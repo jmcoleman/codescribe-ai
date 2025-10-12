@@ -5,6 +5,8 @@ export function useDocGeneration() {
   const [documentation, setDocumentation] = useState('');
   const [qualityScore, setQualityScore] = useState(null);
   const [error, setError] = useState(null);
+  const [rateLimitInfo, setRateLimitInfo] = useState(null);
+  const [retryAfter, setRetryAfter] = useState(null);
   const eventSourceRef = useRef(null);
 
   const generate = useCallback(async (code, docType, language) => {
@@ -13,6 +15,7 @@ export function useDocGeneration() {
     setError(null);
     setDocumentation('');
     setQualityScore(null);
+    setRetryAfter(null);  
 
     // Close any existing connection
     if (eventSourceRef.current) {
@@ -31,6 +34,26 @@ export function useDocGeneration() {
         body: JSON.stringify({ code, docType, language })
       });
 
+      // Extract rate limit headers from response
+      const remaining = response.headers.get('X-RateLimit-Remaining');
+      const limit = response.headers.get('X-RateLimit-Limit');
+      const reset = response.headers.get('X-RateLimit-Reset');
+
+      if (remaining && limit) {
+        setRateLimitInfo({ 
+          remaining: parseInt(remaining), 
+          limit: parseInt(limit), 
+          reset: parseInt(reset)  
+        });
+      }
+
+      // Handle 429 specifically
+      if (response.status === 429) {
+        const errorData = await response.json();
+        setRetryAfter(errorData.retryAfter || 60);
+        throw new Error(errorData.message || 'Rate limit exceeded');
+      }
+      
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -63,7 +86,21 @@ export function useDocGeneration() {
       }
     } catch (err) {
       console.error('Generation error:', err);
-      setError(err.message);
+      
+      // Check if it's a rate limit error
+      if (err.name === 'RateLimitError' || err.message.includes('Rate limit')) {
+        setError(err.message || 'Rate limit exceeded. Please wait before trying again.');
+        setRetryAfter(err.retryAfter || 60); // Set retry countdown
+      } else if (err.message.includes('429')) {
+        // Handle 429 status in error message
+        setError('Rate limit exceeded. Too many requests.');
+        setRetryAfter(60);
+      } else {
+        // Regular error handling
+        setError(err.message || 'Failed to generate documentation');
+        setRetryAfter(null); // Reset retry countdown for non-rate-limit errors
+      }
+      
       setIsGenerating(false);
     }
   }, []);
@@ -82,6 +119,8 @@ export function useDocGeneration() {
     isGenerating,
     documentation,
     qualityScore,
-    error
+    error,
+    rateLimitInfo, 
+    retryAfter
   };
 }
