@@ -1,0 +1,563 @@
+{
+  "info": {
+    "name": "CodeScribe AI API",
+    "description": "Complete API collection for CodeScribe AI - AI-powered code documentation generator. Includes all endpoints for generating documentation, uploading files, and health checks.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "apiPath",
+      "value": "/api",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Documentation Generation",
+      "item": [
+        {
+          "name": "Generate README - Simple Function",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has documentation\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('documentation');",
+                  "    pm.expect(jsonData.documentation).to.be.a('string');",
+                  "});",
+                  "",
+                  "pm.test(\"Response has quality score\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('qualityScore');",
+                  "    pm.expect(jsonData.qualityScore.score).to.be.a('number');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"function greet(name) {\\n  return `Hello, ${name}!`;\\n}\",\n  \"docType\": \"README\",\n  \"language\": \"javascript\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}{{apiPath}}/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{apiPath}}", "generate"]
+            },
+            "description": "Generate README documentation for a simple JavaScript function."
+          },
+          "response": []
+        },
+        {
+          "name": "Generate README - Class (AuthService)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Documentation includes class name\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.documentation.toLowerCase()).to.include('authservice');",
+                  "});",
+                  "",
+                  "pm.test(\"Quality score is >= 70\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.qualityScore.score).to.be.at.least(70);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"export class AuthService {\\n  constructor(database, tokenManager) {\\n    this.db = database;\\n    this.tokens = tokenManager;\\n  }\\n\\n  async login(email, password) {\\n    const user = await this.db.findUser(email);\\n    if (!user) throw new Error('User not found');\\n    \\n    const valid = await this.verifyPassword(password, user.passwordHash);\\n    if (!valid) throw new Error('Invalid password');\\n    \\n    return this.tokens.generate(user.id);\\n  }\\n\\n  async verifyPassword(password, hash) {\\n    // Implementation\\n    return true;\\n  }\\n}\",\n  \"docType\": \"README\",\n  \"language\": \"javascript\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}{{apiPath}}/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{apiPath}}", "generate"]
+            },
+            "description": "Generate comprehensive README for an authentication service class with multiple methods."
+          },
+          "response": []
+        },
+        {
+          "name": "Generate JSDoc Comments",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Documentation includes JSDoc tags\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.documentation).to.include('@param');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"function calculateTotal(items, taxRate) {\\n  const subtotal = items.reduce((sum, item) => sum + item.price, 0);\\n  const tax = subtotal * taxRate;\\n  return subtotal + tax;\\n}\",\n  \"docType\": \"JSDOC\",\n  \"language\": \"javascript\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}{{apiPath}}/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{apiPath}}", "generate"]
+            },
+            "description": "Generate JSDoc comments for a JavaScript function with parameters and return value."
+          },
+          "response": []
+        },
+        {
+          "name": "Generate API Documentation",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Documentation includes API format\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    var doc = jsonData.documentation.toLowerCase();",
+                  "    pm.expect(doc).to.satisfy(function(text) {",
+                  "        return text.includes('endpoint') || text.includes('api') || text.includes('route');",
+                  "    });",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"router.get('/users/:id', async (req, res) => {\\n  try {\\n    const user = await User.findById(req.params.id);\\n    if (!user) {\\n      return res.status(404).json({ error: 'User not found' });\\n    }\\n    res.json(user);\\n  } catch (error) {\\n    res.status(500).json({ error: error.message });\\n  }\\n});\",\n  \"docType\": \"API\",\n  \"language\": \"javascript\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}{{apiPath}}/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{apiPath}}", "generate"]
+            },
+            "description": "Generate API endpoint documentation for an Express route handler."
+          },
+          "response": []
+        },
+        {
+          "name": "Generate Docs - Python Function",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Analysis detects Python\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.analysis.language).to.equal('python');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"def calculate_fibonacci(n):\\n    if n <= 1:\\n        return n\\n    return calculate_fibonacci(n-1) + calculate_fibonacci(n-2)\",\n  \"docType\": \"README\",\n  \"language\": \"python\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}{{apiPath}}/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{apiPath}}", "generate"]
+            },
+            "description": "Generate documentation for Python code to test multi-language support."
+          },
+          "response": []
+        }
+      ],
+      "description": "Endpoints for generating different types of documentation (README, JSDoc, API docs) for various code samples."
+    },
+    {
+      "name": "Streaming",
+      "item": [
+        {
+          "name": "Generate with Streaming (SSE)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"const add = (a, b) => a + b;\\nconst subtract = (a, b) => a - b;\\nconst multiply = (a, b) => a * b;\\nconst divide = (a, b) => b !== 0 ? a / b : null;\",\n  \"docType\": \"README\",\n  \"language\": \"javascript\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}{{apiPath}}/generate-stream",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{apiPath}}", "generate-stream"]
+            },
+            "description": "Generate documentation with Server-Sent Events streaming. Watch the response stream in real-time in Postman's response viewer.\n\nNote: Postman will show the complete streamed response, but you won't see the individual chunks in real-time. For true streaming visualization, use the browser or a specialized SSE client."
+          },
+          "response": []
+        }
+      ],
+      "description": "Server-Sent Events (SSE) streaming endpoint for real-time documentation generation."
+    },
+    {
+      "name": "File Upload",
+      "item": [
+        {
+          "name": "Upload JavaScript File",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has file content\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.file).to.have.property('content');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "/path/to/your/test-file.js",
+                  "description": "Select a .js, .jsx, .ts, .tsx, or .py file to upload"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}{{apiPath}}/upload",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{apiPath}}", "upload"]
+            },
+            "description": "Upload a code file for analysis. Supported types: .js, .jsx, .ts, .tsx, .py\n\nTo test:\n1. Click 'Body' tab\n2. Select 'form-data'\n3. Change 'file' key type to 'File'\n4. Click 'Select Files' and choose a code file\n5. Send request"
+          },
+          "response": []
+        },
+        {
+          "name": "Upload Invalid File Type (Error Test)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Error message about file type\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.false;",
+                  "    pm.expect(jsonData.message).to.include('file');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "/path/to/test.txt",
+                  "description": "Upload a .txt or other invalid file type to test error handling"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}{{apiPath}}/upload",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{apiPath}}", "upload"]
+            },
+            "description": "Test error handling by uploading an invalid file type (e.g., .txt, .pdf). Should return 400 error."
+          },
+          "response": []
+        }
+      ],
+      "description": "File upload endpoints for uploading code files directly instead of pasting code."
+    },
+    {
+      "name": "Health & Status",
+      "item": [
+        {
+          "name": "Health Check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"API is healthy\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.equal('healthy');",
+                  "});",
+                  "",
+                  "pm.test(\"Response has timestamp\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('timestamp');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}{{apiPath}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{apiPath}}", "health"]
+            },
+            "description": "Simple health check endpoint to verify API is running and responsive."
+          },
+          "response": []
+        }
+      ],
+      "description": "Health check and status monitoring endpoints."
+    },
+    {
+      "name": "Error Testing",
+      "item": [
+        {
+          "name": "Missing Code Parameter",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Error message mentions code\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.message.toLowerCase()).to.include('code');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"docType\": \"README\",\n  \"language\": \"javascript\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}{{apiPath}}/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{apiPath}}", "generate"]
+            },
+            "description": "Test error handling when 'code' parameter is missing. Should return 400 Bad Request."
+          },
+          "response": []
+        },
+        {
+          "name": "Code Too Large",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Error message mentions size\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.message.toLowerCase()).to.satisfy(function(msg) {",
+                  "        return msg.includes('large') || msg.includes('size') || msg.includes('length');",
+                  "    });",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"{{largeCode}}\",\n  \"docType\": \"README\",\n  \"language\": \"javascript\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}{{apiPath}}/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{apiPath}}", "generate"]
+            },
+            "description": "Test error handling for code exceeding size limit (100,000 characters). \n\nNote: You'll need to create a 'largeCode' variable with >100k characters to test this."
+          },
+          "response": []
+        },
+        {
+          "name": "Invalid JSON",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"function test() {}\"\n  \"docType\": \"README\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}{{apiPath}}/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{apiPath}}", "generate"]
+            },
+            "description": "Test error handling for malformed JSON. Should return 400 Bad Request."
+          },
+          "response": []
+        }
+      ],
+      "description": "Test cases for error handling and validation."
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Log request details for debugging",
+          "console.log('Request to:', pm.request.url.toString());",
+          "console.log('Method:', pm.request.method);"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Log response time",
+          "console.log('Response time:', pm.response.responseTime + 'ms');"
+        ]
+      }
+    }
+  ]
+}
