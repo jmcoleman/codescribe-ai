@@ -2,6 +2,7 @@ import express from 'express';
 import multer from 'multer';
 import path from 'path';
 import docGenerator from '../services/docGenerator.js';
+import { apiLimiter, generationLimiter } from '../middleware/rateLimiter.js';
 
 const router = express.Router();
 
@@ -14,7 +15,8 @@ function formatBytes(bytes) {
   return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
 }
 
-router.post('/generate', async (req, res) => {
+// Line 17 - add before route handler
+router.post('/generate', apiLimiter, generationLimiter, async (req, res) => {
   try {
     const { code, docType, language } = req.body;
 
@@ -48,7 +50,8 @@ router.post('/generate', async (req, res) => {
   }
 });
 
-router.post('/generate-stream', async (req, res) => {
+// Line 51 - add before route handler
+router.post('/generate-stream', apiLimiter, generationLimiter, async (req, res) => { 
   try {
     const { code, docType, language } = req.body;
 
@@ -120,7 +123,7 @@ const upload = multer({
   }
 });
 
-router.post('/upload', upload.single('file'), async (req, res) => {
+router.post('/upload', apiLimiter, upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({
