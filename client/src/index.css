@@ -77,6 +77,6 @@
 
 .animate-shimmer {
   animation: shimmer 2s infinite linear;
-  background: linear-gradient(to right, #f1f5f9 4%, #e2e8f0 25%, #f1f5f9 36%);
+  background: linear-gradient(to right, rgb(241 245 249) 4%, rgb(226 232 240) 25%, rgb(241 245 249) 36%);
   background-size: 1000px 100%;
 }

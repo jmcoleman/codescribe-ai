@@ -150,7 +150,7 @@ This project has comprehensive documentation organized by purpose. Use this as y
 
 **Contains:**
 - Complete design system:
-  - Color palette (purple brand, slate neutrals, semantic colors)
+  - Color palette (purple primary, indigo secondary, slate neutrals, semantic colors)
   - Typography styles (Inter + JetBrains Mono)
   - Shadow/effect styles
   - Spacing system (4px base unit)
@@ -217,6 +217,27 @@ This project has comprehensive documentation organized by purpose. Use this as y
 - Closing statements
 
 **Key for:** Articulating technical decisions, demo presentations, interview preparation
+
+---
+
+### 🎨 Design Assets
+
+#### [brand-color-palette.html](docs/design/brand-color-palette.html) - Interactive Brand Color Palette
+**When to use:** Visual reference for brand colors, sharing with designers/developers
+
+**Contains:**
+- 27 colors across 6 families (Purple, Indigo, Slate, Green, Yellow, Red)
+- Click-to-copy hex codes for each color
+- Usage guidelines for each color family
+- Accessibility information (WCAG AA compliance)
+- Examples for buttons, alerts, text, backgrounds
+
+**Key for:** Color selection, design consistency, developer implementation, accessibility verification
+
+**How to open:**
+```bash
+open docs/design/brand-color-palette.html
+```
 
 ---
 
@@ -321,6 +342,8 @@ codescribe-ai/
 │   ├── architecture/             # Architecture documentation
 │   │   ├── 04-Architecture.md    # System architecture diagram
 │   │   └── ARCHITECTURE.md       # Architecture overview
+│   ├── design/                   # Design assets
+│   │   └── brand-color-palette.html  # Interactive color palette
 │   └── CONTEXT.md                # Quick reference
 ├── .gitignore
 ├── README.md                      # Main project README
@@ -465,7 +488,9 @@ VITE_API_URL=http://localhost:3000
 
 ## 🔄 Version History
 
-- **v1.2** (Current) - Clarified architecture document purposes: 04-Architecture.md (visual diagram + overview) vs ARCHITECTURE.md (deep technical dive)
+- **v1.4** (Current) - Expanded semantic colors for accessibility (fixed red contrast to WCAG AA, added background/button shades for green/yellow/red)
+- **v1.3** - Added Indigo as secondary brand color to design system (purple primary + indigo secondary)
+- **v1.2** - Clarified architecture document purposes: 04-Architecture.md (visual diagram + overview) vs ARCHITECTURE.md (deep technical dive)
 - **v1.1** - Reorganized documentation structure (planning/, api/, architecture/ subdirectories)
 - **v1.0** - Initial claude.md created with complete documentation map
 - Documentation last updated: October 13, 2025

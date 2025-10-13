@@ -92,10 +92,10 @@ graph TB
     style StreamRoute fill:#e2e8f0,stroke:#64748b
     style UploadRoute fill:#e2e8f0,stroke:#64748b
     style HealthRoute fill:#e2e8f0,stroke:#64748b
-    style DocGen fill:#ddd6fe,stroke:#7e22ce,stroke-width:2px
-    style ClaudeClient fill:#ede9fe,stroke:#7e22ce
-    style CodeParser fill:#ede9fe,stroke:#7e22ce
-    style QualityScorer fill:#ede9fe,stroke:#7e22ce
+    style DocGen fill:#c7d2fe,stroke:#4338ca,stroke-width:2px
+    style ClaudeClient fill:#e0e7ff,stroke:#4f46e5
+    style CodeParser fill:#e0e7ff,stroke:#4f46e5
+    style QualityScorer fill:#e0e7ff,stroke:#4f46e5
     style Claude fill:#fbbf24,stroke:#ca8a04,stroke-width:2px
     style Vercel fill:#86efac,stroke:#16a34a,stroke-width:2px
     style Analytics fill:#bbf7d0,stroke:#22c55e
@@ -113,9 +113,9 @@ graph TB
 
 | Color | Layer | Purpose | Design System |
 |-------|-------|---------|---------------|
-| 🟣 **Purple (Light)** | Client & Frontend | User-facing components and interfaces | Primary brand color |
+| 🟣 **Purple** | Client & Frontend | User-facing components and interfaces | Primary brand color |
 | ⚪ **Slate Gray** | API Layer | Backend routing and request handling | Neutral palette |
-| 🟣 **Purple (Dark)** | Service Layer | Core business logic and processing | Primary palette (darker shades) |
+| 🔵 **Indigo** | Service Layer | Core business logic and processing | Secondary brand color |
 | 🟡 **Yellow** | External Services | Third-party APIs and external dependencies | Warning/dependency color |
 | 🟢 **Green** | Infrastructure | Hosting, deployment, and environment | Success/production color |
 
