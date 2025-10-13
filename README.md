@@ -212,8 +212,7 @@ MIT
 
 ## Author
 
-Jenni Coleman
-Built as a portfolio project showcasing:
+Jenni Coleman -- Built as a portfolio project showcasing:
 - Full-stack JavaScript development (React + Node.js)
 - AI integration (Anthropic Claude API)
 - Real-time streaming (Server-Sent Events)
@@ -223,4 +222,4 @@ Built as a portfolio project showcasing:
 
 ---
 
-**For product requirement documentation, see [01-PRD.md](docs/planning/01-PRD.md) - Complete project reference and documentation map.**
+**For product requirement documentation, see [01-PRD.md](docs/planning/01-PRD.md) - Executive summary and phased plan.**
