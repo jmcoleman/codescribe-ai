@@ -6,14 +6,15 @@
 This diagram shows the complete system architecture for CodeScribe AI across all planned phases.
 
 ```mermaid
+%%{init: {'theme':'base', 'themeVariables': { 'primaryColor':'#faf5ff','primaryTextColor':'#1f2937','primaryBorderColor':'#9333ea','lineColor':'#64748b','secondaryColor':'#ecfeff','tertiaryColor':'#fff7ed','clusterBkg':'#fafafa','clusterBorder':'#9333ea'}}}%%
 graph TB
-    subgraph "Client Layer"
+    subgraph client ["Client Layer"]
         Browser[Web Browser]
         CLI[CLI Tool<br/>Phase 2]
         VSCode[VS Code Extension<br/>Phase 3]
     end
 
-    subgraph "Frontend - React Application"
+    subgraph frontend ["Frontend - React Application"]
         App[App.jsx<br/>Main Component]
         Header[Header Component<br/>Logo, Nav, Menu]
         ControlBar[Control Bar<br/>Upload, GitHub, Generate]
@@ -28,7 +29,7 @@ graph TB
         DocPanel --> QualityScore
     end
 
-    subgraph "API Layer - Express Server"
+    subgraph api ["API Layer - Express Server"]
         Router[API Router]
         GenerateRoute[POST /api/generate]
         StreamRoute[POST /api/generate-stream<br/>SSE]
@@ -41,7 +42,7 @@ graph TB
         Router --> HealthRoute
     end
 
-    subgraph "Service Layer"
+    subgraph services ["Service Layer"]
         DocGen[DocGeneratorService<br/>Core Logic]
         ClaudeClient[ClaudeClient<br/>API Wrapper]
         CodeParser[CodeParser<br/>AST Analysis]
@@ -54,12 +55,12 @@ graph TB
         DocGen --> QualityScorer
     end
 
-    subgraph "External Services"
+    subgraph external ["External Services"]
         Claude[Claude API<br/>Anthropic]
         Claude --> ClaudeClient
     end
 
-    subgraph "Infrastructure"
+    subgraph infra ["Infrastructure"]
         Vercel[Vercel<br/>Hosting & CDN]
         Analytics[Vercel Analytics]
         Env[Environment Variables<br/>CLAUDE_API_KEY]
