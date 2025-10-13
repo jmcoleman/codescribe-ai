@@ -40,10 +40,10 @@ export function useDocGeneration() {
       const reset = response.headers.get('X-RateLimit-Reset');
 
       if (remaining && limit) {
-        setRateLimitInfo({ 
-          remaining: parseInt(remaining), 
-          limit: parseInt(limit), 
-          reset: parseInt(reset)  
+        setRateLimitInfo({
+          remaining: parseInt(remaining),
+          limit: parseInt(limit),
+          reset: parseInt(reset)
         });
       }
 
@@ -86,7 +86,7 @@ export function useDocGeneration() {
       }
     } catch (err) {
       console.error('Generation error:', err);
-      
+
       // Check if it's a rate limit error
       if (err.name === 'RateLimitError' || err.message.includes('Rate limit')) {
         setError(err.message || 'Rate limit exceeded. Please wait before trying again.');
@@ -100,7 +100,7 @@ export function useDocGeneration() {
         setError(err.message || 'Failed to generate documentation');
         setRetryAfter(null); // Reset retry countdown for non-rate-limit errors
       }
-      
+
       setIsGenerating(false);
     }
   }, []);
