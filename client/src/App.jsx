@@ -6,10 +6,7 @@ import { CodePanel } from './components/CodePanel';
 import { DocPanel } from './components/DocPanel';
 import { QualityScoreModal } from './components/QualityScore';
 import { useDocGeneration } from './hooks/useDocGeneration';
-
-import { RateLimitIndicator } from './components/RateLimitIndicator';
 import { ErrorBanner } from './components/ErrorBanner';
-// Import other components as they're built
 
 function App() {
   const [code, setCode] = useState('// Paste your code here or try the example below...\n\n// Example function:\nfunction calculateTotal(items) {\n  return items.reduce((sum, item) => sum + item.price, 0);\n}\n');
@@ -44,40 +41,13 @@ function App() {
     console.log('GitHub import clicked');
   };
 
-  //////////////// remove start
-  // return (
-  //   <div className="min-h-screen bg-slate-50">
-  //     <header className="bg-white border-b border-slate-200 p-4">
-  //       <div className="max-w-7xl mx-auto flex items-center justify-between">
-  //         <h1 className="text-2xl font-bold text-purple-600">CodeScribe AI</h1>
-  //         {rateLimitInfo && (
-  //           <RateLimitIndicator 
-  //             remaining={rateLimitInfo.remaining} 
-  //             limit={rateLimitInfo.limit} 
-  //           />
-  //         )}
-  //       </div>
-  //     </header>
-
-  //     <main className="max-w-7xl mx-auto p-4">
-  //       <ErrorBanner 
-  //         error={error} 
-  //         retryAfter={retryAfter}
-  //         onDismiss={() => {/* handle dismiss */}}
-  //       />
-        
-  //       {/* Rest of your UI */}
-  //     </main>
-  //   </div>
-  // );
-  //////////////////////// remove end
-
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       {/* Header */}
       <Header
         onMenuClick={() => setShowMobileMenu(true)}
         showMobileMenu={showMobileMenu}
+        rateLimitInfo={rateLimitInfo}
       />
 
       {/* Mobile Menu */}
@@ -99,6 +69,15 @@ function App() {
           disabled={!code.trim()}
         />
 
+        {/* Error Banner */}
+        {error && (
+          <ErrorBanner
+            error={error}
+            retryAfter={retryAfter}
+            onDismiss={() => {/* Error will clear on next successful generation */}}
+          />
+        )}
+
         {/* Split View: Code + Documentation */}
         <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 h-[600px] lg:h-[calc(100vh-280px)]">
           {/* Left: Code Panel */}
@@ -118,12 +97,6 @@ function App() {
           />
         </div>
 
-        {/* Error Display */}
-        {error && (
-          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-sm text-red-700">Error: {error}</p>
-          </div>
-        )}
       </main>
 
       {/* Quality Score Modal */}
