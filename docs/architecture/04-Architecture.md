@@ -92,11 +92,11 @@ graph TB
     style StreamRoute fill:#e2e8f0,stroke:#64748b
     style UploadRoute fill:#e2e8f0,stroke:#64748b
     style HealthRoute fill:#e2e8f0,stroke:#64748b
-    style DocGen fill:#06b6d4,stroke:#0891b2,stroke-width:2px
-    style ClaudeClient fill:#22d3ee,stroke:#06b6d4
-    style CodeParser fill:#22d3ee,stroke:#06b6d4
-    style QualityScorer fill:#22d3ee,stroke:#06b6d4
-    style Claude fill:#fb923c,stroke:#ea580c,stroke-width:2px
+    style DocGen fill:#ddd6fe,stroke:#7e22ce,stroke-width:2px
+    style ClaudeClient fill:#ede9fe,stroke:#7e22ce
+    style CodeParser fill:#ede9fe,stroke:#7e22ce
+    style QualityScorer fill:#ede9fe,stroke:#7e22ce
+    style Claude fill:#fbbf24,stroke:#ca8a04,stroke-width:2px
     style Vercel fill:#86efac,stroke:#16a34a,stroke-width:2px
     style Analytics fill:#bbf7d0,stroke:#22c55e
     style Env fill:#bbf7d0,stroke:#22c55e
@@ -106,6 +106,25 @@ graph TB
     class CLI phase2
     class VSCode phase3
 ```
+
+### Legend
+
+**Color Coding by Layer:**
+
+| Color | Layer | Purpose | Design System |
+|-------|-------|---------|---------------|
+| 🟣 **Purple (Light)** | Client & Frontend | User-facing components and interfaces | Primary brand color |
+| ⚪ **Slate Gray** | API Layer | Backend routing and request handling | Neutral palette |
+| 🟣 **Purple (Dark)** | Service Layer | Core business logic and processing | Primary palette (darker shades) |
+| 🟡 **Yellow** | External Services | Third-party APIs and external dependencies | Warning/dependency color |
+| 🟢 **Green** | Infrastructure | Hosting, deployment, and environment | Success/production color |
+
+**Visual Indicators:**
+- **Solid border** = Phase 1 (Current MVP)
+- **Dashed border** = Future phases (CLI in Phase 2, VS Code Extension in Phase 3)
+- **Thicker borders** = Primary components in each layer
+
+---
 
 ## Architecture Overview
 
