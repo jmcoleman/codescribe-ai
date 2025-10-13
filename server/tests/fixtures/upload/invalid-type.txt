@@ -1,0 +1,2 @@
+This is a plain text file that should be rejected during upload.
+It has a .txt extension which is not in the allowed list.
