@@ -1,0 +1,82 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom Scrollbar */
+@layer utilities {
+  .scrollbar-custom::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .scrollbar-custom::-webkit-scrollbar-track {
+    @apply bg-slate-100 rounded;
+  }
+
+  .scrollbar-custom::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 rounded hover:bg-slate-400;
+  }
+}
+
+/* Prose Styles for Markdown */
+.prose {
+  @apply text-slate-700;
+}
+
+.prose h1 {
+  @apply text-2xl font-semibold text-slate-900 mb-4 mt-6;
+}
+
+.prose h2 {
+  @apply text-xl font-semibold text-slate-900 mb-3 mt-5;
+}
+
+.prose h3 {
+  @apply text-lg font-semibold text-slate-900 mb-2 mt-4;
+}
+
+.prose p {
+  @apply mb-4 leading-relaxed;
+}
+
+.prose ul, .prose ol {
+  @apply mb-4 ml-6;
+}
+
+.prose li {
+  @apply mb-1;
+}
+
+.prose code {
+  @apply bg-slate-100 px-1.5 py-0.5 rounded text-xs font-mono text-slate-800;
+}
+
+.prose pre {
+  @apply bg-slate-50 p-4 rounded-lg overflow-x-auto mb-4 border border-slate-200;
+}
+
+.prose pre code {
+  @apply bg-transparent p-0;
+}
+
+.prose a {
+  @apply text-purple-600 hover:text-purple-700 underline;
+}
+
+/* Loading Animation */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite linear;
+  background: linear-gradient(to right, #f1f5f9 4%, #e2e8f0 25%, #f1f5f9 36%);
+  background-size: 1000px 100%;
+}
