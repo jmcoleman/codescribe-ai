@@ -925,15 +925,27 @@ const semanticColors = {
 
 ### Testing Colors
 
-Use the brand color palette reference at `docs/design/brand-color-palette.html` to:
+Use the brand color palette reference:
+
+**Interactive HTML (recommended for development):**
+- File: `docs/design/brand-color-palette.html`
+- Features: Click-to-copy hex codes, interactive color swatches
 - View all colors visually
-- Copy hex codes
+- Copy hex codes instantly
 - Verify usage guidelines
 - Check accessibility notes
 
-Open it in your browser:
+**PDF Version (for sharing/printing):**
+- File: `docs/design/brand-color-palette.pdf`
+- Use for presentations, stakeholder reviews, printing
+
+Open in your browser:
 ```bash
+# Interactive HTML version
 open docs/design/brand-color-palette.html
+
+# PDF version
+open docs/design/brand-color-palette.pdf
 ```
 
 ---

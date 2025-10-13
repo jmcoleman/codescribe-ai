@@ -66,14 +66,24 @@ graph TB
         Env[Environment Variables<br/>CLAUDE_API_KEY]
     end
 
+    subgraph legend ["LEGEND"]
+        direction LR
+        L1["🟣 Purple = Client/Frontend<br/>Primary Brand"]
+        L2["⚪ Slate = API Layer<br/>Neutral"]
+        L3["🔵 Indigo = Service Layer<br/>Secondary Brand"]
+        L4["🟡 Yellow = External APIs<br/>Dependencies"]
+        L5["🟢 Green = Infrastructure<br/>Production"]
+        L6["---  = Future Phase"]
+    end
+
     Browser --> App
     CLI -.-> Router
     VSCode -.-> Router
-    
+
     ControlBar --> |User Action| Router
     Router --> |JSON Response| DocPanel
     StreamRoute --> |SSE Stream| DocPanel
-    
+
     App --> Vercel
     Vercel --> Analytics
     Router --> Env
@@ -105,24 +115,32 @@ graph TB
     classDef phase3 stroke-dasharray: 5 5
     class CLI phase2
     class VSCode phase3
+
+    style L1 fill:#e9d5ff,stroke:#9333ea,stroke-width:2px
+    style L2 fill:#e2e8f0,stroke:#64748b,stroke-width:2px
+    style L3 fill:#c7d2fe,stroke:#4338ca,stroke-width:2px
+    style L4 fill:#fbbf24,stroke:#ca8a04,stroke-width:2px
+    style L5 fill:#86efac,stroke:#16a34a,stroke-width:2px
+    style L6 fill:#fafafa,stroke:#9333ea,stroke-width:1px,stroke-dasharray: 5 5
 ```
 
-### Legend
+### Color Legend (Detailed)
 
-**Color Coding by Layer:**
+The diagram includes an interactive legend. Here's the complete color system:
 
-| Color | Layer | Purpose | Design System |
-|-------|-------|---------|---------------|
-| 🟣 **Purple** | Client & Frontend | User-facing components and interfaces | Primary brand color |
-| ⚪ **Slate Gray** | API Layer | Backend routing and request handling | Neutral palette |
-| 🔵 **Indigo** | Service Layer | Core business logic and processing | Secondary brand color |
-| 🟡 **Yellow** | External Services | Third-party APIs and external dependencies | Warning/dependency color |
-| 🟢 **Green** | Infrastructure | Hosting, deployment, and environment | Success/production color |
+| Color | Layer | Purpose | Design System | Usage |
+|-------|-------|---------|---------------|-------|
+| 🟣 **Purple** | Client & Frontend | User-facing components and interfaces | Primary brand color | Buttons, links, client-side UI |
+| ⚪ **Slate Gray** | API Layer | Backend routing and request handling | Neutral palette | Express routes, middleware |
+| 🔵 **Indigo** | Service Layer | Core business logic and processing | Secondary brand color | Services, business logic, algorithms |
+| 🟡 **Yellow** | External Services | Third-party APIs and external dependencies | Warning/dependency color | Claude API, external integrations |
+| 🟢 **Green** | Infrastructure | Hosting, deployment, and environment | Success/production color | Vercel, analytics, environment config |
 
 **Visual Indicators:**
-- **Solid border** = Phase 1 (Current MVP)
-- **Dashed border** = Future phases (CLI in Phase 2, VS Code Extension in Phase 3)
-- **Thicker borders** = Primary components in each layer
+- **Solid border (—)** = Phase 1 (Current MVP) - actively implemented
+- **Dashed border (- - -)** = Future phases (CLI in Phase 2, VS Code Extension in Phase 3)
+- **Thicker borders** = Primary/main components in each layer
+- **Color consistency** = All colors match the brand palette from `docs/design/brand-color-palette.html`
 
 ---
 
