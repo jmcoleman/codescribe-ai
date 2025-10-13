@@ -20,8 +20,7 @@ codescribe-ai/
 ├── docs/                          # Documentation
 │   ├── planning/                 # Product & development docs
 │   ├── api/                      # API documentation
-│   ├── architecture/             # System architecture
-│   └── CONTEXT.md
+│   └── architecture/             # System architecture
 ├── package.json                   # Root package.json (workspaces)
 └── README.md
 ```
@@ -133,10 +132,6 @@ Comprehensive documentation is organized in the [docs/](docs/) folder:
 - [docs/architecture/](docs/architecture/) - System design and architecture
   - [04-Architecture.md](docs/architecture/04-Architecture.md) - System architecture diagram
   - [ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md) - Architecture overview
-
-### Quick Reference
-- [CLAUDE.md](CLAUDE.md) - Complete documentation map and project context
-- [docs/CONTEXT.md](docs/CONTEXT.md) - Quick project reference
 
 ## Tech Stack
 
