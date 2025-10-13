@@ -280,6 +280,138 @@
                 grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
             }
         }
+
+        /* Print-specific styles for single-page PDF */
+        @media print {
+            body {
+                padding: 16px;
+                background: white;
+                min-height: auto;
+            }
+
+            .header {
+                margin-bottom: 16px;
+            }
+
+            h1 {
+                font-size: 24px;
+                margin-bottom: 6px;
+                color: #a855f7;
+                -webkit-text-fill-color: #a855f7;
+            }
+
+            .subtitle {
+                font-size: 12px;
+            }
+
+            .brand-info {
+                margin: 0 auto 16px;
+                padding: 12px;
+                box-shadow: none;
+                border: 1px solid #e2e8f0;
+            }
+
+            .brand-info h2 {
+                font-size: 14px;
+                margin-bottom: 6px;
+            }
+
+            .brand-info p {
+                font-size: 10px;
+                line-height: 1.4;
+            }
+
+            .palette-section {
+                margin-bottom: 16px;
+                page-break-inside: avoid;
+            }
+
+            .section-title {
+                font-size: 14px;
+            }
+
+            .section-badge {
+                font-size: 8px;
+                padding: 2px 6px;
+            }
+
+            .color-grid {
+                grid-template-columns: repeat(6, 1fr);
+                gap: 8px;
+            }
+
+            .color-card {
+                box-shadow: none;
+                border: 1px solid #e2e8f0;
+            }
+
+            .color-swatch {
+                height: 60px;
+            }
+
+            .color-swatch::after {
+                display: none;
+            }
+
+            .color-info {
+                padding: 6px;
+            }
+
+            .color-name {
+                font-size: 9px;
+                margin-bottom: 2px;
+            }
+
+            .color-hex {
+                font-size: 8px;
+                margin-bottom: 2px;
+            }
+
+            .color-usage {
+                font-size: 7px;
+            }
+
+            .main-badge {
+                font-size: 6px;
+                padding: 1px 4px;
+            }
+
+            .usage-examples {
+                margin: 12px auto;
+                padding: 12px;
+                box-shadow: none;
+                border: 1px solid #e2e8f0;
+            }
+
+            .usage-examples h2 {
+                font-size: 14px;
+                margin-bottom: 8px;
+            }
+
+            .usage-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 8px;
+            }
+
+            .usage-card {
+                padding: 8px;
+            }
+
+            .usage-card h3 {
+                font-size: 10px;
+                margin-bottom: 4px;
+            }
+
+            .usage-card li {
+                font-size: 8px;
+                margin-bottom: 2px;
+                padding-left: 10px;
+            }
+
+            .toast {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>

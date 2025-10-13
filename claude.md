@@ -222,21 +222,29 @@ This project has comprehensive documentation organized by purpose. Use this as y
 
 ### 🎨 Design Assets
 
-#### [brand-color-palette.html](docs/design/brand-color-palette.html) - Interactive Brand Color Palette
-**When to use:** Visual reference for brand colors, sharing with designers/developers
+#### Brand Color Palette - Interactive Reference & PDF
+**When to use:** Visual reference for brand colors, sharing with designers/developers, presentations
+
+**Files:**
+- **[brand-color-palette.html](docs/design/brand-color-palette.html)** - Interactive version with click-to-copy
+- **[brand-color-palette.pdf](docs/design/brand-color-palette.pdf)** - Printable/shareable PDF version
 
 **Contains:**
 - 27 colors across 6 families (Purple, Indigo, Slate, Green, Yellow, Red)
-- Click-to-copy hex codes for each color
+- Click-to-copy hex codes for each color (HTML version)
 - Usage guidelines for each color family
 - Accessibility information (WCAG AA compliance)
 - Examples for buttons, alerts, text, backgrounds
 
-**Key for:** Color selection, design consistency, developer implementation, accessibility verification
+**Key for:** Color selection, design consistency, developer implementation, accessibility verification, stakeholder presentations
 
 **How to open:**
 ```bash
+# Interactive HTML version
 open docs/design/brand-color-palette.html
+
+# PDF version
+open docs/design/brand-color-palette.pdf
 ```
 
 ---
@@ -343,7 +351,8 @@ codescribe-ai/
 │   │   ├── 04-Architecture.md    # System architecture diagram
 │   │   └── ARCHITECTURE.md       # Architecture overview
 │   ├── design/                   # Design assets
-│   │   └── brand-color-palette.html  # Interactive color palette
+│   │   ├── brand-color-palette.html  # Interactive color palette
+│   │   └── brand-color-palette.pdf   # PDF version for sharing
 │   └── CONTEXT.md                # Quick reference
 ├── .gitignore
 ├── README.md                      # Main project README
