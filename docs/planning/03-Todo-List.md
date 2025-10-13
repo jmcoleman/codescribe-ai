@@ -26,7 +26,7 @@
 - [X] Initialize monorepo structure
 - [X] Set up .gitignore (node_modules, .env, dist)
 - [X] Create initial README.md with project overview
-- [ ] Set up project board (GitHub Projects or Trello)
+- [X] Set up project board (GitHub Projects or Trello)
 
 #### Backend Setup
 - [X] Navigate to server directory
@@ -73,8 +73,8 @@
 - [X] Implement ClaudeClient class with:
   - [X] generate() method (non-streaming)
   - [X] generateWithStreaming() method (SSE)
-  - [ ] Error handling
-  - [ ] Rate limiting logic
+  - [X] Error handling
+  - [X] Rate limiting logic
 - [X] Test API connection with simple prompt
 - [X] Log successful response
 
@@ -83,23 +83,23 @@
 - [X] Implement DocGeneratorService class:
   - [X] generateDocumentation() method
   - [X] buildPrompt() method with README template
-  - [ ] Support for docType parameter
-- [ ] Test service with sample code
+  - [X] Support for docType parameter
+- [X] Test service with sample code
 
 #### API Routes
 - [X] Create src/routes/api.js
 - [X] Implement POST /api/generate endpoint
 - [X] Implement POST /api/generate-stream endpoint (SSE)
 - [X] Add error handling middleware
-- [ ] Test with Postman/Insomnia
+- [X] Test with Postman/Insomnia
 
 #### Basic Frontend UI
-- [ ] Create App.jsx with basic layout
-- [ ] Create Header component (logo, title)
-- [ ] Create basic two-panel layout (flexbox)
-- [ ] Add "Generate" button
-- [ ] Connect to backend API (fetch call)
-- [ ] Test end-to-end: button click → API → response
+- [X] Create App.jsx with basic layout
+- [X] Create Header component (logo, title)
+- [X] Create basic two-panel layout (flexbox)
+- [X] Add "Generate" button
+- [X] Connect to backend API (fetch call)
+- [X] Test end-to-end: button click → API → response
 
 **End of Day 1 Goals:**
 ✅ API successfully generates documentation
