@@ -388,8 +388,8 @@ These may be considered for future phases.
 
 ### Approval
 
-**Product Owner:** [Your Name]  
-**Technical Lead:** [Your Name]  
+**Product Owner:** Jenni Coleman  
+**Technical Lead:** Jenni Coleman  
 **Approved Date:** October 11, 2025  
 
 ---
