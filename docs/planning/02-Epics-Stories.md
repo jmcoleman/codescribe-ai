@@ -34,6 +34,13 @@ Epic 5: Deployment & Documentation
   ├── Story 5.1: Production Deployment
   ├── Story 5.2: Project Documentation
   └── Story 5.3: Demo Creation
+
+Epic 6: WCAG AA Accessibility Compliance (Phase 1.5)
+  ├── Story 6.1: Critical Accessibility Fixes
+  ├── Story 6.2: Keyboard & Focus Management
+  ├── Story 6.3: ARIA & Screen Reader Support
+  ├── Story 6.4: Testing & Validation
+  └── Story 6.5: Documentation & Certification
 ```
 
 ---
@@ -738,3 +745,298 @@ A story is done when:
 **Document Owner:** Product Owner  
 **Last Updated:** October 11, 2025  
 **Next Review:** End of Phase 1
+---
+
+## EPIC 6: WCAG AA Accessibility Compliance (Phase 1.5)
+
+**Epic ID:** E6  
+**Priority:** P0 (CRITICAL)  
+**Business Value:** Legal compliance, inclusive design, professional quality  
+**Timeline:** Days 6-10 (5 working days)  
+**Reference:** `docs/WCAG-AA-Accessibility-Assessment.md`  
+**Acceptance Criteria:** Application achieves 100% WCAG 2.1 Level AA compliance  
+
+---
+
+### Story 6.1: Critical Accessibility Fixes
+
+**Story ID:** E6-S1  
+**Priority:** P0  
+**Story Points:** 13  
+**Sprint:** Day 6  
+
+**As a** user with disabilities  
+**I want** the application to meet basic accessibility standards  
+**So that** I can use all features regardless of my abilities  
+
+**Acceptance Criteria:**
+- [ ] All text meets 4.5:1 contrast ratio (WCAG 1.4.3)
+- [ ] All form inputs have associated labels (WCAG 3.3.2)
+- [ ] Page has descriptive title (WCAG 2.4.2)
+- [ ] Skip navigation link present and functional (WCAG 2.4.1)
+- [ ] Live regions announce status changes (WCAG 4.1.3)
+- [ ] axe DevTools shows significant reduction in violations
+
+**Technical Notes:**
+- Update color values in CodePanel, Header, ErrorBanner
+- Add `<label>` elements and aria-label attributes
+- Implement skip link in App.jsx with sr-only class
+- Add role="status" and aria-live attributes
+- Test with WebAIM Contrast Checker
+- Test with NVDA or VoiceOver screen reader
+
+**Tasks:**
+1. Fix color contrast (Issue #1) - 2-3 hours
+2. Add form labels (Issue #2) - 2-3 hours
+3. Fix page title (Issue #7) - 30 min
+4. Add skip link (Issue #5) - 1 hour
+5. Implement live regions (Issue #6) - 2-3 hours
+
+**Definition of Done:**
+- All 7 critical accessibility issues resolved
+- axe DevTools scan shows major improvements
+- Manual keyboard test passes
+- Color contrast verified with tools
+- ~75% WCAG AA compliant
+
+---
+
+### Story 6.2: Keyboard & Focus Management
+
+**Story ID:** E6-S2  
+**Priority:** P0  
+**Story Points:** 13  
+**Sprint:** Day 7  
+
+**As a** keyboard-only user  
+**I want** to navigate and use all features without a mouse  
+**So that** I can interact with the application efficiently  
+
+**Acceptance Criteria:**
+- [ ] Dropdown navigable with arrow keys, Enter, Escape (WCAG 2.1.1)
+- [ ] Modals trap focus appropriately (WCAG 2.4.3)
+- [ ] Focus indicators visible on all interactive elements (WCAG 2.4.7)
+- [ ] Tab order is logical throughout
+- [ ] No keyboard traps detected
+- [ ] Full application usable with keyboard only
+
+**Technical Notes:**
+- Consider using Radix UI or Headless UI for accessible dropdown
+- Install focus-trap-react for modal management
+- Add global focus styles in index.css
+- Implement handleKeyDown in Select component
+- Add aria-activedescendant for keyboard navigation
+- Test Escape key closes all dialogs
+
+**Tasks:**
+1. Keyboard-accessible dropdown (Issue #3) - 4-6 hours
+2. Modal focus traps (Issue #4) - 3-4 hours
+3. Enhanced focus indicators (Issue #9) - 2-3 hours
+
+**Definition of Done:**
+- All features keyboard accessible
+- Focus management working in modals
+- Visual focus indicators enhanced
+- Keyboard-only test completes successfully
+- ~90% WCAG AA compliant
+
+---
+
+### Story 6.3: ARIA & Screen Reader Support
+
+**Story ID:** E6-S3  
+**Priority:** P0  
+**Story Points:** 8  
+**Sprint:** Day 8  
+
+**As a** screen reader user  
+**I want** proper semantic HTML and ARIA attributes  
+**So that** I can understand and navigate the application  
+
+**Acceptance Criteria:**
+- [ ] All decorative icons marked with aria-hidden (WCAG 1.1.1)
+- [ ] Heading hierarchy is logical H1→H2→H3 (WCAG 1.3.1)
+- [ ] Loading states announced to screen readers (WCAG 4.1.3)
+- [ ] Traffic lights have appropriate roles
+- [ ] Screen reader test passes with no critical issues
+
+**Technical Notes:**
+- Add aria-hidden="true" to all Lucide icons
+- Change panel titles from <span> to <h2>
+- Add sr-only class for visually hidden headings
+- Add aria-busy attribute to loading buttons
+- Test with NVDA on Windows or VoiceOver on macOS
+- Document screen reader navigation patterns
+
+**Tasks:**
+1. Mark decorative icons (Issue #8) - 1-2 hours
+2. Fix heading hierarchy (Issue #14) - 2-3 hours
+3. Loading announcements (Issue #13) - 1 hour
+4. Traffic lights & misc (Issue #11, #16-20) - 2 hours
+5. Screen reader testing - 1 hour
+
+**Definition of Done:**
+- All icons properly marked
+- Heading structure validated
+- Screen reader test completes
+- Documentation updated
+- ~95% WCAG AA compliant
+
+---
+
+### Story 6.4: Testing & Validation
+
+**Story ID:** E6-S4  
+**Priority:** P0  
+**Story Points:** 13  
+**Sprint:** Days 9-10  
+
+**As a** quality assurance tester  
+**I want** comprehensive accessibility testing  
+**So that** we can certify WCAG AA compliance  
+
+**Acceptance Criteria:**
+- [ ] axe DevTools scan: 0 violations
+- [ ] Lighthouse accessibility score: 100/100
+- [ ] Pa11y CI scan: 0 errors
+- [ ] Manual keyboard testing: All features accessible
+- [ ] Screen reader testing: No critical issues
+- [ ] Color blindness testing: Information not lost
+- [ ] High contrast mode: All UI visible
+- [ ] Zoom testing: 200% and 400% functional
+
+**Technical Notes:**
+- Install axe DevTools browser extension
+- Install Pa11y CI: npm install -g pa11y-ci
+- Create .pa11yci config file
+- Install jest-axe for unit tests
+- Test with Funkify extension for color blindness
+- Use Windows High Contrast Mode
+- Test with NVDA and VoiceOver thoroughly
+
+**Tasks:**
+1. Error prevention (Issue #12) - 2 hours
+2. Color alternatives (Issue #15) - 2 hours
+3. Set up testing tools - 1 hour
+4. Automated testing - 2-3 hours
+5. Screen reader testing - 2 hours
+6. Zoom & contrast testing - 1 hour
+7. Color blindness testing - 1 hour
+8. Keyboard-only testing - 1 hour
+9. Final fixes - 2-3 hours
+
+**Definition of Done:**
+- All automated tests pass
+- All manual tests pass
+- All issues documented
+- Final fixes applied
+- 100% WCAG AA compliant
+
+---
+
+### Story 6.5: Documentation & Certification
+
+**Story ID:** E6-S5  
+**Priority:** P0  
+**Story Points:** 3  
+**Sprint:** Day 10  
+
+**As a** project stakeholder  
+**I want** documented proof of accessibility compliance  
+**So that** we can demonstrate legal compliance and quality  
+
+**Acceptance Criteria:**
+- [ ] Accessibility statement published on website
+- [ ] README includes accessibility section
+- [ ] Test reports exported and saved
+- [ ] Known limitations documented
+- [ ] Maintenance guidelines created
+- [ ] Team trained on accessibility best practices
+
+**Technical Notes:**
+- Create /accessibility page with statement
+- Add accessibility badge to README
+- Export axe, Lighthouse, Pa11y reports
+- Document Monaco Editor limitations
+- Create accessibility testing checklist
+- Add ESLint accessibility plugin config
+
+**Tasks:**
+1. Write accessibility statement
+2. Update README with accessibility info
+3. Export and save test reports
+4. Document known limitations
+5. Create maintenance checklist
+6. Configure ESLint plugin
+
+**Definition of Done:**
+- Accessibility statement live
+- README updated
+- Reports exported
+- Documentation complete
+- 100% WCAG AA certified
+
+---
+
+## Sprint Planning (Phase 1.5)
+
+### Sprint 6: Critical Fixes (Day 6)
+- E6-S1: Critical Accessibility Fixes (13 pts)
+**Total: 13 story points**
+**Milestone:** 75% WCAG AA compliant
+
+### Sprint 7: Keyboard & Focus (Day 7)
+- E6-S2: Keyboard & Focus Management (13 pts)
+**Total: 13 story points**
+**Milestone:** 90% WCAG AA compliant
+
+### Sprint 8: ARIA & Semantics (Day 8)
+- E6-S3: ARIA & Screen Reader Support (8 pts)
+**Total: 8 story points**
+**Milestone:** 95% WCAG AA compliant
+
+### Sprint 9-10: Testing & Certification (Days 9-10)
+- E6-S4: Testing & Validation (13 pts)
+- E6-S5: Documentation & Certification (3 pts)
+**Total: 16 story points**
+**Milestone:** 100% WCAG AA compliant with certification
+
+---
+
+## Updated Velocity Tracking
+
+**Phase 1 (Days 1-5):** 89 story points  
+**Phase 1.5 (Days 6-10):** 50 story points  
+**Total Project:** 139 story points  
+**Total Duration:** 10 days  
+**Average Daily Velocity:** 13.9 points/day  
+
+---
+
+## Updated Definition of Ready (DoR) - Accessibility Stories
+
+A accessibility story is ready when:
+- [ ] Acceptance criteria defined with WCAG references
+- [ ] Specific issues identified from assessment
+- [ ] Code examples provided
+- [ ] Testing approach documented
+- [ ] Tools and resources identified
+- [ ] Story points estimated
+
+## Updated Definition of Done (DoD) - Accessibility Stories
+
+An accessibility story is done when:
+- [ ] All acceptance criteria met
+- [ ] WCAG criteria validated
+- [ ] Automated tests pass (axe, Lighthouse, Pa11y)
+- [ ] Manual testing completed
+- [ ] Screen reader tested (if applicable)
+- [ ] Code reviewed and merged
+- [ ] Documentation updated
+- [ ] Compliance percentage increased
+
+---
+
+**Document Updated:** October 13, 2025  
+**Phase 1.5 Added:** WCAG AA Accessibility Compliance Epic  
+**Next Review:** End of Phase 1.5

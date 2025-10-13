@@ -172,10 +172,26 @@ Deep editor integration with real-time documentation generation, inline suggesti
 - NFR-11: Rate limiting (10 requests/min per IP)
 
 ### Accessibility
-- NFR-12: WCAG 2.1 AA compliant
-- NFR-13: Keyboard navigation support
-- NFR-14: Screen reader compatible
-- NFR-15: Color contrast ratio ≥ 4.5:1
+- NFR-12: **WCAG 2.1 Level AA compliant** (all 50 criteria assessed)
+- NFR-13: Full keyboard navigation support (no mouse required)
+- NFR-14: Screen reader compatible (NVDA, JAWS, VoiceOver, TalkBack)
+- NFR-15: Color contrast ratio ≥ 4.5:1 for all text
+- NFR-15a: Focus indicators visible on all interactive elements
+- NFR-15b: Skip navigation link for keyboard users
+- NFR-15c: Live regions announce dynamic content changes
+- NFR-15d: All form inputs have associated labels
+- NFR-15e: Modal dialogs trap focus appropriately
+- NFR-15f: Headings follow logical hierarchy (H1 → H2 → H3)
+- NFR-15g: Decorative images marked with aria-hidden
+- NFR-15h: Error messages provide specific correction suggestions
+- NFR-15i: Status changes announced to assistive technologies
+
+**Validation Criteria:**
+- axe DevTools scan: 0 violations
+- Lighthouse accessibility score: 100/100
+- Pa11y CI: 0 errors
+- Manual keyboard testing: All features accessible
+- Screen reader testing: No critical issues
 
 ### Reliability
 - NFR-16: 99% uptime
@@ -297,6 +313,53 @@ GET /api/health
 **Day 5:** Deploy & Document
 - Production deployment
 - README documentation
+
+### Phase 1.5: WCAG AA Accessibility Compliance (Days 6-10)
+**Goal:** Achieve full WCAG 2.1 Level AA compliance
+**Priority:** CRITICAL (Required for Production)
+
+**Day 6:** Critical Accessibility Fixes
+- Fix color contrast failures (4.5:1 ratio)
+- Add form labels and ARIA attributes
+- Add skip navigation link
+- Implement live regions for status updates
+- Fix page title and meta tags
+- **Milestone:** Reach 75% WCAG AA compliance
+
+**Day 7:** Keyboard & Focus Management
+- Implement full keyboard navigation for dropdown
+- Add focus traps to modals
+- Enhance focus indicators globally
+- **Milestone:** Reach 90% WCAG AA compliance
+
+**Day 8:** ARIA & Semantics
+- Mark decorative icons with aria-hidden
+- Fix heading hierarchy
+- Add loading state announcements
+- Screen reader testing
+- **Milestone:** Reach 95% WCAG AA compliance
+
+**Day 9:** Polish & Error Handling
+- Add error prevention dialogs
+- Add text alternatives to color indicators
+- Set up accessibility testing tools
+- Manual testing checklist
+- **Milestone:** Reach 98% WCAG AA compliance
+
+**Day 10:** Comprehensive Testing & Validation
+- Run automated accessibility testing (axe, Lighthouse, Pa11y)
+- Full screen reader testing (NVDA, VoiceOver)
+- Color blindness and high contrast testing
+- Keyboard-only navigation validation
+- Update accessibility documentation
+- **Milestone:** 100% WCAG AA compliant with certification
+
+**Success Criteria:**
+- axe DevTools: 0 violations
+- Lighthouse accessibility score: 100/100
+- All features keyboard accessible
+- Screen reader compatible
+- Accessibility statement published
 - Demo video
 
 ### Phase 2: CLI Tool (Days 6-7)
