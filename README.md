@@ -208,7 +208,7 @@ This is a portfolio project demonstrating full-stack development skills. Issues 
 
 ## License
 
-ISC
+MIT
 
 ## Author
 
