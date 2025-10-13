@@ -1,11 +1,46 @@
-# CodeScribe AI - System Architecture
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeScribe AI - Architecture Diagram Preview</title>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            margin: 0;
+            padding: 40px 20px;
+            background: #ffffff;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+        .subtitle {
+            color: #64748b;
+            margin-bottom: 32px;
+        }
+        .mermaid {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>CodeScribe AI - System Architecture</h1>
+        <p class="subtitle">Quick Visual Reference - Architecture Diagram Preview</p>
 
-> **Quick Visual Reference:** This document provides an interactive Mermaid diagram and high-level architecture overview.
-> **For Deep Technical Details:** See [ARCHITECTURE.md](ARCHITECTURE.md) for comprehensive architecture documentation including security, performance, scalability, and deployment strategies.
-
-This diagram shows the complete system architecture for CodeScribe AI across all planned phases.
-
-```mermaid
+        <div class="mermaid">
 %%{init: {'theme':'base', 'themeVariables': { 'primaryColor':'#faf5ff','primaryTextColor':'#1f2937','primaryBorderColor':'#9333ea','lineColor':'#64748b','secondaryColor':'#ecfeff','tertiaryColor':'#fff7ed','clusterBkg':'#fafafa','clusterBorder':'#9333ea'}, 'flowchart': {'padding': 15, 'nodeSpacing': 50, 'rankSpacing': 80, 'subGraphTitleMargin': {'top': 5, 'bottom': 5}}}}%%
 graph TB
     subgraph client ["Client Layer"]
@@ -21,7 +56,7 @@ graph TB
         CodePanel[Code Panel<br/>Monaco Editor]
         DocPanel[Doc Panel<br/>Markdown Renderer]
         QualityScore[Quality Score<br/>Badge & Suggestions]
-        
+
         App --> Header
         App --> ControlBar
         App --> CodePanel
@@ -35,7 +70,7 @@ graph TB
         StreamRoute[POST /api/generate-stream<br/>SSE]
         UploadRoute[POST /api/upload]
         HealthRoute[GET /api/health]
-        
+
         Router --> GenerateRoute
         Router --> StreamRoute
         Router --> UploadRoute
@@ -47,7 +82,7 @@ graph TB
         ClaudeClient[ClaudeClient<br/>API Wrapper]
         CodeParser[CodeParser<br/>AST Analysis]
         QualityScorer[QualityScorer<br/>Scoring Algorithm]
-        
+
         GenerateRoute --> DocGen
         StreamRoute --> DocGen
         DocGen --> ClaudeClient
@@ -112,78 +147,7 @@ graph TB
 
     style L fill:#ffffff,stroke:none,text-align:left
     style legend fill:#ffffff,stroke:#e2e8f0,stroke-width:2px
-```
-
-### Color Legend (Detailed)
-
-The diagram includes an interactive legend. Here's the complete color system:
-
-| Color | Layer | Purpose | Design System | Usage |
-|-------|-------|---------|---------------|-------|
-| 🟣 **Purple** | Client & Frontend | User-facing components and interfaces | Primary brand color | Buttons, links, client-side UI |
-| ⚪ **Slate Gray** | API Layer | Backend routing and request handling | Neutral palette | Express routes, middleware |
-| 🔵 **Indigo** | Service Layer | Core business logic and processing | Secondary brand color | Services, business logic, algorithms |
-| 🟡 **Yellow** | External Services | Third-party APIs and external dependencies | Warning/dependency color | Claude API, external integrations |
-| 🟢 **Green** | Infrastructure | Hosting, deployment, and environment | Success/production color | Vercel, analytics, environment config |
-
-**Visual Indicators:**
-- **Solid border (—)** = Phase 1 (Current MVP) - actively implemented
-- **Dashed border (- - -)** = Future phases (CLI in Phase 2, VS Code Extension in Phase 3)
-- **Thicker borders** = Primary/main components in each layer
-- **Color consistency** = All colors match the brand palette from `docs/design/brand-color-palette.html`
-
----
-
-## Architecture Overview
-
-### Client Layer
-- **Web Browser**: Primary interface for Phase 1 (MVP)
-- **CLI Tool**: Command-line interface (Phase 2)
-- **VS Code Extension**: IDE integration (Phase 3)
-
-### Frontend (React Application)
-- **App.jsx**: Main application component and state management
-- **Header**: Branding and navigation
-- **Control Bar**: File upload, GitHub integration, and generation controls
-- **Code Panel**: Monaco editor for code input
-- **Doc Panel**: Markdown renderer for generated documentation
-- **Quality Score**: Visual scoring with improvement suggestions
-
-### API Layer (Express Server)
-- **POST /api/generate**: Standard documentation generation endpoint
-- **POST /api/generate-stream**: Server-Sent Events (SSE) streaming endpoint
-- **POST /api/upload**: File upload handling
-- **GET /api/health**: Health check endpoint
-
-### Service Layer
-- **DocGeneratorService**: Core orchestration logic for documentation generation
-- **ClaudeClient**: Wrapper for Anthropic Claude API with retry logic
-- **CodeParser**: AST-based code analysis using Acorn
-- **QualityScorer**: Documentation quality assessment algorithm
-
-### External Services
-- **Claude API**: Anthropic's Claude Sonnet 4.5 for AI generation
-
-### Infrastructure
-- **Vercel**: Hosting platform with CDN
-- **Vercel Analytics**: Usage tracking and performance monitoring
-- **Environment Variables**: Secure configuration management (API keys, etc.)
-
-## Data Flow
-
-1. User inputs code via browser → React App
-2. User triggers generation → API request to Express server
-3. Server routes request → DocGeneratorService
-4. DocGenerator orchestrates:
-   - CodeParser extracts structure (functions, classes, exports)
-   - ClaudeClient sends enriched prompt to Claude API
-   - Claude streams response back through SSE
-   - QualityScorer analyzes generated documentation
-5. Documentation and quality score → Frontend for display
-
-## Technology Stack
-
-**Frontend**: React 18, Vite, Tailwind CSS, Monaco Editor, react-markdown
-**Backend**: Node.js, Express, Anthropic SDK, Acorn (AST parser)
-**Infrastructure**: Vercel, Server-Sent Events (SSE)
-**AI**: Claude Sonnet 4.5 (claude-sonnet-4-20250514)
+        </div>
+    </div>
+</body>
+</html>
