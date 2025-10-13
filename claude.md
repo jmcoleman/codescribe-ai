@@ -421,6 +421,43 @@ Multiple docs cover the same topic from different angles:
 
 Always provide the most relevant reference for the question asked.
 
+### 6. Mermaid Diagram Guidelines
+When creating or modifying Mermaid diagrams for this project:
+
+**Legend/Index Placement:**
+- **Place legend last** in the Mermaid code (after all subgraphs, before node connections)
+- **Position:** Top-left area (Mermaid's auto-layout places standalone subgraphs here - ideal for immediate reference!)
+- **Use compact format** with `<br/>` tags to stack legend items vertically
+- **Simple title:** `subgraph legend ["🗺️ LEGEND"]`
+
+**Legend Styling:**
+- White background: `style legend fill:#ffffff`
+- Light slate border: `style legend stroke:#e2e8f0,stroke-width:2px`
+- No border on legend items: `style L fill:#ffffff,stroke:none,text-align:left`
+- Left-align text for readability
+
+**Spacing Configuration:**
+```javascript
+'flowchart': {
+  'padding': 15,
+  'nodeSpacing': 50,
+  'rankSpacing': 80,
+  'subGraphTitleMargin': {'top': 5, 'bottom': 5}
+}
+```
+
+**Legend Content Format:**
+```
+L["🟣 Purple - Client/Frontend<br/>⚪ Slate - API Layer<br/>🔵 Indigo - Services<br/>🟡 Yellow - External<br/>🟢 Green - Infrastructure<br/>--- Dashed - Future"]
+```
+
+**Best Practices:**
+- Keep legend compact and scannable
+- Use emojis for visual color indicators
+- Place legend last in code (renders top-left, perfect for F-pattern reading!)
+- Ensure all colors in diagram are documented in legend
+- **Note:** Mermaid's auto-layout places standalone subgraphs in top-left - this works perfectly for legends
+
 ---
 
 ## 🚀 Quick Reference Commands
@@ -497,7 +534,8 @@ VITE_API_URL=http://localhost:3000
 
 ## 🔄 Version History
 
-- **v1.4** (Current) - Expanded semantic colors for accessibility (fixed red contrast to WCAG AA, added background/button shades for green/yellow/red)
+- **v1.5** (Current) - Added Mermaid diagram guidelines section with legend placement best practices, spacing configuration, and styling standards
+- **v1.4** - Expanded semantic colors for accessibility (fixed red contrast to WCAG AA, added background/button shades for green/yellow/red)
 - **v1.3** - Added Indigo as secondary brand color to design system (purple primary + indigo secondary)
 - **v1.2** - Clarified architecture document purposes: 04-Architecture.md (visual diagram + overview) vs ARCHITECTURE.md (deep technical dive)
 - **v1.1** - Reorganized documentation structure (planning/, api/, architecture/ subdirectories)
