@@ -144,14 +144,14 @@
 - [X] **Total Tests Created**: 156 tests across 5 test files
 
 #### File Upload Backend
-- [ ] Install multer: `npm install multer`
-- [ ] Create POST /api/upload endpoint
-- [ ] Implement file validation:
-  - [ ] Check file extension (.js, .jsx, .ts, .tsx, .py)
-  - [ ] Check file size (max 500KB)
-  - [ ] Return appropriate errors
-- [ ] Read file content and return
-- [ ] Test with various file types
+- [X] Install multer: `npm install multer`
+- [X] Create POST /api/upload endpoint
+- [X] Implement file validation:
+  - [X] Check file extension (.js, .jsx, .ts, .tsx, .py)
+  - [X] Check file size (max 500KB)
+  - [X] Return appropriate errors
+- [X] Read file content and return
+- [X] Test with various file types
 
 **Checkpoint:** All backend services functional
 
