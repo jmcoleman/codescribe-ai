@@ -76,15 +76,30 @@ graph TB
     App --> Vercel
     Vercel --> Analytics
     Router --> Env
-    
-    style Browser fill:#e1f5ff
-    style CLI fill:#fff4e1
-    style VSCode fill:#fff4e1
-    style App fill:#f0e6ff
-    style DocGen fill:#e6f7ff
-    style Claude fill:#ffe6e6
-    style Vercel fill:#e6ffe6
-    
+
+    style Browser fill:#e9d5ff,stroke:#9333ea,stroke-width:2px
+    style CLI fill:#fae8ff,stroke:#c026d3,stroke-width:2px
+    style VSCode fill:#fae8ff,stroke:#c026d3,stroke-width:2px
+    style App fill:#c084fc,stroke:#9333ea,stroke-width:2px
+    style Header fill:#e9d5ff,stroke:#9333ea
+    style ControlBar fill:#e9d5ff,stroke:#9333ea
+    style CodePanel fill:#e9d5ff,stroke:#9333ea
+    style DocPanel fill:#e9d5ff,stroke:#9333ea
+    style QualityScore fill:#e9d5ff,stroke:#9333ea
+    style Router fill:#cbd5e1,stroke:#475569,stroke-width:2px
+    style GenerateRoute fill:#e2e8f0,stroke:#64748b
+    style StreamRoute fill:#e2e8f0,stroke:#64748b
+    style UploadRoute fill:#e2e8f0,stroke:#64748b
+    style HealthRoute fill:#e2e8f0,stroke:#64748b
+    style DocGen fill:#06b6d4,stroke:#0891b2,stroke-width:2px
+    style ClaudeClient fill:#22d3ee,stroke:#06b6d4
+    style CodeParser fill:#22d3ee,stroke:#06b6d4
+    style QualityScorer fill:#22d3ee,stroke:#06b6d4
+    style Claude fill:#fb923c,stroke:#ea580c,stroke-width:2px
+    style Vercel fill:#86efac,stroke:#16a34a,stroke-width:2px
+    style Analytics fill:#bbf7d0,stroke:#22c55e
+    style Env fill:#bbf7d0,stroke:#22c55e
+
     classDef phase2 stroke-dasharray: 5 5
     classDef phase3 stroke-dasharray: 5 5
     class CLI phase2
