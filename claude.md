@@ -81,19 +81,24 @@ This project has comprehensive documentation organized by purpose. Use this as y
 
 ### 🏗️ Architecture & Development
 
-#### [04-Architecture.md](docs/architecture/04-Architecture.md) - System Architecture Diagram
-**When to use:** Understanding system design and component relationships
+#### [04-Architecture.md](docs/architecture/04-Architecture.md) - System Architecture Diagram & Overview
+**When to use:** Visual system architecture reference, quick component overview
 
 **Contains:**
-- Mermaid diagram showing full system architecture
-- Client layer (Browser, CLI, VS Code Extension)
-- Frontend layer (React components)
-- API layer (Express routes)
-- Service layer (DocGenerator, ClaudeClient, CodeParser, QualityScorer)
-- External services (Claude API)
-- Infrastructure (Vercel, Analytics)
+- **Interactive Mermaid diagram** (renders on GitHub) showing full system architecture
+- Architecture layer overview:
+  - Client layer (Browser, CLI, VS Code Extension)
+  - Frontend layer (React components: App, Header, ControlBar, CodePanel, DocPanel, QualityScore)
+  - API layer (Express routes: /generate, /generate-stream, /upload, /health)
+  - Service layer (DocGenerator, ClaudeClient, CodeParser, QualityScorer)
+  - External services (Claude API)
+  - Infrastructure (Vercel, Analytics, Environment Variables)
+- Simplified data flow explanation
+- Technology stack summary
 
-**Key for:** System design questions, integration points, data flow understanding
+**Key for:** Visual system understanding, quick architecture reference, stakeholder presentations
+
+> **Note:** For deep technical details, see [ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md)
 
 ---
 
@@ -247,15 +252,21 @@ This project has comprehensive documentation organized by purpose. Use this as y
 
 ---
 
-#### [ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md) - Architecture Overview
-**When to use:** Quick architecture reference, system design summary
+#### [ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md) - Architecture Deep Dive
+**When to use:** In-depth technical architecture, security, performance, scalability, deployment
 
 **Contains:**
-- Simplified architecture notes
-- Component relationships overview
-- Data flow summary
+- Detailed architecture explanations with ASCII diagrams
+- Component design patterns (Singleton, Strategy, Decorator)
+- Comprehensive data flow diagrams (standard, streaming, parsing)
+- Complete API architecture with request/response examples
+- Security architecture (API key management, input validation, rate limiting, CORS, privacy)
+- Performance & scalability targets and optimization strategies
+- Deployment architecture and CI/CD pipeline details
+- Monitoring & observability strategies
+- Future enhancement plans (Phase 2: CLI, Phase 3: VS Code)
 
-**Key for:** Quick architecture understanding, system overview
+**Key for:** Deep technical understanding, security/performance decisions, deployment planning, scaling strategies
 
 ---
 
@@ -373,7 +384,7 @@ When answering questions about CodeScribe AI:
 ### 5. Cross-Reference When Needed
 Multiple docs cover the same topic from different angles:
 - **Quality Scoring**: PRD (requirements), Dev Guide (implementation), API Reference (algorithm details)
-- **Architecture**: Architecture.md (diagram), Dev Guide (implementation), Master Prompt (summary)
+- **Architecture**: 04-Architecture.md (visual diagram + quick overview), ARCHITECTURE.md (deep technical dive), Dev Guide (implementation), Master Prompt (summary)
 - **Setup**: Todo List (tasks), Dev Guide (code), Master Prompt (quick commands)
 
 Always provide the most relevant reference for the question asked.
@@ -454,9 +465,10 @@ VITE_API_URL=http://localhost:3000
 
 ## 🔄 Version History
 
-- **v1.1** (Current) - Reorganized documentation structure (planning/, api/, architecture/ subdirectories)
+- **v1.2** (Current) - Clarified architecture document purposes: 04-Architecture.md (visual diagram + overview) vs ARCHITECTURE.md (deep technical dive)
+- **v1.1** - Reorganized documentation structure (planning/, api/, architecture/ subdirectories)
 - **v1.0** - Initial claude.md created with complete documentation map
-- Documentation last updated: October 12, 2025
+- Documentation last updated: October 13, 2025
 
 ---
 

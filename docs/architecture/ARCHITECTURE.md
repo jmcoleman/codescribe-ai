@@ -1,8 +1,11 @@
-# CodeScribe AI - Architecture Overview
+# CodeScribe AI - Architecture Deep Dive
 
-**Version:** 1.0  
-**Last Updated:** October 12, 2025  
-**Status:** Production Ready  
+**Version:** 1.0
+**Last Updated:** October 13, 2025
+**Status:** Production Ready
+
+> **Quick Reference:** For a visual architecture diagram and overview, see [04-Architecture.md](04-Architecture.md)
+> **Purpose:** This document provides comprehensive technical architecture details, including security, performance, scalability, and deployment strategies.
 
 ---
 
