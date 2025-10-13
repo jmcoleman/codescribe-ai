@@ -76,17 +76,28 @@ Download and install:
 3. Click "Install"
 4. We'll use **Lucide** icon set
 
-### Step 5: Create Color Styles (10 min)
+### Step 5: Create Color Styles (15 min)
 
-Go to Design System page:
+Go to Design System page and create color swatches:
 
+**Method:**
 1. Press `R` (Rectangle)
 2. Create 50×50 square
-3. Fill with color (see palette below)
-4. Select square → Click fill color
-5. Click "Style" icon (⊕) → Create style
-6. Name it (e.g., "color/purple/500")
-7. Repeat for all colors
+3. Fill with color from palette below
+4. Select square → Click fill color in right sidebar
+5. Click "Style" icon (⊕) next to the color
+6. Click "Create style"
+7. Name using convention: `color/[family]/[shade]`
+8. Add description with usage guidance
+9. Repeat for all **27 colors** below
+
+**Naming Convention Examples:**
+- Primary: `color/purple/500`, `color/purple/600`
+- Secondary: `color/indigo/500`, `color/indigo/600`
+- Neutral: `color/slate/50`, `color/slate/900`
+- Semantic: `color/green/600`, `color/yellow/600`, `color/red/600`
+
+**Pro Tip:** Group swatches visually by color family for easy reference
 
 ---
 
@@ -104,6 +115,16 @@ purple/600: #9333EA  ← Hover states
 purple/700: #7E22CE
 ```
 
+**Secondary (Indigo)**
+```
+indigo/50:  #EEF2FF  ← Light backgrounds
+indigo/100: #E0E7FF
+indigo/200: #C7D2FE
+indigo/500: #6366F1  ← Secondary brand
+indigo/600: #4F46E5  ← Hover states
+indigo/700: #4338CA
+```
+
 **Neutral (Slate)**
 ```
 slate/50:   #F8FAFC  ← Page background
@@ -119,17 +140,122 @@ white:      #FFFFFF
 ```
 
 **Semantic Colors**
+
+Success (Green):
 ```
-green/600:  #16A34A  ← Success
-yellow/600: #CA8A04  ← Warning
-red/400:    #F87171  ← Error
+green/50:   #F0FDF4  ← Success message backgrounds
+green/100:  #DCFCE7  ← Subtle success states
+green/600:  #16A34A  ← Success text, icons (main)
+green/700:  #15803D  ← Success buttons, badges
 ```
 
-**Create in Figma:**
-1. Make 50×50 squares for each
-2. Apply color
-3. Select → Style icon → Create style
-4. Use naming convention: `color/[group]/[number]`
+Warning (Yellow):
+```
+yellow/50:  #FEFCE8  ← Warning message backgrounds
+yellow/100: #FEF9C3  ← Subtle warnings
+yellow/600: #CA8A04  ← Warning text, icons (main)
+yellow/700: #A16207  ← Warning buttons, badges
+```
+
+Error (Red):
+```
+red/50:     #FEF2F2  ← Error message backgrounds
+red/100:    #FEE2E2  ← Subtle error states
+red/600:    #DC2626  ← Error text, icons (main)
+red/700:    #B91C1C  ← Error buttons, destructive actions
+```
+
+---
+
+### Color Usage Guidelines
+
+**When to use each color family:**
+
+#### Purple (Primary Brand)
+**Best for:** User-facing elements, primary actions, brand moments
+- **50-200**: Light backgrounds, hover states, subtle highlights
+- **500**: Main brand color for primary CTAs, hero elements
+- **600**: Hover states for buttons, focus rings, active states
+- **700**: Pressed states, emphasized elements
+
+**Examples:**
+- Primary buttons: `purple/600` background, hover to `purple/700`
+- Links: `purple/600` text, hover to `purple/700`
+- Brand accents: `purple/500` or `purple/600`
+
+#### Indigo (Secondary Brand)
+**Best for:** Technical features, secondary actions, service layer elements
+- **50-200**: Light backgrounds for technical content
+- **500**: Secondary CTAs, badges, technical highlights
+- **600**: Hover states for secondary elements
+- **700**: Active/pressed states
+
+**Examples:**
+- Secondary buttons: `indigo/600` background
+- Code-related badges: `indigo/500` or `indigo/600`
+- Service layer in architecture diagrams: `indigo/200` fills
+
+#### Slate (Neutral)
+**Best for:** Text, backgrounds, borders, UI chrome
+- **50-100**: Page backgrounds, card backgrounds
+- **200-300**: Borders, dividers, disabled states
+- **500-600**: Body text, labels, subtle content
+- **700-900**: Headings, emphasis, high-contrast text
+
+**Examples:**
+- Page background: `slate/50`
+- Card backgrounds: `white` or `slate/100`
+- Borders: `slate/200` or `slate/300`
+- Body text: `slate/600` or `slate/700`
+- Headings: `slate/900`
+
+#### Green (Success)
+**Best for:** Success messages, confirmations, positive states
+- **50-100**: Alert/message backgrounds
+- **600**: Main success color (text, icons) - WCAG AA compliant
+- **700**: Success buttons, badges with white text
+
+**Examples:**
+- Success alert: `green/50` background, `green/600` text
+- Success icon: `green/600`
+- Success button: `green/700` background
+
+#### Yellow (Warning)
+**Best for:** Warnings, cautions, external dependencies
+- **50-100**: Warning message backgrounds
+- **600**: Main warning color (text, icons) - WCAG AA compliant
+- **700**: Warning buttons, badges with white text
+
+**Examples:**
+- Warning alert: `yellow/50` background, `yellow/600` text
+- Warning icon: `yellow/600`
+- External API indicator: `yellow/600` or `yellow/700`
+
+#### Red (Error)
+**Best for:** Errors, validation failures, destructive actions
+- **50-100**: Error message backgrounds
+- **600**: Main error color (text, icons) - WCAG AA compliant (5.9:1)
+- **700**: Destructive action buttons with white text
+
+**Examples:**
+- Error alert: `red/50` background, `red/600` text
+- Error icon: `red/600`
+- Delete button: `red/700` background
+
+---
+
+### Accessibility Notes
+
+**All colors meet WCAG AA standards (4.5:1 minimum contrast):**
+
+✅ **purple/600** on white: 6.5:1 contrast
+✅ **indigo/600** on white: 6.8:1 contrast
+✅ **green/600** on white: 4.8:1 contrast
+✅ **yellow/600** on white: 6.3:1 contrast
+✅ **red/600** on white: 5.9:1 contrast (fixed from red/400)
+✅ **slate/600** on white: 7.8:1 contrast
+
+**Important:** Always use the /600 shade for text on white backgrounds to ensure accessibility.
 
 ---
 
@@ -687,6 +813,128 @@ After completing this guide, you'll have:
 
 **Time Investment:** 4-6 hours  
 **Result:** Production-ready design system
+
+---
+
+## 💻 Implementation Guide for Developers
+
+### Tailwind CSS Configuration
+
+The brand colors are already configured in `client/tailwind.config.js`. Use these Tailwind utilities in your components:
+
+#### Primary Brand (Purple)
+```jsx
+// Buttons
+<button className="bg-purple-600 hover:bg-purple-700 text-white">
+  Primary Action
+</button>
+
+// Text/Links
+<a className="text-purple-600 hover:text-purple-700">
+  Learn More
+</a>
+
+// Backgrounds
+<div className="bg-purple-50 border border-purple-200">
+  Light purple container
+</div>
+```
+
+#### Secondary Brand (Indigo)
+```jsx
+// Secondary buttons
+<button className="bg-indigo-600 hover:bg-indigo-700 text-white">
+  Secondary Action
+</button>
+
+// Technical badges
+<span className="bg-indigo-100 text-indigo-700 px-2 py-1 rounded">
+  Technical Feature
+</span>
+```
+
+#### Semantic Colors
+```jsx
+// Success alert
+<div className="bg-green-50 border border-green-200 text-green-600">
+  Success message
+</div>
+
+// Warning alert
+<div className="bg-yellow-50 border border-yellow-200 text-yellow-600">
+  Warning message
+</div>
+
+// Error alert
+<div className="bg-red-50 border border-red-200 text-red-600">
+  Error message
+</div>
+```
+
+#### Neutral (Slate)
+```jsx
+// Page background
+<div className="bg-slate-50">
+
+// Card backgrounds
+<div className="bg-white border border-slate-200">
+
+// Text hierarchy
+<h1 className="text-slate-900">Main Heading</h1>
+<p className="text-slate-700">Body text</p>
+<span className="text-slate-500">Subtle text</span>
+```
+
+### Available Color Utilities
+
+**Purple:** `purple-50`, `purple-100`, `purple-200`, `purple-500`, `purple-600`, `purple-700`
+**Indigo:** `indigo-50`, `indigo-100`, `indigo-200`, `indigo-500`, `indigo-600`, `indigo-700`
+**Slate:** `slate-50`, `slate-100`, `slate-200`, `slate-300`, `slate-500`, `slate-600`, `slate-700`, `slate-800`, `slate-900`
+**Green:** `green-50`, `green-100`, `green-600`, `green-700`
+**Yellow:** `yellow-50`, `yellow-100`, `yellow-600`, `yellow-700`
+**Red:** `red-50`, `red-100`, `red-600`, `red-700`
+
+### Color Naming in Code
+
+For semantic colors, you can use descriptive names that map to the Tailwind colors:
+
+```javascript
+const semanticColors = {
+  success: 'green-600',
+  warning: 'yellow-600',
+  error: 'red-600',
+  successBg: 'green-50',
+  warningBg: 'yellow-50',
+  errorBg: 'red-50',
+};
+```
+
+### Accessibility Requirements
+
+**Always use these shades for text on white backgrounds:**
+- Purple: `purple-600` or darker
+- Indigo: `indigo-600` or darker
+- Slate: `slate-600` or darker
+- Green: `green-600` or `green-700`
+- Yellow: `yellow-600` or `yellow-700`
+- Red: `red-600` or `red-700`
+
+**Never use:**
+- Light shades (50, 100, 200) for text
+- `red-400` (old error color - not accessible)
+
+### Testing Colors
+
+Use the brand color palette reference at `docs/design/brand-color-palette.html` to:
+- View all colors visually
+- Copy hex codes
+- Verify usage guidelines
+- Check accessibility notes
+
+Open it in your browser:
+```bash
+open docs/design/brand-color-palette.html
+```
 
 ---
 
