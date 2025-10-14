@@ -452,32 +452,43 @@ async function test7_ArrowFunctionsContexts() {
 // TEST 8: Error Handling and Fallback
 // ============================================================================
 async function test8_ErrorHandling() {
-  // Test 1: Syntax error - should fall back to basic analysis
-  const invalidCode = `
-    function broken() {
-      return x +;  // Syntax error
-    }
-  `;
+  // Suppress console.error during error handling tests to prevent CI/CD failures
+  const originalError = console.error;
+  console.error = jest.fn();
 
-  const result1 = await parseCode(invalidCode, 'javascript');
-  assert(result1 !== undefined, 'Should return result even with syntax error');
-  assert(result1.language === 'javascript', 'Should preserve language in fallback');
+  try {
+    // Test 1: Syntax error - should fall back to basic analysis
+    const invalidCode = `
+      function broken() {
+        return x +;  // Syntax error
+      }
+    `;
 
-  // Test 2: Python code - should use basic analysis
-  const pythonCode = `
+    const result1 = await parseCode(invalidCode, 'javascript');
+    assert(result1 !== undefined, 'Should return result even with syntax error');
+    assert(result1.language === 'javascript', 'Should preserve language in fallback');
+    // Verify console.error was called for error reporting
+    assert(console.error.mock.calls.length > 0, 'Should log parse error');
+
+    // Test 2: Python code - should use basic analysis
+    const pythonCode = `
 def hello(name):
     return f"Hello, {name}!"
 
 class MyClass:
     def method(self):
         pass
-  `;
+    `;
 
-  const result2 = await parseCode(pythonCode, 'python');
-  assert(result2 !== undefined, 'Should handle Python code');
-  assert(result2.language === 'python', 'Should identify as Python');
-  assert(result2.functions.length >= 1, 'Should find Python functions with regex');
-  assert(result2.classes.length >= 1, 'Should find Python classes with regex');
+    const result2 = await parseCode(pythonCode, 'python');
+    assert(result2 !== undefined, 'Should handle Python code');
+    assert(result2.language === 'python', 'Should identify as Python');
+    assert(result2.functions.length >= 1, 'Should find Python functions with regex');
+    assert(result2.classes.length >= 1, 'Should find Python classes with regex');
+  } finally {
+    // Restore original console.error
+    console.error = originalError;
+  }
 }
 
 // ============================================================================

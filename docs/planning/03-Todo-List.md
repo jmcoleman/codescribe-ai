@@ -388,18 +388,18 @@
 ### Afternoon Session (4 hours) - PRIORITY: HIGH
 
 #### Responsive Design Implementation
-- [ ] Update Header for mobile:
-  - [ ] Hide "Examples" and "Docs" links on <md
-  - [ ] Add hamburger menu
-  - [ ] Implement mobile dropdown
-- [ ] Update ControlBar for mobile:
-  - [ ] Stack controls vertically on <sm
-  - [ ] Shorten button labels
-  - [ ] Full-width generate button
-- [ ] Update split-panel layout:
-  - [ ] Side-by-side on >=lg (1024px)
-  - [ ] Stacked on <lg
-  - [ ] Fixed height (400px) on mobile
+- [X] Update Header for mobile:
+  - [X] Hide "Examples" and "Docs" links on <md
+  - [X] Add hamburger menu
+  - [X] Implement mobile dropdown
+- [X] Update ControlBar for mobile:
+  - [X] Stack controls vertically on <sm
+  - [X] Shorten button labels
+  - [X] Full-width generate button
+- [X] Update split-panel layout:
+  - [X] Side-by-side on >=lg (1024px)
+  - [X] Stacked on <lg
+  - [X] Fixed height (600px) on mobile
 - [ ] Test on 5 viewport sizes:
   - [ ] 375px (iPhone SE)
   - [ ] 768px (iPad)
