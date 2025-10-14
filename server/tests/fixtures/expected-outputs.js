@@ -102,69 +102,121 @@ module.exports = {
     end: expect.any(Number),
   },
 
-  // Sample excellent documentation
-  excellentDocumentation: `# MyProject
+  // Sample excellent documentation (matches classExample code)
+  excellentDocumentation: `# UserService
 
-A comprehensive tool for managing tasks efficiently with a simple API.
+A comprehensive service class for managing user data with async database operations.
 
 ## Installation
 
 \`\`\`bash
-npm install myproject
+npm install user-service
 \`\`\`
 
 ## Usage
 
 \`\`\`javascript
-const myproject = require('myproject');
+const UserService = require('user-service');
 
-// Initialize the project
-myproject.init({
-  apiKey: 'your-api-key',
-  debug: true
+// Initialize with database connection
+const userService = new UserService(db);
+
+// Fetch a user by ID
+const user = await userService.getUser('user-123');
+
+// Create a new user
+const newUser = await userService.createUser({
+  email: 'user@example.com',
+  name: 'John Doe'
 });
-
-// Run the main functionality
-await myproject.run();
 \`\`\`
 
 ## API Reference
 
-### init(options)
+### constructor(db)
 
-Initializes the project with configuration options.
+Creates a new UserService instance with a database connection.
 
 **Parameters:**
-- \`options\` (Object) - Configuration object
-  - \`apiKey\` (string) - Your API key
-  - \`debug\` (boolean) - Enable debug mode
+- \`db\` (Object) - Database connection object
 
-**Returns:** \`void\`
+**Returns:** \`UserService\`
 
 **Example:**
 \`\`\`javascript
-myproject.init({ apiKey: 'abc123', debug: false });
+const userService = new UserService(database);
 \`\`\`
 
-### run()
+### getUser(id)
 
-Executes the main functionality.
+Retrieves a user by their ID from the database.
 
-**Parameters:** None
+**Parameters:**
+- \`id\` (string) - User ID to fetch
+
+**Returns:** \`Promise<Object>\` - User object
+
+**Throws:** Error if user ID is not provided
+
+**Example:**
+\`\`\`javascript
+const user = await userService.getUser('user-123');
+\`\`\`
+
+### createUser(data)
+
+Creates a new user in the database.
+
+**Parameters:**
+- \`data\` (Object) - User data
+  - \`email\` (string) - Required user email
+  - other user properties
+
+**Returns:** \`Promise<Object>\` - Created user object
+
+**Throws:** Error if email is not provided
+
+**Example:**
+\`\`\`javascript
+const user = await userService.createUser({ email: 'test@example.com' });
+\`\`\`
+
+### updateUser(id, data)
+
+Updates an existing user's information.
+
+**Parameters:**
+- \`id\` (string) - User ID to update
+- \`data\` (Object) - Updated user data
+
+**Returns:** \`Promise<Object>\` - Updated user object
+
+**Example:**
+\`\`\`javascript
+const updated = await userService.updateUser('user-123', { name: 'Jane' });
+\`\`\`
+
+### deleteUser(id)
+
+Deletes a user from the database.
+
+**Parameters:**
+- \`id\` (string) - User ID to delete
 
 **Returns:** \`Promise<void>\`
 
 **Example:**
 \`\`\`javascript
-await myproject.run();
+await userService.deleteUser('user-123');
 \`\`\`
 
 ## Features
 
-- Fast and efficient
-- Easy to use API
-- Well documented
-- Actively maintained
+- Async/await database operations
+- Error handling for missing required fields
+- CRUD operations for user management
+- Promise-based API
+- Well documented methods
 
 ## License
 

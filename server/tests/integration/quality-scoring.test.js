@@ -21,6 +21,16 @@ describe('Quality Scoring Integration', () => {
       const documentation = expectedOutputs.excellentDocumentation;
       const qualityScore = calculateQualityScore(documentation, codeAnalysis);
 
+      // Debug: Log what we got
+      if (qualityScore.score <= 50 || qualityScore.grade === 'F') {
+        console.log('DEBUG: Quality Score Details:');
+        console.log('Score:', qualityScore.score);
+        console.log('Grade:', qualityScore.grade);
+        console.log('Breakdown:', JSON.stringify(qualityScore.breakdown, null, 2));
+        console.log('Functions in code:', codeAnalysis.functions.map(f => f.name));
+        console.log('Classes in code:', codeAnalysis.classes.map(c => c.name));
+      }
+
       expect(qualityScore).toBeValidQualityScore();
       expect(qualityScore.score).toBeGreaterThan(50);
       expect(qualityScore.grade).toMatch(/A|B|C/);
@@ -159,6 +169,14 @@ Normalizes a single data item.
 `;
 
       const qualityScore = calculateQualityScore(goodDoc, codeAnalysis);
+
+      // Debug: check what we're getting
+      if (qualityScore.breakdown.apiDocs.coveragePercent <= 75) {
+        console.log('DEBUG complex code test:');
+        console.log('Classes:', codeAnalysis.classes.map(c => ({ name: c.name, methods: c.methods.map(m => m.name) })));
+        console.log('Functions:', codeAnalysis.functions.map(f => f.name));
+        console.log('API Coverage:', qualityScore.breakdown.apiDocs);
+      }
 
       expect(qualityScore.score).toBeGreaterThanOrEqual(85);
       expect(qualityScore.grade).toMatch(/A|B/);

@@ -69,4 +69,6 @@ class ClaudeClient {
   }
 }
 
+// Export both the class (for testing) and a singleton instance (for use)
+export { ClaudeClient };
 export default new ClaudeClient();
