@@ -144,7 +144,7 @@ export function DocPanel({
               aria-expanded={isExpanded}
               aria-controls="quality-report-details"
               aria-label={isExpanded ? "Hide full quality report" : "Show full quality report"}
-              className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-700 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 rounded px-2 py-1"
+              className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 rounded px-2 py-1"
             >
               <span className="font-medium">View full report</span>
               {isExpanded ? (
