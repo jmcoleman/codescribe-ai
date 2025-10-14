@@ -459,18 +459,43 @@ POST /api/upload
 {
   "success": false,
   "error": "Invalid file type",
-  "message": "Only .js, .jsx, .ts, .tsx, .py files are allowed",
-  "acceptedTypes": [".js", ".jsx", ".ts", ".tsx", ".py"]
+  "message": "Invalid file type. Allowed: .js, .jsx, .ts, .tsx, .py, .java, .cpp, .c, .h, .hpp, .cs, .go, .rs, .rb, .php, .txt"
 }
 ```
 
-**413 Payload Too Large:**
+**400 Bad Request - File Too Large:**
 ```json
 {
   "success": false,
   "error": "File too large",
-  "message": "Maximum file size is 500KB",
-  "maxSize": "500KB"
+  "message": "Maximum file size is 500KB"
+}
+```
+
+**400 Bad Request - Empty File:**
+```json
+{
+  "success": false,
+  "error": "Empty file",
+  "message": "The uploaded file is empty. Please upload a file with content."
+}
+```
+
+**400 Bad Request - Empty Content:**
+```json
+{
+  "success": false,
+  "error": "Empty content",
+  "message": "The uploaded file contains no meaningful content."
+}
+```
+
+**400 Bad Request - Content Too Large:**
+```json
+{
+  "success": false,
+  "error": "File content too large",
+  "message": "Maximum file content is 100,000 characters"
 }
 ```
 
@@ -485,13 +510,24 @@ const upload = multer({
     fileSize: 500 * 1024 // 500KB
   },
   fileFilter: (req, file, cb) => {
-    const allowedExtensions = ['.js', '.jsx', '.ts', '.tsx', '.py'];
+    const allowedExtensions = [
+      '.js', '.jsx', '.ts', '.tsx',  // JavaScript/TypeScript
+      '.py',                          // Python
+      '.java',                        // Java
+      '.cpp', '.c', '.h', '.hpp',    // C/C++
+      '.cs',                          // C#
+      '.go',                          // Go
+      '.rs',                          // Rust
+      '.rb',                          // Ruby
+      '.php',                         // PHP
+      '.txt'                          // Plain text
+    ];
     const ext = path.extname(file.originalname).toLowerCase();
-    
+
     if (allowedExtensions.includes(ext)) {
       cb(null, true);
     } else {
-      cb(new Error('Invalid file type'));
+      cb(new Error(`Invalid file type. Allowed: ${allowedExtensions.join(', ')}`));
     }
   }
 });
@@ -506,7 +542,35 @@ router.post('/upload', upload.single('file'), async (req, res) => {
       });
     }
 
+    // Validate file is not empty
+    if (req.file.size === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Empty file',
+        message: 'The uploaded file is empty. Please upload a file with content.'
+      });
+    }
+
+    // Convert buffer to string and validate content
     const content = req.file.buffer.toString('utf-8');
+
+    // Additional validation: ensure content is not just whitespace
+    if (!content.trim()) {
+      return res.status(400).json({
+        success: false,
+        error: 'Empty content',
+        message: 'The uploaded file contains no meaningful content.'
+      });
+    }
+
+    // Validate content length (same as code input validation)
+    if (content.length > 100000) {
+      return res.status(400).json({
+        success: false,
+        error: 'File content too large',
+        message: 'Maximum file content is 100,000 characters'
+      });
+    }
 
     res.json({
       success: true,
@@ -527,6 +591,20 @@ router.post('/upload', upload.single('file'), async (req, res) => {
   }
 });
 ```
+
+**Validation Layers:**
+
+The backend performs comprehensive validation in multiple layers:
+
+1. **File Extension (Multer fileFilter)** - Rejects invalid file types immediately
+2. **File Size (Multer limits)** - Enforces 500KB maximum binary size
+3. **Empty File Check** - Rejects files with 0 bytes
+4. **Content Validation** - Ensures content is not just whitespace
+5. **Content Length** - Enforces 100,000 character maximum (same as code input)
+
+**Note on Client-Side Validation:**
+
+While the backend performs all necessary validation, the frontend also implements client-side validation for better UX. This provides immediate feedback to users without requiring a server round-trip. However, all validation is **always re-performed on the backend** for security, as client-side validation can be bypassed.
 
 ---
 
