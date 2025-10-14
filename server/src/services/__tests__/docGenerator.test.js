@@ -128,7 +128,8 @@ function greet(name) {
 
       expect(calculateQualityScore).toHaveBeenCalledWith(
         mockDocumentation,
-        mockAnalysis
+        mockAnalysis,
+        'README'
       );
     });
 
