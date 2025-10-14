@@ -59,11 +59,16 @@ export class DocGeneratorService {
    * @returns {string} Formatted prompt
    */
   buildPrompt(code, analysis, docType, language) {
+    // Format exports (handle both string arrays and object arrays)
+    const exportsStr = analysis.exports.length > 0
+      ? analysis.exports.map(e => typeof e === 'string' ? e : e.name).join(', ')
+      : 'None';
+
     const baseContext = `
 Language: ${language}
 Functions detected: ${analysis.functions.length}
 Classes detected: ${analysis.classes.length}
-Exports: ${analysis.exports.join(', ') || 'None'}
+Exports: ${exportsStr}
 Complexity: ${analysis.complexity || 'Unknown'}
 `;
 
