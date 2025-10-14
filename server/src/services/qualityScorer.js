@@ -1,4 +1,4 @@
-export function calculateQualityScore(documentation, codeAnalysis) {
+export function calculateQualityScore(documentation, codeAnalysis, docType = 'README') {
   let score = 0;
   const breakdown = {};
 
@@ -17,12 +17,14 @@ export function calculateQualityScore(documentation, codeAnalysis) {
     breakdown.overview = {
       present: true,
       points: 20,
+      maxPoints: 20,
       status: 'complete'
     };
   } else {
     breakdown.overview = {
       present: false,
       points: 0,
+      maxPoints: 20,
       status: 'missing',
       suggestion: 'Add an overview section describing what the code does'
     };
@@ -35,15 +37,17 @@ export function calculateQualityScore(documentation, codeAnalysis) {
   
   if (hasInstallation) {
     score += 15;
-    breakdown.installation = { 
-      present: true, 
+    breakdown.installation = {
+      present: true,
       points: 15,
+      maxPoints: 15,
       status: 'complete'
     };
   } else {
-    breakdown.installation = { 
-      present: false, 
+    breakdown.installation = {
+      present: false,
       points: 0,
+      maxPoints: 15,
       status: 'missing',
       suggestion: 'Add installation or setup instructions'
     };
@@ -70,10 +74,11 @@ export function calculateQualityScore(documentation, codeAnalysis) {
   }
 
   score += examplePoints;
-  breakdown.examples = { 
-    present: exampleCount > 0, 
+  breakdown.examples = {
+    present: exampleCount > 0,
     count: exampleCount,
     points: examplePoints,
+    maxPoints: 20,
     status: exampleStatus,
     suggestion: exampleSuggestion
   };
@@ -99,11 +104,12 @@ export function calculateQualityScore(documentation, codeAnalysis) {
     apiSuggestion = `Document remaining functions (${functionsCovered}/${totalFunctions} covered)`;
   }
 
-  breakdown.apiDocs = { 
-    present: apiPoints > 0, 
+  breakdown.apiDocs = {
+    present: apiPoints > 0,
     coverage: `${functionsCovered}/${totalFunctions}`,
     coveragePercent: Math.round(coverageRatio * 100),
     points: apiPoints,
+    maxPoints: 25,
     status: apiStatus,
     suggestion: apiSuggestion
   };
@@ -132,12 +138,13 @@ export function calculateQualityScore(documentation, codeAnalysis) {
   }
 
   score += structurePoints;
-  breakdown.structure = { 
-    present: headerCount > 0, 
+  breakdown.structure = {
+    present: headerCount > 0,
     headers: headerCount,
     hasCodeBlocks,
     hasBulletPoints,
     points: structurePoints,
+    maxPoints: 20,
     status: structureStatus,
     suggestion: structureSuggestion
   };
@@ -149,7 +156,8 @@ export function calculateQualityScore(documentation, codeAnalysis) {
     score,
     grade,
     breakdown,
-    summary: generateSummary(score, breakdown)
+    summary: generateSummary(score, breakdown),
+    docType
   };
 }
 

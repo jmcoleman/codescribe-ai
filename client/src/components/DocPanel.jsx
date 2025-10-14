@@ -179,7 +179,7 @@ export function DocPanel({
                         return (
                           <li key={key} className="text-xs text-slate-600">
                             <span className="font-medium text-slate-700">
-                              {formatCriteriaName(key)}:
+                              {formatCriteriaName(key, qualityScore.docType)}:
                             </span>{' '}
                             {criteria?.suggestion || 'Well done!'}
                           </li>
@@ -202,7 +202,7 @@ export function DocPanel({
                         return (
                           <li key={key} className="text-xs text-slate-600">
                             <span className="font-medium text-slate-700">
-                              {formatCriteriaName(key)}:
+                              {formatCriteriaName(key, qualityScore.docType)}:
                             </span>{' '}
                             {criteria?.suggestion || 'Consider improving this section'}
                           </li>
@@ -232,13 +232,32 @@ function getGradeColor(grade) {
   }
 }
 
-function formatCriteriaName(key) {
-  const names = {
-    overview: 'Overview',
-    installation: 'Installation',
-    examples: 'Usage Examples',
-    apiDocs: 'API Documentation',
-    structure: 'Structure & Formatting',
+function formatCriteriaName(key, docType = 'README') {
+  // Context-aware names based on document type
+  const nameMap = {
+    'README': {
+      overview: 'Overview',
+      installation: 'Installation',
+      examples: 'Usage Examples',
+      apiDocs: 'API Documentation',
+      structure: 'Structure & Formatting',
+    },
+    'JSDOC': {
+      overview: 'Overview',
+      installation: 'Installation',
+      examples: 'Usage Examples',
+      apiDocs: 'JSDoc Comments',
+      structure: 'Structure & Formatting',
+    },
+    'API': {
+      overview: 'Overview',
+      installation: 'Installation',
+      examples: 'Usage Examples',
+      apiDocs: 'API Endpoints',
+      structure: 'Structure & Formatting',
+    },
   };
+
+  const names = nameMap[docType] || nameMap['README'];
   return names[key] || key;
 }
