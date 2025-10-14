@@ -33,6 +33,7 @@ function App() {
 
   const handleGenerate = () => {
     if (code.trim()) {
+      setShowQualityModal(false); // Close modal when starting new generation
       generate(code, docType, 'javascript');
     }
   };

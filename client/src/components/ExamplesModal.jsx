@@ -1,9 +1,53 @@
 import { X, Code2, ChevronRight } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { codeExamples } from '../data/examples';
 
 export function ExamplesModal({ isOpen, onClose, onLoadExample }) {
   const [selectedExample, setSelectedExample] = useState(null);
+  const modalRef = useRef(null);
+  const closeButtonRef = useRef(null);
+
+  // Focus management: auto-focus close button when modal opens
+  useEffect(() => {
+    if (isOpen && closeButtonRef.current) {
+      closeButtonRef.current.focus();
+    }
+  }, [isOpen]);
+
+  // Focus trap: keep focus within modal
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e) => {
+      // Close on Escape key
+      if (e.key === 'Escape') {
+        onClose();
+        return;
+      }
+
+      // Focus trap on Tab
+      if (e.key === 'Tab' && modalRef.current) {
+        const focusableElements = modalRef.current.querySelectorAll(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+
+        if (e.shiftKey && document.activeElement === firstElement) {
+          // Shift+Tab on first element: go to last
+          e.preventDefault();
+          lastElement?.focus();
+        } else if (!e.shiftKey && document.activeElement === lastElement) {
+          // Tab on last element: go to first
+          e.preventDefault();
+          firstElement?.focus();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -13,20 +57,24 @@ export function ExamplesModal({ isOpen, onClose, onLoadExample }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+      <div
+        ref={modalRef}
+        className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+      >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-slate-200">
-          <div className="flex items-center gap-2">
-            <Code2 className="w-5 h-5 text-purple-600" />
-            <h2 className="text-lg font-semibold text-slate-900">Code Examples</h2>
-          </div>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+          <h2 id="modal-title" className="text-lg font-semibold text-slate-900">Code Examples</h2>
           <button
+            ref={closeButtonRef}
             onClick={onClose}
-            className="p-1 hover:bg-slate-100 rounded transition-colors"
+            className="p-2 hover:bg-purple-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
             aria-label="Close examples modal"
           >
-            <X className="w-5 h-5 text-slate-600" />
+            <X className="w-5 h-5 text-slate-600 hover:text-purple-600 transition-colors" />
           </button>
         </div>
 
@@ -34,11 +82,11 @@ export function ExamplesModal({ isOpen, onClose, onLoadExample }) {
         <div className="grid grid-cols-1 md:grid-cols-2 h-[calc(90vh-120px)]">
           {/* Left: Example List */}
           <div className="border-r border-slate-200 overflow-y-auto">
-            <div className="p-4">
+            <div className="p-6">
               <p className="text-sm text-slate-600 mb-4">
-                Click a card to preview • Click <ChevronRight className="w-3.5 h-3.5 inline mx-0.5 -mt-0.5" /> to load
+                Click a card to preview • Click <ChevronRight className="w-3.5 h-3.5 inline mx-0.5" /> to load
               </p>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {codeExamples.map((example) => (
                   <ExampleCard
                     key={example.id}
@@ -74,28 +122,40 @@ export function ExamplesModal({ isOpen, onClose, onLoadExample }) {
 }
 
 function ExampleCard({ example, isSelected, onPreview, onLoad }) {
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onPreview();
+    }
+  };
+
   return (
     <div
-      className={`p-3 rounded-lg border-2 transition-all cursor-pointer ${
+      className={`p-4 rounded-lg border transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${
         isSelected
-          ? 'border-purple-500 bg-purple-50'
-          : 'border-slate-200 bg-white hover:border-purple-300 hover:bg-purple-50/50'
+          ? 'border-purple-500 bg-purple-50 shadow-sm'
+          : 'border-slate-200 bg-white hover:border-purple-300 hover:bg-purple-50/50 hover:shadow-sm'
       }`}
       onClick={onPreview}
+      onKeyDown={handleKeyDown}
+      tabIndex={0}
+      role="button"
+      aria-pressed={isSelected}
+      aria-label={`Preview ${example.title} example`}
     >
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex-1">
-          <h3 className="text-sm font-semibold text-slate-900 mb-1">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <h3 className="text-sm font-semibold text-slate-900 mb-1.5">
             {example.title}
           </h3>
-          <p className="text-xs text-slate-600 line-clamp-2">
+          <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed mb-3">
             {example.description}
           </p>
-          <div className="flex items-center gap-2 mt-2">
-            <span className="text-xs px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded font-medium">
+          <div className="flex items-center gap-2">
+            <span className="text-xs px-2 py-1 bg-indigo-100 text-indigo-700 rounded-md font-medium">
               {example.docType}
             </span>
-            <span className="text-xs px-2 py-0.5 bg-slate-100 text-slate-600 rounded font-medium">
+            <span className="text-xs px-2 py-1 bg-slate-100 text-slate-600 rounded-md font-medium">
               {example.language}
             </span>
           </div>
@@ -107,7 +167,7 @@ function ExampleCard({ example, isSelected, onPreview, onLoad }) {
             e.stopPropagation();
             onLoad();
           }}
-          className="flex-shrink-0 p-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors"
+          className="flex-shrink-0 p-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 shadow-sm hover:shadow"
           aria-label={`Load ${example.title} example`}
           title="Load into editor"
         >
@@ -122,10 +182,10 @@ function ExamplePreview({ example, onLoad }) {
   return (
     <div className="flex flex-col h-full">
       {/* Action Button */}
-      <div className="p-4 border-b border-slate-200">
+      <div className="p-6 border-b border-slate-200 bg-white">
         <button
           onClick={onLoad}
-          className="w-full px-4 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium text-sm shadow-sm"
+          className="w-full px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all font-semibold text-sm shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
         >
           Load This Example
         </button>
@@ -133,8 +193,8 @@ function ExamplePreview({ example, onLoad }) {
 
       {/* Code Preview */}
       <div className="flex-1 overflow-y-auto">
-        <div className="p-4">
-          <pre className="text-xs font-mono text-slate-800 leading-relaxed bg-slate-50 p-4 rounded-lg border border-slate-200">
+        <div className="p-6">
+          <pre className="text-xs font-mono text-slate-800 leading-relaxed bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
             <code>{example.code}</code>
           </pre>
         </div>

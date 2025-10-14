@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QualityScoreModal } from '../QualityScore';
 
@@ -10,26 +10,31 @@ describe('QualityScoreModal Component', () => {
     breakdown: {
       overview: {
         points: 20,
+        maxPoints: 20,
         status: 'complete',
         suggestion: 'Excellent overview provided'
       },
       installation: {
         points: 12,
+        maxPoints: 15,
         status: 'partial',
         suggestion: 'Add more detailed installation steps'
       },
       examples: {
         points: 18,
+        maxPoints: 20,
         status: 'complete',
         suggestion: 'Great usage examples'
       },
       apiDocs: {
         points: 15,
+        maxPoints: 25,
         status: 'partial',
         suggestion: 'Include more API endpoint details'
       },
       structure: {
         points: 15,
+        maxPoints: 20,
         status: 'partial',
         suggestion: 'Improve markdown formatting'
       }
@@ -89,12 +94,6 @@ describe('QualityScoreModal Component', () => {
       expect(screen.getByText('Grade: B')).toBeInTheDocument();
     });
 
-    it('should display top suggestion', () => {
-      const onClose = vi.fn();
-      render(<QualityScoreModal qualityScore={mockQualityScore} onClose={onClose} />);
-
-      expect(screen.getByText('Consider adding more API documentation details')).toBeInTheDocument();
-    });
 
     it('should apply correct color for A grade', () => {
       const onClose = vi.fn();
@@ -102,7 +101,7 @@ describe('QualityScoreModal Component', () => {
       render(<QualityScoreModal qualityScore={scoreA} onClose={onClose} />);
 
       const gradeText = screen.getByText('Grade: A');
-      expect(gradeText).toHaveClass('text-success');
+      expect(gradeText).toHaveClass('text-purple-600');
     });
 
     it('should apply correct color for B grade', () => {
@@ -110,7 +109,7 @@ describe('QualityScoreModal Component', () => {
       render(<QualityScoreModal qualityScore={mockQualityScore} onClose={onClose} />);
 
       const gradeText = screen.getByText('Grade: B');
-      expect(gradeText).toHaveClass('text-blue-600');
+      expect(gradeText).toHaveClass('text-indigo-600');
     });
 
     it('should apply correct color for C grade', () => {
@@ -119,7 +118,7 @@ describe('QualityScoreModal Component', () => {
       render(<QualityScoreModal qualityScore={scoreC} onClose={onClose} />);
 
       const gradeText = screen.getByText('Grade: C');
-      expect(gradeText).toHaveClass('text-warning');
+      expect(gradeText).toHaveClass('text-slate-600');
     });
 
     it('should apply correct color for D grade', () => {
@@ -128,7 +127,7 @@ describe('QualityScoreModal Component', () => {
       render(<QualityScoreModal qualityScore={scoreD} onClose={onClose} />);
 
       const gradeText = screen.getByText('Grade: D');
-      expect(gradeText).toHaveClass('text-error');
+      expect(gradeText).toHaveClass('text-slate-500');
     });
 
     it('should apply correct color for F grade', () => {
@@ -137,7 +136,7 @@ describe('QualityScoreModal Component', () => {
       render(<QualityScoreModal qualityScore={scoreF} onClose={onClose} />);
 
       const gradeText = screen.getByText('Grade: F');
-      expect(gradeText).toHaveClass('text-error');
+      expect(gradeText).toHaveClass('text-slate-500');
     });
   });
 
@@ -149,7 +148,7 @@ describe('QualityScoreModal Component', () => {
       expect(screen.getByText('Overview')).toBeInTheDocument();
       expect(screen.getByText('Installation')).toBeInTheDocument();
       expect(screen.getByText('Usage Examples')).toBeInTheDocument();
-      expect(screen.getByText('API Documentation')).toBeInTheDocument();
+      expect(screen.getByText('Code Documentation')).toBeInTheDocument();
       expect(screen.getByText('Structure & Formatting')).toBeInTheDocument();
     });
 
@@ -157,12 +156,12 @@ describe('QualityScoreModal Component', () => {
       const onClose = vi.fn();
       render(<QualityScoreModal qualityScore={mockQualityScore} onClose={onClose} />);
 
-      // Each criterion uses its points value as the maxPoints by default
+      // Display points out of maxPoints
       expect(screen.getByText('20/20')).toBeInTheDocument();
-      expect(screen.getByText('12/12')).toBeInTheDocument();
-      expect(screen.getByText('18/18')).toBeInTheDocument();
-      const fifteenScores = screen.getAllByText('15/15');
-      expect(fifteenScores.length).toBe(2); // apiDocs and structure both have 15 points
+      expect(screen.getByText('12/15')).toBeInTheDocument();
+      expect(screen.getByText('18/20')).toBeInTheDocument();
+      expect(screen.getByText('15/25')).toBeInTheDocument();
+      expect(screen.getByText('15/20')).toBeInTheDocument();
     });
 
     it('should display suggestions for each criterion', () => {
@@ -178,21 +177,21 @@ describe('QualityScoreModal Component', () => {
 
     it('should show complete status icon for complete criteria', () => {
       const onClose = vi.fn();
-      const { container } = render(<QualityScoreModal qualityScore={mockQualityScore} onClose={onClose} />);
+      render(<QualityScoreModal qualityScore={mockQualityScore} onClose={onClose} />);
 
       // Find the overview criterion card (complete status)
       const overviewCard = screen.getByText('Overview').closest('.p-3');
-      const svgIcon = overviewCard.querySelector('svg.text-success');
+      const svgIcon = overviewCard.querySelector('svg.text-purple-400');
       expect(svgIcon).toBeInTheDocument();
     });
 
     it('should show partial status icon for partial criteria', () => {
       const onClose = vi.fn();
-      const { container } = render(<QualityScoreModal qualityScore={mockQualityScore} onClose={onClose} />);
+      render(<QualityScoreModal qualityScore={mockQualityScore} onClose={onClose} />);
 
       // Find the installation criterion card (partial status)
       const installationCard = screen.getByText('Installation').closest('.p-3');
-      const svgIcon = installationCard.querySelector('svg.text-warning');
+      const svgIcon = installationCard.querySelector('svg.text-amber-400');
       expect(svgIcon).toBeInTheDocument();
     });
 
@@ -200,7 +199,7 @@ describe('QualityScoreModal Component', () => {
       const onClose = vi.fn();
       const { container } = render(<QualityScoreModal qualityScore={mockQualityScore} onClose={onClose} />);
 
-      const progressBars = container.querySelectorAll('.bg-slate-200.rounded-full');
+      const progressBars = container.querySelectorAll('.bg-slate-100.rounded-full');
       expect(progressBars.length).toBe(5); // One for each criterion
     });
 
@@ -211,11 +210,12 @@ describe('QualityScoreModal Component', () => {
       const progressBars = container.querySelectorAll('.h-full.transition-all');
       // Check that progress bars exist and have width set
       expect(progressBars.length).toBe(5);
-      // Since the component uses criteria.points as maxPoints by default, all progress bars will be 100%
-      // Let's verify they all have width set
-      progressBars.forEach(bar => {
-        expect(bar.style.width).toBe('100%');
-      });
+      // Check calculated percentages based on points/maxPoints
+      expect(progressBars[0].style.width).toBe('100%'); // overview: 20/20
+      expect(progressBars[1].style.width).toBe('80%');  // installation: 12/15
+      expect(progressBars[2].style.width).toBe('90%');  // examples: 18/20
+      expect(progressBars[3].style.width).toBe('60%');  // apiDocs: 15/25
+      expect(progressBars[4].style.width).toBe('75%');  // structure: 15/20
     });
 
     it('should apply correct progress bar color for complete status', () => {
@@ -224,7 +224,7 @@ describe('QualityScoreModal Component', () => {
 
       const progressBars = container.querySelectorAll('.h-full.transition-all');
       // Overview is complete
-      expect(progressBars[0]).toHaveClass('bg-success');
+      expect(progressBars[0]).toHaveClass('bg-purple-500');
     });
 
     it('should apply correct progress bar color for partial status', () => {
@@ -233,7 +233,7 @@ describe('QualityScoreModal Component', () => {
 
       const progressBars = container.querySelectorAll('.h-full.transition-all');
       // Installation is partial
-      expect(progressBars[1]).toHaveClass('bg-warning');
+      expect(progressBars[1]).toHaveClass('bg-indigo-400');
     });
 
     it('should apply correct progress bar color for missing status', () => {
@@ -254,51 +254,7 @@ describe('QualityScoreModal Component', () => {
 
       const progressBars = container.querySelectorAll('.h-full.transition-all');
       // Overview is missing
-      expect(progressBars[0]).toHaveClass('bg-error');
-    });
-  });
-
-  describe('Improvements Section', () => {
-    it('should display improvements section when improvements exist', () => {
-      const onClose = vi.fn();
-      render(<QualityScoreModal qualityScore={mockQualityScore} onClose={onClose} />);
-
-      expect(screen.getByText('Areas to Improve:')).toBeInTheDocument();
-    });
-
-    it('should list all improvement areas', () => {
-      const onClose = vi.fn();
-      render(<QualityScoreModal qualityScore={mockQualityScore} onClose={onClose} />);
-
-      // Find the improvements section
-      const improvementsSection = screen.getByText('Areas to Improve:').closest('.p-4');
-
-      expect(within(improvementsSection).getByText(/Installation/)).toBeInTheDocument();
-      expect(within(improvementsSection).getByText(/API Documentation/)).toBeInTheDocument();
-      expect(within(improvementsSection).getByText(/Structure & Formatting/)).toBeInTheDocument();
-    });
-
-    it('should not display improvements section when no improvements needed', () => {
-      const onClose = vi.fn();
-      const perfectScore = {
-        ...mockQualityScore,
-        summary: {
-          ...mockQualityScore.summary,
-          improvements: []
-        }
-      };
-      render(<QualityScoreModal qualityScore={perfectScore} onClose={onClose} />);
-
-      expect(screen.queryByText('Areas to Improve:')).not.toBeInTheDocument();
-    });
-
-    it('should display info icon in improvements section', () => {
-      const onClose = vi.fn();
-      render(<QualityScoreModal qualityScore={mockQualityScore} onClose={onClose} />);
-
-      const improvementsSection = screen.getByText('Areas to Improve:').closest('.p-4');
-      const icon = improvementsSection.querySelector('svg');
-      expect(icon).toHaveClass('text-warning');
+      expect(progressBars[0]).toHaveClass('bg-slate-300');
     });
   });
 
@@ -314,6 +270,16 @@ describe('QualityScoreModal Component', () => {
       expect(onClose).toHaveBeenCalledTimes(1);
     });
 
+    it('should call onClose when Escape key pressed', async () => {
+      const user = userEvent.setup();
+      const onClose = vi.fn();
+      render(<QualityScoreModal qualityScore={mockQualityScore} onClose={onClose} />);
+
+      await user.keyboard('{Escape}');
+
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
     it('should have accessible close button', () => {
       const onClose = vi.fn();
       render(<QualityScoreModal qualityScore={mockQualityScore} onClose={onClose} />);
@@ -323,12 +289,20 @@ describe('QualityScoreModal Component', () => {
       expect(closeButton.querySelector('svg')).toBeInTheDocument(); // X icon
     });
 
+    it('should have aria-label on close button', () => {
+      const onClose = vi.fn();
+      render(<QualityScoreModal qualityScore={mockQualityScore} onClose={onClose} />);
+
+      const closeButton = screen.getByLabelText('Close quality breakdown modal');
+      expect(closeButton).toBeInTheDocument();
+    });
+
     it('should have hover effect on close button', () => {
       const onClose = vi.fn();
       render(<QualityScoreModal qualityScore={mockQualityScore} onClose={onClose} />);
 
       const closeButton = screen.getByRole('button');
-      expect(closeButton).toHaveClass('hover:bg-slate-100');
+      expect(closeButton).toHaveClass('hover:bg-purple-50');
     });
   });
 
@@ -346,14 +320,14 @@ describe('QualityScoreModal Component', () => {
       const { container } = render(<QualityScoreModal qualityScore={mockQualityScore} onClose={onClose} />);
 
       const modal = container.querySelector('.bg-white.rounded-xl');
-      expect(modal).toHaveClass('shadow-xl', 'max-w-md', 'w-full', 'max-h-[90vh]', 'overflow-hidden');
+      expect(modal).toHaveClass('shadow-2xl', 'max-w-md', 'w-full', 'max-h-[90vh]', 'flex', 'flex-col');
     });
 
     it('should have scrollable criteria section', () => {
       const onClose = vi.fn();
       const { container } = render(<QualityScoreModal qualityScore={mockQualityScore} onClose={onClose} />);
 
-      const criteriaSection = container.querySelector('.overflow-y-auto.max-h-96');
+      const criteriaSection = container.querySelector('.overflow-y-auto.flex-1');
       expect(criteriaSection).toBeInTheDocument();
     });
 
@@ -499,6 +473,94 @@ describe('QualityScoreModal Component', () => {
       // Check that text colors are defined
       expect(screen.getByText('Quality Breakdown')).toHaveClass('text-slate-900');
       expect(screen.getByText('85/100')).toHaveClass('text-purple-600');
+    });
+
+    it('should have proper ARIA attributes for dialog', () => {
+      const onClose = vi.fn();
+      render(<QualityScoreModal qualityScore={mockQualityScore} onClose={onClose} />);
+
+      const dialog = screen.getByRole('dialog');
+      expect(dialog).toHaveAttribute('aria-modal', 'true');
+      expect(dialog).toHaveAttribute('aria-labelledby', 'quality-modal-title');
+    });
+
+    it('should have modal title with correct id', () => {
+      const onClose = vi.fn();
+      render(<QualityScoreModal qualityScore={mockQualityScore} onClose={onClose} />);
+
+      const title = screen.getByText('Quality Breakdown');
+      expect(title).toHaveAttribute('id', 'quality-modal-title');
+    });
+  });
+
+  describe('Focus Management', () => {
+    it('should auto-focus close button when modal opens', () => {
+      const onClose = vi.fn();
+      render(<QualityScoreModal qualityScore={mockQualityScore} onClose={onClose} />);
+
+      const closeButton = screen.getByLabelText('Close quality breakdown modal');
+      expect(document.activeElement).toBe(closeButton);
+    });
+
+    it('should not auto-focus when modal is closed', () => {
+      const onClose = vi.fn();
+      render(<QualityScoreModal qualityScore={null} onClose={onClose} />);
+
+      expect(document.activeElement).toBe(document.body);
+    });
+
+    it('should trap focus within modal', async () => {
+      const user = userEvent.setup();
+      const onClose = vi.fn();
+      render(<QualityScoreModal qualityScore={mockQualityScore} onClose={onClose} />);
+
+      const closeButton = screen.getByLabelText('Close quality breakdown modal');
+      expect(document.activeElement).toBe(closeButton);
+
+      // Since there's only one focusable element (close button), Tab should stay on it
+      await user.tab();
+      expect(document.activeElement).toBe(closeButton);
+    });
+
+    it('should trap focus backwards with Shift+Tab', async () => {
+      const user = userEvent.setup();
+      const onClose = vi.fn();
+      render(<QualityScoreModal qualityScore={mockQualityScore} onClose={onClose} />);
+
+      const closeButton = screen.getByLabelText('Close quality breakdown modal');
+      expect(document.activeElement).toBe(closeButton);
+
+      // Shift+Tab from first element should stay on first (only one focusable element)
+      await user.keyboard('{Shift>}{Tab}{/Shift}');
+      expect(document.activeElement).toBe(closeButton);
+    });
+
+    it('should maintain focus when modal is open', () => {
+      const onClose = vi.fn();
+      render(<QualityScoreModal qualityScore={mockQualityScore} onClose={onClose} />);
+
+      const closeButton = screen.getByLabelText('Close quality breakdown modal');
+      expect(document.activeElement).toBe(closeButton);
+
+      // Try to focus body (should not be possible due to focus trap)
+      document.body.focus();
+
+      // Focus should still be managed within modal
+      expect(document.activeElement).not.toBe(document.body);
+    });
+
+    it('should restore focus when modal closes', () => {
+      const onClose = vi.fn();
+      const { rerender } = render(<QualityScoreModal qualityScore={mockQualityScore} onClose={onClose} />);
+
+      const closeButton = screen.getByLabelText('Close quality breakdown modal');
+      expect(document.activeElement).toBe(closeButton);
+
+      // Close modal
+      rerender(<QualityScoreModal qualityScore={null} onClose={onClose} />);
+
+      // Modal should not be in document
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
   });
 

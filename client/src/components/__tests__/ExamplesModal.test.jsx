@@ -239,6 +239,15 @@ describe('ExamplesModal', () => {
 
       expect(mockOnClose).toHaveBeenCalledTimes(1);
     });
+
+    it('should close modal when pressing Escape key', async () => {
+      const user = userEvent.setup();
+      render(<ExamplesModal {...defaultProps} />);
+
+      await user.keyboard('{Escape}');
+
+      expect(mockOnClose).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('Accessibility', () => {
@@ -260,6 +269,245 @@ describe('ExamplesModal', () => {
 
       const loadButtons = screen.getAllByTitle('Load into editor');
       expect(loadButtons.length).toBe(codeExamples.length);
+    });
+
+    it('should have proper aria labels for example cards', () => {
+      render(<ExamplesModal {...defaultProps} />);
+
+      codeExamples.forEach(example => {
+        expect(screen.getByLabelText(`Preview ${example.title} example`)).toBeInTheDocument();
+      });
+    });
+
+    it('should have role="button" on example cards', () => {
+      render(<ExamplesModal {...defaultProps} />);
+
+      const firstExample = codeExamples[0];
+      const card = screen.getByLabelText(`Preview ${firstExample.title} example`);
+
+      expect(card).toHaveAttribute('role', 'button');
+    });
+
+    it('should have aria-pressed attribute on example cards', () => {
+      render(<ExamplesModal {...defaultProps} />);
+
+      const firstExample = codeExamples[0];
+      const card = screen.getByLabelText(`Preview ${firstExample.title} example`);
+
+      expect(card).toHaveAttribute('aria-pressed', 'false');
+    });
+
+    it('should update aria-pressed when card is selected', async () => {
+      const user = userEvent.setup();
+      render(<ExamplesModal {...defaultProps} />);
+
+      const firstExample = codeExamples[0];
+      const card = screen.getByLabelText(`Preview ${firstExample.title} example`);
+
+      await user.click(card);
+
+      expect(card).toHaveAttribute('aria-pressed', 'true');
+    });
+  });
+
+  describe('Keyboard Navigation', () => {
+    it('should make example cards keyboard focusable', () => {
+      render(<ExamplesModal {...defaultProps} />);
+
+      codeExamples.forEach(example => {
+        const card = screen.getByLabelText(`Preview ${example.title} example`);
+        expect(card).toHaveAttribute('tabIndex', '0');
+      });
+    });
+
+    it('should preview example when pressing Enter on card', async () => {
+      const user = userEvent.setup();
+      render(<ExamplesModal {...defaultProps} />);
+
+      const firstExample = codeExamples[0];
+      const card = screen.getByLabelText(`Preview ${firstExample.title} example`);
+
+      card.focus();
+      await user.keyboard('{Enter}');
+
+      expect(screen.getByText('Load This Example')).toBeInTheDocument();
+      expect(card).toHaveAttribute('aria-pressed', 'true');
+    });
+
+    it('should preview example when pressing Space on card', async () => {
+      const user = userEvent.setup();
+      render(<ExamplesModal {...defaultProps} />);
+
+      const firstExample = codeExamples[0];
+      const card = screen.getByLabelText(`Preview ${firstExample.title} example`);
+
+      card.focus();
+      await user.keyboard(' ');
+
+      expect(screen.getByText('Load This Example')).toBeInTheDocument();
+      expect(card).toHaveAttribute('aria-pressed', 'true');
+    });
+
+    it('should navigate between cards using Tab key', async () => {
+      const user = userEvent.setup();
+      render(<ExamplesModal {...defaultProps} />);
+
+      const firstCard = screen.getByLabelText(`Preview ${codeExamples[0].title} example`);
+      const secondCard = screen.getByLabelText(`Preview ${codeExamples[1].title} example`);
+
+      firstCard.focus();
+      expect(document.activeElement).toBe(firstCard);
+
+      // Tab to next element (should be the load button for first card, then second card)
+      await user.tab();
+      await user.tab();
+
+      expect(document.activeElement).toBe(secondCard);
+    });
+
+    it('should show focus ring on example cards', () => {
+      render(<ExamplesModal {...defaultProps} />);
+
+      const firstExample = codeExamples[0];
+      const card = screen.getByLabelText(`Preview ${firstExample.title} example`);
+
+      // Check if focus styles are present
+      expect(card.className).toContain('focus:outline-none');
+      expect(card.className).toContain('focus:ring-2');
+      expect(card.className).toContain('focus:ring-purple-500');
+    });
+
+    it('should allow keyboard navigation through entire modal', async () => {
+      const user = userEvent.setup();
+      render(<ExamplesModal {...defaultProps} />);
+
+      // Start from close button
+      const closeButton = screen.getByLabelText('Close examples modal');
+      closeButton.focus();
+      expect(document.activeElement).toBe(closeButton);
+
+      // Tab through cards
+      await user.tab();
+      const firstCard = screen.getByLabelText(`Preview ${codeExamples[0].title} example`);
+      expect(document.activeElement).toBe(firstCard);
+    });
+
+    it('should prevent default space key behavior to avoid page scroll', async () => {
+      const user = userEvent.setup();
+      render(<ExamplesModal {...defaultProps} />);
+
+      const firstExample = codeExamples[0];
+      const card = screen.getByLabelText(`Preview ${firstExample.title} example`);
+
+      card.focus();
+
+      // Press space - should select card, not scroll page
+      await user.keyboard(' ');
+
+      // Card should be selected
+      expect(card).toHaveAttribute('aria-pressed', 'true');
+      expect(screen.getByText('Load This Example')).toBeInTheDocument();
+    });
+
+    it('should support both Enter and Space consistently', async () => {
+      const user = userEvent.setup();
+      const { rerender } = render(<ExamplesModal {...defaultProps} />);
+
+      const firstCard = screen.getByLabelText(`Preview ${codeExamples[0].title} example`);
+
+      // Test Enter key
+      firstCard.focus();
+      await user.keyboard('{Enter}');
+      expect(firstCard).toHaveAttribute('aria-pressed', 'true');
+
+      // Rerender to reset state
+      rerender(<ExamplesModal {...defaultProps} isOpen={false} />);
+      rerender(<ExamplesModal {...defaultProps} isOpen={true} />);
+
+      // Test Space key
+      const secondCard = screen.getByLabelText(`Preview ${codeExamples[0].title} example`);
+      secondCard.focus();
+      await user.keyboard(' ');
+      expect(secondCard).toHaveAttribute('aria-pressed', 'true');
+    });
+  });
+
+  describe('Focus Management', () => {
+    it('should auto-focus close button when modal opens', () => {
+      render(<ExamplesModal {...defaultProps} />);
+
+      const closeButton = screen.getByLabelText('Close examples modal');
+      expect(document.activeElement).toBe(closeButton);
+    });
+
+    it('should not auto-focus when modal is closed', () => {
+      render(<ExamplesModal {...defaultProps} isOpen={false} />);
+
+      expect(document.activeElement).toBe(document.body);
+    });
+
+    it('should trap focus within modal', async () => {
+      const user = userEvent.setup();
+      render(<ExamplesModal {...defaultProps} />);
+
+      const closeButton = screen.getByLabelText('Close examples modal');
+      expect(document.activeElement).toBe(closeButton);
+
+      // Find all focusable elements
+      const allButtons = screen.getAllByRole('button');
+      const lastButton = allButtons[allButtons.length - 1];
+
+      // Tab to last element
+      lastButton.focus();
+      expect(document.activeElement).toBe(lastButton);
+
+      // Tab from last element should wrap to first (close button)
+      await user.tab();
+      expect(document.activeElement).toBe(closeButton);
+    });
+
+    it('should trap focus backwards with Shift+Tab', async () => {
+      const user = userEvent.setup();
+      render(<ExamplesModal {...defaultProps} />);
+
+      const closeButton = screen.getByLabelText('Close examples modal');
+      expect(document.activeElement).toBe(closeButton);
+
+      // Shift+Tab from first element should wrap to last
+      await user.keyboard('{Shift>}{Tab}{/Shift}');
+
+      // Should be on the last focusable element now
+      const allButtons = screen.getAllByRole('button');
+      const lastButton = allButtons[allButtons.length - 1];
+      expect(document.activeElement).toBe(lastButton);
+    });
+
+    it('should have proper ARIA attributes for dialog', () => {
+      render(<ExamplesModal {...defaultProps} />);
+
+      const dialog = screen.getByRole('dialog');
+      expect(dialog).toHaveAttribute('aria-modal', 'true');
+      expect(dialog).toHaveAttribute('aria-labelledby', 'modal-title');
+    });
+
+    it('should have modal title with correct id', () => {
+      render(<ExamplesModal {...defaultProps} />);
+
+      const title = screen.getByText('Code Examples');
+      expect(title).toHaveAttribute('id', 'modal-title');
+    });
+
+    it('should restore focus when modal closes', () => {
+      const { rerender } = render(<ExamplesModal {...defaultProps} isOpen={true} />);
+
+      const closeButton = screen.getByLabelText('Close examples modal');
+      expect(document.activeElement).toBe(closeButton);
+
+      // Close modal
+      rerender(<ExamplesModal {...defaultProps} isOpen={false} />);
+
+      // Modal should not be in document
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
   });
 

@@ -35,7 +35,7 @@ export class DocGeneratorService {
     }
 
     // Step 4: Calculate quality score
-    const qualityScore = calculateQualityScore(documentation, analysis);
+    const qualityScore = calculateQualityScore(documentation, analysis, docType);
 
     return {
       documentation,
