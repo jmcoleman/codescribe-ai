@@ -221,7 +221,11 @@ describe('App - File Upload Integration', () => {
       render(<App />);
 
       const fileInput = document.querySelector('input[type="file"]');
-      const file = new File(['test'], 'test.pdf', { type: 'application/pdf' });
+      // Use a valid extension but server will reject it
+      const file = new File(['test'], 'test.js', { type: 'application/javascript' });
+
+      // Temporarily remove accept attribute to test server-side validation
+      fileInput.removeAttribute('accept');
 
       await user.upload(fileInput, file);
 
@@ -309,7 +313,10 @@ describe('App - File Upload Integration', () => {
       render(<App />);
 
       const fileInput = document.querySelector('input[type="file"]');
-      const file = new File(['test'], 'test.pdf');
+      const file = new File(['test'], 'test.js', { type: 'application/javascript' });
+
+      // Temporarily remove accept attribute to test server-side validation
+      fileInput.removeAttribute('accept');
 
       await user.upload(fileInput, file);
 

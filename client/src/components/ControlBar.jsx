@@ -28,7 +28,7 @@ export function ControlBar({
             variant="secondary"
             icon={Upload}
             onClick={onUpload}
-            disabled={isGenerating || disabled}
+            disabled={disabled}
           >
             Upload Files
           </Button>
@@ -37,7 +37,7 @@ export function ControlBar({
             variant="secondary"
             icon={Github}
             onClick={onGithubImport}
-            disabled={isGenerating || disabled}
+            disabled={disabled}
           >
             <span className="hidden sm:inline">Import from GitHub</span>
             <span className="sm:hidden">GitHub</span>
