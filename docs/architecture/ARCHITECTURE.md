@@ -45,11 +45,11 @@ CodeScribe AI is a **stateless, real-time documentation generation platform** th
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                         CLIENT TIER                              │
-│  ┌────────────────┐  ┌────────────────┐  ┌────────────────┐   │
-│  │  Web Browser   │  │   CLI Tool     │  │  VS Code Ext   │   │
-│  │   (React)      │  │  (Node.js)     │  │  (TypeScript)  │   │
-│  └────────┬───────┘  └────────┬───────┘  └────────┬───────┘   │
+│                         CLIENT TIER                             │
+│  ┌────────────────┐  ┌────────────────┐  ┌────────────────┐     │
+│  │  Web Browser   │  │   CLI Tool     │  │  VS Code Ext   │     │
+│  │   (React)      │  │  (Node.js)     │  │  (TypeScript)  │     │
+│  └────────┬───────┘  └────────┬───────┘  └────────┬───────┘     │
 │           │                   │                    │            │
 │           └───────────────────┼────────────────────┘            │
 └───────────────────────────────┼─────────────────────────────────┘
@@ -57,43 +57,43 @@ CodeScribe AI is a **stateless, real-time documentation generation platform** th
                          HTTP/SSE (REST API)
                                 │
 ┌───────────────────────────────▼─────────────────────────────────┐
-│                      APPLICATION TIER                            │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │              Express API Server (Node.js)                 │  │
-│  │  ┌────────────┐  ┌────────────┐  ┌────────────┐         │  │
-│  │  │ API Routes │  │ Middleware │  │   Error    │         │  │
-│  │  │            │  │  - CORS    │  │  Handling  │         │  │
-│  │  │ - Generate │  │  - Rate    │  │            │         │  │
-│  │  │ - Stream   │  │    Limit   │  │            │         │  │
-│  │  │ - Upload   │  │  - Validate│  │            │         │  │
-│  │  └─────┬──────┘  └────────────┘  └────────────┘         │  │
-│  │        │                                                  │  │
-│  │  ┌─────▼──────────────────────────────────────────────┐ │  │
-│  │  │          Service Layer (Business Logic)            │ │  │
-│  │  │  ┌─────────────┐  ┌─────────────┐  ┌────────────┐ │ │  │
-│  │  │  │   Claude    │  │    Code     │  │  Quality   │ │ │  │
-│  │  │  │   Client    │  │   Parser    │  │  Scorer    │ │ │  │
-│  │  │  │             │  │   (AST)     │  │            │ │ │  │
-│  │  │  └──────┬──────┘  └──────┬──────┘  └──────┬─────┘ │ │  │
-│  │  │         │                │                │       │ │  │
-│  │  │  ┌──────▼────────────────▼────────────────▼─────┐ │ │  │
-│  │  │  │     Documentation Generator Service          │ │ │  │
-│  │  │  │   (Orchestrates all documentation logic)     │ │ │  │
-│  │  │  └──────────────────────────────────────────────┘ │ │  │
-│  │  └────────────────────────────────────────────────────┘ │  │
-│  └──────────────────────────────────────────────────────────┘  │
+│                      APPLICATION TIER                           │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │              Express API Server (Node.js)                │   │
+│  │  ┌────────────┐  ┌────────────┐  ┌────────────┐          │   │
+│  │  │ API Routes │  │ Middleware │  │   Error    │          │   │
+│  │  │            │  │  - CORS    │  │  Handling  │          │   │
+│  │  │ - Generate │  │  - Rate    │  │            │          │   │
+│  │  │ - Stream   │  │    Limit   │  │            │          │   │
+│  │  │ - Upload   │  │  - Validate│  │            │          │   │
+│  │  └─────┬──────┘  └────────────┘  └────────────┘          │   │
+│  │        │                                                 │   │
+│  │  ┌─────▼──────────────────────────────────────────────┐  │   │
+│  │  │          Service Layer (Business Logic)            │  │   │
+│  │  │  ┌─────────────┐  ┌─────────────┐  ┌────────────┐  │  │   │
+│  │  │  │   Claude    │  │    Code     │  │  Quality   │  │  │   │
+│  │  │  │   Client    │  │   Parser    │  │  Scorer    │  │  │   │
+│  │  │  │             │  │   (AST)     │  │            │  │  │   │
+│  │  │  └──────┬──────┘  └──────┬──────┘  └──────┬─────┘  │  │   │
+│  │  │         │                │                │        │  │   │
+│  │  │  ┌──────▼────────────────▼────────────────▼─────┐  │  │   │
+│  │  │  │     Documentation Generator Service          │  │  │   │
+│  │  │  │   (Orchestrates all documentation logic)     │  │  │   │
+│  │  │  └──────────────────────────────────────────────┘  │  │   │
+│  │  └────────────────────────────────────────────────────┘  │   │
+│  └──────────────────────────────────────────────────────────┘   │
 └───────────────────────────────┬─────────────────────────────────┘
                                 │
                           HTTPS (API)
                                 │
 ┌───────────────────────────────▼─────────────────────────────────┐
-│                       EXTERNAL SERVICES                          │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │           Anthropic Claude API (Sonnet 4.5)              │  │
-│  │   - Text generation with streaming                        │  │
-│  │   - 200K token context window                            │  │
-│  │   - Retry with exponential backoff                       │  │
-│  └──────────────────────────────────────────────────────────┘  │
+│                       EXTERNAL SERVICES                         │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │           Anthropic Claude API (Sonnet 4.5)              │   │
+│  │   - Text generation with streaming                       │   │
+│  │   - 200K token context window                            │   │
+│  │   - Retry with exponential backoff                       │   │
+│  └──────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -255,22 +255,22 @@ User Action: Click "Generate Docs"
 │  │ 1. Parse Code    │  │  parseCode(code, language)
 │  │    (AST)         │  │  → {functions, classes, exports}
 │  └────────┬─────────┘  │
-│           │             │
+│           │            │
 │  ┌────────▼─────────┐  │
 │  │ 2. Build Prompt  │  │  buildPrompt(code, analysis, docType)
 │  │    (Context)     │  │  → Enhanced prompt with context
 │  └────────┬─────────┘  │
-│           │             │
+│           │            │
 │  ┌────────▼─────────┐  │
 │  │ 3. Call Claude   │  │  claudeClient.generate(prompt)
 │  │    API           │  │  → Generated documentation
 │  └────────┬─────────┘  │
-│           │             │
+│           │            │
 │  ┌────────▼─────────┐  │
 │  │ 4. Score Quality │  │  calculateQualityScore(docs, analysis)
 │  │                  │  │  → {score, grade, breakdown}
 │  └────────┬─────────┘  │
-└───────────┼─────────────┘
+└───────────┼────────────┘
             │
             │ JSON Response
             ▼
@@ -341,8 +341,8 @@ Input: Raw source code
            ▼
     Is JavaScript/TypeScript?
            │
-     ┌─────┴─────┐
-   Yes           No
+     ┌─────┴─────--┐
+   Yes            No
      │             │
      ▼             ▼
 ┌────────────┐  ┌────────────┐
@@ -357,12 +357,12 @@ Input: Raw source code
       │               │
       ▼               ▼
    Walk AST      Extract basic info
-   Extract:          │
-   - Functions       │
-   - Classes         │
-   - Exports         │
-   - Imports         │
-   - Complexity      │
+   Extract:           │
+   - Functions        │
+   - Classes          │
+   - Exports          │
+   - Imports          │
+   - Complexity       │
       │               │
       └───────┬───────┘
               │
@@ -676,29 +676,29 @@ Enterprise: Microservices architecture
 
 ```
 ┌────────────────────────────────────────────────────────┐
-│                    Vercel Platform                      │
-│                                                         │
-│  ┌──────────────────────────────────────────────────┐ │
-│  │  Frontend (Static Files)                         │ │
-│  │  - React build artifacts in /dist                │ │
-│  │  - Served via Vercel CDN                         │ │
-│  │  - HTTPS automatic                               │ │
-│  │  - Custom domain support                         │ │
-│  └──────────────────────────────────────────────────┘ │
-│                                                         │
-│  ┌──────────────────────────────────────────────────┐ │
-│  │  API Routes (Serverless Functions)               │ │
-│  │  - Express app in /api directory                 │ │
-│  │  - Auto-scaled based on demand                   │ │
-│  │  - Environment variables from dashboard          │ │
-│  └──────────────────────────────────────────────────┘ │
-│                                                         │
-│  ┌──────────────────────────────────────────────────┐ │
-│  │  Edge Network                                     │ │
-│  │  - Global CDN distribution                       │ │
-│  │  - Automatic SSL certificates                    │ │
-│  │  - DDoS protection                               │ │
-│  └──────────────────────────────────────────────────┘ │
+│                    Vercel Platform                     │
+│                                                        │
+│  ┌──────────────────────────────────────────────────┐  │
+│  │  Frontend (Static Files)                         │  │
+│  │  - React build artifacts in /dist                │  │
+│  │  - Served via Vercel CDN                         │  │
+│  │  - HTTPS automatic                               │  │
+│  │  - Custom domain support                         │  │
+│  └──────────────────────────────────────────────────┘  │
+│                                                        │
+│  ┌──────────────────────────────────────────────────┐  │
+│  │  API Routes (Serverless Functions)               │  │
+│  │  - Express app in /api directory                 │  │
+│  │  - Auto-scaled based on demand                   │  │
+│  │  - Environment variables from dashboard          │  │
+│  └──────────────────────────────────────────────────┘  │
+│                                                        │
+│  ┌──────────────────────────────────────────────────┐  │
+│  │  Edge Network                                    │  │
+│  │  - Global CDN distribution                       │  │
+│  │  - Automatic SSL certificates                    │  │
+│  │  - DDoS protection                               │  │
+│  └──────────────────────────────────────────────────┘  │
 └────────────────────────────────────────────────────────┘
 ```
 
