@@ -1,9 +1,13 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { DocPanel } from '../DocPanel';
 
 describe('DocPanel Component', () => {
+  beforeEach(() => {
+    // Clear localStorage before each test to reset expanded state
+    localStorage.clear();
+  });
   describe('Empty State', () => {
     it('should render empty state when no documentation provided', () => {
       render(<DocPanel documentation="" qualityScore={null} isGenerating={false} />);
@@ -561,10 +565,11 @@ Retrieve all users.
       expect(screen.getByRole('heading', { level: 4 })).toBeInTheDocument();
     });
 
-    it('should have accessible button for quality score', () => {
+    it('should have accessible buttons for quality score and expandable report', () => {
       const mockQualityScore = {
         score: 85,
         grade: 'B',
+        breakdown: {},
         summary: { strengths: [], improvements: [] }
       };
       const onViewBreakdown = vi.fn();
@@ -578,10 +583,20 @@ Retrieve all users.
         />
       );
 
-      const button = screen.getByRole('button');
-      expect(button).toBeInTheDocument();
-      // HTML buttons have implicit type="submit" if not specified, which is fine for accessibility
-      expect(button).toBeEnabled();
+      const buttons = screen.getAllByRole('button');
+      expect(buttons).toHaveLength(2);
+
+      // Quality score button
+      const qualityButton = screen.getByRole('button', { name: /Quality:/i });
+      expect(qualityButton).toBeInTheDocument();
+      expect(qualityButton).toBeEnabled();
+
+      // View full report button (now has aria-label)
+      const reportButton = screen.getByRole('button', { name: /Show full quality report/i });
+      expect(reportButton).toBeInTheDocument();
+      expect(reportButton).toBeEnabled();
+      expect(reportButton).toHaveAttribute('aria-expanded', 'false');
+      expect(reportButton).toHaveAttribute('aria-controls', 'quality-report-details');
     });
 
     it('should render links with proper attributes', () => {
@@ -590,6 +605,642 @@ Retrieve all users.
 
       const link = screen.getByRole('link');
       expect(link).toHaveAttribute('href', 'https://example.com');
+    });
+  });
+
+  describe('Expandable Full Report', () => {
+    const mockQualityScore = {
+      score: 85,
+      grade: 'B',
+      breakdown: {
+        overview: { score: 20, maxScore: 20, suggestion: 'Comprehensive overview provided' },
+        installation: { score: 10, maxScore: 15, suggestion: 'Add more installation steps' },
+        examples: { score: 18, maxScore: 20, suggestion: 'Excellent examples' },
+        apiDocs: { score: 18, maxScore: 25, suggestion: 'Add more API details' },
+        structure: { score: 19, maxScore: 20, suggestion: 'Well structured' }
+      },
+      summary: {
+        strengths: ['overview', 'examples', 'structure'],
+        improvements: ['installation', 'apiDocs']
+      }
+    };
+
+    it('should show "View full report" button when quality score is present', () => {
+      render(
+        <DocPanel
+          documentation="# Test"
+          qualityScore={mockQualityScore}
+          isGenerating={false}
+        />
+      );
+
+      expect(screen.getByText('View full report')).toBeInTheDocument();
+    });
+
+    it('should not show "View full report" button when quality score is null', () => {
+      render(
+        <DocPanel
+          documentation="# Test"
+          qualityScore={null}
+          isGenerating={false}
+        />
+      );
+
+      expect(screen.queryByText('View full report')).not.toBeInTheDocument();
+    });
+
+    it('should initially hide the expandable report section with CSS', () => {
+      render(
+        <DocPanel
+          documentation="# Test"
+          qualityScore={mockQualityScore}
+          isGenerating={false}
+        />
+      );
+
+      // Content is rendered but hidden via CSS (max-h-0 opacity-0)
+      const reportDetails = screen.getByRole('region', { name: /quality report details/i });
+      expect(reportDetails).toHaveClass('max-h-0', 'opacity-0');
+      expect(reportDetails).not.toHaveClass('max-h-96', 'opacity-100');
+    });
+
+    it('should expand report section when "View full report" is clicked', async () => {
+      const user = userEvent.setup();
+
+      render(
+        <DocPanel
+          documentation="# Test"
+          qualityScore={mockQualityScore}
+          isGenerating={false}
+        />
+      );
+
+      const expandButton = screen.getByRole('button', { name: /Show full quality report/i });
+      await user.click(expandButton);
+
+      // Now the suggestions should be visible
+      expect(screen.getByText('Comprehensive overview provided')).toBeInTheDocument();
+      expect(screen.getByText('Add more installation steps')).toBeInTheDocument();
+    });
+
+    it('should show ChevronDown icon when collapsed', () => {
+      render(
+        <DocPanel
+          documentation="# Test"
+          qualityScore={mockQualityScore}
+          isGenerating={false}
+        />
+      );
+
+      const expandButton = screen.getByRole('button', { name: /Show full quality report/i });
+      // ChevronDown should be rendered (has lucide-chevron-down class)
+      const chevronDown = expandButton.querySelector('svg.lucide-chevron-down');
+      expect(chevronDown).toBeInTheDocument();
+    });
+
+    it('should show ChevronUp icon when expanded', async () => {
+      const user = userEvent.setup();
+
+      render(
+        <DocPanel
+          documentation="# Test"
+          qualityScore={mockQualityScore}
+          isGenerating={false}
+        />
+      );
+
+      const expandButton = screen.getByRole('button', { name: /Show full quality report/i });
+      await user.click(expandButton);
+
+      // ChevronUp should be rendered after expanding
+      const chevronUp = expandButton.querySelector('svg.lucide-chevron-up');
+      expect(chevronUp).toBeInTheDocument();
+    });
+
+    it('should toggle report visibility on multiple clicks', async () => {
+      const user = userEvent.setup();
+
+      render(
+        <DocPanel
+          documentation="# Test"
+          qualityScore={mockQualityScore}
+          isGenerating={false}
+        />
+      );
+
+      const expandButton = screen.getByRole('button', { name: /Show full quality report/i });
+      const reportDetails = screen.getByRole('region', { name: /quality report details/i });
+
+      // Initially hidden (collapsed via CSS)
+      expect(reportDetails).toHaveClass('max-h-0', 'opacity-0');
+
+      // Click to expand
+      await user.click(expandButton);
+      expect(reportDetails).toHaveClass('max-h-96', 'opacity-100');
+      expect(expandButton).toHaveAttribute('aria-expanded', 'true');
+
+      // Click to collapse
+      await user.click(expandButton);
+      expect(reportDetails).toHaveClass('max-h-0', 'opacity-0');
+      expect(expandButton).toHaveAttribute('aria-expanded', 'false');
+
+      // Click to expand again
+      await user.click(expandButton);
+      expect(reportDetails).toHaveClass('max-h-96', 'opacity-100');
+      expect(expandButton).toHaveAttribute('aria-expanded', 'true');
+    });
+
+    it('should display "Strengths" section header when expanded', async () => {
+      const user = userEvent.setup();
+
+      render(
+        <DocPanel
+          documentation="# Test"
+          qualityScore={mockQualityScore}
+          isGenerating={false}
+        />
+      );
+
+      await user.click(screen.getByRole('button', { name: /full quality report/i }));
+
+      expect(screen.getByText('Strengths')).toBeInTheDocument();
+    });
+
+    it('should display "Areas to Improve" section header when expanded', async () => {
+      const user = userEvent.setup();
+
+      render(
+        <DocPanel
+          documentation="# Test"
+          qualityScore={mockQualityScore}
+          isGenerating={false}
+        />
+      );
+
+      await user.click(screen.getByRole('button', { name: /full quality report/i }));
+
+      expect(screen.getByText('Areas to Improve')).toBeInTheDocument();
+    });
+
+    it('should display all strength criteria with formatted names', async () => {
+      const user = userEvent.setup();
+
+      render(
+        <DocPanel
+          documentation="# Test"
+          qualityScore={mockQualityScore}
+          isGenerating={false}
+        />
+      );
+
+      await user.click(screen.getByRole('button', { name: /full quality report/i }));
+
+      // Check formatted criteria names appear
+      expect(screen.getByText('Overview:')).toBeInTheDocument();
+      expect(screen.getByText('Usage Examples:')).toBeInTheDocument();
+      expect(screen.getByText('Structure & Formatting:')).toBeInTheDocument();
+    });
+
+    it('should display all improvement criteria with formatted names', async () => {
+      const user = userEvent.setup();
+
+      render(
+        <DocPanel
+          documentation="# Test"
+          qualityScore={mockQualityScore}
+          isGenerating={false}
+        />
+      );
+
+      await user.click(screen.getByRole('button', { name: /full quality report/i }));
+
+      // Check formatted criteria names appear
+      expect(screen.getByText('Installation:')).toBeInTheDocument();
+      expect(screen.getByText('API Documentation:')).toBeInTheDocument();
+    });
+
+    it('should display suggestions for each criteria', async () => {
+      const user = userEvent.setup();
+
+      render(
+        <DocPanel
+          documentation="# Test"
+          qualityScore={mockQualityScore}
+          isGenerating={false}
+        />
+      );
+
+      await user.click(screen.getByRole('button', { name: /full quality report/i }));
+
+      // Check all suggestions are displayed
+      expect(screen.getByText(/Comprehensive overview provided/)).toBeInTheDocument();
+      expect(screen.getByText(/Excellent examples/)).toBeInTheDocument();
+      expect(screen.getByText(/Well structured/)).toBeInTheDocument();
+      expect(screen.getByText(/Add more installation steps/)).toBeInTheDocument();
+      expect(screen.getByText(/Add more API details/)).toBeInTheDocument();
+    });
+
+    it('should not show "Areas to Improve" when no improvements needed', async () => {
+      const user = userEvent.setup();
+      const perfectScore = {
+        ...mockQualityScore,
+        summary: {
+          strengths: ['overview', 'installation', 'examples', 'apiDocs', 'structure'],
+          improvements: []
+        }
+      };
+
+      render(
+        <DocPanel
+          documentation="# Test"
+          qualityScore={perfectScore}
+          isGenerating={false}
+        />
+      );
+
+      await user.click(screen.getByRole('button', { name: /full quality report/i }));
+
+      expect(screen.getByText('Strengths')).toBeInTheDocument();
+      expect(screen.queryByText('Areas to Improve')).not.toBeInTheDocument();
+    });
+
+    it('should not show "Strengths" when no strengths identified', async () => {
+      const user = userEvent.setup();
+      const lowScore = {
+        ...mockQualityScore,
+        summary: {
+          strengths: [],
+          improvements: ['overview', 'installation', 'examples', 'apiDocs', 'structure']
+        }
+      };
+
+      render(
+        <DocPanel
+          documentation="# Test"
+          qualityScore={lowScore}
+          isGenerating={false}
+        />
+      );
+
+      await user.click(screen.getByRole('button', { name: /full quality report/i }));
+
+      expect(screen.queryByText('Strengths')).not.toBeInTheDocument();
+      expect(screen.getByText('Areas to Improve')).toBeInTheDocument();
+    });
+
+    it('should handle missing suggestion gracefully with fallback text', async () => {
+      const user = userEvent.setup();
+      const scoreWithMissingSuggestion = {
+        ...mockQualityScore,
+        breakdown: {
+          overview: { score: 20, maxScore: 20 }, // No suggestion property
+          installation: { score: 10, maxScore: 15, suggestion: null }, // Null suggestion
+        },
+        summary: {
+          strengths: ['overview'],
+          improvements: ['installation']
+        }
+      };
+
+      render(
+        <DocPanel
+          documentation="# Test"
+          qualityScore={scoreWithMissingSuggestion}
+          isGenerating={false}
+        />
+      );
+
+      await user.click(screen.getByRole('button', { name: /full quality report/i }));
+
+      // Should show fallback text
+      expect(screen.getByText(/Well done!/)).toBeInTheDocument();
+      expect(screen.getByText(/Consider improving this section/)).toBeInTheDocument();
+    });
+  });
+
+  describe('Enhancement: Smooth Animations', () => {
+    const mockQualityScore = {
+      score: 85,
+      grade: 'B',
+      breakdown: {
+        overview: { score: 20, maxScore: 20, suggestion: 'Great overview' }
+      },
+      summary: {
+        strengths: ['overview'],
+        improvements: []
+      }
+    };
+
+    it('should have transition classes for smooth animations', () => {
+      render(
+        <DocPanel
+          documentation="# Test"
+          qualityScore={mockQualityScore}
+          isGenerating={false}
+        />
+      );
+
+      const reportDetails = screen.getByRole('region', { name: /quality report details/i });
+      expect(reportDetails).toHaveClass('transition-all', 'duration-300', 'ease-in-out');
+    });
+
+    it('should animate from collapsed to expanded state', async () => {
+      const user = userEvent.setup();
+
+      render(
+        <DocPanel
+          documentation="# Test"
+          qualityScore={mockQualityScore}
+          isGenerating={false}
+        />
+      );
+
+      const reportDetails = screen.getByRole('region', { name: /quality report details/i });
+      const expandButton = screen.getByRole('button', { name: /Show full quality report/i });
+
+      // Start collapsed
+      expect(reportDetails).toHaveClass('max-h-0', 'opacity-0');
+
+      // Click to expand
+      await user.click(expandButton);
+
+      // Should now be expanded
+      expect(reportDetails).toHaveClass('max-h-96', 'opacity-100');
+    });
+  });
+
+  describe('Enhancement: Keyboard Navigation', () => {
+    const mockQualityScore = {
+      score: 85,
+      grade: 'B',
+      breakdown: {
+        overview: { score: 20, maxScore: 20, suggestion: 'Great overview' }
+      },
+      summary: {
+        strengths: ['overview'],
+        improvements: []
+      }
+    };
+
+    it('should toggle on Enter key press', async () => {
+      const user = userEvent.setup();
+
+      render(
+        <DocPanel
+          documentation="# Test"
+          qualityScore={mockQualityScore}
+          isGenerating={false}
+        />
+      );
+
+      const expandButton = screen.getByRole('button', { name: /Show full quality report/i });
+      const reportDetails = screen.getByRole('region', { name: /quality report details/i });
+
+      // Focus and press Enter
+      expandButton.focus();
+      await user.keyboard('{Enter}');
+
+      // Should expand
+      expect(reportDetails).toHaveClass('max-h-96', 'opacity-100');
+      expect(expandButton).toHaveAttribute('aria-expanded', 'true');
+    });
+
+    it('should toggle on Space key press', async () => {
+      const user = userEvent.setup();
+
+      render(
+        <DocPanel
+          documentation="# Test"
+          qualityScore={mockQualityScore}
+          isGenerating={false}
+        />
+      );
+
+      const expandButton = screen.getByRole('button', { name: /Show full quality report/i });
+      const reportDetails = screen.getByRole('region', { name: /quality report details/i });
+
+      // Focus and press Space
+      expandButton.focus();
+      await user.keyboard(' ');
+
+      // Should expand
+      expect(reportDetails).toHaveClass('max-h-96', 'opacity-100');
+      expect(expandButton).toHaveAttribute('aria-expanded', 'true');
+    });
+
+    it('should have focus styles for keyboard navigation', () => {
+      render(
+        <DocPanel
+          documentation="# Test"
+          qualityScore={mockQualityScore}
+          isGenerating={false}
+        />
+      );
+
+      const expandButton = screen.getByRole('button', { name: /Show full quality report/i });
+      expect(expandButton).toHaveClass('focus:outline-none', 'focus:ring-2', 'focus:ring-purple-400');
+    });
+  });
+
+  describe('Enhancement: ARIA Attributes', () => {
+    const mockQualityScore = {
+      score: 85,
+      grade: 'B',
+      breakdown: {
+        overview: { score: 20, maxScore: 20, suggestion: 'Great overview' }
+      },
+      summary: {
+        strengths: ['overview'],
+        improvements: []
+      }
+    };
+
+    it('should have proper aria-expanded attribute when collapsed', () => {
+      render(
+        <DocPanel
+          documentation="# Test"
+          qualityScore={mockQualityScore}
+          isGenerating={false}
+        />
+      );
+
+      const expandButton = screen.getByRole('button', { name: /Show full quality report/i });
+      expect(expandButton).toHaveAttribute('aria-expanded', 'false');
+    });
+
+    it('should have proper aria-expanded attribute when expanded', async () => {
+      const user = userEvent.setup();
+
+      render(
+        <DocPanel
+          documentation="# Test"
+          qualityScore={mockQualityScore}
+          isGenerating={false}
+        />
+      );
+
+      const expandButton = screen.getByRole('button', { name: /Show full quality report/i });
+      await user.click(expandButton);
+
+      expect(expandButton).toHaveAttribute('aria-expanded', 'true');
+    });
+
+    it('should have aria-controls pointing to the expandable region', () => {
+      render(
+        <DocPanel
+          documentation="# Test"
+          qualityScore={mockQualityScore}
+          isGenerating={false}
+        />
+      );
+
+      const expandButton = screen.getByRole('button', { name: /Show full quality report/i });
+      expect(expandButton).toHaveAttribute('aria-controls', 'quality-report-details');
+
+      const reportDetails = screen.getByRole('region', { name: /quality report details/i });
+      expect(reportDetails).toHaveAttribute('id', 'quality-report-details');
+    });
+
+    it('should have proper aria-label that changes based on state', async () => {
+      const user = userEvent.setup();
+
+      render(
+        <DocPanel
+          documentation="# Test"
+          qualityScore={mockQualityScore}
+          isGenerating={false}
+        />
+      );
+
+      const expandButton = screen.getByRole('button', { name: /Show full quality report/i });
+      expect(expandButton).toHaveAttribute('aria-label', 'Show full quality report');
+
+      await user.click(expandButton);
+
+      expect(expandButton).toHaveAttribute('aria-label', 'Hide full quality report');
+    });
+
+    it('should have role="region" on expandable content', () => {
+      render(
+        <DocPanel
+          documentation="# Test"
+          qualityScore={mockQualityScore}
+          isGenerating={false}
+        />
+      );
+
+      const reportDetails = screen.getByRole('region', { name: /quality report details/i });
+      expect(reportDetails).toHaveAttribute('role', 'region');
+      expect(reportDetails).toHaveAttribute('aria-label', 'Quality report details');
+    });
+  });
+
+  describe('Enhancement: LocalStorage Persistence', () => {
+    const mockQualityScore = {
+      score: 85,
+      grade: 'B',
+      breakdown: {
+        overview: { score: 20, maxScore: 20, suggestion: 'Great overview' }
+      },
+      summary: {
+        strengths: ['overview'],
+        improvements: []
+      }
+    };
+
+    it('should save expanded state to localStorage when toggled', async () => {
+      const user = userEvent.setup();
+
+      render(
+        <DocPanel
+          documentation="# Test"
+          qualityScore={mockQualityScore}
+          isGenerating={false}
+        />
+      );
+
+      const expandButton = screen.getByRole('button', { name: /Show full quality report/i });
+
+      // Initially should be false
+      expect(localStorage.getItem('codescribe-report-expanded')).toBe('false');
+
+      // Click to expand
+      await user.click(expandButton);
+
+      // Should save to localStorage
+      expect(localStorage.getItem('codescribe-report-expanded')).toBe('true');
+
+      // Click to collapse
+      await user.click(expandButton);
+
+      // Should update localStorage
+      expect(localStorage.getItem('codescribe-report-expanded')).toBe('false');
+    });
+
+    it('should load expanded state from localStorage on mount', () => {
+      // Set localStorage to expanded
+      localStorage.setItem('codescribe-report-expanded', 'true');
+
+      render(
+        <DocPanel
+          documentation="# Test"
+          qualityScore={mockQualityScore}
+          isGenerating={false}
+        />
+      );
+
+      const reportDetails = screen.getByRole('region', { name: /quality report details/i });
+      const expandButton = screen.getByRole('button', { name: /Hide full quality report/i });
+
+      // Should start expanded
+      expect(reportDetails).toHaveClass('max-h-96', 'opacity-100');
+      expect(expandButton).toHaveAttribute('aria-expanded', 'true');
+    });
+
+    it('should handle localStorage errors gracefully', () => {
+      // Mock localStorage.setItem to throw an error
+      const originalSetItem = Storage.prototype.setItem;
+      Storage.prototype.setItem = vi.fn(() => {
+        throw new Error('localStorage is full');
+      });
+
+      render(
+        <DocPanel
+          documentation="# Test"
+          qualityScore={mockQualityScore}
+          isGenerating={false}
+        />
+      );
+
+      // Should still render without crashing
+      const expandButton = screen.getByRole('button', { name: /Show full quality report/i });
+      expect(expandButton).toBeInTheDocument();
+
+      // Restore original setItem
+      Storage.prototype.setItem = originalSetItem;
+    });
+
+    it('should handle missing localStorage gracefully', () => {
+      // Mock localStorage.getItem to throw an error
+      const originalGetItem = Storage.prototype.getItem;
+      Storage.prototype.getItem = vi.fn(() => {
+        throw new Error('localStorage is not available');
+      });
+
+      render(
+        <DocPanel
+          documentation="# Test"
+          qualityScore={mockQualityScore}
+          isGenerating={false}
+        />
+      );
+
+      // Should render with default state (collapsed)
+      const reportDetails = screen.getByRole('region', { name: /quality report details/i });
+      expect(reportDetails).toHaveClass('max-h-0', 'opacity-0');
+
+      // Restore original getItem
+      Storage.prototype.getItem = originalGetItem;
     });
   });
 

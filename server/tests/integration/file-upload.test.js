@@ -64,12 +64,13 @@ describe('File Upload Validation', () => {
       expect(content).toContain('fibonacci');
     });
 
-    it('should have invalid file type test file', () => {
+    it('should have plain text test file (now valid)', () => {
       const txtFile = path.join(fixturesDir, 'invalid-type.txt');
       expect(fs.existsSync(txtFile)).toBe(true);
 
       const content = fs.readFileSync(txtFile, 'utf-8');
       expect(content).toContain('plain text');
+      // Note: .txt files are now ALLOWED as of the recent update
     });
 
     it('should have large file for size testing', () => {
@@ -82,7 +83,18 @@ describe('File Upload Validation', () => {
   });
 
   describe('File extension validation logic', () => {
-    const allowedExtensions = ['.js', '.jsx', '.ts', '.tsx', '.py'];
+    const allowedExtensions = [
+      '.js', '.jsx', '.ts', '.tsx',  // JavaScript/TypeScript
+      '.py',                          // Python
+      '.java',                        // Java
+      '.cpp', '.c', '.h', '.hpp',    // C/C++
+      '.cs',                          // C#
+      '.go',                          // Go
+      '.rs',                          // Rust
+      '.rb',                          // Ruby
+      '.php',                         // PHP
+      '.txt'                          // Plain text
+    ];
 
     it('should allow all valid extensions', () => {
       const validFiles = [
@@ -90,7 +102,17 @@ describe('File Upload Validation', () => {
         'component.jsx',
         'types.ts',
         'app.tsx',
-        'script.py'
+        'script.py',
+        'Main.java',
+        'program.cpp',
+        'header.h',
+        'util.hpp',
+        'app.cs',
+        'server.go',
+        'main.rs',
+        'script.rb',
+        'index.php',
+        'readme.txt'
       ];
 
       validFiles.forEach(filename => {
@@ -101,11 +123,12 @@ describe('File Upload Validation', () => {
 
     it('should reject invalid extensions', () => {
       const invalidFiles = [
-        'readme.txt',
         'image.png',
         'document.pdf',
         'data.json',
-        'style.css'
+        'style.css',
+        'binary.exe',
+        'archive.zip'
       ];
 
       invalidFiles.forEach(filename => {
@@ -115,7 +138,14 @@ describe('File Upload Validation', () => {
     });
 
     it('should handle uppercase extensions', () => {
-      const upperFiles = ['TEST.JS', 'Component.JSX', 'Types.TS'];
+      const upperFiles = [
+        'TEST.JS',
+        'Component.JSX',
+        'Types.TS',
+        'Main.JAVA',
+        'Program.CPP',
+        'Server.GO'
+      ];
 
       upperFiles.forEach(filename => {
         const ext = path.extname(filename).toLowerCase();
@@ -244,14 +274,39 @@ describe('File Upload Validation', () => {
       });
     });
 
-    it('should validate all file types are represented', () => {
-      const extensions = ['.js', '.jsx', '.ts', '.tsx', '.py'];
+    it('should validate core file types are represented', () => {
+      // Test that at least the core file types have fixtures
+      const coreExtensions = ['.js', '.jsx', '.ts', '.tsx', '.py'];
 
-      extensions.forEach(ext => {
+      coreExtensions.forEach(ext => {
         const files = fs.readdirSync(fixturesDir)
           .filter(f => path.extname(f) === ext);
         expect(files.length).toBeGreaterThan(0);
       });
+    });
+
+    it('should document all supported file types', () => {
+      // This test documents all supported file types for reference
+      const allSupportedExtensions = [
+        '.js', '.jsx', '.ts', '.tsx',  // JavaScript/TypeScript
+        '.py',                          // Python
+        '.java',                        // Java
+        '.cpp', '.c', '.h', '.hpp',    // C/C++
+        '.cs',                          // C#
+        '.go',                          // Go
+        '.rs',                          // Rust
+        '.rb',                          // Ruby
+        '.php',                         // PHP
+        '.txt'                          // Plain text
+      ];
+
+      // Verify our list matches what we expect (16 total extensions)
+      expect(allSupportedExtensions.length).toBe(16);
+      expect(allSupportedExtensions).toContain('.js');
+      expect(allSupportedExtensions).toContain('.java');
+      expect(allSupportedExtensions).toContain('.txt');
+      expect(allSupportedExtensions).toContain('.go');
+      expect(allSupportedExtensions).toContain('.rs');
     });
   });
 });
@@ -270,9 +325,10 @@ describe('File Upload Validation', () => {
  *    curl -X POST http://localhost:3000/api/upload \
  *      -F "file=@tests/fixtures/upload/valid-javascript.js"
  *
- * 3. Test invalid file type:
+ * 3. Test invalid file type (e.g., .pdf, .png):
+ *    echo "test" > /tmp/test.pdf
  *    curl -X POST http://localhost:3000/api/upload \
- *      -F "file=@tests/fixtures/upload/invalid-type.txt"
+ *      -F "file=@/tmp/test.pdf"
  *
  * 4. Test file too large:
  *    curl -X POST http://localhost:3000/api/upload \
@@ -285,16 +341,31 @@ describe('File Upload Validation', () => {
  *      echo ""
  *    done
  *
+ * Supported File Types (as of latest update):
+ * -------------------------------------------
+ * JavaScript/TypeScript: .js, .jsx, .ts, .tsx
+ * Python: .py
+ * Java: .java
+ * C/C++: .c, .cpp, .h, .hpp
+ * C#: .cs
+ * Go: .go
+ * Rust: .rs
+ * Ruby: .rb
+ * PHP: .php
+ * Plain text: .txt
+ *
  * Expected Results:
  * ----------------
- * - Valid files (.js/.jsx/.ts/.tsx/.py under 500KB):
+ * - Valid files (any supported extension under 500KB):
  *   Status 200, success: true, file object with content
  *
- * - Invalid file type (.txt):
+ * - Invalid file type (.pdf, .png, .json, etc.):
  *   Status 400, success: false, error: "Invalid file type"
+ *   Message includes list of allowed extensions
  *
  * - File too large (>500KB):
- *   Status 413, success: false, error: "File too large"
+ *   Status 400, success: false, error: "File too large"
+ *   Message: "Maximum file size is 500KB"
  *
  * - No file uploaded:
  *   Status 400, success: false, error: "No file uploaded"

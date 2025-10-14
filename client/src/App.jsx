@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Header } from './components/Header';
 import { MobileMenu } from './components/MobileMenu';
 import { ControlBar } from './components/ControlBar';
@@ -14,6 +14,8 @@ function App() {
   const [language, setLanguage] = useState('javascript');
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showQualityModal, setShowQualityModal] = useState(false);
+  const [uploadError, setUploadError] = useState(null);
+  const fileInputRef = useRef(null);
   
   const {
     generate,
@@ -32,8 +34,73 @@ function App() {
   };
 
   const handleUpload = () => {
-    // TODO: Implement file upload
-    console.log('Upload clicked');
+    // Trigger the hidden file input
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Clear any previous upload errors
+    setUploadError(null);
+
+    try {
+      // Create FormData to send file to backend
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      const response = await fetch(`${apiUrl}/api/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || errorData.error || 'File upload failed');
+      }
+
+      const data = await response.json();
+
+      if (data.success && data.file) {
+        // Set the code from the uploaded file
+        setCode(data.file.content);
+
+        // Detect language from file extension
+        const extension = data.file.extension.toLowerCase().replace('.', '');
+        const languageMap = {
+          'js': 'javascript',
+          'jsx': 'javascript',
+          'ts': 'typescript',
+          'tsx': 'typescript',
+          'py': 'python',
+          'java': 'java',
+          'cpp': 'cpp',
+          'c': 'c',
+          'h': 'c',
+          'hpp': 'cpp',
+          'cs': 'csharp',
+          'go': 'go',
+          'rs': 'rust',
+          'rb': 'ruby',
+          'php': 'php',
+        };
+        setLanguage(languageMap[extension] || 'javascript');
+
+        console.log(`File uploaded successfully: ${data.file.name} (${data.file.sizeFormatted})`);
+      }
+
+      // Reset the file input so the same file can be selected again
+      event.target.value = '';
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      setUploadError(error.message);
+      // Reset the file input
+      event.target.value = '';
+    }
   };
 
   const handleGithubImport = () => {
@@ -43,6 +110,16 @@ function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".js,.jsx,.ts,.tsx,.py,.java,.cpp,.c,.h,.hpp,.cs,.go,.rs,.rb,.php,.txt"
+        onChange={handleFileChange}
+        className="hidden"
+        aria-label="Upload code file"
+      />
+
       {/* Header */}
       <Header
         onMenuClick={() => setShowMobileMenu(true)}
@@ -66,15 +143,21 @@ function App() {
           onUpload={handleUpload}
           onGithubImport={handleGithubImport}
           isGenerating={isGenerating}
-          disabled={!code.trim()}
+          generateDisabled={!code.trim()}
         />
 
-        {/* Error Banner */}
+        {/* Error Banners */}
         {error && (
           <ErrorBanner
             error={error}
             retryAfter={retryAfter}
             onDismiss={() => {/* Error will clear on next successful generation */}}
+          />
+        )}
+        {uploadError && (
+          <ErrorBanner
+            error={uploadError}
+            onDismiss={() => setUploadError(null)}
           />
         )}
 
