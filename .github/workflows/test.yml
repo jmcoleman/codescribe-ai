@@ -64,7 +64,6 @@ jobs:
   test-frontend:
     name: Frontend Tests
     runs-on: ubuntu-latest
-    if: false  # Disabled until frontend tests are implemented
 
     strategy:
       matrix:
