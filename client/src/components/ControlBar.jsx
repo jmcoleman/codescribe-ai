@@ -9,6 +9,7 @@ export function ControlBar({
   onUpload,
   onGithubImport,
   isGenerating = false,
+  generateDisabled = false,
   disabled = false
 }) {
   const docTypes = [
@@ -27,7 +28,7 @@ export function ControlBar({
             variant="secondary"
             icon={Upload}
             onClick={onUpload}
-            disabled={disabled}
+            disabled={isGenerating || disabled}
           >
             Upload Files
           </Button>
@@ -36,7 +37,7 @@ export function ControlBar({
             variant="secondary"
             icon={Github}
             onClick={onGithubImport}
-            disabled={disabled}
+            disabled={isGenerating || disabled}
           >
             <span className="hidden sm:inline">Import from GitHub</span>
             <span className="sm:hidden">GitHub</span>
@@ -59,7 +60,7 @@ export function ControlBar({
           icon={Sparkles}
           onClick={onGenerate}
           loading={isGenerating}
-          disabled={disabled}
+          disabled={generateDisabled || disabled}
           className="w-full lg:w-auto"
         >
           {isGenerating ? 'Generating...' : 'Generate Docs'}

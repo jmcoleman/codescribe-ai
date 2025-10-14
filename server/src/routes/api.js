@@ -112,46 +112,84 @@ const upload = multer({
     fileSize: 500 * 1024 // 500KB
   },
   fileFilter: (req, file, cb) => {
-    const allowedExtensions = ['.js', '.jsx', '.ts', '.tsx', '.py'];
+    const allowedExtensions = [
+      '.js', '.jsx', '.ts', '.tsx',  // JavaScript/TypeScript
+      '.py',                          // Python
+      '.java',                        // Java
+      '.cpp', '.c', '.h', '.hpp',    // C/C++
+      '.cs',                          // C#
+      '.go',                          // Go
+      '.rs',                          // Rust
+      '.rb',                          // Ruby
+      '.php',                         // PHP
+      '.txt'                          // Plain text
+    ];
     const ext = path.extname(file.originalname).toLowerCase();
 
     if (allowedExtensions.includes(ext)) {
       cb(null, true);
     } else {
-      cb(new Error('Invalid file type'));
+      cb(new Error(`Invalid file type. Allowed: ${allowedExtensions.join(', ')}`));
     }
   }
 });
 
-router.post('/upload', apiLimiter, upload.single('file'), async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({
+router.post('/upload', apiLimiter, (req, res) => {
+  upload.single('file')(req, res, async (err) => {
+    try {
+      // Handle multer errors
+      if (err) {
+        if (err instanceof multer.MulterError) {
+          if (err.code === 'LIMIT_FILE_SIZE') {
+            return res.status(400).json({
+              success: false,
+              error: 'File too large',
+              message: 'Maximum file size is 500KB'
+            });
+          }
+          return res.status(400).json({
+            success: false,
+            error: 'Upload error',
+            message: err.message
+          });
+        }
+        // Handle custom filter errors
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid file type',
+          message: err.message
+        });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          error: 'No file uploaded',
+          message: 'Please select a file to upload'
+        });
+      }
+
+      const content = req.file.buffer.toString('utf-8');
+
+      res.json({
+        success: true,
+        file: {
+          name: req.file.originalname,
+          size: req.file.size,
+          sizeFormatted: formatBytes(req.file.size),
+          extension: path.extname(req.file.originalname),
+          mimetype: req.file.mimetype,
+          content: content
+        }
+      });
+    } catch (error) {
+      res.status(400).json({
         success: false,
-        error: 'No file uploaded',
-        message: 'Please select a file to upload'
+        error: 'Upload failed',
+        message: error.message
       });
     }
-
-    const content = req.file.buffer.toString('utf-8');
-
-    res.json({
-      success: true,
-      file: {
-        name: req.file.originalname,
-        size: req.file.size,
-        sizeFormatted: formatBytes(req.file.size),
-        extension: path.extname(req.file.originalname),
-        mimetype: req.file.mimetype,
-        content: content
-      }
-    });
-  } catch (error) {
-    res.status(400).json({
-      success: false,
-      error: error.message
-    });
-  }
+  });
 });
 
 router.get('/health', (req, res) => {
