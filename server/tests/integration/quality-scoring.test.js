@@ -213,17 +213,21 @@ Normalizes a single data item.
 
     it('should handle syntax errors in code parsing', async () => {
       // Code with syntax error - parser falls back to basic analysis
+      // This test verifies error recovery without failing the test suite
+      // The parser catches the error and returns basic analysis instead
       const codeAnalysis = await parseCode(sampleCode.syntaxError, 'javascript');
 
-      // Should still return a valid structure
+      // Should still return a valid structure (from fallback analysis)
       expect(codeAnalysis).toBeDefined();
       expect(codeAnalysis.language).toBe('javascript');
+      // Fallback analysis should not throw errors
 
-      // Documentation can still be scored
+      // Documentation can still be scored even with syntax errors in code
       const documentation = '# Project\n\nSome documentation.';
       const qualityScore = calculateQualityScore(documentation, codeAnalysis);
 
       expect(qualityScore).toBeValidQualityScore();
+      // This ensures the full workflow works even with malformed code
     });
 
     it('should reward comprehensive documentation of all functions', async () => {

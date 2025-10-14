@@ -38,15 +38,15 @@ expect.extend({
   },
 });
 
-// Suppress console logs during tests (uncomment if needed)
-// global.console = {
-//   ...console,
-//   log: jest.fn(),
-//   debug: jest.fn(),
-//   info: jest.fn(),
-//   warn: jest.fn(),
-//   error: jest.fn(),
-// };
+// Suppress console logs during tests to prevent noise in CI/CD
+global.console = {
+  ...console,
+  log: jest.fn(),
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+};
 
 // Global test utilities
 global.sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
