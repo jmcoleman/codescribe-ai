@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vs } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { CopyButton } from './CopyButton';
 
 const STORAGE_KEY = 'codescribe-report-expanded';
 
@@ -54,21 +55,35 @@ export function DocPanel({
           </span>
         </div>
 
-        {/* Right: Quality Score */}
-        {qualityScore && (
-          <button
-            onClick={onViewBreakdown}
-            className="flex items-center gap-2 px-3 py-1.5 bg-white border border-purple-200 rounded-lg hover:bg-purple-50 transition-colors"
-          >
-            <span className="text-xs text-slate-600">Quality:</span>
-            <span className="text-xs font-semibold text-purple-700">
-              {qualityScore.score}/100
-            </span>
-            <span className={`text-sm font-bold ${getGradeColor(qualityScore.grade)}`}>
-              {qualityScore.grade}
-            </span>
-          </button>
-        )}
+        {/* Right: Copy Button + Quality Score */}
+        <div className="flex items-center gap-2">
+          {/* Copy Button - Only show when documentation exists */}
+          {documentation && (
+            <CopyButton
+              text={documentation}
+              size="md"
+              variant="outline"
+              ariaLabel="Copy documentation to clipboard"
+            />
+          )}
+
+          {/* Quality Score */}
+          {qualityScore && (
+            <button
+              onClick={onViewBreakdown}
+              className="flex items-center gap-2 px-3 py-1.5 bg-white border border-purple-200 rounded-lg hover:bg-purple-50 hover:scale-[1.02] hover:shadow-sm transition-all duration-200 motion-reduce:transition-none active:scale-[0.98]"
+              aria-label="View quality score breakdown"
+            >
+              <span className="text-xs text-slate-600">Quality:</span>
+              <span className="text-xs font-semibold text-purple-700">
+                {qualityScore.score}/100
+              </span>
+              <span className={`text-sm font-bold ${getGradeColor(qualityScore.grade)}`}>
+                {qualityScore.grade}
+              </span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Body - Documentation Content */}
@@ -144,7 +159,7 @@ export function DocPanel({
               aria-expanded={isExpanded}
               aria-controls="quality-report-details"
               aria-label={isExpanded ? "Hide full quality report" : "Show full quality report"}
-              className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 rounded px-2 py-1"
+              className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50 transition-all duration-200 motion-reduce:transition-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 rounded px-2 py-1 active:bg-purple-100"
             >
               <span className="font-medium">View full report</span>
               {isExpanded ? (

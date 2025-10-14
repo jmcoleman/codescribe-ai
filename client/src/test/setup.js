@@ -1,4 +1,4 @@
-import { expect, afterEach } from 'vitest';
+import { afterEach, beforeAll, afterAll, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 
@@ -25,6 +25,18 @@ global.ResizeObserver = class ResizeObserver {
   observe() {}
   unobserve() {}
 };
+
+// Mock Clipboard API (used by CopyButton)
+const mockClipboard = {
+  writeText: vi.fn(() => Promise.resolve()),
+  readText: vi.fn(() => Promise.resolve('')),
+};
+
+Object.defineProperty(navigator, 'clipboard', {
+  value: mockClipboard,
+  writable: true,
+  configurable: true,
+});
 
 // Suppress console errors for cleaner test output (optional)
 const originalError = console.error;
