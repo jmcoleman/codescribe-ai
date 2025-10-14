@@ -3,20 +3,25 @@ export function calculateQualityScore(documentation, codeAnalysis) {
   const breakdown = {};
 
   // 1. Overview/Description (20 points)
-  const hasOverview = hasSection(documentation, [
+  // Check for explicit overview section OR description after title
+  const hasOverviewSection = hasSection(documentation, [
     'overview', 'description', 'about', 'introduction', 'what is'
   ]);
-  
+
+  // Also accept a paragraph right after the title (common pattern)
+  const hasDescriptionAfterTitle = /^#\s+.+\n\n[A-Z].{20,}/m.test(documentation);
+  const hasOverview = hasOverviewSection || hasDescriptionAfterTitle;
+
   if (hasOverview) {
     score += 20;
-    breakdown.overview = { 
-      present: true, 
+    breakdown.overview = {
+      present: true,
       points: 20,
       status: 'complete'
     };
   } else {
-    breakdown.overview = { 
-      present: false, 
+    breakdown.overview = {
+      present: false,
       points: 0,
       status: 'missing',
       suggestion: 'Add an overview section describing what the code does'
@@ -74,10 +79,10 @@ export function calculateQualityScore(documentation, codeAnalysis) {
   };
 
   // 4. API Documentation (25 points)
-  const functionsCovered = countFunctionDocs(documentation, codeAnalysis);
-  const totalFunctions = codeAnalysis.functions?.length || 0;
-  const coverageRatio = totalFunctions > 0 
-    ? functionsCovered / totalFunctions 
+  const { functionsCovered, totalFunctions } = countFunctionDocs(documentation, codeAnalysis);
+
+  const coverageRatio = totalFunctions > 0
+    ? functionsCovered / totalFunctions
     : 1;
   
   const apiPoints = Math.round(25 * coverageRatio);
@@ -181,22 +186,47 @@ function countHeaders(doc) {
  * Count how many functions are documented
  */
 function countFunctionDocs(doc, analysis) {
-  if (!analysis.functions || analysis.functions.length === 0) {
-    return 1; // Give credit if no functions to document
+  const lowerDoc = doc.toLowerCase();
+  let count = 0;
+  let totalToDocument = 0;
+
+  // Check standalone functions
+  if (analysis.functions && analysis.functions.length > 0) {
+    analysis.functions.forEach(func => {
+      const funcName = func.name.toLowerCase();
+      // Skip anonymous functions - they don't need documentation mentions
+      if (funcName !== 'anonymous' && funcName !== '') {
+        totalToDocument++;
+        if (lowerDoc.includes(funcName)) {
+          count++;
+        }
+      }
+    });
   }
 
-  let count = 0;
-  const lowerDoc = doc.toLowerCase();
+  // Check class methods
+  if (analysis.classes && analysis.classes.length > 0) {
+    analysis.classes.forEach(cls => {
+      if (cls.methods && cls.methods.length > 0) {
+        cls.methods.forEach(method => {
+          const methodName = method.name.toLowerCase();
+          // Skip constructors and special methods like getters/setters for basic count
+          // They still count toward total, just use a simpler check
+          totalToDocument++;
+          if (lowerDoc.includes(methodName)) {
+            count++;
+          }
+        });
+      }
+    });
+  }
 
-  analysis.functions.forEach(func => {
-    const funcName = func.name.toLowerCase();
-    // Check if function name appears in documentation
-    if (lowerDoc.includes(funcName)) {
-      count++;
-    }
-  });
+  // If nothing to document, give full credit
+  if (totalToDocument === 0) {
+    return { functionsCovered: 1, totalFunctions: 1 };
+  }
 
-  return count;
+  return { functionsCovered: count, totalFunctions: totalToDocument };
 }
 
 /**

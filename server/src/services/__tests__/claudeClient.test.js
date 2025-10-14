@@ -3,19 +3,18 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
+import { ClaudeClient } from '../claudeClient.js';
 
 // Mock the Anthropic SDK
 jest.mock('@anthropic-ai/sdk');
 
 describe('ClaudeClient', () => {
-  let ClaudeClient;
   let claudeClient;
   let mockAnthropicInstance;
 
   beforeEach(() => {
     // Clear all mocks before each test
     jest.clearAllMocks();
-    jest.resetModules();
 
     // Create mock Anthropic client instance
     mockAnthropicInstance = {
@@ -30,11 +29,8 @@ describe('ClaudeClient', () => {
     // Set up environment variable
     process.env.CLAUDE_API_KEY = 'test-api-key';
 
-    // Import the module after mocking (dynamic import for ES modules)
-    return import('../claudeClient.js').then((module) => {
-      ClaudeClient = module.default.constructor;
-      claudeClient = new ClaudeClient();
-    });
+    // Create a new instance with mocked dependencies
+    claudeClient = new ClaudeClient();
   });
 
   afterEach(() => {

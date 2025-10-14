@@ -594,10 +594,14 @@ async function runAllTests() {
   }
 }
 
-// Run tests only if this file is executed directly (not by Jest)
-if (require.main === module) {
-  runAllTests().catch(error => {
-    console.error(`${colors.red}Fatal error running tests:${colors.reset}`, error);
-    process.exit(1);
-  });
-}
+// Jest test suite wrapper
+describe('CodeParser Service', () => {
+  it('should pass all custom test suite assertions', async () => {
+    // Run the custom test suite
+    await runAllTests();
+
+    // Assert that all tests passed
+    expect(failedTests).toBe(0);
+    expect(passedTests).toBeGreaterThan(0);
+  }, 30000); // 30 second timeout for comprehensive tests
+});
