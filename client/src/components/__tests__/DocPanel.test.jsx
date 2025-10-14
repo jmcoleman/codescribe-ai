@@ -339,7 +339,7 @@ x = 1
         />
       );
 
-      const button = screen.getByRole('button', { name: /Quality:/i });
+      const button = screen.getByRole('button', { name: /View quality score breakdown/i });
       await user.click(button);
 
       expect(onViewBreakdown).toHaveBeenCalledTimes(1);
@@ -584,10 +584,15 @@ Retrieve all users.
       );
 
       const buttons = screen.getAllByRole('button');
-      expect(buttons).toHaveLength(2);
+      expect(buttons).toHaveLength(3); // Copy button + Quality score button + Expand button
+
+      // Copy button
+      const copyButton = screen.getByRole('button', { name: /Copy documentation to clipboard/i });
+      expect(copyButton).toBeInTheDocument();
+      expect(copyButton).toBeEnabled();
 
       // Quality score button
-      const qualityButton = screen.getByRole('button', { name: /Quality:/i });
+      const qualityButton = screen.getByRole('button', { name: /View quality score breakdown/i });
       expect(qualityButton).toBeInTheDocument();
       expect(qualityButton).toBeEnabled();
 
@@ -1038,7 +1043,7 @@ Retrieve all users.
       );
 
       const expandButton = screen.getByRole('button', { name: /Show full quality report/i });
-      expect(expandButton).toHaveClass('focus:outline-none', 'focus:ring-2', 'focus:ring-purple-400');
+      expect(expandButton).toHaveClass('focus:outline-none', 'focus:ring-2', 'focus:ring-indigo-500');
     });
   });
 

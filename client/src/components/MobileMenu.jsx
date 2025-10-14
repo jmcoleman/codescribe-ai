@@ -25,7 +25,8 @@ export function MobileMenu({ isOpen, onClose, onExamplesClick }) {
             <span className="text-sm font-semibold text-slate-900">Menu</span>
             <button
               onClick={onClose}
-              className="p-1 hover:bg-slate-100 rounded transition-colors"
+              className="p-1 hover:bg-slate-100 hover:scale-[1.05] rounded transition-all duration-200 motion-reduce:transition-none active:scale-[0.98]"
+              aria-label="Close menu"
             >
               <X className="w-5 h-5 text-slate-600" />
             </button>
@@ -55,7 +56,7 @@ function MenuItem({ children, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 rounded-lg transition-colors"
+      className="w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 hover:translate-x-1 rounded-lg transition-all duration-200 motion-reduce:transition-none active:bg-slate-100"
     >
       {children}
     </button>

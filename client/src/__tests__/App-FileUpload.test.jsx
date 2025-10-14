@@ -244,16 +244,6 @@ describe('App - File Upload Integration', () => {
     it('should display error for file too large', async () => {
       const user = userEvent.setup();
 
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 400,
-        json: async () => ({
-          success: false,
-          error: 'File too large',
-          message: 'Maximum file size is 500KB'
-        })
-      });
-
       render(<App />);
 
       const fileInput = document.querySelector('input[type="file"]');
@@ -263,13 +253,12 @@ describe('App - File Upload Integration', () => {
 
       await user.upload(fileInput, file);
 
-      await waitFor(() => {
-        expect(mockFetch).toHaveBeenCalled();
-      });
+      // Client-side validation should catch this and NOT call fetch
+      expect(mockFetch).not.toHaveBeenCalled();
 
-      // Error banner should appear
+      // Error banner should appear with client-side validation message
       await waitFor(() => {
-        const errorMessage = screen.getByText(/Maximum file size is 500KB/i);
+        const errorMessage = screen.getByText(/exceeds maximum allowed size/i);
         expect(errorMessage).toBeInTheDocument();
       });
     });

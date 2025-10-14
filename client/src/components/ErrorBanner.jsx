@@ -29,7 +29,7 @@ export function ErrorBanner({ error, retryAfter, onDismiss }) {
         </div>
         <button
           onClick={onDismiss}
-          className="text-red-500 hover:text-red-700 text-xl font-bold flex-shrink-0"
+          className="text-red-500 hover:text-red-700 hover:bg-red-50 hover:scale-[1.05] text-xl font-bold flex-shrink-0 transition-all duration-200 motion-reduce:transition-none rounded p-1 active:scale-[0.98]"
           aria-label="Dismiss error"
         >
           ×
