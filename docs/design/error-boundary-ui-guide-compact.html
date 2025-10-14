@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ErrorBoundary UI States - CodeScribe AI</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+      line-height: 1.4;
+      color: #334155;
+      background: white;
+      padding: 20px;
+      font-size: 11px;
+    }
+
+    .container {
+      max-width: 100%;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #8b5cf6;
+    }
+
+    .header h1 {
+      font-size: 24px;
+      color: #1e293b;
+      margin-bottom: 5px;
+    }
+
+    .header p {
+      font-size: 11px;
+      color: #64748b;
+      margin-top: 3px;
+    }
+
+    .two-column {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .section {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 15px;
+      margin-bottom: 15px;
+      page-break-inside: avoid;
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 8px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .section-description {
+      font-size: 10px;
+      color: #475569;
+      margin-bottom: 10px;
+      line-height: 1.4;
+    }
+
+    .mockup {
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 12px;
+      background: #f8fafc;
+      margin-bottom: 10px;
+    }
+
+    .error-card {
+      background: white;
+      border: 1px solid #fecaca;
+      border-radius: 6px;
+      padding: 12px;
+      font-size: 10px;
+    }
+
+    .error-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .error-icon {
+      width: 24px;
+      height: 24px;
+      background: #fee2e2;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .error-icon svg {
+      width: 14px;
+      height: 14px;
+      color: #dc2626;
+    }
+
+    .error-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #1e293b;
+    }
+
+    .error-subtitle {
+      font-size: 9px;
+      color: #64748b;
+    }
+
+    .error-message {
+      color: #475569;
+      margin-bottom: 8px;
+      font-size: 9px;
+      line-height: 1.3;
+    }
+
+    .error-suggestions ul {
+      margin-left: 15px;
+      font-size: 9px;
+      color: #64748b;
+      line-height: 1.3;
+    }
+
+    .error-suggestions li {
+      margin-bottom: 2px;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin: 8px 0;
+    }
+
+    .button {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 9px;
+      font-weight: 500;
+      border: 1px solid;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .button-primary {
+      background: #8b5cf6;
+      color: white;
+      border-color: #8b5cf6;
+    }
+
+    .button-secondary {
+      background: #f1f5f9;
+      color: #475569;
+      border-color: #e2e8f0;
+    }
+
+    .technical-details {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      padding: 8px;
+      margin-top: 8px;
+      font-size: 9px;
+    }
+
+    .technical-details summary {
+      font-weight: 600;
+      color: #475569;
+      cursor: pointer;
+      padding: 2px;
+    }
+
+    .technical-details pre {
+      background: #fef2f2;
+      color: #991b1b;
+      padding: 6px;
+      border-radius: 3px;
+      overflow-x: auto;
+      font-size: 8px;
+      margin-top: 4px;
+      border: 1px solid #fecaca;
+      line-height: 1.2;
+    }
+
+    .production-info {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      padding: 8px;
+      margin-top: 8px;
+      font-size: 9px;
+    }
+
+    .production-info p {
+      margin-bottom: 3px;
+      color: #64748b;
+    }
+
+    .footer-links {
+      text-align: center;
+      padding-top: 8px;
+      border-top: 1px solid #e2e8f0;
+      font-size: 9px;
+      color: #64748b;
+    }
+
+    .footer-links a {
+      color: #8b5cf6;
+      text-decoration: underline;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .feature-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      padding: 10px;
+    }
+
+    .feature-card h3 {
+      font-size: 11px;
+      color: #1e293b;
+      margin-bottom: 5px;
+    }
+
+    .feature-card ul {
+      margin-left: 15px;
+      font-size: 9px;
+      color: #64748b;
+      line-height: 1.3;
+    }
+
+    .feature-card li {
+      margin-bottom: 2px;
+    }
+
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 9px;
+    }
+
+    .comparison-table th,
+    .comparison-table td {
+      padding: 6px 8px;
+      text-align: left;
+      border: 1px solid #e2e8f0;
+    }
+
+    .comparison-table th {
+      background: #f8fafc;
+      font-weight: 600;
+      color: #1e293b;
+      font-size: 10px;
+    }
+
+    .comparison-table td {
+      color: #475569;
+    }
+
+    .checkmark {
+      color: #10b981;
+      font-weight: bold;
+    }
+
+    .code-inline {
+      background: #f1f5f9;
+      padding: 1px 3px;
+      border-radius: 2px;
+      font-family: 'Courier New', monospace;
+      font-size: 9px;
+      color: #8b5cf6;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .stat-card {
+      background: rgba(139, 92, 246, 0.1);
+      padding: 10px;
+      border-radius: 4px;
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 20px;
+      font-weight: bold;
+      color: #8b5cf6;
+      margin-bottom: 3px;
+    }
+
+    .stat-label {
+      font-size: 9px;
+      color: #64748b;
+    }
+
+    .compact-list {
+      margin-left: 15px;
+      font-size: 9px;
+      line-height: 1.3;
+    }
+
+    .compact-list li {
+      margin-bottom: 2px;
+    }
+
+    @media print {
+      body {
+        padding: 10px;
+      }
+      .section {
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>ErrorBoundary UI States</h1>
+      <p>CodeScribe AI - Production-Ready Error Handling Component</p>
+      <p style="margin-top: 3px;">
+        <span class="code-inline">ErrorBoundary.jsx</span> • 48 Tests Passing • October 14, 2025
+      </p>
+    </div>
+
+    <!-- Overview with Stats -->
+    <div class="section">
+      <div class="section-title">Overview & Key Metrics</div>
+      <p class="section-description">
+        Catches JavaScript errors anywhere in the component tree, prevents app crashes, and displays user-friendly
+        fallback UI. Features intelligent error handling with development and production modes.
+      </p>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-number">48</div>
+          <div class="stat-label">Tests Passing</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">3</div>
+          <div class="stat-label">Recovery Options</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">2</div>
+          <div class="stat-label">Display Modes</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">100%</div>
+          <div class="stat-label">Coverage</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- UI States Side by Side -->
+    <div class="two-column">
+      <!-- Development Mode -->
+      <div class="section">
+        <div class="section-title">Development Mode</div>
+        <p class="section-description">
+          Shows detailed technical info when <span class="code-inline">import.meta.env.DEV === true</span>
+        </p>
+
+        <div class="mockup">
+          <div class="error-card">
+            <div class="error-header">
+              <div class="error-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <circle cx="12" cy="12" r="10" stroke-width="2"/>
+                  <line x1="12" y1="8" x2="12" y2="12" stroke-width="2"/>
+                  <circle cx="12" cy="16" r="1" fill="currentColor"/>
+                </svg>
+              </div>
+              <div>
+                <div class="error-title">Something went wrong</div>
+                <div class="error-subtitle">Unexpected error occurred</div>
+              </div>
+            </div>
+
+            <div class="error-message">
+              <p>We're sorry for the inconvenience. Here's what you can try:</p>
+            </div>
+
+            <div class="error-suggestions">
+              <ul>
+                <li>Try again - temporary issues resolve themselves</li>
+                <li>Reload the page to start fresh</li>
+                <li>Check your internet connection</li>
+              </ul>
+            </div>
+
+            <div class="button-group">
+              <button class="button button-primary">🔄 Try Again</button>
+              <button class="button button-secondary">🔃 Reload Page</button>
+              <button class="button button-secondary">🏠 Go Home</button>
+            </div>
+
+            <div class="technical-details">
+              <details>
+                <summary>Technical Details</summary>
+                <div style="margin-top: 6px;">
+                  <strong style="font-size: 8px;">Error:</strong>
+                  <pre>Cannot read properties of undefined</pre>
+                  <strong style="font-size: 8px;">Stack:</strong>
+                  <pre>at DocPanel.jsx:42:15
+at App.jsx:120:5</pre>
+                </div>
+              </details>
+            </div>
+
+            <div class="footer-links">
+              <a href="#">docs</a> | <a href="#">report issue</a>
+            </div>
+          </div>
+        </div>
+
+        <div style="background: #f8fafc; padding: 8px; border-radius: 4px; margin-top: 8px;">
+          <strong style="font-size: 10px; color: #1e293b;">Includes:</strong>
+          <ul class="compact-list">
+            <li>Full error messages</li>
+            <li>Complete stack traces</li>
+            <li>Component stack display</li>
+            <li>Expandable technical details</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Production Mode -->
+      <div class="section">
+        <div class="section-title">Production Mode</div>
+        <p class="section-description">
+          Clean UI with error ID when <span class="code-inline">import.meta.env.DEV === false</span>
+        </p>
+
+        <div class="mockup">
+          <div class="error-card">
+            <div class="error-header">
+              <div class="error-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <circle cx="12" cy="12" r="10" stroke-width="2"/>
+                  <line x1="12" y1="8" x2="12" y2="12" stroke-width="2"/>
+                  <circle cx="12" cy="16" r="1" fill="currentColor"/>
+                </svg>
+              </div>
+              <div>
+                <div class="error-title">Something went wrong</div>
+                <div class="error-subtitle">Unexpected error occurred</div>
+              </div>
+            </div>
+
+            <div class="error-message">
+              <p>We're sorry for the inconvenience. Here's what you can try:</p>
+            </div>
+
+            <div class="error-suggestions">
+              <ul>
+                <li>Try again - temporary issues resolve themselves</li>
+                <li>Reload the page to start fresh</li>
+                <li>Check your internet connection</li>
+              </ul>
+            </div>
+
+            <div class="button-group">
+              <button class="button button-primary">🔄 Try Again</button>
+              <button class="button button-secondary">🔃 Reload Page</button>
+              <button class="button button-secondary">🏠 Go Home</button>
+            </div>
+
+            <div class="production-info">
+              <p><strong>Error ID:</strong> 1729025847-k3j9x2m1q</p>
+              <p style="margin-top: 4px;">Contact support with error ID if problem continues.</p>
+            </div>
+
+            <div class="footer-links">
+              <a href="#">docs</a> | <a href="#">report issue</a>
+            </div>
+          </div>
+        </div>
+
+        <div style="background: #f8fafc; padding: 8px; border-radius: 4px; margin-top: 8px;">
+          <strong style="font-size: 10px; color: #1e293b;">Features:</strong>
+          <ul class="compact-list">
+            <li>Clean, professional UI</li>
+            <li>Unique error IDs for support</li>
+            <li>No sensitive info exposed</li>
+            <li>User-friendly guidance</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Comparison Table -->
+    <div class="section">
+      <div class="section-title">Development vs Production Comparison</div>
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Development</th>
+            <th>Production</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Error Message</td>
+            <td><span class="checkmark">✓</span> Full details</td>
+            <td><span class="checkmark">✓</span> User-friendly</td>
+          </tr>
+          <tr>
+            <td>Stack Trace</td>
+            <td><span class="checkmark">✓</span> Visible</td>
+            <td>❌ Hidden</td>
+          </tr>
+          <tr>
+            <td>Component Stack</td>
+            <td><span class="checkmark">✓</span> Full tree</td>
+            <td>❌ Hidden</td>
+          </tr>
+          <tr>
+            <td>Error ID</td>
+            <td>❌ Not shown</td>
+            <td><span class="checkmark">✓</span> Unique ID</td>
+          </tr>
+          <tr>
+            <td>Recovery Actions</td>
+            <td><span class="checkmark">✓</span> All 3 options</td>
+            <td><span class="checkmark">✓</span> All 3 options</td>
+          </tr>
+          <tr>
+            <td>Console Logging</td>
+            <td><span class="checkmark">✓</span> Detailed</td>
+            <td><span class="checkmark">✓</span> Basic</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Recovery Actions -->
+    <div class="section">
+      <div class="section-title">Recovery Actions</div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <h3>🔄 Try Again</h3>
+          <ul>
+            <li>Resets error state</li>
+            <li>Re-renders components</li>
+            <li>Preserves app state</li>
+            <li>Best for temporary issues</li>
+          </ul>
+          <p style="margin-top: 5px; padding-top: 5px; border-top: 1px solid #e2e8f0; font-size: 8px; color: #64748b;">
+            <strong>Use:</strong> Network glitches, race conditions
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <h3>🔃 Reload Page</h3>
+          <ul>
+            <li>Full page refresh</li>
+            <li>Clears all state</li>
+            <li>Reloads resources</li>
+            <li>Guaranteed fresh start</li>
+          </ul>
+          <p style="margin-top: 5px; padding-top: 5px; border-top: 1px solid #e2e8f0; font-size: 8px; color: #64748b;">
+            <strong>Use:</strong> Persistent errors, corrupted state
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <h3>🏠 Go Home</h3>
+          <ul>
+            <li>Navigates to root</li>
+            <li>Clears route state</li>
+            <li>Returns to safe state</li>
+            <li>Gentle recovery</li>
+          </ul>
+          <p style="margin-top: 5px; padding-top: 5px; border-top: 1px solid #e2e8f0; font-size: 8px; color: #64748b;">
+            <strong>Use:</strong> Route-specific errors
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Implementation -->
+    <div class="section">
+      <div class="section-title">Implementation & Integration</div>
+      <div class="two-column">
+        <div>
+          <strong style="font-size: 10px; color: #1e293b;">Component Structure:</strong>
+          <ul class="compact-list">
+            <li><strong>Class:</strong> React.Component for error lifecycle</li>
+            <li><strong>State:</strong> hasError, error, errorInfo, errorCount</li>
+            <li><strong>Methods:</strong> getDerivedStateFromError(), componentDidCatch()</li>
+            <li><strong>Recovery:</strong> handleReset(), handleReload(), handleGoHome()</li>
+            <li><strong>Environment:</strong> Detects via import.meta.env.DEV</li>
+          </ul>
+        </div>
+        <div>
+          <strong style="font-size: 10px; color: #1e293b;">Integration (main.jsx):</strong>
+          <pre style="background: #1e293b; color: #e2e8f0; padding: 8px; border-radius: 4px; font-size: 8px; line-height: 1.4;">import ErrorBoundary from './ErrorBoundary'
+
+createRoot(document.getElementById('root'))
+  .render(
+    &lt;StrictMode&gt;
+      &lt;ErrorBoundary&gt;
+        &lt;App /&gt;
+      &lt;/ErrorBoundary&gt;
+    &lt;/StrictMode&gt;
+  )</pre>
+        </div>
+      </div>
+
+      <div style="margin-top: 10px; background: #fef3c7; border-left: 3px solid #f59e0b; padding: 8px; border-radius: 3px;">
+        <p style="font-size: 9px; color: #92400e;">
+          <strong>💡 Best Practice:</strong> Place ErrorBoundary at root level to catch all errors.
+        </p>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="text-align: center; margin-top: 15px; padding: 10px; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; border-radius: 6px;">
+      <p style="font-size: 10px; margin-bottom: 5px;">
+        <strong>Test Coverage:</strong> 48 tests covering normal rendering, error catching, recovery actions, dev/prod modes,
+        accessibility, edge cases, and responsive design
+      </p>
+      <p style="font-size: 9px; opacity: 0.9; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.2);">
+        CodeScribe AI • ErrorBoundary Component • client/src/components/ErrorBoundary.jsx • October 14, 2025
+      </p>
+    </div>
+  </div>
+</body>
+</html>
