@@ -169,7 +169,35 @@ router.post('/upload', apiLimiter, (req, res) => {
         });
       }
 
+      // Validate file is not empty
+      if (req.file.size === 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'Empty file',
+          message: 'The uploaded file is empty. Please upload a file with content.'
+        });
+      }
+
+      // Convert buffer to string and validate content
       const content = req.file.buffer.toString('utf-8');
+
+      // Additional validation: ensure content is not just whitespace
+      if (!content.trim()) {
+        return res.status(400).json({
+          success: false,
+          error: 'Empty content',
+          message: 'The uploaded file contains no meaningful content.'
+        });
+      }
+
+      // Validate content length (same as code input validation)
+      if (content.length > 100000) {
+        return res.status(400).json({
+          success: false,
+          error: 'File content too large',
+          message: 'Maximum file content is 100,000 characters'
+        });
+      }
 
       res.json({
         success: true,

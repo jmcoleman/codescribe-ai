@@ -7,6 +7,7 @@ import { DocPanel } from './components/DocPanel';
 import { QualityScoreModal } from './components/QualityScore';
 import { useDocGeneration } from './hooks/useDocGeneration';
 import { ErrorBanner } from './components/ErrorBanner';
+import { validateFile, getValidationErrorMessage } from './utils/fileValidation';
 
 function App() {
   const [code, setCode] = useState('// Paste your code here or try the example below...\n\n// Example function:\nfunction calculateTotal(items) {\n  return items.reduce((sum, item) => sum + item.price, 0);\n}\n');
@@ -48,6 +49,22 @@ function App() {
     setUploadError(null);
 
     try {
+      // Perform client-side validation
+      const validation = validateFile(file);
+
+      if (!validation.valid) {
+        const errorMessage = getValidationErrorMessage(validation);
+        setUploadError(errorMessage);
+        // Reset the file input
+        event.target.value = '';
+        return;
+      }
+
+      // Log warnings if any (e.g., unexpected MIME type)
+      if (validation.warnings.length > 0) {
+        console.warn('File upload warnings:', validation.warnings);
+      }
+
       // Create FormData to send file to backend
       const formData = new FormData();
       formData.append('file', file);

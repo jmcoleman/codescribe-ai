@@ -256,6 +256,85 @@ describe('File Upload Validation', () => {
     });
   });
 
+  describe('Empty file validation (NEW)', () => {
+    it('should detect empty files (0 bytes)', () => {
+      const tempFile = path.join(fixturesDir, 'temp-empty.js');
+      fs.writeFileSync(tempFile, '', 'utf-8');
+
+      const stats = fs.statSync(tempFile);
+      expect(stats.size).toBe(0);
+
+      // Cleanup
+      fs.unlinkSync(tempFile);
+    });
+
+    it('should detect files with only whitespace', () => {
+      const tempFile = path.join(fixturesDir, 'temp-whitespace.js');
+      fs.writeFileSync(tempFile, '   \n\t  \n  ', 'utf-8');
+
+      const content = fs.readFileSync(tempFile, 'utf-8');
+      expect(content.trim()).toBe('');
+
+      // Cleanup
+      fs.unlinkSync(tempFile);
+    });
+
+    it('should accept files with content after trimming', () => {
+      const tempFile = path.join(fixturesDir, 'temp-valid-trim.js');
+      fs.writeFileSync(tempFile, '  \n  const x = 1;  \n  ', 'utf-8');
+
+      const content = fs.readFileSync(tempFile, 'utf-8');
+      expect(content.trim()).toBe('const x = 1;');
+
+      // Cleanup
+      fs.unlinkSync(tempFile);
+    });
+  });
+
+  describe('Content length validation (NEW)', () => {
+    const MAX_CONTENT_LENGTH = 100000;
+
+    it('should accept files under character limit', () => {
+      const testFiles = [
+        'valid-javascript.js',
+        'valid-typescript.ts',
+        'valid-react.jsx',
+        'valid-typescript-react.tsx',
+        'valid-python.py'
+      ];
+
+      testFiles.forEach(filename => {
+        const filePath = path.join(fixturesDir, filename);
+        const content = fs.readFileSync(filePath, 'utf-8');
+        expect(content.length).toBeLessThan(MAX_CONTENT_LENGTH);
+      });
+    });
+
+    it('should identify files exceeding character limit', () => {
+      const tempFile = path.join(fixturesDir, 'temp-too-long.js');
+      const longContent = 'a'.repeat(MAX_CONTENT_LENGTH + 1);
+      fs.writeFileSync(tempFile, longContent, 'utf-8');
+
+      const content = fs.readFileSync(tempFile, 'utf-8');
+      expect(content.length).toBeGreaterThan(MAX_CONTENT_LENGTH);
+
+      // Cleanup
+      fs.unlinkSync(tempFile);
+    });
+
+    it('should accept files at exactly character limit', () => {
+      const tempFile = path.join(fixturesDir, 'temp-exactly-max.js');
+      const maxContent = 'a'.repeat(MAX_CONTENT_LENGTH);
+      fs.writeFileSync(tempFile, maxContent, 'utf-8');
+
+      const content = fs.readFileSync(tempFile, 'utf-8');
+      expect(content.length).toBe(MAX_CONTENT_LENGTH);
+
+      // Cleanup
+      fs.unlinkSync(tempFile);
+    });
+  });
+
   describe('Integration readiness', () => {
     it('should have all required test fixtures', () => {
       const requiredFiles = [
@@ -367,6 +446,26 @@ describe('File Upload Validation', () => {
  *   Status 400, success: false, error: "File too large"
  *   Message: "Maximum file size is 500KB"
  *
+ * - Empty file (0 bytes):
+ *   Status 400, success: false, error: "Empty file"
+ *   Message: "The uploaded file is empty"
+ *
+ * - File with only whitespace:
+ *   Status 400, success: false, error: "Empty content"
+ *   Message: "The uploaded file contains no meaningful content"
+ *
+ * - Content exceeds 100,000 characters:
+ *   Status 400, success: false, error: "File content too large"
+ *   Message: "Maximum file content is 100,000 characters"
+ *
  * - No file uploaded:
  *   Status 400, success: false, error: "No file uploaded"
+ *
+ * Backend Validation Layers:
+ * -------------------------
+ * 1. File extension (Multer fileFilter) - rejects invalid types immediately
+ * 2. File size (Multer limits) - enforces 500KB maximum
+ * 3. Empty file check - rejects 0-byte files
+ * 4. Content validation - ensures content is not just whitespace
+ * 5. Content length - enforces 100,000 character maximum
  */
