@@ -113,14 +113,22 @@ export function useDocGeneration() {
     setIsGenerating(false);
   }, []);
 
+  const reset = useCallback(() => {
+    setDocumentation('');
+    setQualityScore(null);
+    setError(null);
+    setRetryAfter(null);
+  }, []);
+
   return {
     generate,
     cancel,
+    reset,
     isGenerating,
     documentation,
     qualityScore,
     error,
-    rateLimitInfo, 
+    rateLimitInfo,
     retryAfter
   };
 }

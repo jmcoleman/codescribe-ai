@@ -1,8 +1,13 @@
 import { X } from 'lucide-react';
 import { Button } from './Button';
 
-export function MobileMenu({ isOpen, onClose }) {
+export function MobileMenu({ isOpen, onClose, onExamplesClick }) {
   if (!isOpen) return null;
+
+  const handleExamplesClick = () => {
+    onExamplesClick();
+    onClose();
+  };
 
   return (
     <>
@@ -28,7 +33,7 @@ export function MobileMenu({ isOpen, onClose }) {
 
           {/* Menu Items */}
           <nav className="flex-1 p-4 space-y-2">
-            <MenuItem onClick={onClose}>Examples</MenuItem>
+            <MenuItem onClick={handleExamplesClick}>Examples</MenuItem>
             <MenuItem onClick={onClose}>Documentation</MenuItem>
             <MenuItem onClick={onClose}>API Access</MenuItem>
             <MenuItem onClick={onClose}>GitHub Repo</MenuItem>

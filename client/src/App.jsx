@@ -5,6 +5,7 @@ import { ControlBar } from './components/ControlBar';
 import { CodePanel } from './components/CodePanel';
 import { DocPanel } from './components/DocPanel';
 import { QualityScoreModal } from './components/QualityScore';
+import { ExamplesModal } from './components/ExamplesModal';
 import { useDocGeneration } from './hooks/useDocGeneration';
 import { ErrorBanner } from './components/ErrorBanner';
 import { validateFile, getValidationErrorMessage } from './utils/fileValidation';
@@ -15,12 +16,14 @@ function App() {
   const [language, setLanguage] = useState('javascript');
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showQualityModal, setShowQualityModal] = useState(false);
+  const [showExamplesModal, setShowExamplesModal] = useState(false);
   const [uploadError, setUploadError] = useState(null);
   const fileInputRef = useRef(null);
   
   const {
     generate,
-    isGenerating, 
+    reset,
+    isGenerating,
     documentation,
     qualityScore,
     error,
@@ -125,6 +128,13 @@ function App() {
     console.log('GitHub import clicked');
   };
 
+  const handleLoadExample = (example) => {
+    setCode(example.code);
+    setDocType(example.docType);
+    setLanguage(example.language);
+    reset(); // Clear any existing documentation and quality score
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       {/* Hidden file input */}
@@ -140,6 +150,7 @@ function App() {
       {/* Header */}
       <Header
         onMenuClick={() => setShowMobileMenu(true)}
+        onExamplesClick={() => setShowExamplesModal(true)}
         showMobileMenu={showMobileMenu}
         rateLimitInfo={rateLimitInfo}
       />
@@ -148,6 +159,7 @@ function App() {
       <MobileMenu
         isOpen={showMobileMenu}
         onClose={() => setShowMobileMenu(false)}
+        onExamplesClick={() => setShowExamplesModal(true)}
       />
 
       {/* Main Content */}
@@ -206,6 +218,13 @@ function App() {
           onClose={() => setShowQualityModal(false)}
         />
       )}
+
+      {/* Examples Modal */}
+      <ExamplesModal
+        isOpen={showExamplesModal}
+        onClose={() => setShowExamplesModal(false)}
+        onLoadExample={handleLoadExample}
+      />
     </div>
   );
 }

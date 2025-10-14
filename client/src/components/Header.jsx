@@ -2,7 +2,7 @@ import { FileCode2, Menu } from 'lucide-react';
 import { Button } from './Button';
 import { RateLimitIndicator } from './RateLimitIndicator';
 
-export function Header({ onMenuClick, showMobileMenu = false, rateLimitInfo }) {
+export function Header({ onMenuClick, onExamplesClick, showMobileMenu = false, rateLimitInfo }) {
   return (
     <header className="bg-white border-b border-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -39,7 +39,7 @@ export function Header({ onMenuClick, showMobileMenu = false, rateLimitInfo }) {
 
             {/* Desktop Nav */}
             <div className="hidden md:flex items-center gap-2">
-              <Button variant="secondary" onClick={() => window.open('/examples', '_blank')}>
+              <Button variant="secondary" onClick={onExamplesClick}>
                 Examples
               </Button>
               <Button variant="secondary" onClick={() => window.open('/docs', '_blank')}>
