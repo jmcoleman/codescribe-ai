@@ -1,6 +1,7 @@
 import { Component } from 'react';
 import { AlertCircle, RefreshCw, Home } from 'lucide-react';
 import { Button } from './Button';
+import { CopyButton } from './CopyButton';
 
 /**
  * ErrorBoundary Component
@@ -13,7 +14,8 @@ import { Button } from './Button';
  * - Displays user-friendly error messages
  * - Provides recovery options (retry, reload, home)
  * - Logs errors for debugging (can be extended to send to monitoring services)
- * - Shows error details in development mode
+ * - Shows error details in development mode with copy buttons for easy sharing
+ * - Copy functionality for error message, stack trace, and component stack
  *
  * @example
  * <ErrorBoundary>
@@ -162,9 +164,17 @@ class ErrorBoundary extends Component {
                   <div className="mt-4 space-y-4">
                     {/* Error Message */}
                     <div>
-                      <h3 className="text-xs font-semibold text-slate-600 mb-1">
-                        Error Message:
-                      </h3>
+                      <div className="flex items-center justify-between mb-1">
+                        <h3 className="text-xs font-semibold text-slate-600">
+                          Error Message:
+                        </h3>
+                        <CopyButton
+                          text={error.toString()}
+                          size="sm"
+                          variant="outline"
+                          ariaLabel="Copy error message"
+                        />
+                      </div>
                       <pre className="bg-red-50 text-red-800 p-3 rounded text-xs overflow-x-auto border border-red-200">
                         {error.toString()}
                       </pre>
@@ -173,9 +183,17 @@ class ErrorBoundary extends Component {
                     {/* Stack Trace */}
                     {error.stack && (
                       <div>
-                        <h3 className="text-xs font-semibold text-slate-600 mb-1">
-                          Stack Trace:
-                        </h3>
+                        <div className="flex items-center justify-between mb-1">
+                          <h3 className="text-xs font-semibold text-slate-600">
+                            Stack Trace:
+                          </h3>
+                          <CopyButton
+                            text={error.stack}
+                            size="sm"
+                            variant="outline"
+                            ariaLabel="Copy stack trace"
+                          />
+                        </div>
                         <pre className="bg-slate-100 text-slate-800 p-3 rounded text-xs overflow-x-auto max-h-48 overflow-y-auto border border-slate-300">
                           {error.stack}
                         </pre>
@@ -185,9 +203,17 @@ class ErrorBoundary extends Component {
                     {/* Component Stack */}
                     {errorInfo?.componentStack && (
                       <div>
-                        <h3 className="text-xs font-semibold text-slate-600 mb-1">
-                          Component Stack:
-                        </h3>
+                        <div className="flex items-center justify-between mb-1">
+                          <h3 className="text-xs font-semibold text-slate-600">
+                            Component Stack:
+                          </h3>
+                          <CopyButton
+                            text={errorInfo.componentStack}
+                            size="sm"
+                            variant="outline"
+                            ariaLabel="Copy component stack"
+                          />
+                        </div>
                         <pre className="bg-slate-100 text-slate-800 p-3 rounded text-xs overflow-x-auto max-h-48 overflow-y-auto border border-slate-300">
                           {errorInfo.componentStack}
                         </pre>
