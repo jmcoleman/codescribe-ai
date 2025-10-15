@@ -12,10 +12,10 @@ describe('DocPanel Component', () => {
     it('should render empty state when no documentation provided', () => {
       render(<DocPanel documentation="" qualityScore={null} isGenerating={false} />);
 
-      expect(screen.getByText(/Your generated documentation will appear here/i)).toBeInTheDocument();
+      expect(screen.getByText(/Your AI-generated documentation will appear here/i)).toBeInTheDocument();
       // SVG icons are rendered with aria-hidden, so we can't use getByRole('img')
       // Instead, verify the container is present
-      const emptyStateContainer = screen.getByText(/Your generated documentation will appear here/i).parentElement;
+      const emptyStateContainer = screen.getByText(/Your AI-generated documentation will appear here/i).parentElement;
       expect(emptyStateContainer).toHaveClass('flex', 'flex-col', 'items-center');
     });
 
@@ -44,7 +44,7 @@ describe('DocPanel Component', () => {
     it('should not show empty state message when generating', () => {
       render(<DocPanel documentation="" qualityScore={null} isGenerating={true} />);
 
-      expect(screen.queryByText(/Your generated documentation will appear here/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Your AI-generated documentation will appear here/i)).not.toBeInTheDocument();
     });
   });
 
@@ -398,12 +398,12 @@ x = 1
         <DocPanel documentation="" qualityScore={null} isGenerating={false} />
       );
 
-      expect(screen.getByText(/Your generated documentation will appear here/i)).toBeInTheDocument();
+      expect(screen.getByText(/Your AI-generated documentation will appear here/i)).toBeInTheDocument();
 
       rerender(<DocPanel documentation="" qualityScore={null} isGenerating={true} />);
 
       expect(screen.getByText(/Generating documentation.../i)).toBeInTheDocument();
-      expect(screen.queryByText(/Your generated documentation will appear here/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Your AI-generated documentation will appear here/i)).not.toBeInTheDocument();
     });
 
     it('should transition from loading to documentation state', () => {
@@ -1254,7 +1254,7 @@ Retrieve all users.
     it('should handle empty string documentation', () => {
       render(<DocPanel documentation="" qualityScore={null} isGenerating={false} />);
 
-      expect(screen.getByText(/Your generated documentation will appear here/i)).toBeInTheDocument();
+      expect(screen.getByText(/Your AI-generated documentation will appear here/i)).toBeInTheDocument();
     });
 
     it('should handle very long documentation', () => {

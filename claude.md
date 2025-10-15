@@ -390,7 +390,7 @@ codescribe-ai/
 1. **README.md** - Comprehensive project documentation
 2. **JSDoc** - Inline code comments with @param/@returns/@example
 3. **API** - Endpoint/function documentation
-4. **ARCHITECTURE** - System design overview (future)
+4. **ARCHITECTURE** - System design overview
 
 ### Quality Scoring Criteria
 1. Overview/Description (20 points)

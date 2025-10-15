@@ -1,8 +1,8 @@
-import { FileCode2, Menu } from 'lucide-react';
+import { FileCode2, Menu, HelpCircle } from 'lucide-react';
 import { Button } from './Button';
 import { RateLimitIndicator } from './RateLimitIndicator';
 
-export function Header({ onMenuClick, onExamplesClick, showMobileMenu = false, rateLimitInfo }) {
+export function Header({ onMenuClick, onExamplesClick, onHelpClick, showMobileMenu = false, rateLimitInfo }) {
   return (
     <header className="bg-white border-b border-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -42,9 +42,17 @@ export function Header({ onMenuClick, onExamplesClick, showMobileMenu = false, r
               <Button variant="secondary" onClick={onExamplesClick}>
                 Examples
               </Button>
-              <Button variant="secondary" onClick={() => window.open('/docs', '_blank')}>
-                Docs
-              </Button>
+
+              {/* Help Icon Button */}
+              <button
+                onClick={onHelpClick}
+                className="p-2 hover:bg-slate-100 rounded-lg transition-all duration-200 active:scale-95"
+                aria-label="Help and FAQ"
+                title="Help and FAQ"
+              >
+                <HelpCircle className="w-5 h-5 text-slate-600" />
+              </button>
+
               <Button variant="dark">
                 Sign In
               </Button>

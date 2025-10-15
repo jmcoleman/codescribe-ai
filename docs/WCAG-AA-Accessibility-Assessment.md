@@ -484,7 +484,7 @@ Add to CSS:
     
     <!-- Fix: Proper title and meta tags -->
     <title>CodeScribe AI - Intelligent Code Documentation Generator</title>
-    <meta name="description" content="Generate comprehensive code documentation instantly with AI. Create README files, JSDoc comments, and API documentation with quality scoring." />
+    <meta name="description" content="Generate comprehensive code documentation instantly with AI. Create README files, JSDoc comments, API documentation, and ARCHITECTURE overviews with quality scoring." />
     <meta name="theme-color" content="#A855F7" />
   </head>
   <body>

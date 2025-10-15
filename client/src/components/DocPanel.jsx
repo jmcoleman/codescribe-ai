@@ -119,10 +119,38 @@ export function DocPanel({
             </ReactMarkdown>
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <FileText className="w-12 h-12 text-slate-300 mb-4" />
-            <p className="text-sm text-slate-500">
-              Your generated documentation will appear here
+          <div className="flex flex-col items-center justify-center h-full text-center px-6">
+            <FileText className="w-16 h-16 text-slate-300 mb-4" />
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">
+              Ready to Generate Documentation
+            </h3>
+            <p className="text-sm text-slate-600 mb-6 max-w-md">
+              Your AI-generated documentation will appear here with real-time streaming and quality scoring.
+            </p>
+
+            {/* Quick Start Steps */}
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 max-w-md text-left">
+              <h4 className="text-sm font-semibold text-slate-900 mb-3 text-center">
+                Quick Start
+              </h4>
+              <ol className="space-y-2 text-xs text-slate-700">
+                <li className="flex gap-2">
+                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs font-bold">1</span>
+                  <span>Paste your code or click <strong>"Upload Files"</strong></span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs font-bold">2</span>
+                  <span>Select documentation type (README, JSDoc, API, or ARCHITECTURE)</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs font-bold">3</span>
+                  <span>Click <strong>"Generate Docs"</strong> and watch the magic happen!</span>
+                </li>
+              </ol>
+            </div>
+
+            <p className="text-xs text-slate-500 mt-4">
+              Not sure where to start? Try the <strong>Examples</strong> button above or click the <strong>?</strong> icon for help.
             </p>
           </div>
         )}

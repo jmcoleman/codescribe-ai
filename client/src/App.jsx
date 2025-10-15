@@ -7,6 +7,7 @@ import { CodePanel } from './components/CodePanel';
 import { DocPanel } from './components/DocPanel';
 import { QualityScoreModal } from './components/QualityScore';
 import { ExamplesModal } from './components/ExamplesModal';
+import { HelpModal } from './components/HelpModal';
 import { useDocGeneration } from './hooks/useDocGeneration';
 import { ErrorBanner } from './components/ErrorBanner';
 import { validateFile, getValidationErrorMessage } from './utils/fileValidation';
@@ -25,6 +26,7 @@ function App() {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showQualityModal, setShowQualityModal] = useState(false);
   const [showExamplesModal, setShowExamplesModal] = useState(false);
+  const [showHelpModal, setShowHelpModal] = useState(false);
   const [uploadError, setUploadError] = useState(null);
   const fileInputRef = useRef(null);
   
@@ -204,6 +206,7 @@ function App() {
       <Header
         onMenuClick={() => setShowMobileMenu(true)}
         onExamplesClick={() => setShowExamplesModal(true)}
+        onHelpClick={() => setShowHelpModal(true)}
         showMobileMenu={showMobileMenu}
         rateLimitInfo={rateLimitInfo}
       />
@@ -213,6 +216,7 @@ function App() {
         isOpen={showMobileMenu}
         onClose={() => setShowMobileMenu(false)}
         onExamplesClick={() => setShowExamplesModal(true)}
+        onHelpClick={() => setShowHelpModal(true)}
       />
 
       {/* Main Content */}
@@ -277,6 +281,12 @@ function App() {
         isOpen={showExamplesModal}
         onClose={() => setShowExamplesModal(false)}
         onLoadExample={handleLoadExample}
+      />
+
+      {/* Help Modal */}
+      <HelpModal
+        isOpen={showHelpModal}
+        onClose={() => setShowHelpModal(false)}
       />
     </div>
   );
