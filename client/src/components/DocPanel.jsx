@@ -6,6 +6,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vs } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { CopyButton } from './CopyButton';
 import { DocPanelGeneratingSkeleton } from './SkeletonLoader';
+import { MermaidDiagram } from './MermaidDiagram';
 
 const STORAGE_KEY = 'codescribe-report-expanded';
 
@@ -88,24 +89,66 @@ export function DocPanel({
       </div>
 
       {/* Body - Documentation Content */}
-      <div className="flex-1 overflow-y-auto p-6">
+      <div className="flex-1 overflow-y-auto px-6 py-4">
         {isGenerating && !documentation ? (
           <DocPanelGeneratingSkeleton />
         ) : documentation ? (
-          <div className="prose prose-sm max-w-none">
+          <div className="prose prose-sm prose-slate max-w-none overflow-x-auto">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{
                 code({ node, inline, className, children, ...props }) {
                   const match = /language-(\w+)/.exec(className || '');
+                  const language = match ? match[1] : '';
+                  const codeContent = String(children).replace(/\n$/, '');
+
+                  // Handle mermaid diagrams - only render if generation is complete
+                  if (!inline && language === 'mermaid') {
+                    // Show placeholder while generating
+                    if (isGenerating) {
+                      return (
+                        <div className="my-6 p-4 bg-slate-50 border border-slate-200 rounded-lg min-h-[300px] flex items-center justify-center">
+                          <div className="text-center">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-2"></div>
+                            <p className="text-sm text-slate-600">Diagram will render when generation completes...</p>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    // Render diagram only when generation is complete
+                    return (
+                      <MermaidDiagram
+                        chart={codeContent}
+                        id={`mermaid-${Math.random().toString(36).substring(2, 11)}`}
+                      />
+                    );
+                  }
+
+                  // Handle other code blocks
                   return !inline && match ? (
                     <SyntaxHighlighter
                       style={vs}
-                      language={match[1]}
+                      language={language}
                       PreTag="div"
+                      customStyle={{
+                        background: 'transparent',
+                        padding: '0',
+                        margin: '1rem 0',
+                        border: 'none',
+                        borderRadius: '0'
+                      }}
+                      codeTagProps={{
+                        style: {
+                          background: 'transparent',
+                          fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                          fontSize: '0.875rem',
+                          lineHeight: '1.7'
+                        }
+                      }}
                       {...props}
                     >
-                      {String(children).replace(/\n$/, '')}
+                      {codeContent}
                     </SyntaxHighlighter>
                   ) : (
                     <code className="bg-slate-100 px-1 py-0.5 rounded text-xs font-mono" {...props}>

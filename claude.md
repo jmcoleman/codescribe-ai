@@ -323,6 +323,24 @@ open docs/design/brand-color-palette.pdf
 
 ---
 
+#### [MERMAID-DIAGRAMS.md](docs/components/MERMAID-DIAGRAMS.md) - Mermaid Diagram Developer Guide
+**When to use:** Creating or modifying Mermaid diagrams, understanding diagram patterns, troubleshooting rendering issues
+
+**Contains:**
+- Complete Mermaid implementation guide for CodeScribe AI
+- CodeScribe AI diagram patterns (brand colors, legend placement, theme configuration)
+- React component implementation (`MermaidDiagram.jsx`, `DocPanel.jsx` integration)
+- Best practices for diagram structure, accessibility, performance
+- Configuration reference (theme variables, flowchart settings, security levels)
+- Practical examples (system architecture, sequence diagrams, state machines)
+- Testing & debugging strategies (console debugging, validation checklist, cross-browser testing)
+- Troubleshooting guide (rendering issues, style application, legend placement, performance)
+- Future enhancement ideas for Phase 4 evaluation
+
+**Key for:** Diagram creation, brand consistency, React integration, debugging rendering issues, maintaining visual standards
+
+---
+
 ## 🔑 Key Technical Details
 
 ### Tech Stack
@@ -375,7 +393,8 @@ codescribe-ai/
 │   │   ├── 04-Architecture.md    # System architecture diagram
 │   │   └── ARCHITECTURE.md       # Architecture overview
 │   ├── components/               # Component documentation
-│   │   └── TOAST-SYSTEM.md       # Toast notification system guide
+│   │   ├── TOAST-SYSTEM.md       # Toast notification system guide
+│   │   └── MERMAID-DIAGRAMS.md   # Mermaid diagram developer guide
 │   ├── design/                   # Design assets
 │   │   ├── brand-color-palette.html  # Interactive color palette
 │   │   └── brand-color-palette.pdf   # PDF version for sharing
@@ -416,8 +435,10 @@ When answering questions about CodeScribe AI:
 - **Planning/Scope** → Reference PRD or Epics
 - **Implementation** → Reference Dev Guide or Master Prompt
 - **API/Endpoints** → Reference API Reference
-- **Design/UI** → Reference Figma Guide
-- **Architecture** → Reference Architecture diagram
+- **Design/UI** → Reference Figma Guide or Brand Color Palette
+- **Architecture** → Reference Architecture diagram or ARCHITECTURE.md
+- **Diagrams/Visualization** → Reference MERMAID-DIAGRAMS.md
+- **Components** → Reference TOAST-SYSTEM.md or MERMAID-DIAGRAMS.md
 - **Current Tasks** → Reference Todo List
 - **Explanation/Demo** → Reference Interview Guide
 
@@ -444,6 +465,8 @@ Multiple docs cover the same topic from different angles:
 - **Quality Scoring**: PRD (requirements), Dev Guide (implementation), API Reference (algorithm details)
 - **Architecture**: 04-Architecture.md (visual diagram + quick overview), ARCHITECTURE.md (deep technical dive), Dev Guide (implementation), Master Prompt (summary)
 - **Setup**: Todo List (tasks), Dev Guide (code), Master Prompt (quick commands)
+- **Mermaid Diagrams**: MERMAID-DIAGRAMS.md (comprehensive guide), CLAUDE.md section 7 (quick reference), 04-Architecture.md (implementation example)
+- **Component Patterns**: TOAST-SYSTEM.md (toast notifications), MERMAID-DIAGRAMS.md (diagram rendering)
 
 Always provide the most relevant reference for the question asked.
 
@@ -460,7 +483,9 @@ Always provide the most relevant reference for the question asked.
 - The user is located in EST timezone
 
 ### 7. Mermaid Diagram Guidelines
-When creating or modifying Mermaid diagrams for this project:
+When creating or modifying Mermaid diagrams for this project, refer to the **[MERMAID-DIAGRAMS.md](docs/components/MERMAID-DIAGRAMS.md)** comprehensive developer guide.
+
+**Quick Reference (see full guide for details):**
 
 **Legend/Index Placement:**
 - **Place legend last** in the Mermaid code (after all subgraphs, before node connections)
@@ -495,6 +520,8 @@ L["🟣 Purple - Client/Frontend<br/>⚪ Slate - API Layer<br/>🔵 Indigo - Ser
 - Place legend last in code (renders top-left, perfect for F-pattern reading!)
 - Ensure all colors in diagram are documented in legend
 - **Note:** Mermaid's auto-layout places standalone subgraphs in top-left - this works perfectly for legends
+
+**For comprehensive details, see:** [MERMAID-DIAGRAMS.md](docs/components/MERMAID-DIAGRAMS.md) including React implementation, troubleshooting, examples, and configuration reference.
 
 ---
 
@@ -572,7 +599,8 @@ VITE_API_URL=http://localhost:3000
 
 ## 🔄 Version History
 
-- **v1.7** (Current) - Added UI Pattern Guidelines to Figma Guide establishing color usage patterns: slate for helper text, indigo for primary badges, slate for secondary badges; updated CLAUDE.md documentation map
+- **v1.8** (Current) - Created comprehensive MERMAID-DIAGRAMS.md developer guide with patterns, React implementation, best practices, troubleshooting, and examples; updated CLAUDE.md documentation map
+- **v1.7** - Added UI Pattern Guidelines to Figma Guide establishing color usage patterns: slate for helper text, indigo for primary badges, slate for secondary badges; updated CLAUDE.md documentation map
 - **v1.6** - Added Phase 4: Optional Enhancements to PRD, created TOAST-SYSTEM.md documentation with future enhancement section, updated documentation map
 - **v1.5** - Added Mermaid diagram guidelines section with legend placement best practices, spacing configuration, and styling standards
 - **v1.4** - Expanded semantic colors for accessibility (fixed red contrast to WCAG AA, added background/button shades for green/yellow/red)
