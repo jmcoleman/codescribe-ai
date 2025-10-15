@@ -59,7 +59,7 @@ export const CustomToast = ({
       iconBgColor: 'bg-gradient-to-br from-indigo-50 to-indigo-100',
       bgColor: 'bg-white',
       borderColor: 'border-indigo-300',
-      ringColor: 'focus:ring-indigo-500',
+      ringColor: 'focus:ring-purple-600',
       shadowColor: 'shadow-indigo-100',
     },
   };
@@ -128,7 +128,7 @@ export const CustomToast = ({
                       compact ? 'px-3 py-1.5 text-xs' : 'px-4 py-2 text-xs'
                     } font-semibold rounded-lg shadow-sm ${
                       action.variant === 'primary'
-                        ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white hover:from-purple-700 hover:to-purple-800 focus:ring-purple-500 shadow-purple-200'
+                        ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white hover:from-purple-700 hover:to-purple-800 focus:ring-purple-600 shadow-purple-200'
                         : action.variant === 'danger'
                         ? 'bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800 focus:ring-red-500 shadow-red-200'
                         : 'bg-slate-100 text-slate-700 hover:bg-slate-200 focus:ring-slate-400 border border-slate-300'
@@ -251,7 +251,7 @@ export const ProgressToast = ({
         <div className="flex border-l border-slate-200">
           <button
             onClick={() => toast.dismiss(t.id)}
-            className="w-full border border-transparent rounded-none rounded-r-xl p-3 flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-50/80 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-purple-500 transition-all duration-200 active:scale-95"
+            className="w-full border border-transparent rounded-none rounded-r-xl p-3 flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-50/80 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-purple-600 transition-all duration-200 active:scale-95"
             aria-label="Dismiss notification"
           >
             <X className="h-4 w-4" />
@@ -287,7 +287,7 @@ export const UndoToast = ({ t, message, onUndo }) => {
             onUndo?.();
             toast.dismiss(t.id);
           }}
-          className="ml-4 flex-shrink-0 inline-flex items-center px-4 py-2 text-sm font-bold text-white bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-purple-500 transition-all duration-150 shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40 active:scale-95"
+          className="ml-4 flex-shrink-0 inline-flex items-center px-4 py-2 text-sm font-bold text-white bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-purple-600 transition-all duration-150 shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40 active:scale-95"
         >
           Undo
         </button>
@@ -359,7 +359,7 @@ export const AvatarToast = ({ t, type = 'info', title, message, avatarUrl, avata
     },
     info: {
       borderColor: 'border-indigo-300',
-      ringColor: 'focus:ring-indigo-500',
+      ringColor: 'focus:ring-purple-600',
     },
   };
 
@@ -418,7 +418,7 @@ export const AvatarToast = ({ t, type = 'info', title, message, avatarUrl, avata
                     }}
                     className={`inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg shadow-sm ${
                       action.variant === 'primary'
-                        ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white hover:from-purple-700 hover:to-purple-800 focus:ring-purple-500 shadow-purple-200'
+                        ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white hover:from-purple-700 hover:to-purple-800 focus:ring-purple-600 shadow-purple-200'
                         : action.variant === 'danger'
                         ? 'bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800 focus:ring-red-500 shadow-red-200'
                         : 'bg-slate-100 text-slate-700 hover:bg-slate-200 focus:ring-slate-400 border border-slate-300'
@@ -489,7 +489,7 @@ export const ExpandableToast = ({ t, type = 'info', title, preview, fullContent,
       iconColor: 'text-indigo-600',
       iconBgColor: 'bg-gradient-to-br from-indigo-50 to-indigo-100',
       borderColor: 'border-indigo-300',
-      ringColor: 'focus:ring-indigo-500',
+      ringColor: 'focus:ring-purple-600',
     },
   };
 
@@ -553,7 +553,7 @@ export const ExpandableToast = ({ t, type = 'info', title, preview, fullContent,
                     }}
                     className={`inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg shadow-sm ${
                       action.variant === 'primary'
-                        ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white hover:from-purple-700 hover:to-purple-800 focus:ring-purple-500 shadow-purple-200'
+                        ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white hover:from-purple-700 hover:to-purple-800 focus:ring-purple-600 shadow-purple-200'
                         : action.variant === 'danger'
                         ? 'bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800 focus:ring-red-500 shadow-red-200'
                         : 'bg-slate-100 text-slate-700 hover:bg-slate-200 focus:ring-slate-400 border border-slate-300'

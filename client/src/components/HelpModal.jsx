@@ -121,7 +121,7 @@ export function HelpModal({ isOpen, onClose }) {
           <button
             ref={closeButtonRef}
             onClick={handleClose}
-            className="p-2 hover:bg-slate-100 rounded-lg transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+            className="p-2 hover:bg-slate-100 rounded-lg transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
             aria-label="Close help modal"
           >
             <X className="w-5 h-5 text-slate-600" />
@@ -244,7 +244,7 @@ export function HelpModal({ isOpen, onClose }) {
                   <div key={index} className="border border-slate-200 rounded-lg overflow-hidden transition-all duration-200 hover:shadow-sm">
                     <button
                       onClick={() => toggleFAQ(index)}
-                      className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-slate-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-purple-500"
+                      className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-slate-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-purple-600"
                       aria-expanded={isExpanded}
                       aria-controls={`faq-answer-${index}`}
                     >
@@ -284,7 +284,7 @@ export function HelpModal({ isOpen, onClose }) {
         <div className="sticky bottom-0 bg-slate-50 border-t border-slate-200 px-6 py-4 rounded-b-xl z-10">
           <button
             onClick={handleClose}
-            className="w-full px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+            className="w-full px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
           >
             Got it, let's start!
           </button>

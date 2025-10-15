@@ -1044,7 +1044,7 @@ Retrieve all users.
       );
 
       const expandButton = screen.getByRole('button', { name: /Show full quality report/i });
-      expect(expandButton).toHaveClass('focus:outline-none', 'focus:ring-2', 'focus:ring-indigo-500');
+      expect(expandButton).toHaveClass('focus:outline-none', 'focus:ring-2', 'focus:ring-purple-600');
     });
   });
 

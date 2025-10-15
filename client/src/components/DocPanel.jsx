@@ -1,4 +1,4 @@
-import { Sparkles, CheckCircle, AlertCircle, FileText, ChevronDown, ChevronUp } from 'lucide-react';
+import { Sparkles, CheckCircle, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -47,11 +47,11 @@ export function DocPanel({
   return (
     <div className="flex flex-col h-full bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-purple-50 border-b border-purple-200">
+      <div className="flex items-center justify-between px-4 h-12 bg-purple-50 border-b border-purple-200">
         {/* Left: Icon + Title */}
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-purple-600" />
-          <span className="text-sm font-medium text-slate-800">
+          <span className="text-sm text-slate-800">
             Generated Documentation
           </span>
         </div>
@@ -120,20 +120,19 @@ export function DocPanel({
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center h-full text-center px-6">
-            <FileText className="w-16 h-16 text-slate-300 mb-4" />
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">
+            <h3 className="text-xl font-semibold text-slate-900 mb-3">
               Ready to Generate Documentation
             </h3>
-            <p className="text-sm text-slate-600 mb-6 max-w-md">
+            <p className="text-sm text-slate-600 mb-8 max-w-md">
               Your AI-generated documentation will appear here with real-time streaming and quality scoring.
             </p>
 
             {/* Quick Start Steps */}
-            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 max-w-md text-left">
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-5 max-w-md text-left">
               <h4 className="text-sm font-semibold text-slate-900 mb-3 text-center">
                 Quick Start
               </h4>
-              <ol className="space-y-2 text-xs text-slate-700">
+              <ol className="space-y-2.5 text-xs text-slate-700">
                 <li className="flex gap-2">
                   <span className="flex-shrink-0 w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs font-bold">1</span>
                   <span>Paste your code or click <strong>"Upload Files"</strong></span>
@@ -149,7 +148,7 @@ export function DocPanel({
               </ol>
             </div>
 
-            <p className="text-xs text-slate-500 mt-4">
+            <p className="text-xs text-slate-500 mt-6">
               Not sure where to start? Try the <strong>Examples</strong> button above or click the <strong>?</strong> icon for help.
             </p>
           </div>
@@ -185,7 +184,7 @@ export function DocPanel({
               aria-expanded={isExpanded}
               aria-controls="quality-report-details"
               aria-label={isExpanded ? "Hide full quality report" : "Show full quality report"}
-              className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50 transition-all duration-200 motion-reduce:transition-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 rounded px-2 py-1 active:bg-purple-100"
+              className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50 transition-all duration-200 motion-reduce:transition-none focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 rounded px-2 py-1 active:bg-purple-100"
             >
               <span className="font-medium">View full report</span>
               {isExpanded ? (

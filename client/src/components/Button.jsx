@@ -9,7 +9,7 @@ export function Button({
   className = '',
   ...props
 }) {
-  const baseClasses = 'flex items-center justify-center gap-2 px-6 py-2 rounded-lg text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed motion-reduce:transition-none';
+  const baseClasses = 'flex items-center justify-center gap-2 px-6 py-2 rounded-lg text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed motion-reduce:transition-none focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2';
 
   const variants = {
     primary: 'bg-gradient-to-b from-purple-500 to-purple-600 text-white shadow-purple hover:from-purple-600 hover:to-purple-700 hover:scale-[1.02] hover:shadow-purple-lg active:scale-[0.98] active:brightness-95',

@@ -71,7 +71,7 @@ export function ExamplesModal({ isOpen, onClose, onLoadExample }) {
           <button
             ref={closeButtonRef}
             onClick={onClose}
-            className="p-2 hover:bg-purple-50 hover:scale-[1.05] rounded-lg transition-all duration-200 motion-reduce:transition-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 active:scale-[0.98]"
+            className="p-2 hover:bg-purple-50 hover:scale-[1.05] rounded-lg transition-all duration-200 motion-reduce:transition-none focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 active:scale-[0.98]"
             aria-label="Close examples modal"
           >
             <X className="w-5 h-5 text-slate-600 hover:text-purple-600 transition-colors" />
@@ -131,7 +131,7 @@ function ExampleCard({ example, isSelected, onPreview, onLoad }) {
 
   return (
     <div
-      className={`p-4 rounded-lg border transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${
+      className={`p-4 rounded-lg border transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 ${
         isSelected
           ? 'border-purple-500 bg-purple-50 shadow-sm'
           : 'border-slate-200 bg-white hover:border-purple-300 hover:bg-purple-50/50 hover:shadow-sm'
@@ -167,7 +167,7 @@ function ExampleCard({ example, isSelected, onPreview, onLoad }) {
             e.stopPropagation();
             onLoad();
           }}
-          className="flex-shrink-0 p-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 hover:scale-[1.05] hover:shadow-md transition-all duration-200 motion-reduce:transition-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 shadow-sm active:scale-[0.98] active:brightness-95"
+          className="flex-shrink-0 p-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 hover:scale-[1.05] hover:shadow-md transition-all duration-200 motion-reduce:transition-none focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 shadow-sm active:scale-[0.98] active:brightness-95"
           aria-label={`Load ${example.title} example`}
           title="Load into editor"
         >
@@ -185,7 +185,7 @@ function ExamplePreview({ example, onLoad }) {
       <div className="p-6 border-b border-slate-200 bg-white">
         <button
           onClick={onLoad}
-          className="w-full px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 hover:scale-[1.02] hover:shadow-lg transition-all duration-200 motion-reduce:transition-none font-semibold text-sm shadow-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 active:scale-[0.98] active:brightness-95"
+          className="w-full px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 hover:scale-[1.02] hover:shadow-lg transition-all duration-200 motion-reduce:transition-none font-semibold text-sm shadow-md focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 active:scale-[0.98] active:brightness-95"
         >
           Load This Example
         </button>

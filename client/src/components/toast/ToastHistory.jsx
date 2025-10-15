@@ -259,7 +259,7 @@ export const ToastHistory = ({ defaultOpen = false, position = 'right' }) => {
       {/* Toggle Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-4 right-20 z-40 bg-white hover:bg-slate-50 text-slate-700 rounded-full p-3 shadow-lg border-2 border-slate-200 transition-all duration-200 hover:shadow-xl active:scale-95 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+        className="fixed top-4 right-20 z-40 bg-white hover:bg-slate-50 text-slate-700 rounded-full p-3 shadow-lg border-2 border-slate-200 transition-all duration-200 hover:shadow-xl active:scale-95 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
         aria-label="Open notification center"
       >
         <Bell className="h-5 w-5" />
@@ -303,7 +303,7 @@ export const ToastHistory = ({ defaultOpen = false, position = 'right' }) => {
               </div>
               <button
                 onClick={() => setIsOpen(false)}
-                className="text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-lg hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-lg hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-purple-600"
                 aria-label="Close notification center"
               >
                 <X className="h-5 w-5" />
@@ -333,7 +333,7 @@ export const ToastHistory = ({ defaultOpen = false, position = 'right' }) => {
                     type="checkbox"
                     checked={hideArchived}
                     onChange={(e) => setHideArchived(e.target.checked)}
-                    className="rounded text-purple-600 focus:ring-purple-500"
+                    className="rounded text-purple-600 focus:ring-purple-600"
                   />
                   Hide archived
                 </label>
