@@ -39,10 +39,11 @@ This project has comprehensive documentation organized by purpose. Use this as y
 - Non-functional requirements (performance, security, accessibility)
 - Technical architecture overview
 - User flows and acceptance criteria
-- Release plan and timeline
+- Release plan and timeline (Phases 1-4)
+- Phase 4: Optional Enhancements (future evaluation)
 - Out-of-scope items
 
-**Key for:** Feature decisions, scope questions, acceptance criteria validation
+**Key for:** Feature decisions, scope questions, acceptance criteria validation, future roadmap
 
 ---
 
@@ -299,6 +300,23 @@ open docs/design/brand-color-palette.pdf
 
 ---
 
+#### [TOAST-SYSTEM.md](docs/components/TOAST-SYSTEM.md) - Toast Notification System Guide
+**When to use:** Implementing toast notifications, understanding toast patterns, accessibility requirements
+
+**Contains:**
+- Complete toast system architecture and usage guide
+- 20+ toast utility functions with examples
+- 6 custom toast components (CustomToast, ProgressToast, UndoToast, etc.)
+- Best practices for user notifications
+- Full accessibility support (WCAG 2.1 AA compliant)
+- Testing strategies and examples
+- API reference for all toast functions
+- Optional enhancements for Phase 4 evaluation
+
+**Key for:** Toast implementation, notification patterns, accessibility compliance, UX best practices
+
+---
+
 ## 🔑 Key Technical Details
 
 ### Tech Stack
@@ -350,6 +368,8 @@ codescribe-ai/
 │   ├── architecture/             # Architecture documentation
 │   │   ├── 04-Architecture.md    # System architecture diagram
 │   │   └── ARCHITECTURE.md       # Architecture overview
+│   ├── components/               # Component documentation
+│   │   └── TOAST-SYSTEM.md       # Toast notification system guide
 │   ├── design/                   # Design assets
 │   │   ├── brand-color-palette.html  # Interactive color palette
 │   │   └── brand-color-palette.pdf   # PDF version for sharing
@@ -534,13 +554,14 @@ VITE_API_URL=http://localhost:3000
 
 ## 🔄 Version History
 
-- **v1.5** (Current) - Added Mermaid diagram guidelines section with legend placement best practices, spacing configuration, and styling standards
+- **v1.6** (Current) - Added Phase 4: Optional Enhancements to PRD, created TOAST-SYSTEM.md documentation with future enhancement section, updated documentation map
+- **v1.5** - Added Mermaid diagram guidelines section with legend placement best practices, spacing configuration, and styling standards
 - **v1.4** - Expanded semantic colors for accessibility (fixed red contrast to WCAG AA, added background/button shades for green/yellow/red)
 - **v1.3** - Added Indigo as secondary brand color to design system (purple primary + indigo secondary)
 - **v1.2** - Clarified architecture document purposes: 04-Architecture.md (visual diagram + overview) vs ARCHITECTURE.md (deep technical dive)
 - **v1.1** - Reorganized documentation structure (planning/, api/, architecture/ subdirectories)
 - **v1.0** - Initial claude.md created with complete documentation map
-- Documentation last updated: October 13, 2025
+- Documentation last updated: October 15, 2025
 
 ---
 

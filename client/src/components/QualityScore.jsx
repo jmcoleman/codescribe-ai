@@ -80,6 +80,9 @@ export function QualityScoreModal({ qualityScore, onClose }) {
             <div className={`text-lg font-bold ${getGradeColor(grade)}`}>
               Grade: {grade}
             </div>
+            <div className="text-xs text-slate-600 mt-2">
+              Document Type: <span className="font-medium text-slate-700">{docType}</span>
+            </div>
           </div>
         </div>
 

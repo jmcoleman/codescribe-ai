@@ -180,6 +180,13 @@ export function DocPanel({
             }`}
           >
             <div className="px-4 pb-3 pt-2 border-t border-slate-200">
+              {/* Document Type */}
+              <div className="mb-2 pb-2 border-b border-slate-200">
+                <span className="text-xs text-slate-600">
+                  Document Type: <span className="font-medium text-slate-700">{qualityScore.docType}</span>
+                </span>
+              </div>
+
               <div className="space-y-2">
                 {/* Strengths */}
                 {qualityScore.summary.strengths.length > 0 && (
@@ -254,7 +261,7 @@ function formatCriteriaName(key, docType = 'README') {
       overview: 'Overview',
       installation: 'Installation',
       examples: 'Usage Examples',
-      apiDocs: 'API Documentation',
+      apiDocs: 'Function Coverage',
       structure: 'Structure & Formatting',
     },
     'JSDOC': {
