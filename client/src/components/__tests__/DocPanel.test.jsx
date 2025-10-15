@@ -218,16 +218,17 @@ x = 1
     const mockQualityScore = {
       score: 85,
       grade: 'B',
+      docType: 'README',
       breakdown: {
         overview: { score: 20, maxScore: 20, feedback: 'Excellent' },
         installation: { score: 12, maxScore: 15, feedback: 'Good' },
         usage: { score: 18, maxScore: 20, feedback: 'Excellent' },
-        api: { score: 20, maxScore: 25, feedback: 'Good' },
+        apiDocs: { score: 20, maxScore: 25, feedback: 'Good' },
         structure: { score: 15, maxScore: 20, feedback: 'Good' }
       },
       summary: {
         strengths: ['overview', 'usage'],
-        improvements: ['installation', 'api', 'structure']
+        improvements: ['installation', 'apiDocs', 'structure']
       }
     };
 
@@ -819,9 +820,9 @@ Retrieve all users.
 
       await user.click(screen.getByRole('button', { name: /full quality report/i }));
 
-      // Check formatted criteria names appear
+      // Check formatted criteria names appear (README docType shows "Function Coverage" not "API Documentation")
       expect(screen.getByText('Installation:')).toBeInTheDocument();
-      expect(screen.getByText('API Documentation:')).toBeInTheDocument();
+      expect(screen.getByText('Function Coverage:')).toBeInTheDocument();
     });
 
     it('should display suggestions for each criteria', async () => {

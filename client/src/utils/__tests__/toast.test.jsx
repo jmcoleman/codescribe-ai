@@ -128,7 +128,7 @@ describe('Toast Notification System', () => {
 
       toastCopied();
 
-      expect(await screen.findByText('Copied to clipboard!')).toBeInTheDocument();
+      expect(await screen.findByText('Copied to clipboard')).toBeInTheDocument();
     });
 
     it('should show file uploaded notification', async () => {
@@ -145,7 +145,7 @@ describe('Toast Notification System', () => {
 
       toastDocGenerated('A', 95);
 
-      expect(await screen.findByText(/Quality Score: A \(95\/100\)/)).toBeInTheDocument();
+      expect(await screen.findByText(/Excellent! Documentation generated with quality grade A \(95\/100\)/)).toBeInTheDocument();
     });
 
     it('should show rate limited notification', async () => {
@@ -153,7 +153,7 @@ describe('Toast Notification System', () => {
 
       toastRateLimited(60);
 
-      expect(await screen.findByText(/Rate limit exceeded/)).toBeInTheDocument();
+      expect(await screen.findByText(/Request limit reached/)).toBeInTheDocument();
       expect(await screen.findByText(/1 minute/)).toBeInTheDocument();
     });
 
@@ -162,7 +162,7 @@ describe('Toast Notification System', () => {
 
       toastNetworkError();
 
-      expect(await screen.findByText(/Network error/)).toBeInTheDocument();
+      expect(await screen.findByText(/Unable to connect/)).toBeInTheDocument();
     });
   });
 
