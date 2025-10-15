@@ -289,6 +289,36 @@ describe('ErrorBoundary Component', () => {
       expect(screen.getByText('Technical Details (Development Mode)')).toBeInTheDocument();
     });
 
+    it('should show copy button for error message', () => {
+      render(
+        <ErrorBoundary>
+          <ThrowError shouldThrow={true} errorMessage="Test error" />
+        </ErrorBoundary>
+      );
+
+      expect(screen.getByRole('button', { name: /Copy error message/i })).toBeInTheDocument();
+    });
+
+    it('should show copy button for stack trace', () => {
+      render(
+        <ErrorBoundary>
+          <ThrowError shouldThrow={true} />
+        </ErrorBoundary>
+      );
+
+      expect(screen.getByRole('button', { name: /Copy stack trace/i })).toBeInTheDocument();
+    });
+
+    it('should show copy button for component stack', () => {
+      render(
+        <ErrorBoundary>
+          <ThrowError shouldThrow={true} />
+        </ErrorBoundary>
+      );
+
+      expect(screen.getByRole('button', { name: /Copy component stack/i })).toBeInTheDocument();
+    });
+
     it('should display error message in details', () => {
       render(
         <ErrorBoundary>
@@ -619,13 +649,15 @@ describe('ErrorBoundary Component', () => {
         </ErrorBoundary>
       );
 
-      const buttons = screen.getAllByRole('button');
-      expect(buttons.length).toBe(3);
+      // Should have 3 action buttons (Try Again, Reload Page, Go Home)
+      expect(screen.getByRole('button', { name: /Try Again/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Reload Page/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Go Home/i })).toBeInTheDocument();
 
-      // All buttons should be rendered
-      buttons.forEach(button => {
-        expect(button).toBeInTheDocument();
-      });
+      // In development mode, should also have 3 copy buttons in the details section
+      // (for error message, stack trace, and component stack)
+      const copyButtons = screen.getAllByRole('button', { name: /Copy/i });
+      expect(copyButtons.length).toBe(3);
     });
 
     it('should handle overflow in details section', () => {

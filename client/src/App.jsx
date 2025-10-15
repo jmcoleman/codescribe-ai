@@ -31,6 +31,7 @@ function App() {
   const {
     generate,
     reset,
+    clearError,
     isGenerating,
     documentation,
     qualityScore,
@@ -232,7 +233,7 @@ function App() {
           <ErrorBanner
             error={error}
             retryAfter={retryAfter}
-            onDismiss={() => {/* Error will clear on next successful generation */}}
+            onDismiss={clearError}
           />
         )}
         {uploadError && (

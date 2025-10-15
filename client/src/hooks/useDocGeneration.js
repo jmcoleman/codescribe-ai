@@ -120,10 +120,16 @@ export function useDocGeneration() {
     setRetryAfter(null);
   }, []);
 
+  const clearError = useCallback(() => {
+    setError(null);
+    setRetryAfter(null);
+  }, []);
+
   return {
     generate,
     cancel,
     reset,
+    clearError,
     isGenerating,
     documentation,
     qualityScore,
