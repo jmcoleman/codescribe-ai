@@ -4,7 +4,7 @@
 **Location:** [client/src/components/CopyButton.jsx](../../client/src/components/CopyButton.jsx)
 **Test Suite:** [client/src/components/__tests__/CopyButton.test.jsx](../../client/src/components/__tests__/CopyButton.test.jsx)
 **Status:** Production Ready ✅
-**Test Coverage:** 6 passing tests, 4 known issues (timing/async related, functionality works in production)
+**Test Coverage:** 30 passing tests, 4 known issues (timing/async related, functionality works in production)
 
 ---
 
@@ -444,16 +444,51 @@ try {
 
 ## 🧪 Testing
 
-### Test Coverage (6 passing, 4 skipped)
+### Test Coverage (30 passing, 4 skipped)
 
 #### Passing Tests ✅
 
+**Core Functionality (6 tests):**
 1. **Renders with default props** - Component mounts successfully
 2. **Copies text to clipboard** - `navigator.clipboard.writeText` called correctly
 3. **Shows success state** - Button disabled, aria-label changes to "Copied!"
 4. **Renders different sizes** - `sm`, `md`, `lg` classes applied correctly
 5. **Applies custom className** - Props merged with default classes
 6. **Renders with label text** - CopyButtonWithText displays label
+
+**Variant Styles (6 tests):**
+7. **Ghost variant default** - Transparent background, slate text
+8. **Outline variant default** - White background, slate border
+9. **Solid variant default** - Slate background, slate text
+10. **Ghost variant success** - Green-50 background, green-600 text, green-200 border
+11. **Outline variant success** - Green-50 background, green-600 text, green-300 border
+12. **Solid variant success** - Green-600 background, white text
+
+**Haptic Feedback (2 tests):**
+13. **Vibration triggered** - Calls `navigator.vibrate(50)` on supported devices
+14. **Missing API handled** - Gracefully continues when vibration API unavailable
+
+**Accessibility (5 tests):**
+15. **Custom ariaLabel** - Uses provided ariaLabel prop
+16. **AriaLabel updates on copy** - Changes to "Copied!" when button clicked
+17. **Title attribute** - Matches ariaLabel for tooltip
+18. **Focus ring styles** - Has indigo-500 focus ring with 2px offset
+19. **Reduced motion** - Respects `prefers-reduced-motion` with transition-none class
+
+**Animation States (3 tests):**
+20. **Hover scale** - Applies 105% scale on hover
+21. **Active scale** - Applies 98% scale on active press
+22. **Transition duration** - Has 200ms transition-all classes
+
+**CopyButtonWithText (8 tests):**
+23. **Clipboard copy** - Copies text content when clicked
+24. **Disabled state** - Button disabled when in copied state
+25. **Success styling** - Changes to green theme after copying
+26. **Custom className** - Applies custom CSS classes
+27. **Padding and size** - Has correct px-3, py-1.5, text-sm classes
+28. **Focus ring** - Has indigo-500 focus ring
+29. **Haptic feedback** - Triggers vibration on copy
+30. **Reduced motion** - Respects motion preferences
 
 #### Known Issues (4 skipped tests)
 

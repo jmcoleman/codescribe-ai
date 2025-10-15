@@ -127,6 +127,154 @@ describe('CopyButton', () => {
       expect(button).toBeDisabled();
     }, { timeout: 500 });
   });
+
+  describe('Variant Styles', () => {
+    it('renders ghost variant correctly', () => {
+      render(<CopyButton text="test" variant="ghost" />);
+      const button = screen.getByRole('button');
+      expect(button).toHaveClass('bg-transparent', 'text-slate-600');
+    });
+
+    it('renders outline variant correctly', () => {
+      render(<CopyButton text="test" variant="outline" />);
+      const button = screen.getByRole('button');
+      expect(button).toHaveClass('bg-white', 'border-slate-200');
+    });
+
+    it('renders solid variant correctly', () => {
+      render(<CopyButton text="test" variant="solid" />);
+      const button = screen.getByRole('button');
+      expect(button).toHaveClass('bg-slate-100', 'text-slate-700');
+    });
+
+    it('changes to success colors after copying (ghost)', async () => {
+      const user = userEvent.setup();
+      render(<CopyButton text="test" variant="ghost" />);
+
+      const button = screen.getByRole('button');
+      await user.click(button);
+
+      await waitFor(() => {
+        expect(button).toHaveClass('bg-green-50', 'text-green-600', 'border-green-200');
+      });
+    });
+
+    it('changes to success colors after copying (outline)', async () => {
+      const user = userEvent.setup();
+      render(<CopyButton text="test" variant="outline" />);
+
+      const button = screen.getByRole('button');
+      await user.click(button);
+
+      await waitFor(() => {
+        expect(button).toHaveClass('bg-green-50', 'text-green-600', 'border-green-300');
+      });
+    });
+
+    it('changes to success colors after copying (solid)', async () => {
+      const user = userEvent.setup();
+      render(<CopyButton text="test" variant="solid" />);
+
+      const button = screen.getByRole('button');
+      await user.click(button);
+
+      await waitFor(() => {
+        expect(button).toHaveClass('bg-green-600', 'text-white');
+      });
+    });
+  });
+
+  describe('Haptic Feedback', () => {
+    it('triggers vibration on supported devices', async () => {
+      const vibrateSpy = vi.fn();
+      const originalVibrate = navigator.vibrate;
+      navigator.vibrate = vibrateSpy;
+
+      const user = userEvent.setup();
+      render(<CopyButton text="test" />);
+
+      const button = screen.getByRole('button');
+      await user.click(button);
+
+      await waitFor(() => {
+        expect(vibrateSpy).toHaveBeenCalledWith(50);
+      });
+
+      navigator.vibrate = originalVibrate;
+    });
+
+    it('handles missing vibration API gracefully', async () => {
+      const originalVibrate = navigator.vibrate;
+      delete navigator.vibrate;
+
+      const user = userEvent.setup();
+      render(<CopyButton text="test" />);
+
+      const button = screen.getByRole('button');
+
+      // Should not throw error
+      await expect(user.click(button)).resolves.not.toThrow();
+
+      navigator.vibrate = originalVibrate;
+    });
+  });
+
+  describe('Accessibility', () => {
+    it('uses custom ariaLabel prop', () => {
+      render(<CopyButton text="test" ariaLabel="Copy code snippet" />);
+      expect(screen.getByRole('button', { name: /copy code snippet/i })).toBeInTheDocument();
+    });
+
+    it('updates ariaLabel when copied', async () => {
+      const user = userEvent.setup();
+      render(<CopyButton text="test" ariaLabel="Copy code" />);
+
+      const button = screen.getByRole('button', { name: /copy code/i });
+      await user.click(button);
+
+      await waitFor(() => {
+        expect(button).toHaveAttribute('aria-label', 'Copied!');
+      });
+    });
+
+    it('has title attribute matching ariaLabel', () => {
+      render(<CopyButton text="test" ariaLabel="Copy documentation" />);
+      const button = screen.getByRole('button');
+      expect(button).toHaveAttribute('title', 'Copy documentation');
+    });
+
+    it('has focus ring styles', () => {
+      render(<CopyButton text="test" />);
+      const button = screen.getByRole('button');
+      expect(button).toHaveClass('focus:ring-2', 'focus:ring-indigo-500', 'focus:ring-offset-2');
+    });
+
+    it('respects reduced motion preference', () => {
+      render(<CopyButton text="test" />);
+      const button = screen.getByRole('button');
+      expect(button).toHaveClass('motion-reduce:transition-none');
+    });
+  });
+
+  describe('Animation States', () => {
+    it('applies hover scale effect', () => {
+      render(<CopyButton text="test" />);
+      const button = screen.getByRole('button');
+      expect(button).toHaveClass('hover:scale-[1.05]');
+    });
+
+    it('applies active scale effect', () => {
+      render(<CopyButton text="test" />);
+      const button = screen.getByRole('button');
+      expect(button).toHaveClass('active:scale-[0.98]');
+    });
+
+    it('has transition duration classes', () => {
+      render(<CopyButton text="test" />);
+      const button = screen.getByRole('button');
+      expect(button).toHaveClass('transition-all', 'duration-200');
+    });
+  });
 });
 
 describe('CopyButtonWithText', () => {
@@ -154,5 +302,86 @@ describe('CopyButtonWithText', () => {
     await waitFor(() => {
       expect(screen.getByText('Copied!')).toBeInTheDocument();
     }, { timeout: 500 });
+  });
+
+  it('copies text to clipboard when clicked', async () => {
+    const user = userEvent.setup();
+    const writeTextSpy = vi.spyOn(navigator.clipboard, 'writeText');
+
+    render(<CopyButtonWithText text="Test Content" label="Copy" />);
+
+    const button = screen.getByRole('button');
+    await user.click(button);
+
+    await waitFor(() => {
+      expect(writeTextSpy).toHaveBeenCalledWith('Test Content');
+    });
+
+    writeTextSpy.mockRestore();
+  });
+
+  it('disables button when in copied state', async () => {
+    const user = userEvent.setup();
+    render(<CopyButtonWithText text="test" label="Copy" />);
+
+    const button = screen.getByRole('button');
+    await user.click(button);
+
+    await waitFor(() => {
+      expect(button).toBeDisabled();
+    });
+  });
+
+  it('changes to success styling after copying', async () => {
+    const user = userEvent.setup();
+    render(<CopyButtonWithText text="test" label="Copy" />);
+
+    const button = screen.getByRole('button');
+    await user.click(button);
+
+    await waitFor(() => {
+      expect(button).toHaveClass('bg-green-50', 'text-green-700', 'border-green-200');
+    });
+  });
+
+  it('applies custom className', () => {
+    render(<CopyButtonWithText text="test" label="Copy" className="custom-class" />);
+    expect(screen.getByRole('button')).toHaveClass('custom-class');
+  });
+
+  it('has appropriate padding and text size', () => {
+    render(<CopyButtonWithText text="test" label="Copy" />);
+    const button = screen.getByRole('button');
+    expect(button).toHaveClass('px-3', 'py-1.5', 'text-sm');
+  });
+
+  it('has focus ring styles', () => {
+    render(<CopyButtonWithText text="test" label="Copy" />);
+    const button = screen.getByRole('button');
+    expect(button).toHaveClass('focus:ring-2', 'focus:ring-indigo-500', 'focus:ring-offset-2');
+  });
+
+  it('triggers haptic feedback on supported devices', async () => {
+    const vibrateSpy = vi.fn();
+    const originalVibrate = navigator.vibrate;
+    navigator.vibrate = vibrateSpy;
+
+    const user = userEvent.setup();
+    render(<CopyButtonWithText text="test" label="Copy" />);
+
+    const button = screen.getByRole('button');
+    await user.click(button);
+
+    await waitFor(() => {
+      expect(vibrateSpy).toHaveBeenCalledWith(50);
+    });
+
+    navigator.vibrate = originalVibrate;
+  });
+
+  it('respects reduced motion preference', () => {
+    render(<CopyButtonWithText text="test" label="Copy" />);
+    const button = screen.getByRole('button');
+    expect(button).toHaveClass('motion-reduce:transition-none');
   });
 });
