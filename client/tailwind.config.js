@@ -66,6 +66,43 @@ export default {
       boxShadow: {
         'purple': '0 4px 20px rgba(168, 85, 247, 0.3)',
       },
+      keyframes: {
+        'toast-enter': {
+          '0%': {
+            transform: 'translateX(100%) scale(0.7)',
+            opacity: '0',
+          },
+          '100%': {
+            transform: 'translateX(0) scale(1)',
+            opacity: '1',
+          },
+        },
+        'toast-leave': {
+          '0%': {
+            transform: 'translateX(0) scale(1)',
+            opacity: '1',
+          },
+          '100%': {
+            transform: 'translateX(100%) scale(0.7)',
+            opacity: '0',
+          },
+        },
+        'toast-bounce': {
+          '0%, 100%': {
+            transform: 'translateY(-5%)',
+            animationTimingFunction: 'cubic-bezier(0.8, 0, 1, 1)',
+          },
+          '50%': {
+            transform: 'translateY(0)',
+            animationTimingFunction: 'cubic-bezier(0, 0, 0.2, 1)',
+          },
+        },
+      },
+      animation: {
+        'toast-enter': 'toast-enter 0.3s ease-out',
+        'toast-leave': 'toast-leave 0.2s ease-in forwards',
+        'toast-bounce': 'toast-bounce 0.5s ease-in-out',
+      },
     },
   },
   plugins: [],

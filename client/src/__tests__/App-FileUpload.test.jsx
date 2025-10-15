@@ -234,10 +234,10 @@ describe('App - File Upload Integration', () => {
         expect(mockFetch).toHaveBeenCalled();
       }, { timeout: 3000 });
 
-      // Error banner should appear
+      // Error banner should appear (error appears in both banner and toast, so get all)
       await waitFor(() => {
-        const errorMessage = screen.queryByText(/Invalid file type/i);
-        expect(errorMessage).toBeInTheDocument();
+        const errorMessages = screen.queryAllByText(/Invalid file type/i);
+        expect(errorMessages.length).toBeGreaterThan(0);
       }, { timeout: 3000 });
     });
 
@@ -279,10 +279,10 @@ describe('App - File Upload Integration', () => {
         expect(mockFetch).toHaveBeenCalled();
       });
 
-      // Error should be displayed
+      // Error should be displayed (error appears in both banner and toast, so get all)
       await waitFor(() => {
-        const errorMessage = screen.getByText(/Network error/i);
-        expect(errorMessage).toBeInTheDocument();
+        const errorMessages = screen.queryAllByText(/Network error/i);
+        expect(errorMessages.length).toBeGreaterThan(0);
       });
     });
 
@@ -309,9 +309,10 @@ describe('App - File Upload Integration', () => {
 
       await user.upload(fileInput, file);
 
-      // Wait for error to appear
+      // Wait for error to appear (error appears in both banner and toast, so get all)
       await waitFor(() => {
-        expect(screen.queryByText(/Invalid file type/i)).toBeInTheDocument();
+        const errorMessages = screen.queryAllByText(/Invalid file type/i);
+        expect(errorMessages.length).toBeGreaterThan(0);
       }, { timeout: 3000 });
 
       // Find and click dismiss button (X button or close icon)

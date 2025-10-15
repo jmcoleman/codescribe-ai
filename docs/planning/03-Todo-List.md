@@ -2,8 +2,8 @@
 
 **Project:** CodeScribe AI Portfolio Project
 **Timeline:** 7 Days
-**Status:** In Progress - Day 4 (Animations & Micro-interactions - Enterprise Button Polish Complete)
-**Last Updated:** October 14, 2025 (Late Evening)
+**Status:** In Progress - Day 4 (UI Polish & Bug Fixes Complete)
+**Last Updated:** October 15, 2025 (Evening)
 
 ---
 
@@ -19,17 +19,45 @@
   - ✅ Responsive Design
   - ✅ Error Handling & Loading States (ErrorBoundary + comprehensive testing)
   - ✅ Modal Design System Standardization
-✅ **Day 4:** Animations & Micro-interactions (65% complete)
+✅ **Day 4:** Animations & Micro-interactions (70% complete)
   - ✅ Enterprise-grade button hover effects (7 components updated)
   - ✅ Professional CopyButton component with animations
   - ✅ Accessibility compliance (motion-reduce support)
+  - ✅ Quality score UI polish & contextual labeling
+  - ✅ Toast notification design improvements
   - ⏳ Cross-browser testing (remaining)
   - ⏳ Performance optimization (remaining)
   - ⏳ Accessibility audit (remaining)
 
-### Recent Accomplishments (October 14, 2025)
+### Recent Accomplishments
 
-#### **Late Evening Session: Enterprise-Grade Button Interactions & Copy Button** ⭐ NEW
+#### **October 15, 2025 - Evening Session: Quality Score UI Polish** ⭐ NEW
+- ✅ **Fixed quality report contextual labeling** - Better clarity for different doc types:
+  1. Changed "API Documentation" label to context-aware naming in quality reports
+  2. README documents now show "Function Coverage" (was "API Documentation")
+  3. JSDOC documents show "JSDoc Comments" (correct)
+  4. API documents show "API Endpoints" (correct)
+  5. Updated `formatCriteriaName()` function in DocPanel.jsx
+- ✅ **Added Document Type display to quality reports**:
+  1. Added to Quality Score Modal (QualityScore.jsx) - shows below grade
+  2. Added to DocPanel expandable report - shows at top of expanded section
+  3. Clear visibility of document type being scored (README, JSDOC, API)
+- ✅ **Removed bold formatting from toast notifications**:
+  1. Changed `fontWeight` from `'600'` (semibold) to `'400'` (normal)
+  2. Applied to all toast types: default, success, error, loading
+  3. Updated DEFAULT_OPTIONS in toast.jsx
+  4. Improved readability and visual hierarchy
+
+**Files Modified:**
+- `client/src/components/DocPanel.jsx` - Context-aware criterion naming + document type display
+- `client/src/components/QualityScore.jsx` - Document type display in modal
+- `client/src/utils/toast.jsx` - Removed bold font weight from all toasts
+
+**Impact:** Better UX clarity, improved accessibility, cleaner visual design
+
+---
+
+#### **October 14, 2025 - Late Evening Session: Enterprise-Grade Button Interactions & Copy Button**
 - ✅ **Comprehensive Button Hover Effect Refinements** - Consistent, professional micro-interactions:
   1. **Refined scale transforms** across all 7 components:
      - Changed from aggressive 5-10% to subtle 2% (`scale-[1.02]`) for standard buttons

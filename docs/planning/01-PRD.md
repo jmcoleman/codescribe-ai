@@ -380,6 +380,39 @@ GET /api/health
 - Automatic file updates
 - Marketplace publication
 
+### Phase 4: Optional Enhancements (Future - To Be Evaluated)
+**Goal:** Enhanced features and developer experience improvements
+
+**Note:** These enhancements are **not currently prioritized** and will be evaluated after Phases 1-3 are complete. Implementation will depend on user feedback, demand, and available resources.
+
+**Potential Features:**
+
+**Toast System Enhancements** (See [TOAST-SYSTEM.md](../components/TOAST-SYSTEM.md#optional-enhancements-future-phase) for full details):
+- Advanced positioning and layout options
+- Swipe-to-dismiss and gesture support
+- Toast history panel and search
+- Custom animation styles and sound effects
+- Persistence and user preferences
+- Enhanced accessibility features
+
+**Application-Wide Enhancements:**
+- Dark mode theming
+- User authentication and accounts
+- Documentation history and saved projects
+- Custom documentation templates
+- GitHub repository integration
+- Multi-language support (i18n)
+- Mermaid diagram generation
+- Changelog generation from git history
+- Team collaboration features
+- Advanced analytics and monitoring
+
+**Priority:** P3 (Nice to Have) - To be evaluated and prioritized based on:
+- User feedback and feature requests
+- Technical feasibility and maintenance burden
+- Portfolio value vs. development time
+- Alignment with core product vision
+
 ---
 
 ## Risks & Mitigation
@@ -419,18 +452,19 @@ GET /api/health
 
 The following features will NOT be included in MVP:
 
-❌ User authentication/accounts  
-❌ Saving documentation history  
-❌ Team collaboration features  
-❌ GitHub repository integration  
-❌ Custom documentation templates  
-❌ Multiple language support (beyond English)  
-❌ Mermaid diagram generation  
-❌ Changelog generation from git history  
-❌ Dark mode toggle  
-❌ Payment/monetization  
+❌ User authentication/accounts
+❌ Saving documentation history
+❌ Team collaboration features
+❌ GitHub repository integration
+❌ Custom documentation templates
+❌ Multiple language support (beyond English)
+❌ Mermaid diagram generation
+❌ Changelog generation from git history
+❌ Dark mode toggle
+❌ Payment/monetization
+❌ Advanced toast system features (positioning, persistence, analytics)
 
-These may be considered for future phases.
+These features have been documented in **Phase 4: Optional Enhancements** and will be evaluated after MVP, CLI, and VS Code Extension completion.
 
 ---
 

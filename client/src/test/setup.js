@@ -38,6 +38,21 @@ Object.defineProperty(navigator, 'clipboard', {
   configurable: true,
 });
 
+// Mock matchMedia (used by react-hot-toast)
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: vi.fn().mockImplementation(query => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(), // deprecated
+    removeListener: vi.fn(), // deprecated
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+});
+
 // Suppress console errors for cleaner test output (optional)
 const originalError = console.error;
 beforeAll(() => {

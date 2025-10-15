@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Copy, Check } from 'lucide-react';
+import { toastCopied, toastError } from '../utils/toast';
 
 /**
  * CopyButton - Enterprise-grade copy-to-clipboard button
@@ -42,12 +43,16 @@ export function CopyButton({
       await navigator.clipboard.writeText(text);
       setCopied(true);
 
+      // Show success toast
+      toastCopied();
+
       // Haptic feedback on supported devices
       if (navigator.vibrate) {
         navigator.vibrate(50);
       }
     } catch (err) {
       console.error('Failed to copy text:', err);
+      toastError('Unable to copy to clipboard. Please try again.');
     }
   };
 
@@ -151,11 +156,15 @@ export function CopyButtonWithText({
       await navigator.clipboard.writeText(text);
       setCopied(true);
 
+      // Show success toast
+      toastCopied();
+
       if (navigator.vibrate) {
         navigator.vibrate(50);
       }
     } catch (err) {
       console.error('Failed to copy text:', err);
+      toastError('Unable to copy to clipboard. Please try again.');
     }
   };
 

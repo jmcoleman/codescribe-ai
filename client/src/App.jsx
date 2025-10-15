@@ -1,4 +1,5 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { Toaster } from 'react-hot-toast';
 import { Header } from './components/Header';
 import { MobileMenu } from './components/MobileMenu';
 import { ControlBar } from './components/ControlBar';
@@ -9,6 +10,13 @@ import { ExamplesModal } from './components/ExamplesModal';
 import { useDocGeneration } from './hooks/useDocGeneration';
 import { ErrorBanner } from './components/ErrorBanner';
 import { validateFile, getValidationErrorMessage } from './utils/fileValidation';
+import {
+  toastError,
+  toastDocGenerated,
+  toastRateLimited,
+  toastGrouped,
+  toastCompact,
+} from './utils/toast';
 
 function App() {
   const [code, setCode] = useState('// Paste your code here or try the example below...\n\n// Example function:\nfunction calculateTotal(items) {\n  return items.reduce((sum, item) => sum + item.price, 0);\n}\n');
@@ -31,14 +39,22 @@ function App() {
     retryAfter
   } = useDocGeneration();
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     if (code.trim()) {
       setShowQualityModal(false); // Close modal when starting new generation
-      generate(code, docType, 'javascript');
+      try {
+        await generate(code, docType, 'javascript');
+        // Success toast will be shown after generation completes
+      } catch (err) {
+        // Error handling is done in useDocGeneration hook
+        // But we can add a toast here if needed
+      }
     }
   };
 
   const handleUpload = () => {
+    // Clear any previous upload errors
+    setUploadError(null);
     // Trigger the hidden file input
     if (fileInputRef.current) {
       fileInputRef.current.click();
@@ -111,6 +127,8 @@ function App() {
         };
         setLanguage(languageMap[extension] || 'javascript');
 
+        // Show success toast with compact variant for non-intrusive feedback
+        toastCompact(`File uploaded successfully`, 'success');
         console.log(`File uploaded successfully: ${data.file.name} (${data.file.sizeFormatted})`);
       }
 
@@ -119,6 +137,8 @@ function App() {
     } catch (error) {
       console.error('Error uploading file:', error);
       setUploadError(error.message);
+      // Use grouped toasts for upload errors to prevent duplicate notifications
+      toastGrouped('upload-error', toastError, `Unable to upload file. ${error.message}`);
       // Reset the file input
       event.target.value = '';
     }
@@ -134,10 +154,41 @@ function App() {
     setDocType(example.docType);
     setLanguage(example.language);
     reset(); // Clear any existing documentation and quality score
+    // Use compact toast for quick, non-intrusive feedback
+    toastCompact('Example loaded successfully', 'success');
   };
+
+  // Show toast notifications for documentation generation success/error
+  useEffect(() => {
+    if (documentation && qualityScore && !isGenerating) {
+      // Documentation was successfully generated
+      toastDocGenerated(qualityScore.grade, qualityScore.score);
+    }
+  }, [documentation, qualityScore, isGenerating]);
+
+  // Show toast for rate limit errors (grouped to prevent duplicates)
+  useEffect(() => {
+    if (error && error.includes('rate limit')) {
+      if (retryAfter) {
+        toastGrouped('rate-limit', toastRateLimited, retryAfter);
+      }
+    } else if (error && error.includes('network')) {
+      // Group network errors separately
+      toastGrouped('network-error', toastError, error);
+    }
+  }, [error, retryAfter]);
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
+      {/* Toast Notifications Container - Uses default styling from toast.jsx */}
+      <Toaster
+        position="top-right"
+        reverseOrder={false}
+        gutter={8}
+        containerClassName=""
+        containerStyle={{}}
+      />
+
       {/* Hidden file input */}
       <input
         ref={fileInputRef}
