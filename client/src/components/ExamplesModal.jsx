@@ -1,18 +1,35 @@
 import { X, Code2, ChevronRight } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { codeExamples } from '../data/examples';
 
-export function ExamplesModal({ isOpen, onClose, onLoadExample }) {
+export function ExamplesModal({ isOpen, onClose, onLoadExample, currentCode }) {
   const [selectedExample, setSelectedExample] = useState(null);
   const modalRef = useRef(null);
   const closeButtonRef = useRef(null);
+  const cardRefs = useRef({});
 
-  // Focus management: auto-focus close button when modal opens
+  // Auto-select current example (if it matches) or first example when modal opens
   useEffect(() => {
-    if (isOpen && closeButtonRef.current) {
-      closeButtonRef.current.focus();
+    if (isOpen && codeExamples.length > 0) {
+      // Try to find the currently loaded example by matching code
+      const currentExample = currentCode
+        ? codeExamples.find(ex => ex.code.trim() === currentCode.trim())
+        : null;
+
+      // Select current example if found, otherwise default to first example
+      setSelectedExample(currentExample || codeExamples[0]);
     }
-  }, [isOpen]);
+  }, [isOpen, currentCode]);
+
+  // Focus management: auto-focus the selected example card when modal opens
+  useEffect(() => {
+    if (isOpen && selectedExample) {
+      const selectedCard = cardRefs.current[selectedExample.id];
+      if (selectedCard) {
+        selectedCard.focus();
+      }
+    }
+  }, [isOpen, selectedExample]);
 
   // Focus trap: keep focus within modal
   useEffect(() => {
@@ -83,13 +100,18 @@ export function ExamplesModal({ isOpen, onClose, onLoadExample }) {
           {/* Left: Example List */}
           <div className="border-r border-slate-200 overflow-y-auto">
             <div className="p-6">
-              <p className="text-sm text-slate-600 mb-4">
-                Click a card to preview • Click <ChevronRight className="w-3.5 h-3.5 inline mx-0.5" /> to load
-              </p>
+              <div className="bg-slate-100 py-2 px-3 rounded-lg mb-4">
+                <p className="text-xs text-slate-700">
+                  Click a card to preview • Click <ChevronRight className="w-3.5 h-3.5 inline mx-0.5 text-purple-600" /> to load
+                </p>
+              </div>
               <div className="space-y-3">
                 {codeExamples.map((example) => (
                   <ExampleCard
                     key={example.id}
+                    ref={(el) => {
+                      cardRefs.current[example.id] = el;
+                    }}
                     example={example}
                     isSelected={selectedExample?.id === example.id}
                     onPreview={() => setSelectedExample(example)}
@@ -121,7 +143,7 @@ export function ExamplesModal({ isOpen, onClose, onLoadExample }) {
   );
 }
 
-function ExampleCard({ example, isSelected, onPreview, onLoad }) {
+const ExampleCard = React.forwardRef(({ example, isSelected, onPreview, onLoad }, ref) => {
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
@@ -131,6 +153,7 @@ function ExampleCard({ example, isSelected, onPreview, onLoad }) {
 
   return (
     <div
+      ref={ref}
       className={`p-4 rounded-lg border transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 ${
         isSelected
           ? 'border-purple-500 bg-purple-50 shadow-sm'
@@ -176,7 +199,7 @@ function ExampleCard({ example, isSelected, onPreview, onLoad }) {
       </div>
     </div>
   );
-}
+});
 
 function ExamplePreview({ example, onLoad }) {
   return (
@@ -192,12 +215,10 @@ function ExamplePreview({ example, onLoad }) {
       </div>
 
       {/* Code Preview */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="p-6">
-          <pre className="text-xs font-mono text-slate-800 leading-relaxed bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
-            <code>{example.code}</code>
-          </pre>
-        </div>
+      <div className="flex-1 overflow-y-auto bg-white">
+        <pre className="text-xs font-mono text-slate-800 leading-relaxed p-6 h-full">
+          <code>{example.code}</code>
+        </pre>
       </div>
     </div>
   );

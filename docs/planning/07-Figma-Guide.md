@@ -244,6 +244,62 @@ red/700:    #B91C1C  ← Error buttons, destructive actions
 
 ---
 
+### UI Pattern Guidelines
+
+**Established patterns for consistent implementation across the app:**
+
+#### Helper Text / Instructional Banners
+**Pattern:** Use neutral slate colors to avoid competing with content
+- **Background:** `slate/100` (light, subtle)
+- **Text:** `slate/700` (readable, not too bold)
+- **Purpose:** Instructional text that guides users without drawing excessive attention
+
+**Examples:**
+- Modal helper text: "Click a card to preview • Click → to load"
+- Inline instructions
+- Contextual hints
+
+**Why slate?** Helper text should inform without distraction. Slate maintains visual hierarchy and keeps focus on the actual content/actions.
+
+#### Badges & Tags
+**Pattern:** Use color to convey hierarchy and meaning
+
+**Primary Information (Important/Distinguishing):**
+- **Background:** `indigo/100`
+- **Text:** `indigo/700`
+- **Purpose:** Key distinguishing features that help users make decisions
+
+**Examples:**
+- Doc type badges (README, JSDOC, API)
+- Primary category tags
+- Feature highlights
+
+**Secondary Information (Supplementary):**
+- **Background:** `slate/100`
+- **Text:** `slate/600`
+- **Purpose:** Supporting details that provide context
+
+**Examples:**
+- Language badges (javascript, python, etc.)
+- Metadata tags
+- Supplementary info
+
+**Why indigo for primary?** Adds a subtle pop of color that creates visual hierarchy without being as bold as purple (which is reserved for user actions). Indigo signals "technical/informative" while slate signals "neutral/supplementary."
+
+#### Color Hierarchy Summary
+Use this hierarchy to maintain consistency:
+1. **Purple** → User actions (buttons, links, CTAs)
+2. **Indigo** → Primary information/categories (badges, important tags)
+3. **Slate** → Secondary information, UI chrome, helper text
+4. **Green/Yellow/Red** → Semantic states (success, warning, error)
+
+**Decision Rationale:**
+- Tested slate vs indigo for helper text → slate wins (less visual competition)
+- Tested slate vs indigo for docType badges → indigo wins (adds visual interest)
+- This creates a balanced color distribution: not too much color, not too bland
+
+---
+
 ### Accessibility Notes
 
 **All colors meet WCAG AA standards (4.5:1 minimum contrast):**

@@ -156,6 +156,11 @@ This project has comprehensive documentation organized by purpose. Use this as y
   - Typography styles (Inter + JetBrains Mono)
   - Shadow/effect styles
   - Spacing system (4px base unit)
+- **UI Pattern Guidelines** (NEW):
+  - Helper text / instructional banners → Use **slate** (`slate/100` bg, `slate/700` text)
+  - Primary badges (docType, categories) → Use **indigo** (`indigo/100` bg, `indigo/700` text)
+  - Secondary badges (language, metadata) → Use **slate** (`slate/100` bg, `slate/600` text)
+  - Color hierarchy: Purple (actions) > Indigo (primary info) > Slate (secondary/chrome)
 - Component library (8 components with variants):
   - Buttons (Primary, Secondary, Icon)
   - Select dropdown
@@ -168,7 +173,7 @@ This project has comprehensive documentation organized by purpose. Use this as y
 - Responsive design patterns
 - Interaction & prototyping flows
 
-**Key for:** UI implementation, styling decisions, component design, responsive behavior
+**Key for:** UI implementation, styling decisions, component design, responsive behavior, color selection for new UI elements
 
 ---
 
@@ -567,7 +572,8 @@ VITE_API_URL=http://localhost:3000
 
 ## 🔄 Version History
 
-- **v1.6** (Current) - Added Phase 4: Optional Enhancements to PRD, created TOAST-SYSTEM.md documentation with future enhancement section, updated documentation map
+- **v1.7** (Current) - Added UI Pattern Guidelines to Figma Guide establishing color usage patterns: slate for helper text, indigo for primary badges, slate for secondary badges; updated CLAUDE.md documentation map
+- **v1.6** - Added Phase 4: Optional Enhancements to PRD, created TOAST-SYSTEM.md documentation with future enhancement section, updated documentation map
 - **v1.5** - Added Mermaid diagram guidelines section with legend placement best practices, spacing configuration, and styling standards
 - **v1.4** - Expanded semantic colors for accessibility (fixed red contrast to WCAG AA, added background/button shades for green/yellow/red)
 - **v1.3** - Added Indigo as secondary brand color to design system (purple primary + indigo secondary)
