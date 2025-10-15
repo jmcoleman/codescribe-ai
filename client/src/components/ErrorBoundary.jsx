@@ -106,8 +106,8 @@ class ErrorBoundary extends Component {
                   </h1>
                   <p className="text-sm text-slate-600">
                     {errorCount > 1
-                      ? `This error has occurred ${errorCount} times`
-                      : 'The application encountered an unexpected error'
+                      ? `This error has occurred ${errorCount} times. Consider reloading the page.`
+                      : 'An unexpected error occurred'
                     }
                   </p>
                 </div>
@@ -116,14 +116,13 @@ class ErrorBoundary extends Component {
               {/* User-friendly message */}
               <div className="mb-6">
                 <p className="text-slate-700 mb-3">
-                  We're sorry for the inconvenience. The application ran into a problem
-                  and couldn't continue. Here's what you can try:
+                  We apologize for the disruption. Something unexpected happened.
+                  Here's what you can try:
                 </p>
                 <ul className="list-disc list-inside space-y-1 text-slate-600 text-sm">
-                  <li>Try again - sometimes temporary issues resolve themselves</li>
-                  <li>Reload the page to start fresh</li>
-                  <li>Check your internet connection</li>
-                  <li>Clear your browser cache if the problem persists</li>
+                  <li>Click "Try Again" to retry your action</li>
+                  <li>Refresh the page to restart the application</li>
+                  <li>If the issue continues, try clearing your browser cache and cookies</li>
                 </ul>
               </div>
 
@@ -224,22 +223,49 @@ class ErrorBoundary extends Component {
               )}
 
               {/* Production Error Message */}
-              {!isDevelopment && (
-                <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
-                  <p className="text-xs text-slate-600">
-                    <strong>Error ID:</strong> {Date.now()}-{Math.random().toString(36).substr(2, 9)}
-                  </p>
-                  <p className="text-xs text-slate-600 mt-1">
-                    If this problem continues, please contact support with the error ID above.
-                  </p>
-                </div>
-              )}
+              {!isDevelopment && (() => {
+                const errorId = `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+                const timestamp = new Date().toLocaleString();
+                return (
+                  <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-xs font-semibold text-slate-700">
+                        Error Reference
+                      </p>
+                      <CopyButton
+                        text={errorId}
+                        size="sm"
+                        variant="outline"
+                        ariaLabel="Copy error ID"
+                      />
+                    </div>
+                    <p className="text-xs font-mono text-slate-900 bg-white px-2 py-1 rounded border border-slate-300 mb-2">
+                      {errorId}
+                    </p>
+                    <p className="text-xs text-slate-500 mb-2">
+                      Occurred at: {timestamp}
+                    </p>
+                    <p className="text-xs text-slate-600">
+                      If this error persists, please report it on{' '}
+                      <a
+                        href="https://github.com/yourusername/codescribe-ai/issues"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-purple-600 hover:text-purple-700 underline"
+                      >
+                        GitHub
+                      </a>
+                      {' '}and include this error reference.
+                    </p>
+                  </div>
+                );
+              })()}
             </div>
 
             {/* Footer Note */}
             <div className="mt-4 text-center text-sm text-slate-600">
               <p>
-                Need help? Check the{' '}
+                Need more help? Check our{' '}
                 <a
                   href="https://github.com/yourusername/codescribe-ai"
                   target="_blank"
@@ -248,15 +274,16 @@ class ErrorBoundary extends Component {
                 >
                   documentation
                 </a>
-                {' '}or{' '}
+                {' '}for troubleshooting tips or{' '}
                 <a
                   href="https://github.com/yourusername/codescribe-ai/issues"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-purple-600 hover:text-purple-700 underline"
                 >
-                  report an issue
+                  report this issue on GitHub
                 </a>
+                .
               </p>
             </div>
           </div>

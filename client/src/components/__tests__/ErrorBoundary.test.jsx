@@ -114,7 +114,7 @@ describe('ErrorBoundary Component', () => {
         </ErrorBoundary>
       );
 
-      expect(screen.getByText(/The application encountered an unexpected error/i)).toBeInTheDocument();
+      expect(screen.getByText(/An unexpected error occurred/i)).toBeInTheDocument();
     });
 
     it('should display helpful suggestions', () => {
@@ -124,9 +124,9 @@ describe('ErrorBoundary Component', () => {
         </ErrorBoundary>
       );
 
-      expect(screen.getByText(/Try again - sometimes temporary issues resolve themselves/i)).toBeInTheDocument();
-      expect(screen.getByText(/Reload the page to start fresh/i)).toBeInTheDocument();
-      expect(screen.getByText(/Check your internet connection/i)).toBeInTheDocument();
+      expect(screen.getByText(/Click "Try Again" to retry your action/i)).toBeInTheDocument();
+      expect(screen.getByText(/Refresh the page to restart the application/i)).toBeInTheDocument();
+      expect(screen.getByText(/If the issue continues, try clearing your browser cache and cookies/i)).toBeInTheDocument();
     });
   });
 
@@ -145,7 +145,7 @@ describe('ErrorBoundary Component', () => {
         </ErrorBoundary>
       );
 
-      expect(screen.getByText(/The application encountered an unexpected error/i)).toBeInTheDocument();
+      expect(screen.getByText(/An unexpected error occurred/i)).toBeInTheDocument();
     });
 
     it('should display error count when multiple errors occur', () => {
@@ -398,7 +398,8 @@ describe('ErrorBoundary Component', () => {
         </ErrorBoundary>
       );
 
-      expect(screen.getByText(/Error ID:/i)).toBeInTheDocument();
+      const errorReferences = screen.getAllByText(/Error Reference/i);
+      expect(errorReferences.length).toBeGreaterThan(0);
     });
 
     it('should show support contact message', () => {
@@ -408,7 +409,7 @@ describe('ErrorBoundary Component', () => {
         </ErrorBoundary>
       );
 
-      expect(screen.getByText(/If this problem continues, please contact support/i)).toBeInTheDocument();
+      expect(screen.getByText(/If this error persists, please report it on/i)).toBeInTheDocument();
     });
 
     it('should not expose stack traces in production', () => {
@@ -419,6 +420,42 @@ describe('ErrorBoundary Component', () => {
       );
 
       expect(screen.queryByText('Stack Trace:')).not.toBeInTheDocument();
+    });
+
+    it('should show copy button for error ID in production', () => {
+      render(
+        <ErrorBoundary>
+          <ThrowError shouldThrow={true} />
+        </ErrorBoundary>
+      );
+
+      expect(screen.getByRole('button', { name: /Copy error ID/i })).toBeInTheDocument();
+    });
+
+    it('should show timestamp in production', () => {
+      render(
+        <ErrorBoundary>
+          <ThrowError shouldThrow={true} />
+        </ErrorBoundary>
+      );
+
+      expect(screen.getByText(/Occurred at:/i)).toBeInTheDocument();
+    });
+
+    it('should show GitHub link in production', () => {
+      render(
+        <ErrorBoundary>
+          <ThrowError shouldThrow={true} />
+        </ErrorBoundary>
+      );
+
+      const githubLinks = screen.getAllByRole('link', { name: /GitHub/i });
+      expect(githubLinks.length).toBeGreaterThan(0);
+      // Check that at least one GitHub link points to the issues page
+      const issuesLink = githubLinks.find(link =>
+        link.getAttribute('href') === 'https://github.com/yourusername/codescribe-ai/issues'
+      );
+      expect(issuesLink).toBeInTheDocument();
     });
   });
 
@@ -511,7 +548,7 @@ describe('ErrorBoundary Component', () => {
         </ErrorBoundary>
       );
 
-      const issueLink = screen.getByRole('link', { name: /report an issue/i });
+      const issueLink = screen.getByRole('link', { name: /report this issue on GitHub/i });
       expect(issueLink).toBeInTheDocument();
       expect(issueLink).toHaveAttribute('target', '_blank');
       expect(issueLink).toHaveAttribute('rel', 'noopener noreferrer');
