@@ -374,7 +374,7 @@ describe('ExamplesModal', () => {
       // Check if focus styles are present
       expect(card.className).toContain('focus:outline-none');
       expect(card.className).toContain('focus:ring-2');
-      expect(card.className).toContain('focus:ring-purple-500');
+      expect(card.className).toContain('focus:ring-purple-600');
     });
 
     it('should allow keyboard navigation through entire modal', async () => {

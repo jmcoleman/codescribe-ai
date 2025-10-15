@@ -46,7 +46,7 @@ export function Header({ onMenuClick, onExamplesClick, onHelpClick, showMobileMe
               {/* Help Icon Button */}
               <button
                 onClick={onHelpClick}
-                className="p-2 hover:bg-slate-100 rounded-lg transition-all duration-200 active:scale-95"
+                className="p-2 hover:bg-slate-100 rounded-lg transition-all duration-200 active:scale-95 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
                 aria-label="Help and FAQ"
                 title="Help and FAQ"
               >
@@ -61,7 +61,7 @@ export function Header({ onMenuClick, onExamplesClick, onHelpClick, showMobileMe
             {/* Mobile Menu Button */}
             <button
               onClick={onMenuClick}
-              className="md:hidden p-2 hover:bg-slate-100 hover:scale-[1.05] rounded-lg transition-all duration-200 motion-reduce:transition-none active:scale-[0.98]"
+              className="md:hidden p-2 hover:bg-slate-100 hover:scale-[1.05] rounded-lg transition-all duration-200 motion-reduce:transition-none active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
               aria-label="Open menu"
             >
               <Menu className="w-6 h-6 text-slate-600" />

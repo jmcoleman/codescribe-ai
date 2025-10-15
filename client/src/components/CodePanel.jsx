@@ -17,7 +17,7 @@ export function CodePanel({
   return (
     <div className="flex flex-col h-full bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-slate-50 border-b border-slate-200">
+      <div className="flex items-center justify-between px-4 h-12 bg-slate-50 border-b border-slate-200">
         {/* Left: Traffic lights + filename */}
         <div className="flex items-center gap-3">
           {/* macOS-style traffic lights */}

@@ -24,7 +24,7 @@ export function Select({ options, value, onChange, placeholder = 'Select...' }) 
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 hover:border-slate-400 transition-colors min-w-[160px]"
+        className="flex items-center gap-2 px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 hover:border-slate-400 transition-colors min-w-[160px] focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
       >
         <span className="flex-1 text-left">
           {selectedOption?.label || placeholder}
@@ -47,7 +47,7 @@ export function Select({ options, value, onChange, placeholder = 'Select...' }) 
                 onChange(option.value);
                 setIsOpen(false);
               }}
-              className={`w-full px-3 py-2 text-left text-sm hover:bg-slate-50 transition-colors ${
+              className={`w-full px-3 py-2 text-left text-sm hover:bg-slate-50 transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-purple-600 ${
                 option.value === value ? 'bg-purple-50 text-purple-700' : 'text-slate-700'
               }`}
             >

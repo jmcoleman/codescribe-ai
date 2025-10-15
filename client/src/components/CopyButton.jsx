@@ -96,7 +96,7 @@ export function CopyButton({
         active:scale-[0.98]
         focus:outline-none
         focus:ring-2
-        focus:ring-indigo-500
+        focus:ring-purple-600
         focus:ring-offset-2
         motion-reduce:transition-none
         relative
@@ -179,7 +179,7 @@ export function CopyButtonWithText({
         active:scale-[0.98]
         focus:outline-none
         focus:ring-2
-        focus:ring-indigo-500
+        focus:ring-purple-600
         focus:ring-offset-2
         motion-reduce:transition-none
         ${copied
