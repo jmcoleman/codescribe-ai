@@ -5,6 +5,7 @@ import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vs } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { CopyButton } from './CopyButton';
+import { DocPanelGeneratingSkeleton } from './SkeletonLoader';
 
 const STORAGE_KEY = 'codescribe-report-expanded';
 
@@ -55,18 +56,8 @@ export function DocPanel({
           </span>
         </div>
 
-        {/* Right: Copy Button + Quality Score */}
+        {/* Right: Quality Score + Copy Button */}
         <div className="flex items-center gap-2">
-          {/* Copy Button - Only show when documentation exists */}
-          {documentation && (
-            <CopyButton
-              text={documentation}
-              size="md"
-              variant="outline"
-              ariaLabel="Copy documentation to clipboard"
-            />
-          )}
-
           {/* Quality Score */}
           {qualityScore && (
             <button
@@ -83,16 +74,23 @@ export function DocPanel({
               </span>
             </button>
           )}
+
+          {/* Copy Button - Only show when documentation exists */}
+          {documentation && (
+            <CopyButton
+              text={documentation}
+              size="md"
+              variant="outline"
+              ariaLabel="Copy documentation to clipboard"
+            />
+          )}
         </div>
       </div>
 
       {/* Body - Documentation Content */}
       <div className="flex-1 overflow-y-auto p-6">
         {isGenerating && !documentation ? (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <Sparkles className="w-12 h-12 text-purple-500 animate-pulse mb-4" />
-            <p className="text-sm text-slate-600">Generating documentation...</p>
-          </div>
+          <DocPanelGeneratingSkeleton />
         ) : documentation ? (
           <div className="prose prose-sm max-w-none">
             <ReactMarkdown

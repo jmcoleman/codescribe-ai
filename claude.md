@@ -5,6 +5,7 @@
 **Tech Stack:** React 18 + Vite, Node.js + Express, Claude API, Tailwind CSS, Monaco Editor
 **Timeline:** 5-7 days to MVP
 **Status:** In Development
+**Timezone:** Eastern Standard Time (EST/EDT) - All dates and times in documentation reference this timezone
 
 ---
 
@@ -441,7 +442,19 @@ Multiple docs cover the same topic from different angles:
 
 Always provide the most relevant reference for the question asked.
 
-### 6. Mermaid Diagram Guidelines
+### 6. Timezone Awareness for Documentation Updates
+**IMPORTANT:** When updating documentation (especially the Todo List) with timestamps:
+- **All times reference Eastern Standard Time (EST/EDT)**
+- When adding session labels (Morning/Afternoon/Evening/Night), consider EST timezone:
+  - Morning: 6:00 AM - 12:00 PM EST
+  - Afternoon: 12:00 PM - 5:00 PM EST
+  - Evening: 5:00 PM - 9:00 PM EST
+  - Night: 9:00 PM - 6:00 AM EST
+- Check the current system time in `<env>` and convert to EST if needed
+- When in doubt, use "Session" instead of time-specific labels
+- The user is located in EST timezone
+
+### 7. Mermaid Diagram Guidelines
 When creating or modifying Mermaid diagrams for this project:
 
 **Legend/Index Placement:**

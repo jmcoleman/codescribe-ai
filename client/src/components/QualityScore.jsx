@@ -1,5 +1,6 @@
 import { X, CheckCircle, AlertTriangle, XCircle } from 'lucide-react';
 import { useEffect, useRef } from 'react';
+import { CopyButtonWithText } from './CopyButton';
 
 export function QualityScoreModal({ qualityScore, onClose }) {
   const modalRef = useRef(null);
@@ -51,6 +52,28 @@ export function QualityScoreModal({ qualityScore, onClose }) {
 
   const { score, grade, breakdown, docType } = qualityScore;
 
+  // Generate formatted text for copying
+  const generateQualityReportText = () => {
+    let report = `Documentation Quality Report\n`;
+    report += `${'='.repeat(35)}\n\n`;
+    report += `Overall Score: ${score}/100\n`;
+    report += `Grade: ${grade}\n`;
+    report += `Document Type: ${docType}\n\n`;
+    report += `Criteria Breakdown:\n`;
+    report += `${'-'.repeat(35)}\n`;
+
+    Object.entries(breakdown).forEach(([key, criteria]) => {
+      const name = formatCriteriaName(key, docType);
+      const maxPoints = criteria.maxPoints || 20;
+      report += `\n${name}: ${criteria.points}/${maxPoints}\n`;
+      if (criteria.suggestion) {
+        report += `  ${criteria.suggestion}\n`;
+      }
+    });
+
+    return report;
+  };
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
       <div
@@ -92,6 +115,18 @@ export function QualityScoreModal({ qualityScore, onClose }) {
             {Object.entries(breakdown).map(([key, criteria]) => (
               <CriteriaItem key={key} name={formatCriteriaName(key, docType)} criteria={criteria} />
             ))}
+          </div>
+        </div>
+
+        {/* Footer - Copy Report Button */}
+        <div className="px-6 py-4 bg-white border-t border-slate-200 flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-slate-600">Share this quality report</p>
+            <CopyButtonWithText
+              text={generateQualityReportText()}
+              label="Copy Report"
+              className="shadow-sm"
+            />
           </div>
         </div>
       </div>
