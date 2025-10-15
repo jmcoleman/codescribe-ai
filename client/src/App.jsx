@@ -281,6 +281,7 @@ function App() {
         isOpen={showExamplesModal}
         onClose={() => setShowExamplesModal(false)}
         onLoadExample={handleLoadExample}
+        currentCode={code}
       />
 
       {/* Help Modal */}

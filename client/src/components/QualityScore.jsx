@@ -110,7 +110,7 @@ export function QualityScoreModal({ qualityScore, onClose }) {
         </div>
 
         {/* Criteria Breakdown */}
-        <div className="px-4 py-4 flex-1 min-h-0 overflow-y-auto bg-slate-50">
+        <div className="px-4 py-4 flex-1 min-h-0 overflow-y-auto bg-slate-50" tabIndex={-1}>
           <div className="space-y-2.5">
             {Object.entries(breakdown).map(([key, criteria]) => (
               <CriteriaItem key={key} name={formatCriteriaName(key, docType)} criteria={criteria} />
