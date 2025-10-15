@@ -639,7 +639,7 @@ CodeScribe AI is an intelligent documentation generator powered by Claude's API.
 
 ## ✨ Features
 
-- 📝 **Multiple Formats**: Generate README, JSDoc, or API documentation
+- 📝 **Multiple Formats**: Generate README, JSDoc, API documentation, or ARCHITECTURE overviews
 - ⚡ **Real-time Streaming**: Watch docs generate character-by-character
 - 📊 **Quality Scoring**: Get objective feedback with actionable suggestions
 - 🎨 **Beautiful UI**: Clean, responsive interface that works everywhere

@@ -2,7 +2,7 @@
 
 **Intelligent Code Documentation Generator**
 
-Transform code into comprehensive, professional documentation in seconds using AI. CodeScribe AI analyzes your code and generates README files, JSDoc comments, and API documentation with real-time streaming and quality scoring.
+Transform code into comprehensive, professional documentation in seconds using AI. CodeScribe AI analyzes your code and generates README files, JSDoc comments, API documentation, and architecture overviews with real-time streaming and quality scoring.
 
 ## Project Structure
 
@@ -27,7 +27,7 @@ codescribe-ai/
 
 ## Features
 
-- **Multiple Documentation Types**: Generate README.md, JSDoc/TSDoc comments, and API documentation
+- **Multiple Documentation Types**: Generate README.md, JSDoc/TSDoc comments, API documentation, and ARCHITECTURE overviews
 - **Real-Time Streaming**: Watch documentation generate character-by-character using Server-Sent Events
 - **Quality Scoring**: Get actionable feedback on documentation completeness (0-100 scale with letter grades)
 - **Code Analysis**: AST-based parsing extracts functions, classes, and exports automatically

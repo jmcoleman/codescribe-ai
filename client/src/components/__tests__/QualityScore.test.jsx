@@ -74,7 +74,7 @@ describe('QualityScoreModal Component', () => {
       const onClose = vi.fn();
       render(<QualityScoreModal qualityScore={mockQualityScore} onClose={onClose} />);
 
-      const closeButton = screen.getByRole('button');
+      const closeButton = screen.getByRole('button', { name: /close quality breakdown modal/i });
       expect(closeButton).toBeInTheDocument();
     });
   });
@@ -264,7 +264,7 @@ describe('QualityScoreModal Component', () => {
       const onClose = vi.fn();
       render(<QualityScoreModal qualityScore={mockQualityScore} onClose={onClose} />);
 
-      const closeButton = screen.getByRole('button');
+      const closeButton = screen.getByRole('button', { name: /close quality breakdown modal/i });
       await user.click(closeButton);
 
       expect(onClose).toHaveBeenCalledTimes(1);
@@ -284,7 +284,7 @@ describe('QualityScoreModal Component', () => {
       const onClose = vi.fn();
       render(<QualityScoreModal qualityScore={mockQualityScore} onClose={onClose} />);
 
-      const closeButton = screen.getByRole('button');
+      const closeButton = screen.getByRole('button', { name: /close quality breakdown modal/i });
       expect(closeButton).toBeInTheDocument();
       expect(closeButton.querySelector('svg')).toBeInTheDocument(); // X icon
     });
@@ -301,7 +301,7 @@ describe('QualityScoreModal Component', () => {
       const onClose = vi.fn();
       render(<QualityScoreModal qualityScore={mockQualityScore} onClose={onClose} />);
 
-      const closeButton = screen.getByRole('button');
+      const closeButton = screen.getByRole('button', { name: /close quality breakdown modal/i });
       expect(closeButton).toHaveClass('hover:bg-purple-50');
     });
   });
@@ -454,7 +454,7 @@ describe('QualityScoreModal Component', () => {
       const onClose = vi.fn();
       render(<QualityScoreModal qualityScore={mockQualityScore} onClose={onClose} />);
 
-      const closeButton = screen.getByRole('button');
+      const closeButton = screen.getByRole('button', { name: /close quality breakdown modal/i });
       expect(closeButton).toBeInTheDocument();
     });
 
@@ -515,9 +515,14 @@ describe('QualityScoreModal Component', () => {
       render(<QualityScoreModal qualityScore={mockQualityScore} onClose={onClose} />);
 
       const closeButton = screen.getByLabelText('Close quality breakdown modal');
+      const copyButton = screen.getByLabelText(/copy.*to clipboard/i);
       expect(document.activeElement).toBe(closeButton);
 
-      // Since there's only one focusable element (close button), Tab should stay on it
+      // Tab should move to copy button (second focusable element)
+      await user.tab();
+      expect(document.activeElement).toBe(copyButton);
+
+      // Tab again should wrap back to close button (focus trap)
       await user.tab();
       expect(document.activeElement).toBe(closeButton);
     });
@@ -528,11 +533,12 @@ describe('QualityScoreModal Component', () => {
       render(<QualityScoreModal qualityScore={mockQualityScore} onClose={onClose} />);
 
       const closeButton = screen.getByLabelText('Close quality breakdown modal');
+      const copyButton = screen.getByLabelText(/copy.*to clipboard/i);
       expect(document.activeElement).toBe(closeButton);
 
-      // Shift+Tab from first element should stay on first (only one focusable element)
+      // Shift+Tab from first element should wrap to last element (copy button)
       await user.keyboard('{Shift>}{Tab}{/Shift}');
-      expect(document.activeElement).toBe(closeButton);
+      expect(document.activeElement).toBe(copyButton);
     });
 
     it('should maintain focus when modal is open', () => {

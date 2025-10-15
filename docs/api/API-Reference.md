@@ -870,13 +870,24 @@ curl -N -X POST http://localhost:3000/api/generate-stream \
   }'
 ```
 
-**3. Upload File:**
+**3. Generate Architecture Documentation:**
+```bash
+curl -X POST http://localhost:3000/api/generate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "code": "export class UserService { async getUser(id) {} }",
+    "docType": "ARCHITECTURE",
+    "language": "javascript"
+  }' | jq
+```
+
+**4. Upload File:**
 ```bash
 curl -X POST http://localhost:3000/api/upload \
   -F "file=@./test-code.js"
 ```
 
-**4. Health Check:**
+**5. Health Check:**
 ```bash
 curl http://localhost:3000/api/health
 ```

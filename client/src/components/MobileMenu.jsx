@@ -1,11 +1,21 @@
 import { X } from 'lucide-react';
 import { Button } from './Button';
 
-export function MobileMenu({ isOpen, onClose, onExamplesClick }) {
+export function MobileMenu({ isOpen, onClose, onExamplesClick, onHelpClick }) {
   if (!isOpen) return null;
 
   const handleExamplesClick = () => {
     onExamplesClick();
+    onClose();
+  };
+
+  const handleHelpClick = () => {
+    onHelpClick();
+    onClose();
+  };
+
+  const handleGitHubClick = () => {
+    window.open('https://github.com/yourusername/codescribe-ai', '_blank', 'noopener,noreferrer');
     onClose();
   };
 
@@ -35,9 +45,8 @@ export function MobileMenu({ isOpen, onClose, onExamplesClick }) {
           {/* Menu Items */}
           <nav className="flex-1 p-4 space-y-2">
             <MenuItem onClick={handleExamplesClick}>Examples</MenuItem>
-            <MenuItem onClick={onClose}>Documentation</MenuItem>
-            <MenuItem onClick={onClose}>API Access</MenuItem>
-            <MenuItem onClick={onClose}>GitHub Repo</MenuItem>
+            <MenuItem onClick={handleHelpClick}>Help & FAQ</MenuItem>
+            <MenuItem onClick={handleGitHubClick}>GitHub Repo</MenuItem>
           </nav>
 
           {/* Footer */}
