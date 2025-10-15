@@ -2,7 +2,7 @@
  * Reusable skeleton loader component for loading states
  * Provides animated placeholder elements with different variants
  */
-export function SkeletonLoader({ variant = 'text', className = '' }) {
+export function SkeletonLoader({ variant = 'text', className = '', ...props }) {
   const baseClasses = 'animate-pulse bg-slate-200 rounded';
 
   const variants = {
@@ -17,7 +17,7 @@ export function SkeletonLoader({ variant = 'text', className = '' }) {
     code: 'h-4 w-11/12 font-mono',
   };
 
-  return <div className={`${baseClasses} ${variants[variant]} ${className}`} />;
+  return <div className={`${baseClasses} ${variants[variant]} ${className}`} {...props} />;
 }
 
 /**
