@@ -201,6 +201,8 @@ const ExampleCard = React.forwardRef(({ example, isSelected, onPreview, onLoad }
   );
 });
 
+ExampleCard.displayName = 'ExampleCard';
+
 function ExamplePreview({ example, onLoad }) {
   return (
     <div className="flex flex-col h-full">

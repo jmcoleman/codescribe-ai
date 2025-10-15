@@ -94,7 +94,55 @@ Code to document:
 ${code}
 \`\`\`
 
-Generate professional, clear documentation in Markdown format. Use proper formatting with headers, code blocks, and bullet points.`,
+IMPORTANT MARKDOWN FORMATTING RULES:
+- Use proper markdown lists with a blank line before the list
+- Each list item must be on its own line
+- Use "- " (dash space) for unordered lists
+- Use "1. " (number period space) for ordered lists
+- Example of correct list format:
+
+## Features
+
+- First feature here
+- Second feature here
+- Third feature here
+
+MERMAID DIAGRAMS:
+- Include Mermaid diagrams to visualize architecture, data flow, or component relationships
+- Use proper Mermaid syntax with \`\`\`mermaid code blocks
+- IMPORTANT: Use simple, valid Mermaid syntax (avoid special characters in node IDs)
+- Example Mermaid diagram:
+
+\`\`\`mermaid
+flowchart TD
+    A[User Input] --> B[Process Data]
+    B --> C[Generate Output]
+    C --> D[Return Result]
+\`\`\`
+
+Mermaid syntax rules (CRITICAL - Follow exactly):
+- Use 'flowchart TD' or 'flowchart LR' (not 'graph')
+- Node IDs: Single letter or simple word with NO special characters (e.g., A, B, C, Input, Process, Output)
+- Arrow syntax: Use --> only (NOT ==> or ->> or any other arrow type)
+- Format: NodeID[Label Text] --> NextNodeID[Next Label Text]
+
+Examples of CORRECT syntax:
+\`\`\`mermaid
+flowchart TD
+    A[User Input] --> B[Process Data]
+    B --> C[Generate Output]
+    C --> D[Return Result]
+\`\`\`
+
+Examples of WRONG syntax to AVOID:
+- Using ==> instead of -->
+- Node IDs with brackets: [Label] --> [Another Label]
+- Special characters in node IDs: A[Price] ==> B[Calculate]
+- Multiple word node IDs: Original_Price[Price]
+
+Remember: Node ID is before the bracket, label is inside the bracket, arrow is always -->
+
+Generate professional, clear documentation in Markdown format. Use proper formatting with headers, code blocks, bullet points, and Mermaid diagrams where helpful.`,
 
       JSDOC: `You are a code documentation expert. Add comprehensive JSDoc comments to the following ${language} code.
 
@@ -111,6 +159,16 @@ Code to document:
 \`\`\`${language}
 ${code}
 \`\`\`
+
+IMPORTANT MARKDOWN FORMATTING RULES (for any markdown in JSDoc):
+- Use proper markdown lists with a blank line before the list
+- Each list item must be on its own line
+- Use "- " (dash space) for unordered lists
+- Use "1. " (number period space) for ordered lists
+- Example of correct format:
+  - First item here
+  - Second item here
+  - Third item here
 
 Return the COMPLETE code with JSDoc comments added. Maintain all original code exactly as is, only add comments above declarations. Use proper JSDoc syntax.`,
 
@@ -135,7 +193,58 @@ Code to document:
 ${code}
 \`\`\`
 
-Generate clear API documentation in Markdown format. Use tables for parameters where appropriate.`,
+IMPORTANT MARKDOWN FORMATTING RULES:
+- Use proper markdown lists with a blank line before the list
+- Each list item must be on its own line
+- Use "- " (dash space) for unordered lists
+- Use "1. " (number period space) for ordered lists
+- Example of correct list format:
+
+## Endpoints
+
+- **POST /api/users** - Create a new user
+- **GET /api/users/:id** - Retrieve user by ID
+- **PUT /api/users/:id** - Update user information
+
+MERMAID DIAGRAMS:
+- Include Mermaid sequence diagrams to visualize API request/response flows
+- Use proper Mermaid syntax with \`\`\`mermaid code blocks
+- IMPORTANT: Use simple, valid Mermaid syntax (no special characters)
+- Example for API flow:
+
+\`\`\`mermaid
+sequenceDiagram
+    participant Client
+    participant API
+    participant DB as Database
+    Client->>API: POST /api/users
+    API->>DB: Insert user
+    DB-->>API: User created
+    API-->>Client: 201 Created
+\`\`\`
+
+Mermaid syntax rules (CRITICAL - Follow exactly):
+- Use 'sequenceDiagram' (no version number, no colon)
+- Participant names: Simple words with NO special characters
+- Use 'as' for labels with spaces: participant DB as Database
+- Arrow syntax: ->> for requests, -->> for responses (NO other arrow types)
+- Format: ParticipantName->>OtherParticipant: Message text
+
+Example of CORRECT syntax:
+\`\`\`mermaid
+sequenceDiagram
+    participant C as Client
+    participant A as API
+    participant D as Database
+    C->>A: POST /users
+    A->>D: INSERT user
+    D-->>A: Success
+    A-->>C: 201 Created
+\`\`\`
+
+AVOID: Using ==> or other arrow types, special characters in participant names
+
+Generate clear API documentation in Markdown format. Use tables for parameters and Mermaid diagrams for request flows where appropriate.`,
 
       ARCHITECTURE: `You are a software architect. Analyze the following ${language} code and generate an architectural overview.
 
@@ -154,7 +263,62 @@ Code to analyze:
 ${code}
 \`\`\`
 
-Generate architectural documentation in Markdown. Include a text-based diagram if helpful.`
+IMPORTANT MARKDOWN FORMATTING RULES:
+- Use proper markdown lists with a blank line before the list
+- Each list item must be on its own line
+- Use "- " (dash space) for unordered lists
+- Use "1. " (number period space) for ordered lists
+- Example of correct list format:
+
+## Key Components
+
+- **API Gateway** - Routes requests to appropriate services
+- **User Service** - Handles user authentication and profiles
+- **Data Layer** - Manages database connections and queries
+
+MERMAID DIAGRAMS:
+- ALWAYS include Mermaid diagrams to visualize system architecture, component relationships, and data flow
+- Use proper Mermaid syntax with \`\`\`mermaid code blocks
+- IMPORTANT: Use simple, valid Mermaid syntax (no special characters in node IDs)
+- Example architecture diagram:
+
+\`\`\`mermaid
+flowchart TD
+    Client[Client Layer] --> API[API Gateway]
+    API --> Auth[Auth Service]
+    API --> Users[User Service]
+    API --> Data[Data Service]
+    Auth --> DB[(Database)]
+    Users --> DB
+    Data --> DB
+\`\`\`
+
+Mermaid syntax rules for architecture (CRITICAL - Follow exactly):
+- Use 'flowchart TD' or 'flowchart LR' (NOT 'graph')
+- Node IDs: Simple words with NO special characters (e.g., Client, API, DB, Auth, Users)
+- Arrow syntax: Use --> only (NOT ==> or other arrow types)
+- Format: NodeID[Label Text] --> NextNodeID[Next Label]
+- Database shape: NodeID[(Database Name)]
+
+Example of CORRECT syntax:
+\`\`\`mermaid
+flowchart TD
+    Client[Client Layer] --> Gateway[API Gateway]
+    Gateway --> Auth[Auth Service]
+    Gateway --> Users[User Service]
+    Auth --> DB[(Database)]
+    Users --> DB
+\`\`\`
+
+Examples of WRONG syntax to AVOID:
+- Using ==> instead of -->
+- Node IDs with hyphens: API-Gateway[Gateway]
+- Special characters: Auth_Service[Auth]
+- Multiple arrows: ==> or ->>
+
+Remember: Simple node IDs, --> arrows only, labels in square brackets
+
+Generate architectural documentation in Markdown with comprehensive Mermaid diagrams showing system structure and interactions.`
     };
 
     return prompts[docType] || prompts.README;
