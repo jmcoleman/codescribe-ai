@@ -1,5 +1,7 @@
-import { FileCode2, Zap } from 'lucide-react';
+import { Zap } from 'lucide-react';
 import { Editor } from '@monaco-editor/react';
+import { CodePanelSkeleton } from './SkeletonLoader';
+import { CopyButton } from './CopyButton';
 
 export function CodePanel({
   code,
@@ -27,8 +29,18 @@ export function CodePanel({
           <span className="text-sm text-slate-600">{filename}</span>
         </div>
 
-        {/* Right: Language badge */}
-        <span className="text-xs text-slate-500 uppercase">{language}</span>
+        {/* Right: Language badge + Copy button */}
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-500 uppercase">{language}</span>
+          {code && (
+            <CopyButton
+              text={code}
+              size="md"
+              variant="outline"
+              ariaLabel="Copy code to clipboard"
+            />
+          )}
+        </div>
       </div>
 
       {/* Monaco Editor */}
@@ -49,6 +61,7 @@ export function CodePanel({
             padding: { top: 16, bottom: 16 },
           }}
           theme="vs-light"
+          loading={<CodePanelSkeleton />}
         />
       </div>
 
