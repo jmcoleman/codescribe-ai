@@ -419,10 +419,45 @@ codescribe-ai/
 │   │   ├── brand-color-palette.html  # Interactive color palette
 │   │   └── brand-color-palette.pdf   # PDF version for sharing
 │   └── CONTEXT.md                # Quick reference
+├── private/                       # ⚠️ GITIGNORED - Sensitive content only
+│   ├── README.md                 # Guidelines for private folder usage
+│   ├── VISION.md                 # Strategic vision, market analysis, GTM strategy
+│   ├── financials/               # Revenue projections, budgets (suggested)
+│   ├── investors/                # Pitch decks, investor comms (suggested)
+│   ├── customers/                # Interview notes, PII data (suggested)
+│   ├── strategy/                 # Competitive analysis (suggested)
+│   ├── partnerships/             # Partnership negotiations (suggested)
+│   └── legal/                    # Legal documents (suggested)
 ├── .gitignore
 ├── README.md                      # Main project README
 └── CLAUDE.md                      # This file
 ```
+
+### Private Folder (Sensitive Content)
+
+**⚠️ IMPORTANT:** The `private/` folder is **excluded from version control** via `.gitignore`. This folder contains sensitive business information that should never be committed to the repository.
+
+**What belongs in `private/`:**
+- **Strategic planning** - Vision documents, market analysis, competitive research, GTM strategy
+- **Financial information** - Revenue projections, pricing models, budgets, cost analysis
+- **Customer data** - Interview transcripts, beta feedback, research notes (may contain PII)
+- **Investor relations** - Pitch decks, investor communications, term sheets, cap table
+- **Partnership docs** - Proposals, negotiations, contract drafts
+- **Internal docs** - Postmortems, employee info, compensation planning
+
+**What does NOT belong in `private/`:**
+- **Actual API keys/secrets** → Use `.env` files (also gitignored)
+- **Public documentation** → Use `docs/` folder
+- **Code and specs** → Use appropriate repo folders
+- **Public roadmap** → Can go in `docs/planning/`
+
+**Security best practices:**
+- Back up `private/` regularly to secure cloud storage (not in Git!)
+- Verify folder is excluded: `git check-ignore private/` (should output: `private/`)
+- Be cautious during screen shares - this folder won't be on GitHub
+- When in doubt, keep it private - easier to make public later
+
+**Reference:** See [private/README.md](private/README.md) for complete guidelines
 
 ### Core Services (Backend)
 1. **claudeClient.js** - Handles Claude API communication, streaming, retries
@@ -628,7 +663,8 @@ VITE_API_URL=http://localhost:3000
 
 ## 🔄 Version History
 
-- **v1.10** (Current) - Enhanced timezone awareness instructions for documentation updates: Added automatic session labeling requirements with step-by-step timezone conversion process, EST/EDT timeframe definitions, and practical examples for converting UTC to EST when adding session labels to documentation
+- **v1.11** (Current) - Added private/ folder documentation: Created dedicated folder structure for sensitive content (strategic planning, financials, customer data, investor relations); updated project structure diagram and added security best practices section; moved VISION-PRIVATE.md to private/VISION.md
+- **v1.10** - Enhanced timezone awareness instructions for documentation updates: Added automatic session labeling requirements with step-by-step timezone conversion process, EST/EDT timeframe definitions, and practical examples for converting UTC to EST when adding session labels to documentation
 - **v1.9** - Created comprehensive ERROR-HANDLING-UX.md design guide with research-based best practices for error banners vs modals, animation specifications (250ms/200ms), accessibility considerations, and CodeScribe AI error patterns; updated CLAUDE.md documentation map and cross-references
 - **v1.8** - Created comprehensive MERMAID-DIAGRAMS.md developer guide with patterns, React implementation, best practices, troubleshooting, and examples; updated CLAUDE.md documentation map
 - **v1.7** - Added UI Pattern Guidelines to Figma Guide establishing color usage patterns: slate for helper text, indigo for primary badges, slate for secondary badges; updated CLAUDE.md documentation map
