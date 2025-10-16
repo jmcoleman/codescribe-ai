@@ -1044,7 +1044,10 @@ Retrieve all users.
       );
 
       const expandButton = screen.getByRole('button', { name: /Show full quality report/i });
-      expect(expandButton).toHaveClass('focus:outline-none', 'focus:ring-2', 'focus:ring-purple-600');
+      // Check that button has focus styles (using focus-visible for better UX)
+      expect(expandButton.className).toContain('focus:outline-none');
+      expect(expandButton.className).toMatch(/focus(-visible)?:ring-2/);
+      expect(expandButton.className).toMatch(/focus(-visible)?:ring-purple-600/);
     });
   });
 

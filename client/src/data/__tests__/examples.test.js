@@ -7,8 +7,8 @@ describe('Code Examples Data', () => {
       expect(Array.isArray(codeExamples)).toBe(true);
     });
 
-    it('should have exactly 5 examples', () => {
-      expect(codeExamples).toHaveLength(5);
+    it('should have exactly 7 examples', () => {
+      expect(codeExamples).toHaveLength(7);
     });
 
     it('should have all required properties for each example', () => {
@@ -96,10 +96,17 @@ describe('Code Examples Data', () => {
   });
 
   describe('Language Validation', () => {
-    it('should only use "javascript" as language', () => {
+    // Valid languages that CodeScribe AI supports
+    const validLanguages = ['javascript', 'typescript', 'python', 'java', 'go', 'rust', 'ruby', 'php', 'c', 'cpp', 'csharp'];
+
+    it('should only use valid supported languages', () => {
       codeExamples.forEach(example => {
-        expect(example.language).toBe('javascript');
+        expect(validLanguages).toContain(example.language);
       });
+    });
+
+    it('should have at least one code example', () => {
+      expect(codeExamples.length).toBeGreaterThan(0);
     });
   });
 
@@ -228,6 +235,22 @@ describe('Code Examples Data', () => {
       expect(example).toBeDefined();
       expect(example.title).toBe('TypeScript Service Class');
       expect(example.docType).toBe('README');
+    });
+
+    it('should have "python-flask-api" example', () => {
+      const example = codeExamples.find(ex => ex.id === 'python-flask-api');
+      expect(example).toBeDefined();
+      expect(example.title).toBe('Python Flask API');
+      expect(example.language).toBe('python');
+      expect(example.docType).toBe('API');
+    });
+
+    it('should have "microservices-architecture" example', () => {
+      const example = codeExamples.find(ex => ex.id === 'microservices-architecture');
+      expect(example).toBeDefined();
+      expect(example.title).toBe('Microservices Architecture');
+      expect(example.language).toBe('javascript');
+      expect(example.docType).toBe('ARCHITECTURE');
     });
   });
 

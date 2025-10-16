@@ -155,11 +155,15 @@ describe('ExamplesModal', () => {
       const firstExample = codeExamples[0];
       const card = screen.getByText(firstExample.title).closest('div[class*="cursor-pointer"]');
 
+      // Verify card is not selected initially (no preview loaded)
+      expect(card).not.toHaveClass('border-purple-500');
+      expect(card).not.toHaveClass('bg-purple-50');
+
       // Click load button
       const loadButtons = screen.getAllByLabelText(/Load .* example/);
       await user.click(loadButtons[0]);
 
-      // Card should not have selected styling
+      // Card should still not have selected styling (load button was clicked directly, not preview)
       expect(card).not.toHaveClass('border-purple-500');
     });
   });
@@ -433,11 +437,11 @@ describe('ExamplesModal', () => {
   });
 
   describe('Focus Management', () => {
-    it('should auto-focus close button when modal opens', () => {
+    it('should auto-focus first example card when modal opens', () => {
       render(<ExamplesModal {...defaultProps} />);
 
-      const closeButton = screen.getByLabelText('Close examples modal');
-      expect(document.activeElement).toBe(closeButton);
+      const firstCard = screen.getByLabelText(`Preview ${codeExamples[0].title} example`);
+      expect(document.activeElement).toBe(firstCard);
     });
 
     it('should not auto-focus when modal is closed', () => {
@@ -450,8 +454,8 @@ describe('ExamplesModal', () => {
       const user = userEvent.setup();
       render(<ExamplesModal {...defaultProps} />);
 
-      const closeButton = screen.getByLabelText('Close examples modal');
-      expect(document.activeElement).toBe(closeButton);
+      const firstCard = screen.getByLabelText(`Preview ${codeExamples[0].title} example`);
+      expect(document.activeElement).toBe(firstCard);
 
       // Find all focusable elements
       const allButtons = screen.getAllByRole('button');
@@ -461,8 +465,9 @@ describe('ExamplesModal', () => {
       lastButton.focus();
       expect(document.activeElement).toBe(lastButton);
 
-      // Tab from last element should wrap to first (close button)
+      // Tab from last element should wrap to first focusable (close button)
       await user.tab();
+      const closeButton = screen.getByLabelText('Close examples modal');
       expect(document.activeElement).toBe(closeButton);
     });
 
@@ -470,10 +475,17 @@ describe('ExamplesModal', () => {
       const user = userEvent.setup();
       render(<ExamplesModal {...defaultProps} />);
 
+      const firstCard = screen.getByLabelText(`Preview ${codeExamples[0].title} example`);
+      expect(document.activeElement).toBe(firstCard);
+
+      // Shift+Tab from first card should go to close button
+      await user.keyboard('{Shift>}{Tab}{/Shift}');
+
+      // Should be on close button now
       const closeButton = screen.getByLabelText('Close examples modal');
       expect(document.activeElement).toBe(closeButton);
 
-      // Shift+Tab from first element should wrap to last
+      // Shift+Tab again should wrap to last focusable element
       await user.keyboard('{Shift>}{Tab}{/Shift}');
 
       // Should be on the last focusable element now
@@ -500,8 +512,8 @@ describe('ExamplesModal', () => {
     it('should restore focus when modal closes', () => {
       const { rerender } = render(<ExamplesModal {...defaultProps} isOpen={true} />);
 
-      const closeButton = screen.getByLabelText('Close examples modal');
-      expect(document.activeElement).toBe(closeButton);
+      const firstCard = screen.getByLabelText(`Preview ${codeExamples[0].title} example`);
+      expect(document.activeElement).toBe(firstCard);
 
       // Close modal
       rerender(<ExamplesModal {...defaultProps} isOpen={false} />);
@@ -559,11 +571,11 @@ describe('ExamplesModal', () => {
   });
 
   describe('Example Count', () => {
-    it('should render all 5 examples', () => {
+    it('should render all 7 examples', () => {
       render(<ExamplesModal {...defaultProps} />);
 
       const exampleCards = screen.getAllByLabelText(/Load .* example/);
-      expect(exampleCards).toHaveLength(5);
+      expect(exampleCards).toHaveLength(7);
     });
 
     it('should have correct example titles', () => {
@@ -574,6 +586,8 @@ describe('ExamplesModal', () => {
       expect(screen.getByText('Express API Endpoint')).toBeInTheDocument();
       expect(screen.getByText('Data Processing Algorithm')).toBeInTheDocument();
       expect(screen.getByText('TypeScript Service Class')).toBeInTheDocument();
+      expect(screen.getByText('Python Flask API')).toBeInTheDocument();
+      expect(screen.getByText('Microservices Architecture')).toBeInTheDocument();
     });
   });
 });

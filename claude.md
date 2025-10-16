@@ -494,14 +494,22 @@ Always provide the most relevant reference for the question asked.
 ### 6. Timezone Awareness for Documentation Updates
 **IMPORTANT:** When updating documentation (especially the Todo List) with timestamps:
 - **All times reference Eastern Standard Time (EST/EDT)**
-- When adding session labels (Morning/Afternoon/Evening/Night), consider EST timezone:
-  - Morning: 6:00 AM - 12:00 PM EST
-  - Afternoon: 12:00 PM - 5:00 PM EST
-  - Evening: 5:00 PM - 9:00 PM EST
-  - Night: 9:00 PM - 6:00 AM EST
-- Check the current system time in `<env>` and convert to EST if needed
-- When in doubt, use "Session" instead of time-specific labels
-- The user is located in EST timezone
+- **Automatic Session Labeling:** When adding session labels to documentation, you MUST:
+  1. Check the current date/time in the `<env>` section
+  2. Convert the system time to EST/EDT timezone (account for UTC offset)
+  3. Use the appropriate session label based on EST time:
+     - **Morning Session**: 6:00 AM - 12:00 PM EST
+     - **Afternoon Session**: 12:00 PM - 5:00 PM EST
+     - **Evening Session**: 5:00 PM - 9:00 PM EST
+     - **Night Session**: 9:00 PM - 6:00 AM EST
+  4. Example: If system time is 4:00 PM UTC and EST is UTC-5, then EST time is 11:00 AM → Use "Morning Session"
+  5. Example: If system time is 7:00 PM UTC and EST is UTC-4 (EDT), then EST time is 3:00 PM → Use "Afternoon Session"
+- **When to use generic "Session":** Only use generic "Session" label if:
+  - System time is unavailable in `<env>`
+  - Timezone conversion is unclear
+  - Session spans multiple timeframes
+- **The user is located in EST timezone** - always label based on their local time, not system/server time
+- **Pro tip:** During daylight saving time (March-November), EST becomes EDT (UTC-4 instead of UTC-5)
 
 ### 7. Mermaid Diagram Guidelines
 When creating or modifying Mermaid diagrams for this project, refer to the **[MERMAID-DIAGRAMS.md](docs/components/MERMAID-DIAGRAMS.md)** comprehensive developer guide.
@@ -620,7 +628,8 @@ VITE_API_URL=http://localhost:3000
 
 ## 🔄 Version History
 
-- **v1.9** (Current) - Created comprehensive ERROR-HANDLING-UX.md design guide with research-based best practices for error banners vs modals, animation specifications (250ms/200ms), accessibility considerations, and CodeScribe AI error patterns; updated CLAUDE.md documentation map and cross-references
+- **v1.10** (Current) - Enhanced timezone awareness instructions for documentation updates: Added automatic session labeling requirements with step-by-step timezone conversion process, EST/EDT timeframe definitions, and practical examples for converting UTC to EST when adding session labels to documentation
+- **v1.9** - Created comprehensive ERROR-HANDLING-UX.md design guide with research-based best practices for error banners vs modals, animation specifications (250ms/200ms), accessibility considerations, and CodeScribe AI error patterns; updated CLAUDE.md documentation map and cross-references
 - **v1.8** - Created comprehensive MERMAID-DIAGRAMS.md developer guide with patterns, React implementation, best practices, troubleshooting, and examples; updated CLAUDE.md documentation map
 - **v1.7** - Added UI Pattern Guidelines to Figma Guide establishing color usage patterns: slate for helper text, indigo for primary badges, slate for secondary badges; updated CLAUDE.md documentation map
 - **v1.6** - Added Phase 4: Optional Enhancements to PRD, created TOAST-SYSTEM.md documentation with future enhancement section, updated documentation map
