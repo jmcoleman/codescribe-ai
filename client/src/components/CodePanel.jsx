@@ -1,6 +1,23 @@
-import { Zap } from 'lucide-react';
-import { Editor } from '@monaco-editor/react';
+import { lazy, Suspense } from 'react';
+import { Zap, Loader2 } from 'lucide-react';
 import { CopyButton } from './CopyButton';
+
+// Lazy load Monaco Editor to reduce initial bundle size
+const LazyMonacoEditor = lazy(() =>
+  import('./LazyMonacoEditor').then(module => ({ default: module.LazyMonacoEditor }))
+);
+
+// Loading fallback component with skeleton UI
+function EditorLoadingFallback() {
+  return (
+    <div className="flex items-center justify-center h-full bg-slate-50">
+      <div className="flex flex-col items-center gap-3">
+        <Loader2 className="w-8 h-8 text-purple-500 animate-spin" />
+        <p className="text-sm text-slate-600">Loading editor...</p>
+      </div>
+    </div>
+  );
+}
 
 export function CodePanel({
   code,
@@ -42,25 +59,27 @@ export function CodePanel({
         </div>
       </div>
 
-      {/* Monaco Editor */}
+      {/* Monaco Editor - Lazy loaded */}
       <div className="flex-1 overflow-hidden">
-        <Editor
-          height="100%"
-          language={language}
-          value={code}
-          onChange={onChange}
-          options={{
-            minimap: { enabled: false },
-            fontSize: 13,
-            fontFamily: 'JetBrains Mono, monospace',
-            lineNumbers: 'on',
-            scrollBeyondLastLine: false,
-            readOnly,
-            automaticLayout: true,
-            padding: { top: 16, bottom: 16 },
-          }}
-          theme="vs-light"
-        />
+        <Suspense fallback={<EditorLoadingFallback />}>
+          <LazyMonacoEditor
+            height="100%"
+            language={language}
+            value={code}
+            onChange={onChange}
+            options={{
+              minimap: { enabled: false },
+              fontSize: 13,
+              fontFamily: 'JetBrains Mono, monospace',
+              lineNumbers: 'on',
+              scrollBeyondLastLine: false,
+              readOnly,
+              automaticLayout: true,
+              padding: { top: 16, bottom: 16 },
+            }}
+            theme="vs-light"
+          />
+        </Suspense>
       </div>
 
       {/* Footer */}
