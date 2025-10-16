@@ -1,16 +1,27 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, lazy, Suspense } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { Header } from './components/Header';
 import { MobileMenu } from './components/MobileMenu';
 import { ControlBar } from './components/ControlBar';
 import { CodePanel } from './components/CodePanel';
-import { DocPanel } from './components/DocPanel';
-import { QualityScoreModal } from './components/QualityScore';
-import { ExamplesModal } from './components/ExamplesModal';
-import { HelpModal } from './components/HelpModal';
 import { useDocGeneration } from './hooks/useDocGeneration';
 import { ErrorBanner } from './components/ErrorBanner';
 import { validateFile, getValidationErrorMessage } from './utils/fileValidation';
+
+// Lazy load heavy components that aren't needed on initial render
+const DocPanel = lazy(() => import('./components/DocPanel').then(m => ({ default: m.DocPanel })));
+const QualityScoreModal = lazy(() => import('./components/QualityScore').then(m => ({ default: m.QualityScoreModal })));
+const ExamplesModal = lazy(() => import('./components/ExamplesModal').then(m => ({ default: m.ExamplesModal })));
+const HelpModal = lazy(() => import('./components/HelpModal').then(m => ({ default: m.HelpModal })));
+
+// Loading fallback for modals and panels
+function LoadingFallback() {
+  return (
+    <div className="flex items-center justify-center p-8">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+    </div>
+  );
+}
 import {
   toastError,
   toastDocGenerated,
@@ -258,37 +269,49 @@ function App() {
           />
 
           {/* Right: Documentation Panel */}
-          <DocPanel
-            documentation={documentation}
-            qualityScore={qualityScore}
-            isGenerating={isGenerating}
-            onViewBreakdown={() => setShowQualityModal(true)}
-          />
+          <Suspense fallback={<LoadingFallback />}>
+            <DocPanel
+              documentation={documentation}
+              qualityScore={qualityScore}
+              isGenerating={isGenerating}
+              onViewBreakdown={() => setShowQualityModal(true)}
+            />
+          </Suspense>
         </div>
 
       </main>
 
       {/* Quality Score Modal */}
       {showQualityModal && qualityScore && (
-        <QualityScoreModal
-          qualityScore={qualityScore}
-          onClose={() => setShowQualityModal(false)}
-        />
+        <Suspense fallback={<LoadingFallback />}>
+          <QualityScoreModal
+            qualityScore={qualityScore}
+            onClose={() => setShowQualityModal(false)}
+          />
+        </Suspense>
       )}
 
       {/* Examples Modal */}
-      <ExamplesModal
-        isOpen={showExamplesModal}
-        onClose={() => setShowExamplesModal(false)}
-        onLoadExample={handleLoadExample}
-        currentCode={code}
-      />
+      {showExamplesModal && (
+        <Suspense fallback={<LoadingFallback />}>
+          <ExamplesModal
+            isOpen={showExamplesModal}
+            onClose={() => setShowExamplesModal(false)}
+            onLoadExample={handleLoadExample}
+            currentCode={code}
+          />
+        </Suspense>
+      )}
 
       {/* Help Modal */}
-      <HelpModal
-        isOpen={showHelpModal}
-        onClose={() => setShowHelpModal(false)}
-      />
+      {showHelpModal && (
+        <Suspense fallback={<LoadingFallback />}>
+          <HelpModal
+            isOpen={showHelpModal}
+            onClose={() => setShowHelpModal(false)}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }

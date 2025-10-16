@@ -145,6 +145,30 @@ This project has comprehensive documentation organized by purpose. Use this as y
 
 ---
 
+### 📊 Performance & Optimization
+
+#### [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) - Performance Optimization Guide
+**When to use:** Understanding performance improvements, lazy loading strategy, bundle analysis, Core Web Vitals tracking
+
+**Contains:**
+- Performance audit results timeline (45 → 75 Lighthouse score, +67% improvement)
+- Bundle size evolution (516 KB → 78 KB gzipped, -85% reduction)
+- Core Web Vitals metrics (FCP: -89%, LCP: -93%, TBT: -30%)
+- Lazy loading implementation patterns:
+  - Monaco Editor (4.85 KB gzipped)
+  - Mermaid.js (139.30 KB gzipped)
+  - DocPanel with ReactMarkdown (281.53 KB gzipped)
+  - Modal components (2-9 KB each)
+- Bundle analysis with rollup-plugin-visualizer
+- Testing & validation procedures (Lighthouse CLI, dev tools verification)
+- Future optimization recommendations (Service Worker, HTTP/2, font optimization, edge computing)
+- Maintenance guidelines and troubleshooting (decision trees, audit checklists)
+- Complete changelog with optimization stages
+
+**Key for:** Performance optimization decisions, lazy loading patterns, bundle analysis, Lighthouse auditing, Core Web Vitals tracking, maintenance best practices
+
+---
+
 ### 🎨 Design & UX
 
 #### [07-Figma-Guide.md](docs/planning/07-Figma-Guide.md) - Complete Figma Design Guide
@@ -412,9 +436,12 @@ codescribe-ai/
 │   ├── architecture/             # Architecture documentation
 │   │   ├── 04-Architecture.md    # System architecture diagram
 │   │   └── ARCHITECTURE.md       # Architecture overview
+│   ├── performance/              # Performance optimization
+│   │   └── OPTIMIZATION-GUIDE.md # Performance optimization guide
 │   ├── components/               # Component documentation
 │   │   ├── TOAST-SYSTEM.md       # Toast notification system guide
-│   │   └── MERMAID-DIAGRAMS.md   # Mermaid diagram developer guide
+│   │   ├── MERMAID-DIAGRAMS.md   # Mermaid diagram developer guide
+│   │   └── ERROR-HANDLING-UX.md  # Error handling UX guide
 │   ├── design/                   # Design assets
 │   │   ├── brand-color-palette.html  # Interactive color palette
 │   │   └── brand-color-palette.pdf   # PDF version for sharing
@@ -492,6 +519,7 @@ When answering questions about CodeScribe AI:
 - **API/Endpoints** → Reference API Reference
 - **Design/UI** → Reference Figma Guide or Brand Color Palette
 - **Architecture** → Reference Architecture diagram or ARCHITECTURE.md
+- **Performance/Optimization** → Reference OPTIMIZATION-GUIDE.md
 - **Diagrams/Visualization** → Reference MERMAID-DIAGRAMS.md
 - **Components** → Reference TOAST-SYSTEM.md or MERMAID-DIAGRAMS.md
 - **Current Tasks** → Reference Todo List
@@ -520,6 +548,8 @@ Multiple docs cover the same topic from different angles:
 - **Quality Scoring**: PRD (requirements), Dev Guide (implementation), API Reference (algorithm details)
 - **Architecture**: 04-Architecture.md (visual diagram + quick overview), ARCHITECTURE.md (deep technical dive), Dev Guide (implementation), Master Prompt (summary)
 - **Setup**: Todo List (tasks), Dev Guide (code), Master Prompt (quick commands)
+- **Performance**: OPTIMIZATION-GUIDE.md (comprehensive guide), Dev Guide (optimization techniques), ARCHITECTURE.md (performance targets)
+- **Lazy Loading**: OPTIMIZATION-GUIDE.md (implementation patterns), Dev Guide (React best practices)
 - **Mermaid Diagrams**: MERMAID-DIAGRAMS.md (comprehensive guide), CLAUDE.md section 7 (quick reference), 04-Architecture.md (implementation example)
 - **Component Patterns**: TOAST-SYSTEM.md (toast notifications), MERMAID-DIAGRAMS.md (diagram rendering), ERROR-HANDLING-UX.md (error banners and modals)
 - **Error Handling**: ERROR-HANDLING-UX.md (UX patterns, animations, accessibility), TOAST-SYSTEM.md (error toasts for non-blocking notifications)
@@ -663,7 +693,8 @@ VITE_API_URL=http://localhost:3000
 
 ## 🔄 Version History
 
-- **v1.11** (Current) - Added private/ folder documentation: Created dedicated folder structure for sensitive content (strategic planning, financials, customer data, investor relations); updated project structure diagram and added security best practices section; moved VISION-PRIVATE.md to private/VISION.md
+- **v1.12** (Current) - Added Performance & Optimization documentation section: Created comprehensive OPTIMIZATION-GUIDE.md covering Lighthouse audits (+67% performance improvement), bundle size reduction (-85%), Core Web Vitals tracking, lazy loading patterns, and maintenance guidelines; updated documentation map with new Performance & Optimization section, cross-references for performance/lazy loading topics, and project structure to include docs/performance/ folder
+- **v1.11** - Added private/ folder documentation: Created dedicated folder structure for sensitive content (strategic planning, financials, customer data, investor relations); updated project structure diagram and added security best practices section; moved VISION-PRIVATE.md to private/VISION.md
 - **v1.10** - Enhanced timezone awareness instructions for documentation updates: Added automatic session labeling requirements with step-by-step timezone conversion process, EST/EDT timeframe definitions, and practical examples for converting UTC to EST when adding session labels to documentation
 - **v1.9** - Created comprehensive ERROR-HANDLING-UX.md design guide with research-based best practices for error banners vs modals, animation specifications (250ms/200ms), accessibility considerations, and CodeScribe AI error patterns; updated CLAUDE.md documentation map and cross-references
 - **v1.8** - Created comprehensive MERMAID-DIAGRAMS.md developer guide with patterns, React implementation, best practices, troubleshooting, and examples; updated CLAUDE.md documentation map
