@@ -97,11 +97,27 @@ export default {
             animationTimingFunction: 'cubic-bezier(0, 0, 0.2, 1)',
           },
         },
+        'slide-in-fade': {
+          '0%': {
+            opacity: '0',
+            transform: 'translateY(-8px)',
+          },
+          '100%': {
+            opacity: '1',
+            transform: 'translateY(0)',
+          },
+        },
+        'fade-out': {
+          '0%': { opacity: '1' },
+          '100%': { opacity: '0' },
+        },
       },
       animation: {
         'toast-enter': 'toast-enter 0.3s ease-out',
         'toast-leave': 'toast-leave 0.2s ease-in forwards',
         'toast-bounce': 'toast-bounce 0.5s ease-in-out',
+        'slide-in-fade': 'slide-in-fade 250ms cubic-bezier(0.4, 0, 0.2, 1) forwards',
+        'fade-out': 'fade-out 200ms cubic-bezier(0.4, 0, 1, 1) forwards',
       },
     },
   },
