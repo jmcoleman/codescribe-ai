@@ -1,5 +1,5 @@
 import { Sparkles, CheckCircle, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -25,6 +25,14 @@ export function DocPanel({
       return false;
     }
   });
+
+  // Track mermaid diagram counter to ensure unique IDs
+  const mermaidCounterRef = useRef(0);
+
+  // Reset counter when documentation changes (new generation)
+  useEffect(() => {
+    mermaidCounterRef.current = 0;
+  }, [documentation]);
 
   // Persist state to localStorage whenever it changes
   useEffect(() => {
@@ -89,38 +97,67 @@ export function DocPanel({
       </div>
 
       {/* Body - Documentation Content */}
-      <div className="flex-1 overflow-y-auto px-6 py-4">
+      <div className="flex-1 overflow-y-auto p-6">
         {isGenerating && !documentation ? (
           <DocPanelGeneratingSkeleton />
         ) : documentation ? (
-          <div className="prose prose-sm prose-slate max-w-none overflow-x-auto">
+          <div className="prose prose-sm max-w-none">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{
+                pre({ node, children, ...props }) {
+                  // Check if this is a code block
+                  const codeChild = children?.[0];
+                  const isCodeBlock = codeChild?.type === 'code';
+
+                  if (isCodeBlock) {
+                    const codeClassName = codeChild?.props?.className || '';
+                    // If it's a mermaid code block, skip the pre wrapper
+                    if (codeClassName.includes('language-mermaid')) {
+                      return <div className="not-prose">{children}</div>;
+                    }
+                  }
+
+                  // For other code blocks, keep the pre wrapper
+                  return <pre {...props}>{children}</pre>;
+                },
                 code({ node, inline, className, children, ...props }) {
                   const match = /language-(\w+)/.exec(className || '');
                   const language = match ? match[1] : '';
                   const codeContent = String(children).replace(/\n$/, '');
 
-                  // Handle mermaid diagrams - only render if generation is complete
+                  // Handle mermaid diagrams
                   if (!inline && language === 'mermaid') {
-                    // Show placeholder while generating
-                    if (isGenerating) {
+                    // Detect incomplete/partial diagrams (common during streaming)
+                    const looksIncomplete = !codeContent.includes('-->') &&
+                                           !codeContent.includes('->') &&
+                                           !codeContent.includes('---') &&
+                                           codeContent.split('\n').length < 3;
+
+                    // Show placeholder if still generating OR diagram looks incomplete
+                    if (isGenerating || looksIncomplete) {
                       return (
                         <div className="my-6 p-4 bg-slate-50 border border-slate-200 rounded-lg min-h-[300px] flex items-center justify-center">
                           <div className="text-center">
                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-2"></div>
-                            <p className="text-sm text-slate-600">Diagram will render when generation completes...</p>
+                            <p className="text-sm text-slate-600">
+                              {isGenerating
+                                ? 'Diagram will render when generation completes...'
+                                : 'Completing diagram...'}
+                            </p>
                           </div>
                         </div>
                       );
                     }
 
-                    // Render diagram only when generation is complete
+                    // Generate stable, unique ID for this diagram
+                    const diagramId = `diagram-${++mermaidCounterRef.current}`;
+
+                    // Render complete diagram only when ready
                     return (
                       <MermaidDiagram
                         chart={codeContent}
-                        id={`mermaid-${Math.random().toString(36).substring(2, 11)}`}
+                        id={diagramId}
                       />
                     );
                   }
@@ -129,26 +166,11 @@ export function DocPanel({
                   return !inline && match ? (
                     <SyntaxHighlighter
                       style={vs}
-                      language={language}
+                      language={match[1]}
                       PreTag="div"
-                      customStyle={{
-                        background: 'transparent',
-                        padding: '0',
-                        margin: '1rem 0',
-                        border: 'none',
-                        borderRadius: '0'
-                      }}
-                      codeTagProps={{
-                        style: {
-                          background: 'transparent',
-                          fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
-                          fontSize: '0.875rem',
-                          lineHeight: '1.7'
-                        }
-                      }}
                       {...props}
                     >
-                      {codeContent}
+                      {String(children).replace(/\n$/, '')}
                     </SyntaxHighlighter>
                   ) : (
                     <code className="bg-slate-100 px-1 py-0.5 rounded text-xs font-mono" {...props}>
@@ -201,24 +223,24 @@ export function DocPanel({
       {/* Footer - Quick Stats & Expandable Report */}
       {qualityScore && (
         <div className="bg-slate-50 border-t border-slate-200">
-          {/* Quick Stats */}
-          <div className="flex items-center justify-between px-4 py-2">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1.5 text-xs">
-                <CheckCircle className="w-3 h-3 text-success" />
-                <span className="text-slate-600">
-                  {qualityScore.summary.strengths.length} criteria met
-                </span>
-              </div>
-              {qualityScore.summary.improvements.length > 0 && (
+            {/* Quick Stats */}
+            <div className="flex items-center justify-between px-4 py-2">
+              <div className="flex items-center gap-4">
                 <div className="flex items-center gap-1.5 text-xs">
-                  <AlertCircle className="w-3 h-3 text-warning" />
+                  <CheckCircle className="w-3 h-3 text-success" />
                   <span className="text-slate-600">
-                    {qualityScore.summary.improvements.length} areas to improve
+                    {qualityScore.summary.strengths.length} criteria met
                   </span>
                 </div>
-              )}
-            </div>
+                {qualityScore.summary.improvements.length > 0 && (
+                  <div className="flex items-center gap-1.5 text-xs">
+                    <AlertCircle className="w-3 h-3 text-warning" />
+                    <span className="text-slate-600">
+                      {qualityScore.summary.improvements.length} areas to improve
+                    </span>
+                  </div>
+                )}
+              </div>
 
             {/* Expand/Collapse Button */}
             <button
@@ -227,7 +249,7 @@ export function DocPanel({
               aria-expanded={isExpanded}
               aria-controls="quality-report-details"
               aria-label={isExpanded ? "Hide full quality report" : "Show full quality report"}
-              className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50 transition-all duration-200 motion-reduce:transition-none focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 rounded px-2 py-1 active:bg-purple-100"
+              className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50 transition-colors duration-200 motion-reduce:transition-none focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 rounded px-2 py-1 active:bg-purple-100"
             >
               <span className="font-medium">View full report</span>
               {isExpanded ? (
