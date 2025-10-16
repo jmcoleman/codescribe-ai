@@ -648,13 +648,13 @@ CodeScribe AI is an intelligent documentation generator powered by Claude's API.
 ## 🛠️ Tech Stack
 
 **Frontend:**
-- React 18 + Vite
+- React 19 + Vite
 - Tailwind CSS
 - Monaco Editor
 - react-markdown
 
 **Backend:**
-- Node.js + Express
+- Node.js 20+ + Express 5
 - Claude API (Sonnet 4.5)
 - Acorn (AST parsing)
 
