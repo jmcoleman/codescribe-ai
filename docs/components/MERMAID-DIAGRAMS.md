@@ -346,19 +346,29 @@ The DocPanel integrates Mermaid diagrams into ReactMarkdown:
 
       // Handle mermaid diagrams
       if (!inline && language === 'mermaid') {
-        // Show placeholder while generating
-        if (isGenerating) {
+        // Detect incomplete/partial diagrams (common during streaming)
+        const looksIncomplete = !codeContent.includes('-->') &&
+                               !codeContent.includes('->') &&
+                               !codeContent.includes('---') &&
+                               codeContent.split('\n').length < 3;
+
+        // Show placeholder if still generating OR diagram looks incomplete
+        if (isGenerating || looksIncomplete) {
           return (
             <div className="my-6 p-4 bg-slate-50 border border-slate-200 rounded-lg min-h-[300px] flex items-center justify-center">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-2"></div>
-                <p className="text-sm text-slate-600">Diagram will render when generation completes...</p>
+                <p className="text-sm text-slate-600">
+                  {isGenerating
+                    ? 'Diagram will render when generation completes...'
+                    : 'Completing diagram...'}
+                </p>
               </div>
             </div>
           );
         }
 
-        // Render diagram only when generation is complete
+        // Render complete diagram only when ready
         return (
           <MermaidDiagram
             chart={codeContent}
@@ -375,7 +385,11 @@ The DocPanel integrates Mermaid diagrams into ReactMarkdown:
 </ReactMarkdown>
 ```
 
-**Key Pattern:** Conditional rendering during AI generation prevents partial diagrams from attempting to render.
+**Key Patterns:**
+1. **Incomplete diagram detection**: Checks for connection operators (`-->`, `->`, `---`) and minimum line count to determine if diagram is complete
+2. **Conditional rendering**: Shows placeholder during generation OR when diagram appears incomplete
+3. **Progressive messaging**: Different messages for active generation vs. completion phase
+4. **Prevents partial renders**: Waits for valid diagram structure before attempting to render
 
 ---
 
@@ -430,7 +444,7 @@ graph LR
     A[Thing] --> B[Stuff]  %% Unclear!
 ```
 
-### 4. Performance
+### 4. Performance & Streaming
 
 ✅ **DO:** Use unique IDs for each diagram
 ```jsx
@@ -447,9 +461,27 @@ useEffect(() => {
 }, [chart, id]);  // Only re-render when these change
 ```
 
+✅ **DO:** Detect incomplete diagrams during streaming
+```jsx
+const looksIncomplete = !codeContent.includes('-->') &&
+                       !codeContent.includes('->') &&
+                       !codeContent.includes('---') &&
+                       codeContent.split('\n').length < 3;
+
+if (isGenerating || looksIncomplete) {
+  return <LoadingPlaceholder />;
+}
+```
+
 ❌ **DON'T:** Use static IDs when rendering multiple diagrams
 ```jsx
 <MermaidDiagram id="diagram" />  %% Will conflict!
+```
+
+❌ **DON'T:** Attempt to render partial diagrams
+```jsx
+// This will cause errors during streaming
+<MermaidDiagram chart={partialMermaidCode} />
 ```
 
 ### 5. Diagram Structure
@@ -719,6 +751,7 @@ Test rendering in:
 2. **Missing initialization** - Ensure `mermaid.initialize()` is called
 3. **Invalid ID** - Use unique IDs for each diagram
 4. **Loading timing** - Diagram code may not be ready yet
+5. **Incomplete diagram** - Diagram is still being streamed/generated
 
 **Solutions:**
 ```jsx
@@ -733,6 +766,16 @@ const uniqueId = `mermaid-${id}-${Date.now()}`;
 
 // 4. Handle loading states
 if (isGenerating) return <LoadingPlaceholder />;
+
+// 5. Detect incomplete diagrams during streaming
+const looksIncomplete = !codeContent.includes('-->') &&
+                       !codeContent.includes('->') &&
+                       !codeContent.includes('---') &&
+                       codeContent.split('\n').length < 3;
+
+if (isGenerating || looksIncomplete) {
+  return <LoadingPlaceholder />;
+}
 ```
 
 ### Problem: Diagram renders with error overlay
@@ -740,6 +783,41 @@ if (isGenerating) return <LoadingPlaceholder />;
 **Cause:** Mermaid adds error text/icons even when diagram renders successfully.
 
 **Solution:** Our `MermaidDiagram` component automatically removes these (see [React Implementation](#react-implementation)).
+
+### Problem: Partial/incomplete diagrams during streaming
+
+**Symptoms:**
+- Mermaid errors appear during AI generation
+- Diagram flashes error states before completing
+- Console shows "Syntax error" messages during streaming
+
+**Cause:** AI streams documentation incrementally, creating temporary invalid Mermaid syntax until complete.
+
+**Example of incomplete diagram:**
+```mermaid
+graph TB
+    A[User
+```
+
+**Solution:** Implement incomplete diagram detection in DocPanel:
+
+```jsx
+// Detect incomplete/partial diagrams
+const looksIncomplete = !codeContent.includes('-->') &&
+                       !codeContent.includes('->') &&
+                       !codeContent.includes('---') &&
+                       codeContent.split('\n').length < 3;
+
+// Wait for completion
+if (isGenerating || looksIncomplete) {
+  return <LoadingPlaceholder />;
+}
+```
+
+**Why this works:**
+- Valid Mermaid diagrams MUST have connection operators (`-->`, `->`, `---`)
+- Valid diagrams typically have at least 3 lines (header + nodes + connections)
+- Prevents rendering attempts until diagram has valid structure
 
 ### Problem: Styles not applying
 
@@ -800,6 +878,156 @@ API["API<br/>(Application Programming Interface)"]
 ```jsx
 {showDiagram && <MermaidDiagram chart={code} id="large-diagram" />}
 ```
+
+### Problem: Layout shake/reflow when diagrams render
+
+**Symptoms:**
+- Entire page "shakes" or jumps when diagram appears
+- Shake is worse with multiple diagrams
+- Shake happens on footer expand/collapse with diagrams present
+
+**Root Cause:**
+SVG content with unknown height being injected into DOM causes browser to recalculate layout for entire page.
+
+**What DIDN'T Work:**
+- CSS `contain` property
+- `will-change` hints
+- Delays/timeouts (created delayed shakes)
+- Fade-in animations (masked but didn't eliminate)
+- Fixed height placeholders (wastes space)
+- `content-visibility` (made it worse)
+- `React.memo()` (prevented re-renders but not initial shift)
+
+**Solution: On-Demand Rendering** ⭐
+
+Render diagrams only when user clicks a button:
+
+```jsx
+export const MermaidDiagram = memo(function MermaidDiagram({ chart, id }) {
+  const [showDiagram, setShowDiagram] = useState(false);
+
+  if (!showDiagram) {
+    return (
+      <button onClick={() => setShowDiagram(true)}>
+        Show Diagram
+      </button>
+    );
+  }
+
+  // ... render diagram
+});
+```
+
+**Why this works:**
+- No diagrams in DOM = no layout shifts
+- User controls when shift happens (intentional, not jarring)
+- Better performance (diagrams only render when needed)
+- Eliminates shake on expand/collapse interactions
+
+**Key Insight:** Sometimes the best technical solution is changing the UX flow rather than fighting browser behavior.
+
+### Problem: Grey background wrapper around diagrams
+
+**Cause:**
+ReactMarkdown wraps code blocks in `<pre>` tags, which prose class styles with grey backgrounds.
+
+**Solution:** Custom `pre` component handler
+
+```jsx
+<ReactMarkdown
+  components={{
+    pre({ node, children, ...props }) {
+      const codeChild = children?.[0];
+      const codeClassName = codeChild?.props?.className || '';
+
+      // Skip pre wrapper for mermaid blocks
+      if (codeClassName.includes('language-mermaid')) {
+        return <div className="not-prose">{children}</div>;
+      }
+
+      return <pre {...props}>{children}</pre>;
+    },
+    code({ /* handle mermaid code blocks */ }) {
+      // Your mermaid rendering logic
+    }
+  }}
+/>
+```
+
+**Important:** Also add `not-prose` class to the MermaidDiagram component itself to fully opt out of prose styling.
+
+---
+
+## Technical Learnings
+
+### ReactMarkdown Gotchas
+
+1. **Default wrappers**: ReactMarkdown wraps code blocks in `<pre>` tags
+2. **Prose styling**: The prose class automatically styles `<pre>` elements
+3. **Solution**: Custom component handlers to control rendering
+4. **Escape hatch**: Use `not-prose` class to opt out of typography styles
+
+### Mermaid Initialization Best Practices
+
+1. **Manual rendering**: Always use `startOnLoad: false`
+2. **Unique IDs**: Each diagram MUST have unique ID or rendering fails
+3. **Counter pattern**: `useRef` with incrementing counter is more stable than random IDs
+4. **Cleanup**: Cancel renders on unmount to prevent memory leaks
+
+```javascript
+useEffect(() => {
+  let cancelled = false;
+
+  const renderDiagram = async () => {
+    const { svg } = await mermaid.render(uniqueId, chart);
+    if (cancelled) return;
+    setSvg(svg);
+  };
+
+  renderDiagram();
+
+  return () => {
+    cancelled = true; // Prevent state updates after unmount
+  };
+}, [chart, id]);
+```
+
+### Streaming Detection Pattern
+
+For AI-generated content that streams incrementally:
+
+```javascript
+// Detect incomplete diagrams
+const looksIncomplete =
+  !codeContent.includes('-->') &&
+  !codeContent.includes('->') &&
+  !codeContent.includes('---') &&
+  codeContent.split('\n').length < 3;
+
+// Wait for valid structure
+if (isGenerating || looksIncomplete) {
+  return <LoadingPlaceholder />;
+}
+```
+
+**Why this works:**
+- All Mermaid diagrams need connection operators
+- Minimum 3 lines for valid diagram structure
+- Prevents parsing errors from partial content
+
+### Debugging Strategy That Works
+
+1. **Isolate**: Remove suspected component entirely to confirm it's the cause
+2. **Add incrementally**: Reintroduce features one at a time
+3. **Test hypothesis**: If rendering causes issue, delay or prevent rendering
+4. **Solution emerges**: Understanding root cause leads to elegant solution
+
+### Performance Considerations
+
+- **Single diagram**: Minimal impact on page performance
+- **Multiple diagrams**: Can cause noticeable layout shifts
+- **On-demand rendering**: Best solution for multiple diagrams
+- **Future option**: Intersection Observer for lazy loading when scrolled into view
 
 ---
 
@@ -910,6 +1138,8 @@ const validateMermaidSyntax = (code) => {
 
 ## Version History
 
+- **v1.2** (October 15, 2025) - Added comprehensive troubleshooting for layout shake/reflow issues, documented on-demand rendering solution, added "Technical Learnings" section with ReactMarkdown gotchas, streaming detection patterns, and debugging strategies
+- **v1.1** (October 15, 2025) - Added incomplete diagram detection pattern for streaming scenarios, updated DocPanel integration section, added troubleshooting for partial diagrams during AI generation
 - **v1.0** (October 15, 2025) - Initial comprehensive guide created with all patterns, examples, and troubleshooting
 
 ---
