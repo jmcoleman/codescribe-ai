@@ -1,4 +1,4 @@
-# CodeScribe AI - Senior Engineer Development Guide
+# CodeScribe AI - Engineering Development Guide
 
 **Role:** Senior Full-Stack Architect & Engineer  
 **Tech Stack:** React, Node.js, Express, Claude API  

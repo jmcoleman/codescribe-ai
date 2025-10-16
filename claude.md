@@ -224,33 +224,6 @@ This project has comprehensive documentation organized by purpose. Use this as y
 
 ---
 
-### 🎤 Interview & Presentation
-
-#### [06-InterviewGuide.md](docs/planning/06-InterviewGuide.md) - Interview Preparation Guide
-**When to use:** Explaining the project to stakeholders, preparing for technical interviews
-
-**Contains:**
-- 30-second elevator pitch
-- Core talking points:
-  - Problem statement explanation
-  - Technical stack justification
-  - Architecture deep dive
-  - Interesting technical challenges
-  - Trade-offs and decisions
-- Live demo script (90 seconds)
-- Anticipated Q&A:
-  - Technical questions (rate limiting, security, React structure, why not Next.js)
-  - Product questions (target audience, monetization, differentiation)
-  - Process questions (time management, what to do differently)
-- Key messages to emphasize
-- What NOT to say
-- LinkedIn post template
-- Closing statements
-
-**Key for:** Articulating technical decisions, demo presentations, interview preparation
-
----
-
 ### 🎨 Design Assets
 
 #### Brand Color Palette - Interactive Reference & PDF
@@ -575,7 +548,6 @@ codescribe-ai/
 │   │   ├── 02-Epics-Stories.md
 │   │   ├── 03-Todo-List.md
 │   │   ├── 05-Dev-Guide.md
-│   │   ├── 06-InterviewGuide.md
 │   │   ├── 07-Figma-Guide.md
 │   │   └── 08-Master-Prompt.md
 │   ├── api/                      # API documentation
@@ -612,6 +584,7 @@ codescribe-ai/
 ├── private/                       # ⚠️ GITIGNORED - Sensitive content only
 │   ├── README.md                 # Guidelines for private folder usage
 │   ├── VISION.md                 # Strategic vision, market analysis, GTM strategy
+│   ├── INTERVIEW-GUIDE.md        # Interview prep, talking points, demo scripts
 │   ├── financials/               # Revenue projections, budgets (suggested)
 │   ├── investors/                # Pitch decks, investor comms (suggested)
 │   ├── customers/                # Interview notes, PII data (suggested)
@@ -629,6 +602,7 @@ codescribe-ai/
 
 **What belongs in `private/`:**
 - **Strategic planning** - Vision documents, market analysis, competitive research, GTM strategy
+- **Interview preparation** - Interview guides, talking points, demo scripts, personal Q&A
 - **Financial information** - Revenue projections, pricing models, budgets, cost analysis
 - **Customer data** - Interview transcripts, beta feedback, research notes (may contain PII)
 - **Investor relations** - Pitch decks, investor communications, term sheets, cap table
@@ -898,7 +872,8 @@ VITE_API_URL=http://localhost:3000
 
 ## 🔄 Version History
 
-- **v1.16** (Current) - Organized testing documentation: Created comprehensive Testing Documentation section in documentation map with 9 test docs under docs/testing/; added Testing README (hub), COMPONENT-TEST-COVERAGE.md (detailed coverage report with 319 tests), frontend-testing-guide.md, TEST-GUIDE.md, IMPLEMENTATION-SUMMARY.md, and 4 specialized test docs; moved TEST-GUIDE.md from client/ to docs/testing/ and IMPLEMENTATION-SUMMARY.md from docs/planning/ to docs/testing/; deleted outdated root files (TESTING-COMPLETE.md, TEST_SUITE_SUMMARY.md); updated project structure to show docs/testing/ folder; added Testing to question type identification and cross-reference list
+- **v1.17** (Current) - Moved interview guide to private folder: Comprehensive update to INTERVIEW-GUIDE.md with actual project learnings and real metrics (319 tests, 85% bundle reduction, 67% performance improvement, 72.2% component coverage); moved from docs/planning/06-InterviewGuide.md to private/INTERVIEW-GUIDE.md (gitignored); removed Interview & Presentation section from CLAUDE.md documentation map; updated project structure and private folder documentation to reflect new location; added interview preparation to private folder contents list
+- **v1.16** - Organized testing documentation: Created comprehensive Testing Documentation section in documentation map with 9 test docs under docs/testing/; added Testing README (hub), COMPONENT-TEST-COVERAGE.md (detailed coverage report with 319 tests), frontend-testing-guide.md, TEST-GUIDE.md, IMPLEMENTATION-SUMMARY.md, and 4 specialized test docs; moved TEST-GUIDE.md from client/ to docs/testing/ and IMPLEMENTATION-SUMMARY.md from docs/planning/ to docs/testing/; deleted outdated root files (TESTING-COMPLETE.md, TEST_SUITE_SUMMARY.md); updated project structure to show docs/testing/ folder; added Testing to question type identification and cross-reference list
 - **v1.15** - Reorganized component documentation: Moved COPYBUTTON_USAGE.md from client/src/components/ to docs/components/COPYBUTTON.md; added COPYBUTTON.md to documentation map with complete feature overview, variants, animation timeline, and best practices; updated project structure in CLAUDE.md to reflect new location; added COPYBUTTON.md to Component Patterns cross-reference list and question type identification
 - **v1.14** - Added version checker script integration: Created comprehensive VERSION-CHECKER.md documentation for scripts/check-versions.js utility; added new Scripts & Utilities section to documentation map; updated Tech Stack section with version checker references and accuracy notes; added Package Versions/Dependencies to question type identification; added Package Versions to cross-reference list; created new section 8 "Package Version Reference Guidelines" with protocol for using version checker when updating documentation; added Version Checking commands to Quick Reference; updated project structure to include docs/scripts/ and scripts/ folders
 - **v1.13** - Architecture documentation audit and migration: Comprehensive update to 04-Architecture.md reflecting actual production implementation including all components (ErrorBanner, Toaster, MobileMenu, LazyMonacoEditor, LazyMermaidRenderer), middleware stack (CORS, RateLimit, Multer, ErrorHandler), service patterns (Singleton, Strategy, Decorator), performance metrics, and current tech stack versions; updated ARCHITECTURE.md to v1.1 with detailed component trees, service architecture, implementation status, data flows, testing strategies, deployment guide, monitoring approaches, and complete technical details matching production codebase; created ARCHITECTURE-OLD.md backup, ARCHITECTURE-AUDIT-SUMMARY.md documentation of changes, and ARCHITECTURE-MIGRATION-GUIDE.md for maintaining accuracy
