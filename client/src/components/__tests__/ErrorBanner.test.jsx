@@ -33,7 +33,7 @@ describe('ErrorBanner Component', () => {
 
     it('should display error icon', () => {
       const { container } = render(<ErrorBanner error="Test error" onDismiss={vi.fn()} />);
-      const icon = container.querySelector('.text-red-500');
+      const icon = container.querySelector('.text-red-600');
       expect(icon).toBeInTheDocument();
     });
 
@@ -339,7 +339,7 @@ describe('ErrorBanner Component', () => {
       const dismissButton = screen.getByRole('button', { name: /dismiss error/i });
       expect(dismissButton).toHaveClass('focus:outline-none');
       expect(dismissButton).toHaveClass('focus:ring-2');
-      expect(dismissButton).toHaveClass('focus:ring-red-500');
+      expect(dismissButton).toHaveClass('focus:ring-red-600');
     });
 
     it('should be keyboard accessible', async () => {

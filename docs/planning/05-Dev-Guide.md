@@ -1443,7 +1443,7 @@ export function ErrorBanner({ error, retryAfter, onDismiss }) {
     >
       <div className="flex items-start gap-4 p-4">
         <div className="flex-shrink-0 mt-0.5">
-          <AlertCircle className="h-5 w-5 text-red-500" aria-hidden="true" />
+          <AlertCircle className="h-5 w-5 text-red-600" aria-hidden="true" />
         </div>
 
         <div className="flex-1 min-w-0">

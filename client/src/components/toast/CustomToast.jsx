@@ -41,7 +41,7 @@ export const CustomToast = ({
       iconBgColor: 'bg-gradient-to-br from-red-50 to-red-100',
       bgColor: 'bg-white',
       borderColor: 'border-red-300',
-      ringColor: 'focus:ring-red-500',
+      ringColor: 'focus:ring-red-600',
       shadowColor: 'shadow-red-100',
     },
     warning: {
@@ -130,7 +130,7 @@ export const CustomToast = ({
                       action.variant === 'primary'
                         ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white hover:from-purple-700 hover:to-purple-800 focus:ring-purple-600 shadow-purple-200'
                         : action.variant === 'danger'
-                        ? 'bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800 focus:ring-red-500 shadow-red-200'
+                        ? 'bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800 focus:ring-red-600 shadow-red-200'
                         : 'bg-slate-100 text-slate-700 hover:bg-slate-200 focus:ring-slate-400 border border-slate-300'
                     } transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 hover:shadow-md active:scale-95`}
                   >
@@ -351,7 +351,7 @@ export const AvatarToast = ({ t, type = 'info', title, message, avatarUrl, avata
     },
     error: {
       borderColor: 'border-red-300',
-      ringColor: 'focus:ring-red-500',
+      ringColor: 'focus:ring-red-600',
     },
     warning: {
       borderColor: 'border-yellow-300',
@@ -420,7 +420,7 @@ export const AvatarToast = ({ t, type = 'info', title, message, avatarUrl, avata
                       action.variant === 'primary'
                         ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white hover:from-purple-700 hover:to-purple-800 focus:ring-purple-600 shadow-purple-200'
                         : action.variant === 'danger'
-                        ? 'bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800 focus:ring-red-500 shadow-red-200'
+                        ? 'bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800 focus:ring-red-600 shadow-red-200'
                         : 'bg-slate-100 text-slate-700 hover:bg-slate-200 focus:ring-slate-400 border border-slate-300'
                     } transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 hover:shadow-md active:scale-95`}
                   >
@@ -475,7 +475,7 @@ export const ExpandableToast = ({ t, type = 'info', title, preview, fullContent,
       iconColor: 'text-red-600',
       iconBgColor: 'bg-gradient-to-br from-red-50 to-red-100',
       borderColor: 'border-red-300',
-      ringColor: 'focus:ring-red-500',
+      ringColor: 'focus:ring-red-600',
     },
     warning: {
       icon: AlertTriangle,
@@ -555,7 +555,7 @@ export const ExpandableToast = ({ t, type = 'info', title, preview, fullContent,
                       action.variant === 'primary'
                         ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white hover:from-purple-700 hover:to-purple-800 focus:ring-purple-600 shadow-purple-200'
                         : action.variant === 'danger'
-                        ? 'bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800 focus:ring-red-500 shadow-red-200'
+                        ? 'bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800 focus:ring-red-600 shadow-red-200'
                         : 'bg-slate-100 text-slate-700 hover:bg-slate-200 focus:ring-slate-400 border border-slate-300'
                     } transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 hover:shadow-md active:scale-95`}
                   >
