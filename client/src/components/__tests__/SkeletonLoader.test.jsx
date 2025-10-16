@@ -350,17 +350,10 @@ describe('SkeletonLoader', () => {
         const wrapper = container.firstChild;
         expect(wrapper).toHaveClass('flex');
         expect(wrapper).toHaveClass('flex-col');
+        expect(wrapper).toHaveClass('items-center');
+        expect(wrapper).toHaveClass('justify-center');
         expect(wrapper).toHaveClass('h-full');
-        expect(wrapper).toHaveClass('bg-white');
-        expect(wrapper).toHaveClass('rounded-xl');
-      });
-
-      it('has header with purple background', () => {
-        const { container } = render(<DocPanelGeneratingSkeleton />);
-        const header = container.querySelector('.bg-purple-50');
-        expect(header).toBeInTheDocument();
-        expect(header).toHaveClass('border-b');
-        expect(header).toHaveClass('border-purple-200');
+        expect(wrapper).toHaveClass('text-center');
       });
 
       it('has centered content layout', () => {
@@ -369,24 +362,30 @@ describe('SkeletonLoader', () => {
         expect(contentContainer).toBeInTheDocument();
         expect(contentContainer).toHaveClass('text-center');
       });
+
+      it('does not have a separate header (renders inside DocPanel)', () => {
+        const { container } = render(<DocPanelGeneratingSkeleton />);
+        const header = container.querySelector('.bg-purple-50');
+        expect(header).not.toBeInTheDocument();
+      });
     });
 
-    describe('Header', () => {
-      it('displays sparkle icons', () => {
+    describe('Content', () => {
+      it('displays sparkle icon with bounce animation', () => {
         render(<DocPanelGeneratingSkeleton />);
         const sparkles = screen.getAllByText('✨');
         expect(sparkles.length).toBeGreaterThan(0);
       });
 
-      it('displays title text', () => {
+      it('does not display title text (title is in parent DocPanel)', () => {
         render(<DocPanelGeneratingSkeleton />);
-        expect(screen.getByText('Generated Documentation')).toBeInTheDocument();
+        expect(screen.queryByText('Generated Documentation')).not.toBeInTheDocument();
       });
 
-      it('sparkle icon has pulse animation', () => {
+      it('bounce animation icon exists', () => {
         const { container } = render(<DocPanelGeneratingSkeleton />);
-        const sparkle = container.querySelector('.text-purple-600');
-        expect(sparkle).toHaveClass('animate-pulse');
+        const bounceIcon = container.querySelector('.animate-bounce');
+        expect(bounceIcon).toBeInTheDocument();
       });
     });
 
