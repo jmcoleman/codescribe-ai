@@ -25,6 +25,8 @@ dist-ssr
 
 # config
 .env
+.env.local
+*.key
 
 # Ignore all Postman environment files
 *.postman_environment.json
@@ -34,3 +36,6 @@ dist-ssr
 
 # But keep the collection
 !*collection.json
+
+# Private folder (strategic planning, financial docs, sensitive content)
+private/
