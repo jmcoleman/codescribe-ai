@@ -1,6 +1,5 @@
 import { Zap } from 'lucide-react';
 import { Editor } from '@monaco-editor/react';
-import { CodePanelSkeleton } from './SkeletonLoader';
 import { CopyButton } from './CopyButton';
 
 export function CodePanel({
@@ -61,7 +60,6 @@ export function CodePanel({
             padding: { top: 16, bottom: 16 },
           }}
           theme="vs-light"
-          loading={<CodePanelSkeleton />}
         />
       </div>
 
