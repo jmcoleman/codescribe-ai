@@ -11,8 +11,8 @@
     "install:all": "npm install && cd server && npm install && cd ../client && npm install",
     "build": "cd client && npm run build",
     "start": "cd server && npm start",
-    "check-versions": "node check-versions.js",
-    "versions": "node check-versions.js"
+    "check-versions": "node scripts/check-versions.js",
+    "versions": "node scripts/check-versions.js"
   },
   "keywords": [
     "documentation",

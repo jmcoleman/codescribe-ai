@@ -372,24 +372,24 @@ serve -s dist -l 5173
 **Run Audit:**
 ```bash
 # Create reports directory
-mkdir -p lighthouse-reports
+mkdir -p docs/performance/lighthouse-reports
 
 # Run Lighthouse (generates HTML + JSON)
 lighthouse http://localhost:5173 \
   --output html \
   --output json \
-  --output-path ./lighthouse-reports/report \
+  --output-path ./docs/performance/lighthouse-reports/report \
   --chrome-flags="--headless" \
   --quiet
 
 # Open report
-open lighthouse-reports/report.report.html
+open docs/performance/lighthouse-reports/report.report.html
 ```
 
 **Extract Scores:**
 ```bash
 # Performance metrics
-cat lighthouse-reports/report.report.json | jq '{
+cat docs/performance/lighthouse-reports/report.report.json | jq '{
   performance: .categories.performance.score,
   accessibility: .categories.accessibility.score,
   bestPractices: .categories."best-practices".score,
@@ -397,7 +397,7 @@ cat lighthouse-reports/report.report.json | jq '{
 }'
 
 # Core Web Vitals
-cat lighthouse-reports/report.report.json | jq '{
+cat docs/performance/lighthouse-reports/report.report.json | jq '{
   "FCP": .audits."first-contentful-paint".displayValue,
   "LCP": .audits."largest-contentful-paint".displayValue,
   "TBT": .audits."total-blocking-time".displayValue,

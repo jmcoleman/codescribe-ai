@@ -6,135 +6,236 @@
 
 ---
 
-## 🏗️ Optimal Project Structure
+## 🏗️ Current Project Structure
 
 ```
 codescribe-ai/
-├── .github/
-│   └── workflows/
-│       └── ci.yml                 # GitHub Actions (optional)
 ├── client/                        # React Frontend
 │   ├── public/
 │   │   ├── favicon.ico
 │   │   └── og-image.png          # Open Graph for sharing
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── Header.jsx
-│   │   │   ├── MobileMenu.jsx
-│   │   │   ├── ControlBar.jsx
+│   │   │   ├── Button.jsx
 │   │   │   ├── CodePanel.jsx
+│   │   │   ├── ControlBar.jsx
+│   │   │   ├── CopyButton.jsx
 │   │   │   ├── DocPanel.jsx
+│   │   │   ├── ErrorBanner.jsx
+│   │   │   ├── ErrorBoundary.jsx
+│   │   │   ├── ExamplesModal.jsx
+│   │   │   ├── Header.jsx
+│   │   │   ├── HelpModal.jsx
+│   │   │   ├── LazyMermaidRenderer.jsx  # Lazy-loaded Mermaid wrapper
+│   │   │   ├── LazyMonacoEditor.jsx     # Lazy-loaded Monaco wrapper
+│   │   │   ├── MermaidDiagram.jsx       # Mermaid diagram component
+│   │   │   ├── MobileMenu.jsx
 │   │   │   ├── QualityScore.jsx
-│   │   │   └── ErrorBoundary.jsx
+│   │   │   ├── RateLimitIndicator.jsx
+│   │   │   ├── Select.jsx
+│   │   │   ├── SkeletonLoader.jsx
+│   │   │   ├── toast/
+│   │   │   │   ├── CustomToast.jsx      # Custom toast components
+│   │   │   │   └── ToastHistory.jsx     # Toast history modal
+│   │   │   └── __tests__/               # Component tests
 │   │   ├── hooks/
 │   │   │   ├── useDocGeneration.js
-│   │   │   ├── useFileUpload.js
-│   │   │   └── useStreamingResponse.js
+│   │   │   └── useToastKeyboardShortcuts.js
 │   │   ├── services/
-│   │   │   └── api.js            # API client
+│   │   │   └── api.js                   # API client
 │   │   ├── constants/
-│   │   │   └── examples.js       # Pre-loaded code samples
+│   │   │   └── examples.js              # Deprecated (use data/examples.js)
+│   │   ├── data/
+│   │   │   ├── examples.js              # Pre-loaded code samples
+│   │   │   └── __tests__/
 │   │   ├── utils/
-│   │   │   └── markdown.js       # Markdown helpers
+│   │   │   ├── fileValidation.js        # File upload validation
+│   │   │   ├── toast.jsx                # Toast utility functions
+│   │   │   ├── toastWithHistory.js      # Toast with history tracking
+│   │   │   └── __tests__/
+│   │   ├── test/
+│   │   │   └── setup.js                 # Vitest setup
 │   │   ├── App.jsx
 │   │   ├── main.jsx
 │   │   └── index.css
 │   ├── .env.example
 │   ├── vite.config.js
+│   ├── vitest.config.js
 │   ├── tailwind.config.js
 │   ├── package.json
 │   └── README.md
 ├── server/                        # Node.js Backend
 │   ├── src/
 │   │   ├── services/
-│   │   │   ├── docGenerator.js   # Core service
-│   │   │   ├── claudeClient.js   # Claude API wrapper
-│   │   │   ├── codeParser.js     # AST analysis
-│   │   │   └── qualityScorer.js  # Scoring logic
+│   │   │   ├── claudeClient.js          # Claude API wrapper
+│   │   │   ├── codeParser.js            # AST analysis
+│   │   │   ├── docGenerator.js          # Core service
+│   │   │   ├── qualityScorer.js         # Scoring logic
+│   │   │   └── __tests__/               # Service tests
 │   │   ├── routes/
-│   │   │   └── api.js            # All API routes
+│   │   │   └── api.js                   # All API routes
 │   │   ├── middleware/
 │   │   │   ├── errorHandler.js
-│   │   │   ├── rateLimiter.js
-│   │   │   └── validator.js
-│   │   ├── utils/
-│   │   │   └── logger.js
-│   │   └── server.js             # Express app
+│   │   │   └── rateLimiter.js
+│   │   └── server.js                    # Express app
+│   ├── tests/
+│   │   ├── manual/                      # Manual testing scripts
+│   │   │   ├── test-api.js              # Quick API smoke test
+│   │   │   ├── test-parser.js           # AST parser testing utility
+│   │   │   └── test-rate-limit.js       # Rate limiting test suite
+│   │   ├── integration/                 # Integration tests (planned)
+│   │   └── helpers/                     # Test utilities
 │   ├── .env.example
 │   ├── package.json
 │   └── README.md
 ├── docs/                          # Documentation
-│   ├── API.md
-│   ├── ARCHITECTURE.md
-│   └── CONTRIBUTING.md
+│   ├── planning/                  # Project planning
+│   │   ├── 01-PRD.md
+│   │   ├── 02-Epics-Stories.md
+│   │   ├── 03-Todo-List.md
+│   │   ├── 05-Dev-Guide.md              # This file
+│   │   ├── 06-InterviewGuide.md
+│   │   ├── 07-Figma-Guide.md
+│   │   └── 08-Master-Prompt.md
+│   ├── api/                       # API documentation
+│   │   ├── README.md
+│   │   └── API-Reference.md
+│   ├── architecture/              # Architecture documentation
+│   │   ├── 04-Architecture.md
+│   │   └── ARCHITECTURE.md
+│   ├── performance/               # Performance optimization
+│   │   └── OPTIMIZATION-GUIDE.md
+│   ├── components/                # Component documentation
+│   │   ├── TOAST-SYSTEM.md
+│   │   ├── MERMAID-DIAGRAMS.md
+│   │   └── ERROR-HANDLING-UX.md
+│   ├── design/                    # Design assets
+│   │   ├── brand-color-palette.html
+│   │   └── brand-color-palette.pdf
+│   ├── scripts/                   # Script documentation
+│   │   └── VERSION-CHECKER.md
+│   └── CONTEXT.md
+├── private/                       # ⚠️ GITIGNORED - Sensitive content
+│   ├── README.md
+│   └── VISION.md
+├── scripts/                       # Utility scripts
+│   └── check-versions.js          # Version checker utility
 ├── .gitignore
+├── CLAUDE.md                      # Claude context reference
 ├── LICENSE
 └── README.md                      # Main project README
 ```
 
 ---
 
-## 🔧 Technology Stack Justification
+## 🔧 Technology Stack
 
-### Frontend
+> **📊 For Real-Time Version Information:** Run `npm run versions` to get exact installed versions.
+> See [VERSION-CHECKER.md](../scripts/VERSION-CHECKER.md) for details.
 
-**React 19 with Vite**
-- ✅ Fast HMR for rapid development
-- ✅ Modern build tool (faster than CRA)
-- ✅ Tree-shaking for smaller bundles
-- ✅ Industry standard, great for portfolio
+### Frontend Stack
 
-**Tailwind CSS**
-- ✅ Rapid prototyping
-- ✅ Consistent design system
-- ✅ Small production bundle (only used classes)
-- ✅ Responsive utilities built-in
+**Core Framework**
+- **React** 19.2.0 - Latest React with improved performance and concurrent features
+  - ✅ Fast HMR for rapid development
+  - ✅ Industry standard, great for portfolio
+  - ✅ Concurrent rendering for better UX
+- **React DOM** 19.2.0
+- **Vite** 7.1.9 - Modern build tool
+  - ✅ Faster than Create React App
+  - ✅ Tree-shaking for smaller bundles
+  - ✅ Optimized hot module replacement
 
-**Monaco Editor (@monaco-editor/react)**
-- ✅ Industry-grade code editor (VS Code's engine)
-- ✅ Syntax highlighting out of the box
-- ✅ Familiar to developers
-- ✅ Shows technical sophistication
+**UI & Styling**
+- **Tailwind CSS** 3.4.18
+  - ✅ Rapid prototyping with utility classes
+  - ✅ Consistent design system
+  - ✅ Small production bundle (only used classes)
+  - ✅ Responsive utilities built-in
+- **Lucide React** 0.545.0 - Icon library
+  - ✅ Modern, clean icon set
+  - ✅ Tree-shakeable
+- **react-hot-toast** 2.6.0 - Toast notifications
+  - ✅ Accessible toast system
+  - ✅ Customizable and animated
+  - See [TOAST-SYSTEM.md](../components/TOAST-SYSTEM.md)
 
-**react-markdown**
-- ✅ Lightweight Markdown renderer
-- ✅ Security-focused (sanitizes HTML)
-- ✅ Customizable components
-- ✅ Syntax highlighting support
+**Code Editor & Markdown**
+- **Monaco Editor** (@monaco-editor/react) 4.7.0
+  - ✅ Industry-grade code editor (VS Code's engine)
+  - ✅ Syntax highlighting out of the box
+  - ✅ Lazy-loaded for performance (see LazyMonacoEditor.jsx)
+- **react-markdown** 10.1.0
+  - ✅ Lightweight Markdown renderer
+  - ✅ Security-focused (sanitizes HTML)
+  - ✅ Customizable components
+- **react-syntax-highlighter** 15.6.6 - Code block syntax highlighting
+- **remark-gfm** 4.0.1 - GitHub Flavored Markdown support
 
-### Backend
+**Diagrams & Visualization**
+- **Mermaid** 11.12.0
+  - ✅ Diagram and flowchart rendering
+  - ✅ Lazy-loaded for performance
+  - See [MERMAID-DIAGRAMS.md](../components/MERMAID-DIAGRAMS.md)
 
-**Node.js 20+ with Express 5**
-- ✅ Matches your JavaScript/Node.js background
-- ✅ Non-blocking I/O perfect for streaming
-- ✅ Massive ecosystem
-- ✅ Easy deployment to Vercel/Railway
+**Development Tools**
+- **ESLint** 9.37.0 - Code linting
+- **Vitest** 3.2.4 - Testing framework
+- **React Testing Library** 16.3.0 - Component testing
+- **PostCSS** 8.5.6 + **Autoprefixer** 10.4.21 - CSS processing
+- **rollup-plugin-visualizer** 6.0.5 - Bundle analysis
+  - See [OPTIMIZATION-GUIDE.md](../performance/OPTIMIZATION-GUIDE.md)
 
-**Anthropic Claude API**
-- ✅ Best-in-class code understanding
-- ✅ Long context window (200K tokens)
-- ✅ Streaming support for real-time UX
-- ✅ Reliable, production-ready
+### Backend Stack
 
-**acorn / @babel/parser**
-- ✅ Fast JavaScript parser
-- ✅ Generates AST for code analysis
-- ✅ Widely used in tooling
-- ✅ Minimal dependencies
+**Core Framework**
+- **Node.js** 22.19.0
+  - ✅ Non-blocking I/O perfect for streaming
+  - ✅ Massive ecosystem
+  - ✅ Easy deployment to Vercel/Railway
+- **Express** 5.1.0
+  - ✅ Mature, battle-tested framework
+  - ✅ Middleware ecosystem
+  - ✅ Perfect for API development
+- **CORS** 2.8.5 - Cross-origin resource sharing
+- **dotenv** 17.2.3 - Environment variable management
+
+**AI & Code Analysis**
+- **Anthropic SDK** (@anthropic-ai/sdk) 0.65.0
+  - ✅ Claude Sonnet 4.5 (claude-sonnet-4-20250514)
+  - ✅ Best-in-class code understanding
+  - ✅ Long context window (200K tokens)
+  - ✅ Streaming support for real-time UX
+- **Acorn** 8.15.0 - JavaScript AST parser
+  - ✅ Fast and reliable
+  - ✅ Generates AST for code analysis
+  - ✅ Widely used in tooling
+  - ✅ Minimal dependencies
+
+**Middleware & Utilities**
+- **express-rate-limit** 8.1.0 - API rate limiting
+- **Multer** 2.0.2 - File upload handling
+
+**Development Tools**
+- **Nodemon** 3.1.10 - Auto-restart during development
+- **Jest** 30.2.0 - Testing framework
+- **Supertest** 7.1.4 - API testing
 
 ### Infrastructure
 
-**Vercel**
-- ✅ Zero-config deployment
-- ✅ Automatic HTTPS & CDN
-- ✅ Serverless functions support
-- ✅ Great for Next.js (future migration path)
-- ✅ Free tier generous for portfolios
+**Deployment**
+- **Vercel** (Primary)
+  - ✅ Zero-config deployment
+  - ✅ Automatic HTTPS & CDN
+  - ✅ Serverless functions support
+  - ✅ Great for monorepo setups
+  - ✅ Free tier generous for portfolios
 
-**Alternative: Netlify + Railway/Render**
-- Netlify for frontend
-- Railway/Render for Node.js backend
-- Good if Vercel limits hit
+**Alternatives**
+- Netlify + Railway/Render
+  - Netlify for frontend
+  - Railway/Render for Node.js backend
+  - Good if Vercel limits are reached
 
 ---
 
@@ -1101,6 +1202,474 @@ export function useDocGeneration() {
 
 ---
 
+## 🎨 Modern Component Patterns (Implemented)
+
+### 7. Lazy Loading Components
+
+**Pattern:** Reduce initial bundle size by lazy-loading heavy dependencies.
+
+**File: client/src/components/LazyMonacoEditor.jsx**
+
+```javascript
+import { Editor } from '@monaco-editor/react';
+
+/**
+ * Monaco Editor wrapper component for lazy loading
+ * This component is dynamically imported to reduce initial bundle size
+ */
+export function LazyMonacoEditor({ height, language, value, onChange, options, theme }) {
+  return (
+    <Editor
+      height={height}
+      language={language}
+      value={value}
+      onChange={onChange}
+      options={options}
+      theme={theme}
+    />
+  );
+}
+```
+
+**Usage in CodePanel.jsx:**
+
+```javascript
+import { lazy, Suspense } from 'react';
+import { SkeletonLoader } from './SkeletonLoader';
+
+// Lazy load Monaco Editor (reduces initial bundle by ~4.85 KB gzipped)
+const LazyMonacoEditor = lazy(() =>
+  import('./LazyMonacoEditor').then(mod => ({ default: mod.LazyMonacoEditor }))
+);
+
+export function CodePanel({ code, onChange, language }) {
+  return (
+    <Suspense fallback={<SkeletonLoader type="editor" />}>
+      <LazyMonacoEditor
+        height="100%"
+        language={language}
+        value={code}
+        onChange={onChange}
+        options={{
+          minimap: { enabled: false },
+          fontSize: 14,
+          lineNumbers: 'on',
+          scrollBeyondLastLine: false,
+          wordWrap: 'on'
+        }}
+        theme="vs-light"
+      />
+    </Suspense>
+  );
+}
+```
+
+**Key Benefits:**
+- ✅ Reduces initial bundle size by 4.85 KB gzipped (Monaco Editor)
+- ✅ Improves First Contentful Paint (FCP) by 89%
+- ✅ Skeleton loader provides instant visual feedback
+- ✅ Maintains same functionality, better performance
+
+---
+
+### 8. Mermaid Diagram Rendering (Lazy Loaded)
+
+**Pattern:** Lazy-load Mermaid.js library and render diagrams only when needed.
+
+**File: client/src/components/LazyMermaidRenderer.jsx**
+
+```javascript
+import { useEffect, useState } from 'react';
+import mermaid from 'mermaid';
+
+// Initialize mermaid with CodeScribe AI brand theme
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'default',
+  securityLevel: 'loose',
+  themeVariables: {
+    primaryColor: '#9333ea',      // Purple primary
+    primaryTextColor: '#1e293b',
+    primaryBorderColor: '#c084fc',
+    lineColor: '#64748b',
+    secondaryColor: '#e0e7ff',
+    tertiaryColor: '#f1f5f9',
+    fontFamily: 'Inter, system-ui, sans-serif',
+    fontSize: '14px'
+  }
+});
+
+export function LazyMermaidRenderer({ chart, id, onError, onSuccess }) {
+  const [svg, setSvg] = useState('');
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const renderDiagram = async () => {
+      if (!chart) return;
+
+      try {
+        const uniqueId = `mermaid-${id}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+        const { svg } = await mermaid.render(uniqueId, chart.trim());
+
+        if (cancelled) return;
+
+        setSvg(svg);
+        setError(null);
+        if (onSuccess) onSuccess();
+      } catch (err) {
+        if (cancelled) return;
+
+        const errorMsg = err.message || 'Failed to render diagram';
+        setError(errorMsg);
+        setSvg('');
+        if (onError) onError(errorMsg);
+      }
+    };
+
+    renderDiagram();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [chart, id, onError, onSuccess]);
+
+  if (error) {
+    return (
+      <div className="my-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+        <p className="text-sm text-red-800">
+          <strong>Error rendering diagram:</strong> {error}
+        </p>
+      </div>
+    );
+  }
+
+  if (!svg) {
+    return (
+      <div className="my-6 p-4 bg-slate-50 border border-slate-200 rounded-lg min-h-[300px] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-2"></div>
+          <p className="text-sm text-slate-600">Rendering diagram...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="not-prose my-6 w-full overflow-x-auto">
+      <div
+        className="w-full flex justify-center"
+        dangerouslySetInnerHTML={{ __html: svg }}
+      />
+    </div>
+  );
+}
+```
+
+**Usage in DocPanel.jsx:**
+
+```javascript
+import { lazy, Suspense } from 'react';
+import { SkeletonLoader } from './SkeletonLoader';
+
+// Lazy load Mermaid renderer (reduces initial bundle by ~139.30 KB gzipped)
+const LazyMermaidRenderer = lazy(() =>
+  import('./LazyMermaidRenderer').then(mod => ({ default: mod.LazyMermaidRenderer }))
+);
+
+// In MermaidDiagram component
+<Suspense fallback={<SkeletonLoader type="diagram" />}>
+  <LazyMermaidRenderer
+    chart={content}
+    id={index}
+    onError={handleError}
+    onSuccess={handleSuccess}
+  />
+</Suspense>
+```
+
+**Key Benefits:**
+- ✅ Reduces initial bundle by 139.30 KB gzipped
+- ✅ Diagrams render with CodeScribe AI brand colors (purple, indigo, slate)
+- ✅ Proper error handling and loading states
+- ✅ Prevents memory leaks with cleanup function
+
+**Documentation:** See [MERMAID-DIAGRAMS.md](../components/MERMAID-DIAGRAMS.md) for comprehensive guide.
+
+---
+
+### 9. Error Banner Component
+
+**Pattern:** User-friendly error display with animations and accessibility.
+
+**File: client/src/components/ErrorBanner.jsx**
+
+```javascript
+import { useState, useEffect } from 'react';
+import { AlertCircle, X } from 'lucide-react';
+
+export function ErrorBanner({ error, retryAfter, onDismiss }) {
+  const [isVisible, setIsVisible] = useState(false);
+  const [isExiting, setIsExiting] = useState(false);
+
+  useEffect(() => {
+    if (error) {
+      setIsVisible(true);
+      setIsExiting(false);
+    }
+  }, [error]);
+
+  const handleDismiss = () => {
+    setIsExiting(true);
+    setTimeout(() => {
+      setIsVisible(false);
+      onDismiss();
+    }, 200); // Match exit animation duration
+  };
+
+  if (!error || !isVisible) return null;
+
+  const isMultiLine = error.includes('\n');
+  const errorLines = isMultiLine ? error.split('\n') : [error];
+
+  return (
+    <div
+      className={`bg-red-50 rounded-lg shadow-sm mb-6 ${
+        isExiting ? 'animate-fade-out' : 'animate-slide-in-fade'
+      } motion-reduce:animate-none`}
+      role="alert"
+      aria-live="assertive"
+    >
+      <div className="flex items-start gap-4 p-4">
+        <div className="flex-shrink-0 mt-0.5">
+          <AlertCircle className="h-5 w-5 text-red-500" aria-hidden="true" />
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <h3 className="text-sm font-semibold text-red-900 mb-1">Error</h3>
+          {isMultiLine ? (
+            <div className="text-sm text-red-700 space-y-1.5 leading-relaxed">
+              {errorLines.map((line, index) => (
+                <p key={index} className={line.trim() ? '' : 'hidden'}>
+                  {line}
+                </p>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-red-700 leading-relaxed">{error}</p>
+          )}
+          {retryAfter && (
+            <div className="mt-3 pt-3 border-t border-red-200">
+              <p className="text-xs font-medium text-red-600">
+                Please wait {retryAfter} seconds before trying again.
+              </p>
+            </div>
+          )}
+        </div>
+
+        <button
+          onClick={handleDismiss}
+          className="flex-shrink-0 text-red-400 hover:text-red-600 hover:bg-red-100 rounded-md p-1.5 transition-colors"
+          aria-label="Dismiss error"
+        >
+          <X className="h-4 w-4" aria-hidden="true" />
+        </button>
+      </div>
+    </div>
+  );
+}
+```
+
+**Usage:**
+
+```javascript
+const [error, setError] = useState(null);
+const [retryAfter, setRetryAfter] = useState(null);
+
+<ErrorBanner
+  error={error}
+  retryAfter={retryAfter}
+  onDismiss={() => {
+    setError(null);
+    setRetryAfter(null);
+  }}
+/>
+```
+
+**Key Features:**
+- ✅ Enter animation: 250ms slide-in with fade
+- ✅ Exit animation: 200ms fade-out
+- ✅ Respects `prefers-reduced-motion`
+- ✅ ARIA attributes for screen readers
+- ✅ Multi-line error support
+- ✅ Rate limit retry countdown
+
+**Documentation:** See [ERROR-HANDLING-UX.md](../components/ERROR-HANDLING-UX.md) for research-backed patterns.
+
+---
+
+### 10. Toast Notification System
+
+**Pattern:** Global toast notifications with history and keyboard shortcuts.
+
+**File: client/src/utils/toast.jsx**
+
+```javascript
+import toast from 'react-hot-toast';
+import { CustomToast } from '../components/toast/CustomToast';
+
+// Success toast
+export const toastSuccess = (message, options = {}) => {
+  return toast.custom(
+    (t) => <CustomToast t={t} type="success" message={message} />,
+    { duration: 4000, ...options }
+  );
+};
+
+// Error toast
+export const toastError = (message, options = {}) => {
+  return toast.custom(
+    (t) => <CustomToast t={t} type="error" message={message} />,
+    { duration: 6000, ...options }
+  );
+};
+
+// Info toast
+export const toastInfo = (message, options = {}) => {
+  return toast.custom(
+    (t) => <CustomToast t={t} type="info" message={message} />,
+    { duration: 4000, ...options }
+  );
+};
+
+// File upload toast with progress
+export const toastFileUpload = (fileName, options = {}) => {
+  return toast.success(`File loaded: ${fileName}`, {
+    duration: 3000,
+    icon: '📄',
+    ...options
+  });
+};
+```
+
+**Usage:**
+
+```javascript
+import { toastSuccess, toastError } from './utils/toast';
+
+// Success notification
+toastSuccess('Documentation generated successfully!');
+
+// Error notification
+toastError('Failed to generate documentation. Please try again.');
+
+// File upload notification
+toastFileUpload('example.js');
+```
+
+**Key Features:**
+- ✅ 20+ utility functions for common scenarios
+- ✅ Custom toast components with brand styling
+- ✅ Toast history modal (Cmd/Ctrl + H)
+- ✅ Keyboard shortcuts (dismiss all, show history)
+- ✅ WCAG 2.1 AA compliant
+- ✅ Progress toasts for long operations
+
+**Documentation:** See [TOAST-SYSTEM.md](../components/TOAST-SYSTEM.md) for complete API reference.
+
+---
+
+### 11. Skeleton Loaders
+
+**Pattern:** Provide instant visual feedback during lazy loading.
+
+**File: client/src/components/SkeletonLoader.jsx**
+
+```javascript
+export function SkeletonLoader({ type = 'editor' }) {
+  if (type === 'editor') {
+    return (
+      <div className="animate-pulse w-full h-full bg-slate-100 rounded-lg p-4">
+        <div className="space-y-3">
+          <div className="h-4 bg-slate-200 rounded w-3/4"></div>
+          <div className="h-4 bg-slate-200 rounded w-full"></div>
+          <div className="h-4 bg-slate-200 rounded w-5/6"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (type === 'diagram') {
+    return (
+      <div className="my-6 p-4 bg-slate-50 border border-slate-200 rounded-lg min-h-[300px] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-2"></div>
+          <p className="text-sm text-slate-600">Loading diagram renderer...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+}
+```
+
+**Key Benefits:**
+- ✅ Instant visual feedback (no blank screens)
+- ✅ Reduces perceived loading time
+- ✅ Matches component dimensions to prevent layout shift
+
+---
+
+## 📊 Performance Optimization
+
+### Bundle Size Reduction
+
+**Results from Optimization:**
+- **Initial bundle:** 516 KB (uncompressed)
+- **Optimized bundle:** 78 KB gzipped (-85% reduction)
+- **Lighthouse score:** 45 → 75 (+67% improvement)
+
+**Key Optimizations Implemented:**
+
+1. **Lazy Loading Heavy Components**
+   ```javascript
+   // Monaco Editor: -4.85 KB gzipped
+   const LazyMonacoEditor = lazy(() => import('./LazyMonacoEditor'));
+
+   // Mermaid.js: -139.30 KB gzipped
+   const LazyMermaidRenderer = lazy(() => import('./LazyMermaidRenderer'));
+
+   // DocPanel with react-markdown: -281.53 KB gzipped
+   const DocPanel = lazy(() => import('./DocPanel'));
+   ```
+
+2. **Modal Components Lazy Loading**
+   ```javascript
+   // ExamplesModal: -2.43 KB gzipped
+   const ExamplesModal = lazy(() => import('./ExamplesModal'));
+
+   // HelpModal: -9.21 KB gzipped
+   const HelpModal = lazy(() => import('./HelpModal'));
+   ```
+
+3. **Core Web Vitals Improvements**
+   - **FCP (First Contentful Paint):** 5.5s → 0.6s (-89%)
+   - **LCP (Largest Contentful Paint):** 10.5s → 0.7s (-93%)
+   - **TBT (Total Blocking Time):** 900ms → 630ms (-30%)
+
+**Bundle Analysis:**
+```bash
+npm run build
+npm run preview
+# Bundle visualizer at http://localhost:4173/stats.html
+```
+
+**Documentation:** See [OPTIMIZATION-GUIDE.md](../performance/OPTIMIZATION-GUIDE.md) for comprehensive guide.
+
+---
+
 ## 🚀 Deployment Guide
 
 ### Vercel Deployment
@@ -1187,22 +1756,16 @@ Does something great.
 
 ---
 
-## 📊 Performance Optimization
+## 🔐 Additional Best Practices
 
-### Frontend
+### Frontend Performance Patterns
 
-1. **Code Splitting**
-```javascript
-// Lazy load Monaco Editor
-const MonacoEditor = lazy(() => import('@monaco-editor/react'));
-```
-
-2. **Memoization**
+1. **Memoization for Expensive Computations**
 ```javascript
 const MemoizedCodePanel = memo(CodePanel);
 ```
 
-3. **Debounce API Calls**
+2. **Debounce API Calls**
 ```javascript
 const debouncedGenerate = useMemo(
   () => debounce(generate, 500),
@@ -1210,15 +1773,10 @@ const debouncedGenerate = useMemo(
 );
 ```
 
-### Backend
+### Backend Rate Limiting
 
-1. **Caching** (Future Enhancement)
-```javascript
-// Cache common code samples
-const cache = new Map();
-```
+**File: server/src/middleware/rateLimiter.js**
 
-2. **Rate Limiting**
 ```javascript
 import rateLimit from 'express-rate-limit';
 
@@ -1227,8 +1785,14 @@ const limiter = rateLimit({
   max: 10 // 10 requests per minute
 });
 
+// Apply to all API routes
 app.use('/api/', limiter);
 ```
+
+**Features:**
+- ✅ Prevents API abuse
+- ✅ Returns `Retry-After` header
+- ✅ Configurable per endpoint
 
 ---
 
@@ -1243,6 +1807,40 @@ app.use('/api/', limiter);
 
 ---
 
-**Document Owner:** Senior Engineer  
-**Last Updated:** October 11, 2025  
-**Status:** Ready for Implementation
+## 📚 Related Documentation
+
+### Component Documentation
+- [TOAST-SYSTEM.md](../components/TOAST-SYSTEM.md) - Complete toast notification system guide
+- [MERMAID-DIAGRAMS.md](../components/MERMAID-DIAGRAMS.md) - Mermaid diagram rendering guide
+- [ERROR-HANDLING-UX.md](../components/ERROR-HANDLING-UX.md) - Error handling UX patterns
+- [COPYBUTTON.md](../components/COPYBUTTON.md) - CopyButton component guide
+
+### Performance Documentation
+- [OPTIMIZATION-GUIDE.md](../performance/OPTIMIZATION-GUIDE.md) - Comprehensive optimization guide
+  - Lazy loading patterns
+  - Bundle analysis
+  - Core Web Vitals tracking
+  - Lighthouse auditing
+
+### Architecture Documentation
+- [04-Architecture.md](../architecture/04-Architecture.md) - System architecture diagram
+- [ARCHITECTURE.md](../architecture/ARCHITECTURE.md) - Deep technical architecture
+
+### API Documentation
+- [API-Reference.md](../api/API-Reference.md) - Complete API specification
+- [README.md](../api/README.md) - API quick start
+
+### Utilities
+- [VERSION-CHECKER.md](../scripts/VERSION-CHECKER.md) - Version checker script documentation
+  - Run `npm run versions` for current package versions
+
+---
+
+**Document Owner:** Senior Engineer
+**Last Updated:** October 16, 2025
+**Status:** Current (Reflects Production Implementation)
+**Version:** 2.0
+
+**Changelog:**
+- **v2.0** (Oct 16, 2025) - Major update: Updated project structure, added accurate package versions from version checker, documented new components (LazyMonacoEditor, LazyMermaidRenderer, ErrorBanner, SkeletonLoader, Toast system), added performance optimization section, added related documentation references
+- **v1.0** (Oct 11, 2025) - Initial version

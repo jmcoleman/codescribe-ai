@@ -1,53 +1,106 @@
 # CodeScribe AI Testing Documentation
 
 **Project:** CodeScribe AI - Intelligent Code Documentation Generator
-**Testing Status:** ✅ Comprehensive Coverage
-**Last Updated:** October 13, 2025
+**Testing Status:** ✅ Comprehensive Coverage (72.2%)
+**Last Updated:** October 16, 2025
+
+---
+
+## 📊 Quick Stats
+
+- **Total Tests:** 319 (100% passing)
+- **Component Coverage:** 72.2% (13/18 components)
+- **Test Execution Time:** ~2.5 seconds
+- **Coverage Target:** 70% ✅ EXCEEDED
 
 ---
 
 ## 📚 Testing Documentation Index
 
-### Frontend Testing
-**Framework:** Vitest + React Testing Library + jsdom
+### 🎯 Component Testing
+
+#### [Component Test Coverage](./COMPONENT-TEST-COVERAGE.md) ⭐ **START HERE**
+**Complete overview of all component tests**
+
+- ✅ **319 tests** - All passing (100%)
+- ✅ **13/18 components** - Fully tested (72.2%)
+- ✅ **Recent additions:** CodePanel (43), RateLimitIndicator (40), Select (41)
+
+**Key Features:**
+- Detailed test breakdown by component
+- Coverage metrics and analysis
+- Testing patterns and best practices
+- Recommendations for untested components
+
+---
+
+### 📖 Guides & References
 
 #### [Frontend Testing Guide](./frontend-testing-guide.md)
-**Comprehensive guide for React component testing**
+**Comprehensive guide for React component testing patterns**
 
-- ✅ **96 tests** - All passing (100%)
-- ✅ **95%+ coverage** - Exceeds 90% target
-- ✅ **20+ test categories** - Complete component coverage
+- Testing framework (Vitest + React Testing Library)
+- Best practices and patterns
+- Mocking strategies
+- Accessibility testing
 
-**Components Tested:**
+#### [Test Guide](./TEST-GUIDE.md)
+**Quick reference for running tests**
 
-##### DocPanel - Complete (45 tests)
-1. Empty State (2 tests)
-2. Loading State (3 tests)
-3. Documentation Rendering (6 tests)
-4. GitHub Flavored Markdown (3 tests)
-5. Syntax Highlighting (7 tests)
-6. Quality Score Display (10 tests)
-7. State Transitions (3 tests)
-8. Complex Documentation Examples (3 tests)
-9. Accessibility (3 tests)
-10. Edge Cases (5 tests)
+- Quick start commands
+- Watch mode
+- Coverage reports
+- Debugging tips
 
-##### ControlBar - Complete (51 tests)
-1. Rendering (4 tests)
-2. Upload Button (5 tests)
-3. GitHub Import Button (5 tests)
-4. Doc Type Selector (7 tests)
-5. Generate Button (8 tests)
-6. Disabled State (3 tests)
-7. Loading State (3 tests)
-8. Responsive Layout (4 tests)
-9. Accessibility (4 tests)
-10. User Interaction Flows (4 tests)
-11. Edge Cases (4 tests)
+---
 
-##### Remaining Components
-- ⏳ CodePanel - Planned
-- ⏳ QualityScore - Planned
+### 🔍 Specialized Test Documentation
+
+#### [Error Handling Tests](./ERROR-HANDLING-TESTS.md)
+**Error handling test suite documentation**
+
+- ErrorBanner (58 tests) - User-facing error notifications
+- ErrorBoundary (12 tests) - Technical error catching
+- Animation specs (250ms enter, 200ms exit)
+- WCAG 2.1 AA accessibility compliance
+
+#### [Mermaid Diagram Tests](./MERMAID-DIAGRAM-TESTS.md)
+**Mermaid diagram rendering test suite**
+
+- Diagram rendering (14 tests)
+- Brand theming (purple, indigo, slate)
+- Error handling
+- Async rendering and cleanup
+
+#### [Monaco Syntax Highlighting Tests](./monaco-syntax-highlighting-tests.md)
+**Monaco Editor syntax highlighting tests**
+
+- Language support verification
+- Theme configuration
+- Editor integration
+
+---
+
+### 📋 Implementation & Reports
+
+#### [Implementation Summary](./IMPLEMENTATION-SUMMARY.md)
+**Backend test implementation summary**
+
+- Jest configuration
+- Service layer tests
+- Integration tests
+- Coverage requirements
+
+#### [Prompt Quality Report](./PROMPT-QUALITY-REPORT.md)
+**AI prompt quality testing results**
+
+- Prompt validation tests
+- Quality metrics
+- Claude API integration tests
+
+---
+
+## 🧪 Component Test Status
 
 ---
 

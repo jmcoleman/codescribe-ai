@@ -79,7 +79,10 @@ describe('MermaidDiagram', () => {
       const button = screen.getByRole('button', { name: /show/i });
       await user.click(button);
 
-      expect(screen.getByText('Rendering diagram...')).toBeInTheDocument();
+      // Should show either the Suspense fallback or the renderer loading state
+      expect(
+        screen.getByText(/Loading diagram renderer\.\.\.|Rendering diagram\.\.\./i)
+      ).toBeInTheDocument();
     });
 
     it('should call mermaid.render when show button is clicked', async () => {
