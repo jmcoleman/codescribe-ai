@@ -66,7 +66,7 @@ CodeScribe AI is a **stateless, real-time documentation generation platform** th
 │                         CLIENT TIER                             │
 │  ┌────────────────┐  ┌────────────────┐  ┌────────────────┐   │
 │  │  Web Browser   │  │   CLI Tool     │  │  VS Code Ext   │   │
-│  │   (React 18)   │  │  (Phase 2)     │  │  (Phase 3)     │   │
+│  │   (React 19)   │  │  (Phase 2)     │  │  (Phase 3)     │   │
 │  │   + Vite       │  │                │  │                │   │
 │  └────────┬───────┘  └────────┬───────┘  └────────┬───────┘   │
 │           │                   │                    │           │
@@ -123,7 +123,7 @@ CodeScribe AI is a **stateless, real-time documentation generation platform** th
 ### Architecture Layers
 
 **1. Presentation Layer (Client)**
-- **React 18** with Vite for fast dev server and optimized builds
+- **React 19** with Vite for fast dev server and optimized builds
 - **Lazy Loading**: DocPanel, modals, Monaco Editor, Mermaid renderer
 - **Component Library**: 20+ components with comprehensive test coverage
 - **State Management**: React hooks (useState, useCallback, useEffect, useRef)
@@ -131,7 +131,7 @@ CodeScribe AI is a **stateless, real-time documentation generation platform** th
 - **Responsible for**: UI rendering, user input, code editing (Monaco), markdown display
 
 **2. Application Layer (Server)**
-- **Express 4.18+** REST API with middleware architecture
+- **Express 5** REST API with middleware architecture
 - **Middleware Stack**: CORS → Rate Limiting → Body Parser → Routes → Error Handler
 - **Service-oriented architecture** for reusability
 - **Responsible for**: Request handling, validation, rate limiting, streaming, error responses
@@ -154,14 +154,14 @@ CodeScribe AI is a **stateless, real-time documentation generation platform** th
 
 | Technology | Version | Purpose | Implementation Details |
 |------------|---------|---------|------------------------|
-| React | 18.3.1 | UI framework | Hooks-based, no class components |
-| Vite | 5.4.11 | Build tool | Fast HMR, bundle optimization with rollup-plugin-visualizer |
-| Tailwind CSS | 3.4.17 | Utility styling | Custom animations for errors, toasts, modals |
-| Monaco Editor | @monaco-editor/react 4.6.0 | Code editing | Lazy loaded, syntax highlighting |
-| react-markdown | 9.0.2 | Markdown rendering | Lazy loaded via DocPanel |
-| Mermaid | 11.4.1 | Diagram rendering | Lazy loaded renderer component |
-| react-hot-toast | 2.4.1 | Notifications | Custom toast components with history |
-| Lucide React | 0.468.0 | Icon library | Tree-shakeable icons |
+| React | 19.2.0 | UI framework | Hooks-based, no class components |
+| Vite | 7.1.9 | Build tool | Fast HMR, bundle optimization with rollup-plugin-visualizer |
+| Tailwind CSS | 3.4.18 | Utility styling | Custom animations for errors, toasts, modals |
+| Monaco Editor | @monaco-editor/react 4.7.0 | Code editing | Lazy loaded, syntax highlighting |
+| react-markdown | 10.1.0 | Markdown rendering | Lazy loaded via DocPanel |
+| Mermaid | 11.12.0 | Diagram rendering | Lazy loaded renderer component |
+| react-hot-toast | 2.6.0 | Notifications | Custom toast components with history |
+| Lucide React | 0.545.0 | Icon library | Tree-shakeable icons |
 
 **Performance Optimizations:**
 - Lazy loading reduces initial bundle: 516KB → 78KB gzipped (-85%)
@@ -174,11 +174,11 @@ CodeScribe AI is a **stateless, real-time documentation generation platform** th
 | Technology | Version | Purpose | Implementation Details |
 |------------|---------|---------|------------------------|
 | Node.js | 20+ | JavaScript runtime | ES modules (import/export) |
-| Express | 4.21.1 | Web framework | Middleware-driven architecture |
-| @anthropic-ai/sdk | 0.32.1 | Claude API | Streaming support via async iterators |
-| Acorn | 8.14.0 | AST parser | JavaScript/TypeScript parsing |
-| Multer | 1.4.5-lts.1 | File upload | Memory storage, 500KB limit |
-| express-rate-limit | 7.4.1 | Rate limiting | 2 limiters: per-minute + hourly |
+| Express | 5.1.0 | Web framework | Middleware-driven architecture |
+| @anthropic-ai/sdk | 0.65.0 | Claude API | Streaming support via async iterators |
+| Acorn | 8.15.0 | AST parser | JavaScript/TypeScript parsing |
+| Multer | 2.0.2 | File upload | Memory storage, 500KB limit |
+| express-rate-limit | 8.1.0 | Rate limiting | 2 limiters: per-minute + hourly |
 | cors | 2.8.5 | CORS handling | Exposes rate limit headers |
 
 **Service Architecture:**

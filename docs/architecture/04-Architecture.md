@@ -210,16 +210,18 @@ The diagram includes an interactive legend. Here's the complete color system:
 
 ## Technology Stack
 
+> **📊 Accurate Versions**: These versions are from the version checker script. Run `npm run versions` to verify current installations.
+
 **Frontend**:
-- React 18.3.1, Vite 5.4.11, Tailwind CSS 3.4.17
-- Monaco Editor 4.6.0 (lazy loaded), react-markdown 9.0.2 (lazy loaded)
-- Mermaid 11.4.1 (lazy loaded), react-hot-toast 2.4.1
-- Lucide React 0.468.0 (icons)
+- React 19.2.0, Vite 7.1.9, Tailwind CSS 3.4.18
+- Monaco Editor 4.7.0 (lazy loaded), react-markdown 10.1.0 (lazy loaded)
+- Mermaid 11.12.0 (lazy loaded), react-hot-toast 2.6.0
+- Lucide React 0.545.0 (icons)
 
 **Backend**:
-- Node.js 20+, Express 4.21.1, @anthropic-ai/sdk 0.32.1
-- Acorn 8.14.0 (AST parser), Multer 1.4.5-lts.1 (file upload)
-- express-rate-limit 7.4.1, cors 2.8.5
+- Node.js 20+, Express 5.1.0, @anthropic-ai/sdk 0.65.0
+- Acorn 8.15.0 (AST parser), Multer 2.0.2 (file upload)
+- express-rate-limit 8.1.0, cors 2.8.5
 
 **Infrastructure**:
 - Vercel (planned), Fetch API with ReadableStream (streaming)

@@ -14,7 +14,7 @@ This document describes the REST API endpoints you will build for the CodeScribe
 
 **Technology Stack:**
 - **Runtime:** Node.js 20+
-- **Framework:** Express 4.18+
+- **Framework:** Express 5
 - **AI Provider:** Anthropic Claude API (Sonnet 4.5)
 - **Code Parser:** Acorn (JavaScript AST)
 - **Streaming:** Server-Sent Events (SSE)
@@ -736,17 +736,41 @@ Each criterion includes an actionable suggestion when not complete:
 ## 🚦 Rate Limiting
 
 **Current Implementation:**
-- 10 requests per minute per IP
-- 100 requests per hour per IP
+
+CodeScribe AI uses a two-tier rate limiting strategy to prevent abuse while allowing reasonable usage:
+
+1. **API-Wide Rate Limiter** (applied to all `/api/*` endpoints)
+   - **Limit:** 10 requests per minute per IP address
+   - **Window:** 60 seconds (1 minute)
+   - **Purpose:** Prevents rapid-fire spam requests
+
+2. **Generation Rate Limiter** (applied to `/api/generate` and `/api/generate-stream`)
+   - **Limit:** 100 requests per hour per IP address
+   - **Window:** 3600 seconds (1 hour)
+   - **Purpose:** Controls expensive Claude API calls and prevents resource exhaustion
+
+**How It Works:**
+- Both limiters must be satisfied for generation endpoints to work
+- For example, you can make up to 10 generation requests per minute, but no more than 100 per hour total
+- Other endpoints (health, upload) only check the API-wide limiter
+- Limits are tracked per IP address
+- Counters reset automatically after the time window expires
 
 **Response Headers:**
+
+All rate-limited responses include these standard headers:
+
 ```http
-X-RateLimit-Limit: 10
-X-RateLimit-Remaining: 7
-X-RateLimit-Reset: 1697123456
+RateLimit-Limit: 10              # Maximum requests allowed in window
+RateLimit-Remaining: 7           # Requests remaining in current window
+RateLimit-Reset: 1697123456      # Unix timestamp when limit resets
 ```
 
-**Rate Limit Error (429 Too Many Requests):**
+> **Note:** The `RateLimit-*` headers follow the [IETF Rate Limit Headers](https://datatracker.ietf.org/doc/html/draft-ietf-httpapi-ratelimit-headers) draft standard.
+
+**Rate Limit Errors:**
+
+**429 Too Many Requests (Per-Minute Limit Exceeded):**
 ```json
 {
   "error": "Rate limit exceeded",
@@ -755,24 +779,137 @@ X-RateLimit-Reset: 1697123456
 }
 ```
 
-**Implementation:**
+**429 Too Many Requests (Hourly Limit Exceeded):**
+```json
+{
+  "error": "Hourly limit exceeded",
+  "message": "You have exceeded 100 generations per hour. Please try again later.",
+  "retryAfter": 3600
+}
+```
+
+**Client-Side Handling Best Practices:**
+
+```javascript
+async function generateDocumentation(code, docType) {
+  try {
+    const response = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, docType })
+    });
+
+    // Check rate limit headers
+    const limit = response.headers.get('RateLimit-Limit');
+    const remaining = response.headers.get('RateLimit-Remaining');
+    const reset = response.headers.get('RateLimit-Reset');
+
+    console.log(`Rate limit: ${remaining}/${limit} requests remaining`);
+
+    if (response.status === 429) {
+      const error = await response.json();
+      // Show user-friendly message with retry time
+      throw new Error(`${error.message} (Retry in ${error.retryAfter} seconds)`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Generation failed:', error);
+    throw error;
+  }
+}
+```
+
+**Configuration:**
+
+Rate limits can be customized via environment variables:
+
+```bash
+# API-wide rate limiter (per minute)
+RATE_LIMIT_WINDOW_MS=60000       # Window duration in milliseconds (default: 60000 = 1 minute)
+RATE_LIMIT_MAX=10                # Max requests per window (default: 10)
+
+# Generation rate limiter (per hour)
+RATE_LIMIT_HOURLY_MAX=100        # Max generations per hour (default: 100)
+```
+
+**Implementation Reference:**
+
 ```javascript
 // server/src/middleware/rateLimiter.js
 import rateLimit from 'express-rate-limit';
 
+// Primary rate limiter: 10 requests per minute
 export const apiLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 10, // 10 requests per window
+  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 60 * 1000,
+  max: parseInt(process.env.RATE_LIMIT_MAX) || 10,
   message: {
     error: 'Rate limit exceeded',
-    message: 'Too many requests. Please try again in 60 seconds.'
+    message: 'Too many requests. Please try again in 60 seconds.',
+    retryAfter: 60
   },
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: true,
+  handler: (req, res) => {
+    res.status(429).json({
+      error: 'Rate limit exceeded',
+      message: 'Too many requests. Please try again in 60 seconds.',
+      retryAfter: 60
+    });
+  }
+});
+
+// Stricter limiter for generation endpoints
+export const generationLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: parseInt(process.env.RATE_LIMIT_HOURLY_MAX) || 100,
+  message: {
+    error: 'Hourly limit exceeded',
+    message: 'You have exceeded 100 generations per hour. Please try again later.',
+    retryAfter: 3600
+  },
+  standardHeaders: true,
+  legacyHeaders: true,
+  handler: (req, res) => {
+    res.status(429).json({
+      error: 'Hourly limit exceeded',
+      message: 'You have exceeded 100 generations per hour. Please try again later.',
+      retryAfter: 3600
+    });
+  }
 });
 
 // Apply to routes
-app.use('/api/', apiLimiter);
+// server/src/routes/api.js
+import { apiLimiter, generationLimiter } from '../middleware/rateLimiter.js';
+
+// All API routes get the per-minute limiter
+router.use(apiLimiter);
+
+// Generation endpoints get additional hourly limiter
+router.post('/generate', generationLimiter, async (req, res) => { /* ... */ });
+router.post('/generate-stream', generationLimiter, async (req, res) => { /* ... */ });
+```
+
+**Testing Rate Limits:**
+
+You can test rate limiting behavior with cURL:
+
+```bash
+# Test per-minute limit (should fail on 11th request)
+for i in {1..11}; do
+  echo "Request $i:"
+  curl -X POST http://localhost:3000/api/generate \
+    -H "Content-Type: application/json" \
+    -d '{"code":"test","docType":"README"}' \
+    -w "\nHTTP Status: %{http_code}\n\n"
+  sleep 1
+done
+
+# Check rate limit headers
+curl -I -X POST http://localhost:3000/api/generate \
+  -H "Content-Type: application/json" \
+  -d '{"code":"test"}'
 ```
 
 ---

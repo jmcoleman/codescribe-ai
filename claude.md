@@ -2,7 +2,7 @@
 
 **Project:** CodeScribe AI - Intelligent Code Documentation Generator
 **Current Phase:** Day 1 - Backend Setup
-**Tech Stack:** React 18 + Vite, Node.js + Express, Claude API, Tailwind CSS, Monaco Editor
+**Tech Stack:** React 19 + Vite, Node.js + Express, Claude API, Tailwind CSS, Monaco Editor
 **Timeline:** 5-7 days to MVP
 **Status:** In Development
 **Timezone:** Eastern Standard Time (EST/EDT) - All dates and times in documentation reference this timezone
@@ -385,11 +385,37 @@ open docs/design/brand-color-palette.pdf
 
 ---
 
+### 🛠️ Scripts & Utilities
+
+#### [VERSION-CHECKER.md](docs/scripts/VERSION-CHECKER.md) - Version Checker Script Documentation
+**When to use:** Retrieving accurate package versions, updating documentation with current technology versions, dependency audits
+
+**Contains:**
+- Complete documentation for `check-versions.js` utility script
+- Usage instructions (`npm run versions` or `npm run check-versions`)
+- Output sections breakdown (System Environment, Frontend Stack, Backend Stack, AI Model, Summary)
+- Use cases (documentation updates, debugging, audits, onboarding, CI/CD)
+- Troubleshooting guide for version detection issues
+- Maintenance guidelines for adding new packages
+- Example output with colorized terminal display
+
+**Key for:** Getting accurate installed versions for all packages, updating ARCHITECTURE.md tech stack tables, verifying package installations, dependency management
+
+**⚠️ IMPORTANT:** When updating documentation that references package versions (ARCHITECTURE.md, CLAUDE.md Tech Stack section, API-Reference.md, etc.), **ALWAYS run the version checker script first** to ensure accuracy:
+```bash
+npm run versions
+```
+
+---
+
 ## 🔑 Key Technical Details
 
 ### Tech Stack
+
+> **📊 For Accurate Version Information:** Run `npm run versions` to get the exact installed versions of all packages. See [VERSION-CHECKER.md](docs/scripts/VERSION-CHECKER.md) for details.
+
 **Frontend:**
-- React 18 with Vite
+- React 19 with Vite
 - Tailwind CSS 3.4+
 - Monaco Editor (@monaco-editor/react)
 - react-markdown
@@ -397,7 +423,7 @@ open docs/design/brand-color-palette.pdf
 
 **Backend:**
 - Node.js 20+
-- Express 4.18+
+- Express 5
 - Anthropic Claude API (Sonnet 4.5: claude-sonnet-4-20250514)
 - Acorn (JavaScript AST parsing)
 - Multer (file uploads)
@@ -406,6 +432,8 @@ open docs/design/brand-color-palette.pdf
 - Vercel (hosting)
 - Server-Sent Events (streaming)
 - Environment variables for secrets
+
+> **Note:** The versions listed above are approximate. For exact installed versions, use the version checker script.
 
 ### Project Structure
 ```
@@ -445,6 +473,8 @@ codescribe-ai/
 │   ├── design/                   # Design assets
 │   │   ├── brand-color-palette.html  # Interactive color palette
 │   │   └── brand-color-palette.pdf   # PDF version for sharing
+│   ├── scripts/                  # Script documentation
+│   │   └── VERSION-CHECKER.md    # Version checker utility guide
 │   └── CONTEXT.md                # Quick reference
 ├── private/                       # ⚠️ GITIGNORED - Sensitive content only
 │   ├── README.md                 # Guidelines for private folder usage
@@ -524,6 +554,7 @@ When answering questions about CodeScribe AI:
 - **Components** → Reference TOAST-SYSTEM.md or MERMAID-DIAGRAMS.md
 - **Current Tasks** → Reference Todo List
 - **Explanation/Demo** → Reference Interview Guide
+- **Package Versions/Dependencies** → Run version checker script (`npm run versions`), reference VERSION-CHECKER.md
 
 ### 2. Provide Context
 - Always mention which document you're referencing
@@ -553,6 +584,7 @@ Multiple docs cover the same topic from different angles:
 - **Mermaid Diagrams**: MERMAID-DIAGRAMS.md (comprehensive guide), CLAUDE.md section 7 (quick reference), 04-Architecture.md (implementation example)
 - **Component Patterns**: TOAST-SYSTEM.md (toast notifications), MERMAID-DIAGRAMS.md (diagram rendering), ERROR-HANDLING-UX.md (error banners and modals)
 - **Error Handling**: ERROR-HANDLING-UX.md (UX patterns, animations, accessibility), TOAST-SYSTEM.md (error toasts for non-blocking notifications)
+- **Package Versions**: VERSION-CHECKER.md (script documentation), ARCHITECTURE.md (tech stack tables), CLAUDE.md Tech Stack section (quick reference)
 
 Always provide the most relevant reference for the question asked.
 
@@ -617,6 +649,33 @@ L["🟣 Purple - Client/Frontend<br/>⚪ Slate - API Layer<br/>🔵 Indigo - Ser
 
 **For comprehensive details, see:** [MERMAID-DIAGRAMS.md](docs/components/MERMAID-DIAGRAMS.md) including React implementation, troubleshooting, examples, and configuration reference.
 
+### 8. Package Version Reference Guidelines
+When questions involve package versions, dependencies, or tech stack details:
+
+**Always Use the Version Checker First:**
+```bash
+npm run versions
+```
+
+**When to use the version checker:**
+- User asks "what version of X are we using?"
+- Updating documentation that lists package versions
+- Debugging dependency conflicts
+- Verifying installations
+- Creating dependency audits
+- Onboarding documentation
+
+**Documentation Update Protocol:**
+1. Run `npm run versions` to get accurate installed versions
+2. Update the relevant documentation (ARCHITECTURE.md, CLAUDE.md, etc.)
+3. Reference the version checker in your response to the user
+4. Never guess or estimate version numbers
+
+**Example Response:**
+> "Let me check the exact version using the version checker script..."
+> [Runs npm run versions]
+> "According to the version checker, React is at version 19.2.0. I'll update the documentation with this accurate information."
+
 ---
 
 ## 🚀 Quick Reference Commands
@@ -642,6 +701,17 @@ npm run dev          # Starts on http://localhost:3000
 
 # Frontend (from client/)
 npm run dev          # Starts on http://localhost:5173
+```
+
+### Version Checking
+```bash
+# Check all package versions (from project root)
+npm run versions     # Comprehensive version report
+npm run check-versions  # Alternative command (same output)
+node check-versions.js  # Direct execution
+
+# Redirect output to file for documentation
+npm run versions > current-versions.txt
 ```
 
 ### Key Environment Variables
@@ -693,7 +763,8 @@ VITE_API_URL=http://localhost:3000
 
 ## 🔄 Version History
 
-- **v1.13** (Current) - Architecture documentation audit and migration: Comprehensive update to 04-Architecture.md reflecting actual production implementation including all components (ErrorBanner, Toaster, MobileMenu, LazyMonacoEditor, LazyMermaidRenderer), middleware stack (CORS, RateLimit, Multer, ErrorHandler), service patterns (Singleton, Strategy, Decorator), performance metrics, and current tech stack versions; updated ARCHITECTURE.md to v1.1 with detailed component trees, service architecture, implementation status, data flows, testing strategies, deployment guide, monitoring approaches, and complete technical details matching production codebase; created ARCHITECTURE-OLD.md backup, ARCHITECTURE-AUDIT-SUMMARY.md documentation of changes, and ARCHITECTURE-MIGRATION-GUIDE.md for maintaining accuracy
+- **v1.14** (Current) - Added version checker script integration: Created comprehensive VERSION-CHECKER.md documentation for check-versions.js utility; added new Scripts & Utilities section to documentation map; updated Tech Stack section with version checker references and accuracy notes; added Package Versions/Dependencies to question type identification; added Package Versions to cross-reference list; created new section 8 "Package Version Reference Guidelines" with protocol for using version checker when updating documentation; added Version Checking commands to Quick Reference; updated project structure to include docs/scripts/ folder
+- **v1.13** - Architecture documentation audit and migration: Comprehensive update to 04-Architecture.md reflecting actual production implementation including all components (ErrorBanner, Toaster, MobileMenu, LazyMonacoEditor, LazyMermaidRenderer), middleware stack (CORS, RateLimit, Multer, ErrorHandler), service patterns (Singleton, Strategy, Decorator), performance metrics, and current tech stack versions; updated ARCHITECTURE.md to v1.1 with detailed component trees, service architecture, implementation status, data flows, testing strategies, deployment guide, monitoring approaches, and complete technical details matching production codebase; created ARCHITECTURE-OLD.md backup, ARCHITECTURE-AUDIT-SUMMARY.md documentation of changes, and ARCHITECTURE-MIGRATION-GUIDE.md for maintaining accuracy
 - **v1.12** - Added Performance & Optimization documentation section: Created comprehensive OPTIMIZATION-GUIDE.md covering Lighthouse audits (+67% performance improvement), bundle size reduction (-85%), Core Web Vitals tracking, lazy loading patterns, and maintenance guidelines; updated documentation map with new Performance & Optimization section, cross-references for performance/lazy loading topics, and project structure to include docs/performance/ folder
 - **v1.11** - Added private/ folder documentation: Created dedicated folder structure for sensitive content (strategic planning, financials, customer data, investor relations); updated project structure diagram and added security best practices section; moved VISION-PRIVATE.md to private/VISION.md
 - **v1.10** - Enhanced timezone awareness instructions for documentation updates: Added automatic session labeling requirements with step-by-step timezone conversion process, EST/EDT timeframe definitions, and practical examples for converting UTC to EST when adding session labels to documentation

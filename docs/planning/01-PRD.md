@@ -204,7 +204,7 @@ Deep editor integration with real-time documentation generation, inline suggesti
 ## Technical Architecture
 
 ### Frontend Stack
-- **Framework:** React 18+ with Vite
+- **Framework:** React 19 with Vite
 - **Styling:** Tailwind CSS 3.4+
 - **Code Editor:** Monaco Editor (VS Code engine)
 - **Markdown Rendering:** react-markdown
@@ -214,9 +214,9 @@ Deep editor integration with real-time documentation generation, inline suggesti
 
 ### Backend Stack
 - **Runtime:** Node.js 20+
-- **Framework:** Express 4.18+
+- **Framework:** Express 5
 - **AI Integration:** Anthropic Claude API (Sonnet 4.5)
-- **Code Parsing:** @babel/parser, acorn
+- **Code Parsing:** acorn (JavaScript AST parser)
 - **File Handling:** multer
 - **CORS:** cors middleware
 

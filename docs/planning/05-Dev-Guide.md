@@ -78,7 +78,7 @@ codescribe-ai/
 
 ### Frontend
 
-**React 18+ with Vite**
+**React 19 with Vite**
 - ✅ Fast HMR for rapid development
 - ✅ Modern build tool (faster than CRA)
 - ✅ Tree-shaking for smaller bundles
@@ -104,7 +104,7 @@ codescribe-ai/
 
 ### Backend
 
-**Node.js 20+ with Express**
+**Node.js 20+ with Express 5**
 - ✅ Matches your JavaScript/Node.js background
 - ✅ Non-blocking I/O perfect for streaming
 - ✅ Massive ecosystem
