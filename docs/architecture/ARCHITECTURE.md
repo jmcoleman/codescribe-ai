@@ -1,11 +1,12 @@
 # CodeScribe AI - Architecture Deep Dive
 
-**Version:** 1.0
-**Last Updated:** October 13, 2025
-**Status:** Production Ready
+**Version:** 1.1
+**Last Updated:** October 16, 2025
+**Status:** Production Ready - Phase 1 Complete
+**Model:** Claude Sonnet 4.5 (claude-sonnet-4-20250514)
 
 > **Quick Reference:** For a visual architecture diagram and overview, see [04-Architecture.md](04-Architecture.md)
-> **Purpose:** This document provides comprehensive technical architecture details, including security, performance, scalability, and deployment strategies.
+> **Purpose:** This document provides comprehensive technical architecture details reflecting the actual production implementation, including all components, services, middleware, and design patterns currently in use.
 
 ---
 
@@ -26,16 +27,33 @@
 
 ## Executive Summary
 
-CodeScribe AI is a **stateless, real-time documentation generation platform** that leverages Anthropic's Claude API to transform source code into professional documentation. The architecture follows a **service-oriented design** with clear separation between presentation (React), application logic (Node.js), and AI services (Claude API).
+CodeScribe AI is a **stateless, real-time documentation generation platform** that leverages Anthropic's Claude Sonnet 4.5 API to transform source code into professional documentation. The architecture follows a **service-oriented design** with clear separation between presentation (React), application logic (Node.js/Express), and AI services (Claude API).
 
 ### Key Architectural Principles
 
 - **Stateless Design**: No database, no user sessions - privacy-first approach
-- **Service Layer Pattern**: Reusable business logic across multiple clients (web, CLI, extension)
-- **Real-Time Streaming**: Server-Sent Events (SSE) for responsive UX
+- **Service Layer Pattern**: Reusable business logic across multiple clients
+- **Real-Time Streaming**: Fetch API with ReadableStream for responsive UX
 - **API-First**: Backend can serve multiple front ends independently
-- **Code-as-Data**: AST parsing for intelligent code analysis
+- **Code-as-Data**: AST parsing using Acorn for intelligent code analysis
 - **Graceful Degradation**: Fallback strategies for API failures and parsing errors
+- **Performance Optimized**: Lazy loading, code splitting, and bundle optimization
+- **Middleware-Driven**: Rate limiting, error handling, and CORS as reusable middleware
+
+### Current Implementation Status
+
+**✅ Completed Features:**
+- Full-stack web application (React + Express)
+- Real-time streaming documentation generation
+- AST-based code analysis for JavaScript/TypeScript
+- Quality scoring algorithm (5 criteria, 100-point scale)
+- File upload with validation (500KB limit, 10+ file types)
+- Rate limiting (10/min per IP, 100/hour for generation)
+- Error handling with user-friendly messages
+- Toast notification system with history
+- Lazy-loaded components for performance
+- Mermaid diagram rendering in documentation
+- Comprehensive test coverage (Jest + React Testing Library)
 
 ---
 
@@ -46,39 +64,42 @@ CodeScribe AI is a **stateless, real-time documentation generation platform** th
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                         CLIENT TIER                             │
-│  ┌────────────────┐  ┌────────────────┐  ┌────────────────┐     │
-│  │  Web Browser   │  │   CLI Tool     │  │  VS Code Ext   │     │
-│  │   (React)      │  │  (Node.js)     │  │  (TypeScript)  │     │
-│  └────────┬───────┘  └────────┬───────┘  └────────┬───────┘     │
-│           │                   │                    │            │
-│           └───────────────────┼────────────────────┘            │
+│  ┌────────────────┐  ┌────────────────┐  ┌────────────────┐   │
+│  │  Web Browser   │  │   CLI Tool     │  │  VS Code Ext   │   │
+│  │   (React 18)   │  │  (Phase 2)     │  │  (Phase 3)     │   │
+│  │   + Vite       │  │                │  │                │   │
+│  └────────┬───────┘  └────────┬───────┘  └────────┬───────┘   │
+│           │                   │                    │           │
+│           └───────────────────┼────────────────────┘           │
 └───────────────────────────────┼─────────────────────────────────┘
                                 │
-                         HTTP/SSE (REST API)
+                     HTTP/Fetch API (Streaming)
                                 │
 ┌───────────────────────────────▼─────────────────────────────────┐
 │                      APPLICATION TIER                           │
 │  ┌──────────────────────────────────────────────────────────┐   │
-│  │              Express API Server (Node.js)                │   │
-│  │  ┌────────────┐  ┌────────────┐  ┌────────────┐          │   │
-│  │  │ API Routes │  │ Middleware │  │   Error    │          │   │
-│  │  │            │  │  - CORS    │  │  Handling  │          │   │
-│  │  │ - Generate │  │  - Rate    │  │            │          │   │
-│  │  │ - Stream   │  │    Limit   │  │            │          │   │
-│  │  │ - Upload   │  │  - Validate│  │            │          │   │
-│  │  └─────┬──────┘  └────────────┘  └────────────┘          │   │
+│  │              Express API Server (Node.js 20+)            │   │
+│  │  ┌────────────┐  ┌────────────┐  ┌────────────┐         │   │
+│  │  │ API Routes │  │ Middleware │  │   Error    │         │   │
+│  │  │            │  │  - CORS    │  │  Handling  │         │   │
+│  │  │ - Generate │  │  - Rate    │  │            │         │   │
+│  │  │ - Stream   │  │    Limit   │  │            │         │   │
+│  │  │ - Upload   │  │  - Multer  │  │            │         │   │
+│  │  │ - Health   │  │            │  │            │         │   │
+│  │  └─────┬──────┘  └────────────┘  └────────────┘         │   │
 │  │        │                                                 │   │
 │  │  ┌─────▼──────────────────────────────────────────────┐  │   │
-│  │  │          Service Layer (Business Logic)            │  │   │
+│  │  │          Service Layer (Singleton Pattern)         │  │   │
 │  │  │  ┌─────────────┐  ┌─────────────┐  ┌────────────┐  │  │   │
 │  │  │  │   Claude    │  │    Code     │  │  Quality   │  │  │   │
 │  │  │  │   Client    │  │   Parser    │  │  Scorer    │  │  │   │
-│  │  │  │             │  │   (AST)     │  │            │  │  │   │
+│  │  │  │  (Retry)    │  │   (Acorn)   │  │ (5 Criteria│  │  │   │
 │  │  │  └──────┬──────┘  └──────┬──────┘  └──────┬─────┘  │  │   │
 │  │  │         │                │                │        │  │   │
 │  │  │  ┌──────▼────────────────▼────────────────▼─────┐  │  │   │
-│  │  │  │     Documentation Generator Service          │  │  │   │
-│  │  │  │   (Orchestrates all documentation logic)     │  │  │   │
+│  │  │  │     DocGeneratorService (Orchestrator)       │  │  │   │
+│  │  │  │   - buildPrompt() (4 doc types)              │  │  │   │
+│  │  │  │   - generateDocumentation()                  │  │  │   │
 │  │  │  └──────────────────────────────────────────────┘  │  │   │
 │  │  └────────────────────────────────────────────────────┘  │   │
 │  └──────────────────────────────────────────────────────────┘   │
@@ -89,10 +110,12 @@ CodeScribe AI is a **stateless, real-time documentation generation platform** th
 ┌───────────────────────────────▼─────────────────────────────────┐
 │                       EXTERNAL SERVICES                         │
 │  ┌──────────────────────────────────────────────────────────┐   │
-│  │           Anthropic Claude API (Sonnet 4.5)              │   │
-│  │   - Text generation with streaming                       │   │
+│  │   Anthropic Claude API (Sonnet 4.5)                      │   │
+│  │   Model: claude-sonnet-4-20250514                        │   │
+│  │   - Streaming with message.create({ stream: true })      │   │
 │  │   - 200K token context window                            │   │
-│  │   - Retry with exponential backoff                       │   │
+│  │   - Max tokens: 4000                                     │   │
+│  │   - Retry with exponential backoff (3 attempts)          │   │
 │  └──────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -100,365 +123,517 @@ CodeScribe AI is a **stateless, real-time documentation generation platform** th
 ### Architecture Layers
 
 **1. Presentation Layer (Client)**
-- React 19 with Vite for the web application
-- Future: CLI tool and VS Code extension
-- Responsible for: UI rendering, user input, Monaco Editor integration
+- **React 18** with Vite for fast dev server and optimized builds
+- **Lazy Loading**: DocPanel, modals, Monaco Editor, Mermaid renderer
+- **Component Library**: 20+ components with comprehensive test coverage
+- **State Management**: React hooks (useState, useCallback, useEffect, useRef)
+- **Custom Hooks**: useDocGeneration, useToastKeyboardShortcuts
+- **Responsible for**: UI rendering, user input, code editing (Monaco), markdown display
 
 **2. Application Layer (Server)**
-- Express 5 REST API
-- Service-oriented architecture
-- Responsible for: Request handling, business logic orchestration, response formatting
+- **Express 4.18+** REST API with middleware architecture
+- **Middleware Stack**: CORS → Rate Limiting → Body Parser → Routes → Error Handler
+- **Service-oriented architecture** for reusability
+- **Responsible for**: Request handling, validation, rate limiting, streaming, error responses
 
 **3. Service Layer**
-- Claude API client with retry logic
-- Code parser (AST analysis using Acorn)
-- Quality scoring algorithm
-- Documentation generator (prompt engineering)
+- **ClaudeClient**: API wrapper with retry logic (3 attempts, exponential backoff)
+- **CodeParser**: Acorn-based AST analysis with fallback regex parsing
+- **QualityScorer**: 5-criteria algorithm (Overview, Installation, Examples, API Docs, Structure)
+- **DocGeneratorService**: Orchestrates parsing → prompting → generation → scoring
 
 **4. External Services**
-- Anthropic Claude API for AI text generation
+- **Anthropic Claude API**: Sonnet 4.5 model for AI text generation
+- **Vercel**: Hosting and CDN (planned for production deployment)
 
 ---
 
 ## Technology Stack
 
-### Frontend Stack
+### Frontend Stack (Current Implementation)
 
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| React | 19.x | UI framework with concurrent features |
-| Vite | 7.x | Build tool and dev server |
-| Tailwind CSS | 4.x | Utility-first styling |
-| Monaco Editor | Latest | Code editing with syntax highlighting |
-| react-markdown | Latest | Safe markdown rendering |
-| Lucide React | Latest | Icon library |
+| Technology | Version | Purpose | Implementation Details |
+|------------|---------|---------|------------------------|
+| React | 18.3.1 | UI framework | Hooks-based, no class components |
+| Vite | 5.4.11 | Build tool | Fast HMR, bundle optimization with rollup-plugin-visualizer |
+| Tailwind CSS | 3.4.17 | Utility styling | Custom animations for errors, toasts, modals |
+| Monaco Editor | @monaco-editor/react 4.6.0 | Code editing | Lazy loaded, syntax highlighting |
+| react-markdown | 9.0.2 | Markdown rendering | Lazy loaded via DocPanel |
+| Mermaid | 11.4.1 | Diagram rendering | Lazy loaded renderer component |
+| react-hot-toast | 2.4.1 | Notifications | Custom toast components with history |
+| Lucide React | 0.468.0 | Icon library | Tree-shakeable icons |
 
-**Why these choices?**
-- React 19 provides the latest features and performance optimizations
-- Vite offers instant HMR and optimized production builds
-- Monaco Editor gives VS Code-quality editing in the browser
-- Tailwind enables rapid, consistent UI development
+**Performance Optimizations:**
+- Lazy loading reduces initial bundle: 516KB → 78KB gzipped (-85%)
+- Code splitting for modals (ExamplesModal, HelpModal, QualityScoreModal)
+- Lighthouse score: 45 → 75 (+67% improvement)
+- Core Web Vitals: FCP -89%, LCP -93%, TBT -30%
 
-### Backend Stack
+### Backend Stack (Current Implementation)
 
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| Node.js | 20+ | JavaScript runtime |
-| Express | 5.x | Web framework |
-| Anthropic SDK | Latest | Claude API integration |
-| Acorn | Latest | JavaScript AST parser |
-| Multer | Latest | File upload handling |
+| Technology | Version | Purpose | Implementation Details |
+|------------|---------|---------|------------------------|
+| Node.js | 20+ | JavaScript runtime | ES modules (import/export) |
+| Express | 4.21.1 | Web framework | Middleware-driven architecture |
+| @anthropic-ai/sdk | 0.32.1 | Claude API | Streaming support via async iterators |
+| Acorn | 8.14.0 | AST parser | JavaScript/TypeScript parsing |
+| Multer | 1.4.5-lts.1 | File upload | Memory storage, 500KB limit |
+| express-rate-limit | 7.4.1 | Rate limiting | 2 limiters: per-minute + hourly |
+| cors | 2.8.5 | CORS handling | Exposes rate limit headers |
 
-**Why these choices?**
-- Node.js 20+ provides modern JavaScript features and performance
-- Express is lightweight, flexible, and well-documented
-- Acorn is fast and produces standard ESTree AST
-- Service layer is framework-agnostic for future flexibility
+**Service Architecture:**
+- **Singleton Pattern**: Single instance of each service (ClaudeClient, DocGeneratorService)
+- **Strategy Pattern**: Different prompts per doc type (README, JSDoc, API, ARCHITECTURE)
+- **Decorator Pattern**: Retry logic wraps Claude API calls
 
 ### Infrastructure
 
-| Service | Purpose |
-|---------|---------|
-| Vercel | Frontend hosting + API routes |
-| Environment Variables | API key management |
-| HTTPS | Secure communication |
-| SSE | Real-time streaming |
+| Service | Purpose | Status |
+|---------|---------|--------|
+| Vercel | Frontend hosting + API routes | Planned |
+| Environment Variables | API key management | Implemented (.env) |
+| HTTPS | Secure communication | Vercel-managed |
+| Fetch API Streaming | Real-time updates | Implemented (ReadableStream) |
 
 ---
 
 ## Component Design
 
-### Frontend Components
+### Frontend Component Tree (Actual Implementation)
 
 ```
-App.jsx
-├── Header.jsx                    # Logo, title, navigation
-├── MobileMenu.jsx               # Responsive mobile navigation
-├── ControlBar.jsx               # Doc type selector, generate button
-│   ├── DocTypeSelector
-│   ├── ExamplesDropdown
-│   └── GenerateButton
-├── Split Panel Container
-│   ├── CodePanel.jsx            # Monaco Editor wrapper
-│   │   └── Monaco Editor
-│   └── DocPanel.jsx             # Documentation display
-│       ├── StreamingText
-│       ├── MarkdownRenderer
-│       └── QualityScore.jsx    # Score badge and breakdown
-├── ErrorBoundary.jsx            # Global error handling
-└── LoadingStates
+App.jsx (Main orchestrator)
+├── Toaster (react-hot-toast container)
+├── <input type="file" /> (Hidden file upload)
+├── Header.jsx
+│   ├── Logo + Title
+│   ├── Desktop Navigation
+│   │   ├── Examples Button
+│   │   ├── Help Button
+│   │   └── RateLimitIndicator
+│   └── Mobile Menu Button
+├── MobileMenu.jsx (Slide-in sidebar)
+│   ├── Examples Button
+│   ├── Help Button
+│   └── Close Button
+├── ControlBar.jsx
+│   ├── Select (Doc Type Dropdown)
+│   │   └── Options: README, JSDoc, API, ARCHITECTURE
+│   ├── Button (Upload File)
+│   ├── Button (GitHub Import - Future)
+│   └── Button (Generate Docs)
+│       └── Disabled when code empty
+├── ErrorBanner.jsx (Inline error display)
+│   ├── Error message
+│   ├── Retry timer (for rate limits)
+│   └── Dismiss button
+├── Split Panel Container (Grid layout)
+│   ├── CodePanel.jsx
+│   │   └── LazyMonacoEditor
+│   │       └── Monaco Editor (lazy loaded)
+│   └── DocPanel.jsx (lazy loaded)
+│       ├── SkeletonLoader (while generating)
+│       ├── LazyMermaidRenderer (for diagrams)
+│       ├── ReactMarkdown
+│       ├── QualityScoreBadge
+│       └── CopyButton
+├── Modals (All lazy loaded with Suspense)
+│   ├── QualityScoreModal.jsx
+│   │   ├── Overall Score Display
+│   │   ├── Criteria Breakdown (5 items)
+│   │   │   └── CriteriaItem (progress bars)
+│   │   └── CopyButtonWithText (Copy Report)
+│   ├── ExamplesModal.jsx
+│   │   ├── Example cards (JavaScript, React, API)
+│   │   ├── Preview code snippets
+│   │   └── Load Example buttons
+│   └── HelpModal.jsx
+│       ├── Feature list
+│       ├── Keyboard shortcuts
+│       └── Tips
+└── ErrorBoundary.jsx (Top-level error catching)
 ```
 
-**Key Design Patterns:**
-- **Composition**: Small, focused components composed together
-- **Custom Hooks**: Business logic extracted into reusable hooks
-- **Error Boundaries**: Graceful error handling at component boundaries
-- **Memoization**: Performance optimization for expensive renders
+**Component Patterns:**
+- **Lazy Loading**: DocPanel, all modals, Monaco Editor, Mermaid renderer
+- **Suspense Boundaries**: LoadingFallback for panels, ModalLoadingFallback for modals
+- **Custom Hooks**: useDocGeneration (API calls), useToastKeyboardShortcuts
+- **Error Boundaries**: ErrorBoundary catches React errors, displays fallback UI
+- **Memoization**: Not extensively used (React 18 handles most optimizations)
+- **Focus Management**: Modals trap focus, auto-focus close button
+- **Accessibility**: ARIA labels, roles, keyboard navigation, screen reader support
 
-### Backend Services
+### Backend Service Architecture (Actual Implementation)
 
 ```
-DocGeneratorService
-├── buildPrompt()               # Context-aware prompt engineering
-├── generateDocumentation()     # Main orchestration
-└── Uses:
-    ├── ClaudeClient
-    │   ├── generate()          # Non-streaming generation
-    │   ├── generateWithStreaming()
-    │   └── Retry logic with exponential backoff
-    ├── CodeParser
-    │   ├── parseCode()         # AST parsing with Acorn
-    │   ├── walkAST()           # Extract structure
-    │   └── calculateComplexity()
-    └── QualityScorer
-        ├── calculateQualityScore()
-        ├── hasSection()        # Check for required sections
-        ├── countCodeBlocks()   # Count examples
-        └── getGrade()          # A-F grading
+server/src/
+├── server.js (Express app setup)
+│   ├── CORS middleware
+│   ├── Body parser (10MB limit)
+│   ├── API routes (/api)
+│   └── Error handler middleware
+├── middleware/
+│   ├── rateLimiter.js
+│   │   ├── apiLimiter (10 req/min)
+│   │   └── generationLimiter (100 req/hour)
+│   └── errorHandler.js
+│       └── Global error handler
+├── routes/
+│   └── api.js (All API endpoints)
+│       ├── POST /api/generate (non-streaming)
+│       ├── POST /api/generate-stream (SSE)
+│       ├── POST /api/upload (Multer)
+│       └── GET /api/health
+└── services/
+    ├── claudeClient.js
+    │   ├── ClaudeClient class
+    │   ├── generate() → single completion
+    │   ├── generateWithStreaming() → async iterator
+    │   └── sleep() → exponential backoff
+    ├── docGenerator.js
+    │   ├── DocGeneratorService class
+    │   ├── generateDocumentation() → main flow
+    │   └── buildPrompt() → 4 doc type strategies
+    ├── codeParser.js
+    │   ├── parseCode() → AST analysis
+    │   ├── walkAST() → extract functions/classes
+    │   ├── calculateComplexity() → simple/medium/complex
+    │   ├── calculateMetrics() → comprehensive stats
+    │   └── basicAnalysis() → fallback for non-JS
+    └── qualityScorer.js
+        ├── calculateQualityScore() → 5 criteria
+        ├── hasSection() → keyword matching
+        ├── countCodeBlocks() → example detection
+        ├── countFunctionDocs() → API coverage
+        └── getGrade() → A-F grading
 ```
 
-**Key Design Patterns:**
-- **Singleton**: Single instance of each service
-- **Strategy Pattern**: Different prompt strategies per doc type
-- **Decorator Pattern**: Retry logic wraps API calls
-- **Service Layer**: Reusable across web/CLI/extension
+**Service Patterns:**
+- **Singleton**: `export default new ClaudeClient()` - single instance
+- **Strategy**: `buildPrompt()` selects prompt based on docType
+- **Retry Decorator**: `generate()` wraps API calls with retry logic (3 attempts)
+- **Template Method**: `generateDocumentation()` defines algorithm skeleton
+- **AST Visitor**: `walkAST()` walks tree, extracts structure
 
 ---
 
 ## Data Flow
 
-### 1. Documentation Generation Flow (Standard)
+### 1. Streaming Documentation Flow (Primary Implementation)
 
 ```
 User Action: Click "Generate Docs"
      │
      ▼
 ┌────────────────────────┐
-│  Frontend (React)      │
-│  - Collect code        │
-│  - Validate input      │
-│  - Show loading state  │
+│  App.jsx               │
+│  - handleGenerate()    │
+│  - Close quality modal │
 └──────────┬─────────────┘
-           │ POST /api/generate
+           │
+           ▼
+┌────────────────────────┐
+│  useDocGeneration Hook │
+│  - Reset state         │
+│  - Clear errors        │
+│  - Set isGenerating    │
+└──────────┬─────────────┘
+           │ fetch() with POST
            │ { code, docType, language }
            ▼
 ┌────────────────────────┐
-│  API Route Handler     │
-│  - Validate request    │
-│  - Rate limit check    │
+│  Express Middleware    │
+│  1. CORS headers       │
+│  2. apiLimiter         │ → 429 if > 10/min
+│  3. generationLimiter  │ → 429 if > 100/hour
+│  4. Body validation    │ → 400 if invalid
 └──────────┬─────────────┘
            │
            ▼
 ┌────────────────────────┐
-│  DocGeneratorService   │
-│  ┌──────────────────┐  │
-│  │ 1. Parse Code    │  │  parseCode(code, language)
-│  │    (AST)         │  │  → {functions, classes, exports}
-│  └────────┬─────────┘  │
-│           │            │
-│  ┌────────▼─────────┐  │
-│  │ 2. Build Prompt  │  │  buildPrompt(code, analysis, docType)
-│  │    (Context)     │  │  → Enhanced prompt with context
-│  └────────┬─────────┘  │
-│           │            │
-│  ┌────────▼─────────┐  │
-│  │ 3. Call Claude   │  │  claudeClient.generate(prompt)
-│  │    API           │  │  → Generated documentation
-│  └────────┬─────────┘  │
-│           │            │
-│  ┌────────▼─────────┐  │
-│  │ 4. Score Quality │  │  calculateQualityScore(docs, analysis)
-│  │                  │  │  → {score, grade, breakdown}
-│  └────────┬─────────┘  │
-└───────────┼────────────┘
-            │
-            │ JSON Response
-            ▼
-┌────────────────────────┐
-│  Frontend (React)      │
-│  - Display docs        │
-│  - Show quality score  │
-│  - Enable copy/download│
-└────────────────────────┘
-```
-
-### 2. Streaming Documentation Flow (Real-Time)
-
-```
-User Action: Click "Generate Docs"
-     │
-     ▼
-┌────────────────────────┐
-│  Frontend (React)      │
-│  - Collect code        │
-│  - Open SSE connection │
-└──────────┬─────────────┘
-           │ POST /api/generate-stream
-           │ SSE connection established
-           ▼
-┌────────────────────────┐
-│  Streaming Handler     │
+│  POST /api/generate-   │
+│  stream Handler        │
+│  - Validate code       │
 │  - Set SSE headers     │
-│  - Keep connection open│
+│  - Write connected     │
 └──────────┬─────────────┘
            │
            ▼
-┌────────────────────────┐
-│  DocGeneratorService   │
-│  with streaming=true   │
-│                        │
-│  onChunk callback:     │
-│    ↓                   │
-│    Send SSE event      │
-│    data: {chunk}       │
-└──────────┬─────────────┘
-           │
-           │ Multiple SSE events
-           │ data: {type: "chunk", content: "..."}
-           │ data: {type: "chunk", content: "..."}
-           │ data: {type: "complete", qualityScore: {...}}
+┌────────────────────────────────────────┐
+│  DocGeneratorService                   │
+│  ┌──────────────────────────────────┐  │
+│  │ 1. parseCode(code, language)     │  │
+│  │    → Acorn AST parsing           │  │
+│  │    → Extract functions, classes  │  │
+│  │    → Calculate complexity        │  │
+│  │    → Fallback to regex if fails  │  │
+│  └──────────┬───────────────────────┘  │
+│             │                          │
+│  ┌──────────▼───────────────────────┐  │
+│  │ 2. buildPrompt(code, analysis,   │  │
+│  │    docType, language)            │  │
+│  │    → Select prompt strategy      │  │
+│  │    → Inject code context         │  │
+│  │    → Add Mermaid rules           │  │
+│  │    → Add markdown formatting     │  │
+│  └──────────┬───────────────────────┘  │
+│             │                          │
+│  ┌──────────▼───────────────────────┐  │
+│  │ 3. claudeClient.generate         │  │
+│  │    WithStreaming(prompt, onChunk)│  │
+│  │    → Create stream with SDK      │  │
+│  │    → Iterate events              │  │
+│  │    → Call onChunk() per delta    │  │
+│  └──────────┬───────────────────────┘  │
+│             │ Each chunk              │
+└─────────────┼───────────────────────────┘
+              │
+              ▼ res.write(SSE chunk)
+┌─────────────────────────┐
+│  Streaming Response     │
+│  For each chunk:        │
+│  data: {                │
+│    type: 'chunk',       │
+│    content: '...'       │
+│  }                      │
+└──────────┬──────────────┘
+           │ ReadableStream
            ▼
-┌────────────────────────┐
-│  Frontend (React)      │
-│  - Append each chunk   │
-│  - Live typing effect  │
-│  - Show score on done  │
-└────────────────────────┘
+┌─────────────────────────┐
+│  useDocGeneration       │
+│  - reader.read()        │
+│  - Decode UTF-8         │
+│  - Parse SSE format     │
+│  - Update doc state     │
+└──────────┬──────────────┘
+           │ Each chunk
+           ▼
+┌─────────────────────────┐
+│  DocPanel.jsx           │
+│  - Display streaming    │
+│  - Markdown render      │
+│  - Scroll to bottom     │
+└─────────────────────────┘
+           │
+           │ When complete
+           ▼
+┌──────────────────────────────────────┐
+│  DocGeneratorService                 │
+│  ┌────────────────────────────────┐  │
+│  │ 4. calculateQualityScore       │  │
+│  │    (documentation, analysis)   │  │
+│  │    → Check 5 criteria          │  │
+│  │    → Count sections, examples  │  │
+│  │    → Calculate API coverage    │  │
+│  │    → Generate grade A-F        │  │
+│  └──────────┬─────────────────────┘  │
+└─────────────┼──────────────────────────┘
+              │
+              ▼ res.write(SSE complete)
+┌─────────────────────────┐
+│  data: {                │
+│    type: 'complete',    │
+│    qualityScore: {...}, │
+│    metadata: {...}      │
+│  }                      │
+└──────────┬──────────────┘
+           │
+           ▼
+┌─────────────────────────┐
+│  useDocGeneration       │
+│  - Set qualityScore     │
+│  - Set isGenerating=off │
+│  - Trigger toast        │
+└──────────┬──────────────┘
+           │
+           ▼
+┌─────────────────────────┐
+│  App.jsx useEffect      │
+│  - toastDocGenerated()  │
+│  - Show quality badge   │
+└─────────────────────────┘
 ```
 
-### 3. Code Parsing Flow
+### 2. File Upload Flow
 
 ```
-Input: Raw source code
+User Action: Click "Upload File"
      │
      ▼
-┌─────────────────────┐
-│  Language Detection │
-│  (from file ext or  │
-│   user selection)   │
-└──────────┬──────────┘
+┌────────────────────────┐
+│  App.jsx               │
+│  - handleUpload()      │
+│  - Trigger file input  │
+└──────────┬─────────────┘
            │
            ▼
-    Is JavaScript/TypeScript?
+┌────────────────────────┐
+│  <input type="file">   │
+│  - User selects file   │
+│  - onChange fires      │
+└──────────┬─────────────┘
            │
-     ┌─────┴─────--┐
-   Yes            No
-     │             │
-     ▼             ▼
-┌────────────┐  ┌────────────┐
-│ AST Parser │  │   Basic    │
-│  (Acorn)   │  │  Analysis  │
-│            │  │  (Regex)   │
-└─────┬──────┘  └─────┬──────┘
-      │               │
-      ▼               ▼
-   Parse code    Count patterns
-   to AST        (functions, classes)
-      │               │
-      ▼               ▼
-   Walk AST      Extract basic info
-   Extract:           │
-   - Functions        │
-   - Classes          │
-   - Exports          │
-   - Imports          │
-   - Complexity       │
-      │               │
-      └───────┬───────┘
-              │
-              ▼
-      ┌───────────────┐
-      │   Analysis    │
-      │   Object      │
-      │               │
-      │ {             │
-      │   functions,  │
-      │   classes,    │
-      │   exports,    │
-      │   complexity  │
-      │ }             │
-      └───────┬───────┘
-              │
-              ▼
-      Used in prompt building
-      and quality scoring
+           ▼
+┌────────────────────────┐
+│  handleFileChange()    │
+│  - Client validation   │
+│  - Check extension     │
+│  - Check size (<500KB) │
+│  - Check not empty     │
+└──────────┬─────────────┘
+           │ If valid
+           │ FormData
+           ▼
+┌────────────────────────┐
+│  fetch POST /api/upload│
+│  - multipart/form-data │
+└──────────┬─────────────┘
+           │
+           ▼
+┌────────────────────────┐
+│  Multer Middleware     │
+│  - memoryStorage       │
+│  - 500KB limit         │
+│  - Extension filter    │
+└──────────┬─────────────┘
+           │
+           ▼
+┌────────────────────────┐
+│  POST /api/upload      │
+│  - Validate not empty  │
+│  - Check content       │
+│  - Convert to UTF-8    │
+│  - Return JSON         │
+└──────────┬─────────────┘
+           │ Success
+           ▼
+┌────────────────────────┐
+│  App.jsx               │
+│  - setCode(content)    │
+│  - Detect language     │
+│  - Show toast          │
+└─────────────────────────┘
+```
+
+### 3. Error Handling Flow
+
+```
+Error occurs (API, network, validation)
+     │
+     ▼
+┌────────────────────────┐
+│  useDocGeneration      │
+│  - Catch error         │
+│  - Categorize type     │
+│  - Set error state     │
+│  - Set retryAfter      │
+└──────────┬─────────────┘
+           │
+           ▼
+┌────────────────────────┐
+│  App.jsx useEffect     │
+│  - Detect error        │
+│  - Show ErrorBanner    │
+│  - Grouped toast       │
+└──────────┬─────────────┘
+           │
+           ▼
+┌────────────────────────┐
+│  ErrorBanner.jsx       │
+│  - Display message     │
+│  - Show retry timer    │
+│  - Animate in (250ms)  │
+│  - Dismiss button      │
+└─────────────────────────┘
 ```
 
 ---
 
 ## API Architecture
 
-### RESTful Endpoints
+### Endpoints (Current Implementation)
 
-```
-Base URL: https://codescribe-ai.vercel.app/api
-         or http://localhost:3000/api (development)
-```
+#### 1. POST /api/generate (Non-Streaming)
 
-#### 1. Generate Documentation (Standard)
-
-**Endpoint:** `POST /api/generate`
+**Purpose:** Generate documentation without streaming (for CLI/extension future use)
 
 **Request:**
-```javascript
+```json
 {
-  "code": "function hello() { return 'world'; }",
-  "docType": "README",        // README | JSDOC | API
-  "language": "javascript"     // javascript | typescript | python
+  "code": "function example() { return 'Hello'; }",
+  "docType": "README",  // README | JSDoc | API | ARCHITECTURE
+  "language": "javascript"
 }
 ```
 
-**Response:**
-```javascript
+**Response (Success 200):**
+```json
 {
-  "documentation": "# Project Documentation\n...",
+  "documentation": "# Example\n\nGenerated markdown...",
   "qualityScore": {
     "score": 85,
     "grade": "B",
     "breakdown": {
-      "overview": { present: true, points: 20, status: "complete" },
-      "installation": { present: true, points: 15, status: "complete" },
-      "examples": { present: true, count: 2, points: 15, status: "partial" },
-      "apiDocs": { present: true, coverage: "1/1", points: 25, status: "complete" },
-      "structure": { present: true, headers: 4, points: 10, status: "partial" }
+      "overview": { "present": true, "points": 20, "maxPoints": 20, ... },
+      "installation": { "present": true, "points": 15, ... },
+      "examples": { "count": 2, "points": 15, ... },
+      "apiDocs": { "coverage": "3/3", "points": 25, ... },
+      "structure": { "headers": 5, "points": 18, ... }
     },
     "summary": {
-      "strengths": ["overview", "installation", "apiDocs"],
-      "improvements": [],
+      "strengths": ["overview", "apiDocs"],
+      "improvements": ["examples"],
       "topSuggestion": "Add one more usage example"
-    }
+    },
+    "docType": "README"
   },
   "analysis": {
-    "functions": [{ name: "hello", params: [], async: false }],
+    "functions": [{ "name": "example", "params": [], ... }],
     "classes": [],
-    "exports": ["hello"],
-    "complexity": "simple"
+    "exports": [],
+    "complexity": "simple",
+    "cyclomaticComplexity": 1,
+    "metrics": { ... }
   },
   "metadata": {
     "language": "javascript",
     "docType": "README",
-    "generatedAt": "2025-10-12T10:30:00.000Z",
-    "codeLength": 38
+    "generatedAt": "2025-10-16T12:00:00.000Z",
+    "codeLength": 42
   }
 }
 ```
 
-#### 2. Generate Documentation (Streaming)
+**Error Responses:**
+- `400`: Invalid request (missing code, too large)
+- `429`: Rate limit exceeded
+- `500`: Generation failed
 
-**Endpoint:** `POST /api/generate-stream`
+**Middleware:** apiLimiter → generationLimiter
 
-**Request:** Same as `/api/generate`
+---
 
-**Response:** Server-Sent Events (SSE)
+#### 2. POST /api/generate-stream (Server-Sent Events)
 
+**Purpose:** Primary generation endpoint with real-time streaming
+
+**Request:** Same as /api/generate
+
+**Response (SSE Stream):**
 ```
+HTTP/1.1 200 OK
+Content-Type: text/event-stream
+Cache-Control: no-cache
+Connection: keep-alive
+X-Accel-Buffering: no
+
 data: {"type":"connected"}
 
 data: {"type":"chunk","content":"#"}
 
-data: {"type":"chunk","content":" Project"}
+data: {"type":"chunk","content":" Example"}
 
-data: {"type":"chunk","content":" Documentation"}
+data: {"type":"chunk","content":"\n\nThis is"}
 
 ...
 
@@ -466,44 +641,94 @@ data: {"type":"complete","qualityScore":{...},"metadata":{...}}
 ```
 
 **Event Types:**
-- `connected` - Connection established
-- `chunk` - Text chunk to append
-- `complete` - Generation finished with metadata
-- `error` - Error occurred
+- `connected`: Initial handshake
+- `chunk`: Documentation text chunk
+- `complete`: Final event with quality score
+- `error`: Error occurred during generation
 
-#### 3. Health Check
+**Middleware:** apiLimiter → generationLimiter
 
-**Endpoint:** `GET /api/health`
+---
 
-**Response:**
-```javascript
-{
-  "status": "healthy",
-  "timestamp": "2025-10-12T10:30:00.000Z",
-  "version": "1.0.0"
-}
+#### 3. POST /api/upload
+
+**Purpose:** File upload for code input
+
+**Request (multipart/form-data):**
+```
+Content-Type: multipart/form-data
+file: [Binary file data]
 ```
 
-### Error Handling
-
-**Standard Error Response:**
-```javascript
+**Response (Success 200):**
+```json
 {
-  "error": "Error category",
-  "message": "Human-readable error message",
-  "details": {  // Optional
-    "field": "code",
-    "reason": "Code exceeds maximum length"
+  "success": true,
+  "file": {
+    "name": "example.js",
+    "size": 1024,
+    "sizeFormatted": "1.00 KB",
+    "extension": ".js",
+    "mimetype": "application/javascript",
+    "content": "function example() { ... }"
   }
 }
 ```
 
-**HTTP Status Codes:**
-- `200` - Success
-- `400` - Bad Request (validation error)
-- `429` - Too Many Requests (rate limit)
-- `500` - Internal Server Error
-- `503` - Service Unavailable (Claude API down)
+**Validation:**
+- Max size: 500KB
+- Allowed extensions: .js, .jsx, .ts, .tsx, .py, .java, .cpp, .c, .h, .hpp, .cs, .go, .rs, .rb, .php, .txt
+- Content must not be empty
+
+**Error Responses:**
+- `400`: File too large, invalid type, empty file
+- `500`: Upload failed
+
+**Middleware:** apiLimiter → multer
+
+---
+
+#### 4. GET /api/health
+
+**Purpose:** Health check and status monitoring
+
+**Response (200):**
+```json
+{
+  "status": "healthy",
+  "timestamp": "2025-10-16T12:00:00.000Z",
+  "version": "1.0.0",
+  "uptime": 12345.67,
+  "environment": "production"
+}
+```
+
+**No middleware** (publicly accessible)
+
+---
+
+### Rate Limiting Configuration
+
+**Per-Minute Limiter (apiLimiter):**
+- Window: 60 seconds
+- Max requests: 10
+- Applied to: ALL /api/* endpoints
+- Headers: `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`
+
+**Hourly Limiter (generationLimiter):**
+- Window: 3600 seconds (1 hour)
+- Max requests: 100
+- Applied to: /api/generate, /api/generate-stream
+- Prevents Claude API abuse
+
+**429 Response:**
+```json
+{
+  "error": "Rate limit exceeded",
+  "message": "Too many requests. Please try again in 60 seconds.",
+  "retryAfter": 60
+}
+```
 
 ---
 
@@ -511,379 +736,344 @@ data: {"type":"complete","qualityScore":{...},"metadata":{...}}
 
 ### 1. API Key Management
 
-```
-Environment Variables (never in code)
-  │
-  ├── CLAUDE_API_KEY        # Anthropic API key
-  ├── PORT                  # Server port
-  └── NODE_ENV              # Environment (dev/prod)
+**Current Implementation:**
+- Claude API key stored in environment variable: `CLAUDE_API_KEY`
+- Never exposed to frontend
+- Loaded via `dotenv` in server startup
+- Validated on server initialization
 
-Accessed via process.env
-Never exposed to client
-Rotated regularly
-```
+**Best Practices:**
+- Use `.env` file locally (gitignored)
+- Use Vercel environment variables in production
+- Rotate keys periodically
+- Monitor usage via Anthropic dashboard
 
 ### 2. Input Validation
 
+**Code Input:**
+- Max length: 100,000 characters (prevent abuse)
+- String type validation
+- SQL injection: N/A (no database)
+- XSS: Handled by react-markdown sanitization
+
+**File Upload:**
+- Size limit: 500KB
+- Extension whitelist: 10+ approved types
+- Empty file detection
+- Content validation: Must contain non-whitespace
+
+**Request Validation:**
+- Body parser limit: 10MB
+- JSON parsing errors caught
+- Missing field validation
+
+### 3. CORS Configuration
+
 ```javascript
-// All inputs validated before processing
-const validation = {
-  code: {
-    type: 'string',
-    required: true,
-    maxLength: 100000,  // 100K characters
-    sanitize: true       // Remove potentially harmful content
-  },
-  docType: {
-    type: 'string',
-    enum: ['README', 'JSDOC', 'API'],
-    default: 'README'
-  },
-  language: {
-    type: 'string',
-    enum: ['javascript', 'typescript', 'python'],
-    default: 'javascript'
-  }
+const corsOptions = {
+  origin: process.env.NODE_ENV === 'production'
+    ? 'https://codescribe-ai.vercel.app'
+    : ['http://localhost:5173', 'http://localhost:5174'],
+  credentials: true,
+  exposedHeaders: ['X-RateLimit-Limit', 'X-RateLimit-Remaining', 'X-RateLimit-Reset']
 };
 ```
 
-### 3. Rate Limiting
+**Production:** Strict origin check
+**Development:** Allow local Vite servers
 
+### 4. Rate Limiting (DDoS Protection)
+
+- IP-based rate limiting
+- Two-tier system: per-minute + hourly
+- Prevents API abuse
+- Protects Claude API quota
+
+### 5. Error Handling
+
+**Never expose sensitive data:**
+- Stack traces hidden in production
+- Generic error messages to client
+- Detailed errors logged server-side
+- No API key leakage
+
+**Error Handler Middleware:**
 ```javascript
-// Per IP address
-10 requests per minute per IP
-Prevents abuse and controls costs
-Returns 429 status when exceeded
+function errorHandler(err, req, res, next) {
+  console.error(err); // Server-side logging
+  res.status(500).json({
+    error: 'Internal server error',
+    message: process.env.NODE_ENV === 'development'
+      ? err.message
+      : 'An error occurred'
+  });
+}
 ```
 
-### 4. CORS Policy
+### 6. Privacy
 
-```javascript
-// Configured CORS headers
-Allowed Origins: 
-  - Production: https://codescribe-ai.vercel.app
-  - Development: http://localhost:5173
-Allowed Methods: GET, POST
-Allowed Headers: Content-Type
-```
+**No Data Storage:**
+- Code never saved to database
+- Documentation generated in memory
+- No user tracking (except Vercel Analytics)
+- No cookies (except session management if added)
 
-### 5. No Data Persistence
-
-```
-User code → Process → Generate → Return → Discard
-                                            │
-                                            ▼
-                                    Nothing stored
-                                    Privacy by design
-```
-
-**Privacy Features:**
-- No database
-- No logging of user code
+**Stateless Architecture:**
+- Each request independent
 - No user accounts
-- No cookies
-- No tracking
+- No session persistence
 
 ---
 
 ## Performance & Scalability
 
-### Performance Targets
+### Performance Metrics (Lighthouse Audit)
 
-| Metric | Target | Current |
-|--------|--------|---------|
-| Initial Page Load | < 3s | ~2s |
-| Time to Interactive | < 5s | ~3s |
-| Documentation Generation | < 30s | ~15s avg |
-| API Response (P95) | < 2s | ~1.5s |
-| Streaming Latency | < 500ms | ~200ms |
+**Before Optimization:**
+- Performance Score: 45
+- First Contentful Paint: 3.8s
+- Largest Contentful Paint: 8.2s
+- Total Blocking Time: 980ms
+- Bundle Size: 516 KB gzipped
+
+**After Optimization (Current):**
+- Performance Score: 75 (+67% improvement)
+- First Contentful Paint: 0.4s (-89%)
+- Largest Contentful Paint: 0.6s (-93%)
+- Total Blocking Time: 680ms (-30%)
+- Bundle Size: 78 KB gzipped (-85%)
 
 ### Optimization Strategies
 
-**Frontend:**
+**1. Lazy Loading:**
+- DocPanel: 281.53 KB gzipped (lazy loaded)
+- Monaco Editor: 4.85 KB wrapper (editor loaded on interaction)
+- Mermaid: 139.30 KB gzipped (lazy loaded)
+- Modals: 2-9 KB each (lazy loaded)
+
+**Implementation:**
 ```javascript
-// 1. Code Splitting
-const MonacoEditor = lazy(() => import('@monaco-editor/react'));
-
-// 2. Memoization
-const MemoizedCodePanel = memo(CodePanel);
-
-// 3. Debouncing
-const debouncedGenerate = useMemo(
-  () => debounce(generate, 500),
-  [generate]
-);
-
-// 4. Virtual Scrolling (for large docs)
-// Not yet implemented, planned for Phase 2
+const DocPanel = lazy(() => import('./components/DocPanel').then(m => ({ default: m.DocPanel })));
+const QualityScoreModal = lazy(() => import('./components/QualityScore').then(...));
 ```
 
-**Backend:**
-```javascript
-// 1. Efficient AST parsing
-// Single pass through code, minimal overhead
+**2. Code Splitting:**
+- Vite automatic code splitting
+- Dynamic imports for heavy components
+- Suspense boundaries with fallbacks
 
-// 2. Streaming responses
-// Send data as generated, don't wait for completion
+**3. Bundle Analysis:**
+- Tool: rollup-plugin-visualizer
+- Identified large dependencies
+- Moved to lazy loading
+- Result: 85% size reduction
 
-// 3. Retry logic with exponential backoff
-// Handles transient failures gracefully
-
-// 4. Rate limiting
-// Prevents resource exhaustion
-```
+**4. Streaming:**
+- Real-time documentation generation
+- Perceived performance improvement
+- User sees progress immediately
+- No waiting for full response
 
 ### Scalability Considerations
 
-**Current Capacity:**
-- 100 concurrent users
-- 1,000 requests per day
-- Files up to 10,000 lines
+**Current Architecture:**
+- **Horizontal Scaling**: Stateless design allows multiple server instances
+- **Bottleneck**: Claude API rate limits (check Anthropic tier)
+- **Caching**: Not implemented (future enhancement)
 
-**Scaling Strategy:**
+**Future Enhancements:**
+- **Caching Layer**: Redis for repeated code snippets
+- **Queue System**: Background job processing for large files
+- **CDN**: Vercel Edge Network for static assets
+- **Load Balancing**: Vercel automatic load balancing
 
-```
-Current: Single Vercel serverless function
-   │
-   ▼
-Phase 2: Multiple serverless functions with load balancing
-   │
-   ▼
-Phase 3: Dedicated API server with horizontal scaling
-   │      + Redis for request queuing
-   │      + CDN for static assets
-   ▼
-Enterprise: Microservices architecture
-            + Message queue (RabbitMQ/SQS)
-            + Distributed caching
-            + Auto-scaling based on demand
-```
-
-**Bottlenecks & Mitigations:**
-
-| Bottleneck | Impact | Mitigation |
-|------------|--------|------------|
-| Claude API Rate Limits | High | Request queuing, user feedback |
-| Large file parsing | Medium | File size limits, chunking |
-| SSE connection limits | Low | Connection pooling, timeouts |
-| Cold start latency | Medium | Keep-alive pings, serverless optimization |
+**Claude API Limits:**
+- Check tier limits on Anthropic dashboard
+- Monitor usage to avoid quota exhaustion
+- Implement backpressure if needed
+- Consider prompt caching (if available in API)
 
 ---
 
 ## Deployment Architecture
 
-### Current Deployment (Phase 1)
+### Current Deployment Strategy
 
+**Development:**
+- Frontend: `npm run dev` (Vite dev server on port 5173)
+- Backend: `npm run dev` (Nodemon on port 3000)
+- Concurrently: `npm run dev` (both servers simultaneously)
+
+**Production (Planned for Vercel):**
 ```
-┌────────────────────────────────────────────────────────┐
-│                    Vercel Platform                     │
-│                                                        │
-│  ┌──────────────────────────────────────────────────┐  │
-│  │  Frontend (Static Files)                         │  │
-│  │  - React build artifacts in /dist                │  │
-│  │  - Served via Vercel CDN                         │  │
-│  │  - HTTPS automatic                               │  │
-│  │  - Custom domain support                         │  │
-│  └──────────────────────────────────────────────────┘  │
-│                                                        │
-│  ┌──────────────────────────────────────────────────┐  │
-│  │  API Routes (Serverless Functions)               │  │
-│  │  - Express app in /api directory                 │  │
-│  │  - Auto-scaled based on demand                   │  │
-│  │  - Environment variables from dashboard          │  │
-│  └──────────────────────────────────────────────────┘  │
-│                                                        │
-│  ┌──────────────────────────────────────────────────┐  │
-│  │  Edge Network                                    │  │
-│  │  - Global CDN distribution                       │  │
-│  │  - Automatic SSL certificates                    │  │
-│  │  - DDoS protection                               │  │
-│  └──────────────────────────────────────────────────┘  │
-└────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────┐
+│        Vercel Edge Network          │
+│  - Global CDN                       │
+│  - Automatic SSL                    │
+│  - Edge caching                     │
+└──────────┬──────────────────────────┘
+           │
+           ▼
+┌──────────────────────┬──────────────┐
+│   Static Frontend    │  API Routes  │
+│   (React Build)      │  (Express)   │
+│   /                  │  /api/*      │
+└──────────────────────┴──────────────┘
 ```
 
-### Build & Deploy Pipeline
+**Build Process:**
+```bash
+# Client build
+cd client && npm run build
+# Outputs to client/dist/
 
-```
-Developer
-   │
-   ├─── git commit
-   ├─── git push to main
-   │
-   ▼
-GitHub Repository
-   │
-   │ Webhook triggers Vercel
-   ▼
-Vercel Build System
-   │
-   ├─── Install dependencies (npm install)
-   ├─── Run build (npm run build)
-   ├─── Run tests (optional)
-   │
-   ▼
-Deployment Preview (for PRs)
-or Production (for main branch)
-   │
-   ├─── Deploy to edge network
-   ├─── Assign URL
-   ├─── Configure environment
-   │
-   ▼
-Live Application
-   │
-   └─── Health check
+# Server (no build needed - runs directly)
+cd server && npm start
 ```
 
-### Environment Configuration
+**Environment Variables (Vercel):**
+- `CLAUDE_API_KEY`: Anthropic API key
+- `NODE_ENV`: production
+- `VITE_API_URL`: https://codescribe-ai.vercel.app
 
-```javascript
-// Production
-CLAUDE_API_KEY=sk-ant-...
-NODE_ENV=production
-VITE_API_URL=https://codescribe-ai.vercel.app
+### CI/CD Pipeline (Future)
 
-// Staging (Optional)
-CLAUDE_API_KEY=sk-ant-...
-NODE_ENV=staging
-VITE_API_URL=https://codescribe-ai-staging.vercel.app
+**GitHub Actions Workflow:**
+1. Trigger: Push to `main` branch
+2. Install dependencies: `npm run install:all`
+3. Run tests: `npm test` (client + server)
+4. Build frontend: `cd client && npm run build`
+5. Deploy to Vercel: Automatic via Git integration
 
-// Development
-CLAUDE_API_KEY=sk-ant-...
-NODE_ENV=development
-VITE_API_URL=http://localhost:3000
-```
-
-### Monitoring & Observability
-
-**Built-in Vercel Analytics:**
-- Page views and unique visitors
-- Performance metrics (Core Web Vitals)
-- Error tracking
-- Function execution logs
-
-**Custom Logging:**
-```javascript
-// Structured logging
-console.log('[INFO]', { 
-  action: 'generate_docs',
-  docType,
-  codeLength,
-  timestamp: new Date().toISOString()
-});
-
-console.error('[ERROR]', {
-  error: error.message,
-  stack: error.stack,
-  context: { code, docType }
-});
-```
+**Testing Strategy:**
+- Unit tests: Jest + React Testing Library
+- Integration tests: API endpoint testing
+- E2E tests: Future (Playwright)
 
 ---
 
 ## Future Enhancements
 
-### Phase 2: CLI Tool (Week 2)
+### Phase 2: CLI Tool
 
-```
-Architecture Addition:
+**Architecture:**
+- Standalone Node.js CLI package
+- Reuses service layer (claudeClient, docGenerator, etc.)
+- File system operations for reading/writing
+- Interactive prompts via inquirer
 
-┌────────────────────────┐
-│  CLI Application       │
-│  (Node.js)             │
-│                        │
-│  Commands:             │
-│  - codescribe gen      │
-│  - codescribe batch    │
-│  - codescribe watch    │
-└──────────┬─────────────┘
-           │
-           │ Uses same service layer
-           ▼
-┌────────────────────────┐
-│  DocGeneratorService   │
-│  (Shared logic)        │
-└────────────────────────┘
+**Commands:**
+```bash
+codescribe generate ./src/index.js --type README
+codescribe batch ./src/**/*.js --type JSDoc
+codescribe config --api-key sk-ant-xxx
 ```
 
-**New Features:**
-- File path support
-- Batch processing
-- Watch mode for auto-regeneration
-- Configuration file support
-- Output to file or stdout
+### Phase 3: VS Code Extension
 
-### Phase 3: VS Code Extension (Week 3+)
+**Architecture:**
+- TypeScript extension
+- Reuses service layer via API calls
+- Editor integration via VS Code API
+- Context menu: "Generate Documentation"
 
-```
-Architecture Addition:
+**Features:**
+- Right-click on file → Generate docs
+- Inline documentation insertion
+- Quality score in status bar
 
-┌────────────────────────┐
-│  VS Code Extension     │
-│  (TypeScript)          │
-│                        │
-│  Features:             │
-│  - Context menu        │
-│  - Command palette     │
-│  - Inline preview      │
-│  - Auto file updates   │
-└──────────┬─────────────┘
-           │
-           │ WebSocket or HTTP
-           ▼
-┌────────────────────────┐
-│  Extension Host API    │
-│  (New service)         │
-└────────────────────────┘
-```
+### Phase 4: Optional Enhancements
 
-### Advanced Features (Future)
+**Feature Enhancements:**
+- Toast History panel (implemented)
+- Advanced Mermaid diagrams (implemented)
+- Error handling UX (implemented)
+- Copy/download documentation (implemented)
 
-**1. Caching Layer**
-```javascript
-// Cache common code patterns
-const cache = new Map();
+**Performance:**
+- Service Worker for offline support
+- HTTP/2 Server Push
+- Font optimization
+- Edge computing (Vercel Edge Functions)
 
-if (cache.has(codeHash)) {
-  return cache.get(codeHash);
-}
-```
+**Caching:**
+- Redis for repeated code snippets
+- Cache prompt templates
+- Cache AST analysis results
 
-**2. Multi-Language Support**
-- Python parser (ast module)
-- Go parser (go/ast)
-- Rust parser (syn)
-- Universal fallback (regex + heuristics)
-
-**3. Collaborative Features**
-- Team documentation standards
-- Shared templates
-- Review workflows
-
-**4. Advanced Analysis**
-- Cyclomatic complexity metrics
-- Test coverage integration
-- Dependency graph visualization
-- Security vulnerability detection
-
-**5. Integrations**
-- GitHub Actions for CI/CD
-- GitLab CI integration
-- Bitbucket Pipelines
-- npm pre-commit hooks
+**Monitoring:**
+- Application Performance Monitoring (APM)
+- Error tracking (Sentry)
+- Usage analytics (Vercel Analytics)
+- Claude API cost tracking
 
 ---
 
-## Conclusion
+## Appendix: File Structure
 
-CodeScribe AI's architecture is designed for **simplicity, performance, and extensibility**. The service-oriented design enables multiple clients (web, CLI, extension) to share the same battle-tested business logic. The stateless nature ensures privacy and simplifies deployment, while streaming provides a responsive user experience.
-
-The architecture supports the product roadmap from MVP to enterprise-grade solution, with clear paths for scaling, new features, and platform expansion.
+```
+codescribe-ai/
+├── client/                     # Frontend application
+│   ├── src/
+│   │   ├── components/        # React components (20+)
+│   │   │   ├── App.jsx
+│   │   │   ├── Header.jsx
+│   │   │   ├── ControlBar.jsx
+│   │   │   ├── CodePanel.jsx
+│   │   │   ├── DocPanel.jsx
+│   │   │   ├── QualityScore.jsx
+│   │   │   ├── ErrorBanner.jsx
+│   │   │   ├── ErrorBoundary.jsx
+│   │   │   ├── LazyMonacoEditor.jsx
+│   │   │   ├── LazyMermaidRenderer.jsx
+│   │   │   ├── toast/
+│   │   │   │   ├── CustomToast.jsx
+│   │   │   │   └── ToastHistory.jsx
+│   │   │   └── __tests__/     # Component tests
+│   │   ├── hooks/
+│   │   │   ├── useDocGeneration.js
+│   │   │   └── useToastKeyboardShortcuts.js
+│   │   ├── services/
+│   │   │   └── api.js
+│   │   ├── utils/
+│   │   │   ├── toast.jsx
+│   │   │   ├── toastWithHistory.js
+│   │   │   └── fileValidation.js
+│   │   ├── constants/
+│   │   │   └── examples.js
+│   │   └── main.jsx
+│   ├── index.html
+│   ├── vite.config.js
+│   └── package.json
+├── server/                     # Backend application
+│   ├── src/
+│   │   ├── server.js          # Express app setup
+│   │   ├── routes/
+│   │   │   └── api.js         # API endpoints
+│   │   ├── middleware/
+│   │   │   ├── rateLimiter.js
+│   │   │   └── errorHandler.js
+│   │   └── services/
+│   │       ├── claudeClient.js
+│   │       ├── docGenerator.js
+│   │       ├── codeParser.js
+│   │       ├── qualityScorer.js
+│   │       └── __tests__/     # Service tests
+│   ├── .env                   # Environment variables (gitignored)
+│   └── package.json
+├── docs/                       # Documentation
+│   ├── architecture/
+│   │   ├── 04-Architecture.md  # Visual diagram
+│   │   └── ARCHITECTURE.md     # This file
+│   ├── planning/
+│   ├── api/
+│   ├── components/
+│   └── performance/
+└── package.json                # Root package (scripts)
+```
 
 ---
 
-**Document Owner:** Architecture Team  
-**Reviewed By:** [Your Name]  
-**Next Review:** After Phase 2 completion  
-**Version History:**
-- v1.0 (Oct 12, 2025): Initial architecture document
+**Document Version:** 1.1
+**Last Updated:** October 16, 2025
+**Next Review:** Phase 2 planning
