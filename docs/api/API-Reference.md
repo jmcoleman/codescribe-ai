@@ -1032,7 +1032,7 @@ curl http://localhost:3000/api/health
 ### Testing with JavaScript
 
 ```javascript
-// test-api.js
+// Example: Quick API smoke test (see server/tests/manual/test-api.js)
 const API_URL = 'http://localhost:3000/api';
 
 async function testGenerate() {

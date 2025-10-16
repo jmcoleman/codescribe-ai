@@ -1,6 +1,6 @@
 # Version Checker Script
 
-**Script:** `check-versions.js`
+**Script:** `scripts/check-versions.js`
 **Purpose:** Retrieve and display versions of all technologies used in CodeScribe AI
 **Last Updated:** October 16, 2025
 
@@ -33,7 +33,7 @@ npm run check-versions
 npm run versions
 
 # Or run directly
-node check-versions.js
+node scripts/check-versions.js
 ```
 
 ### Output Sections
@@ -171,12 +171,12 @@ Some terminals may not support ANSI color codes. The script will still work, but
 When new dependencies are added to the project:
 
 1. **No changes needed** to the script - it automatically reads from `package.json`
-2. To feature a new package prominently, edit the `check-versions.js` arrays:
+2. To feature a new package prominently, edit the `scripts/check-versions.js` arrays:
    - `frontendCore`, `uiPackages`, `editorPackages`, etc. (for client)
    - `backendCore`, `aiPackages`, `middlewarePackages`, etc. (for server)
 
 ### Updating the Script
-The script is located at: `check-versions.js` (project root)
+The script is located at: `scripts/check-versions.js`
 
 Key functions:
 - `getInstalledVersion()` - Retrieves version using `npm list`

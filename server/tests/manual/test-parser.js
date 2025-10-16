@@ -1,4 +1,4 @@
-import { parseCode } from './src/services/codeParser.js';
+import { parseCode } from '../../src/services/codeParser.js';
 
 const testCode = `
 export class AuthService {

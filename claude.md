@@ -385,13 +385,135 @@ open docs/design/brand-color-palette.pdf
 
 ---
 
+#### [COPYBUTTON.md](docs/components/COPYBUTTON.md) - CopyButton Component Guide
+**When to use:** Implementing copy-to-clipboard functionality, understanding CopyButton component variants and usage
+
+**Contains:**
+- Enterprise-grade feature overview (icon animation, color feedback, auto-reset, accessibility, haptic feedback)
+- Quick examples for icon-only and labeled buttons
+- Variants and sizes reference (ghost, outline, solid)
+- Animation timeline (0ms to 2200ms state transitions)
+- Integration points in CodeScribe AI (DocPanel, CodePanel, ExamplesModal, QualityScore)
+- Best practices (DO/DON'T guidelines)
+- Enterprise design decisions (timing, colors, animations, accessibility)
+
+**Key for:** CopyButton implementation, variant selection, accessibility patterns, animation specifications
+
+---
+
+### 🧪 Testing Documentation
+
+#### [Testing README](docs/testing/README.md) - Testing Documentation Hub
+**When to use:** Starting point for all testing documentation, quick stats, running tests
+
+**Contains:**
+- Quick stats (319 tests, 72.2% coverage, 100% passing)
+- Testing documentation index with links to all test guides
+- Quick start commands for frontend and backend tests
+- Test coverage summary tables
+- Testing strategy and pyramid
+- Best practices overview
+- Related documentation links
+
+**Key for:** Test navigation, quick test commands, coverage overview
+
+---
+
+#### [COMPONENT-TEST-COVERAGE.md](docs/testing/COMPONENT-TEST-COVERAGE.md) - Component Test Coverage Report ⭐ **START HERE**
+**When to use:** Understanding which components are tested, test breakdown details, coverage analysis
+
+**Contains:**
+- Overall statistics (13/18 components tested, 319 tests, 100% passing)
+- Detailed breakdown of all 13 tested components with test counts
+- Analysis of 5 untested components with justification for skipping
+- Test categories for each component (rendering, interactions, accessibility, edge cases)
+- Testing patterns and best practices
+- Running tests commands
+- Coverage metrics by component type and test category
+- Recent updates timeline (Oct 16, 2025: +124 tests, +16.6% coverage)
+
+**Key for:** Test coverage decisions, understanding test organization, identifying gaps, tracking progress
+
+---
+
+#### [Frontend Testing Guide](docs/testing/frontend-testing-guide.md) - Comprehensive React Testing Patterns
+**When to use:** Writing new component tests, understanding testing patterns, best practices
+
+**Contains:**
+- Testing framework details (Vitest + React Testing Library)
+- Component testing patterns and examples
+- Mocking strategies (Monaco Editor, Mermaid, APIs)
+- Accessibility testing guidelines
+- User interaction testing
+- Edge case testing
+- Performance testing considerations
+
+**Key for:** Test implementation, mocking patterns, accessibility compliance, writing quality tests
+
+---
+
+#### [TEST-GUIDE.md](docs/testing/TEST-GUIDE.md) - Quick Reference for Running Tests
+**When to use:** Running tests, debugging test failures, coverage reports
+
+**Contains:**
+- Quick start commands
+- Watch mode usage
+- Coverage report generation
+- Debugging tips
+- Common troubleshooting
+
+**Key for:** Day-to-day test execution, debugging, CI/CD setup
+
+---
+
+#### [IMPLEMENTATION-SUMMARY.md](docs/testing/IMPLEMENTATION-SUMMARY.md) - Backend Test Implementation
+**When to use:** Understanding backend test setup, service layer testing, integration tests
+
+**Contains:**
+- Jest configuration
+- Service layer test examples
+- Integration test patterns
+- Coverage requirements
+- Backend-specific testing strategies
+
+**Key for:** Backend test implementation, Jest configuration, service testing
+
+---
+
+#### Specialized Test Documentation
+
+**[ERROR-HANDLING-TESTS.md](docs/testing/ERROR-HANDLING-TESTS.md)** - Error handling test suites
+- ErrorBanner (58 tests) - User-facing error notifications
+- ErrorBoundary (12 tests) - Technical error catching
+- Animation specs (250ms enter, 200ms exit)
+- WCAG 2.1 AA accessibility compliance
+
+**[MERMAID-DIAGRAM-TESTS.md](docs/testing/MERMAID-DIAGRAM-TESTS.md)** - Mermaid diagram rendering tests
+- Diagram rendering (14 tests)
+- Brand theming (purple, indigo, slate)
+- Error handling and async cleanup
+
+**[monaco-syntax-highlighting-tests.md](docs/testing/monaco-syntax-highlighting-tests.md)** - Monaco Editor tests
+- Language support verification (24+ languages)
+- Theme configuration
+- Editor integration
+
+**[PROMPT-QUALITY-REPORT.md](docs/testing/PROMPT-QUALITY-REPORT.md)** - AI prompt quality testing
+- Prompt validation tests
+- Quality metrics
+- Claude API integration tests
+
+**Key for:** Specialized component testing, specific test suites, detailed test documentation
+
+---
+
 ### 🛠️ Scripts & Utilities
 
 #### [VERSION-CHECKER.md](docs/scripts/VERSION-CHECKER.md) - Version Checker Script Documentation
 **When to use:** Retrieving accurate package versions, updating documentation with current technology versions, dependency audits
 
 **Contains:**
-- Complete documentation for `check-versions.js` utility script
+- Complete documentation for `scripts/check-versions.js` utility script
 - Usage instructions (`npm run versions` or `npm run check-versions`)
 - Output sections breakdown (System Environment, Frontend Stack, Backend Stack, AI Model, Summary)
 - Use cases (documentation updates, debugging, audits, onboarding, CI/CD)
@@ -469,7 +591,18 @@ codescribe-ai/
 │   ├── components/               # Component documentation
 │   │   ├── TOAST-SYSTEM.md       # Toast notification system guide
 │   │   ├── MERMAID-DIAGRAMS.md   # Mermaid diagram developer guide
-│   │   └── ERROR-HANDLING-UX.md  # Error handling UX guide
+│   │   ├── ERROR-HANDLING-UX.md  # Error handling UX guide
+│   │   └── COPYBUTTON.md         # CopyButton component guide
+│   ├── testing/                  # Testing documentation
+│   │   ├── README.md             # Testing documentation hub
+│   │   ├── COMPONENT-TEST-COVERAGE.md  # Component test coverage report
+│   │   ├── frontend-testing-guide.md   # React testing patterns
+│   │   ├── TEST-GUIDE.md         # Quick reference for running tests
+│   │   ├── IMPLEMENTATION-SUMMARY.md   # Backend test implementation
+│   │   ├── ERROR-HANDLING-TESTS.md     # Error component tests
+│   │   ├── MERMAID-DIAGRAM-TESTS.md    # Diagram rendering tests
+│   │   ├── monaco-syntax-highlighting-tests.md  # Monaco Editor tests
+│   │   └── PROMPT-QUALITY-REPORT.md    # AI prompt quality tests
 │   ├── design/                   # Design assets
 │   │   ├── brand-color-palette.html  # Interactive color palette
 │   │   └── brand-color-palette.pdf   # PDF version for sharing
@@ -551,7 +684,8 @@ When answering questions about CodeScribe AI:
 - **Architecture** → Reference Architecture diagram or ARCHITECTURE.md
 - **Performance/Optimization** → Reference OPTIMIZATION-GUIDE.md
 - **Diagrams/Visualization** → Reference MERMAID-DIAGRAMS.md
-- **Components** → Reference TOAST-SYSTEM.md or MERMAID-DIAGRAMS.md
+- **Components** → Reference TOAST-SYSTEM.md, MERMAID-DIAGRAMS.md, ERROR-HANDLING-UX.md, or COPYBUTTON.md
+- **Testing** → Reference Testing README, COMPONENT-TEST-COVERAGE.md, or frontend-testing-guide.md
 - **Current Tasks** → Reference Todo List
 - **Explanation/Demo** → Reference Interview Guide
 - **Package Versions/Dependencies** → Run version checker script (`npm run versions`), reference VERSION-CHECKER.md
@@ -582,8 +716,9 @@ Multiple docs cover the same topic from different angles:
 - **Performance**: OPTIMIZATION-GUIDE.md (comprehensive guide), Dev Guide (optimization techniques), ARCHITECTURE.md (performance targets)
 - **Lazy Loading**: OPTIMIZATION-GUIDE.md (implementation patterns), Dev Guide (React best practices)
 - **Mermaid Diagrams**: MERMAID-DIAGRAMS.md (comprehensive guide), CLAUDE.md section 7 (quick reference), 04-Architecture.md (implementation example)
-- **Component Patterns**: TOAST-SYSTEM.md (toast notifications), MERMAID-DIAGRAMS.md (diagram rendering), ERROR-HANDLING-UX.md (error banners and modals)
+- **Component Patterns**: TOAST-SYSTEM.md (toast notifications), MERMAID-DIAGRAMS.md (diagram rendering), ERROR-HANDLING-UX.md (error banners and modals), COPYBUTTON.md (copy-to-clipboard functionality)
 - **Error Handling**: ERROR-HANDLING-UX.md (UX patterns, animations, accessibility), TOAST-SYSTEM.md (error toasts for non-blocking notifications)
+- **Testing**: Testing README (overview and quick commands), COMPONENT-TEST-COVERAGE.md (detailed coverage report), frontend-testing-guide.md (patterns and best practices), TEST-GUIDE.md (running tests)
 - **Package Versions**: VERSION-CHECKER.md (script documentation), ARCHITECTURE.md (tech stack tables), CLAUDE.md Tech Stack section (quick reference)
 
 Always provide the most relevant reference for the question asked.
@@ -708,7 +843,7 @@ npm run dev          # Starts on http://localhost:5173
 # Check all package versions (from project root)
 npm run versions     # Comprehensive version report
 npm run check-versions  # Alternative command (same output)
-node check-versions.js  # Direct execution
+node scripts/check-versions.js  # Direct execution
 
 # Redirect output to file for documentation
 npm run versions > current-versions.txt
@@ -763,7 +898,9 @@ VITE_API_URL=http://localhost:3000
 
 ## 🔄 Version History
 
-- **v1.14** (Current) - Added version checker script integration: Created comprehensive VERSION-CHECKER.md documentation for check-versions.js utility; added new Scripts & Utilities section to documentation map; updated Tech Stack section with version checker references and accuracy notes; added Package Versions/Dependencies to question type identification; added Package Versions to cross-reference list; created new section 8 "Package Version Reference Guidelines" with protocol for using version checker when updating documentation; added Version Checking commands to Quick Reference; updated project structure to include docs/scripts/ folder
+- **v1.16** (Current) - Organized testing documentation: Created comprehensive Testing Documentation section in documentation map with 9 test docs under docs/testing/; added Testing README (hub), COMPONENT-TEST-COVERAGE.md (detailed coverage report with 319 tests), frontend-testing-guide.md, TEST-GUIDE.md, IMPLEMENTATION-SUMMARY.md, and 4 specialized test docs; moved TEST-GUIDE.md from client/ to docs/testing/ and IMPLEMENTATION-SUMMARY.md from docs/planning/ to docs/testing/; deleted outdated root files (TESTING-COMPLETE.md, TEST_SUITE_SUMMARY.md); updated project structure to show docs/testing/ folder; added Testing to question type identification and cross-reference list
+- **v1.15** - Reorganized component documentation: Moved COPYBUTTON_USAGE.md from client/src/components/ to docs/components/COPYBUTTON.md; added COPYBUTTON.md to documentation map with complete feature overview, variants, animation timeline, and best practices; updated project structure in CLAUDE.md to reflect new location; added COPYBUTTON.md to Component Patterns cross-reference list and question type identification
+- **v1.14** - Added version checker script integration: Created comprehensive VERSION-CHECKER.md documentation for scripts/check-versions.js utility; added new Scripts & Utilities section to documentation map; updated Tech Stack section with version checker references and accuracy notes; added Package Versions/Dependencies to question type identification; added Package Versions to cross-reference list; created new section 8 "Package Version Reference Guidelines" with protocol for using version checker when updating documentation; added Version Checking commands to Quick Reference; updated project structure to include docs/scripts/ and scripts/ folders
 - **v1.13** - Architecture documentation audit and migration: Comprehensive update to 04-Architecture.md reflecting actual production implementation including all components (ErrorBanner, Toaster, MobileMenu, LazyMonacoEditor, LazyMermaidRenderer), middleware stack (CORS, RateLimit, Multer, ErrorHandler), service patterns (Singleton, Strategy, Decorator), performance metrics, and current tech stack versions; updated ARCHITECTURE.md to v1.1 with detailed component trees, service architecture, implementation status, data flows, testing strategies, deployment guide, monitoring approaches, and complete technical details matching production codebase; created ARCHITECTURE-OLD.md backup, ARCHITECTURE-AUDIT-SUMMARY.md documentation of changes, and ARCHITECTURE-MIGRATION-GUIDE.md for maintaining accuracy
 - **v1.12** - Added Performance & Optimization documentation section: Created comprehensive OPTIMIZATION-GUIDE.md covering Lighthouse audits (+67% performance improvement), bundle size reduction (-85%), Core Web Vitals tracking, lazy loading patterns, and maintenance guidelines; updated documentation map with new Performance & Optimization section, cross-references for performance/lazy loading topics, and project structure to include docs/performance/ folder
 - **v1.11** - Added private/ folder documentation: Created dedicated folder structure for sensitive content (strategic planning, financials, customer data, investor relations); updated project structure diagram and added security best practices section; moved VISION-PRIVATE.md to private/VISION.md
