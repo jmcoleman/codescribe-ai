@@ -341,6 +341,26 @@ open docs/design/brand-color-palette.pdf
 
 ---
 
+#### [ERROR-HANDLING-UX.md](docs/components/ERROR-HANDLING-UX.md) - Error Handling UX Design Guide
+**When to use:** Implementing error banners, choosing between banners vs modals, animation specifications, error UX patterns
+
+**Contains:**
+- Research-based best practices from Nielsen Norman Group, Material Design, Carbon Design System
+- Decision framework for inline banners vs modal popups (when to use each)
+- Animation specifications (250ms enter with slide+fade, 200ms exit with fade)
+- React component implementation examples with state management
+- Tailwind CSS configuration for error animations
+- CodeScribe AI-specific error patterns and classification table
+- Error message content standards (network errors, rate limits, validation, server errors)
+- Visual design standards (colors, typography, spacing, icons)
+- Complete accessibility considerations (ARIA attributes, motion preferences, keyboard navigation)
+- Screen reader testing checklist
+- References to all UX research sources
+
+**Key for:** Error banner implementation, animation timing decisions, accessibility compliance, UX research-backed patterns, choosing notification display methods
+
+---
+
 ## 🔑 Key Technical Details
 
 ### Tech Stack
@@ -466,7 +486,8 @@ Multiple docs cover the same topic from different angles:
 - **Architecture**: 04-Architecture.md (visual diagram + quick overview), ARCHITECTURE.md (deep technical dive), Dev Guide (implementation), Master Prompt (summary)
 - **Setup**: Todo List (tasks), Dev Guide (code), Master Prompt (quick commands)
 - **Mermaid Diagrams**: MERMAID-DIAGRAMS.md (comprehensive guide), CLAUDE.md section 7 (quick reference), 04-Architecture.md (implementation example)
-- **Component Patterns**: TOAST-SYSTEM.md (toast notifications), MERMAID-DIAGRAMS.md (diagram rendering)
+- **Component Patterns**: TOAST-SYSTEM.md (toast notifications), MERMAID-DIAGRAMS.md (diagram rendering), ERROR-HANDLING-UX.md (error banners and modals)
+- **Error Handling**: ERROR-HANDLING-UX.md (UX patterns, animations, accessibility), TOAST-SYSTEM.md (error toasts for non-blocking notifications)
 
 Always provide the most relevant reference for the question asked.
 
@@ -599,7 +620,8 @@ VITE_API_URL=http://localhost:3000
 
 ## 🔄 Version History
 
-- **v1.8** (Current) - Created comprehensive MERMAID-DIAGRAMS.md developer guide with patterns, React implementation, best practices, troubleshooting, and examples; updated CLAUDE.md documentation map
+- **v1.9** (Current) - Created comprehensive ERROR-HANDLING-UX.md design guide with research-based best practices for error banners vs modals, animation specifications (250ms/200ms), accessibility considerations, and CodeScribe AI error patterns; updated CLAUDE.md documentation map and cross-references
+- **v1.8** - Created comprehensive MERMAID-DIAGRAMS.md developer guide with patterns, React implementation, best practices, troubleshooting, and examples; updated CLAUDE.md documentation map
 - **v1.7** - Added UI Pattern Guidelines to Figma Guide establishing color usage patterns: slate for helper text, indigo for primary badges, slate for secondary badges; updated CLAUDE.md documentation map
 - **v1.6** - Added Phase 4: Optional Enhancements to PRD, created TOAST-SYSTEM.md documentation with future enhancement section, updated documentation map
 - **v1.5** - Added Mermaid diagram guidelines section with legend placement best practices, spacing configuration, and styling standards
@@ -608,7 +630,7 @@ VITE_API_URL=http://localhost:3000
 - **v1.2** - Clarified architecture document purposes: 04-Architecture.md (visual diagram + overview) vs ARCHITECTURE.md (deep technical dive)
 - **v1.1** - Reorganized documentation structure (planning/, api/, architecture/ subdirectories)
 - **v1.0** - Initial claude.md created with complete documentation map
-- Documentation last updated: October 15, 2025
+- Documentation last updated: October 16, 2025
 
 ---
 
