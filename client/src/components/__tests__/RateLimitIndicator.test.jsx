@@ -57,32 +57,32 @@ describe('RateLimitIndicator', () => {
   describe('Low Threshold Warning (< 30%)', () => {
     it('shows red color when below 30% threshold', () => {
       const { container } = render(<RateLimitIndicator remaining={2} limit={10} />); // 20%
-      const text = container.querySelector('.text-red-500');
+      const text = container.querySelector('.text-red-600');
       expect(text).toBeInTheDocument();
       expect(text).toHaveTextContent('2/10 requests remaining');
     });
 
     it('shows red progress bar when below 30% threshold', () => {
       const { container } = render(<RateLimitIndicator remaining={2} limit={10} />); // 20%
-      const progressFill = container.querySelector('.bg-red-500');
+      const progressFill = container.querySelector('.bg-red-600');
       expect(progressFill).toBeInTheDocument();
     });
 
     it('shows red at exactly 29%', () => {
       const { container } = render(<RateLimitIndicator remaining={29} limit={100} />);
-      const text = container.querySelector('.text-red-500');
+      const text = container.querySelector('.text-red-600');
       expect(text).toBeInTheDocument();
     });
 
     it('shows red at 1% remaining', () => {
       const { container } = render(<RateLimitIndicator remaining={1} limit={100} />);
-      const text = container.querySelector('.text-red-500');
+      const text = container.querySelector('.text-red-600');
       expect(text).toBeInTheDocument();
     });
 
     it('shows red at 0% remaining', () => {
       const { container } = render(<RateLimitIndicator remaining={0} limit={100} />);
-      const text = container.querySelector('.text-red-500');
+      const text = container.querySelector('.text-red-600');
       expect(text).toBeInTheDocument();
     });
   });
@@ -201,8 +201,8 @@ describe('RateLimitIndicator', () => {
   describe('Threshold Boundary Testing', () => {
     it('29.9% shows red warning', () => {
       const { container } = render(<RateLimitIndicator remaining={299} limit={1000} />);
-      expect(container.querySelector('.text-red-500')).toBeInTheDocument();
-      expect(container.querySelector('.bg-red-500')).toBeInTheDocument();
+      expect(container.querySelector('.text-red-600')).toBeInTheDocument();
+      expect(container.querySelector('.bg-red-600')).toBeInTheDocument();
     });
 
     it('30.0% shows normal state', () => {
@@ -238,7 +238,7 @@ describe('RateLimitIndicator', () => {
     it('almost depleted (2/10)', () => {
       const { container } = render(<RateLimitIndicator remaining={2} limit={10} />);
       expect(screen.getByText('2/10 requests remaining')).toBeInTheDocument();
-      expect(container.querySelector('.bg-red-500')).toBeInTheDocument();
+      expect(container.querySelector('.bg-red-600')).toBeInTheDocument();
       const progressFill = container.querySelector('.h-full.transition-all');
       expect(progressFill).toHaveStyle({ width: '20%' });
     });
@@ -246,7 +246,7 @@ describe('RateLimitIndicator', () => {
     it('depleted (0/10)', () => {
       const { container } = render(<RateLimitIndicator remaining={0} limit={10} />);
       expect(screen.getByText('0/10 requests remaining')).toBeInTheDocument();
-      expect(container.querySelector('.bg-red-500')).toBeInTheDocument();
+      expect(container.querySelector('.bg-red-600')).toBeInTheDocument();
       const progressFill = container.querySelector('.h-full.transition-all');
       expect(progressFill).toHaveStyle({ width: '0%' });
     });

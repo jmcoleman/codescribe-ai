@@ -329,7 +329,7 @@ module.exports = {
 .error-banner {
   /* Base styles */
   background-color: #fef2f2; /* red-50 */
-  border-left: 4px solid #ef4444; /* red-500 */
+  border-left: 4px solid #dc2626; /* red-600 */
   border-radius: 0.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   margin-bottom: 1.5rem;
@@ -407,10 +407,10 @@ Recovery: "If the issue persists, contact support."
 #### Colors (From Figma Design System)
 ```css
 Background: #fef2f2 (red-50)
-Border: #ef4444 (red-500) - 4px left accent
+Border: #dc2626 (red-600) - 4px left accent
 Text (Header): #7f1d1d (red-900)
 Text (Body): #991b1b (red-700)
-Icon: #ef4444 (red-500)
+Icon: #dc2626 (red-600)
 Button (Dismiss): #f87171 (red-400) → #dc2626 (red-600) on hover
 ```
 

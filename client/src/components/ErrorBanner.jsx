@@ -39,7 +39,7 @@ export function ErrorBanner({ error, retryAfter, onDismiss }) {
       <div className="flex items-start gap-4 p-4">
         {/* Error Icon */}
         <div className="flex-shrink-0 mt-0.5">
-          <AlertCircle className="h-5 w-5 text-red-500" aria-hidden="true" />
+          <AlertCircle className="h-5 w-5 text-red-600" aria-hidden="true" />
         </div>
 
         {/* Error Content */}
@@ -63,7 +63,7 @@ export function ErrorBanner({ error, retryAfter, onDismiss }) {
           {retryAfter && (
             <div className="mt-3 pt-3 border-t border-red-200">
               <p className="text-xs font-medium text-red-600 flex items-center gap-2">
-                <span className="inline-block w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" aria-hidden="true"></span>
+                <span className="inline-block w-1.5 h-1.5 bg-red-600 rounded-full animate-pulse" aria-hidden="true"></span>
                 Please wait {retryAfter} seconds before trying again.
               </p>
             </div>
@@ -73,7 +73,7 @@ export function ErrorBanner({ error, retryAfter, onDismiss }) {
         {/* Dismiss Button */}
         <button
           onClick={handleDismiss}
-          className="flex-shrink-0 text-red-400 hover:text-red-600 hover:bg-red-100 rounded-md p-1.5 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 motion-reduce:transition-none"
+          className="flex-shrink-0 text-red-400 hover:text-red-600 hover:bg-red-100 rounded-md p-1.5 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-2 motion-reduce:transition-none"
           aria-label="Dismiss error"
         >
           <X className="h-4 w-4" aria-hidden="true" />

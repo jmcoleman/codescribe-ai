@@ -12,7 +12,10 @@
     "build": "cd client && npm run build",
     "start": "cd server && npm start",
     "check-versions": "node scripts/check-versions.js",
-    "versions": "node scripts/check-versions.js"
+    "versions": "node scripts/check-versions.js",
+    "lighthouse": "./scripts/lighthouse-audit.sh",
+    "lighthouse:quick": "./scripts/lighthouse-quick.sh",
+    "audit:a11y": "./scripts/lighthouse-quick.sh"
   },
   "keywords": [
     "documentation",
