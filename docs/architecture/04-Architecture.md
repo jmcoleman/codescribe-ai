@@ -15,39 +15,49 @@ graph TB
     end
 
     subgraph frontend ["Frontend - React Application"]
-        App[App.jsx<br/>Main Component]
-        Header[Header Component<br/>Logo, Nav, Menu]
-        ControlBar[Control Bar<br/>Upload, GitHub, Generate]
-        CodePanel[Code Panel<br/>Monaco Editor]
-        DocPanel[Doc Panel<br/>Markdown Renderer]
-        QualityScore[Quality Score<br/>Badge & Suggestions]
-        
+        App[App.jsx<br/>Main Component<br/>+ Hooks + State]
+        Header[Header Component<br/>Logo, Nav, RateLimitIndicator]
+        MobileMenu[Mobile Menu<br/>Slide-in Navigation]
+        ControlBar[Control Bar<br/>Doc Type, Upload, Generate]
+        ErrorBanner[Error Banner<br/>Inline Errors + Timer]
+        CodePanel[Code Panel<br/>+ LazyMonacoEditor]
+        DocPanel[Doc Panel Lazy<br/>Markdown + Mermaid]
+        QualityScore[Quality Score<br/>Badge + Modal]
+        Toaster[Toast System<br/>Notifications + History]
+
         App --> Header
+        App --> MobileMenu
         App --> ControlBar
+        App --> ErrorBanner
         App --> CodePanel
         App --> DocPanel
+        App --> Toaster
         DocPanel --> QualityScore
     end
 
     subgraph api ["API Layer - Express Server"]
         Router[API Router]
+        Middleware[Middleware Stack<br/>CORS + RateLimit + Parser]
         GenerateRoute[POST /api/generate]
-        StreamRoute[POST /api/generate-stream<br/>SSE]
-        UploadRoute[POST /api/upload]
+        StreamRoute[POST /api/generate-stream<br/>Fetch ReadableStream]
+        UploadRoute[POST /api/upload<br/>Multer 500KB]
         HealthRoute[GET /api/health]
-        
-        Router --> GenerateRoute
-        Router --> StreamRoute
-        Router --> UploadRoute
+        ErrorHandler[Error Handler<br/>User-friendly Messages]
+
+        Router --> Middleware
+        Middleware --> GenerateRoute
+        Middleware --> StreamRoute
+        Middleware --> UploadRoute
         Router --> HealthRoute
+        Router --> ErrorHandler
     end
 
-    subgraph services ["Service Layer"]
-        DocGen[DocGeneratorService<br/>Core Logic]
-        ClaudeClient[ClaudeClient<br/>API Wrapper]
-        CodeParser[CodeParser<br/>AST Analysis]
-        QualityScorer[QualityScorer<br/>Scoring Algorithm]
-        
+    subgraph services ["Service Layer - Singleton Pattern"]
+        DocGen[DocGeneratorService<br/>4 Prompt Strategies]
+        ClaudeClient[ClaudeClient<br/>3-Retry Exponential]
+        CodeParser[CodeParser<br/>Acorn AST + 14 Metrics]
+        QualityScorer[QualityScorer<br/>5 Criteria Algorithm]
+
         GenerateRoute --> DocGen
         StreamRoute --> DocGen
         DocGen --> ClaudeClient
@@ -56,14 +66,15 @@ graph TB
     end
 
     subgraph external ["External Services"]
-        Claude[Claude API<br/>Anthropic]
+        Claude[Claude API<br/>Sonnet 4.5<br/>claude-sonnet-4-20250514]
         Claude --> ClaudeClient
     end
 
     subgraph infra ["Infrastructure"]
-        Vercel[Vercel<br/>Hosting & CDN]
-        Analytics[Vercel Analytics]
-        Env[Environment Variables<br/>CLAUDE_API_KEY]
+        Vercel[Vercel Planned<br/>Hosting & CDN]
+        Analytics[Vercel Analytics<br/>Performance Monitoring]
+        Env[Environment Variables<br/>CLAUDE_API_KEY + Config]
+        Performance[Performance<br/>Bundle: 78KB -85%<br/>Lighthouse: 75 +67%]
     end
 
     subgraph legend ["🗺️ LEGEND"]
@@ -87,15 +98,20 @@ graph TB
     style VSCode fill:#fae8ff,stroke:#c026d3,stroke-width:2px
     style App fill:#c084fc,stroke:#9333ea,stroke-width:2px
     style Header fill:#e9d5ff,stroke:#9333ea
+    style MobileMenu fill:#e9d5ff,stroke:#9333ea
     style ControlBar fill:#e9d5ff,stroke:#9333ea
+    style ErrorBanner fill:#e9d5ff,stroke:#9333ea
     style CodePanel fill:#e9d5ff,stroke:#9333ea
     style DocPanel fill:#e9d5ff,stroke:#9333ea
     style QualityScore fill:#e9d5ff,stroke:#9333ea
+    style Toaster fill:#e9d5ff,stroke:#9333ea
     style Router fill:#cbd5e1,stroke:#475569,stroke-width:2px
+    style Middleware fill:#e2e8f0,stroke:#64748b
     style GenerateRoute fill:#e2e8f0,stroke:#64748b
     style StreamRoute fill:#e2e8f0,stroke:#64748b
     style UploadRoute fill:#e2e8f0,stroke:#64748b
     style HealthRoute fill:#e2e8f0,stroke:#64748b
+    style ErrorHandler fill:#e2e8f0,stroke:#64748b
     style DocGen fill:#c7d2fe,stroke:#4338ca,stroke-width:2px
     style ClaudeClient fill:#e0e7ff,stroke:#4f46e5
     style CodeParser fill:#e0e7ff,stroke:#4f46e5
@@ -104,6 +120,7 @@ graph TB
     style Vercel fill:#86efac,stroke:#16a34a,stroke-width:2px
     style Analytics fill:#bbf7d0,stroke:#22c55e
     style Env fill:#bbf7d0,stroke:#22c55e
+    style Performance fill:#bbf7d0,stroke:#22c55e
 
     classDef phase2 stroke-dasharray: 5 5
     classDef phase3 stroke-dasharray: 5 5
@@ -142,27 +159,37 @@ The diagram includes an interactive legend. Here's the complete color system:
 - **VS Code Extension**: IDE integration (Phase 3)
 
 ### Frontend (React Application)
-- **App.jsx**: Main application component and state management
-- **Header**: Branding and navigation
-- **Control Bar**: File upload, GitHub integration, and generation controls
-- **Code Panel**: Monaco editor for code input
-- **Doc Panel**: Markdown renderer for generated documentation
-- **Quality Score**: Visual scoring with improvement suggestions
+- **App.jsx**: Main application component with hooks-based state management
+- **Header**: Branding, navigation, and RateLimitIndicator
+- **MobileMenu**: Responsive slide-in navigation for mobile devices
+- **Control Bar**: Doc type selector, file upload, and generation controls
+- **Code Panel**: LazyMonacoEditor wrapper for Monaco editor (lazy loaded)
+- **Doc Panel**: Markdown renderer with LazyMermaidRenderer (lazy loaded)
+- **Quality Score**: Visual scoring badge with modal breakdown
+- **ErrorBanner**: Inline error display with retry timer and animations
+- **Toast System**: Notification system with history (react-hot-toast)
 
 ### API Layer (Express Server)
+- **Middleware Stack**: CORS → Rate Limiting → Body Parser → Routes → Error Handler
 - **POST /api/generate**: Standard documentation generation endpoint
-- **POST /api/generate-stream**: Server-Sent Events (SSE) streaming endpoint
-- **POST /api/upload**: File upload handling
-- **GET /api/health**: Health check endpoint
+- **POST /api/generate-stream**: Streaming endpoint using Fetch API ReadableStream
+- **POST /api/upload**: File upload with Multer (500KB limit, 10+ file types)
+- **GET /api/health**: Health check endpoint with uptime and version info
+- **Rate Limiting**: Two-tier system (10/min per IP, 100/hour for generation)
+- **Error Handling**: Custom error handler middleware with user-friendly messages
 
 ### Service Layer
-- **DocGeneratorService**: Core orchestration logic for documentation generation
-- **ClaudeClient**: Wrapper for Anthropic Claude API with retry logic
-- **CodeParser**: AST-based code analysis using Acorn
-- **QualityScorer**: Documentation quality assessment algorithm
+- **DocGeneratorService**: Core orchestration with 4 prompt strategies (README, JSDoc, API, ARCHITECTURE)
+- **ClaudeClient**: Wrapper for Anthropic Claude API with 3-retry exponential backoff
+- **CodeParser**: Acorn AST parser with 14 metrics and fallback regex parsing for non-JS
+- **QualityScorer**: 5-criteria algorithm (Overview, Installation, Examples, API Docs, Structure)
+- **Pattern**: All services use Singleton pattern for single instance across requests
 
 ### External Services
-- **Claude API**: Anthropic's Claude Sonnet 4.5 for AI generation
+- **Claude API**: Anthropic's Claude Sonnet 4.5 (model: claude-sonnet-4-20250514)
+  - Streaming via SDK async iterators
+  - 200K token context window
+  - Max tokens: 4000 per request
 
 ### Infrastructure
 - **Vercel**: Hosting platform with CDN
@@ -183,7 +210,24 @@ The diagram includes an interactive legend. Here's the complete color system:
 
 ## Technology Stack
 
-**Frontend**: React 18, Vite, Tailwind CSS, Monaco Editor, react-markdown
-**Backend**: Node.js, Express, Anthropic SDK, Acorn (AST parser)
-**Infrastructure**: Vercel, Server-Sent Events (SSE)
+**Frontend**:
+- React 18.3.1, Vite 5.4.11, Tailwind CSS 3.4.17
+- Monaco Editor 4.6.0 (lazy loaded), react-markdown 9.0.2 (lazy loaded)
+- Mermaid 11.4.1 (lazy loaded), react-hot-toast 2.4.1
+- Lucide React 0.468.0 (icons)
+
+**Backend**:
+- Node.js 20+, Express 4.21.1, @anthropic-ai/sdk 0.32.1
+- Acorn 8.14.0 (AST parser), Multer 1.4.5-lts.1 (file upload)
+- express-rate-limit 7.4.1, cors 2.8.5
+
+**Infrastructure**:
+- Vercel (planned), Fetch API with ReadableStream (streaming)
+- Environment Variables (.env)
+
 **AI**: Claude Sonnet 4.5 (claude-sonnet-4-20250514)
+
+**Performance**:
+- Bundle: 78 KB gzipped (85% reduction from 516 KB)
+- Lighthouse: 75/100 (+67% improvement from 45)
+- Core Web Vitals: FCP -89%, LCP -93%, TBT -30%
