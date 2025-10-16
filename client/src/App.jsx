@@ -14,7 +14,16 @@ const QualityScoreModal = lazy(() => import('./components/QualityScore').then(m 
 const ExamplesModal = lazy(() => import('./components/ExamplesModal').then(m => ({ default: m.ExamplesModal })));
 const HelpModal = lazy(() => import('./components/HelpModal').then(m => ({ default: m.HelpModal })));
 
-// Loading fallback for modals and panels
+// Loading fallback for modals - full screen to prevent layout shift
+function ModalLoadingFallback() {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+    </div>
+  );
+}
+
+// Loading fallback for panels
 function LoadingFallback() {
   return (
     <div className="flex items-center justify-center p-8">
@@ -40,6 +49,28 @@ function App() {
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [uploadError, setUploadError] = useState(null);
   const fileInputRef = useRef(null);
+
+  // Prevent body scroll and layout shift when any modal opens
+  useEffect(() => {
+    const isAnyModalOpen = showQualityModal || showExamplesModal || showHelpModal;
+
+    if (isAnyModalOpen) {
+      // Calculate scrollbar width BEFORE hiding overflow
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+
+      // Apply both styles synchronously to prevent flash
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    }
+
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    };
+  }, [showQualityModal, showExamplesModal, showHelpModal]);
   
   const {
     generate,
@@ -283,7 +314,7 @@ function App() {
 
       {/* Quality Score Modal */}
       {showQualityModal && qualityScore && (
-        <Suspense fallback={<LoadingFallback />}>
+        <Suspense fallback={<ModalLoadingFallback />}>
           <QualityScoreModal
             qualityScore={qualityScore}
             onClose={() => setShowQualityModal(false)}
@@ -293,7 +324,7 @@ function App() {
 
       {/* Examples Modal */}
       {showExamplesModal && (
-        <Suspense fallback={<LoadingFallback />}>
+        <Suspense fallback={<ModalLoadingFallback />}>
           <ExamplesModal
             isOpen={showExamplesModal}
             onClose={() => setShowExamplesModal(false)}
@@ -305,7 +336,7 @@ function App() {
 
       {/* Help Modal */}
       {showHelpModal && (
-        <Suspense fallback={<LoadingFallback />}>
+        <Suspense fallback={<ModalLoadingFallback />}>
           <HelpModal
             isOpen={showHelpModal}
             onClose={() => setShowHelpModal(false)}

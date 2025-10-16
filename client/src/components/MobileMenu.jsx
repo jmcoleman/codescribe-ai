@@ -44,8 +44,24 @@ export function MobileMenu({ isOpen, onClose, onExamplesClick, onHelpClick }) {
 
           {/* Menu Items */}
           <nav className="flex-1 p-4 space-y-2">
-            <MenuItem onClick={handleExamplesClick}>Examples</MenuItem>
-            <MenuItem onClick={handleHelpClick}>Help & FAQ</MenuItem>
+            <MenuItem
+              onClick={handleExamplesClick}
+              onMouseEnter={() => {
+                // Preload ExamplesModal on hover to prevent layout shift on first click
+                import('./ExamplesModal').catch(() => {});
+              }}
+            >
+              Examples
+            </MenuItem>
+            <MenuItem
+              onClick={handleHelpClick}
+              onMouseEnter={() => {
+                // Preload HelpModal on hover to prevent layout shift on first click
+                import('./HelpModal').catch(() => {});
+              }}
+            >
+              Help & FAQ
+            </MenuItem>
             <MenuItem onClick={handleGitHubClick}>GitHub Repo</MenuItem>
           </nav>
 
@@ -61,10 +77,11 @@ export function MobileMenu({ isOpen, onClose, onExamplesClick, onHelpClick }) {
   );
 }
 
-function MenuItem({ children, onClick }) {
+function MenuItem({ children, onClick, onMouseEnter }) {
   return (
     <button
       onClick={onClick}
+      onMouseEnter={onMouseEnter}
       className="w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 hover:translate-x-1 rounded-lg transition-all duration-200 motion-reduce:transition-none active:bg-slate-100"
     >
       {children}
