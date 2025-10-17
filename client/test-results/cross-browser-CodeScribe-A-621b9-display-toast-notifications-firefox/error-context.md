@@ -1,0 +1,101 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e6]:
+        - generic [ref=e7]:
+          - img [ref=e9]
+          - generic [ref=e14]:
+            - heading "CodeScribe AI" [level=1] [ref=e15]
+            - paragraph [ref=e16]: Intelligent Code Documentation
+        - navigation [ref=e17]:
+          - generic [ref=e18]:
+            - button "Examples" [ref=e19] [cursor=pointer]
+            - button "Help and FAQ" [ref=e20] [cursor=pointer]:
+              - img [ref=e21]
+            - button "Sign In" [ref=e25] [cursor=pointer]
+    - main [ref=e26]:
+      - generic [ref=e28]:
+        - generic [ref=e29]:
+          - button "Upload Files" [ref=e30] [cursor=pointer]:
+            - img [ref=e31]
+            - text: Upload Files
+          - button "Import from GitHub" [ref=e35] [cursor=pointer]:
+            - img [ref=e36]
+            - generic [ref=e39]: Import from GitHub
+          - button "README.md" [ref=e42] [cursor=pointer]:
+            - generic [ref=e43]: README.md
+            - img [ref=e44]
+        - button "Generate Docs" [ref=e46] [cursor=pointer]:
+          - img [ref=e47]
+          - text: Generate Docs
+      - generic [ref=e52]:
+        - generic [ref=e53]:
+          - generic [ref=e54]:
+            - generic [ref=e60]: code.js
+            - generic [ref=e61]:
+              - generic [ref=e62]: javascript
+              - button "Copy code to clipboard" [ref=e63] [cursor=pointer]:
+                - generic [ref=e64]:
+                  - img [ref=e65]
+                  - img [ref=e68]
+          - code [ref=e73]:
+            - generic [ref=e74]:
+              - generic [ref=e76]:
+                - generic [ref=e79]: "1"
+                - generic [ref=e81]: "2"
+                - generic [ref=e83]: "3"
+                - generic [ref=e84]:
+                  - generic [ref=e85] [cursor=pointer]: 
+                  - generic [ref=e86]: "4"
+                - generic [ref=e88]: "5"
+                - generic [ref=e90]: "6"
+                - generic [ref=e92]: "7"
+              - generic [ref=e103]:
+                - generic [ref=e105]: // Paste your code here or try the example below...
+                - generic [ref=e108]: "// Example function:"
+                - generic [ref=e110]: "function calculateTotal(items) {"
+                - generic [ref=e112]: return items.reduce((sum, item) => sum + item.price, 0);
+                - generic [ref=e114]: "}"
+              - textbox "Editor content"
+          - generic [ref=e117]:
+            - generic [ref=e118]: 7 lines • 168 chars
+            - generic [ref=e119]:
+              - img [ref=e120]
+              - generic [ref=e122]: Ready to analyze
+        - generic [ref=e123]:
+          - generic [ref=e125]:
+            - img [ref=e126]
+            - generic [ref=e131]: Generated Documentation
+          - generic [ref=e133]:
+            - heading "Ready to Generate Documentation" [level=3] [ref=e134]
+            - paragraph [ref=e135]: Your AI-generated documentation will appear here with real-time streaming and quality scoring.
+            - generic [ref=e136]:
+              - heading "Quick Start" [level=4] [ref=e137]
+              - list [ref=e138]:
+                - listitem [ref=e139]:
+                  - generic [ref=e140]: "1"
+                  - generic [ref=e141]:
+                    - text: Paste your code or click
+                    - strong [ref=e142]: "\"Upload Files\""
+                - listitem [ref=e143]:
+                  - generic [ref=e144]: "2"
+                  - generic [ref=e145]: Select documentation type (README, JSDoc, API, or ARCHITECTURE)
+                - listitem [ref=e146]:
+                  - generic [ref=e147]: "3"
+                  - generic [ref=e148]:
+                    - text: Click
+                    - strong [ref=e149]: "\"Generate Docs\""
+                    - text: and watch the magic happen!
+            - paragraph [ref=e150]:
+              - text: Not sure where to start? Try the
+              - strong [ref=e151]: Examples
+              - text: button above or click the
+              - strong [ref=e152]: "?"
+              - text: icon for help.
+  - generic [ref=e153]:
+    - alert
+    - alert
+```
