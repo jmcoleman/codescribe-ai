@@ -1,0 +1,276 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e6]:
+        - generic [ref=e7]:
+          - img [ref=e9]
+          - generic [ref=e14]:
+            - heading "CodeScribe AI" [level=1] [ref=e15]
+            - paragraph [ref=e16]: Intelligent Code Documentation
+        - navigation [ref=e17]:
+          - generic [ref=e21]: 9907/10000 requests remaining
+          - generic [ref=e24]:
+            - button "Examples" [ref=e25] [cursor=pointer]
+            - button "Help and FAQ" [ref=e26] [cursor=pointer]:
+              - img [ref=e27]
+            - button "Sign In" [ref=e31] [cursor=pointer]
+    - main [ref=e32]:
+      - generic [ref=e34]:
+        - generic [ref=e35]:
+          - button "Upload Files" [ref=e36] [cursor=pointer]:
+            - img [ref=e37]
+            - text: Upload Files
+          - button "Import from GitHub" [ref=e41] [cursor=pointer]:
+            - img [ref=e42]
+            - generic [ref=e45]: Import from GitHub
+          - button "README.md" [ref=e48] [cursor=pointer]:
+            - generic [ref=e49]: README.md
+            - img [ref=e50]
+        - button "Generate Docs" [ref=e52] [cursor=pointer]:
+          - img [ref=e53]
+          - text: Generate Docs
+      - generic [ref=e58]:
+        - generic [ref=e59]:
+          - generic [ref=e60]:
+            - generic [ref=e66]: code.js
+            - generic [ref=e67]:
+              - generic [ref=e68]: javascript
+              - button "Copy code to clipboard" [ref=e69] [cursor=pointer]:
+                - generic [ref=e70]:
+                  - img [ref=e71]
+                  - img [ref=e74]
+          - code [ref=e79]:
+            - generic [ref=e80]:
+              - generic [ref=e82]:
+                - generic [ref=e84]: "1"
+                - generic [ref=e86]: "2"
+                - generic [ref=e88]: "3"
+                - generic [ref=e89]:
+                  - generic [ref=e90] [cursor=pointer]: 
+                  - generic [ref=e91]: "4"
+                - generic [ref=e93]: "5"
+                - generic [ref=e95]: "6"
+                - generic [ref=e98]: "7"
+              - generic [ref=e109]:
+                - generic [ref=e111]: // Paste your code here or try the example below...
+                - generic [ref=e114]: "// Example function:"
+                - generic [ref=e116]: "function calculateTotal(items) {"
+                - generic [ref=e118]: return items.reduce((sum, item) => sum + item.price, 0);
+                - generic [ref=e120]: "}"
+                - generic [ref=e122]: "class MyClass { constructor() {} }"
+              - textbox "Editor content": "// Paste your code here or try the example below... // Example function: function calculateTotal(items) { return items.reduce((sum, item) => sum + item.price, 0); } class MyClass { constructor() {} }"
+          - generic [ref=e124]:
+            - generic [ref=e125]: 7 lines • 202 chars
+            - generic [ref=e126]:
+              - img [ref=e127]
+              - generic [ref=e129]: Ready to analyze
+        - generic [ref=e130]:
+          - generic [ref=e131]:
+            - generic [ref=e132]:
+              - img [ref=e133]
+              - generic [ref=e138]: Generated Documentation
+            - generic [ref=e139]:
+              - button "View quality score breakdown" [ref=e140] [cursor=pointer]:
+                - generic [ref=e141]: "Quality:"
+                - generic [ref=e142]: 100/100
+                - generic [ref=e143]: A
+              - button "Copy documentation to clipboard" [ref=e144] [cursor=pointer]:
+                - generic [ref=e145]:
+                  - img [ref=e146]
+                  - img [ref=e149]
+          - generic [ref=e152]:
+            - heading "Shopping Cart Total Calculator" [level=1] [ref=e153]
+            - paragraph [ref=e154]: A simple JavaScript utility for calculating totals from collections of items with price properties. This lightweight library provides a straightforward way to compute the sum of item prices in shopping carts, invoices, or any collection of priced objects.
+            - heading "Features" [level=2] [ref=e155]
+            - list [ref=e156]:
+              - listitem [ref=e157]: Calculate total price from arrays of items
+              - listitem [ref=e158]: Simple reduce-based implementation for optimal performance
+              - listitem [ref=e159]:
+                - text: Works with any objects containing a
+                - code [ref=e160]: price
+                - text: property
+              - listitem [ref=e161]: Lightweight and dependency-free
+              - listitem [ref=e162]: Includes extensible class structure for future enhancements
+            - heading "Installation" [level=2] [ref=e163]
+            - paragraph [ref=e164]: "Since this is a standalone JavaScript module, you can include it directly in your project:"
+            - list [ref=e165]:
+              - listitem [ref=e166]: Copy the code into your project directory
+              - listitem [ref=e167]: Import or include the functions as needed
+              - listitem [ref=e168]: No external dependencies required
+            - code [ref=e171]:
+              - text: // Direct inclusion
+              - text: <script src="path/to/calculator.js"></script>
+              - text: // Or copy the functions directly into your codebase
+            - heading "Usage" [level=2] [ref=e172]
+            - heading "Basic Total Calculation" [level=3] [ref=e173]
+            - code [ref=e176]:
+              - text: "const items = [ { name: 'Coffee', price: 4.99 }, { name: 'Sandwich', price: 8.50 }, { name: 'Cookie', price: 2.25 }"
+              - text: "];"
+              - text: const total = calculateTotal(items);
+              - text: console.log(total); // 15.74
+            - heading "Working with Shopping Cart Data" [level=3] [ref=e177]
+            - code [ref=e180]:
+              - text: "const cartItems = [ { id: 1, product: 'Laptop', price: 999.99, quantity: 1 }, { id: 2, product: 'Mouse', price: 29.99, quantity: 2 }, { id: 3, product: 'Keyboard', price: 79.99, quantity: 1 }"
+              - text: "];"
+              - text: "// Note: This function sums the price property directly"
+              - text: // For quantity-based calculations, you'd need to modify the data first
+              - text: const baseTotal = calculateTotal(cartItems);
+              - text: console.log(baseTotal); // 1109.97
+            - heading "Architecture Overview" [level=2] [ref=e181]
+            - generic [ref=e184]:
+              - generic [ref=e185]:
+                - img [ref=e187]
+                - generic [ref=e189]:
+                  - paragraph [ref=e190]: Diagram Available
+                  - paragraph [ref=e191]: Click to render visualization
+              - button "Show" [ref=e192] [cursor=pointer]
+            - heading "API Documentation" [level=2] [ref=e193]
+            - heading "calculateTotal(items)" [level=3] [ref=e194]
+            - paragraph [ref=e195]: Calculates the total sum of prices from an array of items.
+            - paragraph [ref=e196]:
+              - strong [ref=e197]: "Parameters:"
+            - list [ref=e198]:
+              - listitem [ref=e199]:
+                - code [ref=e200]: items
+                - text: "(Array): An array of objects, each containing a"
+                - code [ref=e201]: price
+                - text: property
+                - list [ref=e202]:
+                  - listitem [ref=e203]:
+                    - text: "Type:"
+                    - code [ref=e204]: Array<Object>
+                  - listitem [ref=e205]: "Required: Yes"
+                  - listitem [ref=e206]:
+                    - text: Each object must have a
+                    - code [ref=e207]: price
+                    - text: property (Number)
+            - paragraph [ref=e208]:
+              - strong [ref=e209]: "Return Value:"
+            - list [ref=e210]:
+              - listitem [ref=e211]:
+                - text: "Type:"
+                - code [ref=e212]: Number
+              - listitem [ref=e213]: "Description: The sum of all price values from the items array"
+            - paragraph [ref=e214]:
+              - strong [ref=e215]: "Example Usage:"
+            - code [ref=e218]:
+              - text: "const products = [ { name: 'Book', price: 12.99 }, { name: 'Pen', price: 1.50 }, { name: 'Notebook', price: 3.25 }"
+              - text: "];"
+              - text: const total = calculateTotal(products);
+              - text: "console.log(`Total: $${total.toFixed(2)}`); // Total: $17.74"
+            - heading "MyClass" [level=3] [ref=e219]
+            - paragraph [ref=e220]: A basic class structure provided for extensibility and future enhancements.
+            - paragraph [ref=e221]:
+              - strong [ref=e222]: "Constructor:"
+            - list [ref=e223]:
+              - listitem [ref=e224]:
+                - code [ref=e225]: constructor()
+                - text: ": Creates a new instance of MyClass"
+              - listitem [ref=e226]: "Parameters: None"
+              - listitem [ref=e227]: "Return Value: MyClass instance"
+            - paragraph [ref=e228]:
+              - strong [ref=e229]: "Example Usage:"
+            - code [ref=e232]:
+              - text: const instance = new MyClass();
+              - text: console.log(instance instanceof MyClass); // true
+            - heading "Code Examples" [level=2] [ref=e233]
+            - 'heading "Example 1: Restaurant Order Calculator" [level=3] [ref=e234]'
+            - code [ref=e237]:
+              - text: // Restaurant order with multiple items
+              - text: "const orderItems = [ { dish: 'Caesar Salad', price: 12.99, category: 'appetizer' }, { dish: 'Grilled Salmon', price: 24.99, category: 'main' }, { dish: 'Chocolate Cake', price: 7.99, category: 'dessert' }, { dish: 'Coffee', price: 3.50, category: 'beverage' }"
+              - text: "];"
+              - text: const orderTotal = calculateTotal(orderItems);
+              - text: const tax = orderTotal * 0.08; // 8% tax
+              - text: const finalTotal = orderTotal + tax;
+              - text: "console.log(`Subtotal: $${orderTotal.toFixed(2)}`); // Subtotal: $49.47"
+              - text: "console.log(`Tax (8%): $${tax.toFixed(2)}`); // Tax (8%): $3.96"
+              - text: "console.log(`Final Total: $${finalTotal.toFixed(2)}`); // Final Total: $53.43"
+            - 'heading "Example 2: E-commerce Cart with Data Processing" [level=3] [ref=e238]'
+            - code [ref=e241]:
+              - text: // E-commerce scenario with product variations
+              - text: "const cartProducts = [ { sku: 'SHIRT-001', name: 'Cotton T-Shirt', price: 19.99, size: 'M' }, { sku: 'JEANS-002', name: 'Blue Jeans', price: 59.99, size: '32' }, { sku: 'SHOES-003', name: 'Running Shoes', price: 89.99, size: '10' }, { sku: 'HAT-004', name: 'Baseball Cap', price: 24.99, color: 'red' }"
+              - text: "];"
+              - text: // Calculate subtotal
+              - text: const subtotal = calculateTotal(cartProducts);
+              - text: // Apply discount for orders over $150
+              - text: "const discount = subtotal > 150 ? subtotal * 0.1 : 0;"
+              - text: const discountedTotal = subtotal - discount;
+              - text: // Free shipping for orders over $100
+              - text: "const shipping = discountedTotal > 100 ? 0 : 9.99;"
+              - text: const grandTotal = discountedTotal + shipping;
+              - text: "console.log(`Items: ${cartProducts.length}`);"
+              - text: "console.log(`Subtotal: $${subtotal.toFixed(2)}`); // Subtotal: $194.96"
+              - text: "console.log(`Discount: -$${discount.toFixed(2)}`); // Discount: -$19.50"
+              - text: "console.log(`Shipping: $${shipping.toFixed(2)}`); // Shipping: $0.00"
+              - text: "console.log(`Grand Total: $${grandTotal.toFixed(2)}`); // Grand Total: $175.46"
+              - text: // Using MyClass for order management
+              - text: "class OrderManager extends MyClass { constructor() { super(); this.orders = []; } addOrder(items, customerInfo) { const total = calculateTotal(items); this.orders.push({ id: Date.now(), items, total, customer: customerInfo, date: new Date() }); return total; }"
+              - text: "}"
+              - text: const orderManager = new OrderManager();
+              - text: "const orderTotal = orderManager.addOrder(cartProducts, { name: 'John Doe', email: 'john@example.com' });"
+              - text: "console.log(`Order processed: $${orderTotal.toFixed(2)}`); // Order processed: $194.96"
+            - heading "Data Flow Diagram" [level=2] [ref=e242]
+            - generic [ref=e245]:
+              - generic [ref=e246]:
+                - img [ref=e248]
+                - generic [ref=e250]:
+                  - paragraph [ref=e251]: Diagram Available
+                  - paragraph [ref=e252]: Click to render visualization
+              - button "Show" [ref=e253] [cursor=pointer]
+            - heading "Error Handling Considerations" [level=2] [ref=e254]
+            - paragraph [ref=e255]: "While the current implementation is simple, consider these potential enhancements for production use:"
+            - list [ref=e256]:
+              - listitem [ref=e257]:
+                - text: Validate that
+                - code [ref=e258]: items
+                - text: is an array
+              - listitem [ref=e259]:
+                - text: Check that each item has a valid
+                - code [ref=e260]: price
+                - text: property
+              - listitem [ref=e261]: Handle non-numeric price values
+              - listitem [ref=e262]: Add error handling for empty arrays
+            - code [ref=e265]:
+              - text: // Enhanced version example
+              - text: "function calculateTotalSafe(items) { if (!Array.isArray(items)) { throw new Error('Items must be an array'); } return items.reduce((sum, item) => { const price = parseFloat(item.price) || 0; return sum + price; }, 0);"
+              - text: "}"
+            - heading "License" [level=2] [ref=e266]
+            - paragraph [ref=e267]: This code is provided as-is for educational and practical use. Modify and distribute as needed for your projects.
+          - generic [ref=e268]:
+            - generic [ref=e269]:
+              - generic [ref=e271]:
+                - img [ref=e272]
+                - generic [ref=e275]: 5 criteria met
+              - button "Show full quality report" [ref=e276] [cursor=pointer]:
+                - generic [ref=e277]: View full report
+                - img [ref=e278]
+            - region "Quality report details":
+              - generic [ref=e280]:
+                - generic [ref=e282]: "Document Type: README"
+                - generic [ref=e284]:
+                  - generic [ref=e285]:
+                    - img [ref=e286]
+                    - generic [ref=e289]: Strengths
+                  - list [ref=e290]:
+                    - listitem [ref=e291]:
+                      - generic [ref=e292]: "Overview:"
+                      - text: Well done!
+                    - listitem [ref=e293]:
+                      - generic [ref=e294]: "Installation:"
+                      - text: Well done!
+                    - listitem [ref=e295]:
+                      - generic [ref=e296]: "Usage Examples:"
+                      - text: Well done!
+                    - listitem [ref=e297]:
+                      - generic [ref=e298]: "Function Coverage:"
+                      - text: Well done!
+                    - listitem [ref=e299]:
+                      - generic [ref=e300]: "Structure & Formatting:"
+                      - text: Well done!
+  - generic [ref=e301]:
+    - alert
+    - alert
+```

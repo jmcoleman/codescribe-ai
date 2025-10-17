@@ -86,6 +86,7 @@ export function CopyButton({
 
   return (
     <button
+      data-testid="copy-btn"
       onClick={handleCopy}
       className={`
         ${sizeClasses[size]}

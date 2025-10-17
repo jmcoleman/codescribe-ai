@@ -31,7 +31,7 @@ export function CodePanel({
   const chars = code.length;
 
   return (
-    <div className="flex flex-col h-full bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+    <div data-testid="code-panel" className="flex flex-col h-full bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-4 h-12 bg-slate-50 border-b border-slate-200">
         {/* Left: Traffic lights + filename */}

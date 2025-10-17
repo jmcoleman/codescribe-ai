@@ -71,6 +71,7 @@ export function Header({ onMenuClick, onExamplesClick, onHelpClick, showMobileMe
 
             {/* Mobile Menu Button */}
             <button
+              data-testid="mobile-menu-btn"
               onClick={onMenuClick}
               className="md:hidden p-2 hover:bg-slate-100 hover:scale-[1.05] rounded-lg transition-all duration-200 motion-reduce:transition-none active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
               aria-label="Open menu"

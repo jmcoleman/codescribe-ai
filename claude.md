@@ -722,7 +722,118 @@ Multiple docs cover the same topic from different angles:
 
 Always provide the most relevant reference for the question asked.
 
-### 6. Timezone Awareness for Documentation Updates
+### 6. E2E Testing Best Practices
+
+**CRITICAL: When writing or modifying E2E tests, ALWAYS follow these async best practices:**
+
+#### ❌ **NEVER DO: Arbitrary Timeouts**
+```javascript
+// BAD: Blind waiting doesn't guarantee operation completed
+await page.setInputFiles('input[type="file"]', file);
+await page.waitForTimeout(1000); // Race condition!
+const content = await page.locator('.editor').textContent();
+```
+
+**Problem:** Different browsers have different speeds. API calls, file uploads, and async operations may take <1000ms in Chromium but >1000ms in Firefox/WebKit. This creates flaky tests that pass in some browsers and fail in others.
+
+#### ✅ **ALWAYS DO: Wait for Actual Events**
+
+**1. Wait for Network Responses (API calls, file uploads, SSE)**
+```javascript
+// GOOD: Wait for actual API response
+const uploadPromise = page.waitForResponse(
+  response => response.url().includes('/api/upload') && response.status() === 200,
+  { timeout: 10000 }
+);
+await page.setInputFiles('input[type="file"]', file);
+await uploadPromise; // Guaranteed to complete
+
+// For SSE streaming
+const ssePromise = page.waitForResponse(
+  response => response.url().includes('/api/generate-stream') &&
+              response.headers()['content-type']?.includes('text/event-stream')
+);
+await page.click('[data-testid="generate-btn"]');
+await ssePromise;
+```
+
+**2. Wait for DOM State Changes**
+```javascript
+// GOOD: Wait for element to appear/disappear
+await expect(page.locator('[role="status"]')).toBeVisible({ timeout: 5000 });
+
+// GOOD: Wait for specific content to appear
+await page.waitForFunction(
+  () => document.querySelector('.editor')?.textContent?.includes('expected content'),
+  { timeout: 10000 }
+);
+
+// GOOD: Wait for element state
+await page.waitForSelector('.monaco-editor', { state: 'visible', timeout: 10000 });
+```
+
+**3. Wait for Lazy-Loaded Components (Monaco, Mermaid)**
+```javascript
+// GOOD: Wait for lazy component to initialize
+await page.waitForSelector('.monaco-editor', { state: 'visible', timeout: 10000 });
+await page.waitForTimeout(1500); // Brief initialization delay OK after verification
+await page.click('.monaco-editor'); // Ensure focus
+await page.keyboard.type('code'); // Use keyboard for cross-browser reliability
+```
+
+#### 🎯 **Real-World Example: File Upload Fix**
+
+**Before (Flaky):**
+```javascript
+test('file upload', async ({ page }) => {
+  await page.setInputFiles('input[type="file"]', file);
+  await page.waitForTimeout(1000); // ❌ Fails in Firefox/WebKit
+  const content = await page.locator('.view-lines').textContent();
+  expect(content).toContain('function test');
+});
+```
+
+**After (Reliable):**
+```javascript
+test('file upload', async ({ page }) => {
+  // Set up listener BEFORE triggering upload
+  const uploadPromise = page.waitForResponse(
+    response => response.url().includes('/api/upload') && response.status() === 200,
+    { timeout: 10000 }
+  );
+
+  await page.setInputFiles('input[type="file"]', file);
+  await uploadPromise; // ✅ Wait for actual API completion
+  await page.waitForTimeout(500); // Brief UI update delay
+
+  const content = await page.locator('.view-lines').textContent();
+  expect(content).toMatch(/function\s+test\s*\(\)/); // Regex for robustness
+});
+```
+
+**Result:** 1/5 browsers passing → 5/5 browsers passing (100%)
+
+#### 📋 **Testing Checklist**
+
+When writing E2E tests, ask yourself:
+- [ ] Am I waiting for a network request? → Use `page.waitForResponse()`
+- [ ] Am I waiting for UI to update? → Use `expect().toBeVisible()` or `waitForFunction()`
+- [ ] Am I interacting with lazy-loaded components? → Wait for selector + initialization
+- [ ] Am I using arbitrary timeouts? → Replace with event-based waiting
+- [ ] Will this work across all browsers? → Test in isolation first, then full suite
+
+#### 🔍 **Debugging Flaky Tests**
+
+If tests pass in Chromium but fail in Firefox/WebKit:
+1. **Check timing:** Run test in isolation - does it pass?
+2. **Check API calls:** Use browser DevTools to verify response timing
+3. **Check async operations:** Ensure you're waiting for actual completion, not guessing
+4. **Test the API directly:** Use `curl` to verify backend is working
+5. **Distinguish:** Is this an app bug or test infrastructure issue?
+
+**Remember:** Test failures under load ≠ application bugs. Tests that pass in isolation but fail in full suite indicate resource contention, not broken functionality.
+
+### 7. Timezone Awareness for Documentation Updates
 **IMPORTANT:** When updating documentation (especially the Todo List) with timestamps:
 - **All times reference Eastern Standard Time (EST/EDT)**
 - **Automatic Session Labeling:** When adding session labels to documentation, you MUST:
@@ -742,7 +853,7 @@ Always provide the most relevant reference for the question asked.
 - **The user is located in EST timezone** - always label based on their local time, not system/server time
 - **Pro tip:** During daylight saving time (March-November), EST becomes EDT (UTC-4 instead of UTC-5)
 
-### 7. Mermaid Diagram Guidelines
+### 8. Mermaid Diagram Guidelines
 When creating or modifying Mermaid diagrams for this project, refer to the **[MERMAID-DIAGRAMS.md](docs/components/MERMAID-DIAGRAMS.md)** comprehensive developer guide.
 
 **Quick Reference (see full guide for details):**
@@ -783,7 +894,7 @@ L["🟣 Purple - Client/Frontend<br/>⚪ Slate - API Layer<br/>🔵 Indigo - Ser
 
 **For comprehensive details, see:** [MERMAID-DIAGRAMS.md](docs/components/MERMAID-DIAGRAMS.md) including React implementation, troubleshooting, examples, and configuration reference.
 
-### 8. Package Version Reference Guidelines
+### 9. Package Version Reference Guidelines
 When questions involve package versions, dependencies, or tech stack details:
 
 **Always Use the Version Checker First:**
@@ -897,7 +1008,8 @@ VITE_API_URL=http://localhost:3000
 
 ## 🔄 Version History
 
-- **v1.18** (Current) - Added accessibility and cross-browser testing documentation: Added three new test documentation files (CROSS-BROWSER-TEST-PLAN.md, SCREEN-READER-TESTING-GUIDE.md, ACCESSIBILITY-AUDIT.MD) to docs/testing/; updated Testing README with new "Accessibility & Cross-Browser Testing" and "Performance & Audit Reports" sections; updated CLAUDE.md Testing Documentation section with new specialized test docs; updated CLAUDE.md project structure to include new test files; added "Accessibility Testing" and "Cross-Browser Testing" to question type identification and cross-reference sections
+- **v1.19** (Current) - Added E2E Testing Best Practices: Created comprehensive section 6 "E2E Testing Best Practices" with critical guidelines for writing reliable cross-browser tests; includes detailed patterns for waiting on actual events (network responses, DOM changes, lazy-loaded components) vs arbitrary timeouts; real-world file upload fix example showing 1/5 to 5/5 browser pass rate improvement; testing checklist and debugging flowchart for flaky tests; renumbered subsequent sections (Timezone → 7, Mermaid → 8, Package Versions → 9)
+- **v1.18** - Added accessibility and cross-browser testing documentation: Added three new test documentation files (CROSS-BROWSER-TEST-PLAN.md, SCREEN-READER-TESTING-GUIDE.md, ACCESSIBILITY-AUDIT.MD) to docs/testing/; updated Testing README with new "Accessibility & Cross-Browser Testing" and "Performance & Audit Reports" sections; updated CLAUDE.md Testing Documentation section with new specialized test docs; updated CLAUDE.md project structure to include new test files; added "Accessibility Testing" and "Cross-Browser Testing" to question type identification and cross-reference sections
 - **v1.17** - Moved interview guide to private folder: Comprehensive update to INTERVIEW-GUIDE.md with actual project learnings and real metrics (319 tests, 85% bundle reduction, 67% performance improvement, 72.2% component coverage); moved from docs/planning/06-InterviewGuide.md to private/INTERVIEW-GUIDE.md (gitignored); removed Interview & Presentation section from CLAUDE.md documentation map; updated project structure and private folder documentation to reflect new location; added interview preparation to private folder contents list
 - **v1.16** - Organized testing documentation: Created comprehensive Testing Documentation section in documentation map with 9 test docs under docs/testing/; added Testing README (hub), COMPONENT-TEST-COVERAGE.md (detailed coverage report with 319 tests), frontend-testing-guide.md, TEST-GUIDE.md, IMPLEMENTATION-SUMMARY.md, and 4 specialized test docs; moved TEST-GUIDE.md from client/ to docs/testing/ and IMPLEMENTATION-SUMMARY.md from docs/planning/ to docs/testing/; deleted outdated root files (TESTING-COMPLETE.md, TEST_SUITE_SUMMARY.md); updated project structure to show docs/testing/ folder; added Testing to question type identification and cross-reference list
 - **v1.15** - Reorganized component documentation: Moved COPYBUTTON_USAGE.md from client/src/components/ to docs/components/COPYBUTTON.md; added COPYBUTTON.md to documentation map with complete feature overview, variants, animation timeline, and best practices; updated project structure in CLAUDE.md to reflect new location; added COPYBUTTON.md to Component Patterns cross-reference list and question type identification
