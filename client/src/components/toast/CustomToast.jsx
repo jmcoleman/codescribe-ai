@@ -117,6 +117,7 @@ export const CustomToast = ({
               <div className={`${compact ? 'mt-2.5' : 'mt-3.5'} flex flex-wrap gap-2`}>
                 {actions.map((action, index) => (
                   <button
+                    type="button"
                     key={index}
                     onClick={() => {
                       action.onClick?.();
@@ -148,6 +149,7 @@ export const CustomToast = ({
       {dismissible && (
         <div className="flex border-l border-slate-200">
           <button
+            type="button"
             onClick={() => toast.dismiss(t.id)}
             className={`w-full border border-transparent rounded-none rounded-r-xl ${
               compact ? 'p-2' : 'p-3'
@@ -250,6 +252,7 @@ export const ProgressToast = ({
       {dismissible && (
         <div className="flex border-l border-slate-200">
           <button
+            type="button"
             onClick={() => toast.dismiss(t.id)}
             className="w-full border border-transparent rounded-none rounded-r-xl p-3 flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-50/80 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-purple-600 transition-all duration-200 active:scale-95"
             aria-label="Dismiss notification"
@@ -283,6 +286,7 @@ export const UndoToast = ({ t, message, onUndo }) => {
       <div className="flex-1 w-0 p-4 flex items-center justify-between">
         <p className="text-sm text-white font-semibold tracking-tight">{message}</p>
         <button
+          type="button"
           onClick={() => {
             onUndo?.();
             toast.dismiss(t.id);
@@ -409,6 +413,7 @@ export const AvatarToast = ({ t, type = 'info', title, message, avatarUrl, avata
               <div className="mt-3.5 flex flex-wrap gap-2">
                 {actions.map((action, index) => (
                   <button
+                    type="button"
                     key={index}
                     onClick={() => {
                       action.onClick?.();
@@ -437,6 +442,7 @@ export const AvatarToast = ({ t, type = 'info', title, message, avatarUrl, avata
       {/* Dismiss button */}
       <div className="flex border-l border-slate-200">
         <button
+          type="button"
           onClick={() => toast.dismiss(t.id)}
           className={`w-full border border-transparent rounded-none rounded-r-xl p-3 flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-50/80 focus:outline-none focus:ring-2 focus:ring-inset ${config.ringColor} transition-all duration-200 active:scale-95`}
           aria-label="Dismiss notification"
@@ -532,6 +538,7 @@ export const ExpandableToast = ({ t, type = 'info', title, preview, fullContent,
             {/* Toggle button */}
             {fullContent && (
               <button
+                type="button"
                 onClick={() => setIsExpanded(!isExpanded)}
                 className="mt-2.5 text-xs font-semibold text-purple-600 hover:text-purple-700 focus:outline-none focus:underline underline-offset-2 transition-colors duration-150"
               >
@@ -544,6 +551,7 @@ export const ExpandableToast = ({ t, type = 'info', title, preview, fullContent,
               <div className="mt-3.5 flex flex-wrap gap-2">
                 {actions.map((action, index) => (
                   <button
+                    type="button"
                     key={index}
                     onClick={() => {
                       action.onClick?.();
@@ -572,6 +580,7 @@ export const ExpandableToast = ({ t, type = 'info', title, preview, fullContent,
       {/* Dismiss button */}
       <div className="flex border-l border-slate-200">
         <button
+          type="button"
           onClick={() => toast.dismiss(t.id)}
           className={`w-full border border-transparent rounded-none rounded-r-xl p-3 flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-50/80 focus:outline-none focus:ring-2 focus:ring-inset ${config.ringColor} transition-all duration-200 active:scale-95`}
           aria-label="Dismiss notification"

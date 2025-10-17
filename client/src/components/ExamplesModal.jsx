@@ -88,6 +88,7 @@ export function ExamplesModal({ isOpen, onClose, onLoadExample, currentCode }) {
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
           <h2 id="modal-title" className="text-lg font-semibold text-slate-900">Code Examples</h2>
           <button
+            type="button"
             ref={closeButtonRef}
             onClick={onClose}
             className="p-2 hover:bg-purple-50 hover:scale-[1.05] rounded-lg transition-all duration-200 motion-reduce:transition-none focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 active:scale-[0.98]"
@@ -188,6 +189,7 @@ const ExampleCard = React.forwardRef(({ example, isSelected, onPreview, onLoad }
 
         {/* Load Button */}
         <button
+          type="button"
           onClick={(e) => {
             e.stopPropagation();
             onLoad();
@@ -211,6 +213,7 @@ function ExamplePreview({ example, onLoad }) {
       {/* Action Button */}
       <div className="p-6 border-b border-slate-200 bg-white">
         <button
+          type="button"
           onClick={onLoad}
           className="w-full px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 hover:scale-[1.02] hover:shadow-lg transition-all duration-200 motion-reduce:transition-none font-semibold text-sm shadow-md focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 active:scale-[0.98] active:brightness-95"
         >

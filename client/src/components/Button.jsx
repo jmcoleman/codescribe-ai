@@ -20,14 +20,19 @@ export function Button({
 
   return (
     <button
+      type="button"
       className={`${baseClasses} ${variants[variant]} ${className}`}
       disabled={disabled || loading}
+      aria-busy={loading}
       {...props}
     >
       {loading ? (
-        <Loader2 className="w-4 h-4 animate-spin" />
+        <>
+          <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+          <span className="sr-only">Loading</span>
+        </>
       ) : Icon ? (
-        <Icon className="w-4 h-4" />
+        <Icon className="w-4 h-4" aria-hidden="true" />
       ) : null}
       {children}
     </button>

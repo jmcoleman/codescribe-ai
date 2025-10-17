@@ -1,7 +1,42 @@
 import { X } from 'lucide-react';
+import { useEffect, useRef } from 'react';
+import { FocusTrap } from 'focus-trap-react';
 import { Button } from './Button';
 
 export function MobileMenu({ isOpen, onClose, onExamplesClick, onHelpClick }) {
+  const closeButtonRef = useRef(null);
+  const previousFocusRef = useRef(null);
+
+  // Store previous focus on mount
+  useEffect(() => {
+    if (isOpen) {
+      previousFocusRef.current = document.activeElement;
+    }
+  }, [isOpen]);
+
+  // Restore focus when menu closes
+  useEffect(() => {
+    return () => {
+      if (previousFocusRef.current && previousFocusRef.current.focus) {
+        previousFocusRef.current.focus();
+      }
+    };
+  }, []);
+
+  // Handle Escape key
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const handleExamplesClick = () => {
@@ -28,17 +63,33 @@ export function MobileMenu({ isOpen, onClose, onExamplesClick, onHelpClick }) {
       />
 
       {/* Menu Panel */}
-      <div data-testid="mobile-menu" className="fixed top-0 right-0 bottom-0 w-64 bg-white shadow-xl z-50 md:hidden">
+      <FocusTrap
+        focusTrapOptions={{
+          initialFocus: () => closeButtonRef.current,
+          escapeDeactivates: false, // We handle Escape manually
+          clickOutsideDeactivates: true,
+          onDeactivate: onClose,
+        }}
+      >
+        <div
+          data-testid="mobile-menu"
+          className="fixed top-0 right-0 bottom-0 w-64 bg-white shadow-xl z-50 md:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Mobile menu"
+        >
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-slate-200">
             <span className="text-sm font-semibold text-slate-900">Menu</span>
             <button
+              type="button"
+              ref={closeButtonRef}
               onClick={onClose}
-              className="p-1 hover:bg-slate-100 hover:scale-[1.05] rounded transition-all duration-200 motion-reduce:transition-none active:scale-[0.98]"
+              className="p-1 hover:bg-slate-100 hover:scale-[1.05] rounded transition-all duration-200 motion-reduce:transition-none active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
               aria-label="Close menu"
             >
-              <X className="w-5 h-5 text-slate-600" />
+              <X className="w-5 h-5 text-slate-600" aria-hidden="true" />
             </button>
           </div>
 
@@ -72,7 +123,8 @@ export function MobileMenu({ isOpen, onClose, onExamplesClick, onHelpClick }) {
             </Button>
           </div>
         </div>
-      </div>
+        </div>
+      </FocusTrap>
     </>
   );
 }
@@ -80,6 +132,7 @@ export function MobileMenu({ isOpen, onClose, onExamplesClick, onHelpClick }) {
 function MenuItem({ children, onClick, onMouseEnter }) {
   return (
     <button
+      type="button"
       onClick={onClick}
       onMouseEnter={onMouseEnter}
       className="w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 hover:translate-x-1 rounded-lg transition-all duration-200 motion-reduce:transition-none active:bg-slate-100"

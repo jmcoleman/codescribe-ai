@@ -48,7 +48,7 @@ export function ErrorBanner({ error, retryAfter, onDismiss }) {
             Error
           </h3>
           {isMultiLine ? (
-            <div className="text-sm text-red-700 space-y-1.5 leading-relaxed">
+            <div className="text-sm text-red-800 space-y-1.5 leading-relaxed">
               {errorLines.map((line, index) => (
                 <p key={index} className={line.trim() ? '' : 'hidden'}>
                   {line}
@@ -56,7 +56,7 @@ export function ErrorBanner({ error, retryAfter, onDismiss }) {
               ))}
             </div>
           ) : (
-            <p className="text-sm text-red-700 leading-relaxed">
+            <p className="text-sm text-red-800 leading-relaxed">
               {error}
             </p>
           )}
@@ -72,6 +72,7 @@ export function ErrorBanner({ error, retryAfter, onDismiss }) {
 
         {/* Dismiss Button */}
         <button
+          type="button"
           onClick={handleDismiss}
           className="flex-shrink-0 text-red-400 hover:text-red-600 hover:bg-red-100 rounded-md p-1.5 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-2 motion-reduce:transition-none"
           aria-label="Dismiss error"

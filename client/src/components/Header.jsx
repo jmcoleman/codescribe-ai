@@ -11,7 +11,7 @@ export function Header({ onMenuClick, onExamplesClick, onHelpClick, showMobileMe
           <div className="flex items-center gap-3">
             {/* Logo */}
             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-purple">
-              <FileCode2 className="w-6 h-6 text-white" />
+              <FileCode2 className="w-6 h-6 text-white" aria-hidden="true" />
             </div>
 
             {/* Title + Tagline */}
@@ -19,7 +19,7 @@ export function Header({ onMenuClick, onExamplesClick, onHelpClick, showMobileMe
               <h1 className="text-xl font-semibold text-slate-900">
                 CodeScribe AI
               </h1>
-              <p className="text-xs text-slate-500 hidden lg:block">
+              <p className="text-xs text-slate-600 hidden lg:block">
                 Intelligent Code Documentation
               </p>
             </div>
@@ -52,6 +52,7 @@ export function Header({ onMenuClick, onExamplesClick, onHelpClick, showMobileMe
 
               {/* Help Icon Button */}
               <button
+                type="button"
                 onClick={onHelpClick}
                 onMouseEnter={() => {
                   // Preload HelpModal on hover to prevent layout shift on first click
@@ -61,7 +62,7 @@ export function Header({ onMenuClick, onExamplesClick, onHelpClick, showMobileMe
                 aria-label="Help and FAQ"
                 title="Help and FAQ"
               >
-                <HelpCircle className="w-5 h-5 text-slate-600" />
+                <HelpCircle className="w-5 h-5 text-slate-600" aria-hidden="true" />
               </button>
 
               <Button variant="dark">
@@ -71,12 +72,13 @@ export function Header({ onMenuClick, onExamplesClick, onHelpClick, showMobileMe
 
             {/* Mobile Menu Button */}
             <button
+              type="button"
               data-testid="mobile-menu-btn"
               onClick={onMenuClick}
               className="md:hidden p-2 hover:bg-slate-100 hover:scale-[1.05] rounded-lg transition-all duration-200 motion-reduce:transition-none active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
               aria-label="Open menu"
             >
-              <Menu className="w-6 h-6 text-slate-600" />
+              <Menu className="w-6 h-6 text-slate-600" aria-hidden="true" />
             </button>
           </nav>
         </div>
