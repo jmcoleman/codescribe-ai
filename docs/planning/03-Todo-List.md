@@ -1993,11 +1993,19 @@ Option A: Implement from scratch
 #### Morning Session (3 hours)
 
 **Error Prevention (Issue #12) - 2 hours**
-- [ ] Add confirmation dialog for large code submissions in `App.jsx`
-- [ ] Check line count before generation
-- [ ] Show warning message with file stats
-- [ ] Add confirmation button
-- [ ] Test with 1000+ line files
+- [x] Add confirmation dialog for large code submissions in `App.jsx`
+- [x] Check line count before generation
+- [x] Show warning message with file stats
+- [x] Add confirmation button
+- [x] Test with 1000+ line files
+
+**Implementation Summary:**
+- Created reusable ConfirmationModal component with 3 variants (warning, danger, info)
+- Added line count and file size checking before generation (1000+ lines or 50KB+ triggers warning)
+- Displays file stats (lines, size in KB, character count) in modal
+- Full accessibility support (ARIA attributes, focus management, keyboard navigation)
+- Comprehensive test suite with 23 passing tests
+- Test file created with 1,303 lines for validation (client/src/__tests__/fixtures/large-code-sample.js)
 
 **Color Alternatives (Issue #15) - 2 hours**
 - [ ] Add text labels to quality grades in `DocPanel.jsx`

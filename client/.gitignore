@@ -1,0 +1,3 @@
+
+# Test fixtures - keep the directory but ignore very large test files if needed
+# src/__tests__/fixtures/*.large.js
