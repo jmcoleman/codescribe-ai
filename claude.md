@@ -476,7 +476,25 @@ open docs/design/brand-color-palette.pdf
 - Quality metrics
 - Claude API integration tests
 
-**Key for:** Specialized component testing, specific test suites, detailed test documentation
+**[CROSS-BROWSER-TEST-PLAN.md](docs/testing/CROSS-BROWSER-TEST-PLAN.md)** - Cross-browser testing strategy
+- Browser compatibility matrix (Chrome, Firefox, Safari, Edge)
+- Test execution procedures
+- Known issues and workarounds
+- Responsive design verification
+
+**[SCREEN-READER-TESTING-GUIDE.md](docs/testing/SCREEN-READER-TESTING-GUIDE.md)** - Accessibility testing guide
+- Screen reader setup (NVDA, JAWS, VoiceOver)
+- Testing procedures for key user flows
+- WCAG 2.1 AA compliance verification
+- Keyboard navigation testing
+
+**[ACCESSIBILITY-AUDIT.MD](docs/testing/ACCESSIBILITY-AUDIT.MD)** - Accessibility audit results
+- Lighthouse accessibility scores
+- WCAG compliance verification
+- Remediation status tracking
+- Testing methodology
+
+**Key for:** Specialized component testing, specific test suites, detailed test documentation, accessibility compliance, cross-browser compatibility
 
 ---
 
@@ -574,7 +592,10 @@ codescribe-ai/
 │   │   ├── ERROR-HANDLING-TESTS.md     # Error component tests
 │   │   ├── MERMAID-DIAGRAM-TESTS.md    # Diagram rendering tests
 │   │   ├── monaco-syntax-highlighting-tests.md  # Monaco Editor tests
-│   │   └── PROMPT-QUALITY-REPORT.md    # AI prompt quality tests
+│   │   ├── PROMPT-QUALITY-REPORT.md    # AI prompt quality tests
+│   │   ├── CROSS-BROWSER-TEST-PLAN.md  # Cross-browser testing strategy
+│   │   ├── SCREEN-READER-TESTING-GUIDE.md  # Screen reader testing guide
+│   │   └── ACCESSIBILITY-AUDIT.MD      # Accessibility audit results
 │   ├── design/                   # Design assets
 │   │   ├── brand-color-palette.html  # Interactive color palette
 │   │   └── brand-color-palette.pdf   # PDF version for sharing
@@ -660,6 +681,8 @@ When answering questions about CodeScribe AI:
 - **Diagrams/Visualization** → Reference MERMAID-DIAGRAMS.md
 - **Components** → Reference TOAST-SYSTEM.md, MERMAID-DIAGRAMS.md, ERROR-HANDLING-UX.md, or COPYBUTTON.md
 - **Testing** → Reference Testing README, COMPONENT-TEST-COVERAGE.md, or frontend-testing-guide.md
+- **Accessibility Testing** → Reference ACCESSIBILITY-AUDIT.MD, SCREEN-READER-TESTING-GUIDE.md, or frontend-testing-guide.md
+- **Cross-Browser Testing** → Reference CROSS-BROWSER-TEST-PLAN.md
 - **Current Tasks** → Reference Todo List
 - **Explanation/Demo** → Reference Interview Guide
 - **Package Versions/Dependencies** → Run version checker script (`npm run versions`), reference VERSION-CHECKER.md
@@ -693,6 +716,8 @@ Multiple docs cover the same topic from different angles:
 - **Component Patterns**: TOAST-SYSTEM.md (toast notifications), MERMAID-DIAGRAMS.md (diagram rendering), ERROR-HANDLING-UX.md (error banners and modals), COPYBUTTON.md (copy-to-clipboard functionality)
 - **Error Handling**: ERROR-HANDLING-UX.md (UX patterns, animations, accessibility), TOAST-SYSTEM.md (error toasts for non-blocking notifications)
 - **Testing**: Testing README (overview and quick commands), COMPONENT-TEST-COVERAGE.md (detailed coverage report), frontend-testing-guide.md (patterns and best practices), TEST-GUIDE.md (running tests)
+- **Accessibility Testing**: ACCESSIBILITY-AUDIT.MD (audit results and remediation), SCREEN-READER-TESTING-GUIDE.md (screen reader testing procedures), frontend-testing-guide.md (accessibility testing patterns), ERROR-HANDLING-UX.md (accessible error handling)
+- **Cross-Browser Testing**: CROSS-BROWSER-TEST-PLAN.md (browser compatibility matrix and testing strategy), frontend-testing-guide.md (testing best practices)
 - **Package Versions**: VERSION-CHECKER.md (script documentation), ARCHITECTURE.md (tech stack tables), CLAUDE.md Tech Stack section (quick reference)
 
 Always provide the most relevant reference for the question asked.
@@ -872,7 +897,8 @@ VITE_API_URL=http://localhost:3000
 
 ## 🔄 Version History
 
-- **v1.17** (Current) - Moved interview guide to private folder: Comprehensive update to INTERVIEW-GUIDE.md with actual project learnings and real metrics (319 tests, 85% bundle reduction, 67% performance improvement, 72.2% component coverage); moved from docs/planning/06-InterviewGuide.md to private/INTERVIEW-GUIDE.md (gitignored); removed Interview & Presentation section from CLAUDE.md documentation map; updated project structure and private folder documentation to reflect new location; added interview preparation to private folder contents list
+- **v1.18** (Current) - Added accessibility and cross-browser testing documentation: Added three new test documentation files (CROSS-BROWSER-TEST-PLAN.md, SCREEN-READER-TESTING-GUIDE.md, ACCESSIBILITY-AUDIT.MD) to docs/testing/; updated Testing README with new "Accessibility & Cross-Browser Testing" and "Performance & Audit Reports" sections; updated CLAUDE.md Testing Documentation section with new specialized test docs; updated CLAUDE.md project structure to include new test files; added "Accessibility Testing" and "Cross-Browser Testing" to question type identification and cross-reference sections
+- **v1.17** - Moved interview guide to private folder: Comprehensive update to INTERVIEW-GUIDE.md with actual project learnings and real metrics (319 tests, 85% bundle reduction, 67% performance improvement, 72.2% component coverage); moved from docs/planning/06-InterviewGuide.md to private/INTERVIEW-GUIDE.md (gitignored); removed Interview & Presentation section from CLAUDE.md documentation map; updated project structure and private folder documentation to reflect new location; added interview preparation to private folder contents list
 - **v1.16** - Organized testing documentation: Created comprehensive Testing Documentation section in documentation map with 9 test docs under docs/testing/; added Testing README (hub), COMPONENT-TEST-COVERAGE.md (detailed coverage report with 319 tests), frontend-testing-guide.md, TEST-GUIDE.md, IMPLEMENTATION-SUMMARY.md, and 4 specialized test docs; moved TEST-GUIDE.md from client/ to docs/testing/ and IMPLEMENTATION-SUMMARY.md from docs/planning/ to docs/testing/; deleted outdated root files (TESTING-COMPLETE.md, TEST_SUITE_SUMMARY.md); updated project structure to show docs/testing/ folder; added Testing to question type identification and cross-reference list
 - **v1.15** - Reorganized component documentation: Moved COPYBUTTON_USAGE.md from client/src/components/ to docs/components/COPYBUTTON.md; added COPYBUTTON.md to documentation map with complete feature overview, variants, animation timeline, and best practices; updated project structure in CLAUDE.md to reflect new location; added COPYBUTTON.md to Component Patterns cross-reference list and question type identification
 - **v1.14** - Added version checker script integration: Created comprehensive VERSION-CHECKER.md documentation for scripts/check-versions.js utility; added new Scripts & Utilities section to documentation map; updated Tech Stack section with version checker references and accuracy notes; added Package Versions/Dependencies to question type identification; added Package Versions to cross-reference list; created new section 8 "Package Version Reference Guidelines" with protocol for using version checker when updating documentation; added Version Checking commands to Quick Reference; updated project structure to include docs/scripts/ and scripts/ folders
