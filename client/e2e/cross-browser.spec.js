@@ -90,12 +90,41 @@ test.describe('CodeScribe AI - Cross Browser Compatibility', () => {
     await page.click('.monaco-editor');
     await page.keyboard.type('class MyClass { constructor() {} }');
 
+    // Set up listener BEFORE clicking generate button
+    const ssePromise = page.waitForResponse(
+      response => response.url().includes('/api/generate-stream') &&
+                  response.headers()['content-type']?.includes('text/event-stream'),
+      { timeout: 10000 }
+    );
+
     // Click generate button
     await page.click('[data-testid="generate-btn"]');
 
-    // Wait for Mermaid SVG to render (it will appear after full generation)
-    // Generous timeout to account for full SSE stream + Mermaid rendering
-    await expect(page.locator('svg[data-mermaid]')).toBeVisible({ timeout: 35000 });
+    // Wait for SSE stream to start
+    await ssePromise;
+
+    // Wait for documentation panel to appear and generation to complete
+    await page.waitForFunction(
+      () => {
+        const docPanel = document.querySelector('[data-testid="doc-panel"]');
+        const generateBtn = document.querySelector('[data-testid="generate-btn"]');
+        return docPanel && !generateBtn?.disabled;
+      },
+      { timeout: 30000 }
+    );
+
+    // Wait a bit for all content to render
+    await page.waitForTimeout(2000);
+
+    // Look for the "Show" button for Mermaid diagram (there may be multiple)
+    const showButton = page.locator('button:has-text("Show")').first();
+    await expect(showButton).toBeVisible({ timeout: 5000 });
+
+    // Click the "Show" button to trigger Mermaid diagram rendering
+    await showButton.click();
+
+    // Wait for Mermaid SVG to render after clicking Show
+    await expect(page.locator('svg[id^="mermaid-"]').first()).toBeVisible({ timeout: 15000 });
   });
 
   test('should copy to clipboard', async ({ page, context, browserName }) => {

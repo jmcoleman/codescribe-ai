@@ -1,5 +1,30 @@
 # CodeScribe AI - API Documentation
 
+**API Version:** 1.0.0
+**Status:** ✅ Production-Ready (Deployment Pending)
+**Base URL (Dev):** `http://localhost:3000/api`
+**Base URL (Prod):** `https://codescribe-ai.vercel.app/api` _(Coming Day 5)_
+
+## 📋 Overview
+
+The CodeScribe AI API provides AI-powered code documentation generation with real-time streaming, quality scoring, and AST-based code analysis.
+
+**Key Features:**
+- 🤖 AI-powered documentation generation (Claude Sonnet 4.5)
+- ⚡ Real-time streaming with Server-Sent Events (SSE)
+- 📊 Quality scoring on 5 criteria (100-point scale)
+- 📝 Multiple documentation types (README, JSDoc, API, ARCHITECTURE)
+- 🔒 Rate limiting (10 req/min, 100 req/hour)
+- 📁 File upload support (16 file types)
+- ✅ Comprehensive testing (133+ tests, 95.81% coverage)
+
+**Quick Links:**
+- [API Reference](API-Reference.md) - Complete endpoint specifications
+- [Testing Documentation](../testing/) - Test coverage and strategies
+- [Architecture Diagrams](../architecture/) - System design overview
+
+---
+
 ## 📦 Postman Collection & Environments
 
 ### Import Collection
