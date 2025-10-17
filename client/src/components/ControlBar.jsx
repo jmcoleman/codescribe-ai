@@ -21,6 +21,7 @@ export function ControlBar({
 
   return (
     <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-4">
+      <h2 className="sr-only">Documentation Controls</h2>
       <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
         {/* Left: Actions */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
@@ -51,6 +52,7 @@ export function ControlBar({
             options={docTypes}
             value={docType}
             onChange={onDocTypeChange}
+            ariaLabel="Select documentation type"
           />
         </div>
 

@@ -1,46 +1,35 @@
 import { X, CheckCircle, AlertTriangle, XCircle } from 'lucide-react';
 import { useEffect, useRef } from 'react';
+import { FocusTrap } from 'focus-trap-react';
 import { CopyButtonWithText } from './CopyButton';
 
 export function QualityScoreModal({ qualityScore, onClose }) {
-  const modalRef = useRef(null);
   const closeButtonRef = useRef(null);
+  const previousFocusRef = useRef(null);
 
-  // Focus management: auto-focus close button when modal opens
+  // Store previous focus on mount
   useEffect(() => {
-    if (qualityScore && closeButtonRef.current) {
-      closeButtonRef.current.focus();
+    if (qualityScore) {
+      previousFocusRef.current = document.activeElement;
     }
   }, [qualityScore]);
 
-  // Focus trap: keep focus within modal
+  // Restore focus when modal closes
+  useEffect(() => {
+    return () => {
+      if (previousFocusRef.current && previousFocusRef.current.focus) {
+        previousFocusRef.current.focus();
+      }
+    };
+  }, []);
+
+  // Handle Escape key
   useEffect(() => {
     if (!qualityScore) return;
 
     const handleKeyDown = (e) => {
-      // Close on Escape key
       if (e.key === 'Escape') {
         onClose();
-        return;
-      }
-
-      // Focus trap on Tab
-      if (e.key === 'Tab' && modalRef.current) {
-        const focusableElements = modalRef.current.querySelectorAll(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        );
-        const firstElement = focusableElements[0];
-        const lastElement = focusableElements[focusableElements.length - 1];
-
-        if (e.shiftKey && document.activeElement === firstElement) {
-          // Shift+Tab on first element: go to last
-          e.preventDefault();
-          lastElement?.focus();
-        } else if (!e.shiftKey && document.activeElement === lastElement) {
-          // Tab on last element: go to first
-          e.preventDefault();
-          firstElement?.focus();
-        }
       }
     };
 
@@ -76,23 +65,31 @@ export function QualityScoreModal({ qualityScore, onClose }) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-      <div
-        ref={modalRef}
-        className="bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-200"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="quality-modal-title"
+      <FocusTrap
+        focusTrapOptions={{
+          initialFocus: () => closeButtonRef.current,
+          escapeDeactivates: false, // We handle Escape manually
+          clickOutsideDeactivates: true,
+          onDeactivate: onClose,
+        }}
       >
+        <div
+          className="bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-200"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="quality-modal-title"
+        >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 flex-shrink-0">
           <h2 id="quality-modal-title" className="text-lg font-semibold text-slate-900">Quality Breakdown</h2>
           <button
+            type="button"
             ref={closeButtonRef}
             onClick={onClose}
             className="p-2 hover:bg-purple-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
             aria-label="Close quality breakdown modal"
           >
-            <X className="w-5 h-5 text-slate-600 hover:text-purple-600 transition-colors" />
+            <X className="w-5 h-5 text-slate-600 hover:text-purple-600 transition-colors" aria-hidden="true" />
           </button>
         </div>
 
@@ -129,7 +126,8 @@ export function QualityScoreModal({ qualityScore, onClose }) {
             />
           </div>
         </div>
-      </div>
+        </div>
+      </FocusTrap>
     </div>
   );
 }
@@ -137,10 +135,10 @@ export function QualityScoreModal({ qualityScore, onClose }) {
 function CriteriaItem({ name, criteria }) {
   // Use subtle, muted colors that provide context without being distracting
   const icon = criteria.status === 'complete'
-    ? <CheckCircle className="w-4 h-4 text-purple-400 flex-shrink-0" />
+    ? <CheckCircle className="w-4 h-4 text-purple-400 flex-shrink-0" aria-hidden="true" />
     : criteria.status === 'partial'
-    ? <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0" />
-    : <XCircle className="w-4 h-4 text-slate-500 flex-shrink-0" />;
+    ? <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0" aria-hidden="true" />
+    : <XCircle className="w-4 h-4 text-slate-500 flex-shrink-0" aria-hidden="true" />;
 
   const maxPoints = criteria.maxPoints || 20;
   const percentage = (criteria.points / maxPoints) * 100;

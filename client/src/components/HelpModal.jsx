@@ -113,6 +113,7 @@ export function HelpModal({ isOpen, onClose }) {
             Help & Quick Start
           </h2>
           <button
+            type="button"
             ref={closeButtonRef}
             onClick={handleClose}
             className="p-2 hover:bg-slate-100 rounded-lg transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
@@ -237,6 +238,7 @@ export function HelpModal({ isOpen, onClose }) {
                 return (
                   <div key={index} className="border border-slate-200 rounded-lg overflow-hidden transition-all duration-200 hover:shadow-sm">
                     <button
+                      type="button"
                       onClick={() => toggleFAQ(index)}
                       className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-slate-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-purple-600"
                       aria-expanded={isExpanded}
@@ -277,6 +279,7 @@ export function HelpModal({ isOpen, onClose }) {
         {/* Footer */}
         <div className="sticky bottom-0 bg-slate-50 border-t border-slate-200 px-6 py-4 rounded-b-xl z-10">
           <button
+            type="button"
             onClick={handleClose}
             className="w-full px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
           >

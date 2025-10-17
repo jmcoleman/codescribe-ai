@@ -55,14 +55,27 @@ export function DocPanel({
   };
   return (
     <div data-testid="doc-panel" className="flex flex-col h-full bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+      {/* Live Region for Screen Reader Announcements */}
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+      >
+        {isGenerating && !documentation ? 'Generating documentation...' :
+         isGenerating && documentation ? 'Updating documentation...' :
+         documentation ? `Documentation generated. Quality score: ${qualityScore?.score} out of 100, grade ${qualityScore?.grade}` :
+         'Ready to generate documentation'}
+      </div>
+
       {/* Header */}
       <div className="flex items-center justify-between px-4 h-12 bg-purple-50 border-b border-purple-200">
         {/* Left: Icon + Title */}
         <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-purple-600" />
-          <span className="text-sm text-slate-800">
+          <Sparkles className="w-4 h-4 text-purple-600" aria-hidden="true" />
+          <h2 className="text-sm text-slate-800">
             Generated Documentation
-          </span>
+          </h2>
         </div>
 
         {/* Right: Quality Score + Copy Button */}
@@ -70,6 +83,7 @@ export function DocPanel({
           {/* Quality Score */}
           {qualityScore && (
             <button
+              type="button"
               onClick={onViewBreakdown}
               className="flex items-center gap-2 px-3 py-1.5 bg-white border border-purple-200 rounded-lg hover:bg-purple-50 hover:scale-[1.02] hover:shadow-sm transition-all duration-200 motion-reduce:transition-none active:scale-[0.98]"
               aria-label="View quality score breakdown"
@@ -184,7 +198,7 @@ export function DocPanel({
             </ReactMarkdown>
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center h-full text-center px-6">
+          <div className="flex flex-col items-center justify-center h-full text-center px-6" role="status">
             <h3 className="text-xl font-semibold text-slate-900 mb-3">
               Ready to Generate Documentation
             </h3>
@@ -227,14 +241,14 @@ export function DocPanel({
             <div className="flex items-center justify-between px-4 py-2">
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-1.5 text-xs">
-                  <CheckCircle className="w-3 h-3 text-success" />
+                  <CheckCircle className="w-3 h-3 text-success" aria-hidden="true" />
                   <span className="text-slate-600">
                     {qualityScore.summary.strengths.length} criteria met
                   </span>
                 </div>
                 {qualityScore.summary.improvements.length > 0 && (
                   <div className="flex items-center gap-1.5 text-xs">
-                    <AlertCircle className="w-3 h-3 text-warning" />
+                    <AlertCircle className="w-3 h-3 text-warning" aria-hidden="true" />
                     <span className="text-slate-600">
                       {qualityScore.summary.improvements.length} areas to improve
                     </span>
@@ -244,6 +258,7 @@ export function DocPanel({
 
             {/* Expand/Collapse Button */}
             <button
+              type="button"
               onClick={handleToggle}
               onKeyDown={handleKeyDown}
               aria-expanded={isExpanded}
@@ -253,9 +268,9 @@ export function DocPanel({
             >
               <span className="font-medium">View full report</span>
               {isExpanded ? (
-                <ChevronUp className="w-3 h-3" />
+                <ChevronUp className="w-3 h-3" aria-hidden="true" />
               ) : (
-                <ChevronDown className="w-3 h-3" />
+                <ChevronDown className="w-3 h-3" aria-hidden="true" />
               )}
             </button>
           </div>
@@ -282,7 +297,7 @@ export function DocPanel({
                 {qualityScore.summary.strengths.length > 0 && (
                   <div>
                     <div className="flex items-center gap-1.5 mb-1.5">
-                      <CheckCircle className="w-3.5 h-3.5 text-success" />
+                      <CheckCircle className="w-3.5 h-3.5 text-success" aria-hidden="true" />
                       <span className="text-xs font-semibold text-slate-800">Strengths</span>
                     </div>
                     <ul className="space-y-1 ml-5">
@@ -305,7 +320,7 @@ export function DocPanel({
                 {qualityScore.summary.improvements.length > 0 && (
                   <div>
                     <div className="flex items-center gap-1.5 mb-1.5">
-                      <AlertCircle className="w-3.5 h-3.5 text-warning" />
+                      <AlertCircle className="w-3.5 h-3.5 text-warning" aria-hidden="true" />
                       <span className="text-xs font-semibold text-slate-800">Areas to Improve</span>
                     </div>
                     <ul className="space-y-1 ml-5">

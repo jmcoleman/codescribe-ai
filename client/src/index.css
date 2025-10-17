@@ -4,18 +4,28 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Global Focus Styles - Indigo (Secondary Brand Color) */
+/* Global Focus Styles - Purple (Primary Brand Color) for Keyboard Navigation */
 @layer base {
+  /* Remove default browser focus styles */
   *:focus {
-    @apply outline-none ring-2 ring-indigo-500 ring-offset-2;
+    @apply outline-none;
   }
 
+  /* Only show focus ring for keyboard navigation (not mouse clicks) */
   *:focus:not(:focus-visible) {
     @apply ring-0 ring-offset-0;
   }
 
+  /* Default focus-visible style for all interactive elements */
   *:focus-visible {
-    @apply outline-none ring-2 ring-indigo-500 ring-offset-2;
+    @apply outline-none ring-2 ring-purple-600 ring-offset-2;
+  }
+
+  /* High contrast mode support - ensure focus indicators are visible */
+  @media (prefers-contrast: high) {
+    *:focus-visible {
+      @apply ring-4 ring-purple-600 ring-offset-4;
+    }
   }
 }
 
@@ -32,6 +42,31 @@
 
   .scrollbar-custom::-webkit-scrollbar-thumb {
     @apply bg-slate-300 rounded hover:bg-slate-400;
+  }
+
+  /* Screen Reader Only - Hidden visually but accessible to screen readers */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  /* Show when focused - for skip links */
+  .focus\:not-sr-only:focus {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: 0.5rem 1rem;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
   }
 }
 

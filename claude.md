@@ -374,6 +374,26 @@ open docs/design/brand-color-palette.pdf
 
 ---
 
+#### [SELECT-USAGE.md](docs/components/SELECT-USAGE.md) - Select Component Usage Guide
+**When to use:** Creating new dropdowns, understanding Select component patterns, accessibility requirements, styling decisions
+
+**Contains:**
+- Complete Select component usage guide (Headless UI-based)
+- Props API reference (options, value, onChange, label, ariaLabel, placeholder)
+- Basic and advanced usage examples
+- Current styling decisions (purple hover at 75% opacity, slate checkmark, no bold text)
+- Color reference table (hover, selected, text, border)
+- Full keyboard navigation support (Arrow keys, Home, End, Type-ahead, Escape)
+- Automatic ARIA attributes and screen reader support
+- When to use vs when to create variants
+- Testing guidelines (manual, screen reader, accessibility)
+- Common issues and solutions
+- Future enhancement ideas for Phase 4 evaluation
+
+**Key for:** Dropdown implementation, Select component usage, maintaining design consistency, accessibility compliance, keyboard navigation patterns
+
+---
+
 ### 🧪 Testing Documentation
 
 #### [Testing README](docs/testing/README.md) - Testing Documentation Hub
@@ -713,7 +733,7 @@ Multiple docs cover the same topic from different angles:
 - **Performance**: OPTIMIZATION-GUIDE.md (comprehensive guide), Dev Guide (optimization techniques), ARCHITECTURE.md (performance targets)
 - **Lazy Loading**: OPTIMIZATION-GUIDE.md (implementation patterns), Dev Guide (React best practices)
 - **Mermaid Diagrams**: MERMAID-DIAGRAMS.md (comprehensive guide), CLAUDE.md section 7 (quick reference), 04-Architecture.md (implementation example)
-- **Component Patterns**: TOAST-SYSTEM.md (toast notifications), MERMAID-DIAGRAMS.md (diagram rendering), ERROR-HANDLING-UX.md (error banners and modals), COPYBUTTON.md (copy-to-clipboard functionality)
+- **Component Patterns**: TOAST-SYSTEM.md (toast notifications), MERMAID-DIAGRAMS.md (diagram rendering), ERROR-HANDLING-UX.md (error banners and modals), COPYBUTTON.md (copy-to-clipboard functionality), SELECT-USAGE.md (dropdown select component)
 - **Error Handling**: ERROR-HANDLING-UX.md (UX patterns, animations, accessibility), TOAST-SYSTEM.md (error toasts for non-blocking notifications)
 - **Testing**: Testing README (overview and quick commands), COMPONENT-TEST-COVERAGE.md (detailed coverage report), frontend-testing-guide.md (patterns and best practices), TEST-GUIDE.md (running tests)
 - **Accessibility Testing**: ACCESSIBILITY-AUDIT.MD (audit results and remediation), SCREEN-READER-TESTING-GUIDE.md (screen reader testing procedures), frontend-testing-guide.md (accessibility testing patterns), ERROR-HANDLING-UX.md (accessible error handling)

@@ -258,6 +258,7 @@ export const ToastHistory = ({ defaultOpen = false, position = 'right' }) => {
     <>
       {/* Toggle Button */}
       <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
         className="fixed top-4 right-20 z-40 bg-white hover:bg-slate-50 text-slate-700 rounded-full p-3 shadow-lg border-2 border-slate-200 transition-all duration-200 hover:shadow-xl active:scale-95 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
         aria-label="Open notification center"
@@ -302,6 +303,7 @@ export const ToastHistory = ({ defaultOpen = false, position = 'right' }) => {
                 </p>
               </div>
               <button
+                type="button"
                 onClick={() => setIsOpen(false)}
                 className="text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-lg hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-purple-600"
                 aria-label="Close notification center"
@@ -315,6 +317,7 @@ export const ToastHistory = ({ defaultOpen = false, position = 'right' }) => {
               <div className="flex items-center gap-2 flex-wrap">
                 {['all', 'success', 'error', 'warning', 'info'].map((type) => (
                   <button
+                    type="button"
                     key={type}
                     onClick={() => setFilter(type)}
                     className={`px-3 py-1 text-xs font-medium rounded-full transition-all duration-150 ${
@@ -344,6 +347,7 @@ export const ToastHistory = ({ defaultOpen = false, position = 'right' }) => {
             {filteredNotifications.length > 0 && (
               <div className="p-3 border-b border-slate-200 bg-white flex items-center gap-2">
                 <button
+                  type="button"
                   onClick={markAllAsRead}
                   className="text-xs font-medium text-purple-600 hover:text-purple-700 flex items-center gap-1 hover:underline"
                 >
@@ -351,6 +355,7 @@ export const ToastHistory = ({ defaultOpen = false, position = 'right' }) => {
                 </button>
                 <span className="text-slate-300">|</span>
                 <button
+                  type="button"
                   onClick={clear}
                   className="text-xs font-medium text-red-600 hover:text-red-700 flex items-center gap-1 hover:underline"
                 >
@@ -408,6 +413,7 @@ export const ToastHistory = ({ defaultOpen = false, position = 'right' }) => {
                           <div className="flex items-center gap-1">
                             {!notification.read && (
                               <button
+                                type="button"
                                 onClick={() => markAsRead(notification.id)}
                                 className="text-purple-600 hover:text-purple-700 p-1 rounded hover:bg-purple-50 transition-colors"
                                 aria-label="Mark as read"
@@ -418,6 +424,7 @@ export const ToastHistory = ({ defaultOpen = false, position = 'right' }) => {
                             )}
                             {!notification.archived && (
                               <button
+                                type="button"
                                 onClick={() => archive(notification.id)}
                                 className="text-slate-400 hover:text-slate-600 p-1 rounded hover:bg-slate-100 transition-colors"
                                 aria-label="Archive"
@@ -427,6 +434,7 @@ export const ToastHistory = ({ defaultOpen = false, position = 'right' }) => {
                               </button>
                             )}
                             <button
+                              type="button"
                               onClick={() => remove(notification.id)}
                               className="text-slate-400 hover:text-red-600 p-1 rounded hover:bg-red-50 transition-colors"
                               aria-label="Delete"
