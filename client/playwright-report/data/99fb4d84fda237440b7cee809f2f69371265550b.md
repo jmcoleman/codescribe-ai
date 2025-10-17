@@ -1,0 +1,101 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e6]:
+        - generic [ref=e7]:
+          - img [ref=e9]
+          - generic [ref=e14]:
+            - heading "CodeScribe AI" [level=1] [ref=e15]
+            - paragraph [ref=e16]: Intelligent Code Documentation
+        - navigation [ref=e17]:
+          - generic [ref=e18]:
+            - button "Examples" [ref=e19] [cursor=pointer]
+            - button "Help and FAQ" [ref=e20] [cursor=pointer]:
+              - img [ref=e21]
+            - button "Sign In" [ref=e24] [cursor=pointer]
+    - main [ref=e25]:
+      - generic [ref=e27]:
+        - generic [ref=e28]:
+          - button "Upload Files" [ref=e29] [cursor=pointer]:
+            - img [ref=e30]
+            - text: Upload Files
+          - button "Import from GitHub" [ref=e33] [cursor=pointer]:
+            - img [ref=e34]
+            - generic [ref=e37]: Import from GitHub
+          - button "README.md" [ref=e40] [cursor=pointer]:
+            - generic [ref=e41]: README.md
+            - img [ref=e42]
+        - button "Generate Docs" [ref=e44] [cursor=pointer]:
+          - img [ref=e45]
+          - text: Generate Docs
+      - generic [ref=e48]:
+        - generic [ref=e49]:
+          - generic [ref=e50]:
+            - generic [ref=e56]: code.js
+            - generic [ref=e57]:
+              - generic [ref=e58]: javascript
+              - button "Copy code to clipboard" [ref=e59] [cursor=pointer]:
+                - generic [ref=e60]:
+                  - img [ref=e61]
+                  - img [ref=e64]
+          - code [ref=e69]:
+            - generic [ref=e70]:
+              - generic [ref=e72]:
+                - generic [ref=e75]: "1"
+                - generic [ref=e77]: "2"
+                - generic [ref=e79]: "3"
+                - generic [ref=e80]:
+                  - generic [ref=e81] [cursor=pointer]: 
+                  - generic [ref=e82]: "4"
+                - generic [ref=e84]: "5"
+                - generic [ref=e86]: "6"
+                - generic [ref=e88]: "7"
+              - generic [ref=e101]:
+                - generic [ref=e103]: "function hello() { return \"world\"; }// Paste your code here or try the example below..."
+                - generic [ref=e106]: "// Example function:"
+                - generic [ref=e108]: "function calculateTotal(items) {"
+                - generic [ref=e110]: return items.reduce((sum, item) => sum + item.price, 0);
+                - generic [ref=e112]: "}"
+              - textbox "Editor content" [active] [ref=e115]: "function hello() { return \"world\"; }// Paste your code here or try the example below... // Example function: function calculateTotal(items) { return items.reduce((sum, item) => sum + item.price, 0); }"
+          - generic [ref=e116]:
+            - generic [ref=e117]: 7 lines • 204 chars
+            - generic [ref=e118]:
+              - img [ref=e119]
+              - generic [ref=e121]: Ready to analyze
+        - generic [ref=e122]:
+          - generic [ref=e124]:
+            - img [ref=e125]
+            - generic [ref=e128]: Generated Documentation
+          - generic [ref=e130]:
+            - heading "Ready to Generate Documentation" [level=3] [ref=e131]
+            - paragraph [ref=e132]: Your AI-generated documentation will appear here with real-time streaming and quality scoring.
+            - generic [ref=e133]:
+              - heading "Quick Start" [level=4] [ref=e134]
+              - list [ref=e135]:
+                - listitem [ref=e136]:
+                  - generic [ref=e137]: "1"
+                  - generic [ref=e138]:
+                    - text: Paste your code or click
+                    - strong [ref=e139]: "\"Upload Files\""
+                - listitem [ref=e140]:
+                  - generic [ref=e141]: "2"
+                  - generic [ref=e142]: Select documentation type (README, JSDoc, API, or ARCHITECTURE)
+                - listitem [ref=e143]:
+                  - generic [ref=e144]: "3"
+                  - generic [ref=e145]:
+                    - text: Click
+                    - strong [ref=e146]: "\"Generate Docs\""
+                    - text: and watch the magic happen!
+            - paragraph [ref=e147]:
+              - text: Not sure where to start? Try the
+              - strong [ref=e148]: Examples
+              - text: button above or click the
+              - strong [ref=e149]: "?"
+              - text: icon for help.
+  - generic [ref=e150]:
+    - alert
+    - alert
+```

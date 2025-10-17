@@ -1,0 +1,80 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e6]:
+        - img [ref=e9]
+        - navigation [ref=e14]:
+          - button "Open menu" [ref=e15] [cursor=pointer]:
+            - img [ref=e16]
+    - main [ref=e17]:
+      - generic [ref=e19]:
+        - generic [ref=e20]:
+          - button "Upload Files" [ref=e21] [cursor=pointer]:
+            - img [ref=e22]
+            - text: Upload Files
+          - button "GitHub" [ref=e25] [cursor=pointer]:
+            - img [ref=e26]
+            - generic [ref=e29]: GitHub
+          - button "README.md" [ref=e31] [cursor=pointer]:
+            - generic [ref=e32]: README.md
+            - img [ref=e33]
+        - button "Generate Docs" [ref=e35] [cursor=pointer]:
+          - img [ref=e36]
+          - text: Generate Docs
+      - generic [ref=e39]:
+        - generic [ref=e40]:
+          - generic [ref=e41]:
+            - generic [ref=e47]: code.js
+            - generic [ref=e48]:
+              - generic [ref=e49]: javascript
+              - button "Copy code to clipboard" [ref=e50] [cursor=pointer]:
+                - generic [ref=e51]:
+                  - img [ref=e52]
+                  - img [ref=e55]
+          - code [ref=e60]:
+            - generic [ref=e61]:
+              - generic [ref=e66]: "1"
+              - generic [ref=e74]: "class MyClass { constructor() {} }// Paste your code here or try the example below..."
+              - textbox "Editor content" [active] [ref=e78]
+          - generic [ref=e79]:
+            - generic [ref=e80]: 7 lines • 202 chars
+            - generic [ref=e81]:
+              - img [ref=e82]
+              - generic [ref=e84]: Ready to analyze
+        - generic [ref=e85]:
+          - generic [ref=e87]:
+            - img [ref=e88]
+            - generic [ref=e91]: Generated Documentation
+          - generic [ref=e93]:
+            - heading "Ready to Generate Documentation" [level=3] [ref=e94]
+            - paragraph [ref=e95]: Your AI-generated documentation will appear here with real-time streaming and quality scoring.
+            - generic [ref=e96]:
+              - heading "Quick Start" [level=4] [ref=e97]
+              - list [ref=e98]:
+                - listitem [ref=e99]:
+                  - generic [ref=e100]: "1"
+                  - generic [ref=e101]:
+                    - text: Paste your code or click
+                    - strong [ref=e102]: "\"Upload Files\""
+                - listitem [ref=e103]:
+                  - generic [ref=e104]: "2"
+                  - generic [ref=e105]: Select documentation type (README, JSDoc, API, or ARCHITECTURE)
+                - listitem [ref=e106]:
+                  - generic [ref=e107]: "3"
+                  - generic [ref=e108]:
+                    - text: Click
+                    - strong [ref=e109]: "\"Generate Docs\""
+                    - text: and watch the magic happen!
+            - paragraph [ref=e110]:
+              - text: Not sure where to start? Try the
+              - strong [ref=e111]: Examples
+              - text: button above or click the
+              - strong [ref=e112]: "?"
+              - text: icon for help.
+  - generic [ref=e113]:
+    - alert
+    - alert
+```
