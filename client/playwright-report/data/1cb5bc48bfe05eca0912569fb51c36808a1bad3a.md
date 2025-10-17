@@ -1,0 +1,103 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e6]:
+        - img [ref=e9]
+        - navigation [ref=e14]:
+          - button "Open menu" [ref=e15] [cursor=pointer]:
+            - img [ref=e16]
+    - main [ref=e17]:
+      - generic [ref=e19]:
+        - generic [ref=e20]:
+          - button "Upload Files" [ref=e21] [cursor=pointer]:
+            - img [ref=e22]
+            - text: Upload Files
+          - button "GitHub" [ref=e25] [cursor=pointer]:
+            - img [ref=e26]
+            - generic [ref=e29]: GitHub
+          - button "README.md" [ref=e31] [cursor=pointer]:
+            - generic [ref=e32]: README.md
+            - img [ref=e33]
+        - button "Generate Docs" [ref=e35] [cursor=pointer]:
+          - img [ref=e36]
+          - text: Generate Docs
+      - alert [ref=e39]:
+        - generic [ref=e40]:
+          - img [ref=e42]
+          - generic [ref=e44]:
+            - heading "Error" [level=3] [ref=e45]
+            - paragraph [ref=e46]: Rate limit exceeded. Too many requests.
+            - paragraph [ref=e48]: Please wait 60 seconds before trying again.
+          - button "Dismiss error" [ref=e50] [cursor=pointer]:
+            - img [ref=e51]
+      - generic [ref=e54]:
+        - generic [ref=e55]:
+          - generic [ref=e56]:
+            - generic [ref=e62]: code.js
+            - generic [ref=e63]:
+              - generic [ref=e64]: javascript
+              - button "Copy code to clipboard" [ref=e65] [cursor=pointer]:
+                - generic [ref=e66]:
+                  - img [ref=e67]
+                  - img [ref=e70]
+          - code [ref=e75]:
+            - generic [ref=e76]:
+              - generic [ref=e78]:
+                - generic [ref=e81]: "1"
+                - generic [ref=e83]: "2"
+                - generic [ref=e85]: "3"
+                - generic [ref=e86]:
+                  - generic [ref=e87] [cursor=pointer]: 
+                  - generic [ref=e88]: "4"
+                - generic [ref=e90]: "5"
+                - generic [ref=e92]: "6"
+                - generic [ref=e94]: "7"
+              - generic [ref=e105]:
+                - generic [ref=e107]: // Paste your code here or try the example below...
+                - generic [ref=e110]: "// Example function:"
+                - generic [ref=e112]: "function calculateTotal(items) {"
+                - generic [ref=e114]: return items.reduce((sum, item) => sum + item.price, 0);
+                - generic [ref=e116]: "}"
+              - textbox "Editor content" [ref=e119]
+          - generic [ref=e120]:
+            - generic [ref=e121]: 7 lines • 168 chars
+            - generic [ref=e122]:
+              - img [ref=e123]
+              - generic [ref=e125]: Ready to analyze
+        - generic [ref=e126]:
+          - generic [ref=e128]:
+            - img [ref=e129]
+            - generic [ref=e132]: Generated Documentation
+          - generic [ref=e134]:
+            - heading "Ready to Generate Documentation" [level=3] [ref=e135]
+            - paragraph [ref=e136]: Your AI-generated documentation will appear here with real-time streaming and quality scoring.
+            - generic [ref=e137]:
+              - heading "Quick Start" [level=4] [ref=e138]
+              - list [ref=e139]:
+                - listitem [ref=e140]:
+                  - generic [ref=e141]: "1"
+                  - generic [ref=e142]:
+                    - text: Paste your code or click
+                    - strong [ref=e143]: "\"Upload Files\""
+                - listitem [ref=e144]:
+                  - generic [ref=e145]: "2"
+                  - generic [ref=e146]: Select documentation type (README, JSDoc, API, or ARCHITECTURE)
+                - listitem [ref=e147]:
+                  - generic [ref=e148]: "3"
+                  - generic [ref=e149]:
+                    - text: Click
+                    - strong [ref=e150]: "\"Generate Docs\""
+                    - text: and watch the magic happen!
+            - paragraph [ref=e151]:
+              - text: Not sure where to start? Try the
+              - strong [ref=e152]: Examples
+              - text: button above or click the
+              - strong [ref=e153]: "?"
+              - text: icon for help.
+  - generic [ref=e154]:
+    - alert
+    - alert
+```

@@ -54,7 +54,7 @@ export function DocPanel({
     }
   };
   return (
-    <div className="flex flex-col h-full bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+    <div data-testid="doc-panel" className="flex flex-col h-full bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-4 h-12 bg-purple-50 border-b border-purple-200">
         {/* Left: Icon + Title */}

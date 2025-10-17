@@ -1,0 +1,73 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e6]:
+        - img [ref=e9]
+        - navigation [ref=e14]:
+          - button "Open menu" [ref=e15] [cursor=pointer]:
+            - img [ref=e16]
+    - main [ref=e17]:
+      - generic [ref=e19]:
+        - generic [ref=e20]:
+          - button "Upload Files" [ref=e21] [cursor=pointer]:
+            - img [ref=e22]
+            - text: Upload Files
+          - button "GitHub" [ref=e25] [cursor=pointer]:
+            - img [ref=e26]
+            - generic [ref=e29]: GitHub
+          - button "README.md" [ref=e31] [cursor=pointer]:
+            - generic [ref=e32]: README.md
+            - img [ref=e33]
+        - button "Generating..." [disabled] [ref=e35]:
+          - img [ref=e36]
+          - text: Generating...
+      - generic [ref=e38]:
+        - generic [ref=e39]:
+          - generic [ref=e40]:
+            - generic [ref=e46]: code.js
+            - generic [ref=e47]:
+              - generic [ref=e48]: javascript
+              - button "Copy code to clipboard" [ref=e49] [cursor=pointer]:
+                - generic [ref=e50]:
+                  - img [ref=e51]
+                  - img [ref=e54]
+          - code [ref=e59]:
+            - generic [ref=e60]:
+              - generic [ref=e62]:
+                - generic [ref=e65]: "1"
+                - generic [ref=e67]: "2"
+                - generic [ref=e69]: "3"
+                - generic [ref=e70]:
+                  - generic [ref=e71] [cursor=pointer]: 
+                  - generic [ref=e72]: "4"
+                - generic [ref=e74]: "5"
+                - generic [ref=e76]: "6"
+                - generic [ref=e78]: "7"
+              - generic [ref=e89]:
+                - generic [ref=e91]: const hello = "world";// Paste your code here or try the example below...
+                - generic [ref=e94]: "// Example function:"
+                - generic [ref=e96]: "function calculateTotal(items) {"
+                - generic [ref=e98]: return items.reduce((sum, item) => sum + item.price, 0);
+                - generic [ref=e100]: "}"
+              - textbox "Editor content" [ref=e103]
+          - generic [ref=e104]:
+            - generic [ref=e105]: 7 lines • 190 chars
+            - generic [ref=e106]:
+              - img [ref=e107]
+              - generic [ref=e109]: Ready to analyze
+        - generic [ref=e110]:
+          - generic [ref=e112]:
+            - img [ref=e113]
+            - generic [ref=e116]: Generated Documentation
+          - generic [ref=e118]:
+            - generic [ref=e121]: ✨
+            - generic [ref=e122]:
+              - paragraph [ref=e123]: Generating documentation...
+              - paragraph [ref=e124]: This may take a few moments
+  - generic [ref=e129]:
+    - alert
+    - alert
+```

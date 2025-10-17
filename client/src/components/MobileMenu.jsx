@@ -28,7 +28,7 @@ export function MobileMenu({ isOpen, onClose, onExamplesClick, onHelpClick }) {
       />
 
       {/* Menu Panel */}
-      <div className="fixed top-0 right-0 bottom-0 w-64 bg-white shadow-xl z-50 md:hidden">
+      <div data-testid="mobile-menu" className="fixed top-0 right-0 bottom-0 w-64 bg-white shadow-xl z-50 md:hidden">
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-slate-200">

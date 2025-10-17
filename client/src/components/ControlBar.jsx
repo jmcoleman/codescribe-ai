@@ -56,6 +56,7 @@ export function ControlBar({
 
         {/* Right: Generate Button */}
         <Button
+          data-testid="generate-btn"
           variant="primary"
           icon={Sparkles}
           onClick={onGenerate}
