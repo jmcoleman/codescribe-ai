@@ -39,3 +39,9 @@ dist-ssr
 
 # Private folder (strategic planning, financial docs, sensitive content)
 private/
+
+# Playwright test artifacts
+client/test-results/
+client/playwright-report/
+test-results/
+playwright-report/
