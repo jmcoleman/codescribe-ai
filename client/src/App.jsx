@@ -13,6 +13,7 @@ const DocPanel = lazy(() => import('./components/DocPanel').then(m => ({ default
 const QualityScoreModal = lazy(() => import('./components/QualityScore').then(m => ({ default: m.QualityScoreModal })));
 const ExamplesModal = lazy(() => import('./components/ExamplesModal').then(m => ({ default: m.ExamplesModal })));
 const HelpModal = lazy(() => import('./components/HelpModal').then(m => ({ default: m.HelpModal })));
+const ConfirmationModal = lazy(() => import('./components/ConfirmationModal').then(m => ({ default: m.ConfirmationModal })));
 
 // Loading fallback for modals - full screen to prevent layout shift
 function ModalLoadingFallback() {
@@ -47,12 +48,14 @@ function App() {
   const [showQualityModal, setShowQualityModal] = useState(false);
   const [showExamplesModal, setShowExamplesModal] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [largeCodeStats, setLargeCodeStats] = useState(null);
   const [uploadError, setUploadError] = useState(null);
   const fileInputRef = useRef(null);
 
   // Prevent body scroll and layout shift when any modal opens
   useEffect(() => {
-    const isAnyModalOpen = showQualityModal || showExamplesModal || showHelpModal;
+    const isAnyModalOpen = showQualityModal || showExamplesModal || showHelpModal || showConfirmationModal;
 
     if (isAnyModalOpen) {
       // Calculate scrollbar width BEFORE hiding overflow
@@ -86,14 +89,40 @@ function App() {
 
   const handleGenerate = async () => {
     if (code.trim()) {
-      setShowQualityModal(false); // Close modal when starting new generation
-      try {
-        await generate(code, docType, 'javascript');
-        // Success toast will be shown after generation completes
-      } catch (err) {
-        // Error handling is done in useDocGeneration hook
-        // But we can add a toast here if needed
+      // Check line count and file size
+      const lines = code.split('\n').length;
+      const sizeInKB = (new Blob([code]).size / 1024).toFixed(2);
+      const charCount = code.length;
+
+      // Threshold for large code warning (1000+ lines or 50KB+)
+      const LARGE_CODE_LINE_THRESHOLD = 1000;
+      const LARGE_CODE_SIZE_THRESHOLD_KB = 50;
+
+      if (lines >= LARGE_CODE_LINE_THRESHOLD || parseFloat(sizeInKB) >= LARGE_CODE_SIZE_THRESHOLD_KB) {
+        // Show confirmation modal with stats
+        setLargeCodeStats({
+          lines,
+          sizeInKB,
+          charCount
+        });
+        setShowConfirmationModal(true);
+        return; // Wait for user confirmation
       }
+
+      // Proceed with generation if code is not too large
+      await performGeneration();
+    }
+  };
+
+  const performGeneration = async () => {
+    setShowQualityModal(false); // Close modal when starting new generation
+    setShowConfirmationModal(false); // Close confirmation modal if open
+    try {
+      await generate(code, docType, 'javascript');
+      // Success toast will be shown after generation completes
+    } catch (err) {
+      // Error handling is done in useDocGeneration hook
+      // But we can add a toast here if needed
     }
   };
 
@@ -348,6 +377,48 @@ function App() {
           <HelpModal
             isOpen={showHelpModal}
             onClose={() => setShowHelpModal(false)}
+          />
+        </Suspense>
+      )}
+
+      {/* Confirmation Modal for Large Code Submissions */}
+      {showConfirmationModal && largeCodeStats && (
+        <Suspense fallback={<ModalLoadingFallback />}>
+          <ConfirmationModal
+            isOpen={showConfirmationModal}
+            onClose={() => {
+              setShowConfirmationModal(false);
+              setLargeCodeStats(null);
+            }}
+            onConfirm={performGeneration}
+            title="Large Code Detected"
+            variant="warning"
+            confirmLabel="Generate Anyway"
+            cancelLabel="Cancel"
+            message={
+              <div className="space-y-3">
+                <p className="text-sm">
+                  You're about to generate documentation for a large code file. This may take longer and consume more API resources.
+                </p>
+                <div className="bg-slate-100 border border-slate-200 rounded-lg p-3 space-y-1">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-600">Lines of code:</span>
+                    <span className="font-semibold text-slate-900">{largeCodeStats.lines.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-600">File size:</span>
+                    <span className="font-semibold text-slate-900">{largeCodeStats.sizeInKB} KB</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-600">Characters:</span>
+                    <span className="font-semibold text-slate-900">{largeCodeStats.charCount.toLocaleString()}</span>
+                  </div>
+                </div>
+                <p className="text-sm text-slate-600">
+                  Consider breaking your code into smaller modules for better documentation quality and faster generation.
+                </p>
+              </div>
+            }
           />
         </Suspense>
       )}
