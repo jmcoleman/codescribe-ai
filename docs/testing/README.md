@@ -100,6 +100,38 @@
 
 ---
 
+### 🌐 Accessibility & Cross-Browser Testing
+
+#### [Cross-Browser Test Plan](./CROSS-BROWSER-TEST-PLAN.md)
+**Comprehensive cross-browser testing strategy**
+
+- Browser compatibility matrix (Chrome, Firefox, Safari, Edge)
+- Test execution procedures
+- Known issues and workarounds
+- Responsive design verification
+
+#### [Screen Reader Testing Guide](./SCREEN-READER-TESTING-GUIDE.md)
+**Accessibility testing with assistive technologies**
+
+- Screen reader setup (NVDA, JAWS, VoiceOver)
+- Testing procedures for key user flows
+- WCAG 2.1 AA compliance verification
+- Keyboard navigation testing
+
+---
+
+### 📊 Performance & Audit Reports
+
+#### [Accessibility Audit](./ACCESSIBILITY-AUDIT.MD)
+**Comprehensive accessibility audit results**
+
+- Lighthouse accessibility scores
+- WCAG compliance verification
+- Remediation status tracking
+- Testing methodology
+
+---
+
 ## 🧪 Component Test Status
 
 ---
@@ -447,6 +479,9 @@ npm test -- -t "should render documentation"
 ### Documentation
 - [Frontend Testing Guide](./frontend-testing-guide.md) - Complete frontend testing documentation
 - [Monaco Syntax Highlighting Tests](./monaco-syntax-highlighting-tests.md) - Backend prompt validation
+- [Cross-Browser Test Plan](./CROSS-BROWSER-TEST-PLAN.md) - Cross-browser testing strategy
+- [Screen Reader Testing Guide](./SCREEN-READER-TESTING-GUIDE.md) - Accessibility testing with screen readers
+- [Accessibility Audit](./ACCESSIBILITY-AUDIT.MD) - Comprehensive accessibility audit results
 - [Vitest Documentation](https://vitest.dev/)
 - [React Testing Library](https://testing-library.com/react)
 - [Jest Documentation](https://jestjs.io/)
@@ -472,8 +507,9 @@ npm test -- -t "should render documentation"
 - [ ] All integration tests passing
 - [ ] Manual QA on critical paths
 - [ ] Performance benchmarks met
-- [ ] Accessibility verified
-- [ ] Cross-browser testing complete
+- [ ] Accessibility verified (see [ACCESSIBILITY-AUDIT.MD](./ACCESSIBILITY-AUDIT.MD))
+- [ ] Cross-browser testing complete (see [CROSS-BROWSER-TEST-PLAN.md](./CROSS-BROWSER-TEST-PLAN.md))
+- [ ] Screen reader testing complete (see [SCREEN-READER-TESTING-GUIDE.md](./SCREEN-READER-TESTING-GUIDE.md))
 
 ---
 
