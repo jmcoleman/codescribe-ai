@@ -16,10 +16,15 @@ export function RateLimitIndicator({ remaining, limit }) {
         </div>
       )}
 
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
         <span className={isLow ? 'text-red-600' : 'text-slate-500'}>
           {remaining}/{limit} requests remaining
         </span>
+        {isLow && (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+            Low
+          </span>
+        )}
       </div>
 
       {/* Progress Bar with ARIA Attributes */}
