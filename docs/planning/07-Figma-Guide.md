@@ -1,15 +1,18 @@
 # CodeScribe AI - Complete Figma Design Guide
 
-**Project:** CodeScribe AI  
-**Designer Role:** UX/UI Designer  
-**Timeline:** 4-6 hours  
-**Deliverable:** Production-ready design system and mockups  
+**Project:** CodeScribe AI
+**Designer Role:** UX/UI Designer
+**Timeline:** 6-8 hours (includes Phase 1.5 accessibility components)
+**Deliverable:** Production-ready design system and mockups with WCAG 2.1 AA compliance
+**Document Version:** 2.0 (Updated October 18, 2025)
 
 ---
 
 ## 📋 Overview
 
 This guide will help you recreate the CodeScribe AI interface in Figma with a professional, scalable design system. The design uses a modern SaaS aesthetic with developer-focused sensibilities.
+
+**Updated in v2.0:** Includes 6 additional accessibility components and design patterns from Phase 1.5 (WCAG 2.1 AA compliance achieved in production with zero violations).
 
 ---
 
@@ -357,7 +360,29 @@ Use this hierarchy to maintain consistency:
 
 ---
 
-## 🧱 Component Library
+## 🧱 Component Library (14 Components)
+
+**Total Components:** 14 (8 core + 6 accessibility components from Phase 1.5)
+
+**Core UI Components (Original - Phase 1):**
+1. Button (Primary)
+2. Button (Secondary)
+3. Icon Button
+4. Select Dropdown
+5. Code Panel
+6. Documentation Panel
+7. Quality Score Breakdown
+8. Mobile Menu
+
+**Accessibility Components (Phase 1.5 - Oct 2025):**
+9. Error Banner
+10. Confirmation Modal
+11. Skip Navigation Link
+12. Focus Indicator Pattern
+13. Copy Button
+14. Rate Limit Indicator
+
+---
 
 ### Component 1: Button (Primary)
 
@@ -618,6 +643,434 @@ export class AuthService {
 
 ---
 
+### Component 9: Error Banner (Accessibility - Phase 1.5)
+
+**Purpose:** Inline error notifications with smooth animations and ARIA support
+
+1. **Container Frame**
+   - Width: Fill container (100%)
+   - Auto layout: Horizontal
+   - Padding: 16px
+   - Gap: 16px
+   - Border radius: 8px
+   - Fill: `color/red/50`
+   - Shadow: `shadow/sm`
+
+2. **Error Icon**
+   - Icon: AlertCircle (Lucide)
+   - Size: 20×20
+   - Color: `color/red/600`
+   - Flex: 0 (fixed width)
+   - Add `aria-hidden="true"` note
+
+3. **Content Area**
+   - Auto layout: Vertical
+   - Gap: 4px
+   - Flex: 1 (flexible width)
+
+   **Error Heading:**
+   - Text: "Invalid Request Error" (example)
+   - Style: `text/label-medium`
+   - Color: `color/red/900`
+
+   **Error Message:**
+   - Text: "Detailed error message here..."
+   - Style: `text/body-sm`
+   - Color: `color/red/800`
+   - Line height: Relaxed (22px)
+
+   **Retry After (Optional):**
+   - Border top: 1px, `color/red/200`
+   - Padding top: 12px
+   - Margin top: 12px
+   - Text: "⚫ Please wait 60 seconds before trying again."
+   - Style: `text/body-xs`
+   - Color: `color/red/600`
+   - Font weight: Medium (500)
+
+4. **Dismiss Button**
+   - Size: 32×32
+   - Icon: X (16×16)
+   - Color: `color/red/400`
+   - Hover: `color/red/600` + `color/red/100` background
+   - Border radius: 6px
+   - Padding: 8px
+   - Add `aria-label="Dismiss error"` note
+
+5. **Animation Specs**
+   - **Enter:** 250ms slide-in + fade
+   - **Exit:** 200ms fade-out
+   - **Motion-safe:** Respects `prefers-reduced-motion`
+
+6. **ARIA Attributes** (add as annotations)
+   - `role="alert"`
+   - `aria-live="assertive"`
+
+7. Create component: "UI/ErrorBanner"
+
+---
+
+### Component 10: Confirmation Modal (Accessibility - Phase 1.5)
+
+**Purpose:** Warning dialog for large file submissions
+
+1. **Backdrop**
+   - Full screen: 100vw × 100vh
+   - Fill: Black with 50% opacity
+   - Position: Fixed, z-index: 50
+
+2. **Modal Container**
+   - Width: 480px (max)
+   - Auto layout: Vertical
+   - Padding: 32px
+   - Gap: 24px
+   - Border radius: 16px
+   - Fill: `color/white`
+   - Shadow: `shadow/xl`
+   - Position: Centered
+
+3. **Icon**
+   - Icon: AlertTriangle (Lucide)
+   - Size: 48×48
+   - Color: `color/yellow/600`
+   - Center-aligned
+
+4. **Heading**
+   - Text: "Large File Submission"
+   - Style: `text/heading-xl`
+   - Color: `color/slate/900`
+   - Text align: Center
+
+5. **Description**
+   - Text: "You're about to generate documentation for..."
+   - Style: `text/body-base`
+   - Color: `color/slate/600`
+   - Text align: Center
+   - Line height: 24px
+
+6. **Stats Card**
+   - Auto layout: Horizontal, space-between
+   - Padding: 16px
+   - Gap: 24px
+   - Border radius: 12px
+   - Fill: `color/slate/50`
+   - Border: 2px, `color/purple/200`
+
+   **Each Stat:**
+   - Auto layout: Vertical, center-aligned
+   - Gap: 4px
+
+   **Value:**
+   - Text: "1,303" (example)
+   - Font size: 28px
+   - Font weight: Bold (700)
+   - Color: `color/purple/600`
+
+   **Label:**
+   - Text: "Lines" (example)
+   - Style: `text/body-xs`
+   - Color: `color/slate/600`
+
+7. **Actions (Auto layout: Horizontal)**
+   - Gap: 12px
+   - Full width
+
+   **Cancel Button:**
+   - Component instance: Button/Secondary
+   - Text: "Cancel"
+   - Flex: 1
+
+   **Confirm Button:**
+   - Component instance: Button/Primary
+   - Text: "Continue Anyway"
+   - Flex: 1
+
+8. **ARIA Attributes** (add as annotations)
+   - `role="dialog"`
+   - `aria-modal="true"`
+   - `aria-labelledby="modal-title"`
+   - Focus trap implemented
+
+9. Create component: "UI/ConfirmationModal"
+
+---
+
+### Component 11: Skip Navigation Link (Accessibility - Phase 1.5)
+
+**Purpose:** Keyboard users can bypass navigation and jump to main content
+
+1. **Link Button**
+   - Width: Auto (intrinsic)
+   - Padding: 12px 20px
+   - Border radius: 6px
+   - Fill: `color/purple/600`
+   - Text: "Skip to main content"
+   - Style: `text/label-medium`
+   - Color: `color/white`
+
+2. **States:**
+   - **Default:** Screen reader only (invisible)
+   - **Focus:** Visible, positioned at top-left
+   - **Hover (when focused):** `color/purple/700`
+
+3. **Position Specs:**
+   - Position: Absolute
+   - Top: 16px
+   - Left: 16px
+   - Z-index: 50
+
+4. **Visual Indicator:**
+   - Add annotation: "Hidden by default, visible on keyboard focus"
+   - Add annotation: "Uses sr-only + focus:not-sr-only classes"
+
+5. Create component: "A11y/SkipLink"
+
+---
+
+### Component 12: Focus Indicator Pattern (Accessibility - Phase 1.5)
+
+**Purpose:** Visual indicator for keyboard navigation
+
+**Global Focus Style:**
+- **Ring:** 2px solid `color/purple/600`
+- **Offset:** 2px from element edge
+- **Border radius:** Matches element (inherit)
+- **Apply to:** All interactive elements (buttons, links, inputs)
+
+**High Contrast Mode:**
+- **Ring:** 4px solid `color/purple/600`
+- **Offset:** 2px
+
+**Visual Example:**
+1. Create any button
+2. Duplicate it
+3. Add outer ring: 2px stroke, `color/purple/600`, 2px offset
+4. Label: "Focus State (Keyboard Only)"
+5. Annotation: "Uses :focus-visible - only shows for keyboard"
+
+---
+
+### Component 13: Copy Button (Accessibility - Phase 1.5)
+
+**Purpose:** One-click copy to clipboard with visual feedback
+
+1. **Button Variants:**
+
+   **Icon Only:**
+   - Size: 32×32
+   - Icon: Copy (16×16)
+   - Colors: `color/slate/600` text, `color/slate/100` background
+   - Hover: `color/purple/600` text, `color/purple/50` background
+   - Border radius: 6px
+
+   **With Label:**
+   - Auto layout: Horizontal
+   - Padding: 8px 12px
+   - Gap: 8px
+   - Icon: Copy (16×16)
+   - Text: "Copy"
+   - Same color scheme
+
+2. **Success State** (after copy):
+   - Icon changes to: Check (16×16)
+   - Color: `color/green/600`
+   - Background: `color/green/50`
+   - Text: "Copied!"
+   - Duration: 2 seconds, then auto-reset
+
+3. **Animation:**
+   - Icon swap: 150ms scale transition
+   - Color change: 200ms ease
+
+4. **ARIA:**
+   - `aria-label="Copy to clipboard"`
+   - Add tooltip: "Copied!" on success
+
+5. Create component: "UI/CopyButton" with variants
+
+---
+
+### Component 14: Rate Limit Indicator (Accessibility - Phase 1.5)
+
+**Purpose:** Shows API usage and warns when limits approaching
+
+1. **Container**
+   - Auto layout: Horizontal
+   - Padding: 12px 16px
+   - Gap: 12px
+   - Border radius: 8px
+   - Fill: `color/yellow/50`
+   - Border: 1px, `color/yellow/200`
+
+2. **Warning Icon**
+   - Icon: AlertTriangle (Lucide)
+   - Size: 20×20
+   - Color: `color/yellow/600`
+
+3. **Content**
+   - Auto layout: Vertical
+   - Gap: 6px
+
+   **Label:**
+   - Text: "Rate Limit Warning"
+   - Style: `text/label-medium`
+   - Color: `color/yellow/900`
+
+   **Message:**
+   - Text: "Please wait before trying again"
+   - Style: `text/body-sm`
+   - Color: `color/yellow/800`
+
+4. **Progress Bar (Optional)**
+   - Width: 200px
+   - Height: 4px
+   - Border radius: 2px
+   - Background: `color/yellow/200`
+
+   **Fill:**
+   - Fill: `color/yellow/600`
+   - Width: Percentage based on time remaining
+   - Animated: Smooth countdown
+
+5. **ARIA Attributes:**
+   - `role="status"`
+   - `aria-live="polite"`
+   - Progress bar: `role="progressbar"` with `aria-valuenow`
+
+6. Create component: "UI/RateLimitIndicator"
+
+---
+
+## 🎯 Accessibility Design Patterns (Phase 1.5)
+
+### Pattern 1: Keyboard Navigation Indicators
+
+**Visual Design for Interactive States:**
+
+**Default State:**
+- No special indication
+- Normal colors and styling
+
+**Hover State (Mouse):**
+- Subtle background change
+- Color shift (e.g., `purple/600` → `purple/700`)
+- Cursor: pointer
+
+**Focus State (Keyboard):**
+- Purple focus ring: 2px solid `color/purple/600`
+- Ring offset: 2px
+- Background stays default (no hover style on focus)
+- **Key:** Focus ring should be MORE prominent than hover
+
+**Active State (Click/Press):**
+- Slight scale: 98%
+- Brightness: 95%
+- All states combined
+
+### Pattern 2: Screen Reader Only Text
+
+**Visual Indicator in Designs:**
+- Create text layer
+- Add red border/background to indicate "SR-only"
+- Label: "Screen Reader Only: [text content]"
+- Position where it logically belongs in DOM order
+
+**Examples:**
+- "Loading" text in buttons (hidden visually, read by SR)
+- Form labels for inputs without visible labels
+- Additional context for icons
+
+**Implementation Note:**
+- Uses `sr-only` class (position: absolute, width: 1px, height: 1px, clip)
+
+### Pattern 3: Live Regions (Dynamic Content)
+
+**Visual Indicators:**
+- Add megaphone icon or "LIVE" badge to designs
+- Annotation: "Announces changes to screen readers"
+- Color: `color/indigo/600`
+
+**Usage:**
+- Error messages (assertive)
+- Success toasts (polite)
+- Loading states (polite)
+- Status updates (polite)
+
+**ARIA Roles:**
+- `role="alert"` (assertive) - interrupts immediately
+- `role="status"` (polite) - announces when convenient
+- `aria-live="assertive|polite|off"`
+
+### Pattern 4: Modal Focus Management
+
+**Design Specifications:**
+
+**Modal Open:**
+1. Backdrop appears with fade (200ms)
+2. Modal slides up and fades in (250ms)
+3. Focus moves to first focusable element (close button)
+4. Background content: aria-hidden="true"
+
+**Focus Trap:**
+- User can only Tab within modal
+- Tab from last element → first element (loops)
+- Shift+Tab from first → last element (reverse loop)
+- Escape key closes modal
+
+**Visual Design:**
+- Add flow arrows showing Tab order
+- Annotate: "Focus trapped inside modal"
+- Mark close button as "Focus target on open"
+
+**Modal Close:**
+1. Modal fades out (200ms)
+2. Backdrop fades out (200ms)
+3. Focus returns to trigger element
+4. Background content: aria-hidden removed
+
+### Pattern 5: Icon Accessibility
+
+**Decorative Icons:**
+- Add annotation: `aria-hidden="true"`
+- No additional text needed
+- Examples: Icons next to labeled buttons, purely visual elements
+
+**Meaningful Icons:**
+- Add annotation: `aria-label="[description]"`
+- Provide text alternative
+- Examples: Icon-only buttons, status indicators
+
+**Icon + Text Combos:**
+- Icon: `aria-hidden="true"`
+- Text provides full context
+- Example: Button with icon and "Copy" text
+
+### Pattern 6: Color + Non-Color Indicators
+
+**Never rely on color alone:**
+
+**Quality Scores (A-F):**
+- ✅ Color: Green (A), Red (F)
+- ✅ Letter: "A", "F"
+- ✅ Text label: "(Excellent)", "(Failing)"
+
+**Status Indicators:**
+- ✅ Color: Green, Yellow, Red
+- ✅ Icon: CheckCircle, AlertTriangle, XCircle
+- ✅ Text: "Success", "Warning", "Error"
+
+**Form Validation:**
+- ✅ Color: Red border
+- ✅ Icon: AlertCircle
+- ✅ Text: Error message below field
+
+**Design Checklist:**
+- [ ] Every colored state has a non-color indicator
+- [ ] Works in grayscale
+- [ ] Works for colorblind users
+
+---
+
 ## 📐 Layout Construction
 
 ### Desktop Layout (1440px) - 2 hours
@@ -769,8 +1222,12 @@ Before finalizing:
 - [ ] Letter spacing adjusted
 
 ### Components
-- [ ] All interactive elements are components
-- [ ] Variants cover all states
+- [ ] All 14 components created (8 core + 6 accessibility)
+- [ ] Variants cover all states (default, hover, focus, active, disabled)
+- [ ] ARIA annotations added to accessibility components
+- [ ] Focus states use purple ring (2px, 2px offset)
+- [ ] Decorative icons marked with aria-hidden notes
+- [ ] Interactive icons have aria-label annotations
 - [ ] Auto layout used throughout
 - [ ] Constraints set for responsive behavior
 
@@ -1022,6 +1479,21 @@ open docs/design/brand-color-palette.pdf
 - **Stark** - Accessibility checker
 - **Content Reel** - Placeholder content
 - **Figmotion** - Advanced animations (optional)
+
+---
+
+**Document Version:** 2.0
+**Last Updated:** October 18, 2025
+**Changes in v2.0:**
+- Added 6 accessibility components (Phase 1.5)
+- Added Accessibility Design Patterns section
+- Updated component library count (8 → 14 components)
+- Added ARIA annotation guidelines
+- Added focus indicator specifications
+- Added animation specifications for Error Banner
+- Updated component checklist with accessibility requirements
+
+**Previous Version:** 1.0 (October 2025 - Pre-Accessibility)
 
 ---
 
