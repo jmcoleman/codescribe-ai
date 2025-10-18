@@ -296,7 +296,7 @@ describe('ErrorBanner Component', () => {
     it('should style error message with red color', () => {
       render(<ErrorBanner error="Test error" onDismiss={vi.fn()} />);
       const message = screen.getByText('Test error');
-      expect(message).toHaveClass('text-red-700');
+      expect(message).toHaveClass('text-red-800');
     });
 
     it('should style dismiss button with hover states', () => {
@@ -368,7 +368,7 @@ describe('ErrorBanner Component', () => {
 
       // Check message contrast (red-700 on red-50)
       const message = screen.getByText('Test error');
-      expect(message).toHaveClass('text-red-700');
+      expect(message).toHaveClass('text-red-800');
     });
   });
 

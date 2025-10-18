@@ -85,22 +85,22 @@ export function ConfirmationModal({
     onClose();
   };
 
-  // Variant-specific styling
+  // Variant-specific styling - using brand colors (purple primary, indigo secondary)
   const variantStyles = {
     warning: {
-      icon: <AlertTriangle className="w-6 h-6 text-yellow-600" />,
-      iconBg: 'bg-yellow-100',
-      confirmButton: 'bg-yellow-600 hover:bg-yellow-700 focus:ring-yellow-600'
+      icon: <AlertTriangle className="w-6 h-6 text-purple-600" />,
+      iconBg: 'bg-slate-100 ring-2 ring-purple-200',
+      confirmButton: 'bg-purple-600 hover:bg-purple-700 active:bg-purple-800 focus:ring-purple-600 shadow-sm hover:shadow transition-all duration-200'
     },
     danger: {
       icon: <AlertTriangle className="w-6 h-6 text-red-600" />,
-      iconBg: 'bg-red-100',
-      confirmButton: 'bg-red-600 hover:bg-red-700 focus:ring-red-600'
+      iconBg: 'bg-slate-100 ring-2 ring-red-200',
+      confirmButton: 'bg-red-600 hover:bg-red-700 active:bg-red-800 focus:ring-red-600 shadow-sm hover:shadow transition-all duration-200'
     },
     info: {
       icon: <AlertTriangle className="w-6 h-6 text-indigo-600" />,
-      iconBg: 'bg-indigo-100',
-      confirmButton: 'bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-600'
+      iconBg: 'bg-slate-100 ring-2 ring-indigo-200',
+      confirmButton: 'bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 focus:ring-indigo-600 shadow-sm hover:shadow transition-all duration-200'
     }
   };
 
@@ -119,7 +119,7 @@ export function ConfirmationModal({
     >
       <div
         ref={modalRef}
-        className="bg-white rounded-xl shadow-xl max-w-md w-full"
+        className="bg-white rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header with icon */}
@@ -151,25 +151,25 @@ export function ConfirmationModal({
 
         {/* Message */}
         <div className="px-6 pb-6">
-          <div id="confirmation-modal-description" className="text-slate-700 leading-relaxed ml-[4.5rem]">
+          <div id="confirmation-modal-description" className="text-slate-700 leading-relaxed space-y-4">
             {message}
           </div>
         </div>
 
         {/* Action buttons */}
-        <div className="bg-slate-50 px-6 py-4 rounded-b-xl flex items-center justify-end gap-3">
+        <div className="bg-slate-50 border-t border-slate-200 px-6 py-4 rounded-b-xl flex items-center justify-end gap-3">
           <button
             type="button"
             ref={cancelButtonRef}
             onClick={onClose}
-            className="px-4 py-2 text-slate-700 hover:bg-slate-200 rounded-lg transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2"
+            className="px-5 py-2.5 text-slate-700 hover:bg-white hover:border-slate-300 border border-slate-200 bg-white rounded-lg transition-all duration-200 font-medium focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 shadow-sm"
           >
             {cancelLabel}
           </button>
           <button
             type="button"
             onClick={handleConfirm}
-            className={`px-4 py-2 text-white rounded-lg transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 ${styles.confirmButton}`}
+            className={`px-5 py-2.5 text-white rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 ${styles.confirmButton}`}
           >
             {confirmLabel}
           </button>

@@ -2007,6 +2007,24 @@ Option A: Implement from scratch
 - Comprehensive test suite with 23 passing tests
 - Test file created with 1,303 lines for validation (client/src/__tests__/fixtures/large-code-sample.js)
 
+**Modal Design Update (Oct 17):**
+- Redesigned with Option B: Subtle Professional style
+- Updated title from "Large Code Detected" to "Large File Submission"
+- Integrated brand colors (purple/indigo) throughout
+- Improved stats layout with large bold numbers and purple accent border
+- Enhanced typography hierarchy and visual separators
+
+**Error Display Enhancement (Oct 17):**
+- Fixed error banner to display formatted errors instead of raw JSON
+- Server-side: Updated `claudeClient.js` to parse Anthropic SDK errors and return structured JSON
+- Client-side: Added `formatErrorType()` to ErrorBanner to format error headings (e.g., "invalid_request_error" → "Invalid Request Error")
+- Handles both nested `{error: {type, message}}` and flat `{error, message}` structures
+- All 58 ErrorBanner tests passing, all 165 backend tests passing
+- Result: Clean, professional error messages with proper capitalization
+- Added professional button styling with shadows and transitions
+- All 23 tests passing
+
+
 **Color Alternatives (Issue #15) - 2 hours**
 - [ ] Add text labels to quality grades in `DocPanel.jsx`
   - [ ] A = "(Excellent)"

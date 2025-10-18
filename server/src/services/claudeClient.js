@@ -12,29 +12,47 @@ class ClaudeClient {
   /**
    * Extract user-friendly error message from Anthropic API errors
    * @param {Error} error - The error from Anthropic SDK
-   * @returns {string} User-friendly error message
+   * @returns {string} User-friendly error message (JSON string for structured errors)
    */
   extractErrorMessage(error) {
-    // Check if error has a structured error object from Anthropic
-    if (error.error && typeof error.error === 'object') {
-      // Return just the message field from the error object
-      return error.error.message || error.message || 'An error occurred while generating documentation';
-    }
-
-    // Try to parse error.message if it contains JSON
+    // Try to parse error.message if it contains JSON (from Anthropic SDK errors)
     if (error.message) {
       try {
         // Check if message contains a JSON error object
-        const jsonMatch = error.message.match(/\{.*"message".*\}/);
+        // Format: "400 {"type":"error","error":{"type":"invalid_request_error","message":"..."}}"
+        const jsonMatch = error.message.match(/\d{3}\s+(\{.*\})/);
         if (jsonMatch) {
-          const parsed = JSON.parse(jsonMatch[0]);
-          return parsed.message || error.message;
+          const parsed = JSON.parse(jsonMatch[1]);
+
+          // Handle nested structure: {error: {type: "...", message: "..."}}
+          if (parsed.error && typeof parsed.error === 'object' && parsed.error.message) {
+            return JSON.stringify({
+              error: parsed.error.type || 'Error',
+              message: parsed.error.message
+            });
+          }
+
+          // Handle flat structure: {type: "...", message: "..."}
+          if (parsed.message) {
+            return JSON.stringify({
+              error: parsed.type || 'Error',
+              message: parsed.message
+            });
+          }
         }
       } catch (e) {
         // Not JSON, continue to return original message
       }
 
       return error.message;
+    }
+
+    // Check if error has a structured error object from Anthropic
+    if (error.error && typeof error.error === 'object') {
+      return JSON.stringify({
+        error: error.error.type || 'Error',
+        message: error.error.message || 'An error occurred while generating documentation'
+      });
     }
 
     return 'An error occurred while generating documentation';

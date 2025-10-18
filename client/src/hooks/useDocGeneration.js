@@ -53,7 +53,7 @@ export function useDocGeneration() {
         setRetryAfter(errorData.retryAfter || 60);
         throw new Error(errorData.message || 'Rate limit exceeded');
       }
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }

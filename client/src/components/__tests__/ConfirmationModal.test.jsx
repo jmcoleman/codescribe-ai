@@ -62,7 +62,7 @@ describe('ConfirmationModal', () => {
     it('should render warning variant by default', () => {
       render(<ConfirmationModal {...defaultProps} />);
       const confirmButton = screen.getByText('Confirm');
-      expect(confirmButton).toHaveClass('bg-yellow-600');
+      expect(confirmButton).toHaveClass('bg-purple-600');
     });
 
     it('should render danger variant', () => {
