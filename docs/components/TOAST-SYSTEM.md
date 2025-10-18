@@ -2,22 +2,23 @@
 
 **CodeScribe AI Toast Notification System**
 **Version:** 1.0.0
-**Last Updated:** October 14, 2025
+**Last Updated:** October 18, 2025
 
 ---
 
 ## Table of Contents
 
 1. [Overview](#overview)
-2. [Architecture](#architecture)
-3. [Getting Started](#getting-started)
-4. [Basic Usage](#basic-usage)
-5. [Advanced Features](#advanced-features)
-6. [Custom Toast Components](#custom-toast-components)
-7. [Best Practices](#best-practices)
-8. [Accessibility](#accessibility)
-9. [Testing](#testing)
-10. [API Reference](#api-reference)
+2. [When to Use Toasts](#when-to-use-toasts)
+3. [Architecture](#architecture)
+4. [Getting Started](#getting-started)
+5. [Basic Usage](#basic-usage)
+6. [Advanced Features](#advanced-features)
+7. [Custom Toast Components](#custom-toast-components)
+8. [Best Practices](#best-practices)
+9. [Accessibility](#accessibility)
+10. [Testing](#testing)
+11. [API Reference](#api-reference)
 
 ---
 
@@ -33,12 +34,63 @@ CodeScribe AI implements an enterprise-grade toast notification system built on 
 
 ### Key Features
 
-✅ **Multiple Toast Types**: Success, error, warning, info, custom
+✅ **Success-Focused**: Toasts are used for positive feedback only (errors use ErrorBanner)
 ✅ **Rich Content**: Actions, progress bars, avatars, expandable content
 ✅ **Smart Management**: Queuing, grouping, rate limiting
 ✅ **Accessibility**: WCAG 2.1 AA compliant
 ✅ **Animations**: Smooth enter/exit transitions with bounce effects
 ✅ **Customization**: Fully themeable with Tailwind CSS
+
+---
+
+## When to Use Toasts
+
+**⚠️ IMPORTANT DESIGN DECISION (October 18, 2025):**
+
+CodeScribe AI uses a **clear separation** between error and success notifications:
+
+### ✅ Use Toasts For:
+
+**Success notifications only** - Quick, celebratory feedback:
+- ✅ Documentation generated successfully (`toastDocGenerated`)
+- ✅ Example loaded (`toastCompact`)
+- ✅ File uploaded successfully (`toastCompact`)
+- ✅ Any positive action completion
+
+**Why toasts for success:**
+- Celebratory and positive reinforcement
+- Auto-dismiss (don't clutter the UI)
+- Non-blocking and unobtrusive
+- Don't require user action
+
+### ❌ DO NOT Use Toasts For:
+
+**Error notifications** - Use ErrorBanner component instead:
+- ❌ ~~Documentation generation errors~~ → Use ErrorBanner
+- ❌ ~~File upload errors~~ → Use ErrorBanner
+- ❌ ~~Network errors~~ → Use ErrorBanner
+- ❌ ~~Rate limit errors~~ → Use ErrorBanner
+- ❌ ~~Any error state~~ → Use ErrorBanner
+
+**Why banners for errors:**
+- Persistent (don't auto-dismiss and get missed)
+- More prominent for critical information
+- Include technical details in dev mode
+- Allow user to see context while fixing issue
+
+### Decision Rationale
+
+**Problem:** Error toasts + error banners = duplicate notifications and UX clutter
+
+**Solution:** Errors use persistent banners only, success uses auto-dismissing toasts
+
+**Benefits:**
+1. **No notification spam** - Each error shown once
+2. **Clear mental model** - Red banner = error, green toast = success
+3. **Better error visibility** - Errors persist until dismissed
+4. **Technical debugging** - Dev mode shows full error details in banner
+
+**See Also:** [ERROR-HANDLING-UX.md](./ERROR-HANDLING-UX.md#error-notification-strategy) for complete error handling guidelines
 
 ---
 

@@ -33,10 +33,7 @@ function LoadingFallback() {
   );
 }
 import {
-  toastError,
   toastDocGenerated,
-  toastRateLimited,
-  toastGrouped,
   toastCompact,
 } from './utils/toast';
 
@@ -210,9 +207,43 @@ function App() {
       event.target.value = '';
     } catch (error) {
       console.error('Error uploading file:', error);
-      setUploadError(error.message);
-      // Use grouped toasts for upload errors to prevent duplicate notifications
-      toastGrouped('upload-error', toastError, `Unable to upload file. ${error.message}`);
+
+      // Provide more helpful error messages based on error type
+      let userFriendlyMessage = 'Unable to upload file';
+
+      if (error.message.includes('Failed to fetch') || error.name === 'TypeError') {
+        // Network connectivity issues
+        userFriendlyMessage = 'Unable to connect to the server to upload your file. Please check your internet connection and ensure the backend server is running.';
+      } else if (error.message.includes('413') || error.message.includes('too large')) {
+        // File too large
+        userFriendlyMessage = 'File is too large to upload. Please choose a smaller file.';
+      } else if (error.message.includes('415') || error.message.includes('Unsupported')) {
+        // Unsupported file type
+        userFriendlyMessage = 'Unsupported file type. Please upload a valid code file.';
+      } else if (error.message.includes('500')) {
+        // Server error
+        userFriendlyMessage = 'Server error occurred while uploading the file. Please try again.';
+      } else if (error.message.includes('503')) {
+        // Service unavailable
+        userFriendlyMessage = 'Upload service temporarily unavailable. Please try again in a moment.';
+      } else {
+        // Use the original error message if it's descriptive
+        userFriendlyMessage = error.message && error.message !== 'File upload failed'
+          ? `Unable to upload file. ${error.message}`
+          : 'Unable to upload file. Please try again.';
+      }
+
+      // Create a structured error object with full details for dev mode (similar to useDocGeneration)
+      const errorObject = {
+        message: userFriendlyMessage,           // User-friendly message
+        type: error.name || 'Error',            // Error type
+        originalMessage: error.message,         // Original error message from server/network
+        stack: error.stack,                     // Stack trace if available
+        timestamp: new Date().toISOString(),    // ISO timestamp
+      };
+
+      setUploadError(JSON.stringify(errorObject));
+      // No toast needed - error banner will display the error
       // Reset the file input
       event.target.value = '';
     }
@@ -232,7 +263,7 @@ function App() {
     toastCompact('Example loaded successfully', 'success');
   };
 
-  // Show toast notifications for documentation generation success/error
+  // Show toast notifications for documentation generation success only
   useEffect(() => {
     if (documentation && qualityScore && !isGenerating) {
       // Documentation was successfully generated
@@ -240,17 +271,7 @@ function App() {
     }
   }, [documentation, qualityScore, isGenerating]);
 
-  // Show toast for rate limit errors (grouped to prevent duplicates)
-  useEffect(() => {
-    if (error && error.includes('rate limit')) {
-      if (retryAfter) {
-        toastGrouped('rate-limit', toastRateLimited, retryAfter);
-      }
-    } else if (error && error.includes('network')) {
-      // Group network errors separately
-      toastGrouped('network-error', toastError, error);
-    }
-  }, [error, retryAfter]);
+  // Error toasts removed - errors are displayed via ErrorBanner component instead
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
