@@ -2,7 +2,7 @@
 
 **Project:** CodeScribe AI
 **Component:** Error Banner & Notification System
-**Last Updated:** October 16, 2025
+**Last Updated:** October 18, 2025
 **Status:** Active Design Guidelines
 
 ---
@@ -10,13 +10,14 @@
 ## 📋 Table of Contents
 
 1. [Overview](#overview)
-2. [Research Summary](#research-summary)
-3. [Decision Framework](#decision-framework)
-4. [Animation Specifications](#animation-specifications)
-5. [Implementation Guidelines](#implementation-guidelines)
-6. [CodeScribe AI Error Patterns](#codescribe-ai-error-patterns)
-7. [Accessibility Considerations](#accessibility-considerations)
-8. [References](#references)
+2. [Error Notification Strategy](#error-notification-strategy)
+3. [Research Summary](#research-summary)
+4. [Decision Framework](#decision-framework)
+5. [Animation Specifications](#animation-specifications)
+6. [Implementation Guidelines](#implementation-guidelines)
+7. [CodeScribe AI Error Patterns](#codescribe-ai-error-patterns)
+8. [Accessibility Considerations](#accessibility-considerations)
+9. [References](#references)
 
 ---
 
@@ -31,6 +32,189 @@ This guide documents research-based best practices for error handling UX in Code
 3. **Animations should be subtle** and follow industry timing standards (200-300ms)
 4. **Error messages must persist** until user dismisses or resolves the issue
 5. **Accessibility is paramount** - respect `prefers-reduced-motion` and use ARIA
+6. **No duplicate notifications** - errors use banners only, not toasts
+
+---
+
+## Error Notification Strategy
+
+### Decision: Banners for Errors, Toasts for Success
+
+**Implemented:** October 18, 2025
+
+CodeScribe AI uses a **clear separation** between error and success notifications to avoid notification spam and provide better UX.
+
+#### ✅ Use Error Banners (Persistent, Dismissible)
+
+**All error scenarios:**
+- Documentation generation errors (network, rate limit, server errors)
+- File upload errors (network, validation, server errors)
+- Any recoverable error state
+
+**Why banners instead of toasts:**
+- ✅ **Persistent** - Stay visible until user dismisses (toasts auto-hide)
+- ✅ **More prominent** - Harder to miss, better for critical information
+- ✅ **Context available** - User can see the error while fixing the issue
+- ✅ **Technical details** - Can expand to show stack traces in dev mode
+- ✅ **No notification spam** - One persistent banner vs multiple toasts
+
+**Implementation:**
+```javascript
+// App.jsx - File upload error
+setUploadError(JSON.stringify(errorObject));
+// No toast - error banner will display the error
+
+// useDocGeneration.js - Generation error
+setError(JSON.stringify(errorObject));
+// No toast - error banner will display the error
+```
+
+#### ✅ Use Toasts (Quick Feedback)
+
+**Success scenarios only:**
+- Documentation generated successfully (`toastDocGenerated`)
+- Example loaded (`toastCompact`)
+- File uploaded successfully (`toastCompact`)
+
+**Why toasts for success:**
+- ✅ **Celebratory** - Positive reinforcement for completed actions
+- ✅ **Non-blocking** - Quick feedback that auto-dismisses
+- ✅ **Unobtrusive** - Doesn't take up permanent screen space
+
+**Implementation:**
+```javascript
+// Success toast for documentation generation
+toastDocGenerated(qualityScore.grade, qualityScore.score);
+
+// Success toast for quick actions
+toastCompact('Example loaded successfully', 'success');
+```
+
+#### ❌ DO NOT Use (Removed)
+
+**Error toasts** - These create notification overload:
+- ~~`toastError()` for errors~~ → Use ErrorBanner instead
+- ~~`toastRateLimited()` for rate limits~~ → Use ErrorBanner with retry countdown
+- ~~`toastNetworkError()` for network errors~~ → Use ErrorBanner instead
+- ~~`toastGrouped()` for upload errors~~ → Use ErrorBanner instead
+
+### Benefits of This Approach
+
+1. **No duplicate notifications** - Each error shown once in persistent banner
+2. **Clear mental model** - Red banner = error, green toast = success
+3. **Better error visibility** - Errors don't auto-dismiss and get missed
+4. **Technical details available** - Dev mode shows full error object in banner
+5. **Reduced notification spam** - Only success actions trigger toasts
+
+### Error Banner Features
+
+**User-facing:**
+- Clear error heading (e.g., "Connection Error" instead of "TypeError")
+- User-friendly error message with actionable guidance
+- Retry countdown for rate limit errors
+- Dismiss button to clear error
+
+**Developer-facing (dev mode only):**
+- Expandable "Technical details" section
+- Full error object (JSON)
+- Error type
+- Original error message from server/network
+- Stack trace (if available)
+- Timestamp
+
+**Example error object structure:**
+```javascript
+{
+  message: "Unable to connect to the server...",  // User-friendly
+  type: "TypeError",                              // Error type
+  originalMessage: "Failed to fetch",             // Original from network
+  stack: "...",                                   // Stack trace
+  timestamp: "2025-10-18T11:39:41.342Z"          // ISO timestamp
+}
+```
+
+### API Error Parsing
+
+**Enhanced Feature:** Automatic parsing of Claude API JSON error responses
+
+**Problem:** Claude API returns errors as JSON objects that were displayed as raw strings:
+```json
+{"error":"invalid_request_error","message":"Your credit balance is too low..."}
+```
+
+**Solution:** Intelligent API error detection and parsing in `useDocGeneration.js`:
+
+```javascript
+// Check if the error message is a JSON string from the API
+let apiError = null;
+try {
+  if (typeof err.message === 'string' && err.message.startsWith('{')) {
+    apiError = JSON.parse(err.message);
+  }
+} catch (parseError) {
+  // Not JSON, continue with normal error handling
+}
+
+// If we have a parsed API error, use it
+if (apiError) {
+  // Use the API's message directly (it's already user-friendly)
+  errorMessage = apiError.message || errorMessage;
+  // Map API error types to better names
+  if (apiError.error === 'invalid_request_error') {
+    errorType = 'InvalidRequestError';
+  } else if (apiError.error === 'authentication_error') {
+    errorType = 'AuthenticationError';
+  } else if (apiError.error === 'rate_limit_error') {
+    errorType = 'RateLimitError';
+  }
+}
+```
+
+**API Error Type Mapping:**
+
+| API Error Code | Mapped Type | User-Friendly Heading |
+|----------------|-------------|----------------------|
+| `invalid_request_error` | InvalidRequestError | "Invalid Request" |
+| `authentication_error` | AuthenticationError | "Authentication Error" |
+| `rate_limit_error` | RateLimitError | "Rate Limit Exceeded" |
+
+**Benefits:**
+- ✅ API messages used directly (already user-friendly)
+- ✅ Raw API JSON preserved in `originalMessage` for debugging
+- ✅ Proper error type categorization
+- ✅ No more raw JSON displayed to users
+
+### Error Type Formatting
+
+**CamelCase Auto-Formatting:** Error types like `TypeError`, `RangeError` automatically formatted with spaces
+
+**Formatting Rules:**
+1. **Special cases** (highest priority):
+   - `TypeError` + "Failed to fetch" → "Connection Error"
+   - `RateLimitError` → "Rate Limit Exceeded"
+   - `InvalidRequestError` → "Invalid Request"
+   - `AuthenticationError` → "Authentication Error"
+   - `ValidationError` → "Validation Error"
+   - `SyntaxError` → "Invalid Input"
+
+2. **Underscore-separated** (e.g., `invalid_request_error`):
+   - Split on underscores
+   - Capitalize each word
+   - Join with spaces: "Invalid Request Error"
+
+3. **CamelCase** (e.g., `TypeError`, `RangeError`):
+   - Insert space before capital letters
+   - Result: "Type Error", "Range Error"
+
+**Examples:**
+
+| Original Error Type | Formatted Heading | Technical Details (unchanged) |
+|---------------------|-------------------|-------------------------------|
+| `TypeError` + "Failed to fetch" | Connection Error | TypeError |
+| `InvalidRequestError` | Invalid Request | InvalidRequestError |
+| `AuthenticationError` | Authentication Error | AuthenticationError |
+| `ReferenceError` | Reference Error | ReferenceError |
+| `NetworkError` | Network Error | NetworkError |
 
 ---
 

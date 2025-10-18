@@ -87,16 +87,45 @@ export function useDocGeneration() {
     } catch (err) {
       console.error('Generation error:', err);
 
+      // Check if the error message is a JSON string from the API
+      let apiError = null;
+      try {
+        if (typeof err.message === 'string' && err.message.startsWith('{')) {
+          apiError = JSON.parse(err.message);
+        }
+      } catch (parseError) {
+        // Not JSON, continue with normal error handling
+      }
+
       // Provide more helpful error messages based on error type
       let errorMessage = 'Failed to generate documentation';
+      let errorType = err.name || 'Error';
 
+      // If we have a parsed API error, use it
+      if (apiError) {
+        // Use the API's message directly (it's already user-friendly)
+        errorMessage = apiError.message || errorMessage;
+        // Map API error types to better names
+        if (apiError.error === 'invalid_request_error') {
+          errorType = 'InvalidRequestError';
+        } else if (apiError.error === 'authentication_error') {
+          errorType = 'AuthenticationError';
+        } else if (apiError.error === 'rate_limit_error') {
+          errorType = 'RateLimitError';
+          setRetryAfter(60);
+        } else {
+          errorType = apiError.error || errorType;
+        }
+      }
       // Check if it's a rate limit error
-      if (err.name === 'RateLimitError' || err.message.includes('Rate limit')) {
+      else if (err.name === 'RateLimitError' || err.message.includes('Rate limit')) {
         errorMessage = err.message || 'Rate limit exceeded. Please wait before trying again.';
+        errorType = 'RateLimitError';
         setRetryAfter(err.retryAfter || 60);
       } else if (err.message.includes('429')) {
         // Handle 429 status in error message
         errorMessage = 'Rate limit exceeded. Too many requests.';
+        errorType = 'RateLimitError';
         setRetryAfter(60);
       } else if (err.message.includes('Failed to fetch') || err.name === 'TypeError') {
         // Network connectivity issues
@@ -131,7 +160,18 @@ export function useDocGeneration() {
         setRetryAfter(null);
       }
 
-      setError(errorMessage);
+      // Create a structured error object with full details for dev mode
+      const errorObject = {
+        message: errorMessage,                    // User-friendly message
+        type: errorType,                         // Error type (mapped from API or detected)
+        originalMessage: apiError ? JSON.stringify(apiError) : err.message, // Original error (API JSON or error message)
+        stack: err.stack || new Error().stack,   // Stack trace (generate if not available)
+        timestamp: new Date().toISOString(),     // ISO timestamp
+        statusCode: err.status || err.statusCode, // HTTP status if available
+        url: err.url,                            // Request URL if available
+      };
+
+      setError(JSON.stringify(errorObject));
       setIsGenerating(false);
     }
   }, []);
