@@ -134,6 +134,12 @@ export function QualityScoreModal({ qualityScore, onClose }) {
 
 function CriteriaItem({ name, criteria }) {
   // Use subtle, muted colors that provide context without being distracting
+  const statusText = criteria.status === 'complete'
+    ? 'Complete'
+    : criteria.status === 'partial'
+    ? 'Partial'
+    : 'Incomplete';
+
   const icon = criteria.status === 'complete'
     ? <CheckCircle className="w-4 h-4 text-purple-400 flex-shrink-0" aria-hidden="true" />
     : criteria.status === 'partial'
@@ -145,12 +151,17 @@ function CriteriaItem({ name, criteria }) {
 
   return (
     <div className="p-3 bg-white rounded-lg border border-slate-200 hover:border-purple-200 hover:bg-purple-50/30 transition-all">
+      {/* Screen reader status text */}
+      <span className="sr-only">
+        {name}: {statusText}. Score: {criteria.points} out of {maxPoints} points.
+      </span>
+
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           {icon}
-          <span className="text-sm font-medium text-slate-800">{name}</span>
+          <span className="text-sm font-medium text-slate-800" aria-hidden="true">{name}</span>
         </div>
-        <span className="text-sm font-semibold text-slate-700">
+        <span className="text-sm font-semibold text-slate-700" aria-hidden="true">
           {criteria.points}/{maxPoints}
         </span>
       </div>

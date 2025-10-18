@@ -618,7 +618,8 @@ flowchart TD
 
       // Should show quality score
       expect(screen.getByText(/85\/100/)).toBeInTheDocument();
-      expect(screen.getByText('B')).toBeInTheDocument();
+      // Grade is announced in sr-only text for screen readers
+      expect(screen.getByText(/grade B/i)).toBeInTheDocument();
 
       // Should show diagram button
       expect(screen.getByText('Diagram Available')).toBeInTheDocument();

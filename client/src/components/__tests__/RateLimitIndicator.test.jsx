@@ -85,6 +85,23 @@ describe('RateLimitIndicator', () => {
       const text = container.querySelector('.text-red-600');
       expect(text).toBeInTheDocument();
     });
+
+    it('shows "Low" badge when below 30%', () => {
+      render(<RateLimitIndicator remaining={2} limit={10} />); // 20%
+      const badge = screen.getByText('Low');
+      expect(badge).toBeInTheDocument();
+      expect(badge).toHaveClass('bg-red-100', 'text-red-800');
+    });
+
+    it('does not show "Low" badge at exactly 30%', () => {
+      render(<RateLimitIndicator remaining={3} limit={10} />); // 30%
+      expect(screen.queryByText('Low')).not.toBeInTheDocument();
+    });
+
+    it('does not show "Low" badge above 30%', () => {
+      render(<RateLimitIndicator remaining={5} limit={10} />); // 50%
+      expect(screen.queryByText('Low')).not.toBeInTheDocument();
+    });
   });
 
   describe('Normal State (>= 30%)', () => {
@@ -261,7 +278,7 @@ describe('RateLimitIndicator', () => {
 
     it('text container has correct classes', () => {
       const { container } = render(<RateLimitIndicator remaining={5} limit={10} />);
-      const textContainer = container.querySelector('.flex.items-center.gap-1');
+      const textContainer = container.querySelector('.flex.items-center.gap-2');
       expect(textContainer).toBeInTheDocument();
     });
   });

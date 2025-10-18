@@ -93,7 +93,7 @@ export function DocPanel({
                 {qualityScore.score}/100
               </span>
               <span className={`text-sm font-bold ${getGradeColor(qualityScore.grade)}`}>
-                {qualityScore.grade}
+                {qualityScore.grade} {getGradeLabel(qualityScore.grade)}
               </span>
             </button>
           )}
@@ -356,6 +356,17 @@ function getGradeColor(grade) {
     case 'D':
     case 'F': return 'text-error';
     default: return 'text-slate-600';
+  }
+}
+
+function getGradeLabel(grade) {
+  switch (grade) {
+    case 'A': return '(Excellent)';
+    case 'B': return '(Good)';
+    case 'C': return '(Fair)';
+    case 'D': return '(Poor)';
+    case 'F': return '(Failing)';
+    default: return '';
   }
 }
 
