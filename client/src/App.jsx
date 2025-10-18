@@ -391,32 +391,52 @@ function App() {
               setLargeCodeStats(null);
             }}
             onConfirm={performGeneration}
-            title="Large Code Detected"
+            title="Large File Submission"
             variant="warning"
             confirmLabel="Generate Anyway"
             cancelLabel="Cancel"
             message={
-              <div className="space-y-3">
-                <p className="text-sm">
-                  You're about to generate documentation for a large code file. This may take longer and consume more API resources.
+              <div className="space-y-4">
+                <p className="text-sm leading-relaxed text-slate-700">
+                  You're about to generate documentation for a <strong className="font-semibold text-slate-900">large code file</strong>. This may take longer and consume more API resources.
                 </p>
-                <div className="bg-slate-100 border border-slate-200 rounded-lg p-3 space-y-1">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-600">Lines of code:</span>
-                    <span className="font-semibold text-slate-900">{largeCodeStats.lines.toLocaleString()}</span>
+
+                {/* Visual separator */}
+                <div className="h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
+
+                {/* Stats box with purple accent */}
+                <div className="bg-white border-l-4 border-purple-500 border border-slate-200 rounded-lg p-4 shadow-sm space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-slate-700">Lines of code</span>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-2xl font-bold text-purple-900">{largeCodeStats.lines.toLocaleString()}</span>
+                      <span className="text-xs text-slate-500 font-medium">lines</span>
+                    </div>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-600">File size:</span>
-                    <span className="font-semibold text-slate-900">{largeCodeStats.sizeInKB} KB</span>
+                  <div className="h-px bg-slate-100" />
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-slate-700">File size</span>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-2xl font-bold text-indigo-900">{largeCodeStats.sizeInKB}</span>
+                      <span className="text-xs text-slate-500 font-medium">KB</span>
+                    </div>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-600">Characters:</span>
-                    <span className="font-semibold text-slate-900">{largeCodeStats.charCount.toLocaleString()}</span>
+                  <div className="h-px bg-slate-100" />
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-slate-700">Characters</span>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-2xl font-bold text-purple-900">{largeCodeStats.charCount.toLocaleString()}</span>
+                      <span className="text-xs text-slate-500 font-medium">chars</span>
+                    </div>
                   </div>
                 </div>
-                <p className="text-sm text-slate-600">
-                  Consider breaking your code into smaller modules for better documentation quality and faster generation.
-                </p>
+
+                {/* Tip box */}
+                <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
+                  <p className="text-xs leading-relaxed text-slate-600">
+                    <span className="font-semibold text-slate-700">💡 Tip:</span> Breaking your code into smaller modules improves documentation quality and generation speed.
+                  </p>
+                </div>
               </div>
             }
           />

@@ -1,6 +1,20 @@
 import { useState, useEffect } from 'react';
 import { AlertCircle, X } from 'lucide-react';
 
+/**
+ * Formats error type strings by removing underscores and capitalizing each word
+ * @param {string} errorType - Raw error type (e.g., "invalid_request_error")
+ * @returns {string} Formatted error type (e.g., "Invalid Request Error")
+ */
+function formatErrorType(errorType) {
+  if (!errorType || typeof errorType !== 'string') return 'Error';
+
+  return errorType
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+}
+
 export function ErrorBanner({ error, retryAfter, onDismiss }) {
   const [isVisible, setIsVisible] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
@@ -24,9 +38,63 @@ export function ErrorBanner({ error, retryAfter, onDismiss }) {
 
   if (!error || !isVisible) return null;
 
-  // Check if error contains multiple lines (for validation errors)
-  const isMultiLine = error.includes('\n');
-  const errorLines = isMultiLine ? error.split('\n') : [error];
+  // Parse error - could be string or object with type/message
+  let errorHeading = 'Error';
+  let errorMessage = error;
+  let fullErrorObject = null;
+
+  try {
+    // If error is a string, try to parse it as JSON
+    if (typeof error === 'string') {
+      try {
+        const parsed = JSON.parse(error);
+        fullErrorObject = parsed;
+
+        // Handle nested structure: {error: {type: "...", message: "..."}}
+        if (parsed.error && typeof parsed.error === 'object') {
+          errorHeading = formatErrorType(parsed.error.type) || 'Error';
+          errorMessage = parsed.error.message || JSON.stringify(parsed.error);
+        }
+        // Handle flat structure: {error: "Type", message: "Message"}
+        else if (parsed.type || parsed.error) {
+          errorHeading = formatErrorType(parsed.type || parsed.error) || 'Error';
+          errorMessage = parsed.message || error;
+        }
+        else {
+          errorMessage = error;
+        }
+      } catch {
+        // Not JSON, treat as plain string
+        errorMessage = error;
+      }
+    } else if (typeof error === 'object' && error !== null) {
+      // Error is already an object
+      fullErrorObject = error;
+
+      // Handle nested structure: {error: {type: "...", message: "..."}}
+      if (error.error && typeof error.error === 'object') {
+        errorHeading = formatErrorType(error.error.type) || 'Error';
+        errorMessage = error.error.message || JSON.stringify(error.error);
+      }
+      // Handle flat structure: {type: "Type", error: "Type", message: "Message"}
+      else {
+        errorHeading = formatErrorType(error.type || error.error) || 'Error';
+        errorMessage = error.message || JSON.stringify(error);
+      }
+    }
+  } catch (e) {
+    console.error('Error parsing error object:', e);
+    errorMessage = String(error);
+  }
+
+  // Log full error details to console for technical debugging
+  if (fullErrorObject) {
+    console.error('Error Banner - Full Details:', fullErrorObject);
+  }
+
+  // Check if error message contains multiple lines (for validation errors)
+  const isMultiLine = errorMessage.includes('\n');
+  const errorLines = isMultiLine ? errorMessage.split('\n') : [errorMessage];
 
   return (
     <div
@@ -45,7 +113,7 @@ export function ErrorBanner({ error, retryAfter, onDismiss }) {
         {/* Error Content */}
         <div className="flex-1 min-w-0">
           <h3 className="text-sm font-semibold text-red-900 mb-1">
-            Error
+            {errorHeading}
           </h3>
           {isMultiLine ? (
             <div className="text-sm text-red-800 space-y-1.5 leading-relaxed">
@@ -57,7 +125,7 @@ export function ErrorBanner({ error, retryAfter, onDismiss }) {
             </div>
           ) : (
             <p className="text-sm text-red-800 leading-relaxed">
-              {error}
+              {errorMessage}
             </p>
           )}
           {retryAfter && (
