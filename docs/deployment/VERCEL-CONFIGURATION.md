@@ -1,8 +1,11 @@
 # Vercel Deployment Configuration
 
 **Project:** CodeScribe AI
-**Status:** Ready for Deployment
-**Date:** October 18, 2025
+**Status:** ✅ **DEPLOYED TO PRODUCTION**
+**Deployment Date:** October 19, 2025
+**Production URL:** [https://codescribe-ai.vercel.app](https://codescribe-ai.vercel.app)
+
+> **Note:** This configuration has been applied and is kept for reference. For deployment learnings, see [DEPLOYMENT-LEARNINGS.md](./DEPLOYMENT-LEARNINGS.md)
 
 ---
 
@@ -22,16 +25,16 @@ CLAUDE_API_KEY=sk-ant-api03-YOUR_ACTUAL_API_KEY_HERE
 NODE_ENV=production
 PORT=3000
 
-# CORS Configuration (UPDATE AFTER FIRST DEPLOYMENT)
-ALLOWED_ORIGINS=https://your-project-name.vercel.app
+# CORS Configuration
+ALLOWED_ORIGINS=https://codescribe-ai.vercel.app
 
 # Rate Limiting
 RATE_LIMIT_WINDOW_MS=60000
 RATE_LIMIT_MAX=10
 RATE_LIMIT_HOURLY_MAX=100
 
-# Client Configuration (UPDATE AFTER FIRST DEPLOYMENT)
-VITE_API_URL=https://your-project-name.vercel.app
+# Client Configuration
+VITE_API_URL=https://codescribe-ai.vercel.app
 ```
 
 ---
