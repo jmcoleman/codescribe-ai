@@ -1,31 +1,12 @@
 {
   "version": 2,
-  "builds": [
+  "buildCommand": "cd client && npm run build",
+  "outputDirectory": "client/dist",
+  "installCommand": "npm install --prefix client && npm install --prefix server",
+  "rewrites": [
     {
-      "src": "client/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
-    },
-    {
-      "src": "server/index.js",
-      "use": "@vercel/node"
+      "source": "/api/:path*",
+      "destination": "/api"
     }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/server/index.js"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/client/$1"
-    }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  },
-  "installCommand": "npm install && cd client && npm install && cd ../server && npm install",
-  "buildCommand": "cd client && npm run build"
+  ]
 }
