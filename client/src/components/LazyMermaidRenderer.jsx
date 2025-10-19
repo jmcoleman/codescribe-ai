@@ -37,7 +37,6 @@ export function LazyMermaidRenderer({ chart, id, onError, onSuccess }) {
 
     const renderDiagram = async () => {
       if (!chart) {
-        console.log(`[Mermaid ${id}] No chart content, skipping render`);
         return;
       }
 
@@ -48,19 +47,13 @@ export function LazyMermaidRenderer({ chart, id, onError, onSuccess }) {
         // Generate unique ID for this render with more entropy
         const uniqueId = `mermaid-${id}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
-        console.log(`[Mermaid ${id}] Starting render with uniqueId: ${uniqueId}`);
-        console.log(`[Mermaid ${id}] Chart length: ${cleanChart.length} chars`);
-
         // Render the diagram
         const { svg } = await mermaid.render(uniqueId, cleanChart);
 
         // If component unmounted during render, don't update state
         if (cancelled) {
-          console.log(`[Mermaid ${id}] Render cancelled (component unmounted)`);
           return;
         }
-
-        console.log(`[Mermaid ${id}] Render successful, SVG length: ${svg.length} chars`);
 
         // Remove error elements from the SVG
         const parser = new DOMParser();
@@ -87,16 +80,6 @@ export function LazyMermaidRenderer({ chart, id, onError, onSuccess }) {
           }
         });
 
-        // Log errors found
-        if (errorsFound.length > 0) {
-          console.group(`🔍 [Mermaid ${id}] Syntax Issues (diagram still rendered):`);
-          errorsFound.forEach((error, index) => {
-            console.log(`Error ${index + 1}:`, error);
-          });
-          console.log('Chart source:', cleanChart);
-          console.groupEnd();
-        }
-
         // Also remove any images (error icons like bombs)
         const errorImages = doc.querySelectorAll('image[href*="bomb"]');
         errorImages.forEach(img => {
@@ -114,15 +97,10 @@ export function LazyMermaidRenderer({ chart, id, onError, onSuccess }) {
         setSvg(cleanSvg);
         setError(null);
         if (onSuccess) onSuccess();
-        console.log(`[Mermaid ${id}] ✅ Render complete and state updated`);
       } catch (err) {
         if (cancelled) {
-          console.log(`[Mermaid ${id}] Error ignored (component unmounted)`);
           return;
         }
-
-        console.error(`[Mermaid ${id}] ❌ Rendering failed:`, err);
-        console.error(`[Mermaid ${id}] Chart content:`, chart);
         const errorMsg = err.message || 'Failed to render diagram';
         setError(errorMsg);
         setSvg('');
@@ -135,7 +113,6 @@ export function LazyMermaidRenderer({ chart, id, onError, onSuccess }) {
     // Cleanup function to prevent state updates after unmount
     return () => {
       cancelled = true;
-      console.log(`[Mermaid ${id}] Component unmounting, cancelling any pending renders`);
     };
   }, [chart, id, onError, onSuccess]);
 

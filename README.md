@@ -13,6 +13,7 @@ Transform code into comprehensive, professional documentation in seconds using A
 - [Features](#features)
 - [Screenshots](#screenshots)
 - [Quick Start](#quick-start)
+- [Environment Variables](#environment-variables)
 - [Usage](#usage)
 - [Documentation](#documentation)
 - [Tech Stack](#tech-stack)
@@ -112,13 +113,19 @@ _Screenshots coming soon - application is currently in development_
    CLAUDE_API_KEY=your-api-key-here
    PORT=3000
    NODE_ENV=development
+   ALLOWED_ORIGINS=http://localhost:5173
+   RATE_LIMIT_WINDOW_MS=60000
+   RATE_LIMIT_MAX=10
+   RATE_LIMIT_HOURLY_MAX=100
    ```
 
-   Create a `.env` file in the `client/` directory (optional, defaults shown):
+   Create a `.env` file in the `client/` directory:
    ```bash
    # client/.env
    VITE_API_URL=http://localhost:3000
    ```
+
+   **See `.env.example` files in each directory for complete documentation.**
 
 ### Development
 
@@ -158,6 +165,76 @@ From **client/** directory:
 - `npm run dev` - Start Vite dev server
 - `npm run build` - Build for production
 - `npm run preview` - Preview production build locally
+
+## Environment Variables
+
+### Server Environment Variables
+
+Configure these in `server/.env`:
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `CLAUDE_API_KEY` | ✅ Yes | - | Your Anthropic Claude API key ([Get one here](https://console.anthropic.com/)) |
+| `PORT` | No | `3000` | Server port number |
+| `NODE_ENV` | No | `development` | Environment mode (`development` or `production`) |
+| `ALLOWED_ORIGINS` | No | `http://localhost:5173` | Comma-separated list of allowed CORS origins |
+| `RATE_LIMIT_WINDOW_MS` | No | `60000` | Rate limit time window in milliseconds (1 minute) |
+| `RATE_LIMIT_MAX` | No | `10` | Maximum requests per window per IP address |
+| `RATE_LIMIT_HOURLY_MAX` | No | `100` | Maximum generation requests per hour per IP |
+
+**Example `server/.env`:**
+```bash
+CLAUDE_API_KEY=sk-ant-your-api-key-here
+PORT=3000
+NODE_ENV=development
+ALLOWED_ORIGINS=http://localhost:5173
+RATE_LIMIT_WINDOW_MS=60000
+RATE_LIMIT_MAX=10
+RATE_LIMIT_HOURLY_MAX=100
+```
+
+### Client Environment Variables
+
+Configure these in `client/.env`:
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `VITE_API_URL` | No | `http://localhost:3000` | Backend API URL |
+
+**Example `client/.env`:**
+```bash
+VITE_API_URL=http://localhost:3000
+```
+
+**For production deployment:**
+```bash
+# Production example
+VITE_API_URL=https://your-backend.vercel.app
+```
+
+**Note:** All client environment variables must be prefixed with `VITE_` to be accessible in the browser.
+
+### Production Configuration
+
+When deploying to production (e.g., Vercel):
+
+**Server variables:**
+```bash
+CLAUDE_API_KEY=sk-ant-your-production-key
+NODE_ENV=production
+PORT=3000
+ALLOWED_ORIGINS=https://your-frontend.vercel.app
+RATE_LIMIT_WINDOW_MS=60000
+RATE_LIMIT_MAX=10
+RATE_LIMIT_HOURLY_MAX=100
+```
+
+**Client variables:**
+```bash
+VITE_API_URL=https://your-backend.vercel.app
+```
+
+See `.env.example` files in `server/` and `client/` directories for complete documentation.
 
 ## Usage
 
