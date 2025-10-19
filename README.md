@@ -6,7 +6,7 @@ Transform code into comprehensive, professional documentation in seconds using A
 
 > **Portfolio Project** by Jenni Coleman - Showcasing full-stack development, AI integration, and modern UX design
 >
-> 🔗 [Live Demo](#) | 📖 [Documentation](docs/) | 🎨 [Design System](docs/planning/07-Figma-Guide.md)
+> 🔗 [Live Demo](https://codescribeai.com) | 📖 [Documentation](docs/) | 🎨 [Design System](docs/planning/07-Figma-Guide.md)
 
 ## Table of Contents
 
@@ -515,7 +515,7 @@ npm run test:e2e:headed       # With browser UI (for debugging)
 
 **Current Phase:** Phase 1.5 - WCAG AA Accessibility Compliance + Deployment - ✅ **COMPLETE AND DEPLOYED!**
 **Timeline:** 4 days (Oct 16-19: 2 days accessibility + 2 days deployment) | **Status:** 🚀 **LIVE IN PRODUCTION**
-**Production URL:** [codescribe-ai.vercel.app](https://codescribe-ai.vercel.app)
+**Production URL:** [codescribeai.com](https://codescribeai.com)
 
 ### ✅ Completed (Days 1-4)
 
@@ -589,7 +589,7 @@ npm run test:e2e:headed       # With browser UI (for debugging)
 - ✅ **Build Optimization:** Dependency restructuring for Vercel
 - ✅ **API Configuration:** Centralized URL management
 - ✅ **Monorepo Support:** Automatic detection and build
-- ✅ **Live Application:** [codescribe-ai.vercel.app](https://codescribe-ai.vercel.app)
+- ✅ **Live Application:** [codescribeai.com](https://codescribeai.com)
 
 **Accessibility Scores:**
 - ✅ Overall: 95/100 (A grade)
@@ -602,7 +602,7 @@ npm run test:e2e:headed       # With browser UI (for debugging)
 ### ✅ Phase 1.5 Complete (Oct 16-19, 2025)
 
 **All Major Deliverables Achieved:**
-- [x] ✅ Deploy to production (Vercel) - **LIVE at codescribe-ai.vercel.app**
+- [x] ✅ Deploy to production (Vercel) - **LIVE at [codescribeai.com](https://codescribeai.com)**
 - [x] ✅ CI/CD pipeline (GitHub Actions)
 - [x] ✅ Security hardening (env sanitization, API protection)
 - [x] ✅ Accessibility compliance (95/100, 0 violations)

@@ -4,7 +4,7 @@
 **Current Phase:** Phase 1.5 Complete - Production Deployment ✅
 **Tech Stack:** React 19 + Vite, Node.js + Express, Claude API, Tailwind CSS, Monaco Editor
 **Timeline:** Phase 1 (5 days) + Phase 1.5 (4 days) = 9 days total
-**Status:** ✅ **DEPLOYED TO PRODUCTION** - [codescribe-ai.vercel.app](https://codescribe-ai.vercel.app)
+**Status:** ✅ **DEPLOYED TO PRODUCTION** - [codescribeai.com](https://codescribeai.com)
 **Completion Date:** October 19, 2025
 **Timezone:** Eastern Standard Time (EST/EDT) - All dates and times in documentation reference this timezone
 
@@ -25,7 +25,7 @@ CodeScribe AI is an AI-powered documentation generator that analyzes code and pr
 
 ## 🌐 Production Application
 
-**Live Demo:** [https://codescribe-ai.vercel.app](https://codescribe-ai.vercel.app)
+**Live Demo:** [https://codescribeai.com](https://codescribeai.com)
 
 **Key Features:**
 - Real-time AI-powered documentation generation with streaming
@@ -1023,7 +1023,7 @@ VITE_API_URL=http://localhost:3000
 
 **Phase 1.5: WCAG AA Accessibility Compliance + Deployment (Days 6-10)** ✅ **COMPLETE** (Oct 16-19, 2025)
 
-**Status:** ✅ **DEPLOYED TO PRODUCTION** - [codescribe-ai.vercel.app](https://codescribe-ai.vercel.app)
+**Status:** ✅ **DEPLOYED TO PRODUCTION** - [codescribeai.com](https://codescribeai.com)
 
 **Accessibility Implementation (Oct 16-17):**
 - ✅ **Days 6-7 (Critical + Keyboard):** 100% Complete

@@ -130,7 +130,7 @@ curl -X POST https://your-url.vercel.app/api/generate \
 - [x] ✅ Monitor rate limiting effectiveness
 
 ### Optional Enhancements
-- [ ] Add custom domain (if desired)
+- [x] ✅ Add custom domain (codescribeai.com - configured October 19, 2025)
 - [ ] Set up Vercel Analytics
 - [ ] Configure Vercel Web Analytics
 - [ ] Add Sentry for error tracking
@@ -256,7 +256,7 @@ Deployment is successful when:
 
 **Date Deployed:** October 19, 2025
 **Vercel URL:** https://codescribe-ai.vercel.app
-**Custom Domain:** N/A (using Vercel subdomain)
+**Custom Domain:** https://codescribeai.com (configured October 19, 2025)
 **Deployed By:** Jenni Coleman
 
 ---
