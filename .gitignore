@@ -26,6 +26,7 @@ dist-ssr
 # config
 .env
 .env.local
+.env.test
 *.key
 
 # Ignore all Postman environment files
@@ -45,3 +46,12 @@ client/test-results/
 client/playwright-report/
 test-results/
 playwright-report/
+
+# Coverage reports
+coverage/
+.nyc_output/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/

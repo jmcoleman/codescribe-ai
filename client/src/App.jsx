@@ -200,7 +200,6 @@ function App() {
 
         // Show success toast with compact variant for non-intrusive feedback
         toastCompact(`File uploaded successfully`, 'success');
-        console.log(`File uploaded successfully: ${data.file.name} (${data.file.sizeFormatted})`);
       }
 
       // Reset the file input so the same file can be selected again
@@ -251,7 +250,6 @@ function App() {
 
   const handleGithubImport = () => {
     // TODO: Implement GitHub import
-    console.log('GitHub import clicked');
   };
 
   const handleLoadExample = (example) => {
