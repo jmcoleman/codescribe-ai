@@ -14,4 +14,9 @@ export default defineConfig({
       template: 'treemap', // Use treemap visualization (other options: sunburst, network)
     }),
   ],
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './src/test/setup.js',
+  },
 })

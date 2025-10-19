@@ -1,9 +1,21 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ErrorBanner } from '../ErrorBanner';
 
 describe('ErrorBanner Component', () => {
+  // Mock import.meta.env.DEV to be false for most tests (production mode)
+  const originalEnv = import.meta.env.DEV;
+
+  beforeEach(() => {
+    // Set to production mode by default
+    import.meta.env.DEV = false;
+  });
+
+  afterEach(() => {
+    // Restore original value
+    import.meta.env.DEV = originalEnv;
+  });
   describe('Rendering and Visibility', () => {
     it('should not render when error is null', () => {
       const { container } = render(<ErrorBanner error={null} onDismiss={vi.fn()} />);
@@ -286,17 +298,17 @@ describe('ErrorBanner Component', () => {
       expect(contentArea).toBeInTheDocument();
     });
 
-    it('should style heading with red color', () => {
+    it('should style heading with slate color', () => {
       render(<ErrorBanner error="Test error" onDismiss={vi.fn()} />);
       const heading = screen.getByText('Error');
-      expect(heading).toHaveClass('text-red-900');
+      expect(heading).toHaveClass('text-slate-900');
       expect(heading).toHaveClass('font-semibold');
     });
 
-    it('should style error message with red color', () => {
+    it('should style error message with slate color', () => {
       render(<ErrorBanner error="Test error" onDismiss={vi.fn()} />);
       const message = screen.getByText('Test error');
-      expect(message).toHaveClass('text-red-800');
+      expect(message).toHaveClass('text-slate-700');
     });
 
     it('should style dismiss button with hover states', () => {
@@ -362,13 +374,13 @@ describe('ErrorBanner Component', () => {
     it('should have proper color contrast for text', () => {
       render(<ErrorBanner error="Test error" onDismiss={vi.fn()} />);
 
-      // Check heading contrast (red-900 on red-50)
+      // Check heading contrast (slate-900 on red-50)
       const heading = screen.getByText('Error');
-      expect(heading).toHaveClass('text-red-900');
+      expect(heading).toHaveClass('text-slate-900');
 
-      // Check message contrast (red-700 on red-50)
+      // Check message contrast (slate-700 on red-50)
       const message = screen.getByText('Test error');
-      expect(message).toHaveClass('text-red-800');
+      expect(message).toHaveClass('text-slate-700');
     });
   });
 
