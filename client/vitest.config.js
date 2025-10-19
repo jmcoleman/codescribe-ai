@@ -9,6 +9,17 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/test/setup.js',
     css: true,
+    // Only include unit/integration tests in src directory
+    include: ['src/**/__tests__/**/*.{test,spec}.{js,jsx}', 'src/**/*.{test,spec}.{js,jsx}'],
+    // Exclude e2e tests (run separately with Playwright)
+    exclude: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/e2e/**',
+      '**/*.spec.js',
+      '**/playwright-report/**',
+      '**/test-results/**'
+    ],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
@@ -16,7 +27,8 @@ export default defineConfig({
         'node_modules/',
         'src/test/',
         '*.config.js',
-        'dist/'
+        'dist/',
+        'e2e/'
       ]
     }
   },

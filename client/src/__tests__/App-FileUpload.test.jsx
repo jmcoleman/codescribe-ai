@@ -258,8 +258,9 @@ describe('App - File Upload Integration', () => {
 
       // Error banner should appear with client-side validation message
       await waitFor(() => {
-        const errorMessage = screen.getByText(/exceeds maximum allowed size/i);
-        expect(errorMessage).toBeInTheDocument();
+        // Use getAllByText since error appears in both main message and technical details (dev mode)
+        const errorMessages = screen.getAllByText(/exceeds maximum allowed size/i);
+        expect(errorMessages.length).toBeGreaterThan(0);
       });
     });
 
