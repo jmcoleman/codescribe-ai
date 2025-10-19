@@ -36,6 +36,7 @@ import {
   toastDocGenerated,
   toastCompact,
 } from './utils/toast';
+import { API_URL } from './config/api.js';
 
 function App() {
   const [code, setCode] = useState('// Paste your code here or try the example below...\n\n// Example function:\nfunction calculateTotal(items) {\n  return items.reduce((sum, item) => sum + item.price, 0);\n}\n');
@@ -160,8 +161,7 @@ function App() {
       const formData = new FormData();
       formData.append('file', file);
 
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-      const response = await fetch(`${apiUrl}/api/upload`, {
+      const response = await fetch(`${API_URL}/api/upload`, {
         method: 'POST',
         body: formData,
       });

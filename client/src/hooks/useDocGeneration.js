@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
+import { API_URL } from '../config/api.js';
 
 export function useDocGeneration() {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -23,10 +24,8 @@ export function useDocGeneration() {
     }
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-      
       // Use fetch with POST to send data
-      const response = await fetch(`${apiUrl}/api/generate-stream`, {
+      const response = await fetch(`${API_URL}/api/generate-stream`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
