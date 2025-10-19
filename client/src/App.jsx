@@ -294,6 +294,8 @@ function App() {
       <input
         ref={fileInputRef}
         type="file"
+        id="file-upload-input"
+        name="file-upload"
         accept=".js,.jsx,.ts,.tsx,.py,.java,.cpp,.c,.h,.hpp,.cs,.go,.rs,.rb,.php,.txt"
         onChange={handleFileChange}
         className="hidden"
