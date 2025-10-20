@@ -1,8 +1,0 @@
-{
-  "devDependencies": {
-    "@axe-core/cli": "^4.10.2"
-  },
-  "dependencies": {
-    "@vercel/speed-insights": "^1.2.0"
-  }
-}
