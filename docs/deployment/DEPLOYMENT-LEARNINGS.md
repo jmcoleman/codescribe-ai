@@ -533,3 +533,68 @@ vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN
 **Last Updated:** October 19, 2025
 **Author:** Jenni Coleman
 **Status:**  Production Deployment Complete
+
+---
+
+## Issue 5: Vercel Analytics and Speed Insights Not Loading
+
+**Error:**
+```
+window.__VERCEL_ANALYTICS__ → undefined
+window.__VERCEL_SPEED_INSIGHTS__ → undefined
+```
+
+**Root Causes:**
+1. `import.meta.env.MODE === 'production'` returns false in Vercel builds
+2. Nested `client/client/` directory created by running npm install from wrong directory
+3. Packages not properly included in production build
+
+**Solution:**
+
+**Step 1: Use hostname-based production detection:**
+```javascript
+// client/src/main.jsx
+const isProduction =
+  window.location.hostname === 'codescribeai.com' ||
+  window.location.hostname.includes('vercel.app')
+
+{isProduction && (
+  <>
+    <Analytics />
+    <SpeedInsights />
+  </>
+)}
+```
+
+**Step 2: Clean up nested directories:**
+```bash
+rm -rf client/client/
+git add -A
+git commit -m "Remove nested client directory"
+```
+
+**Step 3: Enable Speed Insights in Vercel Dashboard:**
+- Settings → Speed Insights → Toggle ON
+- Deploy changes
+- Wait 15-30 minutes for data to appear
+
+**Step 4: Verify in production:**
+```javascript
+// Should return objects (not undefined)
+window.__VERCEL_ANALYTICS__
+window.__VERCEL_SPEED_INSIGHTS__
+```
+
+**Expected Timeline:**
+- Analytics (page views): 5 minutes
+- Speed Insights (Web Vitals): 15-30 minutes
+
+**Git Commits:**
+- `a78ec14` - add vercel speed-insights package for analytics
+- `6749267` - Fix analytics not loading - use hostname detection instead of env.MODE
+- `d3485b6` - Remove typeof window check from analytics detection
+- `320ad90` - resolving analytics deploy issues (removed nested client/client/)
+
+---
+
+**Document Last Updated:** October 20, 2025 (v1.1 - Added Analytics Troubleshooting)
