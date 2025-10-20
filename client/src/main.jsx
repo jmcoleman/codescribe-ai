@@ -20,7 +20,12 @@ createRoot(document.getElementById('root')).render(
     {isProduction && (
       <>
         <Analytics />
-        <SpeedInsights />
+        <SpeedInsights
+          beforeSend={(data) => {
+            console.log('[Speed Insights] Sending data:', data);
+            return data;
+          }}
+        />
       </>
     )}
   </StrictMode>,
