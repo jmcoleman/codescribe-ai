@@ -1,23 +1,31 @@
 # Analytics Implementation Guide
 
 **Status:** ✅ Fully Implemented
-**Platform:** Vercel Analytics
-**Package:** `@vercel/analytics` v1.x
+**Platform:** Vercel Analytics + Speed Insights
+**Packages:**
+- `@vercel/analytics` v1.5.0 (Custom Events)
+- `@vercel/speed-insights` v1.2.0 (Web Vitals)
 **Privacy:** Anonymous, GDPR compliant, no cookies
 
 ---
 
 ## 📊 Overview
 
-CodeScribe AI uses Vercel Analytics to track user behavior, performance metrics, and product insights. All tracking is **anonymous** and **privacy-friendly** with no personal information collected.
+CodeScribe AI uses **two Vercel packages** to track user behavior, performance metrics, and product insights:
 
-### Why Vercel Analytics?
+1. **`@vercel/analytics`** - Custom event tracking (doc generation, quality scores, user interactions)
+2. **`@vercel/speed-insights`** - Web Vitals and performance monitoring (FCP, LCP, CLS, TTFB)
+
+All tracking is **anonymous** and **privacy-friendly** with no personal information collected.
+
+### Why Vercel Analytics + Speed Insights?
 
 1. **Zero configuration** - Already on Vercel platform
 2. **Privacy-first** - No cookies, GDPR compliant
-3. **Core Web Vitals** - Automatic tracking of FCP, LCP, TBT, CLS
-4. **Free tier** - 2,500 events/month
+3. **Comprehensive tracking** - Both custom events AND Core Web Vitals
+4. **Free tier** - Speed Insights free on all plans, Analytics available with limits
 5. **Real User Monitoring** - Actual performance data from users
+6. **Dual tracking** - Behavior analytics (Analytics) + Performance metrics (Speed Insights)
 
 ---
 
@@ -452,13 +460,23 @@ Potential additions for Phase 4 (optional):
 ## 📚 References
 
 - [Vercel Analytics Docs](https://vercel.com/docs/analytics)
+- [Vercel Speed Insights Docs](https://vercel.com/docs/speed-insights)
 - [Custom Events Guide](https://vercel.com/docs/analytics/custom-events)
 - [Web Vitals](https://web.dev/vitals/)
 - [Privacy Best Practices](https://vercel.com/docs/analytics/privacy-policy)
+- [@vercel/analytics npm package](https://www.npmjs.com/package/@vercel/analytics)
+- [@vercel/speed-insights npm package](https://www.npmjs.com/package/@vercel/speed-insights)
 
 ---
 
 ## 📝 Changelog
+
+### v1.2 (October 20, 2025)
+- ✅ **Added Speed Insights:** Installed `@vercel/speed-insights` package
+- ✅ Added `<SpeedInsights />` component to main.jsx
+- ✅ Dual tracking: Custom events (Analytics) + Web Vitals (Speed Insights)
+- ✅ Enabled Speed Insights in Vercel Dashboard settings
+- ✅ Updated documentation to reflect both packages
 
 ### v1.1 (October 20, 2025)
 - ✅ **Performance optimization:** Disabled analytics in development mode
@@ -476,5 +494,5 @@ Potential additions for Phase 4 (optional):
 ---
 
 **Last Updated:** October 20, 2025
-**Version:** 1.1
+**Version:** 1.2
 **Status:** Production Ready ✅
