@@ -14,8 +14,11 @@
 import { track } from '@vercel/analytics';
 
 // Helper to check if we're in production
-// Use MODE check as it's more reliable in Vercel builds
-const isProduction = import.meta.env.MODE === 'production';
+// Use hostname check - most reliable method for Vercel deployments
+const isProduction =
+  typeof window !== 'undefined' &&
+  (window.location.hostname === 'codescribeai.com' ||
+   window.location.hostname.includes('vercel.app'));
 
 // Wrapper function that only tracks in production
 const trackEvent = (eventName, eventData) => {
