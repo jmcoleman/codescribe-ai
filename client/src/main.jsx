@@ -7,8 +7,11 @@ import App from './App.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 
 // Only load analytics and speed insights in production
-// Use MODE check as it's more reliable in Vercel builds
-const isProduction = import.meta.env.MODE === 'production'
+// Use hostname check - most reliable method for Vercel deployments
+const isProduction =
+  typeof window !== 'undefined' &&
+  (window.location.hostname === 'codescribeai.com' ||
+   window.location.hostname.includes('vercel.app'))
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
