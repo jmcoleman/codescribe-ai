@@ -579,15 +579,31 @@ git commit -m "Remove nested client directory"
 - Wait 15-30 minutes for data to appear
 
 **Step 4: Verify in production:**
-```javascript
-// Should return objects (not undefined)
-window.__VERCEL_ANALYTICS__
-window.__VERCEL_SPEED_INSIGHTS__
-```
+
+**IMPORTANT:** `window.__VERCEL_ANALYTICS__` and `window.__VERCEL_SPEED_INSIGHTS__` will show `undefined` even when working correctly. The packages don't expose global variables in newer versions.
+
+**Correct Way to Verify (Network Tab):**
+1. Open DevTools → Network tab
+2. Check "Preserve log" checkbox
+3. Filter by typing `vitals` or `insights`
+4. Use the app for 30-60 seconds
+5. Look for POST requests to:
+   - `/_vercel/insights/view` (Analytics - page views)
+   - `/_vercel/speed-insights/vitals` (Speed Insights - Web Vitals)
+6. Both should show **Status: 200 OK** or **204 No Content**
+
+**If you see 200/204 responses:** ✅ Components are working correctly!
 
 **Expected Timeline:**
-- Analytics (page views): 5 minutes
-- Speed Insights (Web Vitals): 15-30 minutes
+- **Analytics (page views):** 5-10 minutes
+- **Speed Insights (Web Vitals):** **24-48 hours** ⚠️ MUCH LONGER!
+
+**Why Speed Insights Takes Longer:**
+- Analytics shows every page view immediately (raw data)
+- Speed Insights aggregates performance metrics from multiple sessions
+- Needs statistically significant data to calculate percentiles (P75)
+- Dashboard waits for minimum threshold of complete user sessions
+- First data typically appears after 1-2 days of traffic
 
 **Git Commits:**
 - `a78ec14` - add vercel speed-insights package for analytics
@@ -597,4 +613,73 @@ window.__VERCEL_SPEED_INSIGHTS__
 
 ---
 
-**Document Last Updated:** October 20, 2025 (v1.1 - Added Analytics Troubleshooting)
+**Document Last Updated:** October 20, 2025 (v1.2 - Added Speed Insights Data Delay Explanation)
+
+---
+
+## Issue 6: Speed Insights Shows "No data available" Despite Working Components
+
+**Dashboard Message:**
+```
+"No data available. Make sure you are using the latest @vercel/speed-insights package."
+```
+
+**Symptoms:**
+- Analytics dashboard showing visitors and page views ✅
+- Speed Insights dashboard showing "Get Started" setup page with "No data points collected"
+- Network tab shows successful POST requests to `/_vercel/speed-insights/vitals` (200 OK)
+- `window.__VERCEL_SPEED_INSIGHTS__` returns `undefined` (this is normal!)
+
+**Root Cause:**
+Speed Insights has a **24-48 hour delay** before first data appears in dashboard. This is by design, not a bug.
+
+**Why the Delay:**
+1. **Data Aggregation:** Speed Insights doesn't show individual measurements like Analytics
+2. **Statistical Significance:** Waits for enough sessions to calculate meaningful percentiles (P75)
+3. **Multiple Metrics:** Each measurement includes 5+ Web Vitals (FCP, LCP, CLS, TBT, INP)
+4. **Quality Threshold:** Won't display until it has high-confidence performance data
+
+**How to Verify It's Working (While Waiting for Dashboard):**
+
+**Method 1: Network Tab (Most Reliable)**
+1. Open production site with DevTools → Network tab
+2. Enable "Preserve log" checkbox
+3. Filter by `vitals` or `insights`
+4. Use the app normally for 1-2 minutes
+5. Look for POST request to `/_vercel/speed-insights/vitals`
+6. **Status 200 or 204 = Working! ✅**
+
+**Method 2: Check Multiple Times**
+- Visit site from different browsers/devices
+- Complete full user sessions (don't just refresh)
+- Each visit sends new vitals data
+- More sessions = faster dashboard population
+
+**Expected Timeline:**
+- **Day 1:** Components installed, data being sent (Network tab shows 200 OK)
+- **Day 2:** Enough data collected, dashboard starts showing metrics
+- **Day 3+:** Full historical data and trends available
+
+**Solution:**
+✅ **If Network tab shows 200/204 responses:** Everything is working! Just wait 24-48 hours.
+❌ **If Network tab shows no requests:** Components not loading - check hostname detection logic.
+
+**Verification Checklist:**
+- [ ] Network tab shows POST to `/_vercel/speed-insights/vitals` with 200 OK
+- [ ] Analytics dashboard shows page views (proves components load)
+- [ ] Speed Insights enabled in Vercel Dashboard (Settings → Speed Insights)
+- [ ] Using latest package version (`@vercel/speed-insights@1.2.0`)
+- [ ] Multiple user sessions completed (at least 10+)
+- [ ] Waited at least 24 hours since first deployment
+
+**Common Misconception:**
+❌ "Dashboard says 'no data' so components aren't working"
+✅ "Network tab shows 200 OK so components ARE working, dashboard just needs time"
+
+**Real Example:**
+- October 20, 2025: Components deployed, Network tab confirmed 200 OK responses
+- Dashboard showed "No data points collected" 
+- After 24-48 hours: Dashboard populated with Real Experience Score and Web Vitals graphs
+
+**Pro Tip:** Don't debug further if Network tab shows 200 OK responses. Just wait!
+
