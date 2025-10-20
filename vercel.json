@@ -3,6 +3,7 @@
   "buildCommand": "cd client && npm install && npm run build",
   "outputDirectory": "client/dist",
   "installCommand": "npm install --prefix server && npm install",
+  "cleanUrls": true,
   "headers": [
     {
       "source": "/(.*)",
