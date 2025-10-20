@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import { API_URL } from '../config/api.js';
+import { trackDocGeneration, trackQualityScore, trackError, trackPerformance } from '../utils/analytics.js';
 
 export function useDocGeneration() {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -16,12 +17,15 @@ export function useDocGeneration() {
     setError(null);
     setDocumentation('');
     setQualityScore(null);
-    setRetryAfter(null);  
+    setRetryAfter(null);
 
     // Close any existing connection
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
     }
+
+    // Track start time for performance metrics
+    const startTime = performance.now();
 
     try {
       // Use fetch with POST to send data
@@ -77,6 +81,32 @@ export function useDocGeneration() {
             } else if (data.type === 'complete') {
               setQualityScore(data.qualityScore);
               setIsGenerating(false);
+
+              // Track successful generation
+              const duration = performance.now() - startTime;
+              trackDocGeneration({
+                docType,
+                success: true,
+                duration,
+                codeSize: code.length,
+                language: language || 'unknown',
+              });
+
+              // Track quality score
+              if (data.qualityScore) {
+                trackQualityScore({
+                  score: data.qualityScore.score,
+                  grade: data.qualityScore.grade,
+                  docType,
+                });
+              }
+
+              // Track performance
+              trackPerformance({
+                parseTime: 0, // Not tracked separately in current implementation
+                generateTime: duration,
+                totalTime: duration,
+              });
             } else if (data.type === 'error') {
               throw new Error(data.error);
             }
@@ -268,6 +298,23 @@ export function useDocGeneration() {
       setError(errorMessage);
 >>>>>>> Stashed changes
       setIsGenerating(false);
+
+      // Track failed generation
+      const duration = performance.now() - startTime;
+      trackDocGeneration({
+        docType,
+        success: false,
+        duration,
+        codeSize: code.length,
+        language: language || 'unknown',
+      });
+
+      // Track error
+      trackError({
+        errorType,
+        errorMessage,
+        context: 'doc_generation',
+      });
     }
   }, []);
 
