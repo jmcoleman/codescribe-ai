@@ -1,7 +1,7 @@
 name: Tests
 
 on:
-  # Only run on PRs to main (no direct pushes)
+  # Run on PRs to main or develop
   pull_request:
     branches: [main, develop]
     paths-ignore:
@@ -11,9 +11,9 @@ on:
       - '.gitignore'
       - 'LICENSE'
       - '**.txt'
-  # Allow pushes to develop for development work
+  # Run on pushes to main or develop
   push:
-    branches: [develop]
+    branches: [main, develop]
     paths-ignore:
       - '**.md'
       - 'docs/**'
