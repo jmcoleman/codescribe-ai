@@ -41,7 +41,12 @@ codescribe-ai/
 ├── docs/                          # Documentation
 │   ├── planning/                  # Product & development docs
 │   ├── api/                       # API documentation
-│   └── architecture/              # System architecture
+│   ├── architecture/              # System architecture
+│   ├── analytics/                 # Analytics implementation
+│   ├── performance/               # Performance optimization
+│   ├── testing/                   # Test documentation
+│   ├── components/                # Component guides
+│   └── design/                    # Design assets
 ├── package.json                   # Root package.json (workspaces)
 └── README.md
 ```
@@ -65,6 +70,14 @@ codescribe-ai/
 - **Help System**: Built-in examples modal with sample code for quick starts
 - **Responsive Design**: Optimized layouts for desktop, tablet, and mobile devices
 - **Dark Mode Support**: Brand-consistent color palette with accessibility considerations
+
+### 📊 Analytics & Insights
+- **Privacy-First Tracking**: Anonymous analytics with Vercel Analytics (no cookies, GDPR compliant)
+- **Production-Only Mode**: Analytics disabled in development for optimal performance
+- **Custom Event Tracking**: 8 event types including doc generation, quality scores, and user interactions
+- **Core Web Vitals**: Automatic FCP, LCP, CLS, and FID performance monitoring
+- **Error Monitoring**: Real-time error tracking with sanitized messages (API keys removed)
+- **Success Metrics**: Generation success rate, quality score distribution, and performance benchmarks
 
 ### ♿ Accessibility
 - **WCAG 2.1 AA Compliant**: Full keyboard navigation, ARIA labels, screen reader support
@@ -351,6 +364,10 @@ Comprehensive documentation is organized in the [docs/](docs/) folder:
   - [brand-color-palette.html](docs/design/brand-color-palette.html) - Interactive color palette
   - [brand-color-palette.pdf](docs/design/brand-color-palette.pdf) - PDF version for sharing
 
+### Analytics
+- [docs/analytics/](docs/analytics/) - Analytics implementation and insights
+  - [ANALYTICS.md](docs/analytics/ANALYTICS.md) - Complete analytics guide (8 event types, privacy-first tracking)
+
 ## Tech Stack
 
 ### Frontend
@@ -366,6 +383,7 @@ Comprehensive documentation is organized in the [docs/](docs/) folder:
 - **Vitest** - Unit and component testing framework
 - **Testing Library** - React component testing utilities
 - **Playwright** - E2E testing framework for cross-browser validation
+- **Vercel Analytics** - Privacy-first anonymous analytics and Core Web Vitals tracking
 
 ### Backend
 - **Node.js 20+** - JavaScript runtime
@@ -442,6 +460,15 @@ Grading scale: A (90+), B (80-89), C (70-79), D (60-69), F (<60)
 - Non-blocking UI with smooth animations
 - Progress indicators and status updates
 - Graceful error handling with reconnection logic
+
+**Privacy-First Analytics**
+- Anonymous event tracking with Vercel Analytics
+- Production-only mode (disabled in development)
+- 8 custom event types (doc generation, quality scores, user interactions, errors, etc.)
+- Automatic Core Web Vitals monitoring (FCP, LCP, CLS, FID)
+- Error sanitization (API keys and tokens removed)
+- GDPR compliant, no cookies, no PII
+- Complete guide at [ANALYTICS.md](docs/analytics/ANALYTICS.md)
 
 ### ⚡ Performance Optimization
 
@@ -590,6 +617,7 @@ npm run test:e2e:headed       # With browser UI (for debugging)
 - ✅ **API Configuration:** Centralized URL management
 - ✅ **Monorepo Support:** Automatic detection and build
 - ✅ **Live Application:** [codescribeai.com](https://codescribeai.com)
+- ✅ **Analytics:** Privacy-first tracking with Vercel Analytics (production-only mode)
 
 **Accessibility Scores:**
 - ✅ Overall: 95/100 (A grade)
@@ -662,6 +690,7 @@ Built as a portfolio project (Days 1-4 of 5) to showcase:
 - 🧪 **Test-driven development** with 660+ tests (6600%+ beyond original scope!)
 - 🚀 **Performance optimization** with lazy loading and Core Web Vitals tracking
 - 🌐 **Cross-browser validation** with Playwright E2E tests (5 browsers)
+- 📈 **Privacy-first analytics** with anonymous tracking and production-only mode (8 event types)
 
 ---
 
