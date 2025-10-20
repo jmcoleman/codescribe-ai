@@ -1,0 +1,48 @@
+# Documentation
+docs/
+*.md
+!README.md
+
+# Development files
+.vscode/
+.idea/
+
+# Testing
+**/__tests__/
+**/*.test.js
+**/*.test.jsx
+**/*.spec.js
+**/*.spec.jsx
+coverage/
+
+# Development dependencies
+node_modules/
+
+# Environment files (handled separately in Vercel dashboard)
+.env
+.env.local
+.env.*.local
+
+# Git
+.git/
+.gitignore
+
+# Private folder
+private/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Build artifacts (except output directory)
+client/node_modules/
+server/node_modules/
+
+# macOS
+.DS_Store
+
+# Editor files
+*.swp
+*.swo
+*~
