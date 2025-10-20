@@ -1,249 +1,186 @@
 /**
- * Analytics Utility - Privacy-First Tracking
+ * Analytics Utility for CodeScribe AI
  *
- * Integrates with Plausible Analytics for custom event tracking
- * with automatic device/browser context enrichment.
+ * Tracks custom events to Vercel Analytics for understanding user behavior,
+ * performance metrics, and product insights.
+ *
+ * Privacy: All tracking is anonymous and respects user privacy.
+ * No personal information is collected.
  */
 
-// Lazy load Plausible to avoid blocking main bundle
-let plausible = null;
+import { track } from '@vercel/analytics';
 
-const initPlausible = async () => {
-  if (plausible) return plausible;
-
-  // Only initialize in production
-  if (import.meta.env.PROD) {
-    try {
-      const { default: Plausible } = await import('plausible-tracker');
-      plausible = Plausible({
-        domain: 'codescribeai.com',
-        trackLocalhost: false, // Don't track dev environment
-        apiHost: 'https://plausible.io', // Or your self-hosted instance
-      });
-      return plausible;
-    } catch (error) {
-      console.warn('Plausible analytics failed to load:', error);
-      return null;
-    }
-  }
-  return null;
+/**
+ * Track documentation generation events
+ * @param {Object} params - Event parameters
+ * @param {string} params.docType - Type of documentation (README, JSDoc, API, ARCHITECTURE)
+ * @param {boolean} params.success - Whether generation succeeded
+ * @param {number} params.duration - Time taken in milliseconds
+ * @param {number} params.codeSize - Size of input code in bytes
+ * @param {string} params.language - Programming language detected
+ */
+export const trackDocGeneration = ({ docType, success, duration, codeSize, language }) => {
+  track('doc_generation', {
+    doc_type: docType,
+    success: success ? 'true' : 'false',
+    duration_ms: Math.round(duration),
+    code_size_kb: Math.round(codeSize / 1024),
+    language: language || 'unknown',
+  });
 };
 
 /**
- * Get device context for enriched tracking
+ * Track quality score results
+ * @param {Object} params - Event parameters
+ * @param {number} params.score - Overall quality score (0-100)
+ * @param {string} params.grade - Letter grade (A, B, C, D, F)
+ * @param {string} params.docType - Type of documentation
  */
-const getDeviceContext = () => {
-  const ua = navigator.userAgent;
-  const width = window.innerWidth;
-
-  // Detect device type
-  let deviceType = 'desktop';
-  if (width < 768) {
-    deviceType = 'mobile';
-  } else if (width < 1024) {
-    deviceType = 'tablet';
-  }
-
-  // Detect browser (simple detection)
-  let browser = 'unknown';
-  if (ua.includes('Chrome') && !ua.includes('Edg')) {
-    browser = 'chrome';
-  } else if (ua.includes('Safari') && !ua.includes('Chrome')) {
-    browser = 'safari';
-  } else if (ua.includes('Firefox')) {
-    browser = 'firefox';
-  } else if (ua.includes('Edg')) {
-    browser = 'edge';
-  }
-
-  // Detect OS
-  let os = 'unknown';
-  if (ua.includes('Win')) {
-    os = 'windows';
-  } else if (ua.includes('Mac')) {
-    os = 'macos';
-  } else if (ua.includes('Linux')) {
-    os = 'linux';
-  } else if (ua.includes('Android')) {
-    os = 'android';
-  } else if (ua.includes('iPhone') || ua.includes('iPad')) {
-    os = 'ios';
-  }
-
-  // Screen size bucket
-  let screenSize = 'xl'; // >1280px
-  if (width < 640) {
-    screenSize = 'xs'; // mobile
-  } else if (width < 768) {
-    screenSize = 'sm'; // large mobile
-  } else if (width < 1024) {
-    screenSize = 'md'; // tablet
-  } else if (width < 1280) {
-    screenSize = 'lg'; // small desktop
-  }
-
-  return {
-    deviceType,
-    browser,
-    os,
-    screenSize,
-    viewportWidth: width,
-  };
+export const trackQualityScore = ({ score, grade, docType }) => {
+  track('quality_score', {
+    score: Math.round(score),
+    grade,
+    doc_type: docType,
+    score_range: getScoreRange(score),
+  });
 };
 
 /**
- * Track a custom event with automatic device context
+ * Track code input method
+ * @param {string} method - Input method (paste, upload, example)
+ * @param {number} codeSize - Size of code in bytes
+ * @param {string} language - Programming language
  */
-export const trackEvent = async (eventName, props = {}) => {
-  // Only track in production
-  if (!import.meta.env.PROD) {
-    console.log('[Analytics - Dev]', eventName, props);
-    return;
-  }
-
-  try {
-    const tracker = await initPlausible();
-    if (!tracker) return;
-
-    // Enrich with device context (optional - Plausible already tracks this globally)
-    // Uncomment if you want device context on EVERY event
-    // const deviceContext = getDeviceContext();
-
-    tracker.trackEvent(eventName, {
-      props: {
-        ...props,
-        // ...deviceContext, // Uncomment to add to every event
-      },
-    });
-  } catch (error) {
-    console.warn('Failed to track event:', error);
-  }
+export const trackCodeInput = (method, codeSize, language) => {
+  track('code_input', {
+    method,
+    code_size_kb: Math.round(codeSize / 1024),
+    language: language || 'unknown',
+  });
 };
 
 /**
- * Track page view (called automatically by Plausible script)
- * This is a manual override if needed
+ * Track errors
+ * @param {Object} params - Event parameters
+ * @param {string} params.errorType - Type of error (network, validation, api, server)
+ * @param {string} params.errorMessage - Error message (sanitized)
+ * @param {string} params.context - Where error occurred
  */
-export const trackPageView = async (pathname) => {
-  if (!import.meta.env.PROD) return;
+export const trackError = ({ errorType, errorMessage, context }) => {
+  // Sanitize error message to avoid sending sensitive data
+  const sanitizedMessage = sanitizeErrorMessage(errorMessage);
 
-  try {
-    const tracker = await initPlausible();
-    if (!tracker) return;
-
-    tracker.trackPageview({
-      url: pathname || window.location.pathname,
-    });
-  } catch (error) {
-    console.warn('Failed to track page view:', error);
-  }
+  track('error', {
+    error_type: errorType,
+    error_message: sanitizedMessage,
+    context,
+  });
 };
 
 /**
- * Analytics event tracking for key user actions
+ * Track streaming vs standard generation
+ * @param {string} mode - Generation mode (streaming, standard)
+ * @param {number} duration - Time taken in milliseconds
  */
-export const analytics = {
-  /**
-   * Track documentation generation
-   */
-  trackGeneration: async (docType, language, linesOfCode, success) => {
-    const deviceContext = getDeviceContext();
-
-    await trackEvent('doc_generated', {
-      docType, // README, JSDoc, API, ARCHITECTURE
-      language, // javascript, typescript, python, etc.
-      linesOfCode: Math.floor(linesOfCode / 100) * 100, // Round to nearest 100 for privacy
-      success: success ? 'true' : 'false',
-      // Device context for this specific event
-      device: deviceContext.deviceType,
-      browser: deviceContext.browser,
-      screenSize: deviceContext.screenSize,
-    });
-  },
-
-  /**
-   * Track quality score
-   */
-  trackQualityScore: async (score, grade, docType) => {
-    await trackEvent('quality_scored', {
-      scoreRange: `${Math.floor(score / 10) * 10}-${Math.floor(score / 10) * 10 + 9}`, // e.g., "80-89"
-      grade, // A, B, C, D, F
-      docType,
-    });
-  },
-
-  /**
-   * Track file upload
-   */
-  trackFileUpload: async (extension, sizeKB, success) => {
-    const deviceContext = getDeviceContext();
-
-    await trackEvent('file_uploaded', {
-      extension, // js, ts, py, etc.
-      sizeRange: sizeKB < 50 ? '<50KB' : sizeKB < 200 ? '50-200KB' : '>200KB',
-      success: success ? 'true' : 'false',
-      // Track device for upload behavior analysis
-      device: deviceContext.deviceType,
-    });
-  },
-
-  /**
-   * Track modal interactions
-   */
-  trackModal: async (modalType, action) => {
-    await trackEvent('modal_interaction', {
-      modalType, // 'examples', 'help', 'quality_breakdown', 'confirmation'
-      action, // 'opened', 'closed', 'example_loaded', 'confirmed', 'cancelled'
-    });
-  },
-
-  /**
-   * Track error occurrences
-   */
-  trackError: async (errorType, endpoint) => {
-    const deviceContext = getDeviceContext();
-
-    await trackEvent('error_occurred', {
-      errorType, // 'rate_limit', 'api_error', 'upload_error', 'network_error', etc.
-      endpoint, // '/api/generate-stream', '/api/upload', etc.
-      device: deviceContext.deviceType,
-      browser: deviceContext.browser,
-    });
-  },
-
-  /**
-   * Track feature usage
-   */
-  trackFeature: async (feature, detail) => {
-    await trackEvent('feature_used', {
-      feature, // 'copy_button', 'code_paste', 'example_loaded', etc.
-      detail,
-    });
-  },
-
-  /**
-   * Track streaming performance (optional - for debugging)
-   */
-  trackStreamingPerformance: async (timeToFirstToken, totalDuration, success) => {
-    await trackEvent('streaming_performance', {
-      timeToFirstToken: Math.floor(timeToFirstToken / 1000), // Round to seconds
-      totalDuration: Math.floor(totalDuration / 1000), // Round to seconds
-      success: success ? 'true' : 'false',
-    });
-  },
-
-  /**
-   * Track user engagement patterns
-   */
-  trackEngagement: async (action, value) => {
-    const deviceContext = getDeviceContext();
-
-    await trackEvent('user_engagement', {
-      action, // 'session_duration', 'scroll_depth', 'code_edit', etc.
-      value,
-      device: deviceContext.deviceType,
-    });
-  },
+export const trackGenerationMode = (mode, duration) => {
+  track('generation_mode', {
+    mode,
+    duration_ms: Math.round(duration),
+  });
 };
 
-export default analytics;
+/**
+ * Track user interactions
+ * @param {string} action - Action performed (copy_code, copy_docs, toggle_quality, view_example, etc.)
+ * @param {Object} metadata - Additional metadata
+ */
+export const trackInteraction = (action, metadata = {}) => {
+  track('user_interaction', {
+    action,
+    ...metadata,
+  });
+};
+
+/**
+ * Track example usage
+ * @param {string} exampleName - Name of example used
+ */
+export const trackExampleUsage = (exampleName) => {
+  track('example_usage', {
+    example_name: exampleName,
+  });
+};
+
+/**
+ * Track file upload
+ * @param {Object} params - Event parameters
+ * @param {string} params.fileType - File extension
+ * @param {number} params.fileSize - File size in bytes
+ * @param {boolean} params.success - Upload success
+ */
+export const trackFileUpload = ({ fileType, fileSize, success }) => {
+  track('file_upload', {
+    file_type: fileType,
+    file_size_kb: Math.round(fileSize / 1024),
+    success: success ? 'true' : 'false',
+  });
+};
+
+/**
+ * Track performance metrics
+ * @param {Object} params - Event parameters
+ * @param {number} params.parseTime - Time to parse code (ms)
+ * @param {number} params.generateTime - Time to generate docs (ms)
+ * @param {number} params.totalTime - Total time (ms)
+ */
+export const trackPerformance = ({ parseTime, generateTime, totalTime }) => {
+  track('performance', {
+    parse_time_ms: Math.round(parseTime),
+    generate_time_ms: Math.round(generateTime),
+    total_time_ms: Math.round(totalTime),
+  });
+};
+
+// Helper functions
+
+/**
+ * Get score range for grouping
+ * @param {number} score - Quality score
+ * @returns {string} Score range (e.g., "90-100", "80-89")
+ */
+function getScoreRange(score) {
+  if (score >= 90) return '90-100';
+  if (score >= 80) return '80-89';
+  if (score >= 70) return '70-79';
+  if (score >= 60) return '60-69';
+  return '0-59';
+}
+
+/**
+ * Sanitize error message to remove sensitive information
+ * @param {string} message - Error message
+ * @returns {string} Sanitized message
+ */
+function sanitizeErrorMessage(message) {
+  if (!message) return 'unknown';
+
+  // Truncate long messages
+  let sanitized = message.slice(0, 100);
+
+  // Remove potential API keys, tokens, or sensitive data patterns
+  sanitized = sanitized.replace(/sk-[a-zA-Z0-9-_]+/g, '[API_KEY]');
+  sanitized = sanitized.replace(/Bearer\s+[a-zA-Z0-9-_]+/g, '[TOKEN]');
+  sanitized = sanitized.replace(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, '[EMAIL]');
+
+  return sanitized;
+}
+
+/**
+ * Batch track multiple events (for complex operations)
+ * @param {Array} events - Array of event objects with { name, data }
+ */
+export const trackBatch = (events) => {
+  events.forEach(({ name, data }) => {
+    track(name, data);
+  });
+};

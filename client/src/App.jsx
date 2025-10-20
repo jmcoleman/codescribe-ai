@@ -7,6 +7,7 @@ import { CodePanel } from './components/CodePanel';
 import { useDocGeneration } from './hooks/useDocGeneration';
 import { ErrorBanner } from './components/ErrorBanner';
 import { validateFile, getValidationErrorMessage } from './utils/fileValidation';
+import { trackCodeInput, trackFileUpload, trackExampleUsage, trackInteraction } from './utils/analytics';
 
 // Lazy load heavy components that aren't needed on initial render
 const DocPanel = lazy(() => import('./components/DocPanel').then(m => ({ default: m.DocPanel })));
@@ -196,7 +197,18 @@ function App() {
           'rb': 'ruby',
           'php': 'php',
         };
-        setLanguage(languageMap[extension] || 'javascript');
+        const detectedLanguage = languageMap[extension] || 'javascript';
+        setLanguage(detectedLanguage);
+
+        // Track successful file upload
+        trackFileUpload({
+          fileType: extension,
+          fileSize: file.size,
+          success: true,
+        });
+
+        // Track code input method
+        trackCodeInput('upload', data.file.content.length, detectedLanguage);
 
         // Show success toast with compact variant for non-intrusive feedback
         toastCompact(`File uploaded successfully`, 'success');
@@ -242,6 +254,14 @@ function App() {
       };
 
       setUploadError(JSON.stringify(errorObject));
+
+      // Track failed file upload
+      trackFileUpload({
+        fileType: file.name.split('.').pop(),
+        fileSize: file.size,
+        success: false,
+      });
+
       // No toast needed - error banner will display the error
       // Reset the file input
       event.target.value = '';
@@ -257,6 +277,11 @@ function App() {
     setDocType(example.docType);
     setLanguage(example.language);
     reset(); // Clear any existing documentation and quality score
+
+    // Track example usage
+    trackExampleUsage(example.name || example.docType);
+    trackCodeInput('example', example.code.length, example.language);
+
     // Use compact toast for quick, non-intrusive feedback
     toastCompact('Example loaded successfully', 'success');
   };
@@ -363,7 +388,13 @@ function App() {
               documentation={documentation}
               qualityScore={qualityScore}
               isGenerating={isGenerating}
-              onViewBreakdown={() => setShowQualityModal(true)}
+              onViewBreakdown={() => {
+                setShowQualityModal(true);
+                trackInteraction('view_quality_breakdown', {
+                  score: qualityScore?.score,
+                  grade: qualityScore?.grade,
+                });
+              }}
             />
           </Suspense>
         </div>
