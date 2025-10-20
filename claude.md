@@ -632,7 +632,10 @@ codescribe-ai/
 │   │   └── ACCESSIBILITY-AUDIT.MD      # Accessibility audit results
 │   ├── design/                   # Design assets
 │   │   ├── brand-color-palette.html  # Interactive color palette
-│   │   └── brand-color-palette.pdf   # PDF version for sharing
+│   │   ├── brand-color-palette.pdf   # PDF version for sharing
+│   │   ├── error-boundary-ui-guide.html  # Error boundary UI design guide
+│   │   ├── error-boundary-ui-guide-compact.html  # Compact version
+│   │   └── generate-graphics.html  # Graphics generation guide (production assets)
 │   ├── scripts/                  # Script documentation
 │   │   └── VERSION-CHECKER.md    # Version checker utility guide
 │   └── CONTEXT.md                # Quick reference
@@ -640,6 +643,10 @@ codescribe-ai/
 │   ├── README.md                 # Guidelines for private folder usage
 │   ├── VISION.md                 # Strategic vision, market analysis, GTM strategy
 │   ├── INTERVIEW-GUIDE.md        # Interview prep, talking points, demo scripts
+│   ├── design-archive/           # Design exploration files (non-production)
+│   │   ├── favicon-comparison.html  # Favicon options comparison (archived)
+│   │   ├── GRAPHICS-FINAL-SUMMARY.md  # Design process documentation
+│   │   └── GRAPHICS-README.md    # Design documentation
 │   ├── financials/               # Revenue projections, budgets (suggested)
 │   ├── investors/                # Pitch decks, investor comms (suggested)
 │   ├── customers/                # Interview notes, PII data (suggested)
@@ -658,6 +665,7 @@ codescribe-ai/
 **What belongs in `private/`:**
 - **Strategic planning** - Vision documents, market analysis, competitive research, GTM strategy
 - **Interview preparation** - Interview guides, talking points, demo scripts, personal Q&A
+- **Design exploration** - Design process files, archived mockups, options comparisons (design-archive/)
 - **Financial information** - Revenue projections, pricing models, budgets, cost analysis
 - **Customer data** - Interview transcripts, beta feedback, research notes (may contain PII)
 - **Investor relations** - Pitch decks, investor communications, term sheets, cap table
@@ -1089,7 +1097,8 @@ VITE_API_URL=http://localhost:3000
 
 ## 🔄 Version History
 
-- **v1.21** (Current) - Production Deployment Complete: Updated all documentation to reflect Phase 1.5 completion including production deployment (Oct 17-19, 2025); application now live at codescribe-ai.vercel.app; updated Current Phase Status with deployment achievements (Vercel setup, CI/CD, security hardening, build optimization); marked all Phase 1.5 days as 100% complete; added Production Application section with live demo link and key features; updated PRD with Day 10 deployment milestone; updated README Development Status with deployment phase details; captured deployment learnings (environment security, dependency restructuring, API configuration, monorepo support); all major deliverables achieved (accessibility compliance, production deployment, CI/CD pipeline, security measures)
+- **v1.22** (Current) - Deployment Fix & Design Archive Organization: Fixed Vercel deployment failures caused by HTML files with broken SVG references; moved design exploration files to private/design-archive/ (favicon-comparison.html with references to non-existent favicon-letter.svg and favicon-abstract.svg, GRAPHICS-FINAL-SUMMARY.md, GRAPHICS-README.md); updated CLAUDE.md project structure to document design-archive/ location and all production design files (brand-color-palette, error-boundary-ui-guide, generate-graphics); added "Design exploration" to private folder contents list; deployment now succeeds with only valid production assets
+- **v1.21** - Production Deployment Complete: Updated all documentation to reflect Phase 1.5 completion including production deployment (Oct 17-19, 2025); application now live at codescribe-ai.vercel.app; updated Current Phase Status with deployment achievements (Vercel setup, CI/CD, security hardening, build optimization); marked all Phase 1.5 days as 100% complete; added Production Application section with live demo link and key features; updated PRD with Day 10 deployment milestone; updated README Development Status with deployment phase details; captured deployment learnings (environment security, dependency restructuring, API configuration, monorepo support); all major deliverables achieved (accessibility compliance, production deployment, CI/CD pipeline, security measures)
 - **v1.20** - Phase 1.5 Status Update: Updated Current Phase Status section to reflect Phase 1 completion and Phase 1.5 substantial completion (95/100 accessibility score, Lighthouse 100/100); detailed breakdown of Days 6-10 implementation status (Days 6-7: 100%, Day 8: 90%, Day 9: 50%, Day 10: 10%); updated PRD Phase 1.5 section with detailed completion status and success criteria achieved; updated README Development Status section with Phase 1.5 accomplishments; updated Todo List Phase 1.5 overview with production-ready status; all documentation now reflects current accessibility compliance state and remaining optional manual testing recommendations
 - **v1.19** - Added E2E Testing Best Practices: Created comprehensive section 6 "E2E Testing Best Practices" with critical guidelines for writing reliable cross-browser tests; includes detailed patterns for waiting on actual events (network responses, DOM changes, lazy-loaded components) vs arbitrary timeouts; real-world file upload fix example showing 1/5 to 5/5 browser pass rate improvement; testing checklist and debugging flowchart for flaky tests; renumbered subsequent sections (Timezone → 7, Mermaid → 8, Package Versions → 9)
 - **v1.18** - Added accessibility and cross-browser testing documentation: Added three new test documentation files (CROSS-BROWSER-TEST-PLAN.md, SCREEN-READER-TESTING-GUIDE.md, ACCESSIBILITY-AUDIT.MD) to docs/testing/; updated Testing README with new "Accessibility & Cross-Browser Testing" and "Performance & Audit Reports" sections; updated CLAUDE.md Testing Documentation section with new specialized test docs; updated CLAUDE.md project structure to include new test files; added "Accessibility Testing" and "Cross-Browser Testing" to question type identification and cross-reference sections
@@ -1111,7 +1120,7 @@ VITE_API_URL=http://localhost:3000
 - **v1.2** - Clarified architecture document purposes: 04-Architecture.md (visual diagram + overview) vs ARCHITECTURE.md (deep technical dive)
 - **v1.1** - Reorganized documentation structure (planning/, api/, architecture/ subdirectories)
 - **v1.0** - Initial claude.md created with complete documentation map
-- Documentation last updated: October 19, 2025
+- Documentation last updated: October 20, 2025
 
 ---
 
