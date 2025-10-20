@@ -7,7 +7,8 @@ import App from './App.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 
 // Only load analytics and speed insights in production
-const isProduction = import.meta.env.PROD
+// Use MODE check as it's more reliable in Vercel builds
+const isProduction = import.meta.env.MODE === 'production'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
