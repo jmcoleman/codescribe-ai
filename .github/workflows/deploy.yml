@@ -29,40 +29,24 @@ jobs:
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
 
-      - name: Pull Vercel Environment Information
-        id: vercel_pull
-        continue-on-error: true
+      - name: Setup Vercel Project Link
         run: |
-          # Retry up to 3 times with exponential backoff
-          max_attempts=3
-          attempt=1
-          while [ $attempt -le $max_attempts ]; do
-            echo "Attempt $attempt of $max_attempts..."
-            if vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }} --debug; then
-              echo "Successfully pulled Vercel environment"
-              echo "pull_success=true" >> $GITHUB_OUTPUT
-              exit 0
-            fi
-            if [ $attempt -lt $max_attempts ]; then
-              sleep_time=$((2 ** attempt))
-              echo "Failed. Retrying in ${sleep_time}s..."
-              sleep $sleep_time
-            fi
-            attempt=$((attempt + 1))
-          done
-          echo "Failed after $max_attempts attempts. Continuing with vercel.json configuration..."
-          echo "pull_success=false" >> $GITHUB_OUTPUT
-          exit 0
+          # Create .vercel directory and project.json FIRST
+          mkdir -p .vercel
+          echo '{"projectId":"${{ secrets.VERCEL_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}"}' > .vercel/project.json
+          cat .vercel/project.json
+          echo "✓ Created .vercel/project.json"
+
+          # Now try to pull additional environment information
+          echo "Attempting to pull Vercel environment information..."
+          if vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}; then
+            echo "✓ Successfully pulled Vercel environment"
+          else
+            echo "⚠ Could not pull environment, using vercel.json configuration"
+          fi
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-
-      - name: Create fallback Vercel config
-        if: steps.vercel_pull.outputs.pull_success == 'false'
-        run: |
-          mkdir -p .vercel
-          echo '{"projectId":"${{ secrets.VERCEL_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}"}' > .vercel/project.json
-          echo "Created fallback .vercel/project.json"
 
       - name: Build Project Artifacts
         run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }} --debug
