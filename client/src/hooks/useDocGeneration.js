@@ -86,6 +86,7 @@ export function useDocGeneration() {
     } catch (err) {
       console.error('Generation error:', err);
 
+<<<<<<< Updated upstream
       // Check if the error message is a JSON string from the API
       let apiError = null;
       try {
@@ -171,6 +172,53 @@ export function useDocGeneration() {
       };
 
       setError(JSON.stringify(errorObject));
+=======
+      // Provide more helpful error messages based on error type
+      let errorMessage = 'Failed to generate documentation';
+
+      // Check if it's a rate limit error
+      if (err.name === 'RateLimitError' || err.message.includes('Rate limit')) {
+        errorMessage = err.message || 'Rate limit exceeded. Please wait before trying again.';
+        setRetryAfter(err.retryAfter || 60);
+      } else if (err.message.includes('429')) {
+        // Handle 429 status in error message
+        errorMessage = 'Rate limit exceeded. Too many requests.';
+        setRetryAfter(60);
+      } else if (err.message.includes('Failed to fetch') || err.name === 'TypeError') {
+        // Network connectivity issues
+        errorMessage = 'Unable to connect to the server. Please check your internet connection and ensure the backend server is running.';
+        setRetryAfter(null);
+      } else if (err.message.includes('HTTP error')) {
+        // Extract status code for better context
+        const statusMatch = err.message.match(/status: (\d+)/);
+        const status = statusMatch ? statusMatch[1] : 'unknown';
+
+        if (status === '500') {
+          errorMessage = 'Server error occurred while generating documentation. Please try again.';
+        } else if (status === '503') {
+          errorMessage = 'Service temporarily unavailable. The server may be overloaded or down for maintenance.';
+        } else if (status === '400') {
+          errorMessage = 'Invalid request. Please check your code input and try again.';
+        } else if (status === '401' || status === '403') {
+          errorMessage = 'Authentication error. Please check API configuration.';
+        } else {
+          errorMessage = `Server returned error (${status}). Please try again.`;
+        }
+        setRetryAfter(null);
+      } else if (err.message.includes('Unexpected token') || err.message.includes('JSON')) {
+        // JSON parsing errors
+        errorMessage = 'Invalid response from server. Please try again or contact support if the issue persists.';
+        setRetryAfter(null);
+      } else {
+        // Use the original error message if it's descriptive, otherwise use generic message
+        errorMessage = err.message && err.message !== 'Failed to fetch'
+          ? err.message
+          : 'An unexpected error occurred. Please try again.';
+        setRetryAfter(null);
+      }
+
+      setError(errorMessage);
+>>>>>>> Stashed changes
       setIsGenerating(false);
     }
   }, []);
