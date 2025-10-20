@@ -178,6 +178,42 @@ Tracks errors for debugging and reliability monitoring.
 3. **[client/src/hooks/useDocGeneration.js](../client/src/hooks/useDocGeneration.js)** - Doc generation tracking
 4. **[client/src/App.jsx](../client/src/App.jsx)** - Code input and interaction tracking
 
+### Production-Only Tracking
+
+**Important:** Analytics are **disabled in development** to prevent performance degradation and avoid polluting production data with test events.
+
+**How it works:**
+- Uses `import.meta.env.PROD` to detect production environment
+- In **development**: Events logged to console with `console.debug()` for debugging
+- In **production**: Events sent to Vercel Analytics
+- `<Analytics />` component only loaded in production builds
+
+**Implementation:**
+```javascript
+// In analytics.js
+const isProduction = import.meta.env.PROD;
+
+const trackEvent = (eventName, eventData) => {
+  if (isProduction) {
+    track(eventName, eventData);
+  } else {
+    console.debug(`[Analytics] ${eventName}:`, eventData);
+  }
+};
+
+// In main.jsx
+const isProduction = import.meta.env.PROD;
+
+createRoot(document.getElementById('root')).render(
+  <StrictMode>
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
+    {isProduction && <Analytics />}
+  </StrictMode>,
+);
+```
+
 ### Analytics Utility API
 
 ```javascript
@@ -300,13 +336,32 @@ The `<Analytics />` component in [main.jsx](../client/src/main.jsx) handles init
 
 ### Local Development
 
-In local development, analytics events are logged to the console but **not sent to Vercel**. This prevents development data from polluting production analytics.
+**Analytics are disabled in development mode** to improve performance and prevent test data from polluting production analytics.
 
-To test analytics locally:
+**What happens in development:**
+- ❌ No network requests to Vercel Analytics
+- ❌ `<Analytics />` component not loaded
+- ✅ Events logged to browser console with `console.debug()` for debugging
+- ✅ Zero performance impact
+
+**Why this matters:**
+- **Performance:** Eliminates 10+ network requests per doc generation in development
+- **Data quality:** Keeps production analytics clean (no test data)
+- **Developer experience:** Faster local development without analytics overhead
+
+**To view analytics events locally:**
 ```bash
 cd client
 npm run dev
-# Open browser console to see analytics events
+# Open browser DevTools → Console
+# Filter by: "[Analytics]" to see tracked events
+```
+
+**Console output format:**
+```
+[Analytics] doc_generation: {doc_type: "README", success: "true", ...}
+[Analytics] quality_score: {score: 92, grade: "A", ...}
+[Analytics] user_interaction: {action: "view_quality_breakdown", ...}
 ```
 
 ---
@@ -403,6 +458,23 @@ Potential additions for Phase 4 (optional):
 
 ---
 
+## 📝 Changelog
+
+### v1.1 (October 20, 2025)
+- ✅ **Performance optimization:** Disabled analytics in development mode
+- ✅ Added production-only tracking with `import.meta.env.PROD` check
+- ✅ Conditional `<Analytics />` component loading in main.jsx
+- ✅ Console debug logging for development debugging
+- ✅ Eliminated network requests and performance overhead in local development
+
+### v1.0 (October 19, 2025)
+- ✅ Initial analytics implementation
+- ✅ 8 custom event types
+- ✅ Privacy-first tracking
+- ✅ Production deployment
+
+---
+
 **Last Updated:** October 20, 2025
-**Version:** 1.0
+**Version:** 1.1
 **Status:** Production Ready ✅

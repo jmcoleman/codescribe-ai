@@ -6,9 +6,25 @@
  *
  * Privacy: All tracking is anonymous and respects user privacy.
  * No personal information is collected.
+ *
+ * NOTE: Analytics are only enabled in production to avoid performance
+ * degradation during development.
  */
 
 import { track } from '@vercel/analytics';
+
+// Helper to check if we're in production
+const isProduction = import.meta.env.PROD;
+
+// Wrapper function that only tracks in production
+const trackEvent = (eventName, eventData) => {
+  if (isProduction) {
+    track(eventName, eventData);
+  } else {
+    // Log to console in development for debugging
+    console.debug(`[Analytics] ${eventName}:`, eventData);
+  }
+};
 
 /**
  * Track documentation generation events
@@ -20,7 +36,7 @@ import { track } from '@vercel/analytics';
  * @param {string} params.language - Programming language detected
  */
 export const trackDocGeneration = ({ docType, success, duration, codeSize, language }) => {
-  track('doc_generation', {
+  trackEvent('doc_generation', {
     doc_type: docType,
     success: success ? 'true' : 'false',
     duration_ms: Math.round(duration),
@@ -37,7 +53,7 @@ export const trackDocGeneration = ({ docType, success, duration, codeSize, langu
  * @param {string} params.docType - Type of documentation
  */
 export const trackQualityScore = ({ score, grade, docType }) => {
-  track('quality_score', {
+  trackEvent('quality_score', {
     score: Math.round(score),
     grade,
     doc_type: docType,
@@ -52,7 +68,7 @@ export const trackQualityScore = ({ score, grade, docType }) => {
  * @param {string} language - Programming language
  */
 export const trackCodeInput = (method, codeSize, language) => {
-  track('code_input', {
+  trackEvent('code_input', {
     method,
     code_size_kb: Math.round(codeSize / 1024),
     language: language || 'unknown',
@@ -70,7 +86,7 @@ export const trackError = ({ errorType, errorMessage, context }) => {
   // Sanitize error message to avoid sending sensitive data
   const sanitizedMessage = sanitizeErrorMessage(errorMessage);
 
-  track('error', {
+  trackEvent('error', {
     error_type: errorType,
     error_message: sanitizedMessage,
     context,
@@ -83,7 +99,7 @@ export const trackError = ({ errorType, errorMessage, context }) => {
  * @param {number} duration - Time taken in milliseconds
  */
 export const trackGenerationMode = (mode, duration) => {
-  track('generation_mode', {
+  trackEvent('generation_mode', {
     mode,
     duration_ms: Math.round(duration),
   });
@@ -95,7 +111,7 @@ export const trackGenerationMode = (mode, duration) => {
  * @param {Object} metadata - Additional metadata
  */
 export const trackInteraction = (action, metadata = {}) => {
-  track('user_interaction', {
+  trackEvent('user_interaction', {
     action,
     ...metadata,
   });
@@ -106,7 +122,7 @@ export const trackInteraction = (action, metadata = {}) => {
  * @param {string} exampleName - Name of example used
  */
 export const trackExampleUsage = (exampleName) => {
-  track('example_usage', {
+  trackEvent('example_usage', {
     example_name: exampleName,
   });
 };
@@ -119,7 +135,7 @@ export const trackExampleUsage = (exampleName) => {
  * @param {boolean} params.success - Upload success
  */
 export const trackFileUpload = ({ fileType, fileSize, success }) => {
-  track('file_upload', {
+  trackEvent('file_upload', {
     file_type: fileType,
     file_size_kb: Math.round(fileSize / 1024),
     success: success ? 'true' : 'false',
@@ -134,7 +150,7 @@ export const trackFileUpload = ({ fileType, fileSize, success }) => {
  * @param {number} params.totalTime - Total time (ms)
  */
 export const trackPerformance = ({ parseTime, generateTime, totalTime }) => {
-  track('performance', {
+  trackEvent('performance', {
     parse_time_ms: Math.round(parseTime),
     generate_time_ms: Math.round(generateTime),
     total_time_ms: Math.round(totalTime),
@@ -181,6 +197,6 @@ function sanitizeErrorMessage(message) {
  */
 export const trackBatch = (events) => {
   events.forEach(({ name, data }) => {
-    track(name, data);
+    trackEvent(name, data);
   });
 };

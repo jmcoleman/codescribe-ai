@@ -5,11 +5,14 @@ import './index.css'
 import App from './App.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 
+// Only load analytics in production
+const isProduction = import.meta.env.PROD
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ErrorBoundary>
       <App />
     </ErrorBoundary>
-    <Analytics />
+    {isProduction && <Analytics />}
   </StrictMode>,
 )
