@@ -1,0 +1,159 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background gradient -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7c3aed;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4f46e5;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="cardGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.1" />
+      <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0.05" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bgGradient)"/>
+
+  <!-- Decorative grid pattern -->
+  <g opacity="0.1">
+    <line x1="0" y1="157.5" x2="1200" y2="157.5" stroke="white" stroke-width="1"/>
+    <line x1="0" y1="315" x2="1200" y2="315" stroke="white" stroke-width="1"/>
+    <line x1="0" y1="472.5" x2="1200" y2="472.5" stroke="white" stroke-width="1"/>
+    <line x1="300" y1="0" x2="300" y2="630" stroke="white" stroke-width="1"/>
+    <line x1="600" y1="0" x2="600" y2="630" stroke="white" stroke-width="1"/>
+    <line x1="900" y1="0" x2="900" y2="630" stroke="white" stroke-width="1"/>
+  </g>
+
+  <!-- Main content card -->
+  <rect x="80" y="100" width="540" height="430" rx="20" fill="url(#cardGradient)" stroke="white" stroke-width="2" stroke-opacity="0.2"/>
+
+  <!-- Hybrid Icon: Curly braces with doc lines inside + AI sparkle -->
+  <g transform="translate(155, 165) scale(0.85)">
+    <!-- Left curly bracket { (scaled and positioned) -->
+    <path d="M 0 0
+             C -12 0, -20 5, -20 15
+             L -20 50
+             C -20 60, -28 65, -35 65
+             L -35 72
+             C -28 72, -20 77, -20 87
+             L -20 122
+             C -20 132, -12 137, 0 137
+             L 0 125
+             C -6 125, -9 121, -9 115
+             L -9 85
+             C -9 72, -17 65, -28 62
+             C -17 59, -9 52, -9 39
+             L -9 7
+             C -9 1, -6 0, 0 0 Z"
+          fill="white" opacity="0.95"/>
+
+    <!-- Right curly bracket } -->
+    <path d="M 100 0
+             C 112 0, 120 5, 120 15
+             L 120 50
+             C 120 60, 128 65, 135 65
+             L 135 72
+             C 128 72, 120 77, 120 87
+             L 120 122
+             C 120 132, 112 137, 100 137
+             L 100 125
+             C 106 125, 109 121, 109 115
+             L 109 85
+             C 109 72, 117 65, 128 62
+             C 117 59, 109 52, 109 39
+             L 109 7
+             C 109 1, 106 0, 100 0 Z"
+          fill="white" opacity="0.95"/>
+
+    <!-- Document lines inside the brackets -->
+    <line x1="15" y1="35" x2="85" y2="35" stroke="white" stroke-width="4" stroke-linecap="round" opacity="0.7"/>
+    <line x1="15" y1="55" x2="85" y2="55" stroke="white" stroke-width="4" stroke-linecap="round" opacity="0.7"/>
+    <line x1="15" y1="75" x2="70" y2="75" stroke="white" stroke-width="4" stroke-linecap="round" opacity="0.7"/>
+    <line x1="15" y1="95" x2="85" y2="95" stroke="white" stroke-width="4" stroke-linecap="round" opacity="0.7"/>
+
+    <!-- AI Sparkle (centered above) -->
+    <g transform="translate(30, -20)">
+      <circle cx="20" cy="20" r="20" fill="#fbbf24"/>
+      <path d="M20 7 L23 17 L33 20 L23 23 L20 33 L17 23 L7 20 L17 17 Z" fill="white"/>
+    </g>
+  </g>
+
+  <!-- Brand name -->
+  <text x="130" y="340" font-family="system-ui, -apple-system, sans-serif" font-size="60" font-weight="700" fill="white">
+    CodeScribe AI
+  </text>
+
+  <!-- Tagline -->
+  <text x="130" y="380" font-family="system-ui, -apple-system, sans-serif" font-size="22" font-weight="400" fill="white" opacity="0.85">
+    Intelligent Documentation Generator
+  </text>
+
+  <!-- Features badges -->
+  <g transform="translate(130, 420)">
+    <rect x="0" y="0" width="120" height="44" rx="22" fill="white" fill-opacity="0.25"/>
+    <text x="60" y="28" font-family="system-ui" font-size="15" font-weight="600" fill="white" text-anchor="middle">
+      AI-Powered
+    </text>
+  </g>
+
+  <g transform="translate(265, 420)">
+    <rect x="0" y="0" width="130" height="44" rx="22" fill="white" fill-opacity="0.25"/>
+    <text x="65" y="28" font-family="system-ui" font-size="15" font-weight="600" fill="white" text-anchor="middle">
+      Streaming
+    </text>
+  </g>
+
+  <g transform="translate(410, 420)">
+    <rect x="0" y="0" width="140" height="44" rx="22" fill="white" fill-opacity="0.25"/>
+    <text x="70" y="28" font-family="system-ui" font-size="15" font-weight="600" fill="white" text-anchor="middle">
+      Quality Scores
+    </text>
+  </g>
+
+  <!-- Right side: Code preview mockup -->
+  <g transform="translate(680, 100)">
+    <!-- Code editor window -->
+    <rect x="0" y="0" width="440" height="430" rx="16" fill="#1e293b"/>
+
+    <!-- Window controls -->
+    <circle cx="24" cy="24" r="7" fill="#ef4444"/>
+    <circle cx="48" cy="24" r="7" fill="#fbbf24"/>
+    <circle cx="72" cy="24" r="7" fill="#22c55e"/>
+
+    <!-- Code lines -->
+    <text x="24" y="80" font-family="JetBrains Mono, monospace" font-size="16" fill="#94a3b8">
+      <tspan x="24" dy="0">// Generate docs</tspan>
+      <tspan x="24" dy="28" fill="#c084fc">function</tspan>
+      <tspan fill="#e2e8f0"> analyzeCode() {</tspan>
+      <tspan x="48" dy="28" fill="#94a3b8">// AI-powered</tspan>
+      <tspan x="48" dy="28" fill="#a78bfa">const</tspan>
+      <tspan fill="#e2e8f0"> docs = </tspan>
+      <tspan fill="#fbbf24">generate</tspan>
+      <tspan fill="#e2e8f0">();</tspan>
+      <tspan x="48" dy="28" fill="#a78bfa">return</tspan>
+      <tspan fill="#e2e8f0"> docs;</tspan>
+      <tspan x="24" dy="28" fill="#e2e8f0">}</tspan>
+    </text>
+
+    <!-- Quality score badge -->
+    <g transform="translate(270, 260)">
+      <rect x="0" y="0" width="150" height="140" rx="12" fill="#4f46e5"/>
+      <text x="75" y="35" font-family="system-ui" font-size="15" font-weight="600" fill="white" text-anchor="middle" opacity="0.75">
+        Quality Score
+      </text>
+      <text x="75" y="95" font-family="system-ui" font-size="56" font-weight="700" fill="#22c55e" text-anchor="middle">
+        92
+      </text>
+      <text x="75" y="120" font-family="system-ui" font-size="18" font-weight="600" fill="#22c55e" text-anchor="middle">
+        Grade A
+      </text>
+    </g>
+  </g>
+
+  <!-- Footer tag -->
+  <g transform="translate(1020, 580)">
+    <text font-family="system-ui" font-size="16" font-weight="600" fill="white" opacity="0.7">
+      Portfolio Project
+    </text>
+  </g>
+</svg>

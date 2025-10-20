@@ -1,0 +1,53 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="iconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7c3aed;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4f46e5;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="256" fill="url(#iconGradient)"/>
+
+  <!-- Final favicon: LARGER THICKER curly braces (fill more of circle) -->
+
+  <!-- Left curly bracket { - LARGER and EXTRA THICK -->
+  <path d="M 220 70
+           C 180 70, 140 95, 140 145
+           L 140 210
+           C 140 245, 105 265, 70 265
+           L 70 270
+           C 105 270, 140 290, 140 325
+           L 140 390
+           C 140 440, 180 465, 220 465
+           L 220 430
+           C 200 430, 190 418, 190 400
+           L 190 320
+           C 190 280, 165 258, 125 250
+           C 165 242, 190 220, 190 180
+           L 190 112
+           C 190 94, 200 82, 220 82 Z"
+        fill="white"
+        stroke="white"
+        stroke-width="14"/>
+
+  <!-- Right curly bracket } - LARGER and EXTRA THICK -->
+  <path d="M 292 70
+           C 332 70, 372 95, 372 145
+           L 372 210
+           C 372 245, 407 265, 442 265
+           L 442 270
+           C 407 270, 372 290, 372 325
+           L 372 390
+           C 372 440, 332 465, 292 465
+           L 292 430
+           C 312 430, 322 418, 322 400
+           L 322 320
+           C 322 280, 347 258, 387 250
+           C 347 242, 322 220, 322 180
+           L 322 112
+           C 322 94, 312 82, 292 82 Z"
+        fill="white"
+        stroke="white"
+        stroke-width="14"/>
+</svg>

@@ -1,6 +1,7 @@
-import { FileCode2, Menu, HelpCircle } from 'lucide-react';
+import { Menu, HelpCircle } from 'lucide-react';
 import { Button } from './Button';
 import { RateLimitIndicator } from './RateLimitIndicator';
+import { Logo } from './Logo';
 
 export function Header({ onMenuClick, onExamplesClick, onHelpClick, showMobileMenu = false, rateLimitInfo }) {
   return (
@@ -10,8 +11,8 @@ export function Header({ onMenuClick, onExamplesClick, onHelpClick, showMobileMe
           {/* Left: Logo + Title */}
           <div className="flex items-center gap-3">
             {/* Logo */}
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-purple">
-              <FileCode2 className="w-6 h-6 text-white" aria-hidden="true" />
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-purple p-1">
+              <Logo className="w-full h-full" aria-hidden="true" />
             </div>
 
             {/* Title + Tagline */}
