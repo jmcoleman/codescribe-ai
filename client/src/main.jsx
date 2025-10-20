@@ -6,22 +6,17 @@ import './index.css'
 import App from './App.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 
-// Only load analytics and speed insights in production
-// Use hostname check - most reliable method for Vercel deployments
-const isProduction =
-  window.location.hostname === 'codescribeai.com' ||
-  window.location.hostname.includes('vercel.app')
+// Always load analytics and speed insights to debug
+// TODO: Add back production check after confirming it works
+console.log('[DEBUG] Loading Analytics and SpeedInsights components');
+console.log('[DEBUG] Hostname:', window.location.hostname);
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ErrorBoundary>
       <App />
     </ErrorBoundary>
-    {isProduction && (
-      <>
-        <Analytics />
-        <SpeedInsights />
-      </>
-    )}
+    <Analytics />
+    <SpeedInsights />
   </StrictMode>,
 )
