@@ -131,8 +131,8 @@ curl -X POST https://your-url.vercel.app/api/generate \
 
 ### Optional Enhancements
 - [x] ✅ Add custom domain (codescribeai.com - configured October 19, 2025)
-- [ ] Set up Vercel Analytics
-- [ ] Configure Vercel Web Analytics
+- [x] ✅ Set up Vercel Analytics (configured October 20, 2025)
+- [x] ✅ Configure Speed Insights (configured October 20, 2025)
 - [ ] Add Sentry for error tracking
 
 ---
