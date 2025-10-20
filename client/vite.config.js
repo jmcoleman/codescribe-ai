@@ -8,7 +8,7 @@ export default defineConfig({
     react(),
     visualizer({
       open: true, // Automatically open the report in browser after build
-      filename: './dist/stats.html', // Output file location
+      filename: './stats.html', // Output outside dist to avoid deployment
       gzipSize: true, // Show gzip sizes
       brotliSize: true, // Show brotli sizes
       template: 'treemap', // Use treemap visualization (other options: sunburst, network)
