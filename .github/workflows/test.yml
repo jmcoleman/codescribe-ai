@@ -151,3 +151,17 @@ jobs:
       - name: Audit frontend dependencies
         run: cd client && npm audit --audit-level=moderate
         continue-on-error: true
+
+  deploy:
+    name: Deploy to Vercel
+    runs-on: ubuntu-latest
+    # Only deploy if all tests passed
+    needs: [test-backend, test-frontend, lint, security]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Trigger Vercel Deploy Hook
+        run: |
+          echo "🚀 All tests passed! Triggering Vercel deployment..."
+          curl -X POST "${{ secrets.VERCEL_DEPLOY_HOOK }}"
+          echo "✅ Deployment triggered successfully"
