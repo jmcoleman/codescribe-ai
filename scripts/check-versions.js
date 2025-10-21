@@ -18,6 +18,7 @@ import { execSync } from 'child_process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+const projectRoot = join(__dirname, '..');
 
 // ANSI color codes for terminal output
 const colors = {
@@ -37,7 +38,7 @@ const colors = {
  */
 function getPackageJson(path) {
   try {
-    const fullPath = join(__dirname, path);
+    const fullPath = join(projectRoot, path);
     if (!existsSync(fullPath)) {
       return null;
     }
@@ -56,7 +57,7 @@ function getInstalledVersion(packageName, directory) {
   try {
     const command = `npm list ${packageName} --depth=0 --json`;
     const output = execSync(command, {
-      cwd: join(__dirname, directory),
+      cwd: join(projectRoot, directory),
       stdio: ['pipe', 'pipe', 'pipe']
     }).toString();
 
@@ -269,7 +270,7 @@ function main() {
   printHeader('AI Model Configuration');
 
   try {
-    const claudeClientPath = join(__dirname, 'server/src/services/claudeClient.js');
+    const claudeClientPath = join(projectRoot, 'server/src/services/claudeClient.js');
     if (existsSync(claudeClientPath)) {
       const content = readFileSync(claudeClientPath, 'utf8');
       const modelMatch = content.match(/this\.model\s*=\s*['"]([^'"]+)['"]/);

@@ -25,6 +25,16 @@
         }
         .subtitle {
             color: #64748b;
+            margin-bottom: 12px;
+        }
+        .status {
+            display: inline-block;
+            background: #dcfce7;
+            color: #166534;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
             margin-bottom: 32px;
         }
         .mermaid {
@@ -38,7 +48,8 @@
 <body>
     <div class="container">
         <h1>CodeScribe AI - System Architecture</h1>
-        <p class="subtitle">Quick Visual Reference - Architecture Diagram Preview</p>
+        <p class="subtitle">Interactive Mermaid Diagram - Production Implementation (Phase 1.5 Complete)</p>
+        <div class="status">✅ Deployed to Production: codescribeai.com</div>
 
         <div class="mermaid">
 %%{init: {'theme':'base', 'themeVariables': { 'primaryColor':'#faf5ff','primaryTextColor':'#1f2937','primaryBorderColor':'#9333ea','lineColor':'#64748b','secondaryColor':'#ecfeff','tertiaryColor':'#fff7ed','clusterBkg':'#fafafa','clusterBorder':'#9333ea'}, 'flowchart': {'padding': 15, 'nodeSpacing': 50, 'rankSpacing': 80, 'subGraphTitleMargin': {'top': 5, 'bottom': 5}}}}%%
@@ -50,38 +61,48 @@ graph TB
     end
 
     subgraph frontend ["Frontend - React Application"]
-        App[App.jsx<br/>Main Component]
-        Header[Header Component<br/>Logo, Nav, Menu]
-        ControlBar[Control Bar<br/>Upload, GitHub, Generate]
-        CodePanel[Code Panel<br/>Monaco Editor]
-        DocPanel[Doc Panel<br/>Markdown Renderer]
-        QualityScore[Quality Score<br/>Badge & Suggestions]
+        App[App.jsx<br/>Main Component<br/>+ Hooks + State]
+        Header[Header Component<br/>Logo, Nav, RateLimitIndicator]
+        MobileMenu[Mobile Menu<br/>Slide-in Navigation]
+        ControlBar[Control Bar<br/>Doc Type, Upload, Generate]
+        ErrorBanner[Error Banner<br/>Inline Errors + Timer]
+        CodePanel[Code Panel<br/>+ LazyMonacoEditor]
+        DocPanel[Doc Panel Lazy<br/>Markdown + Mermaid]
+        QualityScore[Quality Score<br/>Badge + Modal]
+        Toaster[Toast System<br/>Notifications + History]
 
         App --> Header
+        App --> MobileMenu
         App --> ControlBar
+        App --> ErrorBanner
         App --> CodePanel
         App --> DocPanel
+        App --> Toaster
         DocPanel --> QualityScore
     end
 
     subgraph api ["API Layer - Express Server"]
         Router[API Router]
+        Middleware[Middleware Stack<br/>CORS + RateLimit + Parser]
         GenerateRoute[POST /api/generate]
-        StreamRoute[POST /api/generate-stream<br/>SSE]
-        UploadRoute[POST /api/upload]
+        StreamRoute[POST /api/generate-stream<br/>Fetch ReadableStream]
+        UploadRoute[POST /api/upload<br/>Multer 500KB]
         HealthRoute[GET /api/health]
+        ErrorHandler[Error Handler<br/>User-friendly Messages]
 
-        Router --> GenerateRoute
-        Router --> StreamRoute
-        Router --> UploadRoute
+        Router --> Middleware
+        Middleware --> GenerateRoute
+        Middleware --> StreamRoute
+        Middleware --> UploadRoute
         Router --> HealthRoute
+        Router --> ErrorHandler
     end
 
-    subgraph services ["Service Layer"]
-        DocGen[DocGeneratorService<br/>Core Logic]
-        ClaudeClient[ClaudeClient<br/>API Wrapper]
-        CodeParser[CodeParser<br/>AST Analysis]
-        QualityScorer[QualityScorer<br/>Scoring Algorithm]
+    subgraph services ["Service Layer - Singleton Pattern"]
+        DocGen[DocGeneratorService<br/>4 Prompt Strategies]
+        ClaudeClient[ClaudeClient<br/>3-Retry Exponential]
+        CodeParser[CodeParser<br/>Acorn AST + 14 Metrics]
+        QualityScorer[QualityScorer<br/>5 Criteria Algorithm]
 
         GenerateRoute --> DocGen
         StreamRoute --> DocGen
@@ -91,14 +112,15 @@ graph TB
     end
 
     subgraph external ["External Services"]
-        Claude[Claude API<br/>Anthropic]
+        Claude[Claude API<br/>Sonnet 4.5<br/>claude-sonnet-4-20250514]
         Claude --> ClaudeClient
     end
 
     subgraph infra ["Infrastructure"]
-        Vercel[Vercel<br/>Hosting & CDN]
-        Analytics[Vercel Analytics]
-        Env[Environment Variables<br/>CLAUDE_API_KEY]
+        Vercel[Vercel Production<br/>codescribeai.com<br/>Hosting & CDN]
+        Analytics[Vercel Analytics<br/>Performance Monitoring]
+        Env[Environment Variables<br/>CLAUDE_API_KEY + Config]
+        Performance[Performance<br/>Bundle: 78KB -85%<br/>Lighthouse: 75 +67%]
     end
 
     subgraph legend ["🗺️ LEGEND"]
@@ -122,15 +144,20 @@ graph TB
     style VSCode fill:#fae8ff,stroke:#c026d3,stroke-width:2px
     style App fill:#c084fc,stroke:#9333ea,stroke-width:2px
     style Header fill:#e9d5ff,stroke:#9333ea
+    style MobileMenu fill:#e9d5ff,stroke:#9333ea
     style ControlBar fill:#e9d5ff,stroke:#9333ea
+    style ErrorBanner fill:#e9d5ff,stroke:#9333ea
     style CodePanel fill:#e9d5ff,stroke:#9333ea
     style DocPanel fill:#e9d5ff,stroke:#9333ea
     style QualityScore fill:#e9d5ff,stroke:#9333ea
+    style Toaster fill:#e9d5ff,stroke:#9333ea
     style Router fill:#cbd5e1,stroke:#475569,stroke-width:2px
+    style Middleware fill:#e2e8f0,stroke:#64748b
     style GenerateRoute fill:#e2e8f0,stroke:#64748b
     style StreamRoute fill:#e2e8f0,stroke:#64748b
     style UploadRoute fill:#e2e8f0,stroke:#64748b
     style HealthRoute fill:#e2e8f0,stroke:#64748b
+    style ErrorHandler fill:#e2e8f0,stroke:#64748b
     style DocGen fill:#c7d2fe,stroke:#4338ca,stroke-width:2px
     style ClaudeClient fill:#e0e7ff,stroke:#4f46e5
     style CodeParser fill:#e0e7ff,stroke:#4f46e5
@@ -139,6 +166,7 @@ graph TB
     style Vercel fill:#86efac,stroke:#16a34a,stroke-width:2px
     style Analytics fill:#bbf7d0,stroke:#22c55e
     style Env fill:#bbf7d0,stroke:#22c55e
+    style Performance fill:#bbf7d0,stroke:#22c55e
 
     classDef phase2 stroke-dasharray: 5 5
     classDef phase3 stroke-dasharray: 5 5

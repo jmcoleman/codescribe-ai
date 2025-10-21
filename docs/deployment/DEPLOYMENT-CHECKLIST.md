@@ -2,7 +2,8 @@
 
 **Project:** CodeScribe AI
 **Date Deployed:** October 19, 2025
-**Vercel URL:** https://codescribe-ai.vercel.app
+**Production URL:** https://codescribeai.com (custom domain)
+**Staging URL:** https://codescribe-ai.vercel.app
 **Status:** ✅ **DEPLOYMENT COMPLETE**
 
 > **Note:** This checklist has been completed and is kept for reference. For deployment learnings and insights, see [DEPLOYMENT-LEARNINGS.md](./DEPLOYMENT-LEARNINGS.md).
@@ -64,10 +65,10 @@ NODE_ENV=production
 PORT=3000
 ```
 
-**Temporary (update after first deployment):**
+**Production (custom domain):**
 ```
-ALLOWED_ORIGINS=https://codescribe-ai.vercel.app
-VITE_API_URL=https://codescribe-ai.vercel.app
+ALLOWED_ORIGINS=https://codescribeai.com
+VITE_API_URL=https://codescribeai.com
 ```
 
 **Optional (has defaults):**

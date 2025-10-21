@@ -71,7 +71,7 @@ graph TB
     end
 
     subgraph infra ["Infrastructure"]
-        Vercel[Vercel Planned<br/>Hosting & CDN]
+        Vercel[Vercel Production<br/>codescribeai.com<br/>Hosting & CDN]
         Analytics[Vercel Analytics<br/>Performance Monitoring]
         Env[Environment Variables<br/>CLAUDE_API_KEY + Config]
         Performance[Performance<br/>Bundle: 78KB -85%<br/>Lighthouse: 75 +67%]
@@ -192,9 +192,11 @@ The diagram includes an interactive legend. Here's the complete color system:
   - Max tokens: 4000 per request
 
 ### Infrastructure
-- **Vercel**: Hosting platform with CDN
+- **Vercel**: ✅ **Deployed to Production** ([codescribeai.com](https://codescribeai.com))
+  - Hosting platform with global CDN
+  - GitHub Actions CI/CD with test-gated Deploy Hooks
 - **Vercel Analytics**: Usage tracking and performance monitoring
-- **Environment Variables**: Secure configuration management (API keys, etc.)
+- **Environment Variables**: Secure configuration management (API keys, secrets)
 
 ## Data Flow
 
@@ -219,13 +221,13 @@ The diagram includes an interactive legend. Here's the complete color system:
 - Lucide React 0.545.0 (icons)
 
 **Backend**:
-- Node.js 20+, Express 5.1.0, @anthropic-ai/sdk 0.65.0
-- Acorn 8.15.0 (AST parser), Multer 2.0.2 (file upload)
-- express-rate-limit 8.1.0, cors 2.8.5
+- Node.js 22.19.0, npm 11.6.0, Express 5.1.0
+- @anthropic-ai/sdk 0.65.0, Acorn 8.15.0 (AST parser)
+- Multer 2.0.2 (file upload), express-rate-limit 8.1.0, cors 2.8.5
 
 **Infrastructure**:
-- Vercel (planned), Fetch API with ReadableStream (streaming)
-- Environment Variables (.env)
+- Vercel (✅ deployed to production), GitHub Actions (CI/CD)
+- Fetch API with ReadableStream (streaming), Environment Variables (.env)
 
 **AI**: Claude Sonnet 4.5 (claude-sonnet-4-20250514)
 

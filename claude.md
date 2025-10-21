@@ -97,7 +97,7 @@ This project has comprehensive documentation organized by purpose. Use this as y
 
 ### 🏗️ Architecture & Development
 
-#### [04-Architecture.md](docs/architecture/04-Architecture.md) - System Architecture Diagram & Overview
+#### [ARCHITECTURE-OVERVIEW.md](docs/architecture/ARCHITECTURE-OVERVIEW.md) - System Architecture Diagram & Overview
 **When to use:** Visual system architecture reference, quick component overview
 
 **Contains:**
@@ -414,7 +414,8 @@ open docs/design/brand-color-palette.pdf
 **When to use:** Starting point for all testing documentation, quick stats, running tests
 
 **Contains:**
-- Quick stats (319 tests, 72.2% coverage, 100% passing)
+- Quick stats (660+ tests: 513+ frontend + 133+ backend + 10 E2E, 100% passing)
+- Backend coverage (95.81% statements, 88.72% branches)
 - Testing documentation index with links to all test guides
 - Quick start commands for frontend and backend tests
 - Test coverage summary tables
@@ -430,7 +431,7 @@ open docs/design/brand-color-palette.pdf
 **When to use:** Understanding which components are tested, test breakdown details, coverage analysis
 
 **Contains:**
-- Overall statistics (13/18 components tested, 319 tests, 100% passing)
+- Overall statistics (13/18 components tested, 513+ frontend tests, 100% passing)
 - Detailed breakdown of all 13 tested components with test counts
 - Analysis of 5 untested components with justification for skipping
 - Test categories for each component (rendering, interactions, accessibility, edge cases)
@@ -608,8 +609,8 @@ codescribe-ai/
 │   │   ├── API-Examples.md       # cURL/JS examples (planned)
 │   │   └── CHANGELOG.md          # API version history (planned)
 │   ├── architecture/             # Architecture documentation
-│   │   ├── 04-Architecture.md    # System architecture diagram
-│   │   └── ARCHITECTURE.md       # Architecture overview
+│   │   ├── ARCHITECTURE-OVERVIEW.md  # System architecture diagram (visual)
+│   │   └── ARCHITECTURE.md       # Architecture deep dive (technical)
 │   ├── performance/              # Performance optimization
 │   │   └── OPTIMIZATION-GUIDE.md # Performance optimization guide
 │   ├── components/               # Component documentation
@@ -646,6 +647,10 @@ codescribe-ai/
 │   ├── INTERVIEW-GUIDE.md        # Interview prep, talking points, demo scripts
 │   ├── design-archive/           # Design exploration files (archived, not in git)
 │   │   └── favicon-comparison.html  # Favicon options comparison (archived)
+│   ├── architecture-archive/     # Architecture documentation history (archived)
+│   │   ├── ARCHITECTURE-OLD.md   # Previous architecture doc version
+│   │   ├── ARCHITECTURE-MIGRATION-GUIDE.md  # Migration process documentation
+│   │   └── ARCHITECTURE-AUDIT-SUMMARY.md    # Audit findings and changes
 │   ├── financials/               # Revenue projections, budgets (suggested)
 │   ├── investors/                # Pitch decks, investor comms (suggested)
 │   ├── customers/                # Interview notes, PII data (suggested)
@@ -665,6 +670,7 @@ codescribe-ai/
 - **Strategic planning** - Vision documents, market analysis, competitive research, GTM strategy
 - **Interview preparation** - Interview guides, talking points, demo scripts, personal Q&A
 - **Design exploration** - Design process files, archived mockups, options comparisons (design-archive/)
+- **Architecture history** - Previous versions, migration guides, audit summaries (architecture-archive/)
 - **Financial information** - Revenue projections, pricing models, budgets, cost analysis
 - **Customer data** - Interview transcripts, beta feedback, research notes (may contain PII)
 - **Investor relations** - Pitch decks, investor communications, term sheets, cap table
@@ -749,11 +755,11 @@ When answering questions about CodeScribe AI:
 ### 5. Cross-Reference When Needed
 Multiple docs cover the same topic from different angles:
 - **Quality Scoring**: PRD (requirements), Dev Guide (implementation), API Reference (algorithm details)
-- **Architecture**: 04-Architecture.md (visual diagram + quick overview), ARCHITECTURE.md (deep technical dive), Dev Guide (implementation), Master Prompt (summary)
+- **Architecture**: ARCHITECTURE-OVERVIEW.md (visual diagram + quick overview), ARCHITECTURE.md (deep technical dive), Dev Guide (implementation), Master Prompt (summary)
 - **Setup**: Todo List (tasks), Dev Guide (code), Master Prompt (quick commands)
 - **Performance**: OPTIMIZATION-GUIDE.md (comprehensive guide), Dev Guide (optimization techniques), ARCHITECTURE.md (performance targets)
 - **Lazy Loading**: OPTIMIZATION-GUIDE.md (implementation patterns), Dev Guide (React best practices)
-- **Mermaid Diagrams**: MERMAID-DIAGRAMS.md (comprehensive guide), CLAUDE.md section 7 (quick reference), 04-Architecture.md (implementation example)
+- **Mermaid Diagrams**: MERMAID-DIAGRAMS.md (comprehensive guide), CLAUDE.md section 7 (quick reference), ARCHITECTURE-OVERVIEW.md (implementation example)
 - **Component Patterns**: TOAST-SYSTEM.md (toast notifications), MERMAID-DIAGRAMS.md (diagram rendering), ERROR-HANDLING-UX.md (error banners and modals), COPYBUTTON.md (copy-to-clipboard functionality), SELECT-USAGE.md (dropdown select component)
 - **Error Handling**: ERROR-HANDLING-UX.md (UX patterns, animations, accessibility), TOAST-SYSTEM.md (error toasts for non-blocking notifications)
 - **Testing**: Testing README (overview and quick commands), COMPONENT-TEST-COVERAGE.md (detailed coverage report), frontend-testing-guide.md (patterns and best practices), TEST-GUIDE.md (running tests)
@@ -1064,7 +1070,7 @@ VITE_API_URL=http://localhost:3000
   - API URL centralization (config-based approach)
   - Monorepo detection and configuration
   - Production deployment checklist completion
-  - **Live Application:** [codescribe-ai.vercel.app](https://codescribe-ai.vercel.app)
+  - **Live Application:** [codescribeai.com](https://codescribeai.com) (custom domain)
 
 **Final Achievements:**
 - ✅ Accessibility Score: 95/100 (A grade)
@@ -1090,7 +1096,7 @@ VITE_API_URL=http://localhost:3000
 3. **No Database in MVP**: Code is processed in memory only (privacy feature)
 4. **Streaming is Key**: Real-time documentation generation using Server-Sent Events
 5. **Quality Scoring Differentiator**: Not just generation, but education on what good docs look like
-6. **Timeline is Aggressive**: 5-7 days requires strict scope discipline
+6. **Timeline Achieved**: Completed in 9 days actual execution (Phase 1: 5 days + Phase 1.5: 4 days, 10 days planned) with strict scope discipline
 
 ---
 
@@ -1113,7 +1119,9 @@ Reference these authoritative sources when implementing features or troubleshoot
 
 ## 🔄 Version History
 
-- **v1.23** (Current) - Test-Gated Deployment Implementation: Implemented production-grade CI/CD pipeline using Vercel Deploy Hooks triggered by GitHub Actions after tests pass; added vercel.json git.deploymentEnabled configuration to disable automatic Git deployments; added deploy job to test.yml workflow with needs dependencies on all test jobs; created Issue #9 in DEPLOYMENT-LEARNINGS.md with complete implementation guide; updated VERCEL-CONFIGURATION.md with recommended deployment method and updated checklists; added External Documentation Links section to CLAUDE.md with Vercel and GitHub Actions references; documented hybrid approach combining Vercel reliability with test-gating (best of both worlds); resolved duplicate deployment issue (Git Integration + Deploy Hook competing); deployment now only occurs after all tests pass successfully
+- **v1.25** (Current) - Architecture Documentation Reorganization: Renamed 04-Architecture.md to ARCHITECTURE-OVERVIEW.md for clarity (visual diagram vs technical deep-dive); updated all references across 10+ documentation files; updated CLAUDE.md project structure and cross-references
+- **v1.24** - Architecture Documentation Update & Archive Organization: Updated ARCHITECTURE.md to v1.2 with accurate package versions from version checker script (React 19.2.0, Node 22.19.0, all frontend/backend dependencies); added accessibility metrics (WCAG 2.1 AA, 660+ tests); updated deployment status (Vercel production, GitHub Actions CI/CD); moved historical architecture docs (ARCHITECTURE-OLD.md, ARCHITECTURE-MIGRATION-GUIDE.md, ARCHITECTURE-AUDIT-SUMMARY.md) to private/architecture-archive/ (excluded from git); updated CLAUDE.md project structure to document architecture-archive/ location; fixed check-versions.js path resolution to use projectRoot variable for correct file detection
+- **v1.23** - Test-Gated Deployment Implementation: Implemented production-grade CI/CD pipeline using Vercel Deploy Hooks triggered by GitHub Actions after tests pass; added vercel.json git.deploymentEnabled configuration to disable automatic Git deployments; added deploy job to test.yml workflow with needs dependencies on all test jobs; created Issue #9 in DEPLOYMENT-LEARNINGS.md with complete implementation guide; updated VERCEL-CONFIGURATION.md with recommended deployment method and updated checklists; added External Documentation Links section to CLAUDE.md with Vercel and GitHub Actions references; documented hybrid approach combining Vercel reliability with test-gating (best of both worlds); resolved duplicate deployment issue (Git Integration + Deploy Hook competing); deployment now only occurs after all tests pass successfully
 - **v1.22** - Deployment Fix & Design Archive Organization: Fixed Vercel deployment failures caused by HTML files with broken SVG references; moved design exploration files to private/design-archive/ (favicon-comparison.html with references to non-existent favicon-letter.svg and favicon-abstract.svg, GRAPHICS-FINAL-SUMMARY.md, GRAPHICS-README.md); updated CLAUDE.md project structure to document design-archive/ location and all production design files (brand-color-palette, error-boundary-ui-guide, generate-graphics); added "Design exploration" to private folder contents list; deployment now succeeds with only valid production assets
 - **v1.21** - Production Deployment Complete: Updated all documentation to reflect Phase 1.5 completion including production deployment (Oct 17-19, 2025); application now live at codescribe-ai.vercel.app; updated Current Phase Status with deployment achievements (Vercel setup, CI/CD, security hardening, build optimization); marked all Phase 1.5 days as 100% complete; added Production Application section with live demo link and key features; updated PRD with Day 10 deployment milestone; updated README Development Status with deployment phase details; captured deployment learnings (environment security, dependency restructuring, API configuration, monorepo support); all major deliverables achieved (accessibility compliance, production deployment, CI/CD pipeline, security measures)
 - **v1.20** - Phase 1.5 Status Update: Updated Current Phase Status section to reflect Phase 1 completion and Phase 1.5 substantial completion (95/100 accessibility score, Lighthouse 100/100); detailed breakdown of Days 6-10 implementation status (Days 6-7: 100%, Day 8: 90%, Day 9: 50%, Day 10: 10%); updated PRD Phase 1.5 section with detailed completion status and success criteria achieved; updated README Development Status section with Phase 1.5 accomplishments; updated Todo List Phase 1.5 overview with production-ready status; all documentation now reflects current accessibility compliance state and remaining optional manual testing recommendations
@@ -1123,7 +1131,7 @@ Reference these authoritative sources when implementing features or troubleshoot
 - **v1.16** - Organized testing documentation: Created comprehensive Testing Documentation section in documentation map with 9 test docs under docs/testing/; added Testing README (hub), COMPONENT-TEST-COVERAGE.md (detailed coverage report with 319 tests), frontend-testing-guide.md, TEST-GUIDE.md, IMPLEMENTATION-SUMMARY.md, and 4 specialized test docs; moved TEST-GUIDE.md from client/ to docs/testing/ and IMPLEMENTATION-SUMMARY.md from docs/planning/ to docs/testing/; deleted outdated root files (TESTING-COMPLETE.md, TEST_SUITE_SUMMARY.md); updated project structure to show docs/testing/ folder; added Testing to question type identification and cross-reference list
 - **v1.15** - Reorganized component documentation: Moved COPYBUTTON_USAGE.md from client/src/components/ to docs/components/COPYBUTTON.md; added COPYBUTTON.md to documentation map with complete feature overview, variants, animation timeline, and best practices; updated project structure in CLAUDE.md to reflect new location; added COPYBUTTON.md to Component Patterns cross-reference list and question type identification
 - **v1.14** - Added version checker script integration: Created comprehensive VERSION-CHECKER.md documentation for scripts/check-versions.js utility; added new Scripts & Utilities section to documentation map; updated Tech Stack section with version checker references and accuracy notes; added Package Versions/Dependencies to question type identification; added Package Versions to cross-reference list; created new section 8 "Package Version Reference Guidelines" with protocol for using version checker when updating documentation; added Version Checking commands to Quick Reference; updated project structure to include docs/scripts/ and scripts/ folders
-- **v1.13** - Architecture documentation audit and migration: Comprehensive update to 04-Architecture.md reflecting actual production implementation including all components (ErrorBanner, Toaster, MobileMenu, LazyMonacoEditor, LazyMermaidRenderer), middleware stack (CORS, RateLimit, Multer, ErrorHandler), service patterns (Singleton, Strategy, Decorator), performance metrics, and current tech stack versions; updated ARCHITECTURE.md to v1.1 with detailed component trees, service architecture, implementation status, data flows, testing strategies, deployment guide, monitoring approaches, and complete technical details matching production codebase; created ARCHITECTURE-OLD.md backup, ARCHITECTURE-AUDIT-SUMMARY.md documentation of changes, and ARCHITECTURE-MIGRATION-GUIDE.md for maintaining accuracy
+- **v1.13** - Architecture documentation audit and migration: Comprehensive update to ARCHITECTURE-OVERVIEW.md reflecting actual production implementation including all components (ErrorBanner, Toaster, MobileMenu, LazyMonacoEditor, LazyMermaidRenderer), middleware stack (CORS, RateLimit, Multer, ErrorHandler), service patterns (Singleton, Strategy, Decorator), performance metrics, and current tech stack versions; updated ARCHITECTURE.md to v1.1 with detailed component trees, service architecture, implementation status, data flows, testing strategies, deployment guide, monitoring approaches, and complete technical details matching production codebase; archived previous versions (ARCHITECTURE-OLD.md, ARCHITECTURE-AUDIT-SUMMARY.md, ARCHITECTURE-MIGRATION-GUIDE.md) to private/architecture-archive/ (excluded from git)
 - **v1.12** - Added Performance & Optimization documentation section: Created comprehensive OPTIMIZATION-GUIDE.md covering Lighthouse audits (+67% performance improvement), bundle size reduction (-85%), Core Web Vitals tracking, lazy loading patterns, and maintenance guidelines; updated documentation map with new Performance & Optimization section, cross-references for performance/lazy loading topics, and project structure to include docs/performance/ folder
 - **v1.11** - Added private/ folder documentation: Created dedicated folder structure for sensitive content (strategic planning, financials, customer data, investor relations); updated project structure diagram and added security best practices section; moved VISION-PRIVATE.md to private/VISION.md
 - **v1.10** - Enhanced timezone awareness instructions for documentation updates: Added automatic session labeling requirements with step-by-step timezone conversion process, EST/EDT timeframe definitions, and practical examples for converting UTC to EST when adding session labels to documentation
@@ -1134,7 +1142,7 @@ Reference these authoritative sources when implementing features or troubleshoot
 - **v1.5** - Added Mermaid diagram guidelines section with legend placement best practices, spacing configuration, and styling standards
 - **v1.4** - Expanded semantic colors for accessibility (fixed red contrast to WCAG AA, added background/button shades for green/yellow/red)
 - **v1.3** - Added Indigo as secondary brand color to design system (purple primary + indigo secondary)
-- **v1.2** - Clarified architecture document purposes: 04-Architecture.md (visual diagram + overview) vs ARCHITECTURE.md (deep technical dive)
+- **v1.2** - Clarified architecture document purposes: ARCHITECTURE-OVERVIEW.md (visual diagram + overview) vs ARCHITECTURE.md (deep technical dive)
 - **v1.1** - Reorganized documentation structure (planning/, api/, architecture/ subdirectories)
 - **v1.0** - Initial claude.md created with complete documentation map
 - Documentation last updated: October 20, 2025

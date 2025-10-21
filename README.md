@@ -6,7 +6,7 @@ Transform code into comprehensive, professional documentation in seconds using A
 
 > **Portfolio Project** by Jenni Coleman - Showcasing full-stack development, AI integration, and modern UX design
 >
-> 🔗 [Live Demo](https://codescribeai.com) | 📖 [Documentation](docs/) | 🎨 [Design System](docs/planning/07-Figma-Guide.md)
+> 🔗 [Live Demo](https://codescribeai.com) | 📖 [Documentation](docs/) | 🎨 [Design System](docs/planning/07-Figma-Guide.md) | 💻 [GitHub](https://github.com/jmcoleman/codescribe-ai)
 
 ## Table of Contents
 
@@ -87,7 +87,7 @@ codescribe-ai/
 
 ## Screenshots
 
-_Screenshots coming soon - application is currently in development_
+_Screenshots coming soon - planned for portfolio presentation_
 
 **Key Features to Showcase:**
 - 📝 Monaco code editor with syntax highlighting
@@ -98,10 +98,12 @@ _Screenshots coming soon - application is currently in development_
 - 📈 Mermaid diagram rendering
 - ⚠️ Error handling with inline banners
 
+**Live Demo:** Try all features at [codescribeai.com](https://codescribeai.com)
+
 ## Quick Start
 
 ### Prerequisites
-- Node.js 20+
+- Node.js 20+ (developed on v22.19.0)
 - npm or yarn
 - Anthropic Claude API key ([Get one here](https://console.anthropic.com/))
 
@@ -318,14 +320,15 @@ router.post('/users', async (req, res) => {
 Comprehensive documentation is organized in the [docs/](docs/) folder:
 
 ### Planning & Development
-- [docs/planning/](docs/planning/) - Product requirements, epics, dev guide, interview prep
+- [docs/planning/](docs/planning/) - Product requirements, epics, dev guide
   - [01-PRD.md](docs/planning/01-PRD.md) - Product Requirements Document
   - [02-Epics-Stories.md](docs/planning/02-Epics-Stories.md) - User stories and acceptance criteria
   - [03-Todo-List.md](docs/planning/03-Todo-List.md) - Day-by-day implementation tasks
   - [05-Dev-Guide.md](docs/planning/05-Dev-Guide.md) - Complete development guide with code examples
-  - [06-InterviewGuide.md](docs/planning/06-InterviewGuide.md) - Interview preparation & talking points
   - [07-Figma-Guide.md](docs/planning/07-Figma-Guide.md) - Complete UI/UX design system
   - [08-Master-Prompt.md](docs/planning/08-Master-Prompt.md) - Master implementation guide
+  - [ROADMAP.md](docs/planning/ROADMAP.md) - Product roadmap and future phases
+  - [MVP-DEPLOY-LAUNCH.md](docs/planning/MVP-DEPLOY-LAUNCH.md) - Deployment checklist and guide
 
 ### API Documentation
 - [docs/api/](docs/api/) - API specifications and examples
@@ -334,7 +337,7 @@ Comprehensive documentation is organized in the [docs/](docs/) folder:
 
 ### Architecture
 - [docs/architecture/](docs/architecture/) - System design and architecture
-  - [04-Architecture.md](docs/architecture/04-Architecture.md) - System architecture diagram (Mermaid)
+  - [ARCHITECTURE-OVERVIEW.md](docs/architecture/ARCHITECTURE-OVERVIEW.md) - System architecture diagram (Mermaid)
   - [ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md) - Deep architecture overview
 
 ### Component Guides
@@ -386,7 +389,7 @@ Comprehensive documentation is organized in the [docs/](docs/) folder:
 - **Vercel Analytics** - Privacy-first anonymous analytics and Core Web Vitals tracking
 
 ### Backend
-- **Node.js 20+** - JavaScript runtime
+- **Node.js 22** - JavaScript runtime (v22.19.0)
 - **Express 5** - Minimalist web framework
 - **Anthropic Claude API** - Claude Sonnet 4.5 (claude-sonnet-4-20250514) for AI generation
 - **Acorn** - JavaScript AST parser for code analysis
@@ -541,8 +544,10 @@ npm run test:e2e:headed       # With browser UI (for debugging)
 ## Development Status
 
 **Current Phase:** Phase 1.5 - WCAG AA Accessibility Compliance + Deployment - ✅ **COMPLETE AND DEPLOYED!**
-**Timeline:** 4 days (Oct 16-19: 2 days accessibility + 2 days deployment) | **Status:** 🚀 **LIVE IN PRODUCTION**
+**Timeline:** Phase 1.0 (5 days, Oct 11-16) + Phase 1.5 (4 days, Oct 16-19) = 9 days total execution | **Status:** 🚀 **LIVE IN PRODUCTION**
 **Production URL:** [codescribeai.com](https://codescribeai.com)
+
+> **Note:** Original plan was 10 days total (5 days Phase 1 + 4 days Phase 1.5), completed in 9 days actual execution.
 
 ### ✅ Completed (Days 1-4)
 
@@ -661,7 +666,7 @@ MIT
 
 **Jenni Coleman** - Full-Stack Developer & UX Designer
 
-Built as a portfolio project (Days 1-4 of 5) to showcase:
+Built as a portfolio project (9 days total: Phase 1.0 + Phase 1.5) to showcase:
 
 ### Technical Skills
 - **Full-Stack Development**: React 19, Node.js, Express, RESTful APIs
