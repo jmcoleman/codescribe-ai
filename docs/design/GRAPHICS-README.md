@@ -17,7 +17,6 @@ Professional graphics for the CodeScribe AI portfolio project, including LinkedI
   - Transparent background (container applies gradient)
 - **[linkedin-thumbnail.svg](../../client/public/linkedin-thumbnail.svg)** - LinkedIn social preview (1200×630px)
   - Full design with curly braces, lines, code mockup
-- **[generate-graphics.html](generate-graphics.html)** - Interactive preview and generation tool
 
 ## 🎨 Design Specifications
 
@@ -94,20 +93,6 @@ Professional graphics for the CodeScribe AI portfolio project, including LinkedI
 - 128×128+ - Presentations, marketing materials
 
 ## 🚀 Usage
-
-### View Graphics Interactively
-
-Open the interactive preview in your browser:
-
-```bash
-open docs/design/generate-graphics.html
-```
-
-This HTML file provides:
-- Full-size previews of both graphics
-- Design specifications and usage guidelines
-- Instructions for generating PNG versions
-- Code snippets for implementation
 
 ### LinkedIn Usage
 

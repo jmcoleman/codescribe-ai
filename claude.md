@@ -635,18 +635,17 @@ codescribe-ai/
 │   │   ├── brand-color-palette.pdf   # PDF version for sharing
 │   │   ├── error-boundary-ui-guide.html  # Error boundary UI design guide
 │   │   ├── error-boundary-ui-guide-compact.html  # Compact version
-│   │   └── generate-graphics.html  # Graphics generation guide (production assets)
+│   │   ├── GRAPHICS-README.md    # Graphics assets documentation
+│   │   └── GRAPHICS-FINAL-SUMMARY.md  # Design evolution and rationale
 │   ├── scripts/                  # Script documentation
 │   │   └── VERSION-CHECKER.md    # Version checker utility guide
 │   └── CONTEXT.md                # Quick reference
-├── private/                       # ⚠️ GITIGNORED - Sensitive content only
+├── private/                       # ⚠️ GITIGNORED - All contents excluded from git
 │   ├── README.md                 # Guidelines for private folder usage
 │   ├── VISION.md                 # Strategic vision, market analysis, GTM strategy
 │   ├── INTERVIEW-GUIDE.md        # Interview prep, talking points, demo scripts
-│   ├── design-archive/           # Design exploration files (non-production)
-│   │   ├── favicon-comparison.html  # Favicon options comparison (archived)
-│   │   ├── GRAPHICS-FINAL-SUMMARY.md  # Design process documentation
-│   │   └── GRAPHICS-README.md    # Design documentation
+│   ├── design-archive/           # Design exploration files (archived, not in git)
+│   │   └── favicon-comparison.html  # Favicon options comparison (archived)
 │   ├── financials/               # Revenue projections, budgets (suggested)
 │   ├── investors/                # Pitch decks, investor comms (suggested)
 │   ├── customers/                # Interview notes, PII data (suggested)
@@ -660,7 +659,7 @@ codescribe-ai/
 
 ### Private Folder (Sensitive Content)
 
-**⚠️ IMPORTANT:** The `private/` folder is **excluded from version control** via `.gitignore`. This folder contains sensitive business information that should never be committed to the repository.
+**⚠️ IMPORTANT:** The `private/` folder and **all its contents** are **excluded from version control** via `.gitignore`. This folder contains sensitive business information that should never be committed to the repository.
 
 **What belongs in `private/`:**
 - **Strategic planning** - Vision documents, market analysis, competitive research, GTM strategy
