@@ -4,6 +4,11 @@
   "outputDirectory": "client/dist",
   "installCommand": "npm install --prefix server && npm install",
   "cleanUrls": true,
+  "git": {
+    "deploymentEnabled": {
+      "main": false
+    }
+  },
   "headers": [
     {
       "source": "/(.*)",
