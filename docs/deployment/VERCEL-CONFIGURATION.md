@@ -39,6 +39,71 @@ VITE_API_URL=https://codescribe-ai.vercel.app
 
 ---
 
+## GitHub Actions CI/CD Setup
+
+### Required GitHub Secrets
+
+For automated deployment via GitHub Actions, configure these secrets in your repository:
+
+**Location:** `Settings → Secrets and variables → Actions → Repository secrets`
+
+| Secret Name | How to Get Value | Example Format |
+|-------------|------------------|----------------|
+| `VERCEL_TOKEN` | Vercel Dashboard → Settings → Tokens → Create Token | `Ab1Cd2Ef3Gh4...` |
+| `VERCEL_PROJECT_ID` | Run: `vercel project inspect [project-name]` | `prj_h7LVP6tjkw52lt2Eoh99hxwXHJUR` |
+| `VERCEL_ORG_ID` | Run: `vercel teams list` | `jenni-colemans-projects` |
+
+**⚠️ CRITICAL: Getting Correct Values**
+
+**Do NOT use values from:**
+- ❌ Vercel web dashboard Settings page (may be stale or wrong format)
+- ❌ `.vercel/project.json` from your local machine (machine-specific)
+- ❌ Old documentation or screenshots
+
+**Always get fresh values using Vercel CLI:**
+
+```bash
+# 1. Update CLI to latest version
+npm install -g vercel@latest
+
+# 2. Get Project ID
+vercel project inspect codescribe-ai
+# Copy the "ID" value exactly (watch for typos like it2 vs lt2!)
+
+# 3. Get Org ID (team slug)
+vercel teams list
+# Copy the "id" column value (NOT the team_xxx format!)
+
+# 4. Create new token
+# Go to Vercel Dashboard → Settings → Tokens → Create Token
+# Scope: Select your team
+# Copy immediately (shown only once)
+```
+
+**Common Mistakes:**
+- Typos in Project ID (e.g., `it2` vs `lt2` - lowercase i vs lowercase L)
+- Using `team_xxx` format instead of team slug for Org ID
+- Using expired or wrong-scoped tokens
+- Extra spaces before/after values when pasting
+
+### GitHub Actions Workflow
+
+The deployment workflow (`.github/workflows/deploy.yml`) runs automatically on:
+- Push to `main` branch (after tests pass)
+- Manual trigger via GitHub UI
+
+**Workflow structure:**
+```yaml
+- Install Vercel CLI
+- Deploy to Vercel (single command)
+  Uses: vercel deploy --prod
+  Authenticates with: VERCEL_TOKEN, VERCEL_PROJECT_ID, VERCEL_ORG_ID
+```
+
+**Simplified approach:** Uses `vercel deploy --prod` in one step instead of separate `pull/build/deploy` commands for fewer failure points.
+
+---
+
 ## Deployment Steps
 
 ### 1. Initial Deployment
@@ -132,6 +197,20 @@ curl -X POST https://your-project-name.vercel.app/api/generate \
 
 ### Common Issues
 
+**Issue: GitHub Actions - "Project not found" 404 Error**
+```
+Error: Project not found ({"VERCEL_PROJECT_ID":"***","VERCEL_ORG_ID":"***"})
+```
+- **Symptoms:** Local deployment works, GitHub Actions fails with 404
+- **Root Cause:** Wrong Project ID or Org ID in GitHub Secrets
+- **Solution:**
+  1. Update Vercel CLI: `npm install -g vercel@latest`
+  2. Get correct Project ID: `vercel project inspect codescribe-ai`
+  3. Get correct Org ID: `vercel teams list` (use slug, NOT team_xxx)
+  4. Update GitHub Secrets with exact values (watch for typos!)
+  5. Common typo: `it2` vs `lt2` in Project ID
+- **See:** [DEPLOYMENT-LEARNINGS.md Issue #7](./DEPLOYMENT-LEARNINGS.md#issue-7-github-actions-deployment---project-not-found-error) for detailed guide
+
 **Issue: CORS Error**
 - **Solution:** Verify `ALLOWED_ORIGINS` includes your Vercel URL
 
@@ -143,6 +222,11 @@ curl -X POST https://your-project-name.vercel.app/api/generate \
 
 **Issue: 404 on Routes**
 - **Solution:** Ensure `vercel.json` has proper rewrites (if needed)
+
+**Issue: Deployments Showing as "Canceled"**
+- **Symptoms:** Multiple deployments in Vercel show "Canceled" status
+- **Root Cause:** GitHub Actions triggering new deployments before previous ones complete, or workflow failures
+- **Solution:** Check GitHub Actions logs, fix any errors, allow one deployment to complete before triggering another
 
 ---
 
