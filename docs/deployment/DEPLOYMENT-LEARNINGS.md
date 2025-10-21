@@ -948,3 +948,188 @@ If automatic deployments stop working:
 
 **Date:** October 21, 2025
 
+
+---
+
+## Issue 9: Test-Gated Deployment with Deploy Hooks
+
+**Challenge:**
+Need to ensure tests pass BEFORE deploying to production, while using reliable Vercel Git Integration (avoiding GitHub Actions deployment complexity).
+
+**Initial Problem:**
+- Vercel Git Integration deploys immediately on every push (parallel with tests)
+- Risk of deploying broken code if tests fail
+- GitHub Actions deployment had credential/configuration issues (see Issue #7)
+
+**Solution: Hybrid Approach with Deploy Hooks**
+
+Use Vercel Deploy Hooks triggered by GitHub Actions ONLY after tests pass, while disabling automatic Git deployments.
+
+**Architecture:**
+```
+Push to main
+    ↓
+GitHub Actions: Run Tests (2-3 min)
+    ├─ Backend Tests
+    ├─ Frontend Tests
+    ├─ Lint
+    └─ Security Audit
+    ↓
+All tests PASS ✅
+    ↓
+Deploy Job: curl POST to Vercel Deploy Hook
+    ↓
+Vercel: Build & Deploy to Production
+```
+
+**Implementation:**
+
+**Step 1: Create Vercel Deploy Hook**
+
+1. Vercel Dashboard → Project → Settings → Git → Deploy Hooks
+2. Click "Create Hook"
+3. Name: "Deploy after tests pass"
+4. Branch: `main`
+5. Copy the hook URL (starts with `https://api.vercel.com/v1/integrations/deploy/...`)
+
+**Step 2: Add Deploy Hook to GitHub Secrets**
+
+1. GitHub → Repository → Settings → Secrets and variables → Actions
+2. Click "New repository secret"
+3. Name: `VERCEL_DEPLOY_HOOK`
+4. Value: Paste the hook URL from Step 1
+5. Save
+
+**Step 3: Disable Automatic Git Deployments**
+
+Add to `vercel.json`:
+```json
+{
+  "version": 2,
+  "git": {
+    "deploymentEnabled": {
+      "main": false
+    }
+  }
+}
+```
+
+This prevents Vercel from automatically deploying on Git pushes while still allowing Deploy Hook deployments.
+
+**Step 4: Keep Ignored Build Step as "Automatic"**
+
+In Vercel Dashboard → Settings → Git → Ignored Build Step:
+- Set to: **"Automatic"**
+- This allows Deploy Hook deployments to proceed
+
+**Critical:** Do NOT set to "Don't build anything" - this blocks Deploy Hook deployments too!
+
+**Step 5: Add Deploy Job to Test Workflow**
+
+Add to `.github/workflows/test.yml`:
+```yaml
+deploy:
+  name: Deploy to Vercel
+  runs-on: ubuntu-latest
+  # Only deploy if all tests passed
+  needs: [test-backend, test-frontend, lint, security]
+  # Deploy on push to main OR manual trigger
+  if: github.ref == 'refs/heads/main'
+
+  steps:
+    - name: Trigger Vercel Deploy Hook
+      run: |
+        echo "🚀 All tests passed! Triggering Vercel deployment..."
+        curl -X POST "${{ secrets.VERCEL_DEPLOY_HOOK }}"
+        echo "✅ Deployment triggered successfully"
+```
+
+**How It Works:**
+
+1. **Git push to main** → Tests run, no automatic Vercel deployment
+2. **Tests fail** → Deploy job never runs, no deployment ✅
+3. **Tests pass** → Deploy job calls webhook → Vercel deploys ✅
+4. **Manual trigger** → Tests run → Deploy job runs (if on main branch)
+
+**Verification:**
+
+After pushing code, check:
+1. GitHub Actions shows all test jobs passing
+2. Deploy job runs and calls webhook (check logs for JSON response)
+3. Vercel Dashboard shows ONE deployment (triggered by "Deploy Hook")
+4. No duplicate deployments from Git Integration
+
+**Benefits:**
+
+✅ **Tests must pass** before any production deployment
+✅ **No duplicate deployments** (Git Integration disabled for main)
+✅ **Reliable Vercel deployment** (no GitHub Actions Project ID issues)
+✅ **Simple webhook integration** (just a curl command)
+✅ **Works with manual triggers** (workflow_dispatch events)
+
+**Troubleshooting:**
+
+**Issue: Deploy Hook returns PENDING but never builds**
+- Check: Ignored Build Step should be "Automatic" (NOT "Don't build anything")
+- The git.deploymentEnabled setting only blocks Git pushes, not Deploy Hooks
+
+**Issue: Two deployments on every push**
+- Check: vercel.json has `"deploymentEnabled": { "main": false }`
+- Check: Git Integration still connected (needed for Deploy Hook to work)
+
+**Issue: Deploy job skipped on manual trigger**
+- Check: Deploy job condition allows both push and workflow_dispatch
+- Use: `if: github.ref == 'refs/heads/main'` (no event_name check)
+
+**Issue: Tests run but deploy job never runs**
+- Check: All test jobs (backend, frontend, lint, security) must pass
+- Check: Push was to main branch (not develop or feature branch)
+
+**Comparison to Other Approaches:**
+
+| Approach | Tests Gate Deployment | Reliability | Complexity |
+|----------|---------------------|-------------|------------|
+| **Vercel Git Integration Only** | ❌ No (parallel) | ✅ High | ✅ Low |
+| **GitHub Actions Deployment** | ✅ Yes | ⚠️ Medium (Project ID issues) | ⚠️ High |
+| **Deploy Hooks (This)** | ✅ Yes | ✅ High | ✅ Medium |
+
+**Key Configuration Files:**
+
+`vercel.json`:
+```json
+{
+  "git": {
+    "deploymentEnabled": {
+      "main": false
+    }
+  }
+}
+```
+
+`.github/workflows/test.yml`:
+```yaml
+deploy:
+  needs: [test-backend, test-frontend, lint, security]
+  if: github.ref == 'refs/heads/main'
+  steps:
+    - run: curl -X POST "${{ secrets.VERCEL_DEPLOY_HOOK }}"
+```
+
+**Timeline:**
+- **Hours spent researching:** ~2 hours (testing different approaches)
+- **Root cause:** Needed to combine Vercel Deploy Hooks with git.deploymentEnabled
+- **Implementation time:** 30 minutes once approach was clear
+
+**Key Lesson:**
+Vercel Deploy Hooks + `git.deploymentEnabled` configuration provides the best of both worlds: test-gated deployment with Vercel's reliable infrastructure. This hybrid approach is superior to pure GitHub Actions deployment for most use cases.
+
+**Related Issues:**
+- See Issue #7 for why GitHub Actions deployment alone is problematic
+- See Issue #8 for Vercel Git Integration automatic deployment setup
+
+**Git Commits:**
+- Added deploy job to test.yml workflow
+- Added `git.deploymentEnabled` to vercel.json
+- Created VERCEL_DEPLOY_HOOK GitHub secret
+
+**Date:** October 21, 2025

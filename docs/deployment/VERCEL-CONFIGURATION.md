@@ -39,6 +39,36 @@ VITE_API_URL=https://codescribe-ai.vercel.app
 
 ---
 
+## Recommended Deployment Method: Test-Gated Deploy Hooks ⭐
+
+**Best Practice:** Use Vercel Deploy Hooks triggered by GitHub Actions after tests pass.
+
+**Why this approach:**
+- ✅ Tests must pass before deployment (production protected)
+- ✅ Reliable Vercel deployment (no GitHub Actions complexity)
+- ✅ No duplicate deployments
+- ✅ Simple webhook integration
+
+**Quick Setup:**
+
+1. **Create Deploy Hook** in Vercel Dashboard → Settings → Git → Deploy Hooks
+2. **Add GitHub Secret** `VERCEL_DEPLOY_HOOK` with hook URL
+3. **Disable auto-deploy** in `vercel.json`:
+   ```json
+   {
+     "git": {
+       "deploymentEnabled": {
+         "main": false
+       }
+     }
+   }
+   ```
+4. **Add deploy job** to test workflow (see below)
+
+**See:** [DEPLOYMENT-LEARNINGS.md Issue #9](./DEPLOYMENT-LEARNINGS.md#issue-9-test-gated-deployment-with-deploy-hooks) for complete setup guide.
+
+---
+
 ## GitHub Actions CI/CD Setup
 
 ### Required GitHub Secrets
@@ -274,17 +304,41 @@ If deployment fails:
 
 ---
 
-## Vercel Git Integration Deployment Checklist
+## Test-Gated Deployment Checklist ⭐ RECOMMENDED
 
-Use this checklist to ensure smooth automatic deployments:
+Use this checklist for the Deploy Hook approach (tests must pass before deployment):
+
+### Initial Setup
+- [ ] GitHub repository connected to Vercel project
+- [ ] Deploy Hook created in Vercel (Settings → Git → Deploy Hooks)
+- [ ] `VERCEL_DEPLOY_HOOK` secret added to GitHub repository
+- [ ] `vercel.json` has `"deploymentEnabled": { "main": false }`
+- [ ] **"Ignored Build Step" set to "Automatic"** ⭐ **CRITICAL**
+- [ ] Deploy job added to test workflow (depends on all test jobs)
+- [ ] All environment variables added to Vercel Dashboard
+- [ ] CORS `ALLOWED_ORIGINS` includes production URL
+
+### Verification
+- [ ] Push code → Tests run → No automatic Vercel deployment
+- [ ] Tests pass → Deploy job runs → Calls Deploy Hook
+- [ ] Vercel Dashboard shows ONE deployment (triggered by "Deploy Hook")
+- [ ] Tests fail → No deployment occurs ✅
+
+---
+
+## Alternative: Vercel Git Integration Only (Simple but No Test Gating)
+
+Use this checklist if you want automatic deployments without test gating:
 
 ### Initial Setup
 - [ ] GitHub repository connected to Vercel project
 - [ ] Production branch set to `main` (or your primary branch)
-- [ ] **"Ignored Build Step" set to "Automatic"** ⭐ **CRITICAL**
+- [ ] **"Ignored Build Step" set to "Automatic"**
 - [ ] All environment variables added to Vercel Dashboard
 - [ ] CORS `ALLOWED_ORIGINS` includes production URL
 - [ ] GitHub webhook exists and is active (Settings → Webhooks)
+
+**Warning:** This approach deploys immediately on push (parallel with tests). Tests don't gate deployment.
 
 ### Before Every Deployment
 - [ ] All tests passing locally
