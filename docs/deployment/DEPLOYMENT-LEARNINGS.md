@@ -683,3 +683,142 @@ Speed Insights has a **24-48 hour delay** before first data appears in dashboard
 
 **Pro Tip:** Don't debug further if Network tab shows 200 OK responses. Just wait!
 
+---
+
+## Issue 7: GitHub Actions Deployment - "Project not found" Error
+
+**Error:**
+```
+Error: Project not found ({"VERCEL_PROJECT_ID":"***","VERCEL_ORG_ID":"***"})
+> [debug] #2 ← 404 Not Found
+```
+
+**Symptoms:**
+- Local `vercel deploy` works fine
+- GitHub Actions deployment fails with 404
+- Environment variables show as set (YES) in workflow logs
+- `.vercel/project.json` created but Vercel CLI can't find project
+- All deployments showing as "Canceled" in Vercel dashboard
+
+**Root Causes:**
+1. **Wrong Project ID format** - Used Project ID from Vercel Settings page but had typo (`it2` instead of `lt2`)
+2. **Wrong Org ID format** - Used `team_xxx` format from old Vercel Settings, but CLI expects team slug
+3. **Outdated Vercel CLI** - Older CLI versions had bugs with project detection
+
+**Critical Discovery:**
+The Project ID and Org ID values shown in Vercel's web dashboard **may not match** what the CLI expects! Always use `vercel` CLI commands to get the correct values.
+
+**Solution:**
+
+**Step 1: Update Vercel CLI to latest version:**
+```bash
+npm install -g vercel@latest
+```
+
+**Step 2: Get correct Project ID using CLI:**
+```bash
+vercel project inspect codescribe-ai
+```
+
+**Output:**
+```
+Found Project jenni-colemans-projects/codescribe-ai
+
+  General
+    ID                          prj_h7LVP6tjkw52lt2Eoh99hxwXHJUR  ← Use this exact value
+    Name                        codescribe-ai
+    Owner                       Jenni Coleman's projects
+```
+
+⚠️ **CRITICAL:** Copy the ID character-by-character! Common mistakes:
+- `it2` vs `lt2` (lowercase i vs lowercase L)
+- Extra spaces before/after
+- Missing characters when copy-pasting
+
+**Step 3: Get correct Org ID (team slug) using CLI:**
+```bash
+vercel teams list
+```
+
+**Output:**
+```
+id                          Team name
+jenni-colemans-projects     Jenni Coleman's projects  ← Use the ID column (slug), NOT team_xxx format
+```
+
+**Step 4: Update GitHub Secrets with CLI-provided values:**
+
+Go to: `https://github.com/[username]/codescribe-ai/settings/secrets/actions`
+
+| Secret Name | Correct Value | Wrong Value (Don't Use) |
+|-------------|---------------|-------------------------|
+| `VERCEL_PROJECT_ID` | `prj_h7LVP6tjkw52lt2Eoh99hxwXHJUR` | `prj_h7LVP6tjkw52it2Eoh99hxwXHJUR` (typo: it2) |
+| `VERCEL_ORG_ID` | `jenni-colemans-projects` | `team_fzBS6hN894eToZoYOLi50Ath` (wrong format) |
+| `VERCEL_TOKEN` | [from Vercel Dashboard → Settings → Tokens] | [any expired token] |
+
+**Step 5: Simplify GitHub Actions workflow:**
+
+Instead of complex `vercel pull` → `vercel build` → `vercel deploy --prebuilt` workflow, use single command:
+
+```yaml
+# .github/workflows/deploy.yml
+- name: Deploy to Vercel
+  run: vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --debug
+  env:
+    VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+    VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+```
+
+This lets Vercel handle project detection, build, and deployment in one step.
+
+**Why This Works:**
+- `vercel deploy --prod` uses environment variables for authentication
+- Reads `vercel.json` for build configuration
+- No need to manually create `.vercel/project.json` or run `vercel pull`
+- Single command = fewer failure points
+
+**Verification:**
+After updating secrets and pushing changes, check GitHub Actions logs for:
+```
+✓ Deployment started
+✓ Building project
+✓ Deployment complete
+Production: https://codescribe-ai.vercel.app
+```
+
+**Common Pitfalls to Avoid:**
+
+❌ **Don't use values from:**
+- Vercel web dashboard Settings page (may be outdated)
+- `.vercel/project.json` from another machine (machine-specific)
+- Old documentation or screenshots
+
+✅ **Always get fresh values from:**
+- `vercel project inspect [project-name]` (for Project ID)
+- `vercel teams list` (for Org ID/team slug)
+- Vercel Dashboard → Settings → Tokens (for fresh token)
+
+**Debugging Tips:**
+
+If deployment still fails with 404:
+1. **Verify CLI version:** `vercel --version` (should be 48.4.1+)
+2. **Test locally first:** `vercel deploy --prod` from project root
+3. **Check token scope:** Token must have access to the team/project
+4. **Verify secrets exist:** GitHub Settings → Secrets should show 3 secrets
+5. **Check secret names:** Must be EXACTLY `VERCEL_PROJECT_ID`, `VERCEL_ORG_ID`, `VERCEL_TOKEN` (case-sensitive)
+
+**Timeline:**
+- **Hours spent debugging:** ~2 hours
+- **Root cause:** Typo in Project ID (`it2` vs `lt2`) + wrong Org ID format
+- **Fix time:** 5 minutes once correct values identified
+
+**Key Lesson:**
+When GitHub Actions deployment fails but local deployment works, the issue is almost always **incorrect or stale credentials/IDs in GitHub Secrets**, NOT your code or workflow configuration.
+
+**Git Commits:**
+- `671bf43` - Fix environment variable expansion in .vercel/project.json
+- `ba6e499` - Simplify deployment: use vercel deploy directly
+- `74e2212` - Trigger deployment with corrected Vercel credentials
+
+**Date:** October 20, 2025
+
