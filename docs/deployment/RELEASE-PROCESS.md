@@ -1,0 +1,394 @@
+# Release Process Guide
+
+**Project:** CodeScribe AI
+**Last Updated:** October 21, 2025
+
+This guide documents the complete process for shipping a new release, including versioning, tagging, testing, deployment, and post-release tasks.
+
+---
+
+## 📋 Table of Contents
+
+1. [Versioning Strategy](#versioning-strategy)
+2. [Pre-Release Checklist](#pre-release-checklist)
+3. [Release Steps](#release-steps)
+4. [Post-Release Tasks](#post-release-tasks)
+5. [Rollback Procedure](#rollback-procedure)
+6. [Release History](#release-history)
+
+---
+
+## 📌 Versioning Strategy
+
+CodeScribe AI uses **Semantic Versioning (SemVer)** for public releases:
+
+```
+MAJOR.MINOR.PATCH (e.g., v1.3.0, v2.0.0)
+```
+
+- **MAJOR** (v1 → v2): Breaking changes, new product surfaces (CLI, VS Code extension)
+- **MINOR** (v1.3 → v1.4): New features, backwards-compatible additions
+- **PATCH** (v1.3.0 → v1.3.1): Bug fixes, maintenance, security patches
+
+### Phase-to-Version Mapping
+
+| Phase | Version | Description |
+|-------|---------|-------------|
+| Phase 1.0 | v1.0.0 | Initial web application |
+| Phase 1.5 | v1.2.0 | WCAG AA compliance + production deployment |
+| Phase 2 | v1.3.0 | UX improvements (mobile, filename, GitHub import, download) |
+| Phase 3 | v1.4.0 | Layout enhancements (resizable panels, full-width) |
+| Phase 4 | v2.0.0 | OpenAPI/Swagger (5th doc type - major feature) |
+| Phase 5 | v2.1.0 | Multi-file projects (6th doc type) |
+| Phase 6 | v3.0.0 | CLI tool (new product surface) |
+| Phase 7 | v4.0.0 | VS Code extension (new product surface) |
+
+### Tag Naming Convention
+
+```bash
+# Production releases
+v1.3.0                    # Standard release
+v1.3.1                    # Patch release
+v2.0.0                    # Major release
+
+# Phase completion tags (optional, for reference)
+v1.2.0-phase-1.5         # Phase 1.5 completion
+v1.3.0-phase-2           # Phase 2 completion
+```
+
+---
+
+## ✅ Pre-Release Checklist
+
+### 1. Code Quality & Testing
+
+- [ ] All feature branches merged to `main`
+- [ ] Working tree is clean (`git status`)
+- [ ] All tests passing:
+  ```bash
+  # Frontend tests
+  cd client && npm test
+
+  # Backend tests
+  cd server && npm test
+
+  # E2E tests
+  cd client && npm run test:e2e
+  ```
+- [ ] Test coverage meets targets (>90% backend, >70% frontend)
+- [ ] Lighthouse audit scores meet targets:
+  - Performance: ≥75/100
+  - Accessibility: 100/100
+  - Best Practices: ≥90/100
+  - SEO: ≥90/100
+- [ ] axe DevTools scan shows 0 violations
+- [ ] Cross-browser testing completed (Chrome, Firefox, Safari, Edge)
+- [ ] Mobile responsiveness verified (iOS Safari, Android Chrome)
+
+### 2. Documentation
+
+- [ ] `CHANGELOG.md` updated with release notes
+- [ ] `README.md` updated with new features
+- [ ] API documentation updated if endpoints changed
+- [ ] Architecture docs updated if structure changed
+- [ ] Version number updated in `package.json` files
+
+### 3. Security & Performance
+
+- [ ] No secrets committed (scan with git-secrets or similar)
+- [ ] Dependencies audited (`npm audit` clean or justified)
+- [ ] Environment variables documented in `.env.example`
+- [ ] Bundle size checked (frontend should be <100KB gzipped)
+- [ ] API rate limiting tested and configured
+- [ ] CORS settings verified for production
+
+### 4. Deployment Configuration
+
+- [ ] Vercel configuration up to date (`vercel.json`)
+- [ ] Environment variables set in Vercel dashboard
+- [ ] Custom domain configured (if applicable)
+- [ ] CI/CD pipeline tested (GitHub Actions passing)
+- [ ] Deploy hooks configured (if using test-gated deployment)
+
+---
+
+## 🚀 Release Steps
+
+### Step 1: Finalize Version Number
+
+Determine the version based on changes:
+
+```bash
+# View recent commits to assess changes
+git log --oneline --since="1 month ago"
+
+# Decide version (MAJOR.MINOR.PATCH)
+# - New features = MINOR bump (v1.2.0 → v1.3.0)
+# - Bug fixes only = PATCH bump (v1.3.0 → v1.3.1)
+# - Breaking changes = MAJOR bump (v1.x.x → v2.0.0)
+```
+
+### Step 2: Update Version Numbers
+
+```bash
+# Update package.json versions
+cd client
+npm version 1.3.0 --no-git-tag-version
+cd ../server
+npm version 1.3.0 --no-git-tag-version
+cd ..
+
+# Commit version changes
+git add client/package.json server/package.json
+git commit -m "chore: bump version to v1.3.0"
+```
+
+### Step 3: Update CHANGELOG.md
+
+Add release notes following [Keep a Changelog](https://keepachangelog.com/) format:
+
+```markdown
+## [1.3.0] - 2025-10-25
+
+### Added
+- Download button for generated documentation (MD, TXT, HTML formats)
+- Filename display in code editor header
+- GitHub direct file import integration
+- Multi-format download with file type selector
+
+### Changed
+- Improved mobile responsiveness on small screens
+- Enhanced error messages for file upload failures
+
+### Fixed
+- Monaco Editor loading race condition on slow connections
+- Quality score display precision (now shows 1 decimal place)
+
+### Security
+- Updated dependencies to patch CVE-2024-XXXXX
+```
+
+Commit the changelog:
+
+```bash
+git add CHANGELOG.md
+git commit -m "docs: update changelog for v1.3.0"
+```
+
+### Step 4: Create Git Tag
+
+```bash
+# Create annotated tag with release notes
+git tag -a v1.3.0 -m "Release v1.3.0 - UX Improvements
+
+Features:
+- Download button for generated docs (MD, TXT, HTML)
+- Filename display in code editor
+- GitHub direct file import
+- Multi-format download selector
+
+Improvements:
+- Enhanced mobile responsiveness
+- Better error messaging
+
+Bug Fixes:
+- Monaco Editor loading race condition
+- Quality score display precision
+
+🤖 Generated with Claude Code
+https://claude.com/claude-code"
+
+# Verify tag
+git tag -l -n9 v1.3.0
+
+# Push code and tag to GitHub
+git push origin main
+git push origin v1.3.0
+```
+
+### Step 5: Test Deployment
+
+Vercel will auto-deploy when you push to `main`. Monitor the deployment:
+
+1. **Watch Build Logs:**
+   - Go to [Vercel Dashboard](https://vercel.com/dashboard)
+   - Click on your project
+   - Monitor the deployment in progress
+
+2. **Verify Deployment:**
+   ```bash
+   # Health check
+   curl https://codescribeai.com/api/health
+
+   # Test new features
+   # (Manual testing checklist based on release changes)
+   ```
+
+3. **Run Smoke Tests:**
+   - Visit production URL
+   - Test critical user flows:
+     - Code input → Generate docs → View results
+     - File upload → Generate docs → Download
+     - Mobile view (responsive design)
+   - Check browser console for errors
+
+### Step 6: Create GitHub Release
+
+1. Go to [GitHub Releases](https://github.com/YOUR_USERNAME/codescribe-ai/releases)
+2. Click "Draft a new release"
+3. Choose tag: `v1.3.0`
+4. Release title: `v1.3.0 - UX Improvements`
+5. Description: Copy from CHANGELOG.md
+6. Attach any release assets (screenshots, binaries, etc.)
+7. Click "Publish release"
+
+**Or use GitHub CLI:**
+
+```bash
+gh release create v1.3.0 \
+  --title "v1.3.0 - UX Improvements" \
+  --notes "$(cat << 'EOF'
+## Features
+- Download button for generated documentation (MD, TXT, HTML formats)
+- Filename display in code editor header
+- GitHub direct file import integration
+- Multi-format download with file type selector
+
+## Improvements
+- Enhanced mobile responsiveness on small screens
+- Better error messages for file upload failures
+
+## Bug Fixes
+- Monaco Editor loading race condition on slow connections
+- Quality score display precision (now shows 1 decimal place)
+
+## Security
+- Updated dependencies to patch CVE-2024-XXXXX
+
+---
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+EOF
+)"
+```
+
+---
+
+## 📝 Post-Release Tasks
+
+### Immediate (Within 1 Hour)
+
+- [ ] Verify production deployment is live
+- [ ] Test critical user flows on production
+- [ ] Monitor error logs (Vercel, browser console)
+- [ ] Check Anthropic API usage for spikes
+- [ ] Announce release internally (if applicable)
+
+### First 24 Hours
+
+- [ ] Monitor Vercel analytics for traffic patterns
+- [ ] Watch for error alerts or unexpected behavior
+- [ ] Check GitHub Issues for new bug reports
+- [ ] Review user feedback (if any)
+- [ ] Update project status in README.md
+
+### Within 1 Week
+
+- [ ] Write blog post or case study (optional)
+- [ ] Share on social media (LinkedIn, Twitter, etc.)
+- [ ] Update portfolio with new features
+- [ ] Plan next sprint/phase based on learnings
+- [ ] Document any deployment issues in DEPLOYMENT-LEARNINGS.md
+
+### Optional Marketing
+
+- [ ] Submit to Product Hunt / Hacker News
+- [ ] Share in developer communities (Reddit, Dev.to)
+- [ ] Create demo video showcasing new features
+- [ ] Update demo screenshots in README
+
+---
+
+## 🔄 Rollback Procedure
+
+If critical issues are discovered post-release:
+
+### Option 1: Rollback in Vercel (Fastest)
+
+1. Go to Vercel Dashboard → Deployments
+2. Find the previous stable deployment
+3. Click "..." → "Promote to Production"
+4. Previous version is now live (~30 seconds)
+
+### Option 2: Revert Git Tag (Permanent Fix)
+
+```bash
+# Revert the problematic commit(s)
+git revert HEAD~1
+
+# Or reset to previous tag (use with caution)
+git reset --hard v1.2.0
+
+# Force push (only if absolutely necessary)
+git push origin main --force
+
+# Delete bad tag
+git tag -d v1.3.0
+git push origin :refs/tags/v1.3.0
+```
+
+### Option 3: Hot Fix Release
+
+```bash
+# Create hotfix branch from last stable tag
+git checkout -b hotfix/v1.3.1 v1.3.0
+
+# Fix the issue
+# ... make changes ...
+
+# Commit and tag
+git commit -m "fix: critical bug in download feature"
+git tag -a v1.3.1 -m "Hotfix: fix critical download bug"
+
+# Push and deploy
+git push origin hotfix/v1.3.1
+git push origin v1.3.1
+
+# Merge back to main
+git checkout main
+git merge hotfix/v1.3.1
+git push origin main
+```
+
+---
+
+## 📊 Release History
+
+| Version | Date | Phase | Description |
+|---------|------|-------|-------------|
+| v1.2.0 | Oct 19, 2025 | Phase 1.5 | Production deployment + WCAG AA compliance |
+| v1.1.0 | Oct 16, 2025 | Phase 1.0 | Initial web application (pre-production) |
+| v1.0.0 | Oct 11, 2025 | Phase 1.0 | MVP complete (development) |
+
+---
+
+## 🔗 Related Documentation
+
+- **[DEPLOYMENT-CHECKLIST.md](./DEPLOYMENT-CHECKLIST.md)** - Initial deployment setup
+- **[DEPLOYMENT-LEARNINGS.md](./DEPLOYMENT-LEARNINGS.md)** - Deployment insights and troubleshooting
+- **[ROADMAP.md](../planning/ROADMAP.md)** - Product roadmap and phase planning
+- **[CHANGELOG.md](../../CHANGELOG.md)** - Complete change history
+- **[README.md](../../README.md)** - Project overview and status
+
+---
+
+## 📞 Release Manager
+
+**Current Release Manager:** Jenni Coleman
+**Contact:** GitHub Issues
+**Emergency Rollback Authority:** Project Owner
+
+---
+
+**Last Release:** v1.2.0 (October 19, 2025)
+**Next Planned Release:** v1.3.0 (Phase 2 - UX Improvements)
