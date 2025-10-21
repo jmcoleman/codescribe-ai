@@ -1095,9 +1095,27 @@ VITE_API_URL=http://localhost:3000
 
 ---
 
+## 🌐 Official Documentation Links
+
+Reference these authoritative sources when implementing features or troubleshooting:
+
+- **[Vercel Documentation](https://vercel.com/docs)** - Deployment platform
+- **[GitHub Actions](https://docs.github.com/en/actions)** - CI/CD workflows
+- **[Anthropic Claude API](https://docs.anthropic.com/)** - AI integration
+- **[React](https://react.dev/)** - Frontend library
+- **[Vite](https://vitejs.dev/)** - Build tool
+- **[Tailwind CSS](https://tailwindcss.com/docs)** - Styling framework
+- **[Node.js](https://nodejs.org/docs/)** - Backend runtime
+- **[Express](https://expressjs.com/)** - Web framework
+- **[Vitest](https://vitest.dev/)** - Testing framework
+- **[WCAG 2.1](https://www.w3.org/WAI/WCAG21/quickref/)** - Accessibility standards
+
+---
+
 ## 🔄 Version History
 
-- **v1.22** (Current) - Deployment Fix & Design Archive Organization: Fixed Vercel deployment failures caused by HTML files with broken SVG references; moved design exploration files to private/design-archive/ (favicon-comparison.html with references to non-existent favicon-letter.svg and favicon-abstract.svg, GRAPHICS-FINAL-SUMMARY.md, GRAPHICS-README.md); updated CLAUDE.md project structure to document design-archive/ location and all production design files (brand-color-palette, error-boundary-ui-guide, generate-graphics); added "Design exploration" to private folder contents list; deployment now succeeds with only valid production assets
+- **v1.23** (Current) - Test-Gated Deployment Implementation: Implemented production-grade CI/CD pipeline using Vercel Deploy Hooks triggered by GitHub Actions after tests pass; added vercel.json git.deploymentEnabled configuration to disable automatic Git deployments; added deploy job to test.yml workflow with needs dependencies on all test jobs; created Issue #9 in DEPLOYMENT-LEARNINGS.md with complete implementation guide; updated VERCEL-CONFIGURATION.md with recommended deployment method and updated checklists; added External Documentation Links section to CLAUDE.md with Vercel and GitHub Actions references; documented hybrid approach combining Vercel reliability with test-gating (best of both worlds); resolved duplicate deployment issue (Git Integration + Deploy Hook competing); deployment now only occurs after all tests pass successfully
+- **v1.22** - Deployment Fix & Design Archive Organization: Fixed Vercel deployment failures caused by HTML files with broken SVG references; moved design exploration files to private/design-archive/ (favicon-comparison.html with references to non-existent favicon-letter.svg and favicon-abstract.svg, GRAPHICS-FINAL-SUMMARY.md, GRAPHICS-README.md); updated CLAUDE.md project structure to document design-archive/ location and all production design files (brand-color-palette, error-boundary-ui-guide, generate-graphics); added "Design exploration" to private folder contents list; deployment now succeeds with only valid production assets
 - **v1.21** - Production Deployment Complete: Updated all documentation to reflect Phase 1.5 completion including production deployment (Oct 17-19, 2025); application now live at codescribe-ai.vercel.app; updated Current Phase Status with deployment achievements (Vercel setup, CI/CD, security hardening, build optimization); marked all Phase 1.5 days as 100% complete; added Production Application section with live demo link and key features; updated PRD with Day 10 deployment milestone; updated README Development Status with deployment phase details; captured deployment learnings (environment security, dependency restructuring, API configuration, monorepo support); all major deliverables achieved (accessibility compliance, production deployment, CI/CD pipeline, security measures)
 - **v1.20** - Phase 1.5 Status Update: Updated Current Phase Status section to reflect Phase 1 completion and Phase 1.5 substantial completion (95/100 accessibility score, Lighthouse 100/100); detailed breakdown of Days 6-10 implementation status (Days 6-7: 100%, Day 8: 90%, Day 9: 50%, Day 10: 10%); updated PRD Phase 1.5 section with detailed completion status and success criteria achieved; updated README Development Status section with Phase 1.5 accomplishments; updated Todo List Phase 1.5 overview with production-ready status; all documentation now reflects current accessibility compliance state and remaining optional manual testing recommendations
 - **v1.19** - Added E2E Testing Best Practices: Created comprehensive section 6 "E2E Testing Best Practices" with critical guidelines for writing reliable cross-browser tests; includes detailed patterns for waiting on actual events (network responses, DOM changes, lazy-loaded components) vs arbitrary timeouts; real-world file upload fix example showing 1/5 to 5/5 browser pass rate improvement; testing checklist and debugging flowchart for flaky tests; renumbered subsequent sections (Timezone → 7, Mermaid → 8, Package Versions → 9)
