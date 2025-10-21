@@ -1,17 +1,22 @@
 # CodeScribe AI Testing Documentation
 
 **Project:** CodeScribe AI - Intelligent Code Documentation Generator
-**Testing Status:** ✅ Comprehensive Coverage (72.2%)
-**Last Updated:** October 16, 2025
+**Testing Status:** ✅ Comprehensive Coverage Across 3 Frameworks
+**Last Updated:** October 21, 2025
 
 ---
 
 ## 📊 Quick Stats
 
-- **Total Tests:** 319 (100% passing)
-- **Component Coverage:** 72.2% (13/18 components)
-- **Test Execution Time:** ~2.5 seconds
-- **Coverage Target:** 70% ✅ EXCEEDED
+- **Total Tests:** 660+ (100% passing)
+  - **Frontend:** 513+ tests (Vitest + React Testing Library)
+  - **Backend:** 133+ tests (Jest + Supertest)
+  - **E2E:** 10 tests (Playwright across 5 browsers)
+- **Component Coverage:** 13/18 frontend components tested (5 intentionally skipped)
+- **Backend Coverage:** 95.81% statements, 88.72% branches
+- **E2E Pass Rate:** 100% (10/10 tests across 5 browsers)
+- **Test Execution Time:** Frontend ~2.5s, Backend ~5s, E2E ~2-4min
+- **Coverage Target:** 70% ✅ EXCEEDED (95.81% backend)
 
 ---
 
@@ -22,8 +27,8 @@
 #### [Component Test Coverage](./COMPONENT-TEST-COVERAGE.md) ⭐ **START HERE**
 **Complete overview of all component tests**
 
-- ✅ **319 tests** - All passing (100%)
-- ✅ **13/18 components** - Fully tested (72.2%)
+- ✅ **513+ frontend tests** - All passing (100%)
+- ✅ **13/18 components** - Fully tested (5 intentionally skipped)
 - ✅ **Recent additions:** CodePanel (43), RateLimitIndicator (40), Select (41)
 
 **Key Features:**

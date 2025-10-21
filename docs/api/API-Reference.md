@@ -1124,7 +1124,7 @@ npm run test:e2e:webkit       # WebKit (Safari) only
 - [CLAUDE.md](../../CLAUDE.md) - Comprehensive documentation map and quick reference
 
 ### Architecture
-- [04-Architecture.md](../architecture/04-Architecture.md) - System architecture diagram (Mermaid)
+- [ARCHITECTURE-OVERVIEW.md](../architecture/ARCHITECTURE-OVERVIEW.md) - System architecture diagram (Mermaid)
 - [ARCHITECTURE.md](../architecture/ARCHITECTURE.md) - Deep architecture overview with data flows
 
 ### Testing

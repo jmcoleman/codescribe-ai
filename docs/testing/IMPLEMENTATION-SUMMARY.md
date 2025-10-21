@@ -254,7 +254,7 @@ Common test utilities:
   - **Lint job**: Code formatting checks
   - **Security job**: Dependency audits
   - **Coverage upload**: Codecov integration
-  - **Matrix strategy**: Node.js 20.x
+  - **Matrix strategy**: Node.js 22.x (v22.19.0)
   - **Environment variables**: Test configuration
 
 ---

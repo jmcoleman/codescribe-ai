@@ -101,7 +101,7 @@ codescribe-ai/
 │   │   ├── README.md
 │   │   └── API-Reference.md
 │   ├── architecture/              # Architecture documentation
-│   │   ├── 04-Architecture.md
+│   │   ├── ARCHITECTURE-OVERVIEW.md
 │   │   └── ARCHITECTURE.md
 │   ├── performance/               # Performance optimization
 │   │   └── OPTIMIZATION-GUIDE.md
@@ -1823,7 +1823,7 @@ app.use('/api/', limiter);
   - Lighthouse auditing
 
 ### Architecture Documentation
-- [04-Architecture.md](../architecture/04-Architecture.md) - System architecture diagram
+- [ARCHITECTURE-OVERVIEW.md](../architecture/ARCHITECTURE-OVERVIEW.md) - System architecture diagram
 - [ARCHITECTURE.md](../architecture/ARCHITECTURE.md) - Deep technical architecture
 
 ### API Documentation

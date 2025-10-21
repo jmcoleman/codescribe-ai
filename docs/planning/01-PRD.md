@@ -357,7 +357,7 @@ GET /api/health
 - ✅ API URL centralization (config-based approach)
 - ✅ Monorepo detection and configuration
 - ✅ Production deployment checklist completion
-- **Milestone:** ✅ Application deployed to production at [codescribe-ai.vercel.app](https://codescribe-ai.vercel.app)
+- **Milestone:** ✅ Application deployed to production at [codescribeai.com](https://codescribeai.com) (custom domain)
 
 **Success Criteria Achieved:**
 - ✅ 25/25 accessibility issues from assessment resolved

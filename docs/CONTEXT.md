@@ -41,7 +41,7 @@ For the **comprehensive documentation map** with descriptions of when to use eac
 - [03-Todo-List.md](planning/03-Todo-List.md) - Day-by-day implementation tasks
 
 **Development & Architecture:**
-- [04-Architecture.md](architecture/04-Architecture.md) - Visual system diagram (Mermaid)
+- [ARCHITECTURE-OVERVIEW.md](architecture/ARCHITECTURE-OVERVIEW.md) - Visual system diagram (Mermaid)
 - [ARCHITECTURE.md](architecture/ARCHITECTURE.md) - Deep technical architecture
 - [05-Dev-Guide.md](planning/05-Dev-Guide.md) - Implementation guide with code examples
 
@@ -289,7 +289,7 @@ npm run versions      # Check all package versions
 **Need product requirements?** → [01-PRD.md](planning/01-PRD.md)
 **Need implementation details?** → [05-Dev-Guide.md](planning/05-Dev-Guide.md)
 **Need API specs?** → [API-Reference.md](api/API-Reference.md)
-**Need architecture info?** → [04-Architecture.md](architecture/04-Architecture.md) or [ARCHITECTURE.md](architecture/ARCHITECTURE.md)
+**Need architecture info?** → [ARCHITECTURE-OVERVIEW.md](architecture/ARCHITECTURE-OVERVIEW.md) or [ARCHITECTURE.md](architecture/ARCHITECTURE.md)
 **Need design guidance?** → [07-Figma-Guide.md](planning/07-Figma-Guide.md)
 **Need performance info?** → [OPTIMIZATION-GUIDE.md](performance/OPTIMIZATION-GUIDE.md)
 **Need analytics info?** → [ANALYTICS.md](analytics/ANALYTICS.md)

@@ -36,7 +36,7 @@ Mermaid is a JavaScript-based diagramming and charting tool that uses markdown-i
 
 ### Why We Use Mermaid in CodeScribe AI
 
-1. **System Architecture Visualization**: We use Mermaid to create our main system architecture diagram in [04-Architecture.md](../architecture/04-Architecture.md)
+1. **System Architecture Visualization**: We use Mermaid to create our main system architecture diagram in [ARCHITECTURE-OVERVIEW.md](../architecture/ARCHITECTURE-OVERVIEW.md)
 2. **AI-Generated Diagrams**: The AI can generate Mermaid diagrams as part of documentation
 3. **Interactive Documentation**: Users can see live-rendered diagrams in the DocPanel
 4. **Brand Consistency**: Custom theming ensures diagrams match our brand colors
@@ -45,7 +45,7 @@ Mermaid is a JavaScript-based diagramming and charting tool that uses markdown-i
 
 | Location | Purpose | Type |
 |----------|---------|------|
-| [04-Architecture.md](../architecture/04-Architecture.md) | System architecture overview | Flowchart (graph TB) |
+| [ARCHITECTURE-OVERVIEW.md](../architecture/ARCHITECTURE-OVERVIEW.md) | System architecture overview | Flowchart (graph TB) |
 | [MermaidDiagram.jsx](../../client/src/components/MermaidDiagram.jsx) | React rendering component | Component |
 | [DocPanel.jsx](../../client/src/components/DocPanel.jsx) | Markdown integration | Integration |
 | [mermaid-preview.html](../architecture/mermaid-preview.html) | Standalone preview tool | Preview |
@@ -225,7 +225,7 @@ class NodeName phase2
 
 ### Complete Pattern Example
 
-See [04-Architecture.md](../architecture/04-Architecture.md) for a full implementation of all these patterns.
+See [ARCHITECTURE-OVERVIEW.md](../architecture/ARCHITECTURE-OVERVIEW.md) for a full implementation of all these patterns.
 
 ---
 
@@ -657,7 +657,7 @@ stateDiagram-v2
 
 ### Example 4: Full System Architecture
 
-See [04-Architecture.md](../architecture/04-Architecture.md) for our complete system architecture diagram implementation.
+See [ARCHITECTURE-OVERVIEW.md](../architecture/ARCHITECTURE-OVERVIEW.md) for our complete system architecture diagram implementation.
 
 ---
 
@@ -1125,7 +1125,7 @@ const validateMermaidSyntax = (code) => {
 - **GitHub Syntax**: https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-diagrams
 
 ### CodeScribe AI Resources
-- [System Architecture](../architecture/04-Architecture.md) - Full diagram implementation
+- [System Architecture](../architecture/ARCHITECTURE-OVERVIEW.md) - Full diagram implementation
 - [Architecture Deep Dive](../architecture/ARCHITECTURE.md) - Technical details
 - [Brand Colors](../design/brand-color-palette.html) - Interactive color palette
 - [Figma Guide](../planning/07-Figma-Guide.md) - Design system

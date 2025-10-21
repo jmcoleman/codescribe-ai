@@ -1,11 +1,11 @@
 # CodeScribe AI - Architecture Deep Dive
 
-**Version:** 1.1
-**Last Updated:** October 16, 2025
-**Status:** Production Ready - Phase 1 Complete
+**Version:** 1.2
+**Last Updated:** October 21, 2025
+**Status:** Production Ready - Phase 1.5 Complete (Deployed)
 **Model:** Claude Sonnet 4.5 (claude-sonnet-4-20250514)
 
-> **Quick Reference:** For a visual architecture diagram and overview, see [04-Architecture.md](04-Architecture.md)
+> **Quick Reference:** For a visual architecture diagram and overview, see [ARCHITECTURE-OVERVIEW.md](ARCHITECTURE-OVERVIEW.md)
 > **Purpose:** This document provides comprehensive technical architecture details reflecting the actual production implementation, including all components, services, middleware, and design patterns currently in use.
 
 ---
@@ -123,11 +123,12 @@ CodeScribe AI is a **stateless, real-time documentation generation platform** th
 ### Architecture Layers
 
 **1. Presentation Layer (Client)**
-- **React 19** with Vite for fast dev server and optimized builds
+- **React 19.2.0** with Vite 7.1.9 for fast dev server and optimized builds
 - **Lazy Loading**: DocPanel, modals, Monaco Editor, Mermaid renderer
-- **Component Library**: 20+ components with comprehensive test coverage
+- **Component Library**: 20+ components with comprehensive test coverage (660+ tests)
 - **State Management**: React hooks (useState, useCallback, useEffect, useRef)
 - **Custom Hooks**: useDocGeneration, useToastKeyboardShortcuts
+- **Accessibility**: WCAG 2.1 AA compliant (95/100 Lighthouse score, 0 violations)
 - **Responsible for**: UI rendering, user input, code editing (Monaco), markdown display
 
 **2. Application Layer (Server)**
@@ -155,13 +156,18 @@ CodeScribe AI is a **stateless, real-time documentation generation platform** th
 | Technology | Version | Purpose | Implementation Details |
 |------------|---------|---------|------------------------|
 | React | 19.2.0 | UI framework | Hooks-based, no class components |
+| React DOM | 19.2.0 | React renderer | DOM-specific rendering methods |
 | Vite | 7.1.9 | Build tool | Fast HMR, bundle optimization with rollup-plugin-visualizer |
 | Tailwind CSS | 3.4.18 | Utility styling | Custom animations for errors, toasts, modals |
 | Monaco Editor | @monaco-editor/react 4.7.0 | Code editing | Lazy loaded, syntax highlighting |
 | react-markdown | 10.1.0 | Markdown rendering | Lazy loaded via DocPanel |
+| react-syntax-highlighter | 15.6.6 | Code highlighting | Syntax highlighting in markdown code blocks |
+| remark-gfm | 4.0.1 | GitHub Flavored Markdown | Extended markdown support (tables, task lists) |
 | Mermaid | 11.12.0 | Diagram rendering | Lazy loaded renderer component |
 | react-hot-toast | 2.6.0 | Notifications | Custom toast components with history |
 | Lucide React | 0.545.0 | Icon library | Tree-shakeable icons |
+| @headlessui/react | 2.2.9 | Headless UI components | Accessible select dropdowns, modals |
+| focus-trap-react | 11.0.4 | Focus management | Modal focus trapping for accessibility |
 
 **Performance Optimizations:**
 - Lazy loading reduces initial bundle: 516KB → 78KB gzipped (-85%)
@@ -173,13 +179,15 @@ CodeScribe AI is a **stateless, real-time documentation generation platform** th
 
 | Technology | Version | Purpose | Implementation Details |
 |------------|---------|---------|------------------------|
-| Node.js | 20+ | JavaScript runtime | ES modules (import/export) |
+| Node.js | 22.19.0 | JavaScript runtime | ES modules (import/export) |
+| npm | 11.6.0 | Package manager | Workspaces for monorepo |
 | Express | 5.1.0 | Web framework | Middleware-driven architecture |
 | @anthropic-ai/sdk | 0.65.0 | Claude API | Streaming support via async iterators |
 | Acorn | 8.15.0 | AST parser | JavaScript/TypeScript parsing |
 | Multer | 2.0.2 | File upload | Memory storage, 500KB limit |
 | express-rate-limit | 8.1.0 | Rate limiting | 2 limiters: per-minute + hourly |
 | cors | 2.8.5 | CORS handling | Exposes rate limit headers |
+| dotenv | 17.2.3 | Environment variables | Secure API key management |
 
 **Service Architecture:**
 - **Singleton Pattern**: Single instance of each service (ClaudeClient, DocGeneratorService)
@@ -190,10 +198,12 @@ CodeScribe AI is a **stateless, real-time documentation generation platform** th
 
 | Service | Purpose | Status |
 |---------|---------|--------|
-| Vercel | Frontend hosting + API routes | Planned |
-| Environment Variables | API key management | Implemented (.env) |
-| HTTPS | Secure communication | Vercel-managed |
-| Fetch API Streaming | Real-time updates | Implemented (ReadableStream) |
+| Vercel | Frontend hosting + API routes | ✅ Deployed (codescribeai.com) |
+| GitHub Actions | CI/CD pipeline | ✅ Test-gated deployment with Deploy Hooks |
+| Environment Variables | API key management | ✅ Implemented (.env + Vercel secrets) |
+| HTTPS | Secure communication | ✅ Vercel-managed |
+| Fetch API Streaming | Real-time updates | ✅ Implemented (ReadableStream) |
+| Git | Version control | git 2.51.0 |
 
 ---
 
@@ -772,14 +782,14 @@ file: [Binary file data]
 ```javascript
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production'
-    ? 'https://codescribe-ai.vercel.app'
+    ? 'https://codescribeai.com'
     : ['http://localhost:5173', 'http://localhost:5174'],
   credentials: true,
   exposedHeaders: ['X-RateLimit-Limit', 'X-RateLimit-Remaining', 'X-RateLimit-Reset']
 };
 ```
 
-**Production:** Strict origin check
+**Production:** Strict origin check (custom domain: codescribeai.com)
 **Development:** Allow local Vite servers
 
 ### 4. Rate Limiting (DDoS Protection)
@@ -934,21 +944,24 @@ cd server && npm start
 **Environment Variables (Vercel):**
 - `CLAUDE_API_KEY`: Anthropic API key
 - `NODE_ENV`: production
-- `VITE_API_URL`: https://codescribe-ai.vercel.app
+- `VITE_API_URL`: https://codescribeai.com (custom domain)
 
-### CI/CD Pipeline (Future)
+### CI/CD Pipeline ✅ **IMPLEMENTED**
 
 **GitHub Actions Workflow:**
 1. Trigger: Push to `main` branch
 2. Install dependencies: `npm run install:all`
 3. Run tests: `npm test` (client + server)
+   - ✅ 660+ tests must pass before deployment
 4. Build frontend: `cd client && npm run build`
-5. Deploy to Vercel: Automatic via Git integration
+5. Deploy to Vercel: Test-gated deployment via Deploy Hooks
+   - ✅ Only deploys after all tests pass
 
 **Testing Strategy:**
-- Unit tests: Jest + React Testing Library
-- Integration tests: API endpoint testing
-- E2E tests: Future (Playwright)
+- ✅ Unit tests: Jest + Vitest + React Testing Library (660+ tests)
+- ✅ Integration tests: API endpoint testing with Supertest
+- ✅ E2E tests: Playwright (10 tests across 5 browsers, 100% pass rate)
+- ✅ Backend coverage: 95.81% statements, 88.72% branches
 
 ---
 
@@ -1063,8 +1076,8 @@ codescribe-ai/
 │   └── package.json
 ├── docs/                       # Documentation
 │   ├── architecture/
-│   │   ├── 04-Architecture.md  # Visual diagram
-│   │   └── ARCHITECTURE.md     # This file
+│   │   ├── ARCHITECTURE-OVERVIEW.md  # Visual diagram
+│   │   └── ARCHITECTURE.md     # This file (deep dive)
 │   ├── planning/
 │   ├── api/
 │   ├── components/
@@ -1074,6 +1087,6 @@ codescribe-ai/
 
 ---
 
-**Document Version:** 1.1
-**Last Updated:** October 16, 2025
+**Document Version:** 1.2
+**Last Updated:** October 21, 2025
 **Next Review:** Phase 2 planning
