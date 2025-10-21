@@ -7,15 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Planned
-- User accounts and saved documentation history
-- API usage dashboard
-- Custom documentation templates
-- Batch documentation generation
+### Added
+- (Features added since last release will be listed here)
+
+### Changed
+- (Changes to existing functionality will be listed here)
+
+### Fixed
+- (Bug fixes will be listed here)
 
 ---
 
-## [1.0.0] - 2025-10-19
+## [1.2.0] - 2025-10-19
 
 **Status:** ✅ Production Release - [codescribeai.com](https://codescribeai.com)
 
