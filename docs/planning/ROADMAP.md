@@ -236,14 +236,218 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 
 ---
 
-## 📋 Phase 2: CLI Tool (PLANNED)
+## 🔧 Phase 2: UX Improvements (PLANNED)
 
-**Timeline:** TBD (after MVP deployment)
+**Timeline:** TBD (after production deployment)
 **Estimated Duration:** 2-3 days
 **Status:** 📋 **NOT STARTED**
-**Goal:** Terminal-based documentation generation
+**Target Release:** v1.3.0
+**Goal:** Enhance user experience with mobile fixes, GitHub integration, and download capabilities
 
 ### Planned Features
+- [ ] **Mobile Issues Fix** - Address mobile responsiveness and usability issues
+- [ ] **Filename Display** - Show filename/code unit name at top of Monaco Editor
+- [ ] **GitHub Single-File Import** - Load code files directly from GitHub URLs
+- [ ] **Download Button** - Export generated documentation to multiple formats
+
+### Technical Details
+
+**Filename Display:**
+- Add header bar above Monaco Editor
+- Display current filename or code unit name
+- Show file type icon (JavaScript, Python, etc.)
+- Breadcrumb-style for better context
+
+**GitHub Single-File Import:**
+- Support GitHub raw file URLs
+- Parse GitHub repository URLs and convert to raw
+- Add "Load from GitHub" button in ControlBar
+- Client-side fetch (no backend needed)
+- Example: `https://github.com/user/repo/blob/main/file.js` → `https://raw.githubusercontent.com/user/repo/main/file.js`
+
+**Download Button:**
+- Add download button to DocPanel (next to copy button)
+- Support multiple formats:
+  - Markdown (.md) - default
+  - Plain text (.txt)
+  - HTML (rendered version)
+- Use filename from current file if available (e.g., "authentication-service-README.md")
+- Implement using browser download API (no backend needed)
+
+**Mobile Fixes:**
+- Review mobile-specific issues (TBD by user)
+- Ensure responsive design works on smaller screens
+- Test on real devices (iOS Safari, Android Chrome)
+
+### Success Criteria
+- [ ] Mobile issues resolved and tested on real devices
+- [ ] Filename displays correctly for uploaded files and examples
+- [ ] GitHub import works with raw URLs and repository URLs
+- [ ] Download button exports docs in all 3 formats
+- [ ] No regressions in existing features
+
+---
+
+## 📋 Phase 3: Layout Enhancements (PLANNED)
+
+**Timeline:** TBD (after Phase 2)
+**Estimated Duration:** 3-4 days
+**Status:** 📋 **NOT STARTED**
+**Target Release:** v1.4.0
+**Goal:** Enhanced layout with full-width design and resizable panels
+
+**Note:** Can ship incrementally (full-width first, then resizable panels) or together as v1.4.0.
+
+### Planned Features
+
+**Full-Width Layout:**
+- [ ] Remove `max-width` constraints on main container
+- [ ] Allow app to use full browser width
+- [ ] Keep responsive padding (px-4, px-6, px-8)
+- [ ] Add `max-w-prose` on DocPanel markdown content only (readability)
+- [ ] Test on multiple monitor sizes (1920px, 2560px, 3440px ultra-wide)
+
+**Resizable Panels:**
+- [ ] Add `react-resizable-panels` dependency
+- [ ] Draggable divider between CodePanel and DocPanel
+- [ ] Save panel sizes to localStorage (persist user preference)
+- [ ] Panel constraints: 30% min, 70% max for each panel
+- [ ] "Reset to Default" button (50/50 split)
+- [ ] Keyboard accessibility (arrow keys to resize)
+- [ ] Mobile: panels stack vertically (no resizing)
+
+### Technical Implementation
+
+**Full-Width Layout:**
+- Remove `max-w-7xl` from main container
+- App container goes from 1280px → 100vw
+- Limit line length in DocPanel to 80-100 characters for readability
+
+**Resizable Panels:**
+```javascript
+// Panel constraints
+const PANEL_CONSTRAINTS = {
+  code: { min: 30, max: 70, default: 50 },
+  doc: { min: 30, max: 70, default: 50 }
+};
+
+// Usage with react-resizable-panels
+<PanelGroup direction="horizontal" onLayout={saveSizesToLocalStorage}>
+  <Panel defaultSize={50} minSize={30} maxSize={70}>
+    <CodePanel />
+  </Panel>
+  <PanelResizeHandle className="w-2 bg-slate-200 hover:bg-purple-500" />
+  <Panel defaultSize={50} minSize={30} maxSize={70}>
+    <DocPanel />
+  </Panel>
+</PanelGroup>
+```
+
+**localStorage Best Practices:**
+- Namespace key: `codescribe-panel-sizes`
+- Validate stored data before using
+- Handle edge cases (disabled localStorage, corrupt data)
+- Mobile exception: don't persist, always stack
+
+### Success Criteria
+- [ ] App uses full browser width on large monitors
+- [ ] Doc text remains readable (not too wide)
+- [ ] Panels resize smoothly with draggable handle
+- [ ] Panel sizes persist across page refreshes
+- [ ] Constraints prevent panels from becoming unusable
+- [ ] Keyboard users can resize panels
+- [ ] Mobile users see stacked panels (no resizing)
+- [ ] Reset button works correctly
+- [ ] Responsive behavior unchanged on mobile/tablet
+- [ ] No regressions in existing features
+
+---
+
+## 📋 Phase 4: OpenAPI/Swagger Generation (PLANNED)
+
+**Timeline:** TBD (after Phase 3)
+**Estimated Duration:** 3-4 days
+**Status:** 📋 **NOT STARTED**
+**Target Release:** v2.0.0
+**Goal:** 5th documentation type for API specifications
+
+### Planned Features
+- [ ] New doc type: "OPENAPI" or "SWAGGER"
+- [ ] AI-powered generation from code
+- [ ] Output in YAML format (OpenAPI 3.0 specification)
+- [ ] Quality scoring with 5 criteria (0-100 scale)
+- [ ] Reuse existing service layer architecture
+
+### Quality Scoring Criteria
+1. API overview and metadata (20 points)
+2. Endpoint documentation completeness (25 points)
+3. Schema definitions (20 points)
+4. Examples and request/response samples (20 points)
+5. Security and authentication docs (15 points)
+
+### Technical Approach
+- Add "OPENAPI" to docType dropdown
+- Create new AI prompt template for Swagger generation
+- Parse code for API routes/endpoints (Express, Flask, FastAPI, etc.)
+- Generate YAML output (industry standard)
+- Add Swagger-specific quality scoring algorithm
+
+### Success Criteria
+- [ ] OpenAPI generation works with quality scoring
+- [ ] Output valid OpenAPI 3.0 YAML
+- [ ] Quality score provides actionable feedback
+- [ ] Works with Express, Flask, FastAPI code examples
+- [ ] Documentation and examples added
+
+---
+
+## 📋 Phase 5: Multi-File Project Documentation (PLANNED)
+
+**Timeline:** TBD (after Phase 4)
+**Estimated Duration:** 4-5 days
+**Status:** 📋 **NOT STARTED**
+**Target Release:** v2.1.0
+**Goal:** 6th documentation type for entire projects
+
+- [ ] Accept multiple files or directory structures
+- [ ] Analyze project-wide architecture
+- [ ] Generate comprehensive README for entire project
+- [ ] Cross-reference between files
+- [ ] Identify project patterns (MVC, microservices, monorepo, etc.)
+- [ ] Quality scoring for project-level documentation
+
+### Technical Approach
+- New file upload: support multiple files or .zip upload
+- Parse directory structure and file relationships
+- Identify entry points (package.json, main.py, etc.)
+- Analyze imports/exports to understand architecture
+- Generate holistic project documentation
+- Reuse existing quality scoring with project-level criteria
+
+### Quality Scoring Criteria (Project-Level)
+1. Project overview and purpose (20 points)
+2. Architecture and structure (25 points)
+3. Setup and installation (15 points)
+4. Usage examples and workflows (20 points)
+5. Documentation completeness (20 points)
+
+### Success Criteria
+- [ ] Multi-file upload works smoothly
+- [ ] Project structure analysis is accurate
+- [ ] Generated README covers entire project
+- [ ] Cross-references between files make sense
+- [ ] Quality score reflects project documentation quality
+
+---
+
+## 📋 Phase 6: CLI Tool (PLANNED)
+
+**Timeline:** TBD (after Phase 5)
+**Estimated Duration:** 5-7 days
+**Status:** 📋 **NOT STARTED**
+**Target Release:** v3.0.0
+**Goal:** Terminal-based documentation generation
+
 - [ ] Command-line interface (Commander.js)
 - [ ] File path support (single file or directory)
 - [ ] Batch processing (multiple files)
@@ -261,21 +465,21 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 
 ### Success Criteria
 - [ ] Generate docs for single file via CLI
-- [ ] All 4 doc types supported (README, JSDoc, API, ARCHITECTURE)
+- [ ] All doc types supported (README, JSDoc, API, ARCHITECTURE, OPENAPI, PROJECT)
 - [ ] Published to npm registry
 - [ ] CLI documentation complete
 - [ ] Works on Windows, macOS, Linux
 
 ---
 
-## 📋 Phase 3: VS Code Extension (PLANNED)
+## 📋 Phase 7: VS Code Extension (PLANNED)
 
-**Timeline:** TBD
-**Estimated Duration:** 4-5 days
+**Timeline:** TBD (after Phase 6)
+**Estimated Duration:** 7-10 days
 **Status:** 📋 **NOT STARTED**
+**Target Release:** v4.0.0
 **Goal:** Deep VS Code editor integration
 
-### Planned Features
 - [ ] Right-click "Generate Documentation" menu
 - [ ] Inline documentation preview
 - [ ] Automatic file updates (create/overwrite docs)
@@ -292,14 +496,14 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 
 ### Success Criteria
 - [ ] Generate docs from within VS Code
-- [ ] All 4 doc types supported
+- [ ] All doc types supported (README, JSDoc, API, ARCHITECTURE, OPENAPI, PROJECT)
 - [ ] Published to VS Code Marketplace
 - [ ] Extension documentation complete
 - [ ] 4+ star average rating
 
 ---
 
-## 💡 Phase 4: Optional Enhancements (FUTURE)
+## 💡 Phase 8: Optional Enhancements (FUTURE)
 
 **Timeline:** TBD
 **Status:** 💡 **TO BE EVALUATED**
@@ -307,7 +511,7 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 **Priority:** P3 (Nice to Have)
 
 ### Note
-These enhancements are **not currently prioritized** and will be evaluated after Phases 1-3 are complete. Implementation will depend on user feedback, demand, and available resources.
+These enhancements are **not currently prioritized** and will be evaluated after Phases 2-7 are complete. Implementation will depend on user feedback, demand, and available resources.
 
 ### Potential Features
 - [ ] Dark mode theming
@@ -373,10 +577,14 @@ These enhancements are **not currently prioritized** and will be evaluated after
 | Oct 18, 2025 | **Production Ready - Zero Accessibility Violations** | ✅ Complete |
 | Oct 17-19, 2025 | **Vercel Deployment & CI/CD Setup** | ✅ Complete |
 | Oct 19, 2025 | **Production Launch** (codescribeai.com) | ✅ Complete |
-| Oct 21, 2025 | **Documentation Update** (ARCHITECTURE.md v1.2, ROADMAP.md v1.2) | ✅ Complete |
+| Oct 21, 2025 | **Documentation Update** (ARCHITECTURE.md v1.2, ROADMAP.md v1.4) | ✅ Complete |
 | TBD | Manual accessibility validation (optional) | ⏸️ Recommended |
-| TBD | CLI Tool development | 📋 Planned |
-| TBD | VS Code Extension | 📋 Planned |
+| TBD | **Phase 2: UX Improvements** (v1.3.0) | 📋 Planned |
+| TBD | **Phase 3: Layout Enhancements** (v1.4.0) | 📋 Planned |
+| TBD | **Phase 4: OpenAPI/Swagger** (v2.0.0) | 📋 Planned |
+| TBD | **Phase 5: Multi-File Docs** (v2.1.0) | 📋 Planned |
+| TBD | **Phase 6: CLI Tool** (v3.0.0) | 📋 Planned |
+| TBD | **Phase 7: VS Code Extension** (v4.0.0) | 📋 Planned |
 
 ---
 
@@ -444,8 +652,34 @@ These enhancements are **not currently prioritized** and will be evaluated after
 
 ---
 
-**Document Version:** 1.2
+**Document Version:** 1.4
 **Created:** October 17, 2025
 **Last Updated:** October 21, 2025
 **Status:** Phase 1.5 Complete - Deployed to Production (https://codescribeai.com)
-**Next Review:** Before Phase 2 (CLI Tool) planning
+**Next Review:** Before Phase 2 (UX Improvements) planning
+
+---
+
+## 📌 Versioning Strategy
+
+**Internal Planning (Phases):** Sequential phase numbers (Phase 2, 3, 4, 5, 6, 7, 8)
+- Used for project planning, roadmaps, and internal communication
+- Phases can be flexible and evolve as needed
+
+**Public Releases (SemVer):** Semantic versioning (v1.3.0, v1.4.0, v2.0.0, etc.)
+- Used for GitHub releases, npm packages, changelogs, and user-facing documentation
+- Allows for maintenance releases (v1.3.1, v1.3.2) between phases
+- MAJOR.MINOR.PATCH format:
+  - **MAJOR** (v1 → v2): Breaking changes or major new features (new doc types, CLI, extension)
+  - **MINOR** (v1.3 → v1.4): New features, backwards-compatible (UX improvements, layout enhancements)
+  - **PATCH** (v1.3.0 → v1.3.1): Bug fixes, maintenance, no new features
+
+**Mapping:**
+- Phase 2 → v1.3.0 (UX improvements)
+- Phase 3 → v1.4.0 (Layout enhancements)
+- Phase 4 → v2.0.0 (OpenAPI/Swagger - 5th doc type, major feature)
+- Phase 5 → v2.1.0 (Multi-file docs - 6th doc type)
+- Phase 6 → v3.0.0 (CLI tool - new product surface)
+- Phase 7 → v4.0.0 (VS Code extension - new product surface)
+
+This hybrid approach allows flexible planning while maintaining industry-standard versioning for releases.
