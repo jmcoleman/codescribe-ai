@@ -31,9 +31,13 @@ jobs:
 
       - name: Deploy to Vercel
         run: |
-          # Deploy directly without separate build step
-          # Vercel will build and deploy in one command
+          # Create .vercel directory for project linking
+          mkdir -p .vercel
+          echo '{"orgId":"${{ secrets.VERCEL_ORG_ID }}","projectId":"${{ secrets.VERCEL_PROJECT_ID }}"}' > .vercel/project.json
+
+          # Debug: Show what was written (values will be masked)
+          cat .vercel/project.json
+          ls -la .vercel/
+
+          # Deploy to production
           vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --debug
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
