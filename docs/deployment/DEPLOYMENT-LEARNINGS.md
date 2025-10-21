@@ -822,3 +822,129 @@ When GitHub Actions deployment fails but local deployment works, the issue is al
 
 **Date:** October 20, 2025
 
+---
+
+## Issue 8: Vercel Git Integration - "Ignored Build Step" Blocking Deployments
+
+**Error:**
+No error message! Deployments simply don't trigger automatically when pushing to GitHub.
+
+**Symptoms:**
+- Code pushed to GitHub main branch
+- No automatic deployment triggered in Vercel
+- Last successful deployment was hours/days ago
+- Vercel Git Integration shows as "Connected" with GitHub repo
+- Manual "Redeploy" button works, but automatic deployments don't
+
+**Root Cause:**
+**"Ignored Build Step" setting was set to "Don't build anything"** instead of "Automatic".
+
+This setting silently prevents Vercel from building on every push, even though the Git integration appears to be properly connected.
+
+**Critical Discovery:**
+You can have Vercel Git Integration fully connected and configured, but if "Ignored Build Step" is misconfigured, **zero deployments will happen automatically**. No error messages, no warnings in logs - just silence.
+
+**Solution:**
+
+**Step 1: Check the Ignored Build Step setting:**
+```
+Vercel Dashboard → Project → Settings → Git → Ignored Build Step
+```
+
+**Should be set to:** `Automatic` (default)
+**Not:** `Don't build anything` ❌
+
+**Step 2: Fix the setting:**
+1. Change from "Don't build anything" to **"Automatic"**
+2. Click **Save**
+3. You'll see a warning: "Configuration Settings in the current Production deployment differ from your current Project Settings"
+   - This is expected - the old deployment used the old settings
+
+**Step 3: Trigger a fresh deployment:**
+
+**Option A: Redeploy from Vercel Dashboard**
+- Go to Deployments tab
+- Click "Redeploy" on latest deployment
+- New deployment will use "Automatic" setting
+
+**Option B: Push a new commit**
+```bash
+git commit --allow-empty -m "Trigger automatic deployment"
+git push
+```
+- Vercel will automatically detect and deploy
+
+**Step 4: Verify automatic deployments work:**
+- Make a small change to your code
+- Push to main branch
+- Check Vercel Deployments tab - should automatically start building within seconds
+
+**Why This Happens:**
+
+The "Ignored Build Step" setting allows you to conditionally skip builds based on file changes or custom logic. Common use cases:
+- Only build when certain files change (e.g., skip builds for README updates)
+- Use a custom script to determine if build is needed
+
+**Setting options:**
+- **Automatic (default):** Build on every push
+- **Don't build anything:** Never build automatically (useful for manual-only deployments)
+- **Custom command:** Use a script that exits with code 0 (build) or 1 (skip)
+
+**When might "Don't build anything" get set:**
+- Testing manual deployments
+- Temporarily disabling auto-deploy
+- Migrating from another deployment method
+- Accidentally changed during settings exploration
+
+**How to Avoid This Issue:**
+
+✅ **Use Vercel Git Integration as primary deployment method** (not GitHub Actions)
+✅ **Keep "Ignored Build Step" on "Automatic"** unless you have specific needs
+✅ **Check Vercel project settings first** when deployments mysteriously stop
+✅ **Test automatic deployment** after any settings changes
+
+**Debugging Checklist:**
+
+If automatic deployments stop working:
+1. ☑️ Check Vercel Dashboard → Settings → Git → Is repo connected?
+2. ☑️ Check "Ignored Build Step" setting → Should be "Automatic"
+3. ☑️ Check "Production Branch" → Should match your main branch name
+4. ☑️ Check GitHub → Settings → Webhooks → Vercel webhook should exist and be active
+5. ☑️ Try manual "Redeploy" → If this works, it's a Git integration config issue
+
+**Competing Deployment Methods:**
+
+⚠️ **Don't run multiple deployment methods simultaneously:**
+- Vercel Git Integration (automatic on push)
+- GitHub Actions with Vercel CLI (also triggers on push)
+- Manual deployments via `vercel` CLI
+
+**Running multiple methods causes:**
+- Deployment conflicts and cancellations
+- Wasted build minutes
+- Confusing deployment logs
+- Race conditions
+
+**Best Practice:** Pick ONE method:
+- **Vercel Git Integration:** Easiest, most reliable (recommended for most projects)
+- **GitHub Actions:** More control, custom workflows, can run tests first
+- **Manual CLI:** Development/testing only
+
+**Timeline:**
+- **Hours spent debugging:** ~3 hours (combined with GitHub Actions troubleshooting)
+- **Root cause:** "Ignored Build Step" set to "Don't build anything"
+- **Fix time:** 2 minutes once setting was discovered
+
+**Key Lesson:**
+**Always check the Vercel project settings in the dashboard first**, before debugging GitHub Actions workflows, CLI commands, or tokens. The simplest explanation is often the correct one.
+
+**Related Issues:**
+- See Issue #7 for GitHub Actions "Project not found" errors
+- Both issues stemmed from trying to use GitHub Actions when Vercel Git Integration was the better/simpler solution
+
+**Git Commits:**
+- `b952a4b` - Disable GitHub Actions deployment workflow (switched to Vercel Git Integration)
+- Settings change in Vercel Dashboard (not tracked in git)
+
+**Date:** October 21, 2025
+

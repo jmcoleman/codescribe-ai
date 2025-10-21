@@ -228,6 +228,28 @@ Error: Project not found ({"VERCEL_PROJECT_ID":"***","VERCEL_ORG_ID":"***"})
 - **Root Cause:** GitHub Actions triggering new deployments before previous ones complete, or workflow failures
 - **Solution:** Check GitHub Actions logs, fix any errors, allow one deployment to complete before triggering another
 
+**Issue: Automatic Deployments Not Triggering** ⭐ **MOST COMMON**
+```
+Symptom: Push to GitHub but no deployment starts in Vercel
+```
+- **Symptoms:** Code pushed to main branch, but Vercel doesn't deploy automatically
+- **Root Cause:** "Ignored Build Step" setting is misconfigured
+- **Solution:**
+  1. Go to Vercel Dashboard → Settings → Git
+  2. Check **"Ignored Build Step"** setting
+  3. Should be **"Automatic"** (NOT "Don't build anything")
+  4. Save and trigger a redeploy
+  5. Test by pushing a new commit - should auto-deploy within seconds
+- **See:** [DEPLOYMENT-LEARNINGS.md Issue #8](./DEPLOYMENT-LEARNINGS.md#issue-8-vercel-git-integration---ignored-build-step-blocking-deployments) for detailed guide
+
+**Issue: Competing Deployment Methods**
+- **Symptoms:** Deployments work sometimes, canceled other times, inconsistent behavior
+- **Root Cause:** Both Vercel Git Integration AND GitHub Actions trying to deploy
+- **Solution:** Pick ONE deployment method:
+  - **Recommended:** Vercel Git Integration (automatic, simple, reliable)
+  - **Alternative:** GitHub Actions (more control, can run tests first)
+  - Disable whichever method you're NOT using
+
 ---
 
 ## Security Notes
@@ -249,6 +271,46 @@ If deployment fails:
 3. Click "..." → "Promote to Production"
 4. Fix issues locally
 5. Redeploy when ready
+
+---
+
+## Vercel Git Integration Deployment Checklist
+
+Use this checklist to ensure smooth automatic deployments:
+
+### Initial Setup
+- [ ] GitHub repository connected to Vercel project
+- [ ] Production branch set to `main` (or your primary branch)
+- [ ] **"Ignored Build Step" set to "Automatic"** ⭐ **CRITICAL**
+- [ ] All environment variables added to Vercel Dashboard
+- [ ] CORS `ALLOWED_ORIGINS` includes production URL
+- [ ] GitHub webhook exists and is active (Settings → Webhooks)
+
+### Before Every Deployment
+- [ ] All tests passing locally
+- [ ] Code committed and pushed to main branch
+- [ ] No competing deployment methods running (GitHub Actions, manual CLI)
+
+### After Deployment
+- [ ] Check Vercel Deployments tab shows "Ready" status (not "Canceled" or "Error")
+- [ ] Visit production URL and verify latest changes are live
+- [ ] Test core functionality end-to-end
+- [ ] Check browser console for errors
+- [ ] Verify API endpoints respond correctly
+
+### Troubleshooting Automatic Deployments
+If push doesn't trigger deployment:
+1. [ ] Check **Settings → Git → Ignored Build Step** = "Automatic"
+2. [ ] Check **Settings → Git → Production Branch** matches your branch
+3. [ ] Check **GitHub → Settings → Webhooks** - Vercel webhook active
+4. [ ] Try manual "Redeploy" to test if build works at all
+5. [ ] Check Vercel Deployment logs for error messages
+
+### Monthly Maintenance
+- [ ] Review and rotate API keys (CLAUDE_API_KEY, VERCEL_TOKEN)
+- [ ] Check for Vercel platform updates
+- [ ] Review deployment frequency and build times
+- [ ] Verify automatic deployments still working
 
 ---
 
