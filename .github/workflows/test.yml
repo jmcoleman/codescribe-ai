@@ -157,7 +157,8 @@ jobs:
     runs-on: ubuntu-latest
     # Only deploy if all tests passed
     needs: [test-backend, test-frontend, lint, security]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    # Deploy on push to main OR manual trigger
+    if: github.ref == 'refs/heads/main'
 
     steps:
       - name: Trigger Vercel Deploy Hook
