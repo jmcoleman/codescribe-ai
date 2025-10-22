@@ -9,14 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - DownloadButton component with timestamped file downloads, haptic feedback, and icon animations
+- Enhanced tooltip features across the application
+- Test utility: `loadTestDocument()` method for populating document panel from console
 
 ### Changed
-- (Changes to existing functionality will be listed here)
+- Renamed 'View full details' button in footer for better clarity
+- Reduced the size of Quality Score modal for improved UX
 
 ### Fixed
 - DownloadButton test suite: Fixed 23 failing tests related to appendChild mocks, SVG className access, and keyboard accessibility
 - QualityScore test suite: Fixed 5 failing tests for criteria breakdown icon selectors
 - Test suite now at 789 passing tests (up from 766), 0 failures, 16 skipped
+- Quality Score modal improvements and bug fixes
+- Example modal now properly closes when clicking on backdrop
 
 ---
 
