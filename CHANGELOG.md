@@ -8,13 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- (Features added since last release will be listed here)
+- DownloadButton component with timestamped file downloads, haptic feedback, and icon animations
 
 ### Changed
 - (Changes to existing functionality will be listed here)
 
 ### Fixed
-- (Bug fixes will be listed here)
+- DownloadButton test suite: Fixed 23 failing tests related to appendChild mocks, SVG className access, and keyboard accessibility
+- QualityScore test suite: Fixed 5 failing tests for criteria breakdown icon selectors
+- Test suite now at 789 passing tests (up from 766), 0 failures, 16 skipped
 
 ---
 

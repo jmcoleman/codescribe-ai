@@ -249,7 +249,9 @@ export function useDocGeneration() {
     clearError,
     isGenerating,
     documentation,
+    setDocumentation, // Exposed for testing
     qualityScore,
+    setQualityScore, // Exposed for testing
     error,
     rateLimitInfo,
     retryAfter

@@ -599,10 +599,15 @@ Retrieve all users.
       );
 
       const buttons = screen.getAllByRole('button');
-      expect(buttons).toHaveLength(3); // Copy button + Quality score button + Expand button
+      expect(buttons).toHaveLength(4); // Download button + Copy button + Quality score button + Expand button
+
+      // Download button
+      const downloadButton = screen.getByRole('button', { name: /Download doc/i });
+      expect(downloadButton).toBeInTheDocument();
+      expect(downloadButton).toBeEnabled();
 
       // Copy button
-      const copyButton = screen.getByRole('button', { name: /Copy documentation to clipboard/i });
+      const copyButton = screen.getByRole('button', { name: /Copy doc/i });
       expect(copyButton).toBeInTheDocument();
       expect(copyButton).toBeEnabled();
 
@@ -611,8 +616,8 @@ Retrieve all users.
       expect(qualityButton).toBeInTheDocument();
       expect(qualityButton).toBeEnabled();
 
-      // View full report button (now has aria-label)
-      const reportButton = screen.getByRole('button', { name: /Show full quality report/i });
+      // Show details button (now has aria-label)
+      const reportButton = screen.getByRole('button', { name: /Show details/i });
       expect(reportButton).toBeInTheDocument();
       expect(reportButton).toBeEnabled();
       expect(reportButton).toHaveAttribute('aria-expanded', 'false');
@@ -645,7 +650,7 @@ Retrieve all users.
       }
     };
 
-    it('should show "View full report" button when quality score is present', () => {
+    it('should show "Show details" button when quality score is present', () => {
       render(
         <DocPanel
           documentation="# Test"
@@ -654,10 +659,10 @@ Retrieve all users.
         />
       );
 
-      expect(screen.getByText('View full report')).toBeInTheDocument();
+      expect(screen.getByText('Show details')).toBeInTheDocument();
     });
 
-    it('should not show "View full report" button when quality score is null', () => {
+    it('should not show "Show details" button when quality score is null', () => {
       render(
         <DocPanel
           documentation="# Test"
@@ -666,7 +671,7 @@ Retrieve all users.
         />
       );
 
-      expect(screen.queryByText('View full report')).not.toBeInTheDocument();
+      expect(screen.queryByText('Show details')).not.toBeInTheDocument();
     });
 
     it('should initially hide the expandable report section with CSS', () => {
@@ -684,7 +689,7 @@ Retrieve all users.
       expect(reportDetails).not.toHaveClass('max-h-96', 'opacity-100');
     });
 
-    it('should expand report section when "View full report" is clicked', async () => {
+    it('should expand report section when "Show details" is clicked', async () => {
       const user = userEvent.setup();
 
       render(
@@ -695,7 +700,7 @@ Retrieve all users.
         />
       );
 
-      const expandButton = screen.getByRole('button', { name: /Show full quality report/i });
+      const expandButton = screen.getByRole('button', { name: /Show details/i });
       await user.click(expandButton);
 
       // Now the suggestions should be visible
@@ -712,7 +717,7 @@ Retrieve all users.
         />
       );
 
-      const expandButton = screen.getByRole('button', { name: /Show full quality report/i });
+      const expandButton = screen.getByRole('button', { name: /Show details/i });
       // ChevronDown should be rendered (has lucide-chevron-down class)
       const chevronDown = expandButton.querySelector('svg.lucide-chevron-down');
       expect(chevronDown).toBeInTheDocument();
@@ -729,7 +734,7 @@ Retrieve all users.
         />
       );
 
-      const expandButton = screen.getByRole('button', { name: /Show full quality report/i });
+      const expandButton = screen.getByRole('button', { name: /Show details/i });
       await user.click(expandButton);
 
       // ChevronUp should be rendered after expanding
@@ -748,7 +753,7 @@ Retrieve all users.
         />
       );
 
-      const expandButton = screen.getByRole('button', { name: /Show full quality report/i });
+      const expandButton = screen.getByRole('button', { name: /Show details/i });
       const reportDetails = screen.getByRole('region', { name: /quality report details/i });
 
       // Initially hidden (collapsed via CSS)
@@ -781,7 +786,7 @@ Retrieve all users.
         />
       );
 
-      await user.click(screen.getByRole('button', { name: /full quality report/i }));
+      await user.click(screen.getByRole('button', { name: /Show details/i }));
 
       expect(screen.getByText('Strengths')).toBeInTheDocument();
     });
@@ -797,7 +802,7 @@ Retrieve all users.
         />
       );
 
-      await user.click(screen.getByRole('button', { name: /full quality report/i }));
+      await user.click(screen.getByRole('button', { name: /Show details/i }));
 
       expect(screen.getByText('Areas to Improve')).toBeInTheDocument();
     });
@@ -813,7 +818,7 @@ Retrieve all users.
         />
       );
 
-      await user.click(screen.getByRole('button', { name: /full quality report/i }));
+      await user.click(screen.getByRole('button', { name: /Show details/i }));
 
       // Check formatted criteria names appear
       expect(screen.getByText('Overview:')).toBeInTheDocument();
@@ -832,7 +837,7 @@ Retrieve all users.
         />
       );
 
-      await user.click(screen.getByRole('button', { name: /full quality report/i }));
+      await user.click(screen.getByRole('button', { name: /Show details/i }));
 
       // Check formatted criteria names appear (README docType shows "Function Coverage" not "API Documentation")
       expect(screen.getByText('Installation:')).toBeInTheDocument();
@@ -850,7 +855,7 @@ Retrieve all users.
         />
       );
 
-      await user.click(screen.getByRole('button', { name: /full quality report/i }));
+      await user.click(screen.getByRole('button', { name: /Show details/i }));
 
       // Check all suggestions are displayed
       expect(screen.getByText(/Comprehensive overview provided/)).toBeInTheDocument();
@@ -878,7 +883,7 @@ Retrieve all users.
         />
       );
 
-      await user.click(screen.getByRole('button', { name: /full quality report/i }));
+      await user.click(screen.getByRole('button', { name: /Show details/i }));
 
       expect(screen.getByText('Strengths')).toBeInTheDocument();
       expect(screen.queryByText('Areas to Improve')).not.toBeInTheDocument();
@@ -902,7 +907,7 @@ Retrieve all users.
         />
       );
 
-      await user.click(screen.getByRole('button', { name: /full quality report/i }));
+      await user.click(screen.getByRole('button', { name: /Show details/i }));
 
       expect(screen.queryByText('Strengths')).not.toBeInTheDocument();
       expect(screen.getByText('Areas to Improve')).toBeInTheDocument();
@@ -930,7 +935,7 @@ Retrieve all users.
         />
       );
 
-      await user.click(screen.getByRole('button', { name: /full quality report/i }));
+      await user.click(screen.getByRole('button', { name: /Show details/i }));
 
       // Should show fallback text
       expect(screen.getByText(/Well done!/)).toBeInTheDocument();
@@ -976,7 +981,7 @@ Retrieve all users.
       );
 
       const reportDetails = screen.getByRole('region', { name: /quality report details/i });
-      const expandButton = screen.getByRole('button', { name: /Show full quality report/i });
+      const expandButton = screen.getByRole('button', { name: /Show details/i });
 
       // Start collapsed
       expect(reportDetails).toHaveClass('max-h-0', 'opacity-0');
@@ -1013,7 +1018,7 @@ Retrieve all users.
         />
       );
 
-      const expandButton = screen.getByRole('button', { name: /Show full quality report/i });
+      const expandButton = screen.getByRole('button', { name: /Show details/i });
       const reportDetails = screen.getByRole('region', { name: /quality report details/i });
 
       // Focus and press Enter
@@ -1036,7 +1041,7 @@ Retrieve all users.
         />
       );
 
-      const expandButton = screen.getByRole('button', { name: /Show full quality report/i });
+      const expandButton = screen.getByRole('button', { name: /Show details/i });
       const reportDetails = screen.getByRole('region', { name: /quality report details/i });
 
       // Focus and press Space
@@ -1057,7 +1062,7 @@ Retrieve all users.
         />
       );
 
-      const expandButton = screen.getByRole('button', { name: /Show full quality report/i });
+      const expandButton = screen.getByRole('button', { name: /Show details/i });
       // Check that button has focus styles (using focus-visible for better UX)
       expect(expandButton.className).toContain('focus:outline-none');
       expect(expandButton.className).toMatch(/focus(-visible)?:ring-2/);
@@ -1087,7 +1092,7 @@ Retrieve all users.
         />
       );
 
-      const expandButton = screen.getByRole('button', { name: /Show full quality report/i });
+      const expandButton = screen.getByRole('button', { name: /Show details/i });
       expect(expandButton).toHaveAttribute('aria-expanded', 'false');
     });
 
@@ -1102,7 +1107,7 @@ Retrieve all users.
         />
       );
 
-      const expandButton = screen.getByRole('button', { name: /Show full quality report/i });
+      const expandButton = screen.getByRole('button', { name: /Show details/i });
       await user.click(expandButton);
 
       expect(expandButton).toHaveAttribute('aria-expanded', 'true');
@@ -1117,7 +1122,7 @@ Retrieve all users.
         />
       );
 
-      const expandButton = screen.getByRole('button', { name: /Show full quality report/i });
+      const expandButton = screen.getByRole('button', { name: /Show details/i });
       expect(expandButton).toHaveAttribute('aria-controls', 'quality-report-details');
 
       const reportDetails = screen.getByRole('region', { name: /quality report details/i });
@@ -1135,12 +1140,12 @@ Retrieve all users.
         />
       );
 
-      const expandButton = screen.getByRole('button', { name: /Show full quality report/i });
-      expect(expandButton).toHaveAttribute('aria-label', 'Show full quality report');
+      const expandButton = screen.getByRole('button', { name: /Show details/i });
+      expect(expandButton).toHaveAttribute('aria-label', 'Show details');
 
       await user.click(expandButton);
 
-      expect(expandButton).toHaveAttribute('aria-label', 'Hide full quality report');
+      expect(expandButton).toHaveAttribute('aria-label', 'Hide details');
     });
 
     it('should have role="region" on expandable content', () => {
@@ -1182,7 +1187,7 @@ Retrieve all users.
         />
       );
 
-      const expandButton = screen.getByRole('button', { name: /Show full quality report/i });
+      const expandButton = screen.getByRole('button', { name: /Show details/i });
 
       // Initially should be false
       expect(localStorage.getItem('codescribe-report-expanded')).toBe('false');
@@ -1213,7 +1218,7 @@ Retrieve all users.
       );
 
       const reportDetails = screen.getByRole('region', { name: /quality report details/i });
-      const expandButton = screen.getByRole('button', { name: /Hide full quality report/i });
+      const expandButton = screen.getByRole('button', { name: /Hide details/i });
 
       // Should start expanded
       expect(reportDetails).toHaveClass('max-h-96', 'opacity-100');
@@ -1236,7 +1241,7 @@ Retrieve all users.
       );
 
       // Should still render without crashing
-      const expandButton = screen.getByRole('button', { name: /Show full quality report/i });
+      const expandButton = screen.getByRole('button', { name: /Show details/i });
       expect(expandButton).toBeInTheDocument();
 
       // Restore original setItem
