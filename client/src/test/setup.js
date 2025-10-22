@@ -53,6 +53,10 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 });
 
+// Mock URL.createObjectURL and URL.revokeObjectURL (used by DownloadButton)
+global.URL.createObjectURL = vi.fn(() => 'blob:mock-url');
+global.URL.revokeObjectURL = vi.fn();
+
 // Suppress console errors for cleaner test output (optional)
 const originalError = console.error;
 beforeAll(() => {

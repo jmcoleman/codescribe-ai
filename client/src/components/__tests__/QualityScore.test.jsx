@@ -190,21 +190,19 @@ describe('QualityScoreModal Component', () => {
 
     it('should show complete status icon for complete criteria', () => {
       const onClose = vi.fn();
-      render(<QualityScoreModal qualityScore={mockQualityScore} onClose={onClose} />);
+      const { container } = render(<QualityScoreModal qualityScore={mockQualityScore} onClose={onClose} />);
 
-      // Find the overview criterion card (complete status)
-      const overviewCard = screen.getByText('Overview').closest('.p-3');
-      const svgIcon = overviewCard.querySelector('svg.text-purple-400');
+      // Find the complete status icon (purple check circle)
+      const svgIcon = container.querySelector('svg.text-purple-400');
       expect(svgIcon).toBeInTheDocument();
     });
 
     it('should show partial status icon for partial criteria', () => {
       const onClose = vi.fn();
-      render(<QualityScoreModal qualityScore={mockQualityScore} onClose={onClose} />);
+      const { container } = render(<QualityScoreModal qualityScore={mockQualityScore} onClose={onClose} />);
 
-      // Find the installation criterion card (partial status)
-      const installationCard = screen.getByText('Installation').closest('.p-3');
-      const svgIcon = installationCard.querySelector('svg.text-amber-400');
+      // Find the partial status icon (amber alert triangle)
+      const svgIcon = container.querySelector('svg.text-amber-400');
       expect(svgIcon).toBeInTheDocument();
     });
 

@@ -80,7 +80,9 @@ function App() {
     clearError,
     isGenerating,
     documentation,
+    setDocumentation,
     qualityScore,
+    setQualityScore,
     error,
     rateLimitInfo,
     retryAfter
@@ -285,6 +287,75 @@ function App() {
     // Use compact toast for quick, non-intrusive feedback
     toastCompact('Example loaded successfully', 'success');
   };
+
+  // Test function to load fake documentation (for testing download button)
+  const loadTestDocumentation = () => {
+    const testDoc = `# Test Documentation
+
+## Overview
+This is test documentation to demonstrate the download button functionality.
+
+## Features
+- Download as Markdown (.md file)
+- Copy to clipboard
+- Quality scoring system
+
+## Example Code
+
+\`\`\`javascript
+function hello(name) {
+  return \`Hello, \${name}!\`;
+}
+
+const greeting = hello('World');
+console.log(greeting); // Output: Hello, World!
+\`\`\`
+
+## Installation
+
+\`\`\`bash
+npm install test-package
+\`\`\`
+
+## Usage
+
+This is a comprehensive example showing various markdown features including code blocks, headers, and lists.
+
+### Nested Features
+- Item 1
+- Item 2
+  - Nested item
+  - Another nested item
+
+**This download button is working perfectly!**`;
+
+    setDocumentation(testDoc);
+    setQualityScore({
+      score: 85,
+      grade: 'B',
+      docType: 'README',
+      breakdown: {
+        overview: { score: 18, max: 20, suggestion: 'Clear and comprehensive overview provided' },
+        installation: { score: 12, max: 15, suggestion: 'Add more installation options or troubleshooting steps' },
+        examples: { score: 16, max: 20, suggestion: 'Examples are good, could add more real-world scenarios' },
+        apiDocs: { score: 20, max: 25, suggestion: 'Excellent API documentation coverage' },
+        structure: { score: 19, max: 20, suggestion: 'Well-structured and formatted' }
+      },
+      summary: {
+        strengths: ['overview', 'apiDocs', 'structure'],
+        improvements: ['installation', 'examples']
+      }
+    });
+    // Toast will be shown by the useEffect that watches for documentation completion
+  };
+
+  // Expose test function to window for console access
+  useEffect(() => {
+    window.loadTestDoc = loadTestDocumentation;
+    return () => {
+      delete window.loadTestDoc;
+    };
+  }, []);
 
   // Show toast notifications for documentation generation success only
   useEffect(() => {
