@@ -76,7 +76,7 @@ export function CodePanel({
               scrollBeyondLastLine: false,
               readOnly,
               automaticLayout: true,
-              padding: { top: 16, bottom: 16 },
+              padding: { top: 24, bottom: 16 },
               ariaLabel: readOnly ? 'Code editor, read-only' : 'Code editor, type or paste your code here',
             }}
             theme="vs-light"

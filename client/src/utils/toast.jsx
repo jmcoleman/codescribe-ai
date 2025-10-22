@@ -267,25 +267,19 @@ export const toastFileUploaded = (fileName, fileSize) => {
 };
 
 /**
- * Documentation generation success with quality score
+ * Documentation generation success
+ * Uses compact toast for consistency with other quick notifications
+ * Quality score is already visible in DocPanel header
  *
- * @param {string} grade - Quality grade (A, B, C, D, F)
- * @param {number} score - Numeric score (0-100)
+ * @param {string} grade - Quality grade (A, B, C, D, F) - kept for backwards compatibility
+ * @param {number} score - Numeric score (0-100) - kept for backwards compatibility
  * @returns {string} Toast ID
  *
  * @example
  * toastDocGenerated('A', 95);
  */
 export const toastDocGenerated = (grade, score) => {
-  const gradeMessages = {
-    'A': 'Excellent! Documentation generated with quality grade',
-    'B': 'Good! Documentation generated with quality grade',
-    'C': 'Documentation generated with quality grade',
-    'D': 'Documentation generated with quality grade',
-    'F': 'Documentation generated with quality grade',
-  };
-  const message = gradeMessages[grade] || 'Documentation generated with quality grade';
-  return toastSuccess(`${message} ${grade} (${score}/100)`);
+  return toastCompact('Documentation ready', 'success');
 };
 
 /**

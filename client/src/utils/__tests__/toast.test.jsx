@@ -145,7 +145,7 @@ describe('Toast Notification System', () => {
 
       toastDocGenerated('A', 95);
 
-      expect(await screen.findByText(/Excellent! Documentation generated with quality grade A \(95\/100\)/)).toBeInTheDocument();
+      expect(await screen.findByText(/Documentation ready/)).toBeInTheDocument();
     });
 
     it('should show rate limited notification', async () => {
