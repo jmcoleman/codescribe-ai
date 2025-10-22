@@ -4,9 +4,22 @@ import { codeExamples } from '../data/examples';
 
 export function ExamplesModal({ isOpen, onClose, onLoadExample, currentCode }) {
   const [selectedExample, setSelectedExample] = useState(null);
+  const [allowClickOutside, setAllowClickOutside] = useState(false);
   const modalRef = useRef(null);
   const closeButtonRef = useRef(null);
   const cardRefs = useRef({});
+
+  // Delay enabling click-outside to prevent immediate close on modal open
+  useEffect(() => {
+    if (isOpen) {
+      const timer = setTimeout(() => {
+        setAllowClickOutside(true);
+      }, 200);
+      return () => clearTimeout(timer);
+    } else {
+      setAllowClickOutside(false);
+    }
+  }, [isOpen]);
 
   // Auto-select current example (if it matches) when modal opens
   useEffect(() => {
@@ -75,10 +88,21 @@ export function ExamplesModal({ isOpen, onClose, onLoadExample, currentCode }) {
     onClose();
   };
 
+  const handleBackdropClick = (e) => {
+    // Only close if clicking the backdrop itself (not the modal content)
+    if (allowClickOutside && e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+    <div
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-in fade-in duration-200"
+      onClick={handleBackdropClick}
+    >
       <div
         ref={modalRef}
+        onClick={(e) => e.stopPropagation()}
         className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200"
         role="dialog"
         aria-modal="true"

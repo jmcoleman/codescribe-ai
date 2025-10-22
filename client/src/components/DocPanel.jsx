@@ -5,6 +5,7 @@ import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vs } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { CopyButton } from './CopyButton';
+import { DownloadButton } from './DownloadButton';
 import { DocPanelGeneratingSkeleton } from './SkeletonLoader';
 import { MermaidDiagram } from './MermaidDiagram';
 
@@ -53,6 +54,8 @@ export function DocPanel({
       handleToggle();
     }
   };
+
+
   return (
     <div data-testid="doc-panel" className="flex flex-col h-full bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
       {/* Live Region for Screen Reader Announcements */}
@@ -84,9 +87,14 @@ export function DocPanel({
           {qualityScore && (
             <button
               type="button"
-              onClick={onViewBreakdown}
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                onViewBreakdown();
+              }}
               className="flex items-center gap-2 px-3 py-1.5 bg-white border border-purple-200 rounded-lg hover:bg-purple-50 hover:scale-[1.02] hover:shadow-sm transition-all duration-200 motion-reduce:transition-none active:scale-[0.98]"
               aria-label="View quality score breakdown"
+              title="View breakdown"
             >
               <span className="text-xs text-slate-600">Quality:</span>
               <span className="text-xs font-semibold text-purple-700">
@@ -98,24 +106,35 @@ export function DocPanel({
             </button>
           )}
 
+          {/* Download Button - Only show when documentation exists */}
+          {documentation && (
+            <DownloadButton
+              content={documentation}
+              docType={qualityScore?.docType || 'documentation'}
+              size="md"
+              variant="outline"
+              ariaLabel="Download doc"
+            />
+          )}
+
           {/* Copy Button - Only show when documentation exists */}
           {documentation && (
             <CopyButton
               text={documentation}
               size="md"
               variant="outline"
-              ariaLabel="Copy documentation to clipboard"
+              ariaLabel="Copy doc"
             />
           )}
         </div>
       </div>
 
       {/* Body - Documentation Content */}
-      <div className="flex-1 overflow-y-auto p-6">
+      <div className="flex-1 overflow-y-auto px-6 py-4">
         {isGenerating && !documentation ? (
           <DocPanelGeneratingSkeleton />
         ) : documentation ? (
-          <div className="prose prose-sm max-w-none">
+          <div className="max-w-none text-sm leading-relaxed [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mb-4 [&_h1]:mt-0 [&_h1:not(:first-child)]:mt-6 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:mb-3 [&_h2:not(:first-child)]:mt-5 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:mb-2 [&_h3:not(:first-child)]:mt-4 [&_p]:mb-3 [&_ul]:mb-3 [&_ol]:mb-3 [&_li]:ml-4 [&_strong]:font-semibold [&_code]:bg-slate-100 [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-[13px] [&_code]:font-mono">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{
@@ -182,12 +201,24 @@ export function DocPanel({
                       style={vs}
                       language={match[1]}
                       PreTag="div"
+                      customStyle={{
+                        fontSize: '13px !important',
+                        lineHeight: '1.5',
+                        margin: 0,
+                        padding: '1rem',
+                      }}
+                      codeTagProps={{
+                        style: {
+                          fontSize: '13px',
+                          fontFamily: 'JetBrains Mono, Menlo, Monaco, Consolas, monospace',
+                        }
+                      }}
                       {...props}
                     >
                       {String(children).replace(/\n$/, '')}
                     </SyntaxHighlighter>
                   ) : (
-                    <code className="bg-slate-100 px-1 py-0.5 rounded text-xs font-mono" {...props}>
+                    <code className="bg-slate-100 px-1 py-0.5 rounded text-[13px] font-mono" {...props}>
                       {children}
                     </code>
                   );
@@ -263,10 +294,10 @@ export function DocPanel({
               onKeyDown={handleKeyDown}
               aria-expanded={isExpanded}
               aria-controls="quality-report-details"
-              aria-label={isExpanded ? "Hide full quality report" : "Show full quality report"}
+              aria-label={isExpanded ? "Hide details" : "Show details"}
               className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50 transition-colors duration-200 motion-reduce:transition-none focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 rounded px-2 py-1 active:bg-purple-100"
             >
-              <span className="font-medium">View full report</span>
+              <span className="font-medium">{isExpanded ? "Hide details" : "Show details"}</span>
               {isExpanded ? (
                 <ChevronUp className="w-3 h-3" aria-hidden="true" />
               ) : (
