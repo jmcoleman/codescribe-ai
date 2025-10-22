@@ -1,0 +1,301 @@
+{
+  "_colorSchemeOptions": {
+    "default": {
+      "color-blue-dark": "#1e3a8a",
+      "color-blue-primary": "#1e40af",
+      "color-blue-medium": "#2563eb",
+      "color-blue-accent": "#60a5fa",
+      "color-green": "#10b981",
+      "color-green-dark": "#059669",
+      "color-bg-green": "#d1fae5",
+      "color-slate-50": "#f8fafc",
+      "color-slate-100": "#f1f5f9",
+      "color-slate-200": "#e2e8f0",
+      "color-slate-500": "#64748b",
+      "color-slate-600": "#475569",
+      "color-slate-900": "#0f172a"
+    },
+    "purple": {
+      "color-blue-dark": "#581c87",
+      "color-blue-primary": "#7c3aed",
+      "color-blue-medium": "#8b5cf6",
+      "color-blue-accent": "#a78bfa",
+      "color-green": "#10b981",
+      "color-green-dark": "#059669",
+      "color-bg-green": "#d1fae5",
+      "color-slate-50": "#f8fafc",
+      "color-slate-100": "#f1f5f9",
+      "color-slate-200": "#e2e8f0",
+      "color-slate-500": "#64748b",
+      "color-slate-600": "#475569",
+      "color-slate-900": "#0f172a",
+      "color-column-label": "#64748b",
+      "color-column-title": "#475569",
+      "color-column-border": "#94a3b8",
+      "color-card-border": "#94a3b8"
+    },
+    "indigo": {
+      "color-blue-dark": "#3730a3",
+      "color-blue-primary": "#4f46e5",
+      "color-blue-medium": "#6366f1",
+      "color-blue-accent": "#818cf8",
+      "color-green": "#10b981",
+      "color-green-dark": "#059669",
+      "color-bg-green": "#d1fae5",
+      "color-slate-50": "#f8fafc",
+      "color-slate-100": "#f1f5f9",
+      "color-slate-200": "#e2e8f0",
+      "color-slate-500": "#64748b",
+      "color-slate-600": "#475569",
+      "color-slate-900": "#0f172a",
+      "color-column-label": "#64748b",
+      "color-column-title": "#475569",
+      "color-column-border": "#94a3b8",
+      "color-card-border": "#94a3b8"
+    },
+    "slate": {
+      "color-blue-dark": "#334155",
+      "color-blue-primary": "#475569",
+      "color-blue-medium": "#64748b",
+      "color-blue-accent": "#94a3b8",
+      "color-green": "#10b981",
+      "color-green-dark": "#059669",
+      "color-bg-green": "#d1fae5",
+      "color-slate-50": "#f8fafc",
+      "color-slate-100": "#f1f5f9",
+      "color-slate-200": "#e2e8f0",
+      "color-slate-500": "#64748b",
+      "color-slate-600": "#475569",
+      "color-slate-900": "#0f172a"
+    }
+  },
+  "colorScheme": "purple",
+  "meta": {
+    "title": "CodeScribe AI Roadmap",
+    "subtitle": "From MVP to Full Ecosystem",
+    "statusPill": {
+      "text": "Live"
+    },
+    "productionLink": {
+      "url": "https://codescribeai.com",
+      "text": "codescribeai.com",
+      "title": "CodeScribe AI - Intelligent Code Documentation Generator"
+    },
+    "footerLeft": "<strong>CodeScribe AI</strong> · Timeline Roadmap v1.0",
+    "footer": "Phase 1-1.5 (9 days) · Phases 2-8 Planned (24-33 days)"
+  },
+  "columns": [
+    {
+      "id": "done",
+      "label": "Done",
+      "title": "Completed",
+      "subtitle": "Phases 1 & 1.5",
+      "phases": [
+        {
+          "version": "v1.0.0",
+          "title": "Web Application (MVP)",
+          "duration": "5 days",
+          "status": "✓ Complete",
+          "features": [
+            "4 documentation types (README, JSDoc, API, ARCHITECTURE)",
+            "Monaco Editor with syntax highlighting (24+ languages)",
+            "Real-time streaming with SSE",
+            "Quality scoring system (0-100 scale, 5 criteria)",
+            "File upload & drag-and-drop",
+            "Copy-to-clipboard & download",
+            "Responsive design (mobile, tablet, desktop)",
+            "660+ tests (100% passing)",
+            "95.81% backend code coverage",
+            "Mermaid diagram support"
+          ]
+        },
+        {
+          "version": "v1.2.0",
+          "title": "WCAG AA Compliance",
+          "duration": "4 days",
+          "status": "✓ Complete",
+          "features": [
+            "WCAG 2.1 AA compliance (95/100 score)",
+            "Lighthouse accessibility: 100/100",
+            "0 automated accessibility violations",
+            "Full keyboard navigation",
+            "Screen reader compatibility (NVDA, VoiceOver)",
+            "AAA color contrast (18.2:1 ratio)",
+            "Focus traps in modals",
+            "Skip navigation link"
+          ],
+          "badge": "660+ Tests · 100% Passing"
+        },
+        {
+          "version": "v1.2.0",
+          "title": "Performance & Infrastructure",
+          "duration": "3 days",
+          "status": "✓ Complete",
+          "features": [
+            "Vercel deployment with custom domain",
+            "GitHub Actions CI/CD pipeline",
+            "Test-gated deployments",
+            "Bundle optimization (78KB gzipped)",
+            "Lazy loading (Monaco, Mermaid, DocPanel)",
+            "Lighthouse performance: 75/100 (+67%)",
+            "95.81% backend code coverage",
+            "Cross-browser testing (Chrome, Firefox, Safari, Edge)"
+          ],
+          "badge": "Core Web Vitals Optimized"
+        },
+        {
+          "version": "v1.2.0",
+          "title": "Security & Quality",
+          "duration": "2 days",
+          "status": "✓ Complete",
+          "features": [
+            "Environment variable sanitization",
+            "API key protection (server-side only)",
+            "Rate limiting (10/min, 100/hour per IP)",
+            "Input validation and sanitization",
+            "File upload security checks",
+            "HSTS headers for security",
+            "CORS configuration",
+            "Comprehensive error handling"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "now",
+      "label": "Now",
+      "title": "Active Development",
+      "subtitle": "Next 2-4 weeks",
+      "phases": [
+        {
+          "version": "v1.3.0",
+          "title": "UX Improvements",
+          "duration": "3-5 days",
+          "status": "Planning",
+          "features": [
+            "Command-line interface for terminal-based generation",
+            "File path support (single files and directories)",
+            "Batch processing for multiple files",
+            "Configuration file support (.codescriberc)",
+            "CI/CD integration capabilities",
+            "Output format options (markdown, HTML, PDF)",
+            "npm package publication",
+            "Cross-platform compatibility (Windows, macOS, Linux)"
+          ]
+        },
+        {
+          "version": "v1.4.0",
+          "title": "Layout Enhancements",
+          "duration": "7-10 days",
+          "status": "Design",
+          "features": [
+            "Deep editor integration",
+            "Right-click 'Generate Docs' context menu",
+            "Inline documentation preview",
+            "Automatic file updates",
+            "Sidebar panel for quality scores",
+            "Settings sync with web app",
+            "Marketplace publication",
+            "Auto-update on file save (optional)"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "next",
+      "label": "Next",
+      "title": "Planned Features",
+      "subtitle": "1-3 months",
+      "phases": [
+        {
+          "version": "v2.0.0",
+          "title": "OpenAPI/Swagger",
+          "duration": "5-7 days",
+          "status": "Proposed",
+          "features": [
+            "GitHub App for repository integration",
+            "Automatic PR documentation checks",
+            "Documentation quality enforcement",
+            "Commit message documentation links",
+            "Repository-wide documentation audits",
+            "Team collaboration features",
+            "Documentation history tracking",
+            "Integration with GitHub Actions"
+          ]
+        },
+        {
+          "version": "v2.1.0",
+          "title": "Multi-File Projects",
+          "duration": "7-10 days",
+          "status": "Proposed",
+          "features": [
+            "User authentication & accounts",
+            "Team workspaces",
+            "Shared documentation templates",
+            "Style guide enforcement",
+            "Documentation approval workflows",
+            "Usage analytics dashboard",
+            "API rate limit management",
+            "Role-based access control"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "later",
+      "label": "Later",
+      "title": "Future Expansion",
+      "subtitle": "3-6+ months",
+      "phases": [
+        {
+          "version": "v3.0.0",
+          "title": "CLI Tool",
+          "duration": "10-14 days",
+          "status": "Research",
+          "features": [
+            "Multi-language support (Python, Java, Go, Rust)",
+            "Code smell detection & suggestions",
+            "Documentation consistency checks across repos",
+            "Automated changelog generation from git history",
+            "Smart dependency documentation",
+            "Architecture diagram generation",
+            "Security best practices documentation",
+            "Performance optimization suggestions"
+          ]
+        },
+        {
+          "version": "v4.0.0",
+          "title": "VS Code Extension",
+          "duration": "14-21 days",
+          "status": "Concept",
+          "features": [
+            "Self-hosted deployment options",
+            "Custom AI model fine-tuning",
+            "SSO & enterprise authentication",
+            "Compliance reporting (SOC 2, GDPR)",
+            "Advanced security & audit logs",
+            "SLA guarantees & priority support",
+            "Custom integrations (Jira, Confluence)",
+            "Dedicated infrastructure"
+          ]
+        },
+        {
+          "version": "TBD",
+          "title": "Platform Enhancements",
+          "duration": "21+ days",
+          "status": "Vision",
+          "features": [
+            "IntelliJ IDEA plugin",
+            "Sublime Text plugin",
+            "Vim/Neovim plugin",
+            "JetBrains IDE family support",
+            "API marketplace for custom generators",
+            "Community template library",
+            "Documentation as Code workflows",
+            "Integration with major dev tools (Slack, Teams, Discord)"
+          ]
+        }
+      ]
+    }
+  ]
+}
