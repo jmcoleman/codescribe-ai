@@ -2,6 +2,9 @@ import { Upload, Github, Sparkles } from 'lucide-react';
 import { Button } from './Button';
 import { Select } from './Select';
 
+// Feature flag: GitHub import not yet implemented (planned for v2.0)
+const ENABLE_GITHUB_IMPORT = false;
+
 export function ControlBar({
   docType,
   onDocTypeChange,
@@ -34,15 +37,17 @@ export function ControlBar({
             Upload Files
           </Button>
 
-          <Button
-            variant="secondary"
-            icon={Github}
-            onClick={onGithubImport}
-            disabled={disabled}
-          >
-            <span className="hidden sm:inline">Import from GitHub</span>
-            <span className="sm:hidden">GitHub</span>
-          </Button>
+          {ENABLE_GITHUB_IMPORT && (
+            <Button
+              variant="secondary"
+              icon={Github}
+              onClick={onGithubImport}
+              disabled={disabled}
+            >
+              <span className="hidden sm:inline">Import from GitHub</span>
+              <span className="sm:hidden">GitHub</span>
+            </Button>
+          )}
 
           {/* Divider (hidden on mobile) */}
           <div className="hidden sm:block w-px h-6 bg-slate-300" />

@@ -1,18 +1,20 @@
-import { useState, useEffect } from 'react';
-import { Download, Check } from 'lucide-react';
+import { Download } from 'lucide-react';
 import { toastCompact, toastError } from '../utils/toast';
 
 /**
  * DownloadButton - Enterprise-grade download button
  *
  * Features:
- * - Smooth icon transition (Download → Check)
- * - Color animation on success
- * - Auto-reset after 2 seconds
+ * - Static download icon (no state transitions)
+ * - Toast notification for success feedback
  * - Accessible with ARIA labels
  * - Reduced motion support
  * - Haptic feedback (if available)
  * - Timestamped filenames
+ *
+ * Note: Unlike CopyButton, download buttons should NOT show checkmark
+ * animations. Downloads are fire-and-forget actions where the toast
+ * notification provides sufficient user feedback.
  *
  * @param {string} content - Content to download
  * @param {string} docType - Document type (README, API, JSDOC, ARCHITECTURE)
@@ -29,18 +31,6 @@ export function DownloadButton({
   variant = 'ghost',
   ariaLabel = 'Download'
 }) {
-  const [downloaded, setDownloaded] = useState(false);
-
-  // Auto-reset after 2 seconds
-  useEffect(() => {
-    if (downloaded) {
-      const timer = setTimeout(() => {
-        setDownloaded(false);
-      }, 2000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [downloaded]);
 
   const handleDownload = () => {
     try {
@@ -71,8 +61,6 @@ export function DownloadButton({
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
-      setDownloaded(true);
-
       // Show success toast
       toastCompact('Downloaded!', 'success');
 
@@ -99,17 +87,11 @@ export function DownloadButton({
     lg: 'w-5 h-5',
   };
 
-  // Style variants
+  // Style variants (no state changes - icon stays consistent)
   const variantClasses = {
-    ghost: downloaded
-      ? 'bg-green-50 text-green-600 border border-green-200'
-      : 'bg-transparent text-slate-600 hover:bg-slate-100 border border-transparent',
-    outline: downloaded
-      ? 'bg-green-50 text-green-600 border border-green-300'
-      : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 hover:border-slate-300',
-    solid: downloaded
-      ? 'bg-green-600 text-white border border-green-600'
-      : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200',
+    ghost: 'bg-transparent text-slate-600 hover:bg-slate-100 border border-transparent',
+    outline: 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 hover:border-slate-300',
+    solid: 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200',
   };
 
   const iconSize = iconSizes[size];
@@ -131,33 +113,13 @@ export function DownloadButton({
         focus:ring-purple-600
         focus:ring-offset-2
         motion-reduce:transition-none
-        relative
         ${className}
       `}
-      aria-label={downloaded ? 'Downloaded!' : ariaLabel}
-      title={downloaded ? 'Downloaded!' : ariaLabel}
-      disabled={downloaded}
+      aria-label={ariaLabel}
+      title={ariaLabel}
     >
-      {/* Icon with smooth cross-fade animation */}
-      <div className="relative flex items-center justify-center">
-        {/* Download Icon */}
-        <Download
-          className={`
-            ${iconSize}
-            transition-all duration-200 ease-out
-            ${downloaded ? 'opacity-0 scale-50 rotate-90 absolute' : 'opacity-100 scale-100 rotate-0'}
-          `}
-        />
-
-        {/* Check Icon */}
-        <Check
-          className={`
-            ${iconSize}
-            transition-all duration-200 ease-out
-            ${downloaded ? 'opacity-100 scale-100 rotate-0' : 'opacity-0 scale-50 -rotate-90 absolute'}
-          `}
-        />
-      </div>
+      {/* Static Download Icon - No state transitions */}
+      <Download className={iconSize} aria-hidden="true" />
     </button>
   );
 }

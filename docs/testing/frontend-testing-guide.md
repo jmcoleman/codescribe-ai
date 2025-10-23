@@ -655,6 +655,167 @@ it('should generate documentation from code input', async () => {
 
 ---
 
+## 📱 Mobile Device Testing
+
+### Testing Mobile UI in DevTools (Quick Testing)
+
+For rapid iteration and most UI testing, use browser DevTools:
+
+**Chrome/Edge:**
+1. Open http://localhost:5173/ in your browser
+2. Press `F12` (or right-click → Inspect)
+3. Click the **device toolbar icon** or press `Ctrl+Shift+M` (Windows/Linux) / `Cmd+Shift+M` (Mac)
+4. Select a mobile device from the dropdown (iPhone 12, Pixel 5, etc.)
+5. **Hard refresh:** `Ctrl+Shift+R` / `Cmd+Shift+R`
+
+**Firefox:**
+1. Open http://localhost:5173/
+2. Press `F12`
+3. Click **Responsive Design Mode** or press `Ctrl+Shift+M` / `Cmd+Shift+M`
+4. Choose device dimensions
+
+**When to use DevTools mobile testing:**
+- ✅ UI layout and responsive design
+- ✅ CSS breakpoints and media queries
+- ✅ Quick iteration during development
+- ❌ Touch interactions (use real device)
+- ❌ Mobile browser quirks (use real device)
+
+---
+
+### Testing on Real Mobile Devices (Most Accurate)
+
+For touch interactions, mobile browser quirks, and final validation, test on real devices.
+
+#### Step 1: Find Your Computer's Local IP
+
+**Mac:**
+```bash
+ipconfig getifaddr en0 || ipconfig getifaddr en1
+```
+
+**Windows (PowerShell):**
+```powershell
+ipconfig | findstr IPv4
+```
+
+**Linux:**
+```bash
+hostname -I | awk '{print $1}'
+```
+
+Example output: `192.168.1.92`
+
+#### Step 2: Start Dev Server with Network Access
+
+**From project root:**
+```bash
+# Kill any existing dev servers
+pkill -f vite; pkill -f nodemon
+
+# Start frontend with network access
+cd client && npm run dev -- --host
+
+# In a new terminal, start backend
+cd server && npm run dev
+```
+
+The Vite output will show:
+```
+➜  Local:   http://localhost:5173/
+➜  Network: http://192.168.1.92:5173/
+```
+
+#### Step 3: Access from Mobile Device
+
+**Requirements:**
+- Mobile device must be on the **same WiFi network** as your computer
+- Firewall may need to allow incoming connections on port 5173
+
+**On your mobile device:**
+1. Open Safari (iOS) or Chrome (Android)
+2. Navigate to: `http://YOUR_IP_ADDRESS:5173/`
+   - Example: `http://192.168.1.92:5173/`
+3. Test the app
+
+**Mobile-Specific Testing Checklist:**
+- [ ] Touch interactions (tap, swipe, long-press)
+- [ ] Mobile menu functionality
+- [ ] File upload on mobile browsers
+- [ ] Keyboard behavior on mobile
+- [ ] Safe area insets (iPhone notch, Android navigation)
+- [ ] Landscape vs portrait orientation
+- [ ] iOS Safari quirks
+- [ ] Android Chrome quirks
+
+#### Troubleshooting
+
+**"Can't connect" from mobile device:**
+- Verify both devices are on same WiFi network
+- Check firewall settings (allow port 5173)
+- Try your computer's IP address in a browser (should load the app)
+- Restart dev server with `--host` flag
+
+**"Hard refresh" on mobile:**
+- **iOS Safari:** Close tab completely, reopen URL
+- **Android Chrome:** Settings → Privacy → Clear cached images and files
+
+**Mobile menu flashes and closes immediately:**
+- This was fixed by removing FocusTrap and adding `allowClickOutside` delay
+- See [MobileMenu.jsx](../../client/src/components/MobileMenu.jsx) for implementation
+
+#### Viewing Console on Mobile Devices
+
+**iOS (Safari):**
+1. On iPhone/iPad: Settings → Safari → Advanced → Enable "Web Inspector"
+2. On Mac: Connect via USB → Safari → Develop menu → [Your Device] → [Webpage]
+3. Full DevTools with Console, Network, Elements available
+
+**Android (Chrome):**
+1. On Android: Settings → About Chrome → Tap "Build Number" 7x → Developer Options → Enable "USB Debugging"
+2. On Computer: Chrome → `chrome://inspect` → Find device → Click "Inspect"
+3. Full DevTools available
+
+**Alternative (Any Device) - Eruda:**
+
+Add to `client/index.html` before `</head>` for a floating mobile console:
+
+```html
+<script>
+  if (window.location.hostname !== 'localhost' &&
+      window.location.hostname !== '127.0.0.1') {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/eruda';
+    script.onload = () => eruda.init();
+    document.head.appendChild(script);
+  }
+</script>
+```
+
+⚠️ Remove before production!
+
+---
+
+### Network Testing Best Practices
+
+**Security Note:**
+- Dev server is exposed to local network only (not internet)
+- Anyone on your WiFi can access it
+- Don't use on public/untrusted networks
+
+**Performance:**
+- Network testing may be slower than localhost
+- Hot Module Replacement (HMR) works over network
+- Keep DevTools open on desktop to see console errors
+
+**When to use real device testing:**
+- Final QA before production deployment
+- Touch interaction testing
+- Browser-specific bug reproduction
+- Performance testing on real hardware
+
+---
+
 ## 📚 Resources
 
 ### Documentation
@@ -720,6 +881,6 @@ it('should generate documentation from code input', async () => {
 
 ---
 
-**Last Updated:** October 13, 2025
+**Last Updated:** October 22, 2025
 **Maintainer:** CodeScribe AI Team
-**Version:** 1.0
+**Version:** 1.1 - Added Mobile Device Testing section

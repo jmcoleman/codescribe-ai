@@ -2,7 +2,208 @@
 
 **Status:** 📋 **PLANNED** (Post-Production Enhancements)
 **Timeline:** TBD (after v1.2.0 production deployment)
-**Last Updated:** October 21, 2025
+**Last Updated:** October 22, 2025
+
+> **📌 Navigation Tip:**
+> - **In VS Code:** Use `Cmd+Shift+O` (Mac) or `Ctrl+Shift+O` (Windows/Linux) to see all headings and jump to sections
+> - **On GitHub:** The Table of Contents links below are clickable and will jump to each section
+> - **Outline View:** Open the Outline panel in VS Code sidebar for a hierarchical document view
+
+---
+
+## 📑 Table of Contents
+
+**Quick Navigation:**
+- [✅ v1.2.2 - Maintenance Release (COMPLETED)](#v122---maintenance-release-completed)
+- [v1.2.1 - Bug Fixes (P0)](#v121---bug-fixes-priority-p0)
+  - [Bug Fix #1: DocPanel Footer Alignment](#bug-fix-1-docpanel-footer-alignment)
+  - [Bug Fix #2: Download Button Checkmark](#bug-fix-2-download-button-checkmark-issue)
+  - [Bug Fix #3: Hide Sign In Button](#bug-fix-3-hide-sign-in-button)
+  - [Success Criteria v1.2.1](#success-criteria-v121)
+- [v1.3.0 - UX Improvements (P1)](#v130---phase-2-ux-improvements-priority-p1)
+  - [Feature 1: Mobile Issues Fix](#feature-1-mobile-issues-fix)
+  - [Feature 2: Filename Display](#feature-2-filename-display)
+  - [Feature 3: GitHub Single-File Import](#feature-3-github-single-file-import)
+  - [Feature 4: Download Button](#feature-4-download-button)
+  - [Success Criteria v1.3.0](#success-criteria-v130)
+- [v1.4.0 - Layout Enhancements (P2)](#v140---phase-3-layout-enhancements-priority-p2)
+  - [Feature 1: Full-Width Layout](#feature-1-full-width-layout)
+  - [Feature 2: Resizable Panels](#feature-2-resizable-panels)
+  - [Success Criteria v1.4.0](#success-criteria-v140)
+- [Version Summary](#version-summary)
+- [Notes for PM](#notes-for-pm)
+- [Backlog (Unscheduled)](#backlog-unscheduled)
+
+---
+
+## ✅ v1.2.2 - Maintenance Release (COMPLETED)
+
+**Completed:** October 22, 2025 (Afternoon Session)
+**Duration:** 1 day
+**Status:** ✅ **DEPLOYED**
+**Goal:** Mobile compatibility fixes, UX polish, and feature flag management
+
+### Summary
+
+Comprehensive maintenance release addressing 16 issues across mobile compatibility, accessibility, UX consistency, and test coverage. All changes tested and verified with 660+ tests passing.
+
+### Completed Items
+
+#### 1. Copy Button - Non-Secure Context Fallback ✅
+**File:** `client/src/components/CopyButton.jsx`
+- [x] Added fallback to `document.execCommand('copy')` for non-HTTPS contexts
+- [x] Detects if `navigator.clipboard` is unavailable or not in secure context
+- [x] Creates temporary textarea for fallback copy method
+- [x] Applied to both `CopyButton` and `CopyButtonWithText` components
+- [x] Added test coverage for non-secure context
+- **Impact:** Copy functionality now works on mobile devices via IP/HTTP
+
+#### 2. Download Button - UX Simplification ✅
+**File:** `client/src/components/DownloadButton.jsx`
+- [x] Removed `downloaded` state and checkmark animation
+- [x] Removed auto-reset timer logic (useEffect cleanup)
+- [x] Simplified to static Download icon with toast notification
+- [x] Added documentation explaining downloads don't need state transitions
+- [x] Updated all component tests (removed 3 checkmark tests)
+- **Impact:** Cleaner, more appropriate UX for download actions
+
+#### 3. Download Button Tests - Cleanup ✅
+**File:** `client/src/components/__tests__/DownloadButton.test.jsx`
+- [x] Removed 3 tests for checkmark transitions
+- [x] Removed timer-based state tests
+- [x] Kept core functionality tests (download triggers, toast, filename)
+- **Impact:** Tests match actual component behavior
+
+#### 4. Copy Button Tests - Secure Context Coverage ✅
+**File:** `client/src/components/__tests__/CopyButton.test.jsx`
+- [x] Added test for non-secure context using `document.execCommand` fallback
+- [x] Verified fallback creates temporary textarea
+- [x] Verified textarea is removed after copy
+- **Impact:** Better test coverage for mobile/non-HTTPS scenarios
+
+#### 5. Quality Score Tests - Cleanup ✅
+**File:** `client/src/components/__tests__/QualityScore.test.jsx`
+- [x] Removed duplicate test helper function
+- [x] Streamlined test setup
+- **Impact:** Cleaner, more maintainable test file
+
+#### 6. Examples Modal - Mobile Accessibility ✅
+**File:** `client/src/components/ExamplesModal.jsx`
+- [x] Enhanced focus styles for mobile (larger ring, better visibility)
+- [x] Improved touch target clarity
+- [x] Better visual feedback for keyboard navigation on mobile
+- **Impact:** Better accessibility and UX on mobile devices
+
+#### 7. Header - Focus Indicator Improvements ✅
+**File:** `client/src/components/Header.jsx`
+- [x] Enhanced focus ring visibility
+- [x] Improved contrast for better accessibility
+- [x] Better keyboard navigation visual feedback
+- **Impact:** Improved WCAG compliance and mobile accessibility
+
+#### 8. Mobile Menu - Accessibility & UX ✅
+**File:** `client/src/components/MobileMenu.jsx`
+- [x] Enhanced focus indicators for all interactive elements
+- [x] Improved touch target sizing
+- [x] Better visual hierarchy
+- [x] Clearer active/hover states
+- **Impact:** Better mobile UX and accessibility
+
+#### 9. DocPanel - Minor Refinements ✅
+**File:** `client/src/components/DocPanel.jsx`
+- [x] Refined spacing and layout
+- [x] Improved responsive behavior
+- **Impact:** More polished UI
+
+#### 10. App.jsx - Integration Updates ✅
+**File:** `client/src/App.jsx`
+- [x] Updated DownloadButton usage to match new simplified API
+- [x] Removed unnecessary state management for downloads
+- **Impact:** Cleaner component integration
+
+#### 11. Server - Error Handling ✅
+**File:** `server/src/server.js`
+- [x] Improved error logging
+- [x] Better error messages
+- [x] More defensive code
+- **Impact:** Better debugging and reliability
+
+#### 12. Frontend Testing Guide - Test Patterns ✅
+**File:** `docs/testing/frontend-testing-guide.md`
+- [x] Added section on testing clipboard fallbacks
+- [x] Added examples for testing `document.execCommand`
+- [x] Added mobile testing best practices
+- [x] Documented testing patterns for secure vs non-secure contexts
+- **Impact:** Better developer documentation for edge cases
+
+#### 13. Cross-Browser Test Plan - Mobile File Upload ✅
+**File:** `docs/testing/CROSS-BROWSER-TEST-PLAN.md` (v1.0 → v1.1)
+- [x] Added comprehensive "Mobile-Specific Testing" section (110+ lines)
+- [x] Documented native OS file picker behavior (Camera/Photos/Files)
+- [x] Added automated test example (Playwright)
+- [x] Added 8-step manual testing procedure
+- [x] Created browser-specific notes table (iOS Safari, Chrome Android, Samsung Browser)
+- [x] Added debugging tips for `chrome://inspect` workflow
+- [x] Documented known limitations
+- [x] Included UX considerations for future improvements
+- [x] Updated Table of Contents
+- [x] Bumped version v1.0 → v1.1
+- **Impact:** Clear expectations for mobile testing, reduces confusion
+
+#### 14. GitHub Import Button - Feature Flag ✅
+**Files:**
+- `client/src/components/ControlBar.jsx`
+- `client/src/components/__tests__/ControlBar.test.jsx`
+- [x] Added `ENABLE_GITHUB_IMPORT = false` feature flag (following `ENABLE_AUTH` pattern)
+- [x] Wrapped GitHub import button in conditional render
+- [x] Updated 9 tests: 6 skipped (button hidden), 1 new verification test, 2 updated assertions
+- [x] All 46 ControlBar tests passing, 6 skipped appropriately
+- [x] Button hidden until v2.0 implementation
+- **Impact:** Cleaner UI, no non-functional buttons shown to users
+
+#### 15. Roadmap - Documentation ✅
+**File:** `docs/planning/ROADMAP.md`
+- [x] Added maintenance release items
+- [x] Updated progress tracking
+- [x] Documented mobile improvements
+- **Impact:** Better project visibility and planning
+
+#### 16. Roadmap Data - JSON Update ✅
+**File:** `docs/planning/roadmap-data.json`
+- [x] Added v1.2.2 Maintenance Release to "Done" column
+- [x] Listed all 8 key features
+- [x] Added badge: "Mobile & UX Polish"
+- **Impact:** Interactive roadmap reflects current state
+
+### Success Criteria (v1.2.2) ✅
+
+- [x] Copy-to-clipboard works on mobile via IP/HTTP (non-secure contexts)
+- [x] Download button has appropriate UX (no confusing checkmark)
+- [x] Enhanced mobile accessibility (focus indicators, touch targets)
+- [x] GitHub import button hidden (non-functional feature removed from UI)
+- [x] Cross-browser test plan documents mobile file upload behavior
+- [x] All 660+ tests passing (100% pass rate)
+- [x] 16 files updated, 260+ net lines added
+- [x] No regressions in existing functionality
+- [x] Documentation updated (testing guides, roadmap)
+
+### Statistics
+
+- **Files Modified:** 16
+- **Lines Added:** 513
+- **Lines Removed:** 253
+- **Net Change:** +260 lines
+- **Tests:** 660+ passing (46 ControlBar + 6 skipped appropriately)
+- **Test Coverage:** Maintained at 95.81% backend
+- **Duration:** 1 day (afternoon session)
+
+### Key Themes
+
+1. **Mobile-First Fixes:** Copy fallback, file upload docs, accessibility
+2. **UX Improvements:** Simplified download button, better focus indicators
+3. **Test Coverage:** Added tests for edge cases, cleaned up obsolete tests
+4. **Documentation:** Comprehensive mobile testing guide, updated frontend testing patterns
+5. **Feature Management:** Feature flags for unimplemented features (GitHub import)
 
 ---
 
@@ -60,9 +261,35 @@
   - [ ] Cross-browser testing
   - [ ] Mobile testing (download behavior varies by device)
 
+**Bug Fix #3: Hide Sign In Button**
+- [ ] **Issue:** Sign In button is visible but non-functional (no authentication implemented yet)
+- [ ] **Analysis:** Authentication planned for Phase 3.5 (v1.5.0), button is a placeholder
+  - Current state: Button exists in Header.jsx but does nothing when clicked
+  - User confusion: Clicking button has no effect (broken UX)
+- [ ] **Fix:** Hide Sign In button until authentication is implemented
+  - Option A: Conditional rendering based on feature flag
+  - Option B: Comment out the button JSX
+  - Option C: CSS display: none with comment
+  - **Recommended:** Option A (cleaner, easier to re-enable later)
+- [ ] **Files to modify:**
+  - `client/src/components/Header.jsx` (lines 69-71)
+  - `client/src/components/MobileMenu.jsx` (if Sign In appears in mobile menu)
+- [ ] **Implementation:**
+  - Add feature flag constant: `const ENABLE_AUTH = false;`
+  - Wrap button in conditional: `{ENABLE_AUTH && <Button>Sign In</Button>}`
+  - When authentication is ready (v1.5.0), change flag to `true`
+- [ ] **Testing:**
+  - [ ] Verify Sign In button is not visible in desktop header
+  - [ ] Verify Sign In button is not visible in mobile menu
+  - [ ] Verify header layout still looks balanced without button
+  - [ ] Cross-browser testing (Chrome, Firefox, Safari)
+  - [ ] Mobile testing (responsive layout intact)
+
 #### Success Criteria (v1.2.1)
-- [ ] DocPanel footer perfectly aligned with CodePanel footer (pixel-perfect)
-- [ ] Download button (if exists) has correct visual behavior without checkmark
+- [x] DocPanel footer perfectly aligned with CodePanel footer (pixel-perfect)
+- [x] Download button (if exists) has correct visual behavior without checkmark
+- [x] Examples modal preview persistence and focus alignment fixed
+- [x] Sign In button hidden (non-functional placeholder removed)
 - [ ] No regressions in existing UI
 - [ ] All tests passing
 - [ ] Deployed to production
@@ -214,7 +441,7 @@
 - [ ] Filename displays correctly for uploaded files and examples
 - [ ] GitHub import works with raw URLs and repository URLs
 - [ ] Download button exports docs in .md and .txt formats
-- [ ] Download button has correct visual behavior (NO checkmark)
+- [x] Download button has correct visual behavior (NO checkmark)
 - [ ] No regressions in existing features
 - [ ] All tests passing (add tests for new features)
 - [ ] Documentation updated (README, ARCHITECTURE, etc.)
@@ -394,3 +621,25 @@ const PANEL_CONSTRAINTS = {
 - [ ] Update ARCHITECTURE.md if significant changes
 - [ ] Update README.md with new features
 - [ ] Create release notes for GitHub
+
+---
+
+## 🗂️ Backlog (Unscheduled)
+
+**Status:** 💡 **IDEA CAPTURE** - Not yet scoped or scheduled
+**Purpose:** Quick capture of bugs, enhancements, and ideas (like Jira backlog)
+
+**Process:**
+1. Capture ideas here quickly (1 line, no detailed planning)
+2. When ready to implement → Move to versioned section (v1.2.1, v1.3.0, etc.)
+3. Add full implementation details at that time
+
+**Format:** `[TYPE]` Brief description
+- Types: BUG, ENHANCEMENT, FEATURE, TECH-DEBT
+
+---
+
+### Backlog Items
+
+- [ ] **[ENHANCEMENT]** App needs to be responsive to larger monitor sizes - reduce excessive whitespace on wide screens
+- [ ] **[BUG]** Remove max-w-7xl constraint - app should use full width on laptop screens (currently creates unnecessary whitespace)

@@ -19,8 +19,9 @@ describe('ControlBar Component', () => {
       render(<ControlBar {...defaultProps} />);
 
       expect(screen.getByRole('button', { name: /upload files/i })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /import from github/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /generate docs/i })).toBeInTheDocument();
+      // GitHub import button hidden by feature flag
+      expect(screen.queryByRole('button', { name: /import from github/i })).not.toBeInTheDocument();
     });
 
     it('should render doc type selector', () => {
@@ -89,7 +90,10 @@ describe('ControlBar Component', () => {
   });
 
   describe('GitHub Import Button', () => {
-    it('should call onGithubImport when clicked', async () => {
+    // Note: GitHub import feature is currently disabled via feature flag (ENABLE_GITHUB_IMPORT = false)
+    // These tests are skipped until the feature is implemented in v2.0
+
+    it.skip('should call onGithubImport when clicked', async () => {
       const user = userEvent.setup();
       const onGithubImport = vi.fn();
 
@@ -101,28 +105,28 @@ describe('ControlBar Component', () => {
       expect(onGithubImport).toHaveBeenCalledTimes(1);
     });
 
-    it('should disable github button when disabled prop is true', () => {
+    it.skip('should disable github button when disabled prop is true', () => {
       render(<ControlBar {...defaultProps} disabled={true} />);
 
       const githubButton = screen.getByRole('button', { name: /import from github/i });
       expect(githubButton).toBeDisabled();
     });
 
-    it('should have secondary variant styling', () => {
+    it.skip('should have secondary variant styling', () => {
       render(<ControlBar {...defaultProps} />);
 
       const githubButton = screen.getByRole('button', { name: /import from github/i });
       expect(githubButton).toHaveClass('bg-slate-100');
     });
 
-    it('should display github icon', () => {
+    it.skip('should display github icon', () => {
       render(<ControlBar {...defaultProps} />);
 
       const githubButton = screen.getByRole('button', { name: /import from github/i });
       expect(githubButton.querySelector('svg')).toBeInTheDocument();
     });
 
-    it('should show responsive text content', () => {
+    it.skip('should show responsive text content', () => {
       render(<ControlBar {...defaultProps} />);
 
       // Desktop text (hidden on mobile)
@@ -130,6 +134,13 @@ describe('ControlBar Component', () => {
 
       // Mobile text (hidden on desktop)
       expect(screen.getByText('GitHub')).toHaveClass('sm:hidden');
+    });
+
+    it('should not render GitHub import button when feature is disabled', () => {
+      render(<ControlBar {...defaultProps} />);
+
+      const githubButton = screen.queryByRole('button', { name: /import from github/i });
+      expect(githubButton).not.toBeInTheDocument();
     });
   });
 
@@ -329,13 +340,12 @@ describe('ControlBar Component', () => {
     it('should disable all action buttons when disabled prop is true', () => {
       render(<ControlBar {...defaultProps} disabled={true} />);
 
-      // Check main action buttons (Upload, GitHub, Generate)
+      // Check main action buttons (Upload, Generate)
+      // Note: GitHub button hidden by feature flag
       const uploadButton = screen.getByRole('button', { name: /upload files/i });
-      const githubButton = screen.getByRole('button', { name: /import from github/i });
       const generateButton = screen.getByRole('button', { name: /generate docs/i });
 
       expect(uploadButton).toBeDisabled();
-      expect(githubButton).toBeDisabled();
       expect(generateButton).toBeDisabled();
     });
 
@@ -343,11 +353,9 @@ describe('ControlBar Component', () => {
       render(<ControlBar {...defaultProps} disabled={false} />);
 
       const uploadButton = screen.getByRole('button', { name: /upload files/i });
-      const githubButton = screen.getByRole('button', { name: /import from github/i });
       const generateButton = screen.getByRole('button', { name: /generate docs/i });
 
       expect(uploadButton).toBeEnabled();
-      expect(githubButton).toBeEnabled();
       expect(generateButton).toBeEnabled();
     });
 
@@ -386,10 +394,8 @@ describe('ControlBar Component', () => {
       render(<ControlBar {...defaultProps} isGenerating={true} disabled={false} />);
 
       const uploadButton = screen.getByRole('button', { name: /upload files/i });
-      const githubButton = screen.getByRole('button', { name: /import from github/i });
 
       expect(uploadButton).toBeEnabled();
-      expect(githubButton).toBeEnabled();
     });
   });
 
@@ -429,15 +435,16 @@ describe('ControlBar Component', () => {
       render(<ControlBar {...defaultProps} />);
 
       const buttons = screen.getAllByRole('button');
-      expect(buttons.length).toBeGreaterThanOrEqual(3); // At least 3 main buttons
+      expect(buttons.length).toBeGreaterThanOrEqual(2); // At least 2 main buttons (Upload, Generate)
     });
 
     it('should have descriptive button text', () => {
       render(<ControlBar {...defaultProps} />);
 
       expect(screen.getByRole('button', { name: /upload files/i })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /import from github/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /generate docs/i })).toBeInTheDocument();
+      // GitHub button hidden by feature flag
+      expect(screen.queryByRole('button', { name: /import from github/i })).not.toBeInTheDocument();
     });
 
     it('should indicate disabled state through aria', () => {
@@ -445,11 +452,9 @@ describe('ControlBar Component', () => {
 
       // Check main action buttons for disabled attribute
       const uploadButton = screen.getByRole('button', { name: /upload files/i });
-      const githubButton = screen.getByRole('button', { name: /import from github/i });
       const generateButton = screen.getByRole('button', { name: /generate docs/i });
 
       expect(uploadButton).toHaveAttribute('disabled');
-      expect(githubButton).toHaveAttribute('disabled');
       expect(generateButton).toHaveAttribute('disabled');
     });
 
@@ -505,7 +510,8 @@ describe('ControlBar Component', () => {
       expect(onGenerate).toHaveBeenCalled();
     });
 
-    it('should handle github import → select type → generate', async () => {
+    it.skip('should handle github import → select type → generate', async () => {
+      // Skipped: GitHub import feature disabled (ENABLE_GITHUB_IMPORT = false)
       const user = userEvent.setup();
       const onGithubImport = vi.fn();
       const onDocTypeChange = vi.fn();

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { DownloadButton } from '../DownloadButton';
 
@@ -159,32 +159,7 @@ describe('DownloadButton', () => {
     });
   });
 
-  describe('Success State', () => {
-    it('should show success state after download', async () => {
-      const user = userEvent.setup();
-      render(<DownloadButton content="Test content" />);
-
-      const button = screen.getByTestId('download-btn');
-      await user.click(button);
-
-      await waitFor(() => {
-        expect(button).toHaveAttribute('aria-label', 'Downloaded!');
-        expect(button).toHaveAttribute('title', 'Downloaded!');
-      });
-    });
-
-    it('should disable button after download', async () => {
-      const user = userEvent.setup();
-      render(<DownloadButton content="Test content" />);
-
-      const button = screen.getByTestId('download-btn');
-      await user.click(button);
-
-      await waitFor(() => {
-        expect(button).toBeDisabled();
-      });
-    });
-
+  describe('Success Feedback', () => {
     it('should show success toast after download', async () => {
       const user = userEvent.setup();
       const { toastCompact } = await import('../../utils/toast');
@@ -197,32 +172,37 @@ describe('DownloadButton', () => {
       expect(toastCompact).toHaveBeenCalledWith('Downloaded!', 'success');
     });
 
-    it.skip('should reset to initial state after 2 seconds', async () => {
-      vi.useFakeTimers();
-      const user = userEvent.setup({ delay: null });
-
-      render(<DownloadButton content="Test content" />);
+    it('should keep same aria-label after download (no state change)', async () => {
+      const user = userEvent.setup();
+      render(<DownloadButton content="Test content" ariaLabel="Download documentation" />);
 
       const button = screen.getByTestId('download-btn');
       await user.click(button);
 
-      // Initially should be in downloaded state
-      expect(button).toHaveAttribute('aria-label', 'Downloaded!');
-      expect(button).toBeDisabled();
-
-      // Fast-forward 2 seconds and run pending timers
-      await vi.advanceTimersByTimeAsync(2000);
-
-      // Should reset to initial state
-      expect(button).toHaveAttribute('aria-label', 'Download');
+      // Button should remain enabled with same label
       expect(button).not.toBeDisabled();
+      expect(button).toHaveAttribute('aria-label', 'Download documentation');
+      expect(button).toHaveAttribute('title', 'Download documentation');
+    });
 
-      vi.useRealTimers();
+    it('should remain clickable after download (fire-and-forget pattern)', async () => {
+      const user = userEvent.setup();
+      render(<DownloadButton content="Test content" />);
+
+      const button = screen.getByTestId('download-btn');
+
+      // First download
+      await user.click(button);
+      expect(global.URL.createObjectURL).toHaveBeenCalledTimes(1);
+
+      // Should be able to download again immediately
+      await user.click(button);
+      expect(global.URL.createObjectURL).toHaveBeenCalledTimes(2);
     });
   });
 
   describe('Error Handling', () => {
-    it.skip('should show error toast on download failure', async () => {
+    it('should show error toast on download failure', async () => {
       const user = userEvent.setup();
       const { toastError } = await import('../../utils/toast');
 
@@ -333,63 +313,32 @@ describe('DownloadButton', () => {
     });
   });
 
-  describe('Haptic Feedback', () => {
-    it.skip('should trigger haptic feedback on supported devices', async () => {
-      const user = userEvent.setup();
-      const vibrateSpy = vi.fn();
-      navigator.vibrate = vibrateSpy;
-
-      render(<DownloadButton content="Test content" />);
-
-      const button = screen.getByTestId('download-btn');
-      await user.click(button);
-
-      expect(vibrateSpy).toHaveBeenCalledWith(50);
-    });
-
-    it.skip('should not error when haptic feedback is not supported', async () => {
-      const user = userEvent.setup();
-      delete navigator.vibrate;
-
-      render(<DownloadButton content="Test content" />);
-
-      const button = screen.getByTestId('download-btn');
-
-      // Should not throw error
-      await expect(user.click(button)).resolves.not.toThrow();
-    });
-  });
-
-  describe('Icon Animation', () => {
-    it('should show Download icon initially', () => {
+  describe('Icon Display', () => {
+    it('should show Download icon', () => {
       const { container } = render(<DownloadButton content="Test content" />);
 
-      // Download icon should be visible (opacity-100)
+      // Should have exactly one SVG (Download icon only)
       const icons = container.querySelectorAll('svg');
-      const downloadIcon = icons[0];
-
-      // SVG className is an object, use getAttribute instead
-      expect(downloadIcon.getAttribute('class')).toContain('opacity-100');
+      expect(icons).toHaveLength(1);
     });
 
-    it.skip('should transition to Check icon after download', async () => {
+    it('should keep Download icon after clicking (no state change)', async () => {
       const user = userEvent.setup();
       const { container } = render(<DownloadButton content="Test content" />);
 
       const button = screen.getByTestId('download-btn');
       await user.click(button);
 
-      await waitFor(() => {
-        const icons = container.querySelectorAll('svg');
-        const downloadIcon = icons[0];
-        const checkIcon = icons[1];
+      // Should still have exactly one SVG (Download icon, no Check icon)
+      const icons = container.querySelectorAll('svg');
+      expect(icons).toHaveLength(1);
+    });
 
-        // Download icon should fade out
-        expect(downloadIcon.getAttribute('class')).toContain('opacity-0');
+    it('should have aria-hidden on icon', () => {
+      const { container } = render(<DownloadButton content="Test content" />);
 
-        // Check icon should fade in
-        expect(checkIcon.getAttribute('class')).toContain('opacity-100');
-      });
+      const icon = container.querySelector('svg');
+      expect(icon).toHaveAttribute('aria-hidden', 'true');
     });
   });
 });
