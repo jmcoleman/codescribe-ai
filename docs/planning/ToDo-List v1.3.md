@@ -15,7 +15,7 @@
 
 **Quick Navigation:**
 - [✅ v1.2.2 - Maintenance Release (COMPLETED)](#v122---maintenance-release-completed)
-- [v1.2.1 - Bug Fixes (P0)](#v121---bug-fixes-priority-p0)
+- [✅ v1.2.1 - Bug Fixes (COMPLETED)](#v121---bug-fixes-completed)
   - [Bug Fix #1: DocPanel Footer Alignment](#bug-fix-1-docpanel-footer-alignment)
   - [Bug Fix #2: Download Button Checkmark](#bug-fix-2-download-button-checkmark-issue)
   - [Bug Fix #3: Hide Sign In Button](#bug-fix-3-hide-sign-in-button)
@@ -33,6 +33,96 @@
 - [Version Summary](#version-summary)
 - [Notes for PM](#notes-for-pm)
 - [Backlog (Unscheduled)](#backlog-unscheduled)
+
+---
+
+### ✅ v1.2.1 - Bug Fixes (COMPLETED)
+
+**Completed:** Included in v1.2.2 release
+**Duration:** 0.5 days
+**Status:** ✅ **DEPLOYED**
+**Goal:** Critical UI fixes for footer alignment, download button UX, and sign-in button
+
+#### Critical UI Fixes
+
+**Bug Fix #1: DocPanel Footer Alignment**
+- [x] **Issue:** DocPanel footer alignment doesn't match CodePanel footer
+- [x] **Analysis:** Compare CodePanel footer structure (lines 88-96) vs DocPanel footer (lines 239-344)
+  - CodePanel: Simple `flex items-center justify-between px-4 py-2` with `bg-slate-50 border-t border-slate-200`
+  - DocPanel: Has nested structure with expandable report, may have alignment inconsistency
+- [x] **Fix:** Ensure DocPanel footer uses same padding, spacing, and alignment as CodePanel
+  - Verify `px-4 py-2` padding matches
+  - Verify flex alignment (`items-center justify-between`)
+  - Verify vertical centering of all footer elements
+  - Test with and without quality score
+  - Test with expandable section collapsed and expanded
+- [x] **Files to modify:**
+  - `client/src/components/DocPanel.jsx` (lines 237-345)
+- [x] **Testing:**
+  - [x] Visual comparison: CodePanel footer vs DocPanel footer side-by-side
+  - [x] Test with quality score present
+  - [x] Test with quality score absent
+  - [x] Test expandable section transitions
+  - [x] Cross-browser testing (Chrome, Firefox, Safari)
+  - [x] Responsive testing (mobile, tablet, desktop)
+
+**Bug Fix #2: Download Button Checkmark Issue**
+- [x] **Issue:** Download button shows checkmark after clicking (copied from CopyButton pattern)
+- [x] **Analysis:** Determine if download button exists or is planned
+  - Search codebase for DownloadButton component
+  - Review roadmap for download button feature (Phase 2: UX Improvements)
+- [x] **Decision:**
+  - If button exists: Remove checkmark state transition (downloads don't need success confirmation like copy does)
+  - If planned: Note for Phase 2 implementation (don't use CopyButton checkmark pattern)
+- [x] **Fix (if button exists):**
+  - Create `DownloadButton.jsx` component without checkmark state
+  - Use Download icon only (no Check icon swap)
+  - Maintain hover/active states but remove success animation
+  - Keep toast notification for download completion (if applicable)
+- [x] **Files to check/modify:**
+  - `client/src/components/DownloadButton.jsx` (if exists)
+  - `client/src/components/DocPanel.jsx` (if download button is inline)
+  - Search for download-related code
+- [x] **Testing:**
+  - [x] Verify download triggers correctly
+  - [x] Verify no checkmark appears after download
+  - [x] Verify button returns to normal state immediately
+  - [x] Test download functionality (file saves correctly)
+  - [x] Cross-browser testing
+  - [x] Mobile testing (download behavior varies by device)
+
+**Bug Fix #3: Hide Sign In Button**
+- [x] **Issue:** Sign In button is visible but non-functional (no authentication implemented yet)
+- [x] **Analysis:** Authentication planned for Phase 3.5 (v1.5.0), button is a placeholder
+  - Current state: Button exists in Header.jsx but does nothing when clicked
+  - User confusion: Clicking button has no effect (broken UX)
+- [x] **Fix:** Hide Sign In button until authentication is implemented
+  - Option A: Conditional rendering based on feature flag
+  - Option B: Comment out the button JSX
+  - Option C: CSS display: none with comment
+  - **Recommended:** Option A (cleaner, easier to re-enable later)
+- [x] **Files to modify:**
+  - `client/src/components/Header.jsx` (lines 69-71)
+  - `client/src/components/MobileMenu.jsx` (if Sign In appears in mobile menu)
+- [x] **Implementation:**
+  - Add feature flag constant: `const ENABLE_AUTH = false;`
+  - Wrap button in conditional: `{ENABLE_AUTH && <Button>Sign In</Button>}`
+  - When authentication is ready (v1.5.0), change flag to `true`
+- [x] **Testing:**
+  - [x] Verify Sign In button is not visible in desktop header
+  - [x] Verify Sign In button is not visible in mobile menu
+  - [x] Verify header layout still looks balanced without button
+  - [x] Cross-browser testing (Chrome, Firefox, Safari)
+  - [x] Mobile testing (responsive layout intact)
+
+#### Success Criteria (v1.2.1)
+- [x] DocPanel footer perfectly aligned with CodePanel footer (pixel-perfect)
+- [x] Download button (if exists) has correct visual behavior without checkmark
+- [x] Examples modal preview persistence and focus alignment fixed
+- [x] Sign In button hidden (non-functional placeholder removed)
+- [x] No regressions in existing UI
+- [x] All tests passing
+- [x] Deployed to production
 
 ---
 
@@ -204,95 +294,6 @@ Comprehensive maintenance release addressing 16 issues across mobile compatibili
 3. **Test Coverage:** Added tests for edge cases, cleaned up obsolete tests
 4. **Documentation:** Comprehensive mobile testing guide, updated frontend testing patterns
 5. **Feature Management:** Feature flags for unimplemented features (GitHub import)
-
----
-
-### 📦 v1.2.1 - Bug Fixes (PRIORITY: P0)
-
-**Estimated Duration:** 0.5 days
-**Target Release:** Immediate (hotfix)
-**Status:** 📋 **NOT STARTED**
-
-#### Critical UI Fixes
-
-**Bug Fix #1: DocPanel Footer Alignment**
-- [ ] **Issue:** DocPanel footer alignment doesn't match CodePanel footer
-- [ ] **Analysis:** Compare CodePanel footer structure (lines 88-96) vs DocPanel footer (lines 239-344)
-  - CodePanel: Simple `flex items-center justify-between px-4 py-2` with `bg-slate-50 border-t border-slate-200`
-  - DocPanel: Has nested structure with expandable report, may have alignment inconsistency
-- [ ] **Fix:** Ensure DocPanel footer uses same padding, spacing, and alignment as CodePanel
-  - Verify `px-4 py-2` padding matches
-  - Verify flex alignment (`items-center justify-between`)
-  - Verify vertical centering of all footer elements
-  - Test with and without quality score
-  - Test with expandable section collapsed and expanded
-- [ ] **Files to modify:**
-  - `client/src/components/DocPanel.jsx` (lines 237-345)
-- [ ] **Testing:**
-  - [ ] Visual comparison: CodePanel footer vs DocPanel footer side-by-side
-  - [ ] Test with quality score present
-  - [ ] Test with quality score absent
-  - [ ] Test expandable section transitions
-  - [ ] Cross-browser testing (Chrome, Firefox, Safari)
-  - [ ] Responsive testing (mobile, tablet, desktop)
-
-**Bug Fix #2: Download Button Checkmark Issue**
-- [ ] **Issue:** Download button shows checkmark after clicking (copied from CopyButton pattern)
-- [ ] **Analysis:** Determine if download button exists or is planned
-  - Search codebase for DownloadButton component
-  - Review roadmap for download button feature (Phase 2: UX Improvements)
-- [ ] **Decision:**
-  - If button exists: Remove checkmark state transition (downloads don't need success confirmation like copy does)
-  - If planned: Note for Phase 2 implementation (don't use CopyButton checkmark pattern)
-- [ ] **Fix (if button exists):**
-  - Create `DownloadButton.jsx` component without checkmark state
-  - Use Download icon only (no Check icon swap)
-  - Maintain hover/active states but remove success animation
-  - Keep toast notification for download completion (if applicable)
-- [ ] **Files to check/modify:**
-  - `client/src/components/DownloadButton.jsx` (if exists)
-  - `client/src/components/DocPanel.jsx` (if download button is inline)
-  - Search for download-related code
-- [ ] **Testing:**
-  - [ ] Verify download triggers correctly
-  - [ ] Verify no checkmark appears after download
-  - [ ] Verify button returns to normal state immediately
-  - [ ] Test download functionality (file saves correctly)
-  - [ ] Cross-browser testing
-  - [ ] Mobile testing (download behavior varies by device)
-
-**Bug Fix #3: Hide Sign In Button**
-- [ ] **Issue:** Sign In button is visible but non-functional (no authentication implemented yet)
-- [ ] **Analysis:** Authentication planned for Phase 3.5 (v1.5.0), button is a placeholder
-  - Current state: Button exists in Header.jsx but does nothing when clicked
-  - User confusion: Clicking button has no effect (broken UX)
-- [ ] **Fix:** Hide Sign In button until authentication is implemented
-  - Option A: Conditional rendering based on feature flag
-  - Option B: Comment out the button JSX
-  - Option C: CSS display: none with comment
-  - **Recommended:** Option A (cleaner, easier to re-enable later)
-- [ ] **Files to modify:**
-  - `client/src/components/Header.jsx` (lines 69-71)
-  - `client/src/components/MobileMenu.jsx` (if Sign In appears in mobile menu)
-- [ ] **Implementation:**
-  - Add feature flag constant: `const ENABLE_AUTH = false;`
-  - Wrap button in conditional: `{ENABLE_AUTH && <Button>Sign In</Button>}`
-  - When authentication is ready (v1.5.0), change flag to `true`
-- [ ] **Testing:**
-  - [ ] Verify Sign In button is not visible in desktop header
-  - [ ] Verify Sign In button is not visible in mobile menu
-  - [ ] Verify header layout still looks balanced without button
-  - [ ] Cross-browser testing (Chrome, Firefox, Safari)
-  - [ ] Mobile testing (responsive layout intact)
-
-#### Success Criteria (v1.2.1)
-- [x] DocPanel footer perfectly aligned with CodePanel footer (pixel-perfect)
-- [x] Download button (if exists) has correct visual behavior without checkmark
-- [x] Examples modal preview persistence and focus alignment fixed
-- [x] Sign In button hidden (non-functional placeholder removed)
-- [ ] No regressions in existing UI
-- [ ] All tests passing
-- [ ] Deployed to production
 
 ---
 

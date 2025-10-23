@@ -160,6 +160,22 @@
           ]
         },
         {
+          "version": "v1.2.1",
+          "title": "Bug Fixes",
+          "duration": "0.5 days",
+          "status": "✓ Complete",
+          "features": [
+            "DocPanel footer alignment (pixel-perfect match with CodePanel)",
+            "Download button UX fix (removed checkmark animation)",
+            "Sign-in button hidden (ENABLE_AUTH feature flag)",
+            "Examples modal preview persistence and focus alignment",
+            "Visual regression testing (Chrome, Firefox, Safari)",
+            "Mobile testing (iOS, Android)",
+            "Cross-browser compatibility verification"
+          ],
+          "badge": "Critical UI Fixes"
+        },
+        {
           "version": "v1.2.2",
           "title": "Maintenance Release",
           "duration": "1 day",

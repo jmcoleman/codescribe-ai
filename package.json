@@ -15,7 +15,8 @@
     "versions": "node scripts/check-versions.js",
     "lighthouse": "./scripts/lighthouse-audit.sh",
     "lighthouse:quick": "./scripts/lighthouse-quick.sh",
-    "audit:a11y": "./scripts/lighthouse-quick.sh"
+    "audit:a11y": "./scripts/lighthouse-quick.sh",
+    "roadmap:update": "./scripts/update-roadmap.sh"
   },
   "keywords": [
     "documentation",

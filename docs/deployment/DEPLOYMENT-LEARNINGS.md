@@ -1133,3 +1133,278 @@ Vercel Deploy Hooks + `git.deploymentEnabled` configuration provides the best of
 - Created VERCEL_DEPLOY_HOOK GitHub secret
 
 **Date:** October 21, 2025
+
+---
+
+## Issue 10: Missed Release Tagging - Creating Retroactive Git Tags and Releases
+
+**Problem:**
+After deploying v1.2.1 to production, the git tag and GitHub release were forgotten. By the time it was noticed, v1.2.2 had already been released and tagged.
+
+**Symptoms:**
+- Production deployment happened without corresponding git tag
+- GitHub releases page missing v1.2.1 release
+- CHANGELOG.md has v1.2.1 entry but no matching tag in git history
+- Tag history shows v1.2.0 → v1.2.2 (v1.2.1 missing)
+
+**Why This Matters:**
+- **Version history gaps** confuse contributors and users
+- **Release notes missing** from GitHub releases page
+- **Breaking semantic versioning** (appears to skip from v1.2.0 to v1.2.2)
+- **CI/CD issues** if pipelines depend on tags
+- **Portfolio credibility** - incomplete release history looks unprofessional
+
+**Root Cause:**
+Release tagging was not part of the documented deployment checklist, making it easy to forget during the deployment rush.
+
+**Solution: Create Retroactive Tags and Releases**
+
+**Step 1: Identify the Correct Commit**
+
+First, find which commit represents the v1.2.1 release:
+
+```bash
+# View recent commit history
+git log --oneline --all -20
+
+# View commit graph to understand branching
+git log --oneline --graph --all -10
+
+# View full details of a specific commit
+git show COMMIT_HASH --stat
+```
+
+**Key indicators of the right commit:**
+- Date matches CHANGELOG.md date for the release
+- Comes chronologically AFTER previous release (v1.2.0)
+- Comes chronologically BEFORE next release (v1.2.2)
+- Contains the changes documented in CHANGELOG.md for that version
+
+**Example from CodeScribe AI:**
+```bash
+$ git log --oneline --graph --all -10
+* 31d93e6 roadmap updated for v1.2.2
+* b83d818 v1.2.2 maintenance release: mobile compatibility and UX polish
+* 4495715 added an interactive roadmap
+* 3efe329 readme and vercel deployment doc updates
+* 0ef49dc updated changelog for recent improvements  ← This is v1.2.1
+```
+
+**Step 2: Verify Commit in GitHub**
+
+Before tagging, confirm the commit exists in GitHub:
+
+**Method A: Direct URL**
+```
+https://github.com/USERNAME/REPO/commit/COMMIT_HASH
+```
+
+**Example:**
+```
+https://github.com/jmcoleman/codescribe-ai/commit/0ef49dc
+```
+
+**Method B: GitHub Web UI**
+1. Go to repository on GitHub
+2. Click "Commits" link (below green Code button)
+3. Use search box (top right) and paste commit hash
+4. Verify commit message and date
+
+**Method C: Git Show**
+```bash
+# Get full commit details including author and date
+git show 0ef49dc --stat
+
+# Output shows:
+# commit 0ef49dcaab2c208e9cc23ce59012faa33323f1c8
+# Author: Jenni Coleman <jenni.m.coleman@gmail.com>
+# Date:   Tue Oct 21 21:25:52 2025 -0400
+#     updated changelog for recent improvements
+```
+
+**Step 3: Create Retroactive Git Tag**
+
+Create an annotated tag pointing to the specific commit (NOT current HEAD):
+
+```bash
+# Syntax: git tag -a VERSION COMMIT_HASH -m "MESSAGE"
+git tag -a v1.2.1 0ef49dc -m "v1.2.1 - Bug fixes: footer alignment, download button UX, sign-in button hiding"
+
+# Verify tag was created
+git tag -l "v1.2.*"
+# Output:
+# v1.2.0
+# v1.2.1
+# v1.2.2
+
+# Verify tag points to correct commit
+git show v1.2.1 --stat
+```
+
+**Critical Notes:**
+- ✅ **Use `-a` flag** to create annotated tag (includes metadata)
+- ✅ **Include commit hash** to tag a specific commit (not HEAD)
+- ✅ **Use meaningful message** that summarizes the release
+- ❌ **Don't tag HEAD** if you've made commits since the release
+
+**Step 4: Push Tag to GitHub**
+
+```bash
+# Push the single tag
+git push origin v1.2.1
+
+# Verify on GitHub
+# Go to: https://github.com/USERNAME/REPO/tags
+# Should see v1.2.1 in the list
+```
+
+**Step 5: Create GitHub Release**
+
+**Option A: Using GitHub CLI (Recommended)**
+
+```bash
+# Install gh CLI if not already installed
+# brew install gh (macOS)
+# See: https://cli.github.com/
+
+# Authenticate
+gh auth login
+
+# Create release with notes from CHANGELOG
+gh release create v1.2.1 \
+  --title "v1.2.1 - Bug Fixes" \
+  --notes "$(cat <<'EOF'
+**Status:** ✅ Bug Fixes (Included in v1.2.2 release)
+
+### Fixed
+- **DocPanel Footer Alignment**
+  - Fixed DocPanel footer to match CodePanel footer alignment
+  - Ensured consistent padding across both panels
+
+- **Download Button UX**
+  - Removed checkmark animation from download button
+  - Simplified to static Download icon with toast notification
+
+- **Sign In Button**
+  - Hidden non-functional Sign In button until authentication is implemented
+  - Added feature flag system: ENABLE_AUTH = false
+
+- **Examples Modal**
+  - Fixed preview persistence and focus alignment issues
+  - Enhanced focus styles for mobile
+
+### Testing
+- Visual regression testing across Chrome, Firefox, Safari
+- Mobile testing (iOS, Android) for responsive behavior
+- Verified 660+ tests passing with 100% pass rate
+EOF
+)"
+```
+
+**Option B: Using GitHub Web UI**
+
+1. Go to: `https://github.com/USERNAME/REPO/releases/new`
+2. Click "Choose a tag" dropdown → Select `v1.2.1` (will appear after Step 4)
+3. Release title: `v1.2.1 - Bug Fixes`
+4. Description: Copy relevant section from CHANGELOG.md (lines 86-131)
+5. **Target:** Verify shows correct commit hash (0ef49dc)
+6. Click "Publish release"
+
+**Step 6: Verify Retroactive Release**
+
+**Check Git Tags:**
+```bash
+git tag -l "v1.2.*"
+# Should show: v1.2.0, v1.2.1, v1.2.2
+
+git log --oneline --decorate --all | grep -E "v1\.2\.[0-2]"
+# Should show tags on correct commits
+```
+
+**Check GitHub:**
+1. **Releases page:** `github.com/USERNAME/REPO/releases`
+   - v1.2.2, v1.2.1, v1.2.0 should all be listed
+   - Dates should be in correct chronological order
+2. **Tags page:** `github.com/USERNAME/REPO/tags`
+   - All three tags should appear
+3. **Individual release:** `github.com/USERNAME/REPO/releases/tag/v1.2.1`
+   - Should show correct commit hash
+   - Should show "This release was created retroactively" if you add that note
+
+**Common Mistakes to Avoid:**
+
+❌ **Tagging HEAD when you've moved forward:**
+```bash
+# WRONG - tags current commit, not the v1.2.1 commit
+git tag -a v1.2.1 -m "v1.2.1"
+```
+
+❌ **Creating lightweight tag instead of annotated:**
+```bash
+# WRONG - no metadata, harder to manage
+git tag v1.2.1 0ef49dc
+```
+
+❌ **Using wrong commit hash:**
+```bash
+# WRONG - verify hash carefully (0ef49dc vs 0ef49cd)
+git tag -a v1.2.1 0ef49cd -m "v1.2.1"
+```
+
+❌ **Not verifying commit in GitHub first:**
+```bash
+# WRONG - tag might point to local commit not pushed yet
+git tag -a v1.2.1 LOCAL_COMMIT_HASH -m "v1.2.1"
+```
+
+❌ **Using Project ID from GitHub instead of commit hash:**
+```bash
+# WRONG - confusing Project ID with commit hash
+git tag -a v1.2.1 prj_xxx -m "v1.2.1"
+```
+
+**Prevention: Add to Deployment Checklist**
+
+To prevent future missed tags, add to deployment process:
+
+**In [DEPLOYMENT-CHECKLIST.md](./DEPLOYMENT-CHECKLIST.md):**
+
+```markdown
+### Create GitHub Release
+- [ ] Create git tag for the release
+- [ ] Push tag to GitHub
+- [ ] Create GitHub Release with changelog notes
+
+**Standard Release Process:**
+1. Create annotated tag: `git tag -a v1.2.0 -m "v1.2.0 - Production Release"`
+2. Push tag: `git push origin v1.2.0`
+3. Create release: `gh release create v1.2.0 --title "..." --notes "..."`
+```
+
+**Timeline:**
+- **Issue discovered:** October 22, 2025 (after v1.2.2 release)
+- **Time to identify correct commit:** ~10 minutes
+- **Time to create tag and release:** ~5 minutes
+- **Total fix time:** ~15 minutes
+
+**Key Lessons:**
+
+1. **Release tagging should be automated** or prominently featured in deployment checklist
+2. **Git commit history is the source of truth** - use `git log` to find commits, not memory
+3. **Verify in GitHub first** - ensure commit exists remotely before creating tag
+4. **Character-by-character accuracy matters** - typos in commit hashes silently fail
+5. **Retroactive tagging is safe** - doesn't affect existing code or deployments
+6. **Document the process** - future maintainers will thank you
+
+**Related Issues:**
+- See DEPLOYMENT-CHECKLIST.md for standard release tagging process
+- See Issue #7 for GitHub Actions credential management
+- See Issue #9 for test-gated deployment workflow
+
+**Git Commits:**
+- Tag created locally: `git tag -a v1.2.1 0ef49dc -m "..."`
+- Tag pushed to GitHub: `git push origin v1.2.1`
+- Release created via GitHub web UI
+- DEPLOYMENT-CHECKLIST.md updated with release tagging section
+
+**Date:** October 23, 2025

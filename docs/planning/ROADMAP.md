@@ -734,6 +734,123 @@ These enhancements are **not currently prioritized** and will be evaluated after
 
 ---
 
+## 🗺️ Updating the Interactive Roadmap
+
+The project includes an interactive HTML roadmap ([ROADMAP-TIMELINE.html](ROADMAP-TIMELINE.html)) that visualizes the project timeline with embedded data. This section explains how to update it.
+
+### Data Source
+
+The roadmap data is stored in [roadmap-data.json](roadmap-data.json) and includes:
+- Column structure (Done, Now, Next, Later)
+- Phase details (versions, titles, features, durations)
+- Metadata (title, links, footer text)
+- Color scheme options (purple, indigo, slate, default)
+
+### Update Workflow
+
+**Prerequisites:** Have the HTML file open in a browser (locally via file:// or live-server)
+
+1. **Edit the data source:**
+   ```bash
+   # Edit the JSON file with your changes
+   vim docs/planning/roadmap-data.json
+   ```
+
+2. **Load data into HTML:**
+   - Open [ROADMAP-TIMELINE.html](ROADMAP-TIMELINE.html) in browser
+   - Press **Shift+L** - Loads fresh data from roadmap-data.json
+   - Verify changes appear correctly in the UI
+
+3. **Save with embedded data:**
+   - Press **Shift+S** - Downloads updated HTML with embedded data
+   - File downloads to `~/Downloads/ROADMAP-TIMELINE.html`
+
+4. **Copy back to project with automatic backup:**
+   ```bash
+   # Automated script (recommended)
+   npm run roadmap:update
+
+   # This script automatically:
+   # 1. Backs up current HTML and JSON to private/roadmap-archives/
+   # 2. Copies the latest downloaded HTML to project directory
+   ```
+
+   **Manual alternative (not recommended):**
+   ```bash
+   cp ~/Downloads/ROADMAP-TIMELINE.html docs/planning/ROADMAP-TIMELINE.html
+   # Note: This skips the automatic backup step
+   ```
+
+5. **Verify the update:**
+   - **Hard refresh:** **Cmd+Shift+R** (Mac) or **Ctrl+Shift+R** (Windows/Linux)
+   - Browser cache must be bypassed to load new embedded data
+   - If using live-server, it may also need a restart
+
+### Keyboard Shortcuts
+
+When viewing [ROADMAP-TIMELINE.html](ROADMAP-TIMELINE.html) in browser:
+- **T** - Toggle between full timeline view (4 columns) and planned-only view (3 columns)
+- **Shift+L** - Load data from external roadmap-data.json file
+- **Shift+S** - Save HTML with current embedded data (downloads file)
+
+### Troubleshooting
+
+**Issue: Changes don't appear after reloading HTML**
+- **Cause:** Browser caching the old HTML file
+- **Solution:** Hard refresh with **Cmd+Shift+R** (Mac) or **Ctrl+Shift+R** (Windows/Linux)
+- **Alternative:** Clear browser cache or open in incognito/private window
+
+**Issue: "Failed to fetch roadmap-data.json"**
+- **Cause:** HTML file not in same directory as JSON file
+- **Solution:** Either:
+  - Open HTML from project directory (where JSON exists)
+  - Use embedded data (don't press Shift+L, just rely on embedded data)
+
+**Issue: Downloaded file named "ROADMAP-TIMELINE (2).html"**
+- **Cause:** Browser auto-numbering duplicate downloads
+- **Solution:** `npm run roadmap:update` always uses the most recent file
+
+### Backup System
+
+The update script automatically creates timestamped backups before making changes:
+
+**Backup Location:** `private/roadmap-archives/`
+- Directories are created automatically if they don't exist
+- Safe to run on fresh clones or new machines
+
+**Backup Format:**
+- `ROADMAP-TIMELINE YYYYMMDD:HH:MM:SS.html` - Previous HTML state
+- `roadmap-data YYYYMMDD:HH:MM:SS.json` - Previous JSON state
+
+**Example:**
+- `ROADMAP-TIMELINE 20251023:07:39:57.html`
+- `roadmap-data 20251023:07:39:57.json`
+
+**Benefits:**
+- Safely revert to any previous version
+- Track roadmap evolution over time
+- Compare changes between versions
+- No data loss if update goes wrong
+- Zero manual setup required
+
+### How It Works
+
+1. **Embedded Data:** The HTML file contains a JavaScript object `ROADMAP_DATA` with all roadmap information
+2. **Initial Render:** On page load, the HTML renders using its embedded data
+3. **External Load:** Shift+L fetches roadmap-data.json and updates both the display and the embedded data in memory
+4. **Save Operation:** Shift+S captures the entire HTML including the updated embedded data and downloads it
+5. **Backup & Update:** Script backs up current files, then copies new HTML to project directory
+6. **Standalone:** The HTML file works independently without the JSON file (uses embedded data)
+
+### Files
+
+- **[roadmap-data.json](roadmap-data.json)** - Source of truth for roadmap data
+- **[ROADMAP-TIMELINE.html](ROADMAP-TIMELINE.html)** - Interactive visualization with embedded data
+- **[../scripts/update-roadmap.sh](../../scripts/update-roadmap.sh)** - Automated update script with backup
+- **`private/roadmap-archives/`** - Timestamped backups of HTML and JSON files
+
+---
+
 **Document Version:** 1.4
 **Created:** October 17, 2025
 **Last Updated:** October 21, 2025

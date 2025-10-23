@@ -83,6 +83,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.1] - 2025-10-22
+
+**Status:** ✅ Bug Fixes (Included in v1.2.2 release)
+
+### Fixed
+- **DocPanel Footer Alignment**
+  - Fixed DocPanel footer to match CodePanel footer alignment
+  - Ensured consistent padding (`px-4 py-2`) across both panels
+  - Verified proper flex alignment (`items-center justify-between`)
+  - Verified vertical centering of all footer elements
+  - Tested with and without quality score display
+  - Tested expandable section transitions
+
+- **Download Button UX**
+  - Removed checkmark animation from download button (downloads don't need success confirmation like copy does)
+  - Simplified to static Download icon with toast notification
+  - Removed unnecessary state management and timer logic
+  - Maintained hover/active states for visual feedback
+  - Updated component tests to match new behavior
+
+- **Sign In Button**
+  - Hidden non-functional Sign In button until authentication is implemented (planned for v1.5.0)
+  - Added feature flag system: `ENABLE_AUTH = false`
+  - Implemented conditional rendering for cleaner code
+  - Verified header layout remains balanced without button
+  - Applied to both desktop header and mobile menu
+
+- **Examples Modal**
+  - Fixed preview persistence and focus alignment issues
+  - Enhanced focus styles for mobile (larger ring, better visibility)
+  - Improved touch target clarity
+  - Better visual feedback for keyboard navigation
+
+### Changed
+- Updated DownloadButton component to remove checkmark pattern (fire-and-forget UX)
+- Applied feature flag pattern to authentication UI elements
+- Enhanced mobile accessibility in ExamplesModal
+
+### Testing
+- Visual regression testing across Chrome, Firefox, Safari
+- Cross-browser testing for all fixes
+- Mobile testing (iOS, Android) for responsive behavior
+- Verified 660+ tests passing with 100% pass rate
+- No regressions in existing UI
+
+---
+
 ## [1.2.0] - 2025-10-19
 
 **Status:** ✅ Production Release - [codescribeai.com](https://codescribeai.com)
@@ -171,7 +218,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History Summary
 
-- **v1.0.0** - Production release with full feature set, accessibility compliance, and comprehensive testing
+- **v1.2.2** - Maintenance release: mobile compatibility, UX polish, feature flag management
+- **v1.2.1** - Bug fixes: footer alignment, download button UX, sign-in button hiding
+- **v1.2.0** - Production release with full feature set, accessibility compliance, and comprehensive testing
 
 ---
 
