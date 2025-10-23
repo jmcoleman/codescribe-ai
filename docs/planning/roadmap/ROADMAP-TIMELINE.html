@@ -645,6 +645,35 @@
           transform: rotate(360deg);
         }
       }
+    </style><style>
+      @keyframes slideIn {
+        from {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+      @keyframes slideOut {
+        from {
+          transform: translateX(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+      }
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
     </style></head>
 <body data-new-gr-c-s-check-loaded="14.1258.0" data-gr-ext-installed="">
   <div class="page">
@@ -689,7 +718,7 @@
             <div class="column-title">Active Development</div>
             <div class="column-timeline">Phase 2: Monetization Foundation</div>
           </div>
-          <div class="column-body"><div class="phase-card"><div class="phase-header"><div class="phase-title">Authentication &amp; User Management</div><div class="phase-version">Epic 2.1</div></div><ul class="feature-list"><li>Email/password authentication (bcrypt hashing)</li><li>GitHub OAuth integration</li><li>JWT token-based sessions</li><li>Password reset flow</li><li>Auth routes and frontend context</li><li>Login/Signup modal UI</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Tier System &amp; Feature Flags</div><div class="phase-version">Epic 2.2</div></div><ul class="feature-list"><li>Database setup (PostgreSQL or MongoDB)</li><li>User and usage schemas</li><li>Tier gate middleware integration</li><li>Usage tracking and quota enforcement</li><li>4-tier system (Free, Pro, Team, Enterprise)</li><li>Usage dashboard UI</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Payment Integration</div><div class="phase-version">Epic 2.3</div></div><ul class="feature-list"><li>Stripe integration</li><li>Subscription management (create, update, cancel)</li><li>Webhook handling (tier updates)</li><li>Pricing page UI</li><li>Upgrade/downgrade flows</li><li>Invoice and receipt generation</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">UI Integration</div><div class="phase-version">Epic 2.4</div></div><ul class="feature-list"><li>Unhide Sign In button in header</li><li>User profile menu (usage stats, settings)</li><li>Upgrade to Pro prompts</li><li>Tier badges and feature gates</li><li>Loading states and error handling</li></ul></div></div>
+          <div class="column-body"><div class="phase-card"><div class="phase-header"><div class="phase-title">Authentication &amp; User Management</div><div class="phase-version">Epic 2.1</div></div><ul class="feature-list"><li>Passport.js authentication (local, GitHub, JWT strategies)</li><li>Email/password login with bcrypt hashing</li><li>GitHub OAuth integration (passport-github2)</li><li>JWT tokens for web, CLI, and VS Code extension (Phase 5)</li><li>Password reset flow</li><li>Auth routes (/signup, /login, /github, /github/callback)</li><li>Login/Signup modal UI with React Context</li></ul><div class="metric-badge">Passport.js</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Tier System &amp; Feature Flags</div><div class="phase-version">Epic 2.2</div></div><ul class="feature-list"><li>PostgreSQL database setup (Vercel Postgres)</li><li>User schema (id, email, password_hash, github_id, tier)</li><li>Usage schema (user_id, daily_count, monthly_count)</li><li>Tier gate middleware integration (req.user.tier)</li><li>Usage tracking and quota enforcement</li><li>4-tier system (Free, Pro, Team, Enterprise)</li><li>Usage dashboard UI</li></ul><div class="metric-badge">PostgreSQL</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Payment Integration</div><div class="phase-version">Epic 2.3</div></div><ul class="feature-list"><li>Stripe integration</li><li>Subscription management (create, update, cancel)</li><li>Webhook handling (tier updates)</li><li>Pricing page UI</li><li>Upgrade/downgrade flows</li><li>Invoice and receipt generation</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">UI Integration</div><div class="phase-version">Epic 2.4</div></div><ul class="feature-list"><li>Unhide Sign In button in header</li><li>User profile menu (usage stats, settings)</li><li>Upgrade to Pro prompts</li><li>Tier badges and feature gates</li><li>Loading states and error handling</li></ul></div></div>
         </div>
 
         <!-- NEXT Column -->
@@ -709,7 +738,7 @@
             <div class="column-title">Future Expansion</div>
             <div class="column-timeline">Phases 5-6: Tools &amp; Enterprise Features</div>
           </div>
-          <div class="column-body"><div class="phase-card"><div class="phase-header"><div class="phase-title">CLI Tool</div><div class="phase-version">Epic 5.1</div></div><ul class="feature-list"><li>Command-line interface with Commander.js</li><li>File path support (single file or directory)</li><li>Batch processing with glob patterns</li><li>Configuration file support (.codescriberc)</li><li>Cross-platform support (Windows, macOS, Linux)</li><li>npm package publication</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">VS Code Extension</div><div class="phase-version">Epic 5.2</div></div><ul class="feature-list"><li>Right-click 'Generate Documentation' menu</li><li>Inline documentation preview (WebView)</li><li>Quality score in status bar</li><li>Suggestions in problems panel</li><li>Extension settings (API key, doc type)</li><li>VS Code Marketplace publication</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">SSO &amp; Advanced Authentication</div><div class="phase-version">Epic 6.1</div></div><ul class="feature-list"><li>SAML 2.0 integration</li><li>OAuth 2.0 providers (Okta, Auth0, Azure AD)</li><li>Just-In-Time (JIT) user provisioning</li><li>Role-based access control (RBAC)</li><li>Multi-factor authentication (MFA)</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Audit Logs &amp; Compliance</div><div class="phase-version">Epic 6.2</div></div><ul class="feature-list"><li>Comprehensive audit logging</li><li>Log export (CSV, JSON formats)</li><li>GDPR compliance tools</li><li>SOC 2 Type II preparation</li><li>Retention policies and data lifecycle</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">On-Premise Deployment</div><div class="phase-version">Epic 6.3</div></div><ul class="feature-list"><li>Docker containerization</li><li>Kubernetes deployment manifests</li><li>Self-hosted deployment guide</li><li>Air-gapped environment support</li><li>License key validation system</li><li>Automatic updates (opt-in)</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Optional Enhancements</div><div class="phase-version">Backlog</div></div><ul class="feature-list"><li>Documentation history and saved projects</li><li>GitHub repository integration</li><li>Multi-language support (i18n for UI)</li><li>Advanced Mermaid diagram auto-generation</li><li>Changelog generation from git history</li><li>Team collaboration features</li><li>Advanced analytics and monitoring</li></ul></div></div>
+          <div class="column-body"><div class="phase-card"><div class="phase-header"><div class="phase-title">CLI Tool</div><div class="phase-version">Epic 5.1</div></div><ul class="feature-list"><li>Command-line interface with Commander.js</li><li>OAuth login flow (opens browser, saves JWT token)</li><li>Offline-capable JWT authentication (passport-jwt)</li><li>File path support (single file or directory)</li><li>Batch processing with glob patterns</li><li>Configuration file support (.codescriberc)</li><li>Cross-platform support (Windows, macOS, Linux)</li><li>npm package publication</li></ul><div class="metric-badge">JWT Auth</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">VS Code Extension</div><div class="phase-version">Epic 5.2</div></div><ul class="feature-list"><li>Right-click 'Generate Documentation' menu</li><li>OAuth login flow in IDE (same as web/CLI)</li><li>JWT token storage in VS Code SecretStorage</li><li>Inline documentation preview (WebView)</li><li>Quality score in status bar</li><li>Suggestions in problems panel</li><li>Extension settings (API key, doc type)</li><li>VS Code Marketplace publication</li></ul><div class="metric-badge">Shared Auth</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">SSO &amp; Advanced Authentication</div><div class="phase-version">Epic 6.1</div></div><ul class="feature-list"><li>SAML 2.0 integration (passport-saml strategy)</li><li>OAuth 2.0 providers (Okta, Auth0, Azure AD)</li><li>Just-In-Time (JIT) user provisioning</li><li>Role-based access control (RBAC) enhancement</li><li>Multi-factor authentication (MFA)</li></ul><div class="metric-badge">passport-saml</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Audit Logs &amp; Compliance</div><div class="phase-version">Epic 6.2</div></div><ul class="feature-list"><li>Comprehensive audit logging</li><li>Log export (CSV, JSON formats)</li><li>GDPR compliance tools</li><li>SOC 2 Type II preparation</li><li>Retention policies and data lifecycle</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">On-Premise Deployment</div><div class="phase-version">Epic 6.3</div></div><ul class="feature-list"><li>Docker containerization with Passport.js</li><li>Kubernetes deployment manifests</li><li>Self-hosted authentication (no external dependencies)</li><li>Customer-controlled user data (PostgreSQL)</li><li>Air-gapped environment support</li><li>License key validation system</li><li>Automatic updates (opt-in)</li></ul><div class="metric-badge">Self-Hosted Auth</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Optional Enhancements</div><div class="phase-version">Backlog</div></div><ul class="feature-list"><li>Documentation history and saved projects</li><li>GitHub repository integration</li><li>Multi-language support (i18n for UI)</li><li>Advanced Mermaid diagram auto-generation</li><li>Changelog generation from git history</li><li>Team collaboration features</li><li>Advanced analytics and monitoring</li></ul></div></div>
         </div>
       </div>
     </div>
@@ -934,13 +963,15 @@
           "title": "Authentication & User Management",
           "duration": "3-5 days",
           "status": "Planning Complete",
+          "badge": "Passport.js",
           "features": [
-            "Email/password authentication (bcrypt hashing)",
-            "GitHub OAuth integration",
-            "JWT token-based sessions",
+            "Passport.js authentication (local, GitHub, JWT strategies)",
+            "Email/password login with bcrypt hashing",
+            "GitHub OAuth integration (passport-github2)",
+            "JWT tokens for web, CLI, and VS Code extension (Phase 5)",
             "Password reset flow",
-            "Auth routes and frontend context",
-            "Login/Signup modal UI"
+            "Auth routes (/signup, /login, /github, /github/callback)",
+            "Login/Signup modal UI with React Context"
           ]
         },
         {
@@ -948,10 +979,12 @@
           "title": "Tier System & Feature Flags",
           "duration": "2-3 days",
           "status": "Planning Complete",
+          "badge": "PostgreSQL",
           "features": [
-            "Database setup (PostgreSQL or MongoDB)",
-            "User and usage schemas",
-            "Tier gate middleware integration",
+            "PostgreSQL database setup (Vercel Postgres)",
+            "User schema (id, email, password_hash, github_id, tier)",
+            "Usage schema (user_id, daily_count, monthly_count)",
+            "Tier gate middleware integration (req.user.tier)",
             "Usage tracking and quota enforcement",
             "4-tier system (Free, Pro, Team, Enterprise)",
             "Usage dashboard UI"
@@ -1088,8 +1121,11 @@
           "title": "CLI Tool",
           "duration": "5-7 days",
           "status": "Planned",
+          "badge": "JWT Auth",
           "features": [
             "Command-line interface with Commander.js",
+            "OAuth login flow (opens browser, saves JWT token)",
+            "Offline-capable JWT authentication (passport-jwt)",
             "File path support (single file or directory)",
             "Batch processing with glob patterns",
             "Configuration file support (.codescriberc)",
@@ -1102,8 +1138,11 @@
           "title": "VS Code Extension",
           "duration": "7-10 days",
           "status": "Planned",
+          "badge": "Shared Auth",
           "features": [
             "Right-click 'Generate Documentation' menu",
+            "OAuth login flow in IDE (same as web/CLI)",
+            "JWT token storage in VS Code SecretStorage",
             "Inline documentation preview (WebView)",
             "Quality score in status bar",
             "Suggestions in problems panel",
@@ -1116,11 +1155,12 @@
           "title": "SSO & Advanced Authentication",
           "duration": "5-7 days",
           "status": "Future",
+          "badge": "passport-saml",
           "features": [
-            "SAML 2.0 integration",
+            "SAML 2.0 integration (passport-saml strategy)",
             "OAuth 2.0 providers (Okta, Auth0, Azure AD)",
             "Just-In-Time (JIT) user provisioning",
-            "Role-based access control (RBAC)",
+            "Role-based access control (RBAC) enhancement",
             "Multi-factor authentication (MFA)"
           ]
         },
@@ -1142,10 +1182,12 @@
           "title": "On-Premise Deployment",
           "duration": "7-10 days",
           "status": "Future",
+          "badge": "Self-Hosted Auth",
           "features": [
-            "Docker containerization",
+            "Docker containerization with Passport.js",
             "Kubernetes deployment manifests",
-            "Self-hosted deployment guide",
+            "Self-hosted authentication (no external dependencies)",
+            "Customer-controlled user data (PostgreSQL)",
             "Air-gapped environment support",
             "License key validation system",
             "Automatic updates (opt-in)"
@@ -1601,6 +1643,44 @@
 	// ]]>
 </script>
 <grammarly-desktop-integration data-grammarly-shadow-root="true"></grammarly-desktop-integration><!-- Code injected by live-server -->
+<script>
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					var parent = elem.parentElement || head;
+					parent.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					parent.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
+</script>
+<!-- Code injected by live-server -->
 <script>
 	// <![CDATA[  <-- For SVG support
 	if ('WebSocket' in window) {
