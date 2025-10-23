@@ -16,9 +16,10 @@
 5. [Cloud Testing Platforms](#cloud-testing-platforms)
 6. [Feature Detection](#feature-detection)
 7. [Testing Checklist](#testing-checklist)
-8. [CI/CD Integration](#cicd-integration)
-9. [Priority & Timeline](#priority--timeline)
-10. [Tools Summary](#tools-summary)
+8. [Mobile-Specific Testing](#mobile-specific-testing)
+9. [CI/CD Integration](#cicd-integration)
+10. [Priority & Timeline](#priority--timeline)
+11. [Tools Summary](#tools-summary)
 
 ---
 
@@ -562,10 +563,13 @@ Use this checklist for manual testing on each target browser:
 
 #### File Upload
 - [ ] File input accepts .js, .py, .ts files
-- [ ] Drag & drop zone is functional
+- [ ] Drag & drop zone is functional (desktop only)
 - [ ] File upload populates Monaco Editor
 - [ ] Error handling for invalid file types
 - [ ] Error handling for files >1MB
+- [ ] **Mobile:** Native file picker appears with Camera/Photos/Files options
+- [ ] **Mobile:** "Files" or "Browse" option is accessible for code files
+- [ ] **Mobile:** Accept attribute filters to show only code file types
 
 #### Documentation Generation
 - [ ] Generate button triggers API call
@@ -635,6 +639,117 @@ Use this checklist for manual testing on each target browser:
 - [ ] Streaming starts <1 second
 - [ ] No layout shift (CLS)
 - [ ] Smooth animations (60fps)
+
+---
+
+## Mobile-Specific Testing
+
+### Mobile File Upload Behavior
+
+**Context:** Mobile browsers (iOS Safari, Chrome Android) handle file inputs differently than desktop browsers.
+
+#### Expected Behavior
+
+When users tap the file upload button on mobile:
+
+1. **Native OS picker appears** with multiple options:
+   - **Camera** - Take a photo/video
+   - **Photo Library/Gallery** - Select from photos/videos
+   - **Files/Documents/Browse** - Access file system (Downloads, Documents, etc.)
+   - **Recent Files** - Recently accessed files
+
+2. **This is standard mobile OS behavior**, not controlled by the web app
+
+3. **Users must navigate to "Files" or "Browse"** to access code files
+
+#### Testing Checklist
+
+**Automated Test (Playwright):**
+```javascript
+test('mobile file upload - programmatic', async ({ page }) => {
+  // Can only test the programmatic file selection
+  const fileInput = await page.locator('input[type="file"]');
+
+  // Verify accept attribute is set correctly
+  await expect(fileInput).toHaveAttribute('accept',
+    expect.stringContaining('.js'));
+
+  // Simulate file selection (programmatic)
+  await fileInput.setInputFiles({
+    name: 'test.js',
+    mimeType: 'text/javascript',
+    buffer: Buffer.from('function test() {}')
+  });
+
+  // Verify file loads into editor
+  await expect(page.locator('.monaco-editor')).toContainText('function test');
+});
+```
+
+**Manual Test (Real Device):**
+1. ✅ Tap "Upload Code" button
+2. ✅ Verify native picker appears
+3. ✅ Locate "Files" or "Browse" option (may require scrolling)
+4. ✅ Navigate to Downloads or Documents folder
+5. ✅ Verify only code file types are selectable (.js, .py, .ts, etc.)
+6. ✅ Select a code file (e.g., test.js)
+7. ✅ Verify file content loads into Monaco Editor
+8. ✅ Verify file name appears in UI (if applicable)
+
+#### Implementation Verification
+
+**Current Accept Attribute ([App.jsx:395](../client/src/App.jsx#L395)):**
+```jsx
+<input
+  type="file"
+  accept=".js,.jsx,.ts,.tsx,.py,.java,.cpp,.c,.h,.hpp,.cs,.go,.rs,.rb,.php,.txt"
+  // ... other props
+/>
+```
+
+This ensures only code files are selectable once users navigate to the file system.
+
+#### Known Limitations
+
+- ❌ **Cannot suppress Camera/Photos options** - Native OS behavior
+- ❌ **Cannot default to "Files" view** - Native OS behavior
+- ❌ **Cannot test native picker UI** - OS-level control, not browser-level
+- ✅ **Can verify accept attribute filters files correctly**
+
+#### UX Considerations (Optional Enhancement)
+
+If mobile users frequently struggle to find the "Files" option, consider adding:
+
+```jsx
+// Mobile-only helper text
+<div className="text-sm text-slate-600 dark:text-slate-400 mt-2 md:hidden">
+  Tip: Tap "Files" or "Browse" in the picker to select code files
+</div>
+```
+
+**Decision:** Not implemented in v1.0 - Monitor user feedback before adding.
+
+#### Browser-Specific Notes
+
+| Browser | OS | Picker Options | Notes |
+|---------|-----|----------------|-------|
+| Safari | iOS 14+ | Camera, Photo Library, Browse | "Browse" accesses Files app |
+| Chrome | Android | Camera, Gallery, Files | "Files" accesses Downloads/Documents |
+| Samsung Browser | Android | Camera, Gallery, My Files | Similar to Chrome |
+
+#### Debugging Tips
+
+**On Mobile Device:**
+1. Connect device via USB
+2. Enable USB debugging (Developer Options)
+3. Desktop Chrome → `chrome://inspect/#devices`
+4. Find device → Click "Inspect" on CodeScribe AI tab
+5. Full DevTools available for debugging file input behavior
+
+**Common Issues:**
+- **"No files shown"** → User in wrong folder, needs to navigate to Downloads/Documents
+- **"Wrong file types shown"** → Verify `accept` attribute is correct
+- **"Upload fails silently"** → Check file size (<1MB limit), check console errors
 
 ---
 
@@ -915,6 +1030,7 @@ npx playwright show-report
 
 ## Version History
 
+- **v1.1** (October 22, 2025) - Added Mobile-Specific Testing section documenting expected mobile file upload behavior (native OS picker with Camera/Photos/Files options), testing checklist, browser-specific notes, and debugging tips for iOS Safari and Chrome Android
 - **v1.0** (October 16, 2025) - Initial cross-browser testing plan created with Playwright configuration, test examples, manual testing checklist, CI/CD integration, and phased timeline
 
 ---

@@ -158,6 +158,23 @@
             "CORS configuration",
             "Comprehensive error handling"
           ]
+        },
+        {
+          "version": "v1.2.2",
+          "title": "Maintenance Release",
+          "duration": "1 day",
+          "status": "✓ Complete",
+          "features": [
+            "Mobile clipboard fallback (non-secure contexts)",
+            "Download button UX simplification (removed checkmark)",
+            "Enhanced mobile accessibility (focus indicators)",
+            "Test coverage for edge cases (58 error handling tests)",
+            "Cross-browser test plan with mobile file upload docs",
+            "GitHub import feature flag (hidden until v2.0)",
+            "16 files updated, 260+ net lines added",
+            "All 660+ tests passing (46 ControlBar tests + 6 skipped)"
+          ],
+          "badge": "Mobile & UX Polish"
         }
       ]
     },

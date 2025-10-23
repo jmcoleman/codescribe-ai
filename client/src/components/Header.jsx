@@ -3,7 +3,10 @@ import { Button } from './Button';
 import { RateLimitIndicator } from './RateLimitIndicator';
 import { Logo } from './Logo';
 
-export function Header({ onMenuClick, onExamplesClick, onHelpClick, showMobileMenu = false, rateLimitInfo }) {
+// Feature flag: Authentication not yet implemented (planned for v1.5.0)
+const ENABLE_AUTH = false;
+
+export function Header({ onMenuClick, onExamplesClick, onHelpClick, rateLimitInfo }) {
   return (
     <header className="bg-white border-b border-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -16,8 +19,8 @@ export function Header({ onMenuClick, onExamplesClick, onHelpClick, showMobileMe
             </div>
 
             {/* Title + Tagline */}
-            <div className="hidden sm:block">
-              <h1 className="text-xl font-semibold text-slate-900">
+            <div>
+              <h1 className="text-lg sm:text-xl font-semibold text-slate-900">
                 CodeScribe AI
               </h1>
               <p className="text-xs text-slate-600 hidden lg:block">
@@ -66,9 +69,11 @@ export function Header({ onMenuClick, onExamplesClick, onHelpClick, showMobileMe
                 <HelpCircle className="w-5 h-5 text-slate-600" aria-hidden="true" />
               </button>
 
-              <Button variant="dark">
-                Sign In
-              </Button>
+              {ENABLE_AUTH && (
+                <Button variant="dark">
+                  Sign In
+                </Button>
+              )}
             </div>
 
             {/* Mobile Menu Button */}

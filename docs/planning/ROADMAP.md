@@ -363,6 +363,88 @@ const PANEL_CONSTRAINTS = {
 
 ---
 
+## 📋 Phase 3.5: User Authentication & Monetization (PLANNED)
+
+**Timeline:** TBD (after Phase 3)
+**Estimated Duration:** 3-5 days
+**Status:** 📋 **NOT STARTED**
+**Target Release:** v1.5.0
+**Goal:** Enable user accounts, usage tracking, and freemium tier enforcement
+
+### Planned Features
+
+**User Authentication:**
+- [ ] Email/password authentication (secure hashing with bcrypt)
+- [ ] GitHub OAuth integration (social login)
+- [ ] Password reset flow (email-based)
+- [ ] Email verification for new accounts
+- [ ] JWT token-based sessions
+
+**Usage Tracking & Rate Limiting:**
+- [ ] Per-user generation quota tracking
+- [ ] Free tier: 10 generations/month
+- [ ] Usage dashboard (show remaining quota)
+- [ ] Rate limit enforcement (client + server-side)
+- [ ] Usage analytics (track user behavior)
+
+**Database:**
+- [ ] PostgreSQL or MongoDB for user data
+- [ ] User schema (id, email, password_hash, created_at, subscription_tier)
+- [ ] Usage schema (user_id, generations_count, reset_date)
+- [ ] Migration from privacy-first (no database) to user accounts
+
+**UI Changes:**
+- [ ] Show Sign In button (currently hidden)
+- [ ] Login/Signup modal
+- [ ] User profile menu (usage stats, settings, logout)
+- [ ] "Upgrade to Pro" prompts when approaching limit
+- [ ] Loading states and error handling
+
+**Privacy & Security:**
+- [ ] GDPR compliance (data export, account deletion)
+- [ ] Secure password storage (bcrypt + salt)
+- [ ] Rate limiting on auth endpoints (prevent brute force)
+- [ ] HTTPS-only cookies
+- [ ] CSRF protection
+
+### Technical Implementation
+
+**Frontend:**
+- Auth context provider (React Context or Zustand)
+- Protected routes (redirect to login if needed)
+- Token storage (httpOnly cookies or localStorage)
+- Login/Signup forms with validation
+
+**Backend:**
+- Auth routes: `/api/auth/signup`, `/api/auth/login`, `/api/auth/logout`
+- Middleware: `requireAuth()` for protected endpoints
+- JWT generation and verification
+- Database connection and ORM (Prisma or TypeORM)
+
+**Migration Strategy:**
+1. Phase 1: Optional auth (users can continue using without account)
+2. Phase 2: Encourage signup (show quota warnings)
+3. Phase 3: Require auth (grandfather existing users with extended free tier)
+
+### Success Criteria
+- [ ] Users can sign up with email/password or GitHub OAuth
+- [ ] Free tier users tracked accurately (10 generations/month)
+- [ ] Usage dashboard shows remaining quota
+- [ ] Sign In button visible and functional
+- [ ] Password reset flow works end-to-end
+- [ ] All tests passing (auth, rate limiting, security)
+- [ ] Documentation updated (API docs, user guide)
+- [ ] Deployed to production
+
+### Notes
+- **Why now?** Authentication is required before implementing paid tiers (Phase 4+)
+- **Database trade-off:** Moves from "privacy-first, no storage" to user accounts
+  - Document this change in README and privacy policy
+  - Emphasize: "We only store email, usage stats, and subscription info - never your code"
+- **Freemium validation:** This phase validates the business model (free → paid conversion)
+
+---
+
 ## 📋 Phase 4: OpenAPI/Swagger Generation (PLANNED)
 
 **Timeline:** TBD (after Phase 3)
@@ -515,7 +597,7 @@ These enhancements are **not currently prioritized** and will be evaluated after
 
 ### Potential Features
 - [ ] Dark mode theming
-- [ ] User authentication and accounts
+- [x] User authentication and accounts (moved to Phase 3.5 - v1.5.0)
 - [ ] Documentation history and saved projects
 - [ ] Custom documentation templates
 - [ ] GitHub repository integration (auto-detect repo, generate docs)

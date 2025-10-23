@@ -1,11 +1,26 @@
 import { X } from 'lucide-react';
-import { useEffect, useRef } from 'react';
-import { FocusTrap } from 'focus-trap-react';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from './Button';
+
+// Feature flag: Authentication not yet implemented (planned for v1.5.0)
+const ENABLE_AUTH = false;
 
 export function MobileMenu({ isOpen, onClose, onExamplesClick, onHelpClick }) {
   const closeButtonRef = useRef(null);
   const previousFocusRef = useRef(null);
+  const [allowClickOutside, setAllowClickOutside] = useState(false);
+
+  // Delay enabling click-outside to prevent immediate close on menu open
+  useEffect(() => {
+    if (isOpen) {
+      const timer = setTimeout(() => {
+        setAllowClickOutside(true);
+      }, 200);
+      return () => clearTimeout(timer);
+    } else {
+      setAllowClickOutside(false);
+    }
+  }, [isOpen]);
 
   // Store previous focus on mount
   useEffect(() => {
@@ -49,9 +64,11 @@ export function MobileMenu({ isOpen, onClose, onExamplesClick, onHelpClick }) {
     onClose();
   };
 
-  const handleGitHubClick = () => {
-    window.open('https://github.com/yourusername/codescribe-ai', '_blank', 'noopener,noreferrer');
-    onClose();
+  const handleBackdropClick = (e) => {
+    // Only close if clicking the backdrop itself (not the menu content)
+    if (allowClickOutside && e.target === e.currentTarget) {
+      onClose();
+    }
   };
 
   return (
@@ -59,19 +76,11 @@ export function MobileMenu({ isOpen, onClose, onExamplesClick, onHelpClick }) {
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/50 z-40 md:hidden"
-        onClick={onClose}
+        onClick={handleBackdropClick}
       />
 
       {/* Menu Panel */}
-      <FocusTrap
-        focusTrapOptions={{
-          initialFocus: () => closeButtonRef.current,
-          escapeDeactivates: false, // We handle Escape manually
-          clickOutsideDeactivates: true,
-          onDeactivate: onClose,
-        }}
-      >
-        <div
+      <div
           data-testid="mobile-menu"
           className="fixed top-0 right-0 bottom-0 w-64 bg-white shadow-xl z-50 md:hidden"
           role="dialog"
@@ -113,18 +122,18 @@ export function MobileMenu({ isOpen, onClose, onExamplesClick, onHelpClick }) {
             >
               Help & FAQ
             </MenuItem>
-            <MenuItem onClick={handleGitHubClick}>GitHub Repo</MenuItem>
           </nav>
 
           {/* Footer */}
-          <div className="p-4 border-t border-slate-200">
-            <Button variant="dark" className="w-full">
-              Sign In
-            </Button>
-          </div>
+          {ENABLE_AUTH && (
+            <div className="p-4 border-t border-slate-200">
+              <Button variant="dark" className="w-full">
+                Sign In
+              </Button>
+            </div>
+          )}
         </div>
-        </div>
-      </FocusTrap>
+      </div>
     </>
   );
 }

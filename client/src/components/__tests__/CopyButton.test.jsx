@@ -7,6 +7,12 @@ describe('CopyButton', () => {
   beforeEach(() => {
     // Reset all mocks before each test
     vi.clearAllMocks();
+
+    // Mock window.isSecureContext to enable Clipboard API in tests
+    Object.defineProperty(window, 'isSecureContext', {
+      writable: true,
+      value: true
+    });
   });
 
   it('renders copy button with default props', () => {
@@ -280,6 +286,12 @@ describe('CopyButton', () => {
 describe('CopyButtonWithText', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+
+    // Mock window.isSecureContext to enable Clipboard API in tests
+    Object.defineProperty(window, 'isSecureContext', {
+      writable: true,
+      value: true
+    });
   });
 
   it('renders with label text', () => {

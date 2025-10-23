@@ -505,16 +505,7 @@ describe('QualityScoreModal Component', () => {
   });
 
   describe('Focus Management', () => {
-    // Note: These tests are skipped because we mock FocusTrap to avoid test setup issues
-    // FocusTrap functionality is tested in E2E tests
-    it.skip('should auto-focus close button when modal opens', () => {
-      const onClose = vi.fn();
-      render(<QualityScoreModal qualityScore={mockQualityScore} onClose={onClose} />);
-
-      const closeButton = screen.getByLabelText('Close quality breakdown modal');
-      expect(document.activeElement).toBe(closeButton);
-    });
-
+    // Note: Focus trap was removed. Only basic focus management remains (store/restore previous focus).
     it('should not auto-focus when modal is closed', () => {
       const onClose = vi.fn();
       render(<QualityScoreModal qualityScore={null} onClose={onClose} />);
@@ -522,52 +513,7 @@ describe('QualityScoreModal Component', () => {
       expect(document.activeElement).toBe(document.body);
     });
 
-    it.skip('should trap focus within modal', async () => {
-      const user = userEvent.setup();
-      const onClose = vi.fn();
-      render(<QualityScoreModal qualityScore={mockQualityScore} onClose={onClose} />);
-
-      const closeButton = screen.getByLabelText('Close quality breakdown modal');
-      const copyButton = screen.getByLabelText(/copy.*to clipboard/i);
-      expect(document.activeElement).toBe(closeButton);
-
-      // Tab should move to copy button (second focusable element)
-      await user.tab();
-      expect(document.activeElement).toBe(copyButton);
-
-      // Tab again should wrap back to close button (focus trap)
-      await user.tab();
-      expect(document.activeElement).toBe(closeButton);
-    });
-
-    it.skip('should trap focus backwards with Shift+Tab', async () => {
-      const user = userEvent.setup();
-      const onClose = vi.fn();
-      render(<QualityScoreModal qualityScore={mockQualityScore} onClose={onClose} />);
-
-      const closeButton = screen.getByLabelText('Close quality breakdown modal');
-      const copyButton = screen.getByLabelText(/copy.*to clipboard/i);
-      expect(document.activeElement).toBe(closeButton);
-
-      // Shift+Tab from first element should wrap to last element (copy button)
-      await user.keyboard('{Shift>}{Tab}{/Shift}');
-      expect(document.activeElement).toBe(copyButton);
-    });
-
-    it.skip('should maintain focus when modal is open', () => {
-      const onClose = vi.fn();
-      render(<QualityScoreModal qualityScore={mockQualityScore} onClose={onClose} />);
-
-      const closeButton = screen.getByLabelText('Close quality breakdown modal');
-      expect(document.activeElement).toBe(closeButton);
-
-      // Try to focus body (should not be possible due to focus trap)
-      document.body.focus();
-
-      // Focus should still be managed within modal
-      expect(document.activeElement).not.toBe(document.body);
-    });
-
+    // TODO: Test is skipped due to jsdom limitations with focus management
     it.skip('should restore focus when modal closes', () => {
       const onClose = vi.fn();
       const { rerender } = render(<QualityScoreModal qualityScore={mockQualityScore} onClose={onClose} />);

@@ -403,7 +403,6 @@ This is a comprehensive example showing various markdown features including code
         onMenuClick={() => setShowMobileMenu(true)}
         onExamplesClick={() => setShowExamplesModal(true)}
         onHelpClick={() => setShowHelpModal(true)}
-        showMobileMenu={showMobileMenu}
         rateLimitInfo={rateLimitInfo}
       />
 
@@ -444,18 +443,21 @@ This is a comprehensive example showing various markdown features including code
         )}
 
         {/* Split View: Code + Documentation */}
-        <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 h-[600px] lg:h-[calc(100vh-280px)]">
+        <div className="mt-6 flex flex-col lg:grid lg:grid-cols-2 gap-4 lg:gap-6">
           {/* Left: Code Panel */}
-          <CodePanel
-            code={code}
-            onChange={setCode}
-            filename="code.js"
-            language={language}
-          />
+          <div className="h-[500px] lg:h-[calc(100vh-280px)]">
+            <CodePanel
+              code={code}
+              onChange={setCode}
+              filename="code.js"
+              language={language}
+            />
+          </div>
 
           {/* Right: Documentation Panel */}
-          <Suspense fallback={<LoadingFallback />}>
-            <DocPanel
+          <div className="h-[500px] lg:h-[calc(100vh-280px)]">
+            <Suspense fallback={<LoadingFallback />}>
+              <DocPanel
               documentation={documentation}
               qualityScore={qualityScore}
               isGenerating={isGenerating}
@@ -468,6 +470,7 @@ This is a comprehensive example showing various markdown features including code
               }}
             />
           </Suspense>
+          </div>
         </div>
 
       </main>

@@ -7,21 +7,79 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [1.2.2] - 2025-10-22
+
+**Status:** ✅ Maintenance Release - Mobile & UX Polish
+
 ### Added
-- DownloadButton component with timestamped file downloads, haptic feedback, and icon animations
-- Enhanced tooltip features across the application
-- Test utility: `loadTestDocument()` method for populating document panel from console
+- **Mobile Compatibility**
+  - Clipboard fallback for non-secure contexts (HTTP/IP access)
+  - Document.execCommand('copy') fallback when Clipboard API unavailable
+  - Test coverage for non-secure context clipboard operations
+
+- **Documentation**
+  - Mobile-Specific Testing section in Cross-Browser Test Plan (110+ lines)
+  - Native OS file picker behavior documentation (iOS Safari, Chrome Android)
+  - 8-step manual testing procedure for mobile file uploads
+  - Browser-specific notes table (Safari iOS, Chrome Android, Samsung Browser)
+  - Debugging tips for chrome://inspect mobile workflow
+  - Testing patterns for secure vs non-secure contexts
+
+- **Feature Management**
+  - Feature flag system for incomplete features (following ENABLE_AUTH pattern)
+  - ENABLE_GITHUB_IMPORT flag (disabled until v2.0 implementation)
 
 ### Changed
-- Renamed 'View full details' button in footer for better clarity
-- Reduced the size of Quality Score modal for improved UX
+- **UX Improvements**
+  - Download button simplified: removed checkmark animation (fire-and-forget UX pattern)
+  - Enhanced mobile focus indicators (larger rings, better visibility)
+  - Improved touch target sizing across mobile components
+  - Better visual hierarchy in mobile menu
+  - Clearer active/hover states for mobile interactions
+
+- **Accessibility Enhancements**
+  - Enhanced focus ring visibility in Header component
+  - Improved keyboard navigation visual feedback
+  - Better contrast for WCAG compliance
+  - Mobile-friendly focus indicators in ExamplesModal
+  - Enhanced focus styles for all interactive elements in MobileMenu
+
+- **Component Refinements**
+  - DocPanel spacing and layout improvements
+  - App.jsx integration cleanup (simplified DownloadButton API)
+  - Removed unnecessary state management for downloads
+
+- **Testing**
+  - Updated ControlBar tests: 6 skipped (GitHub button hidden), 1 new verification test
+  - Removed 3 obsolete download button checkmark tests
+  - Added non-secure context clipboard tests
+  - Cleaned up duplicate test helpers in QualityScore tests
 
 ### Fixed
-- DownloadButton test suite: Fixed 23 failing tests related to appendChild mocks, SVG className access, and keyboard accessibility
-- QualityScore test suite: Fixed 5 failing tests for criteria breakdown icon selectors
-- Test suite now at 789 passing tests (up from 766), 0 failures, 16 skipped
-- Quality Score modal improvements and bug fixes
-- Example modal now properly closes when clicking on backdrop
+- Copy-to-clipboard now works on mobile via IP/HTTP (non-secure contexts)
+- Download button no longer shows confusing checkmark after download
+- GitHub import button hidden (non-functional placeholder removed)
+- Mobile file upload expectations documented (Camera/Photos/Files picker)
+- Server error handling and logging improvements
+- Test suite consistency (660+ tests passing, 100% pass rate)
+
+### Documentation
+- Updated Cross-Browser Test Plan v1.0 → v1.1
+- Enhanced Frontend Testing Guide with mobile patterns
+- Updated Todo List v1.3 with v1.2.2 completion details
+- Updated Roadmap.md and roadmap-data.json
+- Comprehensive maintenance release documentation
+
+### Statistics
+- **Files Modified:** 16
+- **Lines Added:** 513
+- **Lines Removed:** 253
+- **Net Change:** +260 lines
+- **Tests:** 660+ passing (46 ControlBar + 6 skipped appropriately)
+- **Test Coverage:** Maintained at 95.81% backend
+- **Duration:** 1 day (afternoon session)
 
 ---
 

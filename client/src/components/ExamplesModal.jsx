@@ -29,20 +29,27 @@ export function ExamplesModal({ isOpen, onClose, onLoadExample, currentCode }) {
         ? codeExamples.find(ex => ex.code.trim() === currentCode.trim())
         : null;
 
-      // Select current example if found, otherwise show empty preview panel
-      setSelectedExample(currentExample || null);
+      // Only update selectedExample if we found a match
+      // This preserves the previous selection if no match is found
+      if (currentExample) {
+        setSelectedExample(currentExample);
+      }
     }
   }, [isOpen, currentCode]);
 
-  // Focus management: auto-focus the first example card when modal opens
+  // Focus management: auto-focus the selected example card when modal opens
   useEffect(() => {
     if (isOpen && codeExamples.length > 0) {
-      const firstCard = cardRefs.current[codeExamples[0].id];
-      if (firstCard) {
-        firstCard.focus();
+      // Focus the selected example if one exists, otherwise focus the first card
+      const cardToFocus = selectedExample
+        ? cardRefs.current[selectedExample.id]
+        : cardRefs.current[codeExamples[0].id];
+
+      if (cardToFocus) {
+        cardToFocus.focus();
       }
     }
-  }, [isOpen]);
+  }, [isOpen, selectedExample]);
 
   // Focus trap: keep focus within modal
   useEffect(() => {
