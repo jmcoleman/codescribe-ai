@@ -6,7 +6,10 @@ on:
     branches: [main, develop]
     paths-ignore:
       - '**.md'
+      - '**.html'
+      - '**.json'
       - 'docs/**'
+      - 'scripts/**'
       - 'private/**'
       - '.gitignore'
       - 'LICENSE'
@@ -16,7 +19,10 @@ on:
     branches: [main, develop]
     paths-ignore:
       - '**.md'
+      - '**.html'
+      - '**.json'
       - 'docs/**'
+      - 'scripts/**'
       - 'private/**'
       - '.gitignore'
       - 'LICENSE'
