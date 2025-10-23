@@ -6,7 +6,7 @@ Transform code into comprehensive, professional documentation in seconds using A
 
 > **Portfolio Project** by Jenni Coleman - Showcasing full-stack development, AI integration, and modern UX design
 >
-> 🔗 [Live Demo](https://codescribeai.com) | 📖 [Documentation](docs/) | 🎨 [Design System](docs/planning/mvp/07-Figma-Guide.md) | 💻 [GitHub](https://github.com/jmcoleman/codescribe-ai)
+> 🔗 [Live Demo](https://codescribeai.com) | 📖 [Documentation](docs/) | 🎨 [Design System](docs/design/UI-DESIGN-GUIDE.md) | 💻 [GitHub](https://github.com/jmcoleman/codescribe-ai)
 
 ## Table of Contents
 
