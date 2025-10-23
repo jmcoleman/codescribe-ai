@@ -1,9 +1,31 @@
 # CodeScribe AI - Product Roadmap
 
-**Last Updated:** October 21, 2025
+**Last Updated:** October 23, 2025
 **Current Phase:** Phase 1.5 - ✅ **COMPLETE** (Deployed to Production)
 **MVP Status:** ✅ **100% COMPLETE** - Live in Production
 **Production URL:** [https://codescribeai.com](https://codescribeai.com)
+
+---
+
+## 📋 Table of Contents
+
+1. [🎯 Vision](#-vision)
+2. [✅ MVP Complete (Phase 1 + 1.5)](#-mvp-complete-phase-1--15)
+   - [Phase 1.0: Core Development](#-phase-10-core-development-4-days---oct-11-16)
+   - [Phase 1.5: Accessibility](#-phase-15-accessibility-2-days---oct-16-18)
+   - [Phase 1.6: Deployment](#-phase-16-deployment-2-days---oct-17-19)
+   - [MVP Success Metrics](#mvp-success-metrics)
+3. [📋 Future Phases](#-future-phases)
+   - [Phase 2: Monetization Foundation](#-phase-2-monetization-foundation-planned)
+   - [Phase 3: UX Enhancements](#-phase-3-ux-enhancements-planned)
+   - [Phase 4: Documentation Capabilities](#-phase-4-documentation-capabilities-planned)
+   - [Phase 5: Developer Tools](#-phase-5-developer-tools-planned)
+   - [Phase 6: Enterprise Readiness](#-phase-6-enterprise-readiness-future)
+4. [🎉 Project Milestones](#-project-milestones)
+5. [🚨 Risks & Mitigation](#-risks--mitigation)
+6. [📚 Documentation References](#-documentation-references)
+7. [🗺️ Updating the Interactive Roadmap](#️-updating-the-interactive-roadmap)
+8. [📌 Versioning Strategy](#-versioning-strategy)
 
 ---
 
@@ -13,35 +35,18 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 
 ---
 
-## 📊 Phase 1 (MVP) + Phase 1.5 (Accessibility) Progress
+## ✅ MVP Complete (Phase 1 + 1.5)
 
-**Goal:** Production-ready web application with AI-powered documentation generation + WCAG 2.1 AA compliance
+**Total Duration:** 8 days (October 11-19, 2025)
+**Status:** ✅ **100% COMPLETE** - Deployed to Production
+**Production URL:** [https://codescribeai.com](https://codescribeai.com)
 
-| Component | Days Completed | Status |
-|-----------|---------------|--------|
-| **Development** (Features, UI, Testing, Performance) | 4 days | ✅ 100% Complete |
-| **Phase 1.5: Accessibility** (WCAG 2.1 AA Compliance) | 2 days | ✅ 100% Complete |
-| ↳ Days 6-7: Critical + Keyboard | 2 days | ✅ 100% Complete |
-| ↳ Day 8: ARIA & Semantics | 0.5 days | ✅ 100% Complete |
-| ↳ Day 9: Polish & Automated Testing | 0.5 days | ✅ 100% Complete (0 violations!) |
-| **Deployment** (Vercel Production) | 2 days | ✅ 100% Complete |
-| ↳ Day 10: Vercel Setup & CI/CD | 1 day | ✅ 100% Complete |
-| ↳ Day 11: Security & Optimization | 1 day | ✅ 100% Complete |
-
-**Total Scope:** 8 days (4 dev + 2 accessibility + 2 deployment)
-**Completed:** 8 days (100%)
-**Remaining:** 0 days
-
-**Overall Completion:** ✅ **100% COMPLETE**
-
----
-
-## ✅ Development Complete (4 days - Oct 11-16)
+### 🚀 Phase 1.0: Core Development (4 days - Oct 11-16)
 
 **Timeline:** Days 1-4 (October 11-16, 2025)
 **Status:** ✅ **100% COMPLETE**
 
-### Completed Features (14/14)
+#### Completed Features (14/14)
 - ✅ Code editor integration (Monaco Editor, 24+ languages)
 - ✅ File upload (multi-format support: .js, .jsx, .py, .java, etc.)
 - ✅ README generation (AI-powered with Claude Sonnet 4.5)
@@ -57,7 +62,7 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 - ✅ Mermaid diagram support (brand-themed rendering)
 - ✅ Professional UI animations (hover effects, transitions, copy buttons)
 
-### Quality & Testing Metrics
+#### Quality & Testing Metrics
 - ✅ **660+ tests** (100% passing across 3 frameworks)
   - Frontend: 513+ tests (Vitest, 13/18 components)
   - Backend: 133+ tests (Jest, 95.81% statements, 88.72% branches)
@@ -67,7 +72,7 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 - ✅ **65 commits** (Oct 11-17, 2025)
 - ✅ **25+ documentation files** created
 
-### Performance Optimization
+#### Performance Optimization
 - ✅ **Lighthouse Score:** 45 → 75 (+67% improvement)
 - ✅ **Bundle Size:** 516 KB → 78 KB gzipped (-85% reduction)
 - ✅ **Core Web Vitals:**
@@ -76,7 +81,7 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
   - TBT (Total Blocking Time): 3,000ms → 2,100ms (-30%)
 - ✅ **Lazy Loading:** Monaco Editor, Mermaid.js, DocPanel, Modals
 
-### Cross-Browser Testing
+#### Cross-Browser Testing
 - ✅ **5 browsers tested:** Chromium, Firefox, WebKit (Safari), Chrome, Edge
 - ✅ **100% compatibility:** 10/10 E2E tests passing across all browsers
 - ✅ **Async timing issues:** All resolved with proper event-based waiting
@@ -90,14 +95,14 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 
 ---
 
-## ✅ Phase 1.5: Accessibility Substantially Complete (2 days - Oct 16-18)
+### ♿ Phase 1.5: Accessibility (2 days - Oct 16-18)
 
 **Timeline:** Days 4-6 (October 16-18, 2025)
 **Status:** ✅ **SUBSTANTIALLY COMPLETE - Production Ready**
 **Goal:** Achieve full WCAG 2.1 Level AA compliance
 **Achievement:** **ZERO automated accessibility violations** 🎉
 
-### Days 6-7: Critical + Keyboard Accessibility (Oct 16-17) - ✅ 100% COMPLETE
+#### Days 6-7: Critical + Keyboard Accessibility (Oct 16-17) - ✅ 100% COMPLETE
 - ✅ **Color contrast** - WCAG AAA compliant (18.2:1 for body text, exceeds 4.5:1 requirement)
 - ✅ **Form labels** - Comprehensive ARIA labels for all inputs (Monaco Editor, Select, Upload button)
 - ✅ **Keyboard navigation** - Full Tab/Enter/Escape/Arrow key support via Headless UI
@@ -107,7 +112,7 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 - ✅ **Page title and meta tags** - Proper semantic HTML
 - ✅ **Enhanced focus indicators** - Purple focus rings with `:focus-visible` support
 
-### Day 8: ARIA & Semantics (Oct 17) - ✅ 90% COMPLETE
+#### Day 8: ARIA & Semantics (Oct 17) - ✅ 90% COMPLETE
 - ✅ **Decorative icons** - All 22 icons marked `aria-hidden="true"` across 8 files
 - ✅ **Heading hierarchy** - Logical semantic structure (h2 tags in all panels)
 - ✅ **Loading state announcements** - Screen reader support in Button component
@@ -115,7 +120,7 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 - ✅ **Button types** - All 35 buttons have explicit `type="button"` attribute
 - ⏸️ **Manual screen reader testing** - Recommended before final launch (implementation complete)
 
-### Day 9: Automated Testing (Oct 18) - ✅ **COMPLETE - ZERO VIOLATIONS!**
+#### Day 9: Automated Testing (Oct 18) - ✅ **COMPLETE - ZERO VIOLATIONS!**
 - ✅ **axe DevTools CLI scan** - v4.10.3 automated accessibility testing
 - ✅ **Test Results:**
   - **Violations:** 0 ✅ **PERFECT SCORE!**
@@ -138,14 +143,14 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 - ✅ **Documentation updated** - Complete axe scan results in ACCESSIBILITY-AUDIT.MD
 - ✅ **Raw results exported** - client/axe-results.json (32,858 tokens of test data)
 
-### Day 10: Manual Validation (Oct 18+) - ⏸️ OPTIONAL (Recommended)
+#### Day 10: Manual Validation (Oct 18+) - ⏸️ OPTIONAL (Recommended)
 - ⏸️ **Screen reader walkthrough** - VoiceOver/NVDA full user flow validation
 - ⏸️ **Keyboard-only testing** - Complete workflow without mouse
 - ⏸️ **Zoom & contrast testing** - 200%, 400%, high contrast mode
 - ⏸️ **Color blindness testing** - Protanopia, Deuteranopia, Tritanopia simulations
 - **Status:** All automated implementation complete, manual testing recommended but not blocking
 
-### Accessibility Quality Scores
+#### Accessibility Quality Scores
 - ✅ **Overall Accessibility Score:** 95/100 (A grade)
 - ✅ **Lighthouse Accessibility:** 100/100
 - ✅ **axe DevTools Automated Scan:** 0 violations ✅ **PERFECT!**
@@ -153,7 +158,7 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 - ✅ **Motion Reduction:** `prefers-reduced-motion` support implemented
 - ✅ **Keyboard-Only Navigation:** 100% accessible without mouse (implementation complete)
 
-### ARIA Implementation (Comprehensive)
+#### ARIA Implementation (Comprehensive)
 - ✅ `role="dialog"` + `aria-modal="true"` on all modals (Help, Examples, Quality Score)
 - ✅ `role="alert"` + `aria-live="assertive"` on error banners
 - ✅ `aria-labelledby` and `aria-describedby` for modal context
@@ -164,7 +169,7 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 - ✅ `role="status"` on empty states and live regions
 - ✅ `role="presentation"` on decorative elements (traffic lights)
 
-### Production Readiness
+#### Production Readiness
 - ✅ **Zero automated violations** - Production-ready from accessibility perspective
 - ✅ **All critical implementation complete** - ARIA, keyboard, focus, contrast, semantics
 - ⏸️ **Manual validation recommended** - Screen reader walkthrough before public launch
@@ -177,36 +182,36 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 
 ---
 
-## ✅ Deployment Complete (2 days - Oct 17-19, 2025)
+### 🚀 Phase 1.6: Deployment (2 days - Oct 17-19)
 
 **Timeline:** Days 10-11 (October 17-19, 2025)
 **Actual Duration:** 2 days
 **Status:** ✅ **COMPLETE**
 
-### Completed Deployment Tasks
+#### Completed Deployment Tasks
 
-**Phase 1: Pre-Deployment Preparation** - ✅ Complete
+**Pre-Deployment Preparation** - ✅ Complete
 - ✅ Removed all `console.log` statements from production code
 - ✅ Reviewed and documented environment variables
 - ✅ Tested production build locally (`npm run build` + `npm run preview`)
 - ✅ Verified API configuration (CORS, rate limiting)
 - ✅ Checked no sensitive data in code
 
-**Phase 2: Vercel Deployment** - ✅ Complete
+**Vercel Deployment** - ✅ Complete
 - ✅ Set up Vercel account and connected GitHub repository
 - ✅ Configured build settings (monorepo structure with client/ and server/)
 - ✅ Added environment variables to Vercel dashboard (CLAUDE_API_KEY, NODE_ENV, etc.)
 - ✅ Deployed to production: **codescribeai.com**
 - ✅ Configured custom domain and SSL
 
-**Phase 3: CI/CD Pipeline** - ✅ Complete
+**CI/CD Pipeline** - ✅ Complete
 - ✅ Implemented GitHub Actions workflows (test.yml)
 - ✅ Test-gated deployment with Vercel Deploy Hooks
 - ✅ Automatic deployment after all tests pass
 - ✅ Security hardening (secret sanitization, .env.example files)
 - ✅ API URL centralization (config-based approach)
 
-**Phase 4: Post-Deployment Testing** - ✅ Complete
+**Post-Deployment Testing** - ✅ Complete
 - ✅ Smoke tested all critical user flows in production
 - ✅ Verified all 4 doc types (README, JSDoc, API, ARCHITECTURE)
 - ✅ Cross-browser testing on production URL (5 browsers: Chromium, Firefox, WebKit, Chrome, Edge)
@@ -214,13 +219,13 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 - ✅ Accessibility verification (Lighthouse 100/100, axe 0 violations)
 - ✅ Mobile responsive testing
 
-**Phase 5: Documentation Updates** - ✅ Complete
+**Documentation Updates** - ✅ Complete
 - ✅ Updated README.md with live demo link
 - ✅ Updated ARCHITECTURE.md to v1.2 with production URL
 - ✅ Created comprehensive deployment documentation (DEPLOYMENT-LEARNINGS.md)
 - ✅ Added deployment date to all documentation
 
-### Success Criteria - ✅ All Achieved
+#### Success Criteria - ✅ All Achieved
 - ✅ App is live at public URL: https://codescribeai.com
 - ✅ All features working in production
 - ✅ No critical errors in console
@@ -232,546 +237,430 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 - ✅ No broken links or missing assets
 
 **Reference Documentation:**
-- [MVP-DEPLOY-LAUNCH.md](MVP-DEPLOY-LAUNCH.md) - Complete deployment guide with troubleshooting
+- [MVP-DEPLOY-LAUNCH.md](../../deployment/MVP-DEPLOY-LAUNCH.md) - Complete deployment guide with troubleshooting
 
 ---
 
-## 🔧 Phase 2: UX Improvements (PLANNED)
+### 📊 MVP Success Metrics
 
-**Timeline:** TBD (after production deployment)
-**Estimated Duration:** 2-3 days
-**Status:** 📋 **NOT STARTED**
+**Development & Testing - ✅ ACHIEVED**
+- ✅ **Features:** 14/14 P0 features complete (100%)
+- ✅ **Testing:** 660+ tests (100% passing)
+  - Frontend: 513+ tests (Vitest, 13/18 components)
+  - Backend: 133+ tests (Jest, 95.81% statements, 88.72% branches)
+  - E2E: 10 tests (Playwright, 5 browsers, 100% pass rate)
+- ✅ **Coverage:** 72.2% frontend, 85%+ backend
+- ✅ **Code Quality:** Zero critical bugs
+- ✅ **Documentation:** 25+ comprehensive docs
+- ✅ **15,000+ lines of code** (client + server + tests + docs)
+
+**Performance - ✅ ACHIEVED**
+- ✅ **Lighthouse Score:** 45 → 75 (+67% improvement)
+- ✅ **Bundle Size:** -85% reduction (516KB → 78KB gzipped)
+- ✅ **Core Web Vitals:**
+  - FCP: 5.4s → 0.6s (-89%)
+  - LCP: 13.9s → 1.0s (-93%)
+  - TBT: 3,000ms → 2,100ms (-30%)
+
+**Accessibility - ✅ ACHIEVED**
+- ✅ **Overall Score:** 95/100 (A grade)
+- ✅ **Lighthouse Accessibility:** 100/100
+- ✅ **axe DevTools:** 0 violations ✅ **PERFECT SCORE!**
+- ✅ **WCAG 2.1 AA:** Fully compliant
+- ✅ **Cross-Browser:** 100% compatibility (5 browsers)
+
+**Deployment - ✅ COMPLETE**
+- ✅ **Production URL:** https://codescribeai.com
+- ✅ **CI/CD:** Test-gated deployment via GitHub Actions
+- ✅ **SSL & Custom Domain:** Configured
+- ✅ **All features working in production**
+
+---
+
+
+> **Note:** Phases represent **strategic themes**, not individual features. Each phase contains multiple **epics** (feature sets) that work together toward a cohesive goal. See [PHASE-ORGANIZATION.md](../PHASE-ORGANIZATION.md) for best practices.
+
+---
+
+## 💰 Phase 2: Monetization Foundation (PLANNED)
+
+**Timeline:** TBD (after Phase 1)
+**Estimated Duration:** 2-3 weeks
+**Status:** ✅ **PLANNING COMPLETE** - Implementation Files Ready
 **Target Release:** v2.0.0
-**Goal:** Enhance user experience with drag-and-drop, filename display, and GitHub integration
+**Strategic Goal:** Enable sustainable business model with Open Core + Generous Free Tier architecture
 
-### Completed in v1.2.1 & v1.2.2
-- ✅ **Mobile Issues Fix** - Mobile clipboard fallback, enhanced accessibility (v1.2.2)
-- ✅ **Download Button** - Export documentation to markdown format (v1.2.1)
+### 📦 Epics
 
-### Planned Features
-- [ ] **Drag-and-Drop File Upload** - Drop files directly onto CodePanel/Monaco Editor
-- [ ] **Filename Display** - Show filename/code unit name at top of Monaco Editor
-- [ ] **GitHub Single-File Import** - Load code files directly from GitHub URLs
-
-### Technical Details
-
-**Drag-and-Drop File Upload:**
-- Add drag event handlers to CodePanel (`onDragEnter`, `onDragOver`, `onDragLeave`, `onDrop`)
-- Visual feedback during drag-over (highlight border, overlay message "Drop file to upload")
-- Prevent default browser behavior (don't open file in new tab)
-- Reuse existing file upload validation and processing logic
-- Accessibility: keyboard users can still use "Upload Files" button
-- Support same file types as existing upload (.js, .jsx, .py, .java, etc.)
-- Show error messages if invalid file type or size
-
-**Filename Display:**
-- Add header bar above Monaco Editor (currently shows filename in CodePanel header)
-- Enhancement: Display current filename or code unit name more prominently
-- Show file type icon (JavaScript, Python, etc.) next to filename
-- Update on file upload or example selection
-
-**GitHub Single-File Import:**
-- Support GitHub raw file URLs
-- Parse GitHub repository URLs and convert to raw
-- Add "Load from GitHub" button in ControlBar
-- Client-side fetch (no backend needed)
-- Example: `https://github.com/user/repo/blob/main/file.js` → `https://raw.githubusercontent.com/user/repo/main/file.js`
-
-### Success Criteria
-- [ ] Users can drag-and-drop files onto CodePanel to upload
-- [ ] Visual feedback appears during drag-over (border highlight + message)
-- [ ] Drag-and-drop uses same validation as "Upload Files" button
-- [ ] Filename displays correctly for uploaded files and examples
-- [ ] GitHub import works with raw URLs and repository URLs
-- [ ] All accessibility requirements met (WCAG 2.1 AA)
-- [ ] No regressions in existing features
-- [ ] Tests passing for drag-and-drop (unit + E2E)
-
----
-
-## 🌙 Phase 2.5: Dark Mode Theming (PLANNED)
-
-**Timeline:** TBD (after Phase 2)
-**Estimated Duration:** 1.5-2 days
-**Status:** 📋 **NOT STARTED**
-**Target Release:** v2.1.0
-**Goal:** Modern dark mode theming using CSS variables and Tailwind's dark mode system
-
-**Approach:** Following Kevin Powell's best practices for CSS variable theming with `data-theme` attribute
-
-### Planned Features
-- [ ] **Theme Toggle UI** - Sun/moon icon button in Header with smooth transitions
-- [ ] **CSS Variable Architecture** - Semantic color naming with `data-theme` attribute
-- [ ] **Tailwind Dark Mode** - Built-in `dark:` class variants for all components
-- [ ] **Theme Persistence** - Save user preference to localStorage
-- [ ] **System Preference Detection** - Respect `prefers-color-scheme: dark`
-- [ ] **Monaco Editor Dark Theme** - Switch to `vs-dark` theme
-- [ ] **Mermaid Dark Theme** - Use existing theme system with dark color palette
-
-### Technical Details
-
-**Kevin Powell's CSS Variable Pattern:**
-```css
-/* Semantic naming (purpose-based, not color-based) */
-:root {
-  --color-bg-primary: #ffffff;
-  --color-bg-secondary: #f8fafc;
-  --color-text-primary: #0f172a;
-  --color-text-secondary: #475569;
-  --color-brand: #a855f7;
-  --color-border: #e2e8f0;
-}
-
-[data-theme="dark"] {
-  --color-bg-primary: #0f172a;
-  --color-bg-secondary: #1e293b;
-  --color-text-primary: #f8fafc;
-  --color-text-secondary: #cbd5e1;
-  --color-brand: #a855f7; /* Brand colors can stay consistent */
-  --color-border: #334155;
-}
-```
-
-**Tailwind Configuration:**
-```javascript
-// tailwind.config.js
-export default {
-  darkMode: 'selector', // Use selector strategy
-  theme: {
-    extend: {
-      colors: {
-        // Map semantic variables to Tailwind
-      }
-    }
-  }
-}
-```
-
-**React Theme Context:**
-```javascript
-// ThemeContext.jsx
-const ThemeContext = createContext();
-
-export function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState(() => {
-    // 1. Check localStorage
-    const saved = localStorage.getItem('theme');
-    if (saved) return saved;
-
-    // 2. Check system preference
-    return window.matchMedia('(prefers-color-scheme: dark)').matches
-      ? 'dark'
-      : 'light';
-  });
-
-  useEffect(() => {
-    // Set data-theme attribute on <html>
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('theme', theme);
-  }, [theme]);
-
-  return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>
-      {children}
-    </ThemeContext.Provider>
-  );
-}
-```
-
-**Component Updates:**
-- Add `dark:` variants to all Tailwind classes in components
-- Update Monaco Editor: `theme={isDark ? 'vs-dark' : 'vs-light'}`
-- Update Mermaid: Pass dark theme config when `data-theme="dark"`
-- Ensure all custom components (toasts, modals) respect theme
-
-**Accessibility:**
-- Theme toggle button with `aria-label="Toggle dark mode"`
-- Keyboard accessible (Enter/Space to toggle)
-- WCAG AAA contrast ratios (7:1 for text, 3:1 for UI components)
-- Smooth transitions (respect `prefers-reduced-motion`)
-
-### Success Criteria
-- [ ] Theme toggle button in Header works smoothly
-- [ ] All components render correctly in both light and dark modes
-- [ ] Theme preference persists across page reloads
-- [ ] System preference (`prefers-color-scheme`) is respected on first visit
-- [ ] Monaco Editor switches between `vs-light` and `vs-dark` themes
-- [ ] Mermaid diagrams render with dark theme colors
-- [ ] WCAG AAA contrast ratios achieved (7:1 text, 3:1 UI)
-- [ ] All 513+ frontend tests pass for both themes
-- [ ] E2E tests verify theme toggle functionality
-- [ ] No layout shift or flicker when toggling themes
-- [ ] `prefers-reduced-motion` users see instant theme change (no animations)
-
-### Implementation Notes
-- **Why `data-theme` over classes?** Clearer separation of state vs styling, easier to add more themes later
-- **Why semantic naming?** `--color-bg-primary` makes sense in both light/dark, `--white` doesn't
-- **Why Tailwind + CSS vars?** Best of both worlds - Tailwind's utility classes + dynamic theming
-- **Performance:** Theme state in React Context, minimal re-renders
-
-### Future Compatibility: CLI Tool & VS Code Extension
-- ✅ **CLI Tool (Phase 6 - v3.0.0):** Zero impact - Pure command-line, no UI
-- ✅ **VS Code Extension (Phase 7 - v4.0.0):** Zero conflicts - Uses VS Code's theme API
-  - VS Code extension WebViews will use **VS Code's theme system** (not web app theme)
-  - Theming logic: `vscode.window.activeColorTheme.kind` determines light/dark
-  - Web app dark mode patterns (CSS variables, semantic naming) will inform VS Code implementation
-  - Backend services remain theme-agnostic (shared across all platforms)
-- **Benefit:** Experience gained from web app theming will make VS Code theming easier
-
----
-
-## 📋 Phase 3: Layout Enhancements (PLANNED)
-
-**Timeline:** TBD (after Phase 2)
-**Estimated Duration:** 3-4 days
-**Status:** 📋 **NOT STARTED**
-**Target Release:** v2.2.0
-**Goal:** Enhanced layout with full-width design and resizable panels
-
-**Note:** Can ship incrementally (full-width first, then resizable panels) or together as v2.2.0.
-
-### Planned Features
-
-**Full-Width Layout:**
-- [ ] Remove `max-width` constraints on main container
-- [ ] Allow app to use full browser width
-- [ ] Keep responsive padding (px-4, px-6, px-8)
-- [ ] Add `max-w-prose` on DocPanel markdown content only (readability)
-- [ ] Test on multiple monitor sizes (1920px, 2560px, 3440px ultra-wide)
-
-**Resizable Panels:**
-- [ ] Add `react-resizable-panels` dependency
-- [ ] Draggable divider between CodePanel and DocPanel
-- [ ] Save panel sizes to localStorage (persist user preference)
-- [ ] Panel constraints: 30% min, 70% max for each panel
-- [ ] "Reset to Default" button (50/50 split)
-- [ ] Keyboard accessibility (arrow keys to resize)
-- [ ] Mobile: panels stack vertically (no resizing)
-
-### Technical Implementation
-
-**Full-Width Layout:**
-- Remove `max-w-7xl` from main container
-- App container goes from 1280px → 100vw
-- Limit line length in DocPanel to 80-100 characters for readability
-
-**Resizable Panels:**
-```javascript
-// Panel constraints
-const PANEL_CONSTRAINTS = {
-  code: { min: 30, max: 70, default: 50 },
-  doc: { min: 30, max: 70, default: 50 }
-};
-
-// Usage with react-resizable-panels
-<PanelGroup direction="horizontal" onLayout={saveSizesToLocalStorage}>
-  <Panel defaultSize={50} minSize={30} maxSize={70}>
-    <CodePanel />
-  </Panel>
-  <PanelResizeHandle className="w-2 bg-slate-200 hover:bg-purple-500" />
-  <Panel defaultSize={50} minSize={30} maxSize={70}>
-    <DocPanel />
-  </Panel>
-</PanelGroup>
-```
-
-**localStorage Best Practices:**
-- Namespace key: `codescribe-panel-sizes`
-- Validate stored data before using
-- Handle edge cases (disabled localStorage, corrupt data)
-- Mobile exception: don't persist, always stack
-
-### Success Criteria
-- [ ] App uses full browser width on large monitors
-- [ ] Doc text remains readable (not too wide)
-- [ ] Panels resize smoothly with draggable handle
-- [ ] Panel sizes persist across page refreshes
-- [ ] Constraints prevent panels from becoming unusable
-- [ ] Keyboard users can resize panels
-- [ ] Mobile users see stacked panels (no resizing)
-- [ ] Reset button works correctly
-- [ ] Responsive behavior unchanged on mobile/tablet
-- [ ] No regressions in existing features
-
----
-
-## 📋 Phase 3.5: User Authentication & Monetization (PLANNED)
-
-**Timeline:** TBD (after Phase 3)
-**Estimated Duration:** 3-5 days
-**Status:** 📋 **NOT STARTED**
-**Target Release:** v3.0.0
-**Goal:** Enable user accounts, usage tracking, and freemium tier enforcement
-
-### Planned Features
-
-**User Authentication:**
-- [ ] Email/password authentication (secure hashing with bcrypt)
-- [ ] GitHub OAuth integration (social login)
-- [ ] Password reset flow (email-based)
-- [ ] Email verification for new accounts
-- [ ] JWT token-based sessions
-
-**Usage Tracking & Rate Limiting:**
-- [ ] Per-user generation quota tracking
-- [ ] Free tier: 10 generations/month
-- [ ] Usage dashboard (show remaining quota)
-- [ ] Rate limit enforcement (client + server-side)
-- [ ] Usage analytics (track user behavior)
-
-**Database:**
-- [ ] PostgreSQL or MongoDB for user data
-- [ ] User schema (id, email, password_hash, created_at, subscription_tier)
-- [ ] Usage schema (user_id, generations_count, reset_date)
-- [ ] Migration from privacy-first (no database) to user accounts
-
-**UI Changes:**
-- [ ] Show Sign In button (currently hidden)
-- [ ] Login/Signup modal
-- [ ] User profile menu (usage stats, settings, logout)
-- [ ] "Upgrade to Pro" prompts when approaching limit
-- [ ] Loading states and error handling
-
-**Privacy & Security:**
-- [ ] GDPR compliance (data export, account deletion)
-- [ ] Secure password storage (bcrypt + salt)
-- [ ] Rate limiting on auth endpoints (prevent brute force)
-- [ ] HTTPS-only cookies
-- [ ] CSRF protection
-
-### Technical Implementation
-
-**Frontend:**
-- Auth context provider (React Context or Zustand)
-- Protected routes (redirect to login if needed)
-- Token storage (httpOnly cookies or localStorage)
-- Login/Signup forms with validation
-
-**Backend:**
+#### Epic 2.1: Authentication & User Management (3-5 days)
+- Email/password authentication with bcrypt hashing
+- GitHub OAuth integration
+- JWT token-based sessions
+- Password reset flow
 - Auth routes: `/api/auth/signup`, `/api/auth/login`, `/api/auth/logout`
-- Middleware: `requireAuth()` for protected endpoints
-- JWT generation and verification
-- Database connection and ORM (Prisma or TypeORM)
+- Frontend auth context (React Context or Zustand)
+- Login/Signup modal UI
 
-**Migration Strategy:**
-1. Phase 1: Optional auth (users can continue using without account)
-2. Phase 2: Encourage signup (show quota warnings)
-3. Phase 3: Require auth (grandfather existing users with extended free tier)
+#### Epic 2.2: Tier System & Feature Flags (2-3 days)
+- Database setup (PostgreSQL or MongoDB)
+- User schema (id, email, password_hash, tier, created_at)
+- Usage schema (user_id, daily_count, monthly_count, reset_date)
+- Tier gate middleware integration
+- Usage tracking and quota enforcement
+- Usage dashboard UI (show remaining quota)
+
+#### Epic 2.3: Payment Integration (2-3 days)
+- Stripe integration
+- Subscription management (create, update, cancel)
+- Webhook handling (tier updates on payment events)
+- Pricing page UI
+- Upgrade/downgrade flows
+- Invoice and receipt generation
+
+#### Epic 2.4: UI Integration (1-2 days)
+- Unhide Sign In button in header
+- User profile menu (usage stats, settings, logout)
+- "Upgrade to Pro" prompts when approaching limits
+- Tier badges and feature gates in UI
+- Loading states and error handling
+
+### Tier Structure (Feature Flags Ready)
+
+**Free Tier (Generous - Drives Adoption):**
+- ✅ All 4 documentation types (README, JSDoc, API, ARCHITECTURE)
+- ✅ Real-time streaming, quality scoring, Monaco editor
+- ✅ File upload, code parsing, Mermaid diagrams
+- ⚠️ Limit: 10 docs/month OR unlimited self-hosted with own API key
+- 💡 **Philosophy:** Portfolio-worthy for users, showcases full feature set
+
+**Pro Tier ($9/mo - Volume + Convenience):**
+- ✅ 100 docs/month (10x increase)
+- ✅ Built-in API credits (no Claude API key setup)
+- ✅ Batch processing (up to 10 files at once)
+- ✅ Custom templates, priority queue
+- ✅ Export formats (markdown, HTML, PDF)
+- ✅ Version history (30 days)
+
+**Team Tier ($29/mo - Collaboration):**
+- ✅ 500 docs/month shared across 10 users
+- ✅ Team workspace, shared templates
+- ✅ Usage analytics dashboard
+- ✅ Role-based access (admin, member, viewer)
+- ✅ Slack + GitHub + CI/CD integrations
+- ✅ Priority email support (24hr response)
+
+**Enterprise Tier (Custom - Compliance + Control):**
+- ✅ Unlimited docs, unlimited users
+- ✅ SSO/SAML, audit logs, custom model fine-tuning
+- ✅ Dedicated infrastructure, custom integrations
+- ✅ White-label branding, on-premise deployment
+- ✅ 99.9% SLA, dedicated Slack channel, account manager
+
+### Strategic Rationale
+
+**Why Open Core + Generous Free Tier?**
+1. ✅ Free tier is portfolio-worthy (drives adoption)
+2. ✅ Showcases full feature set (interview strength)
+3. ✅ Feature flags demonstrate enterprise architecture
+4. ✅ Volume limits create natural upgrade paths
+5. ✅ Compounds over time (SEO, stars, testimonials)
+
+**Conversion Psychology:**
+- **Volume:** Hit 10-doc limit → Pro ($9 feels cheap for 100 docs)
+- **Convenience:** Avoid API key setup → Pro (20 min vs. 30 sec)
+- **Collaboration:** Team needs workspace → Team ($29 solves chaos)
+- **Professional:** Company context → Enterprise (compliance ready)
+
+**Proven Model (GitLab, Supabase, Ghost):**
+- Generous free tier → 30M users → <1% paying → $150M ARR (GitLab)
+- Year 1: Similar revenue to restricted free tier (~$10K MRR)
+- Year 3: 2x revenue due to viral growth and SEO dominance
 
 ### Success Criteria
+- [ ] Feature flag architecture integrated into existing codebase
 - [ ] Users can sign up with email/password or GitHub OAuth
-- [ ] Free tier users tracked accurately (10 generations/month)
-- [ ] Usage dashboard shows remaining quota
-- [ ] Sign In button visible and functional
-- [ ] Password reset flow works end-to-end
-- [ ] All tests passing (auth, rate limiting, security)
-- [ ] Documentation updated (API docs, user guide)
-- [ ] Deployed to production
+- [ ] Free tier tracked accurately (10 generations/month)
+- [ ] Usage dashboard functional
+- [ ] Stripe subscription flow working end-to-end
+- [ ] All 660+ tests passing (including new auth/tier tests)
+- [ ] Documentation updated (API docs, user guide, privacy policy)
+- [ ] Deployed to production with monitoring
 
-### Notes
-- **Why now?** Authentication is required before implementing paid tiers (Phase 4+)
+### Privacy & Security Notes
 - **Database trade-off:** Moves from "privacy-first, no storage" to user accounts
   - Document this change in README and privacy policy
   - Emphasize: "We only store email, usage stats, and subscription info - never your code"
-- **Freemium validation:** This phase validates the business model (free → paid conversion)
+- **GDPR compliance:** Data export, account deletion
+- **Security:** bcrypt password hashing, rate limiting on auth endpoints, HTTPS-only cookies, CSRF protection
+
+**Reference Documentation:**
+- [private/MONETIZATION-MODEL.md](../../../private/MONETIZATION-MODEL.md) - Complete monetization strategy
+- [server/src/config/tiers.js](../../server/src/config/tiers.js) - Tier configuration
+- [server/src/middleware/tierGate.js](../../server/src/middleware/tierGate.js) - Authorization middleware
+- [client/src/hooks/useFeature.js](../../client/src/hooks/useFeature.js) - Frontend feature gating
 
 ---
 
-## 📋 Phase 4: OpenAPI/Swagger Generation (PLANNED)
+## 🎨 Phase 3: UX Enhancements (PLANNED)
+
+**Timeline:** TBD (after Phase 2)
+**Estimated Duration:** 2-3 weeks
+**Status:** 📋 **NOT STARTED**
+**Target Release:** v3.0.0
+**Strategic Goal:** Transform user experience with customization, flexibility, and advanced file handling capabilities
+
+### 📦 Epics
+
+#### Epic 3.1: Theming & Visual Customization (1.5-2 days)
+- Theme toggle UI (sun/moon icon button in Header)
+- CSS variable architecture with `data-theme` attribute (Kevin Powell's best practices)
+- Tailwind dark mode with `dark:` class variants
+- Theme persistence (localStorage)
+- System preference detection (`prefers-color-scheme: dark`)
+- Monaco Editor theme switching (`vs-light` / `vs-dark`)
+- Mermaid dark theme with brand colors
+- WCAG AAA contrast ratios (7:1 text, 3:1 UI)
+- Smooth transitions with `prefers-reduced-motion` support
+
+#### Epic 3.2: Layout & Workspace Flexibility (2-3 days)
+- Full-width layout option (remove `max-width` constraints)
+- Resizable panels with draggable divider (`react-resizable-panels`)
+- Panel constraints (30% min, 70% max for each panel)
+- Panel size persistence (localStorage)
+- "Reset to Default" button (50/50 split)
+- Keyboard accessibility (arrow keys to resize)
+- Layout presets (50/50, 70/30, 30/70)
+- Mobile responsive (panels stack vertically, no resizing)
+
+#### Epic 3.3: Advanced File Handling (2-3 days)
+- Multi-file upload support
+- Drag-and-drop file interface
+- File history and version tracking (30 days)
+- Batch processing (up to 10 files at once)
+- File preview before generation
+- Progress indicators for batch operations
+- Error handling per file (don't fail entire batch)
+
+### Technical Highlights
+
+**Theming Approach:**
+- CSS variables with semantic naming (`--color-bg-primary` vs `--white`)
+- `data-theme` attribute on `<html>` element
+- React Context for theme state management
+- All components use Tailwind `dark:` variants
+
+**Layout System:**
+- `react-resizable-panels` for draggable panels
+- localStorage for persistence with validation
+- Constraint system prevents unusable layouts
+- Keyboard navigation for accessibility
+
+**File Handling:**
+- Browser File API for drag-and-drop
+- Progress indicators using Server-Sent Events (SSE)
+- Per-file error boundaries for batch resilience
+
+### Success Criteria
+- [ ] All features work seamlessly across light and dark themes
+- [ ] Theme preference persists and respects system settings
+- [ ] Panels resize smoothly with no layout shift
+- [ ] Multi-file upload handles 10+ files without errors
+- [ ] WCAG AAA compliance maintained (7:1 contrast)
+- [ ] All 513+ frontend tests pass for both themes
+- [ ] E2E tests cover theme toggle and panel resizing
+- [ ] Mobile responsive behavior unchanged
+
+**Reference Documentation:**
+- [DARK-MODE-SPEC.md](../DARK-MODE-SPEC.md) - Dark mode implementation details
+
+---
+
+## 📄 Phase 4: Documentation Capabilities (PLANNED)
 
 **Timeline:** TBD (after Phase 3)
-**Estimated Duration:** 3-4 days
+**Estimated Duration:** 2-3 weeks
 **Status:** 📋 **NOT STARTED**
-**Target Release:** v3.1.0
-**Goal:** 5th documentation type for API specifications
+**Target Release:** v4.0.0
+**Strategic Goal:** Expand documentation generation capabilities with new doc types and advanced features
 
-### Planned Features
-- [ ] New doc type: "OPENAPI" or "SWAGGER"
-- [ ] AI-powered generation from code
-- [ ] Output in YAML format (OpenAPI 3.0 specification)
-- [ ] Quality scoring with 5 criteria (0-100 scale)
-- [ ] Reuse existing service layer architecture
+### 📦 Epics
 
-### Quality Scoring Criteria
+#### Epic 4.1: OpenAPI/Swagger Generation (3-4 days)
+- New doc type: "OPENAPI" or "SWAGGER"
+- AI-powered generation from code
+- Output in YAML format (OpenAPI 3.0 specification)
+- Quality scoring with 5 criteria (0-100 scale)
+- Parse code for API routes/endpoints (Express, Flask, FastAPI, etc.)
+- Swagger-specific quality scoring algorithm
+
+**Quality Scoring Criteria:**
 1. API overview and metadata (20 points)
 2. Endpoint documentation completeness (25 points)
 3. Schema definitions (20 points)
 4. Examples and request/response samples (20 points)
 5. Security and authentication docs (15 points)
 
-### Technical Approach
-- Add "OPENAPI" to docType dropdown
-- Create new AI prompt template for Swagger generation
-- Parse code for API routes/endpoints (Express, Flask, FastAPI, etc.)
-- Generate YAML output (industry standard)
-- Add Swagger-specific quality scoring algorithm
+#### Epic 4.2: Multi-File Project Documentation (4-5 days)
+- Accept multiple files or directory structures (.zip upload)
+- Analyze project-wide architecture
+- Generate comprehensive README for entire project
+- Cross-reference between files
+- Identify project patterns (MVC, microservices, monorepo, etc.)
+- Project-level quality scoring
 
-### Success Criteria
-- [ ] OpenAPI generation works with quality scoring
-- [ ] Output valid OpenAPI 3.0 YAML
-- [ ] Quality score provides actionable feedback
-- [ ] Works with Express, Flask, FastAPI code examples
-- [ ] Documentation and examples added
-
----
-
-## 📋 Phase 5: Multi-File Project Documentation (PLANNED)
-
-**Timeline:** TBD (after Phase 4)
-**Estimated Duration:** 4-5 days
-**Status:** 📋 **NOT STARTED**
-**Target Release:** v3.2.0
-**Goal:** 6th documentation type for entire projects
-
-- [ ] Accept multiple files or directory structures
-- [ ] Analyze project-wide architecture
-- [ ] Generate comprehensive README for entire project
-- [ ] Cross-reference between files
-- [ ] Identify project patterns (MVC, microservices, monorepo, etc.)
-- [ ] Quality scoring for project-level documentation
-
-### Technical Approach
-- New file upload: support multiple files or .zip upload
-- Parse directory structure and file relationships
-- Identify entry points (package.json, main.py, etc.)
-- Analyze imports/exports to understand architecture
-- Generate holistic project documentation
-- Reuse existing quality scoring with project-level criteria
-
-### Quality Scoring Criteria (Project-Level)
+**Quality Scoring Criteria (Project-Level):**
 1. Project overview and purpose (20 points)
 2. Architecture and structure (25 points)
 3. Setup and installation (15 points)
 4. Usage examples and workflows (20 points)
 5. Documentation completeness (20 points)
 
+#### Epic 4.3: Custom Templates & Export Formats (2-3 days)
+- Custom documentation templates (user-defined)
+- Template library (community templates)
+- Export formats: markdown, HTML, PDF
+- Template variables and placeholders
+- Template preview and validation
+
 ### Success Criteria
-- [ ] Multi-file upload works smoothly
-- [ ] Project structure analysis is accurate
-- [ ] Generated README covers entire project
-- [ ] Cross-references between files make sense
-- [ ] Quality score reflects project documentation quality
+- [ ] OpenAPI generation produces valid OpenAPI 3.0 YAML
+- [ ] Quality scores provide actionable feedback for all doc types
+- [ ] Multi-file upload analyzes project structure accurately
+- [ ] Generated project docs include cross-references
+- [ ] Custom templates work with all doc types
+- [ ] PDF export maintains formatting and readability
+- [ ] All doc types work with quality scoring system
 
 ---
 
-## 📋 Phase 6: CLI Tool (PLANNED)
+## 💻 Phase 5: Developer Tools (PLANNED)
 
-**Timeline:** TBD (after Phase 5)
-**Estimated Duration:** 5-7 days
-**Status:** 📋 **NOT STARTED**
-**Target Release:** v4.0.0
-**Goal:** Terminal-based documentation generation
-
-- [ ] Command-line interface (Commander.js)
-- [ ] File path support (single file or directory)
-- [ ] Batch processing (multiple files)
-- [ ] Output to file or stdout
-- [ ] Configuration file support (`.codescriberc`)
-- [ ] npm package publication
-- [ ] Cross-platform support (Windows, macOS, Linux)
-
-### Technical Approach
-- Reuse existing service layer (docGenerator, codeParser, qualityScorer)
-- Commander.js for CLI framework
-- Glob patterns for file selection
-- Progress indicators for batch processing
-- Output format options (markdown, JSON)
-
-### Success Criteria
-- [ ] Generate docs for single file via CLI
-- [ ] All doc types supported (README, JSDoc, API, ARCHITECTURE, OPENAPI, PROJECT)
-- [ ] Published to npm registry
-- [ ] CLI documentation complete
-- [ ] Works on Windows, macOS, Linux
-
----
-
-## 📋 Phase 7: VS Code Extension (PLANNED)
-
-**Timeline:** TBD (after Phase 6)
-**Estimated Duration:** 7-10 days
+**Timeline:** TBD (after Phase 4)
+**Estimated Duration:** 3-4 weeks
 **Status:** 📋 **NOT STARTED**
 **Target Release:** v5.0.0
-**Goal:** Deep VS Code editor integration
+**Strategic Goal:** Bring CodeScribe AI to developers' local workflows with CLI and VS Code extension
 
-- [ ] Right-click "Generate Documentation" menu
-- [ ] Inline documentation preview
-- [ ] Automatic file updates (create/overwrite docs)
-- [ ] Quality score in status bar
-- [ ] Suggestions in problems panel
-- [ ] Extension settings (API key, doc type preferences)
-- [ ] VS Code Marketplace publication
+### 📦 Epics
+
+#### Epic 5.1: CLI Tool (5-7 days)
+- Command-line interface using Commander.js
+- File path support (single file or directory)
+- Batch processing (multiple files)
+- Output to file or stdout
+- Configuration file support (`.codescriberc`)
+- Glob patterns for file selection
+- Progress indicators for batch operations
+- Cross-platform support (Windows, macOS, Linux)
+- npm package publication
+
+**Example Commands:**
+```bash
+# Generate README for single file
+codescribe generate README src/index.js
+
+# Generate docs for all files in directory
+codescribe generate JSDoc src/**/*.js --output docs/
+
+# Use configuration file
+codescribe generate --config .codescriberc
+```
+
+#### Epic 5.2: VS Code Extension (7-10 days)
+- Right-click "Generate Documentation" context menu
+- Inline documentation preview (WebView)
+- Automatic file updates (create/overwrite docs)
+- Quality score in status bar
+- Suggestions in problems panel
+- Extension settings (API key, doc type preferences)
+- VS Code Marketplace publication
+- Keyboard shortcuts (e.g., Cmd+Shift+D)
+
+**Features:**
+- Integration with VS Code's existing documentation systems
+- Support for all doc types (README, JSDoc, API, ARCHITECTURE, OPENAPI, PROJECT)
+- Theme support (respects VS Code theme)
+- Offline mode (using cached API responses)
 
 ### Technical Approach
-- Reuse existing service layer
-- VS Code Extension API
-- WebView for documentation preview
-- Extension settings sync
+- **Shared Service Layer:** Reuse existing `docGenerator`, `codeParser`, `qualityScorer` services
+- **CLI Framework:** Commander.js for command parsing
+- **VS Code API:** Extension API for editor integration, WebView API for previews
+- **Cross-Platform:** Node.js for universal compatibility
 
 ### Success Criteria
-- [ ] Generate docs from within VS Code
-- [ ] All doc types supported (README, JSDoc, API, ARCHITECTURE, OPENAPI, PROJECT)
-- [ ] Published to VS Code Marketplace
-- [ ] Extension documentation complete
-- [ ] 4+ star average rating
+- [ ] CLI published to npm registry
+- [ ] CLI works on Windows, macOS, and Linux
+- [ ] VS Code extension published to Marketplace
+- [ ] Extension has 4+ star average rating
+- [ ] All doc types supported in both CLI and extension
+- [ ] CLI documentation complete with examples
+- [ ] Extension documentation includes video walkthrough
+- [ ] Both tools integrate seamlessly with existing workflows
 
 ---
 
-## 💡 Phase 8: Optional Enhancements (FUTURE)
+## 🏢 Phase 6: Enterprise Readiness (FUTURE)
 
-**Timeline:** TBD
+**Timeline:** TBD (after Phase 5)
+**Estimated Duration:** 3-4 weeks
 **Status:** 💡 **TO BE EVALUATED**
-**Goal:** Enhanced features based on user feedback
-**Priority:** P3 (Nice to Have)
+**Target Release:** v6.0.0
+**Strategic Goal:** Enable enterprise adoption with compliance, security, and scalability features
+**Priority:** P2 (Evaluate based on demand)
 
-### Note
-These enhancements are **not currently prioritized** and will be evaluated after Phases 2-7 are complete. Implementation will depend on user feedback, demand, and available resources.
+### 📦 Epics
 
-### Potential Features
-- [x] Dark mode theming (moved to Phase 2.5 - v2.1.0)
-- [x] User authentication and accounts (moved to Phase 3.5 - v3.0.0)
-- [ ] Documentation history and saved projects
-- [ ] Custom documentation templates
-- [ ] GitHub repository integration (auto-detect repo, generate docs)
-- [ ] Multi-language support (i18n for UI)
-- [ ] Advanced Mermaid diagram generation (auto-generate from code)
-- [ ] Changelog generation from git history
-- [ ] Team collaboration features (share, comment, review)
-- [ ] Advanced analytics and monitoring
-- [ ] Toast system enhancements (see [TOAST-SYSTEM.md](../components/TOAST-SYSTEM.md))
+#### Epic 6.1: SSO & Advanced Authentication (5-7 days)
+- SAML 2.0 integration
+- OAuth 2.0 provider support (Okta, Auth0, Azure AD)
+- Just-In-Time (JIT) user provisioning
+- Role-based access control (RBAC) enhancement
+- Multi-factor authentication (MFA)
 
----
+#### Epic 6.2: Audit Logs & Compliance (3-4 days)
+- Comprehensive audit logging (all user actions)
+- Log export (CSV, JSON formats)
+- GDPR compliance tools (data export, right to be forgotten)
+- SOC 2 Type II preparation
+- Retention policies and data lifecycle management
 
-## 🎯 MVP Success Metrics
+#### Epic 6.3: On-Premise Deployment (7-10 days)
+- Docker containerization
+- Kubernetes deployment manifests
+- Self-hosted deployment guide
+- Air-gapped environment support
+- License key validation system
+- Automatic updates (opt-in)
 
-### Development & Accessibility - ✅ ACHIEVED
-- ✅ **Features:** 14/14 P0 features complete (100%)
-- ✅ **Testing:** 660+ tests (100% passing)
-- ✅ **Coverage:** 72.2% frontend, 85%+ backend
-- ✅ **Accessibility:** WCAG 2.1 AA compliant (95/100)
-- ✅ **axe DevTools:** 0 violations ✅ **PERFECT SCORE!**
-- ✅ **Cross-Browser:** 100% compatibility (5 browsers)
-- ✅ **Performance:** Lighthouse 75 (+67% improvement)
-- ✅ **Bundle Size:** -85% reduction (516KB → 78KB)
-- ✅ **Code Quality:** Zero critical bugs
-- ✅ **Documentation:** 25+ comprehensive docs
+### Success Criteria
+- [ ] SAML integration works with major providers (Okta, Auth0, Azure AD)
+- [ ] All user actions logged with timestamp and context
+- [ ] GDPR data export completes in < 5 minutes for typical user
+- [ ] On-premise deployment documented with video walkthrough
+- [ ] Docker images published to Docker Hub
+- [ ] Kubernetes deployment tested on AWS EKS, Google GKE, Azure AKS
 
-### Phase 1.5: Accessibility - ✅ SUBSTANTIALLY COMPLETE
-- ✅ **Days 6-7:** Critical + Keyboard (100% complete)
-- ✅ **Day 8:** ARIA & Semantics (90% complete)
-- ✅ **Day 9:** Automated Testing - **0 violations!**
-- ⏸️ **Day 10:** Manual Validation (recommended, optional)
-- ✅ **Production Ready:** Zero automated accessibility violations
+### Note on Optional Enhancements / Backlog
 
-### Deployment - ✅ COMPLETE
-- ✅ App live at public URL (https://codescribeai.com)
-- ✅ All features working in production
-- ✅ Performance Lighthouse = 75 (exceeds ≥70 target)
-- ✅ Accessibility Lighthouse = 100
-- ✅ Cross-browser tested on live URL (5 browsers, 100% compatibility)
-- ✅ README updated with live demo link
-- ✅ CI/CD pipeline with test-gated deployment
-- ✅ Custom domain with SSL configured
+**This section tracks optional enhancements and backlog items** that don't fit into the current strategic phases (2-6).
+
+Features are tracked here when they:
+- Don't align with current phase themes
+- Are speculative or exploratory
+- Require user feedback to validate demand
+- May become their own phase in the future
+
+**Potential Future Features (Backlog):**
+- Documentation history and saved projects
+- GitHub repository integration (auto-detect repo, generate docs)
+- Multi-language support (i18n for UI)
+- Advanced Mermaid diagram generation (auto-generate from code)
+- Changelog generation from git history
+- Team collaboration features (share, comment, review)
+- Advanced analytics and monitoring
+
+**Status:** These will be evaluated after Phases 2-6 based on user feedback and demand. Items may be promoted to epics within existing phases or become new strategic phases if they gain traction.
 
 ---
 
@@ -792,15 +681,13 @@ These enhancements are **not currently prioritized** and will be evaluated after
 | Oct 17-19, 2025 | **Vercel Deployment & CI/CD Setup** | ✅ Complete |
 | Oct 19, 2025 | **Production Launch** (codescribeai.com) | ✅ Complete |
 | Oct 21, 2025 | **Documentation Update** (ARCHITECTURE.md v1.2, ROADMAP.md v1.4) | ✅ Complete |
+| Oct 23, 2025 | **Monetization Planning** (Feature flags, tier architecture) | ✅ Complete |
 | TBD | Manual accessibility validation (optional) | ⏸️ Recommended |
-| TBD | **Phase 2: UX Improvements** (v2.0.0) | 📋 Planned |
-| TBD | **Phase 2.5: Dark Mode** (v2.1.0) | 📋 Planned |
-| TBD | **Phase 3: Layout Enhancements** (v2.2.0) | 📋 Planned |
-| TBD | **Phase 3.5: Authentication** (v3.0.0) | 📋 Planned |
-| TBD | **Phase 4: OpenAPI/Swagger** (v3.1.0) | 📋 Planned |
-| TBD | **Phase 5: Multi-File Docs** (v3.2.0) | 📋 Planned |
-| TBD | **Phase 6: CLI Tool** (v4.0.0) | 📋 Planned |
-| TBD | **Phase 7: VS Code Extension** (v5.0.0) | 📋 Planned |
+| TBD | **Phase 2: Monetization Foundation** (v2.0.0) | 📋 Planning Complete |
+| TBD | **Phase 3: UX Enhancements** (v3.0.0) | 📋 Planned |
+| TBD | **Phase 4: Documentation Capabilities** (v4.0.0) | 📋 Planned |
+| TBD | **Phase 5: Developer Tools** (v5.0.0) | 📋 Planned |
+| TBD | **Phase 6: Enterprise Readiness** (v6.0.0) | 💡 Future (Evaluate based on demand) |
 
 ---
 
@@ -985,12 +872,18 @@ The update script automatically creates timestamped backups before making change
 
 ---
 
-**Document Version:** 1.5
-**Timeline Version:** 2.0 (added Phase 2.5 - Dark Mode)
+**Document Version:** 2.0
+**Timeline Version:** 3.0 (reorganized into strategic phases with epics)
 **Created:** October 17, 2025
 **Last Updated:** October 23, 2025
-**Status:** Phase 1.5 Complete - Deployed to Production (https://codescribeai.com)
-**Next Review:** Before Phase 2 (UX Improvements) planning
+**Status:** Phase 1 Complete - Deployed to Production (https://codescribeai.com)
+**Next Review:** Before Phase 2 (Monetization Foundation) implementation
+
+**Major Changes in v2.0:**
+- Reorganized 8 feature-driven phases into 5 strategic phase themes
+- Each phase now contains 2-4 epics (shippable feature sets)
+- Phases represent strategic goals (2-3 weeks), not individual features
+- See [PHASE-ORGANIZATION.md](../PHASE-ORGANIZATION.md) for methodology
 
 ---
 
@@ -1009,13 +902,15 @@ The update script automatically creates timestamped backups before making change
   - **PATCH** (v2.0.0 → v2.0.1): Bug fixes, maintenance, no new features
 
 **Mapping:**
-- Phase 2 → v2.0.0 (UX improvements - major UX/UI overhaul begins)
-- Phase 2.5 → v2.1.0 (Dark mode - complete visual redesign)
-- Phase 3 → v2.2.0 (Layout enhancements - resizable panels, full-width)
-- Phase 3.5 → v3.0.0 (Authentication - MAJOR architectural shift, breaks "privacy-first no database")
-- Phase 4 → v3.1.0 (OpenAPI/Swagger - 5th doc type)
-- Phase 5 → v3.2.0 (Multi-file docs - 6th doc type)
-- Phase 6 → v4.0.0 (CLI tool - MAJOR new product surface)
-- Phase 7 → v5.0.0 (VS Code extension - MAJOR new product surface)
+- Phase 1 (MVP) → v1.0.0 (Initial production release)
+- Phase 2 (Monetization Foundation) → v2.0.0 (MAJOR: Authentication, database, breaking architectural change)
+- Phase 3 (UX Enhancements) → v3.0.0 (MAJOR: Complete UX transformation - theming, layout, file handling)
+  - Epic 3.1 (Theming) could ship as v3.1.0 (MINOR)
+  - Epic 3.2 (Layout) could ship as v3.2.0 (MINOR)
+- Phase 4 (Documentation Capabilities) → v4.0.0 (MAJOR: New doc generation capabilities)
+  - Epic 4.1 (OpenAPI) could ship as v4.1.0 (MINOR)
+  - Epic 4.2 (Multi-file) could ship as v4.2.0 (MINOR)
+- Phase 5 (Developer Tools) → v5.0.0 (MAJOR: CLI + VS Code extension, new product surfaces)
+- Phase 6 (Enterprise Readiness) → v6.0.0 (MAJOR: Enterprise features, compliance, on-premise)
 
 This hybrid approach allows flexible planning while maintaining industry-standard versioning for releases.
