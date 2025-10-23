@@ -20,16 +20,16 @@
   - [Bug Fix #2: Download Button Checkmark](#bug-fix-2-download-button-checkmark-issue)
   - [Bug Fix #3: Hide Sign In Button](#bug-fix-3-hide-sign-in-button)
   - [Success Criteria v1.2.1](#success-criteria-v121)
-- [v1.3.0 - UX Improvements (P1)](#v130---phase-2-ux-improvements-priority-p1)
+- [v2.0.0 - UX Improvements (P1)](#v200---phase-2-ux-improvements-priority-p1)
   - [Feature 1: Mobile Issues Fix](#feature-1-mobile-issues-fix)
   - [Feature 2: Filename Display](#feature-2-filename-display)
   - [Feature 3: GitHub Single-File Import](#feature-3-github-single-file-import)
   - [Feature 4: Download Button](#feature-4-download-button)
-  - [Success Criteria v1.3.0](#success-criteria-v130)
-- [v1.4.0 - Layout Enhancements (P2)](#v140---phase-3-layout-enhancements-priority-p2)
+  - [Success Criteria v2.0.0](#success-criteria-v200)
+- [v2.2.0 - Layout Enhancements (P2)](#v220---phase-3-layout-enhancements-priority-p2)
   - [Feature 1: Full-Width Layout](#feature-1-full-width-layout)
   - [Feature 2: Resizable Panels](#feature-2-resizable-panels)
-  - [Success Criteria v1.4.0](#success-criteria-v140)
+  - [Success Criteria v2.2.0](#success-criteria-v220)
 - [Version Summary](#version-summary)
 - [Notes for PM](#notes-for-pm)
 - [Backlog (Unscheduled)](#backlog-unscheduled)
@@ -93,7 +93,7 @@
 
 **Bug Fix #3: Hide Sign In Button**
 - [x] **Issue:** Sign In button is visible but non-functional (no authentication implemented yet)
-- [x] **Analysis:** Authentication planned for Phase 3.5 (v1.5.0), button is a placeholder
+- [x] **Analysis:** Authentication planned for Phase 3.5 (v3.0.0), button is a placeholder
   - Current state: Button exists in Header.jsx but does nothing when clicked
   - User confusion: Clicking button has no effect (broken UX)
 - [x] **Fix:** Hide Sign In button until authentication is implemented
@@ -107,7 +107,7 @@
 - [x] **Implementation:**
   - Add feature flag constant: `const ENABLE_AUTH = false;`
   - Wrap button in conditional: `{ENABLE_AUTH && <Button>Sign In</Button>}`
-  - When authentication is ready (v1.5.0), change flag to `true`
+  - When authentication is ready (v3.0.0), change flag to `true`
 - [x] **Testing:**
   - [x] Verify Sign In button is not visible in desktop header
   - [x] Verify Sign In button is not visible in mobile menu
@@ -248,7 +248,7 @@ Comprehensive maintenance release addressing 16 issues across mobile compatibili
 - [x] Wrapped GitHub import button in conditional render
 - [x] Updated 9 tests: 6 skipped (button hidden), 1 new verification test, 2 updated assertions
 - [x] All 46 ControlBar tests passing, 6 skipped appropriately
-- [x] Button hidden until v2.0 implementation
+- [x] Button hidden until v3.0.0 implementation
 - **Impact:** Cleaner UI, no non-functional buttons shown to users
 
 #### 15. Roadmap - Documentation ✅
@@ -297,7 +297,7 @@ Comprehensive maintenance release addressing 16 issues across mobile compatibili
 
 ---
 
-### 🎨 v1.3.0 - Phase 2: UX Improvements (PRIORITY: P1)
+### 🎨 v2.0.0 - Phase 2: UX Improvements (PRIORITY: P1)
 
 **Estimated Duration:** 2-3 days
 **Target Release:** TBD (after v1.2.1)
@@ -437,7 +437,7 @@ Comprehensive maintenance release addressing 16 issues across mobile compatibili
   - [ ] **Verify NO checkmark appears** (critical)
   - [ ] Accessibility testing
 
-#### Success Criteria (v1.3.0)
+#### Success Criteria (v2.0.0)
 - [ ] Mobile issues resolved and tested on real devices
 - [ ] Filename displays correctly for uploaded files and examples
 - [ ] GitHub import works with raw URLs and repository URLs
@@ -450,14 +450,14 @@ Comprehensive maintenance release addressing 16 issues across mobile compatibili
 
 ---
 
-### 🖥️ v1.4.0 - Phase 3: Layout Enhancements (PRIORITY: P2)
+### 🖥️ v2.2.0 - Phase 3: Layout Enhancements (PRIORITY: P2)
 
 **Estimated Duration:** 3-4 days
-**Target Release:** TBD (after v1.3.0)
+**Target Release:** TBD (after v2.0.0 and v2.1.0 Dark Mode)
 **Status:** 📋 **NOT STARTED**
 **Goal:** Enhanced layout with full-width design and resizable panels
 
-**Note:** Can ship incrementally (full-width first as v1.3.1, then resizable as v1.4.0) or together.
+**Note:** Can ship incrementally (full-width first as v2.2.0, then resizable as v2.2.1) or together as v2.2.0.
 
 #### Feature 1: Full-Width Layout
 - [ ] **Analysis:** Current layout constraints
@@ -561,7 +561,7 @@ const PANEL_CONSTRAINTS = {
   - [ ] Tablet - verify resizing works (or stacks if <768px)
   - [ ] Accessibility audit (keyboard, screen reader)
 
-#### Success Criteria (v1.4.0)
+#### Success Criteria (v2.2.0)
 - [ ] App uses full browser width on large monitors
 - [ ] Doc text remains readable (not too wide) with `max-w-prose`
 - [ ] Panels resize smoothly with draggable handle
@@ -583,11 +583,14 @@ const PANEL_CONSTRAINTS = {
 | Version | Focus | Features | Priority | Status |
 |---------|-------|----------|----------|--------|
 | **v1.2.0** | Production Deployment | Initial production release | P0 | ✅ Complete |
-| **v1.2.1** | Bug Fixes | DocPanel footer alignment, Download button checkmark | P0 | 📋 Planned |
-| **v1.3.0** | UX Improvements | Mobile fixes, filename display, GitHub import, download button | P1 | 📋 Planned |
-| **v1.4.0** | Layout Enhancements | Full-width layout, resizable panels | P2 | 📋 Planned |
-| **v2.0.0** | OpenAPI/Swagger (Phase 4) | 5th doc type | P3 | 📋 Future |
-| **v2.1.0** | Multi-File Docs (Phase 5) | 6th doc type | P3 | 📋 Future |
+| **v1.2.1** | Bug Fixes | DocPanel footer alignment, Download button checkmark | P0 | ✅ Complete |
+| **v1.2.2** | Mobile & UX Polish | Mobile clipboard, accessibility, test coverage | P0 | ✅ Complete |
+| **v2.0.0** | UX Improvements (Phase 2) | Drag-drop, filename display, GitHub import | P1 | 📋 Planned |
+| **v2.1.0** | Dark Mode (Phase 2.5) | Complete visual theming overhaul | P1 | 📋 Planned |
+| **v2.2.0** | Layout Enhancements (Phase 3) | Full-width layout, resizable panels | P2 | 📋 Planned |
+| **v3.0.0** | Authentication (Phase 3.5) | User accounts, monetization, database | P3 | 📋 Future |
+| **v3.1.0** | OpenAPI/Swagger (Phase 4) | 5th doc type | P3 | 📋 Future |
+| **v3.2.0** | Multi-File Docs (Phase 5) | 6th doc type | P3 | 📋 Future |
 
 ---
 
@@ -597,24 +600,24 @@ const PANEL_CONSTRAINTS = {
 1. **DocPanel footer alignment** - Quick CSS fix, high visibility issue
 2. **Download button checkmark** - May not exist yet (check codebase first)
    - If exists: Remove checkmark animation (downloads ≠ copy)
-   - If planned: Note for v1.3.0 implementation
+   - If planned: Note for v2.0.0 implementation
 
-### v1.3.0 - UX Polish
+### v2.0.0 - UX Polish
 - **Mobile fixes** - Requires real device testing (not just DevTools)
 - **GitHub import** - Consider rate limits, CORS, error states
 - **Download button** - **CRITICAL:** Do NOT use CopyButton checkmark pattern
   - Downloads should use toast notification for success
   - Button should remain static (icon doesn't change)
 
-### v1.4.0 - Advanced Layout
-- **Full-width** - Can ship separately as v1.3.1 (low risk)
+### v2.2.0 - Advanced Layout
+- **Full-width** - Can ship separately as v2.2.0 (low risk)
 - **Resizable panels** - Higher complexity, requires library evaluation
 - **Consider:** Ship full-width first, get feedback, then add resizing
 
 ### Testing Strategy
 - **v1.2.1:** Visual regression testing, cross-browser
-- **v1.3.0:** Real device testing (iOS, Android), GitHub API testing
-- **v1.4.0:** Multi-monitor testing, localStorage testing, accessibility
+- **v2.0.0:** Real device testing (iOS, Android), GitHub API testing
+- **v2.2.0:** Multi-monitor testing, localStorage testing, accessibility
 
 ### Documentation Updates Needed
 - [ ] Update ROADMAP.md with v1.2.1 release
@@ -632,7 +635,7 @@ const PANEL_CONSTRAINTS = {
 
 **Process:**
 1. Capture ideas here quickly (1 line, no detailed planning)
-2. When ready to implement → Move to versioned section (v1.2.1, v1.3.0, etc.)
+2. When ready to implement → Move to versioned section (v1.2.1, v2.0.0, etc.)
 3. Add full implementation details at that time
 
 **Format:** `[TYPE]` Brief description

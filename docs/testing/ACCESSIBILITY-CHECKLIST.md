@@ -216,4 +216,4 @@ npm install --save-dev jest-axe @testing-library/react eslint-plugin-jsx-a11y
 
 ---
 
-**Ready to start? Begin with Day 6 in the Todo List (`docs/planning/03-Todo-List.md`)**
+**Ready to start? Begin with Day 6 in the Todo List (`docs/planning/mvp/03-Todo-List.md`)**

@@ -241,22 +241,34 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 **Timeline:** TBD (after production deployment)
 **Estimated Duration:** 2-3 days
 **Status:** 📋 **NOT STARTED**
-**Target Release:** v1.3.0
-**Goal:** Enhance user experience with mobile fixes, GitHub integration, and download capabilities
+**Target Release:** v2.0.0
+**Goal:** Enhance user experience with drag-and-drop, filename display, and GitHub integration
+
+### Completed in v1.2.1 & v1.2.2
+- ✅ **Mobile Issues Fix** - Mobile clipboard fallback, enhanced accessibility (v1.2.2)
+- ✅ **Download Button** - Export documentation to markdown format (v1.2.1)
 
 ### Planned Features
-- [ ] **Mobile Issues Fix** - Address mobile responsiveness and usability issues
+- [ ] **Drag-and-Drop File Upload** - Drop files directly onto CodePanel/Monaco Editor
 - [ ] **Filename Display** - Show filename/code unit name at top of Monaco Editor
 - [ ] **GitHub Single-File Import** - Load code files directly from GitHub URLs
-- [ ] **Download Button** - Export generated documentation to multiple formats
 
 ### Technical Details
 
+**Drag-and-Drop File Upload:**
+- Add drag event handlers to CodePanel (`onDragEnter`, `onDragOver`, `onDragLeave`, `onDrop`)
+- Visual feedback during drag-over (highlight border, overlay message "Drop file to upload")
+- Prevent default browser behavior (don't open file in new tab)
+- Reuse existing file upload validation and processing logic
+- Accessibility: keyboard users can still use "Upload Files" button
+- Support same file types as existing upload (.js, .jsx, .py, .java, etc.)
+- Show error messages if invalid file type or size
+
 **Filename Display:**
-- Add header bar above Monaco Editor
-- Display current filename or code unit name
-- Show file type icon (JavaScript, Python, etc.)
-- Breadcrumb-style for better context
+- Add header bar above Monaco Editor (currently shows filename in CodePanel header)
+- Enhancement: Display current filename or code unit name more prominently
+- Show file type icon (JavaScript, Python, etc.) next to filename
+- Update on file upload or example selection
 
 **GitHub Single-File Import:**
 - Support GitHub raw file URLs
@@ -265,26 +277,146 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 - Client-side fetch (no backend needed)
 - Example: `https://github.com/user/repo/blob/main/file.js` → `https://raw.githubusercontent.com/user/repo/main/file.js`
 
-**Download Button:**
-- Add download button to DocPanel (next to copy button)
-- Support multiple formats:
-  - Markdown (.md) - default
-  - Plain text (.txt)
-  - HTML (rendered version)
-- Use filename from current file if available (e.g., "authentication-service-README.md")
-- Implement using browser download API (no backend needed)
-
-**Mobile Fixes:**
-- Review mobile-specific issues (TBD by user)
-- Ensure responsive design works on smaller screens
-- Test on real devices (iOS Safari, Android Chrome)
-
 ### Success Criteria
-- [ ] Mobile issues resolved and tested on real devices
+- [ ] Users can drag-and-drop files onto CodePanel to upload
+- [ ] Visual feedback appears during drag-over (border highlight + message)
+- [ ] Drag-and-drop uses same validation as "Upload Files" button
 - [ ] Filename displays correctly for uploaded files and examples
 - [ ] GitHub import works with raw URLs and repository URLs
-- [ ] Download button exports docs in all 3 formats
+- [ ] All accessibility requirements met (WCAG 2.1 AA)
 - [ ] No regressions in existing features
+- [ ] Tests passing for drag-and-drop (unit + E2E)
+
+---
+
+## 🌙 Phase 2.5: Dark Mode Theming (PLANNED)
+
+**Timeline:** TBD (after Phase 2)
+**Estimated Duration:** 1.5-2 days
+**Status:** 📋 **NOT STARTED**
+**Target Release:** v2.1.0
+**Goal:** Modern dark mode theming using CSS variables and Tailwind's dark mode system
+
+**Approach:** Following Kevin Powell's best practices for CSS variable theming with `data-theme` attribute
+
+### Planned Features
+- [ ] **Theme Toggle UI** - Sun/moon icon button in Header with smooth transitions
+- [ ] **CSS Variable Architecture** - Semantic color naming with `data-theme` attribute
+- [ ] **Tailwind Dark Mode** - Built-in `dark:` class variants for all components
+- [ ] **Theme Persistence** - Save user preference to localStorage
+- [ ] **System Preference Detection** - Respect `prefers-color-scheme: dark`
+- [ ] **Monaco Editor Dark Theme** - Switch to `vs-dark` theme
+- [ ] **Mermaid Dark Theme** - Use existing theme system with dark color palette
+
+### Technical Details
+
+**Kevin Powell's CSS Variable Pattern:**
+```css
+/* Semantic naming (purpose-based, not color-based) */
+:root {
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f8fafc;
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #475569;
+  --color-brand: #a855f7;
+  --color-border: #e2e8f0;
+}
+
+[data-theme="dark"] {
+  --color-bg-primary: #0f172a;
+  --color-bg-secondary: #1e293b;
+  --color-text-primary: #f8fafc;
+  --color-text-secondary: #cbd5e1;
+  --color-brand: #a855f7; /* Brand colors can stay consistent */
+  --color-border: #334155;
+}
+```
+
+**Tailwind Configuration:**
+```javascript
+// tailwind.config.js
+export default {
+  darkMode: 'selector', // Use selector strategy
+  theme: {
+    extend: {
+      colors: {
+        // Map semantic variables to Tailwind
+      }
+    }
+  }
+}
+```
+
+**React Theme Context:**
+```javascript
+// ThemeContext.jsx
+const ThemeContext = createContext();
+
+export function ThemeProvider({ children }) {
+  const [theme, setTheme] = useState(() => {
+    // 1. Check localStorage
+    const saved = localStorage.getItem('theme');
+    if (saved) return saved;
+
+    // 2. Check system preference
+    return window.matchMedia('(prefers-color-scheme: dark)').matches
+      ? 'dark'
+      : 'light';
+  });
+
+  useEffect(() => {
+    // Set data-theme attribute on <html>
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  return (
+    <ThemeContext.Provider value={{ theme, setTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+}
+```
+
+**Component Updates:**
+- Add `dark:` variants to all Tailwind classes in components
+- Update Monaco Editor: `theme={isDark ? 'vs-dark' : 'vs-light'}`
+- Update Mermaid: Pass dark theme config when `data-theme="dark"`
+- Ensure all custom components (toasts, modals) respect theme
+
+**Accessibility:**
+- Theme toggle button with `aria-label="Toggle dark mode"`
+- Keyboard accessible (Enter/Space to toggle)
+- WCAG AAA contrast ratios (7:1 for text, 3:1 for UI components)
+- Smooth transitions (respect `prefers-reduced-motion`)
+
+### Success Criteria
+- [ ] Theme toggle button in Header works smoothly
+- [ ] All components render correctly in both light and dark modes
+- [ ] Theme preference persists across page reloads
+- [ ] System preference (`prefers-color-scheme`) is respected on first visit
+- [ ] Monaco Editor switches between `vs-light` and `vs-dark` themes
+- [ ] Mermaid diagrams render with dark theme colors
+- [ ] WCAG AAA contrast ratios achieved (7:1 text, 3:1 UI)
+- [ ] All 513+ frontend tests pass for both themes
+- [ ] E2E tests verify theme toggle functionality
+- [ ] No layout shift or flicker when toggling themes
+- [ ] `prefers-reduced-motion` users see instant theme change (no animations)
+
+### Implementation Notes
+- **Why `data-theme` over classes?** Clearer separation of state vs styling, easier to add more themes later
+- **Why semantic naming?** `--color-bg-primary` makes sense in both light/dark, `--white` doesn't
+- **Why Tailwind + CSS vars?** Best of both worlds - Tailwind's utility classes + dynamic theming
+- **Performance:** Theme state in React Context, minimal re-renders
+
+### Future Compatibility: CLI Tool & VS Code Extension
+- ✅ **CLI Tool (Phase 6 - v3.0.0):** Zero impact - Pure command-line, no UI
+- ✅ **VS Code Extension (Phase 7 - v4.0.0):** Zero conflicts - Uses VS Code's theme API
+  - VS Code extension WebViews will use **VS Code's theme system** (not web app theme)
+  - Theming logic: `vscode.window.activeColorTheme.kind` determines light/dark
+  - Web app dark mode patterns (CSS variables, semantic naming) will inform VS Code implementation
+  - Backend services remain theme-agnostic (shared across all platforms)
+- **Benefit:** Experience gained from web app theming will make VS Code theming easier
 
 ---
 
@@ -293,10 +425,10 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 **Timeline:** TBD (after Phase 2)
 **Estimated Duration:** 3-4 days
 **Status:** 📋 **NOT STARTED**
-**Target Release:** v1.4.0
+**Target Release:** v2.2.0
 **Goal:** Enhanced layout with full-width design and resizable panels
 
-**Note:** Can ship incrementally (full-width first, then resizable panels) or together as v1.4.0.
+**Note:** Can ship incrementally (full-width first, then resizable panels) or together as v2.2.0.
 
 ### Planned Features
 
@@ -368,7 +500,7 @@ const PANEL_CONSTRAINTS = {
 **Timeline:** TBD (after Phase 3)
 **Estimated Duration:** 3-5 days
 **Status:** 📋 **NOT STARTED**
-**Target Release:** v1.5.0
+**Target Release:** v3.0.0
 **Goal:** Enable user accounts, usage tracking, and freemium tier enforcement
 
 ### Planned Features
@@ -450,7 +582,7 @@ const PANEL_CONSTRAINTS = {
 **Timeline:** TBD (after Phase 3)
 **Estimated Duration:** 3-4 days
 **Status:** 📋 **NOT STARTED**
-**Target Release:** v2.0.0
+**Target Release:** v3.1.0
 **Goal:** 5th documentation type for API specifications
 
 ### Planned Features
@@ -488,7 +620,7 @@ const PANEL_CONSTRAINTS = {
 **Timeline:** TBD (after Phase 4)
 **Estimated Duration:** 4-5 days
 **Status:** 📋 **NOT STARTED**
-**Target Release:** v2.1.0
+**Target Release:** v3.2.0
 **Goal:** 6th documentation type for entire projects
 
 - [ ] Accept multiple files or directory structures
@@ -527,7 +659,7 @@ const PANEL_CONSTRAINTS = {
 **Timeline:** TBD (after Phase 5)
 **Estimated Duration:** 5-7 days
 **Status:** 📋 **NOT STARTED**
-**Target Release:** v3.0.0
+**Target Release:** v4.0.0
 **Goal:** Terminal-based documentation generation
 
 - [ ] Command-line interface (Commander.js)
@@ -559,7 +691,7 @@ const PANEL_CONSTRAINTS = {
 **Timeline:** TBD (after Phase 6)
 **Estimated Duration:** 7-10 days
 **Status:** 📋 **NOT STARTED**
-**Target Release:** v4.0.0
+**Target Release:** v5.0.0
 **Goal:** Deep VS Code editor integration
 
 - [ ] Right-click "Generate Documentation" menu
@@ -596,8 +728,8 @@ const PANEL_CONSTRAINTS = {
 These enhancements are **not currently prioritized** and will be evaluated after Phases 2-7 are complete. Implementation will depend on user feedback, demand, and available resources.
 
 ### Potential Features
-- [ ] Dark mode theming
-- [x] User authentication and accounts (moved to Phase 3.5 - v1.5.0)
+- [x] Dark mode theming (moved to Phase 2.5 - v2.1.0)
+- [x] User authentication and accounts (moved to Phase 3.5 - v3.0.0)
 - [ ] Documentation history and saved projects
 - [ ] Custom documentation templates
 - [ ] GitHub repository integration (auto-detect repo, generate docs)
@@ -661,12 +793,14 @@ These enhancements are **not currently prioritized** and will be evaluated after
 | Oct 19, 2025 | **Production Launch** (codescribeai.com) | ✅ Complete |
 | Oct 21, 2025 | **Documentation Update** (ARCHITECTURE.md v1.2, ROADMAP.md v1.4) | ✅ Complete |
 | TBD | Manual accessibility validation (optional) | ⏸️ Recommended |
-| TBD | **Phase 2: UX Improvements** (v1.3.0) | 📋 Planned |
-| TBD | **Phase 3: Layout Enhancements** (v1.4.0) | 📋 Planned |
-| TBD | **Phase 4: OpenAPI/Swagger** (v2.0.0) | 📋 Planned |
-| TBD | **Phase 5: Multi-File Docs** (v2.1.0) | 📋 Planned |
-| TBD | **Phase 6: CLI Tool** (v3.0.0) | 📋 Planned |
-| TBD | **Phase 7: VS Code Extension** (v4.0.0) | 📋 Planned |
+| TBD | **Phase 2: UX Improvements** (v2.0.0) | 📋 Planned |
+| TBD | **Phase 2.5: Dark Mode** (v2.1.0) | 📋 Planned |
+| TBD | **Phase 3: Layout Enhancements** (v2.2.0) | 📋 Planned |
+| TBD | **Phase 3.5: Authentication** (v3.0.0) | 📋 Planned |
+| TBD | **Phase 4: OpenAPI/Swagger** (v3.1.0) | 📋 Planned |
+| TBD | **Phase 5: Multi-File Docs** (v3.2.0) | 📋 Planned |
+| TBD | **Phase 6: CLI Tool** (v4.0.0) | 📋 Planned |
+| TBD | **Phase 7: VS Code Extension** (v5.0.0) | 📋 Planned |
 
 ---
 
@@ -729,7 +863,7 @@ These enhancements are **not currently prioritized** and will be evaluated after
 - [Screen Reader Testing Guide](../testing/SCREEN-READER-TESTING-GUIDE.md) - Accessibility testing
 
 ### Deployment & Launch
-- [MVP Deploy & Launch](MVP-DEPLOY-LAUNCH.md) - Complete deployment guide
+- [MVP Deploy & Launch](../../deployment/MVP-DEPLOY-LAUNCH.md) - Complete deployment guide
 - [Roadmap](ROADMAP.md) - This document
 
 ---
@@ -753,7 +887,7 @@ The roadmap data is stored in [roadmap-data.json](roadmap-data.json) and include
 1. **Edit the data source:**
    ```bash
    # Edit the JSON file with your changes
-   vim docs/planning/roadmap-data.json
+   vim docs/planning/roadmap/roadmap-data.json
    ```
 
 2. **Load data into HTML:**
@@ -777,7 +911,7 @@ The roadmap data is stored in [roadmap-data.json](roadmap-data.json) and include
 
    **Manual alternative (not recommended):**
    ```bash
-   cp ~/Downloads/ROADMAP-TIMELINE.html docs/planning/ROADMAP-TIMELINE.html
+   cp ~/Downloads/ROADMAP-TIMELINE.html docs/planning/roadmap/ROADMAP-TIMELINE.html
    # Note: This skips the automatic backup step
    ```
 
@@ -851,9 +985,10 @@ The update script automatically creates timestamped backups before making change
 
 ---
 
-**Document Version:** 1.4
+**Document Version:** 1.5
+**Timeline Version:** 2.0 (added Phase 2.5 - Dark Mode)
 **Created:** October 17, 2025
-**Last Updated:** October 21, 2025
+**Last Updated:** October 23, 2025
 **Status:** Phase 1.5 Complete - Deployed to Production (https://codescribeai.com)
 **Next Review:** Before Phase 2 (UX Improvements) planning
 
@@ -865,20 +1000,22 @@ The update script automatically creates timestamped backups before making change
 - Used for project planning, roadmaps, and internal communication
 - Phases can be flexible and evolve as needed
 
-**Public Releases (SemVer):** Semantic versioning (v1.3.0, v1.4.0, v2.0.0, etc.)
+**Public Releases (SemVer):** Semantic versioning (v2.0.0, v3.0.0, v4.0.0, etc.)
 - Used for GitHub releases, npm packages, changelogs, and user-facing documentation
-- Allows for maintenance releases (v1.3.1, v1.3.2) between phases
+- Allows for maintenance releases (v2.0.1, v2.1.1) between phases
 - MAJOR.MINOR.PATCH format:
-  - **MAJOR** (v1 → v2): Breaking changes or major new features (new doc types, CLI, extension)
-  - **MINOR** (v1.3 → v1.4): New features, backwards-compatible (UX improvements, layout enhancements)
-  - **PATCH** (v1.3.0 → v1.3.1): Bug fixes, maintenance, no new features
+  - **MAJOR** (v1 → v2): Breaking changes or major user-facing transformations (UX/UI overhaul, auth/database, CLI, extension)
+  - **MINOR** (v2.0 → v2.1): New features within major version (dark mode, layout, new doc types)
+  - **PATCH** (v2.0.0 → v2.0.1): Bug fixes, maintenance, no new features
 
 **Mapping:**
-- Phase 2 → v1.3.0 (UX improvements)
-- Phase 3 → v1.4.0 (Layout enhancements)
-- Phase 4 → v2.0.0 (OpenAPI/Swagger - 5th doc type, major feature)
-- Phase 5 → v2.1.0 (Multi-file docs - 6th doc type)
-- Phase 6 → v3.0.0 (CLI tool - new product surface)
-- Phase 7 → v4.0.0 (VS Code extension - new product surface)
+- Phase 2 → v2.0.0 (UX improvements - major UX/UI overhaul begins)
+- Phase 2.5 → v2.1.0 (Dark mode - complete visual redesign)
+- Phase 3 → v2.2.0 (Layout enhancements - resizable panels, full-width)
+- Phase 3.5 → v3.0.0 (Authentication - MAJOR architectural shift, breaks "privacy-first no database")
+- Phase 4 → v3.1.0 (OpenAPI/Swagger - 5th doc type)
+- Phase 5 → v3.2.0 (Multi-file docs - 6th doc type)
+- Phase 6 → v4.0.0 (CLI tool - MAJOR new product surface)
+- Phase 7 → v5.0.0 (VS Code extension - MAJOR new product surface)
 
 This hybrid approach allows flexible planning while maintaining industry-standard versioning for releases.

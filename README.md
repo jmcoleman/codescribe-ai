@@ -6,7 +6,7 @@ Transform code into comprehensive, professional documentation in seconds using A
 
 > **Portfolio Project** by Jenni Coleman - Showcasing full-stack development, AI integration, and modern UX design
 >
-> 🔗 [Live Demo](https://codescribeai.com) | 📖 [Documentation](docs/) | 🎨 [Design System](docs/planning/07-Figma-Guide.md) | 💻 [GitHub](https://github.com/jmcoleman/codescribe-ai)
+> 🔗 [Live Demo](https://codescribeai.com) | 📖 [Documentation](docs/) | 🎨 [Design System](docs/planning/mvp/07-Figma-Guide.md) | 💻 [GitHub](https://github.com/jmcoleman/codescribe-ai)
 
 ## Table of Contents
 
@@ -321,14 +321,21 @@ Comprehensive documentation is organized in the [docs/](docs/) folder:
 
 ### Planning & Development
 - [docs/planning/](docs/planning/) - Product requirements, epics, dev guide
-  - [01-PRD.md](docs/planning/01-PRD.md) - Product Requirements Document
-  - [02-Epics-Stories.md](docs/planning/02-Epics-Stories.md) - User stories and acceptance criteria
-  - [03-Todo-List.md](docs/planning/03-Todo-List.md) - Day-by-day implementation tasks
-  - [05-Dev-Guide.md](docs/planning/05-Dev-Guide.md) - Complete development guide with code examples
-  - [07-Figma-Guide.md](docs/planning/07-Figma-Guide.md) - Complete UI/UX design system
-  - [08-Master-Prompt.md](docs/planning/08-Master-Prompt.md) - Master implementation guide
-  - [ROADMAP.md](docs/planning/ROADMAP.md) - Product roadmap and future phases
-  - [MVP-DEPLOY-LAUNCH.md](docs/planning/MVP-DEPLOY-LAUNCH.md) - Deployment checklist and guide
+  - [mvp/](docs/planning/mvp/) - Phase 1.0 & 1.5 planning docs (COMPLETE)
+    - [01-PRD.md](docs/planning/mvp/01-PRD.md) - Product Requirements Document
+    - [02-Epics-Stories.md](docs/planning/mvp/02-Epics-Stories.md) - User stories and acceptance criteria
+    - [03-Todo-List.md](docs/planning/mvp/03-Todo-List.md) - Day-by-day implementation tasks
+    - [05-Dev-Guide.md](docs/planning/mvp/05-Dev-Guide.md) - Complete development guide with code examples
+    - [07-Figma-Guide.md](docs/planning/mvp/07-Figma-Guide.md) - Complete UI/UX design system
+    - [08-Master-Prompt.md](docs/planning/mvp/08-Master-Prompt.md) - Master implementation guide
+  - [roadmap/](docs/planning/roadmap/) - Product roadmap and future phases
+    - [ROADMAP.md](docs/planning/roadmap/ROADMAP.md) - Product roadmap
+  - [DARK-MODE-SPEC.md](docs/planning/DARK-MODE-SPEC.md) - Phase 2.5 planning (active)
+  - [TODO.md](docs/planning/TODO.md) - Active todo list (current phase)
+
+### Deployment
+- [docs/deployment/](docs/deployment/) - Deployment documentation
+  - [MVP-DEPLOY-LAUNCH.md](docs/deployment/MVP-DEPLOY-LAUNCH.md) - Deployment checklist and guide
 
 ### API Documentation
 - [docs/api/](docs/api/) - API specifications and examples
@@ -653,7 +660,7 @@ npm run test:e2e:headed       # With browser UI (for debugging)
 
 - **Phase 2**: CLI tool for terminal usage
 - **Phase 3**: VS Code extension for IDE integration
-- **Phase 4**: Optional enhancements (see [01-PRD.md](docs/planning/01-PRD.md))
+- **Phase 4**: Optional enhancements (see [01-PRD.md](docs/planning/mvp/01-PRD.md))
 
 ## Contributing
 
@@ -700,5 +707,5 @@ Built as a portfolio project (9 days total: Phase 1.0 + Phase 1.5) to showcase:
 
 ---
 
-**For complete product documentation, see [01-PRD.md](docs/planning/01-PRD.md)**
+**For complete product documentation, see [01-PRD.md](docs/planning/mvp/01-PRD.md)**
 **For technical deep dive, see [ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md)**

@@ -356,7 +356,7 @@ The documentation generator creates prompts that instruct Claude to:
 - **Monaco Editor Docs**: https://microsoft.github.io/monaco-editor/
 - **Markdown Spec**: https://spec.commonmark.org/
 - **WCAG 2.1**: https://www.w3.org/WAI/WCAG21/quickref/
-- **CodeScribe AI PRD**: [docs/planning/01-PRD.md](../planning/01-PRD.md)
+- **CodeScribe AI PRD**: [docs/planning/mvp/01-PRD.md](../planning/mvp/01-PRD.md)
 
 ---
 

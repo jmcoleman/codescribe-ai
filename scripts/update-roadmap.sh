@@ -7,7 +7,7 @@
 # 2. Copies the latest downloaded ROADMAP-TIMELINE.html to the project directory
 
 DOWNLOADS_DIR="$HOME/Downloads"
-PROJECT_DIR="$HOME/Developer/projects/codescribe-ai/docs/planning"
+PROJECT_DIR="$HOME/Developer/projects/codescribe-ai/docs/planning/roadmap"
 PRIVATE_DIR="$HOME/Developer/projects/codescribe-ai/private"
 ARCHIVE_DIR="$PRIVATE_DIR/roadmap-archives"
 
@@ -92,7 +92,7 @@ if [ -z "$LATEST_FILE" ]; then
 fi
 
 echo "📄 Found: $(basename "$LATEST_FILE")"
-echo "📋 Copying to: $PROJECT_DIR/ROADMAP-TIMELINE.html"
+echo "📋 Copying to: docs/planning/roadmap/ROADMAP-TIMELINE.html"
 
 # Copy the file
 cp "$LATEST_FILE" "$PROJECT_DIR/ROADMAP-TIMELINE.html"
