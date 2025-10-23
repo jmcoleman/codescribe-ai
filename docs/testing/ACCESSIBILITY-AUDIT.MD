@@ -143,7 +143,7 @@ CodeScribe AI demonstrates **excellent accessibility compliance** with comprehen
 
 **Known Issue (Fixed in Docs):**
 - ⚠️ Red-500 on white was insufficient (3.9:1) - **Fixed to red-600** (6.3:1)
-  - Reference: [07-Figma-Guide.md v1.4](docs/planning/07-Figma-Guide.md)
+  - Reference: [07-Figma-Guide.md v1.4](../planning/mvp/07-Figma-Guide.md)
 
 **Testing Checklist:**
 - ✅ Use browser DevTools color picker to verify contrast ratios

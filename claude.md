@@ -26,16 +26,16 @@ AI-powered documentation generator with real-time streaming, quality scoring (0-
 ### 📐 Planning & Requirements
 | Document | Use Case | Key Contents |
 |----------|----------|--------------|
-| [01-PRD.md](docs/planning/01-PRD.md) | Product vision, requirements | Feature specs (FR-1.x to FR-5.x), NFRs, acceptance criteria, roadmap |
-| [02-Epics-Stories.md](docs/planning/02-Epics-Stories.md) | User stories, sprint planning | 5 epics, story points, DoR/DoD, day-by-day breakdown |
-| [03-Todo-List.md](docs/planning/03-Todo-List.md) | Daily task tracking | Day 1-5 tasks, setup instructions, checkpoints |
+| [01-PRD.md](docs/planning/mvp/01-PRD.md) | Product vision, requirements | Feature specs (FR-1.x to FR-5.x), NFRs, acceptance criteria, roadmap |
+| [02-Epics-Stories.md](docs/planning/mvp/02-Epics-Stories.md) | User stories, sprint planning | 5 epics, story points, DoR/DoD, day-by-day breakdown |
+| [03-Todo-List.md](docs/planning/mvp/03-Todo-List.md) | Daily task tracking | Day 1-5 tasks, setup instructions, checkpoints |
 
 ### 🏗️ Architecture & Development
 | Document | Use Case | Key Contents |
 |----------|----------|--------------|
 | [ARCHITECTURE-OVERVIEW.md](docs/architecture/ARCHITECTURE-OVERVIEW.md) | Visual system architecture | Mermaid diagram, layer overview, quick reference |
 | [ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md) | Deep technical details | Design patterns, data flows, security, deployment |
-| [05-Dev-Guide.md](docs/planning/05-Dev-Guide.md) | Implementation patterns | Complete service code, best practices, deployment |
+| [05-Dev-Guide.md](docs/planning/mvp/05-Dev-Guide.md) | Implementation patterns | Complete service code, best practices, deployment |
 | [API-Reference.md](docs/api/API-Reference.md) | API specs | 4 endpoints, request/response formats, error codes |
 
 ### 📊 Performance & Testing
@@ -51,7 +51,7 @@ AI-powered documentation generator with real-time streaming, quality scoring (0-
 ### 🎨 Design & Components
 | Document | Use Case | Key Contents |
 |----------|----------|--------------|
-| [07-Figma-Guide.md](docs/planning/07-Figma-Guide.md) | Design system | Colors (purple/indigo/slate), typography, 8 components, UI patterns |
+| [07-Figma-Guide.md](docs/planning/mvp/07-Figma-Guide.md) | Design system | Colors (purple/indigo/slate), typography, 8 components, UI patterns |
 | [brand-color-palette.html](docs/design/brand-color-palette.html) | Color reference | 27 colors, click-to-copy hex codes, WCAG AA info |
 | [TOAST-SYSTEM.md](docs/components/TOAST-SYSTEM.md) | Toast notifications | 20+ utilities, 6 custom toasts, a11y support |
 | [MERMAID-DIAGRAMS.md](docs/components/MERMAID-DIAGRAMS.md) | Diagram patterns | Brand theming, React integration, troubleshooting |
@@ -220,9 +220,14 @@ codescribe-ai/
 ├── server/                    # Node.js + Express backend
 │   └── src/services/         # claudeClient, docGenerator, codeParser, qualityScorer
 ├── docs/
-│   ├── planning/             # PRD, Epics, Todo, Dev Guide, Figma, Master Prompt
+│   ├── planning/
+│   │   ├── mvp/              # Phase 1.0 & 1.5 planning docs (COMPLETE)
+│   │   ├── roadmap/          # ROADMAP.md, interactive timeline, versioning guide
+│   │   ├── DARK-MODE-SPEC.md # Phase 2.5 planning (active)
+│   │   └── TODO.md           # Active todo list (current phase)
 │   ├── api/                  # API Reference, README
 │   ├── architecture/         # ARCHITECTURE-OVERVIEW.md, ARCHITECTURE.md
+│   ├── deployment/           # MVP-DEPLOY-LAUNCH.md
 │   ├── performance/          # OPTIMIZATION-GUIDE.md
 │   ├── components/           # TOAST-SYSTEM, MERMAID-DIAGRAMS, ERROR-HANDLING-UX, etc.
 │   ├── testing/              # 12 test docs (README, coverage, guides, specialized)

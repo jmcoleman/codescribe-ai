@@ -262,7 +262,7 @@ Common test utilities:
 ### 7. Documentation
 
 #### Test Design Document
-- ✅ `docs/planning/09-Test-Design.md` - Comprehensive test design specification
+- ✅ `docs/planning/mvp/09-Test-Design.md` - Comprehensive test design specification
 
 #### Test README
 - ✅ `server/tests/README.md` - Test suite documentation:
