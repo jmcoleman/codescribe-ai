@@ -1,0 +1,1616 @@
+<html lang="en" style="--color-blue-dark: #581c87; --color-blue-primary: #7c3aed; --color-blue-medium: #8b5cf6; --color-blue-accent: #a78bfa; --color-green: #10b981; --color-green-dark: #059669; --color-bg-green: #d1fae5; --color-slate-50: #f8fafc; --color-slate-100: #f1f5f9; --color-slate-200: #e2e8f0; --color-slate-500: #64748b; --color-slate-600: #475569; --color-slate-900: #0f172a; --color-column-label: #64748b; --color-column-title: #475569; --color-column-border: #94a3b8; --color-card-border: #94a3b8;"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CodeScribe AI Roadmap</title>
+  <style>
+    :root {
+      /* Blue Theme Colors */
+      --color-blue-dark: #1e3a8a;      /* Header gradient start, blue-900 */
+      --color-blue-primary: #1e40af;   /* Header gradient end, blue-800 */
+      --color-blue-medium: #2563eb;    /* blue-600 */
+      --color-blue-accent: #60a5fa;    /* Column borders, card borders, blue-400 */
+
+      /* Green Colors (for completed/live status) */
+      --color-green: #10b981;          /* Live pill, checkmarks, green-500 */
+      --color-green-dark: #059669;     /* Version badges in DONE column, green-600 */
+      --color-bg-green: #d1fae5;       /* Version badge background in DONE column */
+
+      /* Neutral Colors */
+      --color-slate-50: #f8fafc;       /* Column header gradient start, footer background */
+      --color-slate-100: #f1f5f9;      /* Column header gradient end, version badge default */
+      --color-slate-200: #e2e8f0;      /* Borders */
+      --color-slate-500: #64748b;      /* Footer text */
+      --color-slate-600: #475569;      /* Secondary text */
+      --color-slate-900: #0f172a;      /* Primary text */
+
+      /* Semantic Colors (can be overridden per theme) */
+      --color-column-label: var(--color-blue-medium);
+      --color-column-title: var(--color-blue-primary);
+      --color-column-border: var(--color-blue-accent);
+      --color-card-border: var(--color-blue-accent);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    @page {
+      size: landscape;
+      margin: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #ffffff;
+      line-height: 1.6;
+      color: #1e293b;
+    }
+
+    .page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+    }
+
+    /* Header */
+    header {
+      background: linear-gradient(135deg, var(--color-blue-dark) 0%, var(--color-blue-primary) 100%);
+      color: white;
+      padding: 20px 48px;
+      box-shadow: 0 2px 16px rgba(30, 58, 138, 0.2);
+    }
+
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 2400px;
+      margin: 0 auto;
+    }
+
+    .header-left h1 {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 2px;
+    }
+
+    .header-left p {
+      font-size: 13px;
+      opacity: 0.95;
+      font-weight: 400;
+    }
+
+    .header-right {
+      text-align: right;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      background: color-mix(in srgb, var(--color-green) 20%, transparent);
+      backdrop-filter: blur(10px);
+      padding: 4px 12px;
+      border-radius: 100px;
+      font-size: 11px;
+      font-weight: 600;
+      border: 1px solid color-mix(in srgb, var(--color-green) 40%, transparent);
+      color: rgba(255, 255, 255, 0.95);
+    }
+
+    .production-link {
+      display: block;
+      color: rgba(255, 255, 255, 0.9);
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .production-link:hover {
+      color: rgba(255, 255, 255, 1);
+    }
+
+    /* Main Content */
+    .content {
+      flex: 1;
+      padding: 24px 48px 16px 48px;
+    }
+
+    .roadmap-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+      max-width: 2400px;
+      margin: 0 auto;
+    }
+
+    .done-column {
+      display: block;
+    }
+
+    .done-column.hidden {
+      display: none;
+    }
+
+    /* Column Styles */
+    .column {
+      background: white;
+      border-radius: 16px;
+      padding: 0;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+      overflow: hidden;
+      border: 1px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .column-header {
+      padding: 18px 18px 14px 18px;
+      border-bottom: 2px solid;
+      position: relative;
+    }
+
+    .done-column .column-header {
+      background: linear-gradient(135deg, var(--color-slate-50) 0%, var(--color-slate-100) 100%);
+      border-bottom-color: var(--color-column-border);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    }
+
+    .now-column .column-header {
+      background: linear-gradient(135deg, var(--color-slate-50) 0%, var(--color-slate-100) 100%);
+      border-bottom-color: var(--color-column-border);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    }
+
+    .next-column .column-header {
+      background: linear-gradient(135deg, var(--color-slate-50) 0%, var(--color-slate-100) 100%);
+      border-bottom-color: var(--color-column-border);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    }
+
+    .later-column .column-header {
+      background: linear-gradient(135deg, var(--color-slate-50) 0%, var(--color-slate-100) 100%);
+      border-bottom-color: var(--color-column-border);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    }
+
+    .column-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      margin-bottom: 4px;
+      opacity: 0.65;
+    }
+
+    .done-column .column-label { color: var(--color-column-label); }
+    .now-column .column-label { color: var(--color-column-label); }
+    .next-column .column-label { color: var(--color-column-label); }
+    .later-column .column-label { color: var(--color-column-label); }
+
+    .column-title {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.75px;
+      margin-bottom: 4px;
+    }
+
+    .done-column .column-title { color: var(--color-column-title); }
+    .now-column .column-title { color: var(--color-column-title); }
+    .next-column .column-title { color: var(--color-column-title); }
+    .later-column .column-title { color: var(--color-column-title); }
+
+    .column-timeline {
+      font-size: 12px;
+      font-weight: 500;
+      opacity: 0.7;
+    }
+
+    .column-body {
+      padding: 14px;
+      flex: 1;
+    }
+
+    /* Phase Cards - Base Styles (All Columns Inherit) */
+    .phase-card {
+      background: #ffffff;
+      border: 1px solid var(--color-slate-200);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      transition: all 0.2s;
+      border-left: 3px solid var(--color-card-border);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); /* Default shadow for better separation */
+    }
+
+    .phase-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12); /* Increased shadow on hover */
+    }
+
+    .phase-card:last-child {
+      margin-bottom: 0;
+    }
+
+    .phase-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 10px;
+    }
+
+    .phase-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--color-slate-900);
+      letter-spacing: -0.3px;
+      line-height: 1.3;
+    }
+
+    .phase-version {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 5px;
+      background: var(--color-slate-100);
+      color: var(--color-slate-600);
+      white-space: nowrap;
+    }
+
+    /* Done Column Conditional: Green version badges for shipped work */
+    .done-column .phase-version {
+      background: var(--color-bg-green);
+      color: var(--color-green-dark);
+    }
+
+    .feature-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .feature-list li {
+      font-size: 13px;
+      color: var(--color-slate-600);
+      padding: 5px 0;
+      padding-left: 0; /* No left padding for future items (no checkmark) */
+      position: relative;
+      line-height: 1.5;
+    }
+
+    /* Only show checkmarks in DONE column */
+    .done-column .feature-list li {
+      padding-left: 20px; /* Add space for checkmark */
+    }
+
+    .done-column .feature-list li::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--color-green);
+    }
+
+    /* Metric Badge */
+    .metric-badge {
+      display: inline-block;
+      background: var(--color-blue-primary);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      margin-top: 6px;
+      letter-spacing: 0.3px;
+    }
+
+    /* Footer */
+    footer {
+      background: var(--color-slate-50);
+      padding: 12px 48px;
+      border-top: 1px solid var(--color-slate-200);
+      text-align: center;
+    }
+
+    .footer-content {
+      max-width: 2400px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .footer-left {
+      font-size: 11px;
+      color: var(--color-slate-500);
+    }
+
+    .footer-center {
+      font-size: 11px;
+      color: var(--color-slate-600);
+      font-weight: 500;
+    }
+
+    .footer-right {
+      font-size: 11px;
+      color: var(--color-slate-500);
+    }
+
+    /* Print Styles */
+    @media print {
+      body {
+        background: white;
+      }
+
+      .page {
+        width: 17in;
+        height: 11in;
+      }
+
+      header {
+        padding: 24px 48px;
+      }
+
+      .content {
+        padding: 24px 48px;
+      }
+
+      footer {
+        padding: 16px 48px;
+      }
+
+      .phase-card:hover {
+        transform: none;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+      }
+
+      .column-body {
+        max-height: none;
+        overflow: visible;
+      }
+
+      .keyboard-hint {
+        display: none;
+      }
+    }
+
+    /* Keyboard Shortcut Help Icon */
+    .keyboard-hint {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      background: transparent;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-left: 8px;
+      position: relative;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+    }
+
+    .keyboard-hint:hover {
+      opacity: 0.7;
+    }
+
+    .keyboard-hint::before {
+      content: 'i';
+      color: white;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: serif;
+    }
+
+
+    /* Responsive */
+    @media (max-width: 1600px) {
+      .roadmap-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+      }
+    }
+
+    @media (max-width: 1200px) {
+      .roadmap-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+
+      .column-header {
+        padding: 20px;
+      }
+
+      .column-body {
+        padding: 16px;
+        max-height: none;
+      }
+    }
+
+    @media (max-width: 768px) {
+      header {
+        padding: 24px;
+      }
+
+      .header-content {
+        flex-direction: column;
+        gap: 20px;
+        text-align: center;
+      }
+
+      .header-right {
+        text-align: center;
+      }
+
+      .content {
+        padding: 20px;
+      }
+
+      footer {
+        padding: 20px 24px;
+      }
+
+      .footer-content {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .header-left h1 {
+        font-size: 24px;
+      }
+
+      .column-title {
+        font-size: 20px;
+      }
+    }
+  </style>
+<style>
+      @keyframes slideIn {
+        from {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+      @keyframes slideOut {
+        from {
+          transform: translateX(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+      }
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style><style>
+      @keyframes slideIn {
+        from {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+      @keyframes slideOut {
+        from {
+          transform: translateX(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+      }
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style><style>
+      @keyframes slideIn {
+        from {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+      @keyframes slideOut {
+        from {
+          transform: translateX(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+      }
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style><style>
+      @keyframes slideIn {
+        from {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+      @keyframes slideOut {
+        from {
+          transform: translateX(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+      }
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style><style>
+      @keyframes slideIn {
+        from {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+      @keyframes slideOut {
+        from {
+          transform: translateX(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+      }
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style></head>
+<body data-new-gr-c-s-check-loaded="14.1258.0" data-gr-ext-installed="">
+  <div class="page">
+    <header>
+      <div class="header-content">
+        <div class="header-left">
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 2px;">
+            <h1 style="margin: 0;">CodeScribe AI Roadmap</h1>
+            <div class="status-pill">✅ Live</div>
+          </div>
+          <p>From MVP to Full Ecosystem</p>
+        </div>
+        <div class="header-right">
+          <a href="https://codescribeai.com" class="production-link" title="CodeScribe AI - Intelligent Code Documentation Generator">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+            </svg>
+            codescribeai.com
+          </a>
+          <div class="keyboard-hint" title="Press T to toggle view"></div>
+        </div>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="roadmap-grid" style="grid-template-columns: repeat(4, 1fr);">
+        <!-- DONE Column -->
+        <div class="column done-column">
+          <div class="column-header">
+            <div class="column-label">Done</div>
+            <div class="column-title">Completed</div>
+            <div class="column-timeline">v1.0 - v1.2.2</div>
+          </div>
+          <div class="column-body"><div class="phase-card"><div class="phase-header"><div class="phase-title">Web Application (MVP)</div><div class="phase-version">v1.0.0</div></div><ul class="feature-list"><li>4 documentation types (README, JSDoc, API, ARCHITECTURE)</li><li>Monaco Editor with syntax highlighting (24+ languages)</li><li>Real-time streaming with SSE</li><li>Quality scoring system (0-100 scale, 5 criteria)</li><li>File upload &amp; drag-and-drop</li><li>Copy-to-clipboard &amp; download</li><li>Responsive design (mobile, tablet, desktop)</li><li>660+ tests (100% passing)</li><li>95.81% backend code coverage</li><li>Mermaid diagram support</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">WCAG AA Compliance</div><div class="phase-version">v1.2.0</div></div><ul class="feature-list"><li>WCAG 2.1 AA compliance (95/100 score)</li><li>Lighthouse accessibility: 100/100</li><li>0 automated accessibility violations</li><li>Full keyboard navigation</li><li>Screen reader compatibility (NVDA, VoiceOver)</li><li>AAA color contrast (18.2:1 ratio)</li><li>Focus traps in modals</li><li>Skip navigation link</li></ul><div class="metric-badge">660+ Tests · 100% Passing</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Performance &amp; Infrastructure</div><div class="phase-version">v1.2.0</div></div><ul class="feature-list"><li>Vercel deployment with custom domain</li><li>GitHub Actions CI/CD pipeline</li><li>Test-gated deployments</li><li>Bundle optimization (78KB gzipped)</li><li>Lazy loading (Monaco, Mermaid, DocPanel)</li><li>Lighthouse performance: 75/100 (+67%)</li><li>95.81% backend code coverage</li><li>Cross-browser testing (Chrome, Firefox, Safari, Edge)</li></ul><div class="metric-badge">Core Web Vitals Optimized</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Security &amp; Quality</div><div class="phase-version">v1.2.0</div></div><ul class="feature-list"><li>Environment variable sanitization</li><li>API key protection (server-side only)</li><li>Rate limiting (10/min, 100/hour per IP)</li><li>Input validation and sanitization</li><li>File upload security checks</li><li>HSTS headers for security</li><li>CORS configuration</li><li>Comprehensive error handling</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Bug Fixes</div><div class="phase-version">v1.2.1</div></div><ul class="feature-list"><li>DocPanel footer alignment (pixel-perfect match with CodePanel)</li><li>Download button UX fix (removed checkmark animation)</li><li>Sign-in button hidden (ENABLE_AUTH feature flag)</li><li>Examples modal preview persistence and focus alignment</li><li>Visual regression testing (Chrome, Firefox, Safari)</li><li>Mobile testing (iOS, Android)</li><li>Cross-browser compatibility verification</li></ul><div class="metric-badge">Critical UI Fixes</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Maintenance Release</div><div class="phase-version">v1.2.2</div></div><ul class="feature-list"><li>Mobile clipboard fallback (non-secure contexts)</li><li>Download button UX simplification (removed checkmark)</li><li>Enhanced mobile accessibility (focus indicators)</li><li>Test coverage for edge cases (58 error handling tests)</li><li>Cross-browser test plan with mobile file upload docs</li><li>GitHub import feature flag (hidden until v2.0)</li><li>16 files updated, 260+ net lines added</li><li>All 660+ tests passing (46 ControlBar tests + 6 skipped)</li></ul><div class="metric-badge">Mobile &amp; UX Polish</div></div></div>
+        </div>
+
+        <!-- NOW Column -->
+        <div class="column now-column">
+          <div class="column-header">
+            <div class="column-label">Now</div>
+            <div class="column-title">Active Development</div>
+            <div class="column-timeline">v2.0 - v2.2</div>
+          </div>
+          <div class="column-body"><div class="phase-card"><div class="phase-header"><div class="phase-title">UX Improvements</div><div class="phase-version">v2.0.0</div></div><ul class="feature-list"><li>Drag-and-drop file upload onto CodePanel/Monaco Editor</li><li>Visual feedback during drag-over (border highlight + overlay)</li><li>Reuse existing file validation (same file types as upload button)</li><li>Filename display enhancement at top of Monaco Editor</li><li>File type icon display (JavaScript, Python, etc.)</li><li>GitHub single-file import support</li><li>Support for GitHub raw URLs and repository URLs</li><li>Client-side GitHub URL parsing and fetching</li><li>'Load from GitHub' button in ControlBar</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Dark Mode Theming</div><div class="phase-version">v2.1.0</div></div><ul class="feature-list"><li>Theme toggle UI (sun/moon icon button in Header)</li><li>CSS variable architecture with data-theme attribute</li><li>Semantic color naming (Kevin Powell's approach)</li><li>Tailwind dark mode with dark: class variants</li><li>Theme persistence (localStorage)</li><li>System preference detection (prefers-color-scheme)</li><li>Monaco Editor dark theme (vs-dark)</li><li>Mermaid dark theme (existing theme system)</li><li>WCAG AAA contrast ratios (7:1 text, 3:1 UI)</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Layout Enhancements</div><div class="phase-version">v2.2.0</div></div><ul class="feature-list"><li>Full-width layout (remove max-width constraints)</li><li>Resizable panels between CodePanel and DocPanel</li><li>Draggable divider with keyboard accessibility</li><li>Panel size persistence (localStorage)</li><li>Panel constraints (30% min, 70% max)</li><li>Reset to default button (50/50 split)</li><li>Mobile: stacked panels (no resizing)</li><li>Maintain readability with max-w-prose on content</li></ul></div></div>
+        </div>
+
+        <!-- NEXT Column -->
+        <div class="column next-column">
+          <div class="column-header">
+            <div class="column-label">Next</div>
+            <div class="column-title">Planned Features</div>
+            <div class="column-timeline">v3.0 - v3.2</div>
+          </div>
+          <div class="column-body"><div class="phase-card"><div class="phase-header"><div class="phase-title">User Authentication &amp; Monetization</div><div class="phase-version">v3.0.0</div></div><ul class="feature-list"><li>Email/password authentication (bcrypt hashing)</li><li>GitHub OAuth integration (social login)</li><li>Password reset flow (email-based)</li><li>JWT token-based sessions</li><li>Usage tracking &amp; rate limiting (10 generations/month free tier)</li><li>Usage dashboard (show remaining quota)</li><li>PostgreSQL or MongoDB for user data</li><li>Sign In button (unhide from header)</li><li>GDPR compliance (data export, account deletion)</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">OpenAPI/Swagger Generation</div><div class="phase-version">v3.1.0</div></div><ul class="feature-list"><li>5th documentation type: OPENAPI/SWAGGER</li><li>AI-powered OpenAPI 3.0 spec generation from code</li><li>YAML output format (industry standard)</li><li>Quality scoring with 5 criteria (0-100 scale)</li><li>Parse API routes/endpoints (Express, Flask, FastAPI)</li><li>Schema definitions and examples</li><li>Security and authentication documentation</li><li>Reuse existing service layer architecture</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Multi-File Project Documentation</div><div class="phase-version">v3.2.0</div></div><ul class="feature-list"><li>6th documentation type: PROJECT (multi-file)</li><li>Accept multiple files or .zip upload</li><li>Analyze project-wide architecture</li><li>Generate comprehensive project README</li><li>Cross-reference between files</li><li>Identify patterns (MVC, microservices, monorepo)</li><li>Parse directory structure and file relationships</li><li>Quality scoring for project-level documentation</li></ul></div></div>
+        </div>
+
+        <!-- LATER Column -->
+        <div class="column later-column">
+          <div class="column-header">
+            <div class="column-label">Later</div>
+            <div class="column-title">Future Expansion</div>
+            <div class="column-timeline">v4.0 - v5.0+</div>
+          </div>
+          <div class="column-body"><div class="phase-card"><div class="phase-header"><div class="phase-title">CLI Tool</div><div class="phase-version">v4.0.0</div></div><ul class="feature-list"><li>Command-line interface (Commander.js)</li><li>File path support (single file or directory)</li><li>Batch processing for multiple files</li><li>Output to file or stdout</li><li>Configuration file support (.codescriberc)</li><li>npm package publication</li><li>Cross-platform support (Windows, macOS, Linux)</li><li>Reuse existing service layer (docGenerator, codeParser, qualityScorer)</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">VS Code Extension</div><div class="phase-version">v5.0.0</div></div><ul class="feature-list"><li>Right-click 'Generate Documentation' menu</li><li>Inline documentation preview</li><li>Automatic file updates (create/overwrite docs)</li><li>Quality score in status bar</li><li>Suggestions in problems panel</li><li>Extension settings (API key, doc type preferences)</li><li>VS Code Marketplace publication</li><li>Reuse existing service layer</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Optional Enhancements</div><div class="phase-version">TBD</div></div><ul class="feature-list"><li>Documentation history and saved projects</li><li>Custom documentation templates</li><li>Multi-language support (i18n for UI)</li><li>Advanced Mermaid diagram generation</li><li>Changelog generation from git history</li><li>Team collaboration features</li><li>Advanced analytics and monitoring</li></ul></div></div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <div class="footer-content">
+        <div class="footer-left"><strong>CodeScribe AI</strong> · Timeline Roadmap v2.0</div>
+        <div class="footer-center">v1.x Complete (15.5 days) · v2-v5 Planned (29-40 days)</div>
+        <div class="footer-right">Last Updated: October 23, 2025</div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    // ========================================
+    // EMBEDDED ROADMAP DATA
+    // ========================================
+    // This data is embedded in the HTML for standalone use.
+    // To update: Edit roadmap-data.json, open this file, press Shift+L to load, then Shift+S to save.
+    let ROADMAP_DATA = {
+  "_colorSchemeOptions": {
+    "default": {
+      "color-blue-dark": "#1e3a8a",
+      "color-blue-primary": "#1e40af",
+      "color-blue-medium": "#2563eb",
+      "color-blue-accent": "#60a5fa",
+      "color-green": "#10b981",
+      "color-green-dark": "#059669",
+      "color-bg-green": "#d1fae5",
+      "color-slate-50": "#f8fafc",
+      "color-slate-100": "#f1f5f9",
+      "color-slate-200": "#e2e8f0",
+      "color-slate-500": "#64748b",
+      "color-slate-600": "#475569",
+      "color-slate-900": "#0f172a"
+    },
+    "purple": {
+      "color-blue-dark": "#581c87",
+      "color-blue-primary": "#7c3aed",
+      "color-blue-medium": "#8b5cf6",
+      "color-blue-accent": "#a78bfa",
+      "color-green": "#10b981",
+      "color-green-dark": "#059669",
+      "color-bg-green": "#d1fae5",
+      "color-slate-50": "#f8fafc",
+      "color-slate-100": "#f1f5f9",
+      "color-slate-200": "#e2e8f0",
+      "color-slate-500": "#64748b",
+      "color-slate-600": "#475569",
+      "color-slate-900": "#0f172a",
+      "color-column-label": "#64748b",
+      "color-column-title": "#475569",
+      "color-column-border": "#94a3b8",
+      "color-card-border": "#94a3b8"
+    },
+    "indigo": {
+      "color-blue-dark": "#3730a3",
+      "color-blue-primary": "#4f46e5",
+      "color-blue-medium": "#6366f1",
+      "color-blue-accent": "#818cf8",
+      "color-green": "#10b981",
+      "color-green-dark": "#059669",
+      "color-bg-green": "#d1fae5",
+      "color-slate-50": "#f8fafc",
+      "color-slate-100": "#f1f5f9",
+      "color-slate-200": "#e2e8f0",
+      "color-slate-500": "#64748b",
+      "color-slate-600": "#475569",
+      "color-slate-900": "#0f172a",
+      "color-column-label": "#64748b",
+      "color-column-title": "#475569",
+      "color-column-border": "#94a3b8",
+      "color-card-border": "#94a3b8"
+    },
+    "slate": {
+      "color-blue-dark": "#334155",
+      "color-blue-primary": "#475569",
+      "color-blue-medium": "#64748b",
+      "color-blue-accent": "#94a3b8",
+      "color-green": "#10b981",
+      "color-green-dark": "#059669",
+      "color-bg-green": "#d1fae5",
+      "color-slate-50": "#f8fafc",
+      "color-slate-100": "#f1f5f9",
+      "color-slate-200": "#e2e8f0",
+      "color-slate-500": "#64748b",
+      "color-slate-600": "#475569",
+      "color-slate-900": "#0f172a"
+    }
+  },
+  "colorScheme": "purple",
+  "meta": {
+    "title": "CodeScribe AI Roadmap",
+    "subtitle": "From MVP to Full Ecosystem",
+    "statusPill": {
+      "text": "Live"
+    },
+    "productionLink": {
+      "url": "https://codescribeai.com",
+      "text": "codescribeai.com",
+      "title": "CodeScribe AI - Intelligent Code Documentation Generator"
+    },
+    "footerLeft": "<strong>CodeScribe AI</strong> · Timeline Roadmap v2.0",
+    "footer": "v1.x Complete (15.5 days) · v2-v5 Planned (29-40 days)",
+    "lastUpdated": "October 23, 2025"
+  },
+  "columns": [
+    {
+      "id": "done",
+      "label": "Done",
+      "title": "Completed",
+      "subtitle": "v1.0 - v1.2.2",
+      "phases": [
+        {
+          "version": "v1.0.0",
+          "title": "Web Application (MVP)",
+          "duration": "5 days",
+          "status": "✓ Complete",
+          "features": [
+            "4 documentation types (README, JSDoc, API, ARCHITECTURE)",
+            "Monaco Editor with syntax highlighting (24+ languages)",
+            "Real-time streaming with SSE",
+            "Quality scoring system (0-100 scale, 5 criteria)",
+            "File upload & drag-and-drop",
+            "Copy-to-clipboard & download",
+            "Responsive design (mobile, tablet, desktop)",
+            "660+ tests (100% passing)",
+            "95.81% backend code coverage",
+            "Mermaid diagram support"
+          ]
+        },
+        {
+          "version": "v1.2.0",
+          "title": "WCAG AA Compliance",
+          "duration": "4 days",
+          "status": "✓ Complete",
+          "features": [
+            "WCAG 2.1 AA compliance (95/100 score)",
+            "Lighthouse accessibility: 100/100",
+            "0 automated accessibility violations",
+            "Full keyboard navigation",
+            "Screen reader compatibility (NVDA, VoiceOver)",
+            "AAA color contrast (18.2:1 ratio)",
+            "Focus traps in modals",
+            "Skip navigation link"
+          ],
+          "badge": "660+ Tests · 100% Passing"
+        },
+        {
+          "version": "v1.2.0",
+          "title": "Performance & Infrastructure",
+          "duration": "3 days",
+          "status": "✓ Complete",
+          "features": [
+            "Vercel deployment with custom domain",
+            "GitHub Actions CI/CD pipeline",
+            "Test-gated deployments",
+            "Bundle optimization (78KB gzipped)",
+            "Lazy loading (Monaco, Mermaid, DocPanel)",
+            "Lighthouse performance: 75/100 (+67%)",
+            "95.81% backend code coverage",
+            "Cross-browser testing (Chrome, Firefox, Safari, Edge)"
+          ],
+          "badge": "Core Web Vitals Optimized"
+        },
+        {
+          "version": "v1.2.0",
+          "title": "Security & Quality",
+          "duration": "2 days",
+          "status": "✓ Complete",
+          "features": [
+            "Environment variable sanitization",
+            "API key protection (server-side only)",
+            "Rate limiting (10/min, 100/hour per IP)",
+            "Input validation and sanitization",
+            "File upload security checks",
+            "HSTS headers for security",
+            "CORS configuration",
+            "Comprehensive error handling"
+          ]
+        },
+        {
+          "version": "v1.2.1",
+          "title": "Bug Fixes",
+          "duration": "0.5 days",
+          "status": "✓ Complete",
+          "features": [
+            "DocPanel footer alignment (pixel-perfect match with CodePanel)",
+            "Download button UX fix (removed checkmark animation)",
+            "Sign-in button hidden (ENABLE_AUTH feature flag)",
+            "Examples modal preview persistence and focus alignment",
+            "Visual regression testing (Chrome, Firefox, Safari)",
+            "Mobile testing (iOS, Android)",
+            "Cross-browser compatibility verification"
+          ],
+          "badge": "Critical UI Fixes"
+        },
+        {
+          "version": "v1.2.2",
+          "title": "Maintenance Release",
+          "duration": "1 day",
+          "status": "✓ Complete",
+          "features": [
+            "Mobile clipboard fallback (non-secure contexts)",
+            "Download button UX simplification (removed checkmark)",
+            "Enhanced mobile accessibility (focus indicators)",
+            "Test coverage for edge cases (58 error handling tests)",
+            "Cross-browser test plan with mobile file upload docs",
+            "GitHub import feature flag (hidden until v2.0)",
+            "16 files updated, 260+ net lines added",
+            "All 660+ tests passing (46 ControlBar tests + 6 skipped)"
+          ],
+          "badge": "Mobile & UX Polish"
+        }
+      ]
+    },
+    {
+      "id": "now",
+      "label": "Now",
+      "title": "Active Development",
+      "subtitle": "v2.0 - v2.2",
+      "phases": [
+        {
+          "version": "v2.0.0",
+          "title": "UX Improvements",
+          "duration": "2-3 days",
+          "status": "Planning",
+          "features": [
+            "Drag-and-drop file upload onto CodePanel/Monaco Editor",
+            "Visual feedback during drag-over (border highlight + overlay)",
+            "Reuse existing file validation (same file types as upload button)",
+            "Filename display enhancement at top of Monaco Editor",
+            "File type icon display (JavaScript, Python, etc.)",
+            "GitHub single-file import support",
+            "Support for GitHub raw URLs and repository URLs",
+            "Client-side GitHub URL parsing and fetching",
+            "'Load from GitHub' button in ControlBar"
+          ]
+        },
+        {
+          "version": "v2.1.0",
+          "title": "Dark Mode Theming",
+          "duration": "1.5-2 days",
+          "status": "Planning",
+          "features": [
+            "Theme toggle UI (sun/moon icon button in Header)",
+            "CSS variable architecture with data-theme attribute",
+            "Semantic color naming (Kevin Powell's approach)",
+            "Tailwind dark mode with dark: class variants",
+            "Theme persistence (localStorage)",
+            "System preference detection (prefers-color-scheme)",
+            "Monaco Editor dark theme (vs-dark)",
+            "Mermaid dark theme (existing theme system)",
+            "WCAG AAA contrast ratios (7:1 text, 3:1 UI)"
+          ]
+        },
+        {
+          "version": "v2.2.0",
+          "title": "Layout Enhancements",
+          "duration": "3-4 days",
+          "status": "Planning",
+          "features": [
+            "Full-width layout (remove max-width constraints)",
+            "Resizable panels between CodePanel and DocPanel",
+            "Draggable divider with keyboard accessibility",
+            "Panel size persistence (localStorage)",
+            "Panel constraints (30% min, 70% max)",
+            "Reset to default button (50/50 split)",
+            "Mobile: stacked panels (no resizing)",
+            "Maintain readability with max-w-prose on content"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "next",
+      "label": "Next",
+      "title": "Planned Features",
+      "subtitle": "v3.0 - v3.2",
+      "phases": [
+        {
+          "version": "v3.0.0",
+          "title": "User Authentication & Monetization",
+          "duration": "3-5 days",
+          "status": "Proposed",
+          "features": [
+            "Email/password authentication (bcrypt hashing)",
+            "GitHub OAuth integration (social login)",
+            "Password reset flow (email-based)",
+            "JWT token-based sessions",
+            "Usage tracking & rate limiting (10 generations/month free tier)",
+            "Usage dashboard (show remaining quota)",
+            "PostgreSQL or MongoDB for user data",
+            "Sign In button (unhide from header)",
+            "GDPR compliance (data export, account deletion)"
+          ]
+        },
+        {
+          "version": "v3.1.0",
+          "title": "OpenAPI/Swagger Generation",
+          "duration": "3-4 days",
+          "status": "Proposed",
+          "features": [
+            "5th documentation type: OPENAPI/SWAGGER",
+            "AI-powered OpenAPI 3.0 spec generation from code",
+            "YAML output format (industry standard)",
+            "Quality scoring with 5 criteria (0-100 scale)",
+            "Parse API routes/endpoints (Express, Flask, FastAPI)",
+            "Schema definitions and examples",
+            "Security and authentication documentation",
+            "Reuse existing service layer architecture"
+          ]
+        },
+        {
+          "version": "v3.2.0",
+          "title": "Multi-File Project Documentation",
+          "duration": "4-5 days",
+          "status": "Proposed",
+          "features": [
+            "6th documentation type: PROJECT (multi-file)",
+            "Accept multiple files or .zip upload",
+            "Analyze project-wide architecture",
+            "Generate comprehensive project README",
+            "Cross-reference between files",
+            "Identify patterns (MVC, microservices, monorepo)",
+            "Parse directory structure and file relationships",
+            "Quality scoring for project-level documentation"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "later",
+      "label": "Later",
+      "title": "Future Expansion",
+      "subtitle": "v4.0 - v5.0+",
+      "phases": [
+        {
+          "version": "v4.0.0",
+          "title": "CLI Tool",
+          "duration": "5-7 days",
+          "status": "Proposed",
+          "features": [
+            "Command-line interface (Commander.js)",
+            "File path support (single file or directory)",
+            "Batch processing for multiple files",
+            "Output to file or stdout",
+            "Configuration file support (.codescriberc)",
+            "npm package publication",
+            "Cross-platform support (Windows, macOS, Linux)",
+            "Reuse existing service layer (docGenerator, codeParser, qualityScorer)"
+          ]
+        },
+        {
+          "version": "v5.0.0",
+          "title": "VS Code Extension",
+          "duration": "7-10 days",
+          "status": "Proposed",
+          "features": [
+            "Right-click 'Generate Documentation' menu",
+            "Inline documentation preview",
+            "Automatic file updates (create/overwrite docs)",
+            "Quality score in status bar",
+            "Suggestions in problems panel",
+            "Extension settings (API key, doc type preferences)",
+            "VS Code Marketplace publication",
+            "Reuse existing service layer"
+          ]
+        },
+        {
+          "version": "TBD",
+          "title": "Optional Enhancements",
+          "duration": "TBD",
+          "status": "Future",
+          "features": [
+            "Documentation history and saved projects",
+            "Custom documentation templates",
+            "Multi-language support (i18n for UI)",
+            "Advanced Mermaid diagram generation",
+            "Changelog generation from git history",
+            "Team collaboration features",
+            "Advanced analytics and monitoring"
+          ]
+        }
+      ]
+    }
+  ]
+};
+
+    // ========================================
+    // ROADMAP RENDERING ENGINE
+    // ========================================
+    let currentData = ROADMAP_DATA;
+
+    function renderRoadmap(data, showToast = false) {
+      console.log('Rendering roadmap with data:', data);
+
+      // Apply color scheme to CSS root variables
+      if (data.colorScheme && data._colorSchemeOptions) {
+        // Resolve colorScheme reference to actual color values
+        const colorSchemeKey = typeof data.colorScheme === 'string' ? data.colorScheme : 'default';
+        const colors = data._colorSchemeOptions[colorSchemeKey];
+
+        if (colors) {
+          const root = document.documentElement;
+          Object.keys(colors).forEach(varName => {
+            root.style.setProperty(`--${varName}`, colors[varName]);
+          });
+        }
+      }
+
+      // Update header metadata
+      document.querySelector('.header-left h1').textContent = data.meta.title;
+      document.querySelector('.header-left p').textContent = data.meta.subtitle;
+
+      // Update status pill text
+      const statusPill = document.querySelector('.status-pill');
+      statusPill.textContent = `✅ ${data.meta.statusPill.text}`;
+
+      // Update production link
+      const prodLink = document.querySelector('.production-link');
+      prodLink.href = data.meta.productionLink.url;
+      prodLink.title = data.meta.productionLink.title;
+      prodLink.querySelector('svg').nextSibling.textContent = '\n            ' + data.meta.productionLink.text + '\n          ';
+
+      // Update footer
+      document.querySelector('.footer-left').innerHTML = data.meta.footerLeft;
+      document.querySelector('.footer-center').textContent = data.meta.footer;
+      if (data.meta.lastUpdated) {
+        document.querySelector('.footer-right').textContent = 'Last Updated: ' + data.meta.lastUpdated;
+      }
+
+      // Render each column
+      data.columns.forEach(column => {
+        const columnEl = document.querySelector(`.${column.id}-column`);
+        if (!columnEl) return;
+
+        // Update column header
+        const header = columnEl.querySelector('.column-header');
+        header.querySelector('.column-label').textContent = column.label;
+        header.querySelector('.column-title').textContent = column.title;
+        header.querySelector('.column-timeline').textContent = column.subtitle;
+
+        // Render phases
+        const columnBody = columnEl.querySelector('.column-body');
+        columnBody.innerHTML = '';
+
+        column.phases.forEach(phase => {
+          const phaseCard = document.createElement('div');
+          phaseCard.className = 'phase-card';
+          // Border color now uses neutral slate from CSS
+
+          // Create phase header
+          const phaseHeader = document.createElement('div');
+          phaseHeader.className = 'phase-header';
+
+          const phaseTitle = document.createElement('div');
+          phaseTitle.className = 'phase-title';
+          phaseTitle.textContent = phase.title;
+
+          const phaseVersion = document.createElement('div');
+          phaseVersion.className = 'phase-version';
+          phaseVersion.textContent = phase.version;
+
+          phaseHeader.appendChild(phaseTitle);
+          phaseHeader.appendChild(phaseVersion);
+          phaseCard.appendChild(phaseHeader);
+
+          // Create feature list
+          const featureList = document.createElement('ul');
+          featureList.className = 'feature-list';
+
+          phase.features.forEach(feature => {
+            const li = document.createElement('li');
+            li.textContent = feature;
+            featureList.appendChild(li);
+          });
+
+          phaseCard.appendChild(featureList);
+
+          // Add badge if present
+          if (phase.badge) {
+            const badge = document.createElement('div');
+            badge.className = 'metric-badge';
+            badge.textContent = phase.badge;
+            phaseCard.appendChild(badge);
+          }
+
+          columnBody.appendChild(phaseCard);
+        });
+      });
+
+      if (showToast) {
+        showFeedback('Loaded from roadmap-data.json', 'success');
+      }
+    }
+
+    // ========================================
+    // JSON LOADING & SAVING
+    // ========================================
+
+    // Load external JSON file
+    async function loadFromJSON() {
+      try {
+        showFeedback('Loading roadmap-data.json...', 'loading');
+        const response = await fetch('./roadmap-data.json');
+        if (!response.ok) throw new Error('Failed to fetch roadmap-data.json');
+        const data = await response.json();
+        currentData = data;
+        ROADMAP_DATA = data; // Update embedded data
+        renderRoadmap(data, true); // Show toast since loading from external file
+      } catch (error) {
+        showFeedback('Error loading roadmap-data.json: ' + error.message, 'error');
+        console.error('Failed to load roadmap-data.json:', error);
+      }
+    }
+
+    // Download updated HTML with embedded data
+    function saveUpdatedHTML() {
+      try {
+        showFeedback('Generating ROADMAP-TIMELINE.html...', 'loading');
+
+        // Remove any existing toast messages before capturing HTML
+        const existingToast = document.querySelector('.feedback-message');
+        if (existingToast) existingToast.remove();
+
+        // Get current HTML
+        const htmlContent = document.documentElement.outerHTML;
+
+        // Replace the embedded ROADMAP_DATA with current data
+        const dataString = JSON.stringify(currentData, null, 2);
+        const updatedHTML = htmlContent.replace(
+          /let ROADMAP_DATA = \{[\s\S]*?\};/,
+          `let ROADMAP_DATA = ${dataString};`
+        );
+
+        // Create blob and download
+        const blob = new Blob([updatedHTML], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'ROADMAP-TIMELINE.html';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        showFeedback('Downloaded ROADMAP-TIMELINE.html', 'success');
+      } catch (error) {
+        showFeedback('Error saving ROADMAP-TIMELINE.html: ' + error.message, 'error');
+        console.error('Failed to save HTML:', error);
+      }
+    }
+
+    // Feedback message system - styled to match CodeScribe app toasts
+    function showFeedback(message, type) {
+      const existing = document.querySelector('.feedback-message');
+      if (existing) existing.remove();
+
+      // Type configurations matching CodeScribe app
+      const typeConfig = {
+        success: {
+          iconColor: '#059669',
+          iconBg: 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)',
+          borderColor: '#10b981',
+        },
+        error: {
+          iconColor: '#dc2626',
+          iconBg: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)',
+          borderColor: '#fca5a5',
+        },
+        loading: {
+          iconColor: '#4338ca',
+          iconBg: 'linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)',
+          borderColor: '#10b981',
+        },
+      };
+
+      const config = typeConfig[type] || typeConfig.loading;
+
+      // Create toast container
+      const feedback = document.createElement('div');
+      feedback.className = 'feedback-message';
+      feedback.setAttribute('role', 'alert');
+      feedback.setAttribute('aria-live', 'assertive');
+      feedback.setAttribute('aria-atomic', 'true');
+
+      // Build the toast HTML - no icons, just message
+      feedback.innerHTML = `
+        <p style="
+          font-size: 13px;
+          font-weight: 400;
+          color: #0f172a;
+          line-height: 1.4;
+          margin: 0;
+        ">${message}</p>
+      `;
+
+      // Apply container styles
+      feedback.style.cssText = `
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        max-width: 420px;
+        background: white;
+        border: 1px solid ${config.borderColor};
+        border-radius: 12px;
+        padding: 12px 16px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12), 0 8px 20px rgba(0, 0, 0, 0.08);
+        z-index: 10000;
+        animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        backdrop-filter: blur(8px);
+        transition: all 0.2s ease;
+      `;
+
+      // Add hover effect
+      feedback.addEventListener('mouseenter', () => {
+        feedback.style.transform = 'translateY(-2px)';
+        feedback.style.boxShadow = '0 25px 60px rgba(0, 0, 0, 0.15), 0 10px 25px rgba(0, 0, 0, 0.1)';
+      });
+
+      feedback.addEventListener('mouseleave', () => {
+        feedback.style.transform = '';
+        feedback.style.boxShadow = '0 20px 50px rgba(0, 0, 0, 0.12), 0 8px 20px rgba(0, 0, 0, 0.08)';
+      });
+
+      document.body.appendChild(feedback);
+
+      // Auto-dismiss for non-loading messages
+      if (type !== 'loading') {
+        setTimeout(() => {
+          feedback.style.animation = 'slideOut 0.3s cubic-bezier(0.4, 0, 1, 1)';
+          setTimeout(() => feedback.remove(), 300);
+        }, 3000);
+      }
+    }
+
+    // Add CSS for animations
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes slideIn {
+        from {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+      @keyframes slideOut {
+        from {
+          transform: translateX(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+      }
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    `;
+    document.head.appendChild(style);
+
+    // ========================================
+    // VIEW TOGGLE FUNCTIONALITY
+    // ========================================
+    const doneColumn = document.querySelector('.done-column');
+    const roadmapGrid = document.querySelector('.roadmap-grid');
+
+    // Always default to full view showing all 4 columns
+    let isFullView = true;
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      // Ignore if user is typing in an input/textarea
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      // T key: Toggle view
+      if (e.key === 't' || e.key === 'T') {
+        isFullView = !isFullView;
+        updateView();
+      }
+
+      // Shift+L: Reload from JSON
+      if (e.shiftKey && (e.key === 'L' || e.key === 'l')) {
+        e.preventDefault();
+        loadFromJSON();
+      }
+
+      // Shift+S: Save updated HTML
+      if (e.shiftKey && (e.key === 'S' || e.key === 's')) {
+        e.preventDefault();
+        saveUpdatedHTML();
+      }
+    });
+
+    function updateView() {
+      if (isFullView) {
+        // Full Timeline view
+        doneColumn.classList.remove('hidden');
+        roadmapGrid.style.gridTemplateColumns = 'repeat(4, 1fr)';
+      } else {
+        // Planned Only view
+        doneColumn.classList.add('hidden');
+        roadmapGrid.style.gridTemplateColumns = 'repeat(3, 1fr)';
+      }
+    }
+
+    // Handle responsive behavior
+    function handleResize() {
+      if (window.innerWidth <= 1600) {
+        roadmapGrid.style.gridTemplateColumns = '';
+      } else {
+        updateView();
+      }
+    }
+
+    window.addEventListener('resize', handleResize);
+
+    // Initialize - render embedded data on page load
+    renderRoadmap(ROADMAP_DATA);
+
+    // Set initial view
+    updateView();
+
+    console.log('Roadmap initialized. Keyboard shortcuts:');
+    console.log('  T = Toggle view (Full/Planned)');
+    console.log('  Shift+L = Load from roadmap-data.json');
+    console.log('  Shift+S = Save updated HTML with embedded data');
+  </script>
+<!-- Code injected by live-server -->
+<script>
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					var parent = elem.parentElement || head;
+					parent.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					parent.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
+</script>
+
+
+<!-- Code injected by live-server -->
+<script>
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					var parent = elem.parentElement || head;
+					parent.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					parent.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
+</script>
+<grammarly-desktop-integration data-grammarly-shadow-root="true"></grammarly-desktop-integration><!-- Code injected by live-server -->
+<script>
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					var parent = elem.parentElement || head;
+					parent.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					parent.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
+</script>
+<!-- Code injected by live-server -->
+<script>
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					var parent = elem.parentElement || head;
+					parent.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					parent.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
+</script>
+<!-- Code injected by live-server -->
+<script>
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					var parent = elem.parentElement || head;
+					parent.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					parent.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
+</script>
+</body></html>
