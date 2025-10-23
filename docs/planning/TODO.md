@@ -99,6 +99,8 @@
 **Target Release:** v2.0.0
 **Strategic Goal:** Enable sustainable business model with Open Core + Generous Free Tier architecture
 
+**Key Decision:** Authentication will use **Passport.js** (not Clerk) to support CLI tools (Phase 5) and self-hosted enterprise deployment (Phase 6). See [AUTH-ANALYSIS.md](AUTH-ANALYSIS.md) for detailed rationale.
+
 **Reference:** See [ROADMAP.md Phase 2](roadmap/ROADMAP.md#-phase-2-monetization-foundation-planned) for complete details
 
 ---
@@ -107,28 +109,32 @@
 
 **Estimated Duration:** 3-5 days
 **Status:** 📋 **NOT STARTED**
+**Implementation:** Passport.js (see [AUTH-ANALYSIS.md](AUTH-ANALYSIS.md) for rationale)
 
 #### Tasks
 
 - [ ] **Backend Setup**
-  - [ ] Install dependencies (bcrypt, jsonwebtoken, express-session)
-  - [ ] Create User model/schema (id, email, password_hash, tier, created_at)
-  - [ ] Set up database connection (PostgreSQL or MongoDB)
-  - [ ] Create auth middleware (JWT token validation)
+  - [ ] Install Passport.js dependencies (passport, passport-local, passport-github2, passport-jwt, bcrypt, jsonwebtoken, express-session, connect-pg-simple)
+  - [ ] Create User model/schema (id, email, password_hash, github_id, tier, created_at)
+  - [ ] Set up PostgreSQL database connection (Vercel Postgres or local)
+  - [ ] Create Passport strategies configuration (`server/src/config/passport.js`)
   - [ ] Implement password hashing (bcrypt)
 
 - [ ] **Auth Routes**
-  - [ ] POST `/api/auth/signup` - User registration
-  - [ ] POST `/api/auth/login` - User login
+  - [ ] POST `/api/auth/signup` - User registration (Passport local strategy)
+  - [ ] POST `/api/auth/login` - User login (Passport local strategy)
   - [ ] POST `/api/auth/logout` - User logout
   - [ ] POST `/api/auth/forgot-password` - Password reset request
   - [ ] POST `/api/auth/reset-password` - Password reset confirmation
   - [ ] GET `/api/auth/me` - Get current user
+  - [ ] GET `/api/auth/github` - GitHub OAuth initiation (Passport GitHub strategy)
+  - [ ] GET `/api/auth/github/callback` - GitHub OAuth callback
 
 - [ ] **GitHub OAuth**
-  - [ ] Set up GitHub OAuth app
+  - [ ] Set up GitHub OAuth app in GitHub Developer Settings
+  - [ ] Configure `passport-github2` strategy with client ID/secret
   - [ ] Implement OAuth callback handler
-  - [ ] Link GitHub accounts to existing users
+  - [ ] Link GitHub accounts to existing users (find or create user)
   - [ ] Handle OAuth errors and edge cases
 
 - [ ] **Frontend Components**

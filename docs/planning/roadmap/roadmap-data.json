@@ -203,13 +203,15 @@
           "title": "Authentication & User Management",
           "duration": "3-5 days",
           "status": "Planning Complete",
+          "badge": "Passport.js",
           "features": [
-            "Email/password authentication (bcrypt hashing)",
-            "GitHub OAuth integration",
-            "JWT token-based sessions",
+            "Passport.js authentication (local, GitHub, JWT strategies)",
+            "Email/password login with bcrypt hashing",
+            "GitHub OAuth integration (passport-github2)",
+            "JWT tokens for web, CLI, and VS Code extension (Phase 5)",
             "Password reset flow",
-            "Auth routes and frontend context",
-            "Login/Signup modal UI"
+            "Auth routes (/signup, /login, /github, /github/callback)",
+            "Login/Signup modal UI with React Context"
           ]
         },
         {
@@ -217,10 +219,12 @@
           "title": "Tier System & Feature Flags",
           "duration": "2-3 days",
           "status": "Planning Complete",
+          "badge": "PostgreSQL",
           "features": [
-            "Database setup (PostgreSQL or MongoDB)",
-            "User and usage schemas",
-            "Tier gate middleware integration",
+            "PostgreSQL database setup (Vercel Postgres)",
+            "User schema (id, email, password_hash, github_id, tier)",
+            "Usage schema (user_id, daily_count, monthly_count)",
+            "Tier gate middleware integration (req.user.tier)",
             "Usage tracking and quota enforcement",
             "4-tier system (Free, Pro, Team, Enterprise)",
             "Usage dashboard UI"
@@ -357,8 +361,11 @@
           "title": "CLI Tool",
           "duration": "5-7 days",
           "status": "Planned",
+          "badge": "JWT Auth",
           "features": [
             "Command-line interface with Commander.js",
+            "OAuth login flow (opens browser, saves JWT token)",
+            "Offline-capable JWT authentication (passport-jwt)",
             "File path support (single file or directory)",
             "Batch processing with glob patterns",
             "Configuration file support (.codescriberc)",
@@ -371,8 +378,11 @@
           "title": "VS Code Extension",
           "duration": "7-10 days",
           "status": "Planned",
+          "badge": "Shared Auth",
           "features": [
             "Right-click 'Generate Documentation' menu",
+            "OAuth login flow in IDE (same as web/CLI)",
+            "JWT token storage in VS Code SecretStorage",
             "Inline documentation preview (WebView)",
             "Quality score in status bar",
             "Suggestions in problems panel",
@@ -385,11 +395,12 @@
           "title": "SSO & Advanced Authentication",
           "duration": "5-7 days",
           "status": "Future",
+          "badge": "passport-saml",
           "features": [
-            "SAML 2.0 integration",
+            "SAML 2.0 integration (passport-saml strategy)",
             "OAuth 2.0 providers (Okta, Auth0, Azure AD)",
             "Just-In-Time (JIT) user provisioning",
-            "Role-based access control (RBAC)",
+            "Role-based access control (RBAC) enhancement",
             "Multi-factor authentication (MFA)"
           ]
         },
@@ -411,10 +422,12 @@
           "title": "On-Premise Deployment",
           "duration": "7-10 days",
           "status": "Future",
+          "badge": "Self-Hosted Auth",
           "features": [
-            "Docker containerization",
+            "Docker containerization with Passport.js",
             "Kubernetes deployment manifests",
-            "Self-hosted deployment guide",
+            "Self-hosted authentication (no external dependencies)",
+            "Customer-controlled user data (PostgreSQL)",
             "Air-gapped environment support",
             "License key validation system",
             "Automatic updates (opt-in)"

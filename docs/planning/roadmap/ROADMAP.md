@@ -293,13 +293,17 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 ### 📦 Epics
 
 #### Epic 2.1: Authentication & User Management (3-5 days)
-- Email/password authentication with bcrypt hashing
-- GitHub OAuth integration
-- JWT token-based sessions
+**Implementation:** Passport.js (decision documented in [AUTH-ANALYSIS.md](../AUTH-ANALYSIS.md))
+
+- Email/password authentication with bcrypt hashing (`passport-local`)
+- GitHub OAuth integration (`passport-github2`)
+- JWT token-based sessions (`passport-jwt` for CLI/API in Phase 5)
 - Password reset flow
-- Auth routes: `/api/auth/signup`, `/api/auth/login`, `/api/auth/logout`
+- Auth routes: `/api/auth/signup`, `/api/auth/login`, `/api/auth/logout`, `/api/auth/github`
 - Frontend auth context (React Context or Zustand)
 - Login/Signup modal UI
+
+**Rationale:** Passport.js selected over Clerk to support CLI authentication (Phase 5) and self-hosted enterprise deployment (Phase 6). See [AUTH-ANALYSIS.md](../AUTH-ANALYSIS.md) for full comparison.
 
 #### Epic 2.2: Tier System & Feature Flags (2-3 days)
 - Database setup (PostgreSQL or MongoDB)
@@ -394,6 +398,7 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 - **Security:** bcrypt password hashing, rate limiting on auth endpoints, HTTPS-only cookies, CSRF protection
 
 **Reference Documentation:**
+- [AUTH-ANALYSIS.md](../AUTH-ANALYSIS.md) - Authentication solution analysis and Passport.js decision
 - [private/MONETIZATION-MODEL.md](../../../private/MONETIZATION-MODEL.md) - Complete monetization strategy
 - [server/src/config/tiers.js](../../server/src/config/tiers.js) - Tier configuration
 - [server/src/middleware/tierGate.js](../../server/src/middleware/tierGate.js) - Authorization middleware
