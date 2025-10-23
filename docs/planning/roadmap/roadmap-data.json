@@ -81,8 +81,8 @@
       "text": "codescribeai.com",
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
-    "footerLeft": "<strong>CodeScribe AI</strong> · Timeline Roadmap v2.0",
-    "footer": "v1.x Complete (15.5 days) · v2-v5 Planned (29-40 days)",
+    "footerLeft": "<strong>CodeScribe AI</strong> \u00b7 Strategic Roadmap v3.0",
+    "footer": "Phase 1 Complete \u00b7 Phases 2-6 Planned \u00b7 Strategic Themes with Shippable Epics",
     "lastUpdated": "October 23, 2025"
   },
   "columns": [
@@ -90,13 +90,13 @@
       "id": "done",
       "label": "Done",
       "title": "Completed",
-      "subtitle": "v1.0 - v1.2.2",
+      "subtitle": "Phase 1: Core Capabilities",
       "phases": [
         {
           "version": "v1.0.0",
           "title": "Web Application (MVP)",
           "duration": "5 days",
-          "status": "✓ Complete",
+          "status": "\u2713 Complete",
           "features": [
             "4 documentation types (README, JSDoc, API, ARCHITECTURE)",
             "Monaco Editor with syntax highlighting (24+ languages)",
@@ -113,8 +113,9 @@
         {
           "version": "v1.2.0",
           "title": "WCAG AA Compliance",
-          "duration": "4 days",
-          "status": "✓ Complete",
+          "duration": "2 days",
+          "status": "\u2713 Complete",
+          "badge": "660+ Tests · 100% Passing",
           "features": [
             "WCAG 2.1 AA compliance (95/100 score)",
             "Lighthouse accessibility: 100/100",
@@ -124,14 +125,13 @@
             "AAA color contrast (18.2:1 ratio)",
             "Focus traps in modals",
             "Skip navigation link"
-          ],
-          "badge": "660+ Tests · 100% Passing"
+          ]
         },
         {
           "version": "v1.2.0",
           "title": "Performance & Infrastructure",
           "duration": "3 days",
-          "status": "✓ Complete",
+          "status": "\u2713 Complete",
           "features": [
             "Vercel deployment with custom domain",
             "GitHub Actions CI/CD pipeline",
@@ -141,14 +141,13 @@
             "Lighthouse performance: 75/100 (+67%)",
             "95.81% backend code coverage",
             "Cross-browser testing (Chrome, Firefox, Safari, Edge)"
-          ],
-          "badge": "Core Web Vitals Optimized"
+          ]
         },
         {
           "version": "v1.2.0",
           "title": "Security & Quality",
           "duration": "2 days",
-          "status": "✓ Complete",
+          "status": "\u2713 Complete",
           "features": [
             "Environment variable sanitization",
             "API key protection (server-side only)",
@@ -164,7 +163,7 @@
           "version": "v1.2.1",
           "title": "Bug Fixes",
           "duration": "0.5 days",
-          "status": "✓ Complete",
+          "status": "\u2713 Complete",
           "features": [
             "DocPanel footer alignment (pixel-perfect match with CodePanel)",
             "Download button UX fix (removed checkmark animation)",
@@ -173,14 +172,13 @@
             "Visual regression testing (Chrome, Firefox, Safari)",
             "Mobile testing (iOS, Android)",
             "Cross-browser compatibility verification"
-          ],
-          "badge": "Critical UI Fixes"
+          ]
         },
         {
           "version": "v1.2.2",
           "title": "Maintenance Release",
           "duration": "1 day",
-          "status": "✓ Complete",
+          "status": "\u2713 Complete",
           "features": [
             "Mobile clipboard fallback (non-secure contexts)",
             "Download button UX simplification (removed checkmark)",
@@ -190,8 +188,7 @@
             "GitHub import feature flag (hidden until v2.0)",
             "16 files updated, 260+ net lines added",
             "All 660+ tests passing (46 ControlBar tests + 6 skipped)"
-          ],
-          "badge": "Mobile & UX Polish"
+          ]
         }
       ]
     },
@@ -199,56 +196,61 @@
       "id": "now",
       "label": "Now",
       "title": "Active Development",
-      "subtitle": "v2.0 - v2.2",
+      "subtitle": "Phase 2: Monetization Foundation",
       "phases": [
         {
-          "version": "v2.0.0",
-          "title": "UX Improvements",
+          "version": "Epic 2.1",
+          "title": "Authentication & User Management",
+          "duration": "3-5 days",
+          "status": "Planning Complete",
+          "features": [
+            "Email/password authentication (bcrypt hashing)",
+            "GitHub OAuth integration",
+            "JWT token-based sessions",
+            "Password reset flow",
+            "Auth routes and frontend context",
+            "Login/Signup modal UI"
+          ]
+        },
+        {
+          "version": "Epic 2.2",
+          "title": "Tier System & Feature Flags",
           "duration": "2-3 days",
-          "status": "Planning",
+          "status": "Planning Complete",
           "features": [
-            "Drag-and-drop file upload onto CodePanel/Monaco Editor",
-            "Visual feedback during drag-over (border highlight + overlay)",
-            "Reuse existing file validation (same file types as upload button)",
-            "Filename display enhancement at top of Monaco Editor",
-            "File type icon display (JavaScript, Python, etc.)",
-            "GitHub single-file import support",
-            "Support for GitHub raw URLs and repository URLs",
-            "Client-side GitHub URL parsing and fetching",
-            "'Load from GitHub' button in ControlBar"
+            "Database setup (PostgreSQL or MongoDB)",
+            "User and usage schemas",
+            "Tier gate middleware integration",
+            "Usage tracking and quota enforcement",
+            "4-tier system (Free, Pro, Team, Enterprise)",
+            "Usage dashboard UI"
           ]
         },
         {
-          "version": "v2.1.0",
-          "title": "Dark Mode Theming",
-          "duration": "1.5-2 days",
-          "status": "Planning",
+          "version": "Epic 2.3",
+          "title": "Payment Integration",
+          "duration": "2-3 days",
+          "status": "Planning Complete",
           "features": [
-            "Theme toggle UI (sun/moon icon button in Header)",
-            "CSS variable architecture with data-theme attribute",
-            "Semantic color naming (Kevin Powell's approach)",
-            "Tailwind dark mode with dark: class variants",
-            "Theme persistence (localStorage)",
-            "System preference detection (prefers-color-scheme)",
-            "Monaco Editor dark theme (vs-dark)",
-            "Mermaid dark theme (existing theme system)",
-            "WCAG AAA contrast ratios (7:1 text, 3:1 UI)"
+            "Stripe integration",
+            "Subscription management (create, update, cancel)",
+            "Webhook handling (tier updates)",
+            "Pricing page UI",
+            "Upgrade/downgrade flows",
+            "Invoice and receipt generation"
           ]
         },
         {
-          "version": "v2.2.0",
-          "title": "Layout Enhancements",
-          "duration": "3-4 days",
-          "status": "Planning",
+          "version": "Epic 2.4",
+          "title": "UI Integration",
+          "duration": "1-2 days",
+          "status": "Planning Complete",
           "features": [
-            "Full-width layout (remove max-width constraints)",
-            "Resizable panels between CodePanel and DocPanel",
-            "Draggable divider with keyboard accessibility",
-            "Panel size persistence (localStorage)",
-            "Panel constraints (30% min, 70% max)",
-            "Reset to default button (50/50 split)",
-            "Mobile: stacked panels (no resizing)",
-            "Maintain readability with max-w-prose on content"
+            "Unhide Sign In button in header",
+            "User profile menu (usage stats, settings)",
+            "Upgrade to Pro prompts",
+            "Tier badges and feature gates",
+            "Loading states and error handling"
           ]
         }
       ]
@@ -257,55 +259,89 @@
       "id": "next",
       "label": "Next",
       "title": "Planned Features",
-      "subtitle": "v3.0 - v3.2",
+      "subtitle": "Phases 3-4: UX & Documentation Capabilities",
       "phases": [
         {
-          "version": "v3.0.0",
-          "title": "User Authentication & Monetization",
-          "duration": "3-5 days",
-          "status": "Proposed",
+          "version": "Epic 3.1",
+          "title": "Theming & Visual Customization",
+          "duration": "1.5-2 days",
+          "status": "Planned",
           "features": [
-            "Email/password authentication (bcrypt hashing)",
-            "GitHub OAuth integration (social login)",
-            "Password reset flow (email-based)",
-            "JWT token-based sessions",
-            "Usage tracking & rate limiting (10 generations/month free tier)",
-            "Usage dashboard (show remaining quota)",
-            "PostgreSQL or MongoDB for user data",
-            "Sign In button (unhide from header)",
-            "GDPR compliance (data export, account deletion)"
+            "Dark mode toggle (sun/moon icon)",
+            "CSS variables with data-theme attribute",
+            "System preference detection (prefers-color-scheme)",
+            "Monaco Editor theme switching (vs-light/vs-dark)",
+            "Mermaid dark theme with brand colors",
+            "WCAG AAA contrast ratios (7:1 text, 3:1 UI)"
           ]
         },
         {
-          "version": "v3.1.0",
+          "version": "Epic 3.2",
+          "title": "Layout & Workspace Flexibility",
+          "duration": "2-3 days",
+          "status": "Planned",
+          "features": [
+            "Full-width layout option (remove max-width)",
+            "Resizable panels with draggable divider",
+            "Panel constraints (30% min, 70% max)",
+            "Panel size persistence (localStorage)",
+            "Layout presets (50/50, 70/30, 30/70)",
+            "Keyboard accessible panel controls"
+          ]
+        },
+        {
+          "version": "Epic 3.3",
+          "title": "Advanced File Handling",
+          "duration": "2-3 days",
+          "status": "Planned",
+          "features": [
+            "Multi-file upload support",
+            "Drag-and-drop file interface",
+            "Batch processing (up to 10 files)",
+            "File preview before generation",
+            "File history and version tracking (30 days)",
+            "Progress indicators for batch operations"
+          ]
+        },
+        {
+          "version": "Epic 4.1",
           "title": "OpenAPI/Swagger Generation",
           "duration": "3-4 days",
-          "status": "Proposed",
+          "status": "Planned",
           "features": [
-            "5th documentation type: OPENAPI/SWAGGER",
-            "AI-powered OpenAPI 3.0 spec generation from code",
-            "YAML output format (industry standard)",
-            "Quality scoring with 5 criteria (0-100 scale)",
-            "Parse API routes/endpoints (Express, Flask, FastAPI)",
+            "New OPENAPI doc type",
+            "YAML output (OpenAPI 3.0 specification)",
+            "Parse API routes (Express, Flask, FastAPI)",
+            "Quality scoring for API specs",
             "Schema definitions and examples",
-            "Security and authentication documentation",
-            "Reuse existing service layer architecture"
+            "Security and authentication docs"
           ]
         },
         {
-          "version": "v3.2.0",
+          "version": "Epic 4.2",
           "title": "Multi-File Project Documentation",
           "duration": "4-5 days",
-          "status": "Proposed",
+          "status": "Planned",
           "features": [
-            "6th documentation type: PROJECT (multi-file)",
             "Accept multiple files or .zip upload",
-            "Analyze project-wide architecture",
-            "Generate comprehensive project README",
-            "Cross-reference between files",
-            "Identify patterns (MVC, microservices, monorepo)",
-            "Parse directory structure and file relationships",
-            "Quality scoring for project-level documentation"
+            "Project-wide architecture analysis",
+            "Cross-file references",
+            "Pattern detection (MVC, microservices, monorepo)",
+            "Comprehensive project README generation",
+            "Project-level quality scoring"
+          ]
+        },
+        {
+          "version": "Epic 4.3",
+          "title": "Custom Templates & Export Formats",
+          "duration": "2-3 days",
+          "status": "Planned",
+          "features": [
+            "User-defined documentation templates",
+            "Template library (community templates)",
+            "Export to markdown, HTML, PDF",
+            "Template variables and placeholders",
+            "Template preview and validation"
           ]
         }
       ]
@@ -314,50 +350,86 @@
       "id": "later",
       "label": "Later",
       "title": "Future Expansion",
-      "subtitle": "v4.0 - v5.0+",
+      "subtitle": "Phases 5-6: Tools & Enterprise Features",
       "phases": [
         {
-          "version": "v4.0.0",
+          "version": "Epic 5.1",
           "title": "CLI Tool",
           "duration": "5-7 days",
-          "status": "Proposed",
+          "status": "Planned",
           "features": [
-            "Command-line interface (Commander.js)",
+            "Command-line interface with Commander.js",
             "File path support (single file or directory)",
-            "Batch processing for multiple files",
-            "Output to file or stdout",
+            "Batch processing with glob patterns",
             "Configuration file support (.codescriberc)",
-            "npm package publication",
             "Cross-platform support (Windows, macOS, Linux)",
-            "Reuse existing service layer (docGenerator, codeParser, qualityScorer)"
+            "npm package publication"
           ]
         },
         {
-          "version": "v5.0.0",
+          "version": "Epic 5.2",
           "title": "VS Code Extension",
           "duration": "7-10 days",
-          "status": "Proposed",
+          "status": "Planned",
           "features": [
             "Right-click 'Generate Documentation' menu",
-            "Inline documentation preview",
-            "Automatic file updates (create/overwrite docs)",
+            "Inline documentation preview (WebView)",
             "Quality score in status bar",
             "Suggestions in problems panel",
-            "Extension settings (API key, doc type preferences)",
-            "VS Code Marketplace publication",
-            "Reuse existing service layer"
+            "Extension settings (API key, doc type)",
+            "VS Code Marketplace publication"
           ]
         },
         {
-          "version": "TBD",
-          "title": "Optional Enhancements",
-          "duration": "TBD",
+          "version": "Epic 6.1",
+          "title": "SSO & Advanced Authentication",
+          "duration": "5-7 days",
           "status": "Future",
           "features": [
+            "SAML 2.0 integration",
+            "OAuth 2.0 providers (Okta, Auth0, Azure AD)",
+            "Just-In-Time (JIT) user provisioning",
+            "Role-based access control (RBAC)",
+            "Multi-factor authentication (MFA)"
+          ]
+        },
+        {
+          "version": "Epic 6.2",
+          "title": "Audit Logs & Compliance",
+          "duration": "3-4 days",
+          "status": "Future",
+          "features": [
+            "Comprehensive audit logging",
+            "Log export (CSV, JSON formats)",
+            "GDPR compliance tools",
+            "SOC 2 Type II preparation",
+            "Retention policies and data lifecycle"
+          ]
+        },
+        {
+          "version": "Epic 6.3",
+          "title": "On-Premise Deployment",
+          "duration": "7-10 days",
+          "status": "Future",
+          "features": [
+            "Docker containerization",
+            "Kubernetes deployment manifests",
+            "Self-hosted deployment guide",
+            "Air-gapped environment support",
+            "License key validation system",
+            "Automatic updates (opt-in)"
+          ]
+        },
+        {
+          "version": "Backlog",
+          "title": "Optional Enhancements",
+          "duration": "TBD",
+          "status": "Backlog (User Feedback Driven)",
+          "features": [
             "Documentation history and saved projects",
-            "Custom documentation templates",
+            "GitHub repository integration",
             "Multi-language support (i18n for UI)",
-            "Advanced Mermaid diagram generation",
+            "Advanced Mermaid diagram auto-generation",
             "Changelog generation from git history",
             "Team collaboration features",
             "Advanced analytics and monitoring"

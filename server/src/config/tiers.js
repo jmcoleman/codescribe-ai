@@ -1,0 +1,271 @@
+/**
+ * Tier-based feature configuration for CodeScribe AI
+ *
+ * Open Core Model: All features exist in codebase, gated by tier
+ * Revenue Strategy: Volume + Convenience + Collaboration, not features
+ *
+ * Philosophy: Generous free tier drives adoption, natural upgrade paths via usage limits
+ */
+
+export const TIER_FEATURES = {
+  free: {
+    // Volume Limits (Primary conversion driver)
+    maxFileSize: 100_000,              // 100KB - typical single file
+    dailyGenerations: 3,                // ~10/month for hobbyists
+    monthlyGenerations: 10,             // Hard monthly cap
+
+    // Core Features (ALL included - drives adoption)
+    documentTypes: ['README', 'JSDOC', 'API', 'ARCHITECTURE'],
+    streaming: true,                    // Real-time generation
+    qualityScoring: true,               // 0-100 scoring with feedback
+    monacoEditor: true,                 // Syntax highlighting
+    fileUpload: true,                   // Single file upload
+    codeParser: true,                   // AST parsing
+    mermaidDiagrams: true,              // Diagram generation
+
+    // Limitations (Encourage upgrade without breaking experience)
+    builtInApiCredits: false,           // Must provide own Claude API key
+    batchProcessing: false,             // Single file only
+    customTemplates: false,             // Default templates only
+    apiAccess: false,                   // Web UI only
+    priorityQueue: false,               // Standard processing
+
+    // Support
+    support: 'community',               // GitHub Discussions, Discord
+    sla: null,                          // No uptime guarantee
+
+    // Deployment
+    selfHosted: true,                   // Can self-host with own API key
+    whiteLabel: false,                  // CodeScribe branding required
+  },
+
+  pro: {
+    // Volume Limits (10x increase - perfect for active developers)
+    maxFileSize: 1_000_000,             // 1MB - multiple files or large projects
+    dailyGenerations: 30,               // ~100/month for daily use
+    monthlyGenerations: 100,            // Hard monthly cap
+
+    // All Free Features
+    documentTypes: ['README', 'JSDOC', 'API', 'ARCHITECTURE'],
+    streaming: true,
+    qualityScoring: true,
+    monacoEditor: true,
+    fileUpload: true,
+    codeParser: true,
+    mermaidDiagrams: true,
+
+    // Pro Additions (Convenience-focused)
+    builtInApiCredits: true,            // No API key setup required
+    batchProcessing: true,              // Up to 10 files at once
+    customTemplates: true,              // Save/reuse custom templates
+    apiAccess: true,                    // REST API + CLI access
+    priorityQueue: true,                // 2x faster processing
+
+    // Advanced Features
+    exportFormats: ['markdown', 'html', 'pdf'],  // Multiple export options
+    versionHistory: true,               // Last 30 days of generations
+    advancedParsing: true,              // TypeScript, JSX, custom parsers
+
+    // Support
+    support: 'email',                   // Email support, 48hr response
+    sla: null,                          // No formal SLA
+
+    // Deployment
+    selfHosted: true,                   // Still can self-host
+    whiteLabel: false,                  // CodeScribe branding required
+  },
+
+  team: {
+    // Volume Limits (Shared across team - encourages collaboration)
+    maxFileSize: 5_000_000,             // 5MB - large codebases
+    dailyGenerations: 150,              // ~500/month shared
+    monthlyGenerations: 500,            // Shared team quota
+    maxUsers: 10,                       // Team size limit
+
+    // All Pro Features
+    documentTypes: ['README', 'JSDOC', 'API', 'ARCHITECTURE'],
+    streaming: true,
+    qualityScoring: true,
+    monacoEditor: true,
+    fileUpload: true,
+    codeParser: true,
+    mermaidDiagrams: true,
+    builtInApiCredits: true,
+    batchProcessing: true,              // Up to 50 files at once
+    customTemplates: true,
+    apiAccess: true,
+    priorityQueue: true,
+    exportFormats: ['markdown', 'html', 'pdf'],
+    versionHistory: true,               // Last 90 days
+    advancedParsing: true,
+
+    // Team Additions (Collaboration-focused)
+    teamWorkspace: true,                // Shared projects and templates
+    sharedTemplates: true,              // Team template library
+    usageAnalytics: true,               // Team usage dashboard
+    roleBasedAccess: true,              // Admin, member, viewer roles
+    slackIntegration: true,             // Notifications to Slack
+    githubIntegration: true,            // Auto-doc on PR merge
+    cicdIntegration: true,              // GitHub Actions, GitLab CI
+
+    // Support
+    support: 'priority-email',          // Email support, 24hr response
+    sla: null,                          // No formal SLA
+
+    // Deployment
+    selfHosted: true,                   // Can self-host with team features
+    whiteLabel: false,                  // CodeScribe branding required
+  },
+
+  enterprise: {
+    // Volume Limits (Effectively unlimited)
+    maxFileSize: 50_000_000,            // 50MB - entire repositories
+    dailyGenerations: -1,               // Unlimited
+    monthlyGenerations: -1,             // Unlimited
+    maxUsers: -1,                       // Unlimited
+
+    // All Team Features
+    documentTypes: ['README', 'JSDOC', 'API', 'ARCHITECTURE'],
+    streaming: true,
+    qualityScoring: true,
+    monacoEditor: true,
+    fileUpload: true,
+    codeParser: true,
+    mermaidDiagrams: true,
+    builtInApiCredits: true,
+    batchProcessing: true,              // Unlimited files
+    customTemplates: true,
+    apiAccess: true,
+    priorityQueue: true,                // Dedicated processing queue
+    exportFormats: ['markdown', 'html', 'pdf'],
+    versionHistory: true,               // Unlimited retention
+    advancedParsing: true,
+    teamWorkspace: true,
+    sharedTemplates: true,
+    usageAnalytics: true,
+    roleBasedAccess: true,
+    slackIntegration: true,
+    githubIntegration: true,
+    cicdIntegration: true,
+
+    // Enterprise Additions (Compliance + Control)
+    ssoSaml: true,                      // Single Sign-On
+    auditLogs: true,                    // Compliance logging
+    customModelFinetuning: true,        // Custom AI model training
+    dedicatedInfrastructure: true,      // Isolated deployment
+    customIntegrations: true,           // Jira, Confluence, etc.
+    advancedSecurity: true,             // IP whitelisting, 2FA enforcement
+    dataResidency: true,                // Region-specific hosting
+
+    // Support
+    support: 'dedicated-slack',         // Dedicated Slack channel
+    sla: '99.9%',                       // Uptime guarantee
+    accountManager: true,               // Dedicated success manager
+
+    // Deployment
+    selfHosted: true,                   // Docker/Kubernetes deployment
+    whiteLabel: true,                   // Full branding customization
+    onPremise: true,                    // Air-gapped deployment option
+  },
+};
+
+/**
+ * Pricing information (for reference, not enforcement)
+ * Actual payment processing handled by Stripe
+ */
+export const TIER_PRICING = {
+  free: {
+    price: 0,
+    period: null,
+    description: '10 docs/month OR self-hosted unlimited',
+  },
+  pro: {
+    price: 9,
+    period: 'month',
+    annual: 90,                         // 2 months free
+    description: '100 docs/month, built-in API credits, priority support',
+  },
+  team: {
+    price: 29,
+    period: 'month',
+    annual: 290,                        // 2 months free
+    description: '500 docs/month, 10 users, team workspace, integrations',
+  },
+  enterprise: {
+    price: null,                        // Custom pricing
+    period: null,
+    description: 'Unlimited docs, SSO, SLA, white-label, dedicated support',
+    startingAt: 500,                    // Starting monthly price for sales page
+  },
+};
+
+/**
+ * Helper: Get features for a tier
+ */
+export const getTierFeatures = (tier = 'free') => {
+  return TIER_FEATURES[tier] || TIER_FEATURES.free;
+};
+
+/**
+ * Helper: Check if feature is available in tier
+ */
+export const hasFeature = (tier = 'free', feature) => {
+  const tierConfig = getTierFeatures(tier);
+  return tierConfig?.[feature] ?? false;
+};
+
+/**
+ * Helper: Get all tiers that have a feature
+ */
+export const getTiersWithFeature = (feature) => {
+  return Object.keys(TIER_FEATURES).filter(tier =>
+    TIER_FEATURES[tier][feature] === true
+  );
+};
+
+/**
+ * Helper: Get upgrade path for a feature
+ */
+export const getUpgradePath = (currentTier, feature) => {
+  const tiersWithFeature = getTiersWithFeature(feature);
+  const tierOrder = ['free', 'pro', 'team', 'enterprise'];
+  const currentIndex = tierOrder.indexOf(currentTier);
+
+  // Find first tier with feature that's higher than current
+  const upgradeTier = tiersWithFeature.find(tier =>
+    tierOrder.indexOf(tier) > currentIndex
+  );
+
+  return {
+    availableIn: tiersWithFeature,
+    recommendedUpgrade: upgradeTier,
+    pricing: upgradeTier ? TIER_PRICING[upgradeTier] : null,
+  };
+};
+
+/**
+ * Helper: Check if usage limits are exceeded
+ */
+export const checkUsageLimits = (tier, usage) => {
+  const tierConfig = getTierFeatures(tier);
+  const limits = {
+    fileSize: usage.fileSize <= tierConfig.maxFileSize,
+    daily: tierConfig.dailyGenerations === -1 ||
+           usage.dailyGenerations < tierConfig.dailyGenerations,
+    monthly: tierConfig.monthlyGenerations === -1 ||
+             usage.monthlyGenerations < tierConfig.monthlyGenerations,
+  };
+
+  return {
+    allowed: limits.fileSize && limits.daily && limits.monthly,
+    limits,
+    remaining: {
+      daily: tierConfig.dailyGenerations === -1 ? 'unlimited' :
+             tierConfig.dailyGenerations - usage.dailyGenerations,
+      monthly: tierConfig.monthlyGenerations === -1 ? 'unlimited' :
+               tierConfig.monthlyGenerations - usage.monthlyGenerations,
+    },
+  };
+};
+
+export default TIER_FEATURES;
