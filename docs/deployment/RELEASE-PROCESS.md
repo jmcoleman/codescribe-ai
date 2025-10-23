@@ -274,6 +274,134 @@ EOF
 
 ---
 
+## 🔧 Troubleshooting: Missed Release Tagging
+
+### If You Forgot to Create a Tag/Release
+
+Sometimes you might deploy to production and forget to create the git tag and GitHub release. Here's how to fix it retroactively:
+
+#### Step 1: Identify the Correct Commit
+
+Find which commit represents the missed release:
+
+```bash
+# View recent commit history
+git log --oneline --all -20
+
+# View commit graph to understand branching
+git log --oneline --graph --all -10
+
+# View full details of a specific commit
+git show COMMIT_HASH --stat
+```
+
+**Key indicators of the right commit:**
+- Date matches CHANGELOG.md date for the release
+- Comes chronologically AFTER previous release
+- Comes chronologically BEFORE next release
+- Contains the changes documented in CHANGELOG.md
+
+#### Step 2: Verify Commit in GitHub
+
+Before tagging, confirm the commit exists in GitHub:
+
+```bash
+# Direct URL format
+https://github.com/USERNAME/REPO/commit/COMMIT_HASH
+
+# Get full commit details
+git show COMMIT_HASH --stat
+```
+
+#### Step 3: Create Retroactive Tag
+
+Create an annotated tag pointing to the specific commit (NOT current HEAD):
+
+```bash
+# Syntax: git tag -a VERSION COMMIT_HASH -m "MESSAGE"
+git tag -a v1.2.1 abc123d -m "v1.2.1 - Bug fixes and improvements"
+
+# Verify tag was created
+git tag -l "v1.2.*"
+
+# Verify tag points to correct commit
+git show v1.2.1 --stat
+```
+
+**Critical Notes:**
+- ✅ Use `-a` flag to create annotated tag (includes metadata)
+- ✅ Include commit hash to tag a specific commit (not HEAD)
+- ✅ Use meaningful message that summarizes the release
+- ❌ Don't tag HEAD if you've made commits since the release
+
+#### Step 4: Push Tag to GitHub
+
+```bash
+# Push the single tag
+git push origin v1.2.1
+
+# Verify on GitHub
+# Visit: https://github.com/USERNAME/REPO/tags
+```
+
+#### Step 5: Create GitHub Release
+
+**Option A: GitHub CLI**
+```bash
+gh release create v1.2.1 \
+  --title "v1.2.1 - Bug Fixes" \
+  --notes "Copy from CHANGELOG.md for this version"
+```
+
+**Option B: GitHub Web UI**
+1. Go to: `https://github.com/USERNAME/REPO/releases/new`
+2. Choose tag: Select `v1.2.1` from dropdown
+3. Release title: `v1.2.1 - Bug Fixes`
+4. Description: Copy relevant section from CHANGELOG.md
+5. Verify target shows correct commit hash
+6. Click "Publish release"
+
+#### Common Mistakes to Avoid
+
+❌ **Tagging HEAD when you've moved forward:**
+```bash
+# WRONG - tags current commit, not the v1.2.1 commit
+git tag -a v1.2.1 -m "v1.2.1"
+```
+
+❌ **Creating lightweight tag:**
+```bash
+# WRONG - no metadata, harder to manage
+git tag v1.2.1 abc123d
+```
+
+❌ **Not verifying commit in GitHub first:**
+```bash
+# WRONG - tag might point to local commit not pushed yet
+git tag -a v1.2.1 LOCAL_COMMIT_HASH -m "v1.2.1"
+```
+
+#### Verification
+
+After creating the retroactive tag and release:
+
+```bash
+# Check tags
+git tag -l "v1.*"
+
+# Check tag timeline
+git log --oneline --decorate --all | grep -E "v1\.[0-9]"
+
+# Visit GitHub releases page
+# Verify all releases appear in chronological order
+```
+
+**For detailed troubleshooting and examples, see:**
+- [DEPLOYMENT-CHECKLIST.md](./DEPLOYMENT-CHECKLIST.md) - Retroactive tagging procedures
+- [DEPLOYMENT-LEARNINGS.md](./DEPLOYMENT-LEARNINGS.md) - Issue #10: Missed Release Tagging
+
+---
+
 ## 📝 Post-Release Tasks
 
 ### Immediate (Within 1 Hour)
@@ -366,6 +494,8 @@ git push origin main
 
 | Version | Date | Phase | Description |
 |---------|------|-------|-------------|
+| v1.2.2 | Oct 22, 2025 | Maintenance | Mobile compatibility, UX polish, feature flag management |
+| v1.2.1 | Oct 22, 2025 | Maintenance | Bug fixes (footer alignment, download button, sign-in) |
 | v1.2.0 | Oct 19, 2025 | Phase 1.5 | Production deployment + WCAG AA compliance |
 | v1.1.0 | Oct 16, 2025 | Phase 1.0 | Initial web application (pre-production) |
 | v1.0.0 | Oct 11, 2025 | Phase 1.0 | MVP complete (development) |
@@ -390,5 +520,5 @@ git push origin main
 
 ---
 
-**Last Release:** v1.2.0 (October 19, 2025)
+**Last Release:** v1.2.2 (October 22, 2025)
 **Next Planned Release:** v1.3.0 (Phase 2 - UX Improvements)

@@ -124,6 +124,133 @@ curl -X POST https://your-url.vercel.app/api/generate \
 - [ ] Take screenshots of the application (pending)
 - [x] ✅ Update deployment documentation with actual URL
 
+### Create GitHub Release
+- [x] ✅ Create git tag for the release
+- [x] ✅ Push tag to GitHub
+- [x] ✅ Create GitHub Release with changelog notes
+
+**Standard Release Process:**
+
+**Step 1: Create and Push Git Tag**
+```bash
+# Create annotated tag
+git tag -a v1.2.0 -m "v1.2.0 - Production Release"
+
+# Push tag to GitHub
+git push origin v1.2.0
+```
+
+**Step 2: Create GitHub Release**
+
+**Option A: Using GitHub Web UI**
+
+1. Go to your repository's releases page:
+   ```
+   https://github.com/USERNAME/codescribe-ai/releases
+   ```
+2. Click **"Draft a new release"** button (top right)
+3. **Choose a tag:** Click dropdown and select `v1.2.0` (the tag you just pushed)
+4. **Release title:** Enter `v1.2.0 - Production Release`
+5. **Description:** Copy the relevant section from CHANGELOG.md for this version
+   - Include all Added, Changed, Fixed, Security sections
+   - Format with markdown for better readability
+6. **Attach binaries** (optional): Drag and drop any release assets if needed
+7. Click **"Publish release"**
+
+**Option B: Using GitHub CLI**
+```bash
+gh release create v1.2.0 \
+  --title "v1.2.0 - Production Release" \
+  --notes "$(cat <<'EOF'
+**Status:** ✅ Production Release
+
+### Added
+- AI-powered documentation generation
+- Real-time streaming with SSE
+- Quality scoring system (0-100)
+
+### Changed
+- Enhanced mobile responsiveness
+- Improved error handling
+
+### Fixed
+- Monaco Editor loading issues
+- Quality score precision
+
+---
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+EOF
+)"
+```
+
+**Verification:**
+- Visit `https://github.com/USERNAME/codescribe-ai/releases/tag/v1.2.0`
+- Confirm release appears on releases page
+- Verify changelog notes are properly formatted
+
+**If You Forgot to Tag a Release:**
+
+Sometimes you might deploy and forget to create the git tag and GitHub release. Here's how to fix it retroactively:
+
+1. **Identify the Correct Commit:**
+   ```bash
+   # View recent commit history
+   git log --oneline --all -20
+
+   # View commit graph to understand branching
+   git log --oneline --graph --all -10
+
+   # View full details of a specific commit
+   git show COMMIT_HASH --stat
+   ```
+
+2. **Verify Commit in GitHub:**
+   - **Direct URL:** `https://github.com/USERNAME/REPO/commit/COMMIT_HASH`
+   - **Via Web UI:** Repository → Commits → Search for commit hash
+   - **Check:** Ensure it's before the next release and after the previous release
+
+3. **Create Retroactive Tag:**
+   ```bash
+   # Tag the specific commit (not HEAD)
+   git tag -a v1.2.1 COMMIT_HASH -m "v1.2.1 - Bug fixes"
+
+   # Example:
+   git tag -a v1.2.1 0ef49dc -m "v1.2.1 - Bug fixes: footer alignment, download button UX"
+
+   # Push the tag to GitHub
+   git push origin v1.2.1
+   ```
+
+4. **Create GitHub Release:**
+
+   **Option A: GitHub CLI**
+   ```bash
+   gh release create v1.2.1 \
+     --title "v1.2.1 - Bug Fixes" \
+     --notes "Bug fixes: footer alignment, download button UX, sign-in button hiding"
+   ```
+
+   **Option B: GitHub Web UI**
+   - Go to `github.com/USERNAME/REPO/releases`
+   - Click "Draft a new release"
+   - Tag: Select `v1.2.1` from dropdown (will appear after pushing)
+   - Target: Verify it shows the correct commit hash
+   - Title: `v1.2.1 - Bug Fixes`
+   - Description: Copy relevant section from CHANGELOG.md
+   - Click "Publish release"
+
+5. **Verify:**
+   - Check that release appears in chronological order
+   - Verify tag points to correct commit
+   - Confirm changelog notes are accurate
+
+**Common Mistakes to Avoid:**
+- ❌ Don't tag HEAD if you've made commits since the release
+- ❌ Don't create tags without commit hashes for retroactive releases
+- ❌ Don't forget to include the `-a` flag (creates annotated tags)
+- ❌ Don't skip verifying the commit in GitHub before tagging
+
 ### Monitoring (First 24-48 Hours)
 - [x] ✅ Monitor Vercel deployment logs
 - [x] ✅ Check Anthropic API usage in console
