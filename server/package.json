@@ -18,7 +18,10 @@
     "test:debug": "node --inspect-brk node_modules/.bin/jest --runInBand",
     "test:parser": "node tests/manual/test-parser.js",
     "test:rate-limit": "node tests/manual/test-rate-limit.js",
-    "test:api": "node tests/manual/test-api.js"
+    "test:api": "node tests/manual/test-api.js",
+    "db:test": "node -r dotenv/config -e \"import('./src/db/connection.js').then(db => db.testConnection())\"",
+    "db:init": "node -r dotenv/config -e \"import('./src/db/connection.js').then(db => db.initializeDatabase())\"",
+    "db:cleanup": "node -r dotenv/config -e \"import('./src/db/connection.js').then(db => db.cleanupSessions().then(count => console.log('Deleted', count, 'expired sessions')))\""
   },
   "keywords": [],
   "author": "",

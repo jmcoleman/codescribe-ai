@@ -15,6 +15,9 @@ const SALT_ROUNDS = 10;
  * - password_hash: VARCHAR(255) (nullable for OAuth users)
  * - github_id: VARCHAR(255) UNIQUE (nullable for local users)
  * - tier: VARCHAR(50) DEFAULT 'free' (free, pro, enterprise)
+ * - email_verified: BOOLEAN DEFAULT FALSE
+ * - verification_token: VARCHAR(255) (nullable)
+ * - verification_token_expires: TIMESTAMP (nullable)
  * - created_at: TIMESTAMP DEFAULT NOW()
  * - updated_at: TIMESTAMP DEFAULT NOW()
  */
@@ -31,6 +34,9 @@ class User {
         password_hash VARCHAR(255),
         github_id VARCHAR(255) UNIQUE,
         tier VARCHAR(50) DEFAULT 'free',
+        email_verified BOOLEAN DEFAULT FALSE,
+        verification_token VARCHAR(255),
+        verification_token_expires TIMESTAMP,
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       )
@@ -39,6 +45,7 @@ class User {
     // Create indexes for performance
     await sql`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_users_github_id ON users(github_id)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_users_verification_token ON users(verification_token)`;
   }
 
   /**
