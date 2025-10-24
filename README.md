@@ -6,7 +6,7 @@ Transform code into comprehensive, professional documentation in seconds using A
 
 > **Portfolio Project** by Jenni Coleman - Showcasing full-stack development, AI integration, and modern UX design
 >
-> 🔗 [Live Demo](https://codescribeai.com) | 📖 [Documentation](docs/) | 🎨 [Design System](docs/design/FIGMA-DESIGN-GUIDE.md) | 💻 [GitHub](https://github.com/jmcoleman/codescribe-ai)
+> 🔗 [Live Demo](https://codescribeai.com) | 📖 [Documentation](docs/) | 🗺️ [Interactive Roadmap](https://jmcoleman.github.io/codescribe-ai/docs/roadmap/) | 🎨 [Design System](docs/design/FIGMA-DESIGN-GUIDE.md) | 💻 [GitHub](https://github.com/jmcoleman/codescribe-ai)
 
 ## Table of Contents
 
@@ -329,7 +329,8 @@ Comprehensive documentation is organized in the [docs/](docs/) folder:
     - [07-Figma-Guide.md](docs/planning/mvp/07-Figma-Guide.md) - Complete UI/UX design system
     - [08-Master-Prompt.md](docs/planning/mvp/08-Master-Prompt.md) - Master implementation guide
   - [roadmap/](docs/planning/roadmap/) - Product roadmap and future phases
-    - [ROADMAP.md](docs/planning/roadmap/ROADMAP.md) - Product roadmap
+    - [Interactive Roadmap](https://jmcoleman.github.io/codescribe-ai/docs/roadmap/) - Visual timeline (GitHub Pages)
+    - [ROADMAP.md](docs/planning/roadmap/ROADMAP.md) - Product roadmap (detailed)
   - [DARK-MODE-SPEC.md](docs/planning/DARK-MODE-SPEC.md) - Phase 2.5 planning (active)
   - [TODO.md](docs/planning/TODO.md) - Active todo list (current phase)
 
