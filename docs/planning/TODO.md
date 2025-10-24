@@ -103,6 +103,19 @@
 
 **Reference:** See [ROADMAP.md Phase 2](roadmap/ROADMAP.md#-phase-2-monetization-foundation-planned) for complete details
 
+
+### 🚩 Feature Flag Status
+
+All authentication features are currently **DISABLED** via feature flags:
+- **Backend:** `ENABLE_AUTH=false` in `server/.env.example`
+- **Frontend:** `VITE_ENABLE_AUTH=false` in `client/.env.example`
+
+This allows the codebase to include auth implementation without requiring database or OAuth credentials.
+
+**To enable auth features:** Set both flags to `true` and configure:
+- Database: `POSTGRES_URL` and related Vercel Postgres variables
+- Auth: `JWT_SECRET`, `SESSION_SECRET`
+- OAuth (optional): `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `GITHUB_CALLBACK_URL`
 ---
 
 ### Epic 2.1: Authentication & User Management
@@ -113,43 +126,43 @@
 
 #### Tasks
 
-- [ ] **Backend Setup**
-  - [ ] Install Passport.js dependencies (passport, passport-local, passport-github2, passport-jwt, bcrypt, jsonwebtoken, express-session, connect-pg-simple)
-  - [ ] Create User model/schema (id, email, password_hash, github_id, tier, created_at)
-  - [ ] Set up PostgreSQL database connection (Vercel Postgres or local)
-  - [ ] Create Passport strategies configuration (`server/src/config/passport.js`)
-  - [ ] Implement password hashing (bcrypt)
+- [x] **Backend Setup**
+  - [x] Install Passport.js dependencies (passport, passport-local, passport-github2, passport-jwt, bcrypt, jsonwebtoken, express-session, connect-pg-simple)
+  - [x] Create User model/schema (id, email, password_hash, github_id, tier, created_at)
+  - [x] Set up PostgreSQL database connection (Vercel Postgres or local)
+  - [x] Create Passport strategies configuration (`server/src/config/passport.js`)
+  - [x] Implement password hashing (bcrypt)
 
-- [ ] **Auth Routes**
-  - [ ] POST `/api/auth/signup` - User registration (Passport local strategy)
-  - [ ] POST `/api/auth/login` - User login (Passport local strategy)
-  - [ ] POST `/api/auth/logout` - User logout
-  - [ ] POST `/api/auth/forgot-password` - Password reset request
-  - [ ] POST `/api/auth/reset-password` - Password reset confirmation
-  - [ ] GET `/api/auth/me` - Get current user
-  - [ ] GET `/api/auth/github` - GitHub OAuth initiation (Passport GitHub strategy)
-  - [ ] GET `/api/auth/github/callback` - GitHub OAuth callback
+- [x] **Auth Routes**
+  - [x] POST `/api/auth/signup` - User registration (Passport local strategy)
+  - [x] POST `/api/auth/login` - User login (Passport local strategy)
+  - [x] POST `/api/auth/logout` - User logout
+  - [x] POST `/api/auth/forgot-password` - Password reset request
+  - [x] POST `/api/auth/reset-password` - Password reset confirmation
+  - [x] GET `/api/auth/me` - Get current user
+  - [x] GET `/api/auth/github` - GitHub OAuth initiation (Passport GitHub strategy)
+  - [x] GET `/api/auth/github/callback` - GitHub OAuth callback
 
-- [ ] **GitHub OAuth**
-  - [ ] Set up GitHub OAuth app in GitHub Developer Settings
-  - [ ] Configure `passport-github2` strategy with client ID/secret
-  - [ ] Implement OAuth callback handler
-  - [ ] Link GitHub accounts to existing users (find or create user)
-  - [ ] Handle OAuth errors and edge cases
+- [x] **GitHub OAuth**
+  - [x] Set up GitHub OAuth app in GitHub Developer Settings
+  - [x] Configure `passport-github2` strategy with client ID/secret
+  - [x] Implement OAuth callback handler
+  - [x] Link GitHub accounts to existing users (find or create user)
+  - [x] Handle OAuth errors and edge cases
 
-- [ ] **Frontend Components**
-  - [ ] Create AuthContext (React Context or Zustand)
-  - [ ] Create Login modal
-  - [ ] Create Signup modal
-  - [ ] Create ForgotPassword modal
-  - [ ] Add auth state management
-  - [ ] Unhide Sign In button in Header (ENABLE_AUTH = true)
+- [x] **Frontend Components**
+  - [x] Create AuthContext (React Context or Zustand)
+  - [x] Create Login modal
+  - [x] Create Signup modal
+  - [x] Create ForgotPassword modal
+  - [x] Add auth state management
+  - [x] Unhide Sign In button in Header (ENABLE_AUTH = true)
 
-- [ ] **Testing**
-  - [ ] Unit tests for auth routes
-  - [ ] Integration tests for auth flow
-  - [ ] E2E tests for login/signup/logout
-  - [ ] Security testing (SQL injection, XSS, CSRF)
+- [x] **Testing**
+  - [x] Unit tests for auth routes
+  - [x] Integration tests for auth flow
+  - [x] E2E tests for login/signup/logout
+  - [x] Security testing (SQL injection, XSS, CSRF)
 
 #### Success Criteria
 

@@ -1,0 +1,446 @@
+/**
+ * Unit tests for LoginModal component
+ * Tests rendering, user interactions, form validation, and authentication flow
+ */
+
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { LoginModal } from '../LoginModal';
+import { AuthProvider } from '../../contexts/AuthContext';
+
+// Mock API_URL
+vi.mock('../../config/api', () => ({
+  API_URL: 'http://localhost:3000',
+}));
+
+// Mock toast utilities
+vi.mock('../../utils/toast', () => ({
+  toastCompact: vi.fn(),
+}));
+
+describe('LoginModal', () => {
+  const mockOnClose = vi.fn();
+  const mockOnSwitchToSignup = vi.fn();
+  const mockOnSwitchToForgot = vi.fn();
+  let mockFetch;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    localStorage.clear();
+    mockFetch = vi.fn();
+    global.fetch = mockFetch;
+
+    // Mock initial auth check to return not authenticated
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 401,
+    });
+  });
+
+  const renderLoginModal = (isOpen = true) => {
+    return render(
+      <AuthProvider>
+        <LoginModal
+          isOpen={isOpen}
+          onClose={mockOnClose}
+          onSwitchToSignup={mockOnSwitchToSignup}
+          onSwitchToForgot={mockOnSwitchToForgot}
+        />
+      </AuthProvider>
+    );
+  };
+
+  describe('Rendering', () => {
+    it('should render modal when isOpen is true', () => {
+      renderLoginModal(true);
+
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      expect(screen.getByText('Welcome Back')).toBeInTheDocument();
+      expect(screen.getByLabelText(/email address/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument();
+    });
+
+    it('should not render modal when isOpen is false', () => {
+      renderLoginModal(false);
+
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    it('should render all form elements', () => {
+      renderLoginModal();
+
+      expect(screen.getByLabelText(/email address/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /github/i })).toBeInTheDocument();
+      expect(screen.getByText(/forgot password/i)).toBeInTheDocument();
+      expect(screen.getByText(/don't have an account/i)).toBeInTheDocument();
+    });
+
+    it('should auto-focus email input when modal opens', async () => {
+      renderLoginModal();
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/email address/i)).toHaveFocus();
+      });
+    });
+  });
+
+  describe('Form Validation', () => {
+    it('should show error when email is empty', async () => {
+      const user = userEvent.setup();
+      renderLoginModal();
+
+      const submitButton = screen.getByRole('button', { name: /sign in/i });
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/email is required/i)).toBeInTheDocument();
+      });
+    });
+
+    it('should show error when password is empty', async () => {
+      const user = userEvent.setup();
+      renderLoginModal();
+
+      const emailInput = screen.getByLabelText(/email address/i);
+      await user.type(emailInput, 'test@example.com');
+
+      const submitButton = screen.getByRole('button', { name: /sign in/i });
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/password is required/i)).toBeInTheDocument();
+      });
+    });
+
+    it('should show error for invalid email format', async () => {
+      const user = userEvent.setup();
+      renderLoginModal();
+
+      const emailInput = screen.getByLabelText(/email address/i);
+      const passwordInput = screen.getByLabelText(/^password$/i);
+
+      await user.type(emailInput, 'invalid-email');
+      await user.type(passwordInput, 'password123');
+
+      const submitButton = screen.getByRole('button', { name: /sign in/i });
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/please enter a valid email address/i)).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('Authentication Flow', () => {
+    it('should successfully login with valid credentials', async () => {
+      const user = userEvent.setup();
+      const mockUser = {
+        id: 1,
+        email: 'test@example.com',
+        tier: 'free',
+      };
+
+      // Mock auth check (initial)
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+      });
+
+      // Mock login success
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          success: true,
+          token: 'test-token',
+          user: mockUser,
+        }),
+      });
+
+      renderLoginModal();
+
+      const emailInput = screen.getByLabelText(/email address/i);
+      const passwordInput = screen.getByLabelText(/^password$/i);
+      const submitButton = screen.getByRole('button', { name: /sign in/i });
+
+      await user.type(emailInput, 'test@example.com');
+      await user.type(passwordInput, 'password123');
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(mockOnClose).toHaveBeenCalled();
+      });
+
+      // Verify fetch was called with correct data
+      expect(mockFetch).toHaveBeenCalledWith(
+        'http://localhost:3000/api/auth/login',
+        expect.objectContaining({
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: 'test@example.com',
+            password: 'password123',
+          }),
+        })
+      );
+    });
+
+    it('should display error for invalid credentials', async () => {
+      const user = userEvent.setup();
+
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+      });
+
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        json: async () => ({
+          success: false,
+          error: 'Invalid email or password',
+        }),
+      });
+
+      renderLoginModal();
+
+      const emailInput = screen.getByLabelText(/email address/i);
+      const passwordInput = screen.getByLabelText(/^password$/i);
+      const submitButton = screen.getByRole('button', { name: /sign in/i });
+
+      await user.type(emailInput, 'wrong@example.com');
+      await user.type(passwordInput, 'wrongpassword');
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/invalid email or password/i)).toBeInTheDocument();
+      });
+
+      expect(mockOnClose).not.toHaveBeenCalled();
+    });
+
+    it('should show loading state during login', async () => {
+      const user = userEvent.setup();
+
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+      });
+
+      // Delay the response
+      mockFetch.mockImplementationOnce(
+        () =>
+          new Promise((resolve) =>
+            setTimeout(
+              () =>
+                resolve({
+                  ok: true,
+                  status: 200,
+                  json: async () => ({
+                    success: true,
+                    token: 'test-token',
+                    user: { id: 1, email: 'test@example.com' },
+                  }),
+                }),
+              100
+            )
+          )
+      );
+
+      renderLoginModal();
+
+      const emailInput = screen.getByLabelText(/email address/i);
+      const passwordInput = screen.getByLabelText(/^password$/i);
+      const submitButton = screen.getByRole('button', { name: /sign in/i });
+
+      await user.type(emailInput, 'test@example.com');
+      await user.type(passwordInput, 'password123');
+      await user.click(submitButton);
+
+      // Should show loading text
+      expect(screen.getByText(/signing in/i)).toBeInTheDocument();
+
+      await waitFor(() => {
+        expect(mockOnClose).toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('Navigation', () => {
+    it('should call onSwitchToSignup when signup link is clicked', async () => {
+      const user = userEvent.setup();
+      renderLoginModal();
+
+      const signupLink = screen.getByText(/sign up/i);
+      await user.click(signupLink);
+
+      expect(mockOnSwitchToSignup).toHaveBeenCalled();
+    });
+
+    it('should call onSwitchToForgot when forgot password link is clicked', async () => {
+      const user = userEvent.setup();
+      renderLoginModal();
+
+      const forgotLink = screen.getByText(/forgot password/i);
+      await user.click(forgotLink);
+
+      expect(mockOnSwitchToForgot).toHaveBeenCalled();
+    });
+
+    it('should call onClose when close button is clicked', async () => {
+      const user = userEvent.setup();
+      renderLoginModal();
+
+      const closeButton = screen.getByLabelText(/close login modal/i);
+      await user.click(closeButton);
+
+      expect(mockOnClose).toHaveBeenCalled();
+    });
+
+    it('should call onClose when backdrop is clicked', async () => {
+      const user = userEvent.setup();
+      renderLoginModal();
+
+      // Wait for click-outside to be enabled (200ms delay)
+      await waitFor(() => {}, { timeout: 250 });
+
+      const backdrop = screen.getByRole('dialog').parentElement;
+      await user.click(backdrop);
+
+      expect(mockOnClose).toHaveBeenCalled();
+    });
+  });
+
+  describe('GitHub OAuth', () => {
+    it('should redirect to GitHub OAuth URL when GitHub button is clicked', async () => {
+      const user = userEvent.setup();
+      const originalLocation = window.location;
+      delete window.location;
+      window.location = { href: '' };
+
+      renderLoginModal();
+
+      const githubButton = screen.getByRole('button', { name: /github/i });
+      await user.click(githubButton);
+
+      expect(window.location.href).toBe('http://localhost:3000/api/auth/github');
+
+      window.location = originalLocation;
+    });
+  });
+
+  describe('Keyboard Navigation', () => {
+    it('should close modal when Escape key is pressed', async () => {
+      const user = userEvent.setup();
+      renderLoginModal();
+
+      await user.keyboard('{Escape}');
+
+      expect(mockOnClose).toHaveBeenCalled();
+    });
+
+    it('should submit form when Enter is pressed in password field', async () => {
+      const user = userEvent.setup();
+
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+      });
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          success: true,
+          token: 'test-token',
+          user: { id: 1, email: 'test@example.com' },
+        }),
+      });
+
+      renderLoginModal();
+
+      const emailInput = screen.getByLabelText(/email address/i);
+      const passwordInput = screen.getByLabelText(/^password$/i);
+
+      await user.type(emailInput, 'test@example.com');
+      await user.type(passwordInput, 'password123{Enter}');
+
+      await waitFor(() => {
+        expect(mockOnClose).toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('Accessibility', () => {
+    it('should have proper ARIA attributes', () => {
+      renderLoginModal();
+
+      const dialog = screen.getByRole('dialog');
+      expect(dialog).toHaveAttribute('aria-modal', 'true');
+      expect(dialog).toHaveAttribute('aria-labelledby', 'login-modal-title');
+    });
+
+    it('should display error with role="alert"', async () => {
+      const user = userEvent.setup();
+      renderLoginModal();
+
+      const submitButton = screen.getByRole('button', { name: /sign in/i });
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        const alert = screen.getByRole('alert');
+        expect(alert).toBeInTheDocument();
+        expect(alert).toHaveTextContent(/email is required/i);
+      });
+    });
+  });
+
+  describe('Form State Management', () => {
+    it('should clear form when modal closes', async () => {
+      const user = userEvent.setup();
+      const { rerender } = renderLoginModal(true);
+
+      const emailInput = screen.getByLabelText(/email address/i);
+      const passwordInput = screen.getByLabelText(/^password$/i);
+
+      await user.type(emailInput, 'test@example.com');
+      await user.type(passwordInput, 'password123');
+
+      // Close modal
+      rerender(
+        <AuthProvider>
+          <LoginModal
+            isOpen={false}
+            onClose={mockOnClose}
+            onSwitchToSignup={mockOnSwitchToSignup}
+            onSwitchToForgot={mockOnSwitchToForgot}
+          />
+        </AuthProvider>
+      );
+
+      // Reopen modal
+      rerender(
+        <AuthProvider>
+          <LoginModal
+            isOpen={true}
+            onClose={mockOnClose}
+            onSwitchToSignup={mockOnSwitchToSignup}
+            onSwitchToForgot={mockOnSwitchToForgot}
+          />
+        </AuthProvider>
+      );
+
+      await waitFor(() => {
+        const emailInputNew = screen.getByLabelText(/email address/i);
+        const passwordInputNew = screen.getByLabelText(/^password$/i);
+        expect(emailInputNew).toHaveValue('');
+        expect(passwordInputNew).toHaveValue('');
+      });
+    });
+  });
+});

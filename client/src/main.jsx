@@ -5,6 +5,7 @@ import { SpeedInsights } from '@vercel/speed-insights/react'
 import './index.css'
 import App from './App.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
+import { AuthProvider } from './contexts/AuthContext.jsx'
 
 // Only load analytics and speed insights in production
 // Use hostname check - works reliably in Vercel deployments
@@ -15,7 +16,9 @@ const isProduction =
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ErrorBoundary>
-      <App />
+      <AuthProvider>
+        <App />
+      </AuthProvider>
     </ErrorBoundary>
     {isProduction && (
       <>
