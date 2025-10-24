@@ -9,6 +9,145 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.0] - 2025-10-24
+
+**Status:** ✅ Feature Release - Authentication System
+
+### Added
+- **Authentication System**
+  - GitHub OAuth integration with Passport.js
+  - Email/password authentication with JWT tokens
+  - User model with Neon Postgres database integration
+  - Session management with express-session
+  - Password hashing with bcrypt (10 salt rounds)
+  - Auth middleware (requireAuth, optionalAuth, requireTier)
+  - JWT token generation and validation
+  - User sanitization (removes password_hash from responses)
+
+- **Frontend Auth UI**
+  - LoginModal component with email/password and GitHub OAuth
+  - SignupModal with password strength indicator (4-level visual)
+  - ForgotPasswordModal (UI only, backend planned for v1.4.0)
+  - AuthContext for global authentication state
+  - React Router integration for OAuth callback handling
+  - AuthCallback component for processing GitHub OAuth redirects
+  - Feature flag system: VITE_ENABLE_AUTH environment variable
+
+- **Database Schema**
+  - Users table with email, password_hash, github_id, tier fields
+  - Email verification fields: email_verified, verification_token, verification_token_expires
+  - Indexes on email, github_id, and verification_token
+  - Session storage with connect-pg-simple
+
+- **API Endpoints**
+  - POST /api/auth/signup - User registration
+  - POST /api/auth/login - Email/password login
+  - POST /api/auth/logout - Session/token cleanup
+  - GET /api/auth/me - Get current authenticated user
+  - GET /api/auth/github - Initiate GitHub OAuth flow
+  - GET /api/auth/github/callback - Handle GitHub OAuth callback
+  - POST /api/auth/forgot-password - Password reset request (stub)
+  - POST /api/auth/reset-password - Password reset confirmation (stub)
+
+- **Email Service Integration (Setup)**
+  - Resend email service selected for verification emails
+  - Cost analysis: Free tier covers 3K emails/month (1,500 signups)
+  - Appendix C added to MONETIZATION-STRATEGY.md
+  - Database schema prepared for email verification
+
+- **Documentation**
+  - VERCEL-POSTGRES-SETUP.md - Neon database integration guide
+  - GITHUB-OAUTH-SETUP.md - OAuth configuration and testing
+  - AUTH-TESTS.md - 102 authentication tests documented
+  - AUTH-SECURITY-TESTS.md - Security testing coverage
+  - AUTH-API-TESTING.md - API endpoint testing guide
+  - MONETIZATION-STRATEGY.md Appendix B - Neon database cost analysis
+  - MONETIZATION-STRATEGY.md Appendix C - Resend email cost analysis
+
+### Changed
+- **Routing**
+  - Added React Router (react-router-dom) for SPA routing
+  - Created routes: / (main app) and /auth/callback (OAuth handler)
+  - Wrapped app in BrowserRouter for navigation support
+
+- **Header Component**
+  - Shows "Sign In" button when not authenticated
+  - Shows username and logout button when authenticated
+  - Dynamic rendering based on authentication state
+  - Lazy loads auth modals on hover for performance
+
+- **Logout Endpoint**
+  - Fixed to handle JWT-only authentication (no session errors)
+  - Gracefully handles missing session support for JWT users
+  - Cleans up both session and Passport state if present
+
+### Fixed
+- Project structure cleanup: Removed incorrect src/models/ directory (kept server/src/models/)
+- Logout errors for JWT-authenticated users (Passport session support warning)
+- OAuth callback token extraction and localStorage storage
+- UI updates after login/logout (AuthContext reinitialization)
+
+### Security
+- JWT secret stored in environment variables (JWT_SECRET)
+- Passwords hashed with bcrypt before storage
+- Tokens expire after 7 days (configurable)
+- Session cookies: httpOnly, secure (production), sameSite strict
+- Input validation on all auth endpoints
+- Email format validation with regex
+- Password minimum length: 8 characters
+- GitHub OAuth scope limited to user:email only
+
+### Testing
+- **Backend Tests:** 102+ authentication tests
+  - 41 auth middleware tests (100% coverage)
+  - 33 User model tests (89% coverage)
+  - 28 auth routes integration tests
+  - GitHub OAuth flow tests
+- **Frontend Tests:** AuthContext tests with React Testing Library
+- **Manual Testing:** GitHub OAuth and email/password flows verified end-to-end
+
+### Infrastructure
+- **Database:** Neon Postgres via Vercel Marketplace
+  - Free tier: 512 MB storage (supports 50K users)
+  - Cost: $0/month for first 50K users
+  - Storage per user: ~160 bytes (users) + ~544 bytes (sessions)
+  - Database costs: <0.5% of total COGS
+
+- **Email Service:** Resend (setup complete, implementation pending)
+  - Free tier: 3,000 emails/month
+  - Covers: 1,500 signups/month (18K annual signups)
+  - Cost: $0/month for first 25K users
+  - Email costs: <0.5% of total COGS
+
+### Dependencies Added
+- **Backend:**
+  - @vercel/postgres (^0.10.0) - Neon database SDK
+  - bcrypt (^5.1.1) - Password hashing
+  - connect-pg-simple (^10.0.0) - PostgreSQL session store
+  - express-session (^1.18.1) - Session middleware
+  - passport (^0.7.0) - Authentication middleware
+  - passport-github2 (^0.1.12) - GitHub OAuth strategy
+  - passport-local (^1.0.0) - Local strategy for email/password
+
+- **Frontend:**
+  - react-router-dom (^7.0.2) - Client-side routing
+
+### Statistics
+- **Files Added:** 15+ (auth routes, models, middleware, modals, context)
+- **Files Modified:** 20+
+- **Lines Added:** 3,500+
+- **Tests:** 102+ new authentication tests (all passing)
+- **Test Coverage:** Backend 95.81% maintained
+- **Duration:** 1 day (full session)
+
+### Notes
+- Email verification implementation in progress (schema ready, Resend selected)
+- Password reset functionality stubbed (planned for v1.4.0)
+- Account linking (GitHub + password on same account) planned for v1.4.0
+- Authentication is feature-flagged: Set VITE_ENABLE_AUTH=true to enable
+
+---
+
 ## [1.2.2] - 2025-10-22
 
 **Status:** ✅ Maintenance Release - Mobile & UX Polish
@@ -218,6 +357,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History Summary
 
+- **v1.3.0** - Feature release: Authentication system (GitHub OAuth + email/password), Neon database, Resend email service
 - **v1.2.2** - Maintenance release: mobile compatibility, UX polish, feature flag management
 - **v1.2.1** - Bug fixes: footer alignment, download button UX, sign-in button hiding
 - **v1.2.0** - Production release with full feature set, accessibility compliance, and comprehensive testing

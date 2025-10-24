@@ -89,7 +89,8 @@ AI-powered documentation generator with real-time streaming, quality scoring (0-
 
 **Frontend:** React 19 + Vite | Tailwind CSS 3.4+ | Monaco Editor | react-markdown | Lucide React
 **Backend:** Node.js 20+ | Express 5 | Claude API (Sonnet 4.5) | Acorn | Multer
-**Infrastructure:** Vercel | SSE streaming | Environment variables
+**Database:** Neon Postgres (via Vercel Marketplace) | @vercel/postgres SDK | connect-pg-simple sessions
+**Infrastructure:** Vercel | Neon (free tier: 512 MB, 20 projects) | SSE streaming
 
 ---
 
@@ -254,26 +255,30 @@ codescribe-ai/
 
 1. **Portfolio Project** - Demonstrates full-stack skills, speed, product thinking
 2. **API-First Design** - Service layer supports future CLI/VS Code extension
-3. **Privacy-First** - No database; code processed in memory only
+3. **Privacy-First** - Code processed in memory only; database only for auth/usage tracking (optional)
 4. **Real-Time Streaming** - SSE for live documentation generation
 5. **Educational** - Quality scoring teaches good documentation practices
 6. **Scope Discipline** - Achieved 9-day timeline through strict scope management
+7. **Cost-Efficient** - Neon free tier ($0/mo) covers first 50K users; database <0.5% of costs
 
 ---
 
 ## 🌐 Official Docs
 
-[Vercel](https://vercel.com/docs) | [GitHub Actions](https://docs.github.com/en/actions) | [Anthropic Claude](https://docs.anthropic.com/) | [React](https://react.dev/) | [Vite](https://vitejs.dev/) | [Tailwind](https://tailwindcss.com/docs) | [Node.js](https://nodejs.org/docs/) | [Express](https://expressjs.com/) | [Vitest](https://vitest.dev/) | [WCAG 2.1](https://www.w3.org/WAI/WCAG21/quickref/)
+[Vercel](https://vercel.com/docs) | [Neon](https://neon.tech/docs) | [GitHub Actions](https://docs.github.com/en/actions) | [Anthropic Claude](https://docs.anthropic.com/) | [React](https://react.dev/) | [Vite](https://vitejs.dev/) | [Tailwind](https://tailwindcss.com/docs) | [Node.js](https://nodejs.org/docs/) | [Express](https://expressjs.com/) | [Vitest](https://vitest.dev/) | [WCAG 2.1](https://www.w3.org/WAI/WCAG21/quickref/)
 
 ---
 
 ## 🔄 Version History
 
-**Current: v1.26** - Streamlined Documentation: Condensed CLAUDE.md from 1152 to ~450 lines (-61%) while preserving all critical information; converted verbose prose to scannable tables; consolidated redundant sections; maintained all doc references, technical specs, and implementation guidelines; improved navigation efficiency with Quick Reference format
+**Current: v1.28** - Authentication System & Email Verification Setup: Implemented GitHub OAuth + email/password authentication with JWT tokens; added React Router for OAuth callback handling; fixed logout route for JWT-only auth; integrated Resend email service for verification (free tier: 3K emails/month); added email verification database schema (email_verified, verification_token fields); updated [MONETIZATION-STRATEGY.md](private/strategic-planning/MONETIZATION-STRATEGY.md) Appendix C with comprehensive Resend cost analysis; authentication fully tested and working
 
 <details>
-<summary>Previous Versions (v1.0-v1.25)</summary>
+<summary>Previous Versions (v1.0-v1.27)</summary>
 
+- **v1.27** - Neon Database Integration (database cost analysis, free tier covers 50K users)
+
+- **v1.26** - Streamlined Documentation (condensed CLAUDE.md -61%)
 - **v1.25** - Architecture doc reorganization (ARCHITECTURE-OVERVIEW.md rename)
 - **v1.24** - Architecture update with accurate versions, archive organization
 - **v1.23** - Test-gated deployment (Vercel Deploy Hooks + GitHub Actions)
@@ -301,7 +306,7 @@ codescribe-ai/
 - **v1.1** - Documentation restructure (subdirectories)
 - **v1.0** - Initial CLAUDE.md with complete doc map
 
-Last updated: October 21, 2025
+Last updated: October 24, 2025
 </details>
 
 ---

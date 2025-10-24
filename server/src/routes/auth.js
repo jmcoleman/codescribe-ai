@@ -121,6 +121,10 @@ router.post(
 // POST /api/auth/logout - User Logout
 // ============================================================================
 router.post('/logout', requireAuth, (req, res) => {
+  // For JWT-based authentication, logout is primarily handled client-side
+  // by removing the token from localStorage. However, we still clean up
+  // any session data if it exists.
+
   // Destroy session if exists
   if (req.session) {
     req.session.destroy((err) => {
@@ -130,11 +134,15 @@ router.post('/logout', requireAuth, (req, res) => {
     });
   }
 
-  // Log out passport session
-  if (req.logout) {
+  // Log out passport session only if it was actually established
+  // Check if user was logged in via session (req.user exists via session)
+  if (req.logout && req.isAuthenticated && req.isAuthenticated()) {
     req.logout((err) => {
       if (err) {
-        console.error('Passport logout error:', err);
+        // Only log error if it's not the "session support required" error
+        if (!err.message.includes('session support')) {
+          console.error('Passport logout error:', err);
+        }
       }
     });
   }
