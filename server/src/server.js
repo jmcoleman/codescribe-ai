@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 
 import apiRoutes from './routes/api.js';
+import migrateRoutes from './routes/migrate.js';
 import errorHandler from './middleware/errorHandler.js';
 
 const app = express();
@@ -112,6 +113,7 @@ if (ENABLE_AUTH) {
 if (ENABLE_AUTH && authRoutes) {
   app.use('/api/auth', authRoutes);
 }
+app.use('/api/migrate', migrateRoutes);
 app.use('/api', apiRoutes);
 
 app.use(errorHandler);
