@@ -237,6 +237,12 @@ export function AuthProvider({ children }) {
         throw new Error(data.error || 'Failed to reset password');
       }
 
+      // If backend returns token and user, automatically log the user in
+      if (data.token && data.user) {
+        localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, data.token);
+        setUser(data.user);
+      }
+
       return { success: true, message: data.message };
     } catch (err) {
       const errorMessage = err.message || 'Failed to reset password';

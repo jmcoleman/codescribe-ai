@@ -306,13 +306,10 @@ router.post(
         });
       }
 
-      // Don't allow password reset for OAuth-only users
+      // Allow password reset for both password and OAuth-only users
+      // OAuth-only users can use this flow to add a password to their account
       if (!user.password_hash) {
-        console.log(`Password reset attempted for OAuth-only user: ${user.email}`);
-        return res.json({
-          success: true,
-          message: successMessage
-        });
+        console.log(`Password set requested for OAuth-only user: ${user.email}`);
       }
 
       // Generate secure random token (64 characters hex)
@@ -374,25 +371,31 @@ router.post(
         });
       }
 
-      // Verify user has a password (not OAuth-only)
+      // Allow password reset for both password and OAuth-only users
+      // OAuth-only users are adding a password (account linking)
+      // Users with existing passwords are resetting their password
       if (!user.password_hash) {
-        return res.status(400).json({
-          success: false,
-          error: 'This account uses OAuth authentication and cannot reset password'
-        });
+        console.log(`Setting password for OAuth-only user: ${user.email}`);
+      } else {
+        console.log(`Resetting password for user: ${user.email}`);
       }
 
-      // Update user password
+      // Update user password (works for both new and existing password_hash)
       await User.updatePassword(user.id, password);
 
       // Clear reset token so it can't be reused
       await User.clearResetToken(user.id);
 
+      // Generate JWT token to automatically log user in
+      const jwtToken = generateToken(user);
+
       console.log(`Password reset successful for user: ${user.email}`);
 
       res.json({
         success: true,
-        message: 'Password reset successfully. You can now log in with your new password.'
+        message: 'Password reset successfully. You are now logged in.',
+        token: jwtToken,
+        user: sanitizeUser(user)
       });
     } catch (error) {
       console.error('Reset password error:', error);

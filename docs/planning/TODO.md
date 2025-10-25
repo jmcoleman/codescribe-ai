@@ -244,6 +244,14 @@ This allows the codebase to include auth implementation without requiring databa
   - [x] Namecheap-specific setup instructions
   - [x] Gmail organization best practices (Priority Inbox setup)
   - [x] Support email now functional via forwarding
+- [x] ✅ **OAuth account linking (October 25, 2025)**
+  - [x] GitHub users can now add email/password to their accounts
+  - [x] Password reset flow supports both "reset" and "set password" scenarios
+  - [x] Removed OAuth-only user blocking from forgot-password endpoint
+  - [x] Symmetric account linking (Email/Password ↔ GitHub)
+  - [x] Industry standard pattern (Slack, Spotify, Figma, Dropbox)
+  - [x] Comprehensive documentation in PASSWORD-RESET-IMPLEMENTATION.md
+  - [x] Password strength indicator added to ResetPassword component
 
 #### Next Steps (Epic 2.1.1 - Email Verification)
 

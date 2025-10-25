@@ -33,6 +33,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Namecheap-specific setup instructions in PASSWORD-RESET-IMPLEMENTATION.md
   - Support email now functional via Gmail forwarding
 
+- **OAuth Account Linking**
+  - GitHub users can now add email/password authentication to their accounts
+  - Password reset flow supports both "reset" and "set password" scenarios
+  - OAuth-only users (no password_hash) can use "Forgot Password" to add password
+  - Symmetric account linking: Email/Password ↔ GitHub both work seamlessly
+  - Industry standard pattern (used by Slack, Spotify, Figma, Dropbox)
+  - Documentation added to PASSWORD-RESET-IMPLEMENTATION.md
+  - Password strength indicator added to ResetPassword component
+  - Auto-login after password reset (JWT token returned, user automatically authenticated)
+  - Fixed error state persistence across pages in ResetPassword component
+  - Removed OAuth-only user blocking from both forgot-password and reset-password endpoints
+
 - **Password Reset System**
   - Complete password reset flow with email-based token verification
   - ResetPassword component with dedicated route (`/reset-password?token=...`)
