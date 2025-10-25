@@ -143,6 +143,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Backend:**
   - resend (^4.0.1) - Email sending service
 
+### Documentation
+- **README.md Author Section**
+  - Expanded to showcase product management skills alongside technical abilities
+  - Added "Product Management & Strategy" section with 9 key competencies
+  - Added "Demonstrated PM Competencies" section with 8 core skills
+  - Highlighted end-to-end product ownership (PRD to production)
+  - Updated subtitle to emphasize product management and execution
+  - Added Product Requirements link to quick navigation
+
 ### Testing - Form Validation Test Suite
 - **Client-Side Tests (LoginModal.test.jsx)**
   - 10 new focus management tests covering client and server error scenarios
