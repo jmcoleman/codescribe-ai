@@ -1,6 +1,8 @@
 -- Migration: Add password reset token fields
+-- Version: 002
 -- Date: 2025-10-24
 -- Description: Adds reset_token_hash and reset_token_expires columns to users table
+-- Note: This migration is now redundant since 001 includes these fields, but kept for migration history
 
 -- Add reset token columns if they don't exist
 DO $$

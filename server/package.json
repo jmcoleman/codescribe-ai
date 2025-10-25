@@ -21,7 +21,10 @@
     "test:api": "node tests/manual/test-api.js",
     "db:test": "node -r dotenv/config -e \"import('./src/db/connection.js').then(db => db.testConnection())\"",
     "db:init": "node -r dotenv/config -e \"import('./src/db/connection.js').then(db => db.initializeDatabase())\"",
-    "db:cleanup": "node -r dotenv/config -e \"import('./src/db/connection.js').then(db => db.cleanupSessions().then(count => console.log('Deleted', count, 'expired sessions')))\""
+    "db:cleanup": "node -r dotenv/config -e \"import('./src/db/connection.js').then(db => db.cleanupSessions().then(count => console.log('Deleted', count, 'expired sessions')))\"",
+    "migrate": "node -r dotenv/config src/db/migrate.js",
+    "migrate:status": "node -r dotenv/config src/db/migrate.js status",
+    "migrate:validate": "node -r dotenv/config src/db/migrate.js validate"
   },
   "keywords": [],
   "author": "",

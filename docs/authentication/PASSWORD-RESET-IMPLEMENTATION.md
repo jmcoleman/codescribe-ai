@@ -79,6 +79,35 @@ Implemented complete password reset functionality for CodeScribe AI, allowing us
 - **OAuth user protection**: Cannot reset password for OAuth-only accounts
 - **Token reuse prevention**: Invalidated immediately after use
 - **Automatic expiration**: Database query checks `expires > NOW()`
+- **Rate limiting**: Max 3 password reset requests per email per hour (prevents email bombing)
+
+### Rate Limiting Details
+
+**Configuration** ([auth.js:242-244](../../server/src/routes/auth.js#L242-L244)):
+- **Max attempts**: 3 requests per email address
+- **Time window**: 1 hour (3600000ms)
+- **Storage**: In-memory Map (auto-expires)
+- **Response**: HTTP 429 "Too many password reset requests. Please try again later."
+
+**What it protects:**
+- ✅ Prevents email bombing attacks (someone requesting 1000 resets for same email)
+- ✅ Protects Resend email quota (free tier: 3,000 emails/month)
+- ✅ Reduces abuse of password reset feature
+
+**What it does NOT limit:**
+- ❌ Support emails to `support@codescribeai.com` (handled by email forwarding, not the app)
+- ❌ Other transactional emails (verification, notifications)
+- ❌ Only password reset requests are rate limited
+
+**Example:**
+```
+User requests password reset 3 times in 10 minutes:
+→ Requests 1-3: Success (emails sent)
+→ Request 4: HTTP 429 error (no email sent)
+→ After 1 hour: Counter resets, user can request again
+```
+
+**Implementation**: See [auth.js:235-292](../../server/src/routes/auth.js#L235-L292)
 
 ## User Flow
 
@@ -246,6 +275,52 @@ Before deploying to production:
 - Exceeding 100 resets/day
 - Need higher email volume
 - Resend Pro: $20/month for 50,000 emails
+
+## Support Email Configuration
+
+The reset password UI displays `support@codescribeai.com` for user assistance. To make this functional:
+
+### Current Approach: Email Forwarding (Option 1)
+
+**Status:** To be configured
+**Implementation:** Simple email forwarding through domain registrar (Namecheap)
+
+**Steps to set up in Namecheap:**
+1. Log into your Namecheap account at https://www.namecheap.com
+2. Go to **Domain List** and click **Manage** next to codescribeai.com
+3. Navigate to the **Advanced DNS** tab
+4. Scroll down to **Mail Settings** section
+5. Click **Email Forwarding**
+6. Click **Add Forwarder** or **Add New Email Forwarding**
+7. Configure the forwarding rule:
+   - **Alias:** `support` (this creates support@codescribeai.com)
+   - **Forward To:** `jenni.m.coleman@gmail.com` (or your preferred inbox)
+   - **Enable:** Make sure it's checked/enabled
+8. Click **Add Forwarder** or **Save** to create the rule
+9. Check your Gmail inbox for a confirmation email from Namecheap
+10. Click the confirmation link in that email to activate forwarding
+11. Test by sending an email to `support@codescribeai.com` from another account
+12. Verify it arrives in your Gmail inbox
+
+**Important Notes:**
+- Email forwarding is free with Namecheap domain registration
+- Changes may take 5-30 minutes to propagate
+- You can add multiple forwarders (e.g., `hello@`, `info@`, `contact@`)
+- Forwarding works even if you don't have email hosting set up
+
+**Benefits:**
+- Quick to set up (5 minutes)
+- No code changes required
+- No additional cost
+- Emails arrive in your existing inbox
+- Works immediately
+
+**Alternatives (for future consideration):**
+- **Option 2:** Contact form (stores in database, no email needed)
+- **Option 3:** Professional email hosting (Google Workspace, Zoho Mail, Microsoft 365)
+- **Option 4:** Support ticket system (Zendesk, Intercom, Help Scout)
+
+**Note:** Until email forwarding is configured, emails to `support@codescribeai.com` will bounce back to senders with a "mailbox not found" error.
 
 ## Future Enhancements
 

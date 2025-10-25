@@ -2,15 +2,19 @@
 
 **Project:** CodeScribe AI - Intelligent Code Documentation Generator
 **Testing Status:** ✅ Comprehensive Coverage Across 3 Frameworks
-**Last Updated:** October 21, 2025
+**Last Updated:** October 25, 2025
 
 ---
 
 ## 📊 Quick Stats
 
-- **Total Tests:** 660+ (100% passing)
+- **Total Tests:** 800+ (100% passing)
   - **Frontend:** 513+ tests (Vitest + React Testing Library)
-  - **Backend:** 133+ tests (Jest + Supertest)
+  - **Backend:** 275+ tests (Jest + Supertest)
+    - Services: 50+ tests
+    - Authentication: 102 tests
+    - Migrations: 40 tests
+    - Routes & Integration: 83+ tests
   - **E2E:** 10 tests (Playwright across 5 browsers)
 - **Component Coverage:** 13/18 frontend components tested (5 intentionally skipped)
 - **Backend Coverage:** 95.81% statements, 88.72% branches
@@ -83,6 +87,39 @@
 - Language support verification
 - Theme configuration
 - Editor integration
+
+#### [Database Migration Tests](./DATABASE-MIGRATION-TESTS.md)
+**Automated migration system test suite**
+
+- Migration file naming conventions (40 tests)
+- Checksum calculation and validation
+- Migration sorting and ordering
+- Environment detection (local/dev/preview/production)
+- PostgreSQL error code handling
+
+#### [Authentication Tests](./AUTH-TESTS.md)
+**Authentication system test suite**
+
+- Auth middleware (41 tests) - JWT, session, OAuth validation
+- User model (33 tests) - CRUD operations, password hashing
+- Auth routes (28 tests) - Login, register, logout, OAuth
+- Total: 102 tests covering complete auth flow
+
+#### [Auth Security Tests](./AUTH-SECURITY-TESTS.md)
+**Security-focused authentication tests**
+
+- Password security (bcrypt, strength validation)
+- JWT token security (signature, expiration)
+- Session security (hijacking, fixation prevention)
+- OAuth security (CSRF, state validation)
+
+#### [Password Reset E2E Tests](./PASSWORD-RESET-E2E-TESTS.md)
+**End-to-end password reset flow tests**
+
+- Email verification flow
+- Token generation and validation
+- Password update workflow
+- Email service integration (Resend)
 
 ---
 
