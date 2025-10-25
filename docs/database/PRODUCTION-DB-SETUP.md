@@ -45,7 +45,7 @@ graph TB
     end
 
     subgraph Prod["🌐 Vercel Production"]
-        E[/api/migrate?secret=XXX] --> F[Vercel Env: Production]
+        E[POST /api/migrate with Bearer token] --> F[Vercel Env: Production]
         F --> G[POSTGRES_URL=prod-db]
         G --> H["✅ PROD Database"]
     end
@@ -132,7 +132,8 @@ $ npm run migrate
 
 **Production Deployment:**
 ```bash
-Visit: https://codescribeai.com/api/migrate?secret=XXX
+POST request to: https://codescribeai.com/api/migrate
+Header: Authorization: Bearer YOUR_MIGRATION_SECRET
    ↓
 1. Vercel serverless function runs
    ↓
@@ -619,15 +620,22 @@ curl -X POST \
 # Local dev status
 npm run migrate:status
 
-# Production status
-curl "https://codescribeai.com/api/migrate?secret=YOUR_SECRET&action=status"
+# Production status (use public endpoint or admin endpoint with header auth)
+curl https://codescribeai.com/api/migration-status
+
+# Or detailed admin status
+curl -X POST \
+  -H "Authorization: Bearer YOUR_MIGRATION_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{"action":"status"}' \
+  https://codescribeai.com/api/migrate
 ```
 
 ### Can't Access Migration Endpoint
 
 **Error:** 401 Unauthorized
 
-**Solution:** Check that `MIGRATION_SECRET` is set in Vercel and matches your URL parameter
+**Solution:** Check that `MIGRATION_SECRET` is set in Vercel and matches the Bearer token in your Authorization header
 
 ---
 
@@ -649,9 +657,9 @@ Confirm your databases are properly isolated:
    npm run migrate:status
    # Shows: Database: neondb, Environment: development
 
-   # Production database
-   curl "https://codescribeai.com/api/migrate?secret=SECRET&action=status"
-   # Shows: Database: neondb, Environment: production
+   # Production database (public endpoint)
+   curl https://codescribeai.com/api/migration-status
+   # Shows: environment: "production", database: "neondb"
    ```
 
 ---
