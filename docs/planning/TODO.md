@@ -252,6 +252,16 @@ This allows the codebase to include auth implementation without requiring databa
   - [x] Industry standard pattern (Slack, Spotify, Figma, Dropbox)
   - [x] Comprehensive documentation in PASSWORD-RESET-IMPLEMENTATION.md
   - [x] Password strength indicator added to ResetPassword component
+- [x] ✅ **Migration API endpoints (October 25, 2025)**
+  - [x] Created separate migration routes file (server/src/routes/migrate.js)
+  - [x] Public endpoint: GET /api/migrate/status (no authentication)
+  - [x] Admin endpoint: POST /api/migrate/run (Bearer token auth)
+  - [x] Admin status endpoint: POST /api/migrate/run with {"action":"status"}
+  - [x] Custom authentication middleware (requireMigrationSecret)
+  - [x] Comprehensive test suite (28 endpoint tests, 67 total migration tests)
+  - [x] Environment variable: MIGRATION_SECRET added
+  - [x] Production error handling (hides sensitive details)
+  - [x] Documentation updated: PRODUCTION-DB-SETUP.md
 
 #### Next Steps (Epic 2.1.1 - Email Verification)
 

@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Migration API Endpoints**
+  - Created separate migration routes file (server/src/routes/migrate.js)
+  - Public endpoint: GET /api/migrate/status (no authentication required)
+  - Admin endpoint: POST /api/migrate/run (Bearer token authentication)
+  - Status action: POST /api/migrate/run with {"action":"status"} for detailed status
+  - Custom authentication middleware (requireMigrationSecret)
+  - Comprehensive test suite with 28 tests (67 total migration tests passing)
+  - Environment variable: MIGRATION_SECRET for securing admin endpoint
+  - Proper error handling (production mode hides sensitive details)
+  - Documentation: PRODUCTION-DB-SETUP.md updated with endpoint details
+
 - **Form Validation Standardization**
   - Standardized SignupModal form validation to match LoginModal patterns
   - Both modals now use `noValidate` with custom validation and focus management
