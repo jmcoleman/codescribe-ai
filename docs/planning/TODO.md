@@ -224,6 +224,26 @@ This allows the codebase to include auth implementation without requiring databa
   - [x] Added "Demonstrated PM Competencies" section (8 core skills)
   - [x] Updated subtitle to highlight product management and execution
   - [x] Added Product Requirements link to quick navigation
+- [x] ✅ **Form validation standardization (October 25, 2025)**
+  - [x] Unified form validation patterns across LoginModal and SignupModal
+  - [x] Both modals use `noValidate` with custom validation
+  - [x] Consistent auto-focus behavior and error handling
+  - [x] Browser autocomplete properly handled
+- [x] ✅ **Email service improvements (October 25, 2025)**
+  - [x] Extracted email footer to reusable `getEmailFooter()` constant
+  - [x] Added support email to all transactional emails
+  - [x] Optimized footer hierarchy (branding → support → website)
+- [x] ✅ **Password reset security enhancements (October 25, 2025)**
+  - [x] Implemented rate limiting (3 requests per hour per email)
+  - [x] Prevents email bombing and quota abuse
+  - [x] In-memory tracking with automatic expiration
+  - [x] HTTP 429 response when limit exceeded
+  - [x] Documentation updated with rate limiting details
+- [x] ✅ **Support email configuration (October 25, 2025)**
+  - [x] Email forwarding documentation for `support@codescribeai.com`
+  - [x] Namecheap-specific setup instructions
+  - [x] Gmail organization best practices (Priority Inbox setup)
+  - [x] Support email now functional via forwarding
 
 #### Next Steps (Epic 2.1.1 - Email Verification)
 
@@ -834,6 +854,17 @@ This allows the codebase to include auth implementation without requiring databa
 - [ ] **[ENHANCEMENT]** Advanced analytics and monitoring dashboard
 - [ ] **[TECH-DEBT]** Evaluate and upgrade to React 19 stable (currently RC)
 - [ ] **[ENHANCEMENT]** Consider adding support for more programming languages
+
+#### Email Service Improvements (Future Evaluation)
+
+- [ ] **[TECH-DEBT]** Extract email templates to separate files (Handlebars/EJS) for easier editing and version control
+- [ ] **[TECH-DEBT]** Create reusable email template components (header, footer, buttons) to reduce duplication
+- [ ] **[ENHANCEMENT]** Add email preview/testing mode for development (Ethereal Email or Mailtrap)
+- [ ] **[ENHANCEMENT]** Implement email queue (Bull/BullMQ) for reliability and async processing at scale
+- [ ] **[ENHANCEMENT]** Add email analytics tracking (opens, clicks) via Resend's built-in features
+- [ ] **[ENHANCEMENT]** Add better error logging with detailed context (to, error message, stack trace)
+- [ ] **[ENHANCEMENT]** Implement email input validation before sending
+- [ ] **[FEATURE]** A/B test email templates to optimize engagement (when scaling)
 
 ---
 

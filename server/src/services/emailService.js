@@ -19,6 +19,23 @@ const FROM_EMAIL = process.env.EMAIL_FROM || 'CodeScribe AI <noreply@mail.codesc
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 
 /**
+ * Reusable email footer template
+ * @param {string} clientUrl - The client URL to link to
+ * @returns {string} HTML footer markup
+ */
+const getEmailFooter = (clientUrl) => `
+  <div style="text-align: center; margin-top: 24px; color: #94a3b8; font-size: 12px;">
+    <p style="margin: 4px 0;">CodeScribe AI - AI-Powered Documentation Generator</p>
+    <p style="margin: 4px 0;">
+      Need help? Contact us at <a href="mailto:support@codescribeai.com" style="color: #6366f1; text-decoration: none;">support@codescribeai.com</a>
+    </p>
+    <p style="margin: 4px 0;">
+      <a href="${clientUrl}" style="color: #6366f1; text-decoration: none;">Visit our website</a>
+    </p>
+  </div>
+`;
+
+/**
  * Send password reset email
  * @param {Object} options - Email options
  * @param {string} options.to - Recipient email
@@ -88,18 +105,13 @@ export async function sendPasswordResetEmail({ to, resetToken }) {
               </div>
             </div>
 
-            <div style="text-align: center; margin-top: 24px; color: #94a3b8; font-size: 12px;">
-              <p style="margin: 4px 0;">CodeScribe AI - AI-Powered Documentation Generator</p>
-              <p style="margin: 4px 0;">
-                <a href="${CLIENT_URL}" style="color: #6366f1; text-decoration: none;">Visit our website</a>
-              </p>
-            </div>
+            ${getEmailFooter(CLIENT_URL)}
           </body>
         </html>
       `
     });
 
-    console.log('Password reset email sent:', { to, id: result.id });
+    console.log('Password reset email sent:', { to, id: result.data?.id });
     return result;
   } catch (error) {
     console.error('Failed to send password reset email:', error);
@@ -177,12 +189,7 @@ export async function sendVerificationEmail({ to, verificationToken }) {
               </div>
             </div>
 
-            <div style="text-align: center; margin-top: 24px; color: #94a3b8; font-size: 12px;">
-              <p style="margin: 4px 0;">CodeScribe AI - AI-Powered Documentation Generator</p>
-              <p style="margin: 4px 0;">
-                <a href="${CLIENT_URL}" style="color: #6366f1; text-decoration: none;">Visit our website</a>
-              </p>
-            </div>
+            ${getEmailFooter(CLIENT_URL)}
           </body>
         </html>
       `

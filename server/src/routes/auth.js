@@ -233,6 +233,45 @@ router.get(
 );
 
 // ============================================================================
+// Rate Limiting for Password Reset
+// ============================================================================
+// In-memory store for password reset attempts
+// Format: { email: { count: number, resetAt: timestamp } }
+const passwordResetAttempts = new Map();
+
+// Rate limit configuration
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const MAX_RESET_ATTEMPTS = 3; // Max 3 requests per hour per email
+
+/**
+ * Check and update password reset rate limit for an email
+ * @param {string} email - Email address to check
+ * @returns {boolean} - True if allowed, false if rate limited
+ */
+function checkPasswordResetRateLimit(email) {
+  const now = Date.now();
+  const attempt = passwordResetAttempts.get(email);
+
+  // No previous attempts or window expired - allow and reset counter
+  if (!attempt || now > attempt.resetAt) {
+    passwordResetAttempts.set(email, {
+      count: 1,
+      resetAt: now + RATE_LIMIT_WINDOW_MS
+    });
+    return true;
+  }
+
+  // Within window - check if under limit
+  if (attempt.count < MAX_RESET_ATTEMPTS) {
+    attempt.count++;
+    return true;
+  }
+
+  // Rate limit exceeded
+  return false;
+}
+
+// ============================================================================
 // POST /api/auth/forgot-password - Password Reset Request
 // ============================================================================
 router.post(
@@ -243,6 +282,14 @@ router.post(
   async (req, res) => {
     try {
       const { email } = req.body;
+
+      // Check rate limit
+      if (!checkPasswordResetRateLimit(email)) {
+        return res.status(429).json({
+          success: false,
+          error: 'Too many password reset requests. Please try again later.'
+        });
+      }
 
       // Check if user exists
       const user = await User.findByEmail(email);

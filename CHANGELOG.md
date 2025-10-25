@@ -8,6 +8,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Form Validation Standardization**
+  - Standardized SignupModal form validation to match LoginModal patterns
+  - Both modals now use `noValidate` with custom validation and focus management
+  - Consistent error display and field-level validation across all auth modals
+  - Auto-focus behavior unified (LoginModal auto-focuses, SignupModal auto-focuses)
+  - Browser autocomplete properly handled in both modals
+
+- **Email Service Improvements**
+  - Extracted email footer to reusable constant (`getEmailFooter()`)
+  - Support email (`support@codescribeai.com`) added to all transactional emails
+  - Footer hierarchy: branding → support contact → website link
+  - Consistent footer across password reset and verification emails
+
+- **Password Reset Rate Limiting**
+  - Implemented rate limiting for password reset requests (3 per hour per email)
+  - Prevents email bombing attacks and quota abuse
+  - In-memory rate limit tracking with automatic expiration
+  - Returns HTTP 429 with clear error message when limit exceeded
+  - Rate limit documentation added to PASSWORD-RESET-IMPLEMENTATION.md
+
+- **Support Email Configuration**
+  - Email forwarding setup documentation for `support@codescribeai.com`
+  - Namecheap-specific setup instructions in PASSWORD-RESET-IMPLEMENTATION.md
+  - Support email now functional via Gmail forwarding
+
 - **Password Reset System**
   - Complete password reset flow with email-based token verification
   - ResetPassword component with dedicated route (`/reset-password?token=...`)
