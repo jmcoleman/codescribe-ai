@@ -45,7 +45,7 @@ graph TB
     end
 
     subgraph Prod["🌐 Vercel Production"]
-        E[POST /api/migrate with Bearer token] --> F[Vercel Env: Production]
+        E[POST /api/migrate/run with Bearer token] --> F[Vercel Env: Production]
         F --> G[POSTGRES_URL=prod-db]
         G --> H["✅ PROD Database"]
     end
@@ -88,7 +88,7 @@ This SDK **automatically** reads database credentials from environment variables
 | Context | Variable Source | Database Connected | Command/URL |
 |---------|----------------|-------------------|-------------|
 | **Local Dev** | `server/.env` file | Development Neon DB | `npm run migrate` |
-| **Production** | Vercel env vars (Production) | Production Neon DB | `https://codescribeai.com/api/migrate` |
+| **Production** | Vercel env vars (Production) | Production Neon DB | `https://codescribeai.com/api/migrate/run` |
 | **Preview** | Vercel env vars (Preview) | Preview/Dev Neon DB | `https://preview-xxx.vercel.app` |
 
 ### Example Configuration
@@ -132,7 +132,7 @@ $ npm run migrate
 
 **Production Deployment:**
 ```bash
-POST request to: https://codescribeai.com/api/migrate
+POST request to: https://codescribeai.com/api/migrate/run
 Header: Authorization: Bearer YOUR_MIGRATION_SECRET
    ↓
 1. Vercel serverless function runs
@@ -213,8 +213,8 @@ The [vercel.json](../../vercel.json#L3) build command has been updated to run mi
 6. Deploys if all steps succeed
 
 **Migration Endpoints Available:**
-- **Public status (no auth):** `/api/migration-status` - Check applied/pending migrations
-- **Admin operations (secure header auth):** `/api/migrate` - Run migrations manually (POST with Bearer token)
+- **Public status (no auth):** `/api/migrate/status` - Check applied/pending migrations
+- **Admin operations (secure header auth):** `/api/migrate/run` - Run migrations manually (POST with Bearer token)
 
 ---
 
@@ -314,7 +314,7 @@ After deployment completes, you can verify migrations were applied successfully:
 
 **Option 1: Public Status Endpoint (Recommended - No Secret Required)** ✨
 ```
-https://codescribeai.com/api/migration-status
+https://codescribeai.com/api/migrate/status
 ```
 
 This read-only endpoint shows migration status without requiring authentication:
@@ -344,14 +344,14 @@ This read-only endpoint shows migration status without requiring authentication:
 # Run pending migrations manually
 curl -X POST \
   -H "Authorization: Bearer YOUR_MIGRATION_SECRET" \
-  https://codescribeai.com/api/migrate
+  https://codescribeai.com/api/migrate/run
 
 # Or just check detailed status
 curl -X POST \
   -H "Authorization: Bearer YOUR_MIGRATION_SECRET" \
   -H "Content-Type: application/json" \
   -d '{"action":"status"}' \
-  https://codescribeai.com/api/migrate
+  https://codescribeai.com/api/migrate/run
 ```
 
 ---
@@ -399,8 +399,8 @@ Once the database is set up, enable authentication:
 4. **Migrations run automatically during Vercel deployment** ✅
 
 **Available Endpoints:**
-- **`/api/migration-status`** (public GET, no auth) - Check applied/pending migrations
-- **`/api/migrate`** (admin POST, Bearer auth) - Manually run migrations or get detailed status
+- **`/api/migrate/status`** (public GET, no auth) - Check applied/pending migrations
+- **`/api/migrate/run`** (admin POST, Bearer auth) - Manually run migrations or get detailed status
 
 **Security:** Admin endpoint uses secure header-based authentication (secret never appears in URLs or logs).
 
@@ -506,13 +506,13 @@ When you need to add new database changes:
 
    **Automatic:** Migrations run during deploy (check build logs)
 
-   **Manual check:** Visit `https://codescribeai.com/api/migration-status` (no secret needed)
+   **Manual check:** Visit `https://codescribeai.com/api/migrate/status` (no secret needed)
 
 ---
 
 ## Security Considerations
 
-### Public Status Endpoint (`/api/migration-status`)
+### Public Status Endpoint (`/api/migrate/status`)
 
 **What's Safe to Expose:**
 - ✅ Migration version numbers and names
@@ -533,7 +533,7 @@ When you need to add new database changes:
 - No sensitive user data exposed
 - Standard metadata useful for monitoring/debugging
 
-### Admin Endpoint (`/api/migrate`)
+### Admin Endpoint (`/api/migrate/run`)
 
 **Secure Header-Based Authentication:**
 - POST request with `Authorization: Bearer YOUR_SECRET` header
@@ -545,14 +545,14 @@ When you need to add new database changes:
 # Run pending migrations
 curl -X POST \
   -H "Authorization: Bearer YOUR_MIGRATION_SECRET" \
-  https://codescribeai.com/api/migrate
+  https://codescribeai.com/api/migrate/run
 
 # Status check (detailed)
 curl -X POST \
   -H "Authorization: Bearer YOUR_MIGRATION_SECRET" \
   -H "Content-Type: application/json" \
   -d '{"action":"status"}' \
-  https://codescribeai.com/api/migrate
+  https://codescribeai.com/api/migrate/run
 ```
 
 **Best Practices:**
@@ -621,14 +621,14 @@ curl -X POST \
 npm run migrate:status
 
 # Production status (use public endpoint or admin endpoint with header auth)
-curl https://codescribeai.com/api/migration-status
+curl https://codescribeai.com/api/migrate/status
 
 # Or detailed admin status
 curl -X POST \
   -H "Authorization: Bearer YOUR_MIGRATION_SECRET" \
   -H "Content-Type: application/json" \
   -d '{"action":"status"}' \
-  https://codescribeai.com/api/migrate
+  https://codescribeai.com/api/migrate/run
 ```
 
 ### Can't Access Migration Endpoint
@@ -658,7 +658,7 @@ Confirm your databases are properly isolated:
    # Shows: Database: neondb, Environment: development
 
    # Production database (public endpoint)
-   curl https://codescribeai.com/api/migration-status
+   curl https://codescribeai.com/api/migrate/status
    # Shows: environment: "production", database: "neondb"
    ```
 
@@ -708,12 +708,12 @@ npm run migrate:validate     # Validate integrity
 git push origin main         # Migrations run automatically during build!
 
 # Check Migration Status (Public - No Secret Required)
-curl https://codescribeai.com/api/migration-status
+curl https://codescribeai.com/api/migrate/status
 
 # Run Migrations Manually (Admin - Secure Header Auth)
-curl -X POST -H "Authorization: Bearer SECRET" https://codescribeai.com/api/migrate
+curl -X POST -H "Authorization: Bearer SECRET" https://codescribeai.com/api/migrate/run
 curl -X POST -H "Authorization: Bearer SECRET" -H "Content-Type: application/json" \
-  -d '{"action":"status"}' https://codescribeai.com/api/migrate
+  -d '{"action":"status"}' https://codescribeai.com/api/migrate/run
 
 # Vercel Database Management
 # 1. Vercel Dashboard → Storage → Create Database
