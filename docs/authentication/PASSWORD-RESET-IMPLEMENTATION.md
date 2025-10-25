@@ -76,7 +76,6 @@ Implemented complete password reset functionality for CodeScribe AI, allowing us
 
 ### Attack Prevention
 - **Email enumeration protection**: Always returns success message
-- **OAuth user protection**: Cannot reset password for OAuth-only accounts
 - **Token reuse prevention**: Invalidated immediately after use
 - **Automatic expiration**: Database query checks `expires > NOW()`
 - **Rate limiting**: Max 3 password reset requests per email per hour (prevents email bombing)
@@ -111,6 +110,7 @@ User requests password reset 3 times in 10 minutes:
 
 ## User Flow
 
+### Standard Password Reset
 ```
 1. User clicks "Forgot Password?" → ForgotPasswordModal opens
 2. User enters email → POST /api/auth/forgot-password
@@ -122,6 +122,42 @@ User requests password reset 3 times in 10 minutes:
 8. User redirected to home page
 9. User can sign in with new password
 ```
+
+### OAuth Account Linking: Adding Password to GitHub Account
+
+**Pattern**: "Forgot Password" flow doubles as "Add Password" for OAuth users
+
+```
+1. User originally signed up with GitHub → Account has no password_hash
+2. User later wants email/password login → Clicks "Forgot Password?"
+3. User enters their email → POST /api/auth/forgot-password
+4. Backend detects no password_hash → Sends "set password" email (same flow)
+5. User clicks link → Navigates to /reset-password?token=xxx
+6. User sets new password → POST /api/auth/reset-password
+7. Backend adds password_hash to account → password_hash now populated
+8. User redirected to home page
+9. User can now sign in with EITHER GitHub OR email/password
+```
+
+**Industry Standard**: This pattern is used by:
+- **Slack**: "Use password reset flow to add password to OAuth account"
+- **Spotify**: "Request password reset to create password for Facebook account"
+- **Figma**: "Use reset password link to set password for Google SSO account"
+- **Dropbox**: "Go to security settings and use password reset to add password"
+
+**Why This Works**:
+- ✅ **No new UI needed** - Reuses existing password reset infrastructure
+- ✅ **Secure** - Email verification required (proves user owns account)
+- ✅ **Self-service** - No support tickets needed
+- ✅ **Intuitive** - Users understand "Forgot Password" means "get/reset password"
+- ✅ **Symmetric account linking**:
+  - Email/Password → GitHub: Auto-links when user logs in with GitHub
+  - GitHub → Email/Password: User requests password via reset flow
+
+**Implementation**:
+- Backend allows password reset for OAuth-only users ([auth.js:309-313](../../server/src/routes/auth.js#L309-L313))
+- No special handling needed - `updatePassword()` works regardless of previous password_hash state
+- Email template is the same (could add "Set Password" variant in future)
 
 ## Setup Required
 

@@ -7,7 +7,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Lock, AlertCircle, CheckCircle, Eye, EyeOff } from 'lucide-react';
+import { Lock, AlertCircle, CheckCircle, Eye, EyeOff, Check } from 'lucide-react';
 import { Button } from './Button';
 import { Logo } from './Logo';
 import { useAuth } from '../contexts/AuthContext';
@@ -28,12 +28,25 @@ export function ResetPassword() {
   const passwordInputRef = useRef(null);
   const token = searchParams.get('token');
 
-  // Auto-focus password input on mount
+  // Password strength indicators
+  const passwordChecks = {
+    length: password.length >= 8,
+    hasUpper: /[A-Z]/.test(password),
+    hasLower: /[a-z]/.test(password),
+    hasNumber: /[0-9]/.test(password),
+  };
+
+  const passwordStrength = Object.values(passwordChecks).filter(Boolean).length;
+
+  // Auto-focus password input and clear any previous errors on mount
   useEffect(() => {
+    // Clear any auth errors from previous pages (e.g., login errors)
+    clearError();
+
     if (passwordInputRef.current) {
       passwordInputRef.current.focus();
     }
-  }, []);
+  }, [clearError]);
 
   // Check if token is present
   useEffect(() => {
@@ -185,9 +198,42 @@ export function ResetPassword() {
                   )}
                 </button>
               </div>
-              <p className="mt-1.5 text-xs text-slate-500">
-                Must be at least 8 characters long
-              </p>
+
+              {/* Password Strength Indicator */}
+              {password && (
+                <div className="mt-3 space-y-2">
+                  <div className="flex gap-1">
+                    {[1, 2, 3, 4].map((level) => (
+                      <div
+                        key={level}
+                        className={`h-1 flex-1 rounded-full transition-colors ${
+                          level <= passwordStrength
+                            ? passwordStrength <= 2
+                              ? 'bg-red-500'
+                              : passwordStrength === 3
+                              ? 'bg-yellow-500'
+                              : 'bg-green-500'
+                            : 'bg-slate-200'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <div className="space-y-1">
+                    <PasswordCheck met={passwordChecks.length}>
+                      At least 8 characters
+                    </PasswordCheck>
+                    <PasswordCheck met={passwordChecks.hasUpper}>
+                      One uppercase letter
+                    </PasswordCheck>
+                    <PasswordCheck met={passwordChecks.hasLower}>
+                      One lowercase letter
+                    </PasswordCheck>
+                    <PasswordCheck met={passwordChecks.hasNumber}>
+                      One number
+                    </PasswordCheck>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Confirm Password Input */}
@@ -259,6 +305,26 @@ export function ResetPassword() {
       <div className="mt-8 text-center text-sm text-slate-500">
         <p>Need help? Contact support at support@codescribeai.com</p>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Password requirement check component
+ */
+function PasswordCheck({ met, children }) {
+  return (
+    <div className="flex items-center gap-2 text-xs">
+      <div
+        className={`flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center ${
+          met ? 'bg-green-100' : 'bg-slate-100'
+        }`}
+      >
+        {met && <Check className="w-3 h-3 text-green-600" aria-hidden="true" />}
+      </div>
+      <span className={met ? 'text-green-700' : 'text-slate-500'}>
+        {children}
+      </span>
     </div>
   );
 }
