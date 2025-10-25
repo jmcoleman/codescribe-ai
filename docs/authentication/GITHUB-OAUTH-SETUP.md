@@ -369,6 +369,45 @@ npm test -- tests/integration/github-oauth.test.js --coverage
 
 ## 🐛 Troubleshooting
 
+### Issue: GitHub authorization screen not showing
+
+**Problem:** When clicking "Sign in with GitHub", you're redirected immediately without seeing GitHub's authorization modal.
+
+**This is normal behavior!** GitHub caches OAuth approvals at the account level. Once you authorize an app, GitHub automatically approves future requests from the same GitHub account.
+
+**What happens:**
+1. First time: GitHub shows authorization modal → You click "Authorize" → App connects
+2. Subsequent times: GitHub auto-approves → Immediate redirect → No modal shown
+
+**Why this happens:**
+- Your GitHub account already granted permission to this OAuth app
+- GitHub stores this authorization on their servers (not in your database)
+- Even if you delete the user from your database, GitHub remembers the authorization
+
+**To see the authorization screen again during testing:**
+
+1. Go to [GitHub Settings → Applications](https://github.com/settings/applications)
+2. Click **"Authorized OAuth Apps"** tab
+3. Find your app (match by `GITHUB_CLIENT_ID`)
+4. Click **"Revoke"** to remove authorization
+5. Now click "Sign in with GitHub" again → You'll see the authorization modal
+
+**Identifying your OAuth app:**
+```bash
+# Check your GitHub Client ID
+cat server/.env | grep GITHUB_CLIENT_ID
+
+# Output: GITHUB_CLIENT_ID=Iv1.abc123xyz
+# Look for app with matching Client ID in GitHub settings
+```
+
+**For production testing:**
+- Use a different GitHub account that hasn't authorized the app
+- Or revoke access and re-authorize
+- Each GitHub account only sees the modal once per app
+
+---
+
 ### Issue: "GitHub OAuth not configured" warning
 
 **Solution:**

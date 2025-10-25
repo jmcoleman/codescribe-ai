@@ -54,6 +54,35 @@ This guide covers setting up Neon Postgres for CodeScribe AI's authentication an
 
 **Note:** After creation, Vercel automatically injects the database connection strings as environment variables into your selected projects. Neon billing is handled through Vercel for seamless integration.
 
+### 1a. Environment Configuration (Dev vs Production)
+
+**IMPORTANT:** When connecting the database in Vercel's configuration modal, choose which environments can access this database:
+
+**Recommended Setup for Development Database:**
+- ✅ **Development** - Your local dev environment
+- ✅ **Preview** - Preview deployments (feature branches)
+- ❌ **Production** - Leave UNCHECKED (use separate database)
+
+**Database Branching Options:**
+- ✅ **Preview** - Create database branches for preview deployments
+- ❌ **Production** - Leave UNCHECKED
+
+**Why this setup?**
+- **Development & Preview** use the `codescribe-db` database
+- **Production** uses a separate database (setup below)
+- Prevents dev/test activity from affecting production data
+- Allows safe schema testing in preview branches
+
+**Custom Prefix:**
+- Keep default `STORAGE` or customize (e.g., `POSTGRES`)
+- This prefix is used for auto-injected environment variables
+
+**For Production:** When ready to deploy to production, create a **separate Neon database** with:
+- Production-only environment access
+- Stronger security (different credentials)
+- Larger tier if needed (Launch/Scale)
+- Regular backups enabled
+
 ### 2. Get Connection Strings
 
 After creation, Vercel provides connection strings automatically. You'll see these environment variables:
@@ -557,14 +586,26 @@ By the time you need Launch tier, you'll likely have monetization in place (see 
 
 ### 19. Common Issues
 
-**Connection Timeout:**
+**Connection Timeout / Database Sleeping:**
 ```
 Error: Connection timeout
+Error connecting to database: fetch failed
+ConnectTimeoutError: Connect Timeout Error
 ```
 **Solution:**
-- Check environment variables
+- **Neon Free Tier:** Database suspends after inactivity (auto-wakes on first request)
+- **First request after sleep:** May timeout (10s limit)
+- **Retry immediately:** Second attempt usually succeeds after wake-up
+- Check environment variables are correct
 - Verify database region matches deployment
 - Use `POSTGRES_URL` (pooled) not `POSTGRES_URL_NON_POOLING`
+- Check database status in Neon console (Active/Idle)
+
+**To prevent timeouts in production:**
+- Keep database active with periodic health checks
+- Use Vercel Cron to ping database every 5 minutes
+- Upgrade to Launch tier ($19/mo) for always-on compute
+- Implement retry logic with exponential backoff
 
 **Max Connections:**
 ```

@@ -6,6 +6,7 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { AuthProvider, useAuth } from '../AuthContext';
+import { STORAGE_KEYS } from '../../constants/storage';
 
 // Mock API_URL
 vi.mock('../../config/api', () => ({
@@ -57,7 +58,7 @@ describe('AuthContext', () => {
         tier: 'free',
       };
 
-      localStorage.setItem('auth_token', 'valid-token');
+      localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, 'valid-token');
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
@@ -89,7 +90,7 @@ describe('AuthContext', () => {
     });
 
     it('should clear invalid token on initialization', async () => {
-      localStorage.setItem('auth_token', 'invalid-token');
+      localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, 'invalid-token');
 
       mockFetch.mockResolvedValueOnce({
         ok: false,
@@ -105,7 +106,7 @@ describe('AuthContext', () => {
       });
 
       expect(result.current.user).toBe(null);
-      expect(localStorage.getItem('auth_token')).toBe(null);
+      expect(localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)).toBe(null);
     });
   });
 
@@ -140,7 +141,7 @@ describe('AuthContext', () => {
       expect(response.success).toBe(true);
       expect(result.current.user).toEqual(mockUser);
       expect(result.current.isAuthenticated).toBe(true);
-      expect(localStorage.getItem('auth_token')).toBe('new-token');
+      expect(localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)).toBe('new-token');
       expect(mockFetch).toHaveBeenCalledWith(
         'http://localhost:3000/api/auth/signup',
         expect.objectContaining({
@@ -179,7 +180,7 @@ describe('AuthContext', () => {
       expect(response.success).toBe(false);
       expect(response.error).toBe('User with this email already exists');
       expect(result.current.user).toBe(null);
-      expect(localStorage.getItem('auth_token')).toBe(null);
+      expect(localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)).toBe(null);
     });
 
     it('should handle network errors during signup', async () => {
@@ -232,7 +233,7 @@ describe('AuthContext', () => {
       expect(response.success).toBe(true);
       expect(result.current.user).toEqual(mockUser);
       expect(result.current.isAuthenticated).toBe(true);
-      expect(localStorage.getItem('auth_token')).toBe('login-token');
+      expect(localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)).toBe('login-token');
     });
 
     it('should handle invalid credentials', async () => {
@@ -270,7 +271,7 @@ describe('AuthContext', () => {
       };
 
       // Setup: login first
-      localStorage.setItem('auth_token', 'valid-token');
+      localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, 'valid-token');
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
@@ -302,11 +303,11 @@ describe('AuthContext', () => {
 
       expect(result.current.user).toBe(null);
       expect(result.current.isAuthenticated).toBe(false);
-      expect(localStorage.getItem('auth_token')).toBe(null);
+      expect(localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)).toBe(null);
     });
 
     it('should clear state even if logout endpoint fails', async () => {
-      localStorage.setItem('auth_token', 'token');
+      localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, 'token');
 
       mockFetch
         .mockResolvedValueOnce({
@@ -326,7 +327,7 @@ describe('AuthContext', () => {
       await result.current.logout();
 
       expect(result.current.user).toBe(null);
-      expect(localStorage.getItem('auth_token')).toBe(null);
+      expect(localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)).toBe(null);
     });
   });
 
@@ -382,7 +383,7 @@ describe('AuthContext', () => {
 
   describe('getToken', () => {
     it('should return stored token', async () => {
-      localStorage.setItem('auth_token', 'stored-token');
+      localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, 'stored-token');
 
       mockFetch.mockResolvedValueOnce({
         ok: false,

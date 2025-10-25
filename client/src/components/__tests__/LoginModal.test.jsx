@@ -56,7 +56,7 @@ describe('LoginModal', () => {
       renderLoginModal(true);
 
       expect(screen.getByRole('dialog')).toBeInTheDocument();
-      expect(screen.getByText('Welcome Back')).toBeInTheDocument();
+      expect(screen.getByText('Sign In')).toBeInTheDocument();
       expect(screen.getByLabelText(/email address/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument();
     });
@@ -440,6 +440,195 @@ describe('LoginModal', () => {
         const passwordInputNew = screen.getByLabelText(/^password$/i);
         expect(emailInputNew).toHaveValue('');
         expect(passwordInputNew).toHaveValue('');
+      });
+    });
+  });
+
+  describe('Focus Management', () => {
+    it('should focus email field when email validation fails', async () => {
+      const user = userEvent.setup();
+      renderLoginModal();
+
+      const submitButton = screen.getByRole('button', { name: /sign in/i });
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        const emailInput = screen.getByLabelText(/email address/i);
+        expect(emailInput).toHaveFocus();
+        expect(screen.getByText(/email is required/i)).toBeInTheDocument();
+      });
+    });
+
+    it('should focus password field when only password validation fails', async () => {
+      const user = userEvent.setup();
+      renderLoginModal();
+
+      const emailInput = screen.getByLabelText(/email address/i);
+      await user.type(emailInput, 'test@example.com');
+
+      const submitButton = screen.getByRole('button', { name: /sign in/i });
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        const passwordInput = screen.getByLabelText(/^password$/i);
+        expect(passwordInput).toHaveFocus();
+        expect(screen.getByText(/password is required/i)).toBeInTheDocument();
+      });
+    });
+
+    it('should focus email field for invalid email format', async () => {
+      const user = userEvent.setup();
+      renderLoginModal();
+
+      const emailInput = screen.getByLabelText(/email address/i);
+      const passwordInput = screen.getByLabelText(/^password$/i);
+
+      await user.type(emailInput, 'invalid-email');
+      await user.type(passwordInput, 'password123');
+
+      const submitButton = screen.getByRole('button', { name: /sign in/i });
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(emailInput).toHaveFocus();
+        expect(screen.getByText(/please enter a valid email address/i)).toBeInTheDocument();
+      });
+    });
+
+    it('should focus email field when server returns authentication error', async () => {
+      const user = userEvent.setup();
+
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+      });
+
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        json: async () => ({
+          success: false,
+          error: 'Invalid email or password',
+        }),
+      });
+
+      renderLoginModal();
+
+      const emailInput = screen.getByLabelText(/email address/i);
+      const passwordInput = screen.getByLabelText(/^password$/i);
+
+      await user.type(emailInput, 'wrong@example.com');
+      await user.type(passwordInput, 'wrongpassword');
+
+      const submitButton = screen.getByRole('button', { name: /sign in/i });
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/invalid email or password/i)).toBeInTheDocument();
+      });
+
+      await waitFor(() => {
+        expect(emailInput).toHaveFocus();
+      });
+    });
+
+    it('should focus email field on network error', async () => {
+      const user = userEvent.setup();
+
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+      });
+
+      mockFetch.mockRejectedValueOnce(new Error('Network error'));
+
+      renderLoginModal();
+
+      const emailInput = screen.getByLabelText(/email address/i);
+      const passwordInput = screen.getByLabelText(/^password$/i);
+
+      await user.type(emailInput, 'test@example.com');
+      await user.type(passwordInput, 'password123');
+
+      const submitButton = screen.getByRole('button', { name: /sign in/i });
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/an unexpected error occurred/i)).toBeInTheDocument();
+      });
+
+      await waitFor(() => {
+        expect(emailInput).toHaveFocus();
+      });
+    });
+
+    it('should clear email error and not refocus when user starts typing', async () => {
+      const user = userEvent.setup();
+      renderLoginModal();
+
+      // Trigger validation error
+      const submitButton = screen.getByRole('button', { name: /sign in/i });
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/email is required/i)).toBeInTheDocument();
+      });
+
+      // Start typing in email field
+      const emailInput = screen.getByLabelText(/email address/i);
+      await user.type(emailInput, 't');
+
+      await waitFor(() => {
+        expect(screen.queryByText(/email is required/i)).not.toBeInTheDocument();
+      });
+
+      // Focus should remain on email input (not re-triggered)
+      expect(emailInput).toHaveFocus();
+    });
+
+    it('should handle multiple validation errors and focus first field', async () => {
+      const user = userEvent.setup();
+      renderLoginModal();
+
+      const submitButton = screen.getByRole('button', { name: /sign in/i });
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        const emailInput = screen.getByLabelText(/email address/i);
+        expect(emailInput).toHaveFocus();
+        expect(screen.getByText(/email is required/i)).toBeInTheDocument();
+        expect(screen.getByText(/password is required/i)).toBeInTheDocument();
+      });
+    });
+
+    it('should set aria-invalid on fields with errors', async () => {
+      const user = userEvent.setup();
+      renderLoginModal();
+
+      const submitButton = screen.getByRole('button', { name: /sign in/i });
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        const emailInput = screen.getByLabelText(/email address/i);
+        const passwordInput = screen.getByLabelText(/^password$/i);
+        expect(emailInput).toHaveAttribute('aria-invalid', 'true');
+        expect(passwordInput).toHaveAttribute('aria-invalid', 'true');
+      });
+    });
+
+    it('should link error messages with aria-describedby', async () => {
+      const user = userEvent.setup();
+      renderLoginModal();
+
+      const submitButton = screen.getByRole('button', { name: /sign in/i });
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        const emailInput = screen.getByLabelText(/email address/i);
+        expect(emailInput).toHaveAttribute('aria-describedby', 'email-error');
+        const errorMessage = document.getElementById('email-error');
+        expect(errorMessage).toBeInTheDocument();
+        expect(errorMessage).toHaveTextContent(/email is required/i);
       });
     });
   });

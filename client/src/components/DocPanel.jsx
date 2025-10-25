@@ -8,8 +8,7 @@ import { CopyButton } from './CopyButton';
 import { DownloadButton } from './DownloadButton';
 import { DocPanelGeneratingSkeleton } from './SkeletonLoader';
 import { MermaidDiagram } from './MermaidDiagram';
-
-const STORAGE_KEY = 'codescribe-report-expanded';
+import { STORAGE_KEYS } from '../constants/storage';
 
 export function DocPanel({
   documentation,
@@ -20,7 +19,7 @@ export function DocPanel({
   // Load initial state from localStorage
   const [isExpanded, setIsExpanded] = useState(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = localStorage.getItem(STORAGE_KEYS.REPORT_EXPANDED);
       return stored === 'true';
     } catch {
       return false;
@@ -38,7 +37,7 @@ export function DocPanel({
   // Persist state to localStorage whenever it changes
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, isExpanded.toString());
+      localStorage.setItem(STORAGE_KEYS.REPORT_EXPANDED, isExpanded.toString());
     } catch {
       // Ignore localStorage errors (e.g., in private browsing mode)
     }

@@ -36,6 +36,28 @@
 - [x] ✅ `ALLOWED_ORIGINS` (configured for production URL)
 - [x] ✅ `VITE_API_URL` (configured for production URL)
 - [x] ✅ Rate limiting configs (using defaults)
+- [x] ✅ `POSTGRES_URL` (Neon database connection string)
+- [x] ✅ `SESSION_SECRET` (secure random string)
+- [x] ✅ `GITHUB_CLIENT_ID` (OAuth app credentials)
+- [x] ✅ `GITHUB_CLIENT_SECRET` (OAuth app credentials)
+- [x] ✅ `RESEND_API_KEY` (email service API key)
+- [x] ✅ `EMAIL_FROM` (verified sender email)
+- [x] ✅ `CLIENT_URL` (frontend URL for OAuth callbacks)
+
+### 5. Database Migrations
+- [x] ✅ Run database migrations before deployment
+  ```bash
+  # For development/staging
+  cd server
+  node src/db/runMigration.js
+
+  # For production (with env var override)
+  POSTGRES_URL="production-db-url" node src/db/runMigration.js
+  ```
+- [x] ✅ Verify migration success (check table output)
+- [x] ✅ Test database connection from application
+
+> **Note:** Always run migrations BEFORE deploying code that depends on new schema changes. This ensures zero-downtime deployments.
 
 ---
 
