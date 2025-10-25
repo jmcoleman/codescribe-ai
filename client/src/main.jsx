@@ -8,6 +8,7 @@ import App from './App.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import { AuthProvider } from './contexts/AuthContext.jsx'
 import { AuthCallback } from './components/AuthCallback.jsx'
+import { ResetPassword } from './components/ResetPassword.jsx'
 
 // Only load analytics and speed insights in production
 // Use hostname check - works reliably in Vercel deployments
@@ -23,6 +24,7 @@ createRoot(document.getElementById('root')).render(
           <Routes>
             <Route path="/" element={<App />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
           </Routes>
         </AuthProvider>
       </BrowserRouter>

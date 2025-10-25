@@ -7,6 +7,7 @@
 
 import express from 'express';
 import passport from 'passport';
+import crypto from 'crypto';
 import User from '../models/User.js';
 import {
   requireAuth,
@@ -14,6 +15,7 @@ import {
   generateToken,
   sanitizeUser
 } from '../middleware/auth.js';
+import { sendPasswordResetEmail } from '../services/emailService.js';
 
 const router = express.Router();
 
@@ -247,35 +249,50 @@ router.post(
 
       // Always return success (don't reveal if email exists)
       // This prevents email enumeration attacks
-      res.json({
-        success: true,
-        message: 'If an account exists with this email, a password reset link has been sent.'
-      });
+      const successMessage = 'If an account exists with this email, a password reset link has been sent.';
 
       // Only proceed if user exists
       if (!user) {
-        return;
+        return res.json({
+          success: true,
+          message: successMessage
+        });
       }
 
-      // TODO: Generate password reset token
-      // TODO: Store reset token in database with expiration (e.g., 1 hour)
-      // TODO: Send email with reset link containing token
-      // TODO: Implement email service integration
+      // Don't allow password reset for OAuth-only users
+      if (!user.password_hash) {
+        console.log(`Password reset attempted for OAuth-only user: ${user.email}`);
+        return res.json({
+          success: true,
+          message: successMessage
+        });
+      }
 
-      // For now, log the reset request
-      console.log(`Password reset requested for user: ${user.email}`);
+      // Generate secure random token (64 characters hex)
+      const resetToken = crypto.randomBytes(32).toString('hex');
 
-      // Example implementation would be:
-      // const resetToken = crypto.randomBytes(32).toString('hex');
-      // const resetTokenHash = await bcrypt.hash(resetToken, 10);
-      // const expiresAt = new Date(Date.now() + 3600000); // 1 hour
-      //
-      // await User.setResetToken(user.id, resetTokenHash, expiresAt);
-      //
-      // await emailService.sendPasswordReset({
-      //   to: user.email,
-      //   resetUrl: `${process.env.CLIENT_URL}/reset-password?token=${resetToken}`
-      // });
+      // Set expiration to 1 hour from now
+      const expiresAt = new Date(Date.now() + 3600000); // 1 hour
+
+      // Store token in database (cryptographically random, single-use)
+      await User.setResetToken(user.id, resetToken, expiresAt);
+
+      // Send email with reset link (token is sent unhashed)
+      try {
+        await sendPasswordResetEmail({
+          to: user.email,
+          resetToken
+        });
+        console.log(`Password reset email sent to: ${user.email}`);
+      } catch (emailError) {
+        console.error('Failed to send password reset email:', emailError);
+        // Still return success to user for security
+      }
+
+      res.json({
+        success: true,
+        message: successMessage
+      });
     } catch (error) {
       console.error('Forgot password error:', error);
       // Still return success to prevent information disclosure
@@ -300,35 +317,36 @@ router.post(
     try {
       const { token, password } = req.body;
 
-      // TODO: Verify reset token
-      // TODO: Check token hasn't expired
-      // TODO: Update user password
-      // TODO: Invalidate reset token
-      // TODO: Optionally invalidate all sessions
+      // Find user by reset token (also verifies token hasn't expired)
+      const user = await User.findByResetToken(token);
 
-      // For now, return not implemented
-      return res.status(501).json({
-        success: false,
-        error: 'Password reset functionality not yet implemented'
+      if (!user) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid or expired reset token'
+        });
+      }
+
+      // Verify user has a password (not OAuth-only)
+      if (!user.password_hash) {
+        return res.status(400).json({
+          success: false,
+          error: 'This account uses OAuth authentication and cannot reset password'
+        });
+      }
+
+      // Update user password
+      await User.updatePassword(user.id, password);
+
+      // Clear reset token so it can't be reused
+      await User.clearResetToken(user.id);
+
+      console.log(`Password reset successful for user: ${user.email}`);
+
+      res.json({
+        success: true,
+        message: 'Password reset successfully. You can now log in with your new password.'
       });
-
-      // Example implementation would be:
-      // const user = await User.findByResetToken(token);
-      //
-      // if (!user || user.reset_token_expires < new Date()) {
-      //   return res.status(400).json({
-      //     success: false,
-      //     error: 'Invalid or expired reset token'
-      //   });
-      // }
-      //
-      // await User.updatePassword(user.id, password);
-      // await User.clearResetToken(user.id);
-      //
-      // res.json({
-      //   success: true,
-      //   message: 'Password reset successfully'
-      // });
     } catch (error) {
       console.error('Reset password error:', error);
       res.status(500).json({

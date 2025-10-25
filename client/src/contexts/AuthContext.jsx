@@ -7,6 +7,7 @@
 
 import { createContext, useContext, useState, useEffect } from 'react';
 import { API_URL } from '../config/api';
+import { STORAGE_KEYS } from '../constants/storage';
 
 const AuthContext = createContext(null);
 
@@ -23,6 +24,7 @@ const dummyAuthContext = {
   login: async () => { throw new Error('Authentication is disabled'); },
   logout: async () => {},
   forgotPassword: async () => { throw new Error('Authentication is disabled'); },
+  resetPassword: async () => { throw new Error('Authentication is disabled'); },
   getToken: () => null,
   clearError: () => {},
 };
@@ -47,7 +49,7 @@ export function AuthProvider({ children }) {
    */
   const initializeAuth = async () => {
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
 
       if (!token) {
         setIsLoading(false);
@@ -63,7 +65,7 @@ export function AuthProvider({ children }) {
 
       if (!response.ok) {
         // Token is invalid or expired
-        localStorage.removeItem('auth_token');
+        localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
         setIsLoading(false);
         return;
       }
@@ -75,7 +77,7 @@ export function AuthProvider({ children }) {
       }
     } catch (err) {
       console.error('Auth initialization error:', err);
-      localStorage.removeItem('auth_token');
+      localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
     } finally {
       setIsLoading(false);
     }
@@ -104,7 +106,7 @@ export function AuthProvider({ children }) {
 
       if (data.success && data.token && data.user) {
         // Store token
-        localStorage.setItem('auth_token', data.token);
+        localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, data.token);
 
         // Update user state
         setUser(data.user);
@@ -143,7 +145,7 @@ export function AuthProvider({ children }) {
 
       if (data.success && data.token && data.user) {
         // Store token
-        localStorage.setItem('auth_token', data.token);
+        localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, data.token);
 
         // Update user state
         setUser(data.user);
@@ -164,7 +166,7 @@ export function AuthProvider({ children }) {
    */
   const logout = async () => {
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
 
       if (token) {
         // Call logout endpoint to invalidate session
@@ -179,7 +181,7 @@ export function AuthProvider({ children }) {
       console.error('Logout error:', err);
     } finally {
       // Always clear local state and token
-      localStorage.removeItem('auth_token');
+      localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
       setUser(null);
       setError(null);
     }
@@ -215,10 +217,39 @@ export function AuthProvider({ children }) {
   };
 
   /**
+   * Reset password with token
+   */
+  const resetPassword = async (token, password) => {
+    try {
+      setError(null);
+
+      const response = await fetch(`${API_URL}/api/auth/reset-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to reset password');
+      }
+
+      return { success: true, message: data.message };
+    } catch (err) {
+      const errorMessage = err.message || 'Failed to reset password';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    }
+  };
+
+  /**
    * Get current auth token
    */
   const getToken = () => {
-    return localStorage.getItem('auth_token');
+    return localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
   };
 
   /**
@@ -237,6 +268,7 @@ export function AuthProvider({ children }) {
     login,
     logout,
     forgotPassword,
+    resetPassword,
     getToken,
     clearError,
   };

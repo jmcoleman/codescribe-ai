@@ -7,6 +7,166 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Password Reset System**
+  - Complete password reset flow with email-based token verification
+  - ResetPassword component with dedicated route (`/reset-password?token=...`)
+  - Email service using Resend API with beautiful HTML templates
+  - Database migrations for reset token fields (reset_token_hash, reset_token_expires)
+  - User model methods: setResetToken, findByResetToken, updatePassword, clearResetToken
+  - API endpoints: POST /api/auth/forgot-password, POST /api/auth/reset-password
+  - E2E tests for password reset flow (password-reset.spec.js, password-reset-core.spec.js)
+  - Show/hide password toggles in ResetPassword component
+  - Auto-redirect to home after successful password reset (2 seconds)
+
+- **Email Service Infrastructure**
+  - Resend SDK integration (npm package: resend)
+  - sendPasswordResetEmail with branded HTML template
+  - sendVerificationEmail for future email verification feature
+  - Brand-consistent design (purple/indigo gradient, CodeScribe AI branding)
+  - Mobile-responsive email templates
+  - Accessible email layout
+
+- **Database Migration System**
+  - runMigration.js utility for executing SQL migrations
+  - Migration: add-reset-token-fields.sql
+  - Safe migration execution with rollback support
+  - Migration logging and error handling
+
+- **Form Validation & Focus Management**
+  - Comprehensive form validation guide (FORM-VALIDATION-GUIDE.md v1.3)
+  - Server-side validation documentation with middleware patterns
+  - Client-server validation flow diagrams (Mermaid sequence + decision tree)
+  - Complete focus management implementation using `flushSync` from react-dom
+  - Automatic focus on first error field for both client and server errors
+  - Enhanced checklist organized by: client-side, focus management, server integration, testing
+
+- **Documentation**
+  - PASSWORD-RESET-IMPLEMENTATION.md - Complete implementation summary
+  - PASSWORD-RESET-SETUP.md - Step-by-step password reset configuration
+  - RESEND-SETUP.md - Resend email service setup with custom domain
+  - DB-MIGRATION-MANAGEMENT.md - Database migration procedures
+  - PASSWORD-RESET-E2E-TESTS.md - E2E testing documentation (20 test scenarios)
+  - FORM-VALIDATION-GUIDE.md v1.3 - Complete form validation patterns
+
+- **Storage Constants**
+  - client/src/constants/storage.js - Centralized localStorage key definitions
+  - Prevents key conflicts and typos
+  - AUTH_TOKEN_KEY constant for JWT token storage
+
+### Changed
+- **Authentication Context**
+  - Added forgotPassword(email) method
+  - Added resetPassword(token, password) method
+  - Enhanced error handling for password reset flows
+  - Better error messages for expired/invalid tokens
+
+- **User Model**
+  - Added reset token management methods
+  - Token hashing for security (SHA-256)
+  - Token expiration validation (1 hour default)
+  - Password update with bcrypt re-hashing
+
+- **Auth Routes**
+  - Implemented forgot-password endpoint with email sending
+  - Implemented reset-password endpoint with token validation
+  - Added comprehensive error handling for edge cases
+  - Email validation and user existence checks
+
+- **App Router**
+  - Added /reset-password route for password reset page
+  - Updated main.jsx with new route configuration
+  - Maintained existing / and /auth/callback routes
+
+- **Form Validation Documentation**
+  - Updated FORM-VALIDATION-GUIDE.md from v1.2 to v1.3
+  - Added "What's New in v1.3" section highlighting key improvements
+  - Expanded Table of Contents with server validation section
+  - Enhanced implementation examples from all 3 auth forms
+  - Updated reference implementations: LoginModal, SignupModal, ResetPassword
+
+- **Environment Variables**
+  - Added RESEND_API_KEY to server/.env.example
+  - Added FROM_EMAIL configuration for sent emails
+  - Updated deployment checklist with Resend setup
+
+### Fixed
+- **Password Reset Flow**
+  - Token expiration properly validated (prevents use of expired tokens)
+  - Token cleared after successful password reset (prevents reuse)
+  - Password validation ensures minimum 8 characters
+  - Proper error messages for invalid/expired/missing tokens
+
+- **Focus Management**
+  - Documented critical `flushSync` pattern for reliable focus management
+  - Fixed focus timing issues with synchronous DOM updates
+  - Ensured focus works consistently for both client and server validation errors
+  - Resolved race conditions in focus trigger mechanism
+
+- **Email Sending**
+  - Reset token properly encoded in email URLs
+  - Email templates render correctly in major email clients
+  - Brand colors match application theme
+
+### Testing
+- **Backend Tests**
+  - 28 new password reset route tests (auth-password-reset.test.js)
+  - 15 new email service tests (emailService.test.js)
+  - Token validation and expiration tests
+  - Email sending mock tests
+
+- **Frontend Tests**
+  - ResetPassword component unit tests (ResetPassword.test.jsx)
+  - AuthContext password reset method tests
+  - Token extraction and validation tests
+
+- **E2E Tests**
+  - password-reset-core.spec.js - Core password reset flow (4 scenarios)
+  - password-reset.spec.js - Comprehensive scenarios (16 scenarios)
+  - Total: 20 E2E test scenarios covering happy path and edge cases
+  - Tests: expired tokens, invalid tokens, missing tokens, password validation
+
+### Security
+- **Token Security**
+  - Reset tokens hashed before database storage (SHA-256)
+  - Tokens expire after 1 hour
+  - Tokens single-use (cleared after password reset)
+  - Cryptographically secure token generation (32 bytes)
+
+- **Email Security**
+  - Rate limiting on password reset requests (prevents abuse)
+  - Email validation before sending reset links
+  - User existence verification (prevents enumeration)
+  - Secure URL encoding of tokens
+
+### Dependencies Added
+- **Backend:**
+  - resend (^4.0.1) - Email sending service
+
+### Testing - Form Validation Test Suite
+- **Client-Side Tests (LoginModal.test.jsx)**
+  - 10 new focus management tests covering client and server error scenarios
+  - Focus on first error field validation (email, password, server errors)
+  - Progressive validation behavior tests (clear on input, no refocus)
+  - ARIA attributes verification (aria-invalid, aria-describedby, role="alert")
+  - Multiple error handling and focus priority testing
+  - Total: 29 comprehensive LoginModal tests
+
+- **Server-Side Tests (auth.test.js)**
+  - 13 validateBody middleware tests
+  - Required field validation
+  - Email/password format validation
+  - Length constraints (minLength, maxLength)
+  - Custom validator function tests
+  - Empty string handling as missing fields
+
+- **Coverage Areas**
+  - Client-side validation (required fields, email format, progressive validation)
+  - Server-side middleware validation (validateBody)
+  - Focus management (automatic focus on first error, client + server errors)
+  - Accessibility (ARIA attributes, screen reader compatibility)
+  - Total validation tests: 42+ (29 client + 13 server)
+
 ---
 
 ## [1.3.0] - 2025-10-24

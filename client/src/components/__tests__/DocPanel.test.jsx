@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { DocPanel } from '../DocPanel';
+import { STORAGE_KEYS } from '../../constants/storage';
 
 describe('DocPanel Component', () => {
   beforeEach(() => {
@@ -1190,24 +1191,24 @@ Retrieve all users.
       const expandButton = screen.getByRole('button', { name: /Show details/i });
 
       // Initially should be false
-      expect(localStorage.getItem('codescribe-report-expanded')).toBe('false');
+      expect(localStorage.getItem(STORAGE_KEYS.REPORT_EXPANDED)).toBe('false');
 
       // Click to expand
       await user.click(expandButton);
 
       // Should save to localStorage
-      expect(localStorage.getItem('codescribe-report-expanded')).toBe('true');
+      expect(localStorage.getItem(STORAGE_KEYS.REPORT_EXPANDED)).toBe('true');
 
       // Click to collapse
       await user.click(expandButton);
 
       // Should update localStorage
-      expect(localStorage.getItem('codescribe-report-expanded')).toBe('false');
+      expect(localStorage.getItem(STORAGE_KEYS.REPORT_EXPANDED)).toBe('false');
     });
 
     it('should load expanded state from localStorage on mount', () => {
       // Set localStorage to expanded
-      localStorage.setItem('codescribe-report-expanded', 'true');
+      localStorage.setItem(STORAGE_KEYS.REPORT_EXPANDED, 'true');
 
       render(
         <DocPanel

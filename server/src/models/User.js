@@ -18,6 +18,8 @@ const SALT_ROUNDS = 10;
  * - email_verified: BOOLEAN DEFAULT FALSE
  * - verification_token: VARCHAR(255) (nullable)
  * - verification_token_expires: TIMESTAMP (nullable)
+ * - reset_token_hash: VARCHAR(255) (nullable)
+ * - reset_token_expires: TIMESTAMP (nullable)
  * - created_at: TIMESTAMP DEFAULT NOW()
  * - updated_at: TIMESTAMP DEFAULT NOW()
  */
@@ -37,6 +39,8 @@ class User {
         email_verified BOOLEAN DEFAULT FALSE,
         verification_token VARCHAR(255),
         verification_token_expires TIMESTAMP,
+        reset_token_hash VARCHAR(255),
+        reset_token_expires TIMESTAMP,
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       )
@@ -46,6 +50,7 @@ class User {
     await sql`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_users_github_id ON users(github_id)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_users_verification_token ON users(verification_token)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_users_reset_token ON users(reset_token_hash)`;
   }
 
   /**
@@ -183,6 +188,80 @@ class User {
     `;
 
     return result.rowCount > 0;
+  }
+
+  /**
+   * Set password reset token for user
+   * @param {number} id - User ID
+   * @param {string} token - Reset token (securely generated, stored directly)
+   * @param {Date} expiresAt - Token expiration timestamp
+   * @returns {Promise<Object>} Updated user object
+   */
+  static async setResetToken(id, token, expiresAt) {
+    const result = await sql`
+      UPDATE users
+      SET reset_token_hash = ${token},
+          reset_token_expires = ${expiresAt.toISOString()},
+          updated_at = NOW()
+      WHERE id = ${id}
+      RETURNING id, email, tier
+    `;
+
+    return result.rows[0];
+  }
+
+  /**
+   * Find user by reset token and verify not expired
+   * @param {string} token - Reset token
+   * @returns {Promise<Object|null>} User object or null
+   */
+  static async findByResetToken(token) {
+    const result = await sql`
+      SELECT id, email, password_hash, github_id, tier, reset_token_hash, reset_token_expires
+      FROM users
+      WHERE reset_token_hash = ${token}
+        AND reset_token_expires > NOW()
+    `;
+
+    return result.rows[0] || null;
+  }
+
+  /**
+   * Update user password
+   * @param {number} id - User ID
+   * @param {string} newPassword - New plain text password
+   * @returns {Promise<Object>} Updated user object
+   */
+  static async updatePassword(id, newPassword) {
+    const password_hash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+
+    const result = await sql`
+      UPDATE users
+      SET password_hash = ${password_hash},
+          updated_at = NOW()
+      WHERE id = ${id}
+      RETURNING id, email, tier
+    `;
+
+    return result.rows[0];
+  }
+
+  /**
+   * Clear password reset token
+   * @param {number} id - User ID
+   * @returns {Promise<Object>} Updated user object
+   */
+  static async clearResetToken(id) {
+    const result = await sql`
+      UPDATE users
+      SET reset_token_hash = NULL,
+          reset_token_expires = NULL,
+          updated_at = NOW()
+      WHERE id = ${id}
+      RETURNING id, email, tier
+    `;
+
+    return result.rows[0];
   }
 }
 

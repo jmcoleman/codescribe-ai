@@ -7,6 +7,7 @@
 
 import { X, Mail, Lock, Github, AlertCircle, Check } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
+import { flushSync } from 'react-dom';
 import { Button } from './Button';
 import { useAuth } from '../contexts/AuthContext';
 import { toastCompact } from '../utils/toast';
@@ -19,10 +20,17 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [localError, setLocalError] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [confirmPasswordError, setConfirmPasswordError] = useState('');
   const [allowClickOutside, setAllowClickOutside] = useState(false);
+  const [focusTrigger, setFocusTrigger] = useState(0); // Increment to trigger focus
+  const lastProcessedTrigger = useRef(0); // Track last trigger we processed
 
   const modalRef = useRef(null);
   const emailInputRef = useRef(null);
+  const passwordInputRef = useRef(null);
+  const confirmPasswordInputRef = useRef(null);
 
   // Password strength indicators
   const passwordChecks = {
@@ -46,24 +54,70 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }) {
     }
   }, [isOpen]);
 
-  // Auto-focus email input when modal opens
+  // Auto-focus email input and clear errors when modal opens
   useEffect(() => {
-    if (isOpen && emailInputRef.current) {
-      emailInputRef.current.focus();
+    if (isOpen) {
+      // Clear any existing errors from previous sessions or other modals
+      setLocalError('');
+      setEmailError('');
+      setPasswordError('');
+      setConfirmPasswordError('');
+      clearError();
+
+      // Focus email input
+      if (emailInputRef.current) {
+        emailInputRef.current.focus();
+      }
     }
-  }, [isOpen]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]); // Only run when modal opens/closes, not when clearError changes
 
   // Clear form and errors when modal closes
   useEffect(() => {
     if (!isOpen) {
+      // Clear form and errors when modal closes
       setEmail('');
       setPassword('');
       setConfirmPassword('');
       setLocalError('');
+      setEmailError('');
+      setPasswordError('');
+      setConfirmPasswordError('');
       clearError();
       setIsLoading(false);
     }
-  }, [isOpen, clearError]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]); // Only run when modal opens/closes, not when clearError changes
+
+  // Focus first field with error
+  // Note: We use flushSync in handleSubmit to ensure DOM updates are applied
+  // synchronously before this effect runs. This guarantees the error state
+  // is committed and the DOM is ready for focus management.
+  useEffect(() => {
+    // Only run if focusTrigger has CHANGED (new submission)
+    // This prevents running when errors change due to typing
+    if (focusTrigger === 0 || focusTrigger === lastProcessedTrigger.current) {
+      return;
+    }
+
+    // Mark this trigger as processed
+    lastProcessedTrigger.current = focusTrigger;
+
+    // Skip if there are no errors
+    const hasAnyError = emailError || passwordError || confirmPasswordError || localError;
+    if (!hasAnyError) return;
+
+    if (emailError && emailInputRef.current) {
+      emailInputRef.current.focus();
+    } else if (passwordError && passwordInputRef.current) {
+      passwordInputRef.current.focus();
+    } else if (confirmPasswordError && confirmPasswordInputRef.current) {
+      confirmPasswordInputRef.current.focus();
+    } else if (localError && emailInputRef.current) {
+      // Server errors (e.g., "Email already exists") - focus email field
+      emailInputRef.current.focus();
+    }
+  }, [emailError, passwordError, confirmPasswordError, localError, focusTrigger]);
 
   // Focus trap: keep focus within modal
   useEffect(() => {
@@ -113,33 +167,56 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }) {
 
     // Clear previous errors
     setLocalError('');
+    setEmailError('');
+    setPasswordError('');
+    setConfirmPasswordError('');
     clearError();
 
-    // Validate inputs
+    let hasErrors = false;
+    let emailValidationError = '';
+    let passwordValidationError = '';
+    let confirmPasswordValidationError = '';
+
+    // Validate email
     if (!email.trim()) {
-      setLocalError('Email is required');
-      return;
+      emailValidationError = 'Email is required';
+      hasErrors = true;
+    } else {
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        emailValidationError = 'Please enter a valid email address';
+        hasErrors = true;
+      }
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setLocalError('Please enter a valid email address');
-      return;
-    }
-
+    // Validate password
     if (!password) {
-      setLocalError('Password is required');
-      return;
+      passwordValidationError = 'Password is required';
+      hasErrors = true;
+    } else if (password.length < 8) {
+      passwordValidationError = 'Password must be at least 8 characters';
+      hasErrors = true;
     }
 
-    if (password.length < 8) {
-      setLocalError('Password must be at least 8 characters');
-      return;
+    // Validate confirm password
+    if (!confirmPassword) {
+      confirmPasswordValidationError = 'Please confirm your password';
+      hasErrors = true;
+    } else if (password !== confirmPassword) {
+      confirmPasswordValidationError = 'Passwords do not match';
+      hasErrors = true;
     }
 
-    if (password !== confirmPassword) {
-      setLocalError('Passwords do not match');
+    // Stop if validation errors exist
+    if (hasErrors) {
+      // Use flushSync to ensure DOM updates before focus management
+      flushSync(() => {
+        if (emailValidationError) setEmailError(emailValidationError);
+        if (passwordValidationError) setPasswordError(passwordValidationError);
+        if (confirmPasswordValidationError) setConfirmPasswordError(confirmPasswordValidationError);
+        setFocusTrigger(prev => prev + 1); // Increment to trigger focus effect
+      });
       return;
     }
 
@@ -152,10 +229,17 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }) {
         toastCompact('Account created successfully!', 'success');
         onClose();
       } else {
-        setLocalError(result.error || 'Signup failed');
+        // Server/auth errors - use flushSync to ensure DOM updates before focus
+        flushSync(() => {
+          setLocalError(result.error || 'Signup failed');
+          setFocusTrigger(prev => prev + 1); // Increment to trigger focus effect
+        });
       }
     } catch (err) {
-      setLocalError('An unexpected error occurred');
+      flushSync(() => {
+        setLocalError('An unexpected error occurred');
+        setFocusTrigger(prev => prev + 1); // Increment to trigger focus effect
+      });
     } finally {
       setIsLoading(false);
     }
@@ -213,7 +297,7 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }) {
           )}
 
           {/* Signup Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} noValidate className="space-y-4">
             {/* Email Input */}
             <div>
               <label
@@ -231,13 +315,26 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }) {
                   id="signup-email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    // Clear field error when user starts typing
+                    if (emailError) setEmailError('');
+                  }}
                   placeholder="you@example.com"
-                  className="block w-full pl-10 pr-3 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-shadow"
-                  autoComplete="email"
+                  className={`block w-full pl-10 pr-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-shadow ${
+                    emailError ? 'border-red-300 bg-red-50' : 'border-slate-300'
+                  }`}
+                  autoComplete="off"
                   disabled={isLoading}
+                  aria-invalid={!!emailError}
+                  aria-describedby={emailError ? 'email-error' : undefined}
                 />
               </div>
+              {emailError && (
+                <p id="email-error" className="mt-1.5 text-sm text-red-600" role="alert">
+                  {emailError}
+                </p>
+              )}
             </div>
 
             {/* Password Input */}
@@ -253,16 +350,30 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }) {
                   <Lock className="w-5 h-5 text-slate-400" aria-hidden="true" />
                 </div>
                 <input
+                  ref={passwordInputRef}
                   id="signup-password"
                   type="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    // Clear field error when user starts typing
+                    if (passwordError) setPasswordError('');
+                  }}
                   placeholder="Create a strong password"
-                  className="block w-full pl-10 pr-3 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-shadow"
+                  className={`block w-full pl-10 pr-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-shadow ${
+                    passwordError ? 'border-red-300 bg-red-50' : 'border-slate-300'
+                  }`}
                   autoComplete="new-password"
                   disabled={isLoading}
+                  aria-invalid={!!passwordError}
+                  aria-describedby={passwordError ? 'password-error' : undefined}
                 />
               </div>
+              {passwordError && (
+                <p id="password-error" className="mt-1.5 text-sm text-red-600" role="alert">
+                  {passwordError}
+                </p>
+              )}
 
               {/* Password Strength Indicator */}
               {password && (
@@ -314,16 +425,30 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }) {
                   <Lock className="w-5 h-5 text-slate-400" aria-hidden="true" />
                 </div>
                 <input
+                  ref={confirmPasswordInputRef}
                   id="signup-confirm-password"
                   type="password"
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                    // Clear field error when user starts typing
+                    if (confirmPasswordError) setConfirmPasswordError('');
+                  }}
                   placeholder="Confirm your password"
-                  className="block w-full pl-10 pr-3 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-shadow"
+                  className={`block w-full pl-10 pr-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-shadow ${
+                    confirmPasswordError ? 'border-red-300 bg-red-50' : 'border-slate-300'
+                  }`}
                   autoComplete="new-password"
                   disabled={isLoading}
+                  aria-invalid={!!confirmPasswordError}
+                  aria-describedby={confirmPasswordError ? 'confirm-password-error' : undefined}
                 />
               </div>
+              {confirmPasswordError && (
+                <p id="confirm-password-error" className="mt-1.5 text-sm text-red-600" role="alert">
+                  {confirmPasswordError}
+                </p>
+              )}
             </div>
 
             {/* Submit Button */}

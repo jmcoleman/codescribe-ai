@@ -9,6 +9,7 @@
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { STORAGE_KEYS } from '../constants/storage';
 
 export function AuthCallback() {
   const navigate = useNavigate();
@@ -33,7 +34,7 @@ export function AuthCallback() {
       if (token) {
         try {
           // Store token in localStorage
-          localStorage.setItem('auth_token', token);
+          localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token);
 
           // Clear any previous auth errors
           clearError();
