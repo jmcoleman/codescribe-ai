@@ -7,6 +7,362 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Migration API Endpoints**
+  - Created separate migration routes file (server/src/routes/migrate.js)
+  - Public endpoint: GET /api/migrate/status (no authentication required)
+  - Admin endpoint: POST /api/migrate/run (Bearer token authentication)
+  - Status action: POST /api/migrate/run with {"action":"status"} for detailed status
+  - Custom authentication middleware (requireMigrationSecret)
+  - Comprehensive test suite with 28 tests (67 total migration tests passing)
+  - Environment variable: MIGRATION_SECRET for securing admin endpoint
+  - Proper error handling (production mode hides sensitive details)
+  - Documentation: PRODUCTION-DB-SETUP.md updated with endpoint details
+
+- **Form Validation Standardization**
+  - Standardized SignupModal form validation to match LoginModal patterns
+  - Both modals now use `noValidate` with custom validation and focus management
+  - Consistent error display and field-level validation across all auth modals
+  - Auto-focus behavior unified (LoginModal auto-focuses, SignupModal auto-focuses)
+  - Browser autocomplete properly handled in both modals
+
+- **Email Service Improvements**
+  - Extracted email footer to reusable constant (`getEmailFooter()`)
+  - Support email (`support@codescribeai.com`) added to all transactional emails
+  - Footer hierarchy: branding → support contact → website link
+  - Consistent footer across password reset and verification emails
+
+- **Password Reset Rate Limiting**
+  - Implemented rate limiting for password reset requests (3 per hour per email)
+  - Prevents email bombing attacks and quota abuse
+  - In-memory rate limit tracking with automatic expiration
+  - Returns HTTP 429 with clear error message when limit exceeded
+  - Rate limit documentation added to PASSWORD-RESET-IMPLEMENTATION.md
+
+- **Support Email Configuration**
+  - Email forwarding setup documentation for `support@codescribeai.com`
+  - Namecheap-specific setup instructions in PASSWORD-RESET-IMPLEMENTATION.md
+  - Support email now functional via Gmail forwarding
+
+- **OAuth Account Linking**
+  - GitHub users can now add email/password authentication to their accounts
+  - Password reset flow supports both "reset" and "set password" scenarios
+  - OAuth-only users (no password_hash) can use "Forgot Password" to add password
+  - Symmetric account linking: Email/Password ↔ GitHub both work seamlessly
+  - Industry standard pattern (used by Slack, Spotify, Figma, Dropbox)
+  - Documentation added to PASSWORD-RESET-IMPLEMENTATION.md
+  - Password strength indicator added to ResetPassword component
+  - Auto-login after password reset (JWT token returned, user automatically authenticated)
+  - Fixed error state persistence across pages in ResetPassword component
+  - Removed OAuth-only user blocking from both forgot-password and reset-password endpoints
+
+- **Password Reset System**
+  - Complete password reset flow with email-based token verification
+  - ResetPassword component with dedicated route (`/reset-password?token=...`)
+  - Email service using Resend API with beautiful HTML templates
+  - Database migrations for reset token fields (reset_token_hash, reset_token_expires)
+  - User model methods: setResetToken, findByResetToken, updatePassword, clearResetToken
+  - API endpoints: POST /api/auth/forgot-password, POST /api/auth/reset-password
+  - E2E tests for password reset flow (password-reset.spec.js, password-reset-core.spec.js)
+  - Show/hide password toggles in ResetPassword component
+  - Auto-redirect to home after successful password reset (2 seconds)
+
+- **Email Service Infrastructure**
+  - Resend SDK integration (npm package: resend)
+  - sendPasswordResetEmail with branded HTML template
+  - sendVerificationEmail for future email verification feature
+  - Brand-consistent design (purple/indigo gradient, CodeScribe AI branding)
+  - Mobile-responsive email templates
+  - Accessible email layout
+
+- **Database Migration System**
+  - runMigration.js utility for executing SQL migrations
+  - Migration: add-reset-token-fields.sql
+  - Safe migration execution with rollback support
+  - Migration logging and error handling
+
+- **Form Validation & Focus Management**
+  - Comprehensive form validation guide (FORM-VALIDATION-GUIDE.md v1.3)
+  - Server-side validation documentation with middleware patterns
+  - Client-server validation flow diagrams (Mermaid sequence + decision tree)
+  - Complete focus management implementation using `flushSync` from react-dom
+  - Automatic focus on first error field for both client and server errors
+  - Enhanced checklist organized by: client-side, focus management, server integration, testing
+
+- **Documentation**
+  - PASSWORD-RESET-IMPLEMENTATION.md - Complete implementation summary
+  - PASSWORD-RESET-SETUP.md - Step-by-step password reset configuration
+  - RESEND-SETUP.md - Resend email service setup with custom domain
+  - DB-MIGRATION-MANAGEMENT.md - Database migration procedures
+  - PASSWORD-RESET-E2E-TESTS.md - E2E testing documentation (20 test scenarios)
+  - FORM-VALIDATION-GUIDE.md v1.3 - Complete form validation patterns
+
+- **Storage Constants**
+  - client/src/constants/storage.js - Centralized localStorage key definitions
+  - Prevents key conflicts and typos
+  - AUTH_TOKEN_KEY constant for JWT token storage
+
+### Changed
+- **Authentication Context**
+  - Added forgotPassword(email) method
+  - Added resetPassword(token, password) method
+  - Enhanced error handling for password reset flows
+  - Better error messages for expired/invalid tokens
+
+- **User Model**
+  - Added reset token management methods
+  - Token hashing for security (SHA-256)
+  - Token expiration validation (1 hour default)
+  - Password update with bcrypt re-hashing
+
+- **Auth Routes**
+  - Implemented forgot-password endpoint with email sending
+  - Implemented reset-password endpoint with token validation
+  - Added comprehensive error handling for edge cases
+  - Email validation and user existence checks
+
+- **App Router**
+  - Added /reset-password route for password reset page
+  - Updated main.jsx with new route configuration
+  - Maintained existing / and /auth/callback routes
+
+- **Form Validation Documentation**
+  - Updated FORM-VALIDATION-GUIDE.md from v1.2 to v1.3
+  - Added "What's New in v1.3" section highlighting key improvements
+  - Expanded Table of Contents with server validation section
+  - Enhanced implementation examples from all 3 auth forms
+  - Updated reference implementations: LoginModal, SignupModal, ResetPassword
+
+- **Environment Variables**
+  - Added RESEND_API_KEY to server/.env.example
+  - Added FROM_EMAIL configuration for sent emails
+  - Updated deployment checklist with Resend setup
+
+### Fixed
+- **Password Reset Flow**
+  - Token expiration properly validated (prevents use of expired tokens)
+  - Token cleared after successful password reset (prevents reuse)
+  - Password validation ensures minimum 8 characters
+  - Proper error messages for invalid/expired/missing tokens
+
+- **Focus Management**
+  - Documented critical `flushSync` pattern for reliable focus management
+  - Fixed focus timing issues with synchronous DOM updates
+  - Ensured focus works consistently for both client and server validation errors
+  - Resolved race conditions in focus trigger mechanism
+
+- **Email Sending**
+  - Reset token properly encoded in email URLs
+  - Email templates render correctly in major email clients
+  - Brand colors match application theme
+
+### Testing
+- **Backend Tests**
+  - 28 new password reset route tests (auth-password-reset.test.js)
+  - 15 new email service tests (emailService.test.js)
+  - Token validation and expiration tests
+  - Email sending mock tests
+
+- **Frontend Tests**
+  - ResetPassword component unit tests (ResetPassword.test.jsx)
+  - AuthContext password reset method tests
+  - Token extraction and validation tests
+
+- **E2E Tests**
+  - password-reset-core.spec.js - Core password reset flow (4 scenarios)
+  - password-reset.spec.js - Comprehensive scenarios (16 scenarios)
+  - Total: 20 E2E test scenarios covering happy path and edge cases
+  - Tests: expired tokens, invalid tokens, missing tokens, password validation
+
+### Security
+- **Token Security**
+  - Reset tokens hashed before database storage (SHA-256)
+  - Tokens expire after 1 hour
+  - Tokens single-use (cleared after password reset)
+  - Cryptographically secure token generation (32 bytes)
+
+- **Email Security**
+  - Rate limiting on password reset requests (prevents abuse)
+  - Email validation before sending reset links
+  - User existence verification (prevents enumeration)
+  - Secure URL encoding of tokens
+
+### Dependencies Added
+- **Backend:**
+  - resend (^4.0.1) - Email sending service
+
+### Documentation
+- **README.md Author Section**
+  - Expanded to showcase product management skills alongside technical abilities
+  - Added "Product Management & Strategy" section with 9 key competencies
+  - Added "Demonstrated PM Competencies" section with 8 core skills
+  - Highlighted end-to-end product ownership (PRD to production)
+  - Updated subtitle to emphasize product management and execution
+  - Added Product Requirements link to quick navigation
+
+### Testing - Form Validation Test Suite
+- **Client-Side Tests (LoginModal.test.jsx)**
+  - 10 new focus management tests covering client and server error scenarios
+  - Focus on first error field validation (email, password, server errors)
+  - Progressive validation behavior tests (clear on input, no refocus)
+  - ARIA attributes verification (aria-invalid, aria-describedby, role="alert")
+  - Multiple error handling and focus priority testing
+  - Total: 29 comprehensive LoginModal tests
+
+- **Server-Side Tests (auth.test.js)**
+  - 13 validateBody middleware tests
+  - Required field validation
+  - Email/password format validation
+  - Length constraints (minLength, maxLength)
+  - Custom validator function tests
+  - Empty string handling as missing fields
+
+- **Coverage Areas**
+  - Client-side validation (required fields, email format, progressive validation)
+  - Server-side middleware validation (validateBody)
+  - Focus management (automatic focus on first error, client + server errors)
+  - Accessibility (ARIA attributes, screen reader compatibility)
+  - Total validation tests: 42+ (29 client + 13 server)
+
+---
+
+## [1.3.0] - 2025-10-24
+
+**Status:** ✅ Feature Release - Authentication System
+
+### Added
+- **Authentication System**
+  - GitHub OAuth integration with Passport.js
+  - Email/password authentication with JWT tokens
+  - User model with Neon Postgres database integration
+  - Session management with express-session
+  - Password hashing with bcrypt (10 salt rounds)
+  - Auth middleware (requireAuth, optionalAuth, requireTier)
+  - JWT token generation and validation
+  - User sanitization (removes password_hash from responses)
+
+- **Frontend Auth UI**
+  - LoginModal component with email/password and GitHub OAuth
+  - SignupModal with password strength indicator (4-level visual)
+  - ForgotPasswordModal (UI only, backend planned for v1.4.0)
+  - AuthContext for global authentication state
+  - React Router integration for OAuth callback handling
+  - AuthCallback component for processing GitHub OAuth redirects
+  - Feature flag system: VITE_ENABLE_AUTH environment variable
+
+- **Database Schema**
+  - Users table with email, password_hash, github_id, tier fields
+  - Email verification fields: email_verified, verification_token, verification_token_expires
+  - Indexes on email, github_id, and verification_token
+  - Session storage with connect-pg-simple
+
+- **API Endpoints**
+  - POST /api/auth/signup - User registration
+  - POST /api/auth/login - Email/password login
+  - POST /api/auth/logout - Session/token cleanup
+  - GET /api/auth/me - Get current authenticated user
+  - GET /api/auth/github - Initiate GitHub OAuth flow
+  - GET /api/auth/github/callback - Handle GitHub OAuth callback
+  - POST /api/auth/forgot-password - Password reset request (stub)
+  - POST /api/auth/reset-password - Password reset confirmation (stub)
+
+- **Email Service Integration (Setup)**
+  - Resend email service selected for verification emails
+  - Cost analysis: Free tier covers 3K emails/month (1,500 signups)
+  - Appendix C added to MONETIZATION-STRATEGY.md
+  - Database schema prepared for email verification
+
+- **Documentation**
+  - VERCEL-POSTGRES-SETUP.md - Neon database integration guide
+  - GITHUB-OAUTH-SETUP.md - OAuth configuration and testing
+  - AUTH-TESTS.md - 102 authentication tests documented
+  - AUTH-SECURITY-TESTS.md - Security testing coverage
+  - AUTH-API-TESTING.md - API endpoint testing guide
+  - MONETIZATION-STRATEGY.md Appendix B - Neon database cost analysis
+  - MONETIZATION-STRATEGY.md Appendix C - Resend email cost analysis
+
+### Changed
+- **Routing**
+  - Added React Router (react-router-dom) for SPA routing
+  - Created routes: / (main app) and /auth/callback (OAuth handler)
+  - Wrapped app in BrowserRouter for navigation support
+
+- **Header Component**
+  - Shows "Sign In" button when not authenticated
+  - Shows username and logout button when authenticated
+  - Dynamic rendering based on authentication state
+  - Lazy loads auth modals on hover for performance
+
+- **Logout Endpoint**
+  - Fixed to handle JWT-only authentication (no session errors)
+  - Gracefully handles missing session support for JWT users
+  - Cleans up both session and Passport state if present
+
+### Fixed
+- Project structure cleanup: Removed incorrect src/models/ directory (kept server/src/models/)
+- Logout errors for JWT-authenticated users (Passport session support warning)
+- OAuth callback token extraction and localStorage storage
+- UI updates after login/logout (AuthContext reinitialization)
+
+### Security
+- JWT secret stored in environment variables (JWT_SECRET)
+- Passwords hashed with bcrypt before storage
+- Tokens expire after 7 days (configurable)
+- Session cookies: httpOnly, secure (production), sameSite strict
+- Input validation on all auth endpoints
+- Email format validation with regex
+- Password minimum length: 8 characters
+- GitHub OAuth scope limited to user:email only
+
+### Testing
+- **Backend Tests:** 102+ authentication tests
+  - 41 auth middleware tests (100% coverage)
+  - 33 User model tests (89% coverage)
+  - 28 auth routes integration tests
+  - GitHub OAuth flow tests
+- **Frontend Tests:** AuthContext tests with React Testing Library
+- **Manual Testing:** GitHub OAuth and email/password flows verified end-to-end
+
+### Infrastructure
+- **Database:** Neon Postgres via Vercel Marketplace
+  - Free tier: 512 MB storage (supports 50K users)
+  - Cost: $0/month for first 50K users
+  - Storage per user: ~160 bytes (users) + ~544 bytes (sessions)
+  - Database costs: <0.5% of total COGS
+
+- **Email Service:** Resend (setup complete, implementation pending)
+  - Free tier: 3,000 emails/month
+  - Covers: 1,500 signups/month (18K annual signups)
+  - Cost: $0/month for first 25K users
+  - Email costs: <0.5% of total COGS
+
+### Dependencies Added
+- **Backend:**
+  - @vercel/postgres (^0.10.0) - Neon database SDK
+  - bcrypt (^5.1.1) - Password hashing
+  - connect-pg-simple (^10.0.0) - PostgreSQL session store
+  - express-session (^1.18.1) - Session middleware
+  - passport (^0.7.0) - Authentication middleware
+  - passport-github2 (^0.1.12) - GitHub OAuth strategy
+  - passport-local (^1.0.0) - Local strategy for email/password
+
+- **Frontend:**
+  - react-router-dom (^7.0.2) - Client-side routing
+
+### Statistics
+- **Files Added:** 15+ (auth routes, models, middleware, modals, context)
+- **Files Modified:** 20+
+- **Lines Added:** 3,500+
+- **Tests:** 102+ new authentication tests (all passing)
+- **Test Coverage:** Backend 95.81% maintained
+- **Duration:** 1 day (full session)
+
+### Notes
+- Email verification implementation in progress (schema ready, Resend selected)
+- Password reset functionality stubbed (planned for v1.4.0)
+- Account linking (GitHub + password on same account) planned for v1.4.0
+- Authentication is feature-flagged: Set VITE_ENABLE_AUTH=true to enable
+
 ---
 
 ## [1.2.2] - 2025-10-22
@@ -218,6 +574,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History Summary
 
+- **v1.3.0** - Feature release: Authentication system (GitHub OAuth + email/password), Neon database, Resend email service
 - **v1.2.2** - Maintenance release: mobile compatibility, UX polish, feature flag management
 - **v1.2.1** - Bug fixes: footer alignment, download button UX, sign-in button hiding
 - **v1.2.0** - Production release with full feature set, accessibility compliance, and comprehensive testing

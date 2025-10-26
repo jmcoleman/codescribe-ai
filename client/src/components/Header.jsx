@@ -1,12 +1,48 @@
-import { Menu, HelpCircle } from 'lucide-react';
+import { Menu, HelpCircle, LogOut, User } from 'lucide-react';
+import { useState, lazy, Suspense } from 'react';
 import { Button } from './Button';
 import { RateLimitIndicator } from './RateLimitIndicator';
 import { Logo } from './Logo';
+import { useAuth } from '../contexts/AuthContext';
 
-// Feature flag: Authentication not yet implemented (planned for v1.5.0)
-const ENABLE_AUTH = false;
+// Lazy load auth modals
+const LoginModal = lazy(() => import('./LoginModal').then(m => ({ default: m.LoginModal })));
+const SignupModal = lazy(() => import('./SignupModal').then(m => ({ default: m.SignupModal })));
+const ForgotPasswordModal = lazy(() => import('./ForgotPasswordModal').then(m => ({ default: m.ForgotPasswordModal })));
+
+// Feature flag: Authentication enabled (from environment variable)
+const ENABLE_AUTH = import.meta.env.VITE_ENABLE_AUTH === 'true';
 
 export function Header({ onMenuClick, onExamplesClick, onHelpClick, rateLimitInfo }) {
+  const { user, isAuthenticated, logout } = useAuth();
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showSignupModal, setShowSignupModal] = useState(false);
+  const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
+
+  const handleSignInClick = () => {
+    setShowLoginModal(true);
+  };
+
+  const handleLogout = async () => {
+    await logout();
+  };
+
+  const switchToSignup = () => {
+    setShowLoginModal(false);
+    setShowSignupModal(true);
+  };
+
+  const switchToLogin = () => {
+    setShowSignupModal(false);
+    setShowForgotPasswordModal(false);
+    setShowLoginModal(true);
+  };
+
+  const switchToForgot = () => {
+    setShowLoginModal(false);
+    setShowForgotPasswordModal(true);
+  };
+
   return (
     <header className="bg-white border-b border-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -70,9 +106,42 @@ export function Header({ onMenuClick, onExamplesClick, onHelpClick, rateLimitInf
               </button>
 
               {ENABLE_AUTH && (
-                <Button variant="dark">
-                  Sign In
-                </Button>
+                <>
+                  {isAuthenticated ? (
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        className="flex items-center gap-2 px-3 py-2 hover:bg-slate-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
+                        aria-label="User account"
+                      >
+                        <User className="w-5 h-5 text-slate-600" aria-hidden="true" />
+                        <span className="text-sm font-medium text-slate-700">
+                          {user?.email?.split('@')[0] || 'Account'}
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleLogout}
+                        className="p-2 hover:bg-slate-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
+                        aria-label="Sign out"
+                        title="Sign out"
+                      >
+                        <LogOut className="w-5 h-5 text-slate-600" aria-hidden="true" />
+                      </button>
+                    </div>
+                  ) : (
+                    <Button
+                      variant="dark"
+                      onClick={handleSignInClick}
+                      onMouseEnter={() => {
+                        // Preload auth modals on hover
+                        import('./LoginModal').catch(() => {});
+                      }}
+                    >
+                      Sign In
+                    </Button>
+                  )}
+                </>
               )}
             </div>
 
@@ -89,6 +158,36 @@ export function Header({ onMenuClick, onExamplesClick, onHelpClick, rateLimitInf
           </nav>
         </div>
       </div>
+
+      {/* Auth Modals */}
+      {ENABLE_AUTH && (
+        <Suspense fallback={null}>
+          {showLoginModal && (
+            <LoginModal
+              isOpen={showLoginModal}
+              onClose={() => setShowLoginModal(false)}
+              onSwitchToSignup={switchToSignup}
+              onSwitchToForgot={switchToForgot}
+            />
+          )}
+
+          {showSignupModal && (
+            <SignupModal
+              isOpen={showSignupModal}
+              onClose={() => setShowSignupModal(false)}
+              onSwitchToLogin={switchToLogin}
+            />
+          )}
+
+          {showForgotPasswordModal && (
+            <ForgotPasswordModal
+              isOpen={showForgotPasswordModal}
+              onClose={() => setShowForgotPasswordModal(false)}
+              onSwitchToLogin={switchToLogin}
+            />
+          )}
+        </Suspense>
+      )}
     </header>
   );
 }

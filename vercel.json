@@ -1,13 +1,11 @@
 {
   "version": 2,
-  "buildCommand": "cd client && npm install && npm run build",
+  "buildCommand": "cd server && npm install && npm run migrate && cd ../client && npm install && npm run build",
   "outputDirectory": "client/dist",
   "installCommand": "npm install --prefix server && npm install",
   "cleanUrls": true,
   "git": {
-    "deploymentEnabled": {
-      "main": false
-    }
+    "deploymentEnabled": false
   },
   "headers": [
     {

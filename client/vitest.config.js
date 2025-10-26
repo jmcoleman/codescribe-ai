@@ -9,6 +9,10 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/test/setup.js',
     css: true,
+    // Enable authentication for tests
+    env: {
+      VITE_ENABLE_AUTH: 'true'
+    },
     // Only include unit/integration tests in src directory
     include: ['src/**/__tests__/**/*.{test,spec}.{js,jsx}', 'src/**/*.{test,spec}.{js,jsx}'],
     // Exclude e2e tests (run separately with Playwright)

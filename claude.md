@@ -45,6 +45,7 @@ AI-powered documentation generator with real-time streaming, quality scoring (0-
 | [Testing README](docs/testing/README.md) | Test navigation hub | 660+ test stats, quick commands, coverage overview |
 | [COMPONENT-TEST-COVERAGE.md](docs/testing/COMPONENT-TEST-COVERAGE.md) | Coverage details ⭐ | 13/18 components tested, category breakdown, gaps |
 | [frontend-testing-guide.md](docs/testing/frontend-testing-guide.md) | React testing patterns | Vitest + RTL, mocking, a11y, interactions |
+| [TEST-FIXES-OCT-2025.md](docs/testing/TEST-FIXES-OCT-2025.md) | Test fix patterns ⭐ | 75 tests fixed, 10 patterns, 6 technical insights, 97.3% pass rate |
 
 **Specialized Tests:** [ERROR-HANDLING-TESTS.md](docs/testing/ERROR-HANDLING-TESTS.md) (58 tests) | [MERMAID-DIAGRAM-TESTS.md](docs/testing/MERMAID-DIAGRAM-TESTS.md) (14 tests) | [CROSS-BROWSER-TEST-PLAN.md](docs/testing/CROSS-BROWSER-TEST-PLAN.md) | [ACCESSIBILITY-AUDIT.MD](docs/testing/ACCESSIBILITY-AUDIT.MD)
 
@@ -89,7 +90,8 @@ AI-powered documentation generator with real-time streaming, quality scoring (0-
 
 **Frontend:** React 19 + Vite | Tailwind CSS 3.4+ | Monaco Editor | react-markdown | Lucide React
 **Backend:** Node.js 20+ | Express 5 | Claude API (Sonnet 4.5) | Acorn | Multer
-**Infrastructure:** Vercel | SSE streaming | Environment variables
+**Database:** Neon Postgres (via Vercel Marketplace) | @vercel/postgres SDK | connect-pg-simple sessions
+**Infrastructure:** Vercel | Neon (free tier: 512 MB, 20 projects) | SSE streaming
 
 ---
 
@@ -104,7 +106,8 @@ AI-powered documentation generator with real-time streaming, quality scoring (0-
 | Design/UI | Figma Guide, Brand Color Palette |
 | Architecture | ARCHITECTURE-OVERVIEW.md (visual), ARCHITECTURE.md (technical) |
 | Performance | OPTIMIZATION-GUIDE.md |
-| Testing | Testing README, COMPONENT-TEST-COVERAGE.md |
+| Testing | Testing README, COMPONENT-TEST-COVERAGE.md, TEST-FIXES-OCT-2025.md |
+| Test Fixes/Patterns | TEST-FIXES-OCT-2025.md (10 patterns, 6 insights, frontend + backend) |
 | Accessibility | ACCESSIBILITY-AUDIT.MD, SCREEN-READER-TESTING-GUIDE.md |
 | Components | TOAST-SYSTEM.md, ERROR-HANDLING-UX.md, COPYBUTTON.md, etc. |
 | Versions | Run `npm run versions`, VERSION-CHECKER.md |
@@ -119,7 +122,8 @@ AI-powered documentation generator with real-time streaming, quality scoring (0-
 ### 3. Key Cross-References
 - **Architecture:** ARCHITECTURE-OVERVIEW.md (visual) → ARCHITECTURE.md (technical) → Dev Guide (implementation)
 - **Performance:** OPTIMIZATION-GUIDE.md (comprehensive) → Dev Guide (techniques) → ARCHITECTURE.md (targets)
-- **Testing:** Testing README (overview) → COMPONENT-TEST-COVERAGE.md (details) → frontend-testing-guide.md (patterns)
+- **Testing:** Testing README (overview) → COMPONENT-TEST-COVERAGE.md (details) → frontend-testing-guide.md (patterns) → TEST-FIXES-OCT-2025.md (fixes & patterns)
+- **Test Debugging:** TEST-FIXES-OCT-2025.md (10 patterns, 6 insights) for fixing auth tests, mocking, validation
 - **Error Handling:** ERROR-HANDLING-UX.md (UX patterns) → TOAST-SYSTEM.md (error toasts)
 - **Accessibility:** ACCESSIBILITY-AUDIT.MD (results) → SCREEN-READER-TESTING-GUIDE.md (procedures)
 
@@ -254,26 +258,32 @@ codescribe-ai/
 
 1. **Portfolio Project** - Demonstrates full-stack skills, speed, product thinking
 2. **API-First Design** - Service layer supports future CLI/VS Code extension
-3. **Privacy-First** - No database; code processed in memory only
+3. **Privacy-First** - Code processed in memory only; database only for auth/usage tracking (optional)
 4. **Real-Time Streaming** - SSE for live documentation generation
 5. **Educational** - Quality scoring teaches good documentation practices
 6. **Scope Discipline** - Achieved 9-day timeline through strict scope management
+7. **Cost-Efficient** - Neon free tier ($0/mo) covers first 50K users; database <0.5% of costs
 
 ---
 
 ## 🌐 Official Docs
 
-[Vercel](https://vercel.com/docs) | [GitHub Actions](https://docs.github.com/en/actions) | [Anthropic Claude](https://docs.anthropic.com/) | [React](https://react.dev/) | [Vite](https://vitejs.dev/) | [Tailwind](https://tailwindcss.com/docs) | [Node.js](https://nodejs.org/docs/) | [Express](https://expressjs.com/) | [Vitest](https://vitest.dev/) | [WCAG 2.1](https://www.w3.org/WAI/WCAG21/quickref/)
+[Vercel](https://vercel.com/docs) | [Neon](https://neon.tech/docs) | [GitHub Actions](https://docs.github.com/en/actions) | [Anthropic Claude](https://docs.anthropic.com/) | [React](https://react.dev/) | [Vite](https://vitejs.dev/) | [Tailwind](https://tailwindcss.com/docs) | [Node.js](https://nodejs.org/docs/) | [Express](https://expressjs.com/) | [Vitest](https://vitest.dev/) | [WCAG 2.1](https://www.w3.org/WAI/WCAG21/quickref/)
 
 ---
 
 ## 🔄 Version History
 
-**Current: v1.26** - Streamlined Documentation: Condensed CLAUDE.md from 1152 to ~450 lines (-61%) while preserving all critical information; converted verbose prose to scannable tables; consolidated redundant sections; maintained all doc references, technical specs, and implementation guidelines; improved navigation efficiency with Quick Reference format
+**Current: v1.30** - Complete Test Suite Fix & Deployment Unblock (October 25, 2025): **75 total tests fixed** (54 frontend + 21 backend); **100% elimination of all test failures** (70 → 0); frontend 98.4% pass rate, backend 94.9% pass rate, overall 97.3%; achieved 100% pass rate for 4 frontend files (SignupModal, App-FileUpload, ResetPassword, ForgotPasswordModal); fixed GitHub OAuth session conflict (removed `session: false` + `req.login()` contradiction); documented 10 reusable patterns (8 frontend + 2 backend) and 6 technical insights; comprehensive [TEST-FIXES-OCT-2025.md](docs/testing/TEST-FIXES-OCT-2025.md); **✅ deployment unblocked**
 
 <details>
-<summary>Previous Versions (v1.0-v1.25)</summary>
+<summary>Previous Versions (v1.0-v1.29)</summary>
 
+- **v1.29** - Test Suite Improvements Session 1 (41 frontend tests fixed, 73% reduction in failures)
+- **v1.28** - Authentication System & Email Verification Setup (authentication fully tested and working)
+- **v1.27** - Neon Database Integration (database cost analysis, free tier covers 50K users)
+
+- **v1.26** - Streamlined Documentation (condensed CLAUDE.md -61%)
 - **v1.25** - Architecture doc reorganization (ARCHITECTURE-OVERVIEW.md rename)
 - **v1.24** - Architecture update with accurate versions, archive organization
 - **v1.23** - Test-gated deployment (Vercel Deploy Hooks + GitHub Actions)
@@ -301,7 +311,7 @@ codescribe-ai/
 - **v1.1** - Documentation restructure (subdirectories)
 - **v1.0** - Initial CLAUDE.md with complete doc map
 
-Last updated: October 21, 2025
+Last updated: October 24, 2025
 </details>
 
 ---

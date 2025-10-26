@@ -445,7 +445,7 @@ This is a comprehensive example showing various markdown features including code
         {/* Split View: Code + Documentation */}
         <div className="mt-6 flex flex-col lg:grid lg:grid-cols-2 gap-4 lg:gap-6">
           {/* Left: Code Panel */}
-          <div className="h-[500px] lg:h-[calc(100vh-280px)]">
+          <div className="h-[500px] lg:h-[calc(100vh-280px)] flex-shrink-0">
             <CodePanel
               code={code}
               onChange={setCode}
@@ -455,7 +455,7 @@ This is a comprehensive example showing various markdown features including code
           </div>
 
           {/* Right: Documentation Panel */}
-          <div className="h-[500px] lg:h-[calc(100vh-280px)]">
+          <div className="h-[500px] lg:h-[calc(100vh-280px)] flex-shrink-0">
             <Suspense fallback={<LoadingFallback />}>
               <DocPanel
               documentation={documentation}

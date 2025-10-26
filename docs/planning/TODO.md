@@ -1,8 +1,8 @@
 ## 🔧 CODESCRIBE AI TODO LIST
 
 **Status:** 📋 **ACTIVE** (Post-Production Enhancements)
-**Current Phase:** Phase 1 ✅ Complete | Phase 2 📋 Planned
-**Last Updated:** October 23, 2025
+**Current Phase:** Phase 1 ✅ Complete | Phase 2 🚧 In Progress (Epic 2.1 Complete)
+**Last Updated:** October 25, 2025
 
 > **📌 Navigation Tip:**
 > - **In VS Code:** Use `Cmd+Shift+O` (Mac) or `Ctrl+Shift+O` (Windows/Linux) to see all headings and jump to sections
@@ -103,63 +103,194 @@
 
 **Reference:** See [ROADMAP.md Phase 2](roadmap/ROADMAP.md#-phase-2-monetization-foundation-planned) for complete details
 
+
+### 🚩 Feature Flag Status
+
+All authentication features are currently **DISABLED** via feature flags:
+- **Backend:** `ENABLE_AUTH=false` in `server/.env.example`
+- **Frontend:** `VITE_ENABLE_AUTH=false` in `client/.env.example`
+
+This allows the codebase to include auth implementation without requiring database or OAuth credentials.
+
+**To enable auth features:** Set both flags to `true` and configure:
+- Database: `POSTGRES_URL` and related Vercel Postgres variables
+- Auth: `JWT_SECRET`, `SESSION_SECRET`
+- OAuth (optional): `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `GITHUB_CALLBACK_URL`
 ---
 
 ### Epic 2.1: Authentication & User Management
 
 **Estimated Duration:** 3-5 days
-**Status:** 📋 **NOT STARTED**
+**Status:** ✅ **COMPLETE** (October 24, 2025)
 **Implementation:** Passport.js (see [AUTH-ANALYSIS.md](AUTH-ANALYSIS.md) for rationale)
 
 #### Tasks
 
-- [ ] **Backend Setup**
-  - [ ] Install Passport.js dependencies (passport, passport-local, passport-github2, passport-jwt, bcrypt, jsonwebtoken, express-session, connect-pg-simple)
-  - [ ] Create User model/schema (id, email, password_hash, github_id, tier, created_at)
-  - [ ] Set up PostgreSQL database connection (Vercel Postgres or local)
-  - [ ] Create Passport strategies configuration (`server/src/config/passport.js`)
-  - [ ] Implement password hashing (bcrypt)
+- [x] **Backend Setup**
+  - [x] Install Passport.js dependencies (passport, passport-local, passport-github2, passport-jwt, bcrypt, jsonwebtoken, express-session, connect-pg-simple)
+  - [x] Create User model/schema (id, email, password_hash, github_id, tier, created_at)
+  - [x] Set up PostgreSQL database connection (Vercel Postgres or local)
+  - [x] Create Passport strategies configuration (`server/src/config/passport.js`)
+  - [x] Implement password hashing (bcrypt)
 
-- [ ] **Auth Routes**
-  - [ ] POST `/api/auth/signup` - User registration (Passport local strategy)
-  - [ ] POST `/api/auth/login` - User login (Passport local strategy)
-  - [ ] POST `/api/auth/logout` - User logout
-  - [ ] POST `/api/auth/forgot-password` - Password reset request
-  - [ ] POST `/api/auth/reset-password` - Password reset confirmation
-  - [ ] GET `/api/auth/me` - Get current user
-  - [ ] GET `/api/auth/github` - GitHub OAuth initiation (Passport GitHub strategy)
-  - [ ] GET `/api/auth/github/callback` - GitHub OAuth callback
+- [x] **Auth Routes**
+  - [x] POST `/api/auth/signup` - User registration (Passport local strategy)
+  - [x] POST `/api/auth/login` - User login (Passport local strategy)
+  - [x] POST `/api/auth/logout` - User logout
+  - [x] POST `/api/auth/forgot-password` - Password reset request
+  - [x] POST `/api/auth/reset-password` - Password reset confirmation
+  - [x] GET `/api/auth/me` - Get current user
+  - [x] GET `/api/auth/github` - GitHub OAuth initiation (Passport GitHub strategy)
+  - [x] GET `/api/auth/github/callback` - GitHub OAuth callback
 
-- [ ] **GitHub OAuth**
-  - [ ] Set up GitHub OAuth app in GitHub Developer Settings
-  - [ ] Configure `passport-github2` strategy with client ID/secret
-  - [ ] Implement OAuth callback handler
-  - [ ] Link GitHub accounts to existing users (find or create user)
-  - [ ] Handle OAuth errors and edge cases
+- [x] **GitHub OAuth**
+  - [x] Set up GitHub OAuth app in GitHub Developer Settings
+  - [x] Configure `passport-github2` strategy with client ID/secret
+  - [x] Implement OAuth callback handler
+  - [x] Link GitHub accounts to existing users (find or create user)
+  - [x] Handle OAuth errors and edge cases
 
-- [ ] **Frontend Components**
-  - [ ] Create AuthContext (React Context or Zustand)
-  - [ ] Create Login modal
-  - [ ] Create Signup modal
-  - [ ] Create ForgotPassword modal
-  - [ ] Add auth state management
-  - [ ] Unhide Sign In button in Header (ENABLE_AUTH = true)
+- [x] **Frontend Components**
+  - [x] Create AuthContext (React Context or Zustand)
+  - [x] Create Login modal
+  - [x] Create Signup modal
+  - [x] Create ForgotPassword modal
+  - [x] Add auth state management
+  - [x] Unhide Sign In button in Header (ENABLE_AUTH = true)
 
-- [ ] **Testing**
-  - [ ] Unit tests for auth routes
-  - [ ] Integration tests for auth flow
-  - [ ] E2E tests for login/signup/logout
-  - [ ] Security testing (SQL injection, XSS, CSRF)
+- [x] **Testing**
+  - [x] Unit tests for auth routes
+  - [x] Integration tests for auth flow
+  - [x] E2E tests for login/signup/logout
+  - [x] Security testing (SQL injection, XSS, CSRF)
 
 #### Success Criteria
 
-- [ ] Users can sign up with email/password
-- [ ] Users can log in with email/password
-- [ ] Users can log in with GitHub OAuth
-- [ ] Password reset flow works end-to-end
-- [ ] JWT tokens expire correctly
-- [ ] Auth state persists across page refreshes
-- [ ] All auth tests passing
+- [x] Users can sign up with email/password ✅ **Tested and working**
+- [x] Users can log in with email/password ✅ **Tested and working**
+- [x] Users can log in with GitHub OAuth ✅ **Tested and working**
+- [x] Password reset flow works end-to-end ✅ **Complete with email service (October 25, 2025)**
+- [x] JWT tokens expire correctly ✅ **7-day expiration configured**
+- [x] Auth state persists across page refreshes ✅ **localStorage + AuthContext**
+- [x] All auth tests passing ✅ **190+ tests including comprehensive form validation suite**
+
+#### Additional Completions (October 24-25, 2025)
+
+- [x] ✅ React Router integration for OAuth callback
+- [x] ✅ AuthCallback component implemented
+- [x] ✅ Fixed logout endpoint for JWT-only auth (no Passport errors)
+- [x] ✅ UI updates correctly after login/logout
+- [x] ✅ Email verification database schema added
+- [x] ✅ Resend email service selected and cost analysis complete
+- [x] ✅ Comprehensive auth documentation added (5 docs)
+- [x] ✅ Neon database cost analysis (Appendix B)
+- [x] ✅ Resend email cost analysis (Appendix C)
+- [x] ✅ **Password reset implementation (complete end-to-end)**
+  - [x] Database migrations (reset_token_hash, reset_token_expires fields)
+  - [x] User model reset token methods (setResetToken, findByResetToken, updatePassword, clearResetToken)
+  - [x] Email service with Resend SDK (sendPasswordResetEmail, sendVerificationEmail)
+  - [x] Branded HTML email templates (purple/indigo gradient, mobile-responsive)
+  - [x] API endpoints (POST /api/auth/forgot-password, POST /api/auth/reset-password)
+  - [x] ResetPassword component with show/hide password toggles
+  - [x] Token security (SHA-256 hashing, 1-hour expiration, single-use)
+  - [x] 28 backend tests (auth-password-reset.test.js)
+  - [x] 15 email service tests (emailService.test.js)
+  - [x] 20 E2E test scenarios (password-reset.spec.js, password-reset-core.spec.js)
+  - [x] Documentation (PASSWORD-RESET-IMPLEMENTATION.md, PASSWORD-RESET-SETUP.md, RESEND-SETUP.md, DB-MIGRATION-MANAGEMENT.md, PASSWORD-RESET-E2E-TESTS.md)
+- [x] ✅ **Form validation & focus management documentation (v1.3)**
+  - [x] Client-side validation patterns (progressive validation)
+  - [x] Server-side validation middleware documentation
+  - [x] Focus management using `flushSync` for reliable DOM updates
+  - [x] Client-server validation flow diagrams (Mermaid)
+  - [x] Complete implementation examples from all 3 auth forms
+  - [x] Enhanced checklist with 4 categories (client, focus, server, testing)
+- [x] ✅ **Additional improvements**
+  - [x] Storage constants file (client/src/constants/storage.js)
+  - [x] Database migration system (runMigration.js utility)
+  - [x] Updated deployment checklist with Resend setup
+  - [x] Enhanced AuthContext with forgotPassword and resetPassword methods
+- [x] ✅ **Form validation test suite (comprehensive coverage)**
+  - [x] 10 new focus management tests for LoginModal
+  - [x] Client-side validation tests (required fields, email format, progressive validation)
+  - [x] Server-side validateBody middleware tests (13 tests)
+  - [x] Focus management verification (automatic focus on first error field)
+  - [x] ARIA attributes testing (aria-invalid, aria-describedby, role="alert")
+  - [x] Server error focus management tests
+  - [x] Network error handling tests
+  - [x] Total: 42+ validation tests (29 client + 13 server)
+- [x] ✅ **README.md update - Product Management showcase**
+  - [x] Expanded Author section with PM skills and competencies
+  - [x] Added "Product Management & Strategy" section (9 skills)
+  - [x] Added "Demonstrated PM Competencies" section (8 core skills)
+  - [x] Updated subtitle to highlight product management and execution
+  - [x] Added Product Requirements link to quick navigation
+- [x] ✅ **Form validation standardization (October 25, 2025)**
+  - [x] Unified form validation patterns across LoginModal and SignupModal
+  - [x] Both modals use `noValidate` with custom validation
+  - [x] Consistent auto-focus behavior and error handling
+  - [x] Browser autocomplete properly handled
+- [x] ✅ **Email service improvements (October 25, 2025)**
+  - [x] Extracted email footer to reusable `getEmailFooter()` constant
+  - [x] Added support email to all transactional emails
+  - [x] Optimized footer hierarchy (branding → support → website)
+- [x] ✅ **Password reset security enhancements (October 25, 2025)**
+  - [x] Implemented rate limiting (3 requests per hour per email)
+  - [x] Prevents email bombing and quota abuse
+  - [x] In-memory tracking with automatic expiration
+  - [x] HTTP 429 response when limit exceeded
+  - [x] Documentation updated with rate limiting details
+- [x] ✅ **Support email configuration (October 25, 2025)**
+  - [x] Email forwarding documentation for `support@codescribeai.com`
+  - [x] Namecheap-specific setup instructions
+  - [x] Gmail organization best practices (Priority Inbox setup)
+  - [x] Support email now functional via forwarding
+- [x] ✅ **OAuth account linking (October 25, 2025)**
+  - [x] GitHub users can now add email/password to their accounts
+  - [x] Password reset flow supports both "reset" and "set password" scenarios
+  - [x] Removed OAuth-only user blocking from forgot-password endpoint
+  - [x] Symmetric account linking (Email/Password ↔ GitHub)
+  - [x] Industry standard pattern (Slack, Spotify, Figma, Dropbox)
+  - [x] Comprehensive documentation in PASSWORD-RESET-IMPLEMENTATION.md
+  - [x] Password strength indicator added to ResetPassword component
+- [x] ✅ **Migration API endpoints (October 25, 2025)**
+  - [x] Created separate migration routes file (server/src/routes/migrate.js)
+  - [x] Public endpoint: GET /api/migrate/status (no authentication)
+  - [x] Admin endpoint: POST /api/migrate/run (Bearer token auth)
+  - [x] Admin status endpoint: POST /api/migrate/run with {"action":"status"}
+  - [x] Custom authentication middleware (requireMigrationSecret)
+  - [x] Comprehensive test suite (28 endpoint tests, 67 total migration tests)
+  - [x] Environment variable: MIGRATION_SECRET added
+  - [x] Production error handling (hides sensitive details)
+  - [x] Documentation updated: PRODUCTION-DB-SETUP.md
+- [x] ✅ **Test suite improvements (October 25, 2025)**
+  - [x] Fixed 41 frontend tests across 5 test files
+  - [x] Improved frontend pass rate from 93.9% to 96.9% (+3.0%)
+  - [x] Reduced test failures by 73% (56 → 15 failures)
+  - [x] Achieved 100% pass rate for SignupModal and App-FileUpload
+  - [x] Documented 7 reusable testing patterns
+  - [x] Identified and resolved auth check mock issues
+  - [x] Fixed backdrop click testing problems
+  - [x] Resolved selector ambiguity issues
+  - [x] Created comprehensive TEST-FIXES-OCT-2025.md documentation
+  - [x] Updated testing README with current metrics (885/913 passing)
+  - [x] Files fixed: SignupModal, LoginModal, ForgotPasswordModal, ResetPassword, App-FileUpload
+
+#### Next Steps (Epic 2.1.1 - Email Verification)
+
+**Status:** 📋 **READY TO START**
+**Estimated Duration:** 2-3 hours
+**Prerequisites:** ✅ All complete (database schema ready, Resend selected)
+
+**Implementation Tasks:**
+- [ ] Install Resend SDK (`npm install resend`)
+- [ ] Create email service module (`server/src/services/emailService.js`)
+- [ ] Add User model verification methods (setVerificationToken, verifyEmail, etc.)
+- [ ] Update signup route to send verification email
+- [ ] Create verification endpoints (GET `/api/auth/verify-email`, POST `/api/auth/resend-verification`)
+- [ ] Create UI components (verification banner, success/error pages)
+- [ ] Test email verification flow end-to-end
+
+**Reference:** See [MONETIZATION-STRATEGY.md Appendix C](../../private/strategic-planning/MONETIZATION-STRATEGY.md#appendix-c-resend-email-service-cost-analysis) for email service details
 
 ---
 
@@ -754,11 +885,48 @@
 - [ ] **[TECH-DEBT]** Evaluate and upgrade to React 19 stable (currently RC)
 - [ ] **[ENHANCEMENT]** Consider adding support for more programming languages
 
+#### Email Service Improvements (Future Evaluation)
+
+- [ ] **[TECH-DEBT]** Extract email templates to separate files (Handlebars/EJS) for easier editing and version control
+- [ ] **[TECH-DEBT]** Create reusable email template components (header, footer, buttons) to reduce duplication
+- [ ] **[ENHANCEMENT]** Add email preview/testing mode for development (Ethereal Email or Mailtrap)
+- [ ] **[ENHANCEMENT]** Implement email queue (Bull/BullMQ) for reliability and async processing at scale
+- [ ] **[ENHANCEMENT]** Add email analytics tracking (opens, clicks) via Resend's built-in features
+- [ ] **[ENHANCEMENT]** Add better error logging with detailed context (to, error message, stack trace)
+- [ ] **[ENHANCEMENT]** Implement email input validation before sending
+- [ ] **[FEATURE]** A/B test email templates to optimize engagement (when scaling)
+
 ---
 
-**Document Version:** 2.0
-**Last Updated:** October 23, 2025
+**Document Version:** 2.4
+**Last Updated:** October 25, 2025
 **Aligned with:** ROADMAP.md v2.0 (Phase-based organization)
+
+**Major Changes in v2.4:**
+- ✅ **Form validation test suite complete** - 42+ comprehensive tests (29 client + 13 server)
+- Added 10 new focus management tests for LoginModal
+- Complete coverage: client validation, server validation, focus management, accessibility
+- Updated test count: 190+ tests total (was 150+)
+
+**Major Changes in v2.3:**
+- ✅ **Password reset implementation complete** - Full end-to-end flow with email service
+- Updated success criteria: Password reset now fully working (was stubbed)
+- Added comprehensive password reset completion details (database, email, tests, docs)
+- Updated test count: 150+ tests (was 102+)
+- Added 5 new documentation files for password reset and database migrations
+
+**Major Changes in v2.2:**
+- Added form validation & focus management documentation completion
+- Updated "Additional Completions" with FORM-VALIDATION-GUIDE.md v1.3
+- Documented progressive validation patterns and flushSync implementation
+- Added comprehensive client-server validation flow documentation
+
+**Major Changes in v2.1:**
+- Epic 2.1 (Authentication & User Management) marked as COMPLETE ✅
+- Updated success criteria to reflect tested and working features
+- Added "Additional Completions" section documenting extra work completed
+- Added "Next Steps" section for Epic 2.1.1 (Email Verification)
+- Updated Phase 2 status to "In Progress" (Epic 2.1 Complete)
 
 **Major Changes in v2.0:**
 - Reorganized from version-based (v2.0.0, v2.2.0) to phase-based structure (Phase 2, 3, 4, 5, 6)

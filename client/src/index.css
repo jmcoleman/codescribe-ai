@@ -4,6 +4,12 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Minimum page width - must be outside @layer to take precedence */
+html,
+body {
+  min-width: 320px !important;
+}
+
 /* Global Focus Styles - Purple (Primary Brand Color) for Keyboard Navigation */
 @layer base {
   /* Remove default browser focus styles */
