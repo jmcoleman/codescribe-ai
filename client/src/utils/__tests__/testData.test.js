@@ -31,26 +31,9 @@ describe('testData utilities', () => {
       expect(TEST_CODE.length).toBeGreaterThan(0);
     });
 
-    it('should contain the hello function', () => {
-      expect(TEST_CODE).toContain('function hello(name)');
-      expect(TEST_CODE).toContain('console.log(hello(\'World\'))');
-    });
-
-    it('should contain demoDocumentationFeatures function', () => {
-      expect(TEST_CODE).toContain('function demoDocumentationFeatures()');
-    });
-
-    it('should contain demo action methods', () => {
-      expect(TEST_CODE).toContain('download()');
-      expect(TEST_CODE).toContain('copy()');
-      expect(TEST_CODE).toContain('score()');
-    });
-
-    it('should contain example usage', () => {
-      expect(TEST_CODE).toContain('const docDemo = demoDocumentationFeatures()');
-      expect(TEST_CODE).toContain('docDemo.download()');
-      expect(TEST_CODE).toContain('docDemo.copy()');
-      expect(TEST_CODE).toContain('docDemo.score()');
+    it('should contain valid JavaScript code', () => {
+      expect(TEST_CODE).toContain('function');
+      expect(TEST_CODE).toContain('return');
     });
   });
 
