@@ -7,7 +7,6 @@ on:
     paths-ignore:
       - '**.md'
       - '**.html'
-      - '**.json'
       - 'docs/**'
       - 'scripts/**'
       - 'private/**'
@@ -20,7 +19,6 @@ on:
     paths-ignore:
       - '**.md'
       - '**.html'
-      - '**.json'
       - 'docs/**'
       - 'scripts/**'
       - 'private/**'
