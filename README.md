@@ -396,7 +396,7 @@ For a complete navigation guide with descriptions of all documentation, see **[D
 
 **Design & UX:**
 - **[Figma Design System](docs/planning/mvp/07-Figma-Guide.md)** - Complete UI/UX design system
-- **[Brand Colors](docs/design/brand-color-palette.html)** - Interactive color palette (27 colors)
+- **[Brand Colors](https://jmcoleman.github.io/codescribe-ai/docs/design/brand-color-palette.html)** - Interactive color palette (27 colors)
 - **[Component Guides](docs/components/)** - Toast system, error handling, Mermaid diagrams, etc.
 
 **Performance & Analytics:**
