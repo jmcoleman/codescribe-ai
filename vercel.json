@@ -7,6 +7,17 @@
   "git": {
     "deploymentEnabled": false
   },
+  "build": {
+    "env": {
+      "POSTGRES_URL": "@prod_postgres_url",
+      "POSTGRES_PRISMA_URL": "@prod_postgres_prisma_url",
+      "POSTGRES_URL_NON_POOLING": "@prod_postgres_url_non_pooling",
+      "POSTGRES_USER": "@prod_postgres_user",
+      "POSTGRES_HOST": "@prod_postgres_host",
+      "POSTGRES_PASSWORD": "@prod_postgres_password",
+      "POSTGRES_DATABASE": "@prod_postgres_database"
+    }
+  },
   "headers": [
     {
       "source": "/(.*)",
