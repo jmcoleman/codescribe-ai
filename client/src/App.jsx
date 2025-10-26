@@ -8,6 +8,7 @@ import { useDocGeneration } from './hooks/useDocGeneration';
 import { ErrorBanner } from './components/ErrorBanner';
 import { validateFile, getValidationErrorMessage } from './utils/fileValidation';
 import { trackCodeInput, trackFileUpload, trackExampleUsage, trackInteraction } from './utils/analytics';
+import { createTestDataLoader, exposeTestDataLoader } from './utils/testData';
 
 // Lazy load heavy components that aren't needed on initial render
 const DocPanel = lazy(() => import('./components/DocPanel').then(m => ({ default: m.DocPanel })));
@@ -288,74 +289,12 @@ function App() {
     toastCompact('Example loaded successfully', 'success');
   };
 
-  // Test function to load fake documentation (for testing download button)
-  const loadTestDocumentation = () => {
-    const testDoc = `# Test Documentation
-
-## Overview
-This is test documentation to demonstrate the download button functionality.
-
-## Features
-- Download as Markdown (.md file)
-- Copy to clipboard
-- Quality scoring system
-
-## Example Code
-
-\`\`\`javascript
-function hello(name) {
-  return \`Hello, \${name}!\`;
-}
-
-const greeting = hello('World');
-console.log(greeting); // Output: Hello, World!
-\`\`\`
-
-## Installation
-
-\`\`\`bash
-npm install test-package
-\`\`\`
-
-## Usage
-
-This is a comprehensive example showing various markdown features including code blocks, headers, and lists.
-
-### Nested Features
-- Item 1
-- Item 2
-  - Nested item
-  - Another nested item
-
-**This download button is working perfectly!**`;
-
-    setDocumentation(testDoc);
-    setQualityScore({
-      score: 85,
-      grade: 'B',
-      docType: 'README',
-      breakdown: {
-        overview: { score: 18, max: 20, suggestion: 'Clear and comprehensive overview provided' },
-        installation: { score: 12, max: 15, suggestion: 'Add more installation options or troubleshooting steps' },
-        examples: { score: 16, max: 20, suggestion: 'Examples are good, could add more real-world scenarios' },
-        apiDocs: { score: 20, max: 25, suggestion: 'Excellent API documentation coverage' },
-        structure: { score: 19, max: 20, suggestion: 'Well-structured and formatted' }
-      },
-      summary: {
-        strengths: ['overview', 'apiDocs', 'structure'],
-        improvements: ['installation', 'examples']
-      }
-    });
-    // Toast will be shown by the useEffect that watches for documentation completion
-  };
-
-  // Expose test function to window for console access
+  // Expose test data loader to window for console access (development/testing)
   useEffect(() => {
-    window.loadTestDoc = loadTestDocumentation;
-    return () => {
-      delete window.loadTestDoc;
-    };
-  }, []);
+    const loadTestDoc = createTestDataLoader(setDocumentation, setQualityScore, setCode);
+    const cleanup = exposeTestDataLoader(loadTestDoc);
+    return cleanup;
+  }, [setDocumentation, setQualityScore, setCode]);
 
   // Show toast notifications for documentation generation success only
   useEffect(() => {

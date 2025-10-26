@@ -31,12 +31,21 @@ Transform code into comprehensive, professional documentation in seconds using A
 codescribe-ai/
 ├── client/                        # Frontend (React + Vite)
 │   ├── src/
+│   │   ├── components/            # React components + tests
+│   │   ├── hooks/                 # Custom hooks (useDocGeneration, etc.)
+│   │   ├── utils/                 # Utilities (analytics, testData, etc.)
+│   │   ├── contexts/              # React contexts (AuthContext)
+│   │   └── App.jsx
+│   ├── e2e/                       # E2E tests (Playwright)
 │   └── package.json
 ├── server/                        # Backend (Node.js + Express)
 │   ├── src/
 │   │   ├── services/              # Core services (Claude API, parsers, etc.)
 │   │   ├── routes/                # API routes
+│   │   ├── middleware/            # Express middleware
+│   │   ├── models/                # Database models
 │   │   └── server.js
+│   ├── tests/                     # Backend tests (Jest)
 │   └── package.json
 ├── docs/                          # Documentation
 │   ├── planning/                  # Product & development docs

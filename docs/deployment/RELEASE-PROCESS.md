@@ -1,9 +1,11 @@
 # Release Process Guide
 
 **Project:** CodeScribe AI
-**Last Updated:** October 21, 2025
+**Last Updated:** October 26, 2025
 
 This guide documents the complete process for shipping a new release, including versioning, tagging, testing, deployment, and post-release tasks.
+
+> **🚀 Quick Start:** For a streamlined release workflow, see [RELEASE-QUICKSTART.md](./RELEASE-QUICKSTART.md) - includes step-by-step instructions with automated CI/CD flow.
 
 ---
 
@@ -12,9 +14,10 @@ This guide documents the complete process for shipping a new release, including 
 1. [Versioning Strategy](#versioning-strategy)
 2. [Pre-Release Checklist](#pre-release-checklist)
 3. [Release Steps](#release-steps)
-4. [Post-Release Tasks](#post-release-tasks)
-5. [Rollback Procedure](#rollback-procedure)
-6. [Release History](#release-history)
+4. [Deploying Interactive Roadmap to GitHub Pages](#️-deploying-interactive-roadmap-to-github-pages)
+5. [Post-Release Tasks](#post-release-tasks)
+6. [Rollback Procedure](#rollback-procedure)
+7. [Release History](#release-history)
 
 ---
 
@@ -402,6 +405,161 @@ git log --oneline --decorate --all | grep -E "v1\.[0-9]"
 
 ---
 
+## 🗺️ Deploying Interactive Roadmap to GitHub Pages
+
+If you've updated the interactive roadmap ([ROADMAP-TIMELINE.html](../planning/roadmap/ROADMAP-TIMELINE.html)) and need to publish it to GitHub Pages:
+
+### When to Update GitHub Pages
+
+Update the GitHub Pages deployment when:
+- Major roadmap changes (new phases, completed epics, timeline shifts)
+- Version updates that affect the roadmap
+- Strategic direction changes
+- After completing a major release milestone
+
+**Note:** Minor roadmap updates don't require GitHub Pages deployment - the HTML file in the main branch is the primary source.
+
+### Deployment Steps
+
+1. **Verify Your Changes:**
+   ```bash
+   # Ensure you've updated the roadmap data and HTML
+   # See ROADMAP.md section "Updating the Interactive Roadmap" for data update workflow
+
+   # Verify the HTML file has your latest changes
+   open docs/planning/roadmap/ROADMAP-TIMELINE.html
+   ```
+
+2. **Check Current GitHub Pages Status:**
+   ```bash
+   # View current gh-pages branch
+   git log gh-pages --oneline -5
+
+   # View files currently on gh-pages
+   git ls-tree gh-pages --name-only
+   ```
+
+3. **Deploy to GitHub Pages:**
+   ```bash
+   # Switch to gh-pages branch
+   git checkout gh-pages
+
+   # Copy the updated HTML from main branch
+   git checkout main docs/planning/roadmap/ROADMAP-TIMELINE.html
+
+   # Move to root for GitHub Pages (optional - depends on your Pages config)
+   # GitHub Pages typically serves from root or /docs folder
+   cp docs/planning/roadmap/ROADMAP-TIMELINE.html index.html
+
+   # Commit and push
+   git add index.html
+   git commit -m "Update interactive roadmap for v2.0.0"
+   git push origin gh-pages
+
+   # Switch back to main branch
+   git checkout main
+   ```
+
+4. **Verify Deployment:**
+   - Visit your GitHub Pages URL: `https://[username].github.io/codescribe-ai/`
+   - Verify the roadmap displays correctly
+   - Test keyboard shortcuts (T, Shift+L, Shift+S)
+   - Hard refresh with **Cmd+Shift+R** to bypass cache
+
+### Alternative: Automated Deployment Script
+
+Create a helper script for future deployments:
+
+```bash
+#!/bin/bash
+# scripts/deploy-roadmap.sh
+
+echo "🚀 Deploying interactive roadmap to GitHub Pages..."
+
+# Verify HTML exists
+if [ ! -f "docs/planning/roadmap/ROADMAP-TIMELINE.html" ]; then
+    echo "❌ ROADMAP-TIMELINE.html not found"
+    exit 1
+fi
+
+# Save current branch
+CURRENT_BRANCH=$(git branch --show-current)
+
+# Checkout gh-pages
+git checkout gh-pages
+
+# Copy latest HTML
+git checkout main docs/planning/roadmap/ROADMAP-TIMELINE.html
+cp docs/planning/roadmap/ROADMAP-TIMELINE.html index.html
+
+# Commit and push
+git add index.html
+git commit -m "chore: update interactive roadmap from main branch"
+git push origin gh-pages
+
+# Return to original branch
+git checkout "$CURRENT_BRANCH"
+
+echo "✅ Roadmap deployed to GitHub Pages!"
+echo "🌐 View at: https://[username].github.io/codescribe-ai/"
+```
+
+Make it executable:
+```bash
+chmod +x scripts/deploy-roadmap.sh
+```
+
+Add to `package.json`:
+```json
+"roadmap:deploy": "./scripts/deploy-roadmap.sh"
+```
+
+Then deploy with:
+```bash
+npm run roadmap:deploy
+```
+
+### Troubleshooting
+
+**Issue: Changes don't appear on GitHub Pages**
+- **Cause:** GitHub Pages caching
+- **Solution:**
+  - Wait 1-2 minutes for GitHub to rebuild
+  - Hard refresh with Cmd+Shift+R
+  - Check GitHub → Settings → Pages for build status
+  - Verify gh-pages branch has your commit
+
+**Issue: 404 error on GitHub Pages**
+- **Cause:** File not at expected location
+- **Solution:**
+  - Verify GitHub Pages source is set to `gh-pages` branch
+  - Check if Pages serves from root or `/docs` folder
+  - Ensure `index.html` exists at the correct path
+
+**Issue: Old version still showing**
+- **Cause:** Browser cache or embedded data stale
+- **Solution:**
+  - Clear browser cache completely
+  - Open in incognito/private window
+  - Check if you saved embedded data with Shift+S before deploying
+
+### GitHub Pages Configuration
+
+Verify your repository's GitHub Pages settings:
+
+1. Go to: `https://github.com/[username]/codescribe-ai/settings/pages`
+2. **Source:** Deploy from a branch → `gh-pages` → `/ (root)`
+3. **Custom domain:** (optional)
+4. **Enforce HTTPS:** ✅ Enabled
+
+### Reference Documentation
+
+- [ROADMAP.md](../planning/roadmap/ROADMAP.md) - Section "Updating the Interactive Roadmap"
+- [update-roadmap.sh](../../scripts/update-roadmap.sh) - Script for updating local HTML with backups
+- GitHub Pages docs: https://docs.github.com/en/pages
+
+---
+
 ## 📝 Post-Release Tasks
 
 ### Immediate (Within 1 Hour)
@@ -504,9 +662,10 @@ git push origin main
 
 ## 🔗 Related Documentation
 
+- **[RELEASE-QUICKSTART.md](./RELEASE-QUICKSTART.md)** - Quick reference for standard releases
 - **[DEPLOYMENT-CHECKLIST.md](./DEPLOYMENT-CHECKLIST.md)** - Initial deployment setup
 - **[DEPLOYMENT-LEARNINGS.md](./DEPLOYMENT-LEARNINGS.md)** - Deployment insights and troubleshooting
-- **[ROADMAP.md](../planning/ROADMAP.md)** - Product roadmap and phase planning
+- **[ROADMAP.md](../planning/roadmap/ROADMAP.md)** - Product roadmap and phase planning
 - **[CHANGELOG.md](../../CHANGELOG.md)** - Complete change history
 - **[README.md](../../README.md)** - Project overview and status
 
