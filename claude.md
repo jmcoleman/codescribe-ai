@@ -237,7 +237,7 @@ codescribe-ai/
 │   ├── testing/              # 12 test docs (README, coverage, guides, specialized)
 │   ├── design/               # brand-color-palette.html/pdf, UI guides
 │   ├── scripts/              # VERSION-CHECKER.md
-│   └── CONTEXT.md
+│   └── DOCUMENTATION-MAP.md
 ├── private/                  # ⚠️ GITIGNORED - Sensitive content
 │   ├── VISION.md             # Strategic planning, GTM
 │   ├── INTERVIEW-GUIDE.md    # Interview prep, demo scripts

@@ -8,6 +8,20 @@ Transform code into comprehensive, professional documentation in seconds using A
 >
 > 🔗 [Live Demo](https://codescribeai.com) | 📖 [Documentation](docs/) | 🗺️ [Interactive Roadmap](https://jmcoleman.github.io/codescribe-ai/docs/roadmap/) | 📋 [Product Requirements](docs/planning/mvp/01-PRD.md) | 🎨 [Design System](docs/design/FIGMA-DESIGN-GUIDE.md) | 💻 [GitHub](https://github.com/jmcoleman/codescribe-ai)
 
+## 🌐 Deployment URLs
+
+**Production (Custom Domain):**
+- Frontend: https://codescribeai.com
+- API: https://codescribeai.com/api
+
+**Vercel Default URLs:**
+- Production: https://codescribe-ai.vercel.app
+- Preview/Dev: https://codescribe-ai-[branch-name].vercel.app
+
+**Local Development:**
+- Frontend: http://localhost:5173
+- API: http://localhost:3000
+
 ## Table of Contents
 
 - [Features](#features)
@@ -386,68 +400,39 @@ router.post('/users', async (req, res) => {
 
 ## Documentation
 
-Comprehensive documentation is organized in the [docs/](docs/) folder:
+📚 **Comprehensive documentation organized in [docs/](docs/)**
 
-### Planning & Development
-- [docs/planning/](docs/planning/) - Product requirements, epics, dev guide
-  - [mvp/](docs/planning/mvp/) - Phase 1.0 & 1.5 planning docs (COMPLETE)
-    - [01-PRD.md](docs/planning/mvp/01-PRD.md) - Product Requirements Document
-    - [02-Epics-Stories.md](docs/planning/mvp/02-Epics-Stories.md) - User stories and acceptance criteria
-    - [03-Todo-List.md](docs/planning/mvp/03-Todo-List.md) - Day-by-day implementation tasks
-    - [05-Dev-Guide.md](docs/planning/mvp/05-Dev-Guide.md) - Complete development guide with code examples
-    - [07-Figma-Guide.md](docs/planning/mvp/07-Figma-Guide.md) - Complete UI/UX design system
-    - [08-Master-Prompt.md](docs/planning/mvp/08-Master-Prompt.md) - Master implementation guide
-  - [roadmap/](docs/planning/roadmap/) - Product roadmap and future phases
-    - [Interactive Roadmap](https://jmcoleman.github.io/codescribe-ai/docs/roadmap/) - Visual timeline (GitHub Pages)
-    - [ROADMAP.md](docs/planning/roadmap/ROADMAP.md) - Product roadmap (detailed)
-  - [DARK-MODE-SPEC.md](docs/planning/DARK-MODE-SPEC.md) - Phase 2.5 planning (active)
-  - [TODO.md](docs/planning/TODO.md) - Active todo list (current phase)
+For a complete navigation guide with descriptions of all documentation, see **[Documentation Map](docs/DOCUMENTATION-MAP.md)**.
 
-### Deployment
-- [docs/deployment/](docs/deployment/) - Deployment documentation
-  - [MVP-DEPLOY-LAUNCH.md](docs/deployment/MVP-DEPLOY-LAUNCH.md) - Deployment checklist and guide
+### Quick Links to Essential Docs
 
-### API Documentation
-- [docs/api/](docs/api/) - API specifications and examples
-  - [README.md](docs/api/README.md) - API quick start guide
-  - [API-Reference.md](docs/api/API-Reference.md) - Complete endpoint specifications
+**Planning & Product:**
+- **[Product Requirements (PRD)](docs/planning/mvp/01-PRD.md)** - Vision, features, acceptance criteria
+- **[Interactive Roadmap](https://jmcoleman.github.io/codescribe-ai/docs/roadmap/)** - 6-phase product timeline (GitHub Pages)
+- **[ROADMAP.md](docs/planning/roadmap/ROADMAP.md)** - Detailed roadmap documentation
 
-### Architecture
-- [docs/architecture/](docs/architecture/) - System design and architecture
-  - [ARCHITECTURE-OVERVIEW.md](docs/architecture/ARCHITECTURE-OVERVIEW.md) - System architecture diagram (Mermaid)
-  - [ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md) - Deep architecture overview
+**Architecture & API:**
+- **[Architecture Overview](docs/architecture/ARCHITECTURE-OVERVIEW.md)** - Visual system diagram (Mermaid)
+- **[Architecture Details](docs/architecture/ARCHITECTURE.md)** - Deep technical architecture
+- **[API Reference](docs/api/API-Reference.md)** - Complete endpoint specifications
 
-### Component Guides
-- [docs/components/](docs/components/) - Component-specific documentation
-  - [TOAST-SYSTEM.md](docs/components/TOAST-SYSTEM.md) - Toast notification system guide
-  - [MERMAID-DIAGRAMS.md](docs/components/MERMAID-DIAGRAMS.md) - Mermaid diagram developer guide
-  - [ERROR-HANDLING-UX.md](docs/components/ERROR-HANDLING-UX.md) - Error handling UX design guide
-  - [COPYBUTTON.md](docs/components/COPYBUTTON.md) - Copy button component guide
-  - [DOWNLOADBUTTON.md](docs/components/DOWNLOADBUTTON.md) - Download button component guide
-  - [SKELETON-LOADER.md](docs/components/SKELETON-LOADER.md) - Loading skeleton patterns
+**Development & Testing:**
+- **[Dev Guide](docs/planning/mvp/05-Dev-Guide.md)** - Implementation guide with code examples
+- **[Testing Hub](docs/testing/README.md)** - 1,381+ tests, coverage reports, test patterns
+- **[Test Fixes Guide](docs/testing/TEST-FIXES-OCT-2025.md)** - Testing patterns & best practices
 
-### Testing Documentation
-- [docs/testing/](docs/testing/) - Comprehensive testing documentation
-  - [README.md](docs/testing/README.md) - Testing documentation hub (660+ tests)
-  - [COMPONENT-TEST-COVERAGE.md](docs/testing/COMPONENT-TEST-COVERAGE.md) - Component coverage report
-  - [CROSS-BROWSER-TEST-PLAN.md](docs/testing/CROSS-BROWSER-TEST-PLAN.md) - E2E cross-browser strategy
-  - [ACCESSIBILITY-AUDIT.MD](docs/testing/ACCESSIBILITY-AUDIT.MD) - WCAG 2.1 AA audit report
-  - [frontend-testing-guide.md](docs/testing/frontend-testing-guide.md) - React testing patterns
-  - [ERROR-HANDLING-TESTS.md](docs/testing/ERROR-HANDLING-TESTS.md) - Error component tests
-  - [MERMAID-DIAGRAM-TESTS.md](docs/testing/MERMAID-DIAGRAM-TESTS.md) - Diagram rendering tests
+**Design & UX:**
+- **[Figma Design System](docs/planning/mvp/07-Figma-Guide.md)** - Complete UI/UX design system
+- **[Brand Colors](docs/design/brand-color-palette.html)** - Interactive color palette (27 colors)
+- **[Component Guides](docs/components/)** - Toast system, error handling, Mermaid diagrams, etc.
 
-### Performance Optimization
-- [docs/performance/](docs/performance/) - Performance optimization documentation
-  - [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) - Comprehensive optimization guide
+**Performance & Analytics:**
+- **[Optimization Guide](docs/performance/OPTIMIZATION-GUIDE.md)** - Performance strategies (+67% Lighthouse)
+- **[Analytics](docs/analytics/ANALYTICS.md)** - Privacy-first tracking, Core Web Vitals
 
-### Design Assets
-- [docs/design/](docs/design/) - Brand colors and design resources
-  - [brand-color-palette.html](docs/design/brand-color-palette.html) - Interactive color palette
-  - [brand-color-palette.pdf](docs/design/brand-color-palette.pdf) - PDF version for sharing
-
-### Analytics
-- [docs/analytics/](docs/analytics/) - Analytics implementation and insights
-  - [ANALYTICS.md](docs/analytics/ANALYTICS.md) - Complete analytics guide (8 event types, privacy-first tracking)
+**Deployment:**
+- **[Deployment Guide](docs/deployment/MVP-DEPLOY-LAUNCH.md)** - Vercel deployment checklist
+- **[Database Setup](docs/deployment/VERCEL-POSTGRES-SETUP.md)** - Neon Postgres configuration
 
 ## Tech Stack
 
@@ -576,21 +561,29 @@ See [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) for complete
 
 ### 📊 Testing & Quality
 
-**Comprehensive Test Coverage: 789+ Tests**
-- **Backend Tests**: 133+ tests (Jest + Supertest)
+**Comprehensive Test Coverage: 1,381+ Tests**
+- **Backend Tests**: 434 tests (Jest + Supertest)
   - Service layer: qualityScorer, claudeClient, codeParser, docGenerator
+  - Authentication: 102 tests (auth middleware, user model, OAuth flows)
+  - Database migrations: 40 tests (naming, checksums, ordering)
+  - Password reset: 25 tests (email verification, token validation, security)
   - Integration: file upload, quality scoring, prompt quality
   - Mermaid generation tests
-  - **Coverage**: 95.81% statements, 88.72% branches
-- **Frontend Tests**: 642+ tests (Vitest + React Testing Library)
-  - Component tests with accessibility checks (ExamplesModal, QualityScore, ErrorBanner, DownloadButton, etc.)
+  - **Coverage**: 95.81% statements, 88.72% branches, 86.84% models, 65.41% routes
+  - **Pass Rate**: 95.2% (413 passing, 21 skipped, 0 failures)
+- **Frontend Tests**: 937 tests (Vitest + React Testing Library)
+  - Component tests with accessibility checks (18/18 components tested)
+  - Authentication UI: SignupModal, LoginModal, ForgotPasswordModal, ResetPasswordModal
   - Integration tests for App workflows
   - Mermaid diagram rendering tests
+  - Toast notification system tests (33 tests)
   - **Coverage**: 100% critical user paths
+  - **Pass Rate**: 98.4% (922 passing, 15 skipped, 0 failures)
 - **E2E Tests**: 10 tests across 5 browsers (Playwright)
   - Cross-browser validation (Chromium, Firefox, WebKit, Chrome, Edge)
   - File upload + generate workflows
   - **Pass Rate**: 100% (10/10 tests passing)
+- **Overall Pass Rate**: 97.5% (1,335 passing, 36 skipped, 0 failures)
 
 **Running Tests:**
 ```bash
@@ -615,9 +608,12 @@ npm run test:e2e:headed       # With browser UI (for debugging)
 ```
 
 **Test Documentation:**
-- [Testing README](docs/testing/README.md) - Test documentation hub
-- [COMPONENT-TEST-COVERAGE.md](docs/testing/COMPONENT-TEST-COVERAGE.md) - Detailed coverage report
+- [Testing README](docs/testing/README.md) - Test documentation hub (1,381+ tests)
+- [TEST-FIXES-OCT-2025.md](docs/testing/TEST-FIXES-OCT-2025.md) - Test fix patterns (75 tests fixed, 25 added)
+- [COMPONENT-TEST-COVERAGE.md](docs/testing/COMPONENT-TEST-COVERAGE.md) - Detailed coverage report (18/18 components)
 - [CROSS-BROWSER-TEST-PLAN.md](docs/testing/CROSS-BROWSER-TEST-PLAN.md) - E2E testing strategy
+- [AUTH-TESTS.md](docs/testing/AUTH-TESTS.md) - Authentication tests (102 tests)
+- [DATABASE-MIGRATION-TESTS.md](docs/testing/DATABASE-MIGRATION-TESTS.md) - Migration tests (40 tests)
 
 ## Development Status
 
@@ -648,12 +644,13 @@ npm run test:e2e:headed       # With browser UI (for debugging)
 - ✅ Help system with examples modal (7 curated examples)
 
 **Testing & Quality (Day 4):**
-- ✅ **789+ comprehensive tests** (7890%+ beyond original scope!)
-  - 133+ backend tests (Jest + Supertest)
-  - 642+ frontend tests (Vitest + React Testing Library)
+- ✅ **1,381+ comprehensive tests** (13,810%+ beyond original scope!)
+  - 434 backend tests (Jest + Supertest)
+  - 937 frontend tests (Vitest + React Testing Library)
   - 10 E2E tests across 5 browsers (Playwright)
-- ✅ **Backend coverage**: 95.81% statements, 88.72% branches
-- ✅ **Frontend coverage**: 100% critical user paths
+- ✅ **Backend coverage**: 95.81% statements, 88.72% branches, 86.84% models, 65.41% routes
+- ✅ **Frontend coverage**: 100% critical user paths, 18/18 components tested
+- ✅ **Overall pass rate**: 97.5% (1,335 passing, 36 skipped, 0 failures)
 - ✅ **E2E pass rate**: 100% (10/10 tests passing)
 - ✅ **Cross-browser validation**: Chromium, Firefox, WebKit, Chrome, Edge
 - ✅ **Accessibility audit**: 95/100 score, WCAG 2.1 AA compliant
@@ -773,7 +770,7 @@ Built as a portfolio project (9 days total: Phase 1.0 + Phase 1.5) to showcase b
 - **Execution Excellence**: Maintained 98% accuracy between planned vs. actual implementation tasks
 - **Documentation Standards**: Created comprehensive planning docs (PRD, epics, dev guide, design system) ensuring team alignment
 - **Strategic Prioritization**: Balanced feature completeness with shipping velocity (MVP → accessibility → deployment)
-- **Metrics-Driven**: Defined measurable success criteria (789+ tests, 95/100 accessibility, +67% performance)
+- **Metrics-Driven**: Defined measurable success criteria (1,381+ tests, 95/100 accessibility, +67% performance)
 - **Stakeholder Communication**: Complete project documentation for technical and non-technical audiences
 
 ### Technical Skills
@@ -781,10 +778,11 @@ Built as a portfolio project (9 days total: Phase 1.0 + Phase 1.5) to showcase b
 - **AI Integration**: Anthropic Claude API with streaming (SSE)
 - **Code Analysis**: AST parsing with Acorn for intelligent extraction
 - **Modern Frontend**: Vite, Tailwind CSS, Monaco Editor, Mermaid.js
-- **Testing Excellence**: 789+ tests across 3 frameworks (Jest, Vitest, Playwright)
-  - Backend: 95.81% statement coverage, 88.72% branch coverage
-  - Frontend: 100% critical path coverage
-  - E2E: 100% pass rate across 5 browsers
+- **Testing Excellence**: 1,381+ tests across 3 frameworks (Jest, Vitest, Playwright)
+  - Backend: 95.81% statement coverage, 88.72% branch coverage, 434 tests
+  - Frontend: 100% critical path coverage, 18/18 components tested, 937 tests
+  - E2E: 100% pass rate across 5 browsers, 10 tests
+  - Overall: 97.5% pass rate (0 failures)
 - **Performance Engineering**: +67% Lighthouse score, -85% bundle size, -89% FCP
 - **UX Design**: Research-based patterns, WCAG 2.1 AA accessibility (95/100)
 
@@ -793,7 +791,7 @@ Built as a portfolio project (9 days total: Phase 1.0 + Phase 1.5) to showcase b
 - 📊 **Data-Driven Decisions**: Quality scoring algorithm based on documentation best practices
 - 🎯 **Feature Scoping**: Strategically deferred CLI/VS Code extensions to Phase 2-3 for faster MVP launch
 - ⚡ **Technical Execution**: Real-time streaming with SSE, enterprise UX patterns, accessibility-first design
-- 🧪 **Quality Standards**: 789+ tests (7890%+ beyond original scope) ensuring production readiness
+- 🧪 **Quality Standards**: 1,381+ tests (13,810%+ beyond original scope) ensuring production readiness
 - 🚀 **Performance Focus**: Lazy loading strategy reduced bundle size by 85%, improved FCP by 89%
 - 🌐 **Cross-Browser Strategy**: E2E validation across 5 browsers for enterprise reliability
 - 📈 **Analytics Implementation**: Privacy-first tracking with 8 event types for product insights

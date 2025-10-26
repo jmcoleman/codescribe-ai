@@ -20,39 +20,47 @@
 - 100% privacy-focused (no database, code never persisted)
 
 ### Key Achievements
-- ✅ 660+ tests (100% pass rate across 5 browsers)
+- ✅ 1,381+ tests (97.5% pass rate, 0 failures)
 - ✅ 95/100 accessibility score (WCAG 2.1 AA compliant)
 - ✅ +67% Lighthouse performance improvement (45→75)
 - ✅ -85% bundle size reduction (516KB→78KB gzipped)
 - ✅ Privacy-first analytics (production-only mode)
 - ✅ Deployed to production with CI/CD pipeline
+- ✅ Phase 2: Authentication & database integration complete
 
 ---
 
 ## 📚 Complete Documentation Map
 
-For the **comprehensive documentation map** with descriptions of when to use each document, see **[CLAUDE.md](../CLAUDE.md)** - the master reference guide.
+This document serves as the complete navigation hub for all CodeScribe AI documentation. For the **comprehensive guide with Claude usage patterns and best practices**, see **[CLAUDE.md](../CLAUDE.md)** - the master reference guide.
 
 ### Quick Navigation by Topic
 
 **Planning & Requirements:**
-- [01-PRD.md](planning/01-PRD.md) - Product vision, features, requirements, acceptance criteria
-- [02-Epics-Stories.md](planning/02-Epics-Stories.md) - User stories, sprint planning
-- [03-Todo-List.md](planning/03-Todo-List.md) - Day-by-day implementation tasks
+- [01-PRD.md](planning/mvp/01-PRD.md) - Product vision, features, requirements, acceptance criteria
+- [02-Epics-Stories.md](planning/mvp/02-Epics-Stories.md) - User stories, sprint planning
+- [03-Todo-List.md](planning/mvp/03-Todo-List.md) - Day-by-day implementation tasks (Phase 1)
+- [05-Dev-Guide.md](planning/mvp/05-Dev-Guide.md) - Implementation guide with code examples
+- [07-Figma-Guide.md](planning/mvp/07-Figma-Guide.md) - Complete design system
+- [08-Master-Prompt.md](planning/mvp/08-Master-Prompt.md) - Master implementation guide
+- [ROADMAP.md](planning/roadmap/ROADMAP.md) - 6-phase product roadmap (detailed)
+- [Interactive Roadmap](https://jmcoleman.github.io/codescribe-ai/docs/roadmap/) - Visual timeline (GitHub Pages)
+- [DARK-MODE-SPEC.md](planning/DARK-MODE-SPEC.md) - Phase 2.5 planning (dark mode)
+- [TODO.md](planning/TODO.md) - Active todo list (current phase)
 
-**Development & Architecture:**
+**Architecture & System Design:**
 - [ARCHITECTURE-OVERVIEW.md](architecture/ARCHITECTURE-OVERVIEW.md) - Visual system diagram (Mermaid)
 - [ARCHITECTURE.md](architecture/ARCHITECTURE.md) - Deep technical architecture
-- [05-Dev-Guide.md](planning/05-Dev-Guide.md) - Implementation guide with code examples
-
-**Design & UX:**
-- [07-Figma-Guide.md](planning/07-Figma-Guide.md) - Complete design system
-- [brand-color-palette.html](design/brand-color-palette.html) - Interactive color reference
-- [brand-color-palette.pdf](design/brand-color-palette.pdf) - PDF version
 
 **API & Backend:**
 - [API-Reference.md](api/API-Reference.md) - Complete endpoint specifications
 - [README.md](api/README.md) - API quick start guide
+
+**Deployment:**
+- [MVP-DEPLOY-LAUNCH.md](deployment/MVP-DEPLOY-LAUNCH.md) - Deployment checklist and guide
+- [VERCEL-POSTGRES-SETUP.md](deployment/VERCEL-POSTGRES-SETUP.md) - Neon database setup
+- [RESEND-SETUP.md](deployment/RESEND-SETUP.md) - Email service configuration
+- [DATABASE-ENVIRONMENT-CHECKLIST.md](deployment/DATABASE-ENVIRONMENT-CHECKLIST.md) - Environment setup
 
 **Performance & Optimization:**
 - [OPTIMIZATION-GUIDE.md](performance/OPTIMIZATION-GUIDE.md) - Complete performance guide
@@ -61,22 +69,33 @@ For the **comprehensive documentation map** with descriptions of when to use eac
   - Core Web Vitals tracking
   - Lazy loading patterns
 
+**Design & UX:**
+- [brand-color-palette.html](design/brand-color-palette.html) - Interactive color reference (27 colors)
+- [brand-color-palette.pdf](design/brand-color-palette.pdf) - PDF version for sharing
+
 **Component Guides:**
 - [TOAST-SYSTEM.md](components/TOAST-SYSTEM.md) - Toast notification system (20+ variants)
 - [MERMAID-DIAGRAMS.md](components/MERMAID-DIAGRAMS.md) - Diagram rendering guide
 - [ERROR-HANDLING-UX.md](components/ERROR-HANDLING-UX.md) - Error UX patterns
 - [COPYBUTTON.md](components/COPYBUTTON.md) - Copy-to-clipboard component
+- [DOWNLOADBUTTON.md](components/DOWNLOADBUTTON.md) - Download button component
+- [SKELETON-LOADER.md](components/SKELETON-LOADER.md) - Loading skeleton patterns
 - [SELECT-USAGE.md](components/SELECT-USAGE.md) - Dropdown component guide
 
 **Testing Documentation:**
-- [testing/README.md](testing/README.md) - Testing hub (660+ tests)
-- [COMPONENT-TEST-COVERAGE.md](testing/COMPONENT-TEST-COVERAGE.md) - Coverage report
+- [testing/README.md](testing/README.md) - Testing hub (1,381+ tests)
+- [TEST-FIXES-OCT-2025.md](testing/TEST-FIXES-OCT-2025.md) - Test fix patterns (75 tests fixed, 25 added)
+- [COMPONENT-TEST-COVERAGE.md](testing/COMPONENT-TEST-COVERAGE.md) - Coverage report (18/18 components)
 - [frontend-testing-guide.md](testing/frontend-testing-guide.md) - React testing patterns
 - [CROSS-BROWSER-TEST-PLAN.md](testing/CROSS-BROWSER-TEST-PLAN.md) - E2E strategy
 - [ACCESSIBILITY-AUDIT.MD](testing/ACCESSIBILITY-AUDIT.MD) - WCAG audit
-- [ERROR-HANDLING-TESTS.md](testing/ERROR-HANDLING-TESTS.md) - Error tests
-- [MERMAID-DIAGRAM-TESTS.md](testing/MERMAID-DIAGRAM-TESTS.md) - Diagram tests
 - [SCREEN-READER-TESTING-GUIDE.md](testing/SCREEN-READER-TESTING-GUIDE.md) - A11y testing
+- [ERROR-HANDLING-TESTS.md](testing/ERROR-HANDLING-TESTS.md) - Error tests (58 tests)
+- [MERMAID-DIAGRAM-TESTS.md](testing/MERMAID-DIAGRAM-TESTS.md) - Diagram tests (14 tests)
+- [AUTH-TESTS.md](testing/AUTH-TESTS.md) - Authentication tests (102 tests)
+- [AUTH-SECURITY-TESTS.md](testing/AUTH-SECURITY-TESTS.md) - Security-focused auth tests
+- [DATABASE-MIGRATION-TESTS.md](testing/DATABASE-MIGRATION-TESTS.md) - Migration tests (40 tests)
+- [PASSWORD-RESET-E2E-TESTS.md](testing/PASSWORD-RESET-E2E-TESTS.md) - Password reset flow
 
 **Analytics & Insights:**
 - [ANALYTICS.md](analytics/ANALYTICS.md) - Complete analytics guide
@@ -97,8 +116,8 @@ For the **comprehensive documentation map** with descriptions of when to use eac
 ### Current State
 - **Status:** Production deployment complete
 - **URL:** https://codescribeai.com
-- **Phase:** Phase 1.5 complete (Oct 16-19, 2025)
-- **Next:** Phase 2 (CLI), Phase 3 (VS Code), Phase 4 (Optional enhancements)
+- **Phase:** Phase 2 - Epic 2.1 Complete (Authentication & User Management)
+- **Next:** Phase 2 - Epic 2.2 (Tier System), Phase 2.5 (Dark Mode), Phase 3+ (CLI, VS Code, Enterprise)
 
 ### Tech Stack Versions
 > **📊 Always use version checker for accuracy:** `npm run versions`
@@ -114,7 +133,10 @@ For the **comprehensive documentation map** with descriptions of when to use eac
 **Backend:**
 - Node.js 20+, Express 5
 - Claude API (Sonnet 4.5: claude-sonnet-4-20250514)
+- Neon Postgres (via Vercel Marketplace)
 - Acorn (AST parsing), Multer (uploads)
+- Passport.js (OAuth), bcrypt (password hashing)
+- Resend (email service)
 - Jest, Supertest
 
 **Infrastructure:**
@@ -123,10 +145,22 @@ For the **comprehensive documentation map** with descriptions of when to use eac
 - GitHub Actions (CI/CD)
 
 ### API Endpoints
+
+**Core Features:**
 - `POST /api/generate` - Standard generation
 - `POST /api/generate-stream` - Streaming with SSE
 - `POST /api/upload` - File upload
 - `GET /api/health` - Health check
+
+**Authentication (Phase 2):**
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/login` - Email/password login
+- `POST /api/auth/logout` - Logout
+- `GET /api/auth/check` - Session validation
+- `GET /api/auth/github` - GitHub OAuth
+- `GET /api/auth/github/callback` - OAuth callback
+- `POST /api/auth/forgot-password` - Request password reset
+- `POST /api/auth/reset-password` - Reset password with token
 
 ### Quality Scoring Criteria (100 points)
 1. Overview/Description (20 pts)
@@ -179,9 +213,9 @@ npm run test:e2e:headed       # With browser UI
 ```
 
 ### Test Stats
-- **Total Tests:** 660+ (100% passing)
-- **Backend:** 133+ tests (95.81% statements, 88.72% branches)
-- **Frontend:** 513+ tests (100% critical paths)
+- **Total Tests:** 1,381+ (97.5% pass rate, 0 failures)
+- **Backend:** 434 tests (95.81% statements, 88.72% branches, 86.84% models, 65.41% routes)
+- **Frontend:** 937 tests (98.4% pass rate, 18/18 components tested)
 - **E2E:** 10 tests across 5 browsers (100% pass rate)
 
 ---
@@ -247,18 +281,20 @@ npm run versions      # Check all package versions
 
 ### Architecture Principles
 - **API-first design** - Service layer is framework-agnostic
-- **No database** - Privacy-focused, code never persisted
+- **Privacy-focused** - Code never persisted, only user accounts in database
 - **Streaming** - Real-time with Server-Sent Events
 - **Quality scoring** - Educational tool for documentation best practices
 - **Accessibility-first** - WCAG 2.1 AA compliance
+- **Database** - Neon Postgres for authentication, sessions, usage tracking
 
 ### Key Differentiators
 1. **Real-time streaming** - Character-by-character generation
 2. **Quality scoring** - Not just generation, but education
-3. **Privacy-focused** - No storage, anonymous analytics
+3. **Privacy-focused** - Code never stored, anonymous analytics
 4. **Enterprise UX** - Toast system, error handling, accessibility
 5. **Performance optimized** - Lazy loading, Core Web Vitals tracking
-6. **Comprehensive testing** - 660+ tests across 3 frameworks
+6. **Comprehensive testing** - 1,381+ tests across 3 frameworks
+7. **Tier-based access** - Free, Starter, Pro, Team, Enterprise (Phase 2)
 
 ---
 
@@ -276,9 +312,21 @@ npm run versions      # Check all package versions
 - CI/CD pipeline setup
 - Analytics implementation
 
-**Phase 2 (Future)** - CLI Tool
-**Phase 3 (Future)** - VS Code Extension
-**Phase 4 (Future)** - Optional Enhancements
+**Phase 2 (Oct 20-26, 2025)** 🚧 In Progress
+- Epic 2.1: ✅ Authentication & User Management (complete)
+  - Email/password + GitHub OAuth
+  - Password reset flow with Resend
+  - Session management
+  - 102 authentication tests
+- Epic 2.2: 🚧 Tier System & Feature Flags (in progress)
+- Epic 2.3: 📋 Payment Integration (Stripe)
+- Epic 2.4: 📋 UI Integration
+
+**Phase 2.5 (Future)** - Dark Mode
+**Phase 3 (Future)** - UX Enhancements (Multi-file, exports)
+**Phase 4 (Future)** - Documentation Capabilities (OpenAPI, templates)
+**Phase 5 (Future)** - Developer Tools (CLI, VS Code)
+**Phase 6 (Future)** - Enterprise Readiness (SSO, audit logs)
 
 ---
 
@@ -300,6 +348,6 @@ npm run versions      # Check all package versions
 
 ---
 
-**Last Updated:** October 20, 2025
-**Project Status:** Production Ready ✅
-**Version:** 1.21
+**Last Updated:** October 26, 2025
+**Project Status:** Production Ready ✅ | Phase 2 In Progress 🚧
+**Version:** 1.31
