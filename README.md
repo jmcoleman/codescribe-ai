@@ -125,6 +125,10 @@ _Screenshots coming soon - planned for portfolio presentation_
 
 ## Quick Start
 
+> **Basic Setup:** Get started in 5 minutes with just a Claude API key. No database, authentication, or email service required.
+>
+> **Production Setup:** For authentication, user management, and email features, see [Advanced Configuration](#advanced-configuration) below.
+
 ### Prerequisites
 - Node.js 20+ (developed on v22.19.0)
 - npm or yarn
@@ -147,14 +151,10 @@ _Screenshots coming soon - planned for portfolio presentation_
 
    Create a `.env` file in the `server/` directory:
    ```bash
-   # server/.env
+   # server/.env - Basic Configuration (No Auth)
    CLAUDE_API_KEY=your-api-key-here
    PORT=3000
    NODE_ENV=development
-   ALLOWED_ORIGINS=http://localhost:5173
-   RATE_LIMIT_WINDOW_MS=60000
-   RATE_LIMIT_MAX=10
-   RATE_LIMIT_HOURLY_MAX=100
    ```
 
    Create a `.env` file in the `client/` directory:
@@ -163,7 +163,7 @@ _Screenshots coming soon - planned for portfolio presentation_
    VITE_API_URL=http://localhost:3000
    ```
 
-   **See `.env.example` files in each directory for complete documentation.**
+   **That's it!** The app runs without authentication by default (no `ENABLE_AUTH` or `VITE_ENABLE_AUTH` needed).
 
 ### Development
 
@@ -206,103 +206,85 @@ From **client/** directory:
 
 ## Environment Variables
 
-### Server Environment Variables
+### Basic Configuration (No Auth)
 
-Configure these in `server/.env`:
+For the basic setup without authentication, you only need these minimal environment variables:
+
+**Server variables** (`server/.env`):
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `CLAUDE_API_KEY` | ✅ Yes | - | Your Anthropic Claude API key ([Get one here](https://console.anthropic.com/)) |
 | `PORT` | No | `3000` | Server port number |
 | `NODE_ENV` | No | `development` | Environment mode (`development` or `production`) |
-| `ALLOWED_ORIGINS` | No | `http://localhost:5173` | Comma-separated list of allowed CORS origins |
-| `RATE_LIMIT_WINDOW_MS` | No | `60000` | Rate limit time window in milliseconds (1 minute) |
-| `RATE_LIMIT_MAX` | No | `10` | Maximum requests per window per IP address |
-| `RATE_LIMIT_HOURLY_MAX` | No | `100` | Maximum generation requests per hour per IP |
 
-**Example `server/.env`:**
-```bash
-CLAUDE_API_KEY=sk-ant-your-api-key-here
-PORT=3000
-NODE_ENV=development
-ALLOWED_ORIGINS=http://localhost:5173
-RATE_LIMIT_WINDOW_MS=60000
-RATE_LIMIT_MAX=10
-RATE_LIMIT_HOURLY_MAX=100
-```
-
-### Client Environment Variables
-
-Configure these in `client/.env`:
+**Client variables** (`client/.env`):
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `VITE_API_URL` | No | `http://localhost:3000` | Backend API URL |
 
-**Example `client/.env`:**
+**Example basic configuration:**
+
 ```bash
+# server/.env
+CLAUDE_API_KEY=sk-ant-your-api-key-here
+PORT=3000
+NODE_ENV=development
+
+# client/.env
 VITE_API_URL=http://localhost:3000
 ```
 
-**For production deployment:**
-```bash
-# Production example
-VITE_API_URL=https://your-backend.vercel.app
-```
+**Note:** `ENABLE_AUTH` and `VITE_ENABLE_AUTH` default to `false` in the code, so you can omit them entirely for basic setup. All client environment variables must be prefixed with `VITE_` to be accessible in the browser.
 
-**Note:** All client environment variables must be prefixed with `VITE_` to be accessible in the browser.
+---
 
-### Production Configuration
+## Advanced Configuration
 
-When deploying to production (e.g., Vercel):
+> **Need authentication, user management, or email features?** See comprehensive setup guides:
+>
+> - [Database Setup Guide](docs/deployment/VERCEL-POSTGRES-SETUP.md) - Neon Postgres configuration
+> - [Resend Email Setup](docs/deployment/RESEND-SETUP.md) - Email service for password resets
+> - [Environment Checklist](docs/deployment/DATABASE-ENVIRONMENT-CHECKLIST.md) - Dev/preview/production isolation
+> - [Deployment Guide](docs/deployment/MVP-DEPLOY-LAUNCH.md) - Production deployment
+> - [GitHub OAuth Setup](docs/authentication/GITHUB-OAUTH-SETUP.md) - Social login configuration
 
-**Server variables:**
-```bash
-CLAUDE_API_KEY=sk-ant-your-production-key
-NODE_ENV=production
-PORT=3000
-ALLOWED_ORIGINS=https://your-frontend.vercel.app
-RATE_LIMIT_WINDOW_MS=60000
-RATE_LIMIT_MAX=10
-RATE_LIMIT_HOURLY_MAX=100
-```
+### Enabling Authentication
 
-**Client variables:**
-```bash
-VITE_API_URL=https://your-backend.vercel.app
-```
+To enable authentication features, set `ENABLE_AUTH=true` and configure additional environment variables:
 
-### Authentication & Database Configuration (Phase 2)
+**Required authentication variables** (`server/.env`):
 
-For authentication, user management, and database features, additional environment variables are required:
+| Variable | Description |
+|----------|-------------|
+| `ENABLE_AUTH` | Set to `true` to enable authentication features |
+| `DATABASE_URL` | Neon Postgres connection string (pooled) |
+| `JWT_SECRET` | Secret key for JWT tokens (generate with `openssl rand -base64 32`) |
+| `SESSION_SECRET` | Secret key for session cookies (generate with `openssl rand -base64 32`) |
+| `RESEND_API_KEY` | Resend API key for password reset emails |
+| `EMAIL_FROM` | From address for system emails (e.g., `"CodeScribe AI <noreply@yourdomain.com>"`) |
+| `MIGRATION_SECRET` | Secret for database migration API endpoint |
 
-**Server variables** (`server/.env`):
+**Optional OAuth variables** (`server/.env`):
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `ENABLE_AUTH` | No | Set to `true` to enable authentication features (requires DB and auth env vars) |
-| `DATABASE_URL` | Yes* | Neon Postgres connection string (pooled) |
-| `JWT_SECRET` | Yes* | Secret key for JWT tokens (generate with `openssl rand -base64 32`) |
-| `SESSION_SECRET` | Yes* | Secret key for session cookies (generate with `openssl rand -base64 32`) |
-| `RESEND_API_KEY` | Yes* | Resend API key for password reset emails ([Get one](https://resend.com/api-keys)) |
-| `EMAIL_FROM` | Yes* | From address for system emails (e.g., `"CodeScribe AI <noreply@yourdomain.com>"`) |
-| `GITHUB_CLIENT_ID` | No | GitHub OAuth client ID ([Setup guide](https://github.com/settings/developers)) |
-| `GITHUB_CLIENT_SECRET` | No | GitHub OAuth client secret |
-| `GITHUB_CALLBACK_URL` | No | OAuth callback URL (e.g., `http://localhost:3000/api/auth/github/callback`) |
-| `MIGRATION_SECRET` | Yes* | Secret for database migration API endpoint (generate with `openssl rand -base64 32`) |
-| `CLIENT_URL` | No | Frontend URL for OAuth redirects (default: `http://localhost:5173`) |
-
-\* Required when `ENABLE_AUTH=true`
+| Variable | Description |
+|----------|-------------|
+| `GITHUB_CLIENT_ID` | GitHub OAuth client ID |
+| `GITHUB_CLIENT_SECRET` | GitHub OAuth client secret |
+| `GITHUB_CALLBACK_URL` | OAuth callback URL (e.g., `http://localhost:3000/api/auth/github/callback`) |
+| `CLIENT_URL` | Frontend URL for OAuth redirects (default: `http://localhost:5173`) |
 
 **Client variables** (`client/.env`):
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `VITE_ENABLE_AUTH` | No | Set to `true` to show authentication UI (Sign In button, user menu, etc.) |
+| Variable | Description |
+|----------|-------------|
+| `VITE_ENABLE_AUTH` | Set to `true` to show authentication UI (Sign In button, user menu, etc.) |
 
-**Example `server/.env` with authentication:**
+**Example with authentication enabled:**
+
 ```bash
-# Core
+# server/.env
 CLAUDE_API_KEY=sk-ant-your-api-key-here
 PORT=3000
 NODE_ENV=development
@@ -324,10 +306,8 @@ GITHUB_CALLBACK_URL=http://localhost:3000/api/auth/github/callback
 
 # Migration
 MIGRATION_SECRET=generated-secret-min-32-chars
-```
 
-**Example `client/.env` with authentication:**
-```bash
+# client/.env
 VITE_API_URL=http://localhost:3000
 VITE_ENABLE_AUTH=true
 ```
