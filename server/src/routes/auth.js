@@ -1,0 +1,414 @@
+/**
+ * Authentication Routes
+ *
+ * Handles user registration, login, logout, and OAuth flows.
+ * Supports both email/password and GitHub OAuth authentication.
+ */
+
+import express from 'express';
+import passport from 'passport';
+import crypto from 'crypto';
+import User from '../models/User.js';
+import {
+  requireAuth,
+  validateBody,
+  generateToken,
+  sanitizeUser
+} from '../middleware/auth.js';
+import { sendPasswordResetEmail } from '../services/emailService.js';
+
+const router = express.Router();
+
+// ============================================================================
+// POST /api/auth/signup - User Registration
+// ============================================================================
+router.post(
+  '/signup',
+  validateBody({
+    email: { required: true, type: 'email' },
+    password: { required: true, type: 'password', minLength: 8 }
+  }),
+  async (req, res, next) => {
+    try {
+      const { email, password } = req.body;
+
+      // Check if user already exists
+      const existingUser = await User.findByEmail(email);
+      if (existingUser) {
+        return res.status(409).json({
+          success: false,
+          error: 'User with this email already exists'
+        });
+      }
+
+      // Create new user (password will be hashed in User.create)
+      const user = await User.create({ email, password });
+
+      // Generate JWT token
+      const token = generateToken(user);
+
+      // Log user in via session
+      req.login(user, (err) => {
+        if (err) {
+          console.error('Session login error:', err);
+          // Continue even if session fails (token is primary)
+        }
+
+        res.status(201).json({
+          success: true,
+          message: 'User registered successfully',
+          user: sanitizeUser(user),
+          token
+        });
+      });
+    } catch (error) {
+      console.error('Signup error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to create user account'
+      });
+    }
+  }
+);
+
+// ============================================================================
+// POST /api/auth/login - User Login
+// ============================================================================
+router.post(
+  '/login',
+  validateBody({
+    email: { required: true, type: 'email' },
+    password: { required: true }
+  }),
+  async (req, res, next) => {
+    // Use Passport local strategy for authentication
+    passport.authenticate('local', { session: false }, (err, user, info) => {
+      if (err) {
+        console.error('Login error:', err);
+        return res.status(500).json({
+          success: false,
+          error: 'Login failed'
+        });
+      }
+
+      if (!user) {
+        return res.status(401).json({
+          success: false,
+          error: info?.message || 'Invalid email or password'
+        });
+      }
+
+      // Generate JWT token
+      const token = generateToken(user);
+
+      // Log user in via session
+      req.login(user, (err) => {
+        if (err) {
+          console.error('Session login error:', err);
+          // Continue even if session fails (token is primary)
+        }
+
+        res.json({
+          success: true,
+          message: 'Login successful',
+          user: sanitizeUser(user),
+          token
+        });
+      });
+    })(req, res, next);
+  }
+);
+
+// ============================================================================
+// POST /api/auth/logout - User Logout
+// ============================================================================
+router.post('/logout', requireAuth, (req, res) => {
+  // For JWT-based authentication, logout is primarily handled client-side
+  // by removing the token from localStorage. However, we still clean up
+  // any session data if it exists.
+
+  // Destroy session if exists
+  if (req.session) {
+    req.session.destroy((err) => {
+      if (err) {
+        console.error('Session destruction error:', err);
+      }
+    });
+  }
+
+  // Log out passport session only if it was actually established
+  // Check if user was logged in via session (req.user exists via session)
+  if (req.logout && req.isAuthenticated && req.isAuthenticated()) {
+    req.logout((err) => {
+      if (err) {
+        // Only log error if it's not the "session support required" error
+        if (!err.message.includes('session support')) {
+          console.error('Passport logout error:', err);
+        }
+      }
+    });
+  }
+
+  res.json({
+    success: true,
+    message: 'Logged out successfully'
+  });
+});
+
+// ============================================================================
+// GET /api/auth/me - Get Current User
+// ============================================================================
+router.get('/me', requireAuth, async (req, res) => {
+  try {
+    // req.user should contain at least { id }
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      user: sanitizeUser(user)
+    });
+  } catch (error) {
+    console.error('Get current user error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch user data'
+    });
+  }
+});
+
+// ============================================================================
+// GET /api/auth/github - GitHub OAuth Initiation
+// ============================================================================
+router.get(
+  '/github',
+  passport.authenticate('github', {
+    scope: ['user:email']
+  })
+);
+
+// ============================================================================
+// GET /api/auth/github/callback - GitHub OAuth Callback
+// ============================================================================
+router.get(
+  '/github/callback',
+  passport.authenticate('github', {
+    failureRedirect: '/login?error=github_auth_failed'
+  }),
+  (req, res) => {
+    try {
+      // User authenticated via GitHub
+      const user = req.user;
+
+      if (!user) {
+        return res.redirect('/login?error=no_user_data');
+      }
+
+      // Generate JWT token
+      const token = generateToken(user);
+
+      // Redirect to frontend with token
+      // Frontend will extract token from URL and store it
+      const frontendUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+      res.redirect(`${frontendUrl}/auth/callback?token=${token}`);
+    } catch (error) {
+      console.error('GitHub callback error:', error);
+      res.redirect('/login?error=callback_failed');
+    }
+  }
+);
+
+// ============================================================================
+// Rate Limiting for Password Reset
+// ============================================================================
+// In-memory store for password reset attempts
+// Format: { email: { count: number, resetAt: timestamp } }
+const passwordResetAttempts = new Map();
+
+// Rate limit configuration
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const MAX_RESET_ATTEMPTS = 3; // Max 3 requests per hour per email
+
+/**
+ * Check and update password reset rate limit for an email
+ * @param {string} email - Email address to check
+ * @returns {boolean} - True if allowed, false if rate limited
+ */
+function checkPasswordResetRateLimit(email) {
+  const now = Date.now();
+  const attempt = passwordResetAttempts.get(email);
+
+  // No previous attempts or window expired - allow and reset counter
+  if (!attempt || now > attempt.resetAt) {
+    passwordResetAttempts.set(email, {
+      count: 1,
+      resetAt: now + RATE_LIMIT_WINDOW_MS
+    });
+    return true;
+  }
+
+  // Within window - check if under limit
+  if (attempt.count < MAX_RESET_ATTEMPTS) {
+    attempt.count++;
+    return true;
+  }
+
+  // Rate limit exceeded
+  return false;
+}
+
+/**
+ * Reset password reset rate limit (for testing only)
+ * @param {string} [email] - Optional email to reset. If not provided, resets all.
+ */
+export function resetPasswordResetRateLimit(email) {
+  if (email) {
+    passwordResetAttempts.delete(email);
+  } else {
+    passwordResetAttempts.clear();
+  }
+}
+
+// ============================================================================
+// POST /api/auth/forgot-password - Password Reset Request
+// ============================================================================
+router.post(
+  '/forgot-password',
+  validateBody({
+    email: { required: true, type: 'email' }
+  }),
+  async (req, res) => {
+    try {
+      const { email } = req.body;
+
+      // Check rate limit
+      if (!checkPasswordResetRateLimit(email)) {
+        return res.status(429).json({
+          success: false,
+          error: 'Too many password reset requests. Please try again later.'
+        });
+      }
+
+      // Check if user exists
+      const user = await User.findByEmail(email);
+
+      // Always return success (don't reveal if email exists)
+      // This prevents email enumeration attacks
+      const successMessage = 'If an account exists with this email, a password reset link has been sent.';
+
+      // Only proceed if user exists
+      if (!user) {
+        return res.json({
+          success: true,
+          message: successMessage
+        });
+      }
+
+      // Allow password reset for both password and OAuth-only users
+      // OAuth-only users can use this flow to add a password to their account
+      if (!user.password_hash) {
+        console.log(`Password set requested for OAuth-only user: ${user.email}`);
+      }
+
+      // Generate secure random token (64 characters hex)
+      const resetToken = crypto.randomBytes(32).toString('hex');
+
+      // Set expiration to 1 hour from now
+      const expiresAt = new Date(Date.now() + 3600000); // 1 hour
+
+      // Store token in database (cryptographically random, single-use)
+      await User.setResetToken(user.id, resetToken, expiresAt);
+
+      // Send email with reset link (token is sent unhashed)
+      try {
+        await sendPasswordResetEmail({
+          to: user.email,
+          resetToken
+        });
+        console.log(`Password reset email sent to: ${user.email}`);
+      } catch (emailError) {
+        console.error('Failed to send password reset email:', emailError);
+        // Still return success to user for security
+      }
+
+      res.json({
+        success: true,
+        message: successMessage
+      });
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      // Still return success to prevent information disclosure
+      res.json({
+        success: true,
+        message: 'If an account exists with this email, a password reset link has been sent.'
+      });
+    }
+  }
+);
+
+// ============================================================================
+// POST /api/auth/reset-password - Password Reset Confirmation
+// ============================================================================
+router.post(
+  '/reset-password',
+  validateBody({
+    token: { required: true, minLength: 32 },
+    password: { required: true, type: 'password', minLength: 8 }
+  }),
+  async (req, res) => {
+    try {
+      const { token, password } = req.body;
+
+      // Find user by reset token (also verifies token hasn't expired)
+      const user = await User.findByResetToken(token);
+
+      if (!user) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid or expired reset token'
+        });
+      }
+
+      // Allow password reset for both password and OAuth-only users
+      // OAuth-only users are adding a password (account linking)
+      // Users with existing passwords are resetting their password
+      if (!user.password_hash) {
+        console.log(`Setting password for OAuth-only user: ${user.email}`);
+      } else {
+        console.log(`Resetting password for user: ${user.email}`);
+      }
+
+      // Update user password (works for both new and existing password_hash)
+      await User.updatePassword(user.id, password);
+
+      // Clear reset token so it can't be reused
+      await User.clearResetToken(user.id);
+
+      // Generate JWT token to automatically log user in
+      const jwtToken = generateToken(user);
+
+      console.log(`Password reset successful for user: ${user.email}`);
+
+      res.json({
+        success: true,
+        message: 'Password reset successfully. You are now logged in.',
+        token: jwtToken,
+        user: sanitizeUser(user)
+      });
+    } catch (error) {
+      console.error('Reset password error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to reset password'
+      });
+    }
+  }
+);
+
+export default router;

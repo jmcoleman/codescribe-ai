@@ -11,20 +11,37 @@ module.exports = {
     '!src/**/*.test.js',
     '!src/server.js',
     '!src/**/index.js',
-    // Exclude files without tests (for now)
-    '!src/middleware/**',
-    '!src/routes/**',
+    // Exclude files without tests
     '!src/test-parser.js',
+    '!src/config/passport.js', // Complex Passport strategies, tested via integration
+    '!src/db/connection.js', // Database connection, tested via integration
   ],
 
   // Coverage thresholds (fail if below)
-  // Only enforce thresholds on tested services directory
   coverageThreshold: {
     './src/services/': {
       branches: 80,
       functions: 85,
       lines: 90,
       statements: 90,
+    },
+    './src/middleware/': {
+      branches: 85,
+      functions: 90,
+      lines: 90,
+      statements: 90,
+    },
+    './src/models/': {
+      branches: 80,
+      functions: 85,
+      lines: 90,
+      statements: 90,
+    },
+    './src/routes/': {
+      branches: 70,
+      functions: 75,
+      lines: 80,
+      statements: 80,
     },
   },
 
@@ -60,5 +77,5 @@ module.exports = {
   transform: {
     '^.+\\.js$': 'babel-jest',
   },
-  transformIgnorePatterns: ['node_modules/(?!(acorn)/)'],
+  transformIgnorePatterns: ['node_modules/(?!(acorn|resend)/)'],
 };
