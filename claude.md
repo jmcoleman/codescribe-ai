@@ -271,11 +271,12 @@ codescribe-ai/
 
 ## 🔄 Version History
 
-**Current: v1.28** - Authentication System & Email Verification Setup: Implemented GitHub OAuth + email/password authentication with JWT tokens; added React Router for OAuth callback handling; fixed logout route for JWT-only auth; integrated Resend email service for verification (free tier: 3K emails/month); added email verification database schema (email_verified, verification_token fields); updated [MONETIZATION-STRATEGY.md](private/strategic-planning/MONETIZATION-STRATEGY.md) Appendix C with comprehensive Resend cost analysis; authentication fully tested and working
+**Current: v1.29** - Test Suite Improvements (October 25, 2025): Fixed 41 frontend tests across 5 files (73% reduction in failures); improved pass rate from 93.9% to 96.9%; achieved 100% pass rate for SignupModal and App-FileUpload tests; documented 7 reusable testing patterns; identified and resolved auth check mock issues, backdrop click problems, and selector ambiguity; created comprehensive [TEST-FIXES-OCT-2025.md](docs/testing/TEST-FIXES-OCT-2025.md) documentation; updated testing README with current metrics (885/913 frontend tests passing)
 
 <details>
-<summary>Previous Versions (v1.0-v1.27)</summary>
+<summary>Previous Versions (v1.0-v1.28)</summary>
 
+- **v1.28** - Authentication System & Email Verification Setup (authentication fully tested and working)
 - **v1.27** - Neon Database Integration (database cost analysis, free tier covers 50K users)
 
 - **v1.26** - Streamlined Documentation (condensed CLAUDE.md -61%)

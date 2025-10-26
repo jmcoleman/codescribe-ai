@@ -61,7 +61,7 @@ describe('ResetPassword Component', () => {
       });
 
       expect(screen.getByText('Reset Your Password')).toBeInTheDocument();
-      expect(screen.getByLabelText(/new password/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/^new password$/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/confirm new password/i)).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /reset password/i })).toBeInTheDocument();
     });

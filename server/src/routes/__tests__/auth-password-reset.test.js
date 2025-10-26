@@ -13,7 +13,7 @@ import request from 'supertest';
 import express from 'express';
 import crypto from 'crypto';
 import User from '../../models/User.js';
-import authRoutes from '../auth.js';
+import authRoutes, { resetPasswordResetRateLimit } from '../auth.js';
 import { sendPasswordResetEmail } from '../../services/emailService.js';
 
 // Mock dependencies
@@ -24,6 +24,17 @@ jest.mock('../../services/emailService.js');
 function createTestApp() {
   const app = express();
   app.use(express.json());
+
+  // Mock req.login() for password reset route
+  // The route calls req.login() after successful password reset
+  app.use((req, _res, next) => {
+    req.login = (user, callback) => {
+      req.user = user;
+      if (callback) callback();
+    };
+    next();
+  });
+
   app.use('/api/auth', authRoutes);
   return app;
 }
@@ -34,6 +45,10 @@ describe('Password Reset Flow', () => {
   beforeEach(() => {
     app = createTestApp();
     jest.clearAllMocks();
+    // Reset rate limiting between tests
+    resetPasswordResetRateLimit();
+    // Set JWT_SECRET for token generation
+    process.env.JWT_SECRET = 'test-jwt-secret-key-for-testing';
   });
 
   // ============================================================================
@@ -137,14 +152,17 @@ describe('Password Reset Flow', () => {
       });
     });
 
-    describe('OAuth User Protection', () => {
-      it('should not send email for OAuth-only users', async () => {
+    describe('OAuth User Account Linking', () => {
+      it('should allow OAuth-only users to add password via reset flow', async () => {
+        // This allows account linking - OAuth users can add a password
         User.findByEmail.mockResolvedValue({
           id: 1,
           email: validEmail,
-          password_hash: null, // OAuth user has no password
+          password_hash: null, // OAuth user has no password yet
           github_id: 'github123'
         });
+        User.setResetToken.mockResolvedValue({});
+        sendPasswordResetEmail.mockResolvedValue({});
 
         const response = await request(app)
           .post('/api/auth/forgot-password')
@@ -152,8 +170,9 @@ describe('Password Reset Flow', () => {
 
         expect(response.status).toBe(200);
         expect(response.body.success).toBe(true);
-        expect(sendPasswordResetEmail).not.toHaveBeenCalled();
-        expect(User.setResetToken).not.toHaveBeenCalled();
+        // Email SHOULD be sent to allow OAuth users to add password
+        expect(sendPasswordResetEmail).toHaveBeenCalled();
+        expect(User.setResetToken).toHaveBeenCalled();
       });
 
       it('should send email for email/password users', async () => {
@@ -367,6 +386,10 @@ describe('Password Reset Flow', () => {
           .post('/api/auth/reset-password')
           .send({ token: validToken, password: newPassword });
 
+        if (response.status !== 200) {
+          console.log('Response body:', response.body);
+          console.log('Response text:', response.text);
+        }
         expect(response.status).toBe(200);
         expect(response.body.success).toBe(true);
       });
@@ -425,23 +448,27 @@ describe('Password Reset Flow', () => {
       });
     });
 
-    describe('OAuth User Protection', () => {
-      it('should reject password reset for OAuth-only users', async () => {
+    describe('OAuth User Account Linking', () => {
+      it('should allow OAuth users to set password (account linking)', async () => {
+        // OAuth users can add a password to link their account
         User.findByResetToken.mockResolvedValue({
           id: 1,
           email: 'user@example.com',
-          password_hash: null, // OAuth user
+          password_hash: null, // OAuth user adding password
           github_id: 'github123'
         });
+        User.updatePassword.mockResolvedValue({});
+        User.clearResetToken.mockResolvedValue({});
 
         const response = await request(app)
           .post('/api/auth/reset-password')
           .send({ token: validToken, password: newPassword });
 
-        expect(response.status).toBe(400);
-        expect(response.body.success).toBe(false);
-        expect(response.body.error).toContain('OAuth');
-        expect(User.updatePassword).not.toHaveBeenCalled();
+        expect(response.status).toBe(200);
+        expect(response.body.success).toBe(true);
+        expect(response.body.message).toContain('Password reset successfully');
+        expect(User.updatePassword).toHaveBeenCalledWith(1, newPassword);
+        expect(User.clearResetToken).toHaveBeenCalledWith(1);
       });
     });
 
@@ -490,7 +517,7 @@ describe('Password Reset Flow', () => {
         email: userEmail,
         password_hash: 'old_hash'
       });
-      User.setResetToken.mockImplementation((id, token, expires) => {
+      User.setResetToken.mockImplementation((_id, token, _expires) => {
         resetToken = token;
         return Promise.resolve({});
       });

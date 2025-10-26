@@ -405,18 +405,8 @@ describe('Auth Routes Integration Tests', () => {
   });
 
   describe('POST /api/auth/reset-password', () => {
-    it('should return 501 Not Implemented', async () => {
-      const response = await request(app)
-        .post('/api/auth/reset-password')
-        .send({
-          token: 'a'.repeat(32),
-          password: 'NewPassword123'
-        });
-
-      expect(response.status).toBe(501);
-      expect(response.body.success).toBe(false);
-      expect(response.body.error).toContain('not yet implemented');
-    });
+    // Full password reset tests are in src/routes/__tests__/auth-password-reset.test.js
+    // These are basic validation tests only
 
     it('should validate token length', async () => {
       const response = await request(app)

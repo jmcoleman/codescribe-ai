@@ -9,10 +9,24 @@
 
 import { Resend } from 'resend';
 
-// Initialize Resend only if API key is available
-const resend = process.env.RESEND_API_KEY
-  ? new Resend(process.env.RESEND_API_KEY)
-  : null;
+// Initialize Resend lazily - will be created when needed
+// This allows tests to set env vars before initialization
+let resend = null;
+
+function getResendClient() {
+  if (!process.env.RESEND_API_KEY) {
+    return null;
+  }
+  if (!resend) {
+    resend = new Resend(process.env.RESEND_API_KEY);
+  }
+  return resend;
+}
+
+// Export for testing - allows tests to reset the client
+export function __resetResendClient() {
+  resend = null;
+}
 
 // Configuration
 const FROM_EMAIL = process.env.EMAIL_FROM || 'CodeScribe AI <noreply@mail.codescribeai.com>';
@@ -43,14 +57,15 @@ const getEmailFooter = (clientUrl) => `
  * @returns {Promise<Object>} Send result
  */
 export async function sendPasswordResetEmail({ to, resetToken }) {
-  if (!resend) {
+  const client = getResendClient();
+  if (!client) {
     throw new Error('Email service not configured. Please set RESEND_API_KEY environment variable.');
   }
 
   const resetUrl = `${CLIENT_URL}/reset-password?token=${resetToken}`;
 
   try {
-    const result = await resend.emails.send({
+    const result = await client.emails.send({
       from: FROM_EMAIL,
       to,
       subject: 'Reset Your Password - CodeScribe AI',
@@ -115,6 +130,11 @@ export async function sendPasswordResetEmail({ to, resetToken }) {
     return result;
   } catch (error) {
     console.error('Failed to send password reset email:', error);
+    console.error('Error details:', {
+      name: error.name,
+      message: error.message,
+      stack: error.stack?.split('\n')[0]
+    });
     throw new Error('Failed to send password reset email');
   }
 }
@@ -127,14 +147,15 @@ export async function sendPasswordResetEmail({ to, resetToken }) {
  * @returns {Promise<Object>} Send result
  */
 export async function sendVerificationEmail({ to, verificationToken }) {
-  if (!resend) {
+  const client = getResendClient();
+  if (!client) {
     throw new Error('Email service not configured. Please set RESEND_API_KEY environment variable.');
   }
 
   const verifyUrl = `${CLIENT_URL}/verify-email?token=${verificationToken}`;
 
   try {
-    const result = await resend.emails.send({
+    const result = await client.emails.send({
       from: FROM_EMAIL,
       to,
       subject: 'Verify Your Email - CodeScribe AI',
@@ -195,7 +216,7 @@ export async function sendVerificationEmail({ to, verificationToken }) {
       `
     });
 
-    console.log('Verification email sent:', { to, id: result.id });
+    console.log('Verification email sent:', { to, id: result.data?.id });
     return result;
   } catch (error) {
     console.error('Failed to send verification email:', error);
