@@ -316,7 +316,7 @@ This allows the codebase to include auth implementation without requiring databa
 
 - [ ] **Database Schema**
   - [ ] Create Usage table (user_id, daily_count, monthly_count, reset_date)
-  - [ ] Add tier column to User table (FREE, PRO, TEAM, ENTERPRISE)
+  - [ ] Add tier column to User table (FREE, STARTER, PRO, TEAM, ENTERPRISE)
   - [ ] Create indexes for performance
 
 - [ ] **Backend Implementation**
@@ -334,9 +334,10 @@ This allows the codebase to include auth implementation without requiring databa
 
 - [ ] **Tier Configuration**
   - [ ] Configure FREE tier limits (10 docs/month)
-  - [ ] Configure PRO tier limits (100 docs/month)
-  - [ ] Configure TEAM tier limits (500 docs/month)
-  - [ ] Configure ENTERPRISE tier (unlimited)
+  - [ ] Configure STARTER tier limits (50 docs/month, $12/mo)
+  - [ ] Configure PRO tier limits (200 docs/month, $29/mo)
+  - [ ] Configure TEAM tier limits (1,000 docs/month, $99/mo)
+  - [ ] Configure ENTERPRISE tier (unlimited, custom pricing)
 
 - [ ] **Testing**
   - [ ] Unit tests for tierGate middleware
@@ -397,7 +398,8 @@ This allows the codebase to include auth implementation without requiring databa
 
 #### Success Criteria
 
-- [ ] Users can subscribe to Pro tier ($9/mo)
+- [ ] Users can subscribe to Starter tier ($12/mo)
+- [ ] Users can subscribe to Pro tier ($29/mo)
 - [ ] Stripe webhooks update user tiers correctly
 - [ ] Subscription management portal works
 - [ ] Invoice generation works

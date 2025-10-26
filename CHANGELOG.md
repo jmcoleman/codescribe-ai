@@ -7,7 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Documentation & Planning Updates (October 26, 2025)**
+  - Updated pricing structure from 4 tiers to 5 tiers across all documentation
+  - Added Starter tier ($12/mo, 50 docs/month) between Free and Pro
+  - Corrected Pro tier pricing: $9/100 docs → $29/200 docs
+  - Corrected Team tier pricing: $29/500 docs → $99/1,000 docs
+  - Updated feature flags (server/src/config/tiers.js) with complete 5-tier configuration
+  - Fixed Team tier support SLA: 4hr → 24hr priority (business hours) for realistic expectations
+  - Moved "Unhide Sign In button" from Epic 2.4 to Epic 2.1 (auth implementation)
+  - Added GitHub Pages deployment section to RELEASE-PROCESS.md for interactive roadmap
+  - Added reference to RELEASE-QUICKSTART.md in release documentation
+  - Updated ROADMAP.md, roadmap-data.json, and MONETIZATION-STRATEGY.md for consistency
+  - All pricing documentation now matches authoritative monetization strategy
+
+---
+
+## [2.0.0] - 2025-10-26
+
+**Status:** ✅ Feature Release - Phase 2: Monetization Foundation (Authentication & Database)
+
 ### Added
+- **Test Data Utilities Modularization (October 26, 2025)**
+  - Extracted test data loading from App.jsx into dedicated testData.js module (client/src/utils/testData.js)
+  - Added TEST_CODE constant with demo documentation features (download, copy, score actions)
+  - Enhanced createTestDataLoader with optional code loading via includeCode parameter
+  - Support for loading both documentation and code panels simultaneously
+  - Comprehensive documentation in client/src/utils/README.md
+  - 24 comprehensive tests (100% passing) covering all exports and edge cases
+  - Backward compatible: existing window.loadTestDoc() calls still work
+  - New feature: window.loadTestDoc({ includeCode: true }) loads code panel too
+  - Demo actions in TEST_CODE: download(), copy(), score() for feature demonstrations
+  - Reduced App.jsx by 54 lines (improved modularity and separation of concerns)
+
 - **Backend Test Coverage & CI Fixes (October 26, 2025)**
   - Added 25 new tests for authentication password reset functionality
   - User model password reset tests (12 tests): setResetToken, findByResetToken, updatePassword, clearResetToken
@@ -171,6 +203,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Brand colors match application theme
 
 ### Testing
+- **Test Data Utilities Tests**
+  - 24 comprehensive tests for testData.js module (100% passing)
+  - TEST_DOCUMENTATION validation (3 tests): structure, markdown headers, code blocks
+  - TEST_CODE validation (5 tests): hello function, demo functions, action methods, example usage
+  - TEST_QUALITY_SCORE validation (5 tests): structure, score/grade, breakdown criteria, summary
+  - createTestDataLoader tests (7 tests): basic loading, optional code loading, edge cases
+  - exposeTestDataLoader tests (4 tests): window exposure, cleanup, invocation
+  - Edge case coverage: undefined parameters, missing setters, no options provided
+  - Integration verified: App.jsx tests still pass (15/15)
+
 - **Backend Tests**
   - 28 new password reset route tests (auth-password-reset.test.js)
   - 15 new email service tests (emailService.test.js)

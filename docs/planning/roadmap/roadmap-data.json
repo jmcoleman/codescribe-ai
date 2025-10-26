@@ -211,7 +211,8 @@
             "JWT tokens for web, CLI, and VS Code extension (Phase 5)",
             "Password reset flow",
             "Auth routes (/signup, /login, /github, /github/callback)",
-            "Login/Signup modal UI with React Context"
+            "Login/Signup modal UI with React Context",
+            "Unhide Sign In button in header"
           ]
         },
         {
@@ -226,7 +227,7 @@
             "Usage schema (user_id, daily_count, monthly_count)",
             "Tier gate middleware integration (req.user.tier)",
             "Usage tracking and quota enforcement",
-            "4-tier system (Free, Pro, Team, Enterprise)",
+            "5-tier system (Free, Starter $12, Pro $29, Team $99, Enterprise custom)",
             "Usage dashboard UI"
           ]
         },
@@ -250,7 +251,6 @@
           "duration": "1-2 days",
           "status": "Planning Complete",
           "features": [
-            "Unhide Sign In button in header",
             "User profile menu (usage stats, settings)",
             "Upgrade to Pro prompts",
             "Tier badges and feature gates",

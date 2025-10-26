@@ -39,11 +39,11 @@ export const TIER_FEATURES = {
     whiteLabel: false,                  // CodeScribe branding required
   },
 
-  pro: {
-    // Volume Limits (10x increase - perfect for active developers)
-    maxFileSize: 1_000_000,             // 1MB - multiple files or large projects
-    dailyGenerations: 30,               // ~100/month for daily use
-    monthlyGenerations: 100,            // Hard monthly cap
+  starter: {
+    // Volume Limits (5x increase - convenience tier)
+    maxFileSize: 500_000,               // 500KB - larger files
+    dailyGenerations: 10,               // ~50/month for regular use
+    monthlyGenerations: 50,             // Hard monthly cap
 
     // All Free Features
     documentTypes: ['README', 'JSDOC', 'API', 'ARCHITECTURE'],
@@ -54,17 +54,12 @@ export const TIER_FEATURES = {
     codeParser: true,
     mermaidDiagrams: true,
 
-    // Pro Additions (Convenience-focused)
+    // Starter Additions (Convenience-focused)
     builtInApiCredits: true,            // No API key setup required
-    batchProcessing: true,              // Up to 10 files at once
-    customTemplates: true,              // Save/reuse custom templates
-    apiAccess: true,                    // REST API + CLI access
+    batchProcessing: false,             // Single file only
+    customTemplates: false,             // Default templates only
+    apiAccess: false,                   // Web UI only
     priorityQueue: true,                // 2x faster processing
-
-    // Advanced Features
-    exportFormats: ['markdown', 'html', 'pdf'],  // Multiple export options
-    versionHistory: true,               // Last 30 days of generations
-    advancedParsing: true,              // TypeScript, JSX, custom parsers
 
     // Support
     support: 'email',                   // Email support, 48hr response
@@ -75,11 +70,45 @@ export const TIER_FEATURES = {
     whiteLabel: false,                  // CodeScribe branding required
   },
 
+  pro: {
+    // Volume Limits (20x free tier - perfect for active developers)
+    maxFileSize: 1_000_000,             // 1MB - multiple files or large projects
+    dailyGenerations: 50,               // ~200/month for daily use
+    monthlyGenerations: 200,            // Hard monthly cap
+
+    // All Starter Features
+    documentTypes: ['README', 'JSDOC', 'API', 'ARCHITECTURE'],
+    streaming: true,
+    qualityScoring: true,
+    monacoEditor: true,
+    fileUpload: true,
+    codeParser: true,
+    mermaidDiagrams: true,
+    builtInApiCredits: true,
+    priorityQueue: true,
+
+    // Pro Additions (Power user features)
+    batchProcessing: true,              // Up to 10 files at once
+    customTemplates: true,              // Save/reuse custom templates
+    apiAccess: false,                   // Reserved for Team+
+    exportFormats: ['markdown', 'html', 'pdf'],  // Multiple export options
+    versionHistory: false,              // Reserved for Team+
+    advancedParsing: true,              // TypeScript, JSX, custom parsers
+
+    // Support
+    support: 'email',                   // Email support, 24hr response
+    sla: null,                          // No formal SLA
+
+    // Deployment
+    selfHosted: true,                   // Still can self-host
+    whiteLabel: false,                  // CodeScribe branding required
+  },
+
   team: {
     // Volume Limits (Shared across team - encourages collaboration)
     maxFileSize: 5_000_000,             // 5MB - large codebases
-    dailyGenerations: 150,              // ~500/month shared
-    monthlyGenerations: 500,            // Shared team quota
+    dailyGenerations: 250,              // ~1,000/month shared
+    monthlyGenerations: 1000,           // Shared team quota (100x free tier)
     maxUsers: 10,                       // Team size limit
 
     // All Pro Features
@@ -93,13 +122,13 @@ export const TIER_FEATURES = {
     builtInApiCredits: true,
     batchProcessing: true,              // Up to 50 files at once
     customTemplates: true,
-    apiAccess: true,
     priorityQueue: true,
     exportFormats: ['markdown', 'html', 'pdf'],
-    versionHistory: true,               // Last 90 days
     advancedParsing: true,
 
     // Team Additions (Collaboration-focused)
+    apiAccess: true,                    // REST API + CLI access
+    versionHistory: true,               // Last 90 days
     teamWorkspace: true,                // Shared projects and templates
     sharedTemplates: true,              // Team template library
     usageAnalytics: true,               // Team usage dashboard
@@ -109,7 +138,7 @@ export const TIER_FEATURES = {
     cicdIntegration: true,              // GitHub Actions, GitLab CI
 
     // Support
-    support: 'priority-email',          // Email support, 24hr response
+    support: 'priority-email',          // Email support, 24hr priority (business hours)
     sla: null,                          // No formal SLA
 
     // Deployment
@@ -179,17 +208,23 @@ export const TIER_PRICING = {
     period: null,
     description: '10 docs/month OR self-hosted unlimited',
   },
-  pro: {
-    price: 9,
+  starter: {
+    price: 12,
     period: 'month',
-    annual: 90,                         // 2 months free
-    description: '100 docs/month, built-in API credits, priority support',
+    annual: 120,                        // 2 months free
+    description: '50 docs/month, built-in API credits, priority queue',
   },
-  team: {
+  pro: {
     price: 29,
     period: 'month',
     annual: 290,                        // 2 months free
-    description: '500 docs/month, 10 users, team workspace, integrations',
+    description: '200 docs/month, batch processing, custom templates, export formats',
+  },
+  team: {
+    price: 99,
+    period: 'month',
+    annual: 990,                        // 2 months free
+    description: '1,000 docs/month, 10 users, team workspace, integrations',
   },
   enterprise: {
     price: null,                        // Custom pricing
@@ -228,7 +263,7 @@ export const getTiersWithFeature = (feature) => {
  */
 export const getUpgradePath = (currentTier, feature) => {
   const tiersWithFeature = getTiersWithFeature(feature);
-  const tierOrder = ['free', 'pro', 'team', 'enterprise'];
+  const tierOrder = ['free', 'starter', 'pro', 'team', 'enterprise'];
   const currentIndex = tierOrder.indexOf(currentTier);
 
   // Find first tier with feature that's higher than current

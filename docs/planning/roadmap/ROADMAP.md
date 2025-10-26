@@ -302,6 +302,7 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 - Auth routes: `/api/auth/signup`, `/api/auth/login`, `/api/auth/logout`, `/api/auth/github`
 - Frontend auth context (React Context or Zustand)
 - Login/Signup modal UI
+- Unhide Sign In button in header
 
 **Rationale:** Passport.js selected over Clerk to support CLI authentication (Phase 5) and self-hosted enterprise deployment (Phase 6). See [AUTH-ANALYSIS.md](../AUTH-ANALYSIS.md) for full comparison.
 
@@ -322,7 +323,6 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 - Invoice and receipt generation
 
 #### Epic 2.4: UI Integration (1-2 days)
-- Unhide Sign In button in header
 - User profile menu (usage stats, settings, logout)
 - "Upgrade to Pro" prompts when approaching limits
 - Tier badges and feature gates in UI
@@ -337,21 +337,27 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 - ⚠️ Limit: 10 docs/month OR unlimited self-hosted with own API key
 - 💡 **Philosophy:** Portfolio-worthy for users, showcases full feature set
 
-**Pro Tier ($9/mo - Volume + Convenience):**
-- ✅ 100 docs/month (10x increase)
+**Starter Tier ($12/mo - Convenience):**
+- ✅ 50 docs/month (5x increase)
 - ✅ Built-in API credits (no Claude API key setup)
-- ✅ Batch processing (up to 10 files at once)
-- ✅ Custom templates, priority queue
-- ✅ Export formats (markdown, HTML, PDF)
-- ✅ Version history (30 days)
+- ✅ Priority queue
+- ✅ Email support (48hr response)
+- 💡 **Philosophy:** Instant signup convenience vs. 20-min API key setup
 
-**Team Tier ($29/mo - Collaboration):**
-- ✅ 500 docs/month shared across 10 users
+**Pro Tier ($29/mo - Volume + Power Features):**
+- ✅ 200 docs/month (20x free tier)
+- ✅ Batch processing (up to 10 files at once)
+- ✅ Custom templates
+- ✅ Export formats (markdown, HTML, PDF)
+- ✅ Email support (24hr response)
+
+**Team Tier ($99/mo - Collaboration):**
+- ✅ 1,000 docs/month shared across 10 users
 - ✅ Team workspace, shared templates
 - ✅ Usage analytics dashboard
 - ✅ Role-based access (admin, member, viewer)
 - ✅ Slack + GitHub + CI/CD integrations
-- ✅ Priority email support (24hr response)
+- ✅ Priority email support (24hr business hours)
 
 **Enterprise Tier (Custom - Compliance + Control):**
 - ✅ Unlimited docs, unlimited users
@@ -370,15 +376,17 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 5. ✅ Compounds over time (SEO, stars, testimonials)
 
 **Conversion Psychology:**
-- **Volume:** Hit 10-doc limit → Pro ($9 feels cheap for 100 docs)
-- **Convenience:** Avoid API key setup → Pro (20 min vs. 30 sec)
-- **Collaboration:** Team needs workspace → Team ($29 solves chaos)
+- **Volume:** Hit 10-doc limit → Starter ($12 feels cheap for 50 docs)
+- **Convenience:** Avoid API key setup → Starter (20 min vs. 30 sec)
+- **Power User:** Need 200 docs/month → Pro ($29 for advanced features)
+- **Collaboration:** Team needs workspace → Team ($99 solves chaos)
 - **Professional:** Company context → Enterprise (compliance ready)
 
 **Proven Model (GitLab, Supabase, Ghost):**
 - Generous free tier → 30M users → <1% paying → $150M ARR (GitLab)
-- Year 1: Similar revenue to restricted free tier (~$10K MRR)
-- Year 3: 2x revenue due to viral growth and SEO dominance
+- 5-tier structure: Free → Starter → Pro → Team → Enterprise
+- Year 1: ~$31-39K MRR (750-1,250 paid users at 3-5% conversion)
+- Year 3: ~$78K MRR (2,500 paid users) due to viral growth and SEO dominance
 
 ### Success Criteria
 - [ ] Feature flag architecture integrated into existing codebase
