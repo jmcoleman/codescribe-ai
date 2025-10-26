@@ -45,6 +45,7 @@ AI-powered documentation generator with real-time streaming, quality scoring (0-
 | [Testing README](docs/testing/README.md) | Test navigation hub | 660+ test stats, quick commands, coverage overview |
 | [COMPONENT-TEST-COVERAGE.md](docs/testing/COMPONENT-TEST-COVERAGE.md) | Coverage details ⭐ | 13/18 components tested, category breakdown, gaps |
 | [frontend-testing-guide.md](docs/testing/frontend-testing-guide.md) | React testing patterns | Vitest + RTL, mocking, a11y, interactions |
+| [TEST-FIXES-OCT-2025.md](docs/testing/TEST-FIXES-OCT-2025.md) | Test fix patterns ⭐ | 75 tests fixed, 10 patterns, 6 technical insights, 97.3% pass rate |
 
 **Specialized Tests:** [ERROR-HANDLING-TESTS.md](docs/testing/ERROR-HANDLING-TESTS.md) (58 tests) | [MERMAID-DIAGRAM-TESTS.md](docs/testing/MERMAID-DIAGRAM-TESTS.md) (14 tests) | [CROSS-BROWSER-TEST-PLAN.md](docs/testing/CROSS-BROWSER-TEST-PLAN.md) | [ACCESSIBILITY-AUDIT.MD](docs/testing/ACCESSIBILITY-AUDIT.MD)
 
@@ -105,7 +106,8 @@ AI-powered documentation generator with real-time streaming, quality scoring (0-
 | Design/UI | Figma Guide, Brand Color Palette |
 | Architecture | ARCHITECTURE-OVERVIEW.md (visual), ARCHITECTURE.md (technical) |
 | Performance | OPTIMIZATION-GUIDE.md |
-| Testing | Testing README, COMPONENT-TEST-COVERAGE.md |
+| Testing | Testing README, COMPONENT-TEST-COVERAGE.md, TEST-FIXES-OCT-2025.md |
+| Test Fixes/Patterns | TEST-FIXES-OCT-2025.md (10 patterns, 6 insights, frontend + backend) |
 | Accessibility | ACCESSIBILITY-AUDIT.MD, SCREEN-READER-TESTING-GUIDE.md |
 | Components | TOAST-SYSTEM.md, ERROR-HANDLING-UX.md, COPYBUTTON.md, etc. |
 | Versions | Run `npm run versions`, VERSION-CHECKER.md |
@@ -120,7 +122,8 @@ AI-powered documentation generator with real-time streaming, quality scoring (0-
 ### 3. Key Cross-References
 - **Architecture:** ARCHITECTURE-OVERVIEW.md (visual) → ARCHITECTURE.md (technical) → Dev Guide (implementation)
 - **Performance:** OPTIMIZATION-GUIDE.md (comprehensive) → Dev Guide (techniques) → ARCHITECTURE.md (targets)
-- **Testing:** Testing README (overview) → COMPONENT-TEST-COVERAGE.md (details) → frontend-testing-guide.md (patterns)
+- **Testing:** Testing README (overview) → COMPONENT-TEST-COVERAGE.md (details) → frontend-testing-guide.md (patterns) → TEST-FIXES-OCT-2025.md (fixes & patterns)
+- **Test Debugging:** TEST-FIXES-OCT-2025.md (10 patterns, 6 insights) for fixing auth tests, mocking, validation
 - **Error Handling:** ERROR-HANDLING-UX.md (UX patterns) → TOAST-SYSTEM.md (error toasts)
 - **Accessibility:** ACCESSIBILITY-AUDIT.MD (results) → SCREEN-READER-TESTING-GUIDE.md (procedures)
 
@@ -271,11 +274,12 @@ codescribe-ai/
 
 ## 🔄 Version History
 
-**Current: v1.29** - Test Suite Improvements (October 25, 2025): Fixed 41 frontend tests across 5 files (73% reduction in failures); improved pass rate from 93.9% to 96.9%; achieved 100% pass rate for SignupModal and App-FileUpload tests; documented 7 reusable testing patterns; identified and resolved auth check mock issues, backdrop click problems, and selector ambiguity; created comprehensive [TEST-FIXES-OCT-2025.md](docs/testing/TEST-FIXES-OCT-2025.md) documentation; updated testing README with current metrics (885/913 frontend tests passing)
+**Current: v1.30** - Complete Test Suite Fix & Deployment Unblock (October 25, 2025): **75 total tests fixed** (54 frontend + 21 backend); **100% elimination of all test failures** (70 → 0); frontend 98.4% pass rate, backend 94.9% pass rate, overall 97.3%; achieved 100% pass rate for 4 frontend files (SignupModal, App-FileUpload, ResetPassword, ForgotPasswordModal); fixed GitHub OAuth session conflict (removed `session: false` + `req.login()` contradiction); documented 10 reusable patterns (8 frontend + 2 backend) and 6 technical insights; comprehensive [TEST-FIXES-OCT-2025.md](docs/testing/TEST-FIXES-OCT-2025.md); **✅ deployment unblocked**
 
 <details>
-<summary>Previous Versions (v1.0-v1.28)</summary>
+<summary>Previous Versions (v1.0-v1.29)</summary>
 
+- **v1.29** - Test Suite Improvements Session 1 (41 frontend tests fixed, 73% reduction in failures)
 - **v1.28** - Authentication System & Email Verification Setup (authentication fully tested and working)
 - **v1.27** - Neon Database Integration (database cost analysis, free tier covers 50K users)
 

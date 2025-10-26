@@ -199,7 +199,6 @@ router.get(
 router.get(
   '/github/callback',
   passport.authenticate('github', {
-    session: false,
     failureRedirect: '/login?error=github_auth_failed'
   }),
   (req, res) => {
@@ -214,17 +213,10 @@ router.get(
       // Generate JWT token
       const token = generateToken(user);
 
-      // Log user in via session
-      req.login(user, (err) => {
-        if (err) {
-          console.error('Session login error:', err);
-        }
-
-        // Redirect to frontend with token
-        // Frontend should extract token from URL and store it
-        const frontendUrl = process.env.CLIENT_URL || 'http://localhost:5173';
-        res.redirect(`${frontendUrl}/auth/callback?token=${token}`);
-      });
+      // Redirect to frontend with token
+      // Frontend will extract token from URL and store it
+      const frontendUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+      res.redirect(`${frontendUrl}/auth/callback?token=${token}`);
     } catch (error) {
       console.error('GitHub callback error:', error);
       res.redirect('/login?error=callback_failed');

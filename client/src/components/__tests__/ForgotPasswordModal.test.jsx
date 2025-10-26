@@ -88,6 +88,10 @@ describe('ForgotPasswordModal', () => {
       const user = userEvent.setup();
       renderForgotPasswordModal();
 
+      // Disable HTML5 validation to test JavaScript validation
+      const form = screen.getByRole('button', { name: /send reset link/i }).closest('form');
+      form.setAttribute('novalidate', 'true');
+
       const emailInput = screen.getByLabelText(/email address/i);
       await user.type(emailInput, 'invalid-email');
 
@@ -182,7 +186,7 @@ describe('ForgotPasswordModal', () => {
                   status: 200,
                   json: async () => ({
                     success: true,
-                    message: 'Reset email sent',
+                    message: 'If an account exists with this email, a password reset link has been sent.',
                   }),
                 }),
               100
@@ -191,6 +195,10 @@ describe('ForgotPasswordModal', () => {
       );
 
       renderForgotPasswordModal();
+
+      // Disable HTML5 validation to test JavaScript validation
+      const form = screen.getByRole('button', { name: /send reset link/i }).closest('form');
+      form.setAttribute('novalidate', 'true');
 
       const emailInput = screen.getByLabelText(/email address/i);
       const submitButton = screen.getByRole('button', { name: /send reset link/i });
@@ -214,11 +222,15 @@ describe('ForgotPasswordModal', () => {
         status: 200,
         json: async () => ({
           success: true,
-          message: 'Reset email sent',
+          message: 'If an account exists with this email, a password reset link has been sent.',
         }),
       });
 
       renderForgotPasswordModal();
+
+      // Disable HTML5 validation to test JavaScript validation
+      const form = screen.getByRole('button', { name: /send reset link/i }).closest('form');
+      form.setAttribute('novalidate', 'true');
 
       const emailInput = screen.getByLabelText(/email address/i);
       await user.type(emailInput, 'user@example.com');
@@ -290,11 +302,15 @@ describe('ForgotPasswordModal', () => {
         status: 200,
         json: async () => ({
           success: true,
-          message: 'Reset email sent',
+          message: 'If an account exists with this email, a password reset link has been sent.',
         }),
       });
 
       renderForgotPasswordModal();
+
+      // Disable HTML5 validation to test JavaScript validation
+      const form = screen.getByRole('button', { name: /send reset link/i }).closest('form');
+      form.setAttribute('novalidate', 'true');
 
       const emailInput = screen.getByLabelText(/email address/i);
       await user.type(emailInput, 'user@example.com{Enter}');
@@ -337,7 +353,7 @@ describe('ForgotPasswordModal', () => {
         status: 200,
         json: async () => ({
           success: true,
-          message: 'Reset email sent',
+          message: 'If an account exists with this email, a password reset link has been sent.',
         }),
       });
 
@@ -352,7 +368,7 @@ describe('ForgotPasswordModal', () => {
       await waitFor(() => {
         const alerts = screen.getAllByRole('alert');
         expect(alerts.length).toBeGreaterThan(0);
-        expect(alerts[0]).toHaveTextContent(/reset email sent/i);
+        expect(alerts[0]).toHaveTextContent(/if an account exists/i);
       });
     });
   });
@@ -362,12 +378,17 @@ describe('ForgotPasswordModal', () => {
       const user = userEvent.setup();
       const { rerender } = renderForgotPasswordModal(true);
 
+      // Disable HTML5 validation to test JavaScript validation
+      const form = screen.getByRole('button', { name: /send reset link/i }).closest('form');
+      form.setAttribute('novalidate', 'true');
+
       const emailInput = screen.getByLabelText(/email address/i);
       await user.type(emailInput, 'test@example.com');
 
       // Trigger an error
       const submitButton = screen.getByRole('button', { name: /send reset link/i });
-      await user.type(emailInput, '{selectall}invalid');
+      await user.clear(emailInput);
+      await user.type(emailInput, 'invalid');
       await user.click(submitButton);
 
       await waitFor(() => {
@@ -412,11 +433,15 @@ describe('ForgotPasswordModal', () => {
         status: 200,
         json: async () => ({
           success: true,
-          message: 'Reset email sent',
+          message: 'If an account exists with this email, a password reset link has been sent.',
         }),
       });
 
       renderForgotPasswordModal();
+
+      // Disable HTML5 validation to test JavaScript validation
+      const form = screen.getByRole('button', { name: /send reset link/i }).closest('form');
+      form.setAttribute('novalidate', 'true');
 
       const emailInput = screen.getByLabelText(/email address/i);
       await user.type(emailInput, 'user@example.com');

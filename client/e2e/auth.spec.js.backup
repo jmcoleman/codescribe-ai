@@ -57,7 +57,7 @@ test.describe('Authentication Flow', () => {
 
     test('should close modal when close button is clicked', async ({ page }) => {
       // Open modal
-      await page.getByRole('button', { name: /sign in/i }).first().click();
+      await page.getByRole('button', { name: /sign in/i }).click();
       await expect(page.getByRole('dialog')).toBeVisible();
 
       // Click close button
@@ -69,7 +69,7 @@ test.describe('Authentication Flow', () => {
 
     test('should close modal when Escape is pressed', async ({ page }) => {
       // Open modal
-      await page.getByRole('button', { name: /sign in/i }).first().click();
+      await page.getByRole('button', { name: /sign in/i }).click();
       await expect(page.getByRole('dialog')).toBeVisible();
 
       // Press Escape
@@ -81,7 +81,7 @@ test.describe('Authentication Flow', () => {
 
     test('should close modal when backdrop is clicked', async ({ page }) => {
       // Open modal
-      await page.getByRole('button', { name: /sign in/i }).first().click();
+      await page.getByRole('button', { name: /sign in/i }).click();
       await expect(page.getByRole('dialog')).toBeVisible();
 
       // Wait for click-outside to be enabled (200ms delay)
@@ -152,7 +152,7 @@ test.describe('Authentication Flow', () => {
 
     test('should show password strength indicator', async ({ page }) => {
       // Open signup modal
-      await page.getByRole('button', { name: /sign in/i }).first().click();
+      await page.getByRole('button', { name: /sign in/i }).click();
       await page.getByText(/sign up/i).click();
 
       // Type password
@@ -167,14 +167,14 @@ test.describe('Authentication Flow', () => {
 
     test('should validate password confirmation', async ({ page }) => {
       // Open signup modal
-      await page.getByRole('button', { name: /sign in/i }).first().click();
+      await page.getByRole('button', { name: /sign in/i }).click();
       await page.getByText(/sign up/i).click();
 
       // Enter mismatched passwords
       await page.getByLabel(/email address/i).fill('test@example.com');
       await page.getByLabel(/^password$/i).fill('Password123');
       await page.getByLabel(/confirm password/i).fill('Password456');
-      await page.getByRole('dialog').getByRole('button', { name: /create account/i }).click();
+      await page.getByRole('button', { name: /create account/i }).click();
 
       // Should show mismatch error
       await expect(page.getByText(/passwords do not match/i)).toBeVisible();
@@ -182,33 +182,33 @@ test.describe('Authentication Flow', () => {
 
     test('should switch back to login modal', async ({ page }) => {
       // Open signup modal
-      await page.getByRole('button', { name: /sign in/i }).first().click();
+      await page.getByRole('button', { name: /sign in/i }).click();
       await page.getByText(/sign up/i).click();
-      await expect(page.getByRole('heading', { name: /create account/i })).toBeVisible();
+      await expect(page.getByText('Create Account')).toBeVisible();
 
       // Click sign in link
       await page.getByText(/^sign in$/i).click();
 
       // Should show login modal
-      await expect(page.getByRole('heading', { name: /welcome back/i })).toBeVisible();
+      await expect(page.getByText('Welcome Back')).toBeVisible();
     });
   });
 
   test.describe('Forgot Password Modal', () => {
     test('should open forgot password modal from login modal', async ({ page }) => {
       // Open login modal and switch to forgot password
-      await page.getByRole('button', { name: /sign in/i }).first().click();
+      await page.getByRole('button', { name: /sign in/i }).click();
       await page.getByText(/forgot password/i).click();
 
       // Verify forgot password modal
       await expect(page.getByRole('dialog')).toBeVisible();
-      await expect(page.getByRole('heading', { name: /reset password/i })).toBeVisible();
+      await expect(page.getByText('Reset Password')).toBeVisible();
       await expect(page.getByText(/enter your email address/i)).toBeVisible();
     });
 
     test('should validate email field', async ({ page }) => {
       // Open forgot password modal
-      await page.getByRole('button', { name: /sign in/i }).first().click();
+      await page.getByRole('button', { name: /sign in/i }).click();
       await page.getByText(/forgot password/i).click();
 
       // Submit without email
@@ -220,15 +220,15 @@ test.describe('Authentication Flow', () => {
 
     test('should switch back to login modal', async ({ page }) => {
       // Open forgot password modal
-      await page.getByRole('button', { name: /sign in/i }).first().click();
+      await page.getByRole('button', { name: /sign in/i }).click();
       await page.getByText(/forgot password/i).click();
-      await expect(page.getByRole('heading', { name: /reset password/i })).toBeVisible();
+      await expect(page.getByText('Reset Password')).toBeVisible();
 
       // Click back to sign in
       await page.getByText(/back to sign in/i).click();
 
       // Should show login modal
-      await expect(page.getByRole('heading', { name: /welcome back/i })).toBeVisible();
+      await expect(page.getByText('Welcome Back')).toBeVisible();
     });
   });
 
@@ -252,7 +252,7 @@ test.describe('Authentication Flow', () => {
       });
 
       // Open login modal
-      await page.getByRole('button', { name: /sign in/i }).first().click();
+      await page.getByRole('button', { name: /sign in/i }).click();
 
       // Fill in credentials
       await page.getByLabel(/email address/i).fill('test@example.com');
@@ -282,7 +282,7 @@ test.describe('Authentication Flow', () => {
       });
 
       // Open login modal
-      await page.getByRole('button', { name: /sign in/i }).first().click();
+      await page.getByRole('button', { name: /sign in/i }).click();
 
       // Fill in credentials
       await page.getByLabel(/email address/i).fill('wrong@example.com');
@@ -319,7 +319,7 @@ test.describe('Authentication Flow', () => {
       });
 
       // Open signup modal
-      await page.getByRole('button', { name: /sign in/i }).first().click();
+      await page.getByRole('button', { name: /sign in/i }).click();
       await page.getByText(/sign up/i).click();
 
       // Fill in form
@@ -328,7 +328,7 @@ test.describe('Authentication Flow', () => {
       await page.getByLabel(/confirm password/i).fill('StrongPass123');
 
       // Submit form
-      await page.getByRole('dialog').getByRole('button', { name: /create account/i }).click();
+      await page.getByRole('button', { name: /create account/i }).click();
 
       // Modal should close
       await expect(page.getByRole('dialog')).not.toBeVisible({ timeout: 5000 });
@@ -351,7 +351,7 @@ test.describe('Authentication Flow', () => {
       });
 
       // Open signup modal
-      await page.getByRole('button', { name: /sign in/i }).first().click();
+      await page.getByRole('button', { name: /sign in/i }).click();
       await page.getByText(/sign up/i).click();
 
       // Fill in form
@@ -360,7 +360,7 @@ test.describe('Authentication Flow', () => {
       await page.getByLabel(/confirm password/i).fill('Password123');
 
       // Submit form
-      await page.getByRole('dialog').getByRole('button', { name: /create account/i }).click();
+      await page.getByRole('button', { name: /create account/i }).click();
 
       // Should show error
       await expect(page.getByText(/user with this email already exists/i)).toBeVisible();
@@ -398,7 +398,7 @@ test.describe('Authentication Flow', () => {
       });
 
       // Login first
-      await page.getByRole('button', { name: /sign in/i }).first().click();
+      await page.getByRole('button', { name: /sign in/i }).click();
       await page.getByLabel(/email address/i).fill('test@example.com');
       await page.getByLabel(/^password$/i).fill('password123');
       await page.getByRole('button', { name: /^sign in$/i }).click();
@@ -418,7 +418,7 @@ test.describe('Authentication Flow', () => {
   test.describe('Accessibility', () => {
     test('should support keyboard navigation in login modal', async ({ page }) => {
       // Open login modal
-      await page.getByRole('button', { name: /sign in/i }).first().click();
+      await page.getByRole('button', { name: /sign in/i }).click();
 
       // Tab through form elements
       await page.keyboard.press('Tab'); // Email input
@@ -436,7 +436,7 @@ test.describe('Authentication Flow', () => {
 
     test('should have proper ARIA labels', async ({ page }) => {
       // Open login modal
-      await page.getByRole('button', { name: /sign in/i }).first().click();
+      await page.getByRole('button', { name: /sign in/i }).click();
 
       const dialog = page.getByRole('dialog');
       await expect(dialog).toHaveAttribute('aria-modal', 'true');
