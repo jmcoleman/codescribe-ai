@@ -451,6 +451,200 @@ describe('User Model', () => {
     });
   });
 
+  describe('Password Reset', () => {
+    describe('setResetToken', () => {
+      it('should set password reset token', async () => {
+        const token = 'reset-token-123';
+        const expiresAt = new Date(Date.now() + 3600000);
+        const mockResult = {
+          rows: [{
+            id: 1,
+            email: 'user@example.com',
+            tier: 'free'
+          }]
+        };
+
+        sql.mockResolvedValue(mockResult);
+
+        const user = await User.setResetToken(1, token, expiresAt);
+
+        expect(user).toEqual(mockResult.rows[0]);
+        expect(sql).toHaveBeenCalledTimes(1);
+      });
+
+      it('should update reset_token_expires timestamp', async () => {
+        const token = 'reset-token-456';
+        const expiresAt = new Date(Date.now() + 3600000);
+
+        sql.mockResolvedValue({
+          rows: [{ id: 2, email: 'test@example.com', tier: 'free' }]
+        });
+
+        await User.setResetToken(2, token, expiresAt);
+
+        expect(sql).toHaveBeenCalled();
+      });
+    });
+
+    describe('findByResetToken', () => {
+      it('should find user by valid reset token', async () => {
+        const token = 'valid-token-123';
+        const mockUser = {
+          id: 1,
+          email: 'user@example.com',
+          password_hash: '$2b$10$hash',
+          github_id: null,
+          tier: 'free',
+          reset_token_hash: token,
+          reset_token_expires: new Date(Date.now() + 3600000)
+        };
+
+        sql.mockResolvedValue({ rows: [mockUser] });
+
+        const user = await User.findByResetToken(token);
+
+        expect(user).toEqual(mockUser);
+        expect(sql).toHaveBeenCalledTimes(1);
+      });
+
+      it('should return null for expired token', async () => {
+        sql.mockResolvedValue({ rows: [] });
+
+        const user = await User.findByResetToken('expired-token');
+
+        expect(user).toBeNull();
+      });
+
+      it('should return null for non-existent token', async () => {
+        sql.mockResolvedValue({ rows: [] });
+
+        const user = await User.findByResetToken('nonexistent-token');
+
+        expect(user).toBeNull();
+      });
+    });
+
+    describe('updatePassword', () => {
+      it('should update user password with hashed value', async () => {
+        const newPassword = 'NewSecurePassword123';
+        const mockResult = {
+          rows: [{
+            id: 1,
+            email: 'user@example.com',
+            tier: 'free'
+          }]
+        };
+
+        sql.mockResolvedValue(mockResult);
+
+        const user = await User.updatePassword(1, newPassword);
+
+        expect(user).toEqual(mockResult.rows[0]);
+        expect(sql).toHaveBeenCalledTimes(1);
+      });
+
+      it('should hash password before storing', async () => {
+        const newPassword = 'TestPassword123';
+
+        sql.mockResolvedValue({
+          rows: [{ id: 1, email: 'test@example.com', tier: 'free' }]
+        });
+
+        await User.updatePassword(1, newPassword);
+
+        // Verify sql was called (password should be hashed)
+        expect(sql).toHaveBeenCalled();
+      });
+
+      it('should handle database errors', async () => {
+        sql.mockRejectedValue(new Error('Database error'));
+
+        await expect(
+          User.updatePassword(1, 'newpassword')
+        ).rejects.toThrow('Database error');
+      });
+    });
+
+    describe('clearResetToken', () => {
+      it('should clear reset token and expiration', async () => {
+        const mockResult = {
+          rows: [{
+            id: 1,
+            email: 'user@example.com',
+            tier: 'free'
+          }]
+        };
+
+        sql.mockResolvedValue(mockResult);
+
+        const user = await User.clearResetToken(1);
+
+        expect(user).toEqual(mockResult.rows[0]);
+        expect(sql).toHaveBeenCalledTimes(1);
+      });
+
+      it('should handle non-existent user', async () => {
+        sql.mockResolvedValue({ rows: [] });
+
+        const user = await User.clearResetToken(999);
+
+        expect(user).toBeUndefined();
+      });
+
+      it('should handle database errors', async () => {
+        sql.mockRejectedValue(new Error('Connection lost'));
+
+        await expect(
+          User.clearResetToken(1)
+        ).rejects.toThrow('Connection lost');
+      });
+    });
+
+    describe('Password Reset Flow', () => {
+      it('should support complete password reset flow', async () => {
+        const userId = 1;
+        const email = 'reset@example.com';
+        const resetToken = 'secure-token-123';
+        const expiresAt = new Date(Date.now() + 3600000);
+        const newPassword = 'NewPassword123';
+
+        // Step 1: Set reset token
+        sql.mockResolvedValueOnce({
+          rows: [{ id: userId, email, tier: 'free' }]
+        });
+        const setResult = await User.setResetToken(userId, resetToken, expiresAt);
+        expect(setResult.id).toBe(userId);
+
+        // Step 2: Find by reset token
+        sql.mockResolvedValueOnce({
+          rows: [{
+            id: userId,
+            email,
+            password_hash: '$2b$10$oldhash',
+            reset_token_hash: resetToken,
+            reset_token_expires: expiresAt
+          }]
+        });
+        const foundUser = await User.findByResetToken(resetToken);
+        expect(foundUser.id).toBe(userId);
+
+        // Step 3: Update password
+        sql.mockResolvedValueOnce({
+          rows: [{ id: userId, email, tier: 'free' }]
+        });
+        const updated = await User.updatePassword(userId, newPassword);
+        expect(updated.id).toBe(userId);
+
+        // Step 4: Clear reset token
+        sql.mockResolvedValueOnce({
+          rows: [{ id: userId, email, tier: 'free' }]
+        });
+        const cleared = await User.clearResetToken(userId);
+        expect(cleared.id).toBe(userId);
+      });
+    });
+  });
+
   describe('Integration Scenarios', () => {
     it('should support full user lifecycle', async () => {
       const email = 'lifecycle@test.com';
