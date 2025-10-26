@@ -50,7 +50,7 @@ This is a comprehensive example showing various markdown features including code
  * Sample code for the CodePanel
  * Demonstrates a simple "Hello, World!" example with documentation demo actions
  */
-export const TEST_CODE = `// Simulate rendering a "Hello, World!" example
+export const TEST_CODE = `// "Hello, World!" example
 function hello(name) {
   return \`Hello, \${name}!\`;
 }
@@ -61,39 +61,7 @@ function demoDocumentationFeatures() {
   const markdown = \`# Test Documentation
 
 ## Overview
-This is test documentation to demonstrate the download button functionality.
-
-## Features
-- Download as Markdown (.md file)
-- Copy to clipboard
-- Quality scoring system
-
-## Example Code
-
-\\\`\\\`\\\`javascript
-function hello(name) {
-  return \\\`Hello, \\\${name}!\\\`;
-}
-
-const greeting = hello('World');
-console.log(greeting); // Output: Hello, World!
-\\\`\\\`\\\`
-
-## Installation
-
-\\\`\\\`\\\`bash
-npm install test-package
-\\\`\\\`\\\`
-
-## Usage
-
-This is a comprehensive example showing various markdown features including code blocks, headers, and lists.
-
-### Nested Features
-- Item 1
-- Item 2
-  - Nested item
-  - Another nested item
+Content of example document is provided here....
 
 **This download button is working perfectly!**\`;
 
@@ -109,13 +77,6 @@ This is a comprehensive example showing various markdown features including code
     copy() {
       navigator.clipboard.writeText(markdown);
       console.log('Markdown copied to clipboard!');
-    },
-    score() {
-      const wordCount = markdown.split(/\\s+/).length;
-      const codeBlocks = (markdown.match(/\\\`\\\`\\\`/g) || []).length / 2;
-      const score = Math.min(100, Math.round((wordCount / 50) + (codeBlocks * 10)));
-      console.log(\`Quality Score: \${score}/100\`);
-      return score;
     }
   };
 }
@@ -124,7 +85,6 @@ This is a comprehensive example showing various markdown features including code
 const docDemo = demoDocumentationFeatures();
 docDemo.download(); // triggers file download
 docDemo.copy();     // copies markdown
-docDemo.score();    // logs quality score
 `;
 
 /**
