@@ -286,6 +286,15 @@ This allows the codebase to include auth implementation without requiring databa
   - [x] Created comprehensive TEST-FIXES-OCT-2025.md documentation (all 3 sessions)
   - [x] Updated testing README with current metrics
   - [x] Files modified: User.test.js, password-reset-flow.test.js, jest.config.cjs
+- [x] ✅ **Password visibility toggle (October 26, 2025)**
+  - [x] Added Eye/EyeOff icon toggle buttons to SignupModal password fields
+  - [x] Independent toggles for password and confirm password fields
+  - [x] Proper accessibility with aria-labels ("Show password"/"Hide password")
+  - [x] Toggle buttons disabled during form submission
+  - [x] Added 7 comprehensive tests for password visibility feature
+  - [x] All 30 SignupModal tests passing (100% pass rate)
+  - [x] Updated input padding to accommodate toggle button (pr-11)
+  - [x] Consistent design with existing component patterns
 
 #### Next Steps (Epic 2.1.1 - Email Verification)
 
