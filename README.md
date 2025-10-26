@@ -258,7 +258,67 @@ RATE_LIMIT_HOURLY_MAX=100
 VITE_API_URL=https://your-backend.vercel.app
 ```
 
-See `.env.example` files in `server/` and `client/` directories for complete documentation.
+### Authentication & Database Configuration (Phase 2)
+
+For authentication, user management, and database features, additional environment variables are required:
+
+**Server variables** (`server/.env`):
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `ENABLE_AUTH` | No | Set to `true` to enable authentication features (requires DB and auth env vars) |
+| `DATABASE_URL` | Yes* | Neon Postgres connection string (pooled) |
+| `JWT_SECRET` | Yes* | Secret key for JWT tokens (generate with `openssl rand -base64 32`) |
+| `SESSION_SECRET` | Yes* | Secret key for session cookies (generate with `openssl rand -base64 32`) |
+| `RESEND_API_KEY` | Yes* | Resend API key for password reset emails ([Get one](https://resend.com/api-keys)) |
+| `EMAIL_FROM` | Yes* | From address for system emails (e.g., `"CodeScribe AI <noreply@yourdomain.com>"`) |
+| `GITHUB_CLIENT_ID` | No | GitHub OAuth client ID ([Setup guide](https://github.com/settings/developers)) |
+| `GITHUB_CLIENT_SECRET` | No | GitHub OAuth client secret |
+| `GITHUB_CALLBACK_URL` | No | OAuth callback URL (e.g., `http://localhost:3000/api/auth/github/callback`) |
+| `MIGRATION_SECRET` | Yes* | Secret for database migration API endpoint (generate with `openssl rand -base64 32`) |
+| `CLIENT_URL` | No | Frontend URL for OAuth redirects (default: `http://localhost:5173`) |
+
+\* Required when `ENABLE_AUTH=true`
+
+**Client variables** (`client/.env`):
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `VITE_ENABLE_AUTH` | No | Set to `true` to show authentication UI (Sign In button, user menu, etc.) |
+
+**Example `server/.env` with authentication:**
+```bash
+# Core
+CLAUDE_API_KEY=sk-ant-your-api-key-here
+PORT=3000
+NODE_ENV=development
+
+# Authentication & Database
+ENABLE_AUTH=true
+DATABASE_URL=postgresql://user:password@host.neon.tech/dbname?sslmode=require
+JWT_SECRET=generated-secret-min-32-chars
+SESSION_SECRET=generated-secret-min-32-chars
+
+# Email
+RESEND_API_KEY=re_your_api_key_here
+EMAIL_FROM="CodeScribe AI <noreply@codescribeai.com>"
+
+# OAuth (optional)
+GITHUB_CLIENT_ID=Iv1.your-client-id
+GITHUB_CLIENT_SECRET=your-client-secret
+GITHUB_CALLBACK_URL=http://localhost:3000/api/auth/github/callback
+
+# Migration
+MIGRATION_SECRET=generated-secret-min-32-chars
+```
+
+**Example `client/.env` with authentication:**
+```bash
+VITE_API_URL=http://localhost:3000
+VITE_ENABLE_AUTH=true
+```
+
+**See `.env.example` files in `server/` and `client/` directories for complete documentation.**
 
 ## Usage
 
@@ -667,15 +727,33 @@ npm run test:e2e:headed       # With browser UI (for debugging)
 - [ ] Record demo video (planned for portfolio presentation)
 - [ ] Additional manual testing (color blindness, zoom levels)
 
-### 🚀 Planned (Future Phases)
+### 🚀 Future Development
 
-- **Phase 2**: CLI tool for terminal usage
-- **Phase 3**: VS Code extension for IDE integration
-- **Phase 4**: Optional enhancements (see [01-PRD.md](docs/planning/mvp/01-PRD.md))
+For detailed information about upcoming features and development phases, see the comprehensive roadmap:
+
+- **[Product Roadmap](docs/planning/roadmap/ROADMAP.md)** - Complete 6-phase development plan (Phase 2-6)
+- **[Interactive Roadmap Timeline](https://jmcoleman.github.io/codescribe-ai/docs/roadmap/)** - Visual timeline with keyboard shortcuts
+
+**Current Phase:** Phase 2 - Monetization Foundation (Epic 2.1 Complete)
+- ✅ Epic 2.1: Authentication & User Management
+- 🚧 Epic 2.2: Tier System & Feature Flags (5 tiers: Free → Starter → Pro → Team → Enterprise)
+- 📋 Epic 2.3: Payment Integration (Stripe)
+- 📋 Epic 2.4: UI Integration
+
+**Future Phases:**
+- **Phase 3**: UX Enhancements (Dark mode, multi-file support)
+- **Phase 4**: Documentation Capabilities (OpenAPI, custom templates)
+- **Phase 5**: Developer Tools (CLI, VS Code extension)
+- **Phase 6**: Enterprise Readiness (SSO, audit logs, white-label)
 
 ## Contributing
 
-This is a portfolio project demonstrating full-stack development skills. Issues and suggestions are welcome!
+This is a portfolio project, but feedback and suggestions are welcome! Feel free to:
+- Open an issue for bugs or feature requests
+- Submit a pull request with improvements
+- Share your experience using CodeScribe AI
+
+Please note: As a portfolio project, contributions may be reviewed on a limited schedule.
 
 ## License
 

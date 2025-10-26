@@ -1,15 +1,15 @@
 # CodeScribe AI - API Reference
 
 **Project:** CodeScribe AI Portfolio Application
-**API Version:** 1.0.0
+**API Version:** 2.0.0
 **Base URL (Dev):** `http://localhost:3000/api`
-**Base URL (Prod):** `https://codescribe-ai.vercel.app/api` _(Coming soon - Day 5)_
-**Last Updated:** October 16, 2025
+**Base URL (Prod):** `https://codescribeai.com/api`
+**Last Updated:** October 26, 2025
 
-**Status:** ✅ Production-ready with comprehensive testing
-- 133+ backend tests (95.81% statement coverage)
+**Status:** ✅ Production-ready with authentication & database
+- 1,347+ tests (97.5% pass rate, 95.81% backend coverage)
 - 10 E2E tests across 5 browsers (100% pass rate)
-- Rate limiting, error handling, and streaming fully implemented
+- Authentication, database, rate limiting, and streaming fully implemented
 
 ---
 
@@ -52,17 +52,42 @@ External APIs (Claude API)
 
 ## 🔐 Authentication
 
-**Phase 1 (Current):** No authentication
-- Public API for portfolio demonstration
-- Rate limiting by IP address only
+**Current (v2.0.0):** JWT + Session-based Authentication
+- User registration via email/password or GitHub OAuth
+- JWT tokens for API authentication
+- Session cookies for web application
+- Password reset via email (Resend service)
 
-**Phase 2 (Future Enhancement):**
+**Authentication Methods:**
+
+1. **Bearer Token (Recommended for API/CLI):**
 ```javascript
-// Optional API key authentication
 headers: {
-  'Authorization': 'Bearer YOUR_API_KEY'
+  'Authorization': 'Bearer YOUR_JWT_TOKEN'
 }
 ```
+
+2. **Session Cookie (Web Application):**
+```javascript
+// Automatically handled by browser after login
+// Session persists via connect-pg-simple + Neon Postgres
+```
+
+**Protected Endpoints:**
+- `/api/auth/logout` - Requires authentication
+- `/api/auth/me` - Requires authentication
+- Future: `/api/generate` and `/api/generate-stream` will support tier-based limits
+
+**Public Endpoints:**
+- `/api/auth/signup` - User registration
+- `/api/auth/login` - User login
+- `/api/auth/github` - GitHub OAuth
+- `/api/auth/forgot-password` - Password reset request
+- `/api/auth/reset-password` - Password reset
+- `/api/generate`, `/api/generate-stream` - Currently public (Phase 2.2: will enforce tier limits)
+- `/api/upload` - File upload
+- `/api/health` - Health check
+- `/api/migrate/status` - Migration status
 
 ---
 
@@ -616,7 +641,352 @@ While the backend performs all necessary validation, the frontend also implement
 
 ---
 
-### 4. Health Check
+### 4. User Registration
+
+Register a new user account with email and password.
+
+**Endpoint:**
+```http
+POST /api/auth/signup
+```
+
+**Request Headers:**
+```http
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com",
+  "password": "securepassword123"
+}
+```
+
+**Parameters:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `email` | string | Yes | Valid email address |
+| `password` | string | Yes | Password (minimum 8 characters) |
+
+**Response (201 Created):**
+```json
+{
+  "success": true,
+  "message": "User registered successfully",
+  "user": {
+    "id": "123e4567-e89b-12d3-a456-426614174000",
+    "email": "user@example.com",
+    "tier": "free",
+    "created_at": "2025-10-26T10:30:00.000Z"
+  },
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+**Error Responses:**
+
+**400 Bad Request - Invalid Input:**
+```json
+{
+  "success": false,
+  "error": "Invalid email address"
+}
+```
+
+**409 Conflict - User Exists:**
+```json
+{
+  "success": false,
+  "error": "User with this email already exists"
+}
+```
+
+---
+
+### 5. User Login
+
+Authenticate with email and password.
+
+**Endpoint:**
+```http
+POST /api/auth/login
+```
+
+**Request Headers:**
+```http
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com",
+  "password": "securepassword123"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Login successful",
+  "user": {
+    "id": "123e4567-e89b-12d3-a456-426614174000",
+    "email": "user@example.com",
+    "tier": "free",
+    "created_at": "2025-10-26T10:30:00.000Z"
+  },
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+**Error Responses:**
+
+**401 Unauthorized - Invalid Credentials:**
+```json
+{
+  "success": false,
+  "error": "Invalid email or password"
+}
+```
+
+---
+
+### 6. User Logout
+
+Logout the current user (requires authentication).
+
+**Endpoint:**
+```http
+POST /api/auth/logout
+```
+
+**Request Headers:**
+```http
+Authorization: Bearer YOUR_JWT_TOKEN
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Logout successful"
+}
+```
+
+---
+
+### 7. Get Current User
+
+Get the authenticated user's profile (requires authentication).
+
+**Endpoint:**
+```http
+GET /api/auth/me
+```
+
+**Request Headers:**
+```http
+Authorization: Bearer YOUR_JWT_TOKEN
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "user": {
+    "id": "123e4567-e89b-12d3-a456-426614174000",
+    "email": "user@example.com",
+    "tier": "free",
+    "github_id": null,
+    "created_at": "2025-10-26T10:30:00.000Z"
+  }
+}
+```
+
+**Error Responses:**
+
+**401 Unauthorized - Not Authenticated:**
+```json
+{
+  "success": false,
+  "error": "Authentication required"
+}
+```
+
+---
+
+### 8. GitHub OAuth Login
+
+Initiate GitHub OAuth authentication flow.
+
+**Endpoint:**
+```http
+GET /api/auth/github
+```
+
+**Use Case:**
+- Single Sign-On with GitHub account
+- No password required
+- Automatic account creation
+
+**Flow:**
+1. Redirect user to `/api/auth/github`
+2. User authorizes on GitHub
+3. GitHub redirects to `/api/auth/github/callback`
+4. User is redirected to frontend with token
+
+**Success Redirect:**
+```
+GET {CLIENT_URL}?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+**Error Redirect:**
+```
+GET {CLIENT_URL}?error=authentication_failed
+```
+
+---
+
+### 9. Request Password Reset
+
+Request a password reset email (rate-limited to prevent abuse).
+
+**Endpoint:**
+```http
+POST /api/auth/forgot-password
+```
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "If an account exists with this email, a password reset link has been sent"
+}
+```
+
+**Note:** Returns same response whether email exists or not (prevents email enumeration).
+
+**Rate Limit:** 3 requests per 15 minutes per IP
+
+---
+
+### 10. Reset Password
+
+Reset password using token from email.
+
+**Endpoint:**
+```http
+POST /api/auth/reset-password
+```
+
+**Request Body:**
+```json
+{
+  "token": "abc123def456...",
+  "password": "newsecurepassword123"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Password reset successful"
+}
+```
+
+**Error Responses:**
+
+**400 Bad Request - Invalid/Expired Token:**
+```json
+{
+  "success": false,
+  "error": "Invalid or expired reset token"
+}
+```
+
+---
+
+### 11. Database Migration Status
+
+Check database migration status (public endpoint).
+
+**Endpoint:**
+```http
+GET /api/migrate/status
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "status": "ready",
+  "migrations": {
+    "pending": 0,
+    "completed": 5
+  }
+}
+```
+
+---
+
+### 12. Run Database Migrations
+
+Run pending database migrations (admin only, requires MIGRATION_SECRET).
+
+**Endpoint:**
+```http
+POST /api/migrate/run
+```
+
+**Request Headers:**
+```http
+Authorization: Bearer YOUR_MIGRATION_SECRET
+Content-Type: application/json
+```
+
+**Request Body (Optional):**
+```json
+{
+  "action": "status"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Migrations completed successfully",
+  "migrations": {
+    "completed": 5,
+    "failed": 0
+  }
+}
+```
+
+**Error Responses:**
+
+**401 Unauthorized - Invalid Secret:**
+```json
+{
+  "success": false,
+  "error": "Unauthorized"
+}
+```
+
+---
+
+### 13. Health Check
 
 Check API health and version.
 
@@ -1183,6 +1553,7 @@ app.use(cors(corsOptions));
 
 ### Production Checklist
 
+**Phase 1 (MVP):**
 - [x] ✅ Environment variables set in Vercel
 - [x] ✅ CORS configured for production domain
 - [x] ✅ Rate limiting enabled (10 req/min, 100 req/hour)
@@ -1192,12 +1563,24 @@ app.use(cors(corsOptions));
 - [x] ✅ File upload size limits enforced (500KB max)
 - [x] ✅ Comprehensive test coverage (133+ tests, 95.81% coverage)
 - [x] ✅ Cross-browser E2E validation (5 browsers, 100% pass rate)
-- [ ] Deploy to production (Day 5 - Pending)
+- [x] ✅ Deployed to production (codescribeai.com)
+
+**Phase 2 (Authentication & Database):**
+- [x] ✅ Neon Postgres database configured
+- [x] ✅ User authentication (email/password + GitHub OAuth)
+- [x] ✅ Password reset with email (Resend service)
+- [x] ✅ JWT + session-based auth
+- [x] ✅ Database migrations system
+- [x] ✅ 1,347+ tests (97.5% pass rate)
+- [x] ✅ All authentication endpoints documented
+- [ ] Epic 2.2: Tier system & feature flags (in progress)
+- [ ] Epic 2.3: Payment integration (Stripe)
+- [ ] Epic 2.4: UI integration
 
 ---
 
-**API Documentation Version:** 1.0.0
-**Last Updated:** October 16, 2025
-**Status:** ✅ Production-Ready (Deployment Pending)
-**Test Coverage:** 133+ tests, 95.81% statement coverage, 88.72% branch coverage
-**Next Steps:** Deploy to Vercel (Day 5)
+**API Documentation Version:** 2.0.0
+**Last Updated:** October 26, 2025
+**Status:** ✅ Production (https://codescribeai.com)
+**Test Coverage:** 1,347+ tests (97.5% pass rate), 95.81% backend statement coverage, 88.72% branch coverage
+**Phase 2:** Authentication & Database Complete (Epic 2.1)
