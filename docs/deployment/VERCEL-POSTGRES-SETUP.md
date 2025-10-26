@@ -3,13 +3,15 @@
 **Project:** CodeScribe AI
 **Database:** Neon (via Vercel Marketplace)
 **Status:** Production Ready
-**Last Updated:** October 24, 2025
+**Last Updated:** October 26, 2025
 
 ---
 
 ## Overview
 
 This guide covers setting up Neon Postgres for CodeScribe AI's authentication and usage tracking features. Neon is a serverless Postgres database that integrates seamlessly with Vercel through the Marketplace.
+
+**IMPORTANT:** This guide covers initial database setup. After setup, verify your configuration with [DATABASE-ENVIRONMENT-CHECKLIST.md](./DATABASE-ENVIRONMENT-CHECKLIST.md) to ensure development and production databases are properly separated.
 
 **Why Neon:**
 - **Always-free tier** (no credit card required)
@@ -69,19 +71,23 @@ This guide covers setting up Neon Postgres for CodeScribe AI's authentication an
 
 **Why this setup?**
 - **Development & Preview** use the `codescribe-db` database
-- **Production** uses a separate database (setup below)
+- **Production** uses a separate database (create following same steps)
 - Prevents dev/test activity from affecting production data
 - Allows safe schema testing in preview branches
+- Better security isolation with different credentials
 
 **Custom Prefix:**
 - Keep default `STORAGE` or customize (e.g., `POSTGRES`)
 - This prefix is used for auto-injected environment variables
 
-**For Production:** When ready to deploy to production, create a **separate Neon database** with:
-- Production-only environment access
-- Stronger security (different credentials)
-- Larger tier if needed (Launch/Scale)
-- Regular backups enabled
+**For Production:** Create a **separate Neon database** following the same steps above, but:
+- Production-only environment access (uncheck Development and Preview)
+- Different database name (e.g., `codescribe-prod`)
+- Stronger security (different credentials - never reuse dev credentials)
+- Consider larger tier if needed (Launch/Scale for high traffic)
+- Enable backups and monitoring
+
+**After Setup:** Use [DATABASE-ENVIRONMENT-CHECKLIST.md](./DATABASE-ENVIRONMENT-CHECKLIST.md) to verify proper separation.
 
 ### 2. Get Connection Strings
 
@@ -338,37 +344,55 @@ await sql`
 
 ### 10. Vercel Production Setup
 
+**IMPORTANT:** Production should use a **separate Neon database** from development. See [Section 1a](#1a-environment-configuration-dev-vs-production) for creating the production database.
+
 **Environment Variables:**
 
-Vercel automatically injects Postgres environment variables into your production deployment. No manual configuration needed!
+Vercel automatically injects Postgres environment variables into your production deployment. Verify these variables point to your **production database**, not your development database.
 
 **Verify in Dashboard:**
 1. Project Settings → Environment Variables
-2. Confirm all `POSTGRES_*` variables are present
-3. Add custom variables (JWT_SECRET, SESSION_SECRET, ENABLE_AUTH)
+2. Confirm all `POSTGRES_*` variables are present for **Production** environment
+3. Verify production `POSTGRES_URL` is **different** from development database
+4. Add custom variables (JWT_SECRET, SESSION_SECRET, ENABLE_AUTH)
+5. Use [DATABASE-ENVIRONMENT-CHECKLIST.md](./DATABASE-ENVIRONMENT-CHECKLIST.md) to verify separation
 
 **Required Production Environment Variables:**
 ```
 ENABLE_AUTH=true
-JWT_SECRET=<strong-random-secret>
-SESSION_SECRET=<strong-random-secret>
+JWT_SECRET=<strong-random-secret-DIFFERENT-from-dev>
+SESSION_SECRET=<strong-random-secret-DIFFERENT-from-dev>
 GITHUB_CLIENT_ID=<your-github-oauth-id>
 GITHUB_CLIENT_SECRET=<your-github-oauth-secret>
 GITHUB_CALLBACK_URL=https://yourdomain.com/api/auth/github/callback
 CLIENT_URL=https://yourdomain.com
 ```
 
+**Security Note:** Production secrets (JWT_SECRET, SESSION_SECRET, database passwords) must be **different** from development. Never reuse development credentials in production.
+
 ### 11. Deployment Checklist
 
-- [ ] Database created in Vercel dashboard
-- [ ] Connection strings copied to local `.env`
-- [ ] `ENABLE_AUTH=true` set
-- [ ] Schema initialized successfully
-- [ ] Connection test passes
-- [ ] Production environment variables configured
+**Development Setup:**
+- [ ] Development database created in Vercel dashboard
+- [ ] Connection strings copied to local `server/.env`
+- [ ] `ENABLE_AUTH=true` set in local `.env`
+- [ ] Schema initialized successfully (local)
+- [ ] Connection test passes (local)
 - [ ] Session store configured
 - [ ] Authentication routes working
-- [ ] User model integrated
+
+**Production Setup:**
+- [ ] **Separate** production database created
+- [ ] Production database uses different credentials than dev
+- [ ] Production environment variables configured in Vercel
+- [ ] Production `POSTGRES_URL` verified different from dev
+- [ ] Production schema initialized
+- [ ] User model integrated and tested
+
+**Verification:**
+- [ ] Complete [DATABASE-ENVIRONMENT-CHECKLIST.md](./DATABASE-ENVIRONMENT-CHECKLIST.md)
+- [ ] Verified dev and prod databases are separate
+- [ ] No shared credentials between environments
 
 ---
 
@@ -662,10 +686,20 @@ node -e "console.log(process.env.POSTGRES_URL ? '✅ POSTGRES_URL set' : '❌ PO
 
 ### 21. Security Checklist
 
+**Environment Separation:**
+- [ ] Development and production use **separate** databases
+- [ ] Production credentials are **different** from development
+- [ ] Verified separation using [DATABASE-ENVIRONMENT-CHECKLIST.md](./DATABASE-ENVIRONMENT-CHECKLIST.md)
+
+**Credentials Management:**
 - [ ] Use environment variables for all credentials
 - [ ] Never commit `.env` files to git
 - [ ] Verify `.env` in `.gitignore`
 - [ ] Use strong JWT and session secrets (32+ characters)
+- [ ] Different secrets for dev/prod environments
+- [ ] Rotate secrets periodically (every 90 days)
+
+**Application Security:**
 - [ ] Enable HTTPS-only cookies in production
 - [ ] Parameterize all SQL queries (prevent injection)
 - [ ] Implement rate limiting on auth endpoints
@@ -785,6 +819,7 @@ After completing setup:
 - [docs/api/AUTH-API-TESTING.md](../api/AUTH-API-TESTING.md) - API testing guide
 
 **Deployment:**
+- [DATABASE-ENVIRONMENT-CHECKLIST.md](./DATABASE-ENVIRONMENT-CHECKLIST.md) - Verify database separation
 - [MVP-DEPLOY-LAUNCH.md](./MVP-DEPLOY-LAUNCH.md) - Production deployment
 - [DEPLOYMENT-CHECKLIST.md](./DEPLOYMENT-CHECKLIST.md) - Pre-launch checklist
 
@@ -811,6 +846,13 @@ After completing setup:
 
 ## Changelog
 
+- **v1.2** (October 26, 2025) - Enhanced dev/prod separation guidance
+  - Added prominent references to DATABASE-ENVIRONMENT-CHECKLIST.md
+  - Expanded Section 1a with clearer production database setup instructions
+  - Enhanced Section 10 with database separation verification steps
+  - Updated Section 11 deployment checklist with separate dev/prod sections
+  - Reorganized Section 21 security checklist to emphasize environment separation
+  - Added DATABASE-ENVIRONMENT-CHECKLIST.md to Related Documentation
 - **v1.1** (October 24, 2025) - Updated database creation workflow
   - Corrected Step 1: Postgres is added via Marketplace, not direct Storage tab
   - Updated dashboard navigation paths for current Vercel interface
