@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeScribe AI - Brand Color Palette</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            padding: 48px;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            color: #1e293b;
+            min-height: 100vh;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        h1 {
+            font-size: 40px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 18px;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .brand-info {
+            max-width: 800px;
+            margin: 0 auto 48px;
+            background: white;
+            padding: 32px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .brand-info h2 {
+            font-size: 24px;
+            margin-bottom: 16px;
+            color: #0f172a;
+        }
+
+        .brand-info p {
+            font-size: 16px;
+            line-height: 1.7;
+            color: #475569;
+        }
+
+        .palette-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .palette-section {
+            margin-bottom: 48px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .section-badge {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-primary {
+            background: #f3e8ff;
+            color: #7e22ce;
+        }
+
+        .badge-secondary {
+            background: #e0e7ff;
+            color: #4338ca;
+        }
+
+        .badge-neutral {
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        .badge-semantic {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+        }
+
+        .color-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .color-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .color-swatch {
+            height: 120px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .color-swatch::after {
+            content: 'Click to copy';
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .color-swatch:hover::after {
+            opacity: 1;
+        }
+
+        .color-info {
+            padding: 16px;
+        }
+
+        .color-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+
+        .color-hex {
+            font-size: 13px;
+            color: #64748b;
+            font-family: 'Monaco', 'Courier New', monospace;
+            margin-bottom: 8px;
+        }
+
+        .color-usage {
+            font-size: 12px;
+            color: #94a3b8;
+            line-height: 1.5;
+        }
+
+        .main-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-left: 8px;
+        }
+
+        .usage-examples {
+            max-width: 1200px;
+            margin: 48px auto;
+            background: white;
+            padding: 32px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .usage-examples h2 {
+            font-size: 24px;
+            margin-bottom: 24px;
+            color: #0f172a;
+        }
+
+        .usage-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+        }
+
+        .usage-card {
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .usage-card h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #0f172a;
+        }
+
+        .usage-card ul {
+            list-style: none;
+        }
+
+        .usage-card li {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 6px;
+            padding-left: 16px;
+            position: relative;
+        }
+
+        .usage-card li::before {
+            content: '•';
+            position: absolute;
+            left: 0;
+            color: #a855f7;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #0f172a;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s;
+            pointer-events: none;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 24px;
+            }
+
+            h1 {
+                font-size: 28px;
+            }
+
+            .color-grid {
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            }
+        }
+
+        /* Print-specific styles for single-page PDF */
+        @media print {
+            body {
+                padding: 16px;
+                background: white;
+                min-height: auto;
+            }
+
+            .header {
+                margin-bottom: 16px;
+            }
+
+            h1 {
+                font-size: 24px;
+                margin-bottom: 6px;
+                color: #a855f7;
+                -webkit-text-fill-color: #a855f7;
+            }
+
+            .subtitle {
+                font-size: 12px;
+            }
+
+            .brand-info {
+                margin: 0 auto 16px;
+                padding: 12px;
+                box-shadow: none;
+                border: 1px solid #e2e8f0;
+            }
+
+            .brand-info h2 {
+                font-size: 14px;
+                margin-bottom: 6px;
+            }
+
+            .brand-info p {
+                font-size: 10px;
+                line-height: 1.4;
+            }
+
+            .palette-section {
+                margin-bottom: 16px;
+                page-break-inside: avoid;
+            }
+
+            .section-title {
+                font-size: 14px;
+            }
+
+            .section-badge {
+                font-size: 8px;
+                padding: 2px 6px;
+            }
+
+            .color-grid {
+                grid-template-columns: repeat(6, 1fr);
+                gap: 8px;
+            }
+
+            .color-card {
+                box-shadow: none;
+                border: 1px solid #e2e8f0;
+            }
+
+            .color-swatch {
+                height: 60px;
+            }
+
+            .color-swatch::after {
+                display: none;
+            }
+
+            .color-info {
+                padding: 6px;
+            }
+
+            .color-name {
+                font-size: 9px;
+                margin-bottom: 2px;
+            }
+
+            .color-hex {
+                font-size: 8px;
+                margin-bottom: 2px;
+            }
+
+            .color-usage {
+                font-size: 7px;
+            }
+
+            .main-badge {
+                font-size: 6px;
+                padding: 1px 4px;
+            }
+
+            .usage-examples {
+                margin: 12px auto;
+                padding: 12px;
+                box-shadow: none;
+                border: 1px solid #e2e8f0;
+            }
+
+            .usage-examples h2 {
+                font-size: 14px;
+                margin-bottom: 8px;
+            }
+
+            .usage-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 8px;
+            }
+
+            .usage-card {
+                padding: 8px;
+            }
+
+            .usage-card h3 {
+                font-size: 10px;
+                margin-bottom: 4px;
+            }
+
+            .usage-card li {
+                font-size: 8px;
+                margin-bottom: 2px;
+                padding-left: 10px;
+            }
+
+            .toast {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>CodeScribe AI</h1>
+        <p class="subtitle">Brand Color Palette</p>
+    </div>
+
+    <div class="brand-info">
+        <h2>🎨 Color System Overview</h2>
+        <p>
+            CodeScribe AI uses a modern, professional color palette centered around <strong>Purple</strong> (primary) and <strong>Indigo</strong> (secondary) brand colors.
+            This dual-color system creates visual hierarchy while maintaining brand cohesion. Purple conveys creativity and innovation for user-facing elements,
+            while Indigo adds technical credibility for service and processing layers.
+        </p>
+    </div>
+
+    <div class="palette-container">
+        <!-- Primary: Purple -->
+        <div class="palette-section">
+            <div class="section-header">
+                <h2 class="section-title">Purple</h2>
+                <span class="section-badge badge-primary">Primary Brand</span>
+            </div>
+            <div class="color-grid">
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #FAF5FF;" onclick="copyColor('#FAF5FF')"></div>
+                    <div class="color-info">
+                        <div class="color-name">purple/50</div>
+                        <div class="color-hex">#FAF5FF</div>
+                        <div class="color-usage">Light backgrounds, hover states</div>
+                    </div>
+                </div>
+
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #F3E8FF;" onclick="copyColor('#F3E8FF')"></div>
+                    <div class="color-info">
+                        <div class="color-name">purple/100</div>
+                        <div class="color-hex">#F3E8FF</div>
+                        <div class="color-usage">Subtle backgrounds, cards</div>
+                    </div>
+                </div>
+
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #E9D5FF;" onclick="copyColor('#E9D5FF')"></div>
+                    <div class="color-info">
+                        <div class="color-name">purple/200</div>
+                        <div class="color-hex">#E9D5FF</div>
+                        <div class="color-usage">Borders, dividers, accents</div>
+                    </div>
+                </div>
+
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #A855F7;" onclick="copyColor('#A855F7')"></div>
+                    <div class="color-info">
+                        <div class="color-name">purple/500 <span class="main-badge">Main</span></div>
+                        <div class="color-hex">#A855F7</div>
+                        <div class="color-usage">Primary buttons, links, brand</div>
+                    </div>
+                </div>
+
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #9333EA;" onclick="copyColor('#9333EA')"></div>
+                    <div class="color-info">
+                        <div class="color-name">purple/600</div>
+                        <div class="color-hex">#9333EA</div>
+                        <div class="color-usage">Hover states, focus rings</div>
+                    </div>
+                </div>
+
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #7E22CE;" onclick="copyColor('#7E22CE')"></div>
+                    <div class="color-info">
+                        <div class="color-name">purple/700</div>
+                        <div class="color-hex">#7E22CE</div>
+                        <div class="color-usage">Active states, emphasis</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Secondary: Indigo -->
+        <div class="palette-section">
+            <div class="section-header">
+                <h2 class="section-title">Indigo</h2>
+                <span class="section-badge badge-secondary">Secondary Brand</span>
+            </div>
+            <div class="color-grid">
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #EEF2FF;" onclick="copyColor('#EEF2FF')"></div>
+                    <div class="color-info">
+                        <div class="color-name">indigo/50</div>
+                        <div class="color-hex">#EEF2FF</div>
+                        <div class="color-usage">Light backgrounds</div>
+                    </div>
+                </div>
+
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #E0E7FF;" onclick="copyColor('#E0E7FF')"></div>
+                    <div class="color-info">
+                        <div class="color-name">indigo/100</div>
+                        <div class="color-hex">#E0E7FF</div>
+                        <div class="color-usage">Service layer components</div>
+                    </div>
+                </div>
+
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #C7D2FE;" onclick="copyColor('#C7D2FE')"></div>
+                    <div class="color-info">
+                        <div class="color-name">indigo/200</div>
+                        <div class="color-hex">#C7D2FE</div>
+                        <div class="color-usage">Technical elements, diagrams</div>
+                    </div>
+                </div>
+
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #6366F1;" onclick="copyColor('#6366F1')"></div>
+                    <div class="color-info">
+                        <div class="color-name">indigo/500 <span class="main-badge">Main</span></div>
+                        <div class="color-hex">#6366F1</div>
+                        <div class="color-usage">Secondary buttons, badges</div>
+                    </div>
+                </div>
+
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #4F46E5;" onclick="copyColor('#4F46E5')"></div>
+                    <div class="color-info">
+                        <div class="color-name">indigo/600</div>
+                        <div class="color-hex">#4F46E5</div>
+                        <div class="color-usage">Hover states, strokes</div>
+                    </div>
+                </div>
+
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #4338CA;" onclick="copyColor('#4338CA')"></div>
+                    <div class="color-info">
+                        <div class="color-name">indigo/700</div>
+                        <div class="color-hex">#4338CA</div>
+                        <div class="color-usage">Active states, borders</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Neutral: Slate -->
+        <div class="palette-section">
+            <div class="section-header">
+                <h2 class="section-title">Slate</h2>
+                <span class="section-badge badge-neutral">Neutral</span>
+            </div>
+            <div class="color-grid">
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #F8FAFC;" onclick="copyColor('#F8FAFC')"></div>
+                    <div class="color-info">
+                        <div class="color-name">slate/50</div>
+                        <div class="color-hex">#F8FAFC</div>
+                        <div class="color-usage">Page backgrounds</div>
+                    </div>
+                </div>
+
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #F1F5F9;" onclick="copyColor('#F1F5F9')"></div>
+                    <div class="color-info">
+                        <div class="color-name">slate/100</div>
+                        <div class="color-hex">#F1F5F9</div>
+                        <div class="color-usage">Light elements</div>
+                    </div>
+                </div>
+
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #E2E8F0;" onclick="copyColor('#E2E8F0')"></div>
+                    <div class="color-info">
+                        <div class="color-name">slate/200</div>
+                        <div class="color-hex">#E2E8F0</div>
+                        <div class="color-usage">Borders, dividers</div>
+                    </div>
+                </div>
+
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #CBD5E1;" onclick="copyColor('#CBD5E1')"></div>
+                    <div class="color-info">
+                        <div class="color-name">slate/300</div>
+                        <div class="color-hex">#CBD5E1</div>
+                        <div class="color-usage">Disabled states</div>
+                    </div>
+                </div>
+
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #64748B;" onclick="copyColor('#64748B')"></div>
+                    <div class="color-info">
+                        <div class="color-name">slate/500</div>
+                        <div class="color-hex">#64748B</div>
+                        <div class="color-usage">Subtle text, placeholders</div>
+                    </div>
+                </div>
+
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #475569;" onclick="copyColor('#475569')"></div>
+                    <div class="color-info">
+                        <div class="color-name">slate/600</div>
+                        <div class="color-hex">#475569</div>
+                        <div class="color-usage">Body text, labels</div>
+                    </div>
+                </div>
+
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #334155;" onclick="copyColor('#334155')"></div>
+                    <div class="color-info">
+                        <div class="color-name">slate/700</div>
+                        <div class="color-hex">#334155</div>
+                        <div class="color-usage">Headings, emphasis</div>
+                    </div>
+                </div>
+
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #1E293B;" onclick="copyColor('#1E293B')"></div>
+                    <div class="color-info">
+                        <div class="color-name">slate/800</div>
+                        <div class="color-hex">#1E293B</div>
+                        <div class="color-usage">Dark text, strong contrast</div>
+                    </div>
+                </div>
+
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #0F172A;" onclick="copyColor('#0F172A')"></div>
+                    <div class="color-info">
+                        <div class="color-name">slate/900</div>
+                        <div class="color-hex">#0F172A</div>
+                        <div class="color-usage">Titles, maximum contrast</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Semantic Colors: Success (Green) -->
+        <div class="palette-section">
+            <div class="section-header">
+                <h2 class="section-title">Success (Green)</h2>
+                <span class="section-badge badge-semantic">Functional</span>
+            </div>
+            <div class="color-grid">
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #F0FDF4;" onclick="copyColor('#F0FDF4')"></div>
+                    <div class="color-info">
+                        <div class="color-name">green/50</div>
+                        <div class="color-hex">#F0FDF4</div>
+                        <div class="color-usage">Success message backgrounds</div>
+                    </div>
+                </div>
+
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #DCFCE7;" onclick="copyColor('#DCFCE7')"></div>
+                    <div class="color-info">
+                        <div class="color-name">green/100</div>
+                        <div class="color-hex">#DCFCE7</div>
+                        <div class="color-usage">Subtle success states</div>
+                    </div>
+                </div>
+
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #16A34A;" onclick="copyColor('#16A34A')"></div>
+                    <div class="color-info">
+                        <div class="color-name">green/600 <span class="main-badge">Main</span></div>
+                        <div class="color-hex">#16A34A</div>
+                        <div class="color-usage">Success text, icons, infrastructure</div>
+                    </div>
+                </div>
+
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #15803D;" onclick="copyColor('#15803D')"></div>
+                    <div class="color-info">
+                        <div class="color-name">green/700</div>
+                        <div class="color-hex">#15803D</div>
+                        <div class="color-usage">Success buttons, badges</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Semantic Colors: Warning (Yellow) -->
+        <div class="palette-section">
+            <div class="section-header">
+                <h2 class="section-title">Warning (Yellow)</h2>
+                <span class="section-badge badge-semantic">Functional</span>
+            </div>
+            <div class="color-grid">
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #FEFCE8;" onclick="copyColor('#FEFCE8')"></div>
+                    <div class="color-info">
+                        <div class="color-name">yellow/50</div>
+                        <div class="color-hex">#FEFCE8</div>
+                        <div class="color-usage">Warning message backgrounds</div>
+                    </div>
+                </div>
+
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #FEF9C3;" onclick="copyColor('#FEF9C3')"></div>
+                    <div class="color-info">
+                        <div class="color-name">yellow/100</div>
+                        <div class="color-hex">#FEF9C3</div>
+                        <div class="color-usage">Subtle warnings</div>
+                    </div>
+                </div>
+
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #CA8A04;" onclick="copyColor('#CA8A04')"></div>
+                    <div class="color-info">
+                        <div class="color-name">yellow/600 <span class="main-badge">Main</span></div>
+                        <div class="color-hex">#CA8A04</div>
+                        <div class="color-usage">Warning text, icons, external APIs</div>
+                    </div>
+                </div>
+
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #A16207;" onclick="copyColor('#A16207')"></div>
+                    <div class="color-info">
+                        <div class="color-name">yellow/700</div>
+                        <div class="color-hex">#A16207</div>
+                        <div class="color-usage">Warning buttons, badges</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Semantic Colors: Error (Red) -->
+        <div class="palette-section">
+            <div class="section-header">
+                <h2 class="section-title">Error (Red)</h2>
+                <span class="section-badge badge-semantic">Functional</span>
+            </div>
+            <div class="color-grid">
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #FEF2F2;" onclick="copyColor('#FEF2F2')"></div>
+                    <div class="color-info">
+                        <div class="color-name">red/50</div>
+                        <div class="color-hex">#FEF2F2</div>
+                        <div class="color-usage">Error message backgrounds</div>
+                    </div>
+                </div>
+
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #FEE2E2;" onclick="copyColor('#FEE2E2')"></div>
+                    <div class="color-info">
+                        <div class="color-name">red/100</div>
+                        <div class="color-hex">#FEE2E2</div>
+                        <div class="color-usage">Subtle error states</div>
+                    </div>
+                </div>
+
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #DC2626;" onclick="copyColor('#DC2626')"></div>
+                    <div class="color-info">
+                        <div class="color-name">red/600 <span class="main-badge">Main</span></div>
+                        <div class="color-hex">#DC2626</div>
+                        <div class="color-usage">Error text, icons, alerts</div>
+                    </div>
+                </div>
+
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #B91C1C;" onclick="copyColor('#B91C1C')"></div>
+                    <div class="color-info">
+                        <div class="color-name">red/700</div>
+                        <div class="color-hex">#B91C1C</div>
+                        <div class="color-usage">Error buttons, destructive actions</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="usage-examples">
+        <h2>📋 Usage Guidelines</h2>
+        <div class="usage-grid">
+            <div class="usage-card">
+                <h3>🟣 Purple (Primary)</h3>
+                <ul>
+                    <li>Primary CTAs and buttons</li>
+                    <li>Links and interactive elements</li>
+                    <li>Client/Frontend components</li>
+                    <li>Brand moments and hero sections</li>
+                    <li>Focus states and highlights</li>
+                </ul>
+            </div>
+
+            <div class="usage-card">
+                <h3>🔵 Indigo (Secondary)</h3>
+                <ul>
+                    <li>Secondary buttons and badges</li>
+                    <li>Technical/service layer elements</li>
+                    <li>Code-related UI components</li>
+                    <li>Architecture diagrams</li>
+                    <li>Alternative interactive states</li>
+                </ul>
+            </div>
+
+            <div class="usage-card">
+                <h3>⚪ Slate (Neutral)</h3>
+                <ul>
+                    <li>Text hierarchy (body, headings)</li>
+                    <li>Borders and dividers</li>
+                    <li>Background layers</li>
+                    <li>Disabled states</li>
+                    <li>API/Backend layer elements</li>
+                </ul>
+            </div>
+
+            <div class="usage-card">
+                <h3>🟢 Success (Green)</h3>
+                <ul>
+                    <li>50/100: Success alert backgrounds</li>
+                    <li>600: Success text, icons, checkmarks</li>
+                    <li>700: Success buttons, badges</li>
+                    <li>Use for confirmations, completions</li>
+                    <li>Infrastructure layer in diagrams</li>
+                </ul>
+            </div>
+
+            <div class="usage-card">
+                <h3>🟡 Warning (Yellow)</h3>
+                <ul>
+                    <li>50/100: Warning alert backgrounds</li>
+                    <li>600: Warning text, icons</li>
+                    <li>700: Warning buttons, badges</li>
+                    <li>Use for cautions, non-critical issues</li>
+                    <li>External dependencies in diagrams</li>
+                </ul>
+            </div>
+
+            <div class="usage-card">
+                <h3>🔴 Error (Red)</h3>
+                <ul>
+                    <li>50/100: Error alert backgrounds</li>
+                    <li>600: Error text, icons, validation</li>
+                    <li>700: Destructive action buttons</li>
+                    <li>Use for errors, critical issues</li>
+                    <li>Meets WCAG AA contrast (5.9:1)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">Color copied to clipboard!</div>
+
+    <script>
+        function copyColor(hex) {
+            navigator.clipboard.writeText(hex).then(() => {
+                const toast = document.getElementById('toast');
+                toast.textContent = `${hex} copied to clipboard!`;
+                toast.classList.add('show');
+
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>
