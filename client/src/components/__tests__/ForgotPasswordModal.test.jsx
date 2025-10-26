@@ -24,12 +24,6 @@ describe('ForgotPasswordModal', () => {
     localStorage.clear();
     mockFetch = vi.fn();
     global.fetch = mockFetch;
-
-    // Mock initial auth check
-    mockFetch.mockResolvedValue({
-      ok: false,
-      status: 401,
-    });
   });
 
   const renderForgotPasswordModal = (isOpen = true) => {
@@ -110,11 +104,7 @@ describe('ForgotPasswordModal', () => {
     it('should successfully send reset email', async () => {
       const user = userEvent.setup();
 
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 401,
-      });
-
+      // Mock successful forgot password request
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
@@ -152,11 +142,7 @@ describe('ForgotPasswordModal', () => {
     it('should handle server errors gracefully', async () => {
       const user = userEvent.setup();
 
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 401,
-      });
-
+      // Mock server error
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 500,
@@ -185,11 +171,7 @@ describe('ForgotPasswordModal', () => {
     it('should show loading state during request', async () => {
       const user = userEvent.setup();
 
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 401,
-      });
-
+      // Delay the response to test loading state
       mockFetch.mockImplementationOnce(
         () =>
           new Promise((resolve) =>
@@ -226,11 +208,7 @@ describe('ForgotPasswordModal', () => {
     it('should clear email input after successful submission', async () => {
       const user = userEvent.setup();
 
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 401,
-      });
-
+      // Mock successful reset email
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
@@ -282,10 +260,11 @@ describe('ForgotPasswordModal', () => {
       const user = userEvent.setup();
       renderForgotPasswordModal();
 
-      // Wait for click-outside to be enabled
-      await waitFor(() => {}, { timeout: 250 });
+      // Wait for click-outside to be enabled (200ms delay)
+      await new Promise(resolve => setTimeout(resolve, 250));
 
-      const backdrop = screen.getByRole('dialog').parentElement;
+      // Get the backdrop - it has role="dialog" and is the outer container
+      const backdrop = screen.getByRole('dialog');
       await user.click(backdrop);
 
       expect(mockOnClose).toHaveBeenCalled();
@@ -305,11 +284,7 @@ describe('ForgotPasswordModal', () => {
     it('should submit form when Enter is pressed in email field', async () => {
       const user = userEvent.setup();
 
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 401,
-      });
-
+      // Mock successful reset email
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
@@ -356,11 +331,7 @@ describe('ForgotPasswordModal', () => {
     it('should display success message with role="alert"', async () => {
       const user = userEvent.setup();
 
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 401,
-      });
-
+      // Mock successful reset email
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
@@ -435,11 +406,7 @@ describe('ForgotPasswordModal', () => {
     it('should allow resending reset email after success', async () => {
       const user = userEvent.setup();
 
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 401,
-      });
-
+      // Mock successful reset email
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
@@ -473,11 +440,6 @@ describe('ForgotPasswordModal', () => {
   describe('Security Considerations', () => {
     it('should not reveal whether email exists in system', async () => {
       const user = userEvent.setup();
-
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 401,
-      });
 
       // Server always returns same message regardless of email existence
       mockFetch.mockResolvedValueOnce({

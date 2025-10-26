@@ -13,24 +13,28 @@ process.env.RESEND_API_KEY = 'test_api_key';
 process.env.CLIENT_URL = 'http://localhost:5173';
 
 // Mock Resend before importing emailService
-const mockSend = jest.fn();
+// Note: Variables must be prefixed with 'mock' to be accessible in jest.mock factory
+const mockSendEmail = jest.fn();
+
 jest.mock('resend', () => {
-  return {
-    Resend: jest.fn().mockImplementation(() => ({
-      emails: {
-        send: mockSend
-      }
-    }))
+  // The factory function creates the mock module
+  // We return a constructor that creates an object with emails.send
+  const Resend = function() {
+    this.emails = {
+      send: mockSendEmail
+    };
   };
+  return { Resend };
 });
 
 // Now import emailService (after env vars and mock are set)
-import { sendPasswordResetEmail, sendVerificationEmail } from '../emailService.js';
+import { sendPasswordResetEmail, sendVerificationEmail, __resetResendClient } from '../emailService.js';
 
 describe('Email Service', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockSend.mockClear();
+    mockSendEmail.mockClear();
+    __resetResendClient(); // Reset client so mock is used
   });
 
   // ============================================================================
@@ -41,14 +45,17 @@ describe('Email Service', () => {
     const validToken = 'a'.repeat(64);
 
     it('should send email with correct recipient', async () => {
-      mockSend.mockResolvedValue({ id: 'email_123' });
+      // Try returning just the id wrapped in data
+      mockSendEmail.mockImplementation(async () => {
+        return { data: { id: 'email_123' }, error: null };
+      });
 
       await sendPasswordResetEmail({
         to: validEmail,
         resetToken: validToken
       });
 
-      expect(mockSend).toHaveBeenCalledWith(
+      expect(mockSendEmail).toHaveBeenCalledWith(
         expect.objectContaining({
           to: validEmail
         })
@@ -56,26 +63,26 @@ describe('Email Service', () => {
     });
 
     it('should include reset link with token in email', async () => {
-      mockSend.mockResolvedValue({ id: 'email_123' });
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_123' } });
 
       await sendPasswordResetEmail({
         to: validEmail,
         resetToken: validToken
       });
 
-      const callArgs = mockSend.mock.calls[0][0];
+      const callArgs = mockSendEmail.mock.calls[0][0];
       expect(callArgs.html).toContain('/reset-password?token=' + validToken);
     });
 
     it('should include correct subject line', async () => {
-      mockSend.mockResolvedValue({ id: 'email_123' });
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_123' } });
 
       await sendPasswordResetEmail({
         to: validEmail,
         resetToken: validToken
       });
 
-      expect(mockSend).toHaveBeenCalledWith(
+      expect(mockSendEmail).toHaveBeenCalledWith(
         expect.objectContaining({
           subject: 'Reset Your Password - CodeScribe AI'
         })
@@ -83,57 +90,57 @@ describe('Email Service', () => {
     });
 
     it('should use correct from address', async () => {
-      mockSend.mockResolvedValue({ id: 'email_123' });
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_123' } });
 
       await sendPasswordResetEmail({
         to: validEmail,
         resetToken: validToken
       });
 
-      const callArgs = mockSend.mock.calls[0][0];
+      const callArgs = mockSendEmail.mock.calls[0][0];
       expect(callArgs.from).toMatch(/CodeScribe AI/);
     });
 
     it('should include expiration warning in email', async () => {
-      mockSend.mockResolvedValue({ id: 'email_123' });
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_123' } });
 
       await sendPasswordResetEmail({
         to: validEmail,
         resetToken: validToken
       });
 
-      const callArgs = mockSend.mock.calls[0][0];
+      const callArgs = mockSendEmail.mock.calls[0][0];
       expect(callArgs.html).toContain('1 hour');
       expect(callArgs.html.toLowerCase()).toContain('expire');
     });
 
     it('should include security message', async () => {
-      mockSend.mockResolvedValue({ id: 'email_123' });
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_123' } });
 
       await sendPasswordResetEmail({
         to: validEmail,
         resetToken: validToken
       });
 
-      const callArgs = mockSend.mock.calls[0][0];
+      const callArgs = mockSendEmail.mock.calls[0][0];
       expect(callArgs.html.toLowerCase()).toContain("didn't request");
       expect(callArgs.html.toLowerCase()).toContain('ignore');
     });
 
     it('should return email ID on success', async () => {
       const emailId = 'email_123';
-      mockSend.mockResolvedValue({ id: emailId });
+      mockSendEmail.mockResolvedValue({ data: { id: emailId } });
 
       const result = await sendPasswordResetEmail({
         to: validEmail,
         resetToken: validToken
       });
 
-      expect(result.id).toBe(emailId);
+      expect(result.data.id).toBe(emailId);
     });
 
     it('should throw error on email service failure', async () => {
-      mockSend.mockRejectedValue(new Error('Service error'));
+      mockSendEmail.mockRejectedValue(new Error('Service error'));
 
       await expect(
         sendPasswordResetEmail({
@@ -145,7 +152,7 @@ describe('Email Service', () => {
 
     it('should log email sending', async () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-      mockSend.mockResolvedValue({ id: 'email_123' });
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_123' } });
 
       await sendPasswordResetEmail({
         to: validEmail,
@@ -161,7 +168,7 @@ describe('Email Service', () => {
     });
 
     it('should handle special characters in email', async () => {
-      mockSend.mockResolvedValue({ id: 'email_123' });
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_123' } });
       const specialEmail = 'user+test@example.co.uk';
 
       await sendPasswordResetEmail({
@@ -169,7 +176,7 @@ describe('Email Service', () => {
         resetToken: validToken
       });
 
-      expect(mockSend).toHaveBeenCalledWith(
+      expect(mockSendEmail).toHaveBeenCalledWith(
         expect.objectContaining({
           to: specialEmail
         })
@@ -177,14 +184,14 @@ describe('Email Service', () => {
     });
 
     it('should use CLIENT_URL from environment', async () => {
-      mockSend.mockResolvedValue({ id: 'email_123' });
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_123' } });
 
       await sendPasswordResetEmail({
         to: validEmail,
         resetToken: validToken
       });
 
-      const callArgs = mockSend.mock.calls[0][0];
+      const callArgs = mockSendEmail.mock.calls[0][0];
       expect(callArgs.html).toContain('http://localhost:5173/reset-password');
     });
   });
@@ -197,14 +204,14 @@ describe('Email Service', () => {
     const validToken = 'verification_token_123';
 
     it('should send email with correct recipient', async () => {
-      mockSend.mockResolvedValue({ id: 'email_456' });
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_456' } });
 
       await sendVerificationEmail({
         to: validEmail,
         verificationToken: validToken
       });
 
-      expect(mockSend).toHaveBeenCalledWith(
+      expect(mockSendEmail).toHaveBeenCalledWith(
         expect.objectContaining({
           to: validEmail
         })
@@ -212,26 +219,26 @@ describe('Email Service', () => {
     });
 
     it('should include verification link with token', async () => {
-      mockSend.mockResolvedValue({ id: 'email_456' });
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_456' } });
 
       await sendVerificationEmail({
         to: validEmail,
         verificationToken: validToken
       });
 
-      const callArgs = mockSend.mock.calls[0][0];
+      const callArgs = mockSendEmail.mock.calls[0][0];
       expect(callArgs.html).toContain('/verify-email?token=' + validToken);
     });
 
     it('should include correct subject line', async () => {
-      mockSend.mockResolvedValue({ id: 'email_456' });
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_456' } });
 
       await sendVerificationEmail({
         to: validEmail,
         verificationToken: validToken
       });
 
-      expect(mockSend).toHaveBeenCalledWith(
+      expect(mockSendEmail).toHaveBeenCalledWith(
         expect.objectContaining({
           subject: 'Verify Your Email - CodeScribe AI'
         })
@@ -239,43 +246,43 @@ describe('Email Service', () => {
     });
 
     it('should include welcome message', async () => {
-      mockSend.mockResolvedValue({ id: 'email_456' });
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_456' } });
 
       await sendVerificationEmail({
         to: validEmail,
         verificationToken: validToken
       });
 
-      const callArgs = mockSend.mock.calls[0][0];
+      const callArgs = mockSendEmail.mock.calls[0][0];
       expect(callArgs.html.toLowerCase()).toContain('welcome');
     });
 
     it('should include expiration warning (24 hours)', async () => {
-      mockSend.mockResolvedValue({ id: 'email_456' });
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_456' } });
 
       await sendVerificationEmail({
         to: validEmail,
         verificationToken: validToken
       });
 
-      const callArgs = mockSend.mock.calls[0][0];
+      const callArgs = mockSendEmail.mock.calls[0][0];
       expect(callArgs.html).toContain('24 hours');
     });
 
     it('should return email ID on success', async () => {
       const emailId = 'email_456';
-      mockSend.mockResolvedValue({ id: emailId });
+      mockSendEmail.mockResolvedValue({ data: { id: emailId } });
 
       const result = await sendVerificationEmail({
         to: validEmail,
         verificationToken: validToken
       });
 
-      expect(result.id).toBe(emailId);
+      expect(result.data.id).toBe(emailId);
     });
 
     it('should throw error on email service failure', async () => {
-      mockSend.mockRejectedValue(new Error('Service error'));
+      mockSendEmail.mockRejectedValue(new Error('Service error'));
 
       await expect(
         sendVerificationEmail({
@@ -287,7 +294,7 @@ describe('Email Service', () => {
 
     it('should log email sending', async () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-      mockSend.mockResolvedValue({ id: 'email_456' });
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_456' } });
 
       await sendVerificationEmail({
         to: validEmail,
@@ -308,77 +315,77 @@ describe('Email Service', () => {
   // ============================================================================
   describe('Email Template Quality', () => {
     it('should include CodeScribe AI branding in password reset', async () => {
-      mockSend.mockResolvedValue({ id: 'email_123' });
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_123' } });
 
       await sendPasswordResetEmail({
         to: 'user@example.com',
         resetToken: 'a'.repeat(64)
       });
 
-      const callArgs = mockSend.mock.calls[0][0];
+      const callArgs = mockSendEmail.mock.calls[0][0];
       expect(callArgs.html).toContain('CodeScribe AI');
     });
 
     it('should include CodeScribe AI branding in verification', async () => {
-      mockSend.mockResolvedValue({ id: 'email_456' });
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_456' } });
 
       await sendVerificationEmail({
         to: 'user@example.com',
         verificationToken: 'token123'
       });
 
-      const callArgs = mockSend.mock.calls[0][0];
+      const callArgs = mockSendEmail.mock.calls[0][0];
       expect(callArgs.html).toContain('CodeScribe AI');
     });
 
     it('should include clickable button in password reset', async () => {
-      mockSend.mockResolvedValue({ id: 'email_123' });
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_123' } });
 
       await sendPasswordResetEmail({
         to: 'user@example.com',
         resetToken: 'a'.repeat(64)
       });
 
-      const callArgs = mockSend.mock.calls[0][0];
+      const callArgs = mockSendEmail.mock.calls[0][0];
       expect(callArgs.html).toMatch(/href=.*reset-password/);
       expect(callArgs.html.toLowerCase()).toContain('reset password');
     });
 
     it('should include plain text link as fallback', async () => {
-      mockSend.mockResolvedValue({ id: 'email_123' });
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_123' } });
 
       await sendPasswordResetEmail({
         to: 'user@example.com',
         resetToken: 'a'.repeat(64)
       });
 
-      const callArgs = mockSend.mock.calls[0][0];
+      const callArgs = mockSendEmail.mock.calls[0][0];
       // Should have both clickable button and plain text URL
       const matches = callArgs.html.match(/reset-password\?token=/g);
       expect(matches.length).toBeGreaterThanOrEqual(2);
     });
 
     it('should be mobile responsive', async () => {
-      mockSend.mockResolvedValue({ id: 'email_123' });
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_123' } });
 
       await sendPasswordResetEmail({
         to: 'user@example.com',
         resetToken: 'a'.repeat(64)
       });
 
-      const callArgs = mockSend.mock.calls[0][0];
+      const callArgs = mockSendEmail.mock.calls[0][0];
       expect(callArgs.html).toContain('viewport');
     });
 
     it('should use brand colors (purple/indigo)', async () => {
-      mockSend.mockResolvedValue({ id: 'email_123' });
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_123' } });
 
       await sendPasswordResetEmail({
         to: 'user@example.com',
         resetToken: 'a'.repeat(64)
       });
 
-      const callArgs = mockSend.mock.calls[0][0];
+      const callArgs = mockSendEmail.mock.calls[0][0];
       expect(callArgs.html).toMatch(/#9333ea|#6366f1|purple|indigo/i);
     });
   });
@@ -389,7 +396,7 @@ describe('Email Service', () => {
   describe('Error Logging', () => {
     it('should log errors when password reset email fails', async () => {
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-      mockSend.mockRejectedValue(new Error('Service error'));
+      mockSendEmail.mockRejectedValue(new Error('Service error'));
 
       await expect(
         sendPasswordResetEmail({
@@ -408,7 +415,7 @@ describe('Email Service', () => {
 
     it('should log errors when verification email fails', async () => {
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-      mockSend.mockRejectedValue(new Error('Service error'));
+      mockSendEmail.mockRejectedValue(new Error('Service error'));
 
       await expect(
         sendVerificationEmail({

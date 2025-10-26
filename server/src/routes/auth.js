@@ -271,6 +271,18 @@ function checkPasswordResetRateLimit(email) {
   return false;
 }
 
+/**
+ * Reset password reset rate limit (for testing only)
+ * @param {string} [email] - Optional email to reset. If not provided, resets all.
+ */
+export function resetPasswordResetRateLimit(email) {
+  if (email) {
+    passwordResetAttempts.delete(email);
+  } else {
+    passwordResetAttempts.clear();
+  }
+}
+
 // ============================================================================
 // POST /api/auth/forgot-password - Password Reset Request
 // ============================================================================

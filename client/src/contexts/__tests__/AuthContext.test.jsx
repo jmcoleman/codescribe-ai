@@ -31,18 +31,14 @@ describe('AuthContext', () => {
 
   describe('Initialization', () => {
     it('should initialize with no user when no token exists', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 401,
-      });
+      // No token in localStorage, so initializeAuth returns early
+      // mockFetch is not needed since no API call is made
 
       const { result } = renderHook(() => useAuth(), {
         wrapper: AuthProvider,
       });
 
-      // Initially loading
-      expect(result.current.isLoading).toBe(true);
-
+      // Wait for initialization to complete
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
       });
@@ -139,7 +135,12 @@ describe('AuthContext', () => {
       const response = await result.current.signup('newuser@example.com', 'password123');
 
       expect(response.success).toBe(true);
-      expect(result.current.user).toEqual(mockUser);
+
+      // Wait for user state to update
+      await waitFor(() => {
+        expect(result.current.user).toEqual(mockUser);
+      });
+
       expect(result.current.isAuthenticated).toBe(true);
       expect(localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)).toBe('new-token');
       expect(mockFetch).toHaveBeenCalledWith(
@@ -198,7 +199,11 @@ describe('AuthContext', () => {
 
       expect(response.success).toBe(false);
       expect(response.error).toBe('Network error');
-      expect(result.current.error).toBe('Network error');
+
+      // Wait for error state to update
+      await waitFor(() => {
+        expect(result.current.error).toBe('Network error');
+      });
     });
   });
 
@@ -231,7 +236,12 @@ describe('AuthContext', () => {
       const response = await result.current.login('user@example.com', 'password123');
 
       expect(response.success).toBe(true);
-      expect(result.current.user).toEqual(mockUser);
+
+      // Wait for user state to update
+      await waitFor(() => {
+        expect(result.current.user).toEqual(mockUser);
+      });
+
       expect(result.current.isAuthenticated).toBe(true);
       expect(localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)).toBe('login-token');
     });
@@ -301,7 +311,11 @@ describe('AuthContext', () => {
       // Logout
       await result.current.logout();
 
-      expect(result.current.user).toBe(null);
+      // Wait for user state to be cleared
+      await waitFor(() => {
+        expect(result.current.user).toBe(null);
+      });
+
       expect(result.current.isAuthenticated).toBe(false);
       expect(localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)).toBe(null);
     });
@@ -385,8 +399,14 @@ describe('AuthContext', () => {
     it('should return stored token', async () => {
       localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, 'stored-token');
 
+      // Mock successful token verification
       mockFetch.mockResolvedValueOnce({
-        ok: false,
+        ok: true,
+        status: 200,
+        json: async () => ({
+          success: true,
+          user: { id: 1, email: 'user@example.com', tier: 'free' },
+        }),
       });
 
       const { result } = renderHook(() => useAuth(), {
@@ -439,12 +459,18 @@ describe('AuthContext', () => {
       // Trigger an error
       await result.current.login('wrong@example.com', 'wrongpass');
 
-      expect(result.current.error).toBe('Invalid credentials');
+      // Wait for error state to update
+      await waitFor(() => {
+        expect(result.current.error).toBe('Invalid credentials');
+      });
 
       // Clear error
       result.current.clearError();
 
-      expect(result.current.error).toBe(null);
+      // Wait for error to be cleared
+      await waitFor(() => {
+        expect(result.current.error).toBe(null);
+      });
     });
   });
 

@@ -77,5 +77,5 @@ module.exports = {
   transform: {
     '^.+\\.js$': 'babel-jest',
   },
-  transformIgnorePatterns: ['node_modules/(?!(acorn)/)'],
+  transformIgnorePatterns: ['node_modules/(?!(acorn|resend)/)'],
 };

@@ -24,48 +24,62 @@ jest.mock('../../src/db/connection.js', () => ({
 }));
 
 // Mock passport-github2 strategy
+// Use passport.Strategy as the base class so Passport can properly bind framework methods
 jest.mock('passport-github2', () => {
-  return {
-    Strategy: class MockGitHubStrategy {
-      constructor(options, verify) {
-        this.name = 'github';
-        this._verify = verify;
-        this.options = options;
-      }
+  const passport = require('passport');
 
-      authenticate(req, options) {
-        // Simulate GitHub OAuth flow
-        if (req.query.code) {
-          // Simulate successful OAuth callback
-          const mockProfile = {
-            id: req.query.github_id || '12345',
-            username: req.query.username || 'testuser',
-            emails: [{ value: req.query.email || 'github@test.com' }]
-          };
+  class MockGitHubStrategy extends passport.Strategy {
+    constructor(options, verify) {
+      super();
+      this.name = 'github';
+      this._verify = verify;
+      this.options = options;
+    }
 
-          const mockAccessToken = 'mock_access_token';
-          const mockRefreshToken = 'mock_refresh_token';
+    authenticate(req) {
+      // Simulate GitHub OAuth flow by calling the verify callback
+      // Passport will handle the done() callback and call success/error appropriately
+      const self = this; // Preserve context for done callback
 
-          this._verify(mockAccessToken, mockRefreshToken, mockProfile, (err, user) => {
-            if (err) {
-              return this.error(err);
-            }
-            if (!user) {
-              return this.fail({ message: 'Authentication failed' });
-            }
-            req.user = user;
-            this.success(user);
-          });
-        } else if (req.query.error) {
-          // Simulate OAuth error
-          this.fail({ message: req.query.error });
-        } else {
-          // Simulate redirect to GitHub
-          this.redirect('https://github.com/login/oauth/authorize?client_id=test');
+      if (req.query.code || req.query.state) {
+        // Simulate successful OAuth callback with mock profile
+        const mockProfile = {
+          id: req.query.github_id || '12345',
+          username: req.query.username || 'testuser',
+          emails: [{ value: req.query.email || 'github@test.com' }]
+        };
+
+        const mockAccessToken = 'mock_access_token';
+        const mockRefreshToken = 'mock_refresh_token';
+
+        // Callback function that will be passed to verify
+        const verified = function(err, user, info) {
+          if (err) {
+            return self.error(err);
+          }
+          if (!user) {
+            return self.fail(info);
+          }
+          self.success(user, info);
+        };
+
+        // Call the verify callback with try-catch for error handling
+        try {
+          this._verify(mockAccessToken, mockRefreshToken, mockProfile, verified);
+        } catch (e) {
+          return this.error(e);
         }
+      } else if (req.query.error) {
+        // Simulate OAuth error
+        this.fail({ message: req.query.error });
+      } else {
+        // Simulate redirect to GitHub
+        this.redirect('https://github.com/login/oauth/authorize?client_id=test');
       }
     }
-  };
+  }
+
+  return { Strategy: MockGitHubStrategy };
 });
 
 describe('GitHub OAuth Integration Tests', () => {

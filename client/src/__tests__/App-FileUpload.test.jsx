@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from '../App';
+import { AuthProvider } from '../contexts/AuthContext';
 
 /**
  * File Upload Integration Tests
@@ -14,16 +15,26 @@ describe('App - File Upload Integration', () => {
     // Mock fetch globally
     mockFetch = vi.fn();
     global.fetch = mockFetch;
+    localStorage.clear();
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
+  // Helper to render App with AuthProvider
+  const renderApp = () => {
+    return render(
+      <AuthProvider>
+        <App />
+      </AuthProvider>
+    );
+  };
+
   describe('Upload Button Interaction', () => {
     it('should trigger file input when upload button clicked', async () => {
       const user = userEvent.setup();
-      render(<App />);
+      renderApp();
 
       const uploadButton = screen.getByRole('button', { name: /upload files/i });
       await user.click(uploadButton);
@@ -35,7 +46,7 @@ describe('App - File Upload Integration', () => {
     });
 
     it('should accept correct file extensions', () => {
-      render(<App />);
+      renderApp();
 
       const fileInput = document.querySelector('input[type="file"]');
       const acceptedExtensions = fileInput.getAttribute('accept');
@@ -75,7 +86,7 @@ describe('App - File Upload Integration', () => {
         })
       });
 
-      render(<App />);
+      renderApp();
 
       const fileInput = document.querySelector('input[type="file"]');
       const file = new File([mockFileContent], 'test.js', { type: 'application/javascript' });
@@ -126,7 +137,7 @@ describe('App - File Upload Integration', () => {
           })
         });
 
-        const { unmount } = render(<App />);
+        const { unmount } = renderApp();
 
         const fileInput = document.querySelector('input[type="file"]');
         const file = new File([testCase.content], `test${testCase.extension}`);
@@ -161,7 +172,7 @@ describe('App - File Upload Integration', () => {
         })
       });
 
-      render(<App />);
+      renderApp();
 
       const fileInput = document.querySelector('input[type="file"]');
       const file = new File([tsContent], 'types.ts', { type: 'text/typescript' });
@@ -191,7 +202,7 @@ describe('App - File Upload Integration', () => {
         })
       });
 
-      render(<App />);
+      renderApp();
 
       const fileInput = document.querySelector('input[type="file"]');
       const file = new File([pyContent], 'script.py', { type: 'text/x-python' });
@@ -218,7 +229,7 @@ describe('App - File Upload Integration', () => {
         })
       });
 
-      render(<App />);
+      renderApp();
 
       const fileInput = document.querySelector('input[type="file"]');
       // Use a valid extension but server will reject it
@@ -244,7 +255,7 @@ describe('App - File Upload Integration', () => {
     it('should display error for file too large', async () => {
       const user = userEvent.setup();
 
-      render(<App />);
+      renderApp();
 
       const fileInput = document.querySelector('input[type="file"]');
       // Create a large file (> 500KB)
@@ -269,7 +280,7 @@ describe('App - File Upload Integration', () => {
 
       mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
-      render(<App />);
+      renderApp();
 
       const fileInput = document.querySelector('input[type="file"]');
       const file = new File(['test'], 'test.js', { type: 'application/javascript' });
@@ -300,7 +311,7 @@ describe('App - File Upload Integration', () => {
         })
       });
 
-      render(<App />);
+      renderApp();
 
       const fileInput = document.querySelector('input[type="file"]');
       const file = new File(['test'], 'test.js', { type: 'application/javascript' });
@@ -355,7 +366,7 @@ describe('App - File Upload Integration', () => {
         })
       });
 
-      render(<App />);
+      renderApp();
 
       // Upload file
       const fileInput = document.querySelector('input[type="file"]');
@@ -415,7 +426,7 @@ describe('App - File Upload Integration', () => {
         })
       });
 
-      render(<App />);
+      renderApp();
 
       const fileInput = document.querySelector('input[type="file"]');
       const file = new File(['test'], 'test.js');
@@ -445,7 +456,7 @@ describe('App - File Upload Integration', () => {
         })
       });
 
-      render(<App />);
+      renderApp();
 
       const fileInput = document.querySelector('input[type="file"]');
       const file = new File(['test'], 'test.js');
@@ -471,7 +482,7 @@ describe('App - File Upload Integration', () => {
         })
       });
 
-      render(<App />);
+      renderApp();
 
       const fileInput = document.querySelector('input[type="file"]');
       const file = new File(['test'], 'test.js');
@@ -499,7 +510,7 @@ describe('App - File Upload Integration', () => {
         })
       });
 
-      render(<App />);
+      renderApp();
 
       const fileInput = document.querySelector('input[type="file"]');
       const file = new File(['test content'], 'test.js');

@@ -6,7 +6,8 @@
       "Bash(npm test:*)",
       "Bash(npm install:*)",
       "Bash(npm run dev)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(timeout 60 npm test -- --run App-FileUpload.test.jsx)"
     ],
     "deny": [],
     "ask": []
