@@ -56,16 +56,15 @@ function hello(name) {
 }
 console.log(hello('World'));
 
-// Demo function with actions for documentation testing
+// Demonstrate download functionality of generated docs
 function demoDocumentationFeatures() {
-  const markdown = \`# Test Documentation
+  const markdown = \`
+    # Test Documentation
+    ## Overview
+    Content of example document is provided here....
+  \`;
 
-## Overview
-Content of example document is provided here....
-
-**This download button is working perfectly!**\`;
-
-  // Provide actions for documentation demo
+  // actions
   return {
     download() {
       const blob = new Blob([markdown], { type: 'text/markdown' });

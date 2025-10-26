@@ -501,4 +501,181 @@ describe('SignupModal', () => {
       });
     });
   });
+
+  describe('Password Visibility Toggle', () => {
+    it('should render password visibility toggle buttons', () => {
+      renderSignupModal();
+
+      // Check for show/hide password buttons by their aria-labels
+      const toggleButtons = screen.getAllByLabelText(/show password/i);
+
+      expect(toggleButtons).toHaveLength(2);
+      expect(toggleButtons[0]).toBeInTheDocument();
+      expect(toggleButtons[1]).toBeInTheDocument();
+    });
+
+    it('should toggle password field visibility when button is clicked', async () => {
+      const user = userEvent.setup();
+      renderSignupModal();
+
+      const passwordInput = screen.getByLabelText(/^password$/i);
+      const toggleButtons = screen.getAllByLabelText(/show password/i);
+      const toggleButton = toggleButtons[0]; // First toggle is for password field
+
+      // Initially should be password type (hidden)
+      expect(passwordInput).toHaveAttribute('type', 'password');
+
+      // Click to show password
+      await user.click(toggleButton);
+
+      // Should change to text type (visible)
+      expect(passwordInput).toHaveAttribute('type', 'text');
+      const hideButtons = screen.getAllByLabelText(/hide password/i);
+      expect(hideButtons[0]).toBeInTheDocument();
+
+      // Click to hide password again
+      await user.click(hideButtons[0]);
+
+      // Should change back to password type
+      expect(passwordInput).toHaveAttribute('type', 'password');
+    });
+
+    it('should toggle confirm password field visibility when button is clicked', async () => {
+      const user = userEvent.setup();
+      renderSignupModal();
+
+      const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
+      // Get the second "Show password" button (for confirm password field)
+      const toggleButtons = screen.getAllByLabelText(/show password/i);
+      const confirmToggleButton = toggleButtons[1];
+
+      // Initially should be password type (hidden)
+      expect(confirmPasswordInput).toHaveAttribute('type', 'password');
+
+      // Click to show password
+      await user.click(confirmToggleButton);
+
+      // Should change to text type (visible)
+      expect(confirmPasswordInput).toHaveAttribute('type', 'text');
+
+      // Click to hide password again
+      const hideButtons = screen.getAllByLabelText(/hide password/i);
+      await user.click(hideButtons[hideButtons.length - 1]);
+
+      // Should change back to password type
+      expect(confirmPasswordInput).toHaveAttribute('type', 'password');
+    });
+
+    it('should toggle password fields independently', async () => {
+      const user = userEvent.setup();
+      renderSignupModal();
+
+      const passwordInput = screen.getByLabelText(/^password$/i);
+      const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
+      const toggleButtons = screen.getAllByLabelText(/show password/i);
+      const passwordToggle = toggleButtons[0];
+      const confirmPasswordToggle = toggleButtons[1];
+
+      // Initially both should be hidden
+      expect(passwordInput).toHaveAttribute('type', 'password');
+      expect(confirmPasswordInput).toHaveAttribute('type', 'password');
+
+      // Show only the password field
+      await user.click(passwordToggle);
+
+      expect(passwordInput).toHaveAttribute('type', 'text');
+      expect(confirmPasswordInput).toHaveAttribute('type', 'password');
+
+      // Show the confirm password field
+      await user.click(confirmPasswordToggle);
+
+      expect(passwordInput).toHaveAttribute('type', 'text');
+      expect(confirmPasswordInput).toHaveAttribute('type', 'text');
+
+      // Hide the password field
+      await user.click(screen.getAllByLabelText(/hide password/i)[0]);
+
+      expect(passwordInput).toHaveAttribute('type', 'password');
+      expect(confirmPasswordInput).toHaveAttribute('type', 'text');
+    });
+
+    it('should have proper accessibility attributes for toggle buttons', () => {
+      renderSignupModal();
+
+      const toggleButtons = screen.getAllByLabelText(/show password/i);
+
+      toggleButtons.forEach((button) => {
+        expect(button).toHaveAttribute('type', 'button');
+        expect(button).toHaveAttribute('aria-label');
+      });
+    });
+
+    it('should disable toggle buttons when form is loading', async () => {
+      const user = userEvent.setup();
+
+      // Delay the response to test loading state
+      mockFetch.mockImplementationOnce(
+        () =>
+          new Promise((resolve) =>
+            setTimeout(
+              () =>
+                resolve({
+                  ok: true,
+                  status: 201,
+                  json: async () => ({
+                    success: true,
+                    token: 'test-token',
+                    user: { id: 1, email: 'test@example.com' },
+                  }),
+                }),
+              100
+            )
+          )
+      );
+
+      renderSignupModal();
+
+      const emailInput = screen.getByLabelText(/email address/i);
+      const passwordInput = screen.getByLabelText(/^password$/i);
+      const confirmInput = screen.getByLabelText(/confirm password/i);
+      const submitButton = screen.getByRole('button', { name: /create account/i });
+
+      await user.type(emailInput, 'test@example.com');
+      await user.type(passwordInput, 'Password123');
+      await user.type(confirmInput, 'Password123');
+      await user.click(submitButton);
+
+      // During loading, toggle buttons should be disabled
+      const toggleButtons = screen.getAllByLabelText(/show password/i);
+      toggleButtons.forEach((button) => {
+        expect(button).toBeDisabled();
+      });
+
+      await waitFor(() => {
+        expect(mockOnClose).toHaveBeenCalled();
+      });
+    });
+
+    it('should show password text when visibility is toggled on', async () => {
+      const user = userEvent.setup();
+      renderSignupModal();
+
+      const passwordInput = screen.getByLabelText(/^password$/i);
+      const toggleButtons = screen.getAllByLabelText(/show password/i);
+      const toggleButton = toggleButtons[0]; // First toggle is for password field
+
+      // Type a password
+      await user.type(passwordInput, 'Secret123');
+
+      // Password should be hidden (obscured by browser)
+      expect(passwordInput).toHaveAttribute('type', 'password');
+
+      // Toggle to show
+      await user.click(toggleButton);
+
+      // Password should be visible as text
+      expect(passwordInput).toHaveAttribute('type', 'text');
+      expect(passwordInput).toHaveValue('Secret123');
+    });
+  });
 });

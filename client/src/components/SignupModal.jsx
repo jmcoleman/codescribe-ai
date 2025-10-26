@@ -5,7 +5,7 @@
  * Includes password strength validation and accessibility features.
  */
 
-import { X, Mail, Lock, Github, AlertCircle, Check } from 'lucide-react';
+import { X, Mail, Lock, Github, AlertCircle, Check, Eye, EyeOff } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { flushSync } from 'react-dom';
 import { Button } from './Button';
@@ -26,6 +26,8 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }) {
   const [allowClickOutside, setAllowClickOutside] = useState(false);
   const [focusTrigger, setFocusTrigger] = useState(0); // Increment to trigger focus
   const lastProcessedTrigger = useRef(0); // Track last trigger we processed
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const modalRef = useRef(null);
   const emailInputRef = useRef(null);
@@ -352,7 +354,7 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }) {
                 <input
                   ref={passwordInputRef}
                   id="signup-password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value);
@@ -360,7 +362,7 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }) {
                     if (passwordError) setPasswordError('');
                   }}
                   placeholder="Create a strong password"
-                  className={`block w-full pl-10 pr-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-shadow ${
+                  className={`block w-full pl-10 pr-11 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-shadow ${
                     passwordError ? 'border-red-300 bg-red-50' : 'border-slate-300'
                   }`}
                   autoComplete="new-password"
@@ -368,6 +370,19 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }) {
                   aria-invalid={!!passwordError}
                   aria-describedby={passwordError ? 'password-error' : undefined}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none focus:text-slate-600 transition-colors"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  disabled={isLoading}
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" aria-hidden="true" />
+                  ) : (
+                    <Eye className="w-5 h-5" aria-hidden="true" />
+                  )}
+                </button>
               </div>
               {passwordError && (
                 <p id="password-error" className="mt-1.5 text-sm text-red-600" role="alert">
@@ -427,7 +442,7 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }) {
                 <input
                   ref={confirmPasswordInputRef}
                   id="signup-confirm-password"
-                  type="password"
+                  type={showConfirmPassword ? "text" : "password"}
                   value={confirmPassword}
                   onChange={(e) => {
                     setConfirmPassword(e.target.value);
@@ -435,7 +450,7 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }) {
                     if (confirmPasswordError) setConfirmPasswordError('');
                   }}
                   placeholder="Confirm your password"
-                  className={`block w-full pl-10 pr-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-shadow ${
+                  className={`block w-full pl-10 pr-11 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-shadow ${
                     confirmPasswordError ? 'border-red-300 bg-red-50' : 'border-slate-300'
                   }`}
                   autoComplete="new-password"
@@ -443,6 +458,19 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }) {
                   aria-invalid={!!confirmPasswordError}
                   aria-describedby={confirmPasswordError ? 'confirm-password-error' : undefined}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none focus:text-slate-600 transition-colors"
+                  aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                  disabled={isLoading}
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="w-5 h-5" aria-hidden="true" />
+                  ) : (
+                    <Eye className="w-5 h-5" aria-hidden="true" />
+                  )}
+                </button>
               </div>
               {confirmPasswordError && (
                 <p id="confirm-password-error" className="mt-1.5 text-sm text-red-600" role="alert">

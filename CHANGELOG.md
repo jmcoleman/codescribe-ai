@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Password Visibility Toggle (October 26, 2025)**
+  - Added eye icon toggle buttons to show/hide passwords in SignupModal
+  - Eye icon appears when password is hidden, EyeOff icon when visible
+  - Independent toggles for password and confirm password fields
+  - Proper accessibility with aria-labels ("Show password"/"Hide password")
+  - Toggle buttons disabled during form submission for better UX
+  - Added 7 comprehensive tests for password visibility feature (100% passing)
+  - All 30 SignupModal tests passing with new password visibility coverage
+  - Consistent design with existing component patterns and hover/focus states
+  - Updated input padding to accommodate toggle button (pr-11)
+
 ### Changed
 - **Documentation & Planning Updates (October 26, 2025)**
   - Updated pricing structure from 4 tiers to 5 tiers across all documentation
