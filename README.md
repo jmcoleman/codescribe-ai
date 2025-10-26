@@ -371,13 +371,6 @@ router.post('/users', async (req, res) => {
 });
 ```
 
-### Keyboard Shortcuts
-
-- **Generate**: Click "Generate Docs" button (no keyboard shortcut to prevent accidental generation)
-- **Copy**: Click copy button in documentation panel
-- **Upload**: Click "Upload File" button
-- **Help**: Click "?" icon in header for examples modal
-
 ## Documentation
 
 📚 **Comprehensive documentation organized in [docs/](docs/)**
