@@ -151,10 +151,8 @@ _Screenshots coming soon - planned for portfolio presentation_
 
    Create a `.env` file in the `server/` directory:
    ```bash
-   # server/.env - Basic Configuration (No Auth)
+   # server/.env
    CLAUDE_API_KEY=your-api-key-here
-   PORT=3000
-   NODE_ENV=development
    ```
 
    Create a `.env` file in the `client/` directory:
@@ -163,7 +161,7 @@ _Screenshots coming soon - planned for portfolio presentation_
    VITE_API_URL=http://localhost:3000
    ```
 
-   **That's it!** The app runs without authentication by default (no `ENABLE_AUTH` or `VITE_ENABLE_AUTH` needed).
+   **That's it!** For optional variables and detailed configuration, see [Environment Variables](#environment-variables) below.
 
 ### Development
 
@@ -244,11 +242,12 @@ VITE_API_URL=http://localhost:3000
 
 > **Need authentication, user management, or email features?** See comprehensive setup guides:
 >
+> - [Vercel Deployment Guide](docs/deployment/VERCEL-DEPLOYMENT-GUIDE.md) - Complete 8-step deployment walkthrough (45-60 min)
+> - [Environment Variables](docs/deployment/VERCEL-ENVIRONMENT-VARIABLES.md) - All environment variables reference
 > - [Database Setup Guide](docs/deployment/VERCEL-POSTGRES-SETUP.md) - Neon Postgres configuration
+> - [GitHub OAuth Setup](docs/deployment/GITHUB-OAUTH-SETUP.md) - Social login configuration
 > - [Resend Email Setup](docs/deployment/RESEND-SETUP.md) - Email service for password resets
 > - [Environment Checklist](docs/deployment/DATABASE-ENVIRONMENT-CHECKLIST.md) - Dev/preview/production isolation
-> - [Deployment Guide](docs/deployment/MVP-DEPLOY-LAUNCH.md) - Production deployment
-> - [GitHub OAuth Setup](docs/deployment/GITHUB-OAUTH-SETUP.md) - Social login configuration
 
 ### Enabling Authentication
 
@@ -404,7 +403,8 @@ For a complete navigation guide with descriptions of all documentation, see **[D
 - **[Analytics](docs/analytics/ANALYTICS.md)** - Privacy-first tracking, Core Web Vitals
 
 **Deployment:**
-- **[Deployment Guide](docs/deployment/MVP-DEPLOY-LAUNCH.md)** - Vercel deployment checklist
+- **[Vercel Deployment Guide](docs/deployment/VERCEL-DEPLOYMENT-GUIDE.md)** - Complete 8-step deployment walkthrough
+- **[Environment Variables](docs/deployment/VERCEL-ENVIRONMENT-VARIABLES.md)** - All environment variables reference
 - **[Database Setup](docs/deployment/VERCEL-POSTGRES-SETUP.md)** - Neon Postgres configuration
 
 ## Tech Stack

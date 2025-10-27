@@ -2,9 +2,45 @@
 
 Complete guide for configuring GitHub OAuth authentication for CodeScribe AI across all environments.
 
-**Last Updated:** October 26, 2025
+**Last Updated:** October 27, 2025
 **Service:** [GitHub OAuth Apps](https://github.com/settings/developers)
 **Cost:** Free (unlimited OAuth apps)
+
+---
+
+## 🎯 Quick Start - Your Actual Setup
+
+**This is the GitHub OAuth configuration currently running for CodeScribe AI:**
+
+### OAuth Configuration
+- **Strategy:** Single OAuth App (shared across environments)
+- **App Name:** CodeScribe AI Production
+- **Homepage URL:** https://codescribeai.com
+- **Callback URLs:**
+  - Production: `https://codescribeai.com/api/auth/github/callback`
+  - Preview: `https://codescribe-ai-*.vercel.app/api/auth/github/callback`
+  - Development: `http://localhost:3000/api/auth/github/callback`
+
+### Environment Variables
+- **Client ID:** Same across all environments
+- **Client Secret:** Same across all environments (stored securely in Vercel)
+- **Callback URL:** Environment-specific (configured per deployment)
+
+### Key Decisions Made
+1. ✅ **Single OAuth app** for all environments (simpler to manage)
+2. ✅ **Multiple callback URLs** registered (supports all deployment types)
+3. ✅ **Shared credentials** (same client ID/secret everywhere)
+4. ✅ **Vercel handles callback routing** (automatic per environment)
+
+**Why single app:**
+- Simpler to maintain (one app instead of three)
+- GitHub allows multiple callback URLs per app
+- No credential management complexity
+- Works for portfolio/MVP projects
+
+**Alternative:** See detailed guide for separate OAuth apps per environment (enterprise approach)
+
+**Jump to:** [Setup Instructions](#step-1-create-github-oauth-apps) | [Complete Guide](#oauth-strategy-overview)
 
 ---
 
@@ -1282,7 +1318,8 @@ After completing GitHub OAuth setup:
 **Deployment:**
 - [RESEND-SETUP.md](./RESEND-SETUP.md) - Email service configuration
 - [PRODUCTION-DB-SETUP.md](../database/PRODUCTION-DB-SETUP.md) - Database setup guide
-- [VERCEL-CONFIGURATION.md](./VERCEL-CONFIGURATION.md) - Vercel environment configuration
+- [VERCEL-DEPLOYMENT-GUIDE.md](./VERCEL-DEPLOYMENT-GUIDE.md) - Complete deployment guide
+- [VERCEL-ENVIRONMENT-VARIABLES.md](./VERCEL-ENVIRONMENT-VARIABLES.md) - All environment variables
 - [DEPLOYMENT-CHECKLIST.md](./DEPLOYMENT-CHECKLIST.md) - Pre-deployment verification
 
 **Authentication:**

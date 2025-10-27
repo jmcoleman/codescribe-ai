@@ -231,7 +231,7 @@ codescribe-ai/
 │   │   └── TODO.md           # Active todo list (current phase)
 │   ├── api/                  # API Reference, README
 │   ├── architecture/         # ARCHITECTURE-OVERVIEW.md, ARCHITECTURE.md
-│   ├── deployment/           # MVP-DEPLOY-LAUNCH.md
+│   ├── deployment/           # Deployment guides (Vercel, database, OAuth, email, env vars)
 │   ├── performance/          # OPTIMIZATION-GUIDE.md
 │   ├── components/           # TOAST-SYSTEM, MERMAID-DIAGRAMS, ERROR-HANDLING-UX, etc.
 │   ├── testing/              # 12 test docs (README, coverage, guides, specialized)

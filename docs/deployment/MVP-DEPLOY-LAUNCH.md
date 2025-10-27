@@ -21,7 +21,7 @@
 - ✅ Monorepo build optimization
 - ✅ API URL centralization via config
 
-> **Note:** For detailed deployment learnings and troubleshooting, see [DEPLOYMENT-LEARNINGS.md](../deployment/DEPLOYMENT-LEARNINGS.md) and [VERCEL-CONFIGURATION.md](../deployment/VERCEL-CONFIGURATION.md)
+> **Note:** For detailed deployment learnings and troubleshooting, see [DEPLOYMENT-LEARNINGS.md](../deployment/DEPLOYMENT-LEARNINGS.md), [VERCEL-DEPLOYMENT-GUIDE.md](../deployment/VERCEL-DEPLOYMENT-GUIDE.md), and [VERCEL-ENVIRONMENT-VARIABLES.md](../deployment/VERCEL-ENVIRONMENT-VARIABLES.md)
 
 ---
 
@@ -279,7 +279,8 @@ VITE_API_URL=https://codescribeai.com
 - [x] Update `CLAUDE.md` with deployment achievements
 - [x] Add deployment notes to `03-Todo-List.md`
 - [x] Create `DEPLOYMENT-LEARNINGS.md` with comprehensive deployment guide
-- [x] Create `VERCEL-CONFIGURATION.md` with configuration reference
+- [x] Create `VERCEL-DEPLOYMENT-GUIDE.md` master deployment guide
+- [x] Create `VERCEL-ENVIRONMENT-VARIABLES.md` configuration reference
 
 ✅ **Completed:** All documentation files updated to reflect production deployment
 

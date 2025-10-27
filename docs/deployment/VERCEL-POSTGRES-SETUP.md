@@ -3,7 +3,44 @@
 **Project:** CodeScribe AI
 **Database:** Neon (via Vercel Marketplace)
 **Status:** Production Ready
-**Last Updated:** October 26, 2025
+**Last Updated:** October 27, 2025
+
+---
+
+## 🎯 Quick Start - Your Actual Setup
+
+**This is the database configuration currently running for CodeScribe AI:**
+
+### Database Configuration
+- **Provider:** Neon Postgres (via Vercel Marketplace)
+- **Tier:** Free (512 MB storage, 20 projects, 10 branches)
+- **Development Database:** `codescribe-db`
+- **Production Database:** `codescribe-prod`
+- **Region:** US East (AWS us-east-2)
+
+### Environment Separation ⭐
+- **Development:** Uses `codescribe-db` database
+  - Connected to: Development + Preview environments
+  - Separate credentials from production
+- **Production:** Uses `codescribe-prod` database
+  - Connected to: Production environment only
+  - Isolated from dev/test activity
+
+### Connection Method
+- **Integration:** Vercel Marketplace (automatic variable injection)
+- **Connection Pooling:** PgBouncer (handled by Neon)
+- **Environment Variables:** Auto-injected by Vercel
+  - `POSTGRES_URL` (pooled)
+  - `POSTGRES_PRISMA_URL` (ORM)
+  - `POSTGRES_URL_NON_POOLING` (migrations)
+
+### Key Decisions Made
+1. ✅ **Separate databases** for dev and prod (data isolation, security)
+2. ✅ **Vercel Marketplace integration** (automatic setup, unified billing)
+3. ✅ **Free tier** ($0/month, sufficient for 50K+ users)
+4. ✅ **Connection pooling** (better performance, managed by Neon)
+
+**Jump to:** [Setup Instructions](#1-create-neon-database-via-vercel-marketplace) | [Complete Guide](#overview)
 
 ---
 
@@ -27,7 +64,7 @@ This guide covers setting up Neon Postgres for CodeScribe AI's authentication an
 
 ---
 
-## Quick Start
+## Quick Start Instructions
 
 ### 1. Create Neon Database via Vercel Marketplace
 

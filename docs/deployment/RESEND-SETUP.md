@@ -2,9 +2,47 @@
 
 Complete guide for configuring Resend email service with custom domain verification for CodeScribe AI.
 
-**Last Updated:** October 26, 2025
+**Last Updated:** October 27, 2025
 **Service:** [Resend](https://resend.com)
 **Tier:** Free (3,000 emails/month, 100 emails/day)
+
+---
+
+## 🎯 Quick Start - Your Actual Setup
+
+**This is the configuration currently running for CodeScribe AI:**
+
+### Email Sending (Resend)
+- **Domain Verified:** `mail.codescribeai.com` (subdomain)
+- **Sender Addresses:**
+  - Development: `dev@mail.codescribeai.com`
+  - Preview: `preview@mail.codescribeai.com`
+  - Production: `noreply@mail.codescribeai.com`
+- **DNS Records (in Namecheap):**
+  - SPF: `send.mail` → `v=spf1 include:_spf.resend.com ~all`
+  - DKIM: `resend._domainkey` → `p=MIGfMA0GCSq...` (from Resend)
+  - MX: `send.mail` → `feedback-smtp.us-east-1.amazonses.com` priority 10
+  - DMARC: `_dmarc` → `v=DMARC1; p=none;`
+
+### Email Receiving (Namecheap Forwarding)
+- **Support Email:** `support@codescribeai.com` (root domain)
+- **Forwards To:** `jenni.m.coleman@gmail.com`
+- **Setup Location:** Namecheap → Domain tab → "Redirect Email"
+- **Mail Settings Mode:** Email Forwarding (not Custom MX)
+
+### Key Decisions Made
+1. ✅ **Used subdomain** (`mail.codescribeai.com`) for sending to protect main domain reputation
+2. ✅ **Single API key** across all environments (dev/preview/prod) for simplicity
+3. ✅ **Environment-specific sender emails** to differentiate traffic
+4. ✅ **Free Namecheap email forwarding** for support inbox (no paid hosting needed)
+
+**Why this setup works:**
+- Sending domain (`mail.codescribeai.com`) and receiving domain (`codescribeai.com`) are separate
+- No DNS conflicts between Resend and email forwarding
+- Cost: $0/month (both services free tier)
+- Simple to maintain
+
+**Jump to:** [Step-by-Step Setup Instructions](#step-1-create-resend-account) | [Alternative Configurations (Appendix)](#appendix-alternative-configurations)
 
 ---
 
@@ -45,11 +83,12 @@ These are **sender addresses** configured via Resend for automated application e
 
 | Email Address | Purpose | Environment | Configuration |
 |---------------|---------|-------------|---------------|
-| `noreply@codescribeai.com` | Password resets, verification emails | Production | `EMAIL_FROM` env var |
-| `preview@codescribeai.com` | Testing on Vercel preview deployments | Preview | `EMAIL_FROM` env var |
-| `dev@codescribeai.com` | Local development testing | Development | `EMAIL_FROM` env var |
+| `noreply@mail.codescribeai.com` | Password resets, verification emails | Production | `EMAIL_FROM` env var |
+| `preview@mail.codescribeai.com` | Testing on Vercel preview deployments | Preview | `EMAIL_FROM` env var |
+| `dev@mail.codescribeai.com` | Local development testing | Development | `EMAIL_FROM` env var |
 
 **How they work:**
+- Uses subdomain `mail.codescribeai.com` verified in Resend
 - Configured via `EMAIL_FROM` environment variable
 - Use Resend API for sending (one-way only)
 - Users **cannot reply** to these addresses
@@ -87,7 +126,7 @@ Need help? Contact us at <a href="mailto:support@codescribeai.com">support@codes
 
 ---
 
-### Option A: Email Forwarding via Namecheap (Free, Recommended)
+### Option A: Email Forwarding via Namecheap (Free, Recommended) ⭐ **CURRENT SETUP**
 
 Forward `support@codescribeai.com` to your personal Gmail/Outlook account.
 
@@ -99,38 +138,40 @@ Forward `support@codescribeai.com` to your personal Gmail/Outlook account.
 
 **Drawbacks:**
 - ⚠️ Replies come from personal email (unless using Gmail "Send as")
-- ⚠️ Limited to 1-3 forwarding addresses
+- ⚠️ Limited to 100 forwarding addresses per domain
 - ⚠️ No shared inbox for team collaboration
 
 #### Setup Steps:
 
 1. **Log in to Namecheap Dashboard**
    - Navigate to [Namecheap](https://www.namecheap.com/)
-   - Go to **Domain List** → Select your domain
+   - Go to **Domain List** → Click **"Manage"** next to your domain
 
-2. **Enable Email Forwarding**
-   - Click **"Manage"** next to your domain
-   - Go to **"Advanced DNS"** tab
-   - Scroll to **"Mail Settings"** section
-   - Click **"Add Forwarder"** or **"Email Forwarding"**
+2. **Access Email Forwarding (Redirect Email)**
+   - Click the **"Domain"** tab (not Advanced DNS)
+   - Scroll down to find **"Redirect Email"** section
+   - This is where email forwarding is configured
 
 3. **Configure Forwarding Rule**
-   - **Alias:** `support`
-   - **Forward To:** Your personal email (e.g., `yourname@gmail.com`)
-   - Click **"Add"** or **"Save"**
+   - Click **"ADD FORWARDER"** button
+   - **Alias:** `support` (creates support@codescribeai.com)
+   - **Forward To:** Your personal email (e.g., `jenni.m.coleman@gmail.com`)
+   - Click **"Save"** or **"Add"**
 
-4. **Add MX Records (if not already present)**
+4. **Activate Forwarding (Important!)**
+   - Check your destination email inbox for a confirmation email from Namecheap
+   - Subject will be something like "Confirm Email Forwarding"
+   - **Click the confirmation link** to activate the forwarding
+   - Forwarding will NOT work until you confirm!
 
-   Namecheap may auto-configure MX records. If not, add these manually in **Advanced DNS**:
+5. **Set Mail Settings to Email Forwarding Mode**
+   - Go to **Advanced DNS** tab
+   - Scroll to **"Mail Settings"** dropdown
+   - Select **"Email Forwarding"** (not "Custom MX")
+   - This automatically configures the necessary MX records for forwarding
+   - **Important:** Switching to "Custom MX" will disable email forwarding!
 
-   | Type | Host | Value | Priority | TTL |
-   |------|------|-------|----------|-----|
-   | `MX Record` | `@` | `mx1.privateemail.com` | `10` | Automatic |
-   | `MX Record` | `@` | `mx2.privateemail.com` | `20` | Automatic |
-
-   **Note:** Namecheap uses `privateemail.com` for free email forwarding. Values may differ—check Namecheap's dashboard for exact records.
-
-5. **Verify Forwarding**
+6. **Verify Forwarding**
    - Send a test email to `support@codescribeai.com`
    - Check your personal inbox (and spam folder)
    - Expected delivery time: 1-5 minutes
@@ -577,15 +618,17 @@ re_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 ## Step 3: Add Domain in Resend
 
-### Option A: Root Domain (Recommended)
+### ⭐ Current Setup: Subdomain (mail.codescribeai.com)
+
+**This is what CodeScribe AI uses:**
 
 1. Go to [Domains](https://resend.com/domains) in Resend dashboard
 2. Click **"Add Domain"**
-3. Enter your root domain: `codescribeai.com`
+3. Enter subdomain: `mail.codescribeai.com`
 4. Select **"Use this domain for sending"**
 5. Click **"Add"**
 
-### Option B: Subdomain (Recommended for Production)
+### Why Use a Subdomain?
 
 Using a subdomain like `mail.codescribeai.com` or `email.codescribeai.com` provides several benefits:
 
@@ -609,16 +652,13 @@ Using a subdomain like `mail.codescribeai.com` or `email.codescribeai.com` provi
 - Shows email deliverability expertise
 - Recommended by most ESP providers including Resend
 
-**Setup:**
-- Domain: `mail.codescribeai.com` or `email.codescribeai.com`
-- Emails sent from: `noreply@mail.codescribeai.com`
-- DNS records use subdomain as host (e.g., `mail` instead of `@`)
+**Technical Details:**
+- Domain verified in Resend: `mail.codescribeai.com`
+- Emails sent from: `dev@mail.codescribeai.com`, `noreply@mail.codescribeai.com`, etc.
+- DNS records use subdomain hosts (e.g., `send.mail`, `resend._domainkey`, etc.)
+- Separate from root domain email forwarding (`support@codescribeai.com`)
 
-**When to Use:**
-- ✅ Production environments (reputation protection)
-- ✅ High-volume sending (easier monitoring)
-- ✅ Long-term projects (flexibility for growth)
-- ⚠️ Optional for small portfolio projects or development
+**Alternative:** See [Appendix: Root Domain Setup](#appendix-root-domain-setup) if you prefer using the root domain instead.
 
 ---
 
@@ -1427,7 +1467,8 @@ After completing Resend setup:
 **Deployment:**
 - [DATABASE-ENVIRONMENT-CHECKLIST.md](./DATABASE-ENVIRONMENT-CHECKLIST.md) - Database environment separation
 - [VERCEL-POSTGRES-SETUP.md](./VERCEL-POSTGRES-SETUP.md) - Database setup guide
-- [VERCEL-CONFIGURATION.md](./VERCEL-CONFIGURATION.md) - Vercel environment configuration
+- [VERCEL-DEPLOYMENT-GUIDE.md](./VERCEL-DEPLOYMENT-GUIDE.md) - Complete deployment guide
+- [VERCEL-ENVIRONMENT-VARIABLES.md](./VERCEL-ENVIRONMENT-VARIABLES.md) - All environment variables
 - [MVP-DEPLOY-LAUNCH.md](./MVP-DEPLOY-LAUNCH.md) - Production deployment
 
 **Authentication:**
@@ -1437,8 +1478,122 @@ After completing Resend setup:
 
 ---
 
+## Appendix: Alternative Configurations
+
+### Appendix A: Root Domain Setup
+
+If you prefer to use your root domain (`codescribeai.com`) instead of a subdomain:
+
+**Pros:**
+- Simpler email addresses (`noreply@codescribeai.com` vs `noreply@mail.codescribeai.com`)
+- One less DNS layer to manage
+- Good for small projects or MVPs
+
+**Cons:**
+- Email reputation tied to main domain
+- Risk to SEO if email issues occur
+- Less professional for high-volume sending
+
+**Setup Changes:**
+1. In Resend, add `codescribeai.com` instead of `mail.codescribeai.com`
+2. DNS records use `@` or root domain hosts instead of subdomain hosts
+3. Environment variables: `EMAIL_FROM=dev@codescribeai.com` (no subdomain)
+
+**Compatibility with Email Forwarding:**
+- Can conflict if both use root domain
+- Requires careful MX record configuration
+- Not recommended if using Namecheap email forwarding for support@
+
+### Appendix B: Separate API Keys (Enterprise Setup)
+
+If you need complete isolation between dev and production:
+
+**When to Use:**
+- High email volume in development
+- Compliance requirements (HIPAA, SOC 2)
+- Multiple team members
+- Need separate rate limits
+
+**Setup:**
+1. Create two domains in Resend:
+   - `dev.codescribeai.com` for development
+   - `mail.codescribeai.com` for production
+2. Generate separate API keys scoped to each domain
+3. Set environment-specific `RESEND_API_KEY` in Vercel
+4. Configure separate DNS records for each domain
+
+**Benefits:**
+- Complete isolation (quotas, reputation, monitoring)
+- Dev testing doesn't affect production limits
+- Better security (key compromise affects only one env)
+
+**Drawbacks:**
+- More DNS records to manage
+- Two dashboards to monitor
+- Higher complexity
+
+### Appendix C: Professional Email Hosting (Google Workspace)
+
+For teams needing full inbox functionality:
+
+**When to Use:**
+- Multiple team members need access to support@
+- Need to send AND receive as support@codescribeai.com
+- Want shared inbox, calendar, drive integration
+- Professional appearance for customer support
+
+**Cost:** $6/user/month (Google Workspace Business Starter)
+
+**Setup Summary:**
+1. Sign up at workspace.google.com
+2. Verify domain ownership (TXT record)
+3. Configure MX records (replaces Namecheap forwarding)
+4. Create support@codescribeai.com user
+5. Set up as shared mailbox for team
+
+**Note:** Requires replacing Namecheap email forwarding with Google's MX records.
+
+See [RESEND-SETUP.md lines 157-231](RESEND-SETUP.md#option-b-google-workspace--microsoft-365-paid-professional) for full instructions.
+
+### Appendix D: Resend Inbound Webhooks
+
+For programmatic email handling (advanced):
+
+**Use Case:** Automatically create support tickets when customers email `support@codescribeai.com`
+
+**Requirements:**
+- Backend webhook endpoint
+- Resend inbound configuration
+- Database for ticket storage
+
+**Complexity:** High - requires custom development
+
+See [RESEND-SETUP.md lines 234-346](RESEND-SETUP.md#option-c-resend-inbound-webhooks-advanced-programmatic) for full implementation guide.
+
+---
+
 ## Changelog
 
+- **v4.0** (October 27, 2025) - Documentation Reorganization & Real-World Setup
+  - **Major Restructure:**
+    - Added "Quick Start - Your Actual Setup" section at top showing CodeScribe AI's actual configuration
+    - Reorganized to show subdomain (`mail.codescribeai.com`) as primary setup (was previously Option B)
+    - Moved alternative configurations (root domain, separate API keys, Google Workspace) to Appendix
+    - Updated email address examples throughout to use `@mail.codescribeai.com` subdomain
+  - **Namecheap Email Forwarding Corrections:**
+    - Fixed location: Domain tab → "Redirect Email" (not Advanced DNS)
+    - Documented Mail Settings dropdown (Email Forwarding vs Custom MX modes)
+    - Added warning about confirming forwarding activation via email
+    - Clarified that switching to "Custom MX" disables email forwarding
+  - **Key Decisions Documented:**
+    - Why subdomain was chosen (reputation protection, professional best practice)
+    - Why single API key across environments (simplicity for portfolio project)
+    - Why Namecheap forwarding vs paid hosting (cost efficiency)
+  - **Improved Navigation:**
+    - Clear markers showing "CURRENT SETUP" vs alternatives
+    - Jump links to appendixes for alternative configurations
+    - Summary comparison tables for different approaches
+  - **Goal:** Make it easier for future users to follow the actual implementation path used by CodeScribe AI
 - **v3.2** (October 27, 2025) - DNS Record Corrections (AWS SES Infrastructure Update)
   - **Critical Fixes:**
     - Fixed SPF record value from `include:resend.com` to `include:_spf.resend.com` (all instances)
