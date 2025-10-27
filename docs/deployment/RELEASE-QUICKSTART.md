@@ -74,7 +74,7 @@ Once you push to `main`, GitHub Actions automatically runs:
                     ▼
     ┌───────┬───────┬───────┬────────┐
     ▼       ▼       ▼       ▼        ▼
-┌────────┐ ┌────┐ ┌────┐ ┌─────────┐
+┌────────┐ ┌────-┐ ┌────┐ ┌─────────┐
 │Backend │ │Front│ │Lint│ │Security │
 │ Tests  │ │ end │ │    │ │ Audit   │
 │        │ │Tests│ │    │ │         │
@@ -415,5 +415,73 @@ Use this checklist for each release:
 
 ---
 
-**Last Updated:** October 26, 2025
-**Version:** 1.0.0
+## 📝 Recent Releases
+
+### v2.0.0 - Phase 2: Monetization Foundation (October 26, 2025)
+
+**Status:** ✅ Deployed to Production
+
+**Major Features:**
+- **Authentication System:** Email/password + GitHub OAuth, JWT tokens, password reset flow with email verification
+- **Database Infrastructure:** Neon Postgres integration, user management, session storage, migration system
+- **Email Service:** Resend integration with custom domain (codescribeai.com), branded HTML templates
+- **Test Data Utilities:** Modularized test data loading (testData.js module), window.loadTestDoc() with optional code panel
+- **Password Visibility Toggle:** Eye icon toggles in SignupModal for show/hide password functionality
+- **Backend Test Coverage:** 25 new password reset tests, coverage improved to 86.84% models (+23.69%), 65.41% routes
+- **Migration API Endpoints:** GET /api/migrate/status (public) + POST /api/migrate/run (admin with Bearer auth)
+- **Form Validation:** Comprehensive client-server validation with automatic focus management (flushSync pattern)
+- **OAuth Account Linking:** GitHub users can add email/password, symmetric linking both directions
+
+**Technical Improvements:**
+- Complete password reset security: token hashing (SHA-256), 1-hour expiration, single-use tokens
+- Rate limiting: 3 password reset requests per hour per email (prevents abuse)
+- Email security: enumeration prevention, rate limiting, secure URL encoding
+- Form validation guide v1.3 with server-side validation patterns and focus management
+- Storage constants centralization (AUTH_TOKEN_KEY in client/src/constants/storage.js)
+
+**Testing & Quality:**
+- **Total Tests:** 1,347 (97.5% pass rate, 0 failures)
+- **Backend Coverage:** Models 86.84%, Routes 65.41%, Services 94%, Middleware 100%
+- **Test Data Tests:** 24 new tests for testData.js module (100% passing)
+- **Password Reset Tests:** 25 new tests (12 User model + 13 integration)
+- **E2E Tests:** 20 password reset scenarios (password-reset.spec.js + password-reset-core.spec.js)
+- **All CI Coverage Thresholds:** ✅ Passing (deployment fully unblocked)
+
+**Documentation Updates:**
+- **Pricing Structure:** Updated from 4 tiers to 5 tiers (added Starter tier: $12/mo, 50 docs/month)
+- **Resend Configuration:** Complete setup guide for prod vs dev environments (custom domain, DNS, API keys)
+- **Password Reset Docs:** PASSWORD-RESET-IMPLEMENTATION.md, PASSWORD-RESET-SETUP.md, RESEND-SETUP.md
+- **Form Validation:** FORM-VALIDATION-GUIDE.md v1.3 (client-server patterns, focus management, flushSync)
+- **Test Data Utilities:** client/src/utils/README.md (comprehensive usage guide)
+- **Database Migrations:** DB-MIGRATION-MANAGEMENT.md, PRODUCTION-DB-SETUP.md with migration API details
+- **Testing Documentation:** TEST-FIXES-OCT-2025.md Session 3 (coverage improvement details)
+
+**Dependencies Added:**
+- resend (^4.0.1) - Email sending service
+- react-router-dom (^7.0.2) - Client-side routing (from v1.3.0)
+- Multiple auth-related packages: bcrypt, passport, @vercel/postgres, etc. (from v1.3.0)
+
+**Security Enhancements:**
+- Token hashing (SHA-256) before database storage
+- Cryptographically secure token generation (32 bytes)
+- Password hashing with bcrypt (10 salt rounds)
+- JWT tokens with 7-day expiration
+- Session cookies: httpOnly, secure (production), sameSite strict
+- Input validation on all endpoints
+- MIGRATION_SECRET environment variable for admin endpoints
+
+**Breaking Changes:**
+- Database required (PostgreSQL via Neon)
+- New environment variables: RESEND_API_KEY, FROM_EMAIL, MIGRATION_SECRET, JWT_SECRET
+- Authentication system changes session management
+- Migration from v1.x requires database setup and configuration
+
+**Links:**
+- [Full v2.0 Changelog](../../CHANGELOG.md#200---2025-10-26)
+- [Live Application](https://codescribeai.com)
+- [Migration Guide](../../CHANGELOG.md#-migration-guide) (in CHANGELOG.md)
+
+---
+
+**Last Updated:** October 27, 2025
+**Version:** 1.1.0
