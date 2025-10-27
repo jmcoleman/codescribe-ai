@@ -248,7 +248,7 @@ VITE_API_URL=http://localhost:3000
 > - [Resend Email Setup](docs/deployment/RESEND-SETUP.md) - Email service for password resets
 > - [Environment Checklist](docs/deployment/DATABASE-ENVIRONMENT-CHECKLIST.md) - Dev/preview/production isolation
 > - [Deployment Guide](docs/deployment/MVP-DEPLOY-LAUNCH.md) - Production deployment
-> - [GitHub OAuth Setup](docs/authentication/GITHUB-OAUTH-SETUP.md) - Social login configuration
+> - [GitHub OAuth Setup](docs/deployment/GITHUB-OAUTH-SETUP.md) - Social login configuration
 
 ### Enabling Authentication
 
