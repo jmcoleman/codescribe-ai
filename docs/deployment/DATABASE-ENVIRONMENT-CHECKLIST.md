@@ -263,7 +263,8 @@ psql $DATABASE_URL -c "SELECT current_database(), current_user;"
 ## 📚 Related Documentation
 
 - [VERCEL-POSTGRES-SETUP.md](./VERCEL-POSTGRES-SETUP.md) - Initial database setup guide
-- [VERCEL-CONFIGURATION.md](./VERCEL-CONFIGURATION.md) - Vercel environment configuration
+- [VERCEL-DEPLOYMENT-GUIDE.md](./VERCEL-DEPLOYMENT-GUIDE.md) - Complete deployment guide
+- [VERCEL-ENVIRONMENT-VARIABLES.md](./VERCEL-ENVIRONMENT-VARIABLES.md) - All environment variables
 - [README.md](../../README.md) - Environment variables overview
 - [API-Reference.md](../api/API-Reference.md) - API endpoints and database usage
 - Neon Docs: https://neon.tech/docs/introduction

@@ -456,19 +456,42 @@ git push origin main
 
 ### Issue: Email Not Working After DNS Change
 
-**Possible Causes:**
-1. Deleted MX records when adding A/CNAME records
+**CodeScribe AI uses two separate email systems:**
 
-**Solutions:**
+1. **Outbound (Resend for automated emails)** - Uses subdomain `mail.codescribeai.com`
+2. **Inbound (Namecheap forwarding for support@)** - Uses root domain `codescribeai.com`
+
+**If Resend emails stop working:**
+
 ```bash
-# Check if MX records exist
-dig codescribeai.com MX +short
+# Check Resend subdomain DNS records
+dig TXT send.mail.codescribeai.com          # SPF record
+dig TXT resend._domainkey.mail.codescribeai.com  # DKIM record
+dig MX send.mail.codescribeai.com           # MX record (optional)
 
-# If no MX records, re-add them from your email provider
-# (Gmail, Outlook, custom email host, etc.)
+# If missing, see RESEND-SETUP.md for correct values
 ```
 
-⚠️ **Important:** MX records are separate from A/CNAME records. Adding A/CNAME should not affect email, but always verify MX records are intact.
+**If support@ email forwarding stops working:**
+
+```bash
+# Check root domain MX records for email forwarding
+dig MX codescribeai.com +short
+# Should show: eforward1.registrar-servers.com (and similar)
+
+# If missing:
+# 1. Go to Namecheap → Advanced DNS → Mail Settings
+# 2. Ensure dropdown is set to "Email Forwarding" (not "Custom MX")
+# 3. Verify forwarding rule exists in Domain tab → "Redirect Email"
+```
+
+**Important Notes:**
+- ⚠️ **Resend uses `mail.codescribeai.com` subdomain** - Separate DNS records from root domain
+- ⚠️ **Email forwarding uses root domain** - Managed by Namecheap's "Email Forwarding" mode
+- ⚠️ **Mail Settings dropdown matters** - Switching to "Custom MX" disables email forwarding
+- ✅ **Both can coexist** - Subdomain (Resend) and root domain (forwarding) don't conflict
+
+**See also:** [RESEND-SETUP.md](../deployment/RESEND-SETUP.md) for complete email configuration details.
 
 ---
 
@@ -476,6 +499,7 @@ dig codescribeai.com MX +short
 
 After completing setup, verify:
 
+**Website:**
 - [ ] ✅ `https://codescribeai.com` loads and shows green padlock
 - [ ] ✅ `https://www.codescribeai.com` loads and redirects (if configured)
 - [ ] ✅ HTTP URLs redirect to HTTPS automatically
@@ -486,7 +510,13 @@ After completing setup, verify:
 - [ ] ✅ Performance maintained (Lighthouse 75+ performance score)
 - [ ] ✅ SEO meta tags reference new domain (optional - check view source)
 - [ ] ✅ Analytics tracking works (if enabled)
-- [ ] ✅ Email still works (if using custom email with domain)
+
+**Email (if configured):**
+- [ ] ✅ Resend subdomain DNS verified (`mail.codescribeai.com`)
+- [ ] ✅ Test password reset email sends successfully
+- [ ] ✅ Email forwarding works (`support@codescribeai.com` → your Gmail)
+- [ ] ✅ No DNS conflicts between Resend and email forwarding
+- [ ] ✅ Namecheap Mail Settings on "Email Forwarding" mode (not "Custom MX")
 
 ---
 
@@ -706,6 +736,8 @@ We chose `codescribeai.com` (no www) following modern web best practices:
 **⚠️ Important:** Modern browsers (2019+) de-emphasize security indicators for HTTPS sites since it's now the default expectation. They focus on warning users about insecure (HTTP) sites instead.
 
 ### DNS Records (Actual)
+
+**Website DNS (Vercel):**
 ```bash
 # Root domain (A record)
 codescribeai.com → 216.198.79.1
@@ -716,7 +748,45 @@ www.codescribeai.com → 207502b3f0e915e0.vercel-dns-017.com
                      → 216.198.79.65
 ```
 
+**Email DNS (Resend + Namecheap Forwarding):**
+```bash
+# Outbound Email (Resend) - Subdomain: mail.codescribeai.com
+# SPF record
+send.mail.codescribeai.com → TXT "v=spf1 include:_spf.resend.com ~all"
+
+# DKIM record
+resend._domainkey.mail.codescribeai.com → TXT "p=MIGfMA0GCSq..."
+
+# MX record (bounce notifications)
+send.mail.codescribeai.com → MX 10 feedback-smtp.us-east-1.amazonses.com
+
+# DMARC record
+_dmarc.codescribeai.com → TXT "v=DMARC1; p=none;"
+
+# Inbound Email (Namecheap Forwarding) - Root domain: codescribeai.com
+# MX records (auto-configured by Namecheap when "Email Forwarding" mode is selected)
+codescribeai.com → MX 10 eforward1.registrar-servers.com
+                → MX 10 eforward2.registrar-servers.com
+                → MX 10 eforward3.registrar-servers.com
+                → MX 15 eforward4.registrar-servers.com
+                → MX 20 eforward5.registrar-servers.com
+
+# SPF for email forwarding (auto-added by Namecheap)
+codescribeai.com → TXT "v=spf1 include:spf.efwd.registrar-servers.com ~all"
+```
+
+**Email Configuration Summary:**
+- **Sending domain:** `mail.codescribeai.com` (Resend subdomain)
+- **Receiving domain:** `codescribeai.com` (Namecheap forwarding on root)
+- **Sender addresses:** `dev@mail.codescribeai.com`, `noreply@mail.codescribeai.com`, etc.
+- **Support inbox:** `support@codescribeai.com` → forwards to `jenni.m.coleman@gmail.com`
+- **No conflicts:** Subdomain (Resend) and root domain (forwarding) use separate DNS records
+
+**See:** [RESEND-SETUP.md](../deployment/RESEND-SETUP.md) for complete email setup documentation.
+
 ### Testing Commands
+
+**Website DNS:**
 ```bash
 # Check DNS resolution
 dig codescribeai.com +short
@@ -728,6 +798,22 @@ openssl s_client -connect codescribeai.com:443 -servername codescribeai.com < /d
 # Test redirects
 curl -I https://www.codescribeai.com  # Should show 308 → codescribeai.com
 curl -I http://codescribeai.com       # Should show 308 → https://
+```
+
+**Email DNS:**
+```bash
+# Verify Resend subdomain records
+dig TXT send.mail.codescribeai.com                  # SPF
+dig TXT resend._domainkey.mail.codescribeai.com    # DKIM
+dig MX send.mail.codescribeai.com                   # MX (optional)
+
+# Verify email forwarding on root domain
+dig MX codescribeai.com                             # Should show eforward servers
+dig TXT codescribeai.com | grep spf                 # Should show Namecheap SPF
+
+# Test email forwarding
+# Send test email to support@codescribeai.com
+# Check if it arrives at jenni.m.coleman@gmail.com
 ```
 
 ### Performance Verification
@@ -749,7 +835,33 @@ After domain setup, verified performance maintained:
 
 ---
 
-**Document Version:** 1.1 (Updated with production configuration)
-**Last Updated:** October 19, 2025
+---
+
+## 📝 Changelog
+
+**v1.2** (October 27, 2025) - Email DNS Configuration Documentation
+- Added complete email DNS configuration to Production Configuration section
+- Documented dual email system: Resend (subdomain) + Namecheap forwarding (root)
+- Updated troubleshooting section with detailed email debugging steps
+- Added email DNS verification commands to Testing Commands section
+- Clarified separation between website DNS (Vercel) and email DNS (Resend/Namecheap)
+- Cross-referenced RESEND-SETUP.md for detailed email configuration
+
+**v1.1** (October 19, 2025) - Production Configuration
+- Added Production Configuration section with actual deployed settings
+- Documented SSL certificate details and expiration
+- Added redirect configuration (www → apex, HTTP → HTTPS)
+- Included performance verification results
+
+**v1.0** (October 19, 2025) - Initial Release
+- Complete custom domain setup guide for Vercel
+- Step-by-step Namecheap DNS configuration
+- Troubleshooting guide for common issues
+- Best practices and monitoring recommendations
+
+---
+
+**Document Version:** 1.2
+**Last Updated:** October 27, 2025
 **Author:** CodeScribe AI Team
 **Status:** Production Ready - Deployed
