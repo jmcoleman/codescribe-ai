@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [2.0.0] - 2025-10-26
+
+**Status:** ✅ Feature Release - Phase 2: Monetization Foundation (Authentication & Database)
+
 ### Added
 - **Password Visibility Toggle (October 26, 2025)**
   - Added eye icon toggle buttons to show/hide passwords in SignupModal
@@ -19,27 +25,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Consistent design with existing component patterns and hover/focus states
   - Updated input padding to accommodate toggle button (pr-11)
 
-### Changed
-- **Documentation & Planning Updates (October 26, 2025)**
-  - Updated pricing structure from 4 tiers to 5 tiers across all documentation
-  - Added Starter tier ($12/mo, 50 docs/month) between Free and Pro
-  - Corrected Pro tier pricing: $9/100 docs → $29/200 docs
-  - Corrected Team tier pricing: $29/500 docs → $99/1,000 docs
-  - Updated feature flags (server/src/config/tiers.js) with complete 5-tier configuration
-  - Fixed Team tier support SLA: 4hr → 24hr priority (business hours) for realistic expectations
-  - Moved "Unhide Sign In button" from Epic 2.4 to Epic 2.1 (auth implementation)
-  - Added GitHub Pages deployment section to RELEASE-PROCESS.md for interactive roadmap
-  - Added reference to RELEASE-QUICKSTART.md in release documentation
-  - Updated ROADMAP.md, roadmap-data.json, and MONETIZATION-STRATEGY.md for consistency
-  - All pricing documentation now matches authoritative monetization strategy
-
----
-
-## [2.0.0] - 2025-10-26
-
-**Status:** ✅ Feature Release - Phase 2: Monetization Foundation (Authentication & Database)
-
-### Added
 - **Test Data Utilities Modularization (October 26, 2025)**
   - Extracted test data loading from App.jsx into dedicated testData.js module (client/src/utils/testData.js)
   - Added TEST_CODE constant with demo documentation features (download, copy, score actions)
@@ -161,6 +146,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - AUTH_TOKEN_KEY constant for JWT token storage
 
 ### Changed
+- **Documentation & Planning Updates (October 26, 2025)**
+  - Updated pricing structure from 4 tiers to 5 tiers across all documentation
+  - Added Starter tier ($12/mo, 50 docs/month) between Free and Pro
+  - Corrected Pro tier pricing: $9/100 docs → $29/200 docs
+  - Corrected Team tier pricing: $29/500 docs → $99/1,000 docs
+  - Updated feature flags (server/src/config/tiers.js) with complete 5-tier configuration
+  - Fixed Team tier support SLA: 4hr → 24hr priority (business hours) for realistic expectations
+  - Moved "Unhide Sign In button" from Epic 2.4 to Epic 2.1 (auth implementation)
+  - Added GitHub Pages deployment section to RELEASE-PROCESS.md for interactive roadmap
+  - Added reference to RELEASE-QUICKSTART.md in release documentation
+  - Updated ROADMAP.md, roadmap-data.json, and MONETIZATION-STRATEGY.md for consistency
+  - All pricing documentation now matches authoritative monetization strategy
+
 - **Authentication Context**
   - Added forgotPassword(email) method
   - Added resetPassword(token, password) method
