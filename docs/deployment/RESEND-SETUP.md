@@ -652,19 +652,26 @@ Before adding records in Namecheap, you need to get the exact values from Resend
    - Copy each record's details from Resend
    - This prevents mistakes when entering values in Namecheap
 
-**Example of what you'll see in Resend:**
+**Example of what you'll see in Resend (subdomain `mail.codescribeai.com`):**
 
 ```
-DNS Records for codescribeai.com
+DNS Records for mail.codescribeai.com
 
 ┌──────────┬────────────────────────┬──────────────────────────────────────┬──────────┐
 │ Type     │ Name                   │ Value                                │ Priority │
 ├──────────┼────────────────────────┼──────────────────────────────────────┼──────────┤
-│ TXT      │ @                      │ v=spf1 include:resend.com ~all       │ -        │
-│ TXT      │ resend._domainkey      │ p=MIGfMA0GCSqGSIb3DQEBAQUAA4GN...   │ -        │
-│ MX       │ @                      │ feedback-smtp.resend.com             │ 10       │
+│ TXT      │ send.mail              │ v=spf1 include:_spf.resend.com ~all  │ -        │
+│ TXT      │ resend._domainkey.mail │ p=MIGfMA0GCSqGSIb3DQEBAQUAA4GN...   │ -        │
+│ MX       │ send.mail              │ feedback-smtp.us-east-1.amazonses... │ 10       │
+│ TXT      │ _dmarc                 │ v=DMARC1; p=none;                    │ -        │
 └──────────┴────────────────────────┴──────────────────────────────────────┴──────────┘
 ```
+
+**⚠️ Important Notes:**
+- Resend uses AWS SES infrastructure - your MX record will point to `feedback-smtp.us-east-1.amazonses.com` (not `feedback-smtp.resend.com`)
+- The SPF record includes `_spf.resend.com` (note the underscore and "spf" subdomain)
+- The exact record names/hosts depend on whether you're using a root domain or subdomain
+- **Always copy the exact values from YOUR Resend dashboard** - they are the authoritative source
 
 ---
 
@@ -690,7 +697,7 @@ DNS Records for codescribeai.com
    |-------|-------------------|---------------|
    | **Type** | TXT | Select "TXT Record" from dropdown |
    | **Host** | `@` (in Resend's "Name" column) | Enter `@` |
-   | **Value** | `v=spf1 include:resend.com ~all` | Copy exact value from Resend |
+   | **Value** | `v=spf1 include:_spf.resend.com ~all` | Copy exact value from Resend |
    | **TTL** | - | Select "Automatic" from dropdown |
 
 5. **Click the green checkmark (✓) button to save**
@@ -702,7 +709,7 @@ DNS Records for codescribeai.com
 ├─────────────────────────────────────────────────────────────────┤
 │ Type:  [TXT Record ▼]                                          │
 │ Host:  [@                                ]                      │
-│ Value: [v=spf1 include:resend.com ~all  ]                      │
+│ Value: [v=spf1 include:_spf.resend.com ~all]                   │
 │ TTL:   [Automatic ▼]                                           │
 │                                                      [✓] [✗]    │
 └─────────────────────────────────────────────────────────────────┘
@@ -713,7 +720,7 @@ DNS Records for codescribeai.com
 2. Click the **Edit** (pencil) icon
 3. Modify the existing value to include Resend:
    ```
-   v=spf1 include:resend.com include:other-service.com ~all
+   v=spf1 include:_spf.resend.com include:other-service.com ~all
    ```
 
 ---
@@ -807,8 +814,8 @@ Resend will provide **1-3 DKIM records**. You need to add each one separately.
    | Field | Value from Resend | What to Enter |
    |-------|-------------------|---------------|
    | **Type** | MX | Select "MX Record" from dropdown |
-   | **Host** | `@` | Enter `@` |
-   | **Value** | `feedback-smtp.resend.com` | Copy exact value from Resend |
+   | **Host** | Check Resend (e.g., `send`, `send.mail`) | Copy exact host from Resend |
+   | **Value** | `feedback-smtp.us-east-1.amazonses.com` | Copy exact value from Resend |
    | **Priority** | `10` | Enter `10` |
    | **TTL** | - | Select "Automatic" |
 
@@ -820,8 +827,8 @@ Resend will provide **1-3 DKIM records**. You need to add each one separately.
 │ ADD NEW RECORD                                                  │
 ├─────────────────────────────────────────────────────────────────┤
 │ Type:     [MX Record ▼]                                        │
-│ Host:     [@                              ]                     │
-│ Value:    [feedback-smtp.resend.com      ]                     │
+│ Host:     [send.mail                      ]  (example)         │
+│ Value:    [feedback-smtp.us-east-1.amazonses.com]             │
 │ Priority: [10                            ]                     │
 │ TTL:      [Automatic ▼]                                        │
 │                                                      [✓] [✗]    │
@@ -896,12 +903,14 @@ Resend will provide **1-3 DKIM records**. You need to add each one separately.
 ┌──────────┬────────────────────┬──────────────────────────────────────┬──────────┬─────┐
 │ Type     │ Host               │ Value                                │ Priority │ TTL │
 ├──────────┼────────────────────┼──────────────────────────────────────┼──────────┼─────┤
-│ TXT      │ @                  │ v=spf1 include:resend.com ~all       │ -        │ Auto│
+│ TXT      │ send.mail          │ v=spf1 include:_spf.resend.com ~all  │ -        │ Auto│
 │ TXT      │ resend._domainkey  │ p=MIGfMA0GCSqGSIb3DQEBAQUAA4GN...   │ -        │ Auto│
-│ MX       │ @                  │ feedback-smtp.resend.com             │ 10       │ Auto│
-│ TXT      │ _dmarc             │ v=DMARC1; p=none; rua=mailto:...     │ -        │ Auto│
+│ MX       │ send.mail          │ feedback-smtp.us-east-1.amazonses... │ 10       │ Auto│
+│ TXT      │ _dmarc             │ v=DMARC1; p=none;                    │ -        │ Auto│
 └──────────┴────────────────────┴──────────────────────────────────────┴──────────┴─────┘
 ```
+
+**Note:** Host values (`send.mail`, `resend._domainkey`, etc.) depend on your domain configuration in Resend. Always verify against your Resend dashboard.
 
 **Required Records (minimum):**
 - ✅ 1 SPF record (TXT with `v=spf1`)
@@ -1172,6 +1181,50 @@ Check deliverability and spam folder placement.
 
 ## Troubleshooting
 
+### DNS Verification Failures
+
+**Problem:** Resend shows "Loading..." or fails to verify DNS records even after waiting
+
+**Common Causes:**
+
+1. **Wrong SPF include domain**
+   - ❌ `v=spf1 include:resend.com ~all` (WRONG)
+   - ✅ `v=spf1 include:_spf.resend.com ~all` (CORRECT)
+
+2. **Wrong MX record**
+   - ❌ `feedback-smtp.resend.com` (outdated)
+   - ✅ `feedback-smtp.us-east-1.amazonses.com` (correct - Resend uses AWS SES)
+
+3. **DNS not propagated yet**
+   - Wait 5-30 minutes after adding records
+   - Click "Restart" button in Resend dashboard to force re-check
+
+**Verification Commands:**
+
+```bash
+# Verify SPF record (check for _spf.resend.com)
+dig TXT send.mail.codescribeai.com
+
+# Verify DKIM record
+dig TXT resend._domainkey.mail.codescribeai.com
+
+# Verify MX record (check for amazonses.com)
+dig MX send.mail.codescribeai.com
+```
+
+**What to look for:**
+- Each command should have an `ANSWER SECTION` with the record
+- SPF must contain `include:_spf.resend.com`
+- MX must point to `feedback-smtp.us-east-1.amazonses.com`
+- If no ANSWER section, DNS hasn't propagated yet
+
+**Solution:**
+1. Verify records match exactly what Resend dashboard shows
+2. Wait 15-30 minutes for DNS propagation
+3. Run verification commands above to confirm records are live
+4. Click "Restart" button in Resend dashboard
+5. Verification should succeed within seconds
+
 ### DNS Propagation Taking Too Long
 
 **Solution 1: Lower TTL Before Adding Records**
@@ -1217,13 +1270,13 @@ sudo systemd-resolve --flush-caches
 
 **❌ Wrong (Multiple SPF records):**
 ```
-TXT @ v=spf1 include:resend.com ~all
+TXT @ v=spf1 include:_spf.resend.com ~all
 TXT @ v=spf1 include:mailgun.org ~all
 ```
 
 **✅ Correct (Single combined SPF):**
 ```
-TXT @ v=spf1 include:resend.com include:mailgun.org ~all
+TXT @ v=spf1 include:_spf.resend.com include:mailgun.org ~all
 ```
 
 ### Emails Going to Spam
@@ -1386,6 +1439,23 @@ After completing Resend setup:
 
 ## Changelog
 
+- **v3.2** (October 27, 2025) - DNS Record Corrections (AWS SES Infrastructure Update)
+  - **Critical Fixes:**
+    - Fixed SPF record value from `include:resend.com` to `include:_spf.resend.com` (all instances)
+    - Updated MX record value from `feedback-smtp.resend.com` to `feedback-smtp.us-east-1.amazonses.com`
+    - Corrected all visual guides and examples to reflect actual Resend infrastructure
+    - Added warnings emphasizing that Resend uses AWS SES backend
+  - **New Troubleshooting Section:**
+    - Added "DNS Verification Failures" section with common causes
+    - Included verification commands using `dig` for SPF, DKIM, and MX records
+    - Added step-by-step debugging workflow with expected output
+    - Documented "Restart" button usage in Resend dashboard
+  - **Enhanced Examples:**
+    - Updated Section 4.2 DNS record example table with correct values
+    - Updated Section 4.3 (SPF) with correct `_spf.resend.com` include
+    - Updated Section 4.5 (MX) with correct `amazonses.com` hostname
+    - Updated Section 4.7 verification checklist with real-world values
+  - **Note:** These changes reflect Resend's current AWS SES-based infrastructure. Previous versions showed outdated DNS values.
 - **v3.1** (October 26, 2025) - Enhanced DNS configuration and subdomain clarification
   - **DNS Configuration Enhancements:**
     - Added detailed Section 4.2: "Get DNS Records from Resend" with visual example
@@ -1441,5 +1511,5 @@ After completing Resend setup:
 
 ---
 
-**Last Updated:** October 26, 2025
+**Last Updated:** October 27, 2025
 **Maintained By:** CodeScribe AI Team
