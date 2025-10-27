@@ -93,6 +93,10 @@ if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
       }
     )
   );
+
+  // Mask the client ID for security (show first 8 chars only)
+  const maskedClientId = process.env.GITHUB_CLIENT_ID.substring(0, 8) + '...';
+  console.log(`✅ GitHub OAuth configured (Client ID: ${maskedClientId})`);
 } else {
   console.warn('⚠️  GitHub OAuth not configured (missing GITHUB_CLIENT_ID or GITHUB_CLIENT_SECRET)');
 }

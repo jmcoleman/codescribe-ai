@@ -418,24 +418,26 @@ Need help? Contact us at <a href="mailto:support@codescribeai.com">support@codes
 
 | Environment | Sender Email | Purpose |
 |-------------|--------------|---------|
-| **Development** | `dev@codescribeai.com` | Local testing, feature development |
-| **Preview** | `preview@codescribeai.com` | Feature branch previews |
-| **Production** | `noreply@codescribeai.com` | Live user emails |
+| **Development** | `dev@codescribeai.com` * | Local testing, feature development |
+| **Preview** | `preview@codescribeai.com` * | Feature branch previews |
+| **Production** | `noreply@codescribeai.com` * | Live user emails |
+
+**\* Important:** If you verified a subdomain in Resend (e.g., `mail.codescribeai.com`), use that subdomain in all email addresses above (e.g., `dev@mail.codescribeai.com`, `preview@mail.codescribeai.com`, `noreply@mail.codescribeai.com`).
 
 **Vercel Environment Variables:**
 
 ```env
 # Development/Local (.env)
 RESEND_API_KEY=re_xxxxxxxx  # Same key
-EMAIL_FROM=dev@codescribeai.com
+EMAIL_FROM=dev@codescribeai.com  # Or dev@mail.codescribeai.com if using subdomain
 
 # Preview (Vercel → Preview)
 RESEND_API_KEY=re_xxxxxxxx  # Same key
-EMAIL_FROM=preview@codescribeai.com
+EMAIL_FROM=preview@codescribeai.com  # Or preview@mail.codescribeai.com if using subdomain
 
 # Production (Vercel → Production)
 RESEND_API_KEY=re_xxxxxxxx  # Same key
-EMAIL_FROM=noreply@codescribeai.com
+EMAIL_FROM=noreply@codescribeai.com  # Or noreply@mail.codescribeai.com if using subdomain
 ```
 
 **Benefits:**
@@ -631,70 +633,287 @@ After adding your domain, Resend will display DNS records to configure. Follow t
 3. Click **"Manage"** next to your domain
 4. Navigate to **"Advanced DNS"** tab
 
-### 4.2 Add SPF Record (TXT)
+### 4.2 Get DNS Records from Resend
+
+Before adding records in Namecheap, you need to get the exact values from Resend:
+
+1. **Navigate to Resend Domain Settings:**
+   - Go to [Resend Dashboard](https://resend.com/domains)
+   - Click on your domain (e.g., `codescribeai.com`)
+   - You'll see a page titled "Domain Settings"
+
+2. **Locate DNS Records Section:**
+   - Scroll down to find the **"DNS Records"** section
+   - You'll see a table with records you need to add
+   - Each record will have: **Type**, **Name**, **Value**, and **Priority** (for MX records)
+
+3. **Copy Records to Notepad (Recommended):**
+   - Open a text editor or notepad
+   - Copy each record's details from Resend
+   - This prevents mistakes when entering values in Namecheap
+
+**Example of what you'll see in Resend:**
+
+```
+DNS Records for codescribeai.com
+
+┌──────────┬────────────────────────┬──────────────────────────────────────┬──────────┐
+│ Type     │ Name                   │ Value                                │ Priority │
+├──────────┼────────────────────────┼──────────────────────────────────────┼──────────┤
+│ TXT      │ @                      │ v=spf1 include:resend.com ~all       │ -        │
+│ TXT      │ resend._domainkey      │ p=MIGfMA0GCSqGSIb3DQEBAQUAA4GN...   │ -        │
+│ MX       │ @                      │ feedback-smtp.resend.com             │ 10       │
+└──────────┴────────────────────────┴──────────────────────────────────────┴──────────┘
+```
+
+---
+
+### 4.3 Add SPF Record (TXT)
 
 **Purpose:** Authorizes Resend to send emails on your behalf
 
 **⚠️ Note:** There is no "SPF Record" type in Namecheap - SPF records are implemented as **TXT Records**.
 
-- **Type:** `TXT Record` (not "SPF Record")
-- **Host:** `@` (for root domain) or `mail` (for mail.codescribeai.com subdomain)
-- **Value:** `v=spf1 include:resend.com ~all`
-- **TTL:** `Automatic` or `300` (5 minutes)
+**Step-by-step in Namecheap:**
 
-**Example for subdomain mail.codescribeai.com:**
-- Type: `TXT Record`
-- Host: `mail`
-- Value: `v=spf1 include:resend.com ~all`
+1. **In the Advanced DNS tab, scroll down to "HOST RECORDS" section**
 
-**⚠️ Important:** If you already have an SPF record, **DO NOT create a duplicate**. Instead, modify the existing record to include Resend:
+2. **Click the "ADD NEW RECORD" button**
 
+3. **Select Record Type:**
+   - Click the **Type** dropdown
+   - Select **"TXT Record"**
+
+4. **Fill in the fields:**
+
+   | Field | Value from Resend | What to Enter |
+   |-------|-------------------|---------------|
+   | **Type** | TXT | Select "TXT Record" from dropdown |
+   | **Host** | `@` (in Resend's "Name" column) | Enter `@` |
+   | **Value** | `v=spf1 include:resend.com ~all` | Copy exact value from Resend |
+   | **TTL** | - | Select "Automatic" from dropdown |
+
+5. **Click the green checkmark (✓) button to save**
+
+**Visual Guide:**
 ```
-v=spf1 include:resend.com include:other-service.com ~all
+┌─────────────────────────────────────────────────────────────────┐
+│ ADD NEW RECORD                                                  │
+├─────────────────────────────────────────────────────────────────┤
+│ Type:  [TXT Record ▼]                                          │
+│ Host:  [@                                ]                      │
+│ Value: [v=spf1 include:resend.com ~all  ]                      │
+│ TTL:   [Automatic ▼]                                           │
+│                                                      [✓] [✗]    │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-### 4.3 Add DKIM Records (TXT)
+**⚠️ Important:** If you already have an SPF record (check existing records first), **DO NOT create a duplicate**. Instead:
+1. Find the existing TXT record with `v=spf1` in the value
+2. Click the **Edit** (pencil) icon
+3. Modify the existing value to include Resend:
+   ```
+   v=spf1 include:resend.com include:other-service.com ~all
+   ```
+
+---
+
+### 4.4 Add DKIM Records (TXT)
 
 **Purpose:** Cryptographic signature to verify email authenticity
 
-Resend will provide 1-3 DKIM records. For each record:
+Resend will provide **1-3 DKIM records**. You need to add each one separately.
 
-- **Type:** `TXT Record`
-- **Host:** Copy from Resend (e.g., `resend._domainkey`)
-- **Value:** Copy exact value from Resend (long cryptographic key)
-- **TTL:** `Automatic` or `300`
+**Step-by-step for EACH DKIM record:**
 
-**Example:**
+1. **In Resend, find the DKIM record:**
+   - Look for records with Type: **TXT**
+   - Name will be something like: `resend._domainkey` or `resend._domainkey.codescribeai.com`
+   - Value will be a long string starting with `p=MIGfMA0GCSq...`
+
+2. **In Namecheap, click "ADD NEW RECORD" again**
+
+3. **Select Record Type:**
+   - Type dropdown → **"TXT Record"**
+
+4. **Fill in the fields carefully:**
+
+   | Field | What Resend Shows | What to Enter in Namecheap |
+   |-------|-------------------|----------------------------|
+   | **Type** | TXT | Select "TXT Record" |
+   | **Host** | `resend._domainkey` or `resend._domainkey.codescribeai.com` | Enter **only** `resend._domainkey` (remove domain if shown) |
+   | **Value** | `p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC...` (very long) | Copy the **entire** value exactly as shown |
+   | **TTL** | - | Select "Automatic" |
+
+5. **Click the green checkmark (✓) to save**
+
+**Visual Guide:**
 ```
-Host: resend._domainkey
-Value: p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC... (long key)
+┌──────────────────────────────────────────────────────────────────────┐
+│ ADD NEW RECORD                                                       │
+├──────────────────────────────────────────────────────────────────────┤
+│ Type:  [TXT Record ▼]                                               │
+│ Host:  [resend._domainkey                         ]                 │
+│ Value: [p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQ...]               │
+│        (very long string - paste entire value)                       │
+│ TTL:   [Automatic ▼]                                                │
+│                                                           [✓] [✗]    │
+└──────────────────────────────────────────────────────────────────────┘
 ```
 
-**Note:** If the DKIM value exceeds Namecheap's character limit (~255 chars), Resend may provide it in multiple parts. Add each part as instructed by Resend.
+**⚠️ Critical Tips:**
 
-### 4.4 Add MX Record (Optional)
+1. **Host field - Remove domain suffix:**
+   - If Resend shows: `resend._domainkey.codescribeai.com`
+   - Enter in Namecheap: `resend._domainkey` (without `.codescribeai.com`)
+   - Namecheap automatically appends your domain
+
+2. **Value field - Copy entire string:**
+   - DKIM values are typically 200-400 characters long
+   - Copy the **entire** value from Resend
+   - Don't add quotes or extra spaces
+   - Don't truncate or split the value
+
+3. **Character Limit (if exceeded):**
+   - Namecheap has a ~255 character limit per TXT record
+   - If Resend's DKIM value is longer, you have options:
+     - **Option A:** Resend may provide the key split into multiple records (add each separately)
+     - **Option B:** Contact Namecheap support to increase limit
+     - **Option C:** Use a subdomain (often has higher limits)
+
+**Repeat for all DKIM records** (Resend may provide 1-3 DKIM records - add each one)
+
+### 4.5 Add MX Record (Optional)
 
 **Purpose:** Receive bounce/feedback notifications (recommended)
 
-- **Type:** `MX Record`
-- **Host:** `@`
-- **Value:** `feedback-smtp.resend.com`
-- **Priority:** `10`
-- **TTL:** `Automatic`
+**⚠️ Note:** This is optional but recommended for production email monitoring.
 
-### 4.5 Add DMARC Record (Optional but Recommended)
+**Step-by-step in Namecheap:**
 
-**Purpose:** Email authentication policy
+1. **In Resend, find the MX record:**
+   - Look for record with Type: **MX**
+   - Name: `@` (or your domain)
+   - Value: `feedback-smtp.resend.com`
+   - Priority: `10`
 
-- **Type:** `TXT Record`
-- **Host:** `_dmarc`
-- **Value:** `v=DMARC1; p=none; rua=mailto:dmarc@yourdomain.com`
-- **TTL:** `Automatic`
+2. **In Namecheap, click "ADD NEW RECORD"**
+
+3. **Select Record Type:**
+   - Type dropdown → **"MX Record"**
+
+4. **Fill in the fields:**
+
+   | Field | Value from Resend | What to Enter |
+   |-------|-------------------|---------------|
+   | **Type** | MX | Select "MX Record" from dropdown |
+   | **Host** | `@` | Enter `@` |
+   | **Value** | `feedback-smtp.resend.com` | Copy exact value from Resend |
+   | **Priority** | `10` | Enter `10` |
+   | **TTL** | - | Select "Automatic" |
+
+5. **Click the green checkmark (✓) to save**
+
+**Visual Guide:**
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ ADD NEW RECORD                                                  │
+├─────────────────────────────────────────────────────────────────┤
+│ Type:     [MX Record ▼]                                        │
+│ Host:     [@                              ]                     │
+│ Value:    [feedback-smtp.resend.com      ]                     │
+│ Priority: [10                            ]                     │
+│ TTL:      [Automatic ▼]                                        │
+│                                                      [✓] [✗]    │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**⚠️ Important:** If you already have MX records configured (for email hosting):
+- This MX record is ONLY for Resend bounce notifications
+- If you're using email forwarding or Google Workspace, those MX records are separate
+- You can have multiple MX records with different priorities
+- Lower priority number = higher priority (e.g., Priority 10 is checked before Priority 20)
+
+---
+
+### 4.6 Add DMARC Record (Optional but Recommended)
+
+**Purpose:** Email authentication policy and reporting
+
+**⚠️ Note:** This is optional for initial setup but recommended for production email security.
+
+**Step-by-step in Namecheap:**
+
+1. **DMARC is not shown in Resend - you create this manually**
+
+2. **In Namecheap, click "ADD NEW RECORD"**
+
+3. **Select Record Type:**
+   - Type dropdown → **"TXT Record"**
+
+4. **Fill in the fields:**
+
+   | Field | What to Enter |
+   |-------|---------------|
+   | **Type** | Select "TXT Record" from dropdown |
+   | **Host** | Enter `_dmarc` |
+   | **Value** | `v=DMARC1; p=none; rua=mailto:dmarc@yourdomain.com` (replace `yourdomain.com` with your actual domain) |
+   | **TTL** | Select "Automatic" |
+
+5. **Click the green checkmark (✓) to save**
+
+**Visual Guide:**
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│ ADD NEW RECORD                                                           │
+├──────────────────────────────────────────────────────────────────────────┤
+│ Type:  [TXT Record ▼]                                                   │
+│ Host:  [_dmarc                                ]                          │
+│ Value: [v=DMARC1; p=none; rua=mailto:dmarc@codescribeai.com]           │
+│ TTL:   [Automatic ▼]                                                    │
+│                                                              [✓] [✗]     │
+└──────────────────────────────────────────────────────────────────────────┘
+```
 
 **DMARC Policy Levels:**
 - `p=none` - Monitor only (recommended for initial setup)
-- `p=quarantine` - Mark suspicious emails as spam
-- `p=reject` - Reject unauthorized emails (use after testing)
+- `p=quarantine` - Mark suspicious emails as spam (after testing)
+- `p=reject` - Reject unauthorized emails (production, after confidence)
+
+**Recommended Progression:**
+1. Start with `p=none` for 2-4 weeks
+2. Monitor DMARC reports sent to your email
+3. Once confident, change to `p=quarantine`
+4. After stable period, upgrade to `p=reject` for maximum security
+
+---
+
+### 4.7 Verify All Records Are Added
+
+**Final Checklist - Your Namecheap "HOST RECORDS" should now show:**
+
+```
+┌──────────┬────────────────────┬──────────────────────────────────────┬──────────┬─────┐
+│ Type     │ Host               │ Value                                │ Priority │ TTL │
+├──────────┼────────────────────┼──────────────────────────────────────┼──────────┼─────┤
+│ TXT      │ @                  │ v=spf1 include:resend.com ~all       │ -        │ Auto│
+│ TXT      │ resend._domainkey  │ p=MIGfMA0GCSqGSIb3DQEBAQUAA4GN...   │ -        │ Auto│
+│ MX       │ @                  │ feedback-smtp.resend.com             │ 10       │ Auto│
+│ TXT      │ _dmarc             │ v=DMARC1; p=none; rua=mailto:...     │ -        │ Auto│
+└──────────┴────────────────────┴──────────────────────────────────────┴──────────┴─────┘
+```
+
+**Required Records (minimum):**
+- ✅ 1 SPF record (TXT with `v=spf1`)
+- ✅ 1+ DKIM records (TXT with `resend._domainkey`)
+
+**Optional but Recommended:**
+- ⚠️ 1 MX record (for bounce notifications)
+- ⚠️ 1 DMARC record (for email authentication policy)
+
+**Save and Continue:**
+- Once all records are added, proceed to Step 5: Verify Domain
+- DNS propagation typically takes 30 minutes to 2 hours
 
 ---
 
@@ -763,7 +982,26 @@ RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 EMAIL_FROM=dev@codescribeai.com
 ```
 
-**Note:** Using `dev@codescribeai.com` clearly marks emails as development/testing.
+**⚠️ IMPORTANT - Subdomain vs Root Domain:**
+
+If you verified a **subdomain** in Resend (e.g., `mail.codescribeai.com`), you MUST use that subdomain in all `EMAIL_FROM` addresses:
+
+```env
+# If you verified mail.codescribeai.com (subdomain):
+EMAIL_FROM=dev@mail.codescribeai.com
+
+# If you verified codescribeai.com (root domain):
+EMAIL_FROM=dev@codescribeai.com
+```
+
+**How to check which domain you verified:**
+1. Go to [Resend Domains](https://resend.com/domains)
+2. Look at your verified domain - it will show either:
+   - `codescribeai.com` (root domain)
+   - `mail.codescribeai.com` (subdomain)
+3. Use the **exact verified domain** in your `EMAIL_FROM` addresses
+
+**Note:** Using `dev@` prefix clearly marks emails as development/testing.
 
 ### 6.2 Vercel Environment Variables
 
@@ -774,12 +1012,19 @@ EMAIL_FROM=dev@codescribeai.com
 
 #### Option 1: Single API Key (Recommended)
 
+**⚠️ IMPORTANT:** Replace `codescribeai.com` with your **actual verified domain** from Resend. If you verified a subdomain like `mail.codescribeai.com`, use that subdomain in all email addresses below.
+
 | Key | Value | Environments |
 |-----|-------|-------------|
 | `RESEND_API_KEY` | `re_xxxxx...` | ✅ Production, ✅ Preview, ✅ Development |
-| `EMAIL_FROM` | `noreply@codescribeai.com` | ✅ Production only |
-| `EMAIL_FROM` | `preview@codescribeai.com` | ✅ Preview only |
-| `EMAIL_FROM` | `dev@codescribeai.com` | ✅ Development only |
+| `EMAIL_FROM` | `noreply@codescribeai.com` * | ✅ Production only |
+| `EMAIL_FROM` | `preview@codescribeai.com` * | ✅ Preview only |
+| `EMAIL_FROM` | `dev@codescribeai.com` * | ✅ Development only |
+
+**\* Domain Note:** If you verified `mail.codescribeai.com` (subdomain), use:
+- Production: `noreply@mail.codescribeai.com`
+- Preview: `preview@mail.codescribeai.com`
+- Development: `dev@mail.codescribeai.com`
 
 **How to configure in Vercel:**
 
@@ -793,21 +1038,21 @@ EMAIL_FROM=dev@codescribeai.com
 **Step 2: Add EMAIL_FROM for Production**
 1. Click **"Add Variable"**
 2. **Key:** `EMAIL_FROM`
-3. **Value:** `noreply@codescribeai.com`
+3. **Value:** `noreply@codescribeai.com` (or `noreply@mail.codescribeai.com` if using subdomain)
 4. **Environments:** Check **Production only** ✅ (uncheck Preview and Development)
 5. Click **"Save"**
 
 **Step 3: Add EMAIL_FROM for Preview**
 1. Click **"Add Variable"** again (same key name!)
 2. **Key:** `EMAIL_FROM`
-3. **Value:** `preview@codescribeai.com`
+3. **Value:** `preview@codescribeai.com` (or `preview@mail.codescribeai.com` if using subdomain)
 4. **Environments:** Check **Preview only** ✅ (uncheck Production and Development)
 5. Click **"Save"**
 
 **Step 4: Add EMAIL_FROM for Development**
 1. Click **"Add Variable"** again (same key name!)
 2. **Key:** `EMAIL_FROM`
-3. **Value:** `dev@codescribeai.com`
+3. **Value:** `dev@codescribeai.com` (or `dev@mail.codescribeai.com` if using subdomain)
 4. **Environments:** Check **Development only** ✅ (uncheck Production and Preview)
 5. Click **"Save"**
 
@@ -1135,11 +1380,32 @@ After completing Resend setup:
 **Authentication:**
 - [PASSWORD-RESET-SETUP.md](../authentication/PASSWORD-RESET-SETUP.md) - Password reset configuration
 - [PASSWORD-RESET-IMPLEMENTATION.md](../authentication/PASSWORD-RESET-IMPLEMENTATION.md) - Implementation guide
-- [GITHUB-OAUTH-SETUP.md](../authentication/GITHUB-OAUTH-SETUP.md) - OAuth configuration
+- [GITHUB-OAUTH-SETUP.md](./GITHUB-OAUTH-SETUP.md) - OAuth configuration
 
 ---
 
 ## Changelog
+
+- **v3.1** (October 26, 2025) - Enhanced DNS configuration and subdomain clarification
+  - **DNS Configuration Enhancements:**
+    - Added detailed Section 4.2: "Get DNS Records from Resend" with visual example
+    - Expanded Section 4.3 (SPF) with step-by-step Namecheap instructions and visual guide
+    - Expanded Section 4.4 (DKIM) with detailed field mapping and critical tips
+    - Enhanced Section 4.5 (MX) with complete Namecheap workflow
+    - Enhanced Section 4.6 (DMARC) with manual setup instructions
+    - Added new Section 4.7: Verification checklist with visual table
+    - Included exact UI element names ("ADD NEW RECORD" button, green checkmark, etc.)
+    - Added visual ASCII diagrams of Namecheap form fields
+    - Clarified Host field domain suffix removal for DKIM records
+    - Added warnings about character limits and duplicate SPF records
+    - Improved progression from Resend → Notepad → Namecheap workflow
+  - **Subdomain Impact on EMAIL_FROM:**
+    - Added prominent warning in Section 6.1 about subdomain vs root domain
+    - Added "How to check which domain you verified" instructions
+    - Updated Section 6.2 with subdomain variations for all environment variables
+    - Added inline examples showing both root domain and subdomain options
+    - Updated environment configuration strategy table with subdomain note
+    - Updated all Vercel environment variable examples with subdomain alternatives
 
 - **v3.0** (October 26, 2025) - Inbound email configuration
   - Added [Email Address Overview](#email-address-overview) section

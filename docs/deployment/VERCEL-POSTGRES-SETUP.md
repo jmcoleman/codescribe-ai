@@ -800,7 +800,7 @@ async function getUserMonthlyUsage(userId) {
 After completing setup:
 
 1. **Verify authentication flow** - Test signup, login, logout
-2. **Check GitHub OAuth** - See [GITHUB-OAUTH-SETUP.md](../authentication/GITHUB-OAUTH-SETUP.md)
+2. **Check GitHub OAuth** - See [GITHUB-OAUTH-SETUP.md](./GITHUB-OAUTH-SETUP.md)
 3. **Implement tier enforcement** - See [server/src/middleware/tierGate.js](../../server/src/middleware/tierGate.js)
 4. **Set up monitoring** - Configure alerts in Vercel dashboard
 5. **Test session persistence** - Verify sessions survive server restarts
@@ -809,7 +809,7 @@ After completing setup:
 ### 26. Related Documentation
 
 **Authentication:**
-- [GITHUB-OAUTH-SETUP.md](../authentication/GITHUB-OAUTH-SETUP.md) - GitHub OAuth configuration
+- [GITHUB-OAUTH-SETUP.md](./GITHUB-OAUTH-SETUP.md) - GitHub OAuth configuration
 - [server/src/config/passport.js](../../server/src/config/passport.js) - Passport strategies
 - [server/src/routes/auth.js](../../server/src/routes/auth.js) - Auth endpoints
 
