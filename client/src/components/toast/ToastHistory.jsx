@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Bell, CheckCircle2, AlertCircle, AlertTriangle, Info, Trash2, Archive } from 'lucide-react';
-import { STORAGE_KEYS } from '../../constants/storage';
+import { STORAGE_KEYS, getStorageItem, setStorageItem } from '../../constants/storage';
 
 /**
  * Toast History/Notification Center Component
@@ -56,7 +56,7 @@ class ToastHistoryStore {
 
   loadFromStorage() {
     try {
-      const stored = localStorage.getItem(STORAGE_KEYS.TOAST_HISTORY);
+      const stored = getStorageItem(STORAGE_KEYS.TOAST_HISTORY);
       if (stored) {
         this.notifications = JSON.parse(stored);
       }
@@ -67,7 +67,7 @@ class ToastHistoryStore {
 
   saveToStorage() {
     try {
-      localStorage.setItem(STORAGE_KEYS.TOAST_HISTORY, JSON.stringify(this.notifications));
+      setStorageItem(STORAGE_KEYS.TOAST_HISTORY, JSON.stringify(this.notifications));
     } catch (error) {
       console.error('Failed to save toast history:', error);
     }

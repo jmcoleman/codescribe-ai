@@ -8,7 +8,7 @@ import { CopyButton } from './CopyButton';
 import { DownloadButton } from './DownloadButton';
 import { DocPanelGeneratingSkeleton } from './SkeletonLoader';
 import { MermaidDiagram } from './MermaidDiagram';
-import { STORAGE_KEYS } from '../constants/storage';
+import { STORAGE_KEYS, getStorageItem, setStorageItem } from '../constants/storage';
 
 export function DocPanel({
   documentation,
@@ -18,12 +18,8 @@ export function DocPanel({
 }) {
   // Load initial state from localStorage
   const [isExpanded, setIsExpanded] = useState(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEYS.REPORT_EXPANDED);
-      return stored === 'true';
-    } catch {
-      return false;
-    }
+    const stored = getStorageItem(STORAGE_KEYS.REPORT_EXPANDED);
+    return stored === 'true';
   });
 
   // Track mermaid diagram counter to ensure unique IDs
@@ -36,11 +32,7 @@ export function DocPanel({
 
   // Persist state to localStorage whenever it changes
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEYS.REPORT_EXPANDED, isExpanded.toString());
-    } catch {
-      // Ignore localStorage errors (e.g., in private browsing mode)
-    }
+    setStorageItem(STORAGE_KEYS.REPORT_EXPANDED, isExpanded.toString());
   }, [isExpanded]);
 
   const handleToggle = () => {

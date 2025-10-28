@@ -298,70 +298,205 @@ This allows the codebase to include auth implementation without requiring databa
 
 #### Next Steps (Epic 2.1.1 - Email Verification)
 
-**Status:** 📋 **READY TO START**
-**Estimated Duration:** 2-3 hours
-**Prerequisites:** ✅ All complete (database schema ready, Resend selected)
+**Status:** ✅ **COMPLETE** - Email verification tested and working in dev and production
+**Completed:** October 25, 2025
 
-**Implementation Tasks:**
-- [ ] Install Resend SDK (`npm install resend`)
-- [ ] Create email service module (`server/src/services/emailService.js`)
-- [ ] Add User model verification methods (setVerificationToken, verifyEmail, etc.)
-- [ ] Update signup route to send verification email
-- [ ] Create verification endpoints (GET `/api/auth/verify-email`, POST `/api/auth/resend-verification`)
-- [ ] Create UI components (verification banner, success/error pages)
-- [ ] Test email verification flow end-to-end
+All email verification functionality has been implemented and verified:
+- [x] ✅ Resend SDK installed and configured
+- [x] ✅ Email service module created (`server/src/services/emailService.js`)
+- [x] ✅ User model verification methods implemented
+- [x] ✅ Signup route sends verification emails
+- [x] ✅ Verification endpoints created and tested
+- [x] ✅ UI components for verification flow complete
+- [x] ✅ Email verification tested end-to-end in dev and production
 
-**Reference:** See [MONETIZATION-STRATEGY.md Appendix C](../../private/strategic-planning/MONETIZATION-STRATEGY.md#appendix-c-resend-email-service-cost-analysis) for email service details
+**Reference:** See [PASSWORD-RESET-IMPLEMENTATION.md](../deployment/PASSWORD-RESET-IMPLEMENTATION.md) for full implementation details
 
 ---
 
 ### Epic 2.2: Tier System & Feature Flags
 
-**Estimated Duration:** 2-3 days
+**Estimated Duration:** 3-4 days
 **Status:** 📋 **NOT STARTED**
-**Implementation Files:** `server/src/config/tiers.js`, `server/src/middleware/tierGate.js`, `client/src/hooks/useFeature.js` (already created)
+**Implementation Files:** `server/src/config/tiers.js` ✅, `server/src/middleware/tierGate.js` ✅, `client/src/hooks/useFeature.js` ⚠️ (needs sync)
+**Reference:** [TIER-FEATURE-MATRIX.md](TIER-FEATURE-MATRIX.md)
 
-#### Tasks
+#### 📑 Phase Quick Links
+- [Phase 1: Database Schema & Models](#phase-1-database-schema--models-05-days) (0.5 days) - 17 tasks
+- [Phase 2: Backend Implementation](#phase-2-backend-implementation-1-day) (1 day) - 20 tasks
+- [Phase 3: Frontend Implementation](#phase-3-frontend-implementation-1-15-days) (1-1.5 days) - 22 tasks
+- [Phase 4: Testing](#phase-4-testing-05-1-day) (0.5-1 day) - 21 tasks
+- [Tier Configuration](#tier-configuration-already-complete-in-tiersjs) (Already Complete ✅)
+- [Success Criteria](#success-criteria-1) (12 criteria)
+- [Migration Notes](#migration-notes) (Deployment considerations)
 
-- [ ] **Database Schema**
-  - [ ] Create Usage table (user_id, daily_count, monthly_count, reset_date)
-  - [ ] Add tier column to User table (FREE, STARTER, PRO, TEAM, ENTERPRISE)
-  - [ ] Create indexes for performance
+---
 
-- [ ] **Backend Implementation**
-  - [ ] Integrate `tierGate.js` middleware into generation routes
-  - [ ] Implement usage tracking on `/api/generate` and `/api/generate-stream`
-  - [ ] Add usage reset cron job (daily/monthly)
-  - [ ] Create usage query endpoints (GET `/api/usage`)
+#### Phase 1: Database Schema & Models (0.5 days)
 
-- [ ] **Frontend Implementation**
-  - [ ] Integrate `useFeature.js` hook into components
-  - [ ] Create usage dashboard UI
-  - [ ] Show remaining quota in header or sidebar
-  - [ ] Add "Upgrade to Pro" prompts when approaching limits
-  - [ ] Disable features based on tier (batch processing, custom templates)
+**Status:** ✅ **COMPLETE** (October 27, 2025) - Schema and migrations ready, awaiting models
 
-- [ ] **Tier Configuration**
-  - [ ] Configure FREE tier limits (10 docs/month)
-  - [ ] Configure STARTER tier limits (50 docs/month, $12/mo)
-  - [ ] Configure PRO tier limits (200 docs/month, $29/mo)
-  - [ ] Configure TEAM tier limits (1,000 docs/month, $99/mo)
-  - [ ] Configure ENTERPRISE tier (unlimited, custom pricing)
+- [x] **Usage Table Schema** ✅ **Complete (Migration 003)**
+  - [x] Create Usage table migration (user_id, daily_count, monthly_count, last_reset_date, period_start_date)
+  - [x] Add unique constraint on (user_id, period_start_date)
+  - [x] Create indexes: idx_user_quotas_user_period, idx_user_quotas_last_reset
+  - [x] Add cascade delete on user_id foreign key
 
-- [ ] **Testing**
-  - [ ] Unit tests for tierGate middleware
-  - [ ] Integration tests for usage tracking
-  - [ ] E2E tests for quota enforcement
-  - [ ] Test tier upgrades and downgrades
+- [x] **User Table Updates** ✅ **Complete (Migration 005)**
+  - [x] Verify tier column enum matches tiers.js exactly: 'free', 'starter', 'pro', 'team', 'enterprise' (lowercase)
+  - [x] Add tier_updated_at timestamp column
+  - [x] Add previous_tier column for downgrade tracking
+  - [x] Set default tier = 'free'
+
+- [x] **Database Standards & Testing** ✅ **Complete**
+  - [x] Established PostgreSQL naming conventions (DB-NAMING-STANDARDS.md)
+  - [x] Fixed existing index naming inconsistencies (Migration 004)
+  - [x] Created database testing infrastructure (Docker Compose, Jest config)
+  - [x] Documented schema audit (DB-SCHEMA-AUDIT-2025-10-27.md)
+  - [x] Created migration testing guide (DATABASE-TESTING-GUIDE.md)
+
+- [ ] **Usage Model Methods** ⏸️ **Pending Implementation**
+  - [ ] Create Usage model (server/src/models/Usage.js)
+  - [ ] Implement getUserUsage(userId) - replace tierGate.js placeholder
+  - [ ] Implement incrementUsage(userId) - replace tierGate.js placeholder
+  - [ ] Implement resetDailyUsage(userId)
+  - [ ] Implement resetMonthlyUsage(userId)
+  - [ ] Implement getCurrentPeriod() helper
+  - [ ] Implement getNextResetDate() helper
+
+**Database Work Completed (October 27, 2025):**
+- **Migrations:** 003 (user_quotas table), 004 (index naming fix), 005 (tier tracking)
+- **Documentation:** 4 new docs (naming standards, schema audit, testing guides)
+- **Testing:** Docker Compose test setup, Jest configuration, migration tests
+- **Total Files:** 15+ new files (migrations, tests, docs, helpers)
+
+#### Phase 2: Backend Implementation (1 day)
+
+- [ ] **Middleware Integration**
+  - [ ] Add checkUsage() to POST /api/generate (server/src/routes/generate.js)
+  - [ ] Add checkUsage() to POST /api/generate-stream (server/src/routes/generate.js)
+  - [ ] Add addTierHeaders() to app.js (global middleware)
+  - [ ] Test file size limits with different tiers
+
+- [ ] **Usage Tracking Implementation**
+  - [ ] Replace getUserUsage() placeholder in tierGate.js with real database query
+  - [ ] Replace incrementUsage() placeholder with database update
+  - [ ] Add incrementUsage() call after successful generation (in both routes)
+  - [ ] Add error handling for database failures
+  - [ ] Add transaction support for usage updates
+
+- [ ] **API Endpoints**
+  - [ ] Create GET /api/user/usage - current usage stats
+  - [ ] Create GET /api/user/tier-features - tier config for frontend
+  - [ ] Create GET /api/tiers - all tier info for pricing page
+  - [ ] Test with authenticated and unauthenticated users (IP fallback)
+
+- [ ] **Usage Reset System**
+  - [ ] Create cron job for daily reset (server/src/jobs/resetDailyUsage.js)
+  - [ ] Create cron job for monthly reset (server/src/jobs/resetMonthlyUsage.js)
+  - [ ] Use node-cron for scheduling (0 0 * * * for daily, 0 0 1 * * for monthly)
+  - [ ] Add logging for reset operations
+  - [ ] Test reset logic with different timezones
+
+#### Phase 3: Frontend Implementation (1-1.5 days)
+
+- [ ] **Tier Config Synchronization**
+  - [ ] Update useFeature.js tier config to match tiers.js exactly
+  - [ ] Add missing "starter" tier to TIER_FEATURES
+  - [ ] Fix pricing: starter $12/mo (was $9), update limits to match
+  - [ ] Replace hardcoded config with API fetch from /api/user/tier-features
+  - [ ] Add SWR or React Query for caching
+
+- [ ] **Usage Dashboard Component**
+  - [ ] Create UsageDashboard.jsx component
+  - [ ] Show daily usage (X/3 or X/10 remaining)
+  - [ ] Show monthly usage (X/10 or X/50 remaining)
+  - [ ] Show usage bar chart (progress indicator)
+  - [ ] Show next reset date/time
+  - [ ] Show upgrade CTA when approaching 80% limit
+
+- [ ] **Header Integration**
+  - [ ] Add usage badge to Header (e.g., "8/10 used")
+  - [ ] Add tier badge (Free, Starter, Pro, Team, Enterprise)
+  - [ ] Add hover tooltip with usage breakdown
+  - [ ] Link to usage dashboard modal
+  - [ ] Show "Upgrade" button for Free users
+
+- [ ] **Feature Gates in Components**
+  - [ ] Wrap batch upload UI with <FeatureGate feature="batchProcessing"> (Phase 3)
+  - [ ] Wrap custom templates with <FeatureGate feature="customTemplates"> (Phase 4)
+  - [ ] Wrap export format selector with <FeatureGate feature="exportFormats"> (Phase 4)
+  - [ ] Add UpgradePrompt fallback components
+  - [ ] Test all feature gates with different tiers
+
+- [ ] **Quota Enforcement UI**
+  - [ ] Show error toast when quota exceeded (429 response)
+  - [ ] Parse 429 response and show remaining quota
+  - [ ] Show upgrade path in error modal
+  - [ ] Add "Upgrade Now" button in error state
+  - [ ] Handle file size exceeded errors (403 response)
+
+#### Phase 4: Testing (0.5-1 day)
+
+- [ ] **Unit Tests**
+  - [ ] Test tierGate.requireFeature() middleware (20 tests)
+  - [ ] Test tierGate.checkUsage() middleware (15 tests)
+  - [ ] Test tierGate.requireTier() middleware (10 tests)
+  - [ ] Test Usage model methods (25 tests)
+  - [ ] Test usage reset functions (10 tests)
+
+- [ ] **Integration Tests**
+  - [ ] Test usage tracking end-to-end (generate → increment → verify)
+  - [ ] Test daily usage limit enforcement
+  - [ ] Test monthly usage limit enforcement
+  - [ ] Test file size limit enforcement
+  - [ ] Test tier downgrade (pro → free, verify limits enforced)
+  - [ ] Test tier upgrade (free → pro, verify limits increased)
+  - [ ] Test usage reset (simulate daily/monthly reset)
+
+- [ ] **E2E Tests**
+  - [ ] Test free user quota enforcement (10 docs then block)
+  - [ ] Test usage dashboard displays correct data
+  - [ ] Test upgrade prompt appears when quota exceeded
+  - [ ] Test feature gates hide/show based on tier
+  - [ ] Test file upload fails when size exceeds tier limit
+
+- [ ] **Edge Cases**
+  - [ ] Test concurrent requests (race conditions in usage tracking)
+  - [ ] Test usage tracking for unauthenticated users (IP-based)
+  - [ ] Test tier change mid-month (pro-rate usage?)
+  - [ ] Test database failures (graceful degradation)
+  - [ ] Test cron job failures (retry logic)
+
+#### Tier Configuration (Already Complete in tiers.js)
+
+- [x] ✅ FREE tier limits (10 docs/month, 100KB files, 3/day)
+- [x] ✅ STARTER tier limits (50 docs/month, 500KB files, 10/day, $12/mo)
+- [x] ✅ PRO tier limits (200 docs/month, 1MB files, 50/day, $29/mo)
+- [x] ✅ TEAM tier limits (1,000 docs/month, 5MB files, 250/day, 10 users, $99/mo)
+- [x] ✅ ENTERPRISE tier (unlimited, 50MB files, custom pricing)
 
 #### Success Criteria
 
-- [ ] Free tier limited to 10 docs/month
-- [ ] Usage tracking accurate and performant
-- [ ] Usage dashboard displays correct data
-- [ ] Tier gates prevent unauthorized feature access
-- [ ] Usage resets correctly (daily/monthly)
-- [ ] All tier tests passing
+- [ ] Free tier limited to 10 docs/month (hard enforcement)
+- [ ] Daily and monthly usage tracked accurately in database
+- [ ] Usage dashboard displays real-time data
+- [ ] Tier gates prevent unauthorized feature access (403 errors)
+- [ ] File size limits enforced per tier
+- [ ] Usage resets correctly at midnight UTC (daily) and 1st of month (monthly)
+- [ ] Frontend tier config synced with backend (no hardcoded mismatches)
+- [ ] API endpoints return correct tier info for authenticated users
+- [ ] Unauthenticated users tracked by IP (fallback mode)
+- [ ] All 80+ tier tests passing (unit + integration + E2E)
+- [ ] Zero race conditions in concurrent usage tracking
+- [ ] Upgrade prompts appear at appropriate times (80% usage, quota exceeded)
+
+#### Migration Notes
+
+- **Database:** Run migration for Usage table before deploying
+- **Cron Jobs:** Ensure cron jobs run in single instance (not multiple Vercel serverless functions)
+- **Existing Users:** Backfill tier='free' for existing users, set tier_updated_at to created_at
+- **IP Tracking:** Add note in privacy policy about IP-based usage tracking for anonymous users
 
 ---
 
@@ -921,9 +1056,18 @@ This allows the codebase to include auth implementation without requiring databa
 
 ---
 
-**Document Version:** 2.4
-**Last Updated:** October 25, 2025
+**Document Version:** 2.5
+**Last Updated:** October 28, 2025
 **Aligned with:** ROADMAP.md v2.0 (Phase-based organization)
+
+**Major Changes in v2.5:**
+- ✅ **Database schema & migrations complete (Phase 2, Epic 2.2, Phase 1)** - October 27, 2025
+- Created 3 new migrations (003: user_quotas, 004: index naming fix, 005: tier tracking)
+- Established PostgreSQL naming conventions (DB-NAMING-STANDARDS.md)
+- Built database testing infrastructure (Docker Compose, Jest config, helpers)
+- Created 4 new database docs (naming standards, schema audit, testing guides)
+- Total: 15+ new database files (migrations, tests, docs)
+- Epic 2.2 Phase 1 marked as complete, ready for Usage model implementation
 
 **Major Changes in v2.4:**
 - ✅ **Form validation test suite complete** - 42+ comprehensive tests (29 client + 13 server)

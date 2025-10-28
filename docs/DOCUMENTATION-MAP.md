@@ -56,11 +56,21 @@ This document serves as the complete navigation hub for all CodeScribe AI docume
 - [API-Reference.md](api/API-Reference.md) - Complete endpoint specifications
 - [README.md](api/README.md) - API quick start guide
 
+**Database:**
+- [DB-NAMING-STANDARDS.md](database/DB-NAMING-STANDARDS.md) - PostgreSQL naming conventions
+- [DB-SCHEMA-AUDIT-2025-10-27.md](database/DB-SCHEMA-AUDIT-2025-10-27.md) - Complete schema audit
+- [DB-MIGRATION-MANAGEMENT.MD](database/DB-MIGRATION-MANAGEMENT.MD) - Migration management guide
+- [PRODUCTION-DB-SETUP.md](database/PRODUCTION-DB-SETUP.md) - Production database setup
+
+**Development:**
+- [STORAGE-CONVENTIONS.md](development/STORAGE-CONVENTIONS.md) - Browser storage naming conventions (localStorage, sessionStorage)
+
 **Deployment:**
 - [MVP-DEPLOY-LAUNCH.md](deployment/MVP-DEPLOY-LAUNCH.md) - Deployment checklist and guide
 - [VERCEL-POSTGRES-SETUP.md](deployment/VERCEL-POSTGRES-SETUP.md) - Neon database setup
 - [RESEND-SETUP.md](deployment/RESEND-SETUP.md) - Email service configuration
 - [DATABASE-ENVIRONMENT-CHECKLIST.md](deployment/DATABASE-ENVIRONMENT-CHECKLIST.md) - Environment setup
+- [PASSWORD-RESET-IMPLEMENTATION.md](deployment/PASSWORD-RESET-IMPLEMENTATION.md) - Password reset implementation guide
 
 **Performance & Optimization:**
 - [OPTIMIZATION-GUIDE.md](performance/OPTIMIZATION-GUIDE.md) - Complete performance guide
@@ -95,14 +105,16 @@ This document serves as the complete navigation hub for all CodeScribe AI docume
 - [AUTH-TESTS.md](testing/AUTH-TESTS.md) - Authentication tests (102 tests)
 - [AUTH-SECURITY-TESTS.md](testing/AUTH-SECURITY-TESTS.md) - Security-focused auth tests
 - [DATABASE-MIGRATION-TESTS.md](testing/DATABASE-MIGRATION-TESTS.md) - Migration tests (40 tests)
+- [DATABASE-TESTING-GUIDE.md](testing/DATABASE-TESTING-GUIDE.md) - Database testing patterns
 - [PASSWORD-RESET-E2E-TESTS.md](testing/PASSWORD-RESET-E2E-TESTS.md) - Password reset flow
 
 **Analytics & Insights:**
 - [ANALYTICS.md](analytics/ANALYTICS.md) - Complete analytics guide
-  - 8 event types (doc generation, quality scores, errors, etc.)
+  - 9 event types (doc generation, quality scores, OAuth flow, errors, etc.)
   - Production-only mode (disabled in development)
   - Privacy-first tracking (anonymous, no cookies, GDPR compliant)
   - Core Web Vitals monitoring
+  - OAuth timing tracking (redirect_started, completed, failed with duration_ms)
 
 **Scripts & Utilities:**
 - [VERSION-CHECKER.md](scripts/VERSION-CHECKER.md) - Package version utility
@@ -222,7 +234,7 @@ npm run test:e2e:headed       # With browser UI
 
 ## 📊 Analytics Quick Reference
 
-### Event Types (8 total)
+### Event Types (9 total)
 1. **doc_generation** - Generation attempts (success/failure)
 2. **quality_score** - Score tracking (0-100)
 3. **code_input** - Input methods (paste/upload/example)
@@ -230,7 +242,8 @@ npm run test:e2e:headed       # With browser UI
 5. **example_usage** - Example loading
 6. **user_interaction** - UI actions
 7. **performance** - Operation timing
-8. **error** - Error tracking (sanitized)
+8. **oauth_flow** - OAuth timing (redirect_started, completed, failed with duration_ms)
+9. **error** - Error tracking (sanitized)
 
 ### Key Features
 - **Production-only mode** - Disabled in development
@@ -348,6 +361,6 @@ npm run versions      # Check all package versions
 
 ---
 
-**Last Updated:** October 26, 2025
+**Last Updated:** October 28, 2025
 **Project Status:** Production Ready ✅ | Phase 2 In Progress 🚧
-**Version:** 1.31
+**Version:** 1.33

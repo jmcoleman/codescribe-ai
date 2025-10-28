@@ -11,6 +11,8 @@ import { flushSync } from 'react-dom';
 import { Button } from './Button';
 import { useAuth } from '../contexts/AuthContext';
 import { toastCompact } from '../utils/toast';
+import { trackOAuth } from '../utils/analytics';
+import { STORAGE_KEYS, setSessionItem } from '../constants/storage';
 import { API_URL } from '../config/api';
 
 export function LoginModal({ isOpen, onClose, onSwitchToSignup, onSwitchToForgot }) {
@@ -18,6 +20,7 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup, onSwitchToForgot
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isGithubLoading, setIsGithubLoading] = useState(false);
   const [localError, setLocalError] = useState('');
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
@@ -215,6 +218,21 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup, onSwitchToForgot
   };
 
   const handleGithubLogin = () => {
+    // Show loading state before redirect
+    setIsGithubLoading(true);
+
+    // Track OAuth initiation with timestamp
+    const startTime = Date.now();
+    trackOAuth({
+      provider: 'github',
+      action: 'redirect_started',
+      context: 'login_modal',
+    });
+
+    // Store start time in sessionStorage for callback tracking
+    setSessionItem(STORAGE_KEYS.OAUTH_START_TIME, startTime.toString());
+    setSessionItem(STORAGE_KEYS.OAUTH_CONTEXT, 'login_modal');
+
     // Redirect to GitHub OAuth endpoint
     window.location.href = `${API_URL}/api/auth/github`;
   };
@@ -382,11 +400,20 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup, onSwitchToForgot
           <button
             type="button"
             onClick={handleGithubLogin}
-            disabled={isLoading}
+            disabled={isLoading || isGithubLoading}
             className="w-full flex items-center justify-center gap-3 px-4 py-2.5 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Github className="w-5 h-5 text-slate-700" aria-hidden="true" />
-            <span className="text-sm font-medium text-slate-700">GitHub</span>
+            {isGithubLoading ? (
+              <>
+                <div className="w-5 h-5 border-2 border-slate-300 border-t-slate-700 rounded-full animate-spin" aria-hidden="true" />
+                <span className="text-sm font-medium text-slate-700">Connecting to GitHub...</span>
+              </>
+            ) : (
+              <>
+                <Github className="w-5 h-5 text-slate-700" aria-hidden="true" />
+                <span className="text-sm font-medium text-slate-700">GitHub</span>
+              </>
+            )}
           </button>
 
           {/* Sign Up Link */}

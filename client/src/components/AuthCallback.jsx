@@ -9,7 +9,8 @@
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { STORAGE_KEYS } from '../constants/storage';
+import { trackOAuth } from '../utils/analytics';
+import { STORAGE_KEYS, getSessionItem, removeSessionItem, setStorageItem } from '../constants/storage';
 
 export function AuthCallback() {
   const navigate = useNavigate();
@@ -18,6 +19,11 @@ export function AuthCallback() {
 
   useEffect(() => {
     const handleCallback = async () => {
+      // Calculate OAuth flow duration
+      const startTimeStr = getSessionItem(STORAGE_KEYS.OAUTH_START_TIME);
+      const context = getSessionItem(STORAGE_KEYS.OAUTH_CONTEXT, 'unknown');
+      const duration = startTimeStr ? Date.now() - parseInt(startTimeStr, 10) : undefined;
+
       // Get token from URL parameters
       const token = searchParams.get('token');
       const error = searchParams.get('error');
@@ -25,6 +31,20 @@ export function AuthCallback() {
       // Handle error case
       if (error) {
         console.error('OAuth error:', error);
+
+        // Track OAuth failure with duration
+        trackOAuth({
+          provider: 'github',
+          action: 'failed',
+          context,
+          duration,
+          errorType: error,
+        });
+
+        // Clean up sessionStorage
+        removeSessionItem(STORAGE_KEYS.OAUTH_START_TIME);
+        removeSessionItem(STORAGE_KEYS.OAUTH_CONTEXT);
+
         // Redirect to home with error message
         navigate('/?auth_error=' + encodeURIComponent(error), { replace: true });
         return;
@@ -34,7 +54,19 @@ export function AuthCallback() {
       if (token) {
         try {
           // Store token in localStorage
-          localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token);
+          setStorageItem(STORAGE_KEYS.AUTH_TOKEN, token);
+
+          // Track OAuth success with duration
+          trackOAuth({
+            provider: 'github',
+            action: 'completed',
+            context,
+            duration,
+          });
+
+          // Clean up sessionStorage
+          removeSessionItem(STORAGE_KEYS.OAUTH_START_TIME);
+          removeSessionItem(STORAGE_KEYS.OAUTH_CONTEXT);
 
           // Clear any previous auth errors
           clearError();
@@ -46,11 +78,39 @@ export function AuthCallback() {
           window.location.href = '/';
         } catch (err) {
           console.error('Error storing auth token:', err);
+
+          // Track OAuth failure
+          trackOAuth({
+            provider: 'github',
+            action: 'failed',
+            context,
+            duration,
+            errorType: 'token_storage_failed',
+          });
+
+          // Clean up sessionStorage
+          removeSessionItem(STORAGE_KEYS.OAUTH_START_TIME);
+          removeSessionItem(STORAGE_KEYS.OAUTH_CONTEXT);
+
           navigate('/?auth_error=token_storage_failed', { replace: true });
         }
       } else {
         // No token or error - redirect to home
         console.warn('OAuth callback received with no token or error');
+
+        // Track OAuth failure
+        trackOAuth({
+          provider: 'github',
+          action: 'failed',
+          context,
+          duration,
+          errorType: 'missing_token',
+        });
+
+        // Clean up sessionStorage
+        removeSessionItem(STORAGE_KEYS.OAUTH_START_TIME);
+        removeSessionItem(STORAGE_KEYS.OAUTH_CONTEXT);
+
         navigate('/?auth_error=missing_token', { replace: true });
       }
     };

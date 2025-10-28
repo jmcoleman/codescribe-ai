@@ -146,6 +146,34 @@ export const trackFileUpload = ({ fileType, fileSize, success }) => {
 };
 
 /**
+ * Track OAuth authentication flow timing and outcomes
+ * @param {Object} params - Event parameters
+ * @param {string} params.provider - OAuth provider (github, google, etc.)
+ * @param {string} params.action - Action type (initiated, redirect_started, completed, failed)
+ * @param {string} params.context - Where OAuth was triggered (login_modal, signup_modal)
+ * @param {number} [params.duration] - Time taken in milliseconds (for completed/failed)
+ * @param {string} [params.errorType] - Type of error if failed
+ */
+export const trackOAuth = ({ provider, action, context, duration, errorType }) => {
+  const eventData = {
+    provider,
+    action,
+    context,
+  };
+
+  if (duration !== undefined) {
+    eventData.duration_ms = Math.round(duration);
+    eventData.duration_seconds = Math.round(duration / 1000);
+  }
+
+  if (errorType) {
+    eventData.error_type = errorType;
+  }
+
+  trackEvent('oauth_flow', eventData);
+};
+
+/**
  * Track performance metrics
  * @param {Object} params - Event parameters
  * @param {number} params.parseTime - Time to parse code (ms)
