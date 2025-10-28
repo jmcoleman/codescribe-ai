@@ -674,8 +674,37 @@
           transform: rotate(360deg);
         }
       }
+    </style><style>
+      @keyframes slideIn {
+        from {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+      @keyframes slideOut {
+        from {
+          transform: translateX(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+      }
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
     </style></head>
-<body data-new-gr-c-s-check-loaded="14.1258.0" data-gr-ext-installed="">
+<body data-new-gr-c-s-check-loaded="14.1259.0" data-gr-ext-installed="">
   <div class="page">
     <header>
       <div class="header-content">
@@ -708,7 +737,7 @@
             <div class="column-title">Completed</div>
             <div class="column-timeline">Phase 1: Core Capabilities</div>
           </div>
-          <div class="column-body"><div class="phase-card"><div class="phase-header"><div class="phase-title">Web Application (MVP)</div><div class="phase-version">v1.0.0</div></div><ul class="feature-list"><li>4 documentation types (README, JSDoc, API, ARCHITECTURE)</li><li>Monaco Editor with syntax highlighting (24+ languages)</li><li>Real-time streaming with SSE</li><li>Quality scoring system (0-100 scale, 5 criteria)</li><li>File upload &amp; drag-and-drop</li><li>Copy-to-clipboard &amp; download</li><li>Responsive design (mobile, tablet, desktop)</li><li>660+ tests (100% passing)</li><li>95.81% backend code coverage</li><li>Mermaid diagram support</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">WCAG AA Compliance</div><div class="phase-version">v1.2.0</div></div><ul class="feature-list"><li>WCAG 2.1 AA compliance (95/100 score)</li><li>Lighthouse accessibility: 100/100</li><li>0 automated accessibility violations</li><li>Full keyboard navigation</li><li>Screen reader compatibility (NVDA, VoiceOver)</li><li>AAA color contrast (18.2:1 ratio)</li><li>Focus traps in modals</li><li>Skip navigation link</li></ul><div class="metric-badge">660+ Tests · 100% Passing</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Performance &amp; Infrastructure</div><div class="phase-version">v1.2.0</div></div><ul class="feature-list"><li>Vercel deployment with custom domain</li><li>GitHub Actions CI/CD pipeline</li><li>Test-gated deployments</li><li>Bundle optimization (78KB gzipped)</li><li>Lazy loading (Monaco, Mermaid, DocPanel)</li><li>Lighthouse performance: 75/100 (+67%)</li><li>95.81% backend code coverage</li><li>Cross-browser testing (Chrome, Firefox, Safari, Edge)</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Security &amp; Quality</div><div class="phase-version">v1.2.0</div></div><ul class="feature-list"><li>Environment variable sanitization</li><li>API key protection (server-side only)</li><li>Rate limiting (10/min, 100/hour per IP)</li><li>Input validation and sanitization</li><li>File upload security checks</li><li>HSTS headers for security</li><li>CORS configuration</li><li>Comprehensive error handling</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Bug Fixes</div><div class="phase-version">v1.2.1</div></div><ul class="feature-list"><li>DocPanel footer alignment (pixel-perfect match with CodePanel)</li><li>Download button UX fix (removed checkmark animation)</li><li>Sign-in button hidden (ENABLE_AUTH feature flag)</li><li>Examples modal preview persistence and focus alignment</li><li>Visual regression testing (Chrome, Firefox, Safari)</li><li>Mobile testing (iOS, Android)</li><li>Cross-browser compatibility verification</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Maintenance Release</div><div class="phase-version">v1.2.2</div></div><ul class="feature-list"><li>Mobile clipboard fallback (non-secure contexts)</li><li>Download button UX simplification (removed checkmark)</li><li>Enhanced mobile accessibility (focus indicators)</li><li>Test coverage for edge cases (58 error handling tests)</li><li>Cross-browser test plan with mobile file upload docs</li><li>GitHub import feature flag (hidden until v2.0)</li><li>16 files updated, 260+ net lines added</li><li>All 660+ tests passing (46 ControlBar tests + 6 skipped)</li></ul></div></div>
+          <div class="column-body"><div class="phase-card"><div class="phase-header"><div class="phase-title">Web Application (MVP)</div><div class="phase-version">v1.0.0</div></div><ul class="feature-list"><li>4 documentation types (README, JSDoc, API, ARCHITECTURE)</li><li>Monaco Editor with syntax highlighting (24+ languages)</li><li>Real-time streaming with SSE</li><li>Quality scoring system (0-100 scale, 5 criteria)</li><li>File upload &amp; drag-and-drop</li><li>Copy-to-clipboard &amp; download</li><li>Responsive design (mobile, tablet, desktop)</li><li>660+ tests (100% passing)</li><li>95.81% backend code coverage</li><li>Mermaid diagram support</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">WCAG AA Compliance</div><div class="phase-version">v1.2.0</div></div><ul class="feature-list"><li>WCAG 2.1 AA compliance (95/100 score)</li><li>Lighthouse accessibility: 100/100</li><li>0 automated accessibility violations</li><li>Full keyboard navigation</li><li>Screen reader compatibility (NVDA, VoiceOver)</li><li>AAA color contrast (18.2:1 ratio)</li><li>Focus traps in modals</li><li>Skip navigation link</li></ul><div class="metric-badge">660+ Tests · 100% Passing</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Performance &amp; Infrastructure</div><div class="phase-version">v1.2.0</div></div><ul class="feature-list"><li>Vercel deployment with custom domain</li><li>GitHub Actions CI/CD pipeline</li><li>Test-gated deployments</li><li>Bundle optimization (78KB gzipped)</li><li>Lazy loading (Monaco, Mermaid, DocPanel)</li><li>Lighthouse performance: 75/100 (+67%)</li><li>95.81% backend code coverage</li><li>Cross-browser testing (Chrome, Firefox, Safari, Edge)</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Security &amp; Quality</div><div class="phase-version">v1.2.0</div></div><ul class="feature-list"><li>Environment variable sanitization</li><li>API key protection (server-side only)</li><li>Rate limiting (10/min, 100/hour per IP)</li><li>Input validation and sanitization</li><li>File upload security checks</li><li>HSTS headers for security</li><li>CORS configuration</li><li>Comprehensive error handling</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Bug Fixes</div><div class="phase-version">v1.2.1</div></div><ul class="feature-list"><li>DocPanel footer alignment (pixel-perfect match with CodePanel)</li><li>Download button UX fix (removed checkmark animation)</li><li>Sign-in button hidden (ENABLE_AUTH feature flag)</li><li>Examples modal preview persistence and focus alignment</li><li>Visual regression testing (Chrome, Firefox, Safari)</li><li>Mobile testing (iOS, Android)</li><li>Cross-browser compatibility verification</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Maintenance Release</div><div class="phase-version">v1.2.2</div></div><ul class="feature-list"><li>Mobile clipboard fallback (non-secure contexts)</li><li>Download button UX simplification (removed checkmark)</li><li>Enhanced mobile accessibility (focus indicators)</li><li>Test coverage for edge cases (58 error handling tests)</li><li>Cross-browser test plan with mobile file upload docs</li><li>GitHub import feature flag (hidden until v2.0)</li><li>16 files updated, 260+ net lines added</li><li>All 660+ tests passing (46 ControlBar tests + 6 skipped)</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Authentication &amp; Database (Epic 2.1)</div><div class="phase-version">v2.0.0</div></div><ul class="feature-list"><li>Passport.js authentication (local, GitHub OAuth, JWT)</li><li>Email/password login with bcrypt hashing</li><li>Complete password reset flow with email verification</li><li>Neon Postgres database via Vercel Marketplace</li><li>User schema with auth fields (reset tokens, GitHub ID, tier)</li><li>Resend email service with branded templates</li><li>Account linking (OAuth users can add password)</li><li>Password visibility toggles (eye/eyeOff icons)</li><li>100 tests fixed/added (1,347 total, 97.5% pass rate)</li><li>Backend coverage: ALL CI thresholds met (86.84% models, 65.41% routes)</li><li>GitHub Actions CI passing</li><li>Production deployment (October 26, 2025)</li></ul><div class="metric-badge">Phase 2 Started</div></div></div>
         </div>
 
         <!-- NOW Column -->
@@ -716,9 +745,9 @@
           <div class="column-header">
             <div class="column-label">Now</div>
             <div class="column-title">Active Development</div>
-            <div class="column-timeline">Phase 2: Monetization Foundation</div>
+            <div class="column-timeline">Phase 2: Monetization Foundation (Remaining Epics)</div>
           </div>
-          <div class="column-body"><div class="phase-card"><div class="phase-header"><div class="phase-title">Authentication &amp; User Management</div><div class="phase-version">Epic 2.1</div></div><ul class="feature-list"><li>Passport.js authentication (local, GitHub, JWT strategies)</li><li>Email/password login with bcrypt hashing</li><li>GitHub OAuth integration (passport-github2)</li><li>JWT tokens for web, CLI, and VS Code extension (Phase 5)</li><li>Password reset flow</li><li>Auth routes (/signup, /login, /github, /github/callback)</li><li>Login/Signup modal UI with React Context</li></ul><div class="metric-badge">Passport.js</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Tier System &amp; Feature Flags</div><div class="phase-version">Epic 2.2</div></div><ul class="feature-list"><li>PostgreSQL database setup (Vercel Postgres)</li><li>User schema (id, email, password_hash, github_id, tier)</li><li>Usage schema (user_id, daily_count, monthly_count)</li><li>Tier gate middleware integration (req.user.tier)</li><li>Usage tracking and quota enforcement</li><li>4-tier system (Free, Pro, Team, Enterprise)</li><li>Usage dashboard UI</li></ul><div class="metric-badge">PostgreSQL</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Payment Integration</div><div class="phase-version">Epic 2.3</div></div><ul class="feature-list"><li>Stripe integration</li><li>Subscription management (create, update, cancel)</li><li>Webhook handling (tier updates)</li><li>Pricing page UI</li><li>Upgrade/downgrade flows</li><li>Invoice and receipt generation</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">UI Integration</div><div class="phase-version">Epic 2.4</div></div><ul class="feature-list"><li>Unhide Sign In button in header</li><li>User profile menu (usage stats, settings)</li><li>Upgrade to Pro prompts</li><li>Tier badges and feature gates</li><li>Loading states and error handling</li></ul></div></div>
+          <div class="column-body"><div class="phase-card"><div class="phase-header"><div class="phase-title">Tier System &amp; Feature Flags</div><div class="phase-version">Epic 2.2</div></div><ul class="feature-list"><li>Backend: Protect /api/generate and /api/generate-stream with requireAuth</li><li>Backend: Usage schema (user_id, daily_count, monthly_count, daily_reset, monthly_reset)</li><li>Backend: Usage tracking with incrementUsage() after each generation</li><li>Backend: Daily/monthly reset logic (cron or on-demand)</li><li>Frontend: Include JWT bearer token in API requests (Authorization: Bearer &lt;token&gt;)</li><li>Frontend: Usage dashboard UI (progress bar, remaining quota, reset date)</li><li>Frontend: Upgrade prompts at 80% and 100% usage</li><li>3-tier system for v2.1: Free (10 docs), Starter (50 docs $12), Pro (200 docs $29)</li><li>Open Core model: All 4 doc types in Free tier (adoption engine)</li><li>Soft features: Built-in API credits (marketing only), Priority queue (flag only)</li><li>Deferred: Batch processing (Phase 3), Custom templates (Phase 4)</li></ul><div class="metric-badge">v2.1.0</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Payment Integration</div><div class="phase-version">Epic 2.3</div></div><ul class="feature-list"><li>Stripe integration</li><li>Subscription management (create, update, cancel)</li><li>Webhook handling (tier updates on payment events)</li><li>Pricing page UI</li><li>Upgrade/downgrade flows</li><li>Invoice and receipt generation</li></ul><div class="metric-badge">v2.2.0</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">UI Integration</div><div class="phase-version">Epic 2.4</div></div><ul class="feature-list"><li>User profile menu (usage stats, settings, logout)</li><li>"Upgrade to Pro" prompts when approaching limits</li><li>Tier badges and feature gates in UI</li><li>Loading states and error handling</li><li>Drag-and-drop files into Monaco Editor (file drop zone on CodePanel)</li><li>Complete Phase 2: Monetization Foundation</li></ul><div class="metric-badge">v2.3.0</div></div></div>
         </div>
 
         <!-- NEXT Column -->
@@ -728,7 +757,7 @@
             <div class="column-title">Planned Features</div>
             <div class="column-timeline">Phases 3-4: UX &amp; Documentation Capabilities</div>
           </div>
-          <div class="column-body"><div class="phase-card"><div class="phase-header"><div class="phase-title">Theming &amp; Visual Customization</div><div class="phase-version">Epic 3.1</div></div><ul class="feature-list"><li>Dark mode toggle (sun/moon icon)</li><li>CSS variables with data-theme attribute</li><li>System preference detection (prefers-color-scheme)</li><li>Monaco Editor theme switching (vs-light/vs-dark)</li><li>Mermaid dark theme with brand colors</li><li>WCAG AAA contrast ratios (7:1 text, 3:1 UI)</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Layout &amp; Workspace Flexibility</div><div class="phase-version">Epic 3.2</div></div><ul class="feature-list"><li>Full-width layout option (remove max-width)</li><li>Resizable panels with draggable divider</li><li>Panel constraints (30% min, 70% max)</li><li>Panel size persistence (localStorage)</li><li>Layout presets (50/50, 70/30, 30/70)</li><li>Keyboard accessible panel controls</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Advanced File Handling</div><div class="phase-version">Epic 3.3</div></div><ul class="feature-list"><li>Multi-file upload support</li><li>Drag-and-drop file interface</li><li>Batch processing (up to 10 files)</li><li>File preview before generation</li><li>File history and version tracking (30 days)</li><li>Progress indicators for batch operations</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">OpenAPI/Swagger Generation</div><div class="phase-version">Epic 4.1</div></div><ul class="feature-list"><li>New OPENAPI doc type</li><li>YAML output (OpenAPI 3.0 specification)</li><li>Parse API routes (Express, Flask, FastAPI)</li><li>Quality scoring for API specs</li><li>Schema definitions and examples</li><li>Security and authentication docs</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Multi-File Project Documentation</div><div class="phase-version">Epic 4.2</div></div><ul class="feature-list"><li>Accept multiple files or .zip upload</li><li>Project-wide architecture analysis</li><li>Cross-file references</li><li>Pattern detection (MVC, microservices, monorepo)</li><li>Comprehensive project README generation</li><li>Project-level quality scoring</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Custom Templates &amp; Export Formats</div><div class="phase-version">Epic 4.3</div></div><ul class="feature-list"><li>User-defined documentation templates</li><li>Template library (community templates)</li><li>Export to markdown, HTML, PDF</li><li>Template variables and placeholders</li><li>Template preview and validation</li></ul></div></div>
+          <div class="column-body"><div class="phase-card"><div class="phase-header"><div class="phase-title">Theming &amp; Visual Customization</div><div class="phase-version">Epic 3.1</div></div><ul class="feature-list"><li>Dark mode toggle (sun/moon icon)</li><li>CSS variables with data-theme attribute</li><li>System preference detection (prefers-color-scheme)</li><li>Monaco Editor theme switching (vs-light/vs-dark)</li><li>Mermaid dark theme with brand colors</li><li>WCAG AAA contrast ratios (7:1 text, 3:1 UI)</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Layout &amp; Workspace Flexibility</div><div class="phase-version">Epic 3.2</div></div><ul class="feature-list"><li>Full-width layout option (remove max-width)</li><li>Resizable panels with draggable divider</li><li>Panel constraints (30% min, 70% max)</li><li>Panel size persistence (localStorage)</li><li>Layout presets (50/50, 70/30, 30/70)</li><li>Keyboard accessible panel controls</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Advanced File Handling</div><div class="phase-version">Epic 3.3</div></div><ul class="feature-list"><li>Multi-file upload support (select multiple files at once)</li><li>Batch processing (up to 10 files)</li><li>File preview before generation</li><li>File history and version tracking (30 days)</li><li>Progress indicators for batch operations</li><li>Error handling per file (don't fail entire batch)</li><li>Note: Basic drag-and-drop implemented in Phase 2 Epic 2.4</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">OpenAPI/Swagger Generation</div><div class="phase-version">Epic 4.1</div></div><ul class="feature-list"><li>New OPENAPI doc type</li><li>YAML output (OpenAPI 3.0 specification)</li><li>Parse API routes (Express, Flask, FastAPI)</li><li>Quality scoring for API specs</li><li>Schema definitions and examples</li><li>Security and authentication docs</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Multi-File Project Documentation</div><div class="phase-version">Epic 4.2</div></div><ul class="feature-list"><li>Accept multiple files or .zip upload</li><li>Project-wide architecture analysis</li><li>Cross-file references</li><li>Pattern detection (MVC, microservices, monorepo)</li><li>Comprehensive project README generation</li><li>Project-level quality scoring</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Custom Templates &amp; Export Formats</div><div class="phase-version">Epic 4.3</div></div><ul class="feature-list"><li>User-defined documentation templates</li><li>Template library (community templates)</li><li>Export to markdown, HTML, PDF</li><li>Template variables and placeholders</li><li>Template preview and validation</li></ul></div></div>
         </div>
 
         <!-- LATER Column -->
@@ -745,9 +774,9 @@
 
     <footer>
       <div class="footer-content">
-        <div class="footer-left"><strong>CodeScribe AI</strong> · Strategic Roadmap v3.0</div>
-        <div class="footer-center">Phase 1 Complete · Phases 2-6 Planned · Strategic Themes with Shippable Epics</div>
-        <div class="footer-right">Last Updated: October 23, 2025</div>
+        <div class="footer-left"><strong>CodeScribe AI</strong> · Strategic Roadmap v3.1</div>
+        <div class="footer-center">Phase 1 Complete · Phase 2 In Progress (v2.0.0) · Strategic Themes with Shippable Epics</div>
+        <div class="footer-right">Last Updated: October 27, 2025</div>
       </div>
     </footer>
   </div>
@@ -841,9 +870,9 @@
       "text": "codescribeai.com",
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
-    "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.0",
-    "footer": "Phase 1 Complete · Phases 2-6 Planned · Strategic Themes with Shippable Epics",
-    "lastUpdated": "October 23, 2025"
+    "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.1",
+    "footer": "Phase 1 Complete · Phase 2 In Progress (v2.0.0) · Strategic Themes with Shippable Epics",
+    "lastUpdated": "October 27, 2025"
   },
   "columns": [
     {
@@ -949,6 +978,27 @@
             "16 files updated, 260+ net lines added",
             "All 660+ tests passing (46 ControlBar tests + 6 skipped)"
           ]
+        },
+        {
+          "version": "v2.0.0",
+          "title": "Authentication & Database (Epic 2.1)",
+          "duration": "5 days",
+          "status": "✓ Complete",
+          "badge": "Phase 2 Started",
+          "features": [
+            "Passport.js authentication (local, GitHub OAuth, JWT)",
+            "Email/password login with bcrypt hashing",
+            "Complete password reset flow with email verification",
+            "Neon Postgres database via Vercel Marketplace",
+            "User schema with auth fields (reset tokens, GitHub ID, tier)",
+            "Resend email service with branded templates",
+            "Account linking (OAuth users can add password)",
+            "Password visibility toggles (eye/eyeOff icons)",
+            "100 tests fixed/added (1,347 total, 97.5% pass rate)",
+            "Backend coverage: ALL CI thresholds met (86.84% models, 65.41% routes)",
+            "GitHub Actions CI passing",
+            "Production deployment (October 26, 2025)"
+          ]
         }
       ]
     },
@@ -956,49 +1006,38 @@
       "id": "now",
       "label": "Now",
       "title": "Active Development",
-      "subtitle": "Phase 2: Monetization Foundation",
+      "subtitle": "Phase 2: Monetization Foundation (Remaining Epics)",
       "phases": [
-        {
-          "version": "Epic 2.1",
-          "title": "Authentication & User Management",
-          "duration": "3-5 days",
-          "status": "Planning Complete",
-          "badge": "Passport.js",
-          "features": [
-            "Passport.js authentication (local, GitHub, JWT strategies)",
-            "Email/password login with bcrypt hashing",
-            "GitHub OAuth integration (passport-github2)",
-            "JWT tokens for web, CLI, and VS Code extension (Phase 5)",
-            "Password reset flow",
-            "Auth routes (/signup, /login, /github, /github/callback)",
-            "Login/Signup modal UI with React Context"
-          ]
-        },
         {
           "version": "Epic 2.2",
           "title": "Tier System & Feature Flags",
           "duration": "2-3 days",
-          "status": "Planning Complete",
-          "badge": "PostgreSQL",
+          "status": "Planned",
+          "badge": "v2.1.0",
           "features": [
-            "PostgreSQL database setup (Vercel Postgres)",
-            "User schema (id, email, password_hash, github_id, tier)",
-            "Usage schema (user_id, daily_count, monthly_count)",
-            "Tier gate middleware integration (req.user.tier)",
-            "Usage tracking and quota enforcement",
-            "4-tier system (Free, Pro, Team, Enterprise)",
-            "Usage dashboard UI"
+            "Backend: Protect /api/generate and /api/generate-stream with requireAuth",
+            "Backend: Usage schema (user_id, daily_count, monthly_count, daily_reset, monthly_reset)",
+            "Backend: Usage tracking with incrementUsage() after each generation",
+            "Backend: Daily/monthly reset logic (cron or on-demand)",
+            "Frontend: Include JWT bearer token in API requests (Authorization: Bearer <token>)",
+            "Frontend: Usage dashboard UI (progress bar, remaining quota, reset date)",
+            "Frontend: Upgrade prompts at 80% and 100% usage",
+            "3-tier system for v2.1: Free (10 docs), Starter (50 docs $12), Pro (200 docs $29)",
+            "Open Core model: All 4 doc types in Free tier (adoption engine)",
+            "Soft features: Built-in API credits (marketing only), Priority queue (flag only)",
+            "Deferred: Batch processing (Phase 3), Custom templates (Phase 4)"
           ]
         },
         {
           "version": "Epic 2.3",
           "title": "Payment Integration",
           "duration": "2-3 days",
-          "status": "Planning Complete",
+          "status": "Planned",
+          "badge": "v2.2.0",
           "features": [
             "Stripe integration",
             "Subscription management (create, update, cancel)",
-            "Webhook handling (tier updates)",
+            "Webhook handling (tier updates on payment events)",
             "Pricing page UI",
             "Upgrade/downgrade flows",
             "Invoice and receipt generation"
@@ -1008,13 +1047,15 @@
           "version": "Epic 2.4",
           "title": "UI Integration",
           "duration": "1-2 days",
-          "status": "Planning Complete",
+          "status": "Planned",
+          "badge": "v2.3.0",
           "features": [
-            "Unhide Sign In button in header",
-            "User profile menu (usage stats, settings)",
-            "Upgrade to Pro prompts",
-            "Tier badges and feature gates",
-            "Loading states and error handling"
+            "User profile menu (usage stats, settings, logout)",
+            "\"Upgrade to Pro\" prompts when approaching limits",
+            "Tier badges and feature gates in UI",
+            "Loading states and error handling",
+            "Drag-and-drop files into Monaco Editor (file drop zone on CodePanel)",
+            "Complete Phase 2: Monetization Foundation"
           ]
         }
       ]
@@ -1059,12 +1100,13 @@
           "duration": "2-3 days",
           "status": "Planned",
           "features": [
-            "Multi-file upload support",
-            "Drag-and-drop file interface",
+            "Multi-file upload support (select multiple files at once)",
             "Batch processing (up to 10 files)",
             "File preview before generation",
             "File history and version tracking (30 days)",
-            "Progress indicators for batch operations"
+            "Progress indicators for batch operations",
+            "Error handling per file (don't fail entire batch)",
+            "Note: Basic drag-and-drop implemented in Phase 2 Epic 2.4"
           ]
         },
         {
@@ -1643,6 +1685,44 @@
 	// ]]>
 </script>
 <grammarly-desktop-integration data-grammarly-shadow-root="true"></grammarly-desktop-integration><!-- Code injected by live-server -->
+<script>
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					var parent = elem.parentElement || head;
+					parent.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					parent.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
+</script>
+<!-- Code injected by live-server -->
 <script>
 	// <![CDATA[  <-- For SVG support
 	if ('WebSocket' in window) {
