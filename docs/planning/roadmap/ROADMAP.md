@@ -1,8 +1,8 @@
 # CodeScribe AI - Product Roadmap
 
-**Last Updated:** October 23, 2025
-**Current Phase:** Phase 1.5 - ✅ **COMPLETE** (Deployed to Production)
-**MVP Status:** ✅ **100% COMPLETE** - Live in Production
+**Last Updated:** October 27, 2025
+**Current Phase:** Phase 2 - 🔄 **IN PROGRESS** (Monetization Foundation)
+**Current Release:** v2.0.0 (Authentication & Database Complete)
 **Production URL:** [https://codescribeai.com](https://codescribeai.com)
 
 ---
@@ -35,10 +35,10 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 
 ---
 
-## ✅ MVP Complete (Phase 1 + 1.5)
+## ✅ Completed Phases
 
-**Total Duration:** 8 days (October 11-19, 2025)
-**Status:** ✅ **100% COMPLETE** - Deployed to Production
+**Phase 1 (MVP):** 8 days (October 11-19, 2025) - ✅ **COMPLETE**
+**Phase 2 (Epic 2.1):** 5 days (October 21-26, 2025) - ✅ **Authentication & Database COMPLETE** (v2.0.0)
 **Production URL:** [https://codescribeai.com](https://codescribeai.com)
 
 ### 🚀 Phase 1.0: Core Development (4 days - Oct 11-16)
@@ -241,6 +241,108 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 
 ---
 
+### 💰 Phase 2: Monetization Foundation (5 days - Oct 21-26)
+
+**Timeline:** October 21-26, 2025
+**Actual Duration:** 5 days
+**Status:** ✅ **COMPLETE**
+
+#### Completed Features
+
+**Epic 2.1: Authentication & User Management** - ✅ Complete
+- ✅ Passport.js authentication with multiple strategies (local, GitHub OAuth, JWT)
+- ✅ Email/password authentication with bcrypt password hashing
+- ✅ GitHub OAuth integration (`passport-github2`)
+- ✅ JWT tokens for web session management
+- ✅ Complete password reset flow with email verification
+- ✅ ResetPassword component with dedicated route (`/reset-password?token=...`)
+- ✅ Account linking (OAuth users can add password, email users can link GitHub)
+- ✅ Auth routes: `/api/auth/signup`, `/api/auth/login`, `/api/auth/logout`, `/api/auth/github`, `/api/auth/github/callback`
+- ✅ Password reset endpoints: `/api/auth/forgot-password`, `/api/auth/reset-password`
+- ✅ Frontend auth context with React Context API
+- ✅ Login and Signup modal UI components
+- ✅ Sign In button active in header
+- ✅ Password visibility toggles (eye/eyeOff icons)
+- ✅ Form validation and error handling
+- ✅ Auto-focus on form errors using `flushSync`
+
+**Epic 2.2: Database Infrastructure** - ✅ Complete
+- ✅ Neon Postgres database setup via Vercel Marketplace
+- ✅ Database migration system (runMigration.js utility)
+- ✅ Migration API endpoints (GET `/api/migrate/status`, POST `/api/migrate/run`)
+- ✅ User schema with authentication fields (id, email, password_hash, github_id, github_username, reset_token_hash, reset_token_expires, tier, created_at, updated_at)
+- ✅ User model methods: create, findById, findByEmail, findByGitHubId, setResetToken, findByResetToken, updatePassword, clearResetToken
+- ✅ Database session storage using `connect-pg-simple`
+- ✅ Migration documentation (DB-MIGRATION-MANAGEMENT.md, PRODUCTION-DB-SETUP.md)
+
+**Epic 2.3: Email Service** - ✅ Complete
+- ✅ Resend API integration for transactional emails
+- ✅ Custom domain configuration (`noreply@codescribeai.com`)
+- ✅ Password reset email with branded HTML template
+- ✅ Email verification infrastructure (sendVerificationEmail)
+- ✅ Brand-consistent design (purple/indigo gradient)
+- ✅ Mobile-responsive email templates
+- ✅ Support email setup (`support@codescribeai.com`)
+- ✅ Email rate limiting (3 password reset requests per hour per email)
+- ✅ Email footer with support contact
+- ✅ Environment-specific configuration (dev vs. prod)
+
+**Epic 2.4: Testing & Quality Assurance** - ✅ Complete
+- ✅ **100 tests fixed** across frontend and backend (75 fixed + 25 added)
+- ✅ **1,347 total tests** (97.5% pass rate, 0 failures)
+- ✅ Frontend: 898/913 passing (98.4% pass rate, 15 skipped)
+- ✅ Backend: 413/434 passing (95.2% pass rate, 21 skipped, 0 failures)
+- ✅ Backend coverage: **ALL CI thresholds met** ✅
+  - Middleware: 100%
+  - Models: 86.84% (+23.69%)
+  - Routes: 65.41% (+0.83%)
+  - Services: 94%
+- ✅ Password reset test suite (20 E2E scenarios, 12 User model tests, 13 integration tests)
+- ✅ Test data utilities modularization (client/src/utils/testData.js)
+- ✅ Form validation test coverage (SignupModal 100%, LoginModal 93%, ForgotPasswordModal 100%)
+- ✅ Migration API test coverage (28 tests, 67 total)
+- ✅ GitHub Actions CI passing ✅
+- ✅ Deployment unblocked
+
+**Documentation Created:**
+- PASSWORD-RESET-IMPLEMENTATION.md - Complete password reset summary
+- PASSWORD-RESET-SETUP.md - Step-by-step configuration guide
+- RESEND-SETUP.md - Email service setup with custom domain
+- DB-MIGRATION-MANAGEMENT.md - Database migration procedures
+- PASSWORD-RESET-E2E-TESTS.md - E2E testing documentation
+- FORM-VALIDATION-GUIDE.md v1.3 - Form validation patterns
+- PRODUCTION-DB-SETUP.md - Production database setup
+- TEST-FIXES-OCT-2025.md (Session 3) - Complete test coverage improvements
+- RELEASE-QUICKSTART.md - Release process documentation
+
+#### Success Criteria - ✅ All Achieved
+- ✅ Users can sign up with email/password
+- ✅ Users can log in with email/password or GitHub OAuth
+- ✅ Password reset flow working end-to-end
+- ✅ Email service sending branded transactional emails
+- ✅ Database migrations working in production
+- ✅ All 1,347 tests passing (97.5% pass rate)
+- ✅ Backend coverage thresholds met
+- ✅ GitHub Actions CI passing
+- ✅ Documentation complete and up-to-date
+- ✅ Deployed to production (v2.0.0)
+
+**Release:** v2.0.0 (October 26, 2025)
+
+**Reference Documentation:**
+- [CHANGELOG.md](../../../CHANGELOG.md) - Complete v2.0.0 release notes
+- [TEST-FIXES-OCT-2025.md](../../testing/TEST-FIXES-OCT-2025.md) - Test improvements documentation
+- [PASSWORD-RESET-IMPLEMENTATION.md](../../deployment/PASSWORD-RESET-IMPLEMENTATION.md) - Password reset summary
+- [RESEND-SETUP.md](../../deployment/RESEND-SETUP.md) - Email service configuration
+
+**Next Steps for Phase 2:**
+- Epic 2.2: Tier System & Feature Flags (2-3 days) - 📋 Planned
+- Epic 2.3: Payment Integration (2-3 days) - 📋 Planned
+- Epic 2.4: UI Integration (1-2 days) - 📋 Planned
+- Target completion: v2.1.0-v2.3.0 releases
+
+---
+
 ### 📊 MVP Success Metrics
 
 **Development & Testing - ✅ ACHIEVED**
@@ -282,39 +384,84 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 
 ---
 
-## 💰 Phase 2: Monetization Foundation (PLANNED)
+## 💰 Phase 2: Monetization Foundation (IN PROGRESS)
 
-**Timeline:** TBD (after Phase 1)
-**Estimated Duration:** 2-3 weeks
-**Status:** ✅ **PLANNING COMPLETE** - Implementation Files Ready
-**Target Release:** v2.0.0
+**Timeline:** October 21-26, 2025 (Epic 2.1) + TBD (Epics 2.2-2.4)
+**Estimated Duration:** 2-3 weeks total
+**Status:** 🔄 **IN PROGRESS** - Epic 2.1 Complete (v2.0.0)
+**Target Release:** v2.0.0-v2.3.0
 **Strategic Goal:** Enable sustainable business model with Open Core + Generous Free Tier architecture
 
 ### 📦 Epics
 
-#### Epic 2.1: Authentication & User Management (3-5 days)
+#### Epic 2.1: Authentication & User Management (3-5 days) - ✅ **COMPLETE** (v2.0.0)
 **Implementation:** Passport.js (decision documented in [AUTH-ANALYSIS.md](../AUTH-ANALYSIS.md))
 
-- Email/password authentication with bcrypt hashing (`passport-local`)
-- GitHub OAuth integration (`passport-github2`)
-- JWT token-based sessions (`passport-jwt` for CLI/API in Phase 5)
-- Password reset flow
-- Auth routes: `/api/auth/signup`, `/api/auth/login`, `/api/auth/logout`, `/api/auth/github`
-- Frontend auth context (React Context or Zustand)
-- Login/Signup modal UI
-- Unhide Sign In button in header
+- ✅ Email/password authentication with bcrypt hashing (`passport-local`)
+- ✅ GitHub OAuth integration (`passport-github2`)
+- ✅ JWT token-based sessions for web authentication
+- ✅ Complete password reset flow with email verification
+- ✅ Database setup (Neon Postgres via Vercel Marketplace)
+- ✅ User schema (id, email, password_hash, github_id, github_username, reset_token_hash, reset_token_expires, tier, created_at, updated_at)
+- ✅ Auth routes: `/api/auth/signup`, `/api/auth/login`, `/api/auth/logout`, `/api/auth/github`, `/api/auth/github/callback`, `/api/auth/forgot-password`, `/api/auth/reset-password`
+- ✅ Frontend auth context (React Context)
+- ✅ Login and Signup modal UI
+- ✅ Sign In button active in header
+- ✅ Email service (Resend) with branded templates
+- ✅ 100 tests fixed/added (1,347 total tests, 97.5% pass rate)
 
 **Rationale:** Passport.js selected over Clerk to support CLI authentication (Phase 5) and self-hosted enterprise deployment (Phase 6). See [AUTH-ANALYSIS.md](../AUTH-ANALYSIS.md) for full comparison.
 
-#### Epic 2.2: Tier System & Feature Flags (2-3 days)
-- Database setup (PostgreSQL or MongoDB)
-- User schema (id, email, password_hash, tier, created_at)
-- Usage schema (user_id, daily_count, monthly_count, reset_date)
-- Tier gate middleware integration
-- Usage tracking and quota enforcement
-- Usage dashboard UI (show remaining quota)
+**Release:** v2.0.0 (October 26, 2025)
+**Reference:** See "Phase 2: Monetization Foundation (5 days - Oct 21-26)" section above for complete details.
 
-#### Epic 2.3: Payment Integration (2-3 days)
+#### Epic 2.2: Tier System & Feature Flags (2-3 days) - 📋 **PLANNED**
+
+**Goal:** Enable volume-based monetization with generous free tier (Open Core model)
+
+**Backend Implementation:**
+- Protect generate endpoints with authentication (`requireAuth` middleware on `/api/generate` and `/api/generate-stream`)
+- Include JWT bearer token in API requests from frontend (`Authorization: Bearer <token>`)
+- Usage schema (user_id, daily_count, monthly_count, daily_reset_date, monthly_reset_date)
+- Tier gate middleware integration (`checkUsage()` + `requireAuth` on generate routes)
+- Usage tracking: `incrementUsage()` after successful generation
+- Daily/monthly reset logic (cron job or on-demand check)
+
+**Frontend Implementation:**
+- Usage dashboard UI component
+- Display: "X/10 docs used this month" (Free), "X/50 docs used" (Starter), "X/200 docs used" (Pro)
+- Progress bar with visual indicators (green → yellow → red)
+- Show reset date ("Resets on March 1")
+- Upgrade prompts when approaching limits (80% = warning, 100% = upgrade CTA)
+
+**Tier Structure (3 tiers for Phase 2):**
+- **Free:** 10 docs/month, all 4 doc types, all features (adoption engine)
+- **Starter:** 50 docs/month (5x Free), email support 48h
+- **Pro:** 200 docs/month (20x Free), email support 24h
+
+**What You're Actually Paying For:**
+- ✅ **Volume:** Higher monthly limits (10 → 50 → 200)
+- ✅ **Support:** Community → Email 48h → Email 24h
+- ⚠️ **"Built-in API credits"** is a soft feature (marketing only - all tiers use server's API key)
+- ⚠️ **"Priority queue"** is a soft feature (flag only - all tiers same speed in v2.1)
+
+**NOT Implemented in Epic 2.2 (Deferred):**
+- ❌ Batch processing (Phase 3 Epic 3.3)
+- ❌ Custom templates (Phase 4 Epic 4.3)
+- ❌ Team/Enterprise tiers (Phase 2 Epic 2.3/2.4 or later)
+
+**Success Criteria:**
+- Free users can generate up to 10 docs/month, blocked at limit
+- Starter users can generate up to 50 docs/month
+- Pro users can generate up to 200 docs/month
+- Usage dashboard shows accurate counts and reset dates
+- Upgrade prompts appear at 80% and 100% usage
+- All 898+ frontend tests pass
+- All 413+ backend tests pass (including usage tracking tests)
+
+**Note:** Infrastructure already exists: `server/src/config/tiers.js`, `server/src/middleware/tierGate.js`, `client/src/hooks/useFeature.js`, `server/src/middleware/requireAuth.js` - just needs database hookup and frontend UI
+
+#### Epic 2.3: Payment Integration (2-3 days) - 📋 **PLANNED**
 - Stripe integration
 - Subscription management (create, update, cancel)
 - Webhook handling (tier updates on payment events)
@@ -322,34 +469,43 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 - Upgrade/downgrade flows
 - Invoice and receipt generation
 
-#### Epic 2.4: UI Integration (1-2 days)
+#### Epic 2.4: UI Integration (1-2 days) - 📋 **PLANNED**
 - User profile menu (usage stats, settings, logout)
 - "Upgrade to Pro" prompts when approaching limits
 - Tier badges and feature gates in UI
 - Loading states and error handling
+- Drag-and-drop files into Monaco Editor (file drop zone on CodePanel)
 
 ### Tier Structure (Feature Flags Ready)
 
-**Free Tier (Generous - Drives Adoption):**
-- ✅ All 4 documentation types (README, JSDoc, API, ARCHITECTURE)
-- ✅ Real-time streaming, quality scoring, Monaco editor
-- ✅ File upload, code parsing, Mermaid diagrams
-- ⚠️ Limit: 10 docs/month OR unlimited self-hosted with own API key
-- 💡 **Philosophy:** Portfolio-worthy for users, showcases full feature set
+**Source of Truth:** [MONETIZATION-STRATEGY.md](../../../private/strategic-planning/MONETIZATION-STRATEGY.md) lines 486-492, 654-686
+
+**Free Tier ($0/mo - Adoption Engine):**
+- ✅ **10 docs/month** (enough to be portfolio-worthy, not enough for regular use)
+- ✅ **All 4 documentation types** (README, JSDoc, API, ARCHITECTURE)
+- ✅ **All core features:** Real-time streaming, quality scoring (0-100), Monaco editor, Mermaid diagrams, markdown export
+- ✅ **Self-hosting option:** Clone repo and use own API key for unlimited docs
+- ❌ Built-in API credits (soft feature - all tiers use server API key)
+- ❌ Priority queue (soft feature - flag only)
+- 💬 **Support:** Community (GitHub Discussions, Discord)
+- 💡 **Philosophy:** Showcase full feature set, drive adoption via generosity, natural upgrade at volume limits
 
 **Starter Tier ($12/mo - Convenience):**
-- ✅ 50 docs/month (5x increase)
-- ✅ Built-in API credits (no Claude API key setup)
-- ✅ Priority queue
-- ✅ Email support (48hr response)
-- 💡 **Philosophy:** Instant signup convenience vs. 20-min API key setup
+- ✅ **50 docs/month** (5x Free tier)
+- ✅ **All Free tier features** (4 doc types, streaming, quality scoring, Monaco, Mermaid)
+- ✅ **Built-in API credits** (marketing feature - no setup needed, but uses same server API key)
+- ✅ **Priority queue** (flag only in v2.1 - same speed, future enhancement)
+- 💬 **Support:** Email support (48-hour response)
+- 💡 **Philosophy:** "My time is worth more than $12. Just charge me." Convenience over API key setup.
 
-**Pro Tier ($29/mo - Volume + Power Features):**
-- ✅ 200 docs/month (20x free tier)
-- ✅ Batch processing (up to 10 files at once)
-- ✅ Custom templates
-- ✅ Export formats (markdown, HTML, PDF)
-- ✅ Email support (24hr response)
+**Pro Tier ($29/mo - Power Users):**
+- ✅ **200 docs/month** (20x Free tier, 4x Starter)
+- ✅ **All Starter tier features**
+- ✅ **Batch processing** (up to 10 files at once) - *Deferred to Phase 3 Epic 3.3*
+- ✅ **Custom templates** (save/reuse templates) - *Deferred to Phase 4 Epic 4.3*
+- ✅ **Export formats** (markdown, HTML, PDF) - *Deferred to Phase 4 Epic 4.3*
+- 💬 **Support:** Email support (24-hour response)
+- 💡 **Philosophy:** "Cost = 1 hour of my time, saves 10+ hours/month"
 
 **Team Tier ($99/mo - Collaboration):**
 - ✅ 1,000 docs/month shared across 10 users
@@ -446,13 +602,13 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 - Mobile responsive (panels stack vertically, no resizing)
 
 #### Epic 3.3: Advanced File Handling (2-3 days)
-- Multi-file upload support
-- Drag-and-drop file interface
+- Multi-file upload support (select multiple files at once)
 - File history and version tracking (30 days)
 - Batch processing (up to 10 files at once)
 - File preview before generation
 - Progress indicators for batch operations
 - Error handling per file (don't fail entire batch)
+- Note: Basic drag-and-drop implemented in Phase 2 Epic 2.4
 
 ### Technical Highlights
 
@@ -695,8 +851,12 @@ Features are tracked here when they:
 | Oct 19, 2025 | **Production Launch** (codescribeai.com) | ✅ Complete |
 | Oct 21, 2025 | **Documentation Update** (ARCHITECTURE.md v1.2, ROADMAP.md v1.4) | ✅ Complete |
 | Oct 23, 2025 | **Monetization Planning** (Feature flags, tier architecture) | ✅ Complete |
+| Oct 21-26, 2025 | **Phase 2 (Epic 2.1): Authentication & Database** (v2.0.0) | ✅ Complete |
+| Oct 26, 2025 | **Backend Test Coverage & CI Fixes** (100 tests fixed/added) | ✅ Complete |
 | TBD | Manual accessibility validation (optional) | ⏸️ Recommended |
-| TBD | **Phase 2: Monetization Foundation** (v2.0.0) | 📋 Planning Complete |
+| TBD | **Phase 2 (Epic 2.2): Tier System & Feature Flags** (v2.1.0) | 📋 Planned |
+| TBD | **Phase 2 (Epic 2.3): Payment Integration** (v2.2.0) | 📋 Planned |
+| TBD | **Phase 2 (Epic 2.4): UI Integration** (v2.3.0) | 📋 Planned |
 | TBD | **Phase 3: UX Enhancements** (v3.0.0) | 📋 Planned |
 | TBD | **Phase 4: Documentation Capabilities** (v4.0.0) | 📋 Planned |
 | TBD | **Phase 5: Developer Tools** (v5.0.0) | 📋 Planned |
@@ -885,12 +1045,19 @@ The update script automatically creates timestamped backups before making change
 
 ---
 
-**Document Version:** 2.0
-**Timeline Version:** 3.0 (reorganized into strategic phases with epics)
+**Document Version:** 2.1
+**Timeline Version:** 3.1 (Phase 2 Epic 2.1 complete, Epics 2.2-2.4 planned)
 **Created:** October 17, 2025
-**Last Updated:** October 23, 2025
-**Status:** Phase 1 Complete - Deployed to Production (https://codescribeai.com)
-**Next Review:** Before Phase 2 (Monetization Foundation) implementation
+**Last Updated:** October 27, 2025
+**Status:** Phase 2 In Progress - v2.0.0 Released (Authentication & Database)
+**Next Review:** Before Phase 2 Epic 2.2 (Tier System & Feature Flags) implementation
+
+**Major Changes in v2.1:**
+- Updated Phase 2 status to reflect v2.0.0 completion (Epic 2.1: Authentication & Database)
+- Added comprehensive Phase 2 completion section with all features, metrics, and documentation
+- Updated milestones table with v2.0.0 release and test suite improvements
+- Clarified remaining Phase 2 epics (2.2-2.4) as planned for v2.1.0-v2.3.0 releases
+- Updated current status: Phase 2 In Progress (1 of 4 epics complete)
 
 **Major Changes in v2.0:**
 - Reorganized 8 feature-driven phases into 5 strategic phase themes

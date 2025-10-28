@@ -81,9 +81,9 @@
       "text": "codescribeai.com",
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
-    "footerLeft": "<strong>CodeScribe AI</strong> \u00b7 Strategic Roadmap v3.0",
-    "footer": "Phase 1 Complete \u00b7 Phases 2-6 Planned \u00b7 Strategic Themes with Shippable Epics",
-    "lastUpdated": "October 23, 2025"
+    "footerLeft": "<strong>CodeScribe AI</strong> \u00b7 Strategic Roadmap v3.1",
+    "footer": "Phase 1 Complete \u00b7 Phase 2 In Progress (v2.0.0) \u00b7 Strategic Themes with Shippable Epics",
+    "lastUpdated": "October 27, 2025"
   },
   "columns": [
     {
@@ -189,6 +189,27 @@
             "16 files updated, 260+ net lines added",
             "All 660+ tests passing (46 ControlBar tests + 6 skipped)"
           ]
+        },
+        {
+          "version": "v2.0.0",
+          "title": "Authentication & Database (Epic 2.1)",
+          "duration": "5 days",
+          "status": "\u2713 Complete",
+          "badge": "Phase 2 Started",
+          "features": [
+            "Passport.js authentication (local, GitHub OAuth, JWT)",
+            "Email/password login with bcrypt hashing",
+            "Complete password reset flow with email verification",
+            "Neon Postgres database via Vercel Marketplace",
+            "User schema with auth fields (reset tokens, GitHub ID, tier)",
+            "Resend email service with branded templates",
+            "Account linking (OAuth users can add password)",
+            "Password visibility toggles (eye/eyeOff icons)",
+            "100 tests fixed/added (1,347 total, 97.5% pass rate)",
+            "Backend coverage: ALL CI thresholds met (86.84% models, 65.41% routes)",
+            "GitHub Actions CI passing",
+            "Production deployment (October 26, 2025)"
+          ]
         }
       ]
     },
@@ -196,50 +217,38 @@
       "id": "now",
       "label": "Now",
       "title": "Active Development",
-      "subtitle": "Phase 2: Monetization Foundation",
+      "subtitle": "Phase 2: Monetization Foundation (Remaining Epics)",
       "phases": [
-        {
-          "version": "Epic 2.1",
-          "title": "Authentication & User Management",
-          "duration": "3-5 days",
-          "status": "Planning Complete",
-          "badge": "Passport.js",
-          "features": [
-            "Passport.js authentication (local, GitHub, JWT strategies)",
-            "Email/password login with bcrypt hashing",
-            "GitHub OAuth integration (passport-github2)",
-            "JWT tokens for web, CLI, and VS Code extension (Phase 5)",
-            "Password reset flow",
-            "Auth routes (/signup, /login, /github, /github/callback)",
-            "Login/Signup modal UI with React Context",
-            "Unhide Sign In button in header"
-          ]
-        },
         {
           "version": "Epic 2.2",
           "title": "Tier System & Feature Flags",
           "duration": "2-3 days",
-          "status": "Planning Complete",
-          "badge": "PostgreSQL",
+          "status": "Planned",
+          "badge": "v2.1.0",
           "features": [
-            "PostgreSQL database setup (Vercel Postgres)",
-            "User schema (id, email, password_hash, github_id, tier)",
-            "Usage schema (user_id, daily_count, monthly_count)",
-            "Tier gate middleware integration (req.user.tier)",
-            "Usage tracking and quota enforcement",
-            "5-tier system (Free, Starter $12, Pro $29, Team $99, Enterprise custom)",
-            "Usage dashboard UI"
+            "Backend: Protect /api/generate and /api/generate-stream with requireAuth",
+            "Backend: Usage schema (user_id, daily_count, monthly_count, daily_reset, monthly_reset)",
+            "Backend: Usage tracking with incrementUsage() after each generation",
+            "Backend: Daily/monthly reset logic (cron or on-demand)",
+            "Frontend: Include JWT bearer token in API requests (Authorization: Bearer <token>)",
+            "Frontend: Usage dashboard UI (progress bar, remaining quota, reset date)",
+            "Frontend: Upgrade prompts at 80% and 100% usage",
+            "3-tier system for v2.1: Free (10 docs), Starter (50 docs $12), Pro (200 docs $29)",
+            "Open Core model: All 4 doc types in Free tier (adoption engine)",
+            "Soft features: Built-in API credits (marketing only), Priority queue (flag only)",
+            "Deferred: Batch processing (Phase 3), Custom templates (Phase 4)"
           ]
         },
         {
           "version": "Epic 2.3",
           "title": "Payment Integration",
           "duration": "2-3 days",
-          "status": "Planning Complete",
+          "status": "Planned",
+          "badge": "v2.2.0",
           "features": [
             "Stripe integration",
             "Subscription management (create, update, cancel)",
-            "Webhook handling (tier updates)",
+            "Webhook handling (tier updates on payment events)",
             "Pricing page UI",
             "Upgrade/downgrade flows",
             "Invoice and receipt generation"
@@ -249,12 +258,15 @@
           "version": "Epic 2.4",
           "title": "UI Integration",
           "duration": "1-2 days",
-          "status": "Planning Complete",
+          "status": "Planned",
+          "badge": "v2.3.0",
           "features": [
-            "User profile menu (usage stats, settings)",
-            "Upgrade to Pro prompts",
-            "Tier badges and feature gates",
-            "Loading states and error handling"
+            "User profile menu (usage stats, settings, logout)",
+            "\"Upgrade to Pro\" prompts when approaching limits",
+            "Tier badges and feature gates in UI",
+            "Loading states and error handling",
+            "Drag-and-drop files into Monaco Editor (file drop zone on CodePanel)",
+            "Complete Phase 2: Monetization Foundation"
           ]
         }
       ]
@@ -299,12 +311,13 @@
           "duration": "2-3 days",
           "status": "Planned",
           "features": [
-            "Multi-file upload support",
-            "Drag-and-drop file interface",
+            "Multi-file upload support (select multiple files at once)",
             "Batch processing (up to 10 files)",
             "File preview before generation",
             "File history and version tracking (30 days)",
-            "Progress indicators for batch operations"
+            "Progress indicators for batch operations",
+            "Error handling per file (don't fail entire batch)",
+            "Note: Basic drag-and-drop implemented in Phase 2 Epic 2.4"
           ]
         },
         {

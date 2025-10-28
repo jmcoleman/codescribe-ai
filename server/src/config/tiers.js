@@ -5,13 +5,16 @@
  * Revenue Strategy: Volume + Convenience + Collaboration, not features
  *
  * Philosophy: Generous free tier drives adoption, natural upgrade paths via usage limits
+ *
+ * Source of Truth: private/strategic-planning/MONETIZATION-STRATEGY.md
+ * Last Updated: October 27, 2025 (aligned with MONETIZATION-STRATEGY.md)
  */
 
 export const TIER_FEATURES = {
   free: {
     // Volume Limits (Primary conversion driver)
     maxFileSize: 100_000,              // 100KB - typical single file
-    dailyGenerations: 3,                // ~10/month for hobbyists
+    dailyGenerations: 3,                // ~10/month (assumes ~3 docs every 3 days)
     monthlyGenerations: 10,             // Hard monthly cap
 
     // Core Features (ALL included - drives adoption)
@@ -22,28 +25,32 @@ export const TIER_FEATURES = {
     fileUpload: true,                   // Single file upload
     codeParser: true,                   // AST parsing
     mermaidDiagrams: true,              // Diagram generation
+    markdownExport: true,               // Export to markdown
 
-    // Limitations (Encourage upgrade without breaking experience)
-    builtInApiCredits: false,           // Must provide own Claude API key
-    batchProcessing: false,             // Single file only
-    customTemplates: false,             // Default templates only
-    apiAccess: false,                   // Web UI only
-    priorityQueue: false,               // Standard processing
+    // Soft Features (Marketing differentiators, not technical limits)
+    builtInApiCredits: false,           // Soft feature: All tiers use server API key
+    priorityQueue: false,               // Soft feature: Flag only (same speed in v2.1)
+
+    // Hard Limitations (Encourage upgrade)
+    batchProcessing: false,             // Single file only (Phase 3 Epic 3.3)
+    customTemplates: false,             // Default templates only (Phase 4 Epic 4.3)
+    exportFormats: ['markdown'],        // Only markdown (HTML/PDF in Phase 4)
+    apiAccess: false,                   // Web UI only (Team+ feature)
 
     // Support
     support: 'community',               // GitHub Discussions, Discord
     sla: null,                          // No uptime guarantee
 
     // Deployment
-    selfHosted: true,                   // Can self-host with own API key
+    selfHosted: true,                   // Can self-host with own API key for unlimited
     whiteLabel: false,                  // CodeScribe branding required
   },
 
   starter: {
-    // Volume Limits (5x increase - convenience tier)
+    // Volume Limits (5x free tier - convenience tier)
     maxFileSize: 500_000,               // 500KB - larger files
     dailyGenerations: 10,               // ~50/month for regular use
-    monthlyGenerations: 50,             // Hard monthly cap
+    monthlyGenerations: 50,             // Hard monthly cap (5x Free)
 
     // All Free Features
     documentTypes: ['README', 'JSDOC', 'API', 'ARCHITECTURE'],
@@ -53,15 +60,19 @@ export const TIER_FEATURES = {
     fileUpload: true,
     codeParser: true,
     mermaidDiagrams: true,
+    markdownExport: true,
 
-    // Starter Additions (Convenience-focused)
-    builtInApiCredits: true,            // No API key setup required
-    batchProcessing: false,             // Single file only
-    customTemplates: false,             // Default templates only
-    apiAccess: false,                   // Web UI only
-    priorityQueue: true,                // 2x faster processing
+    // Soft Features (Marketing differentiators - same as Free technically)
+    builtInApiCredits: true,            // Soft feature: Uses server API key (same as Free)
+    priorityQueue: true,                // Soft feature: Flag only (same speed in v2.1)
 
-    // Support
+    // Hard Limitations (Same as Free)
+    batchProcessing: false,             // Single file only (Phase 3 Epic 3.3)
+    customTemplates: false,             // Default templates only (Phase 4 Epic 4.3)
+    exportFormats: ['markdown'],        // Only markdown (HTML/PDF in Phase 4)
+    apiAccess: false,                   // Web UI only (Team+ feature)
+
+    // Support (Upgrade from Free)
     support: 'email',                   // Email support, 48hr response
     sla: null,                          // No formal SLA
 
@@ -74,7 +85,7 @@ export const TIER_FEATURES = {
     // Volume Limits (20x free tier - perfect for active developers)
     maxFileSize: 1_000_000,             // 1MB - multiple files or large projects
     dailyGenerations: 50,               // ~200/month for daily use
-    monthlyGenerations: 200,            // Hard monthly cap
+    monthlyGenerations: 200,            // Hard monthly cap (20x Free)
 
     // All Starter Features
     documentTypes: ['README', 'JSDOC', 'API', 'ARCHITECTURE'],
@@ -84,19 +95,24 @@ export const TIER_FEATURES = {
     fileUpload: true,
     codeParser: true,
     mermaidDiagrams: true,
-    builtInApiCredits: true,
-    priorityQueue: true,
+    markdownExport: true,
 
-    // Pro Additions (Power user features)
-    batchProcessing: true,              // Up to 10 files at once
-    customTemplates: true,              // Save/reuse custom templates
+    // Soft Features (Same as Starter)
+    builtInApiCredits: true,            // Soft feature: Uses server API key
+    priorityQueue: true,                // Soft feature: Flag only (same speed in v2.1)
+
+    // Pro Additions (Power user features - DEFERRED to later phases)
+    batchProcessing: true,              // Deferred to Phase 3 Epic 3.3
+    customTemplates: true,              // Deferred to Phase 4 Epic 4.3
+    exportFormats: ['markdown', 'html', 'pdf'],  // Deferred to Phase 4 Epic 4.3
+    advancedParsing: true,              // Deferred to Phase 4
+
+    // Team+ Features (Not in Pro)
     apiAccess: false,                   // Reserved for Team+
-    exportFormats: ['markdown', 'html', 'pdf'],  // Multiple export options
     versionHistory: false,              // Reserved for Team+
-    advancedParsing: true,              // TypeScript, JSX, custom parsers
 
-    // Support
-    support: 'email',                   // Email support, 24hr response
+    // Support (Upgrade from Starter)
+    support: 'email',                   // Email support, 24hr response (faster than Starter)
     sla: null,                          // No formal SLA
 
     // Deployment
