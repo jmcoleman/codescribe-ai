@@ -21,6 +21,9 @@ module.exports = {
     '**/__tests__/**/schema-*.test.js'
   ],
 
+  // Override testPathIgnorePatterns to allow database tests
+  testPathIgnorePatterns: ['/node_modules/', '/dist/'],
+
   // Display name for this test suite
   displayName: {
     name: 'DATABASE',
