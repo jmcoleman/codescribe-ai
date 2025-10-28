@@ -7,7 +7,7 @@
 
 import { createContext, useContext, useState, useEffect } from 'react';
 import { API_URL } from '../config/api';
-import { STORAGE_KEYS } from '../constants/storage';
+import { STORAGE_KEYS, getStorageItem, setStorageItem, removeStorageItem } from '../constants/storage';
 
 const AuthContext = createContext(null);
 
@@ -49,7 +49,7 @@ export function AuthProvider({ children }) {
    */
   const initializeAuth = async () => {
     try {
-      const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+      const token = getStorageItem(STORAGE_KEYS.AUTH_TOKEN);
 
       if (!token) {
         setIsLoading(false);
@@ -65,7 +65,7 @@ export function AuthProvider({ children }) {
 
       if (!response.ok) {
         // Token is invalid or expired
-        localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+        removeStorageItem(STORAGE_KEYS.AUTH_TOKEN);
         setIsLoading(false);
         return;
       }
@@ -77,7 +77,7 @@ export function AuthProvider({ children }) {
       }
     } catch (err) {
       console.error('Auth initialization error:', err);
-      localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+      removeStorageItem(STORAGE_KEYS.AUTH_TOKEN);
     } finally {
       setIsLoading(false);
     }
@@ -106,7 +106,7 @@ export function AuthProvider({ children }) {
 
       if (data.success && data.token && data.user) {
         // Store token
-        localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, data.token);
+        setStorageItem(STORAGE_KEYS.AUTH_TOKEN, data.token);
 
         // Update user state
         setUser(data.user);
@@ -145,7 +145,7 @@ export function AuthProvider({ children }) {
 
       if (data.success && data.token && data.user) {
         // Store token
-        localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, data.token);
+        setStorageItem(STORAGE_KEYS.AUTH_TOKEN, data.token);
 
         // Update user state
         setUser(data.user);
@@ -166,7 +166,7 @@ export function AuthProvider({ children }) {
    */
   const logout = async () => {
     try {
-      const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+      const token = getStorageItem(STORAGE_KEYS.AUTH_TOKEN);
 
       if (token) {
         // Call logout endpoint to invalidate session
@@ -181,7 +181,7 @@ export function AuthProvider({ children }) {
       console.error('Logout error:', err);
     } finally {
       // Always clear local state and token
-      localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+      removeStorageItem(STORAGE_KEYS.AUTH_TOKEN);
       setUser(null);
       setError(null);
     }
@@ -239,7 +239,7 @@ export function AuthProvider({ children }) {
 
       // If backend returns token and user, automatically log the user in
       if (data.token && data.user) {
-        localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, data.token);
+        setStorageItem(STORAGE_KEYS.AUTH_TOKEN, data.token);
         setUser(data.user);
       }
 
@@ -255,7 +255,7 @@ export function AuthProvider({ children }) {
    * Get current auth token
    */
   const getToken = () => {
-    return localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+    return getStorageItem(STORAGE_KEYS.AUTH_TOKEN);
   };
 
   /**

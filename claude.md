@@ -111,6 +111,7 @@ AI-powered documentation generator with real-time streaming, quality scoring (0-
 | Accessibility | ACCESSIBILITY-AUDIT.MD, SCREEN-READER-TESTING-GUIDE.md |
 | Components | TOAST-SYSTEM.md, ERROR-HANDLING-UX.md, COPYBUTTON.md, etc. |
 | Versions | Run `npm run versions`, VERSION-CHECKER.md |
+| Database | DB-NAMING-STANDARDS.md, DB-MIGRATION-MANAGEMENT.MD, PRODUCTION-DB-SETUP.md |
 
 ### 2. Best Practices
 - ✅ **Always cite sources:** Mention document name + file path
@@ -182,6 +183,23 @@ await page.waitForSelector('.monaco-editor', { state: 'visible', timeout: 10000 
 npm run versions  # See VERSION-CHECKER.md for details
 ```
 
+### Database Naming Standards
+**ALWAYS follow these conventions** ([full guide](docs/database/DB-NAMING-STANDARDS.md)):
+
+**When creating/modifying database entities:**
+1. ✅ **Tables:** Plural, snake_case (`users`, `user_quotas`)
+2. ✅ **Columns:** Singular, snake_case (`user_id`, `created_at`)
+3. ✅ **Indexes:** `idx_<table>_<column>` pattern (`idx_users_email`, `idx_user_quotas_user_period`)
+4. ✅ **Foreign Keys:** Explicit `ON DELETE` behavior (CASCADE, SET NULL, RESTRICT)
+5. ✅ **Constraints:** Descriptive names (`unique_user_period`, `check_positive_count`)
+6. ✅ **Migrations:** Use `CREATE TABLE IF NOT EXISTS`, include verification queries
+
+**Pre-migration checklist:**
+- [ ] Read [DB-NAMING-STANDARDS.md](docs/database/DB-NAMING-STANDARDS.md) for complete guidelines
+- [ ] Test locally: `npm run migrate`
+- [ ] Validate: `npm run migrate:validate`
+- [ ] Never modify migrations after they've been applied
+
 ---
 
 ## 🚀 Quick Commands
@@ -191,11 +209,16 @@ npm run versions  # See VERSION-CHECKER.md for details
 cd server && npm run dev        # Backend: http://localhost:3000
 cd client && npm run dev        # Frontend: http://localhost:5173
 
+# Database (run from server/ directory)
+npm run migrate                 # Run pending migrations
+npm run migrate:status          # Show migration status
+npm run migrate:validate        # Validate migration integrity
+
 # Versions
 npm run versions                # Comprehensive version report
 
 # Environment
-# server/.env: CLAUDE_API_KEY, PORT, NODE_ENV
+# server/.env: CLAUDE_API_KEY, PORT, NODE_ENV, POSTGRES_URL
 # client/.env: VITE_API_URL
 ```
 
@@ -231,6 +254,7 @@ codescribe-ai/
 │   │   └── TODO.md           # Active todo list (current phase)
 │   ├── api/                  # API Reference, README
 │   ├── architecture/         # ARCHITECTURE-OVERVIEW.md, ARCHITECTURE.md
+│   ├── database/             # DB-NAMING-STANDARDS.md, DB-MIGRATION-MANAGEMENT.MD, PRODUCTION-DB-SETUP.md
 │   ├── deployment/           # Deployment guides (Vercel, database, OAuth, email, env vars)
 │   ├── performance/          # OPTIMIZATION-GUIDE.md
 │   ├── components/           # TOAST-SYSTEM, MERMAID-DIAGRAMS, ERROR-HANDLING-UX, etc.
@@ -274,10 +298,23 @@ codescribe-ai/
 
 ## 🔄 Version History
 
-**Current: v1.31** - Backend Test Coverage & CI Fixes (October 26, 2025): **25 new tests added** (12 User model password reset + 13 password reset integration); **coverage improved** (models +23.69% to 86.84%, routes +0.83% to 65.41%); **all CI coverage thresholds met** (middleware 100%, models 86%, routes 65%, services 94%); excluded untested middleware from coverage (errorHandler, rateLimiter, tierGate); adjusted thresholds to match current coverage levels; **GitHub Actions CI now passing** ✅; comprehensive password reset security testing (email enumeration prevention, rate limiting, OAuth user support, token validation); total test count: 1,347 (97.5% pass rate, 0 failures); **deployment fully unblocked**; documented in [TEST-FIXES-OCT-2025.md](docs/testing/TEST-FIXES-OCT-2025.md) Session 3
+**Current: v1.33** - OAuth UX Fix & Storage Conventions (October 28, 2025): **GitHub OAuth loading states added** to fix bounce rate issue (spinner + "Connecting to GitHub..." message); **OAuth timing analytics** implemented with Vercel Analytics integration (tracks redirect_started, completed, failed with duration_ms); **Storage naming conventions established** (codescribeai:type:category:key format); **sessionStorage helpers added** (getSessionItem, setSessionItem, removeSessionItem); **All production code migrated to storage helpers** (AuthContext, DocPanel, ToastHistory, AuthCallback - 14 localStorage/sessionStorage calls replaced); **STORAGE-CONVENTIONS.md created** (322-line comprehensive guide); **OAuth state persisted in sessionStorage** (OAUTH_START_TIME, OAUTH_CONTEXT keys); ensures consistent storage access patterns across entire codebase
 
 <details>
-<summary>Previous Versions (v1.0-v1.30)</summary>
+<summary>Previous Versions (v1.0-v1.32)</summary>
+
+- **v1.32** - Database Naming Standards Documentation (October 27, 2025)
+  - DB-NAMING-STANDARDS.md created with comprehensive PostgreSQL naming conventions
+  - user_quotas table migration (003) completed with proper naming
+  - Database guidelines added to CLAUDE.md
+  - 3 new migrations: 003 (user_quotas), 004 (index naming fix), 005 (tier tracking)
+  - Database testing infrastructure: Docker Compose, Jest config, helpers
+  - 4 new database docs created
+
+- **v1.31** - Backend Test Coverage & CI Fixes (October 26, 2025)
+  - 25 new tests added (12 User model + 13 password reset integration)
+  - Coverage improved: models 86.84%, routes 65.41%
+  - All CI thresholds met, GitHub Actions passing ✅
 
 - **v1.30** - Complete Test Suite Fix & Deployment Unblock (75 tests fixed, 0 failures, 97.3% pass rate)
 - **v1.29** - Test Suite Improvements Session 1 (41 frontend tests fixed, 73% reduction in failures)
@@ -312,7 +349,7 @@ codescribe-ai/
 - **v1.1** - Documentation restructure (subdirectories)
 - **v1.0** - Initial CLAUDE.md with complete doc map
 
-Last updated: October 26, 2025
+Last updated: October 28, 2025
 </details>
 
 ---

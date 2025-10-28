@@ -9,6 +9,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.0.1] - 2025-10-28
+
+**Status:** ✅ Hotfix Release - OAuth UX Fix & Storage System Improvements
+
+### Fixed
+- **GitHub OAuth Loading States (HOTFIX for production bounce rate)**
+  - Added loading spinner and "Connecting to GitHub..." message to OAuth buttons
+  - Prevents users from thinking page is frozen during 3-10 second OAuth redirect delay
+  - Disabled button state prevents spam clicks during redirect
+  - Fixes bounce rate spike observed in production analytics
+
+### Added
+- **OAuth Timing Analytics**
+  - Integrated OAuth flow timing with Vercel Analytics
+  - Tracks `oauth_flow` events: `redirect_started`, `completed`, `failed`
+  - Captures `duration_ms` and `duration_seconds` for performance monitoring
+  - Context tracking (`login_modal` vs `signup_modal`) for better insights
+  - New `trackOAuth()` function in analytics.js
+
+- **Browser Storage Naming Conventions**
+  - Established `codescribeai:type:category:key` format for all storage keys
+  - Created STORAGE-CONVENTIONS.md (322-line comprehensive guide)
+  - Added sessionStorage helpers: `getSessionItem()`, `setSessionItem()`, `removeSessionItem()`
+  - OAuth state persisted in sessionStorage: `OAUTH_START_TIME`, `OAUTH_CONTEXT`
+  - Namespaced keys prevent collisions: `codescribeai:local:*` and `codescribeai:session:*`
+
+### Changed
+- **Storage System Migration**
+  - Migrated all production code to use storage helpers (14 calls replaced)
+  - AuthContext: 9 localStorage calls → helpers
+  - DocPanel: 2 localStorage calls → helpers
+  - ToastHistory: 2 localStorage calls → helpers
+  - AuthCallback: 1 localStorage call → helper
+  - Consistent error handling across all storage access
+  - Graceful degradation in incognito mode
+
+- **Database Documentation (from v2.0.0 work)**
+  - Added database/ folder to docs (4 new guides)
+  - Added development/ folder to docs (storage conventions)
+  - Updated README.md and DOCUMENTATION-MAP.md project structure
+  - Total: 6 new documentation files
+
+### Technical Details
+- 10 files modified (4 components, 2 utils, 4 docs)
+- Build tested and verified (no errors)
+- All storage now uses type-safe constants and helpers
+- OAuth timing data available in Vercel Analytics dashboard
+
+---
+
 ## [2.0.0] - 2025-10-26
 
 **Status:** ✅ Feature Release - Phase 2: Monetization Foundation (Authentication & Database)

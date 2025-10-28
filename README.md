@@ -65,6 +65,9 @@ codescribe-ai/
 │   ├── planning/                  # Product & development docs
 │   ├── api/                       # API documentation
 │   ├── architecture/              # System architecture
+│   ├── database/                  # Database schema, migrations, standards
+│   ├── development/               # Development guides & conventions
+│   ├── deployment/                # Deployment guides (Vercel, database, OAuth, email)
 │   ├── analytics/                 # Analytics implementation
 │   ├── performance/               # Performance optimization
 │   ├── testing/                   # Test documentation

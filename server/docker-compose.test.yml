@@ -1,0 +1,18 @@
+services:
+  postgres-test:
+    image: postgres:16
+    container_name: codescribe-test-db
+    environment:
+      POSTGRES_DB: codescribe_test
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_password
+    ports:
+      - "5433:5432"  # Use different port to avoid conflicts with local/dev databases
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test_user -d codescribe_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    # Use tmpfs for faster tests (data in RAM, cleared on container stop)
+    tmpfs:
+      - /var/lib/postgresql/data:rw,size=256m
