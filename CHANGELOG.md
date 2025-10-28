@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.0.1] - 2025-10-28
 
-**Status:** ✅ Hotfix Release - OAuth UX Fix & Storage System Improvements
+**Status:** ✅ Hotfix Release - OAuth UX Fix, Database Migrations & Storage Improvements
 
 ### Fixed
 - **GitHub OAuth Loading States (HOTFIX for production bounce rate)**
@@ -45,17 +45,66 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Consistent error handling across all storage access
   - Graceful degradation in incognito mode
 
-- **Database Documentation (from v2.0.0 work)**
+- **Database Migrations (from v2.0.0 work, deployed in v2.0.1)**
+  - **Migration 003:** Create user_quotas table for usage tracking
+    - daily_count, monthly_count, period_start, period_end columns
+    - Composite unique constraint on (user_id, period_start, period_end)
+    - ON DELETE CASCADE foreign key to users table
+  - **Migration 004:** Fix index naming to comply with DB-NAMING-STANDARDS.md
+    - Renamed usage_analytics indexes with full table name prefix
+    - Removed duplicate session index (PascalCase → snake_case)
+    - Added missing operation_type index
+  - **Migration 005:** Add tier tracking columns to users table
+    - tier_updated_at (timestamp, defaults to NOW())
+    - previous_tier (varchar, nullable)
+    - CHECK constraint for valid tier values (free, starter, pro, team, enterprise)
+    - Backfilled tier_updated_at = created_at for existing users
+  - All migrations tested with Docker PostgreSQL (25 integration tests passing)
+  - Migrations auto-apply during Vercel deployment (see vercel.json)
+
+- **Database Documentation**
   - Added database/ folder to docs (4 new guides)
   - Added development/ folder to docs (storage conventions)
   - Updated README.md and DOCUMENTATION-MAP.md project structure
   - Total: 6 new documentation files
 
+### Fixed (Test Suite)
+- **Database Test Suite Separation**
+  - Excluded database integration tests from default `npm test` suite
+  - Database tests now only run with explicit `npm run test:db` command
+  - Prevents CI failures when migrations haven't been applied
+  - Default suite: 373 tests (7s, no database required)
+  - Database suite: 25 tests (0.25s, requires migrations)
+  - Updated jest.config.cjs to ignore `/src/db/__tests__/` directory
+  - Updated jest.config.db.cjs to override ignore patterns for database tests
+  - Updated DATABASE-TESTING-GUIDE.md with test separation documentation
+
+### Documentation
+- **Comprehensive Testing Strategy** ([docs/testing/README.md](docs/testing/README.md))
+  - Added "Testing Layers" section (4 layers: Unit, Integration, Database, E2E)
+  - Added "Database Testing Workflow" (6-step process for migration testing)
+  - Added "Pre-Deployment Checklists" (with/without database changes)
+  - Updated Quick Stats to reflect current test counts (796 tests, 100% passing)
+  - Documented test separation strategy (database tests run locally, not in CI)
+  - Clarified Vercel auto-migration (`vercel.json` buildCommand runs migrations)
+
+- **Emergency Rollback Procedures** ([docs/deployment/RELEASE-PROCESS.md](docs/deployment/RELEASE-PROCESS.md))
+  - Added "Database Rollback Scenarios" section (4 scenarios)
+  - Scenario 1: Migration failed to apply (safe rollback)
+  - Scenario 2: Migration succeeded, app broken (fix-forward required)
+  - Scenario 3: Data corruption/loss (emergency procedures, Neon restore)
+  - Scenario 4: Migration partially applied (recovery steps)
+  - Prevention strategies for each scenario
+  - Emergency contacts and recovery time objectives
+
 ### Technical Details
 - 10 files modified (4 components, 2 utils, 4 docs)
+- 3 files modified (jest configs for test separation, testing README)
 - Build tested and verified (no errors)
 - All storage now uses type-safe constants and helpers
 - OAuth timing data available in Vercel Analytics dashboard
+- Test suite now properly separated (unit vs database tests)
+- Comprehensive testing documentation added (layers, workflows, checklists)
 
 ---
 

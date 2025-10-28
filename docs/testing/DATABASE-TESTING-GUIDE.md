@@ -603,6 +603,84 @@ describe('Migration 005: Add Tier Tracking Columns', () => {
 
 ---
 
+## Test Suite Separation
+
+### Current Implementation (October 28, 2025)
+
+**Database tests are separated from the default test suite** to prevent failures in CI where migrations haven't been run.
+
+### Jest Configuration
+
+**Default Test Suite (`jest.config.cjs`):**
+```javascript
+testPathIgnorePatterns: [
+  '/node_modules/',
+  '/dist/',
+  '/src/db/__tests__/', // Database tests excluded - run separately
+],
+```
+
+**Database Test Suite (`jest.config.db.cjs`):**
+```javascript
+// Override to allow database tests
+testPathIgnorePatterns: ['/node_modules/', '/dist/'],
+
+testMatch: [
+  '**/__tests__/**/migrations-*.test.js',
+  '**/__tests__/**/db-*.test.js',
+  '**/__tests__/**/schema-*.test.js'
+],
+```
+
+### Running Tests
+
+```bash
+# Default test suite (NO database required)
+npm test                     # 373 tests (excludes 65 database tests)
+
+# Database tests ONLY (requires migrations applied)
+npm run test:db              # 25 tests (migrations-004-005.test.js)
+
+# With Docker setup
+npm run test:db:setup        # Start test database
+npm run migrate              # Run migrations
+npm run test:db              # Run database tests
+npm run test:db:teardown     # Stop test database
+```
+
+### Why This Separation?
+
+1. **CI/CD Compatibility**: GitHub Actions runs unit tests without a database
+2. **Fast Feedback**: Default test suite runs in ~7s without database overhead
+3. **Explicit Control**: Database tests only run when explicitly requested
+4. **Local Development**: Developers can run full suite after running migrations
+
+### File Structure
+
+```
+server/src/db/__tests__/
+├── README.md                        # Database test documentation
+├── helpers/
+│   ├── setup.js                     # Test database connection
+│   ├── jest-setup.js                # Jest configuration
+│   └── load-env.js                  # Load .env.test
+└── migrations-004-005.test.js       # Migration integration tests (25 tests)
+```
+
+### Current Test Stats
+
+**Default Suite (`npm test`):**
+- Test Suites: 15 passed, 1 skipped (database tests)
+- Tests: 373 passed, 21 skipped (database tests)
+- Time: ~7s
+
+**Database Suite (`npm run test:db`):**
+- Test Suites: 1 passed
+- Tests: 25 passed (all migration 004-005 tests)
+- Time: ~0.25s (with pre-applied migrations)
+
+---
+
 ## CI/CD Integration
 
 ### GitHub Actions Workflow
