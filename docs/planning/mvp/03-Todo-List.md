@@ -2673,7 +2673,7 @@ All development is complete. The codebase is production-ready and requires only:
 2. README updates with live demo URL
 3. Optional: Demo video and launch announcements
 
-See **[MVP-DEPLOY-LAUNCH.md](../deployment/MVP-DEPLOY-LAUNCH.md)** for deployment tasks.
+See **[MVP-DEPLOY-LAUNCH.md](./MVP-DEPLOY-LAUNCH.md)** for deployment tasks.
 
 ### 🚀 Future Phases (Post-MVP)
 

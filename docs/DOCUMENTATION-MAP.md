@@ -66,7 +66,7 @@ This document serves as the complete navigation hub for all CodeScribe AI docume
 - [STORAGE-CONVENTIONS.md](development/STORAGE-CONVENTIONS.md) - Browser storage naming conventions (localStorage, sessionStorage)
 
 **Deployment:**
-- [MVP-DEPLOY-LAUNCH.md](deployment/MVP-DEPLOY-LAUNCH.md) - Deployment checklist and guide
+- [MVP-DEPLOY-LAUNCH.md](planning/mvp/MVP-DEPLOY-LAUNCH.md) - Deployment checklist and guide
 - [VERCEL-POSTGRES-SETUP.md](deployment/VERCEL-POSTGRES-SETUP.md) - Neon database setup
 - [RESEND-SETUP.md](deployment/RESEND-SETUP.md) - Email service configuration
 - [DATABASE-ENVIRONMENT-CHECKLIST.md](deployment/DATABASE-ENVIRONMENT-CHECKLIST.md) - Environment setup

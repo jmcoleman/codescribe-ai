@@ -857,7 +857,7 @@ After completing setup:
 
 **Deployment:**
 - [DATABASE-ENVIRONMENT-CHECKLIST.md](./DATABASE-ENVIRONMENT-CHECKLIST.md) - Verify database separation
-- [MVP-DEPLOY-LAUNCH.md](./MVP-DEPLOY-LAUNCH.md) - Production deployment
+- [MVP-DEPLOY-LAUNCH.md](../planning/mvp/MVP-DEPLOY-LAUNCH.md) - Production deployment
 - [DEPLOYMENT-CHECKLIST.md](./DEPLOYMENT-CHECKLIST.md) - Pre-launch checklist
 
 ---

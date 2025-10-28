@@ -237,7 +237,7 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 - ✅ No broken links or missing assets
 
 **Reference Documentation:**
-- [MVP-DEPLOY-LAUNCH.md](../../deployment/MVP-DEPLOY-LAUNCH.md) - Complete deployment guide with troubleshooting
+- [MVP-DEPLOY-LAUNCH.md](../mvp/MVP-DEPLOY-LAUNCH.md) - Complete deployment guide with troubleshooting
 
 ---
 
@@ -923,7 +923,7 @@ Features are tracked here when they:
 - [Screen Reader Testing Guide](../testing/SCREEN-READER-TESTING-GUIDE.md) - Accessibility testing
 
 ### Deployment & Launch
-- [MVP Deploy & Launch](../../deployment/MVP-DEPLOY-LAUNCH.md) - Complete deployment guide
+- [MVP Deploy & Launch](../mvp/MVP-DEPLOY-LAUNCH.md) - Complete deployment guide
 - [Roadmap](ROADMAP.md) - This document
 
 ---
