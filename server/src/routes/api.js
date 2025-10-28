@@ -3,6 +3,10 @@ import multer from 'multer';
 import path from 'path';
 import docGenerator from '../services/docGenerator.js';
 import { apiLimiter, generationLimiter } from '../middleware/rateLimiter.js';
+import { checkUsage, incrementUsage } from '../middleware/tierGate.js';
+import Usage from '../models/Usage.js';
+import { TIER_FEATURES, TIER_PRICING } from '../config/tiers.js';
+import { requireAuth } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -16,7 +20,7 @@ function formatBytes(bytes) {
 }
 
 // Line 17 - add before route handler
-router.post('/generate', apiLimiter, generationLimiter, async (req, res) => {
+router.post('/generate', apiLimiter, generationLimiter, checkUsage(), async (req, res) => {
   try {
     const { code, docType, language } = req.body;
 
@@ -40,6 +44,16 @@ router.post('/generate', apiLimiter, generationLimiter, async (req, res) => {
       streaming: false
     });
 
+    // Track usage after successful generation
+    const userIdentifier = req.user?.id || `ip:${req.ip || req.socket?.remoteAddress || 'unknown'}`;
+    try {
+      await incrementUsage(userIdentifier);
+      console.log(`[Usage] Incremented usage for ${req.user?.id ? `user ${req.user.id}` : `IP ${userIdentifier}`}`);
+    } catch (usageError) {
+      // Don't fail the request if usage tracking fails - just log it
+      console.error('[Usage] Failed to increment usage:', usageError);
+    }
+
     res.json(result);
   } catch (error) {
     console.error('Generate error:', error);
@@ -51,7 +65,7 @@ router.post('/generate', apiLimiter, generationLimiter, async (req, res) => {
 });
 
 // Line 51 - add before route handler
-router.post('/generate-stream', apiLimiter, generationLimiter, async (req, res) => { 
+router.post('/generate-stream', apiLimiter, generationLimiter, checkUsage(), async (req, res) => { 
   try {
     const { code, docType, language } = req.body;
 
@@ -88,6 +102,16 @@ router.post('/generate-stream', apiLimiter, generationLimiter, async (req, res) 
         })}\n\n`);
       }
     });
+
+    // Track usage after successful generation
+    const userIdentifier = req.user?.id || `ip:${req.ip || req.socket?.remoteAddress || 'unknown'}`;
+    try {
+      await incrementUsage(userIdentifier);
+      console.log(`[Usage] Incremented usage for ${req.user?.id ? `user ${req.user.id}` : `IP ${userIdentifier}`} (stream)`);
+    } catch (usageError) {
+      // Don't fail the request if usage tracking fails - just log it
+      console.error('[Usage] Failed to increment usage:', usageError);
+    }
 
     res.write(`data: ${JSON.stringify({
       type: 'complete',
@@ -218,6 +242,175 @@ router.post('/upload', apiLimiter, (req, res) => {
       });
     }
   });
+});
+
+// GET /api/user/usage - Get current user's usage statistics
+router.get('/user/usage', requireAuth, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const tier = req.user.tier || 'free';
+
+    // Get usage from database
+    const usage = await Usage.getUserUsage(userId);
+
+    // Get tier limits
+    const tierConfig = TIER_FEATURES[tier];
+    const dailyLimit = tierConfig.dailyGenerations;
+    const monthlyLimit = tierConfig.monthlyGenerations;
+
+    // Calculate reset times
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+
+    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+    res.json({
+      tier,
+      daily: {
+        used: usage.dailyGenerations,
+        limit: dailyLimit,
+        remaining: dailyLimit === -1 ? 'unlimited' : Math.max(0, dailyLimit - usage.dailyGenerations)
+      },
+      monthly: {
+        used: usage.monthlyGenerations,
+        limit: monthlyLimit,
+        remaining: monthlyLimit === -1 ? 'unlimited' : Math.max(0, monthlyLimit - usage.monthlyGenerations)
+      },
+      resetTimes: {
+        daily: tomorrow.toISOString(),
+        monthly: nextMonth.toISOString()
+      }
+    });
+  } catch (error) {
+    console.error('[Usage] Failed to get user usage:', error);
+    res.status(500).json({
+      error: 'Failed to retrieve usage',
+      message: error.message
+    });
+  }
+});
+
+// GET /api/user/tier-features - Get current user's tier and feature access
+router.get('/user/tier-features', requireAuth, async (req, res) => {
+  try {
+    const tier = req.user.tier || 'free';
+    const tierConfig = TIER_FEATURES[tier];
+
+    // Map tier config to feature flags for frontend
+    const features = {
+      // Core features (all tiers have these in Free tier model)
+      basicDocs: true,
+      streaming: tierConfig.streaming,
+      qualityScoring: tierConfig.qualityScoring,
+      monacoEditor: tierConfig.monacoEditor,
+      fileUpload: tierConfig.fileUpload,
+      mermaidDiagrams: tierConfig.mermaidDiagrams,
+
+      // Advanced features (tier-dependent)
+      batchProcessing: tierConfig.batchProcessing,
+      customTemplates: tierConfig.customTemplates,
+      apiAccess: tierConfig.apiAccess,
+      priorityQueue: tierConfig.priorityQueue,
+
+      // Team features
+      teamWorkspace: tierConfig.teamWorkspace || false,
+      sharedTemplates: tierConfig.sharedTemplates || false,
+
+      // Export formats
+      exportMarkdown: tierConfig.exportFormats.includes('markdown'),
+      exportHtml: tierConfig.exportFormats.includes('html'),
+      exportPdf: tierConfig.exportFormats.includes('pdf'),
+    };
+
+    const limits = {
+      maxFileSize: tierConfig.maxFileSize,
+      dailyGenerations: tierConfig.dailyGenerations,
+      monthlyGenerations: tierConfig.monthlyGenerations,
+      maxUsers: tierConfig.maxUsers || 1
+    };
+
+    res.json({
+      tier,
+      features,
+      limits,
+      support: tierConfig.support,
+      sla: tierConfig.sla
+    });
+  } catch (error) {
+    console.error('[Tier] Failed to get tier features:', error);
+    res.status(500).json({
+      error: 'Failed to retrieve tier features',
+      message: error.message
+    });
+  }
+});
+
+// GET /api/tiers - Get all tier definitions (public endpoint for pricing page)
+router.get('/tiers', (req, res) => {
+  try {
+    const tiers = Object.keys(TIER_FEATURES).map(tierId => {
+      const tierConfig = TIER_FEATURES[tierId];
+      const pricing = TIER_PRICING[tierId];
+
+      return {
+        id: tierId,
+        name: tierId.charAt(0).toUpperCase() + tierId.slice(1),
+        price: pricing.price,
+        period: pricing.period,
+        annual: pricing.annual,
+        description: pricing.description,
+        startingAt: pricing.startingAt,
+        limits: {
+          maxFileSize: tierConfig.maxFileSize,
+          dailyGenerations: tierConfig.dailyGenerations,
+          monthlyGenerations: tierConfig.monthlyGenerations,
+          maxUsers: tierConfig.maxUsers || 1
+        },
+        features: {
+          // Document types
+          documentTypes: tierConfig.documentTypes,
+
+          // Core features
+          streaming: tierConfig.streaming,
+          qualityScoring: tierConfig.qualityScoring,
+          monacoEditor: tierConfig.monacoEditor,
+          fileUpload: tierConfig.fileUpload,
+          mermaidDiagrams: tierConfig.mermaidDiagrams,
+
+          // Advanced features
+          batchProcessing: tierConfig.batchProcessing,
+          customTemplates: tierConfig.customTemplates,
+          priorityQueue: tierConfig.priorityQueue,
+          exportFormats: tierConfig.exportFormats,
+          apiAccess: tierConfig.apiAccess,
+
+          // Team features
+          teamWorkspace: tierConfig.teamWorkspace || false,
+          sharedTemplates: tierConfig.sharedTemplates || false,
+          versionHistory: tierConfig.versionHistory || false,
+          usageAnalytics: tierConfig.usageAnalytics || false,
+
+          // Enterprise features
+          ssoSaml: tierConfig.ssoSaml || false,
+          auditLogs: tierConfig.auditLogs || false,
+          whiteLabel: tierConfig.whiteLabel || false,
+          onPremise: tierConfig.onPremise || false
+        },
+        support: tierConfig.support,
+        sla: tierConfig.sla
+      };
+    });
+
+    res.json({ tiers });
+  } catch (error) {
+    console.error('[Tiers] Failed to get tiers:', error);
+    res.status(500).json({
+      error: 'Failed to retrieve tiers',
+      message: error.message
+    });
+  }
 });
 
 router.get('/health', (req, res) => {

@@ -1,8 +1,8 @@
 ## 🔧 CODESCRIBE AI TODO LIST
 
 **Status:** 📋 **ACTIVE** (Post-Production Enhancements)
-**Current Phase:** Phase 1 ✅ Complete | Phase 2 🚧 In Progress (Epic 2.1 Complete)
-**Last Updated:** October 26, 2025
+**Current Phase:** Phase 2 🚧 In Progress (Epic 2.1 ✅ Complete | Epic 2.2 Phase 2 ✅ Complete)
+**Last Updated:** October 28, 2025 - v2.1.0
 
 > **📌 Navigation Tip:**
 > - **In VS Code:** Use `Cmd+Shift+O` (Mac) or `Ctrl+Shift+O` (Windows/Linux) to see all headings and jump to sections
@@ -317,9 +317,9 @@ All email verification functionality has been implemented and verified:
 ### Epic 2.2: Tier System & Feature Flags
 
 **Estimated Duration:** 3-4 days
-**Status:** 📋 **NOT STARTED**
-**Implementation Files:** `server/src/config/tiers.js` ✅, `server/src/middleware/tierGate.js` ✅, `client/src/hooks/useFeature.js` ⚠️ (needs sync)
-**Reference:** [TIER-FEATURE-MATRIX.md](TIER-FEATURE-MATRIX.md)
+**Status:** 🚧 **IN PROGRESS** - Phase 2 ✅ Complete, Phase 3 Frontend Pending (October 28, 2025)
+**Implementation Files:** `server/src/config/tiers.js` ✅, `server/src/middleware/tierGate.js` ✅, `server/src/models/Usage.js` ✅, `server/src/routes/api.js` ✅, `client/src/hooks/useFeature.js` ⚠️ (needs sync)
+**Reference:** [TIER-FEATURE-MATRIX.md](TIER-FEATURE-MATRIX.md) | [USAGE-QUOTA-SYSTEM.md](../database/USAGE-QUOTA-SYSTEM.md)
 
 #### 📑 Phase Quick Links
 - [Phase 1: Database Schema & Models](#phase-1-database-schema--models-05-days) (0.5 days) - 17 tasks
@@ -334,13 +334,19 @@ All email verification functionality has been implemented and verified:
 
 #### Phase 1: Database Schema & Models (0.5 days)
 
-**Status:** ✅ **COMPLETE** (October 27, 2025) - Schema and migrations ready, awaiting models
+**Status:** ✅ **COMPLETE** (October 27-28, 2025)
 
 - [x] **Usage Table Schema** ✅ **Complete (Migration 003)**
   - [x] Create Usage table migration (user_id, daily_count, monthly_count, last_reset_date, period_start_date)
   - [x] Add unique constraint on (user_id, period_start_date)
   - [x] Create indexes: idx_user_quotas_user_period, idx_user_quotas_last_reset
   - [x] Add cascade delete on user_id foreign key
+
+- [x] **Anonymous Usage Table** ✅ **Complete (Migration 006, October 28, 2025)**
+  - [x] Create anonymous_quotas table (ip_address, daily_count, monthly_count)
+  - [x] Add unique constraint on (ip_address, period_start_date)
+  - [x] Create indexes: idx_anonymous_quotas_ip_period, idx_anonymous_quotas_last_reset
+  - [x] Support IPv4 and IPv6 addresses (VARCHAR(45))
 
 - [x] **User Table Updates** ✅ **Complete (Migration 005)**
   - [x] Verify tier column enum matches tiers.js exactly: 'free', 'starter', 'pro', 'team', 'enterprise' (lowercase)
@@ -355,14 +361,16 @@ All email verification functionality has been implemented and verified:
   - [x] Documented schema audit (DB-SCHEMA-AUDIT-2025-10-27.md)
   - [x] Created migration testing guide (DATABASE-TESTING-GUIDE.md)
 
-- [ ] **Usage Model Methods** ⏸️ **Pending Implementation**
-  - [ ] Create Usage model (server/src/models/Usage.js)
-  - [ ] Implement getUserUsage(userId) - replace tierGate.js placeholder
-  - [ ] Implement incrementUsage(userId) - replace tierGate.js placeholder
-  - [ ] Implement resetDailyUsage(userId)
-  - [ ] Implement resetMonthlyUsage(userId)
-  - [ ] Implement getCurrentPeriod() helper
-  - [ ] Implement getNextResetDate() helper
+- [x] **Usage Model Methods** ✅ **Complete (October 28, 2025)**
+  - [x] Create Usage model (server/src/models/Usage.js - 568 lines)
+  - [x] Implement getUserUsage(userIdentifier) - with lazy reset logic
+  - [x] Implement incrementUsage(userIdentifier) - atomic UPSERT
+  - [x] Implement resetDailyUsage(userIdentifier) - preserves monthly count
+  - [x] Implement resetMonthlyUsage(userIdentifier) - creates new period
+  - [x] Implement migrateAnonymousUsage(ipAddress, userId) - IP → User migration
+  - [x] Implement getUsageHistory(), deleteUserUsage(), getSystemUsageStats()
+  - [x] Support both authenticated (user ID) and anonymous (IP) tracking
+  - [x] 28 comprehensive unit tests (100% coverage)
 
 **Database Work Completed (October 27, 2025):**
 - **Migrations:** 003 (user_quotas table), 004 (index naming fix), 005 (tier tracking)
@@ -370,33 +378,40 @@ All email verification functionality has been implemented and verified:
 - **Testing:** Docker Compose test setup, Jest configuration, migration tests
 - **Total Files:** 15+ new files (migrations, tests, docs, helpers)
 
-#### Phase 2: Backend Implementation (1 day)
+#### Phase 2: Backend Implementation ✅ **COMPLETE (October 28, 2025)**
 
-- [ ] **Middleware Integration**
-  - [ ] Add checkUsage() to POST /api/generate (server/src/routes/generate.js)
-  - [ ] Add checkUsage() to POST /api/generate-stream (server/src/routes/generate.js)
-  - [ ] Add addTierHeaders() to app.js (global middleware)
-  - [ ] Test file size limits with different tiers
+- [x] **Middleware Integration** ✅ **Complete**
+  - [x] Add checkUsage() to POST /api/generate (server/src/routes/api.js:20)
+  - [x] Add checkUsage() to POST /api/generate-stream (server/src/routes/api.js:65)
+  - [x] Middleware chain: apiLimiter → generationLimiter → checkUsage() → generate
+  - [x] File size limits enforced in tierGate.js (max 100KB for free tier)
 
-- [ ] **Usage Tracking Implementation**
-  - [ ] Replace getUserUsage() placeholder in tierGate.js with real database query
-  - [ ] Replace incrementUsage() placeholder with database update
-  - [ ] Add incrementUsage() call after successful generation (in both routes)
-  - [ ] Add error handling for database failures
-  - [ ] Add transaction support for usage updates
+- [x] **Usage Tracking Implementation** ✅ **Complete**
+  - [x] Integrated Usage.getUserUsage() in tierGate.js checkUsage() middleware
+  - [x] Integrated Usage.incrementUsage() in both generation routes
+  - [x] Added incrementUsage() after successful generation (lines 44-52, 103-111)
+  - [x] Graceful error handling (generation succeeds even if usage tracking fails)
+  - [x] Atomic UPSERT operations prevent race conditions
 
-- [ ] **API Endpoints**
-  - [ ] Create GET /api/user/usage - current usage stats
-  - [ ] Create GET /api/user/tier-features - tier config for frontend
-  - [ ] Create GET /api/tiers - all tier info for pricing page
-  - [ ] Test with authenticated and unauthenticated users (IP fallback)
+- [x] **Auth Integration** ✅ **Complete**
+  - [x] Added Usage.migrateAnonymousUsage() to POST /api/auth/signup (lines 48-58)
+  - [x] Added Usage.migrateAnonymousUsage() to POST /api/auth/login (lines 114-124)
+  - [x] Added Usage.migrateAnonymousUsage() to GET /api/auth/github/callback (lines 238-248)
+  - [x] Seamless IP → User migration on account creation
 
-- [ ] **Usage Reset System**
-  - [ ] Create cron job for daily reset (server/src/jobs/resetDailyUsage.js)
-  - [ ] Create cron job for monthly reset (server/src/jobs/resetMonthlyUsage.js)
-  - [ ] Use node-cron for scheduling (0 0 * * * for daily, 0 0 1 * * for monthly)
-  - [ ] Add logging for reset operations
-  - [ ] Test reset logic with different timezones
+- [x] **API Endpoints** ✅ **Complete (October 28, 2025)**
+  - [x] Create GET /api/user/usage - current usage stats (server/src/routes/api.js:248)
+  - [x] Create GET /api/user/tier-features - tier config for frontend (server/src/routes/api.js:296)
+  - [x] Create GET /api/tiers - all tier info for pricing page (server/src/routes/api.js:351)
+  - [x] All endpoints tested and working with authentication
+
+- [x] **Usage Reset System** ✅ **Complete (Lazy Reset - No Cron Jobs)**
+  - [x] ~~Create cron job for daily reset~~ **Not needed - using lazy reset**
+  - [x] ~~Create cron job for monthly reset~~ **Not needed - using lazy reset**
+  - [x] Lazy reset mechanism implemented (on-demand, serverless-friendly)
+  - [x] Daily reset triggers automatically on first request after midnight
+  - [x] Monthly reset uses period_start_date as part of primary key (new month = new record)
+  - [x] Documented in USAGE-QUOTA-SYSTEM.md (750+ lines)
 
 #### Phase 3: Frontend Implementation (1-1.5 days)
 
@@ -439,13 +454,18 @@ All email verification functionality has been implemented and verified:
 #### Phase 4: Testing (0.5-1 day)
 
 - [ ] **Unit Tests**
+  - [x] ✅ Test Usage model methods (28 tests) - **COMPLETE** (October 28, 2025)
   - [ ] Test tierGate.requireFeature() middleware (20 tests)
   - [ ] Test tierGate.checkUsage() middleware (15 tests)
   - [ ] Test tierGate.requireTier() middleware (10 tests)
-  - [ ] Test Usage model methods (25 tests)
   - [ ] Test usage reset functions (10 tests)
 
-- [ ] **Integration Tests**
+- [ ] **Integration Tests for Generation Routes** (Priority 1)
+  - [ ] Create `server/src/routes/__tests__/api.test.js`
+  - [ ] Test quota enforcement (3/day, 10/month limits)
+  - [ ] Test usage tracking (incrementUsage after generation)
+  - [ ] Test anonymous user tracking by IP
+  - [ ] Test 429 response format with upgrade info
   - [ ] Test usage tracking end-to-end (generate → increment → verify)
   - [ ] Test daily usage limit enforcement
   - [ ] Test monthly usage limit enforcement
@@ -453,6 +473,21 @@ All email verification functionality has been implemented and verified:
   - [ ] Test tier downgrade (pro → free, verify limits enforced)
   - [ ] Test tier upgrade (free → pro, verify limits increased)
   - [ ] Test usage reset (simulate daily/monthly reset)
+
+- [ ] **Auth Migration Integration Tests** (Priority 2)
+  - [ ] Test migrateAnonymousUsage() on signup
+  - [ ] Test migrateAnonymousUsage() on login
+  - [ ] Test migrateAnonymousUsage() on GitHub OAuth
+  - [ ] Test merge logic (anonymous + existing user usage)
+  - [ ] Test migration with no anonymous usage (graceful handling)
+  - [ ] Test migration failure doesn't break auth flow
+
+- [ ] **Tier Config Unit Tests** (Priority 3)
+  - [ ] Create `server/src/config/__tests__/tiers.test.js`
+  - [ ] Test getTierFeatures() for all tiers
+  - [ ] Test checkUsageLimits() with various scenarios
+  - [ ] Test hasFeature() for feature gates
+  - [ ] Test getUpgradePath() recommendations
 
 - [ ] **E2E Tests**
   - [ ] Test free user quota enforcement (10 docs then block)
@@ -466,7 +501,7 @@ All email verification functionality has been implemented and verified:
   - [ ] Test usage tracking for unauthenticated users (IP-based)
   - [ ] Test tier change mid-month (pro-rate usage?)
   - [ ] Test database failures (graceful degradation)
-  - [ ] Test cron job failures (retry logic)
+  - [ ] Test lazy reset performance (first request after midnight)
 
 #### Tier Configuration (Already Complete in tiers.js)
 

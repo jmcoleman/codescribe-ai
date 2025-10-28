@@ -9,6 +9,7 @@ import express from 'express';
 import passport from 'passport';
 import crypto from 'crypto';
 import User from '../models/User.js';
+import Usage from '../models/Usage.js';
 import {
   requireAuth,
   validateBody,
@@ -43,6 +44,18 @@ router.post(
 
       // Create new user (password will be hashed in User.create)
       const user = await User.create({ email, password });
+
+      // Migrate any anonymous usage from this IP to the new user account
+      const ipAddress = req.ip || req.socket.remoteAddress || 'unknown';
+      if (ipAddress && ipAddress !== 'unknown') {
+        try {
+          await Usage.migrateAnonymousUsage(ipAddress, user.id);
+          console.log(`[Auth] Migrated anonymous usage for IP ${ipAddress} to user ${user.id}`);
+        } catch (migrationError) {
+          // Don't fail signup if migration fails - log and continue
+          console.error('[Auth] Failed to migrate anonymous usage:', migrationError);
+        }
+      }
 
       // Generate JWT token
       const token = generateToken(user);
@@ -82,7 +95,7 @@ router.post(
   }),
   async (req, res, next) => {
     // Use Passport local strategy for authentication
-    passport.authenticate('local', { session: false }, (err, user, info) => {
+    passport.authenticate('local', { session: false }, async (err, user, info) => {
       if (err) {
         console.error('Login error:', err);
         return res.status(500).json({
@@ -96,6 +109,18 @@ router.post(
           success: false,
           error: info?.message || 'Invalid email or password'
         });
+      }
+
+      // Migrate any anonymous usage from this IP to the user account
+      const ipAddress = req.ip || req.socket.remoteAddress || 'unknown';
+      if (ipAddress && ipAddress !== 'unknown') {
+        try {
+          await Usage.migrateAnonymousUsage(ipAddress, user.id);
+          console.log(`[Auth] Migrated anonymous usage for IP ${ipAddress} to user ${user.id}`);
+        } catch (migrationError) {
+          // Don't fail login if migration fails - log and continue
+          console.error('[Auth] Failed to migrate anonymous usage:', migrationError);
+        }
       }
 
       // Generate JWT token
@@ -201,13 +226,25 @@ router.get(
   passport.authenticate('github', {
     failureRedirect: '/login?error=github_auth_failed'
   }),
-  (req, res) => {
+  async (req, res) => {
     try {
       // User authenticated via GitHub
       const user = req.user;
 
       if (!user) {
         return res.redirect('/login?error=no_user_data');
+      }
+
+      // Migrate any anonymous usage from this IP to the user account
+      const ipAddress = req.ip || req.socket.remoteAddress || 'unknown';
+      if (ipAddress && ipAddress !== 'unknown') {
+        try {
+          await Usage.migrateAnonymousUsage(ipAddress, user.id);
+          console.log(`[Auth] Migrated anonymous usage for IP ${ipAddress} to user ${user.id} (GitHub OAuth)`);
+        } catch (migrationError) {
+          // Don't fail OAuth callback if migration fails - log and continue
+          console.error('[Auth] Failed to migrate anonymous usage:', migrationError);
+        }
       }
 
       // Generate JWT token

@@ -584,6 +584,137 @@ Solution: Create migration 003 to fix it
 
 ---
 
+## Database Environments & Testing Workflow
+
+### Three-Tier Environment Strategy
+
+**CodeScribe AI uses three database environments for safe migration testing:**
+
+| Environment | Database | Connection | Purpose |
+|-------------|----------|------------|---------|
+| **Sandbox (Docker)** | `codescribe_test` | `localhost:5433` | Isolated testing, fully disposable |
+| **Dev (Neon)** | `neondb` | Neon pooler endpoint | Persistent development database |
+| **Production (Neon)** | `neondb` | Neon pooler endpoint | Live production database |
+
+### Clear Terminology
+
+**🐳 Sandbox DB Migration (Docker only)**
+```bash
+# Start isolated test database
+docker-compose -f docker-compose.test.yml up -d
+
+# Apply migration directly via psql
+docker exec -i codescribe-test-db psql -U test_user -d codescribe_test < src/db/migrations/006-new-migration.sql
+
+# Verify results
+docker exec codescribe-test-db psql -U test_user -d codescribe_test -c "\d table_name"
+
+# Cleanup (destroys all data)
+docker-compose -f docker-compose.test.yml down -v
+```
+**When to use:** Initial migration testing, can break things safely
+
+**🔧 Dev Migration (Neon dev database)**
+```bash
+# Apply to persistent dev database
+npm run migrate
+
+# Check migration status
+npm run migrate:status
+
+# Validate integrity
+npm run migrate:validate
+```
+**When to use:** After sandbox testing passes, before committing to git
+
+**🚀 Production Migration (Automatic)**
+```bash
+# Triggered automatically during Vercel deployment
+# Runs as part of build command: npm run migrate && npm run build
+```
+**When to use:** Never manually! Happens on git push to main
+
+### Migration Testing Workflow
+
+**Recommended Process:**
+
+```bash
+# 1. Create migration file
+# server/src/db/migrations/007-add-new-feature.sql
+
+# 2. Test in Docker sandbox first (isolated, safe to break)
+docker-compose -f docker-compose.test.yml up -d
+docker exec -i codescribe-test-db psql -U test_user -d codescribe_test < src/db/migrations/007-add-new-feature.sql
+
+# Verify it worked
+docker exec codescribe-test-db psql -U test_user -d codescribe_test -c "SELECT * FROM new_table LIMIT 1;"
+
+# 3. If sandbox test passes, apply to Neon dev
+npm run migrate
+
+# 4. Commit and push (production runs automatically)
+git add src/db/migrations/007-add-new-feature.sql
+git commit -m "Add migration 007: new feature"
+git push origin main
+# → GitHub Actions tests → Vercel deploys → Migration runs automatically
+```
+
+### AI Assistant Protocol
+
+**For Claude/AI assistants working on this codebase:**
+
+| User Says | AI Should Do | Commands |
+|-----------|--------------|----------|
+| "Test migration in sandbox" | Docker only, ask before touching Neon | `docker exec ... psql` |
+| "Run sandbox migration test" | Docker only, ask before touching Neon | `docker exec ... psql` |
+| "Apply dev migration" | Run npm migrate on Neon dev | `npm run migrate` |
+| "Deploy migration" | Remind: happens automatically | Nothing (explain workflow) |
+
+**Default behavior:** Always test in Docker first, then explicitly ask:
+> "✅ Docker sandbox tests passed! Ready to apply to Neon dev database? (This will run `npm run migrate`)"
+
+### Docker Test Database Setup
+
+**Configuration:**
+```yaml
+# docker-compose.test.yml
+services:
+  postgres-test:
+    image: postgres:16
+    container_name: codescribe-test-db
+    environment:
+      POSTGRES_DB: codescribe_test
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_password
+    ports:
+      - "5433:5432"  # Different port to avoid conflicts
+    tmpfs:
+      - /var/lib/postgresql/data:rw,size=256m  # In-memory for speed
+```
+
+**Connection String:**
+```bash
+# .env.test (for Docker)
+POSTGRES_URL=postgresql://test_user:test_password@localhost:5433/codescribe_test
+```
+
+**Helpful Commands:**
+```bash
+# Start test DB
+npm run test:db:setup
+
+# Stop test DB (keeps data)
+npm run test:db:teardown
+
+# Reset test DB (destroys all data)
+npm run test:db:reset
+
+# Run database integration tests
+npm run test:db
+```
+
+---
+
 ## Testing Strategy
 
 ### Unit Tests

@@ -11,6 +11,7 @@ import {
   getUpgradePath,
   checkUsageLimits,
 } from '../config/tiers.js';
+import Usage from '../models/Usage.js';
 
 /**
  * Middleware: Require specific feature access
@@ -64,11 +65,11 @@ export const requireFeature = (featureName) => {
 export const checkUsage = () => {
   return async (req, res, next) => {
     const userTier = req.user?.tier || 'free';
-    const userId = req.user?.id || req.ip; // Fallback to IP for anonymous users
+    const userId = req.user?.id;
+    const userIdentifier = userId || `ip:${req.ip}`; // Track by user ID or IP
 
-    // Get current usage (you'll implement this with your database)
-    // TODO: Replace with actual usage tracking service
-    const usage = await getUserUsage(userId);
+    // Get current usage from database
+    const usage = await Usage.getUserUsage(userIdentifier);
 
     // Get file size if uploading
     const fileSize = req.file?.size || req.body?.code?.length || 0;
@@ -160,8 +161,9 @@ export const requireTier = (minimumTier) => {
 export const addTierHeaders = () => {
   return async (req, res, next) => {
     const userTier = req.user?.tier || 'free';
-    const userId = req.user?.id || req.ip;
-    const usage = await getUserUsage(userId);
+    const userId = req.user?.id;
+    const userIdentifier = userId || `ip:${req.ip}`;
+    const usage = await Usage.getUserUsage(userIdentifier);
     const tierConfig = getTierFeatures(userTier);
 
     // Add tier info to response headers
@@ -182,63 +184,16 @@ export const addTierHeaders = () => {
 };
 
 /**
- * Helper: Get user usage from database
- *
- * TODO: Implement with actual database
- * For now, this is a placeholder that returns mock data
- *
- * @param {string} userId - User ID or IP address
- * @returns {Promise<Object>} Usage data
- */
-async function getUserUsage(userId) {
-  // PLACEHOLDER: Replace with actual database query
-  // Example implementation:
-  //
-  // const usage = await db.usage.findOne({
-  //   userId,
-  //   period: getCurrentPeriod(),
-  // });
-  //
-  // return {
-  //   dailyGenerations: usage?.dailyCount || 0,
-  //   monthlyGenerations: usage?.monthlyCount || 0,
-  //   resetDate: getNextResetDate(),
-  // };
-
-  return {
-    dailyGenerations: 0,
-    monthlyGenerations: 0,
-    resetDate: new Date(Date.now() + 24 * 60 * 60 * 1000), // Tomorrow
-  };
-}
-
-/**
  * Helper: Increment usage count
  *
- * Call this after successful generation
+ * Call this after successful generation. Supports both user IDs and IP-based tracking.
  *
- * @param {string} userId - User ID or IP address
- * @returns {Promise<void>}
+ * @param {string|number} userIdentifier - User ID (number) or IP address (string "ip:xxx")
+ * @param {number} count - Number to increment by (default: 1)
+ * @returns {Promise<Object>} Updated usage statistics
  */
-export async function incrementUsage(userId) {
-  // PLACEHOLDER: Replace with actual database update
-  // Example implementation:
-  //
-  // await db.usage.upsert({
-  //   where: { userId, period: getCurrentPeriod() },
-  //   update: {
-  //     dailyCount: { increment: 1 },
-  //     monthlyCount: { increment: 1 },
-  //   },
-  //   create: {
-  //     userId,
-  //     period: getCurrentPeriod(),
-  //     dailyCount: 1,
-  //     monthlyCount: 1,
-  //   },
-  // });
-
-  console.log(`[Usage] Incremented usage for user: ${userId}`);
+export async function incrementUsage(userIdentifier, count = 1) {
+  return await Usage.incrementUsage(userIdentifier, count);
 }
 
 /**
