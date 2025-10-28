@@ -63,7 +63,11 @@ module.exports = {
   },
 
   // Ignore patterns
-  testPathIgnorePatterns: ['/node_modules/', '/dist/'],
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '/dist/',
+    '/src/db/__tests__/', // Database tests require migrations, run separately with test:db
+  ],
 
   // Verbose output
   verbose: true,
