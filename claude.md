@@ -12,7 +12,7 @@
 AI-powered documentation generator with real-time streaming, quality scoring (0-100), and WCAG 2.1 AA compliance.
 
 **Key Metrics:**
-- 660+ tests (100% passing) | 95.81% backend coverage
+- 1,299 tests (100% passing) | 95.81% backend coverage
 - Lighthouse: 75/100 performance (+67%), 100/100 accessibility
 - Bundle: 78KB gzipped (-85% reduction)
 - Accessibility: 95/100 score, 0 axe violations
@@ -42,7 +42,7 @@ AI-powered documentation generator with real-time streaming, quality scoring (0-
 | Document | Use Case | Key Contents |
 |----------|----------|--------------|
 | [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) | Performance optimization | Lazy loading, bundle analysis, Core Web Vitals, maintenance |
-| [Testing README](docs/testing/README.md) | Test navigation hub | 660+ test stats, quick commands, coverage overview |
+| [Testing README](docs/testing/README.md) | Test navigation hub | 1,299 test stats, quick commands, coverage overview |
 | [COMPONENT-TEST-COVERAGE.md](docs/testing/COMPONENT-TEST-COVERAGE.md) | Coverage details ⭐ | 13/18 components tested, category breakdown, gaps |
 | [frontend-testing-guide.md](docs/testing/frontend-testing-guide.md) | React testing patterns | Vitest + RTL, mocking, a11y, interactions |
 | [TEST-FIXES-OCT-2025.md](docs/testing/TEST-FIXES-OCT-2025.md) | Test fix patterns ⭐ | 75 tests fixed, 10 patterns, 6 technical insights, 97.3% pass rate |
@@ -220,7 +220,41 @@ npm run versions                # Comprehensive version report
 # Environment
 # server/.env: CLAUDE_API_KEY, PORT, NODE_ENV, POSTGRES_URL
 # client/.env: VITE_API_URL
+
+# Testing
+cd client && npm test -- --run  # Run frontend tests (get counts)
+cd server && npm test           # Run backend tests (get counts)
 ```
+
+---
+
+## 📋 Version Bump Checklist
+
+**IMPORTANT:** When incrementing version in package.json files, always update test counts:
+
+```bash
+# 1. Get current test counts
+cd client && npm test -- --run 2>&1 | grep "Tests:"
+# Output example: Tests  926 passed | 15 skipped (941)
+
+cd .. && cd server && npm test 2>&1 | grep "Tests:"
+# Output example: Tests:       21 skipped, 373 passed, 394 total
+
+# 2. Update documentation with new counts
+# - claude.md line 15: "X,XXX tests (100% passing)"
+# - claude.md line 45: "X,XXX test stats"
+# - claude.md line 235: "X,XXX tests (XXX frontend, XXX backend, 10 E2E)"
+# - docs/testing/README.md lines 11-20: Update all test breakdowns
+```
+
+**Files to update on version bump:**
+- [ ] `package.json` (root) - Bump version
+- [ ] `client/package.json` - Bump version
+- [ ] `server/package.json` - Bump version
+- [ ] `claude.md` - Update test counts (3 locations: lines 15, 45, 235)
+- [ ] `docs/testing/README.md` - Update Quick Stats section (lines 11-20)
+- [ ] `CHANGELOG.md` - Add version entry with changes
+- [ ] Run `npm run versions` to verify all dependencies are current
 
 ---
 
@@ -232,7 +266,7 @@ npm run versions                # Comprehensive version report
 **Final Metrics:**
 - Accessibility: 95/100, WCAG 2.1 AA, 0 axe violations
 - Performance: 75/100 Lighthouse (+67%), 78KB bundle (-85%)
-- Testing: 660+ tests (513 frontend, 133 backend, 10 E2E), 100% passing
+- Testing: 1,299 tests (926 frontend, 373 backend, 10 E2E), 100% passing
 - Deployment: Vercel + GitHub Actions CI/CD, custom domain
 
 **Optional:** README screenshots, demo video, extended manual a11y testing

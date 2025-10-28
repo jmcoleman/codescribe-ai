@@ -8,20 +8,22 @@
 
 ## 📊 Quick Stats
 
-- **Total Tests:** 796 tests (100% passing)
-  - **Frontend:** 513 tests (Vitest + React Testing Library)
-    - Component Tests: 13/18 components (72% coverage)
-    - Integration Tests: Auth, upload, error handling
-  - **Backend:** 244 tests (Jest + Supertest)
-    - Unit Tests: 133 tests (services, models, utilities)
-    - Integration Tests: 111 tests (prompt quality, API contracts)
-  - **Database:** 25 tests (separate suite, Docker PostgreSQL)
-    - Migration validation, schema checks, constraints
+- **Total Tests:** 1,299 tests (100% passing)
+  - **Frontend:** 926 tests (Vitest + React Testing Library)
+    - Component Tests: 18/18 components (100% coverage)
+    - Integration Tests: Auth, OAuth, password reset, upload, error handling
+    - UI Tests: Toast system, modals, forms, storage helpers
+  - **Backend:** 373 tests (Jest + Supertest)
+    - Unit Tests: Services, models, utilities, middleware
+    - Integration Tests: Prompt quality, API contracts, authentication
+    - Security Tests: Password hashing, JWT validation, OAuth flows
+  - **Database:** 21 tests (skipped in default suite, run separately with Docker PostgreSQL)
+    - Migration validation, schema checks, constraints, user quotas
   - **E2E:** 10 tests (Playwright - file upload flow)
 - **Backend Coverage:** 95.81% statements, 88.72% branches
-- **Test Execution Time:** Unit ~7s, Integration ~5s, Database ~0.25s, E2E ~45s
+- **Test Execution Time:** Frontend ~10.6s, Backend ~6.5s, Database ~0.25s, E2E ~45s
 - **Coverage Target:** 70% ✅ EXCEEDED (95.81% backend)
-- **Recent Updates:** Test suite separation (Oct 28, 2025)
+- **Recent Updates:** Authentication & storage tests added (Oct 28, 2025)
 
 ---
 
