@@ -379,7 +379,7 @@ git push origin v2.0.0
 
 - [CHANGELOG.md](../../CHANGELOG.md) - Complete version history
 - [ROADMAP.md](../planning/roadmap/ROADMAP.md) - Product roadmap and versioning strategy
-- [MVP-DEPLOY-LAUNCH.md](./MVP-DEPLOY-LAUNCH.md) - Detailed deployment guide
+- [MVP-DEPLOY-LAUNCH.md](../planning/mvp/MVP-DEPLOY-LAUNCH.md) - Detailed deployment guide
 - [VERCEL-POSTGRES-SETUP.md](../planning/VERCEL-POSTGRES-SETUP.md) - Database setup
 - [DB-MIGRATION-MANAGEMENT.md](../planning/DB-MIGRATION-MANAGEMENT.md) - Migration procedures
 - [GitHub Actions Workflow](.github/workflows/test.yml) - CI/CD configuration

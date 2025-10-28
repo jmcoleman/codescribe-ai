@@ -1469,7 +1469,7 @@ After completing Resend setup:
 - [VERCEL-POSTGRES-SETUP.md](./VERCEL-POSTGRES-SETUP.md) - Database setup guide
 - [VERCEL-DEPLOYMENT-GUIDE.md](./VERCEL-DEPLOYMENT-GUIDE.md) - Complete deployment guide
 - [VERCEL-ENVIRONMENT-VARIABLES.md](./VERCEL-ENVIRONMENT-VARIABLES.md) - All environment variables
-- [MVP-DEPLOY-LAUNCH.md](./MVP-DEPLOY-LAUNCH.md) - Production deployment
+- [MVP-DEPLOY-LAUNCH.md](../planning/mvp/MVP-DEPLOY-LAUNCH.md) - Production deployment
 
 **Authentication:**
 - [PASSWORD-RESET-SETUP.md](../authentication/PASSWORD-RESET-SETUP.md) - Password reset configuration

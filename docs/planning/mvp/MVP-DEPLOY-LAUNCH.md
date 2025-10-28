@@ -21,7 +21,7 @@
 - ✅ Monorepo build optimization
 - ✅ API URL centralization via config
 
-> **Note:** For detailed deployment learnings and troubleshooting, see [DEPLOYMENT-LEARNINGS.md](../deployment/DEPLOYMENT-LEARNINGS.md), [VERCEL-DEPLOYMENT-GUIDE.md](../deployment/VERCEL-DEPLOYMENT-GUIDE.md), and [VERCEL-ENVIRONMENT-VARIABLES.md](../deployment/VERCEL-ENVIRONMENT-VARIABLES.md)
+> **Note:** For detailed deployment learnings and troubleshooting, see [DEPLOYMENT-LEARNINGS.md](../../deployment/DEPLOYMENT-LEARNINGS.md), [VERCEL-DEPLOYMENT-GUIDE.md](../../deployment/VERCEL-DEPLOYMENT-GUIDE.md), and [VERCEL-ENVIRONMENT-VARIABLES.md](../../deployment/VERCEL-ENVIRONMENT-VARIABLES.md)
 
 ---
 
