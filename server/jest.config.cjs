@@ -17,7 +17,6 @@ module.exports = {
     '!src/db/connection.js', // Database connection, tested via integration
     '!src/middleware/errorHandler.js', // Error handler middleware, used but not yet tested
     '!src/middleware/rateLimiter.js', // Rate limiting middleware, used but not yet tested
-    '!src/middleware/tierGate.js', // Tier gating middleware, not currently used in MVP
   ],
 
   // Coverage thresholds (fail if below)
