@@ -61,3 +61,5 @@ coverage/
 # Bundle analyzer output
 stats.html
 client/stats.html
+.vite/
+client/.vite/

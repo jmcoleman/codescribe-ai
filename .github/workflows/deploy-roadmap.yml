@@ -23,13 +23,19 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Prepare roadmap deployment
+        run: |
+          mkdir -p .deploy/docs/roadmap
+          cp docs/planning/roadmap/ROADMAP-TIMELINE.html .deploy/docs/roadmap/index.html
+          cp docs/planning/roadmap/roadmap-data.json .deploy/docs/roadmap/roadmap-data.json
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs/planning/roadmap
+          publish_dir: ./.deploy
           publish_branch: gh-pages
-          destination_dir: roadmap
+          destination_dir: ./
           keep_files: true
           force_orphan: false
           enable_jekyll: false
