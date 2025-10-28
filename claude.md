@@ -12,7 +12,7 @@
 AI-powered documentation generator with real-time streaming, quality scoring (0-100), and WCAG 2.1 AA compliance.
 
 **Key Metrics:**
-- 1,299 tests (100% passing) | 95.81% backend coverage
+- 1,363 tests (1,327 passing, 36 skipped) | 95.81% backend coverage
 - Lighthouse: 75/100 performance (+67%), 100/100 accessibility
 - Bundle: 78KB gzipped (-85% reduction)
 - Accessibility: 95/100 score, 0 axe violations
@@ -44,7 +44,7 @@ AI-powered documentation generator with real-time streaming, quality scoring (0-
 | Document | Use Case | Key Contents |
 |----------|----------|--------------|
 | [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) | Performance optimization | Lazy loading, bundle analysis, Core Web Vitals, maintenance |
-| [Testing README](docs/testing/README.md) | Test navigation hub | 1,299 test stats, quick commands, coverage overview |
+| [Testing README](docs/testing/README.md) | Test navigation hub | 1,363 test stats, quick commands, coverage overview |
 | [COMPONENT-TEST-COVERAGE.md](docs/testing/COMPONENT-TEST-COVERAGE.md) | Coverage details ⭐ | 13/18 components tested, category breakdown, gaps |
 | [frontend-testing-guide.md](docs/testing/frontend-testing-guide.md) | React testing patterns | Vitest + RTL, mocking, a11y, interactions |
 | [TEST-FIXES-OCT-2025.md](docs/testing/TEST-FIXES-OCT-2025.md) | Test fix patterns ⭐ | 75 tests fixed, 10 patterns, 6 technical insights, 97.3% pass rate |
@@ -113,7 +113,7 @@ AI-powered documentation generator with real-time streaming, quality scoring (0-
 | Accessibility | ACCESSIBILITY-AUDIT.MD, SCREEN-READER-TESTING-GUIDE.md |
 | Components | TOAST-SYSTEM.md, ERROR-HANDLING-UX.md, COPYBUTTON.md, etc. |
 | Versions | Run `npm run versions`, VERSION-CHECKER.md |
-| Database | DB-NAMING-STANDARDS.md, DB-MIGRATION-MANAGEMENT.MD, PRODUCTION-DB-SETUP.md |
+| Database | DB-NAMING-STANDARDS.md, DB-MIGRATION-MANAGEMENT.MD, USAGE-QUOTA-SYSTEM.md, PRODUCTION-DB-SETUP.md |
 
 ### 2. Best Practices
 - ✅ **Always cite sources:** Mention document name + file path
@@ -198,9 +198,15 @@ npm run versions  # See VERSION-CHECKER.md for details
 
 **Pre-migration checklist:**
 - [ ] Read [DB-NAMING-STANDARDS.md](docs/database/DB-NAMING-STANDARDS.md) for complete guidelines
-- [ ] Test locally: `npm run migrate`
+- [ ] Test in Docker sandbox first: See [DB-MIGRATION-MANAGEMENT.MD](docs/database/DB-MIGRATION-MANAGEMENT.MD#database-environments--testing-workflow)
+- [ ] Apply to Neon dev: `npm run migrate`
 - [ ] Validate: `npm run migrate:validate`
 - [ ] Never modify migrations after they've been applied
+
+**Migration Testing Workflow:**
+1. **Sandbox (Docker):** Test migration in isolated environment (port 5433)
+2. **Dev (Neon):** Apply to persistent dev database after sandbox passes
+3. **Production:** Automatic deployment when pushed to `main` branch
 
 ---
 
@@ -212,9 +218,15 @@ cd server && npm run dev        # Backend: http://localhost:3000
 cd client && npm run dev        # Frontend: http://localhost:5173
 
 # Database (run from server/ directory)
-npm run migrate                 # Run pending migrations
+npm run migrate                 # Run pending migrations on Neon dev
 npm run migrate:status          # Show migration status
 npm run migrate:validate        # Validate migration integrity
+
+# Database Testing (Docker sandbox)
+npm run test:db:setup           # Start Docker test database
+npm run test:db                 # Run database integration tests
+npm run test:db:teardown        # Stop Docker test database
+# See: docs/database/DB-MIGRATION-MANAGEMENT.MD for full testing workflow
 
 # Versions
 npm run versions                # Comprehensive version report
@@ -334,10 +346,18 @@ codescribe-ai/
 
 ## 🔄 Version History
 
-**Current: v1.33** - OAuth UX Fix & Storage Conventions (October 28, 2025): **GitHub OAuth loading states added** to fix bounce rate issue (spinner + "Connecting to GitHub..." message); **OAuth timing analytics** implemented with Vercel Analytics integration (tracks redirect_started, completed, failed with duration_ms); **Storage naming conventions established** (codescribeai:type:category:key format); **sessionStorage helpers added** (getSessionItem, setSessionItem, removeSessionItem); **All production code migrated to storage helpers** (AuthContext, DocPanel, ToastHistory, AuthCallback - 14 localStorage/sessionStorage calls replaced); **STORAGE-CONVENTIONS.md created** (322-line comprehensive guide); **OAuth state persisted in sessionStorage** (OAUTH_START_TIME, OAUTH_CONTEXT keys); ensures consistent storage access patterns across entire codebase
+**Current: v2.1.0** - Usage Tracking & Quota System Backend (October 28, 2025): **Phase 2 Backend Complete** for Epic 2.2 (Tier System & Feature Flags); **Usage Model created** (568 lines, 9 methods, 28 unit tests); **Database schema** for user_quotas (Migration 003) and anonymous_quotas (Migration 006) with lazy reset mechanism; **Three new API endpoints**: GET /api/user/usage (quota stats), GET /api/user/tier-features (feature access), GET /api/tiers (pricing page data); **Auth integration** with Usage.migrateAnonymousUsage() in signup/login/OAuth callbacks; **Generation routes** enhanced with checkUsage() middleware and incrementUsage() tracking; **USAGE-QUOTA-SYSTEM.md** comprehensive documentation (750+ lines); **1,363 tests** (926 frontend, 401 backend, 36 skipped); serverless-friendly architecture with atomic UPSERT operations; IP-based anonymous tracking with seamless user migration; production-ready backend for frontend Phase 3 integration
 
 <details>
-<summary>Previous Versions (v1.0-v1.32)</summary>
+<summary>Previous Versions (v1.0-v1.33)</summary>
+
+- **v1.33** - OAuth UX Fix & Storage Conventions (October 28, 2025)
+  - GitHub OAuth loading states added to fix bounce rate issue
+  - OAuth timing analytics with Vercel Analytics integration
+  - Storage naming conventions established (codescribeai:type:category:key)
+  - sessionStorage helpers added (getSessionItem, setSessionItem, removeSessionItem)
+  - All production code migrated to storage helpers
+  - STORAGE-CONVENTIONS.md created (322 lines)
 
 - **v1.32** - Database Naming Standards Documentation (October 27, 2025)
   - DB-NAMING-STANDARDS.md created with comprehensive PostgreSQL naming conventions
