@@ -2,28 +2,173 @@
 
 **Project:** CodeScribe AI - Intelligent Code Documentation Generator
 **Testing Status:** ✅ Comprehensive Coverage Across 3 Frameworks
-**Last Updated:** October 25, 2025
+**Last Updated:** October 28, 2025
 
 ---
 
 ## 📊 Quick Stats
 
-- **Total Tests:** 913+ (96.9% passing - 885/913)
-  - **Frontend:** 885/913 tests passing (Vitest + React Testing Library)
-    - Component Tests: 500+ tests
-    - Integration Tests: 100+ tests
-    - Auth Flow Tests: 285+ tests
-  - **Backend:** 395/409 tests passing (96.6%) (Jest + Supertest)
-    - Services: 50+ tests
-    - Authentication: 102 tests
-    - Migrations: 40 tests
-    - Routes & Integration: 83+ tests
-  - **E2E:** 10 tests (Playwright across 5 browsers)
-- **Component Coverage:** 18/18 frontend components tested
+- **Total Tests:** 796 tests (100% passing)
+  - **Frontend:** 513 tests (Vitest + React Testing Library)
+    - Component Tests: 13/18 components (72% coverage)
+    - Integration Tests: Auth, upload, error handling
+  - **Backend:** 244 tests (Jest + Supertest)
+    - Unit Tests: 133 tests (services, models, utilities)
+    - Integration Tests: 111 tests (prompt quality, API contracts)
+  - **Database:** 25 tests (separate suite, Docker PostgreSQL)
+    - Migration validation, schema checks, constraints
+  - **E2E:** 10 tests (Playwright - file upload flow)
 - **Backend Coverage:** 95.81% statements, 88.72% branches
-- **Test Execution Time:** Frontend ~15s, Backend ~5s, E2E ~2-4min
-- **Coverage Target:** 70% ✅ EXCEEDED (95.81% backend, 96.9% frontend)
-- **Recent Fixes:** 41 frontend tests fixed (Oct 25, 2025)
+- **Test Execution Time:** Unit ~7s, Integration ~5s, Database ~0.25s, E2E ~45s
+- **Coverage Target:** 70% ✅ EXCEEDED (95.81% backend)
+- **Recent Updates:** Test suite separation (Oct 28, 2025)
+
+---
+
+## 🏗️ Testing Layers
+
+### Layer 1: Unit Tests (Fastest, ~7s)
+**What:** Test individual functions/components in isolation
+**When:** Every code change
+**Database Required:** No
+
+```bash
+# Backend
+cd server && npm run test:unit          # 133 tests
+
+# Frontend
+cd client && npm test                    # 513 tests
+```
+
+### Layer 2: Integration Tests (~5s)
+**What:** Test multiple components working together
+**When:** Feature complete, before merge
+**Database Required:** No
+
+```bash
+cd server && npm run test:integration    # 111 tests
+```
+
+### Layer 3: Database Tests (~0.25s)
+**What:** Test database schema, migrations, constraints
+**When:** Database changes made
+**Database Required:** Yes (Docker PostgreSQL on port 5433)
+
+```bash
+# See "Database Testing Workflow" section below
+cd server && npm run test:db             # 25 tests
+```
+
+### Layer 4: E2E Tests (~45s)
+**What:** Test complete user flows in real browser
+**When:** Critical paths, before major releases
+**Database Required:** Optional
+
+```bash
+cd client && npm run test:e2e            # 10 tests
+```
+
+---
+
+## 🗂️ Database Testing Workflow
+
+**For releases with database migrations:**
+
+```bash
+# 1. Start test database (if not already running)
+cd server && npm run test:db:setup
+# Creates Docker container: postgres:16 on port 5433
+
+# 2. Apply migrations to test DB
+POSTGRES_URL=postgresql://test_user:test_password@localhost:5433/codescribe_test \
+  npm run migrate
+
+# 3. Run database tests
+npm run test:db
+# Expected: All 25+ tests pass
+
+# 4. Apply migrations to development DB
+npm run migrate
+# Uses .env POSTGRES_URL (your local/Neon dev database)
+
+# 5. Test application with new schema
+npm run dev
+# Verify all features work with migrated schema
+
+# 6. Commit migration + tests
+git add src/db/migrations/*.sql src/db/__tests__/*.test.js
+git commit -m "Add migration XXX with tests"
+
+# Production deployment: Vercel automatically runs migrations
+# See vercel.json buildCommand: "npm run migrate"
+```
+
+**Note:** Database tests are **excluded from CI** (GitHub Actions). They run locally before merge to verify migrations work correctly. Vercel applies migrations automatically during deployment.
+
+---
+
+## 📋 Pre-Deployment Checklists
+
+### For Releases WITHOUT Database Changes
+**Example:** v2.0.1 (OAuth UX, storage improvements)
+
+```bash
+# Testing
+□ cd server && npm test                 # Backend unit/integration
+□ cd client && npm test                 # Frontend tests
+□ Manual smoke test: npm run dev
+
+# Quality
+□ npx prettier --check "src/**/*.js"   # Linting
+□ cd client && npm run build           # Build succeeds
+□ No console errors in browser
+
+# Documentation
+□ CHANGELOG.md updated
+□ package.json versions bumped (root, client, server)
+
+# Deployment
+□ git push origin main
+□ GitHub Actions green ✅
+□ Vercel deployment succeeds
+□ Production smoke test (visit site, test OAuth flow)
+□ Monitor Vercel Analytics for 24 hours
+```
+
+### For Releases WITH Database Changes
+**Example:** v2.1.0 (migrations 004-005)
+
+```bash
+# Database Testing (see workflow above)
+□ Docker test DB running
+□ Migrations applied to test DB
+□ npm run test:db passes (all 25+ tests)
+□ Migrations applied to dev DB
+□ npm run migrate:validate passes
+□ App tested with new schema
+
+# Standard Testing
+□ All unit/integration tests pass
+□ Build succeeds, linting passes
+□ Documentation updated
+
+# Database Documentation
+□ Migration documented in CHANGELOG.md
+□ Follows DB-NAMING-STANDARDS.md (if schema changes)
+□ Migration has descriptive name and SQL comments
+
+# Deployment
+□ git push origin main
+□ GitHub Actions green ✅
+□ Monitor Vercel build logs (migrations auto-run)
+□ Verify production database (check Neon dashboard)
+□ Production smoke test (test DB-dependent features)
+□ Monitor for 24-48 hours (error rates, DB performance)
+```
+
+**Emergency Rollback:**
+- If migration fails: Create fix-forward migration (never modify applied migrations)
+- Prevention: Always use `IF NOT EXISTS`, test in Docker first, make migrations idempotent
 
 ---
 
@@ -90,6 +235,16 @@
 - Language support verification
 - Theme configuration
 - Editor integration
+
+#### [Database Testing Guide](./DATABASE-TESTING-GUIDE.md) ⭐ **RECOMMENDED**
+**Comprehensive database testing best practices**
+
+- Testing layers (unit, schema, integration, performance)
+- Migration testing strategy
+- Test database setup (Docker PostgreSQL)
+- CI/CD integration patterns
+- **Test suite separation** (database tests excluded from default suite)
+- Current implementation (25 tests, migrations 004-005)
 
 #### [Database Migration Tests](./DATABASE-MIGRATION-TESTS.md)
 **Automated migration system test suite**

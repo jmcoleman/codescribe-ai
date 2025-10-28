@@ -601,12 +601,20 @@ If critical issues are discovered post-release:
 
 ### Option 1: Rollback in Vercel (Fastest)
 
+**When to use:** Code issues, NO database changes in the release
+
 1. Go to Vercel Dashboard → Deployments
 2. Find the previous stable deployment
 3. Click "..." → "Promote to Production"
 4. Previous version is now live (~30 seconds)
 
+⚠️ **WARNING:** If the release included database migrations, see "Database Rollback Scenarios" below.
+
+---
+
 ### Option 2: Revert Git Tag (Permanent Fix)
+
+**When to use:** Code-only issues, or to prevent future deployments of bad code
 
 ```bash
 # Revert the problematic commit(s)
@@ -623,7 +631,13 @@ git tag -d v1.3.0
 git push origin :refs/tags/v1.3.0
 ```
 
+⚠️ **WARNING:** Does NOT undo database migrations that already ran.
+
+---
+
 ### Option 3: Hot Fix Release
+
+**When to use:** Quick fix needed, keep release tagged
 
 ```bash
 # Create hotfix branch from last stable tag
@@ -645,6 +659,186 @@ git checkout main
 git merge hotfix/v1.3.1
 git push origin main
 ```
+
+---
+
+### Database Rollback Scenarios
+
+**IMPORTANT:** Vercel's `buildCommand` runs `npm run migrate` automatically, so migrations apply during deployment.
+
+#### Scenario 1: Migration Failed to Apply
+
+**Symptoms:**
+- Vercel build fails
+- Error in Vercel logs: "Migration XXX failed"
+- Previous version still live (deployment never completed)
+
+**Action:**
+```bash
+✅ SAFE - Migration never ran, database unchanged
+
+# 1. Fix migration SQL locally
+vim server/src/db/migrations/XXX-description.sql
+
+# 2. Test locally
+cd server && npm run test:db:setup
+POSTGRES_URL=postgresql://test_user:test_password@localhost:5433/codescribe_test \
+  npm run migrate
+npm run test:db  # Verify tests pass
+
+# 3. Commit fix and redeploy
+git add server/src/db/migrations/XXX-description.sql
+git commit -m "fix: correct migration XXX syntax"
+git push origin main
+```
+
+---
+
+#### Scenario 2: Migration Succeeded, App Broken
+
+**Symptoms:**
+- Vercel deployment succeeded
+- Migration applied to production database
+- Application errors (500s, crashes, features broken)
+
+**Action:**
+```bash
+⚠️ CRITICAL - Migration already applied, cannot simply revert code
+
+# Option A: Fix-Forward (RECOMMENDED)
+# 1. Create fix migration
+vim server/src/db/migrations/XXX-fix-previous.sql
+
+# 2. Test locally
+npm run test:db:setup
+POSTGRES_URL=postgresql://test_user:test_password@localhost:5433/codescribe_test \
+  npm run migrate
+npm run test:db
+
+# 3. Deploy fix
+git add server/src/db/migrations/XXX-fix-previous.sql
+git commit -m "fix: correct migration XXX issues"
+git push origin main
+
+# Option B: Temporary Code Rollback (if fix needs time)
+# 1. Rollback code in Vercel (Option 1 above)
+# 2. Database has new schema, old code must tolerate it
+# 3. Fix code to work with both old and new schema
+# 4. Deploy fix-forward migration when ready
+```
+
+**Prevention:**
+- Always use `IF NOT EXISTS` / `IF EXISTS`
+- Make migrations backwards-compatible when possible
+- Test with both old and new code versions
+
+---
+
+#### Scenario 3: Data Corruption or Loss
+
+**Symptoms:**
+- Migration deleted data unintentionally
+- Constraints too strict, blocking valid operations
+- Data transformed incorrectly
+
+**Action:**
+```bash
+🚨 EMERGENCY - Requires immediate database intervention
+
+# 1. STOP DEPLOYMENTS (prevent further damage)
+# Disable auto-deploy in Vercel or pause Deploy Hook
+
+# 2. Assess damage via Neon dashboard
+# Connect to production database
+# Run diagnostic queries to understand extent
+
+# 3. Options (in order of preference):
+
+# 3a. Restore from Neon backup (if recent)
+# Neon free tier: Point-in-time restore to before migration
+# See: https://neon.tech/docs/guides/branch-restore
+
+# 3b. Fix data with SQL (if corruption is minor)
+# Create data-fix migration
+CREATE OR REPLACE FUNCTION fix_migration_XXX() RETURNS void AS $$
+BEGIN
+  -- Restore deleted data from audit tables
+  -- Fix transformed data
+  -- Relax constraints
+END;
+$$ LANGUAGE plpgsql;
+
+# 3c. Manual intervention (last resort)
+# Connect via Neon dashboard SQL editor
+# Run corrective SQL manually
+# Document in migration log
+
+# 4. Create migration to prevent recurrence
+# Add IF NOT EXISTS, safer constraints, data validation
+```
+
+**Prevention:**
+- NEVER delete data in migrations (mark as inactive instead)
+- ALWAYS test migrations with production-like data volumes
+- Use transactions in migrations when possible
+- Maintain audit logs/soft deletes for critical tables
+
+---
+
+#### Scenario 4: Migration Partially Applied
+
+**Symptoms:**
+- Some statements succeeded, others failed
+- Database in inconsistent state
+- Migration marked as "applied" but incomplete
+
+**Action:**
+```bash
+⚠️ COMPLEX - Migration table may be out of sync
+
+# 1. Check migration status
+POSTGRES_URL=$PROD_DB npm run migrate:status
+
+# 2. Inspect schema_migrations table via Neon dashboard
+SELECT * FROM schema_migrations ORDER BY applied_at DESC LIMIT 5;
+
+# 3. Determine which statements executed
+# Compare actual schema to expected schema from migration
+
+# 4. Create completion migration
+# Only include statements that didn't execute
+# Use IF NOT EXISTS to be idempotent
+
+# 5. Test locally then deploy
+```
+
+**Prevention:**
+- Use transactions in migrations (BEGIN/COMMIT)
+- Make each statement idempotent
+- Test migrations multiple times locally
+
+---
+
+### Emergency Contacts & Resources
+
+**Database Access:**
+- Neon Dashboard: https://console.neon.tech
+- Connection string: POSTGRES_URL env var in Vercel
+
+**Monitoring:**
+- Vercel Logs: https://vercel.com/dashboard
+- Neon Monitoring: Neon dashboard → Monitoring tab
+
+**Documentation:**
+- [DB-MIGRATION-MANAGEMENT.md](../database/DB-MIGRATION-MANAGEMENT.MD) - Migration best practices
+- [DATABASE-TESTING-GUIDE.md](../testing/DATABASE-TESTING-GUIDE.md) - Testing workflow
+- [PRODUCTION-DB-SETUP.md](../database/PRODUCTION-DB-SETUP.md) - Production config
+
+**Recovery Time Objectives:**
+- Code rollback (Vercel): < 1 minute
+- Hotfix deployment: 5-10 minutes
+- Database fix-forward: 15-30 minutes
+- Database restore from backup: 10-60 minutes (depends on size)
 
 ---
 
