@@ -14,7 +14,9 @@ export function DocPanel({
   documentation,
   qualityScore = null,
   isGenerating = false,
-  onViewBreakdown
+  onViewBreakdown,
+  onUpload,
+  onGenerate
 }) {
   // Load initial state from localStorage
   const [isExpanded, setIsExpanded] = useState(() => {
@@ -236,7 +238,20 @@ export function DocPanel({
               <ol className="space-y-2.5 text-xs text-slate-700">
                 <li className="flex gap-2">
                   <span className="flex-shrink-0 w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs font-bold">1</span>
-                  <span>Paste your code or click <strong>"Upload Files"</strong></span>
+                  <span>
+                    Paste your code or click{' '}
+                    {onUpload ? (
+                      <button
+                        type="button"
+                        onClick={onUpload}
+                        className="inline-flex items-center px-2 py-0.5 border border-slate-300 bg-white text-slate-700 rounded text-xs font-bold hover:bg-slate-50 hover:border-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-1"
+                      >
+                        Upload Files
+                      </button>
+                    ) : (
+                      <strong>Upload Files</strong>
+                    )}
+                  </span>
                 </li>
                 <li className="flex gap-2">
                   <span className="flex-shrink-0 w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs font-bold">2</span>
@@ -244,7 +259,21 @@ export function DocPanel({
                 </li>
                 <li className="flex gap-2">
                   <span className="flex-shrink-0 w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs font-bold">3</span>
-                  <span>Click <strong>"Generate Docs"</strong> and watch the magic happen!</span>
+                  <span>
+                    Click{' '}
+                    {onGenerate ? (
+                      <button
+                        type="button"
+                        onClick={onGenerate}
+                        className="inline-flex items-center px-2 py-0.5 border border-slate-300 bg-white text-slate-700 rounded text-xs font-bold hover:bg-slate-50 hover:border-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-1"
+                      >
+                        Generate Docs
+                      </button>
+                    ) : (
+                      <strong>Generate Docs</strong>
+                    )}
+                    {' '}to get production-ready documentation instantly
+                  </span>
                 </li>
               </ol>
             </div>

@@ -5,7 +5,7 @@ class ClaudeClient {
     this.client = new Anthropic({
       apiKey: process.env.CLAUDE_API_KEY,
     });
-    this.model = 'claude-sonnet-4-20250514';
+    this.model = 'claude-sonnet-4-5-20250929';
     this.maxRetries = 3;
   }
 

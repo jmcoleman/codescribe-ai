@@ -336,10 +336,11 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 - [RESEND-SETUP.md](../../deployment/RESEND-SETUP.md) - Email service configuration
 
 **Next Steps for Phase 2:**
-- Epic 2.2: Tier System & Feature Flags (2-3 days) - 📋 Planned
-- Epic 2.3: Payment Integration (2-3 days) - 📋 Planned
-- Epic 2.4: UI Integration (1-2 days) - 📋 Planned
-- Target completion: v2.1.0-v2.3.0 releases
+- Epic 2.2: Tier System & Feature Flags (3 days) - ✅ **COMPLETE** (v2.1.0-v2.2.0)
+- Epic 2.3: UX Enhancements & File Upload (1 day) - ✅ **COMPLETE** (v2.3.0)
+- Epic 2.4: Payment Integration (2-3 days) - 📋 Planned
+- Epic 2.5: UI Integration (1-2 days) - 📋 Planned
+- Target completion: v2.1.0-v2.5.0 releases
 
 ---
 
@@ -386,10 +387,10 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 
 ## 💰 Phase 2: Monetization Foundation (IN PROGRESS)
 
-**Timeline:** October 21-26, 2025 (Epic 2.1) + TBD (Epics 2.2-2.4)
+**Timeline:** October 21-29, 2025 (Epics 2.1-2.3) + TBD (Epics 2.4-2.5)
 **Estimated Duration:** 2-3 weeks total
-**Status:** 🔄 **IN PROGRESS** - Epic 2.1 Complete (v2.0.0)
-**Target Release:** v2.0.0-v2.3.0
+**Status:** 🔄 **IN PROGRESS** - Epics 2.1-2.3 Complete (v2.0.0-v2.3.0)
+**Target Release:** v2.0.0-v2.5.0
 **Strategic Goal:** Enable sustainable business model with Open Core + Generous Free Tier architecture
 
 ### 📦 Epics
@@ -415,8 +416,9 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 **Release:** v2.0.0 (October 26, 2025)
 **Reference:** See "Phase 2: Monetization Foundation (5 days - Oct 21-26)" section above for complete details.
 
-#### Epic 2.2: Tier System & Feature Flags (2-3 days) - 📋 **PLANNED**
+#### Epic 2.2: Tier System & Feature Flags (3 days) - ✅ **COMPLETE**
 
+**Release:** v2.1.0-v2.2.0 (October 27-29, 2025)
 **Goal:** Enable volume-based monetization with generous free tier (Open Core model)
 
 **Backend Implementation:**
@@ -427,12 +429,19 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 - Usage tracking: `incrementUsage()` after successful generation
 - Daily/monthly reset logic (cron job or on-demand check)
 
-**Frontend Implementation:**
-- Usage dashboard UI component
-- Display: "X/10 docs used this month" (Free), "X/50 docs used" (Starter), "X/200 docs used" (Pro)
-- Progress bar with visual indicators (green → yellow → red)
-- Show reset date ("Resets on March 1")
-- Upgrade prompts when approaching limits (80% = warning, 100% = upgrade CTA)
+**Frontend Implementation (Completed in v2.2.0):**
+- ✅ Usage warning banner (80% threshold with dynamic multipliers)
+- ✅ Usage limit modal (100% threshold - blocks further usage)
+- ✅ useUsageTracking hook for fetching usage data
+- ✅ Error handling priority system (Usage Limit > API > Network > Validation)
+- ✅ Upgrade prompts at 80% and 100% usage
+
+**Frontend Implementation (Deferred to Epic 2.5):**
+- ❌ Usage dashboard page/modal (proactive viewing)
+- ❌ Display: "X/10 docs used this month" with progress bar
+- ❌ Visual indicators (green → yellow → red)
+- ❌ Show reset date ("Resets on March 1")
+- ❌ Usage history chart
 
 **Tier Structure (3 tiers for Phase 2):**
 - **Free:** 10 docs/month, all 4 doc types, all features (adoption engine)
@@ -450,18 +459,44 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 - ❌ Custom templates (Phase 4 Epic 4.3)
 - ❌ Team/Enterprise tiers (Phase 2 Epic 2.3/2.4 or later)
 
-**Success Criteria:**
-- Free users can generate up to 10 docs/month, blocked at limit
-- Starter users can generate up to 50 docs/month
-- Pro users can generate up to 200 docs/month
-- Usage dashboard shows accurate counts and reset dates
-- Upgrade prompts appear at 80% and 100% usage
-- All 898+ frontend tests pass
-- All 413+ backend tests pass (including usage tracking tests)
+**Success Criteria (v2.2.0):**
+- ✅ Backend tier system operational (Free, Starter, Pro tiers configured)
+- ✅ Usage tracking with lazy reset mechanism (no cron jobs needed)
+- ✅ Upgrade prompts appear at 80% (banner) and 100% (modal)
+- ✅ useUsageTracking hook fetches and caches usage data
+- ✅ Error priority system handles usage limits correctly
+- ✅ All 1,489 tests pass (1,022 frontend, 431 backend, 36 skipped)
+- ✅ 100+ new tests for tier system, usage tracking, and UI components
+
+**Note:** Full usage dashboard UI (proactive viewing with progress bars, charts) deferred to Epic 2.5
 
 **Note:** Infrastructure already exists: `server/src/config/tiers.js`, `server/src/middleware/tierGate.js`, `client/src/hooks/useFeature.js`, `server/src/middleware/requireAuth.js` - just needs database hookup and frontend UI
 
-#### Epic 2.3: Payment Integration (2-3 days) - 📋 **PLANNED**
+#### Epic 2.3: UX Enhancements & File Upload (1 day) - ✅ **COMPLETE**
+
+**Release:** v2.3.0 (October 29, 2025)
+**Goal:** Improve user experience with enhanced file upload and editor usability
+
+**Features Implemented:**
+- Drag-and-drop file upload with visual purple overlay
+- Clear button for code editor (RefreshCw icon to reset code/filename/language)
+- Dynamic filename display in Monaco editor header
+- Mobile menu logout button for authenticated users
+- Upgrade to Claude Sonnet 4.5 (claude-sonnet-4-5-20250929)
+- Page width expansion for better space utilization
+
+**Testing:**
+- 15 new tests added (6 drag-drop, 5 clear button, 3 logout, 1 multi-button fix)
+- Total: 1,503 tests (1,467 passing, 36 skipped, 97.6% pass rate)
+
+**Success Criteria:**
+- ✅ Users can drag files directly onto Monaco editor
+- ✅ Clear button resets editor to default state
+- ✅ Uploaded filenames display dynamically
+- ✅ Mobile menu shows logout for authenticated users
+- ✅ All tests pass (1,467/1,503)
+
+#### Epic 2.4: Payment Integration (2-3 days) - 📋 **PLANNED**
 - Stripe integration
 - Subscription management (create, update, cancel)
 - Webhook handling (tier updates on payment events)
@@ -469,12 +504,21 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 - Upgrade/downgrade flows
 - Invoice and receipt generation
 
-#### Epic 2.4: UI Integration (1-2 days) - 📋 **PLANNED**
-- User profile menu (usage stats, settings, logout)
-- "Upgrade to Pro" prompts when approaching limits
-- Tier badges and feature gates in UI
+#### Epic 2.5: UI Integration & Usage Dashboard (2-3 days) - 📋 **PLANNED**
+
+**Usage Dashboard UI (from Epic 2.2):**
+- Usage dashboard page/modal for proactive viewing
+- Display: "X/10 docs used this month" (Free), "X/50 docs used" (Starter), "X/200 docs used" (Pro)
+- Progress bar with visual indicators (green → yellow → red)
+- Show reset date ("Resets on March 1")
+- Usage history chart (optional)
+
+**UI Integration:**
+- User profile menu (usage stats link, settings, logout)
+- Tier badges in header for authenticated users
+- Feature gates in UI (Pro badges on locked features)
 - Loading states and error handling
-- Drag-and-drop files into Monaco Editor (file drop zone on CodePanel)
+- Complete Phase 2: Monetization Foundation
 
 ### Tier Structure (Feature Flags Ready)
 
@@ -853,10 +897,11 @@ Features are tracked here when they:
 | Oct 23, 2025 | **Monetization Planning** (Feature flags, tier architecture) | ✅ Complete |
 | Oct 21-26, 2025 | **Phase 2 (Epic 2.1): Authentication & Database** (v2.0.0) | ✅ Complete |
 | Oct 26, 2025 | **Backend Test Coverage & CI Fixes** (100 tests fixed/added) | ✅ Complete |
+| Oct 27-29, 2025 | **Phase 2 (Epic 2.2): Tier System & Feature Flags** (v2.1.0-v2.2.0) | ✅ Complete |
+| Oct 29, 2025 | **Phase 2 (Epic 2.3): UX Enhancements & File Upload** (v2.3.0) | ✅ Complete |
 | TBD | Manual accessibility validation (optional) | ⏸️ Recommended |
-| TBD | **Phase 2 (Epic 2.2): Tier System & Feature Flags** (v2.1.0) | 📋 Planned |
-| TBD | **Phase 2 (Epic 2.3): Payment Integration** (v2.2.0) | 📋 Planned |
-| TBD | **Phase 2 (Epic 2.4): UI Integration** (v2.3.0) | 📋 Planned |
+| TBD | **Phase 2 (Epic 2.4): Payment Integration** (Stripe) | 📋 Planned |
+| TBD | **Phase 2 (Epic 2.5): UI Integration** (UX polish) | 📋 Planned |
 | TBD | **Phase 3: UX Enhancements** (v3.0.0) | 📋 Planned |
 | TBD | **Phase 4: Documentation Capabilities** (v4.0.0) | 📋 Planned |
 | TBD | **Phase 5: Developer Tools** (v5.0.0) | 📋 Planned |

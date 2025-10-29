@@ -1,7 +1,6 @@
 import { Menu, HelpCircle, LogOut, User } from 'lucide-react';
 import { useState, lazy, Suspense } from 'react';
 import { Button } from './Button';
-import { RateLimitIndicator } from './RateLimitIndicator';
 import { Logo } from './Logo';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -13,7 +12,7 @@ const ForgotPasswordModal = lazy(() => import('./ForgotPasswordModal').then(m =>
 // Feature flag: Authentication enabled (from environment variable)
 const ENABLE_AUTH = import.meta.env.VITE_ENABLE_AUTH === 'true';
 
-export function Header({ onMenuClick, onExamplesClick, onHelpClick, rateLimitInfo }) {
+export function Header({ onMenuClick, onExamplesClick, onHelpClick }) {
   const { user, isAuthenticated, logout } = useAuth();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showSignupModal, setShowSignupModal] = useState(false);
@@ -45,7 +44,7 @@ export function Header({ onMenuClick, onExamplesClick, onHelpClick, rateLimitInf
 
   return (
     <header className="bg-white border-b border-slate-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Left: Logo + Title */}
           <div className="flex items-center gap-3">
@@ -67,16 +66,6 @@ export function Header({ onMenuClick, onExamplesClick, onHelpClick, rateLimitInf
 
           {/* Right: Navigation */}
           <nav className="flex items-center gap-2">
-            {/* Rate Limit Indicator */}
-            {rateLimitInfo && (
-              <div className="hidden sm:block">
-                <RateLimitIndicator
-                  remaining={rateLimitInfo.remaining}
-                  limit={rateLimitInfo.limit}
-                />
-              </div>
-            )}
-
             {/* Desktop Nav */}
             <div className="hidden md:flex items-center gap-2">
               <Button

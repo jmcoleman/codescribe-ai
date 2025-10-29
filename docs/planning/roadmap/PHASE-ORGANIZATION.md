@@ -180,10 +180,12 @@ Phase 1: MVP (Complete) - v1.0.0
 ├── Quality scoring and suggestions
 └── WCAG 2.1 AA compliance + deployment
 
-Phase 2: Monetization Foundation - v2.0.0
-├── Epic 2.1: Authentication & User Management
-├── Epic 2.2: Tier System & Feature Flags
-└── Epic 2.3: Payment Integration (Stripe)
+Phase 2: Monetization Foundation - v2.0.0-v2.5.0
+├── Epic 2.1: Authentication & User Management (v2.0.0)
+├── Epic 2.2: Tier System & Feature Flags (v2.1.0-v2.2.0)
+├── Epic 2.3: UX Enhancements & File Upload (v2.3.0)
+├── Epic 2.4: Payment Integration (Stripe)
+└── Epic 2.5: UI Integration
 
 Phase 3: UX Enhancements - v3.0.0
 ├── Epic 3.1: Theming & Visual Customization

@@ -287,7 +287,7 @@ export function UsageLimitModal({
               ref={upgradeButtonRef}
               type="button"
               onClick={onUpgrade}
-              className="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-semibold rounded-lg transition-all duration-200 shadow-sm hover:shadow focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
+              className="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-b from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 active:from-purple-700 active:to-purple-800 text-white font-semibold rounded-lg transition-all duration-200 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
             >
               Upgrade Now
               <ArrowRight className="w-4 h-4" aria-hidden="true" />

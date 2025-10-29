@@ -1654,9 +1654,9 @@ open docs/design/brand-color-palette.pdf
 
 ---
 
-### Payment UI (Phase 2.3)
+### Payment UI (Phase 2.4)
 
-**Reference:** [TODO.md Epic 2.3](TODO.md#epic-23-payment-integration)
+**Reference:** [TODO.md Epic 2.4](TODO.md#epic-24-payment-integration)
 
 #### Component 18: Pricing Card
 

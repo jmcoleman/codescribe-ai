@@ -431,8 +431,9 @@ describe('App - File Upload Integration', () => {
         }
       });
 
-      // Click generate button
-      const generateButton = screen.getByRole('button', { name: /generate docs/i });
+      // Click generate button (select the main button, not the quick start link)
+      const generateButtons = screen.getAllByRole('button', { name: /generate docs/i });
+      const generateButton = generateButtons[0]; // Main button in ControlBar
       expect(generateButton).toBeEnabled();
 
       await user.click(generateButton);

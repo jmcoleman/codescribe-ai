@@ -214,6 +214,46 @@ describe('MobileMenu', () => {
 
       expect(screen.getByText('User')).toBeInTheDocument();
     });
+
+    it('should show Sign Out button when authenticated', () => {
+      mockAuthContext.isAuthenticated = true;
+      mockAuthContext.user = { email: 'test@example.com', tier: 'free' };
+
+      renderMobileMenu(true);
+
+      const signOutButton = screen.getByRole('button', { name: /sign out/i });
+      expect(signOutButton).toBeInTheDocument();
+    });
+
+    it('should call logout and close menu when Sign Out clicked', async () => {
+      const user = userEvent.setup();
+      mockAuthContext.isAuthenticated = true;
+      mockAuthContext.user = { email: 'test@example.com', tier: 'free' };
+      mockAuthContext.logout = vi.fn().mockResolvedValue(undefined);
+
+      renderMobileMenu(true);
+
+      const signOutButton = screen.getByRole('button', { name: /sign out/i });
+      await user.click(signOutButton);
+
+      await waitFor(() => {
+        expect(mockAuthContext.logout).toHaveBeenCalledTimes(1);
+        expect(mockOnClose).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    it('should have logout icon in Sign Out button', () => {
+      mockAuthContext.isAuthenticated = true;
+      mockAuthContext.user = { email: 'test@example.com', tier: 'free' };
+
+      renderMobileMenu(true);
+
+      const signOutButton = screen.getByRole('button', { name: /sign out/i });
+      const icon = signOutButton.querySelector('svg');
+
+      expect(icon).toBeInTheDocument();
+      expect(icon).toHaveAttribute('aria-hidden', 'true');
+    });
   });
 
   describe('Keyboard Navigation', () => {

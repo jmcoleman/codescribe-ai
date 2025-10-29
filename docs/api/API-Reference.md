@@ -1571,16 +1571,17 @@ app.use(cors(corsOptions));
 - [x] ✅ Password reset with email (Resend service)
 - [x] ✅ JWT + session-based auth
 - [x] ✅ Database migrations system
-- [x] ✅ 1,347+ tests (97.5% pass rate)
+- [x] ✅ 1,503 tests (97.6% pass rate)
 - [x] ✅ All authentication endpoints documented
-- [ ] Epic 2.2: Tier system & feature flags (in progress)
-- [ ] Epic 2.3: Payment integration (Stripe)
-- [ ] Epic 2.4: UI integration
+- [x] ✅ Epic 2.2: Tier system & feature flags (complete - v2.1.0-v2.2.0)
+- [x] ✅ Epic 2.3: UX enhancements & file upload (complete - v2.3.0)
+- [ ] Epic 2.4: Payment integration (Stripe)
+- [ ] Epic 2.5: UI integration
 
 ---
 
-**API Documentation Version:** 2.0.0
-**Last Updated:** October 26, 2025
+**API Documentation Version:** 2.3.0
+**Last Updated:** October 29, 2025
 **Status:** ✅ Production (https://codescribeai.com)
 **Test Coverage:** 1,347+ tests (97.5% pass rate), 95.81% backend statement coverage, 88.72% branch coverage
 **Phase 2:** Authentication & Database Complete (Epic 2.1)

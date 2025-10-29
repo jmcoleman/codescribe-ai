@@ -46,10 +46,11 @@ import {
 import { API_URL } from './config/api.js';
 
 function App() {
-  const { getToken, user } = useAuth();
+  const { getToken } = useAuth();
   const [code, setCode] = useState('// Paste your code here or try the example below...\n\n// Example function:\nfunction calculateTotal(items) {\n  return items.reduce((sum, item) => sum + item.price, 0);\n}\n');
   const [docType, setDocType] = useState('README');
   const [language, setLanguage] = useState('javascript');
+  const [filename, setFilename] = useState('code.js');
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showQualityModal, setShowQualityModal] = useState(false);
   const [showExamplesModal, setShowExamplesModal] = useState(false);
@@ -158,7 +159,6 @@ function App() {
     qualityScore,
     setQualityScore,
     error,
-    rateLimitInfo,
     retryAfter
   } = useDocGeneration(refetchUsage);
 
@@ -217,8 +217,8 @@ function App() {
     }
   };
 
-  const handleFileChange = async (event) => {
-    const file = event.target.files?.[0];
+  // Process file upload (used by both file input and drag-and-drop)
+  const processFileUpload = async (file) => {
     if (!file) return;
 
     // Clear any previous upload errors
@@ -231,8 +231,6 @@ function App() {
       if (!validation.valid) {
         const errorMessage = getValidationErrorMessage(validation);
         setUploadError(errorMessage);
-        // Reset the file input
-        event.target.value = '';
         return;
       }
 
@@ -271,6 +269,9 @@ function App() {
         // Set the code from the uploaded file
         setCode(data.file.content);
 
+        // Set the filename
+        setFilename(data.file.name);
+
         // Detect language from file extension
         const extension = data.file.extension.toLowerCase().replace('.', '');
         const languageMap = {
@@ -306,9 +307,6 @@ function App() {
         // Show success toast with compact variant for non-intrusive feedback
         toastCompact(`File uploaded successfully`, 'success');
       }
-
-      // Reset the file input so the same file can be selected again
-      event.target.value = '';
     } catch (error) {
       console.error('Error uploading file:', error);
 
@@ -356,9 +354,24 @@ function App() {
       });
 
       // No toast needed - error banner will display the error
-      // Reset the file input
+    }
+  };
+
+  // Wrapper for file input change event
+  const handleFileChange = async (event) => {
+    // Currently only process the first file
+    // TODO: Future enhancement - support multiple file uploads
+    const file = event.target.files?.[0];
+    await processFileUpload(file);
+    // Reset the file input so the same file can be selected again
+    if (event.target) {
       event.target.value = '';
     }
+  };
+
+  // Handler for drag-and-drop
+  const handleFileDrop = async (file) => {
+    await processFileUpload(file);
   };
 
   const handleGithubImport = () => {
@@ -369,10 +382,29 @@ function App() {
     setCode(example.code);
     setDocType(example.docType);
     setLanguage(example.language);
+
+    // Set filename based on example title and language
+    const exampleName = (example.title || example.docType).toLowerCase().replace(/\s+/g, '-');
+    const extensionMap = {
+      'javascript': '.js',
+      'typescript': '.ts',
+      'python': '.py',
+      'java': '.java',
+      'cpp': '.cpp',
+      'c': '.c',
+      'csharp': '.cs',
+      'go': '.go',
+      'rust': '.rs',
+      'ruby': '.rb',
+      'php': '.php',
+    };
+    const extension = extensionMap[example.language] || '.js';
+    setFilename(`${exampleName}${extension}`);
+
     reset(); // Clear any existing documentation and quality score
 
     // Track example usage
-    trackExampleUsage(example.name || example.docType);
+    trackExampleUsage(example.title || example.docType);
     trackCodeInput('example', example.code.length, example.language);
 
     // Use compact toast for quick, non-intrusive feedback
@@ -382,6 +414,16 @@ function App() {
   const handleUpgradeClick = () => {
     // Navigate to pricing page
     window.location.href = '/pricing';
+  };
+
+  const handleClear = () => {
+    // Reset code to default placeholder
+    setCode('// Paste your code here or try the example below...\n\n// Example function:\nfunction calculateTotal(items) {\n  return items.reduce((sum, item) => sum + item.price, 0);\n}\n');
+    // Reset filename to default
+    setFilename('code.js');
+    // Reset language to default (matches code.js)
+    setLanguage('javascript');
+    // Note: Does not clear documentation or quality score (those remain for reference)
   };
 
   // Expose test data loader to window for console access (development/testing)
@@ -443,7 +485,6 @@ function App() {
         onMenuClick={() => setShowMobileMenu(true)}
         onExamplesClick={() => setShowExamplesModal(true)}
         onHelpClick={() => setShowHelpModal(true)}
-        rateLimitInfo={rateLimitInfo}
       />
 
       {/* Mobile Menu */}
@@ -455,7 +496,7 @@ function App() {
       />
 
       {/* Main Content */}
-      <main id="main-content" className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main id="main-content" className="flex-1 w-full px-4 sm:px-6 lg:px-8 py-6">
         {/* Priority Banner Section - Show only most critical message */}
         {/* Priority Order: 1) Claude API Error, 2) Upload Error, 3) Generation Error, 4) Usage Warning */}
         {error ? (
@@ -504,8 +545,10 @@ function App() {
             <CodePanel
               code={code}
               onChange={setCode}
-              filename="code.js"
+              filename={filename}
               language={language}
+              onFileDrop={handleFileDrop}
+              onClear={handleClear}
             />
           </div>
 
@@ -523,6 +566,8 @@ function App() {
                   grade: qualityScore?.grade,
                 });
               }}
+              onUpload={handleUpload}
+              onGenerate={handleGenerate}
             />
           </Suspense>
           </div>

@@ -1,4 +1,4 @@
-import { X } from 'lucide-react';
+import { X, LogOut } from 'lucide-react';
 import { useEffect, useRef, useState, lazy, Suspense } from 'react';
 import { Button } from './Button';
 import { useAuth } from '../contexts/AuthContext';
@@ -12,7 +12,7 @@ const ForgotPasswordModal = lazy(() => import('./ForgotPasswordModal').then(m =>
 const ENABLE_AUTH = import.meta.env.VITE_ENABLE_AUTH === 'true';
 
 export function MobileMenu({ isOpen, onClose, onExamplesClick, onHelpClick }) {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showSignupModal, setShowSignupModal] = useState(false);
   const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
@@ -74,6 +74,11 @@ export function MobileMenu({ isOpen, onClose, onExamplesClick, onHelpClick }) {
 
   const handleSignInClick = () => {
     setShowLoginModal(true);
+    onClose();
+  };
+
+  const handleLogout = async () => {
+    await logout();
     onClose();
   };
 
@@ -167,7 +172,14 @@ export function MobileMenu({ isOpen, onClose, onExamplesClick, onHelpClick }) {
                   <div className="text-xs text-slate-500 mb-3">
                     {user?.tier ? `${user.tier.charAt(0).toUpperCase() + user.tier.slice(1)} tier` : 'Free tier'}
                   </div>
-                  {/* Logout and other user actions can be added here in future */}
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={handleLogout}
+                  >
+                    <LogOut className="w-4 h-4 mr-2" aria-hidden="true" />
+                    Sign Out
+                  </Button>
                 </div>
               ) : (
                 <Button

@@ -9,6 +9,119 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.3.0] - 2025-10-29
+
+**Status:** ✅ Feature Release - UX Enhancements & File Upload Improvements
+
+### Added
+- **Drag-and-Drop File Upload**
+  - Drag files directly onto Monaco editor for instant upload
+  - Visual purple overlay with upload icon and instructions
+  - Smart behavior: respects read-only mode, requires onFileDrop prop
+  - MIME type support for cross-platform compatibility (Windows, Linux, macOS)
+  - 6 comprehensive drag-and-drop tests (all passing)
+  - Seamless integration with existing file upload logic
+
+- **Clear Button for Code Editor**
+  - RefreshCw icon button in CodePanel header (next to Copy button)
+  - Resets code to default placeholder, filename to "code.js", language to "javascript"
+  - Styled to match DocPanel download button (outline, hover scale effects)
+  - Only visible when code is not empty and not in read-only mode
+  - Does NOT clear documentation panel (keeps docs for reference)
+  - 5 comprehensive clear button tests (all passing)
+
+- **Dynamic Filename Display**
+  - Monaco editor header shows actual filename for uploaded files
+  - Example files show generated filename (e.g., "simple-utility-function.js")
+  - Defaults to "code.js" for manually typed/pasted code
+  - Language badge updates automatically based on file extension
+  - Supports all 10 languages with proper extension mapping
+
+- **Mobile Menu Logout Button**
+  - Added Sign Out button for authenticated users
+  - LogOut icon with proper accessibility (aria-labels)
+  - Logout handler closes menu after successful logout
+  - 3 new tests for logout functionality (29 total MobileMenu tests)
+
+### Changed
+- **Model Upgrade: Claude Sonnet 4 → Sonnet 4.5**
+  - Upgraded documentation generation model from `claude-sonnet-4-20250514` to `claude-sonnet-4-5-20250929`
+  - Improved code comprehension and reasoning for higher quality documentation output
+  - No cost impact (same pricing: $3/$15 per million tokens)
+  - Enhanced accuracy for README, JSDoc, API, and architecture documentation
+  - Updated 4 test cases to match new model version
+
+- **Page Width Expansion**
+  - Removed max-width constraints (was max-w-7xl, 1280px)
+  - Now uses full browser width for better space utilization
+  - Reduces excessive whitespace on larger displays
+  - 2-column grid layout prevents text from becoming too wide
+
+- **DocPanel Copy Improvements**
+  - Changed "watch the magic happen!" to "to get production-ready documentation instantly"
+  - More professional, focuses on value (production-ready + instant delivery)
+  - Better alignment with product positioning
+
+- **Quick Start Interactive Buttons**
+  - Made "Upload Files" and "Generate Docs" clickable in quick start guide
+  - Slate outline buttons with bold text for consistency
+  - onUpload and onGenerate props added to DocPanel
+  - Fixed App-FileUpload test to handle multiple "Generate Docs" buttons
+
+- **Upgrade Button Styling**
+  - Applied purple gradient (from-purple-500 to-purple-600) to upgrade CTAs
+  - Consistent styling across UsageWarningBanner and UsageLimitModal
+  - Removed animations (tried pulse, glow-pulse, subtle-pulse - all too distracting)
+  - Clean, professional hover effects with scale transitions
+
+### Removed
+- **Request Counter Display**
+  - Removed RateLimitIndicator component from Header
+  - Removed rateLimitInfo prop from Header and App.jsx
+  - IP-based rate limiting UI replaced by tier-based usage system (v2.2.0)
+  - UsageWarningBanner and UsageLimitModal provide better UX
+
+### Fixed
+- **Claude Model Tests**
+  - Updated claudeClient.test.js to expect new Sonnet 4.5 model
+  - Fixed 4 test assertions for model version
+  - All 431 backend tests now passing
+
+### Testing
+- **Test Counts**
+  - **Frontend:** 1,036 tests passed | 15 skipped (1,051 total)
+  - **Backend:** 431 tests passed | 21 skipped (452 total)
+  - **Total:** 1,467 tests passed | 36 skipped (1,503 total)
+  - **Pass Rate:** 97.6%
+
+- **New Tests**
+  - 6 drag-and-drop tests (CodePanel)
+  - 5 clear button tests (CodePanel)
+  - 3 logout tests (MobileMenu)
+  - 1 multi-button test fix (App-FileUpload)
+  - **Total new tests:** 15 tests
+
+### Documentation
+- **Updated Documentation**
+  - TODO.md: Updated Epic 2.2 status to Complete (all 4 phases done)
+  - ROADMAP.md: Epic 2.2 marked complete with v2.1.0-v2.2.0 badge
+  - roadmap-data.json: Updated status and completion dates
+
+### Technical Details
+- CodePanel: Added drag event handlers, isDragging state, overlay UI
+- App.jsx: Refactored file upload into processFileUpload, handleFileDrop, handleClear
+- Header.jsx: Removed RateLimitIndicator import and usage
+- All components maintain accessibility patterns (ARIA labels, focus management)
+- Build tested and verified (no errors, 78KB gzipped main bundle maintained)
+
+### Statistics
+- **Files Modified:** 12 files changed
+- **New Features:** 4 (drag-drop, clear button, dynamic filename, logout button)
+- **Bug Fixes:** 6 (model tests, request counter, copy text, quick start, upgrade buttons, page width)
+- **Lines Changed:** +350 insertions, -120 deletions (net +230 lines)
+
+---
+
 ## [2.2.0] - 2025-10-29
 
 **Status:** ✅ Feature Release - Frontend Integration & Mobile UX Improvements
@@ -122,6 +235,85 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Lazy loading for auth modals to optimize performance
 - Test coverage maintained at high levels (97.6% pass rate)
 - Build tested and verified (no errors, 78KB gzipped main bundle)
+
+---
+
+## [2.1.0] - 2025-10-28
+
+**Status:** ✅ Feature Release - Backend Tier System & Quota Management (Epic 2.2 Phase 1-2)
+
+### Added
+- **Usage Model Implementation**
+  - Created comprehensive Usage model (server/src/models/Usage.js - 568 lines)
+  - 9 methods: getUserUsage, incrementUsage, resetDailyUsage, resetMonthlyUsage, migrateAnonymousUsage, getUsageHistory, deleteUserUsage, getSystemUsageStats, _shouldResetDaily
+  - Lazy reset mechanism (serverless-friendly, no cron jobs needed)
+  - Atomic UPSERT operations to prevent race conditions
+  - Support for both authenticated (user ID) and anonymous (IP address) tracking
+  - 28 comprehensive unit tests (100% coverage)
+
+- **Database Migrations**
+  - **Migration 003:** Create user_quotas table for authenticated user tracking
+    - Columns: user_id, daily_count, monthly_count, period_start, period_end, last_reset, created_at
+    - Composite unique constraint on (user_id, period_start, period_end)
+    - ON DELETE CASCADE foreign key to users table
+    - Indexes: idx_user_quotas_user_period, idx_user_quotas_last_reset
+  - **Migration 006:** Create anonymous_quotas table for IP-based tracking
+    - Columns: ip_address (VARCHAR(45) for IPv4/IPv6), daily_count, monthly_count, period_start, period_end, last_reset, created_at
+    - Composite unique constraint on (ip_address, period_start, period_end)
+    - Indexes: idx_anonymous_quotas_ip_period, idx_anonymous_quotas_last_reset
+  - **Migration Fix:** Checksum fix for migration 003 (2025-10-28-fix-migration-003-checksum.js)
+
+- **API Endpoints**
+  - GET /api/user/usage - Current usage stats (daily/monthly counts, limits, reset dates)
+  - GET /api/user/tier-features - Tier configuration for frontend (limits, features)
+  - GET /api/tiers - All tier information for pricing page
+
+- **Middleware Integration**
+  - Updated tierGate.js with checkUsage() middleware integration
+  - Added Usage.getUserUsage() for quota checking
+  - Added Usage.incrementUsage() after successful generation
+  - Graceful error handling (generation succeeds even if tracking fails)
+
+- **Auth Integration**
+  - Added Usage.migrateAnonymousUsage() to signup route (POST /api/auth/signup)
+  - Added Usage.migrateAnonymousUsage() to login route (POST /api/auth/login)
+  - Added Usage.migrateAnonymousUsage() to GitHub OAuth callback (GET /api/auth/github/callback)
+  - Seamless migration of anonymous IP usage to user account on authentication
+
+- **tierGate Tests**
+  - Added 20 comprehensive tierGate middleware tests
+  - Tests for requireFeature, checkUsage, requireTier
+  - File size limit enforcement tests
+  - Quota limit enforcement tests
+
+### Changed
+- **Generation Routes**
+  - POST /api/generate: Added checkUsage() middleware and incrementUsage() tracking
+  - POST /api/generate-stream: Added checkUsage() middleware and incrementUsage() tracking
+  - Both routes now enforce tier-based quotas (Free: 3/day, 10/month)
+
+### Documentation
+- **New Documentation**
+  - USAGE-QUOTA-SYSTEM.md: Comprehensive 750+ line guide to usage tracking system
+  - DB-MIGRATION-MANAGEMENT.MD: Database migration management guide (131 lines)
+- **Updated Documentation**
+  - claude.md: Updated with Epic 2.2 Phase 1-2 completion details
+  - TODO.md: Updated Epic 2.2 status (Phase 1-2 complete)
+
+### Testing
+- **Test Counts**
+  - **Frontend:** 926 tests passed | 15 skipped (941 total)
+  - **Backend:** 401 tests passed | 21 skipped (422 total)
+  - **Total:** 1,327 tests passed | 36 skipped (1,363 total)
+  - **Pass Rate:** 97.4%
+
+### Technical Details
+- Serverless-friendly architecture (no cron jobs, lazy reset on-demand)
+- Lazy reset: Daily resets trigger automatically on first request after midnight
+- Monthly reset: New period_start creates new record (no reset needed)
+- IP-based anonymous tracking with VARCHAR(45) for IPv4/IPv6 support
+- Atomic operations prevent concurrent request race conditions
+- Files modified: 14 files, 2,588 insertions
 
 ---
 
