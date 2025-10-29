@@ -222,7 +222,10 @@ export function DocPanel({
             </ReactMarkdown>
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center h-full text-center px-6" role="status">
+          <div
+            className="flex flex-col items-center justify-center h-full text-center px-6"
+            role="status"
+          >
             <h3 className="text-xl font-semibold text-slate-900 mb-3">
               Ready to Generate Documentation
             </h3>
@@ -231,7 +234,7 @@ export function DocPanel({
             </p>
 
             {/* Quick Start Steps */}
-            <div className="bg-purple-50 border border-purple-200 rounded-lg p-5 max-w-md text-left">
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-5 max-w-md text-left shadow-lg">
               <h4 className="text-sm font-semibold text-slate-900 mb-3 text-center">
                 Quick Start
               </h4>
