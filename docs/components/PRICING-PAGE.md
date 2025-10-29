@@ -2,12 +2,12 @@
 
 **Component:** `PricingPage.jsx`
 **Location:** `client/src/components/PricingPage.jsx`
-**Status:** 📋 Draft (Phase 2, Epic 2.3 - Payment Integration)
+**Status:** 📋 Draft (Phase 2, Epic 2.4 - Payment Integration)
 **Created:** October 29, 2025
 
 ## Overview
 
-The Pricing Page component displays tier pricing, supported languages, and upgrade options. This is a **draft component** that will be integrated with Stripe payment processing in Phase 2, Epic 2.3.
+The Pricing Page component displays tier pricing, supported languages, and upgrade options. This is a **draft component** that will be integrated with Stripe payment processing in Phase 2, Epic 2.4.
 
 ## Features
 
@@ -147,7 +147,7 @@ const languages = [
 - **Focus Indicators:** Purple-600 ring on focus
 - **Motion:** Respects `prefers-reduced-motion`
 
-## Future Integration (Phase 2 Epic 2.3)
+## Future Integration (Phase 2 Epic 2.4)
 
 ### Stripe Integration
 1. **Connect CTAs to Stripe Checkout**
@@ -184,7 +184,7 @@ const languages = [
 - [PricingPage.jsx](../../client/src/components/PricingPage.jsx) - Main component
 
 **Related Documentation:**
-- [ROADMAP.md](../planning/roadmap/ROADMAP.md#epic-23-payment-integration-2-3-days---planned) - Phase 2 Epic 2.3
+- [ROADMAP.md](../planning/roadmap/ROADMAP.md#epic-24-payment-integration-2-3-days---planned) - Phase 2 Epic 2.4
 - [README.md](../../README.md#-supported-languages) - Supported languages section
 - [USAGE-PROMPTS.md](./USAGE-PROMPTS.md) - Usage warning/limit components
 
@@ -230,7 +230,7 @@ When integrating with Stripe:
 ---
 
 **Next Steps:**
-1. Integrate with Stripe in Phase 2 Epic 2.3
+1. Integrate with Stripe in Phase 2 Epic 2.4
 2. Connect to authentication context
 3. Add analytics event tracking
 4. Test payment flows

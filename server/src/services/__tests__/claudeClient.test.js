@@ -45,7 +45,7 @@ describe('ClaudeClient', () => {
     });
 
     it('should set correct model', () => {
-      expect(claudeClient.model).toBe('claude-sonnet-4-20250514');
+      expect(claudeClient.model).toBe('claude-sonnet-4-5-20250929');
     });
 
     it('should set max retries to 3', () => {
@@ -66,7 +66,7 @@ describe('ClaudeClient', () => {
 
       expect(result).toBe('# Documentation\n\nThis is great documentation!');
       expect(mockAnthropicInstance.messages.create).toHaveBeenCalledWith({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-5-20250929',
         max_tokens: 4000,
         messages: [{ role: 'user', content: mockPrompt }],
       });
@@ -79,7 +79,7 @@ describe('ClaudeClient', () => {
 
       expect(mockAnthropicInstance.messages.create).toHaveBeenCalledTimes(1);
       const callArgs = mockAnthropicInstance.messages.create.mock.calls[0][0];
-      expect(callArgs.model).toBe('claude-sonnet-4-20250514');
+      expect(callArgs.model).toBe('claude-sonnet-4-5-20250929');
       expect(callArgs.max_tokens).toBe(4000);
       expect(callArgs.messages).toHaveLength(1);
       expect(callArgs.messages[0].role).toBe('user');
@@ -189,7 +189,7 @@ describe('ClaudeClient', () => {
       await claudeClient.generateWithStreaming(mockPrompt, () => {});
 
       expect(mockAnthropicInstance.messages.create).toHaveBeenCalledWith({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-5-20250929',
         max_tokens: 4000,
         messages: [{ role: 'user', content: mockPrompt }],
         stream: true,

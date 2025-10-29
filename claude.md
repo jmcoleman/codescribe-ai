@@ -12,7 +12,7 @@
 AI-powered documentation generator with real-time streaming, quality scoring (0-100), and WCAG 2.1 AA compliance.
 
 **Key Metrics:**
-- 1,489 tests (1,453 passing, 36 skipped) | 95.81% backend coverage
+- 1,503 tests (1,467 passing, 36 skipped) | 95.81% backend coverage
 - Lighthouse: 75/100 performance (+67%), 100/100 accessibility
 - Bundle: 78KB gzipped (-85% reduction)
 - Accessibility: 95/100 score, 0 axe violations
@@ -44,7 +44,7 @@ AI-powered documentation generator with real-time streaming, quality scoring (0-
 | Document | Use Case | Key Contents |
 |----------|----------|--------------|
 | [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) | Performance optimization | Lazy loading, bundle analysis, Core Web Vitals, maintenance |
-| [Testing README](docs/testing/README.md) | Test navigation hub | 1,489 test stats, quick commands, coverage overview |
+| [Testing README](docs/testing/README.md) | Test navigation hub | 1,503 test stats, quick commands, coverage overview |
 | [COMPONENT-TEST-COVERAGE.md](docs/testing/COMPONENT-TEST-COVERAGE.md) | Coverage details ⭐ | 13/18 components tested, category breakdown, gaps |
 | [frontend-testing-guide.md](docs/testing/frontend-testing-guide.md) | React testing patterns | Vitest + RTL, mocking, a11y, interactions |
 | [TEST-FIXES-OCT-2025.md](docs/testing/TEST-FIXES-OCT-2025.md) | Test fix patterns ⭐ | 75 tests fixed, 10 patterns, 6 technical insights, 97.3% pass rate |
@@ -290,9 +290,9 @@ cd .. && cd server && npm test 2>&1 | grep "Tests:"
 # Output example: Tests:       21 skipped, 373 passed, 394 total
 
 # 2. Update documentation with new counts
-# - claude.md line 15: "X,XXX tests (X,XXX passing, XX skipped)"
-# - claude.md line 47: "X,XXX test stats"
-# - claude.md line 284: "X,XXX tests (XXX frontend, XXX backend, 10 E2E, XX skipped)"
+# - claude.md line 15: "1,503 tests (1,467 passing, 36 skipped)"
+# - claude.md line 47: "1,503 test stats"
+# - claude.md line 295: "1,503 tests (1,036 frontend, 431 backend, 36 skipped)"
 # - docs/testing/README.md lines 11-27: Update all test breakdowns
 
 # 3. Verify skipped tests documentation is current
@@ -331,7 +331,7 @@ cd server && npm test 2>&1 | grep "skipped"
 **Final Metrics:**
 - Accessibility: 95/100, WCAG 2.1 AA, 0 axe violations
 - Performance: 75/100 Lighthouse (+67%), 78KB bundle (-85%)
-- Testing: 1,489 tests (1,022 frontend, 431 backend, 10 E2E, 36 skipped), 97.6% passing
+- Testing: 1,503 tests (1,036 frontend, 431 backend, 36 skipped), 97.6% passing
 - Deployment: Vercel + GitHub Actions CI/CD, custom domain
 
 **Optional:** README screenshots, demo video, extended manual a11y testing
@@ -397,10 +397,23 @@ codescribe-ai/
 
 ## 🔄 Version History
 
-**Current: v2.2.0** - Frontend Integration & Mobile UX (October 29, 2025): **Phase 2 Frontend Progress** for Epic 2.2 & 2.4 (UI Integration); **Pricing Page Component** with 4 tiers, language showcase, FAQ (ready for Stripe); **Mobile Menu Authentication** with Sign In button, auth modals, and user display; **Password Visibility Toggle** added to LoginModal; **Usage Tracking Frontend** with useUsageTracking hook, UsageWarningBanner (80%), UsageLimitModal (100%); **Enhanced Error Handling** with priority system (Usage Limit > API > Network > Validation); **File Upload Improvements** with MIME types for cross-platform compatibility; **Supported Languages Feature** prominently showcased in README; **1,489 tests** (1,022 frontend, 431 backend, 36 skipped, 97.6% pass rate); **60+ new tests** across 5 test suites; **11 new files** (components, hooks, tests, docs); mobile-first responsive design with accessibility patterns maintained
+**Current: v2.3.0** - UX Enhancements & File Upload Improvements (October 29, 2025): **Drag-and-Drop File Upload** with visual purple overlay and smart behavior; **Clear Button for Code Editor** with RefreshCw icon to reset code/filename/language; **Dynamic Filename Display** in Monaco editor header; **Mobile Menu Logout Button** for authenticated users; **Model Upgrade** to Claude Sonnet 4.5 (claude-sonnet-4-5-20250929); **Page Width Expansion** for better space utilization; **1,503 tests** (1,036 frontend, 431 backend, 36 skipped, 97.6% pass rate); **15 new tests** (6 drag-drop, 5 clear button, 3 logout, 1 multi-button fix); improved UX with full-width layout and enhanced file upload experience
 
 <details>
-<summary>Previous Versions (v1.0-v2.1)</summary>
+<summary>Previous Versions (v1.0-v2.2)</summary>
+
+- **v2.2.0** - Frontend Integration & Mobile UX (October 29, 2025)
+  - Phase 2 Frontend Progress for Epic 2.2 & 2.4 (UI Integration)
+  - Pricing Page Component with 4 tiers, language showcase, FAQ (ready for Stripe)
+  - Mobile Menu Authentication with Sign In button, auth modals, and user display
+  - Password Visibility Toggle added to LoginModal
+  - Usage Tracking Frontend with useUsageTracking hook, UsageWarningBanner (80%), UsageLimitModal (100%)
+  - Enhanced Error Handling with priority system (Usage Limit > API > Network > Validation)
+  - File Upload Improvements with MIME types for cross-platform compatibility
+  - Supported Languages Feature prominently showcased in README
+  - 1,489 tests (1,022 frontend, 431 backend, 36 skipped, 97.6% pass rate)
+  - 60+ new tests across 5 test suites
+  - 11 new files (components, hooks, tests, docs)
 
 - **v2.1.0** - Usage Tracking & Quota System Backend (October 28, 2025)
   - Phase 2 Backend Complete for Epic 2.2 (Tier System & Feature Flags)
@@ -474,7 +487,7 @@ codescribe-ai/
 - **v1.1** - Documentation restructure (subdirectories)
 - **v1.0** - Initial CLAUDE.md with complete doc map
 
-Last updated: October 28, 2025
+Last updated: October 29, 2025
 </details>
 
 ---

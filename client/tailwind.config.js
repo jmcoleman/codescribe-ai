@@ -111,6 +111,22 @@ export default {
           '0%': { opacity: '1' },
           '100%': { opacity: '0' },
         },
+        'glow-pulse': {
+          '0%, 100%': {
+            boxShadow: '0 0 0 0 rgba(147, 51, 234, 0.4)',
+          },
+          '50%': {
+            boxShadow: '0 0 0 8px rgba(147, 51, 234, 0)',
+          },
+        },
+        'subtle-pulse': {
+          '0%, 100%': {
+            transform: 'scale(1)',
+          },
+          '50%': {
+            transform: 'scale(1.02)',
+          },
+        },
       },
       animation: {
         'toast-enter': 'toast-enter 0.3s ease-out',
@@ -118,6 +134,8 @@ export default {
         'toast-bounce': 'toast-bounce 0.5s ease-in-out',
         'slide-in-fade': 'slide-in-fade 250ms cubic-bezier(0.4, 0, 0.2, 1) forwards',
         'fade-out': 'fade-out 200ms cubic-bezier(0.4, 0, 1, 1) forwards',
+        'glow-pulse': 'glow-pulse 2s ease-in-out infinite',
+        'subtle-pulse': 'subtle-pulse 2s ease-in-out infinite',
       },
     },
   },

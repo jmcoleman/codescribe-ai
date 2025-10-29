@@ -1,8 +1,8 @@
 ## 🔧 CODESCRIBE AI TODO LIST
 
 **Status:** 📋 **ACTIVE** (Post-Production Enhancements)
-**Current Phase:** Phase 2 🚧 In Progress (Epic 2.1 ✅ Complete | Epic 2.2 Phase 2 ✅ Complete)
-**Last Updated:** October 28, 2025 - v2.1.0
+**Current Phase:** Phase 2 🚧 In Progress (Epic 2.1 ✅ Complete | Epic 2.2 ✅ Complete | Epic 2.3 ✅ Complete)
+**Last Updated:** October 29, 2025 - v2.3.0
 
 > **📌 Navigation Tip:**
 > - **In VS Code:** Use `Cmd+Shift+O` (Mac) or `Ctrl+Shift+O` (Windows/Linux) to see all headings and jump to sections
@@ -20,8 +20,9 @@
 - [📋 Phase 2: Monetization Foundation (v2.0.0)](#-phase-2-monetization-foundation-v200)
   - [Epic 2.1: Authentication & User Management](#epic-21-authentication--user-management)
   - [Epic 2.2: Tier System & Feature Flags](#epic-22-tier-system--feature-flags)
-  - [Epic 2.3: Payment Integration](#epic-23-payment-integration)
-  - [Epic 2.4: UI Integration](#epic-24-ui-integration)
+  - [Epic 2.3: UX Enhancements & File Upload](#epic-23-ux-enhancements--file-upload)
+  - [Epic 2.4: Payment Integration](#epic-24-payment-integration)
+  - [Epic 2.5: UI Integration](#epic-25-ui-integration)
 - [📋 Phase 3: UX Enhancements (v3.0.0)](#-phase-3-ux-enhancements-v300)
   - [Epic 3.1: Theming & Visual Customization](#epic-31-theming--visual-customization)
   - [Epic 3.2: Layout & Workspace Flexibility](#epic-32-layout--workspace-flexibility)
@@ -317,8 +318,8 @@ All email verification functionality has been implemented and verified:
 ### Epic 2.2: Tier System & Feature Flags
 
 **Estimated Duration:** 3-4 days
-**Status:** 🚧 **IN PROGRESS** - Phase 2 ✅ Complete, Phase 3 Frontend Pending (October 28, 2025)
-**Implementation Files:** `server/src/config/tiers.js` ✅, `server/src/middleware/tierGate.js` ✅, `server/src/models/Usage.js` ✅, `server/src/routes/api.js` ✅, `client/src/hooks/useFeature.js` ⚠️ (needs sync)
+**Status:** ✅ **COMPLETE** - Deployed to Production (v2.2.0, October 29, 2025)
+**Implementation Files:** `server/src/config/tiers.js` ✅, `server/src/middleware/tierGate.js` ✅, `server/src/models/Usage.js` ✅, `server/src/routes/api.js` ✅, Usage tracking frontend ✅
 **Reference:** [TIER-FEATURE-MATRIX.md](TIER-FEATURE-MATRIX.md) | [USAGE-QUOTA-SYSTEM.md](../database/USAGE-QUOTA-SYSTEM.md)
 
 #### 📑 Phase Quick Links
@@ -413,8 +414,17 @@ All email verification functionality has been implemented and verified:
   - [x] Monthly reset uses period_start_date as part of primary key (new month = new record)
   - [x] Documented in USAGE-QUOTA-SYSTEM.md (750+ lines)
 
-#### Phase 3: Frontend Implementation (1-1.5 days)
+#### Phase 3: Frontend Implementation ✅ **COMPLETE (October 29, 2025 - v2.2.0)**
 
+**All Phase 3 items completed and deployed to production in v2.2.0:**
+- ✅ Usage tracking frontend (useUsageTracking hook)
+- ✅ UsageWarningBanner component (80% warning)
+- ✅ UsageLimitModal component (100% limit reached)
+- ✅ Pricing page with tier comparison
+- ✅ Error handling priority system
+- ✅ 60+ comprehensive tests
+
+**Future enhancements (not blocking):**
 - [ ] **Tier Config Synchronization**
   - [ ] Update useFeature.js tier config to match tiers.js exactly
   - [ ] Add missing "starter" tier to TIER_FEATURES
@@ -451,14 +461,16 @@ All email verification functionality has been implemented and verified:
   - [ ] Add "Upgrade Now" button in error state
   - [ ] Handle file size exceeded errors (403 response)
 
-#### Phase 4: Testing (0.5-1 day)
+#### Phase 4: Testing ✅ **COMPLETE** (October 28-29, 2025)
 
+**All critical tests completed:**
+- [x] ✅ **Usage model tests:** 38 tests passing (comprehensive coverage)
+- [x] ✅ **tierGate middleware tests:** 20 tests passing (requireFeature, checkUsage, requireTier)
+- [x] ✅ **Frontend usage component tests:** UsageLimitModal, UsageWarningBanner, useUsageTracking
+- [x] ✅ **Total Epic 2.2 tests:** 100+ tests across backend and frontend
+
+**Future test enhancements (not blocking):**
 - [ ] **Unit Tests**
-  - [x] ✅ Test Usage model methods (28 tests) - **COMPLETE** (October 28, 2025)
-  - [ ] Test tierGate.requireFeature() middleware (20 tests)
-  - [ ] Test tierGate.checkUsage() middleware (15 tests)
-  - [ ] Test tierGate.requireTier() middleware (10 tests)
-  - [ ] Test usage reset functions (10 tests)
 
 - [ ] **Integration Tests for Generation Routes** (Priority 1)
   - [ ] Create `server/src/routes/__tests__/api.test.js`
@@ -535,7 +547,53 @@ All email verification functionality has been implemented and verified:
 
 ---
 
-### Epic 2.3: Payment Integration
+### Epic 2.3: UX Enhancements & File Upload
+
+**Estimated Duration:** 1 day
+**Status:** ✅ **COMPLETE** - Deployed to Production (v2.3.0, October 29, 2025)
+
+#### Completed Tasks
+
+- [x] ✅ **Drag-and-Drop File Upload** - October 29, 2025
+  - [x] Visual purple overlay with upload icon and instructions
+  - [x] Smart behavior respects read-only mode, requires onFileDrop prop
+  - [x] 6 comprehensive drag-and-drop tests (all passing)
+
+- [x] ✅ **Clear Button for Code Editor** - October 29, 2025
+  - [x] RefreshCw icon button in CodePanel header (next to Copy button)
+  - [x] Resets code to default placeholder, filename to "code.js", language to "javascript"
+  - [x] Styled to match DocPanel download button (outline, hover scale effects)
+  - [x] 5 comprehensive clear button tests (all passing)
+
+- [x] ✅ **Dynamic Filename Display** - October 29, 2025
+  - [x] Monaco editor header shows actual filename for uploaded files
+  - [x] Example files show generated filename (e.g., "simple-utility-function.js")
+  - [x] Defaults to "code.js" for manually typed/pasted code
+
+- [x] ✅ **Mobile Menu Logout Button** - October 29, 2025
+  - [x] Added Sign Out button for authenticated users
+  - [x] 3 new tests for logout functionality
+
+- [x] ✅ **Model Upgrade** - October 29, 2025
+  - [x] Upgraded from Claude Sonnet 4 to Claude Sonnet 4.5 (claude-sonnet-4-5-20250929)
+  - [x] Updated 4 test cases to match new model version
+
+- [x] ✅ **Page Width Expansion** - October 29, 2025
+  - [x] Removed max-width constraints for better space utilization
+  - [x] Full browser width now used
+
+#### Success Criteria
+
+- [x] ✅ Users can drag files directly onto Monaco editor
+- [x] ✅ Clear button resets editor to default state
+- [x] ✅ Uploaded filenames display dynamically
+- [x] ✅ Mobile menu shows logout for authenticated users
+- [x] ✅ All 1,467 tests pass (1,503 total, 36 skipped, 97.6% pass rate)
+- [x] ✅ 15 new tests added (6 drag-drop, 5 clear button, 3 logout, 1 multi-button fix)
+
+---
+
+### Epic 2.4: Payment Integration
 
 **Estimated Duration:** 2-3 days
 **Status:** 📋 **NOT STARTED**
@@ -587,25 +645,27 @@ All email verification functionality has been implemented and verified:
 
 ---
 
-### Epic 2.4: UI Integration
+### Epic 2.5: UI Integration & Usage Dashboard
 
-**Estimated Duration:** 1-2 days
+**Estimated Duration:** 2-3 days
 **Status:** 📋 **NOT STARTED**
+
+**Note:** Usage dashboard UI was deferred from Epic 2.2 (v2.2.0 completed warning/limit prompts only)
 
 #### Tasks
 
-- [ ] **Header Updates**
-  - [ ] Unhide Sign In button (ENABLE_AUTH = true)
-  - [ ] Add user profile dropdown (usage, settings, logout)
-  - [ ] Show current tier badge
-  - [ ] Add "Upgrade" link for FREE users
+- [ ] **Usage Dashboard UI (from Epic 2.2)**
+  - [ ] Create dashboard page/modal for proactive viewing
+  - [ ] Display: "X/10 docs used this month" with progress bar
+  - [ ] Visual indicators (green → yellow → red based on usage %)
+  - [ ] Show reset date ("Resets on March 1")
+  - [ ] Usage history chart (optional)
+  - [ ] Link from user profile menu to dashboard
 
-- [ ] **Usage Dashboard**
-  - [ ] Create dashboard page/modal
-  - [ ] Show daily/monthly usage stats
-  - [ ] Show quota limits
-  - [ ] Show usage history chart
-  - [ ] Add "Upgrade" CTA when approaching limits
+- [ ] **Header Updates**
+  - [ ] Add user profile dropdown (usage stats link, settings, logout)
+  - [ ] Show current tier badge for authenticated users
+  - [ ] Add "Upgrade" link for FREE users
 
 - [ ] **Feature Gates**
   - [ ] Show "Pro" badges on locked features
@@ -1077,6 +1137,30 @@ All email verification functionality has been implemented and verified:
 - [ ] **[ENHANCEMENT]** Advanced analytics and monitoring dashboard
 - [ ] **[TECH-DEBT]** Evaluate and upgrade to React 19 stable (currently RC)
 - [ ] **[ENHANCEMENT]** Consider adding support for more programming languages
+
+#### Security Improvements (From Oct 2025 Security Audit)
+
+**Priority 1 (Q1 2026 - Phase 2.3):**
+- [ ] **[SECURITY]** Implement DOMPurify for Mermaid SVG sanitization (2-3 days) - Medium risk XSS mitigation
+- [ ] **[SECURITY]** Add Content Security Policy (CSP) headers (1-2 days) - Deploy report-only first, then enforce
+- [ ] **[SECURITY]** Add security headers: X-Frame-Options, X-Content-Type-Options, X-XSS-Protection, Referrer-Policy (1 day)
+- [ ] **[SECURITY]** Implement Subresource Integrity (SRI) for external scripts/styles (1 day)
+
+**Priority 2 (Q2 2026 - Phase 2.4-2.5):**
+- [ ] **[SECURITY]** Add IP address validation (IPv4/IPv6) in Usage model (2-4 hours)
+- [ ] **[SECURITY]** Implement structured audit logging for auth events and security incidents (5 days)
+- [ ] **[SECURITY]** Extend rate limiting to all endpoints (signup, login, user profile) (3 days)
+- [ ] **[SECURITY]** Add security testing to CI/CD: SAST (Snyk/SonarQube), dependency scanning (8 days setup)
+
+**Priority 3 (Ongoing):**
+- [ ] **[SECURITY]** Set up automated dependency updates and vulnerability scanning (GitHub Dependabot + Snyk)
+- [ ] **[SECURITY]** Annual penetration testing ($5K-15K budget)
+- [ ] **[SECURITY]** Quarterly security audit reviews (next: Jan 2026)
+- [ ] **[SECURITY]** Create formal incident response plan with communication templates
+- [ ] **[SECURITY]** Document threat model and security architecture
+- [ ] **[SECURITY]** Implement vulnerability disclosure policy (security@codescribeai.com)
+
+**Reference:** See `private/SECURITY-AUDIT-OCT-2025.md` for full audit report
 
 #### Email Service Improvements (Future Evaluation)
 

@@ -1,4 +1,5 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
 import { CodePanel } from '../CodePanel';
 
@@ -304,6 +305,151 @@ describe('CodePanel', () => {
       await waitFor(() => {
         expect(screen.getByTestId('monaco-editor')).toBeInTheDocument();
       });
+    });
+  });
+
+  describe('Drag and Drop', () => {
+    it('shows drag overlay when dragging a file over the panel', () => {
+      const onFileDrop = vi.fn();
+      render(<CodePanel {...defaultProps} onFileDrop={onFileDrop} />);
+
+      const panel = screen.getByTestId('code-panel');
+
+      // Simulate drag enter with fireEvent
+      fireEvent.dragEnter(panel, {
+        dataTransfer: { files: [] },
+      });
+
+      // Check that overlay appears
+      expect(screen.getByText('Drop file to upload')).toBeInTheDocument();
+      expect(screen.getByText('Release to load your code')).toBeInTheDocument();
+    });
+
+    it('hides drag overlay when drag leaves the panel', () => {
+      const onFileDrop = vi.fn();
+      render(<CodePanel {...defaultProps} onFileDrop={onFileDrop} />);
+
+      const panel = screen.getByTestId('code-panel');
+
+      // Simulate drag enter
+      fireEvent.dragEnter(panel, {
+        dataTransfer: { files: [] },
+      });
+
+      // Verify overlay is shown
+      expect(screen.getByText('Drop file to upload')).toBeInTheDocument();
+
+      // Simulate drag leave - target must equal currentTarget for the condition to work
+      fireEvent.dragLeave(panel, {
+        target: panel,
+        currentTarget: panel,
+      });
+
+      // Verify overlay is hidden
+      expect(screen.queryByText('Drop file to upload')).not.toBeInTheDocument();
+    });
+
+    it('calls onFileDrop when a file is dropped', () => {
+      const onFileDrop = vi.fn();
+      render(<CodePanel {...defaultProps} onFileDrop={onFileDrop} />);
+
+      const panel = screen.getByTestId('code-panel');
+      const mockFile = new File(['test content'], 'test.js', { type: 'text/javascript' });
+
+      // Simulate drop with fireEvent
+      fireEvent.drop(panel, {
+        dataTransfer: { files: [mockFile] },
+      });
+
+      expect(onFileDrop).toHaveBeenCalledWith(mockFile);
+    });
+
+    it('does not show drag overlay when readOnly is true', () => {
+      const onFileDrop = vi.fn();
+      render(<CodePanel {...defaultProps} readOnly={true} onFileDrop={onFileDrop} />);
+
+      const panel = screen.getByTestId('code-panel');
+
+      // Simulate drag enter
+      fireEvent.dragEnter(panel, {
+        dataTransfer: { files: [] },
+      });
+
+      // Overlay should not appear
+      expect(screen.queryByText('Drop file to upload')).not.toBeInTheDocument();
+    });
+
+    it('does not call onFileDrop when readOnly is true', () => {
+      const onFileDrop = vi.fn();
+      render(<CodePanel {...defaultProps} readOnly={true} onFileDrop={onFileDrop} />);
+
+      const panel = screen.getByTestId('code-panel');
+      const mockFile = new File(['test content'], 'test.js', { type: 'text/javascript' });
+
+      // Simulate drop
+      fireEvent.drop(panel, {
+        dataTransfer: { files: [mockFile] },
+      });
+
+      expect(onFileDrop).not.toHaveBeenCalled();
+    });
+
+    it('does not show drag overlay when onFileDrop is not provided', () => {
+      render(<CodePanel {...defaultProps} />);
+
+      const panel = screen.getByTestId('code-panel');
+
+      // Simulate drag enter
+      fireEvent.dragEnter(panel, {
+        dataTransfer: { files: [] },
+      });
+
+      // Overlay should not appear
+      expect(screen.queryByText('Drop file to upload')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('Clear Button', () => {
+    it('shows clear button when code is not empty and onClear is provided', () => {
+      const onClear = vi.fn();
+      render(<CodePanel {...defaultProps} onClear={onClear} />);
+
+      const clearButton = screen.getByRole('button', { name: /clear editor/i });
+      expect(clearButton).toBeInTheDocument();
+    });
+
+    it('does not show clear button when code is empty', () => {
+      const onClear = vi.fn();
+      render(<CodePanel {...defaultProps} code="" onClear={onClear} />);
+
+      const clearButton = screen.queryByRole('button', { name: /clear editor/i });
+      expect(clearButton).not.toBeInTheDocument();
+    });
+
+    it('does not show clear button when onClear is not provided', () => {
+      render(<CodePanel {...defaultProps} />);
+
+      const clearButton = screen.queryByRole('button', { name: /clear editor/i });
+      expect(clearButton).not.toBeInTheDocument();
+    });
+
+    it('does not show clear button when readOnly is true', () => {
+      const onClear = vi.fn();
+      render(<CodePanel {...defaultProps} readOnly={true} onClear={onClear} />);
+
+      const clearButton = screen.queryByRole('button', { name: /clear editor/i });
+      expect(clearButton).not.toBeInTheDocument();
+    });
+
+    it('calls onClear when clear button is clicked', async () => {
+      const onClear = vi.fn();
+      const user = userEvent.setup();
+      render(<CodePanel {...defaultProps} onClear={onClear} />);
+
+      const clearButton = screen.getByRole('button', { name: /clear editor/i });
+      await user.click(clearButton);
+
+      expect(onClear).toHaveBeenCalledTimes(1);
     });
   });
 });

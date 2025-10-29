@@ -2,17 +2,18 @@
 
 **Project:** CodeScribe AI - Intelligent Code Documentation Generator
 **Testing Status:** ✅ Comprehensive Coverage Across 3 Frameworks
-**Last Updated:** October 29, 2025 (v2.2.0)
+**Last Updated:** October 29, 2025 (v2.3.0)
 
 ---
 
 ## 📊 Quick Stats
 
-- **Total Tests:** 1,489 tests (1,453 passing, 36 skipped)
-  - **Frontend:** 1,022 tests | 15 skipped (Vitest + React Testing Library)
+- **Total Tests:** 1,503 tests (1,467 passing, 36 skipped)
+  - **Frontend:** 1,036 tests | 15 skipped (Vitest + React Testing Library)
     - Component Tests: 18/18 components (100% coverage)
     - Integration Tests: Auth, OAuth, password reset, upload, error handling, usage tracking
     - UI Tests: Toast system, modals, forms, storage helpers, pricing page
+    - New in v2.3.0: Drag-drop upload (6 tests), clear button (5 tests), logout (3 tests)
   - **Backend:** 431 tests | 21 skipped (Jest + Supertest)
     - Unit Tests: Services, models, utilities, middleware, usage tracking
     - Integration Tests: Prompt quality, API contracts, authentication, tier system
@@ -20,11 +21,11 @@
   - **Database:** 21 tests (skipped in default suite, run separately with Docker PostgreSQL)
     - Migration validation, schema checks, constraints, user quotas, anonymous quotas
   - **E2E:** 10 tests (Playwright - file upload flow)
-- **Pass Rate:** 97.6% (1,453/1,489)
+- **Pass Rate:** 97.6% (1,467/1,503)
 - **Backend Coverage:** 95.81% statements, 88.72% branches
 - **Test Execution Time:** Frontend ~10.6s, Backend ~6.5s, Database ~0.25s, E2E ~45s
 - **Coverage Target:** 70% ✅ EXCEEDED (95.81% backend)
-- **Recent Updates:** Mobile menu auth, usage tracking, pricing page tests (Oct 29, 2025)
+- **Recent Updates:** Drag-drop upload, clear button, logout tests (Oct 29, 2025 - v2.3.0)
 
 ---
 

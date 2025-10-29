@@ -1,5 +1,5 @@
-import { lazy, Suspense } from 'react';
-import { Zap, Loader2 } from 'lucide-react';
+import { lazy, Suspense, useState } from 'react';
+import { Zap, Loader2, Upload, RefreshCw } from 'lucide-react';
 import { CopyButton } from './CopyButton';
 
 // Lazy load Monaco Editor to reduce initial bundle size
@@ -24,14 +24,63 @@ export function CodePanel({
   onChange,
   filename = 'code.js',
   language = 'javascript',
-  readOnly = false
+  readOnly = false,
+  onFileDrop,
+  onClear
 }) {
+  const [isDragging, setIsDragging] = useState(false);
+
   // Count lines and characters
   const lines = code.split('\n').length;
   const chars = code.length;
 
+  // Drag and drop handlers
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!readOnly && onFileDrop) {
+      setIsDragging(true);
+    }
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Only set to false if we're leaving the CodePanel entirely
+    if (e.currentTarget === e.target) {
+      setIsDragging(false);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    if (readOnly || !onFileDrop) return;
+
+    const files = e.dataTransfer?.files;
+    if (files && files.length > 0) {
+      // Currently only process the first file
+      // TODO: Future enhancement - support multiple file uploads
+      onFileDrop(files[0]);
+    }
+  };
+
   return (
-    <div data-testid="code-panel" className="flex flex-col h-full bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+    <div
+      data-testid="code-panel"
+      className="flex flex-col h-full bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden relative"
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
       {/* Header */}
       <div className="flex items-center justify-between px-4 h-12 bg-slate-50 border-b border-slate-200">
         <h2 className="sr-only">Code Input</h2>
@@ -46,9 +95,20 @@ export function CodePanel({
           <span className="text-sm text-slate-600">{filename}</span>
         </div>
 
-        {/* Right: Language badge + Copy button */}
+        {/* Right: Language badge + Clear + Copy buttons */}
         <div className="flex items-center gap-2">
           <span className="text-xs text-slate-600 uppercase">{language}</span>
+          {code && !readOnly && onClear && (
+            <button
+              type="button"
+              onClick={onClear}
+              className="p-2 bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 hover:border-slate-300 rounded-lg transition-all duration-200 hover:scale-[1.05] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 motion-reduce:transition-none"
+              aria-label="Clear editor"
+              title="Clear editor"
+            >
+              <RefreshCw className="w-4 h-4" aria-hidden="true" />
+            </button>
+          )}
           {code && (
             <CopyButton
               text={code}
@@ -94,6 +154,17 @@ export function CodePanel({
           <span className="text-slate-600">Ready to analyze</span>
         </div>
       </div>
+
+      {/* Drag and Drop Overlay */}
+      {isDragging && (
+        <div className="absolute inset-0 bg-purple-500/10 backdrop-blur-sm border-2 border-dashed border-purple-500 rounded-xl flex items-center justify-center z-50">
+          <div className="flex flex-col items-center gap-3 text-purple-600">
+            <Upload className="w-12 h-12" aria-hidden="true" />
+            <p className="text-lg font-semibold">Drop file to upload</p>
+            <p className="text-sm text-purple-500">Release to load your code</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
