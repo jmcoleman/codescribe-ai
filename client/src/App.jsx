@@ -5,10 +5,15 @@ import { MobileMenu } from './components/MobileMenu';
 import { ControlBar } from './components/ControlBar';
 import { CodePanel } from './components/CodePanel';
 import { useDocGeneration } from './hooks/useDocGeneration';
+import { useUsageTracking } from './hooks/useUsageTracking';
 import { ErrorBanner } from './components/ErrorBanner';
+import { UsageWarningBanner } from './components/UsageWarningBanner';
+import { UsageLimitModal } from './components/UsageLimitModal';
 import { validateFile, getValidationErrorMessage } from './utils/fileValidation';
 import { trackCodeInput, trackFileUpload, trackExampleUsage, trackInteraction } from './utils/analytics';
 import { createTestDataLoader, exposeTestDataLoader } from './utils/testData';
+import { exposeUsageSimulator } from './utils/usageTestData';
+import { useAuth } from './contexts/AuthContext';
 
 // Lazy load heavy components that aren't needed on initial render
 const DocPanel = lazy(() => import('./components/DocPanel').then(m => ({ default: m.DocPanel })));
@@ -41,6 +46,7 @@ import {
 import { API_URL } from './config/api.js';
 
 function App() {
+  const { getToken, user } = useAuth();
   const [code, setCode] = useState('// Paste your code here or try the example below...\n\n// Example function:\nfunction calculateTotal(items) {\n  return items.reduce((sum, item) => sum + item.price, 0);\n}\n');
   const [docType, setDocType] = useState('README');
   const [language, setLanguage] = useState('javascript');
@@ -49,13 +55,80 @@ function App() {
   const [showExamplesModal, setShowExamplesModal] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [showUsageLimitModal, setShowUsageLimitModal] = useState(false);
+  const [showUsageWarning, setShowUsageWarning] = useState(false);
   const [largeCodeStats, setLargeCodeStats] = useState(null);
   const [uploadError, setUploadError] = useState(null);
   const fileInputRef = useRef(null);
 
+  // Usage tracking
+  const { usage, refetch: refetchUsage, checkThreshold, canGenerate, getUsageForPeriod } = useUsageTracking();
+  const [mockUsage, setMockUsage] = useState(null);
+
+  // Listen for direct banner/modal show/hide events (for UI testing)
+  useEffect(() => {
+    const handleShowBanner = (event) => {
+      const { percentage, usage: usageData } = event.detail;
+      // Transform to match expected format
+      const transformed = {
+        percentage: Math.round((usageData.monthly.used / usageData.monthly.limit) * 100),
+        remaining: usageData.monthly.remaining,
+        limit: usageData.monthly.limit,
+        period: 'monthly',
+        resetDate: usageData.resetTimes.monthly,
+        tier: usageData.tier
+      };
+      setMockUsage(transformed);
+
+      // At 100%, show modal instead of banner
+      if (percentage >= 100 || transformed.remaining === 0) {
+        setShowUsageLimitModal(true);
+        setShowUsageWarning(false);
+      } else {
+        // 80-99% shows banner
+        setShowUsageWarning(true);
+        setShowUsageLimitModal(false);
+      }
+    };
+
+    const handleHideBanner = () => {
+      setMockUsage(null);
+      setShowUsageWarning(false);
+      setShowUsageLimitModal(false);
+    };
+
+    window.addEventListener('show-usage-banner', handleShowBanner);
+    window.addEventListener('hide-usage-banner', handleHideBanner);
+
+    return () => {
+      window.removeEventListener('show-usage-banner', handleShowBanner);
+      window.removeEventListener('hide-usage-banner', handleHideBanner);
+    };
+  }, []);
+
+  // Check usage thresholds and show appropriate warnings
+  useEffect(() => {
+    // Don't override mock usage
+    if (mockUsage) return;
+
+    if (!usage) return;
+
+    // Check if at 100% limit (hard limit)
+    if (!canGenerate()) {
+      // Don't auto-show modal, only show when user tries to generate
+      setShowUsageWarning(false);
+    }
+    // Check if at 80%+ (soft limit warning)
+    else if (checkThreshold(80)) {
+      setShowUsageWarning(true);
+    } else {
+      setShowUsageWarning(false);
+    }
+  }, [usage, canGenerate, checkThreshold, mockUsage]);
+
   // Prevent body scroll and layout shift when any modal opens
   useEffect(() => {
-    const isAnyModalOpen = showQualityModal || showExamplesModal || showHelpModal || showConfirmationModal;
+    const isAnyModalOpen = showQualityModal || showExamplesModal || showHelpModal || showConfirmationModal || showUsageLimitModal;
 
     if (isAnyModalOpen) {
       // Calculate scrollbar width BEFORE hiding overflow
@@ -87,10 +160,17 @@ function App() {
     error,
     rateLimitInfo,
     retryAfter
-  } = useDocGeneration();
+  } = useDocGeneration(refetchUsage);
 
   const handleGenerate = async () => {
     if (code.trim()) {
+      // Check usage quota first
+      if (!canGenerate()) {
+        // Show usage limit modal (100% limit reached)
+        setShowUsageLimitModal(true);
+        return;
+      }
+
       // Check line count and file size
       const lines = code.split('\n').length;
       const sizeInKB = (new Blob([code]).size / 1024).toFixed(2);
@@ -165,8 +245,18 @@ function App() {
       const formData = new FormData();
       formData.append('file', file);
 
+      // Get auth token if available
+      const token = getToken();
+      const headers = {};
+
+      // Add Authorization header if user is authenticated
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch(`${API_URL}/api/upload`, {
         method: 'POST',
+        headers,
         body: formData,
       });
 
@@ -289,12 +379,23 @@ function App() {
     toastCompact('Example loaded successfully', 'success');
   };
 
+  const handleUpgradeClick = () => {
+    // Navigate to pricing page
+    window.location.href = '/pricing';
+  };
+
   // Expose test data loader to window for console access (development/testing)
   useEffect(() => {
     const loadTestDoc = createTestDataLoader(setDocumentation, setQualityScore, setCode);
     const cleanup = exposeTestDataLoader(loadTestDoc);
     return cleanup;
   }, [setDocumentation, setQualityScore, setCode]);
+
+  // Expose usage simulator to window for console access (development/testing)
+  useEffect(() => {
+    const cleanup = exposeUsageSimulator();
+    return cleanup;
+  }, []);
 
   // Show toast notifications for documentation generation success only
   useEffect(() => {
@@ -331,7 +432,7 @@ function App() {
         type="file"
         id="file-upload-input"
         name="file-upload"
-        accept=".js,.jsx,.ts,.tsx,.py,.java,.cpp,.c,.h,.hpp,.cs,.go,.rs,.rb,.php,.txt"
+        accept=".js,.jsx,.ts,.tsx,.py,.java,.cpp,.c,.h,.hpp,.cs,.go,.rs,.rb,.php,.txt,text/javascript,text/x-javascript,application/javascript,text/x-typescript,text/typescript,text/x-python,text/x-java-source,text/x-c,text/x-c++,text/x-csharp,text/x-go,text/x-rust,text/x-ruby,text/x-php,text/plain"
         onChange={handleFileChange}
         className="hidden"
         aria-label="Upload code file"
@@ -355,6 +456,36 @@ function App() {
 
       {/* Main Content */}
       <main id="main-content" className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Priority Banner Section - Show only most critical message */}
+        {/* Priority Order: 1) Claude API Error, 2) Upload Error, 3) Generation Error, 4) Usage Warning */}
+        {error ? (
+          // Priority 1: Claude API rate limit or generation errors (blocking)
+          <ErrorBanner
+            error={error}
+            retryAfter={retryAfter}
+            onDismiss={clearError}
+          />
+        ) : uploadError ? (
+          // Priority 2: Upload errors
+          <ErrorBanner
+            error={uploadError}
+            onDismiss={() => setUploadError(null)}
+          />
+        ) : showUsageWarning && (mockUsage || usage) ? (
+          // Priority 3: Usage warning (80%+ usage, non-blocking)
+          <div className="mb-6">
+            <UsageWarningBanner
+              usage={mockUsage || getUsageForPeriod('monthly')}
+              currentTier={mockUsage?.tier || usage?.tier}
+              onDismiss={() => {
+                setShowUsageWarning(false);
+                setMockUsage(null); // Clear mock when dismissing
+              }}
+              onUpgrade={handleUpgradeClick}
+            />
+          </div>
+        ) : null}
+
         {/* Control Bar */}
         <ControlBar
           docType={docType}
@@ -365,21 +496,6 @@ function App() {
           isGenerating={isGenerating}
           generateDisabled={!code.trim()}
         />
-
-        {/* Error Banners */}
-        {error && (
-          <ErrorBanner
-            error={error}
-            retryAfter={retryAfter}
-            onDismiss={clearError}
-          />
-        )}
-        {uploadError && (
-          <ErrorBanner
-            error={uploadError}
-            onDismiss={() => setUploadError(null)}
-          />
-        )}
 
         {/* Split View: Code + Documentation */}
         <div className="mt-6 flex flex-col lg:grid lg:grid-cols-2 gap-4 lg:gap-6">
@@ -506,6 +622,17 @@ function App() {
             }
           />
         </Suspense>
+      )}
+
+      {/* Usage Limit Modal (100% limit reached) */}
+      {showUsageLimitModal && usage && (
+        <UsageLimitModal
+          isOpen={showUsageLimitModal}
+          onClose={() => setShowUsageLimitModal(false)}
+          usage={getUsageForPeriod('monthly')}
+          currentTier={usage.tier}
+          onUpgrade={handleUpgradeClick}
+        />
       )}
     </div>
   );

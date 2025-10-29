@@ -9,10 +9,17 @@ class RateLimitError extends Error {
   }
 }
 
-export async function generateDocumentation(code, docType, language) {
+export async function generateDocumentation(code, docType, language, token = null) {
+  const headers = { 'Content-Type': 'application/json' };
+
+  // Add Authorization header if token is provided
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
   const response = await fetch(`${API_URL}/api/generate`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify({ code, docType, language })
   });
 

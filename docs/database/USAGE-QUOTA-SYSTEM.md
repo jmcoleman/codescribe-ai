@@ -10,6 +10,7 @@
 
 - [System Overview](#system-overview)
 - [How It Works](#how-it-works)
+  - [IP Address Tracking Limitations](#ip-address-tracking-limitations)
 - [Reset Mechanism](#reset-mechanism)
 - [Database Schema](#database-schema)
 - [Code Architecture](#code-architecture)
@@ -122,6 +123,53 @@
 │ → 429 Too Many Requests (Upgrade to Starter)              │
 └─────────────────────────────────────────────────────────────┘
 ```
+
+### IP Address Tracking Limitations
+
+**Important:** Anonymous user tracking by IP address is a **rough approximation** with known limitations:
+
+#### How IP Addressing Works
+
+**Public IP (what the server sees):**
+- Assigned by ISP to your router/modem
+- **Shared by all devices** on the same network (home, office, coffee shop)
+- This is what `req.ip` returns to the backend
+
+**Private IP (local network only):**
+- Assigned by router to each device (192.168.x.x, 10.x.x.x)
+- Unique within your network but invisible to external servers
+- Cannot be used for tracking
+
+#### Real-World Scenarios
+
+| Scenario | Behavior | Impact |
+|----------|----------|--------|
+| **Same household** | All devices share one public IP | Family members share 10 docs/month quota |
+| **Office network** | All employees share one public IP | Entire office shares 10 docs/month quota |
+| **Coffee shop WiFi** | All customers share one public IP | Everyone collectively gets 10 docs/month |
+| **Mobile network** | IP can change between sessions | Same user might get different quotas |
+| **VPN users** | Share VPN exit node IP with others | May share quota with strangers on same VPN |
+| **Cellular data** | IP changes as you move between towers | Quota may reset unexpectedly |
+
+#### Why This Is Acceptable
+
+**For Free Tier:**
+- ✅ **Privacy-friendly** - No cookies, fingerprinting, or persistent tracking
+- ✅ **Simple implementation** - No consent banners or GDPR complexity
+- ✅ **Conversion driver** - Limitations encourage signup for individual tracking
+- ✅ **Reasonable for 10 docs/month** - Prevents abuse while allowing evaluation
+- ⚠️ **Imperfect accuracy** - Trade-off for privacy and simplicity
+
+**Better alternatives require:**
+- Browser fingerprinting → Privacy concerns, easily defeated
+- Mandatory accounts → Friction, reduces trial conversions
+- Cookies/localStorage → Can be cleared, requires consent banners
+- Device IDs → Privacy invasive, platform-specific
+
+**Design Decision:** IP-based tracking is the right balance between privacy, simplicity, and abuse prevention for a generous free tier. Users who need reliable individual quotas can sign up for a free account (still 10 docs/month, but tracked individually).
+
+**Migration on Signup:**
+When an anonymous user creates an account, their IP-based usage **migrates to their user account** (see Step 3 above). This preserves their quota consumption and prevents double-counting.
 
 ---
 
@@ -576,6 +624,62 @@ October 16 onward:
 ---
 
 ## API Reference
+
+### GET /api/user/usage - Get Current Usage
+
+**Purpose:** Retrieve current usage statistics for authenticated or anonymous users
+
+**Authentication:** Optional (supports both authenticated and anonymous users)
+
+**Headers:**
+```javascript
+Authorization: Bearer <token>  // Optional - omit for anonymous users
+```
+
+**Response (200 OK):**
+```json
+{
+  "tier": "free",
+  "daily": {
+    "used": 2,
+    "limit": 3,
+    "remaining": 1
+  },
+  "monthly": {
+    "used": 8,
+    "limit": 10,
+    "remaining": 2
+  },
+  "resetTimes": {
+    "daily": "2025-10-29T00:00:00.000Z",
+    "monthly": "2025-11-01T00:00:00.000Z"
+  }
+}
+```
+
+**Implementation Details:**
+- **Authenticated users:** Uses `req.user.id` from JWT token
+- **Anonymous users:** Uses `ip:${req.ip}` (see [IP Address Tracking Limitations](#ip-address-tracking-limitations))
+- Always returns 'free' tier for anonymous users
+- Queries `user_quotas` table for authenticated users
+- Queries `anonymous_quotas` table for anonymous users
+
+**Example Usage:**
+```javascript
+// Frontend: Fetch usage (works with or without auth)
+const headers = {};
+if (token) {
+  headers['Authorization'] = `Bearer ${token}`;
+}
+
+const response = await fetch('/api/user/usage', {
+  method: 'GET',
+  headers,
+});
+
+const data = await response.json();
+console.log(`Used ${data.monthly.used} of ${data.monthly.limit} docs this month`);
+```
 
 ### checkUsage() Middleware
 

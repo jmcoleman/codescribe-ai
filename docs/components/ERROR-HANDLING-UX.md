@@ -2,7 +2,7 @@
 
 **Project:** CodeScribe AI
 **Component:** Error Banner & Notification System
-**Last Updated:** October 18, 2025
+**Last Updated:** October 28, 2025 (Evening Session)
 **Status:** Active Design Guidelines
 
 ---
@@ -11,13 +11,14 @@
 
 1. [Overview](#overview)
 2. [Error Notification Strategy](#error-notification-strategy)
-3. [Research Summary](#research-summary)
-4. [Decision Framework](#decision-framework)
-5. [Animation Specifications](#animation-specifications)
-6. [Implementation Guidelines](#implementation-guidelines)
-7. [CodeScribe AI Error Patterns](#codescribe-ai-error-patterns)
-8. [Accessibility Considerations](#accessibility-considerations)
-9. [References](#references)
+3. [Priority Banner System](#priority-banner-system)
+4. [Research Summary](#research-summary)
+5. [Decision Framework](#decision-framework)
+6. [Animation Specifications](#animation-specifications)
+7. [Implementation Guidelines](#implementation-guidelines)
+8. [CodeScribe AI Error Patterns](#codescribe-ai-error-patterns)
+9. [Accessibility Considerations](#accessibility-considerations)
+10. [References](#references)
 
 ---
 
@@ -33,6 +34,8 @@ This guide documents research-based best practices for error handling UX in Code
 4. **Error messages must persist** until user dismisses or resolves the issue
 5. **Accessibility is paramount** - respect `prefers-reduced-motion` and use ARIA
 6. **No duplicate notifications** - errors use banners only, not toasts
+7. **Priority-based display** - show only the most critical message at a time
+8. **Consistent styling** - all banners use left accent borders for visual cohesion
 
 ---
 
@@ -183,6 +186,153 @@ if (apiError) {
 - ✅ Raw API JSON preserved in `originalMessage` for debugging
 - ✅ Proper error type categorization
 - ✅ No more raw JSON displayed to users
+
+---
+
+## Priority Banner System
+
+**Implemented:** October 28, 2025
+
+### Problem Statement
+
+Multiple banners stacking vertically creates several UX issues:
+- **Visual clutter** - Takes up ~200px of vertical space
+- **Reduced impact** - Multiple messages compete for attention
+- **User confusion** - Unclear which issue to address first
+- **Mobile constraints** - Severely limits visible content area
+
+### Solution: Priority-Based Display
+
+**Design Decision:** Show only the most critical message at any time.
+
+```javascript
+// Priority Order (highest to lowest)
+{error ? (
+  // Priority 1: Claude API Errors (blocking - rate limits, auth)
+  <ErrorBanner error={error} />
+) : uploadError ? (
+  // Priority 2: Upload Errors (file validation, network)
+  <ErrorBanner error={uploadError} />
+) : showUsageWarning ? (
+  // Priority 3: Usage Warnings (80%+ quota, non-blocking)
+  <UsageWarningBanner usage={usage} />
+) : null}
+```
+
+### Priority Hierarchy Rationale
+
+**Why this order?**
+
+1. **Claude API Errors (Priority 1)**
+   - **Blocks generation** - User cannot proceed until resolved
+   - **Time-sensitive** - Rate limits have retry countdowns
+   - **App-critical** - Core functionality unavailable
+   - **Examples**: Rate limit exceeded, authentication error, insufficient credits
+
+2. **Upload Errors (Priority 2)**
+   - **Blocks input** - User cannot provide code to generate
+   - **Immediate** - Happens during active user action
+   - **Recoverable** - User can fix file and retry
+   - **Examples**: File too large, invalid format, network error
+
+3. **Usage Warnings (Priority 3)**
+   - **Non-blocking** - User can still generate (until 100%)
+   - **Informational** - Alerts about approaching limits
+   - **Dismissible** - User can acknowledge and continue
+   - **Examples**: 80% quota used, 90% quota used
+
+### Banner Placement
+
+**All banners appear at the top of the page** (below header, above control bar):
+
+```
+┌─────────────────────────────────┐
+│ Header / Navigation             │
+├─────────────────────────────────┤
+│ [BANNER - Most Critical Only]   │  ← Consistent location
+├─────────────────────────────────┤
+│ Control Bar                      │
+│ Main Content                     │
+└─────────────────────────────────┘
+```
+
+**Why top placement?**
+- **Immediate visibility** - First thing user sees
+- **Consistent location** - All banners in same spot
+- **No workflow interruption** - Doesn't cover working area
+- **Mobile friendly** - Easy to scroll past once read
+
+### Consistent Visual Language
+
+All banners follow the same design pattern for cohesion:
+
+**Common Elements:**
+```css
+/* Left accent border (4px) - Color indicates severity */
+border-left: 4px solid [color];
+
+/* Same icon size across all banners */
+.icon { width: 1.5rem; height: 1.5rem; } /* w-6 h-6 */
+
+/* Same animations */
+.entering { animation: slide-in-fade 250ms ... }
+.exiting { animation: fade-out 200ms ... }
+
+/* Neutral slate background with colored accent */
+background: slate-50;
+border: slate-200;
+border-left-color: [severity-color];
+```
+
+**Color Coding:**
+- **Red accent** (`border-l-red-500`) - Blocking errors (API, upload)
+- **Yellow accent** (`border-l-yellow-500`) - Warnings (usage 80-99%)
+
+**Implementation:**
+```jsx
+// ErrorBanner.jsx - Red accent for blocking errors
+<div className="bg-red-50 border border-red-200 border-l-4 border-l-red-500 ...">
+  <AlertCircle className="h-6 w-6 text-red-600" />
+  {/* Error content */}
+</div>
+
+// UsageWarningBanner.jsx - Yellow accent for warnings
+<div className="bg-slate-50 border border-slate-200 border-l-4 border-l-yellow-500 ...">
+  <AlertTriangle className="h-6 w-6 text-yellow-600" />
+  {/* Warning content */}
+</div>
+```
+
+### Benefits
+
+1. **Reduced clutter** - ~200px of stacked banners → single 80px banner
+2. **Clear priorities** - User knows which issue is most critical
+3. **Better mobile experience** - More content visible on small screens
+4. **Consistent UX** - All banners appear in same location
+5. **Visual hierarchy** - Color-coded severity at a glance
+6. **Professional appearance** - Clean, enterprise-grade design
+
+### Implementation Notes
+
+**State Management:**
+```jsx
+const [error, setError] = useState(null);           // API errors
+const [uploadError, setUploadError] = useState(null); // Upload errors
+const [showUsageWarning, setShowUsageWarning] = useState(false); // Usage
+
+// Each error type has independent state
+// Only highest-priority non-null state displays
+```
+
+**Dismissal Behavior:**
+```jsx
+// Each banner dismisses independently
+onDismiss={() => setError(null)}        // API error
+onDismiss={() => setUploadError(null)}  // Upload error
+onDismiss={() => setShowUsageWarning(false)} // Usage warning
+
+// When dismissed, next-highest-priority banner appears automatically
+```
 
 ### Error Type Formatting
 
@@ -510,27 +660,45 @@ module.exports = {
 ### CSS Classes
 
 ```css
+/* Error Banner (Red - Blocking) */
 .error-banner {
   /* Base styles */
   background-color: #fef2f2; /* red-50 */
-  border-left: 4px solid #dc2626; /* red-600 */
+  border: 1px solid #fecaca; /* red-200 */
+  border-left: 4px solid #ef4444; /* red-500 accent */
   border-radius: 0.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   margin-bottom: 1.5rem;
 }
 
-.error-banner.entering {
+/* Usage Warning Banner (Yellow - Non-blocking) */
+.usage-warning-banner {
+  /* Base styles */
+  background-color: #f8fafc; /* slate-50 */
+  border: 1px solid #e2e8f0; /* slate-200 */
+  border-left: 4px solid #eab308; /* yellow-500 accent */
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1.5rem;
+}
+
+/* Animation states (same for all banners) */
+.error-banner.entering,
+.usage-warning-banner.entering {
   animation: slide-in-fade 250ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-.error-banner.exiting {
+.error-banner.exiting,
+.usage-warning-banner.exiting {
   animation: fade-out 200ms cubic-bezier(0.4, 0, 1, 1) forwards;
 }
 
 /* Respect user motion preferences */
 @media (prefers-reduced-motion: reduce) {
   .error-banner.entering,
-  .error-banner.exiting {
+  .error-banner.exiting,
+  .usage-warning-banner.entering,
+  .usage-warning-banner.exiting {
     animation: none;
   }
 }
@@ -542,16 +710,25 @@ module.exports = {
 
 ### Error Classification
 
-| Error Type | Severity | Blocking? | Display Method | Animation |
-|------------|----------|-----------|----------------|-----------|
-| **Network/Server Down** | Medium | No (can retry) | Inline Banner | Slide + Fade |
-| **Rate Limit Exceeded** | Medium | Temporarily | Inline Banner | Slide + Fade |
-| **File Upload Validation** | Low | No (can fix) | Inline Banner | Slide + Fade |
-| **API Auth Failure** | High | Yes | Inline Banner* | Slide + Fade |
-| **Code Parser Error** | Medium | No (can edit) | Inline Banner | Slide + Fade |
-| **Invalid Input** | Low | No | Inline (near field) | Fade only |
+| Error Type | Severity | Blocking? | Display Method | Color Accent | Priority |
+|------------|----------|-----------|----------------|--------------|----------|
+| **Rate Limit Exceeded** | High | Yes | ErrorBanner | Red | 1 |
+| **API Auth Failure** | High | Yes | ErrorBanner | Red | 1 |
+| **Network/Server Down** | Medium-High | Temporarily | ErrorBanner | Red | 1 |
+| **File Upload Validation** | Medium | Partially | ErrorBanner | Red | 2 |
+| **File Upload Network** | Medium | Partially | ErrorBanner | Red | 2 |
+| **Usage Warning (80-99%)** | Low | No | UsageWarningBanner | Yellow | 3 |
+| **Usage Limit (100%)** | High | Yes | UsageLimitModal | Red | N/A* |
+| **Code Parser Error** | Medium | No (can edit) | Inline Banner | Red | N/A |
+| **Invalid Input** | Low | No | Inline (near field) | Red | N/A |
 
-*Note: Even auth failures use banners in CodeScribe AI because user can refresh/retry without losing work.
+*Note: UsageLimitModal is a blocking modal, not part of the banner priority system.
+
+**Priority System:**
+- **Priority 1**: Claude API errors (rate limit, auth, network)
+- **Priority 2**: Upload errors (validation, network)
+- **Priority 3**: Usage warnings (80-99% quota)
+- **Only one banner displays at a time** based on priority hierarchy
 
 ### Error Message Content Standards
 
@@ -590,12 +767,22 @@ Recovery: "If the issue persists, contact support."
 
 #### Colors (From Figma Design System)
 ```css
+/* Error Banners (API errors, Upload errors) */
 Background: #fef2f2 (red-50)
-Border: #dc2626 (red-600) - 4px left accent
+Border: #fecaca (red-200)
+Left Accent: #ef4444 (red-500) - 4px
 Text (Header): #7f1d1d (red-900)
 Text (Body): #991b1b (red-700)
 Icon: #dc2626 (red-600)
 Button (Dismiss): #f87171 (red-400) → #dc2626 (red-600) on hover
+
+/* Usage Warning Banners (80-99% quota) */
+Background: #f8fafc (slate-50)
+Border: #e2e8f0 (slate-200)
+Left Accent: #eab308 (yellow-500) - 4px
+Text (Header): #0f172a (slate-900)
+Text (Body): #475569 (slate-600)
+Icon: #ca8a04 (yellow-600)
 ```
 
 #### Typography
@@ -614,9 +801,13 @@ Margin Bottom: 1.5rem (24px)
 ```
 
 #### Icons (Lucide React)
-- **Error**: `AlertCircle` (20px)
+- **Error**: `AlertCircle` (24px / w-6 h-6) - Red banners
+- **Warning**: `AlertTriangle` (24px / w-6 h-6) - Yellow banners
 - **Dismiss**: `X` (16px)
 - **Retry Indicator**: Pulsing dot (6px) with `animate-pulse`
+
+**Icon Size Consistency:**
+All banners use the same icon size (w-6 h-6 / 24px) for visual cohesion across error states and warning states.
 
 ---
 
@@ -721,19 +912,52 @@ Margin Bottom: 1.5rem (24px)
 
 ## Version History
 
-- **v1.0** (Oct 16, 2025) - Initial design guide created based on UX research
-  - Documented inline banner vs modal decision framework
-  - Specified animation timing standards (250ms enter, 200ms exit)
-  - Defined CodeScribe AI error patterns and classification
-  - Added accessibility guidelines and ARIA specifications
+### v2.0 (Oct 28, 2025 - Evening Session)
+
+**Major Updates:**
+
+1. **Priority Banner System**
+   - Implemented priority-based display (show only most critical message)
+   - Priority hierarchy: API errors (1) > Upload errors (2) > Usage warnings (3)
+   - Reduces UI clutter from ~200px stacked banners to single 80px banner
+   - Added detailed rationale for priority order
+
+2. **Consistent Visual Language**
+   - All banners now use left accent border pattern (4px)
+   - Standard icon size across all banners (w-6 h-6 / 24px)
+   - Color-coded severity: Red (blocking) vs Yellow (warning)
+   - Neutral slate background for warning banners instead of yellow
+
+3. **Banner Placement Standardization**
+   - All banners appear at top of page (below header, above control bar)
+   - Consistent location improves visibility and UX
+   - Mobile-friendly placement
+
+4. **Updated Classification Table**
+   - Added priority column to error classification
+   - Included usage warning patterns (80-99% quota)
+   - Distinguished between ErrorBanner and UsageWarningBanner
+   - Added UsageLimitModal (100% blocking state)
+
+5. **Enhanced Documentation**
+   - Added implementation notes for state management
+   - Documented dismissal behavior with priority system
+   - Updated color specifications for both red and yellow banners
+   - Added icon consistency guidelines
+
+### v1.0 (Oct 16, 2025)
+
+- Initial design guide created based on UX research
+- Documented inline banner vs modal decision framework
+- Specified animation timing standards (250ms enter, 200ms exit)
+- Defined CodeScribe AI error patterns and classification
+- Added accessibility guidelines and ARIA specifications
 
 ---
 
-**Next Steps:**
-1. Implement Option 1 animation (250ms slide + fade in, 200ms fade out)
-2. Test with users to validate animation timing feels natural
-3. Conduct accessibility audit with screen readers
-4. Monitor user feedback on error message clarity
-
 **Maintained by:** CodeScribe AI Design Team
 **Questions?** Refer to research sources or contact UX lead
+
+**Related Documentation:**
+- [USAGE-PROMPTS.md](./USAGE-PROMPTS.md) - Usage warning and limit modal patterns
+- [TOAST-SYSTEM.md](./TOAST-SYSTEM.md) - Success notification patterns

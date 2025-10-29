@@ -11,7 +11,7 @@ import apiRoutes from '../api.js';
 jest.mock('../../models/Usage.js');
 jest.mock('../../middleware/auth.js', () => ({
   requireAuth: (req, res, next) => {
-    // Mock auth middleware - set req.user if not present
+    // Mock auth middleware - requires req.user to be present
     if (!req.user) {
       return res.status(401).json({ success: false, error: 'Authentication required' });
     }
@@ -84,15 +84,38 @@ describe('Usage and Tier API Endpoints', () => {
       expect(Usage.getUserUsage).toHaveBeenCalledWith(1);
     });
 
-    it('should require authentication', async () => {
+    it('should support anonymous users (IP-based tracking)', async () => {
+      const mockDate = new Date('2025-10-28T12:00:00Z');
+      Usage.getUserUsage.mockResolvedValue({
+        dailyGenerations: 1,
+        monthlyGenerations: 5,
+        resetDate: mockDate,
+        periodStart: new Date('2025-10-01'),
+      });
+
       const res = await request(app)
         .get('/api/user/usage')
-        .expect(401);
+        .expect(200);
 
       expect(res.body).toMatchObject({
-        success: false,
-        error: 'Authentication required',
+        tier: 'free',
+        daily: {
+          used: 1,
+          limit: 3,
+          remaining: 2,
+        },
+        monthly: {
+          used: 5,
+          limit: 10,
+          remaining: 5,
+        },
       });
+
+      // Should be called with IP-based identifier (format: "ip:127.0.0.1")
+      expect(Usage.getUserUsage).toHaveBeenCalled();
+      const callArg = Usage.getUserUsage.mock.calls[0][0];
+      expect(typeof callArg).toBe('string');
+      expect(callArg).toMatch(/^ip:/);
     });
 
     it('should handle unlimited tier', async () => {

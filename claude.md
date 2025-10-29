@@ -12,7 +12,7 @@
 AI-powered documentation generator with real-time streaming, quality scoring (0-100), and WCAG 2.1 AA compliance.
 
 **Key Metrics:**
-- 1,363 tests (1,327 passing, 36 skipped) | 95.81% backend coverage
+- 1,489 tests (1,453 passing, 36 skipped) | 95.81% backend coverage
 - Lighthouse: 75/100 performance (+67%), 100/100 accessibility
 - Bundle: 78KB gzipped (-85% reduction)
 - Accessibility: 95/100 score, 0 axe violations
@@ -44,7 +44,7 @@ AI-powered documentation generator with real-time streaming, quality scoring (0-
 | Document | Use Case | Key Contents |
 |----------|----------|--------------|
 | [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) | Performance optimization | Lazy loading, bundle analysis, Core Web Vitals, maintenance |
-| [Testing README](docs/testing/README.md) | Test navigation hub | 1,363 test stats, quick commands, coverage overview |
+| [Testing README](docs/testing/README.md) | Test navigation hub | 1,489 test stats, quick commands, coverage overview |
 | [COMPONENT-TEST-COVERAGE.md](docs/testing/COMPONENT-TEST-COVERAGE.md) | Coverage details ⭐ | 13/18 components tested, category breakdown, gaps |
 | [frontend-testing-guide.md](docs/testing/frontend-testing-guide.md) | React testing patterns | Vitest + RTL, mocking, a11y, interactions |
 | [TEST-FIXES-OCT-2025.md](docs/testing/TEST-FIXES-OCT-2025.md) | Test fix patterns ⭐ | 75 tests fixed, 10 patterns, 6 technical insights, 97.3% pass rate |
@@ -58,7 +58,8 @@ AI-powered documentation generator with real-time streaming, quality scoring (0-
 | [brand-color-palette.html](docs/design/brand-color-palette.html) | Color reference | 27 colors, click-to-copy hex codes, WCAG AA info |
 | [TOAST-SYSTEM.md](docs/components/TOAST-SYSTEM.md) | Toast notifications | 20+ utilities, 6 custom toasts, a11y support |
 | [MERMAID-DIAGRAMS.md](docs/components/MERMAID-DIAGRAMS.md) | Diagram patterns | Brand theming, React integration, troubleshooting |
-| [ERROR-HANDLING-UX.md](docs/components/ERROR-HANDLING-UX.md) | Error UX | Banners vs modals, animations (250ms/200ms), a11y |
+| [ERROR-HANDLING-UX.md](docs/components/ERROR-HANDLING-UX.md) | Error UX | Banners vs modals, animations (250ms/200ms), a11y, priority system |
+| [USAGE-PROMPTS.md](docs/components/USAGE-PROMPTS.md) | Usage warnings & limits | 80% banner, 100% modal, dynamic multipliers, simulator |
 | [COPYBUTTON.md](docs/components/COPYBUTTON.md) | Copy-to-clipboard | Variants, animation timeline, best practices |
 | [SELECT-USAGE.md](docs/components/SELECT-USAGE.md) | Dropdown component | Headless UI patterns, keyboard nav, a11y |
 
@@ -108,10 +109,11 @@ AI-powered documentation generator with real-time streaming, quality scoring (0-
 | Design/UI | Figma Guide, Brand Color Palette |
 | Architecture | ARCHITECTURE-OVERVIEW.md (visual), ARCHITECTURE.md (technical) |
 | Performance | OPTIMIZATION-GUIDE.md |
-| Testing | Testing README, COMPONENT-TEST-COVERAGE.md, TEST-FIXES-OCT-2025.md |
+| Testing | Testing README, COMPONENT-TEST-COVERAGE.md, TEST-FIXES-OCT-2025.md, SKIPPED-TESTS.md |
 | Test Fixes/Patterns | TEST-FIXES-OCT-2025.md (10 patterns, 6 insights, frontend + backend) |
+| Skipped Tests | SKIPPED-TESTS.md (36 tests documented, quarterly review schedule) |
 | Accessibility | ACCESSIBILITY-AUDIT.MD, SCREEN-READER-TESTING-GUIDE.md |
-| Components | TOAST-SYSTEM.md, ERROR-HANDLING-UX.md, COPYBUTTON.md, etc. |
+| Components | TOAST-SYSTEM.md, ERROR-HANDLING-UX.md, USAGE-PROMPTS.md, COPYBUTTON.md, etc. |
 | Versions | Run `npm run versions`, VERSION-CHECKER.md |
 | Database | DB-NAMING-STANDARDS.md, DB-MIGRATION-MANAGEMENT.MD, USAGE-QUOTA-SYSTEM.md, PRODUCTION-DB-SETUP.md |
 
@@ -125,9 +127,10 @@ AI-powered documentation generator with real-time streaming, quality scoring (0-
 ### 3. Key Cross-References
 - **Architecture:** ARCHITECTURE-OVERVIEW.md (visual) → ARCHITECTURE.md (technical) → Dev Guide (implementation)
 - **Performance:** OPTIMIZATION-GUIDE.md (comprehensive) → Dev Guide (techniques) → ARCHITECTURE.md (targets)
-- **Testing:** Testing README (overview) → COMPONENT-TEST-COVERAGE.md (details) → frontend-testing-guide.md (patterns) → TEST-FIXES-OCT-2025.md (fixes & patterns)
+- **Testing:** Testing README (overview) → COMPONENT-TEST-COVERAGE.md (details) → frontend-testing-guide.md (patterns) → TEST-FIXES-OCT-2025.md (fixes & patterns) → SKIPPED-TESTS.md (maintenance)
 - **Test Debugging:** TEST-FIXES-OCT-2025.md (10 patterns, 6 insights) for fixing auth tests, mocking, validation
-- **Error Handling:** ERROR-HANDLING-UX.md (UX patterns) → TOAST-SYSTEM.md (error toasts)
+- **Skipped Tests:** SKIPPED-TESTS.md - Update on every release, quarterly review (15 frontend tests intentionally skipped)
+- **Error Handling:** ERROR-HANDLING-UX.md (UX patterns, priority system) → USAGE-PROMPTS.md (usage warnings/limits) → TOAST-SYSTEM.md (success toasts)
 - **Accessibility:** ACCESSIBILITY-AUDIT.MD (results) → SCREEN-READER-TESTING-GUIDE.md (procedures)
 
 ---
@@ -184,6 +187,38 @@ await page.waitForSelector('.monaco-editor', { state: 'visible', timeout: 10000 
 ```bash
 npm run versions  # See VERSION-CHECKER.md for details
 ```
+
+### Skipped Tests Documentation
+**ALWAYS keep SKIPPED-TESTS.md current** ([full guide](docs/testing/SKIPPED-TESTS.md)):
+
+**When skipping a test:**
+1. ✅ Add skip reason comment in test file: `// TODO: Skipped because [reason]`
+2. ✅ Use `.skip()` method: `it.skip('test name', () => {})`
+3. ✅ Document in SKIPPED-TESTS.md with:
+   - File path and line number
+   - Category (Database, Feature Not Implemented, Timing, jsdom Limitation, etc.)
+   - Clear justification for skipping
+   - When to unskip (conditions or phase/epic)
+   - Verification that core functionality is tested elsewhere
+4. ✅ Update "Total Skipped" count in header
+5. ✅ Update Quick Summary table
+
+**When unskipping a test:**
+1. ✅ Remove `.skip()` from test
+2. ✅ Verify test passes: `npm test -- path/to/test.jsx`
+3. ✅ Remove entry from SKIPPED-TESTS.md
+4. ✅ Update "Total Skipped" count
+5. ✅ Update test counts in documentation
+
+**On every release:**
+- [ ] Run verification commands: `cd client && npm test -- --run 2>&1 | grep "skipped"`
+- [ ] Check if skipped count changed from previous release (currently 15 frontend tests)
+- [ ] Update "Last Updated" date in SKIPPED-TESTS.md
+- [ ] Review quarterly (every 3 months) to ensure all skips still valid
+
+**Note:** Backend shows "1 skipped" test suite (database tests in `/src/db/__tests__/`), but these are **intentionally excluded** via jest.config.cjs and run separately in Docker sandbox before deployment. They are NOT counted as "skipped tests" for release tracking - only the 15 frontend `.skip()` tests are tracked.
+
+**Philosophy:** Every skipped test needs clear justification + zero production impact
 
 ### Database Naming Standards
 **ALWAYS follow these conventions** ([full guide](docs/database/DB-NAMING-STANDARDS.md)):
@@ -255,18 +290,34 @@ cd .. && cd server && npm test 2>&1 | grep "Tests:"
 # Output example: Tests:       21 skipped, 373 passed, 394 total
 
 # 2. Update documentation with new counts
-# - claude.md line 15: "X,XXX tests (100% passing)"
-# - claude.md line 45: "X,XXX test stats"
-# - claude.md line 235: "X,XXX tests (XXX frontend, XXX backend, 10 E2E)"
-# - docs/testing/README.md lines 11-20: Update all test breakdowns
+# - claude.md line 15: "X,XXX tests (X,XXX passing, XX skipped)"
+# - claude.md line 47: "X,XXX test stats"
+# - claude.md line 284: "X,XXX tests (XXX frontend, XXX backend, 10 E2E, XX skipped)"
+# - docs/testing/README.md lines 11-27: Update all test breakdowns
+
+# 3. Verify skipped tests documentation is current
+# Run verification commands from SKIPPED-TESTS.md:
+cd client && npm test -- --run 2>&1 | grep "skipped"
+# Output shows which test files have skipped tests
+
+cd server && npm test 2>&1 | grep "skipped"
+# Output shows: "Test Suites: 1 skipped, X passed"
+
+# If skipped test counts changed:
+# - Review docs/testing/SKIPPED-TESTS.md
+# - Update "Total Skipped" count in header
+# - Update Quick Summary table
+# - Update "Last Updated" date to current release date
+# - Document any new skipped tests with justification
 ```
 
 **Files to update on version bump:**
 - [ ] `package.json` (root) - Bump version
 - [ ] `client/package.json` - Bump version
 - [ ] `server/package.json` - Bump version
-- [ ] `claude.md` - Update test counts (3 locations: lines 15, 45, 235)
-- [ ] `docs/testing/README.md` - Update Quick Stats section (lines 11-20)
+- [ ] `claude.md` - Update test counts (3 locations: lines 15, 47, 284)
+- [ ] `docs/testing/README.md` - Update Quick Stats section (lines 11-27)
+- [ ] `docs/testing/SKIPPED-TESTS.md` - Verify skipped test counts and update "Last Updated" date
 - [ ] `CHANGELOG.md` - Add version entry with changes
 - [ ] Run `npm run versions` to verify all dependencies are current
 
@@ -280,7 +331,7 @@ cd .. && cd server && npm test 2>&1 | grep "Tests:"
 **Final Metrics:**
 - Accessibility: 95/100, WCAG 2.1 AA, 0 axe violations
 - Performance: 75/100 Lighthouse (+67%), 78KB bundle (-85%)
-- Testing: 1,299 tests (926 frontend, 373 backend, 10 E2E), 100% passing
+- Testing: 1,489 tests (1,022 frontend, 431 backend, 10 E2E, 36 skipped), 97.6% passing
 - Deployment: Vercel + GitHub Actions CI/CD, custom domain
 
 **Optional:** README screenshots, demo video, extended manual a11y testing
@@ -305,7 +356,7 @@ codescribe-ai/
 │   ├── database/             # DB-NAMING-STANDARDS.md, DB-MIGRATION-MANAGEMENT.MD, PRODUCTION-DB-SETUP.md
 │   ├── deployment/           # Deployment guides (Vercel, database, OAuth, email, env vars)
 │   ├── performance/          # OPTIMIZATION-GUIDE.md
-│   ├── components/           # TOAST-SYSTEM, MERMAID-DIAGRAMS, ERROR-HANDLING-UX, etc.
+│   ├── components/           # TOAST-SYSTEM, MERMAID-DIAGRAMS, ERROR-HANDLING-UX, USAGE-PROMPTS, etc.
 │   ├── testing/              # 12 test docs (README, coverage, guides, specialized)
 │   ├── design/               # brand-color-palette.html/pdf, UI guides
 │   ├── scripts/              # VERSION-CHECKER.md
@@ -346,10 +397,28 @@ codescribe-ai/
 
 ## 🔄 Version History
 
-**Current: v2.1.0** - Usage Tracking & Quota System Backend (October 28, 2025): **Phase 2 Backend Complete** for Epic 2.2 (Tier System & Feature Flags); **Usage Model created** (568 lines, 9 methods, 28 unit tests); **Database schema** for user_quotas (Migration 003) and anonymous_quotas (Migration 006) with lazy reset mechanism; **Three new API endpoints**: GET /api/user/usage (quota stats), GET /api/user/tier-features (feature access), GET /api/tiers (pricing page data); **Auth integration** with Usage.migrateAnonymousUsage() in signup/login/OAuth callbacks; **Generation routes** enhanced with checkUsage() middleware and incrementUsage() tracking; **USAGE-QUOTA-SYSTEM.md** comprehensive documentation (750+ lines); **1,363 tests** (926 frontend, 401 backend, 36 skipped); serverless-friendly architecture with atomic UPSERT operations; IP-based anonymous tracking with seamless user migration; production-ready backend for frontend Phase 3 integration
+**Current: v2.2.0** - Frontend Integration & Mobile UX (October 29, 2025): **Phase 2 Frontend Progress** for Epic 2.2 & 2.4 (UI Integration); **Pricing Page Component** with 4 tiers, language showcase, FAQ (ready for Stripe); **Mobile Menu Authentication** with Sign In button, auth modals, and user display; **Password Visibility Toggle** added to LoginModal; **Usage Tracking Frontend** with useUsageTracking hook, UsageWarningBanner (80%), UsageLimitModal (100%); **Enhanced Error Handling** with priority system (Usage Limit > API > Network > Validation); **File Upload Improvements** with MIME types for cross-platform compatibility; **Supported Languages Feature** prominently showcased in README; **1,489 tests** (1,022 frontend, 431 backend, 36 skipped, 97.6% pass rate); **60+ new tests** across 5 test suites; **11 new files** (components, hooks, tests, docs); mobile-first responsive design with accessibility patterns maintained
 
 <details>
-<summary>Previous Versions (v1.0-v1.33)</summary>
+<summary>Previous Versions (v1.0-v2.1)</summary>
+
+- **v2.1.0** - Usage Tracking & Quota System Backend (October 28, 2025)
+  - Phase 2 Backend Complete for Epic 2.2 (Tier System & Feature Flags)
+  - Usage Model created (568 lines, 9 methods, 28 unit tests)
+  - Database schema for user_quotas and anonymous_quotas with lazy reset
+  - Three new API endpoints for usage tracking
+  - 1,363 tests (926 frontend, 401 backend, 36 skipped)
+
+- **v2.0.1** - OAuth UX Fix, Database Migrations & Storage (October 28, 2025)
+  - GitHub OAuth loading states hotfix for production bounce rate
+  - Database migrations (003, 004, 005) with tier tracking
+  - Storage naming conventions established
+
+- **v2.0.0** - Authentication System & Password Reset (October 26, 2025)
+  - Complete authentication with GitHub OAuth and email/password
+  - Password reset flow with Resend email service
+  - Backend test coverage improvements (86.84% models, 65.41% routes)
+  - 1,347 tests (97.5% pass rate)
 
 - **v1.33** - OAuth UX Fix & Storage Conventions (October 28, 2025)
   - GitHub OAuth loading states added to fix bounce rate issue

@@ -1,11 +1,21 @@
 import { X } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, lazy, Suspense } from 'react';
 import { Button } from './Button';
+import { useAuth } from '../contexts/AuthContext';
 
-// Feature flag: Authentication not yet implemented (planned for v1.5.0)
-const ENABLE_AUTH = false;
+// Lazy load auth modals
+const LoginModal = lazy(() => import('./LoginModal').then(m => ({ default: m.LoginModal })));
+const SignupModal = lazy(() => import('./SignupModal').then(m => ({ default: m.SignupModal })));
+const ForgotPasswordModal = lazy(() => import('./ForgotPasswordModal').then(m => ({ default: m.ForgotPasswordModal })));
+
+// Feature flag: Authentication enabled (from environment variable)
+const ENABLE_AUTH = import.meta.env.VITE_ENABLE_AUTH === 'true';
 
 export function MobileMenu({ isOpen, onClose, onExamplesClick, onHelpClick }) {
+  const { user, isAuthenticated } = useAuth();
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showSignupModal, setShowSignupModal] = useState(false);
+  const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
   const closeButtonRef = useRef(null);
   const previousFocusRef = useRef(null);
   const [allowClickOutside, setAllowClickOutside] = useState(false);
@@ -52,8 +62,6 @@ export function MobileMenu({ isOpen, onClose, onExamplesClick, onHelpClick }) {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
-
   const handleExamplesClick = () => {
     onExamplesClick();
     onClose();
@@ -62,6 +70,27 @@ export function MobileMenu({ isOpen, onClose, onExamplesClick, onHelpClick }) {
   const handleHelpClick = () => {
     onHelpClick();
     onClose();
+  };
+
+  const handleSignInClick = () => {
+    setShowLoginModal(true);
+    onClose();
+  };
+
+  const switchToSignup = () => {
+    setShowLoginModal(false);
+    setShowSignupModal(true);
+  };
+
+  const switchToLogin = () => {
+    setShowSignupModal(false);
+    setShowForgotPasswordModal(false);
+    setShowLoginModal(true);
+  };
+
+  const switchToForgot = () => {
+    setShowLoginModal(false);
+    setShowForgotPasswordModal(true);
   };
 
   const handleBackdropClick = (e) => {
@@ -73,20 +102,23 @@ export function MobileMenu({ isOpen, onClose, onExamplesClick, onHelpClick }) {
 
   return (
     <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/50 z-40 md:hidden"
-        onClick={handleBackdropClick}
-      />
+      {/* Menu - only render when open */}
+      {isOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/50 z-40 md:hidden"
+            onClick={handleBackdropClick}
+          />
 
-      {/* Menu Panel */}
-      <div
-          data-testid="mobile-menu"
-          className="fixed top-0 right-0 bottom-0 w-64 bg-white shadow-xl z-50 md:hidden"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Mobile menu"
-        >
+          {/* Menu Panel */}
+          <div
+              data-testid="mobile-menu"
+              className="fixed top-0 right-0 bottom-0 w-64 bg-white shadow-xl z-50 md:hidden"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Mobile menu"
+            >
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-slate-200">
@@ -127,13 +159,65 @@ export function MobileMenu({ isOpen, onClose, onExamplesClick, onHelpClick }) {
           {/* Footer */}
           {ENABLE_AUTH && (
             <div className="p-4 border-t border-slate-200">
-              <Button variant="dark" className="w-full">
-                Sign In
-              </Button>
+              {isAuthenticated ? (
+                <div className="text-sm text-slate-600">
+                  <div className="font-medium text-slate-900 mb-1">
+                    {user?.email || user?.name || 'User'}
+                  </div>
+                  <div className="text-xs text-slate-500 mb-3">
+                    {user?.tier ? `${user.tier.charAt(0).toUpperCase() + user.tier.slice(1)} tier` : 'Free tier'}
+                  </div>
+                  {/* Logout and other user actions can be added here in future */}
+                </div>
+              ) : (
+                <Button
+                  variant="dark"
+                  className="w-full"
+                  onClick={handleSignInClick}
+                >
+                  Sign In
+                </Button>
+              )}
             </div>
           )}
         </div>
       </div>
+        </>
+      )}
+
+      {/* Auth Modals - Rendered at same level as menu but with higher z-index */}
+      {ENABLE_AUTH && (
+        <>
+          {showLoginModal && (
+            <Suspense fallback={<div>Loading modal...</div>}>
+              <LoginModal
+                isOpen={showLoginModal}
+                onClose={() => setShowLoginModal(false)}
+                onSwitchToSignup={switchToSignup}
+                onSwitchToForgot={switchToForgot}
+              />
+            </Suspense>
+          )}
+          {showSignupModal && (
+            <Suspense fallback={null}>
+              <SignupModal
+                isOpen={showSignupModal}
+                onClose={() => setShowSignupModal(false)}
+                onSwitchToLogin={switchToLogin}
+              />
+            </Suspense>
+          )}
+          {showForgotPasswordModal && (
+            <Suspense fallback={null}>
+              <ForgotPasswordModal
+                isOpen={showForgotPasswordModal}
+                onClose={() => setShowForgotPasswordModal(false)}
+                onSwitchToLogin={switchToLogin}
+              />
+            </Suspense>
+          )}
+        </>
+      )}
     </>
   );
 }

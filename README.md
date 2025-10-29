@@ -25,6 +25,7 @@ Transform code into comprehensive, professional documentation in seconds using A
 ## Table of Contents
 
 - [Features](#features)
+  - [Supported Languages](#-supported-languages)
 - [Screenshots](#screenshots)
 - [Quick Start](#quick-start)
 - [Environment Variables](#environment-variables)
@@ -79,13 +80,34 @@ codescribe-ai/
 
 ## Features
 
+### 🌐 Supported Languages
+
+Generate professional documentation for **10 programming languages** with **16 file extensions**:
+
+| Language | Extensions | Use Cases |
+|----------|-----------|-----------|
+| 🟨 **JavaScript** | `.js`, `.jsx` | React, Node.js, frontend development |
+| 🔵 **TypeScript** | `.ts`, `.tsx` | Type-safe React, Angular, Vue |
+| 🐍 **Python** | `.py` | Data science, ML, Django, Flask |
+| ☕ **Java** | `.java` | Enterprise apps, Android, Spring |
+| 🔧 **C/C++** | `.c`, `.cpp`, `.h`, `.hpp` | Systems programming, embedded, game engines |
+| 💜 **C#** | `.cs` | .NET, Unity, Windows apps |
+| 🐹 **Go** | `.go` | Cloud-native, microservices, CLI tools |
+| 🦀 **Rust** | `.rs` | High-performance systems, WebAssembly |
+| 💎 **Ruby** | `.rb` | Rails, automation, scripting |
+| 🐘 **PHP** | `.php` | WordPress, Laravel, legacy web apps |
+
+**Plus:** `.txt` for plain text documentation
+
+All documentation types (README, JSDoc, API docs, Architecture) work with every language!
+
 ### 🎯 Core Features
 - **Multiple Documentation Types**: Generate README.md, JSDoc/TSDoc comments, API documentation, and ARCHITECTURE overviews
 - **Real-Time Streaming**: Watch documentation generate character-by-character using Server-Sent Events
 - **Quality Scoring**: Get actionable feedback on documentation completeness (0-100 scale with letter grades)
 - **Code Analysis**: AST-based parsing extracts functions, classes, and exports automatically
-- **Monaco Editor**: Professional in-browser code editing with syntax highlighting
-- **File Upload**: Drag & drop or browse to upload code files (JavaScript, TypeScript, Python, Java, etc.)
+- **Monaco Editor**: Professional in-browser code editing with syntax highlighting for all 10 languages
+- **File Upload**: Drag & drop or browse to upload code files with full MIME type support
 
 ### 🎨 Advanced UX Features
 - **Mermaid Diagram Rendering**: Auto-render system architecture and flowchart diagrams in documentation
@@ -400,7 +422,7 @@ For a complete navigation guide with descriptions of all documentation, see **[D
 **Design & UX:**
 - **[Figma Design System](docs/planning/mvp/07-Figma-Guide.md)** - Complete UI/UX design system
 - **[Brand Colors](https://jmcoleman.github.io/codescribe-ai/docs/design/brand-color-palette.html)** - Interactive color palette (27 colors)
-- **[Component Guides](docs/components/)** - Toast system, error handling, Mermaid diagrams, etc.
+- **[Component Guides](docs/components/)** - Toast system, error handling, usage prompts, Mermaid diagrams, etc.
 
 **Performance & Analytics:**
 - **[Optimization Guide](docs/performance/OPTIMIZATION-GUIDE.md)** - Performance strategies (+67% Lighthouse)

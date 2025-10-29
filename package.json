@@ -1,6 +1,6 @@
 {
   "name": "codescribe-ai",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "AI-powered code documentation generator",
   "type": "module",
   "private": true,

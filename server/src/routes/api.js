@@ -245,13 +245,15 @@ router.post('/upload', apiLimiter, (req, res) => {
 });
 
 // GET /api/user/usage - Get current user's usage statistics
-router.get('/user/usage', requireAuth, async (req, res) => {
+// Supports both authenticated users (by user ID) and anonymous users (by IP)
+router.get('/user/usage', async (req, res) => {
   try {
-    const userId = req.user.id;
-    const tier = req.user.tier || 'free';
+    // Support both authenticated users and anonymous users
+    const userIdentifier = req.user?.id || `ip:${req.ip || req.socket?.remoteAddress || 'unknown'}`;
+    const tier = req.user?.tier || 'free';
 
     // Get usage from database
-    const usage = await Usage.getUserUsage(userId);
+    const usage = await Usage.getUserUsage(userIdentifier);
 
     // Get tier limits
     const tierConfig = TIER_FEATURES[tier];
