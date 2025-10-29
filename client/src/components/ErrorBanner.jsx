@@ -20,6 +20,10 @@ function formatErrorType(errorType, errorObject = {}) {
     return 'Connection Error';
   }
   if (errorType === 'RateLimitError' || userMessage.includes('Rate limit') || originalMessage.includes('Rate limit')) {
+    // Check if it's Claude API rate limit (external) vs CodeScribe quota
+    if (userMessage.includes('Claude API') || originalMessage.includes('Claude API')) {
+      return 'Claude API Rate Limit';
+    }
     return 'Rate Limit Exceeded';
   }
   if (errorType === 'InvalidRequestError') {
@@ -147,19 +151,6 @@ export function ErrorBanner({ error, retryAfter, onDismiss }) {
     errorMessage = String(error);
   }
 
-  // Log full error details to console for technical debugging (dev mode only)
-  if (import.meta.env.DEV) {
-    console.group('🔴 Error Banner Debug');
-    console.log('Raw error:', error);
-    console.log('Parsed fullErrorObject:', fullErrorObject);
-    if (fullErrorObject) {
-      console.log('- has stack?', !!fullErrorObject.stack);
-      console.log('- has type?', !!fullErrorObject.type);
-      console.log('- has originalMessage?', !!fullErrorObject.originalMessage);
-      console.log('- has timestamp?', !!fullErrorObject.timestamp);
-    }
-    console.groupEnd();
-  }
 
   // Check if error message contains multiple lines (for validation errors)
   const isMultiLine = errorMessage.includes('\n');
@@ -170,7 +161,7 @@ export function ErrorBanner({ error, retryAfter, onDismiss }) {
 
   return (
     <div
-      className={`bg-red-50 rounded-lg shadow-sm mb-6 ${
+      className={`bg-red-50 border border-red-200 border-l-4 border-l-red-500 rounded-lg shadow-sm mb-6 ${
         isExiting ? 'animate-fade-out' : 'animate-slide-in-fade'
       } motion-reduce:animate-none`}
       role="alert"
@@ -179,7 +170,7 @@ export function ErrorBanner({ error, retryAfter, onDismiss }) {
       <div className="flex items-start gap-4 p-4">
         {/* Error Icon */}
         <div className="flex-shrink-0 mt-0.5">
-          <AlertCircle className="h-5 w-5 text-red-600" aria-hidden="true" />
+          <AlertCircle className="h-6 w-6 text-red-600" aria-hidden="true" />
         </div>
 
         {/* Error Content */}
@@ -248,52 +239,64 @@ export function ErrorBanner({ error, retryAfter, onDismiss }) {
             }`}
           >
             <div className="px-4 pb-4 pt-1 space-y-4">
-            {/* Full Error Object */}
+            {/* Error Object */}
             <div>
               <div className="flex items-center justify-between mb-2">
                 <h4 className="text-xs font-semibold text-slate-700">
-                  {fullErrorObject ? 'Full error object' : 'Raw error'}
+                  {fullErrorObject ? 'Error object' : 'Raw error'}
                 </h4>
                 <CopyButton
                   text={fullErrorObject ? JSON.stringify(fullErrorObject, null, 2) : String(error)}
                   size="sm"
                   variant="outline"
-                  ariaLabel={fullErrorObject ? "Copy full error object" : "Copy raw error"}
+                  ariaLabel={fullErrorObject ? "Copy error object" : "Copy raw error"}
                 />
               </div>
-              <pre className="bg-white text-slate-800 p-3 rounded-md text-xs overflow-x-auto max-h-64 overflow-y-auto border border-red-200 font-mono leading-relaxed shadow-sm">
-                {fullErrorObject ? JSON.stringify(fullErrorObject, null, 2) : String(error)}
+              <pre className="bg-white text-slate-800 p-3 rounded-md text-xs overflow-x-auto max-h-64 overflow-y-auto border border-red-200 font-mono leading-relaxed shadow-sm whitespace-pre-wrap">
+                {fullErrorObject ? (() => {
+                  // Custom formatter: display each field with proper formatting
+                  const obj = { ...fullErrorObject };
+                  const lines = ['{'];
+
+                  Object.keys(obj).forEach((key, index, array) => {
+                    const value = obj[key];
+                    const isLast = index === array.length - 1;
+
+                    if (key === 'stack' && typeof value === 'string') {
+                      // Display stack trace with actual line breaks (no escaping)
+                      lines.push(`  "${key}": "${value}"${isLast ? '' : ','}`);
+                    } else if (key === 'originalMessage' && typeof value === 'string') {
+                      // originalMessage contains JSON - display it without double-escaping
+                      lines.push(`  "${key}": ${value}${isLast ? '' : ','}`);
+                    } else if (typeof value === 'string') {
+                      // Display strings normally (JSON.stringify handles escaping)
+                      lines.push(`  "${key}": ${JSON.stringify(value)}${isLast ? '' : ','}`);
+                    } else if (typeof value === 'number' || typeof value === 'boolean') {
+                      lines.push(`  "${key}": ${value}${isLast ? '' : ','}`);
+                    } else if (value === null) {
+                      lines.push(`  "${key}": null${isLast ? '' : ','}`);
+                    } else {
+                      // For objects, use JSON.stringify
+                      lines.push(`  "${key}": ${JSON.stringify(value)}${isLast ? '' : ','}`);
+                    }
+                  });
+
+                  lines.push('}');
+                  return lines.join('\n');
+                })() : String(error)}
               </pre>
             </div>
 
-            {/* Error Type */}
-            {fullErrorObject && fullErrorObject.type && (
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-xs font-semibold text-slate-700">Error type</h4>
-                  <CopyButton
-                    text={fullErrorObject.type}
-                    size="sm"
-                    variant="outline"
-                    ariaLabel="Copy error type"
-                  />
-                </div>
-                <pre className="bg-white text-slate-800 p-3 rounded-md text-xs overflow-x-auto border border-red-200 font-mono shadow-sm">
-                  {fullErrorObject.type}
-                </pre>
-              </div>
-            )}
-
-            {/* Original Message */}
+            {/* Error Message */}
             {fullErrorObject && fullErrorObject.originalMessage && (
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-xs font-semibold text-slate-700">Original error message</h4>
+                  <h4 className="text-xs font-semibold text-slate-700">Error message</h4>
                   <CopyButton
                     text={fullErrorObject.originalMessage}
                     size="sm"
                     variant="outline"
-                    ariaLabel="Copy original error message"
+                    ariaLabel="Copy error message"
                   />
                 </div>
                 <pre className="bg-white text-slate-800 p-3 rounded-md text-xs overflow-x-auto border border-red-200 font-mono shadow-sm">

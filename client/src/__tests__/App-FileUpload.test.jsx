@@ -16,6 +16,22 @@ describe('App - File Upload Integration', () => {
     mockFetch = vi.fn();
     global.fetch = mockFetch;
     localStorage.clear();
+
+    // Mock usage tracking API call (happens on mount from useUsageTracking hook)
+    // This ensures mockFetch.mock.calls[0] is always the usage API call
+    // and upload calls start at mockFetch.mock.calls[1]
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        tier: 'free',
+        daily: { used: 0, limit: 10, remaining: 10 },
+        monthly: { used: 0, limit: 10, remaining: 10 },
+        resetTimes: {
+          daily: new Date().toISOString(),
+          monthly: new Date().toISOString()
+        }
+      })
+    });
   });
 
   afterEach(() => {
@@ -105,8 +121,12 @@ describe('App - File Upload Integration', () => {
       });
 
       // Verify FormData contains the file
-      const fetchCall = mockFetch.mock.calls[0];
-      const formData = fetchCall[1].body;
+      // Find the upload API call (not the usage tracking call)
+      const uploadCall = mockFetch.mock.calls.find(call =>
+        call[0].includes('/api/upload')
+      );
+      expect(uploadCall).toBeDefined();
+      const formData = uploadCall[1].body;
       expect(formData).toBeInstanceOf(FormData);
     });
 
@@ -219,6 +239,9 @@ describe('App - File Upload Integration', () => {
     it('should display error for invalid file type', async () => {
       const user = userEvent.setup();
 
+      renderApp();
+
+      // After mount, set up the upload error response
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 400,
@@ -228,8 +251,6 @@ describe('App - File Upload Integration', () => {
           message: 'Invalid file type. Allowed: .js, .jsx, .ts, .tsx, .py, .java, .cpp, .c, .h, .hpp, .cs, .go, .rs, .rb, .php, .txt'
         })
       });
-
-      renderApp();
 
       const fileInput = document.querySelector('input[type="file"]');
       // Use a valid extension but server will reject it
@@ -264,8 +285,12 @@ describe('App - File Upload Integration', () => {
 
       await user.upload(fileInput, file);
 
-      // Client-side validation should catch this and NOT call fetch
-      expect(mockFetch).not.toHaveBeenCalled();
+      // Client-side validation should catch this and NOT call upload API
+      // (usage tracking API was already called on mount)
+      const uploadCalls = mockFetch.mock.calls.filter(call =>
+        call[0].includes('/api/upload')
+      );
+      expect(uploadCalls.length).toBe(0);
 
       // Error banner should appear with client-side validation message
       await waitFor(() => {
@@ -278,9 +303,10 @@ describe('App - File Upload Integration', () => {
     it('should handle network errors gracefully', async () => {
       const user = userEvent.setup();
 
-      mockFetch.mockRejectedValueOnce(new Error('Network error'));
-
       renderApp();
+
+      // After mount, set up the network error response
+      mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
       const fileInput = document.querySelector('input[type="file"]');
       const file = new File(['test'], 'test.js', { type: 'application/javascript' });
@@ -301,6 +327,9 @@ describe('App - File Upload Integration', () => {
     it('should allow dismissing upload errors', async () => {
       const user = userEvent.setup();
 
+      renderApp();
+
+      // After mount, set up the upload error response
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 400,
@@ -310,8 +339,6 @@ describe('App - File Upload Integration', () => {
           message: 'Invalid file type'
         })
       });
-
-      renderApp();
 
       const fileInput = document.querySelector('input[type="file"]');
       const file = new File(['test'], 'test.js', { type: 'application/javascript' });
@@ -373,8 +400,12 @@ describe('App - File Upload Integration', () => {
       const file = new File([fileContent], 'math.js');
       await user.upload(fileInput, file);
 
+      // Wait for upload to complete (usage API + upload API = 2 calls)
       await waitFor(() => {
-        expect(mockFetch).toHaveBeenCalledTimes(1);
+        expect(mockFetch).toHaveBeenCalledWith(
+          expect.stringContaining('/api/upload'),
+          expect.any(Object)
+        );
       });
 
       // Mock generate response
@@ -406,8 +437,12 @@ describe('App - File Upload Integration', () => {
 
       await user.click(generateButton);
 
+      // Wait for generate API call (usage tracking + upload + generate = 3+ calls)
       await waitFor(() => {
-        expect(mockFetch).toHaveBeenCalledTimes(2);
+        const generateCalls = mockFetch.mock.calls.filter(call =>
+          call[0].includes('/api/generate')
+        );
+        expect(generateCalls.length).toBeGreaterThanOrEqual(1);
       });
     });
 
@@ -518,8 +553,12 @@ describe('App - File Upload Integration', () => {
       await user.upload(fileInput, file);
 
       await waitFor(() => {
-        const fetchCall = mockFetch.mock.calls[0];
-        expect(fetchCall[1].body).toBeInstanceOf(FormData);
+        // Find the upload API call (not the usage tracking call)
+        const uploadCall = mockFetch.mock.calls.find(call =>
+          call[0].includes('/api/upload')
+        );
+        expect(uploadCall).toBeDefined();
+        expect(uploadCall[1].body).toBeInstanceOf(FormData);
       });
     });
   });

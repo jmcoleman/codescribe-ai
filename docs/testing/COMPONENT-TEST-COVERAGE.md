@@ -1,11 +1,11 @@
 # Component Test Coverage Report
 
 **Project:** CodeScribe AI
-**Last Updated:** October 21, 2025
-**Total Components:** 18 frontend components
-**Component Coverage:** 13/18 tested (5 intentionally skipped)
-**Frontend Tests:** 513+ (100% passing)
-**Total Tests (All Frameworks):** 660+ (513+ frontend + 133+ backend + 10 E2E)
+**Last Updated:** October 28, 2025
+**Total Components:** 20 frontend components
+**Component Coverage:** 15/20 tested (5 intentionally skipped)
+**Frontend Tests:** 540+ (100% passing)
+**Total Tests (All Frameworks):** 950+ (540+ frontend + 400+ backend + 10 E2E)
 
 ---
 
@@ -396,11 +396,16 @@ npm test -- --coverage
 
 ## =� Related Documentation
 
+### Testing Guides
 - [Testing README](./README.md) - Overview and quick start
 - [Frontend Testing Guide](./frontend-testing-guide.md) - Detailed testing patterns
 - [Error Handling Tests](./ERROR-HANDLING-TESTS.md) - Error component testing
 - [Mermaid Diagram Tests](./MERMAID-DIAGRAM-TESTS.md) - Diagram rendering tests
 - [Test Implementation Summary](./IMPLEMENTATION-SUMMARY.md) - Backend test summary
+
+### Component Documentation
+- [USAGE-PROMPTS.md](../components/USAGE-PROMPTS.md) - Usage warning/limit components (UsageWarningBanner, UsageLimitModal)
+- [ERROR-HANDLING-UX.md](../components/ERROR-HANDLING-UX.md) - Error banner patterns, priority system, animations
 
 ---
 

@@ -1,8 +1,10 @@
 import { useState, useCallback, useRef } from 'react';
 import { API_URL } from '../config/api.js';
 import { trackDocGeneration, trackQualityScore, trackError, trackPerformance } from '../utils/analytics.js';
+import { useAuth } from '../contexts/AuthContext.jsx';
 
-export function useDocGeneration() {
+export function useDocGeneration(onUsageUpdate) {
+  const { getToken } = useAuth();
   const [isGenerating, setIsGenerating] = useState(false);
   const [documentation, setDocumentation] = useState('');
   const [qualityScore, setQualityScore] = useState(null);
@@ -28,12 +30,21 @@ export function useDocGeneration() {
     const startTime = performance.now();
 
     try {
+      // Get auth token if available
+      const token = getToken();
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+
+      // Add Authorization header if user is authenticated
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       // Use fetch with POST to send data
       const response = await fetch(`${API_URL}/api/generate-stream`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({ code, docType, language })
       });
 
@@ -107,6 +118,11 @@ export function useDocGeneration() {
                 generateTime: duration,
                 totalTime: duration,
               });
+
+              // Notify parent to refresh usage data
+              if (onUsageUpdate) {
+                onUsageUpdate();
+              }
             } else if (data.type === 'error') {
               throw new Error(data.error);
             }
@@ -134,8 +150,16 @@ export function useDocGeneration() {
       if (apiError) {
         // Use the API's message directly (it's already user-friendly)
         errorMessage = apiError.message || errorMessage;
+
+        // Add "Claude" clarification for API usage limit errors
+        // Also treat these as rate limit errors for proper title formatting
+        if (errorMessage && errorMessage.includes('API usage limits')) {
+          errorMessage = errorMessage.replace('API usage limits', 'Claude API usage limits');
+          errorType = 'RateLimitError'; // Override error type so title shows "Claude API Rate Limit"
+          // Don't set retryAfter - Claude's error message already includes the specific reset time
+        }
         // Map API error types to better names
-        if (apiError.error === 'invalid_request_error') {
+        else if (apiError.error === 'invalid_request_error') {
           errorType = 'InvalidRequestError';
         } else if (apiError.error === 'authentication_error') {
           errorType = 'AuthenticationError';
@@ -170,7 +194,8 @@ export function useDocGeneration() {
         } else if (status === '503') {
           errorMessage = 'Service temporarily unavailable. The server may be overloaded or down for maintenance.';
         } else if (status === '400') {
-          errorMessage = 'Invalid request. Please check your code input and try again.';
+          // Use the original error message from the API (it already contains the specific error)
+          errorMessage = apiError?.message || 'Invalid request. Please check your code input and try again.';
         } else if (status === '401' || status === '403') {
           errorMessage = 'Authentication error. Please check API configuration.';
         } else {
@@ -220,7 +245,7 @@ export function useDocGeneration() {
         context: 'doc_generation',
       });
     }
-  }, []);
+  }, [onUsageUpdate]);
 
   const cancel = useCallback(() => {
     if (eventSourceRef.current) {

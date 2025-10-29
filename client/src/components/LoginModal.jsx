@@ -5,7 +5,7 @@
  * Follows existing modal patterns with focus management and accessibility.
  */
 
-import { X, Mail, Lock, Github, AlertCircle } from 'lucide-react';
+import { X, Mail, Lock, Github, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { flushSync } from 'react-dom';
 import { Button } from './Button';
@@ -27,6 +27,7 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup, onSwitchToForgot
   const [allowClickOutside, setAllowClickOutside] = useState(false);
   const [focusTrigger, setFocusTrigger] = useState(0); // Increment to trigger focus
   const lastProcessedTrigger = useRef(0); // Track last trigger we processed
+  const [showPassword, setShowPassword] = useState(false);
 
   const modalRef = useRef(null);
   const emailInputRef = useRef(null);
@@ -339,7 +340,7 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup, onSwitchToForgot
                 <input
                   ref={passwordInputRef}
                   id="login-password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value);
@@ -347,7 +348,7 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup, onSwitchToForgot
                     if (passwordError) setPasswordError('');
                   }}
                   placeholder="Enter your password"
-                  className={`block w-full pl-10 pr-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-shadow ${
+                  className={`block w-full pl-10 pr-11 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-shadow ${
                     passwordError ? 'border-red-300 bg-red-50' : 'border-slate-300'
                   }`}
                   autoComplete="current-password"
@@ -355,6 +356,19 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup, onSwitchToForgot
                   aria-invalid={!!passwordError}
                   aria-describedby={passwordError ? 'password-error' : undefined}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none focus:text-slate-600 transition-colors"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  disabled={isLoading}
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" aria-hidden="true" />
+                  ) : (
+                    <Eye className="w-5 h-5" aria-hidden="true" />
+                  )}
+                </button>
               </div>
               {passwordError && (
                 <p id="password-error" className="mt-1.5 text-sm text-red-600" role="alert">

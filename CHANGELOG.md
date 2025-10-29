@@ -9,6 +9,122 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.2.0] - 2025-10-29
+
+**Status:** ✅ Feature Release - Frontend Integration & Mobile UX Improvements
+
+### Added
+- **Pricing Page Component**
+  - Created comprehensive PricingPage.jsx component (ready for Stripe Phase 2.3)
+  - 4 pricing tiers with feature comparison (Free, Starter $12, Pro $29, Team $99)
+  - Supported languages showcase with visual grid (10 languages, 16 extensions, 4 doc types)
+  - Statistics and use case categories (Frontend, Backend, Systems, Web Dev, Mobile & Cloud)
+  - FAQ and CTA sections
+  - Fully responsive and accessible design
+  - Documentation: PRICING-PAGE.md
+
+- **Supported Languages Feature**
+  - Updated README.md with prominent "🌐 Supported Languages" section
+  - Detailed table with language names, extensions, and use cases
+  - Added to Table of Contents
+  - Highlighted as first feature section before core features
+  - 10 languages: JavaScript, TypeScript, Python, Java, C/C++, C#, Go, Rust, Ruby, PHP
+
+- **Mobile Menu Authentication**
+  - Enabled authentication in mobile menu (ENABLE_AUTH environment variable)
+  - Added Sign In button for unauthenticated users
+  - Added user email + tier display for authenticated users
+  - Integrated auth modals (LoginModal, SignupModal, ForgotPasswordModal)
+  - Lazy loading with React Suspense for performance
+  - Fixed modal rendering to work independently of menu state
+  - 26 comprehensive tests for MobileMenu component (100% passing)
+
+- **Password Visibility Toggle - LoginModal**
+  - Added Eye/EyeOff icon toggle to password field in LoginModal
+  - Matches SignupModal UX for consistency
+  - Proper accessibility with aria-labels ("Show password"/"Hide password")
+  - Disabled state during form submission
+  - Hover and focus states with smooth transitions
+
+- **Usage Tracking Frontend Integration**
+  - Created useUsageTracking.js hook for fetching usage data
+  - Created UsageWarningBanner.jsx (80% usage warning with dynamic multipliers)
+  - Created UsageLimitModal.jsx (100% limit reached modal)
+  - Added test suites for all usage components
+  - Documentation: USAGE-PROMPTS.md (design patterns, simulator, examples)
+  - Integration with ErrorBanner priority system
+
+- **Enhanced Error Handling**
+  - Updated ERROR-HANDLING-UX.md with comprehensive error patterns
+  - Added priority system: Usage Limit > API Errors > Network > Validation
+  - Added error type classifications (network, api, validation, usage_limit)
+  - Enhanced ErrorBanner.jsx with priority handling
+  - Clear modal vs banner guidelines (blocking vs informational)
+  - Animation timing specifications (250ms slide-down, 200ms fade)
+
+### Changed
+- **File Upload Compatibility**
+  - Updated App.jsx file input accept attribute to include MIME types
+  - Added: text/javascript, application/javascript, text/x-typescript, text/x-python, etc.
+  - Improves cross-platform OS file picker compatibility (Windows, Linux)
+  - Ensures all supported file types are selectable in native file dialogs
+
+- **Mobile Menu Improvements**
+  - Separated menu UI rendering from modal rendering for better UX
+  - Modals now persist when menu closes (no unmounting issues)
+  - Clicking Sign In closes menu and immediately opens LoginModal
+  - Fixed component lifecycle to prevent modal flicker
+
+### Fixed
+- **Mobile Menu Modal Bug**
+  - Fixed Sign In button not showing modal until menu reopened
+  - Root cause: `if (!isOpen) return null;` was unmounting modals when menu closed
+  - Solution: Wrapped only menu UI in conditional, kept modals rendered independently
+  - Modal z-index stacking now works correctly (z-50 siblings)
+
+### Testing
+- **New Test Suites**
+  - MobileMenu.test.jsx: 26 tests (rendering, navigation, auth states, keyboard nav, a11y)
+  - UsageLimitModal.test.jsx: Tests for limit reached modal
+  - UsageWarningBanner.test.jsx: Tests for 80% warning banner
+  - ErrorBanner.error-types.test.jsx: Tests for error type handling
+  - useUsageTracking hook tests: API integration tests
+
+- **Test Counts**
+  - **Frontend:** 1,022 tests passed | 15 skipped (1,037 total)
+  - **Backend:** 431 tests passed | 21 skipped (452 total)
+  - **Total:** 1,453 tests passed | 36 skipped (1,489 total)
+  - **Pass Rate:** 97.6%
+
+### Documentation
+- **New Documentation**
+  - PRICING-PAGE.md: Pricing page component guide
+  - USAGE-PROMPTS.md: Usage warning and limit modal design patterns
+  - Updated ERROR-HANDLING-UX.md: Comprehensive error handling guide with priority system
+
+- **Updated Documentation**
+  - README.md: Added supported languages section
+  - COMPONENT-TEST-COVERAGE.md: Updated with new test coverage
+  - USAGE-QUOTA-SYSTEM.md: Updated with frontend integration notes
+
+### Statistics
+- **Files Modified:** 15 files changed, 11 new files added
+- **Lines Changed:** +844 insertions, -164 deletions (net +680 lines)
+- **New Components:** PricingPage, UsageLimitModal, UsageWarningBanner
+- **New Hooks:** useUsageTracking
+- **New Tests:** ~60+ tests added across 5 new test files
+- **Documentation:** 2 new docs, 3 updated docs
+
+### Technical Details
+- All components follow established accessibility patterns
+- Mobile-first responsive design maintained
+- Feature flags used for gradual rollout (ENABLE_AUTH)
+- Lazy loading for auth modals to optimize performance
+- Test coverage maintained at high levels (97.6% pass rate)
+- Build tested and verified (no errors, 78KB gzipped main bundle)
+
+---
+
 ## [2.0.1] - 2025-10-28
 
 **Status:** ✅ Hotfix Release - OAuth UX Fix, Database Migrations & Storage Improvements
