@@ -210,21 +210,12 @@
             "GitHub Actions CI passing",
             "Production deployment (October 26, 2025)"
           ]
-        }
-      ]
-    },
-    {
-      "id": "now",
-      "label": "Now",
-      "title": "Active Development",
-      "subtitle": "Phase 2: Monetization Foundation (Remaining Epics)",
-      "phases": [
+        },
         {
-          "version": "Epic 2.2",
-          "title": "Tier System & Feature Flags",
+          "version": "v2.1.0-v2.2.0",
+          "title": "Tier System & Feature Flags (Epic 2.2)",
           "duration": "3 days",
-          "status": "Complete",
-          "badge": "v2.1.0-v2.2.0",
+          "status": "\u2713 Complete",
           "completedDate": "Oct 27-29, 2025",
           "features": [
             "Backend: Protect /api/generate and /api/generate-stream with requireAuth",
@@ -242,11 +233,10 @@
           ]
         },
         {
-          "version": "Epic 2.3",
-          "title": "UX Enhancements & File Upload",
+          "version": "v2.3.0",
+          "title": "UX Enhancements & File Upload (Epic 2.3)",
           "duration": "1 day",
-          "status": "Complete",
-          "badge": "v2.3.0",
+          "status": "\u2713 Complete",
           "completedDate": "Oct 29, 2025",
           "features": [
             "Drag-and-drop file upload with visual purple overlay",
@@ -257,7 +247,15 @@
             "Page width expansion for better space utilization",
             "15 new tests (drag-drop, clear button, logout)"
           ]
-        },
+        }
+      ]
+    },
+    {
+      "id": "now",
+      "label": "Now",
+      "title": "Next Up",
+      "subtitle": "Phase 2: Monetization Foundation (Final Epics)",
+      "phases": [
         {
           "version": "Epic 2.4",
           "title": "Payment Integration",
