@@ -3,18 +3,17 @@
  * Runs before all tests
  */
 
-// Load environment variables from .env
-import 'dotenv/config';
-
-// Set test environment variables
+// Set test environment variables BEFORE any imports
 process.env.NODE_ENV = 'test';
 process.env.CLAUDE_API_KEY = process.env.CLAUDE_API_KEY || 'test-api-key-12345';
 process.env.PORT = '3001'; // Different port to avoid conflicts
+process.env.POSTGRES_URL = process.env.POSTGRES_URL || 'postgresql://test:test@localhost:5432/test_db';
 
-// Ensure database connection is available for integration tests
-if (!process.env.POSTGRES_URL) {
-  console.warn('⚠️  POSTGRES_URL not set - database-dependent tests will fail');
-}
+// Load environment variables from .env (after setting defaults)
+import 'dotenv/config';
+
+// Mock @vercel/postgres to prevent actual database connections
+jest.mock('@vercel/postgres');
 
 // Global test timeout
 jest.setTimeout(10000);
