@@ -13,6 +13,16 @@ import { Resend } from 'resend';
 // This allows tests to set env vars before initialization
 let resend = null;
 
+// Detect environment - mock emails in dev/test, send real emails in production
+// TEST_RESEND_MOCK allows tests to bypass MOCK_EMAILS and use their own Resend mocks
+function shouldMockEmails() {
+  const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+  const TEST_RESEND_MOCK = process.env.TEST_RESEND_MOCK === 'true';
+  const MOCK_EMAILS_OVERRIDE = process.env.MOCK_EMAILS === 'true';
+
+  return (!IS_PRODUCTION && !TEST_RESEND_MOCK) || MOCK_EMAILS_OVERRIDE;
+}
+
 function getResendClient() {
   if (!process.env.RESEND_API_KEY) {
     return null;
@@ -26,6 +36,35 @@ function getResendClient() {
 // Export for testing - allows tests to reset the client
 export function __resetResendClient() {
   resend = null;
+}
+
+/**
+ * Mock email sending for development/test environments
+ * Logs email details instead of actually sending
+ * @param {Object} emailData - Email data to mock
+ * @returns {Promise<Object>} Mock response
+ */
+async function mockEmailSend(emailData) {
+  console.log('\n📧 [MOCK EMAIL] Would have sent:');
+  console.log('  To:', emailData.to);
+  console.log('  Subject:', emailData.subject);
+  console.log('  From:', emailData.from);
+  if (emailData.html) {
+    // Extract URLs from HTML for easy testing
+    const urls = emailData.html.match(/https?:\/\/[^\s"<>]+/g);
+    if (urls && urls.length > 0) {
+      console.log('  Links:', urls[0]); // Show first link (usually the action link)
+    }
+  }
+  console.log('  [Email NOT actually sent - mocked in dev/test mode]\n');
+
+  // Return mock response that matches Resend's response format
+  return {
+    data: {
+      id: `mock_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
+    },
+    error: null
+  };
 }
 
 // Configuration
@@ -57,19 +96,13 @@ const getEmailFooter = (clientUrl) => `
  * @returns {Promise<Object>} Send result
  */
 export async function sendPasswordResetEmail({ to, resetToken }) {
-  const client = getResendClient();
-  if (!client) {
-    throw new Error('Email service not configured. Please set RESEND_API_KEY environment variable.');
-  }
-
   const resetUrl = `${CLIENT_URL}/reset-password?token=${resetToken}`;
 
-  try {
-    const result = await client.emails.send({
-      from: FROM_EMAIL,
-      to,
-      subject: 'Reset Your Password - CodeScribe AI',
-      html: `
+  const emailData = {
+    from: FROM_EMAIL,
+    to,
+    subject: 'Reset Your Password - CodeScribe AI',
+    html: `
         <!DOCTYPE html>
         <html>
           <head>
@@ -124,9 +157,27 @@ export async function sendPasswordResetEmail({ to, resetToken }) {
           </body>
         </html>
       `
-    });
+  };
 
-    console.log('Password reset email sent:', { to, id: result.data?.id });
+  // Mock in dev/test, send real emails in production
+  if (shouldMockEmails()) {
+    return await mockEmailSend(emailData);
+  }
+
+  // Production: send real email via Resend
+  const client = getResendClient();
+  if (!client) {
+    throw new Error('Email service not configured. Please set RESEND_API_KEY environment variable.');
+  }
+
+  try {
+    const result = await client.emails.send(emailData);
+    console.log('\n📧 [EMAIL SENT] Password Reset');
+    console.log('  To:', emailData.to);
+    console.log('  Subject:', emailData.subject);
+    console.log('  Reset URL:', resetUrl);
+    console.log('  Email ID:', result.data?.id);
+    console.log('  Timestamp:', new Date().toISOString());
     return result;
   } catch (error) {
     console.error('Failed to send password reset email:', error);
@@ -147,19 +198,13 @@ export async function sendPasswordResetEmail({ to, resetToken }) {
  * @returns {Promise<Object>} Send result
  */
 export async function sendVerificationEmail({ to, verificationToken }) {
-  const client = getResendClient();
-  if (!client) {
-    throw new Error('Email service not configured. Please set RESEND_API_KEY environment variable.');
-  }
-
   const verifyUrl = `${CLIENT_URL}/verify-email?token=${verificationToken}`;
 
-  try {
-    const result = await client.emails.send({
-      from: FROM_EMAIL,
-      to,
-      subject: 'Verify Your Email - CodeScribe AI',
-      html: `
+  const emailData = {
+    from: FROM_EMAIL,
+    to,
+    subject: 'Verify Your Email - CodeScribe AI',
+    html: `
         <!DOCTYPE html>
         <html>
           <head>
@@ -214,9 +259,27 @@ export async function sendVerificationEmail({ to, verificationToken }) {
           </body>
         </html>
       `
-    });
+  };
 
-    console.log('Verification email sent:', { to, id: result.data?.id });
+  // Mock in dev/test, send real emails in production
+  if (shouldMockEmails()) {
+    return await mockEmailSend(emailData);
+  }
+
+  // Production: send real email via Resend
+  const client = getResendClient();
+  if (!client) {
+    throw new Error('Email service not configured. Please set RESEND_API_KEY environment variable.');
+  }
+
+  try {
+    const result = await client.emails.send(emailData);
+    console.log('\n📧 [EMAIL SENT] Email Verification');
+    console.log('  To:', emailData.to);
+    console.log('  Subject:', emailData.subject);
+    console.log('  Verify URL:', verifyUrl);
+    console.log('  Email ID:', result.data?.id);
+    console.log('  Timestamp:', new Date().toISOString());
     return result;
   } catch (error) {
     console.error('Failed to send verification email:', error);

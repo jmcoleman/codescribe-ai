@@ -55,36 +55,40 @@ export default function UnverifiedEmailBanner({ user, onDismiss }) {
 
   return (
     <div
-      className="bg-yellow-50 dark:bg-yellow-900/20 border-b border-yellow-200 dark:border-yellow-800"
+      className="bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-indigo-200"
       role="alert"
       aria-live="polite"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5">
         <div className="flex items-center justify-between gap-4">
           {/* Icon + Message */}
-          <div className="flex items-center gap-3 flex-1">
-            <Mail
-              className="w-5 h-5 text-yellow-600 dark:text-yellow-500 flex-shrink-0"
-              aria-label="Warning"
-            />
-            <p className="text-sm text-yellow-800 dark:text-yellow-200">
-              <span className="font-medium">Verify your email address</span>
-              {' — '}
-              <span>Please check your inbox and click the verification link to access all features.</span>
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center ring-2 ring-indigo-200">
+              <Mail
+                className="w-4 h-4 text-indigo-600"
+                aria-label="Email verification"
+              />
+            </div>
+            <p className="text-sm text-slate-700 truncate">
+              <span className="font-semibold text-slate-900">Verify your email</span>
+              <span className="hidden sm:inline">
+                {' — '}
+                Check your inbox and click the verification link
+              </span>
             </p>
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
             <button
               onClick={handleResend}
               disabled={isResending}
-              className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-yellow-800 dark:text-yellow-200 hover:text-yellow-900 dark:hover:text-yellow-100 underline transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md shadow-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
             >
               {isResending ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Sending...
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Sending...</span>
                 </>
               ) : (
                 'Resend Email'
@@ -93,10 +97,10 @@ export default function UnverifiedEmailBanner({ user, onDismiss }) {
 
             <button
               onClick={handleDismiss}
-              className="p-1 text-yellow-600 dark:text-yellow-500 hover:text-yellow-700 dark:hover:text-yellow-400 transition-colors"
-              aria-label="Dismiss"
+              className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-white/80 rounded-md transition-all duration-200 active:scale-95"
+              aria-label="Dismiss banner"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
           </div>
         </div>

@@ -11,6 +11,7 @@
 // Set environment variables before anything else
 process.env.RESEND_API_KEY = 'test_api_key';
 process.env.CLIENT_URL = 'http://localhost:5173';
+process.env.TEST_RESEND_MOCK = 'true'; // Use Resend mocks instead of email mocking
 
 // Mock Resend before importing emailService
 // Note: Variables must be prefixed with 'mock' to be accessible in jest.mock factory
@@ -160,8 +161,7 @@ describe('Email Service', () => {
       });
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Password reset email sent'),
-        expect.any(Object)
+        expect.stringContaining('[EMAIL SENT] Password Reset')
       );
 
       consoleSpy.mockRestore();
@@ -302,8 +302,7 @@ describe('Email Service', () => {
       });
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Verification email sent'),
-        expect.any(Object)
+        expect.stringContaining('[EMAIL SENT] Email Verification')
       );
 
       consoleSpy.mockRestore();

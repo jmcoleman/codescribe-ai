@@ -38,7 +38,7 @@ describe('UnverifiedEmailBanner', () => {
     it('should render for unverified user', () => {
       render(<UnverifiedEmailBanner user={unverifiedUser} />);
 
-      expect(screen.getByText(/verify your email address/i)).toBeInTheDocument();
+      expect(screen.getByText(/verify your email/i)).toBeInTheDocument();
     });
 
     it('should not render for verified user', () => {
@@ -63,7 +63,7 @@ describe('UnverifiedEmailBanner', () => {
       const { container } = render(<UnverifiedEmailBanner user={unverifiedUser} />);
 
       // Initially visible
-      expect(screen.getByText(/verify your email address/i)).toBeInTheDocument();
+      expect(screen.getByText(/verify your email/i)).toBeInTheDocument();
 
       // Dismiss
       const dismissButton = screen.getByLabelText(/dismiss/i);
@@ -78,8 +78,8 @@ describe('UnverifiedEmailBanner', () => {
     it('should display main message', () => {
       render(<UnverifiedEmailBanner user={unverifiedUser} />);
 
-      expect(screen.getByText(/verify your email address/i)).toBeInTheDocument();
-      expect(screen.getByText(/please check your inbox/i)).toBeInTheDocument();
+      expect(screen.getByText(/verify your email/i)).toBeInTheDocument();
+      expect(screen.getByText(/check your inbox and click the verification link/i)).toBeInTheDocument();
     });
 
     it('should display resend button', () => {
@@ -96,11 +96,11 @@ describe('UnverifiedEmailBanner', () => {
       expect(dismissButton).toBeInTheDocument();
     });
 
-    it('should have warning styling (yellow background)', () => {
+    it('should have brand gradient styling (indigo to purple)', () => {
       const { container } = render(<UnverifiedEmailBanner user={unverifiedUser} />);
 
       const banner = container.firstChild;
-      expect(banner).toHaveClass('bg-yellow-50');
+      expect(banner).toHaveClass('bg-gradient-to-r', 'from-indigo-50', 'to-purple-50');
     });
   });
 
@@ -312,7 +312,7 @@ describe('UnverifiedEmailBanner', () => {
       const { container } = render(<UnverifiedEmailBanner user={unverifiedUser} />);
 
       // Initially visible
-      expect(screen.getByText(/verify your email address/i)).toBeInTheDocument();
+      expect(screen.getByText(/verify your email/i)).toBeInTheDocument();
 
       // Click dismiss
       const dismissButton = screen.getByLabelText(/dismiss/i);
@@ -396,17 +396,17 @@ describe('UnverifiedEmailBanner', () => {
   });
 
   describe('UI and Styling', () => {
-    it('should have warning color scheme', () => {
+    it('should have brand gradient color scheme', () => {
       const { container } = render(<UnverifiedEmailBanner user={unverifiedUser} />);
 
       const banner = container.firstChild;
-      expect(banner).toHaveClass('bg-yellow-50');
+      expect(banner).toHaveClass('bg-gradient-to-r', 'from-indigo-50', 'to-purple-50');
     });
 
-    it('should display alert icon', () => {
+    it('should display mail icon', () => {
       render(<UnverifiedEmailBanner user={unverifiedUser} />);
 
-      const icon = screen.getByLabelText(/warning/i);
+      const icon = screen.getByLabelText(/email verification/i);
       expect(icon).toBeInTheDocument();
     });
 
@@ -483,7 +483,7 @@ describe('UnverifiedEmailBanner', () => {
 
       // Banner should still be visible after failed resend
       await waitFor(() => {
-        expect(screen.getByText(/verify your email address/i)).toBeInTheDocument();
+        expect(screen.getByText(/verify your email/i)).toBeInTheDocument();
       });
     });
 
@@ -526,7 +526,7 @@ describe('UnverifiedEmailBanner', () => {
       const { container } = render(<UnverifiedEmailBanner user={unverifiedUser} />);
 
       // Step 1: Banner is visible
-      expect(screen.getByText(/verify your email address/i)).toBeInTheDocument();
+      expect(screen.getByText(/verify your email/i)).toBeInTheDocument();
 
       // Step 2: Resend email
       const resendButton = screen.getByRole('button', { name: /resend email/i });
@@ -547,7 +547,7 @@ describe('UnverifiedEmailBanner', () => {
       const { rerender, container } = render(<UnverifiedEmailBanner user={unverifiedUser} />);
 
       // Initially visible
-      expect(screen.getByText(/verify your email address/i)).toBeInTheDocument();
+      expect(screen.getByText(/verify your email/i)).toBeInTheDocument();
 
       // User verifies email (external action)
       rerender(<UnverifiedEmailBanner user={verifiedUser} />);
@@ -560,7 +560,7 @@ describe('UnverifiedEmailBanner', () => {
       const { rerender, container } = render(<UnverifiedEmailBanner user={unverifiedUser} />);
 
       // Initially visible
-      expect(screen.getByText(/verify your email address/i)).toBeInTheDocument();
+      expect(screen.getByText(/verify your email/i)).toBeInTheDocument();
 
       // User logs out
       rerender(<UnverifiedEmailBanner user={null} />);

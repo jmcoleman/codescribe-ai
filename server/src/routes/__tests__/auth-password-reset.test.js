@@ -260,6 +260,9 @@ describe('Password Reset Flow', () => {
           .send({ email: validEmail });
         const token1 = User.setResetToken.mock.calls[0][1];
 
+        // Reset rate limit to allow second request
+        resetPasswordResetRateLimit(validEmail);
+
         await request(app)
           .post('/api/auth/forgot-password')
           .send({ email: validEmail });

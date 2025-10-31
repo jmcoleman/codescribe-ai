@@ -9,6 +9,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.4.1] - 2025-10-31
+
+**Status:** ✅ Email Rate Limiting & UI Fixes
+
+### Added
+- **Email Rate Limiting System**
+  - Cooldown-based rate limiting (5 minutes between emails)
+  - Counter-based daily limits (10 verification emails/day, 10 password resets/day)
+  - Hourly password reset limit (3 per hour)
+  - Industry-standard limits aligned with GitHub/Google
+  - In-memory cache (upgradeable to Redis for multi-region)
+  - EMAIL-RATE-LIMITING.md documentation with testing guide
+
+- **Email Service Mocking**
+  - Auto-mock emails in dev/test environments to prevent quota waste
+  - `shouldMockEmails()` function for environment detection
+  - `TEST_RESEND_MOCK` flag for testing with Resend mocks
+  - `resetEmailCooldown()` helper for testing rate limit logic
+  - Prevents accidental Resend quota exhaustion during development
+
+- **Enhanced Production Email Logging**
+  - Detailed logs with recipient, subject, URLs, email IDs, and ISO timestamps
+  - Consistent format between mocked and real emails
+  - Easy filtering in Vercel logs (`[EMAIL SENT]` vs `[MOCK EMAIL]`)
+
+### Changed
+- **UnverifiedEmailBanner UI Redesign**
+  - Changed from yellow warning to brand gradient (indigo-50 to purple-50)
+  - More compact layout (py-3 → py-2.5)
+  - "Resend Email" now prominent indigo button instead of underlined text
+  - Mail icon in circular white badge with indigo ring
+  - Updated 11 tests to match new design
+
+- **ConfirmationModal Alignment Fix**
+  - Fixed Large File Submission modal title/close button alignment
+  - Changed from `items-start` to `items-center`
+  - Added `flex-shrink-0` to close button
+
+### Removed
+- Removed `npm run migrate` from vercel.json buildCommand (migrations run locally only)
+
+### Fixed
+- 27 email service tests (TEST_RESEND_MOCK flag integration)
+- 28 auth password reset tests (rate limit clearing between tests)
+- 27 email verification tests (rate limit reset in beforeEach)
+- 13 password reset flow integration tests (resetEmailCooldown helper)
+
+### Testing
+- **Frontend:** 1,104 passed, 15 skipped (1,119 total)
+- **Backend:** 522 passed, 21 skipped (543 total)
+- **Total:** 1,626 passed, 36 skipped (1,662 total, 97.8% pass rate)
+
+---
+
 ## [2.4.0] - 2025-10-31
 
 **Status:** ✅ Test Infrastructure & Mobile UX Improvements

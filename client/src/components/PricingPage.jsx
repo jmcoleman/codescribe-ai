@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check, Sparkles, Zap, Building2, Code2, Loader2 } from 'lucide-react';
+import { Check, Sparkles, Zap, Building2, Code2, Loader2, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { API_URL } from '../config/api';
@@ -163,6 +163,16 @@ export function PricingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        {/* Back Button */}
+        <button
+          onClick={() => navigate(-1)}
+          className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 mb-6 transition-colors group"
+          aria-label="Go back to previous page"
+        >
+          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+          <span className="font-medium">Back</span>
+        </button>
+
         <div className="text-center mb-8">
           <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-3">
             Simple, Transparent Pricing

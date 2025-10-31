@@ -23,7 +23,7 @@ jest.mock('../../src/db/connection.js', () => ({
 }));
 
 // Now import routes and models
-import authRoutes, { resetPasswordResetRateLimit } from '../../src/routes/auth.js';
+import authRoutes, { resetPasswordResetRateLimit, resetEmailCooldown } from '../../src/routes/auth.js';
 import '../../src/config/passport.js';
 import User from '../../src/models/User.js';
 import { sendPasswordResetEmail } from '../../src/services/emailService.js';
@@ -178,16 +178,19 @@ describe('Password Reset Flow Integration Tests', () => {
       User.setResetToken.mockResolvedValue({ id: 1, email: 'user@test.com', tier: 'free' });
       sendPasswordResetEmail.mockResolvedValue({ id: 'email-123' });
 
-      // First 3 requests should succeed
+      // First 3 requests should succeed (reset cooldown between each)
       for (let i = 0; i < 3; i++) {
         const response = await request(app)
           .post('/api/auth/forgot-password')
           .send({ email: 'user@test.com' });
 
         expect(response.status).toBe(200);
+
+        // Reset cooldown but not hourly counter for next iteration
+        resetEmailCooldown('user@test.com');
       }
 
-      // 4th request should be rate limited
+      // 4th request should be rate limited (by hourly limit, not cooldown)
       const response = await request(app)
         .post('/api/auth/forgot-password')
         .send({ email: 'user@test.com' });
