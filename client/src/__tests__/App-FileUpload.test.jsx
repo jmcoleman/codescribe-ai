@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import App from '../App';
 import { AuthProvider } from '../contexts/AuthContext';
 
@@ -38,12 +39,14 @@ describe('App - File Upload Integration', () => {
     vi.restoreAllMocks();
   });
 
-  // Helper to render App with AuthProvider
+  // Helper to render App with AuthProvider and Router
   const renderApp = () => {
     return render(
-      <AuthProvider>
-        <App />
-      </AuthProvider>
+      <MemoryRouter>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </MemoryRouter>
     );
   };
 

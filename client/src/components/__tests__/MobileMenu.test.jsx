@@ -9,7 +9,7 @@ import { AuthProvider } from '../../contexts/AuthContext';
  *
  * Tests the mobile navigation menu including:
  * - Opening/closing behavior
- * - Navigation items (Examples, Help)
+ * - Navigation items (Examples, Pricing, Help)
  * - Authentication integration (Sign In button, user info)
  * - Auth modal integration (Login, Signup, Forgot Password)
  * - Accessibility (keyboard navigation, ARIA labels)
@@ -17,6 +17,12 @@ import { AuthProvider } from '../../contexts/AuthContext';
 
 // Mock environment variable
 vi.stubEnv('VITE_ENABLE_AUTH', 'true');
+
+// Mock react-router-dom
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', () => ({
+  useNavigate: () => mockNavigate,
+}));
 
 // Mock auth context
 const mockAuthContext = {
@@ -95,6 +101,12 @@ describe('MobileMenu', () => {
       expect(screen.getByText('Examples')).toBeInTheDocument();
     });
 
+    it('should render Pricing menu item', () => {
+      renderMobileMenu(true);
+
+      expect(screen.getByText('Pricing')).toBeInTheDocument();
+    });
+
     it('should render Help & FAQ menu item', () => {
       renderMobileMenu(true);
 
@@ -109,6 +121,17 @@ describe('MobileMenu', () => {
       await user.click(examplesButton);
 
       expect(mockOnExamplesClick).toHaveBeenCalledTimes(1);
+      expect(mockOnClose).toHaveBeenCalledTimes(1);
+    });
+
+    it('should navigate to /pricing and close menu when Pricing clicked', async () => {
+      const user = userEvent.setup();
+      renderMobileMenu(true);
+
+      const pricingButton = screen.getByText('Pricing');
+      await user.click(pricingButton);
+
+      expect(mockNavigate).toHaveBeenCalledWith('/pricing');
       expect(mockOnClose).toHaveBeenCalledTimes(1);
     });
 

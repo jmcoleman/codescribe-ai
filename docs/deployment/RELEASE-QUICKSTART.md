@@ -388,23 +388,117 @@ git push origin v2.0.0
 
 ## ✅ Release Checklist
 
-Use this checklist for each release:
+Use this checklist for each release. There are two distinct phases:
+1. **Prep for Release** - Documentation updates, version bumps, test verification (can be done in feature branch)
+2. **Release Deployment** - Pushing to production, creating tags, final verification
 
-### Pre-Release
+---
+
+## 📝 Phase 1: Prep for Release
+
+**Goal:** Get everything ready for deployment (can be done days before actual release)
+
+### Code & Testing
 - [ ] All features complete and tested
-- [ ] Version numbers updated (root, client, server)
-- [ ] CHANGELOG.md updated with release notes
-- [ ] Documentation updated
-- [ ] All tests passing locally
-- [ ] No pending security vulnerabilities
+- [ ] All tests passing locally (`npm test` in client/ and server/)
+- [ ] Run test count verification:
+  ```bash
+  cd client && npm test -- --run 2>&1 | grep "Tests:"
+  cd ../server && npm test 2>&1 | grep "Tests:"
+  ```
+- [ ] No pending security vulnerabilities (`npm audit`)
+- [ ] GitHub Actions CI passing on feature branch
 
-### Release
-- [ ] Push to main branch
-- [ ] Verify GitHub Actions tests pass
-- [ ] Verify Vercel deployment succeeds
-- [ ] Test production application
-- [ ] Create git tag
-- [ ] Create GitHub release with notes
+#### Version Numbering
+- [ ] Version numbers updated in all 3 package.json files:
+  - [ ] `package.json` (root)
+  - [ ] `client/package.json`
+  - [ ] `server/package.json`
+
+#### Documentation Updates
+- [ ] **CHANGELOG.md** - Add comprehensive release notes with:
+  - [ ] Stripe payment integration details (if applicable)
+  - [ ] All completed features listed
+  - [ ] Test counts updated (total, frontend, backend, pass rate)
+  - [ ] Breaking changes documented
+  - [ ] Reference documentation links
+- [ ] **README.md** - Update if needed:
+  - [ ] Stripe environment variables documented (if applicable)
+  - [ ] New deployment guides linked
+  - [ ] Environment variable examples updated
+- [ ] **ROADMAP.md** - Add epic completion section:
+  - [ ] Update header (version, date, current phase)
+  - [ ] Add detailed epic section with features, tests, success criteria
+  - [ ] Update "Completed Phase X Epics" list
+  - [ ] Update "Next Steps" section
+- [ ] **Interactive Roadmap** (`docs/planning/roadmap/roadmap-data.json`):
+  - [ ] Move completed epic card to "Done" column
+  - [ ] Update card with completion date and badge
+  - [ ] Update footer with current status and date
+  - [ ] Increment roadmap version number
+- [ ] **TODO.md** - Update epic status:
+  - [ ] Update header with current epic status and date
+  - [ ] Mark epic as ✅ Complete
+  - [ ] Update all task checkboxes to [x]
+  - [ ] Update success criteria to ✅ All Achieved
+  - [ ] Add comprehensive testing metrics
+  - [ ] Add reference documentation links
+- [ ] **SKIPPED-TESTS.md** - If skipped test counts changed:
+  - [ ] Update "Total Skipped" count in header
+  - [ ] Update "Last Updated" date
+  - [ ] Document any new skipped tests with justification
+  - [ ] Update Quick Summary table
+- [ ] **claude.md** - Update test counts (3 locations):
+  - [ ] Line ~15: Quick overview test counts
+  - [ ] Line ~47: Documentation quick reference
+  - [ ] Line ~284: Testing section counts
+
+### Final Prep Steps
+- [ ] Commit all documentation updates to feature branch
+- [ ] Create PR title: `chore: release vX.Y.Z - Epic Title`
+- [ ] Self-review all documentation changes
+- [ ] Verify all checklist items above are complete
+- [ ] **STOP HERE** - Do not merge yet! Proceed to Phase 2 when ready to deploy.
+
+---
+
+## 🚀 Phase 2: Release Deployment
+
+**Goal:** Deploy to production and finalize release (do this when ready to go live)
+
+### Pre-Deployment Final Checks
+- [ ] All Phase 1 "Prep for Release" tasks complete
+- [ ] PR reviewed and approved (if team review required)
+- [ ] No breaking changes in dependencies since last test run
+- [ ] Confirm deployment window (avoid peak traffic times)
+
+### Deployment
+- [ ] Merge PR to main branch (or push directly if solo)
+- [ ] Monitor GitHub Actions:
+  - [ ] All test jobs passing (backend, frontend, lint, security)
+  - [ ] Deploy job triggered successfully
+- [ ] Monitor Vercel deployment:
+  - [ ] Build completes successfully
+  - [ ] Database migrations run successfully (check logs)
+  - [ ] Deployment shows "Ready" status
+
+### Post-Deployment Verification
+- [ ] Test production application at https://codescribeai.com:
+  - [ ] Generate documentation (README)
+  - [ ] File upload
+  - [ ] Authentication (login/signup)
+  - [ ] Password reset flow (if applicable)
+  - [ ] Payment flows (if applicable - test mode or live)
+- [ ] Check browser console for errors (should be clean)
+- [ ] Verify database migrations applied (check migration status)
+
+### Finalization
+- [ ] Create git tag: `git tag -a vX.Y.Z -m "Release vX.Y.Z - Epic Title"`
+- [ ] Push tag: `git push origin vX.Y.Z`
+- [ ] Create GitHub release:
+  - [ ] Copy release notes from CHANGELOG.md
+  - [ ] Set as latest release
+  - [ ] Publish release
 
 ### Post-Release
 - [ ] Monitor error logs for issues

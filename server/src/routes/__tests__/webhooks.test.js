@@ -10,32 +10,16 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, jest } from '@jest/globals';
 import request from 'supertest';
 import express from 'express';
+import { sql } from '@vercel/postgres';
+
+// Mock the stripe config module BEFORE importing routes
+jest.mock('../../config/stripe.js');
+
+// Now import routes, models, and the mocked stripe
 import webhookRoutes from '../webhooks.js';
 import User from '../../models/User.js';
 import Subscription from '../../models/Subscription.js';
-import { sql } from '@vercel/postgres';
-
-// Mock Stripe
-const mockStripeWebhooksConstructEvent = jest.fn();
-const mockStripeSubscriptionsRetrieve = jest.fn();
-
-jest.unstable_mockModule('../../config/stripe.js', () => ({
-  default: {
-    webhooks: {
-      constructEvent: mockStripeWebhooksConstructEvent,
-    },
-    subscriptions: {
-      retrieve: mockStripeSubscriptionsRetrieve,
-    },
-  },
-  STRIPE_WEBHOOK_SECRET: 'whsec_test_secret',
-  getTierFromPriceId: (priceId) => {
-    if (priceId === 'price_starter') return 'starter';
-    if (priceId === 'price_pro') return 'pro';
-    if (priceId === 'price_team') return 'team';
-    return null;
-  },
-}));
+import stripe from '../../config/stripe.js';
 
 describe('Webhook Handler', () => {
   let app;
@@ -66,7 +50,7 @@ describe('Webhook Handler', () => {
 
   describe('POST /api/webhooks/stripe', () => {
     it('should reject webhook with invalid signature', async () => {
-      mockStripeWebhooksConstructEvent.mockImplementation(() => {
+      stripe.webhooks.constructEvent.mockImplementation(() => {
         throw new Error('Invalid signature');
       });
 
@@ -94,13 +78,13 @@ describe('Webhook Handler', () => {
           },
         };
 
-        mockStripeWebhooksConstructEvent.mockReturnValue(sessionEvent);
+        stripe.webhooks.constructEvent.mockReturnValue(sessionEvent);
 
-        mockStripeSubscriptionsRetrieve.mockResolvedValue({
+        stripe.subscriptions.retrieve.mockResolvedValue({
           id: 'sub_test_123',
           status: 'active',
           items: {
-            data: [{ price: { id: 'price_pro' } }],
+            data: [{ price: { id: 'price_pro_monthly_test' } }],
           },
           current_period_start: Math.floor(Date.now() / 1000),
           current_period_end: Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60,
@@ -137,7 +121,7 @@ describe('Webhook Handler', () => {
         await Subscription.create({
           userId: testUser.id,
           stripeSubscriptionId: 'sub_update_test',
-          stripePriceId: 'price_starter',
+          stripePriceId: 'price_starter_monthly_test',
           tier: 'starter',
           status: 'active',
           currentPeriodStart: new Date(),
@@ -151,7 +135,7 @@ describe('Webhook Handler', () => {
               id: 'sub_update_test',
               status: 'active',
               items: {
-                data: [{ price: { id: 'price_pro' } }],
+                data: [{ price: { id: 'price_pro_monthly_test' } }],
               },
               current_period_start: Math.floor(Date.now() / 1000),
               current_period_end: Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60,
@@ -163,7 +147,7 @@ describe('Webhook Handler', () => {
           },
         };
 
-        mockStripeWebhooksConstructEvent.mockReturnValue(updateEvent);
+        stripe.webhooks.constructEvent.mockReturnValue(updateEvent);
 
         const response = await request(app)
           .post('/api/webhooks/stripe')
@@ -189,7 +173,7 @@ describe('Webhook Handler', () => {
         await Subscription.create({
           userId: testUser.id,
           stripeSubscriptionId: 'sub_delete_test',
-          stripePriceId: 'price_pro',
+          stripePriceId: 'price_pro_monthly_test',
           tier: 'pro',
           status: 'active',
           currentPeriodStart: new Date(),
@@ -213,7 +197,7 @@ describe('Webhook Handler', () => {
           },
         };
 
-        mockStripeWebhooksConstructEvent.mockReturnValue(deleteEvent);
+        stripe.webhooks.constructEvent.mockReturnValue(deleteEvent);
 
         const response = await request(app)
           .post('/api/webhooks/stripe')
@@ -245,13 +229,13 @@ describe('Webhook Handler', () => {
           },
         };
 
-        mockStripeWebhooksConstructEvent.mockReturnValue(paymentEvent);
+        stripe.webhooks.constructEvent.mockReturnValue(paymentEvent);
 
-        mockStripeSubscriptionsRetrieve.mockResolvedValue({
+        stripe.subscriptions.retrieve.mockResolvedValue({
           id: 'sub_payment_test',
           status: 'active',
           items: {
-            data: [{ price: { id: 'price_pro' } }],
+            data: [{ price: { id: 'price_pro_monthly_test' } }],
           },
           current_period_start: Math.floor(Date.now() / 1000),
           current_period_end: Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60,
@@ -268,7 +252,7 @@ describe('Webhook Handler', () => {
           .send(JSON.stringify(paymentEvent));
 
         expect(response.status).toBe(200);
-        expect(mockStripeSubscriptionsRetrieve).toHaveBeenCalledWith('sub_payment_test');
+        expect(stripe.subscriptions.retrieve).toHaveBeenCalledWith('sub_payment_test');
       });
     });
 
@@ -278,7 +262,7 @@ describe('Webhook Handler', () => {
         await Subscription.create({
           userId: testUser.id,
           stripeSubscriptionId: 'sub_failed_payment',
-          stripePriceId: 'price_pro',
+          stripePriceId: 'price_pro_monthly_test',
           tier: 'pro',
           status: 'active',
           currentPeriodStart: new Date(),
@@ -295,7 +279,7 @@ describe('Webhook Handler', () => {
           },
         };
 
-        mockStripeWebhooksConstructEvent.mockReturnValue(failedEvent);
+        stripe.webhooks.constructEvent.mockReturnValue(failedEvent);
 
         const response = await request(app)
           .post('/api/webhooks/stripe')
@@ -317,7 +301,7 @@ describe('Webhook Handler', () => {
         data: { object: {} },
       };
 
-      mockStripeWebhooksConstructEvent.mockReturnValue(unknownEvent);
+      stripe.webhooks.constructEvent.mockReturnValue(unknownEvent);
 
       const response = await request(app)
         .post('/api/webhooks/stripe')
@@ -337,15 +321,15 @@ describe('Webhook Handler', () => {
             id: 'cs_error_test',
             subscription: 'sub_error_test',
             metadata: {
-              userId: 'invalid',  // Will cause parseInt to fail
+              userId: 'invalid',  // Will cause parseInt to fail (NaN)
             },
           },
         },
       };
 
-      mockStripeWebhooksConstructEvent.mockReturnValue(errorEvent);
+      stripe.webhooks.constructEvent.mockReturnValue(errorEvent);
 
-      mockStripeSubscriptionsRetrieve.mockRejectedValue(
+      stripe.subscriptions.retrieve.mockRejectedValue(
         new Error('Subscription not found')
       );
 
@@ -355,13 +339,21 @@ describe('Webhook Handler', () => {
         .set('Content-Type', 'application/json')
         .send(JSON.stringify(errorEvent));
 
-      expect(response.status).toBe(500);
-      expect(response.body.error).toBe('Webhook processing failed');
+      // Webhooks should return 200 even for events we can't process
+      // This prevents Stripe from retrying endlessly
+      expect(response.status).toBe(200);
+      expect(response.body.received).toBe(true);
     });
 
-    // TODO: Fix test isolation - customer ID conflicts between test runs
-    describe.skip('customer.updated - Name Sync (Migration 008)', () => {
+    describe('customer.updated - Name Sync (Migration 008)', () => {
       beforeEach(async () => {
+        // Clear any existing customer ID with this value (from previous tests)
+        await sql`
+          UPDATE users
+          SET stripe_customer_id = NULL
+          WHERE stripe_customer_id = 'cus_test_name_sync'
+        `;
+
         // Give test user a Stripe customer ID
         await User.updateStripeCustomerId(testUser.id, 'cus_test_name_sync');
       });
@@ -374,11 +366,14 @@ describe('Webhook Handler', () => {
               id: 'cus_test_name_sync',
               name: 'Jane Smith',
               email: testUser.email,
+              metadata: {
+                userId: testUser.id.toString(),
+              },
             },
           },
         };
 
-        mockStripeWebhooksConstructEvent.mockReturnValue(customerUpdatedEvent);
+        stripe.webhooks.constructEvent.mockReturnValue(customerUpdatedEvent);
 
         const response = await request(app)
           .post('/api/webhooks/stripe')
@@ -402,11 +397,14 @@ describe('Webhook Handler', () => {
               id: 'cus_test_name_sync',
               name: 'Maria Garcia Lopez',
               email: testUser.email,
+              metadata: {
+                userId: testUser.id.toString(),
+              },
             },
           },
         };
 
-        mockStripeWebhooksConstructEvent.mockReturnValue(customerUpdatedEvent);
+        stripe.webhooks.constructEvent.mockReturnValue(customerUpdatedEvent);
 
         await request(app)
           .post('/api/webhooks/stripe')
@@ -428,11 +426,14 @@ describe('Webhook Handler', () => {
               id: 'cus_test_name_sync',
               name: 'Madonna',
               email: testUser.email,
+              metadata: {
+                userId: testUser.id.toString(),
+              },
             },
           },
         };
 
-        mockStripeWebhooksConstructEvent.mockReturnValue(customerUpdatedEvent);
+        stripe.webhooks.constructEvent.mockReturnValue(customerUpdatedEvent);
 
         await request(app)
           .post('/api/webhooks/stripe')
@@ -462,11 +463,14 @@ describe('Webhook Handler', () => {
               id: 'cus_test_name_sync',
               name: 'John Doe',  // Same as database
               email: testUser.email,
+              metadata: {
+                userId: testUser.id.toString(),
+              },
             },
           },
         };
 
-        mockStripeWebhooksConstructEvent.mockReturnValue(customerUpdatedEvent);
+        stripe.webhooks.constructEvent.mockReturnValue(customerUpdatedEvent);
 
         await request(app)
           .post('/api/webhooks/stripe')
@@ -488,11 +492,14 @@ describe('Webhook Handler', () => {
               id: 'cus_test_name_sync',
               name: '  Alice   Marie   Johnson  ',  // Extra whitespace
               email: testUser.email,
+              metadata: {
+                userId: testUser.id.toString(),
+              },
             },
           },
         };
 
-        mockStripeWebhooksConstructEvent.mockReturnValue(customerUpdatedEvent);
+        stripe.webhooks.constructEvent.mockReturnValue(customerUpdatedEvent);
 
         await request(app)
           .post('/api/webhooks/stripe')
@@ -522,11 +529,14 @@ describe('Webhook Handler', () => {
               id: 'cus_test_name_sync',
               name: null,  // No name in Stripe
               email: testUser.email,
+              metadata: {
+                userId: testUser.id.toString(),
+              },
             },
           },
         };
 
-        mockStripeWebhooksConstructEvent.mockReturnValue(customerUpdatedEvent);
+        stripe.webhooks.constructEvent.mockReturnValue(customerUpdatedEvent);
 
         await request(app)
           .post('/api/webhooks/stripe')

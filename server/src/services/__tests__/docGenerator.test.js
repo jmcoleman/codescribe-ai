@@ -99,7 +99,7 @@ function greet(name) {
     });
 
     it('should build prompt with correct parameters', async () => {
-      const buildPromptSpy = jest.spyOn(docGenerator, 'buildPrompt');
+      const buildPromptSpy = jest.spyOn(docGenerator, 'buildPromptWithCaching');
 
       await docGenerator.generateDocumentation(sampleCode, {
         docType: 'README',
@@ -119,7 +119,11 @@ function greet(name) {
 
       expect(claudeClient.generate).toHaveBeenCalledTimes(1);
       expect(claudeClient.generate).toHaveBeenCalledWith(
-        expect.stringContaining('README.md')
+        expect.any(String),
+        expect.objectContaining({
+          systemPrompt: expect.any(String),
+          cacheUserMessage: false
+        })
       );
     });
 
@@ -143,7 +147,11 @@ function greet(name) {
 
       expect(claudeClient.generateWithStreaming).toHaveBeenCalledWith(
         expect.any(String),
-        onChunk
+        onChunk,
+        expect.objectContaining({
+          systemPrompt: expect.any(String),
+          cacheUserMessage: false
+        })
       );
       expect(claudeClient.generate).not.toHaveBeenCalled();
     });
@@ -164,9 +172,8 @@ function greet(name) {
 
       expect(result.documentation).toBe(mockDocumentation);
       expect(result.metadata.docType).toBe('JSDOC');
-      expect(claudeClient.generate).toHaveBeenCalledWith(
-        expect.stringContaining('JSDoc')
-      );
+      const callArgs = claudeClient.generate.mock.calls[0];
+      expect(callArgs[1].systemPrompt).toContain('JSDoc');
     });
 
     it('should generate API documentation', async () => {
@@ -176,9 +183,8 @@ function greet(name) {
 
       expect(result.documentation).toBe(mockDocumentation);
       expect(result.metadata.docType).toBe('API');
-      expect(claudeClient.generate).toHaveBeenCalledWith(
-        expect.stringContaining('API documentation')
-      );
+      const callArgs = claudeClient.generate.mock.calls[0];
+      expect(callArgs[1].systemPrompt).toContain('API documentation');
     });
 
     it('should generate ARCHITECTURE documentation', async () => {
@@ -188,9 +194,8 @@ function greet(name) {
 
       expect(result.documentation).toBe(mockDocumentation);
       expect(result.metadata.docType).toBe('ARCHITECTURE');
-      expect(claudeClient.generate).toHaveBeenCalledWith(
-        expect.stringContaining('architectural')
-      );
+      const callArgs = claudeClient.generate.mock.calls[0];
+      expect(callArgs[1].systemPrompt).toContain('architectural');
     });
 
     it('should default to README for unknown docType', async () => {
@@ -199,9 +204,8 @@ function greet(name) {
       });
 
       expect(result.documentation).toBe(mockDocumentation);
-      expect(claudeClient.generate).toHaveBeenCalledWith(
-        expect.stringContaining('README.md')
-      );
+      const callArgs = claudeClient.generate.mock.calls[0];
+      expect(callArgs[1].systemPrompt).toContain('README.md');
     });
 
     it('should handle empty code gracefully', async () => {

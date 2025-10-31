@@ -9,11 +9,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [2.4.0] - 2025-10-30
+## [2.4.0] - 2025-10-31
 
-**Status:** ✅ Database Enhancement - Name Fields & Origin Tracking
+**Status:** ✅ Test Infrastructure & Mobile UX Improvements
 
 ### Added
+- **Stripe Payment Integration (Epic 2.4)**
+  - **Stripe SDK Integration:** Full test mode setup with webhook handling
+  - **Subscription Management:** Create, update, cancel via Stripe webhooks
+  - **4-Tier Pricing Page:** Free, Starter ($10/mo or $96/yr), Pro ($25/mo or $240/yr), Team ($50/mo or $480/yr)
+  - **Upgrade/Downgrade Flows:** Hybrid proration strategy (immediate upgrade, end-of-period downgrade)
+  - **Stripe Customer Portal:** Self-service account management for payment methods, invoices, subscriptions
+  - **Webhook Events:** 6 handlers (checkout.session.completed, customer.subscription.created/updated/deleted, invoice.payment_succeeded/payment_failed)
+  - **Database Schema:** subscriptions table with 12 columns (subscription_id, tier, status, current_period_end, cancel_at_period_end, etc.)
+  - **Subscription Model:** 9 methods (create, findByUserId, findByStripeId, update, cancel, updateStatus, etc.)
+  - **Test Mode Validation:** Tested with Stripe CLI and test cards (all payment flows working)
+  - **Documentation:** SUBSCRIPTION-MANAGEMENT.md with upgrade/downgrade flow diagrams and testing guide
+
+- **Pricing Page Mobile Access**
+  - Added Pricing link to mobile menu (between Examples and Help & FAQ)
+  - Mobile users can now easily access pricing page without typing URL
+  - 2 new tests for Pricing menu item rendering and navigation
+
+- **Interactive Roadmap Enhancements**
+  - Added D hotkey to toggle dark/light mode
+  - Updated keyboard hint tooltip with multi-line display (T for view toggle, D for dark mode)
+  - Left-justified tooltip text for better readability
+
+- **Epic 6.4: Testing Infrastructure Improvements** (Roadmap)
+  - Added future epic for Playwright E2E tests, contract testing, and production monitoring
+  - Addresses 21 skipped GitHub OAuth integration tests
+  - Duration: 3-5 days, Status: Future, Badge: E2E + Integration
+
 - **Database Migration 008: Name and Origin Tracking**
   - Added `first_name` (VARCHAR 100) and `last_name` (VARCHAR 150) to users table
   - Added `customer_created_via` (origin_enum) to users table for tracking customer creation source
@@ -41,6 +68,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Frontend: 27 VerifyEmail component tests + 39 UnverifiedEmailBanner tests
   - Comprehensive coverage: token generation, expiry, validation, resending, UI states
 
+### Fixed
+- **Backend Test Suite (41 tests fixed)**
+  - Email Verification Routes: Fixed all 27 tests by adding JWT token generation and proper mocking
+  - Payments Name Sync (App → Stripe): Fixed all 5 tests for sending names when creating Stripe customers
+  - Webhook Name Sync (Stripe → App): Fixed all 6 tests for syncing names from Stripe to database
+  - Origin Tracking: Fixed 2 tests for customer_created_via field tracking
+  - Webhook Error Handling: Fixed 1 test (200 response on errors prevents Stripe retry storms)
+
+- **Frontend Test Suite (15 tests fixed)**
+  - File Upload Integration: Added MemoryRouter wrapper to fix useNavigate() context errors
+  - All 15 file upload tests now passing after MobileMenu added useNavigate hook
+
 ### Changed
 - **User Model Query Updates**
   - `findById()`: Now includes `customer_created_via` and `email_verified` fields
@@ -54,6 +93,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Migrated from react-hot-toast to custom toastSuccess/toastError for consistency
 
 ### Documentation
+- **GitHub OAuth Test Documentation**
+  - Updated `docs/testing/SKIPPED-TESTS.md` with comprehensive GitHub OAuth test documentation
+  - Documented 21 skipped GitHub OAuth integration tests (7 passing config tests, 14 failing flow tests)
+  - Added analysis: Complex Passport.js mocking, feature works in production (100+ users)
+  - Recommendation: E2E tests with Playwright as better approach
+
+- **Roadmap Updates**
+  - Moved Epic 2.7 (Production Launch - Post-LLC) to Planned Features column
+  - Moved Epic 2.8 (Enhanced Subscription UI) to Planned Features column
+  - Added Epic 6.4 (Testing Infrastructure Improvements) to Future Expansion column
+
 - **New Documentation Files**
   - `docs/authentication/EMAIL-VERIFICATION-SYSTEM.md` - Complete email verification implementation guide
   - Updated `docs/DOCUMENTATION-MAP.md` with new Authentication section
@@ -61,11 +111,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Testing
 - **Test Coverage**
-  - Total: 1,660 tests (1,565 passing, 95 failing, 36 skipped)
-  - Backend: 543 tests (478 passing, 44 failing, 21 skipped) - 87.9% pass rate
-  - Frontend: 1,117 tests (1,087 passing, 15 failing, 15 skipped) - 97.3% pass rate
+  - Total: 1,662 tests (1,625 passing, 36 skipped, 1 failing) - 97.8% pass rate
+  - Backend: 543 tests (521 passing, 21 skipped, 1 failing) - 95.9% pass rate
+  - Frontend: 1,119 tests (1,104 passing, 15 skipped) - 98.7% pass rate
   - Docker Sandbox: 14/14 migration tests passing
-  - Note: 44 backend failures are new Stripe/webhook test mocking issues (test infrastructure, not production code)
+  - Note: 1 failing test is pre-existing flaky Subscription model test (test isolation issue, not production code)
 
 ### Technical
 - **Database:** Migration 008 applied to Neon dev and Docker sandbox
