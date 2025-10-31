@@ -12,8 +12,19 @@ process.env.POSTGRES_URL = process.env.POSTGRES_URL || 'postgresql://test:test@l
 // Load environment variables from .env (after setting defaults)
 import 'dotenv/config';
 
+// Detect if we're in CI environment (GitHub Actions)
+const isCI = process.env.CI === 'true' || process.env.GITHUB_ACTIONS === 'true';
+
 // Global test timeout
 jest.setTimeout(10000);
+
+// Helper to skip database-dependent tests in CI
+global.skipIfNoDb = () => {
+  if (isCI) {
+    return describe.skip;
+  }
+  return describe;
+};
 
 // Add custom matchers if needed
 expect.extend({
