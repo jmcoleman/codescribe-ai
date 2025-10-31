@@ -21,7 +21,9 @@ import User from '../../models/User.js';
 import Subscription from '../../models/Subscription.js';
 import stripe from '../../config/stripe.js';
 
-describe('Webhook Handler', () => {
+const describeOrSkip = skipIfNoDb();
+
+describeOrSkip('Webhook Handler', () => {
   let app;
   let testUser;
 

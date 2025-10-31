@@ -24,7 +24,9 @@ import paymentRoutes from '../payments.js';
 import User from '../../models/User.js';
 import stripe from '../../config/stripe.js';
 
-describe('Payment Routes', () => {
+const describeOrSkip = skipIfNoDb();
+
+describeOrSkip('Payment Routes', () => {
   let app;
   let testUser;
   let authToken;
