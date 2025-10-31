@@ -12,7 +12,9 @@ jest.mock('@vercel/postgres', () => ({
 
 import { sql } from '@vercel/postgres';
 
-describe('Usage Model', () => {
+const describeOrSkip = skipIfNoDb();
+
+describeOrSkip('Usage Model', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });

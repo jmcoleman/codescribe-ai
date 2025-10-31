@@ -100,7 +100,9 @@ const mockAppliedMigrations = [
   }
 ];
 
-describe('Migration Endpoints', () => {
+const describeOrSkip = skipIfNoDb();
+
+describeOrSkip('Migration Endpoints', () => {
   let app;
   const originalEnv = process.env;
 

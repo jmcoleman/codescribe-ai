@@ -36,7 +36,9 @@ function createTestToken(userId) {
   );
 }
 
-describe('Email Verification Routes', () => {
+const describeOrSkip = skipIfNoDb();
+
+describeOrSkip('Email Verification Routes', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
