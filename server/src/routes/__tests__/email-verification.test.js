@@ -18,7 +18,7 @@ jest.mock('@vercel/postgres', () => ({
 }));
 
 // Now import routes and models
-import authRouter from '../auth.js';
+import authRouter, { resetPasswordResetRateLimit } from '../auth.js';
 import User from '../../models/User.js';
 import { sendVerificationEmail } from '../../services/emailService.js';
 
@@ -41,6 +41,8 @@ const describeOrSkip = skipIfNoDb();
 describeOrSkip('Email Verification Routes', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Reset rate limiting between tests
+    resetPasswordResetRateLimit();
   });
 
   describe('POST /api/auth/verify-email', () => {

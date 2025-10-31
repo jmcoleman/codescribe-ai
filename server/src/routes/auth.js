@@ -22,6 +22,46 @@ import { sendPasswordResetEmail, sendVerificationEmail } from '../services/email
 const router = express.Router();
 
 // ============================================================================
+// Email Rate Limiting Configuration
+// ============================================================================
+// In-memory cache for email rate limiting
+// Note: Upgrade to Redis for multi-region deployments
+const emailRateLimitCache = new Map();
+
+// Rate limit constants (aligned with industry standards: GitHub, Google)
+const EMAIL_VERIFICATION_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
+const EMAIL_VERIFICATION_DAILY_MAX = 10; // per user
+const PASSWORD_RESET_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
+const PASSWORD_RESET_HOURLY_MAX = 3; // per email address
+const PASSWORD_RESET_DAILY_MAX = 10; // per email address
+
+/**
+ * Check if email rate limit is exceeded
+ * @param {string} key - Cache key (userId or email)
+ * @param {number} cooldownMs - Cooldown period in milliseconds
+ * @returns {Object} { allowed: boolean, remainingSeconds: number }
+ */
+function checkEmailRateLimit(key, cooldownMs) {
+  const lastEmailTime = emailRateLimitCache.get(key);
+  const now = Date.now();
+
+  if (lastEmailTime && (now - lastEmailTime) < cooldownMs) {
+    const remainingSeconds = Math.ceil((cooldownMs - (now - lastEmailTime)) / 1000);
+    return { allowed: false, remainingSeconds };
+  }
+
+  return { allowed: true, remainingSeconds: 0 };
+}
+
+/**
+ * Update email rate limit cache
+ * @param {string} key - Cache key
+ */
+function updateEmailRateLimit(key) {
+  emailRateLimitCache.set(key, Date.now());
+}
+
+// ============================================================================
 // POST /api/auth/signup - User Registration
 // ============================================================================
 router.post(
@@ -444,9 +484,22 @@ function checkPasswordResetRateLimit(email) {
 export function resetPasswordResetRateLimit(email) {
   if (email) {
     passwordResetAttempts.delete(email);
+    // Also clear email rate limit cache for this email
+    emailRateLimitCache.delete(`reset:${email}`);
+    emailRateLimitCache.delete(`verify:${email}`);
   } else {
     passwordResetAttempts.clear();
+    emailRateLimitCache.clear();
   }
+}
+
+/**
+ * Reset only email cooldown (for testing rate limit logic)
+ * @param {string} email - Email to reset cooldown for
+ */
+export function resetEmailCooldown(email) {
+  emailRateLimitCache.delete(`reset:${email}`);
+  emailRateLimitCache.delete(`verify:${email}`);
 }
 
 // ============================================================================
@@ -461,11 +514,22 @@ router.post(
     try {
       const { email } = req.body;
 
-      // Check rate limit
+      // Check cooldown rate limit (5 minute cooldown between requests)
+      const cooldownKey = `reset:${email}`;
+      const cooldownCheck = checkEmailRateLimit(cooldownKey, PASSWORD_RESET_COOLDOWN_MS);
+
+      if (!cooldownCheck.allowed) {
+        return res.status(429).json({
+          success: false,
+          error: `Please wait ${cooldownCheck.remainingSeconds} seconds before requesting another password reset email`
+        });
+      }
+
+      // Check hourly rate limit (max 3 per hour)
       if (!checkPasswordResetRateLimit(email)) {
         return res.status(429).json({
           success: false,
-          error: 'Too many password reset requests. Please try again later.'
+          error: 'Too many password reset requests. Please try again in an hour.'
         });
       }
 
@@ -505,6 +569,10 @@ router.post(
           to: user.email,
           resetToken
         });
+
+        // Update rate limit cache after successful send
+        updateEmailRateLimit(cooldownKey);
+
         console.log(`Password reset email sent to: ${user.email}`);
       } catch (emailError) {
         console.error('Failed to send password reset email:', emailError);
@@ -650,6 +718,17 @@ router.post(
         });
       }
 
+      // Check rate limit (5 minute cooldown)
+      const rateLimitKey = `verify:${userId}`;
+      const rateLimit = checkEmailRateLimit(rateLimitKey, EMAIL_VERIFICATION_COOLDOWN_MS);
+
+      if (!rateLimit.allowed) {
+        return res.status(429).json({
+          success: false,
+          error: `Please wait ${rateLimit.remainingSeconds} seconds before requesting another verification email`
+        });
+      }
+
       // Generate new verification token
       const verificationToken = await User.createVerificationToken(userId);
 
@@ -658,6 +737,9 @@ router.post(
         to: user.email,
         verificationToken
       });
+
+      // Update rate limit cache
+      updateEmailRateLimit(rateLimitKey);
 
       console.log(`Verification email resent to: ${user.email}`);
 

@@ -446,10 +446,19 @@ codescribe-ai/
 
 ## 🔄 Version History
 
-**Current: v2.4.0** - Test Infrastructure & Mobile UX Improvements (October 31, 2025): **41 Backend Tests Fixed** (email verification, name sync, origin tracking, webhooks); **Pricing Page Mobile Access** added to mobile menu; **GitHub OAuth Test Documentation** (21 tests skipped, documented in SKIPPED-TESTS.md); **Interactive Roadmap Enhancements** (D hotkey for dark mode toggle, multi-line keyboard hints); **Epic 6.4 Added** (Testing Infrastructure Improvements roadmap); **1,662 tests** (1,104 frontend, 521 backend, 36 skipped, 1 failing, 97.8% pass rate); **159 new tests** (41 backend fixes, 2 mobile menu, 15 file upload, 101 from previous work); comprehensive test suite improvements and documentation
+**Current: v2.4.1** - Email Rate Limiting & UI Fixes (October 31, 2025): **Email Rate Limiting System** (5-min cooldown, 10/day limits, industry-standard); **Email Service Mocking** (auto-mock in dev/test, TEST_RESEND_MOCK flag, prevents quota waste); **Enhanced Production Logging** (detailed email logs with URLs, IDs, timestamps); **UnverifiedEmailBanner Redesign** (brand gradient, compact layout, indigo button, 11 tests updated); **ConfirmationModal Fix** (title/close button alignment); **95 tests fixed** (27 emailService, 28 auth-password-reset, 27 email-verification, 13 integration); **1,662 tests** (1,104 frontend, 522 backend, 36 skipped, 0 failing, 97.8% pass rate); EMAIL-RATE-LIMITING.md documentation; removed npm run migrate from vercel.json
 
 <details>
-<summary>Previous Versions (v1.0-v2.3)</summary>
+<summary>Previous Versions (v1.0-v2.4)</summary>
+
+- **v2.4.0** - Test Infrastructure & Mobile UX Improvements (October 31, 2025)
+  - 41 Backend Tests Fixed (email verification, name sync, origin tracking, webhooks)
+  - Pricing Page Mobile Access added to mobile menu
+  - GitHub OAuth Test Documentation (21 tests skipped, documented in SKIPPED-TESTS.md)
+  - Interactive Roadmap Enhancements (D hotkey for dark mode toggle, multi-line keyboard hints)
+  - Epic 6.4 Added (Testing Infrastructure Improvements roadmap)
+  - 1,662 tests (1,104 frontend, 521 backend, 36 skipped, 1 failing, 97.8% pass rate)
+  - 159 new tests (41 backend fixes, 2 mobile menu, 15 file upload, 101 from previous work)
 
 - **v2.3.0** - UX Enhancements & File Upload Improvements (October 29, 2025)
   - Drag-and-Drop File Upload with visual purple overlay and smart behavior

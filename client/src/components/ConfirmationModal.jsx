@@ -132,14 +132,14 @@ export function ConfirmationModal({
 
             {/* Title and close button */}
             <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-2">
+              <div className="flex items-center justify-between gap-2">
                 <h2 id="confirmation-modal-title" className="text-lg font-semibold text-slate-900">
                   {title}
                 </h2>
                 <button
                   type="button"
                   onClick={onClose}
-                  className="p-1 hover:bg-slate-100 rounded-lg transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
+                  className="p-1 hover:bg-slate-100 rounded-lg transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 flex-shrink-0"
                   aria-label="Close confirmation modal"
                 >
                   <X className="w-5 h-5 text-slate-600" />
