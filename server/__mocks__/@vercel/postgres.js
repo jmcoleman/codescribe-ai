@@ -1,23 +1,22 @@
 /**
  * Mock for @vercel/postgres
  * Prevents actual database connections during tests
+ *
+ * Note: Individual test files override this with their own specific mocks.
+ * This is a fallback for any imports that don't have explicit mocks.
  */
 
-// Mock SQL query function
-const mockSql = jest.fn().mockImplementation((strings, ...values) => {
-  // Return a promise that resolves to a mock result
+// Create a mock function with a default implementation
+const mockSql = jest.fn();
+
+// Set default implementation (will be overridden by individual tests)
+mockSql.mockImplementation(() => {
   return Promise.resolve({
     rows: [],
     rowCount: 0,
     command: 'SELECT',
     fields: [],
   });
-});
-
-// Add query method for template literals
-mockSql.query = jest.fn().mockResolvedValue({
-  rows: [],
-  rowCount: 0,
 });
 
 export const sql = mockSql;

@@ -12,9 +12,6 @@ process.env.POSTGRES_URL = process.env.POSTGRES_URL || 'postgresql://test:test@l
 // Load environment variables from .env (after setting defaults)
 import 'dotenv/config';
 
-// Mock @vercel/postgres to prevent actual database connections
-jest.mock('@vercel/postgres');
-
 // Global test timeout
 jest.setTimeout(10000);
 
