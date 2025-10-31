@@ -12,13 +12,16 @@
 import request from 'supertest';
 import express from 'express';
 import crypto from 'crypto';
+
+// Mock dependencies BEFORE importing routes
+jest.mock('../../models/User.js');
+jest.mock('../../services/emailService.js');
+jest.mock('../../config/stripe.js');
+
+// Now import routes and models
 import User from '../../models/User.js';
 import authRoutes, { resetPasswordResetRateLimit } from '../auth.js';
 import { sendPasswordResetEmail } from '../../services/emailService.js';
-
-// Mock dependencies
-jest.mock('../../models/User.js');
-jest.mock('../../services/emailService.js');
 
 // Create test app
 function createTestApp() {

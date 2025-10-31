@@ -9,13 +9,10 @@ import request from 'supertest';
 import express from 'express';
 import session from 'express-session';
 import passport from 'passport';
-import authRoutes from '../../src/routes/auth.js';
 
-// Mock the User model
+// Mock dependencies BEFORE importing routes
 jest.mock('../../src/models/User.js');
-import User from '../../src/models/User.js';
-
-// Mock the database connection
+jest.mock('../../src/config/stripe.js');
 jest.mock('../../src/db/connection.js', () => ({
   sql: jest.fn(),
   testConnection: jest.fn().mockResolvedValue(true),
@@ -87,6 +84,10 @@ jest.mock('passport-github2', () => {
 
   return { Strategy: MockGitHubStrategy };
 });
+
+// Import routes and User model after all mocks are set up
+import authRoutes from '../../src/routes/auth.js';
+import User from '../../src/models/User.js';
 
 // TODO: Fix GitHub OAuth mock strategy - tests failing due to complex async passport mocking
 // The OAuth feature works in production, but the test mocking strategy needs revision

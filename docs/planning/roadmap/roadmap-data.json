@@ -65,9 +65,9 @@
       "text": "codescribeai.com",
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
-    "footerLeft": "<strong>CodeScribe AI</strong> \u00b7 Strategic Roadmap v3.3",
-    "footer": "Phase 1 Complete \u00b7 Phase 2 In Progress (v2.4.0 - Test Mode) \u00b7 Launch: Mid-Jan 2026 (Validation-Driven)",
-    "lastUpdated": "October 30, 2025"
+    "footerLeft": "<strong>CodeScribe AI</strong> \u00b7 Strategic Roadmap v3.4",
+    "footer": "Phase 1 Complete \u00b7 Phase 2: Epic 2.4 Complete (Payment Integration - Test Mode) \u00b7 Launch: Mid-Jan 2026",
+    "lastUpdated": "October 31, 2025"
   },
   "columns": [
     {
@@ -231,6 +231,33 @@
             "Page width expansion for better space utilization",
             "15 new tests (drag-drop, clear button, logout)"
           ]
+        },
+        {
+          "version": "v2.4.0",
+          "title": "Payment Integration & Test Infrastructure (Epic 2.4)",
+          "duration": "3 days",
+          "status": "\u2713 Complete",
+          "completedDate": "Oct 31, 2025",
+          "badge": "Test Mode",
+          "features": [
+            "Stripe SDK integration with test mode",
+            "Subscription management (create, update, cancel via webhooks)",
+            "Upgrade/downgrade flows with hybrid proration (documented in SUBSCRIPTION-MANAGEMENT.md)",
+            "Webhook handling (6 events: checkout completed, subscription created/updated/deleted, invoice paid/failed)",
+            "Pricing page UI (4 tiers with monthly/annual toggle)",
+            "Stripe Customer Portal integration for account management",
+            "Test mode validation with Stripe CLI - all flows working",
+            "Database schema: subscriptions table, stripe_customer_id column, name fields (Migration 008)",
+            "Subscription model with 9 methods (create, findByUserId, update, cancel, etc.)",
+            "Bidirectional name sync between app and Stripe",
+            "Customer origin tracking (app, stripe_dashboard, api, migration)",
+            "41 backend tests fixed (email verification, name sync, origin tracking, webhooks)",
+            "15 frontend tests fixed (file upload with MemoryRouter)",
+            "Pricing page added to mobile menu",
+            "Interactive roadmap enhancements (D hotkey for dark mode)",
+            "1,662 tests (1,625 passing, 36 skipped, 1 failing) - 97.8% pass rate",
+            "Note: Custom receipts deferred to Epic 2.7 (production launch)"
+          ]
         }
       ]
     },
@@ -240,27 +267,6 @@
       "title": "Active",
       "subtitle": "Phase 2 & 3: Payments + Dark Mode",
       "phases": [
-        {
-          "version": "Epic 2.4",
-          "title": "Payment Integration (Test Mode)",
-          "duration": "2-3 days",
-          "status": "\u2713 Complete",
-          "badge": "v2.4.0",
-          "features": [
-            "Stripe SDK integration with test mode",
-            "Subscription management (create via Checkout, cancel via webhooks)",
-            "Webhook handling (6 events: checkout completed, subscription created/updated/deleted, invoice paid/failed)",
-            "Pricing page UI (4 tiers with monthly/annual toggle)",
-            "Test mode validation with Stripe CLI",
-            "Database schema: subscriptions table, stripe_customer_id column, name fields (Migration 008)",
-            "Subscription model with 9 methods",
-            "Bidirectional name sync between app and Stripe",
-            "Customer origin tracking (app, stripe_dashboard, api, migration)",
-            "Manual E2E testing with test cards - all flows working",
-            "128 new tests: 114 email verification + 14 migration tests (100% pass)",
-            "Note: Upgrade/downgrade flows moved to Epic 2.8, custom receipts moved to Epic 2.7"
-          ]
-        },
         {
           "version": "Epic 2.5",
           "title": "Essential Legal (Terms & Privacy)",
@@ -299,46 +305,6 @@
           ]
         },
         {
-          "version": "Epic 2.7",
-          "title": "Production Launch (Post-LLC)",
-          "duration": "1-2 days",
-          "status": "Planned",
-          "badge": "Jan 14+ 2026",
-          "features": [
-            "Replace test Stripe keys with live keys",
-            "Update webhook endpoints to production URLs",
-            "Verify Stripe business account (requires LLC EIN + bank account)",
-            "Test live checkout flow with real payment",
-            "Custom branded email receipt templates (override Stripe defaults)",
-            "Invoice PDF customization with CodeScribe AI branding",
-            "Store Stripe receipt URLs only (no PII in database)",
-            "Display Stripe-hosted receipts via API links",
-            "Monitor first live transactions",
-            "Deploy AFTER Georgia LLC formation (Jan 2-3) and Stripe business verification (Jan 11-13)"
-          ]
-        },
-        {
-          "version": "Epic 2.8",
-          "title": "Subscription Management UI",
-          "duration": "2-3 days",
-          "status": "Planned",
-          "badge": "Planned",
-          "features": [
-            "Stripe Customer Portal integration from Account Settings",
-            "Portal handles: Update card, view invoices, download receipts",
-            "Upgrade from Free → Starter/Pro/Team (via Pricing page)",
-            "Downgrade from Pro → Starter or Free (self-service)",
-            "Plan change preview: \"New plan starts at next billing cycle\"",
-            "No proration handling (keep it simple)",
-            "Cancel button with confirmation modal",
-            "Soft cancel: Tier remains active until period_end",
-            "Post-cancellation: Auto-downgrade to Free tier",
-            "Email notifications for all subscription changes",
-            "UI components: SubscriptionCard, PlanChangeModal, CancellationModal",
-            "Backend: Add upgradePlan() and downgradePlan() methods to Subscription model"
-          ]
-        },
-        {
           "version": "Epic 3.1",
           "title": "Theme Refinements & Dark Mode",
           "duration": "2-3 days",
@@ -367,6 +333,42 @@
       "title": "Planned Features",
       "subtitle": "Phase 3-4: Developer Adoption Engine",
       "phases": [
+        {
+          "version": "Epic 2.7",
+          "title": "Production Launch (Post-LLC)",
+          "duration": "1-2 days",
+          "status": "Planned",
+          "badge": "Jan 14+ 2026",
+          "features": [
+            "Replace test Stripe keys with live keys",
+            "Update webhook endpoints to production URLs",
+            "Verify Stripe business account (requires LLC EIN + bank account)",
+            "Test live checkout flow with real payment",
+            "Custom branded email receipt templates (override Stripe defaults)",
+            "Invoice PDF customization with CodeScribe AI branding",
+            "Store Stripe receipt URLs only (no PII in database)",
+            "Display Stripe-hosted receipts via API links",
+            "Monitor first live transactions",
+            "Deploy AFTER Georgia LLC formation (Jan 2-3) and Stripe business verification (Jan 11-13)"
+          ]
+        },
+        {
+          "version": "Epic 2.8",
+          "title": "Enhanced Subscription UI",
+          "duration": "1-2 days",
+          "status": "Planned",
+          "badge": "Optional UX",
+          "features": [
+            "Enhanced subscription management UI components",
+            "SubscriptionCard component with tier details and usage stats",
+            "PlanChangeModal with visual comparison of tier features",
+            "CancellationModal with retention flow (feedback form, downgrade offer)",
+            "Subscription history view (past invoices, payment methods)",
+            "Email notifications for subscription lifecycle events",
+            "In-app notifications for billing issues and renewals",
+            "Note: Core upgrade/downgrade flows completed in Epic 2.4"
+          ]
+        },
         {
           "version": "Epic 3.3",
           "title": "Advanced File Handling",
@@ -569,6 +571,23 @@
             "Air-gapped environment support",
             "License key validation system",
             "Automatic updates (opt-in)"
+          ]
+        },
+        {
+          "version": "Epic 6.4",
+          "title": "Testing Infrastructure Improvements",
+          "duration": "3-5 days",
+          "status": "Future",
+          "badge": "E2E + Integration",
+          "features": [
+            "Playwright E2E tests for GitHub OAuth (replace 21 skipped integration tests)",
+            "Contract testing for GitHub API integration",
+            "Production OAuth monitoring and alerting",
+            "Manual regression test checklist documentation",
+            "E2E tests for critical user flows (signup, login, generate docs)",
+            "Visual regression testing with Percy or Chromatic",
+            "Performance testing with Lighthouse CI",
+            "Test coverage reporting improvements"
           ]
         },
         {

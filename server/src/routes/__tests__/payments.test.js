@@ -7,23 +7,22 @@
  * Date: October 29, 2025
  *
  * NOTE: These tests use mocked Stripe SDK to avoid real API calls.
- * The mocks are set up using jest.mock() for CJS compatibility.
+ * The mocks are set up using jest.mock() with manual mock file.
  */
 
 import { describe, it, expect, beforeAll, afterAll, beforeEach, jest } from '@jest/globals';
 import request from 'supertest';
 import express from 'express';
-import paymentRoutes from '../payments.js';
-import User from '../../models/User.js';
 import { sql } from '@vercel/postgres';
 import jwt from 'jsonwebtoken';
 
-// NOTE: Stripe SDK mocking removed - tests may call real API
-// TODO: Fix ESM mocking for Stripe SDK to avoid real API calls
-const mockStripeCustomersCreate = jest.fn();
-const mockStripeCheckoutSessionsCreate = jest.fn();
-const mockStripeBillingPortalSessionsCreate = jest.fn();
-const mockStripeSubscriptionsList = jest.fn();
+// Mock the stripe config module BEFORE importing routes
+jest.mock('../../config/stripe.js');
+
+// Now import the routes and User model
+import paymentRoutes from '../payments.js';
+import User from '../../models/User.js';
+import stripe from '../../config/stripe.js';
 
 describe('Payment Routes', () => {
   let app;
@@ -61,7 +60,7 @@ describe('Payment Routes', () => {
     jest.clearAllMocks();
 
     // Default: no existing subscriptions
-    mockStripeSubscriptionsList.mockResolvedValue({ data: [] });
+    stripe.subscriptions.list.mockResolvedValue({ data: [] });
   });
 
   afterAll(async () => {
@@ -71,11 +70,11 @@ describe('Payment Routes', () => {
 
   describe('POST /api/payments/create-checkout-session', () => {
     it('should create a checkout session for new customer', async () => {
-      mockStripeCustomersCreate.mockResolvedValue({
+      stripe.customers.create.mockResolvedValue({
         id: 'cus_test_123',
       });
 
-      mockStripeCheckoutSessionsCreate.mockResolvedValue({
+      stripe.checkout.sessions.create.mockResolvedValue({
         id: 'cs_test_123',
         url: 'https://checkout.stripe.com/test',
       });
@@ -93,7 +92,7 @@ describe('Payment Routes', () => {
       expect(response.body.url).toBe('https://checkout.stripe.com/test');
 
       // Verify Stripe customer was created
-      expect(mockStripeCustomersCreate).toHaveBeenCalledWith({
+      expect(stripe.customers.create).toHaveBeenCalledWith({
         email: testUser.email,
         metadata: {
           userId: testUser.id,
@@ -102,13 +101,13 @@ describe('Payment Routes', () => {
       });
 
       // Verify checkout session was created with correct price
-      expect(mockStripeCheckoutSessionsCreate).toHaveBeenCalledWith(
+      expect(stripe.checkout.sessions.create).toHaveBeenCalledWith(
         expect.objectContaining({
           customer: 'cus_test_123',
           mode: 'subscription',
           line_items: [
             {
-              price: 'price_pro_monthly',
+              price: 'price_pro_monthly_test',
               quantity: 1,
             },
           ],
@@ -120,7 +119,7 @@ describe('Payment Routes', () => {
       // Update user with existing Stripe customer ID
       await User.updateStripeCustomerId(testUser.id, 'cus_existing_123');
 
-      mockStripeCheckoutSessionsCreate.mockResolvedValue({
+      stripe.checkout.sessions.create.mockResolvedValue({
         id: 'cs_test_456',
         url: 'https://checkout.stripe.com/test2',
       });
@@ -137,15 +136,15 @@ describe('Payment Routes', () => {
       expect(response.body.sessionId).toBe('cs_test_456');
 
       // Should NOT create new customer
-      expect(mockStripeCustomersCreate).not.toHaveBeenCalled();
+      expect(stripe.customers.create).not.toHaveBeenCalled();
 
       // Should use existing customer ID
-      expect(mockStripeCheckoutSessionsCreate).toHaveBeenCalledWith(
+      expect(stripe.checkout.sessions.create).toHaveBeenCalledWith(
         expect.objectContaining({
           customer: 'cus_existing_123',
           line_items: [
             {
-              price: 'price_starter_annual',
+              price: 'price_starter_annual_test',
               quantity: 1,
             },
           ],
@@ -191,7 +190,7 @@ describe('Payment Routes', () => {
     });
 
     it('should handle Stripe errors', async () => {
-      mockStripeCustomersCreate.mockRejectedValue(
+      stripe.customers.create.mockRejectedValue(
         new Error('Stripe API error')
       );
 
@@ -213,7 +212,7 @@ describe('Payment Routes', () => {
       // Update user with Stripe customer ID
       await User.updateStripeCustomerId(testUser.id, 'cus_portal_123');
 
-      mockStripeBillingPortalSessionsCreate.mockResolvedValue({
+      stripe.billingPortal.sessions.create.mockResolvedValue({
         url: 'https://billing.stripe.com/portal/test',
       });
 
@@ -225,7 +224,7 @@ describe('Payment Routes', () => {
       expect(response.status).toBe(200);
       expect(response.body.url).toBe('https://billing.stripe.com/portal/test');
 
-      expect(mockStripeBillingPortalSessionsCreate).toHaveBeenCalledWith({
+      expect(stripe.billingPortal.sessions.create).toHaveBeenCalledWith({
         customer: 'cus_portal_123',
         return_url: expect.stringContaining('/account'),
       });
@@ -252,7 +251,7 @@ describe('Payment Routes', () => {
     it('should handle Stripe errors', async () => {
       await User.updateStripeCustomerId(testUser.id, 'cus_error_123');
 
-      mockStripeBillingPortalSessionsCreate.mockRejectedValue(
+      stripe.billingPortal.sessions.create.mockRejectedValue(
         new Error('Stripe API error')
       );
 
@@ -266,8 +265,7 @@ describe('Payment Routes', () => {
     });
   });
 
-  // TODO: Fix ESM mocking - these tests have mock setup issues but production code works
-  describe.skip('Name Field Sync (Migration 008)', () => {
+  describe('Name Field Sync (Migration 008)', () => {
     describe('App → Stripe: Send name when creating customer', () => {
       it('should include name in Stripe customer when both first_name and last_name exist', async () => {
         // Create user with name
@@ -278,20 +276,29 @@ describe('Payment Routes', () => {
           last_name: 'Doe',
         });
 
+        // Set email_verified = true (bypass middleware check)
+        await sql`
+          UPDATE users
+          SET email_verified = TRUE
+          WHERE id = ${userWithName.id}
+        `;
+
         const token = jwt.sign(
-          { id: userWithName.id, email: userWithName.email },
+          { sub: userWithName.id },
           process.env.JWT_SECRET || 'test-secret',
           { expiresIn: '7d' }
         );
 
-        mockStripeCustomersCreate.mockResolvedValue({
+        stripe.customers.create.mockResolvedValue({
           id: 'cus_with_name_123',
         });
 
-        mockStripeCheckoutSessionsCreate.mockResolvedValue({
+        stripe.checkout.sessions.create.mockResolvedValue({
           id: 'cs_with_name_123',
           url: 'https://checkout.stripe.com/test',
         });
+
+        stripe.subscriptions.list.mockResolvedValue({ data: [] });
 
         await request(app)
           .post('/api/payments/create-checkout-session')
@@ -302,7 +309,7 @@ describe('Payment Routes', () => {
           });
 
         // Verify name was sent to Stripe
-        expect(mockStripeCustomersCreate).toHaveBeenCalledWith(
+        expect(stripe.customers.create).toHaveBeenCalledWith(
           expect.objectContaining({
             name: 'John Doe',
             email: userWithName.email,
@@ -320,20 +327,29 @@ describe('Payment Routes', () => {
           last_name: 'Smith',
         });
 
+        // Set email_verified = true (bypass middleware check)
+        await sql`
+          UPDATE users
+          SET email_verified = TRUE
+          WHERE id = ${userNoFirstName.id}
+        `;
+
         const token = jwt.sign(
-          { id: userNoFirstName.id, email: userNoFirstName.email },
+          { sub: userNoFirstName.id },
           process.env.JWT_SECRET || 'test-secret',
           { expiresIn: '7d' }
         );
 
-        mockStripeCustomersCreate.mockResolvedValue({
+        stripe.customers.create.mockResolvedValue({
           id: 'cus_no_first_123',
         });
 
-        mockStripeCheckoutSessionsCreate.mockResolvedValue({
+        stripe.checkout.sessions.create.mockResolvedValue({
           id: 'cs_no_first_123',
           url: 'https://checkout.stripe.com/test',
         });
+
+        stripe.subscriptions.list.mockResolvedValue({ data: [] });
 
         await request(app)
           .post('/api/payments/create-checkout-session')
@@ -344,7 +360,7 @@ describe('Payment Routes', () => {
           });
 
         // Verify name was NOT sent (no name property)
-        expect(mockStripeCustomersCreate).toHaveBeenCalledWith(
+        expect(stripe.customers.create).toHaveBeenCalledWith(
           expect.not.objectContaining({
             name: expect.anything(),
           })
@@ -361,20 +377,29 @@ describe('Payment Routes', () => {
           first_name: 'Jane',
         });
 
+        // Set email_verified = true (bypass middleware check)
+        await sql`
+          UPDATE users
+          SET email_verified = TRUE
+          WHERE id = ${userNoLastName.id}
+        `;
+
         const token = jwt.sign(
-          { id: userNoLastName.id, email: userNoLastName.email },
+          { sub: userNoLastName.id },
           process.env.JWT_SECRET || 'test-secret',
           { expiresIn: '7d' }
         );
 
-        mockStripeCustomersCreate.mockResolvedValue({
+        stripe.customers.create.mockResolvedValue({
           id: 'cus_no_last_123',
         });
 
-        mockStripeCheckoutSessionsCreate.mockResolvedValue({
+        stripe.checkout.sessions.create.mockResolvedValue({
           id: 'cs_no_last_123',
           url: 'https://checkout.stripe.com/test',
         });
+
+        stripe.subscriptions.list.mockResolvedValue({ data: [] });
 
         await request(app)
           .post('/api/payments/create-checkout-session')
@@ -385,7 +410,7 @@ describe('Payment Routes', () => {
           });
 
         // Verify name was NOT sent
-        expect(mockStripeCustomersCreate).toHaveBeenCalledWith(
+        expect(stripe.customers.create).toHaveBeenCalledWith(
           expect.not.objectContaining({
             name: expect.anything(),
           })
@@ -403,20 +428,29 @@ describe('Payment Routes', () => {
           last_name: 'Garcia Lopez',
         });
 
+        // Set email_verified = true (bypass middleware check)
+        await sql`
+          UPDATE users
+          SET email_verified = TRUE
+          WHERE id = ${userMultiPart.id}
+        `;
+
         const token = jwt.sign(
-          { id: userMultiPart.id, email: userMultiPart.email },
+          { sub: userMultiPart.id },
           process.env.JWT_SECRET || 'test-secret',
           { expiresIn: '7d' }
         );
 
-        mockStripeCustomersCreate.mockResolvedValue({
+        stripe.customers.create.mockResolvedValue({
           id: 'cus_multipart_123',
         });
 
-        mockStripeCheckoutSessionsCreate.mockResolvedValue({
+        stripe.checkout.sessions.create.mockResolvedValue({
           id: 'cs_multipart_123',
           url: 'https://checkout.stripe.com/test',
         });
+
+        stripe.subscriptions.list.mockResolvedValue({ data: [] });
 
         await request(app)
           .post('/api/payments/create-checkout-session')
@@ -427,7 +461,7 @@ describe('Payment Routes', () => {
           });
 
         // Verify full name sent correctly
-        expect(mockStripeCustomersCreate).toHaveBeenCalledWith(
+        expect(stripe.customers.create).toHaveBeenCalledWith(
           expect.objectContaining({
             name: 'Maria Garcia Lopez',
           })
@@ -450,20 +484,29 @@ describe('Payment Routes', () => {
           last_name: longLastName,
         });
 
+        // Set email_verified = true (bypass middleware check)
+        await sql`
+          UPDATE users
+          SET email_verified = TRUE
+          WHERE id = ${userLongName.id}
+        `;
+
         const token = jwt.sign(
-          { id: userLongName.id, email: userLongName.email },
+          { sub: userLongName.id },
           process.env.JWT_SECRET || 'test-secret',
           { expiresIn: '7d' }
         );
 
-        mockStripeCustomersCreate.mockResolvedValue({
+        stripe.customers.create.mockResolvedValue({
           id: 'cus_long_123',
         });
 
-        mockStripeCheckoutSessionsCreate.mockResolvedValue({
+        stripe.checkout.sessions.create.mockResolvedValue({
           id: 'cs_long_123',
           url: 'https://checkout.stripe.com/test',
         });
+
+        stripe.subscriptions.list.mockResolvedValue({ data: [] });
 
         await request(app)
           .post('/api/payments/create-checkout-session')
@@ -478,7 +521,7 @@ describe('Payment Routes', () => {
         expect(expectedName.length).toBe(251); // 100 + 1 (space) + 150
         expect(expectedName.length).toBeLessThan(255); // Under Stripe's limit
 
-        expect(mockStripeCustomersCreate).toHaveBeenCalledWith(
+        expect(stripe.customers.create).toHaveBeenCalledWith(
           expect.objectContaining({
             name: expectedName,
           })
@@ -490,14 +533,13 @@ describe('Payment Routes', () => {
     });
   });
 
-  // TODO: Fix ESM mocking - Origin tracking tests need mock refactoring
-  describe.skip('Origin Tracking (Migration 008)', () => {
+  describe('Origin Tracking (Migration 008)', () => {
     it('should set customer_created_via to "app" when creating customer via checkout', async () => {
-      mockStripeCustomersCreate.mockResolvedValue({
+      stripe.customers.create.mockResolvedValue({
         id: 'cus_origin_test_123',
       });
 
-      mockStripeCheckoutSessionsCreate.mockResolvedValue({
+      stripe.checkout.sessions.create.mockResolvedValue({
         id: 'cs_origin_test_123',
         url: 'https://checkout.stripe.com/test',
       });
@@ -525,7 +567,7 @@ describe('Payment Routes', () => {
         WHERE id = ${testUser.id}
       `;
 
-      mockStripeCheckoutSessionsCreate.mockResolvedValue({
+      stripe.checkout.sessions.create.mockResolvedValue({
         id: 'cs_existing_123',
         url: 'https://checkout.stripe.com/test',
       });

@@ -265,9 +265,10 @@ VITE_API_URL=http://localhost:3000
 
 ## Advanced Configuration
 
-> **Need authentication, user management, or email features?** See comprehensive setup guides:
+> **Need authentication, user management, payments, or email features?** See comprehensive setup guides:
 >
 > - [Vercel Deployment Guide](docs/deployment/VERCEL-DEPLOYMENT-GUIDE.md) - Complete 8-step deployment walkthrough (45-60 min)
+> - [Stripe Setup Guide](docs/deployment/STRIPE-SETUP.md) - Payment integration with test mode setup
 > - [Environment Variables](docs/deployment/VERCEL-ENVIRONMENT-VARIABLES.md) - All environment variables reference
 > - [Database Setup Guide](docs/deployment/VERCEL-POSTGRES-SETUP.md) - Neon Postgres configuration
 > - [GitHub OAuth Setup](docs/deployment/GITHUB-OAUTH-SETUP.md) - Social login configuration
@@ -290,6 +291,22 @@ To enable authentication features, set `ENABLE_AUTH=true` and configure addition
 | `EMAIL_FROM` | From address for system emails (e.g., `"CodeScribe AI <noreply@yourdomain.com>"`) |
 | `MIGRATION_SECRET` | Secret for database migration API endpoint |
 
+**Stripe payment variables** (`server/.env`):
+
+| Variable | Description |
+|----------|-------------|
+| `STRIPE_SECRET_KEY` | Stripe secret key (test mode: `sk_test_...`, live mode: `sk_live_...`) |
+| `STRIPE_PUBLISHABLE_KEY` | Stripe publishable key (test mode: `pk_test_...`, live mode: `pk_live_...`) |
+| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret (get from Stripe Dashboard → Webhooks) |
+| `STRIPE_PRICE_STARTER_MONTHLY` | Price ID for Starter tier monthly ($10/mo) |
+| `STRIPE_PRICE_STARTER_ANNUAL` | Price ID for Starter tier annual ($96/yr) |
+| `STRIPE_PRICE_PRO_MONTHLY` | Price ID for Pro tier monthly ($25/mo) |
+| `STRIPE_PRICE_PRO_ANNUAL` | Price ID for Pro tier annual ($240/yr) |
+| `STRIPE_PRICE_TEAM_MONTHLY` | Price ID for Team tier monthly ($50/mo) |
+| `STRIPE_PRICE_TEAM_ANNUAL` | Price ID for Team tier annual ($480/yr) |
+| `STRIPE_SUCCESS_URL` | Redirect URL after successful payment (e.g., `http://localhost:5173/payment/success`) |
+| `STRIPE_CANCEL_URL` | Redirect URL when payment is cancelled (e.g., `http://localhost:5173/pricing`) |
+
 **Optional OAuth variables** (`server/.env`):
 
 | Variable | Description |
@@ -304,8 +321,9 @@ To enable authentication features, set `ENABLE_AUTH=true` and configure addition
 | Variable | Description |
 |----------|-------------|
 | `VITE_ENABLE_AUTH` | Set to `true` to show authentication UI (Sign In button, user menu, etc.) |
+| `VITE_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key for frontend (test mode: `pk_test_...`, live mode: `pk_live_...`) |
 
-**Example with authentication enabled:**
+**Example with authentication and payments enabled:**
 
 ```bash
 # server/.env
@@ -323,6 +341,19 @@ SESSION_SECRET=generated-secret-min-32-chars
 RESEND_API_KEY=re_your_api_key_here
 EMAIL_FROM="CodeScribe AI <noreply@codescribeai.com>"
 
+# Stripe Payments
+STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key
+STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_publishable_key
+STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
+STRIPE_PRICE_STARTER_MONTHLY=price_xxxxx
+STRIPE_PRICE_STARTER_ANNUAL=price_xxxxx
+STRIPE_PRICE_PRO_MONTHLY=price_xxxxx
+STRIPE_PRICE_PRO_ANNUAL=price_xxxxx
+STRIPE_PRICE_TEAM_MONTHLY=price_xxxxx
+STRIPE_PRICE_TEAM_ANNUAL=price_xxxxx
+STRIPE_SUCCESS_URL=http://localhost:5173/payment/success
+STRIPE_CANCEL_URL=http://localhost:5173/pricing
+
 # OAuth (optional)
 GITHUB_CLIENT_ID=Iv1.your-client-id
 GITHUB_CLIENT_SECRET=your-client-secret
@@ -334,6 +365,7 @@ MIGRATION_SECRET=generated-secret-min-32-chars
 # client/.env
 VITE_API_URL=http://localhost:3000
 VITE_ENABLE_AUTH=true
+VITE_STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_publishable_key
 ```
 
 **See `.env.example` files in `server/` and `client/` directories for complete documentation.**
@@ -430,6 +462,7 @@ For a complete navigation guide with descriptions of all documentation, see **[D
 
 **Deployment:**
 - **[Vercel Deployment Guide](docs/deployment/VERCEL-DEPLOYMENT-GUIDE.md)** - Complete 8-step deployment walkthrough
+- **[Stripe Setup Guide](docs/deployment/STRIPE-SETUP.md)** - Payment integration with test mode setup
 - **[Environment Variables](docs/deployment/VERCEL-ENVIRONMENT-VARIABLES.md)** - All environment variables reference
 - **[Database Setup](docs/deployment/VERCEL-POSTGRES-SETUP.md)** - Neon Postgres configuration
 

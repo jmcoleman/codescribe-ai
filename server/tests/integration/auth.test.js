@@ -9,20 +9,21 @@ import request from 'supertest';
 import express from 'express';
 import session from 'express-session';
 import passport from 'passport';
-import authRoutes from '../../src/routes/auth.js';
-import '../../src/config/passport.js';
 
-// Mock the User model
+// Mock dependencies BEFORE importing routes
 jest.mock('../../src/models/User.js');
-import User from '../../src/models/User.js';
-
-// Mock the database connection
+jest.mock('../../src/config/stripe.js');
 jest.mock('../../src/db/connection.js', () => ({
   sql: jest.fn(),
   testConnection: jest.fn().mockResolvedValue(true),
   initializeDatabase: jest.fn().mockResolvedValue(undefined),
   cleanupSessions: jest.fn().mockResolvedValue(0)
 }));
+
+// Now import routes and models
+import authRoutes from '../../src/routes/auth.js';
+import '../../src/config/passport.js';
+import User from '../../src/models/User.js';
 
 describe('Auth Routes Integration Tests', () => {
   let app;

@@ -1,5 +1,6 @@
 import { X, LogOut } from 'lucide-react';
 import { useEffect, useRef, useState, lazy, Suspense } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from './Button';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -12,6 +13,7 @@ const ForgotPasswordModal = lazy(() => import('./ForgotPasswordModal').then(m =>
 const ENABLE_AUTH = import.meta.env.VITE_ENABLE_AUTH === 'true';
 
 export function MobileMenu({ isOpen, onClose, onExamplesClick, onHelpClick }) {
+  const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showSignupModal, setShowSignupModal] = useState(false);
@@ -69,6 +71,11 @@ export function MobileMenu({ isOpen, onClose, onExamplesClick, onHelpClick }) {
 
   const handleHelpClick = () => {
     onHelpClick();
+    onClose();
+  };
+
+  const handlePricingClick = () => {
+    navigate('/pricing');
     onClose();
   };
 
@@ -149,6 +156,11 @@ export function MobileMenu({ isOpen, onClose, onExamplesClick, onHelpClick }) {
               }}
             >
               Examples
+            </MenuItem>
+            <MenuItem
+              onClick={handlePricingClick}
+            >
+              Pricing
             </MenuItem>
             <MenuItem
               onClick={handleHelpClick}
