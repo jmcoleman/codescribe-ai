@@ -38,7 +38,7 @@ Move items from `[Unreleased]` to a new release section:
 
 ## [2.0.0] - 2025-10-26
 
-**Status:** ✅ Feature Release - Phase 2: Monetization Foundation
+**Status:** ✅ Feature Release - Phase 2: Payments Infrastructure
 
 ### Added
 - Feature 1
@@ -165,7 +165,7 @@ After verifying deployment is successful:
 
 ```bash
 # Create annotated tag
-git tag -a v2.0.0 -m "Release v2.0.0 - Phase 2: Monetization Foundation"
+git tag -a v2.0.0 -m "Release v2.0.0 - Phase 2: Payments Infrastructure"
 
 # Push tag to GitHub
 git push origin v2.0.0
@@ -182,7 +182,7 @@ git push origin v2.0.0
 
 2. **Fill in Release Form:**
    - **Choose a tag:** Select `v2.0.0` from dropdown
-   - **Release title:** `v2.0.0 - Phase 2: Monetization Foundation`
+   - **Release title:** `v2.0.0 - Phase 2: Payments Infrastructure`
    - **Description:** Copy release notes from CHANGELOG.md (see template below)
    - **Options:**
      - ✅ Check "Set as the latest release"
@@ -191,11 +191,11 @@ git push origin v2.0.0
 3. **Release Notes Template:**
 
 ```markdown
-## Release v2.0.0 - Phase 2: Monetization Foundation
+## Release v2.0.0 - Phase 2: Payments Infrastructure
 
 **Release Date:** October 26, 2025
 **Status:** ✅ Production Release
-**Phase:** Phase 2 (Monetization Foundation)
+**Phase:** Phase 2 (Payments Infrastructure)
 
 ### 🎯 Highlights
 
@@ -290,7 +290,7 @@ Per [ROADMAP.md](../planning/roadmap/ROADMAP.md#versioning-strategy):
 | Phase | Version | Description |
 |-------|---------|-------------|
 | Phase 1 | v1.0.0 | MVP - Initial production release |
-| Phase 2 | v2.0.0 | Monetization Foundation (Auth + Database) |
+| Phase 2 | v2.0.0 | Payments Infrastructure (Auth + Database) |
 | Phase 3 | v3.0.0 | UX Enhancements (Dark mode, layout, file handling) |
 | Phase 4 | v4.0.0 | Documentation Capabilities (OpenAPI, multi-file) |
 | Phase 5 | v5.0.0 | Developer Tools (CLI + VS Code extension) |
@@ -417,7 +417,7 @@ Use this checklist for each release:
 
 ## 📝 Recent Releases
 
-### v2.0.0 - Phase 2: Monetization Foundation (October 26, 2025)
+### v2.0.0 - Phase 2: Payments Infrastructure (October 26, 2025)
 
 **Status:** ✅ Deployed to Production
 

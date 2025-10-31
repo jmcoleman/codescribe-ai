@@ -2,7 +2,7 @@
 
 **Decision Date:** October 23, 2025
 **Status:** ✅ **DECISION MADE** - Passport.js Selected
-**Applies To:** Phase 2 (Monetization), Phase 5 (Developer Tools), Phase 6 (Enterprise)
+**Applies To:** Phase 2 (Payments), Phase 5 (Developer Tools), Phase 6 (Enterprise)
 **Last Updated:** October 23, 2025
 
 ---
@@ -45,7 +45,7 @@
 
 ## 🗺️ Strategic Requirements Across All Phases
 
-### Phase 2: Monetization Foundation (v2.0.0)
+### Phase 2: Payments Infrastructure (v2.0.0)
 **Timeline:** 2-3 weeks after Phase 1
 **Auth Needs:**
 - ✅ Email/password authentication with bcrypt hashing
@@ -184,7 +184,7 @@ $ codescribe generate README src/index.js
 
 | Requirement | Passport.js | Clerk | Auth.js |
 |-------------|-------------|-------|---------|
-| **Phase 2: Monetization** |
+| **Phase 2: Payments** |
 | GitHub OAuth | ✅ `passport-github2` | ✅ Dashboard config | ✅ Built-in |
 | Email/password | ✅ `passport-local` | ✅ Pre-built | ✅ Credentials provider |
 | Stripe integration | ✅ Full control (webhook → user ID) | ✅ Native support | ✅ Manual setup |
@@ -458,7 +458,7 @@ spec:
 
 | Phase | Clerk | Passport.js | Impact if Wrong Choice |
 |-------|-------|-------------|------------------------|
-| **Phase 2: Monetization** | ✅ Fastest (< 1 day) | ✅ Self-hosted (1.5-2 days) | +1.5 days dev time with Passport |
+| **Phase 2: Payments** | ✅ Fastest (< 1 day) | ✅ Self-hosted (1.5-2 days) | +1.5 days dev time with Passport |
 | **Phase 5: CLI Tool** | ❌ Vendor lock, poor UX | ✅ Standard JWT, offline-capable | **Rewrite entire auth system (2-3 weeks)** |
 | **Phase 5: VS Code Extension** | ⚠️ Clerk SDK friction | ✅ Standard OAuth flow | **Rewrite extension auth (1 week)** |
 | **Phase 6: Enterprise** | ❌ **BLOCKER** (no self-hosted) | ✅ Self-hosted, SSO/SAML | **Lose $450K/year enterprise revenue** |

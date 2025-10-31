@@ -147,7 +147,7 @@ The diagram includes an interactive legend. Here's the complete color system:
 - **Solid border (—)** = Phase 1 (Current MVP) - actively implemented
 - **Dashed border (- - -)** = Future phases (CLI in Phase 2, VS Code Extension in Phase 3)
 - **Thicker borders** = Primary/main components in each layer
-- **Color consistency** = All colors match the brand palette from `docs/design/brand-color-palette.html`
+- **Color consistency** = All colors match the brand palette from `docs/design/theming/brand-color-palette.html`
 
 ---
 

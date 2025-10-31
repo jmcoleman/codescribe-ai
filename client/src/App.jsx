@@ -9,11 +9,13 @@ import { useUsageTracking } from './hooks/useUsageTracking';
 import { ErrorBanner } from './components/ErrorBanner';
 import { UsageWarningBanner } from './components/UsageWarningBanner';
 import { UsageLimitModal } from './components/UsageLimitModal';
+import UnverifiedEmailBanner from './components/UnverifiedEmailBanner';
 import { validateFile, getValidationErrorMessage } from './utils/fileValidation';
 import { trackCodeInput, trackFileUpload, trackExampleUsage, trackInteraction } from './utils/analytics';
 import { createTestDataLoader, exposeTestDataLoader } from './utils/testData';
 import { exposeUsageSimulator } from './utils/usageTestData';
 import { useAuth } from './contexts/AuthContext';
+import { DEFAULT_CODE } from './constants/defaultCode';
 
 // Lazy load heavy components that aren't needed on initial render
 const DocPanel = lazy(() => import('./components/DocPanel').then(m => ({ default: m.DocPanel })));
@@ -46,8 +48,8 @@ import {
 import { API_URL } from './config/api.js';
 
 function App() {
-  const { getToken } = useAuth();
-  const [code, setCode] = useState('// Paste your code here or try the example below...\n\n// Example function:\nfunction calculateTotal(items) {\n  return items.reduce((sum, item) => sum + item.price, 0);\n}\n');
+  const { getToken, user } = useAuth();
+  const [code, setCode] = useState(DEFAULT_CODE);
   const [docType, setDocType] = useState('README');
   const [language, setLanguage] = useState('javascript');
   const [filename, setFilename] = useState('code.js');
@@ -200,7 +202,9 @@ function App() {
     setShowQualityModal(false); // Close modal when starting new generation
     setShowConfirmationModal(false); // Close confirmation modal if open
     try {
-      await generate(code, docType, 'javascript');
+      // Check if code matches the default code (for prompt caching optimization)
+      const isDefaultCode = code === DEFAULT_CODE;
+      await generate(code, docType, 'javascript', isDefaultCode);
       // Success toast will be shown after generation completes
     } catch (err) {
       // Error handling is done in useDocGeneration hook
@@ -487,6 +491,9 @@ function App() {
         onHelpClick={() => setShowHelpModal(true)}
       />
 
+      {/* Email Verification Banner - Shows at top for unverified users */}
+      <UnverifiedEmailBanner user={user} />
+
       {/* Mobile Menu */}
       <MobileMenu
         isOpen={showMobileMenu}
@@ -498,7 +505,7 @@ function App() {
       {/* Main Content */}
       <main id="main-content" className="flex-1 w-full px-4 sm:px-6 lg:px-8 py-6">
         {/* Priority Banner Section - Show only most critical message */}
-        {/* Priority Order: 1) Claude API Error, 2) Upload Error, 3) Generation Error, 4) Usage Warning */}
+        {/* Priority Order: 1) Email Verification (handled above), 2) Claude API Error, 3) Upload Error, 4) Generation Error, 5) Usage Warning */}
         {error ? (
           // Priority 1: Claude API rate limit or generation errors (blocking)
           <ErrorBanner

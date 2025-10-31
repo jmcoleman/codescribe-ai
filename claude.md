@@ -37,6 +37,8 @@ AI-powered documentation generator with real-time streaming, quality scoring (0-
 |----------|----------|--------------|
 | [ARCHITECTURE-OVERVIEW.md](docs/architecture/ARCHITECTURE-OVERVIEW.md) | Visual system architecture | Mermaid diagram, layer overview, quick reference |
 | [ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md) | Deep technical details | Design patterns, data flows, security, deployment |
+| [SUBSCRIPTION-MANAGEMENT.md](docs/architecture/SUBSCRIPTION-MANAGEMENT.md) | Subscription flows ⭐ | Hybrid proration (upgrade/downgrade), testing guide, webhooks |
+| [PROMPT-CACHING-GUIDE.md](docs/architecture/PROMPT-CACHING-GUIDE.md) | Cost optimization ⭐ | Caching strategy, adding examples, savings analysis ($50-300/mo) |
 | [05-Dev-Guide.md](docs/planning/mvp/05-Dev-Guide.md) | Implementation patterns | Complete service code, best practices, deployment |
 | [API-Reference.md](docs/api/API-Reference.md) | API specs | 4 endpoints, request/response formats, error codes |
 
@@ -55,7 +57,8 @@ AI-powered documentation generator with real-time streaming, quality scoring (0-
 | Document | Use Case | Key Contents |
 |----------|----------|--------------|
 | [07-Figma-Guide.md](docs/planning/mvp/07-Figma-Guide.md) | Design system | Colors (purple/indigo/slate), typography, 8 components, UI patterns |
-| [brand-color-palette.html](docs/design/brand-color-palette.html) | Color reference | 27 colors, click-to-copy hex codes, WCAG AA info |
+| [brand-color-palette.html](docs/design/theming/brand-color-palette.html) | Color reference | 27 colors, click-to-copy hex codes, WCAG AA info |
+| [THEME-DESIGN-SUMMARY.md](docs/design/theming/THEME-DESIGN-SUMMARY.md) | Theme overview | Light + dark theme design specs, color systems, shadows |
 | [TOAST-SYSTEM.md](docs/components/TOAST-SYSTEM.md) | Toast notifications | 20+ utilities, 6 custom toasts, a11y support |
 | [MERMAID-DIAGRAMS.md](docs/components/MERMAID-DIAGRAMS.md) | Diagram patterns | Brand theming, React integration, troubleshooting |
 | [ERROR-HANDLING-UX.md](docs/components/ERROR-HANDLING-UX.md) | Error UX | Banners vs modals, animations (250ms/200ms), a11y, priority system |
@@ -96,6 +99,38 @@ AI-powered documentation generator with real-time streaming, quality scoring (0-
 **Database:** Neon Postgres (via Vercel Marketplace) | @vercel/postgres SDK | connect-pg-simple sessions
 **Infrastructure:** Vercel | Neon (free tier: 512 MB, 20 projects) | SSE streaming
 
+### Prompt Caching (Cost Optimization)
+> **💰 Saves $50-300/month** | Active November 1, 2025 | See [PROMPT-CACHING-GUIDE.md](docs/architecture/PROMPT-CACHING-GUIDE.md) for details
+
+**What we cache:**
+- **System prompts** (doc type instructions ~2K tokens) - Always cached (90% cost reduction)
+- **Default/example code** - Cached when detected (additional 50% reduction)
+
+**How it works:**
+- Anthropic caches processed prompts for 5 minutes
+- Second user within 5 min = 90% savings on cached portions
+- Automatic detection: `code === DEFAULT_CODE` triggers caching
+
+**Implementation:**
+```javascript
+// Backend: claudeClient.js adds cache_control to prompts
+cache_control: { type: 'ephemeral' }
+
+// Frontend: App.jsx detects default code
+const isDefaultCode = code === DEFAULT_CODE;
+await generate(code, docType, language, isDefaultCode);
+```
+
+**Monitor performance:**
+```bash
+# Look for cache stats in backend logs (starts Nov 1)
+[ClaudeClient] Cache stats: { cache_read_input_tokens: 2000 } # 90% savings!
+```
+
+**Test when API resets:** `node server/tests/prompt-caching.test.js` (November 1, 2025)
+
+**Adding new examples:** Update `EXAMPLE_CODES` in [defaultCode.js](client/src/constants/defaultCode.js), use exact string matching for cache hits
+
 ---
 
 ## 📖 Claude Usage Guidelines
@@ -108,7 +143,9 @@ AI-powered documentation generator with real-time streaming, quality scoring (0-
 | API/Endpoints | API Reference |
 | Design/UI | Figma Guide, Brand Color Palette |
 | Architecture | ARCHITECTURE-OVERVIEW.md (visual), ARCHITECTURE.md (technical) |
+| Subscriptions/Payments | SUBSCRIPTION-MANAGEMENT.md (upgrade/downgrade flows, proration, webhooks) |
 | Performance | OPTIMIZATION-GUIDE.md |
+| Cost Optimization | PROMPT-CACHING-GUIDE.md (caching strategy, adding examples, savings) |
 | Testing | Testing README, COMPONENT-TEST-COVERAGE.md, TEST-FIXES-OCT-2025.md, SKIPPED-TESTS.md |
 | Test Fixes/Patterns | TEST-FIXES-OCT-2025.md (10 patterns, 6 insights, frontend + backend) |
 | Skipped Tests | SKIPPED-TESTS.md (36 tests documented, quarterly review schedule) |
@@ -240,8 +277,17 @@ npm run versions  # See VERSION-CHECKER.md for details
 
 **Migration Testing Workflow:**
 1. **Sandbox (Docker):** Test migration in isolated environment (port 5433)
-2. **Dev (Neon):** Apply to persistent dev database after sandbox passes
+   - Run `npm run test:db:setup` to start Docker container
+   - Run `npm run test:db -- migrations-XXX` to test migration
+   - Verify all tests pass (schema, indexes, constraints, data insertion)
+   - **⚠️ CRITICAL: ALWAYS ask user for approval before proceeding to step 2**
+2. **Dev (Neon):** Apply to persistent dev database ONLY after user confirms sandbox passed
+   - Run `npm run migrate` to apply migration to Neon dev
+   - Run `npm run migrate:validate` to verify integrity
+   - Run full test suite: `npm test` (backend) and `cd client && npm test -- --run` (frontend)
 3. **Production:** Automatic deployment when pushed to `main` branch
+
+**⚠️ SAFETY RULE: Never run `npm run migrate` (Neon) without explicit user approval after Docker sandbox tests pass.**
 
 ---
 
@@ -358,7 +404,8 @@ codescribe-ai/
 │   ├── performance/          # OPTIMIZATION-GUIDE.md
 │   ├── components/           # TOAST-SYSTEM, MERMAID-DIAGRAMS, ERROR-HANDLING-UX, USAGE-PROMPTS, etc.
 │   ├── testing/              # 12 test docs (README, coverage, guides, specialized)
-│   ├── design/               # brand-color-palette.html/pdf, UI guides
+│   ├── design/
+│   │   └── theming/          # Theme design specs, color palettes, preview HTML files
 │   ├── scripts/              # VERSION-CHECKER.md
 │   └── DOCUMENTATION-MAP.md
 ├── private/                  # ⚠️ GITIGNORED - Sensitive content

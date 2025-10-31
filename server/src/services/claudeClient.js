@@ -60,19 +60,54 @@ class ClaudeClient {
 
   /**
    * Generate documentation without streaming
-   * @param {string} prompt - The prompt to send to Claude
+   * @param {string} prompt - The prompt to send to Claude (or user message if systemPrompt provided)
+   * @param {Object} options - Generation options
+   * @param {string} options.systemPrompt - Optional system prompt (will be cached)
+   * @param {boolean} options.cacheUserMessage - Whether to cache the user message (for default/example code)
    * @returns {Promise<string>} Generated text
    */
-  async generate(prompt) {
+  async generate(prompt, options = {}) {
+    const { systemPrompt, cacheUserMessage = false } = options;
     let retries = 0;
 
     while (retries < this.maxRetries) {
       try {
-        const response = await this.client.messages.create({
+        // Build request parameters
+        const requestParams = {
           model: this.model,
           max_tokens: 4000,
-          messages: [{ role: 'user', content: prompt }],
-        });
+          messages: [{
+            role: 'user',
+            content: cacheUserMessage
+              ? [{ type: 'text', text: prompt, cache_control: { type: 'ephemeral' } }]
+              : prompt
+          }],
+        };
+
+        // Add system prompt with caching if provided
+        if (systemPrompt) {
+          requestParams.system = [
+            {
+              type: 'text',
+              text: systemPrompt,
+              cache_control: { type: 'ephemeral' }
+            }
+          ];
+        }
+
+        const response = await this.client.messages.create(requestParams);
+
+        // Log cache performance for monitoring
+        if (response.usage) {
+          const cacheStats = {
+            input_tokens: response.usage.input_tokens || 0,
+            cache_creation_input_tokens: response.usage.cache_creation_input_tokens || 0,
+            cache_read_input_tokens: response.usage.cache_read_input_tokens || 0,
+          };
+          if (cacheStats.cache_creation_input_tokens > 0 || cacheStats.cache_read_input_tokens > 0) {
+            console.log('[ClaudeClient] Cache stats:', cacheStats);
+          }
+        }
 
         return response.content[0].text;
       } catch (error) {
@@ -97,20 +132,49 @@ class ClaudeClient {
 
   /**
    * Generate documentation with streaming
-   * @param {string} prompt - The prompt to send to Claude
+   * @param {string} prompt - The prompt to send to Claude (or user message if systemPrompt provided)
    * @param {Function} onChunk - Callback for each chunk
+   * @param {Object} options - Generation options
+   * @param {string} options.systemPrompt - Optional system prompt (will be cached)
+   * @param {boolean} options.cacheUserMessage - Whether to cache the user message (for default/example code)
    * @returns {Promise<string>} Complete generated text
    */
-  async generateWithStreaming(prompt, onChunk) {
+  async generateWithStreaming(prompt, onChunk, options = {}) {
+    const { systemPrompt, cacheUserMessage = false } = options;
+
     try {
-      const stream = await this.client.messages.create({
+      // Build request parameters
+      const requestParams = {
         model: this.model,
         max_tokens: 4000,
-        messages: [{ role: 'user', content: prompt }],
+        messages: [{
+          role: 'user',
+          content: cacheUserMessage
+            ? [{ type: 'text', text: prompt, cache_control: { type: 'ephemeral' } }]
+            : prompt
+        }],
         stream: true,
-      });
+      };
+
+      // Add system prompt with caching if provided
+      if (systemPrompt) {
+        requestParams.system = [
+          {
+            type: 'text',
+            text: systemPrompt,
+            cache_control: { type: 'ephemeral' }
+          }
+        ];
+      }
+
+      const stream = await this.client.messages.create(requestParams);
 
       let fullText = '';
+      let cacheStats = {
+        input_tokens: 0,
+        cache_creation_input_tokens: 0,
+        cache_read_input_tokens: 0,
+      };
 
       for await (const event of stream) {
         if (event.type === 'content_block_delta' &&
@@ -119,6 +183,20 @@ class ClaudeClient {
           fullText += chunk;
           onChunk(chunk);
         }
+
+        // Capture usage stats from message_start event
+        if (event.type === 'message_start' && event.message?.usage) {
+          cacheStats = {
+            input_tokens: event.message.usage.input_tokens || 0,
+            cache_creation_input_tokens: event.message.usage.cache_creation_input_tokens || 0,
+            cache_read_input_tokens: event.message.usage.cache_read_input_tokens || 0,
+          };
+        }
+      }
+
+      // Log cache performance for monitoring
+      if (cacheStats.cache_creation_input_tokens > 0 || cacheStats.cache_read_input_tokens > 0) {
+        console.log('[ClaudeClient] Streaming cache stats:', cacheStats);
       }
 
       return fullText;

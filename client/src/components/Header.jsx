@@ -1,5 +1,6 @@
 import { Menu, HelpCircle, LogOut, User } from 'lucide-react';
 import { useState, lazy, Suspense } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from './Button';
 import { Logo } from './Logo';
 import { useAuth } from '../contexts/AuthContext';
@@ -13,6 +14,7 @@ const ForgotPasswordModal = lazy(() => import('./ForgotPasswordModal').then(m =>
 const ENABLE_AUTH = import.meta.env.VITE_ENABLE_AUTH === 'true';
 
 export function Header({ onMenuClick, onExamplesClick, onHelpClick }) {
+  const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showSignupModal, setShowSignupModal] = useState(false);
@@ -77,6 +79,13 @@ export function Header({ onMenuClick, onExamplesClick, onHelpClick }) {
                 }}
               >
                 Examples
+              </Button>
+
+              <Button
+                variant="secondary"
+                onClick={() => navigate('/pricing')}
+              >
+                Pricing
               </Button>
 
               {/* Help Icon Button */}

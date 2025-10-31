@@ -51,6 +51,8 @@ This document serves as the complete navigation hub for all CodeScribe AI docume
 **Architecture & System Design:**
 - [ARCHITECTURE-OVERVIEW.md](architecture/ARCHITECTURE-OVERVIEW.md) - Visual system diagram (Mermaid)
 - [ARCHITECTURE.md](architecture/ARCHITECTURE.md) - Deep technical architecture
+- [SUBSCRIPTION-MANAGEMENT.md](architecture/SUBSCRIPTION-MANAGEMENT.md) - Subscription flows, upgrade/downgrade logic, proration
+- [PROMPT-CACHING-GUIDE.md](architecture/PROMPT-CACHING-GUIDE.md) - Cost optimization via prompt caching
 
 **API & Backend:**
 - [API-Reference.md](api/API-Reference.md) - Complete endpoint specifications
@@ -62,6 +64,11 @@ This document serves as the complete navigation hub for all CodeScribe AI docume
 - [DB-MIGRATION-MANAGEMENT.MD](database/DB-MIGRATION-MANAGEMENT.MD) - Migration management guide
 - [PRODUCTION-DB-SETUP.md](database/PRODUCTION-DB-SETUP.md) - Production database setup
 
+**Authentication:**
+- [EMAIL-VERIFICATION-SYSTEM.md](authentication/EMAIL-VERIFICATION-SYSTEM.md) - Complete email verification implementation (158+ tests)
+- [PASSWORD-RESET-IMPLEMENTATION.md](authentication/PASSWORD-RESET-IMPLEMENTATION.md) - Password reset flow and testing
+- [PASSWORD-RESET-SETUP.md](authentication/PASSWORD-RESET-SETUP.md) - Password reset configuration guide
+
 **Development:**
 - [STORAGE-CONVENTIONS.md](development/STORAGE-CONVENTIONS.md) - Browser storage naming conventions (localStorage, sessionStorage)
 
@@ -70,7 +77,6 @@ This document serves as the complete navigation hub for all CodeScribe AI docume
 - [VERCEL-POSTGRES-SETUP.md](deployment/VERCEL-POSTGRES-SETUP.md) - Neon database setup
 - [RESEND-SETUP.md](deployment/RESEND-SETUP.md) - Email service configuration
 - [DATABASE-ENVIRONMENT-CHECKLIST.md](deployment/DATABASE-ENVIRONMENT-CHECKLIST.md) - Environment setup
-- [PASSWORD-RESET-IMPLEMENTATION.md](deployment/PASSWORD-RESET-IMPLEMENTATION.md) - Password reset implementation guide
 
 **Performance & Optimization:**
 - [OPTIMIZATION-GUIDE.md](performance/OPTIMIZATION-GUIDE.md) - Complete performance guide
@@ -80,8 +86,10 @@ This document serves as the complete navigation hub for all CodeScribe AI docume
   - Lazy loading patterns
 
 **Design & UX:**
-- [brand-color-palette.html](design/brand-color-palette.html) - Interactive color reference (27 colors)
-- [brand-color-palette.pdf](design/brand-color-palette.pdf) - PDF version for sharing
+- [brand-color-palette.html](design/theming/brand-color-palette.html) - Interactive color reference (27 colors)
+- [dark-theme-palette.html](design/theming/dark-theme-palette.html) - Neon Cyberpunk dark theme
+- [light-theme-refined-preview.html](design/theming/light-theme-refined-preview.html) - Refined light theme
+- [THEME-DESIGN-SUMMARY.md](design/theming/THEME-DESIGN-SUMMARY.md) - Theme overview (light + dark)
 
 **Component Guides:**
 - [TOAST-SYSTEM.md](components/TOAST-SYSTEM.md) - Toast notification system (20+ variants)
@@ -195,7 +203,7 @@ This document serves as the complete navigation hub for all CodeScribe AI docume
 - **Yellow** (Warning): Caution states
 - **Red** (Error): Errors, destructive actions
 
-**Full Reference:** [brand-color-palette.html](design/brand-color-palette.html)
+**Full Reference:** [brand-color-palette.html](design/theming/brand-color-palette.html)
 
 ### UI Pattern Guidelines
 - **Helper text / instructional banners** → Slate (`slate/100` bg, `slate/700` text)

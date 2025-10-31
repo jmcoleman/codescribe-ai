@@ -334,7 +334,7 @@ Delivered a production-ready AI documentation tool from concept to deployment in
     - 8 component specifications
     - UI patterns and conventions
 
-12. **[Brand Color Palette](../design/brand-color-palette.html)** - Interactive reference
+12. **[Brand Color Palette](../design/theming/brand-color-palette.html)** - Interactive reference
     - Click-to-copy hex codes
     - WCAG AA contrast ratios
     - Semantic color usage guidelines

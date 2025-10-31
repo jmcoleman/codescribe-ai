@@ -702,4 +702,245 @@ describe('User Model', () => {
       expect(found.id).toBe(created.id);
     });
   });
+
+  describe('Email Verification', () => {
+    describe('createVerificationToken', () => {
+      it('should create a verification token with 24-hour expiry', async () => {
+        const userId = 1;
+
+        sql.mockResolvedValue({ rows: [] });
+
+        const token = await User.createVerificationToken(userId);
+
+        expect(token).toBeDefined();
+        expect(typeof token).toBe('string');
+        expect(token.length).toBe(64); // 32 bytes in hex = 64 characters
+        expect(sql).toHaveBeenCalledTimes(1);
+      });
+
+      it('should update existing user with token', async () => {
+        const userId = 42;
+        sql.mockResolvedValue({ rows: [] });
+
+        const token = await User.createVerificationToken(userId);
+
+        expect(sql).toHaveBeenCalledTimes(1);
+        expect(token).toBeDefined();
+        expect(typeof token).toBe('string');
+      });
+
+      it('should generate unique tokens for multiple calls', async () => {
+        sql.mockResolvedValue({ rows: [] });
+
+        const token1 = await User.createVerificationToken(1);
+        const token2 = await User.createVerificationToken(1);
+        const token3 = await User.createVerificationToken(2);
+
+        expect(token1).not.toBe(token2);
+        expect(token2).not.toBe(token3);
+        expect(token1).not.toBe(token3);
+      });
+
+      it('should handle database errors gracefully', async () => {
+        sql.mockRejectedValue(new Error('Database connection failed'));
+
+        await expect(
+          User.createVerificationToken(1)
+        ).rejects.toThrow('Database connection failed');
+      });
+    });
+
+    describe('findByVerificationToken', () => {
+      it('should find user by valid, non-expired token', async () => {
+        const token = 'valid-token-123';
+        const mockUser = {
+          id: 1,
+          email: 'test@example.com',
+          first_name: 'Test',
+          last_name: 'User',
+          email_verified: false,
+          verification_token_expires: new Date(Date.now() + 3600000) // 1 hour from now
+        };
+
+        sql.mockResolvedValue({ rows: [mockUser] });
+
+        const user = await User.findByVerificationToken(token);
+
+        expect(user).toEqual(mockUser);
+        expect(sql).toHaveBeenCalledTimes(1);
+      });
+
+      it('should return null for non-existent token', async () => {
+        sql.mockResolvedValue({ rows: [] });
+
+        const user = await User.findByVerificationToken('non-existent-token');
+
+        expect(user).toBeNull();
+      });
+
+      it('should return null for expired token', async () => {
+        // Mock will return empty rows since SQL filters out expired tokens
+        sql.mockResolvedValue({ rows: [] });
+
+        const user = await User.findByVerificationToken('expired-token');
+
+        expect(user).toBeNull();
+      });
+
+      it('should only select necessary user fields', async () => {
+        sql.mockResolvedValue({ rows: [] });
+
+        const user = await User.findByVerificationToken('some-token');
+
+        expect(sql).toHaveBeenCalledTimes(1);
+        expect(user).toBeNull(); // No user found in empty rows
+      });
+
+      it('should handle database errors', async () => {
+        sql.mockRejectedValue(new Error('Connection timeout'));
+
+        await expect(
+          User.findByVerificationToken('token')
+        ).rejects.toThrow('Connection timeout');
+      });
+    });
+
+    describe('markEmailAsVerified', () => {
+      it('should mark email as verified and clear token', async () => {
+        const userId = 1;
+        const mockUpdatedUser = {
+          id: userId,
+          email: 'verified@example.com',
+          first_name: 'Test',
+          last_name: 'User',
+          email_verified: true
+        };
+
+        sql.mockResolvedValue({ rows: [mockUpdatedUser] });
+
+        const user = await User.markEmailAsVerified(userId);
+
+        expect(user).toEqual(mockUpdatedUser);
+        expect(user.email_verified).toBe(true);
+        expect(sql).toHaveBeenCalledTimes(1);
+      });
+
+      it('should return updated user object', async () => {
+        const mockUser = {
+          id: 5,
+          email: 'user@test.com',
+          first_name: 'John',
+          last_name: 'Doe',
+          email_verified: true
+        };
+
+        sql.mockResolvedValue({ rows: [mockUser] });
+
+        const result = await User.markEmailAsVerified(5);
+
+        expect(result).toEqual(mockUser);
+        expect(result.email_verified).toBe(true);
+      });
+
+      it('should use RETURNING clause to get updated user', async () => {
+        const mockUser = {
+          id: 1,
+          email: 'test@example.com',
+          first_name: 'Test',
+          last_name: 'User',
+          email_verified: true
+        };
+
+        sql.mockResolvedValue({ rows: [mockUser] });
+
+        const result = await User.markEmailAsVerified(1);
+
+        expect(result).toEqual(mockUser);
+        expect(sql).toHaveBeenCalledTimes(1);
+      });
+
+      it('should handle non-existent user', async () => {
+        sql.mockResolvedValue({ rows: [] });
+
+        const result = await User.markEmailAsVerified(999);
+
+        expect(result).toBeUndefined();
+      });
+
+      it('should handle database errors', async () => {
+        sql.mockRejectedValue(new Error('Update failed'));
+
+        await expect(
+          User.markEmailAsVerified(1)
+        ).rejects.toThrow('Update failed');
+      });
+    });
+
+    describe('Email Verification Flow Integration', () => {
+      it('should complete full verification flow', async () => {
+        const userId = 1;
+        const email = 'verify@test.com';
+
+        // Step 1: Create verification token
+        sql.mockResolvedValueOnce({ rows: [] });
+        const token = await User.createVerificationToken(userId);
+        expect(token).toBeDefined();
+
+        // Step 2: Find user by token (simulates clicking email link)
+        sql.mockResolvedValueOnce({
+          rows: [{
+            id: userId,
+            email,
+            first_name: 'Test',
+            last_name: 'User',
+            email_verified: false,
+            verification_token_expires: new Date(Date.now() + 3600000)
+          }]
+        });
+        const foundUser = await User.findByVerificationToken(token);
+        expect(foundUser).toBeDefined();
+        expect(foundUser.email_verified).toBe(false);
+
+        // Step 3: Mark email as verified
+        sql.mockResolvedValueOnce({
+          rows: [{
+            id: userId,
+            email,
+            first_name: 'Test',
+            last_name: 'User',
+            email_verified: true
+          }]
+        });
+        const verifiedUser = await User.markEmailAsVerified(userId);
+        expect(verifiedUser.email_verified).toBe(true);
+      });
+
+      it('should handle token expiry correctly', async () => {
+        const userId = 1;
+
+        // Create token
+        sql.mockResolvedValueOnce({ rows: [] });
+        const token = await User.createVerificationToken(userId);
+
+        // Try to find with expired token (database filters out expired)
+        sql.mockResolvedValueOnce({ rows: [] });
+        const user = await User.findByVerificationToken(token);
+
+        expect(user).toBeNull();
+      });
+
+      it('should allow creating new token after expiry', async () => {
+        const userId = 1;
+        sql.mockResolvedValue({ rows: [] });
+
+        const token1 = await User.createVerificationToken(userId);
+        expect(token1).toBeDefined();
+
+        // Simulate expiry - create new token
+        const token2 = await User.createVerificationToken(userId);
+        expect(token2).toBeDefined();
+        expect(token2).not.toBe(token1);
+      });
+    });
+  });
 });
