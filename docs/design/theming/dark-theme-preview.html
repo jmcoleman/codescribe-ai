@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeScribe AI - Dark Theme Preview</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        slate: {
+                            950: '#020617',
+                        },
+                        purple: {
+                            400: '#C084FC',
+                            500: '#A855F7',
+                            600: '#9333EA',
+                        },
+                        indigo: {
+                            400: '#818CF8',
+                            500: '#6366F1',
+                        },
+                        cyan: {
+                            400: '#22D3EE',
+                            500: '#06B6D4',
+                        },
+                        amber: {
+                            400: '#FBBF24',
+                        },
+                        green: {
+                            400: '#4ADE80',
+                        },
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    <style>
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.4); }
+            50% { box-shadow: 0 0 0 8px rgba(34, 211, 238, 0); }
+        }
+        .pulse-glow {
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+
+        /* Custom scrollbar for code area */
+        .code-scrollbar::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .code-scrollbar::-webkit-scrollbar-track {
+            background: #1E293B;
+            border-radius: 4px;
+        }
+        .code-scrollbar::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+        .code-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #64748B;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-200 font-sans antialiased">
+    <!-- Theme Toggle (top right corner) -->
+    <div class="fixed top-4 right-4 z-50">
+        <button onclick="toggleTheme()"
+            class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-all duration-200 focus:ring-2 focus:ring-purple-400"
+            aria-label="Toggle theme">
+            <svg class="w-5 h-5 text-amber-400" id="sunIcon" style="display: block;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+            <svg class="w-5 h-5 text-slate-400" id="moonIcon" style="display: none;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+        </button>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-slate-900 border-b border-slate-700 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <!-- Logo & Title -->
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-lg bg-purple-500 flex items-center justify-center shadow-lg shadow-purple-500/30">
+                        <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-semibold text-slate-100">CodeScribe AI</h1>
+                        <p class="text-xs text-slate-400">Intelligent Code Documentation</p>
+                    </div>
+                </div>
+
+                <!-- Nav buttons -->
+                <div class="flex items-center gap-3">
+                    <button class="px-4 py-2 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800 rounded-lg transition-colors">
+                        Examples
+                    </button>
+                    <button class="px-4 py-2 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800 rounded-lg transition-colors">
+                        Docs
+                    </button>
+                    <button class="px-4 py-2 text-sm bg-slate-800 text-slate-100 hover:bg-slate-700 rounded-lg border border-slate-700 transition-colors">
+                        Sign In
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-6 py-8">
+        <!-- Control Bar -->
+        <div class="bg-slate-900 border border-slate-700 rounded-xl p-4 mb-6 shadow-xl">
+            <div class="flex items-center justify-between flex-wrap gap-4">
+                <!-- Left controls -->
+                <div class="flex items-center gap-3 flex-wrap">
+                    <button class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg border border-slate-600/50 transition-all text-sm">
+                        📤 Upload Files
+                    </button>
+                    <button class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg border border-slate-600/50 transition-all text-sm">
+                        <svg class="w-4 h-4 inline-block mr-1" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                        GitHub
+                    </button>
+                    <div class="h-6 w-px bg-slate-700"></div>
+                    <select class="px-4 py-2 bg-slate-800 text-slate-200 rounded-lg border border-slate-600/50 text-sm focus:border-indigo-400 focus:ring-2 focus:ring-indigo-400/50">
+                        <option>README.md</option>
+                        <option>JSDoc Comments</option>
+                        <option>API Reference</option>
+                        <option>Architecture Docs</option>
+                    </select>
+                </div>
+
+                <!-- Generate button -->
+                <button class="px-6 py-2 bg-purple-400 hover:bg-purple-500 active:bg-purple-600 text-slate-950 font-medium rounded-lg shadow-lg shadow-purple-400/30 transition-all text-sm flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                    </svg>
+                    Generate Docs
+                </button>
+            </div>
+        </div>
+
+        <!-- Split View: Code Panel + Doc Panel -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Code Panel -->
+            <div class="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden shadow-xl">
+                <!-- Header -->
+                <div class="bg-slate-900/50 border-b border-slate-700/50 px-4 py-3 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <!-- Traffic lights -->
+                        <div class="flex gap-1.5">
+                            <div class="w-3 h-3 rounded-full bg-red-400/80 hover:bg-red-400 transition-colors cursor-pointer"></div>
+                            <div class="w-3 h-3 rounded-full bg-amber-400/80 hover:bg-amber-400 transition-colors cursor-pointer"></div>
+                            <div class="w-3 h-3 rounded-full bg-green-400/80 hover:bg-green-400 transition-colors cursor-pointer"></div>
+                        </div>
+                        <span class="text-slate-400 text-sm">auth-service.js</span>
+                    </div>
+                    <span class="text-slate-500 text-xs">JavaScript</span>
+                </div>
+
+                <!-- Code Area -->
+                <div class="p-4 bg-slate-800 font-mono text-sm code-scrollbar overflow-auto" style="min-height: 400px; max-height: 500px;">
+<pre class="text-slate-200"><span class="text-slate-500">// Authentication Service</span>
+<span class="text-purple-400">import</span> { hash, compare } <span class="text-purple-400">from</span> <span class="text-green-400">'bcrypt'</span>;
+<span class="text-purple-400">import</span> { sign, verify } <span class="text-purple-400">from</span> <span class="text-green-400">'jsonwebtoken'</span>;
+
+<span class="text-purple-400">export</span> <span class="text-purple-400">class</span> <span class="text-cyan-400">AuthService</span> {
+  <span class="text-cyan-400">constructor</span>(<span class="text-indigo-400">config</span>) {
+    <span class="text-purple-400">this</span>.<span class="text-slate-300">secret</span> = <span class="text-indigo-400">config</span>.<span class="text-slate-300">jwtSecret</span>;
+    <span class="text-purple-400">this</span>.<span class="text-slate-300">saltRounds</span> = <span class="text-amber-400">10</span>;
+  }
+
+  <span class="text-purple-400">async</span> <span class="text-cyan-400">hashPassword</span>(<span class="text-indigo-400">password</span>) {
+    <span class="text-purple-400">return</span> <span class="text-purple-400">await</span> <span class="text-cyan-400">hash</span>(<span class="text-indigo-400">password</span>, <span class="text-purple-400">this</span>.<span class="text-slate-300">saltRounds</span>);
+  }
+
+  <span class="text-purple-400">async</span> <span class="text-cyan-400">verifyPassword</span>(<span class="text-indigo-400">password</span>, <span class="text-indigo-400">hash</span>) {
+    <span class="text-purple-400">return</span> <span class="text-purple-400">await</span> <span class="text-cyan-400">compare</span>(<span class="text-indigo-400">password</span>, <span class="text-indigo-400">hash</span>);
+  }
+
+  <span class="text-cyan-400">generateToken</span>(<span class="text-indigo-400">userId</span>) {
+    <span class="text-purple-400">return</span> <span class="text-cyan-400">sign</span>(
+      { <span class="text-slate-300">userId</span>: <span class="text-indigo-400">userId</span> },
+      <span class="text-purple-400">this</span>.<span class="text-slate-300">secret</span>,
+      { <span class="text-slate-300">expiresIn</span>: <span class="text-green-400">'7d'</span> }
+    );
+  }
+}</pre>
+                </div>
+
+                <!-- Footer -->
+                <div class="bg-slate-900/50 border-t border-slate-700/50 px-4 py-2 flex items-center justify-between text-xs text-slate-400">
+                    <span>25 lines • 589 chars</span>
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 rounded-full bg-cyan-400 pulse-glow"></div>
+                        <span class="text-cyan-400">Ready to analyze</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Documentation Panel -->
+            <div class="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden shadow-xl">
+                <!-- Header -->
+                <div class="bg-purple-400/10 border-b border-purple-400/30 px-4 py-3 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <svg class="w-5 h-5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                        </svg>
+                        <span class="text-slate-100 font-medium">Generated Documentation</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="px-2.5 py-1 bg-indigo-400/20 border border-indigo-400/30 text-indigo-300 text-xs font-medium rounded-md">
+                            README
+                        </span>
+                        <span class="px-2.5 py-1 bg-green-400/15 border border-green-400/30 text-green-400 text-xs font-semibold rounded-md">
+                            92/100 A
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Doc Content -->
+                <div class="p-6 code-scrollbar overflow-auto" style="min-height: 400px; max-height: 500px;">
+                    <div class="prose prose-invert max-w-none">
+                        <h1 class="text-2xl font-semibold text-slate-100 mb-4">Authentication Service</h1>
+
+                        <p class="text-slate-300 leading-relaxed mb-4">
+                            A robust authentication service providing secure password hashing and JWT token generation
+                            for user authentication flows.
+                        </p>
+
+                        <h2 class="text-xl font-semibold text-slate-100 mt-6 mb-3">Installation</h2>
+                        <div class="bg-slate-900/50 rounded-lg p-4 border border-slate-700 mb-4">
+                            <code class="text-sm text-cyan-400 font-mono">npm install bcrypt jsonwebtoken</code>
+                        </div>
+
+                        <h2 class="text-xl font-semibold text-slate-100 mt-6 mb-3">Usage</h2>
+                        <pre class="bg-slate-900/50 rounded-lg p-4 border border-slate-700 mb-4 overflow-x-auto"><code class="text-sm font-mono text-slate-200"><span class="text-purple-400">import</span> { AuthService } <span class="text-purple-400">from</span> <span class="text-green-400">'./auth-service'</span>;
+
+<span class="text-purple-400">const</span> <span class="text-cyan-400">auth</span> = <span class="text-purple-400">new</span> <span class="text-cyan-400">AuthService</span>({
+  <span class="text-slate-300">jwtSecret</span>: <span class="text-green-400">'your-secret-key'</span>
+});
+
+<span class="text-slate-500">// Hash a password</span>
+<span class="text-purple-400">const</span> <span class="text-indigo-400">hashed</span> = <span class="text-purple-400">await</span> <span class="text-cyan-400">auth</span>.<span class="text-cyan-400">hashPassword</span>(<span class="text-green-400">'user-password'</span>);</code></pre>
+
+                        <h2 class="text-xl font-semibold text-slate-100 mt-6 mb-3">API Reference</h2>
+
+                        <div class="space-y-4">
+                            <div class="bg-slate-900/30 rounded-lg p-4 border border-slate-700/50">
+                                <h3 class="text-base font-medium text-cyan-400 mb-2 font-mono">hashPassword(password)</h3>
+                                <p class="text-slate-400 text-sm leading-relaxed">
+                                    Securely hashes a plain text password using bcrypt with 10 salt rounds.
+                                </p>
+                                <div class="mt-2 flex gap-2">
+                                    <span class="px-2 py-1 bg-slate-800 text-slate-300 text-xs rounded border border-slate-600">
+                                        async
+                                    </span>
+                                    <span class="px-2 py-1 bg-amber-400/15 text-amber-400 text-xs rounded border border-amber-400/30">
+                                        Promise&lt;string&gt;
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="bg-slate-900/30 rounded-lg p-4 border border-slate-700/50">
+                                <h3 class="text-base font-medium text-cyan-400 mb-2 font-mono">generateToken(userId)</h3>
+                                <p class="text-slate-400 text-sm leading-relaxed">
+                                    Generates a JWT token for the specified user with 7-day expiration.
+                                </p>
+                                <div class="mt-2 flex gap-2">
+                                    <span class="px-2 py-1 bg-slate-800 text-slate-300 text-xs rounded border border-slate-600">
+                                        returns string
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="bg-slate-900/50 border-t border-slate-700/50 px-4 py-2 flex items-center justify-between text-xs">
+                    <div class="flex items-center gap-3 text-slate-400">
+                        <span class="flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Complete
+                        </span>
+                        <span>•</span>
+                        <span>Generated in 2.3s</span>
+                    </div>
+                    <button class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded border border-slate-600/50 transition-colors flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        Copy
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quality Score Breakdown (Sample card below panels) -->
+        <div class="mt-6 bg-slate-900 border border-slate-700 rounded-xl p-6 shadow-xl">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-slate-100">Quality Breakdown</h3>
+                <span class="text-2xl font-bold text-green-400">92/100</span>
+            </div>
+
+            <div class="space-y-3">
+                <!-- Progress bars -->
+                <div>
+                    <div class="flex items-center justify-between mb-1 text-sm">
+                        <span class="text-slate-300">Overview & Description</span>
+                        <span class="text-green-400 font-medium">20/20</span>
+                    </div>
+                    <div class="h-2 bg-slate-800 rounded-full overflow-hidden">
+                        <div class="h-full bg-gradient-to-r from-green-400 to-emerald-500" style="width: 100%"></div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex items-center justify-between mb-1 text-sm">
+                        <span class="text-slate-300">Installation Instructions</span>
+                        <span class="text-green-400 font-medium">15/15</span>
+                    </div>
+                    <div class="h-2 bg-slate-800 rounded-full overflow-hidden">
+                        <div class="h-full bg-gradient-to-r from-green-400 to-emerald-500" style="width: 100%"></div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex items-center justify-between mb-1 text-sm">
+                        <span class="text-slate-300">Usage Examples</span>
+                        <span class="text-green-400 font-medium">20/20</span>
+                    </div>
+                    <div class="h-2 bg-slate-800 rounded-full overflow-hidden">
+                        <div class="h-full bg-gradient-to-r from-green-400 to-emerald-500" style="width: 100%"></div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex items-center justify-between mb-1 text-sm">
+                        <span class="text-slate-300">API Documentation</span>
+                        <span class="text-amber-400 font-medium">22/25</span>
+                    </div>
+                    <div class="h-2 bg-slate-800 rounded-full overflow-hidden">
+                        <div class="h-full bg-gradient-to-r from-amber-400 to-amber-500" style="width: 88%"></div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex items-center justify-between mb-1 text-sm">
+                        <span class="text-slate-300">Structure & Formatting</span>
+                        <span class="text-green-400 font-medium">15/20</span>
+                    </div>
+                    <div class="h-2 bg-slate-800 rounded-full overflow-hidden">
+                        <div class="h-full bg-gradient-to-r from-green-400 to-emerald-500" style="width: 75%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4 pt-4 border-t border-slate-700">
+                <h4 class="text-sm font-medium text-slate-300 mb-2">Suggestions for improvement:</h4>
+                <ul class="space-y-1 text-sm text-slate-400">
+                    <li class="flex items-start gap-2">
+                        <span class="text-cyan-400 mt-0.5">→</span>
+                        <span>Add return type documentation for verifyPassword method</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="text-cyan-400 mt-0.5">→</span>
+                        <span>Include error handling examples in usage section</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const sunIcon = document.getElementById('sunIcon');
+            const moonIcon = document.getElementById('moonIcon');
+
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                sunIcon.style.display = 'none';
+                moonIcon.style.display = 'block';
+            } else {
+                html.classList.add('dark');
+                sunIcon.style.display = 'block';
+                moonIcon.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

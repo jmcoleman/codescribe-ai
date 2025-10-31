@@ -3,6 +3,8 @@ import cors from 'cors';
 
 import apiRoutes from './routes/api.js';
 import migrateRoutes from './routes/migrate.js';
+import webhookRoutes from './routes/webhooks.js';
+import paymentRoutes from './routes/payments.js';
 import errorHandler from './middleware/errorHandler.js';
 
 const app = express();
@@ -55,6 +57,10 @@ if (ENABLE_AUTH) {
   };
   app.use(cors(corsOptions));
 
+  // IMPORTANT: Webhooks route MUST come BEFORE express.json()
+  // Stripe webhooks need raw body for signature verification
+  app.use('/api/webhooks', webhookRoutes);
+
   app.use(express.json({ limit: '10mb' }));
 
   // Session configuration (for Passport)
@@ -104,6 +110,10 @@ if (ENABLE_AUTH) {
   };
   app.use(cors(corsOptions));
 
+  // IMPORTANT: Webhooks route MUST come BEFORE express.json()
+  // Stripe webhooks need raw body for signature verification
+  app.use('/api/webhooks', webhookRoutes);
+
   app.use(express.json({ limit: '10mb' }));
 
   console.log('ℹ Authentication features disabled (ENABLE_AUTH=false)');
@@ -112,6 +122,9 @@ if (ENABLE_AUTH) {
 // Mount routes
 if (ENABLE_AUTH && authRoutes) {
   app.use('/api/auth', authRoutes);
+}
+if (ENABLE_AUTH) {
+  app.use('/api/payments', paymentRoutes);
 }
 app.use('/api/migrate', migrateRoutes);
 app.use('/api', apiRoutes);

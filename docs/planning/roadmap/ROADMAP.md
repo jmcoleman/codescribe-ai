@@ -1,7 +1,7 @@
 # CodeScribe AI - Product Roadmap
 
 **Last Updated:** October 27, 2025
-**Current Phase:** Phase 2 - 🔄 **IN PROGRESS** (Monetization Foundation)
+**Current Phase:** Phase 2 - 🔄 **IN PROGRESS** (Payments Infrastructure)
 **Current Release:** v2.0.0 (Authentication & Database Complete)
 **Production URL:** [https://codescribeai.com](https://codescribeai.com)
 
@@ -10,22 +10,22 @@
 ## 📋 Table of Contents
 
 1. [🎯 Vision](#-vision)
-2. [✅ MVP Complete (Phase 1 + 1.5)](#-mvp-complete-phase-1--15)
+2. [✅ Completed Phases](#-completed-phases)
    - [Phase 1.0: Core Development](#-phase-10-core-development-4-days---oct-11-16)
    - [Phase 1.5: Accessibility](#-phase-15-accessibility-2-days---oct-16-18)
    - [Phase 1.6: Deployment](#-phase-16-deployment-2-days---oct-17-19)
-   - [MVP Success Metrics](#mvp-success-metrics)
-3. [📋 Future Phases](#-future-phases)
-   - [Phase 2: Monetization Foundation](#-phase-2-monetization-foundation-planned)
-   - [Phase 3: UX Enhancements](#-phase-3-ux-enhancements-planned)
-   - [Phase 4: Documentation Capabilities](#-phase-4-documentation-capabilities-planned)
-   - [Phase 5: Developer Tools](#-phase-5-developer-tools-planned)
-   - [Phase 6: Enterprise Readiness](#-phase-6-enterprise-readiness-future)
-4. [🎉 Project Milestones](#-project-milestones)
-5. [🚨 Risks & Mitigation](#-risks--mitigation)
-6. [📚 Documentation References](#-documentation-references)
-7. [🗺️ Updating the Interactive Roadmap](#️-updating-the-interactive-roadmap)
-8. [📌 Versioning Strategy](#-versioning-strategy)
+   - [Phase 2: Payments Infrastructure](#-phase-2-payments-infrastructure-5-days---oct-21-26)
+3. [💰 Phase 2: Payments Infrastructure (IN PROGRESS)](#-phase-2-payments-infrastructure-in-progress)
+4. [🎨 Phase 3: UX Enhancements (PLANNED)](#-phase-3-ux-enhancements-planned)
+5. [📄 Phase 4: Documentation Capabilities (PLANNED)](#-phase-4-documentation-capabilities-planned)
+6. [💻 Phase 5: Developer Tools (PLANNED)](#-phase-5-developer-tools-planned)
+7. [🏢 Phase 6: Enterprise Readiness (FUTURE)](#-phase-6-enterprise-readiness-future)
+8. [💡 Optional Enhancements / Backlog](#note-on-optional-enhancements--backlog)
+9. [🎉 Project Milestones](#-project-milestones)
+10. [🚨 Risks & Mitigation](#-risks--mitigation)
+11. [📚 Documentation References](#-documentation-references)
+12. [🗺️ Updating the Interactive Roadmap](#️-updating-the-interactive-roadmap)
+13. [📌 Versioning Strategy](#-versioning-strategy)
 
 ---
 
@@ -241,7 +241,7 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 
 ---
 
-### 💰 Phase 2: Monetization Foundation (5 days - Oct 21-26)
+### 💰 Phase 2: Payments Infrastructure (5 days - Oct 21-26)
 
 **Timeline:** October 21-26, 2025
 **Actual Duration:** 5 days
@@ -385,13 +385,61 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 
 ---
 
-## 💰 Phase 2: Monetization Foundation (IN PROGRESS)
+## 💰 Phase 2: Payments Infrastructure (IN PROGRESS)
 
-**Timeline:** October 21-29, 2025 (Epics 2.1-2.3) + TBD (Epics 2.4-2.5)
-**Estimated Duration:** 2-3 weeks total
-**Status:** 🔄 **IN PROGRESS** - Epics 2.1-2.3 Complete (v2.0.0-v2.3.0)
-**Target Release:** v2.0.0-v2.5.0
+**Timeline:** October 21 - January 2026 (Build Fast, Launch When Validated)
+**Status:** 🔄 **IN PROGRESS** - Foundation Complete (v2.0.0-v2.4.0), Remaining Epics in Sprint
+**Current Release:** v2.4.0 (Payment Integration Complete - Test Mode)
+**Target Launch:** Mid-January 2026 (validation-driven, not calendar-driven)
 **Strategic Goal:** Enable sustainable business model with Open Core + Generous Free Tier architecture
+
+### 📅 Phase 2 Timeline Strategy
+
+**Build-First Approach:** Ship all epics ASAP (no artificial delays)
+
+**Foundation (Complete):**
+- ✅ Oct 21-26: Epic 2.1 (Authentication & Database) - v2.0.0
+- ✅ Oct 27-29: Epic 2.2 (Tier System & Feature Flags) - v2.1.0-v2.2.0
+- ✅ Oct 29: Epic 2.3 (UX Enhancements) - v2.3.0
+- ✅ Oct 30: Epic 2.4 (Payment Integration - Test Mode) - v2.4.0
+
+**Aggressive Sprint (Nov-Dec 2025):**
+- 📋 Nov 2-8: Epic 2.5 Phase 1 (T&Cs placeholders) - v2.5.1
+- 📋 Nov 9-22: Epic 2.6 (Usage Dashboard + Account Settings) - v2.6.0
+- 📋 Nov 23-29: Epic 2.8 (Subscription Management UI) - v2.8.0
+- 📋 Dec 1-7: Epic 2.5 Phase 2-3 (Self-hosted T&Cs + Settings) - v2.5.2
+- 📋 Dec 8-14: Epic 2.5 Phase 4-6 (Data rights + Email) - v2.5.3
+- ✅ Mid-December: ALL CODE COMPLETE
+
+**Validation & Marketing (Dec 2025 - Jan 2026):**
+- 🎯 User acquisition and feedback collection
+- 🎯 Test checkout conversions with Stripe test mode
+- 🎯 User interviews and product iteration
+- 🎯 Build to validation criteria (not calendar date)
+
+**Launch Prep (Early January 2026):**
+- 🏢 Jan 2-3: Form Georgia LLC (optimal timing for annual report)
+- 🏢 Jan 3-5: Receive EIN from IRS
+- 🏢 Jan 6-10: Open business bank account
+- 🏢 Jan 11-13: Complete Stripe business verification
+
+**Production Launch (Mid-January 2026):**
+- 💰 Jan 14+: Epic 2.7 (Deploy live Stripe keys) - when validation criteria met
+- 🚀 Launch when ready (likely Jan 15-20, 2026)
+
+**Validation Criteria (Launch When These Hit):**
+- ✅ 50+ active users (using app weekly)
+- ✅ 10+ user interviews completed
+- ✅ 20+ test checkout conversions (proves willingness to pay)
+- ✅ 3+ positive testimonials/case studies
+- ✅ Clear understanding of target customer
+
+**Why This Approach:**
+- ⚡ Build fast (no waiting for arbitrary dates)
+- 🎯 Validate thoroughly (user-driven timeline)
+- 🏢 LLC formed at optimal time (Jan 2 = 15 months before first GA annual report)
+- 💰 Launch when confident (PMF first, revenue second)
+- 📊 Authentic story ("Launched in X days" where X is what actually happened)
 
 ### 📦 Epics
 
@@ -414,7 +462,7 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 **Rationale:** Passport.js selected over Clerk to support CLI authentication (Phase 5) and self-hosted enterprise deployment (Phase 6). See [AUTH-ANALYSIS.md](../AUTH-ANALYSIS.md) for full comparison.
 
 **Release:** v2.0.0 (October 26, 2025)
-**Reference:** See "Phase 2: Monetization Foundation (5 days - Oct 21-26)" section above for complete details.
+**Reference:** See "Phase 2: Payments Infrastructure (5 days - Oct 21-26)" section above for complete details.
 
 #### Epic 2.2: Tier System & Feature Flags (3 days) - ✅ **COMPLETE**
 
@@ -496,15 +544,86 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 - ✅ Mobile menu shows logout for authenticated users
 - ✅ All tests pass (1,467/1,503)
 
-#### Epic 2.4: Payment Integration (2-3 days) - 📋 **PLANNED**
-- Stripe integration
-- Subscription management (create, update, cancel)
-- Webhook handling (tier updates on payment events)
-- Pricing page UI
-- Upgrade/downgrade flows
-- Invoice and receipt generation
+#### Epic 2.4: Payment Integration (2-3 days) - ✅ **COMPLETE** (v2.4.0)
 
-#### Epic 2.5: UI Integration & Usage Dashboard (2-3 days) - 📋 **PLANNED**
+**Release:** v2.4.0 (October 30, 2025)
+**Goal:** Stripe payment integration for subscription management (Test Mode)
+
+**Features Implemented:**
+- ✅ Stripe SDK integration with test mode
+- ✅ Subscription management (create via Checkout, cancel via webhooks)
+- ✅ Webhook handling (6 events: checkout completed, subscription created/updated/deleted, invoice paid/failed)
+- ✅ Pricing page UI (4 tiers with monthly/annual toggle)
+- ✅ Test mode validation with Stripe CLI
+- ✅ Database schema: subscriptions table, stripe_customer_id column
+- ✅ Subscription model with 9 methods (create, find, update, cancel, etc.)
+
+**Testing:**
+- ✅ Manual E2E testing with Stripe test cards (4242 4242 4242 4242)
+- ✅ Webhook events verified (all 6 events firing correctly)
+- ✅ Subscription model: 16/16 tests passing
+- ✅ Full payment flow working (test mode)
+
+**Success Criteria:**
+- ✅ Users can subscribe to paid tiers via Stripe Checkout
+- ✅ Webhooks automatically update user tier in database
+- ✅ Stripe CLI captures all webhook events
+- ✅ No live payments accepted (test mode only)
+
+**Note:** Upgrade/downgrade flows moved to Epic 2.8. Custom receipts/invoices moved to Epic 2.7.
+
+#### Epic 2.5: Legal Compliance & User Rights (3-4 days) - 📋 **CRITICAL - REQUIRED BEFORE EPIC 2.4**
+
+**Priority:** CRITICAL (must complete before accepting payments)
+**Goal:** GDPR/CCPA compliance + user data rights infrastructure
+**Reference:** [EPIC-2.5-COMPLIANCE.md](./EPIC-2.5-COMPLIANCE.md) for full implementation spec
+
+**Phase 1: UI Placeholders (Week 1-2, 1 day)**
+- Generate Terms + Privacy via Termly.io (30 min each)
+- Create Footer component with T&Cs links
+- Add T&Cs checkbox to SignupModal (disabled placeholder)
+
+**Phase 2: Self-Hosted Policies (Week 10, 1 day)**
+- TermsOfService.jsx + PrivacyPolicy.jsx components
+- Routes: `/terms` and `/privacy`
+- Enable T&Cs checkbox (required for signup)
+
+**Phase 3: Account Settings UI (Week 10, 1 day)**
+- Settings page with 4 tabs: Account | Privacy | Subscription | Danger Zone
+- Analytics opt-out toggle
+- Change email/password
+- Delete account button
+
+**Phase 4: User Data Rights (Week 11, 1 day)**
+- Data export: GET /api/user/data-export (JSON download)
+- Account deletion: 30-day soft delete with restore
+- Analytics opt-out: Conditional Vercel Analytics loading
+- Email notifications via Resend
+
+**Phase 5: Policy Updates (Week 11, 0.5 days)**
+- policy_acceptance table (track versions)
+- Policy update banner/modal
+- Email notification 30 days before changes
+
+**Phase 6: Email Infrastructure (Week 11, 0.5 days)**
+- 8 transactional email templates (Resend)
+- support@codescribeai.com forwarding
+- Response templates for support
+
+**Database Changes:**
+```sql
+ALTER TABLE users ADD COLUMN analytics_enabled BOOLEAN DEFAULT true;
+ALTER TABLE users ADD COLUMN deletion_scheduled_at TIMESTAMPTZ;
+
+CREATE TABLE policy_acceptance (
+  user_id INTEGER,
+  policy_type VARCHAR(50),
+  version VARCHAR(20),
+  accepted_at TIMESTAMPTZ
+);
+```
+
+#### Epic 2.6: UI Integration & Usage Dashboard (2-3 days) - 📋 **PLANNED**
 
 **Usage Dashboard UI (from Epic 2.2):**
 - Usage dashboard page/modal for proactive viewing
@@ -518,7 +637,91 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 - Tier badges in header for authenticated users
 - Feature gates in UI (Pro badges on locked features)
 - Loading states and error handling
-- Complete Phase 2: Monetization Foundation
+- Complete Phase 2: Payments Infrastructure
+
+#### Epic 2.7: Production Launch (1-2 days) - 📋 **PLANNED (Post-LLC)**
+
+**Priority:** CRITICAL (deploy after LLC formation + Stripe business verification)
+**Timeline:** January 14+, 2026 (when validation criteria met)
+**Goal:** Switch from test mode to live payments
+
+**Stripe Production Deployment:**
+- Replace test API keys with live keys (publishable + secret)
+- Update webhook endpoints to production URLs
+- Verify Stripe business account (requires LLC EIN + bank account)
+- Test live checkout flow with real payment method
+- Monitor first live transactions
+
+**Custom Branded Communications:**
+- Custom email receipt templates (override Stripe defaults)
+- Invoice PDF customization with CodeScribe AI branding
+- Email templates: Subscription created, payment succeeded, payment failed, subscription canceled
+- Integration with Resend for email delivery
+
+**Receipt/Invoice Storage:**
+- Store Stripe receipt URLs only (no PII in database)
+- Display Stripe-hosted receipts via API links
+- Users access receipts via Stripe Customer Portal
+
+**Success Criteria:**
+- ✅ Live Stripe keys deployed and working
+- ✅ First real payment processed successfully
+- ✅ Custom branded emails sent for all events
+- ✅ Users can access receipts via Customer Portal
+- ✅ No test mode data in production
+
+**Database Changes:**
+```sql
+ALTER TABLE subscriptions ADD COLUMN stripe_receipt_url VARCHAR(500);
+```
+
+**Note:** This epic deploys AFTER Georgia LLC formation (Jan 2-3) and Stripe business verification (Jan 11-13).
+
+#### Epic 2.8: Subscription Management UI (2-3 days) - 📋 **PLANNED**
+
+**Priority:** MEDIUM (enhances paid user experience)
+**Timeline:** November 23-29, 2025
+**Goal:** Self-service subscription management UI (upgrade, downgrade, cancel)
+
+**Customer Portal Integration:**
+- Stripe Customer Portal for payment method updates
+- Link from Account Settings → "Manage Subscription" button
+- Portal handles: Update card, view invoices, download receipts
+- Automatic redirect back to app after portal actions
+
+**Upgrade/Downgrade Flows:**
+- Upgrade from Free → Starter/Pro/Team (via Pricing page)
+- Downgrade from Pro → Starter or Free (self-service)
+- Plan change UI with preview: "New plan starts at next billing cycle"
+- No proration handling (keep it simple)
+- Clear messaging: "Change takes effect on [next billing date]"
+
+**Cancellation Flow:**
+- Cancel button in Account Settings → Subscription tab
+- Confirmation modal: "Your subscription will end on [date]. You'll retain access until then."
+- Soft cancel: Tier remains active until period_end
+- Post-cancellation: Downgrade to Free tier automatically
+- Email notification: "Your subscription has been canceled"
+
+**UI Components:**
+- SubscriptionCard component (current plan, billing date, usage)
+- PlanChangeModal (preview new plan, confirm change)
+- CancellationModal (confirm cancel, show end date)
+- UpgradePrompt (contextual nudges at usage limits)
+
+**Backend:**
+- Update existing Subscription model methods (already has cancel)
+- Add: upgradePlan(), downgradePlan() methods
+- Webhook handling for plan changes (subscription.updated)
+
+**Success Criteria:**
+- ✅ Users can upgrade/downgrade via UI
+- ✅ Stripe Customer Portal accessible from settings
+- ✅ Cancellations take effect at next billing cycle (no proration)
+- ✅ All plan changes logged and reflected in database
+- ✅ Email notifications sent for all subscription changes
+
+**Philosophy:** Keep it simple - no proration, changes at next billing cycle, self-service for common actions.
 
 ### Tier Structure (Feature Flags Ready)
 
@@ -624,16 +827,35 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 
 ### 📦 Epics
 
-#### Epic 3.1: Theming & Visual Customization (1.5-2 days)
-- Theme toggle UI (sun/moon icon button in Header)
-- CSS variable architecture with `data-theme` attribute (Kevin Powell's best practices)
-- Tailwind dark mode with `dark:` class variants
-- Theme persistence (localStorage)
-- System preference detection (`prefers-color-scheme: dark`)
-- Monaco Editor theme switching (`vs-light` / `vs-dark`)
-- Mermaid dark theme with brand colors
-- WCAG AAA contrast ratios (7:1 text, 3:1 UI)
+#### Epic 3.1: Theme Refinements & Dark Mode (2-3 days) ⭐ DESIGN COMPLETE
+**Status:** Ready to Implement | Design finalized October 30, 2025
+
+**Light Theme Refinements:**
+- 20% opacity purple shadows on primary buttons for premium depth
+- Cyan accents for code elements (brand continuity between themes)
+- Simplified button system (solid, no gradients)
+- Updated button specs in Figma Guide v4.0
+
+**Dark Mode - Neon Cyberpunk:**
+- Slate-950 (#020617) backgrounds for deep, rich dark mode
+- Purple-400 and Indigo-400 for brand colors (lighter for visibility)
+- Cyan-400 accents for developer/terminal aesthetic
+- 30% opacity purple shadows for premium glow effect
+- WCAG AAA contrast ratios (all colors 7:1+ on backgrounds)
+
+**Implementation:**
+- ThemeProvider context with Tailwind class-based switching (`darkMode: 'class'`)
+- Theme toggle UI (sun/moon icon) with persistence (localStorage + system preference)
+- Monaco Editor theme sync (`vs-dark` / `vs-light`)
+- Mermaid diagram dark theme with brand colors
 - Smooth transitions with `prefers-reduced-motion` support
+
+**Design Resources:**
+- [DARK-MODE-SPEC.md](../DARK-MODE-SPEC.md) - Complete implementation guide (959 lines)
+- [LIGHT-THEME-DESIGN-SYSTEM.md](../../design/LIGHT-THEME-DESIGN-SYSTEM.md) - Refined light theme
+- [dark-theme-preview.html](../../design/theming/dark-theme-preview.html) - Full dark preview
+- [light-theme-refined-preview.html](../../design/theming/light-theme-refined-preview.html) - Full light preview
+- [FIGMA-DESIGN-GUIDE.md](../../design/FIGMA-DESIGN-GUIDE.md) v4.0 - Complete shadow system
 
 #### Epic 3.2: Layout & Workspace Flexibility (2-3 days)
 - Full-width layout option (remove `max-width` constraints)
@@ -656,11 +878,13 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 
 ### Technical Highlights
 
-**Theming Approach:**
-- CSS variables with semantic naming (`--color-bg-primary` vs `--white`)
-- `data-theme` attribute on `<html>` element
-- React Context for theme state management
-- All components use Tailwind `dark:` variants
+**Theming Approach (Finalized):**
+- Tailwind class-based dark mode (`darkMode: 'class'` in config)
+- `dark` class on `<html>` element toggles theme
+- React Context (ThemeProvider) for state management
+- All components use Tailwind `dark:` variants (e.g., `bg-white dark:bg-slate-900`)
+- No CSS variables needed - Tailwind handles everything
+- Shadow system: `shadow-lg shadow-purple-600/20` (light) vs `shadow-lg shadow-purple-400/30` (dark)
 
 **Layout System:**
 - `react-resizable-panels` for draggable panels
@@ -1128,7 +1352,7 @@ The update script automatically creates timestamped backups before making change
 
 **Mapping:**
 - Phase 1 (MVP) → v1.0.0 (Initial production release)
-- Phase 2 (Monetization Foundation) → v2.0.0 (MAJOR: Authentication, database, breaking architectural change)
+- Phase 2 (Payments Infrastructure) → v2.0.0 (MAJOR: Authentication, database, breaking architectural change)
 - Phase 3 (UX Enhancements) → v3.0.0 (MAJOR: Complete UX transformation - theming, layout, file handling)
   - Epic 3.1 (Theming) could ship as v3.1.0 (MINOR)
   - Epic 3.2 (Layout) could ship as v3.2.0 (MINOR)

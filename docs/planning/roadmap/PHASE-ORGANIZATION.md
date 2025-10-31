@@ -27,7 +27,7 @@ A phase represents a **cohesive strategic goal** or **user-facing value proposit
 - ❌ NOT longer than 4 weeks (too broad)
 
 **Good Phase Examples:**
-- **Phase 2: Monetization Foundation** - Auth, tiers, payments
+- **Phase 2: Payments Infrastructure** - Auth, tiers, payments
 - **Phase 3: UX Enhancements** - Theming, layout, file handling
 - **Phase 4: Documentation Capabilities** - New doc types, templates, exports
 - **Phase 5: Developer Tools** - CLI, VS Code extension, API SDKs
@@ -138,7 +138,7 @@ These don't support a unified strategic goal
 Phases map to **MAJOR or MINOR** semantic versions:
 
 - **Phase 1 (MVP)** → v1.0.0 (initial release)
-- **Phase 2 (Monetization)** → v2.0.0 (MAJOR: breaking architectural change)
+- **Phase 2 (Payments)** → v2.0.0 (MAJOR: breaking architectural change)
 - **Phase 3 (UX Enhancements)** → v3.0.0 (MAJOR: significant UX transformation)
   - Epic 3.1 (Theming) → v3.1.0 (MINOR: new feature)
   - Epic 3.2 (Layout) → v3.2.0 (MINOR: new feature)
@@ -180,7 +180,7 @@ Phase 1: MVP (Complete) - v1.0.0
 ├── Quality scoring and suggestions
 └── WCAG 2.1 AA compliance + deployment
 
-Phase 2: Monetization Foundation - v2.0.0-v2.5.0
+Phase 2: Payments Infrastructure - v2.0.0-v2.5.0
 ├── Epic 2.1: Authentication & User Management (v2.0.0)
 ├── Epic 2.2: Tier System & Feature Flags (v2.1.0-v2.2.0)
 ├── Epic 2.3: UX Enhancements & File Upload (v2.3.0)
@@ -229,7 +229,7 @@ Phase 2: Improvements
 └── Bug fixes (maintenance)
 ```
 **Problem:** No unified strategic goal, impossible to communicate.
-**Fix:** Split into separate phases (Monetization, UX, Developer Tools).
+**Fix:** Split into separate phases (Payments, UX, Developer Tools).
 
 ### ❌ **Mega Phases** (Too Large)
 ```

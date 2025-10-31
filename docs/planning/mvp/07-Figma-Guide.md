@@ -1441,7 +1441,7 @@ const semanticColors = {
 Use the brand color palette reference:
 
 **Interactive HTML (recommended for development):**
-- File: `docs/design/brand-color-palette.html`
+- File: `docs/design/theming/brand-color-palette.html`
 - Features: Click-to-copy hex codes, interactive color swatches
 - View all colors visually
 - Copy hex codes instantly
@@ -1449,16 +1449,16 @@ Use the brand color palette reference:
 - Check accessibility notes
 
 **PDF Version (for sharing/printing):**
-- File: `docs/design/brand-color-palette.pdf`
+- File: `docs/design/theming/brand-color-palette.html`
 - Use for presentations, stakeholder reviews, printing
 
 Open in your browser:
 ```bash
 # Interactive HTML version
-open docs/design/brand-color-palette.html
+open docs/design/theming/brand-color-palette.html
 
 # PDF version
-open docs/design/brand-color-palette.pdf
+open docs/design/theming/brand-color-palette.html
 ```
 
 ---

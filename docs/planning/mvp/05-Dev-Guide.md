@@ -111,7 +111,9 @@ codescribe-ai/
 │   │   └── ERROR-HANDLING-UX.md
 │   ├── design/                    # Design assets
 │   │   ├── brand-color-palette.html
-│   │   └── brand-color-palette.pdf
+│   │   ├── dark-theme-palette.html
+│   │   ├── light-theme-refined-preview.html
+│   │   └── design-archive/          # Alternative themes & PDFs
 │   ├── scripts/                   # Script documentation
 │   │   └── VERSION-CHECKER.md
 │   └── CONTEXT.md

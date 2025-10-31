@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeScribe AI - Refined Light Theme Preview</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    <style>
+        /* Subtle glow for primary CTAs in light mode */
+        .btn-primary-glow {
+            box-shadow: 0 10px 15px -3px rgba(147, 51, 234, 0.2), 0 4px 6px -2px rgba(147, 51, 234, 0.1);
+        }
+
+        .btn-primary-glow:hover {
+            box-shadow: 0 20px 25px -5px rgba(147, 51, 234, 0.25), 0 10px 10px -5px rgba(147, 51, 234, 0.15);
+        }
+
+        /* Enhanced shadow for gradient buttons */
+        .btn-gradient-glow {
+            box-shadow: 0 10px 20px -5px rgba(147, 51, 234, 0.3), 0 4px 8px -2px rgba(147, 51, 234, 0.2);
+        }
+
+        /* Cyan accent glow for code elements */
+        .code-accent-glow {
+            box-shadow: 0 4px 12px -2px rgba(6, 182, 212, 0.2);
+        }
+
+        /* Logo shadow (subtle) */
+        .logo-glow {
+            box-shadow: 0 4px 12px rgba(168, 85, 247, 0.25);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans antialiased">
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <!-- Logo & Title -->
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-lg bg-purple-600 flex items-center justify-center logo-glow">
+                        <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-semibold text-slate-900">CodeScribe AI</h1>
+                        <p class="text-xs text-slate-500">Refined Light Theme</p>
+                    </div>
+                </div>
+
+                <!-- Nav buttons -->
+                <div class="flex items-center gap-3">
+                    <button class="px-4 py-2 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors">
+                        Examples
+                    </button>
+                    <button class="px-4 py-2 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors">
+                        Docs
+                    </button>
+                    <button class="px-4 py-2 text-sm bg-slate-100 text-slate-900 hover:bg-slate-200 rounded-lg border border-slate-200 transition-colors">
+                        Sign In
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-6 py-8">
+        <!-- Comparison Header -->
+        <div class="mb-8 bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+            <h2 class="text-2xl font-semibold text-slate-900 mb-3">Light Theme Refinements</h2>
+            <p class="text-slate-600 leading-relaxed mb-4">
+                Enhanced with subtle shadows and consistent styling to match the dark theme's premium feel while maintaining light mode clarity.
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                    <h3 class="font-semibold text-purple-900 mb-1">✨ Subtle Shadows</h3>
+                    <p class="text-purple-700">Primary CTAs have 20% opacity purple shadows for depth</p>
+                </div>
+                <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+                    <h3 class="font-semibold text-indigo-900 mb-1">🎯 Simplified System</h3>
+                    <p class="text-indigo-700">One solid button style - emphasis from placement & context</p>
+                </div>
+                <div class="bg-cyan-50 border border-cyan-200 rounded-lg p-4">
+                    <h3 class="font-semibold text-cyan-900 mb-1">💎 Cyan Accents</h3>
+                    <p class="text-cyan-700">Code elements use cyan for brand continuity</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Control Bar -->
+        <div class="bg-white border border-slate-200 rounded-xl p-4 mb-6 shadow-sm">
+            <div class="flex items-center justify-between flex-wrap gap-4">
+                <!-- Left controls -->
+                <div class="flex items-center gap-3 flex-wrap">
+                    <button class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg border border-slate-200 transition-all text-sm">
+                        📤 Upload Files
+                    </button>
+                    <button class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg border border-slate-200 transition-all text-sm">
+                        <svg class="w-4 h-4 inline-block mr-1" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                        GitHub
+                    </button>
+                    <div class="h-6 w-px bg-slate-300"></div>
+                    <select class="px-4 py-2 bg-white text-slate-700 rounded-lg border border-slate-200 text-sm focus:border-purple-600 focus:ring-2 focus:ring-purple-600/50">
+                        <option>README.md</option>
+                        <option>JSDoc Comments</option>
+                        <option>API Reference</option>
+                        <option>Architecture Docs</option>
+                    </select>
+                </div>
+
+                <!-- Generate button - REFINED with shadow -->
+                <button class="px-6 py-2 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-medium rounded-lg btn-primary-glow transition-all text-sm flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                    </svg>
+                    Generate Docs
+                </button>
+            </div>
+        </div>
+
+        <!-- Button Comparison Section -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-semibold text-slate-900 mb-4">Button Styles Comparison</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Before -->
+                <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+                    <h3 class="text-lg font-semibold text-slate-900 mb-4">Before (Flat)</h3>
+                    <div class="space-y-4">
+                        <button class="w-full px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors">
+                            Primary Button
+                        </button>
+                        <button class="w-full px-6 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg border border-slate-200 transition-colors">
+                            Secondary Button
+                        </button>
+                        <button class="w-full px-6 py-2 bg-transparent hover:bg-slate-50 text-slate-700 font-medium rounded-lg border border-slate-300 transition-colors">
+                            Tertiary Button
+                        </button>
+                    </div>
+                    <p class="mt-4 text-sm text-slate-600">Clean but lacks depth and premium feel</p>
+                </div>
+
+                <!-- After -->
+                <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+                    <h3 class="text-lg font-semibold text-slate-900 mb-4">After (With Shadows) ⭐</h3>
+                    <div class="space-y-4">
+                        <button class="w-full px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg btn-primary-glow transition-all">
+                            Primary Button
+                        </button>
+                        <button class="w-full px-6 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg border border-slate-200 transition-all">
+                            Secondary Button
+                        </button>
+                        <button class="w-full px-6 py-2 bg-transparent hover:bg-slate-50 text-slate-700 font-medium rounded-lg border border-slate-300 transition-all">
+                            Tertiary Button
+                        </button>
+                    </div>
+                    <p class="mt-4 text-sm text-slate-600">Subtle 20% shadow on primary adds depth. Emphasis from placement, not button variant.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Cyan Accent Examples -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-semibold text-slate-900 mb-4">Cyan Accents for Code Elements</h2>
+
+            <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Code status indicator -->
+                    <div class="border border-cyan-200 bg-cyan-50 rounded-lg p-4 code-accent-glow">
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></div>
+                            <span class="text-sm font-medium text-cyan-900">Ready to analyze</span>
+                        </div>
+                        <p class="text-xs text-cyan-700">Status indicator with cyan accent</p>
+                    </div>
+
+                    <!-- Code badge -->
+                    <div class="flex items-center justify-center">
+                        <span class="inline-flex items-center px-3 py-1 rounded-md bg-cyan-100 border border-cyan-300 text-cyan-800 text-sm font-medium">
+                            <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                            </svg>
+                            JavaScript
+                        </span>
+                    </div>
+
+                    <!-- Code link -->
+                    <div class="flex items-center justify-center">
+                        <a href="#" class="text-cyan-600 hover:text-cyan-700 font-medium underline decoration-cyan-300 hover:decoration-cyan-500 transition-colors">
+                            View source code →
+                        </a>
+                    </div>
+                </div>
+                <p class="mt-4 text-sm text-slate-600 text-center">Cyan creates visual continuity between light and dark themes for code-related elements</p>
+            </div>
+        </section>
+
+        <!-- Split View: Code Panel + Doc Panel -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-semibold text-slate-900 mb-4">Full Interface Preview</h2>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Code Panel -->
+                <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                    <!-- Header -->
+                    <div class="bg-slate-50 border-b border-slate-200 px-4 py-3 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <!-- Traffic lights -->
+                            <div class="flex gap-1.5">
+                                <div class="w-3 h-3 rounded-full bg-red-400 hover:bg-red-500 transition-colors cursor-pointer"></div>
+                                <div class="w-3 h-3 rounded-full bg-amber-400 hover:bg-amber-500 transition-colors cursor-pointer"></div>
+                                <div class="w-3 h-3 rounded-full bg-green-400 hover:bg-green-500 transition-colors cursor-pointer"></div>
+                            </div>
+                            <span class="text-slate-600 text-sm">auth-service.js</span>
+                        </div>
+                        <span class="text-slate-500 text-xs">JavaScript</span>
+                    </div>
+
+                    <!-- Code Area -->
+                    <div class="p-4 bg-slate-50 font-mono text-sm overflow-auto" style="min-height: 300px;">
+<pre class="text-slate-800"><span class="text-slate-500">// Authentication Service</span>
+<span class="text-purple-600">import</span> { hash, compare } <span class="text-purple-600">from</span> <span class="text-green-600">'bcrypt'</span>;
+<span class="text-purple-600">import</span> { sign, verify } <span class="text-purple-600">from</span> <span class="text-green-600">'jsonwebtoken'</span>;
+
+<span class="text-purple-600">export</span> <span class="text-purple-600">class</span> <span class="text-cyan-600">AuthService</span> {
+  <span class="text-cyan-600">constructor</span>(<span class="text-indigo-600">config</span>) {
+    <span class="text-purple-600">this</span>.<span class="text-slate-800">secret</span> = <span class="text-indigo-600">config</span>.<span class="text-slate-800">jwtSecret</span>;
+    <span class="text-purple-600">this</span>.<span class="text-slate-800">saltRounds</span> = <span class="text-amber-600">10</span>;
+  }
+
+  <span class="text-purple-600">async</span> <span class="text-cyan-600">hashPassword</span>(<span class="text-indigo-600">password</span>) {
+    <span class="text-purple-600">return</span> <span class="text-purple-600">await</span> <span class="text-cyan-600">hash</span>(<span class="text-indigo-600">password</span>, <span class="text-purple-600">this</span>.<span class="text-slate-800">saltRounds</span>);
+  }
+
+  <span class="text-cyan-600">generateToken</span>(<span class="text-indigo-600">userId</span>) {
+    <span class="text-purple-600">return</span> <span class="text-cyan-600">sign</span>(
+      { <span class="text-slate-800">userId</span>: <span class="text-indigo-600">userId</span> },
+      <span class="text-purple-600">this</span>.<span class="text-slate-800">secret</span>,
+      { <span class="text-slate-800">expiresIn</span>: <span class="text-green-600">'7d'</span> }
+    );
+  }
+}</pre>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="bg-slate-50 border-t border-slate-200 px-4 py-2 flex items-center justify-between text-xs text-slate-600">
+                        <span>20 lines • 512 chars</span>
+                        <div class="flex items-center gap-2">
+                            <div class="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></div>
+                            <span class="text-cyan-600 font-medium">Ready to analyze</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Documentation Panel -->
+                <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                    <!-- Header -->
+                    <div class="bg-purple-50 border-b border-purple-200 px-4 py-3 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <svg class="w-5 h-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                            </svg>
+                            <span class="text-slate-900 font-medium">Generated Documentation</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="px-2.5 py-1 bg-indigo-100 border border-indigo-200 text-indigo-700 text-xs font-medium rounded-md">
+                                README
+                            </span>
+                            <span class="px-2.5 py-1 bg-green-100 border border-green-200 text-green-700 text-xs font-semibold rounded-md">
+                                92/100 A
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Doc Content -->
+                    <div class="p-6 overflow-auto" style="min-height: 300px;">
+                        <div class="prose prose-slate max-w-none">
+                            <h1 class="text-2xl font-semibold text-slate-900 mb-4">Authentication Service</h1>
+
+                            <p class="text-slate-700 leading-relaxed mb-4">
+                                A robust authentication service providing secure password hashing and JWT token generation
+                                for user authentication flows.
+                            </p>
+
+                            <h2 class="text-xl font-semibold text-slate-900 mt-6 mb-3">Installation</h2>
+                            <div class="bg-slate-50 rounded-lg p-4 border border-slate-200 mb-4">
+                                <code class="text-sm text-cyan-600 font-mono">npm install bcrypt jsonwebtoken</code>
+                            </div>
+
+                            <h2 class="text-xl font-semibold text-slate-900 mt-6 mb-3">Usage</h2>
+                            <div class="text-xs text-slate-600 mb-2">JavaScript</div>
+                            <pre class="bg-slate-50 rounded-lg p-4 border border-slate-200 mb-4 overflow-x-auto"><code class="text-sm font-mono text-slate-800"><span class="text-purple-600">import</span> { AuthService } <span class="text-purple-600">from</span> <span class="text-green-600">'./auth-service'</span>;
+
+<span class="text-purple-600">const</span> <span class="text-cyan-600">auth</span> = <span class="text-purple-600">new</span> <span class="text-cyan-600">AuthService</span>({
+  <span class="text-slate-800">jwtSecret</span>: <span class="text-green-600">'your-secret-key'</span>
+});
+
+<span class="text-slate-500">// Hash a password</span>
+<span class="text-purple-600">const</span> <span class="text-indigo-600">hashed</span> = <span class="text-purple-600">await</span> <span class="text-cyan-600">auth</span>.<span class="text-cyan-600">hashPassword</span>(<span class="text-green-600">'password'</span>);</code></pre>
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="bg-slate-50 border-t border-slate-200 px-4 py-2 flex items-center justify-between text-xs">
+                        <div class="flex items-center gap-3 text-slate-600">
+                            <span class="flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Complete
+                            </span>
+                            <span>•</span>
+                            <span>Generated in 2.3s</span>
+                        </div>
+                        <button class="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded border border-slate-200 transition-colors flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                            Copy
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Shadow Specifications -->
+        <section class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+            <h3 class="text-lg font-semibold text-slate-900 mb-4">Light Theme Shadow System</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                <div>
+                    <h4 class="font-medium text-slate-900 mb-2">Primary CTAs</h4>
+                    <code class="text-xs bg-slate-50 px-2 py-1 rounded border border-slate-200 block mb-2">
+                        shadow-lg shadow-purple-600/20
+                    </code>
+                    <p class="text-slate-600 mb-3">20% opacity for subtle depth without overpowering</p>
+                    <div class="bg-purple-50 border border-purple-200 rounded p-3">
+                        <p class="text-xs text-purple-900 font-medium">✨ Design Philosophy</p>
+                        <p class="text-xs text-purple-700 mt-1">One primary button style. Emphasis comes from placement, size, and context - not button variants.</p>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="font-medium text-slate-900 mb-2">Code Elements</h4>
+                    <code class="text-xs bg-slate-50 px-2 py-1 rounded border border-slate-200 block mb-2">
+                        shadow-md shadow-cyan-600/20
+                    </code>
+                    <p class="text-slate-600 mb-3">Cyan shadows for code-related indicators</p>
+                    <div class="bg-cyan-50 border border-cyan-200 rounded p-3">
+                        <p class="text-xs text-cyan-900 font-medium">💎 Brand Continuity</p>
+                        <p class="text-xs text-cyan-700 mt-1">Cyan = code/technical in both light and dark themes for instant recognition.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

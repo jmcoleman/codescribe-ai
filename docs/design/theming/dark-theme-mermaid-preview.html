@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dark Theme - Mermaid Diagrams Preview</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'dark',
+            themeVariables: {
+                // Dark theme colors
+                darkMode: true,
+                background: '#020617',
+                primaryColor: '#1E293B',
+                primaryTextColor: '#E2E8F0',
+                primaryBorderColor: '#C084FC',
+                lineColor: '#64748B',
+                secondaryColor: '#1E293B',
+                tertiaryColor: '#1E293B',
+
+                // Text
+                textColor: '#E2E8F0',
+                mainBkg: '#1E293B',
+                secondBkg: '#0F172A',
+
+                // Borders
+                borderColor: '#475569',
+                arrowheadColor: '#94A3B8',
+
+                // Cluster/Subgraph
+                clusterBkg: '#0F172A',
+                clusterBorder: '#818CF8',
+
+                // Typography
+                fontFamily: 'Inter, system-ui, sans-serif',
+                fontSize: '14px',
+
+                // Special colors for nodes
+                nodeBorder: '#C084FC',
+                nodeTextColor: '#E2E8F0'
+            },
+            flowchart: {
+                padding: 15,
+                nodeSpacing: 50,
+                rankSpacing: 80,
+                curve: 'basis',
+                htmlLabels: true
+            }
+        });
+    </script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        slate: {
+                            950: '#020617',
+                        },
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styling for Mermaid diagrams in dark theme */
+        .mermaid {
+            background: transparent !important;
+        }
+
+        /* Ensure SVG text is visible */
+        .mermaid svg {
+            background: transparent;
+        }
+
+        .mermaid .node rect,
+        .mermaid .node circle,
+        .mermaid .node polygon {
+            fill: #1E293B !important;
+            stroke: #C084FC !important;
+            stroke-width: 2px !important;
+        }
+
+        .mermaid .node .label {
+            color: #E2E8F0 !important;
+            fill: #E2E8F0 !important;
+        }
+
+        .mermaid .cluster rect {
+            fill: #0F172A !important;
+            stroke: #818CF8 !important;
+            stroke-width: 2px !important;
+        }
+
+        .mermaid .edgeLabel {
+            background-color: #020617 !important;
+            color: #CBD5E1 !important;
+        }
+
+        .mermaid .edgePath .path {
+            stroke: #64748B !important;
+            stroke-width: 2px !important;
+        }
+
+        .mermaid .marker {
+            fill: #94A3B8 !important;
+            stroke: #94A3B8 !important;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-200 font-sans antialiased">
+    <!-- Theme Toggle -->
+    <div class="fixed top-4 right-4 z-50">
+        <button onclick="toggleTheme()"
+            class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-all duration-200"
+            aria-label="Toggle theme">
+            <svg class="w-5 h-5 text-amber-400" id="sunIcon" style="display: block;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+            <svg class="w-5 h-5 text-slate-400" id="moonIcon" style="display: none;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+        </button>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-slate-900 border-b border-slate-700 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-lg bg-purple-500 flex items-center justify-center shadow-lg shadow-purple-500/30">
+                        <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-semibold text-slate-100">Mermaid Diagrams - Dark Theme</h1>
+                        <p class="text-xs text-slate-400">Neon Cyberpunk Style</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-6 py-8 space-y-8">
+        <!-- Example 1: System Architecture -->
+        <section>
+            <h2 class="text-2xl font-semibold text-slate-100 mb-4">System Architecture Diagram</h2>
+            <div class="bg-slate-900 border border-slate-700 rounded-xl p-6 shadow-xl">
+                <div class="mermaid">
+graph TB
+    subgraph client ["🌐 Frontend Layer"]
+        Browser[React App<br/>Vite + Tailwind]
+        Monaco[Monaco Editor]
+    end
+
+    subgraph api ["⚡ API Layer"]
+        Express[Express Server<br/>REST API]
+        Upload[File Upload<br/>Multer]
+    end
+
+    subgraph services ["🔧 Service Layer"]
+        DocGen[Documentation<br/>Generator]
+        Parser[Code Parser<br/>Acorn AST]
+        Quality[Quality Scorer<br/>0-100 Scale]
+    end
+
+    subgraph external ["☁️ External Services"]
+        Claude[Claude API<br/>Sonnet 4.5]
+    end
+
+    Browser --> Monaco
+    Browser --> Express
+    Upload --> Express
+    Express --> DocGen
+    DocGen --> Parser
+    DocGen --> Quality
+    DocGen --> Claude
+    Claude -.SSE Stream.-> Express
+    Express -.SSE Stream.-> Browser
+
+    style Browser fill:#1E293B,stroke:#C084FC,stroke-width:2px
+    style Monaco fill:#1E293B,stroke:#C084FC,stroke-width:2px
+    style Express fill:#1E293B,stroke:#64748B,stroke-width:2px
+    style Upload fill:#1E293B,stroke:#64748B,stroke-width:2px
+    style DocGen fill:#1E293B,stroke:#818CF8,stroke-width:2px
+    style Parser fill:#1E293B,stroke:#818CF8,stroke-width:2px
+    style Quality fill:#1E293B,stroke:#818CF8,stroke-width:2px
+    style Claude fill:#1E293B,stroke:#22D3EE,stroke-width:2px
+    style client fill:#0F172A,stroke:#C084FC,stroke-width:2px
+    style api fill:#0F172A,stroke:#64748B,stroke-width:2px
+    style services fill:#0F172A,stroke:#818CF8,stroke-width:2px
+    style external fill:#0F172A,stroke:#22D3EE,stroke-width:2px
+                </div>
+                <div class="mt-4 pt-4 border-t border-slate-700">
+                    <p class="text-sm text-slate-400">
+                        <strong class="text-slate-300">Legend:</strong>
+                        <span class="text-purple-400">🟣 Purple - Client/Frontend</span> •
+                        <span class="text-slate-400">⚪ Slate - API Layer</span> •
+                        <span class="text-indigo-400">🔵 Indigo - Services</span> •
+                        <span class="text-cyan-400">🔷 Cyan - External</span>
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Example 2: API Flow -->
+        <section>
+            <h2 class="text-2xl font-semibold text-slate-100 mb-4">API Request Flow (Sequence Diagram)</h2>
+            <div class="bg-slate-900 border border-slate-700 rounded-xl p-6 shadow-xl">
+                <div class="mermaid">
+sequenceDiagram
+    participant User
+    participant React as React App
+    participant API as Express API
+    participant Claude as Claude API
+
+    User->>React: Upload code file
+    React->>API: POST /api/generate-stream
+    API->>Claude: Send prompt + code
+    Note over Claude: Processing with<br/>Claude Sonnet 4.5
+    Claude-->>API: SSE: chunk 1
+    API-->>React: SSE: chunk 1
+    Claude-->>API: SSE: chunk 2
+    API-->>React: SSE: chunk 2
+    Claude-->>API: SSE: complete
+    API-->>React: SSE: complete
+    React-->>User: Display documentation
+                </div>
+            </div>
+        </section>
+
+        <!-- Example 3: State Machine -->
+        <section>
+            <h2 class="text-2xl font-semibold text-slate-100 mb-4">Document Generation State Machine</h2>
+            <div class="bg-slate-900 border border-slate-700 rounded-xl p-6 shadow-xl">
+                <div class="mermaid">
+stateDiagram-v2
+    [*] --> Idle
+    Idle --> Validating: User clicks Generate
+    Validating --> Generating: Valid input
+    Validating --> Error: Invalid input
+    Generating --> Success: Generation complete
+    Generating --> Error: API error
+    Success --> Idle: Reset
+    Error --> Idle: Reset/Retry
+    Success --> [*]: Copy to clipboard
+                </div>
+            </div>
+        </section>
+
+        <!-- Example 4: Simple Flowchart -->
+        <section>
+            <h2 class="text-2xl font-semibold text-slate-100 mb-4">Code Quality Scoring Flow</h2>
+            <div class="bg-slate-900 border border-slate-700 rounded-xl p-6 shadow-xl">
+                <div class="mermaid">
+graph LR
+    Start[Documentation Generated] --> Parse[Parse Markdown]
+    Parse --> Check1{Has Overview?}
+    Check1 -->|Yes 20pts| Check2{Has Installation?}
+    Check1 -->|No 0pts| Check2
+    Check2 -->|Yes 15pts| Check3{Has Usage?}
+    Check2 -->|No 0pts| Check3
+    Check3 -->|Yes 20pts| Check4{Has API Docs?}
+    Check3 -->|No 0pts| Check4
+    Check4 -->|Yes 25pts| Check5{Good Structure?}
+    Check4 -->|No 0pts| Check5
+    Check5 -->|Yes 20pts| Score[Calculate Score]
+    Check5 -->|No 0pts| Score
+    Score --> Grade{Score >= 90?}
+    Grade -->|Yes| A[Grade: A]
+    Grade -->|No| B[Grade: B-F]
+    A --> End[Display Results]
+    B --> End
+
+    style Start fill:#1E293B,stroke:#22D3EE,stroke-width:2px
+    style Score fill:#1E293B,stroke:#818CF8,stroke-width:2px
+    style End fill:#1E293B,stroke:#4ADE80,stroke-width:2px
+    style A fill:#1E293B,stroke:#4ADE80,stroke-width:2px
+    style B fill:#1E293B,stroke:#FBBF24,stroke-width:2px
+                </div>
+            </div>
+        </section>
+
+        <!-- Show Button Example -->
+        <section>
+            <h2 class="text-2xl font-semibold text-slate-100 mb-4">Initial "Show Diagram" Button</h2>
+            <p class="text-slate-400 text-sm mb-4">This is what users see before clicking to render the diagram (prevents layout shifts):</p>
+
+            <div class="bg-slate-900 border border-slate-700 rounded-xl p-6 shadow-xl">
+                <div class="w-full border border-slate-700 rounded-lg bg-slate-800 hover:border-slate-600 transition-colors duration-200">
+                    <div class="flex items-center justify-between gap-4 p-4">
+                        <!-- Left side: Icon + Text -->
+                        <div class="flex items-center gap-3 min-w-0 flex-1">
+                            <div class="flex-shrink-0 w-9 h-9 bg-slate-700 rounded-lg flex items-center justify-center">
+                                <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                </svg>
+                            </div>
+
+                            <div class="min-w-0">
+                                <p class="text-sm font-medium text-slate-200">
+                                    Diagram Available
+                                </p>
+                                <p class="text-xs text-slate-400">
+                                    Click to render visualization
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Right side: Button -->
+                        <button
+                            type="button"
+                            class="flex-shrink-0 px-4 py-2 bg-purple-400 hover:bg-purple-500 active:bg-purple-600 text-slate-950 text-sm font-medium rounded-lg shadow-lg shadow-purple-400/30 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+                        >
+                            Show
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Color Legend -->
+        <section class="bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-xl">
+            <h3 class="text-lg font-semibold text-slate-100 mb-4">Dark Theme Diagram Color System</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                    <h4 class="font-medium text-slate-200 mb-2">Node Colors</h4>
+                    <ul class="space-y-2 text-slate-300">
+                        <li><span class="text-purple-400">●</span> Purple (#C084FC) - Client/Frontend components</li>
+                        <li><span class="text-slate-400">●</span> Slate (#64748B) - API layer</li>
+                        <li><span class="text-indigo-400">●</span> Indigo (#818CF8) - Service layer</li>
+                        <li><span class="text-cyan-400">●</span> Cyan (#22D3EE) - External services</li>
+                        <li><span class="text-green-400">●</span> Green (#4ADE80) - Success states</li>
+                        <li><span class="text-amber-400">●</span> Amber (#FBBF24) - Warning states</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-medium text-slate-200 mb-2">Background Colors</h4>
+                    <ul class="space-y-2 text-slate-300">
+                        <li>Node Fill: <code class="text-cyan-400">#1E293B</code> (slate-800)</li>
+                        <li>Subgraph Fill: <code class="text-cyan-400">#0F172A</code> (slate-900)</li>
+                        <li>Canvas: <code class="text-cyan-400">#020617</code> (slate-950)</li>
+                        <li>Connection Lines: <code class="text-cyan-400">#64748B</code> (slate-600)</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const sunIcon = document.getElementById('sunIcon');
+            const moonIcon = document.getElementById('moonIcon');
+
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                sunIcon.style.display = 'none';
+                moonIcon.style.display = 'block';
+            } else {
+                html.classList.add('dark');
+                sunIcon.style.display = 'block';
+                moonIcon.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

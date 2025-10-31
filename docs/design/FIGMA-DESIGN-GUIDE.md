@@ -5,8 +5,27 @@
 **Designer Role:** UX/UI Designer
 **Timeline:** 6-8 hours (base system) + additional time for new features
 **Deliverable:** Production-ready design system and mockups with WCAG 2.1 AA compliance
-**Document Version:** 3.0 (Updated October 23, 2025)
-**Location:** `docs/planning/FIGMA-DESIGN-GUIDE.md`
+**Document Version:** 4.0 (Updated October 30, 2025)
+**Location:** `docs/design/FIGMA-DESIGN-GUIDE.md`
+
+---
+
+## 🎨 What's New in v4.0 (October 30, 2025)
+
+**Light Theme Refinements:**
+- ✅ **Subtle Shadows** - Primary buttons now use 20% opacity purple shadows for premium depth
+- ✅ **Simplified Button System** - Removed hero/gradient variants, one solid primary style
+- ✅ **Cyan Accents** - New color for code elements (brand continuity with dark theme)
+
+**Dark Theme Finalized:**
+- ✅ **Neon Cyberpunk** - Final dark theme selected (slate-950 backgrounds, purple-400 brand, cyan-400 accents)
+- ✅ **30% Shadow Opacity** - Stronger glow for dark mode buttons
+- ✅ **Complete Specs** - Full color system, component patterns documented
+
+**See:**
+- [light-theme-refined-preview.html](light-theme-refined-preview.html) - Full light theme preview
+- [dark-theme-preview.html](dark-theme-preview.html) - Full dark theme preview
+- [DARK-MODE-SPEC.md](../planning/DARK-MODE-SPEC.md) - Complete dark theme implementation guide
 
 ---
 
@@ -215,6 +234,27 @@ red/700:    #B91C1C  ← Error buttons, destructive actions
 - Code-related badges: `indigo/500` or `indigo/600`
 - Service layer in architecture diagrams: `indigo/200` fills
 
+#### Cyan (Code/Technical Accent) ⭐ NEW in v2.0
+**Best for:** Code elements, syntax highlighting, terminal aesthetics
+- **50**: Code element backgrounds (`#ECFEFF`)
+- **100**: Badge backgrounds (`#CFFAFE`)
+- **400**: Dark theme text/accents (`#22D3EE`) - 11.3:1 contrast
+- **600**: Light theme text/accents (`#0891B2`) - 7.8:1 contrast
+- **700**: Hover states (`#0E7490`)
+
+**Why Cyan?**
+- Creates **brand continuity** between light and dark themes
+- Users recognize "cyan = code" in both modes
+- Distinguishes technical/code elements from UI chrome
+- Complements purple/indigo without competing
+
+**Examples:**
+- "Ready to analyze" status: `cyan/600` text with pulsing dot
+- Language badges: `cyan/100` background, `cyan/800` text
+- Syntax highlighting: Functions/classes in `cyan/600`
+- Code links: `cyan/600` with cyan underline
+- Terminal-style output: `cyan/400` (dark) or `cyan/600` (light)
+
 #### Slate (Neutral)
 **Best for:** Text, backgrounds, borders, UI chrome
 - **50-100**: Page backgrounds, card backgrounds
@@ -361,19 +401,41 @@ Use this hierarchy to maintain consistency:
 
 ### Effect Styles (Shadows)
 
-| Name | Offset | Blur | Color |
-|------|--------|------|-------|
-| `shadow/sm` | 0, 1px | 2px | rgba(0,0,0,0.05) |
-| `shadow/base` | 0, 1px | 3px | rgba(0,0,0,0.1) |
-| `shadow/md` | 0, 4px | 6px | rgba(0,0,0,0.1) |
-| `shadow/purple` | 0, 4px | 20px | rgba(168,85,247,0.3) |
+**Light Theme Shadows (Refined v2.0):**
+
+| Name | Offset | Blur | Spread | Color | Usage |
+|------|--------|------|--------|-------|-------|
+| `shadow/sm` | 0, 1px | 3px | 0 | rgba(0,0,0,0.1) | Cards, panels |
+| `shadow/md` | 0, 4px | 6px | -2px | rgba(0,0,0,0.1) | Dropdowns, elevated elements |
+| `shadow/lg` | 0, 10px | 15px | -3px | rgba(0,0,0,0.1) | Modals, overlays |
+| `shadow/purple-light` ⭐ | 0, 10px, 0, 4px | 15px, 6px | -3px, -2px | rgba(147,51,234,0.2), rgba(147,51,234,0.1) | **Primary buttons (20% opacity)** |
+| `shadow/cyan-light` | 0, 4px | 12px | -2px | rgba(8,145,178,0.2) | Code element accents |
+
+**Dark Theme Shadows (Neon Cyberpunk):**
+
+| Name | Offset | Blur | Spread | Color | Usage |
+|------|--------|------|--------|-------|-------|
+| `shadow/purple-dark` ⭐ | 0, 10px, 0, 4px | 15px, 6px | -3px, -2px | rgba(192,132,252,0.3), rgba(192,132,252,0.15) | **Primary buttons (30% opacity)** |
+| `shadow/cyan-dark` | 0, 4px | 15px | -2px | rgba(34,211,238,0.2) | Code/neon accents |
+| `shadow/glow-strong` | 0, 4px | 20px | 0 | rgba(192,132,252,0.4) | Hero elements (rare) |
+
+**Design Philosophy:**
+- ⭐ **Primary buttons** get colored shadows (purple) for premium feel
+- **20% opacity** for light theme (subtle), **30% opacity** for dark theme (more glow)
+- **Cyan shadows** for code-related elements in both themes
+- Standard shadows (sm/md/lg) remain neutral gray
 
 **How to create:**
 1. Draw rectangle
 2. Effects → + → Drop Shadow
-3. Set X, Y, Blur, Color
-4. Click style icon → Create style
-5. Name it (e.g., `shadow/sm`)
+3. For colored shadows: Set X, Y, Blur, Spread, Color with opacity
+4. For double shadows: Add two drop shadow effects (purple-light uses 2 layers)
+5. Click style icon → Create style
+6. Name it (e.g., `shadow/purple-light`)
+
+**Note:** The `shadow/purple-light` effect uses TWO drop shadows stacked:
+- Layer 1: Larger, lighter (15px blur, 20% opacity)
+- Layer 2: Smaller, tighter (6px blur, 10% opacity)
 
 ---
 
@@ -403,16 +465,19 @@ Use this hierarchy to maintain consistency:
 
 ### Component 1: Button (Primary)
 
+**Design Philosophy (v2.0 Refined):**
+- ✅ **Solid purple background** (no gradient) for clean, modern look
+- ✅ **Colored shadow** (20% opacity) for premium depth
+- ✅ **One primary style** - emphasis from placement, not variants
+- ❌ **No hero/gradient variants** - removed for simplicity
+
 **Desktop Version (30 min):**
 
 1. **Create Base**
    - Rectangle: 160 × 40px
-   - Fill: Linear gradient
-     - Stop 1 (0%): #A855F7
-     - Stop 2 (100%): #9333EA
-     - Angle: 90°
+   - Fill: Solid color `purple/600` (#9333EA)
    - Corner radius: 8px
-   - Effect: `shadow/purple`
+   - Effect: `shadow/purple-light` ⭐ (20% opacity purple glow)
 
 2. **Add Auto Layout**
    - Select rectangle
@@ -431,7 +496,8 @@ Use this hierarchy to maintain consistency:
 4. **Add Text**
    - Text: "Generate Docs"
    - Style: `text/body-sm`
-   - Color: white
+   - Color: white (#FFFFFF)
+   - Weight: Medium (500)
 
 5. **Create Component**
    - Select all → Ctrl/Cmd + Alt + K
@@ -440,13 +506,16 @@ Use this hierarchy to maintain consistency:
 6. **Add Variants**
    - Click "+" next to component name
    - Add property: "State"
-   - Values: Default, Hover, Loading, Disabled
-   - For Hover: Darken gradient to #9333EA → #7E22CE
-   - For Loading: Replace text with spinner icon
-   - For Disabled: Opacity 50%
+   - Values: Default, Hover, Active, Loading, Disabled
+   - **For Hover:** Change fill to `purple/700` (#7E22CE), increase shadow blur slightly
+   - **For Active:** Change fill to `purple/800` (#6B21A8)
+   - **For Loading:** Replace text with spinner icon, same purple bg
+   - **For Disabled:** Opacity 50%, remove shadow
 
-**Result:** 
-✅ Reusable button component with 4 states
+**Result:**
+✅ Reusable button component with 5 states
+✅ Matches refined light theme design system
+✅ Premium feel without gradients
 
 ---
 
@@ -1458,7 +1527,7 @@ const semanticColors = {
 Use the brand color palette reference:
 
 **Interactive HTML (recommended for development):**
-- File: `docs/design/brand-color-palette.html`
+- File: `docs/design/theming/brand-color-palette.html`
 - Features: Click-to-copy hex codes, interactive color swatches
 - View all colors visually
 - Copy hex codes instantly
@@ -1466,16 +1535,16 @@ Use the brand color palette reference:
 - Check accessibility notes
 
 **PDF Version (for sharing/printing):**
-- File: `docs/design/brand-color-palette.pdf`
+- File: `docs/design/theming/brand-color-palette.html`
 - Use for presentations, stakeholder reviews, printing
 
 Open in your browser:
 ```bash
 # Interactive HTML version
-open docs/design/brand-color-palette.html
+open docs/design/theming/brand-color-palette.html
 
 # PDF version
-open docs/design/brand-color-palette.pdf
+open docs/design/theming/brand-color-palette.html
 ```
 
 ---
@@ -1745,18 +1814,27 @@ dark/border-hover: #475569  (slate-600)
 
 ## 📝 Version History
 
-**Document Version:** 3.0
-**Last Updated:** October 23, 2025
-**Location:** Moved from `docs/planning/mvp/07-Figma-Guide.md` to `docs/planning/FIGMA-DESIGN-GUIDE.md`
+**Document Version:** 4.0
+**Last Updated:** October 30, 2025
+**Location:** `docs/design/FIGMA-DESIGN-GUIDE.md`
 
-**Changes in v3.0:**
+**Changes in v4.0:** (October 30, 2025) ⭐
+- **Updated shadow system** - Added `shadow/purple-light` (20%) and `shadow/purple-dark` (30%) for refined button styles
+- **Updated primary button** - Changed from gradient to solid purple with colored shadow
+- **Added cyan color** - New code/technical accent color with complete usage guidelines
+- **Removed gradient button variants** - Simplified to one primary button style
+- **Finalized dark theme** - Complete Neon Cyberpunk specifications (previously "planned")
+- **Updated design philosophy** - Emphasis from placement/context, not button variants
+- Added links to light-theme-refined-preview.html and dark-theme-preview.html
+
+**Changes in v3.0:** (October 23, 2025)
 - Moved to planning folder for easier access when designing Phase 2-6 features
 - Added **Phase 2+ UI Components** section (auth, payment, dark mode)
 - Added Component 15: Login Modal
 - Added Component 16: Signup Modal
 - Added Component 17: User Profile Menu
 - Added Component 18: Pricing Card
-- Added Dark Mode color palette specifications
+- Added Dark Mode color palette specifications (initial planning)
 - Updated overview to clarify use for current + future mockups
 - Total components: 14 (Phase 1) + 4 (Phase 2+) = **18 components**
 

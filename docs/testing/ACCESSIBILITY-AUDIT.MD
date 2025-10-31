@@ -152,8 +152,8 @@ CodeScribe AI demonstrates **excellent accessibility compliance** with comprehen
 - ✅ Test in high contrast mode (Windows High Contrast, macOS Increase Contrast)
 
 **Color Palette Reference:**
-- Interactive version: [brand-color-palette.html](docs/design/brand-color-palette.html)
-- PDF version: [brand-color-palette.pdf](docs/design/brand-color-palette.pdf)
+- Interactive version: [brand-color-palette.html](docs/design/theming/brand-color-palette.html)
+- PDF version: [brand-color-palette.pdf](docs/design/theming/brand-color-palette.pdf)
 
 ---
 
@@ -553,7 +553,7 @@ CodeScribe AI demonstrates **excellent accessibility compliance** with comprehen
 - [axe DevTools](https://www.deque.com/axe/devtools/)
 - [ERROR-HANDLING-UX.md](docs/components/ERROR-HANDLING-UX.md) - Animation specs
 - [TOAST-SYSTEM.md](docs/components/TOAST-SYSTEM.md) - Accessibility considerations
-- [Brand Color Palette](docs/design/brand-color-palette.html) - Color contrast info
+- [Brand Color Palette](docs/design/theming/brand-color-palette.html) - Color contrast info
 
 ---
 

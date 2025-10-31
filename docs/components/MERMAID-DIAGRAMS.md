@@ -132,7 +132,7 @@ User → API → Service → Response
 
 ### Brand Color System for Diagrams
 
-We use a consistent color system that aligns with our brand palette ([brand-color-palette.html](../design/brand-color-palette.html)):
+We use a consistent color system that aligns with our brand palette ([brand-color-palette.html](../design/theming/brand-color-palette.html)):
 
 | Color Family | Usage | Example Nodes | Hex Codes |
 |--------------|-------|---------------|-----------|
@@ -1127,7 +1127,7 @@ const validateMermaidSyntax = (code) => {
 ### CodeScribe AI Resources
 - [System Architecture](../architecture/ARCHITECTURE-OVERVIEW.md) - Full diagram implementation
 - [Architecture Deep Dive](../architecture/ARCHITECTURE.md) - Technical details
-- [Brand Colors](../design/brand-color-palette.html) - Interactive color palette
+- [Brand Colors](../design/theming/brand-color-palette.html) - Interactive color palette
 - [Figma Guide](../planning/07-Figma-Guide.md) - Design system
 
 ### Community

@@ -211,6 +211,44 @@ function generateToken(user, expiresIn = '7d') {
 }
 
 /**
+ * Require verified email
+ * Must be used AFTER requireAuth
+ * Returns 403 if email is not verified
+ */
+const requireVerifiedEmail = async (req, res, next) => {
+  if (!req.user || !req.user.id) {
+    return res.status(401).json({
+      success: false,
+      error: 'Authentication required'
+    });
+  }
+
+  // Import User model dynamically to avoid circular dependency
+  const User = (await import('../models/User.js')).default;
+  const user = await User.findById(req.user.id);
+
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      error: 'User not found'
+    });
+  }
+
+  if (!user.email_verified) {
+    return res.status(403).json({
+      success: false,
+      error: 'Email verification required',
+      message: 'Please verify your email address to access this feature',
+      emailVerified: false
+    });
+  }
+
+  // Add full user object to request for downstream middleware
+  req.user = user;
+  next();
+};
+
+/**
  * Sanitize user object for client response
  * Removes sensitive fields like password_hash
  *
@@ -228,6 +266,7 @@ export {
   requireAuth,
   optionalAuth,
   requireTier,
+  requireVerifiedEmail,
   validateBody,
   generateToken,
   sanitizeUser

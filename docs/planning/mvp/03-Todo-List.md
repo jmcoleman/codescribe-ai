@@ -1223,7 +1223,7 @@ npm run test:e2e:headed       # With browser UI
   - ✅ Test coverage summary
 - ✅ Brand Color Palette (from earlier):
   - ✅ Interactive HTML version (brand-color-palette.html)
-  - ✅ PDF version for sharing (brand-color-palette.pdf)
+  - ✅ PDF version archived (design-archive/brand-color-palette.pdf)
   - ✅ 27 colors across 6 families with usage guidelines
 - ✅ **Button Interactions Documentation** (Day 4) ⭐ NEW:
   - ✅ IMPLEMENTATION_SUMMARY.md - Complete implementation documentation
@@ -1234,12 +1234,12 @@ npm run test:e2e:headed       # With browser UI
   - ✅ Accessibility compliance details
 
 **Design Assets Location:** `docs/design/`
-- `error-boundary-ui-guide-compact.pdf` ⭐ **Recommended**
-- `error-boundary-ui-guide.pdf` (full version)
-- `error-boundary-ui-guide-compact.html`
-- `error-boundary-ui-guide.html`
-- `brand-color-palette.pdf`
-- `brand-color-palette.html`
+- `error-boundary-ui-guide-compact.html` ⭐ **Recommended**
+- `error-boundary-ui-guide.html` (full version)
+- `brand-color-palette.html` - Interactive color palette
+- `dark-theme-palette.html` - Dark theme (Neon Cyberpunk)
+- `light-theme-refined-preview.html` - Refined light theme
+- PDFs archived in `design-archive/` (if needed for presentations)
 
 **Component Documentation Location:** `docs/components/`
 - `COPYBUTTON.md` ⭐ NEW (Oct 15) - Complete CopyButton developer guide with API reference, best practices, integration examples

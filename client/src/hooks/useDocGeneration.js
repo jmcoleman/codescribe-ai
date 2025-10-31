@@ -13,7 +13,7 @@ export function useDocGeneration(onUsageUpdate) {
   const [retryAfter, setRetryAfter] = useState(null);
   const eventSourceRef = useRef(null);
 
-  const generate = useCallback(async (code, docType, language) => {
+  const generate = useCallback(async (code, docType, language, isDefaultCode = false) => {
     // Reset state
     setIsGenerating(true);
     setError(null);
@@ -45,7 +45,12 @@ export function useDocGeneration(onUsageUpdate) {
       const response = await fetch(`${API_URL}/api/generate-stream`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ code, docType, language })
+        body: JSON.stringify({
+          code,
+          docType,
+          language,
+          isDefaultCode // Enable prompt caching for default/example code
+        })
       });
 
       // Extract rate limit headers from response

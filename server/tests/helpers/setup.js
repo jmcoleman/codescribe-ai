@@ -3,10 +3,18 @@
  * Runs before all tests
  */
 
+// Load environment variables from .env
+import 'dotenv/config';
+
 // Set test environment variables
 process.env.NODE_ENV = 'test';
-process.env.CLAUDE_API_KEY = 'test-api-key-12345';
+process.env.CLAUDE_API_KEY = process.env.CLAUDE_API_KEY || 'test-api-key-12345';
 process.env.PORT = '3001'; // Different port to avoid conflicts
+
+// Ensure database connection is available for integration tests
+if (!process.env.POSTGRES_URL) {
+  console.warn('⚠️  POSTGRES_URL not set - database-dependent tests will fail');
+}
 
 // Global test timeout
 jest.setTimeout(10000);

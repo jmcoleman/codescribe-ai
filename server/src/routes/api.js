@@ -22,7 +22,7 @@ function formatBytes(bytes) {
 // Line 17 - add before route handler
 router.post('/generate', apiLimiter, generationLimiter, checkUsage(), async (req, res) => {
   try {
-    const { code, docType, language } = req.body;
+    const { code, docType, language, isDefaultCode } = req.body;
 
     if (!code || typeof code !== 'string') {
       return res.status(400).json({
@@ -41,7 +41,8 @@ router.post('/generate', apiLimiter, generationLimiter, checkUsage(), async (req
     const result = await docGenerator.generateDocumentation(code, {
       docType: docType || 'README',
       language: language || 'javascript',
-      streaming: false
+      streaming: false,
+      isDefaultCode: isDefaultCode === true // Cache user message if this is default/example code
     });
 
     // Track usage after successful generation
@@ -65,9 +66,9 @@ router.post('/generate', apiLimiter, generationLimiter, checkUsage(), async (req
 });
 
 // Line 51 - add before route handler
-router.post('/generate-stream', apiLimiter, generationLimiter, checkUsage(), async (req, res) => { 
+router.post('/generate-stream', apiLimiter, generationLimiter, checkUsage(), async (req, res) => {
   try {
-    const { code, docType, language } = req.body;
+    const { code, docType, language, isDefaultCode } = req.body;
 
     if (!code || typeof code !== 'string') {
       return res.status(400).json({
@@ -95,6 +96,7 @@ router.post('/generate-stream', apiLimiter, generationLimiter, checkUsage(), asy
       docType: docType || 'README',
       language: language || 'javascript',
       streaming: true,
+      isDefaultCode: isDefaultCode === true, // Cache user message if this is default/example code
       onChunk: (chunk) => {
         res.write(`data: ${JSON.stringify({
           type: 'chunk',

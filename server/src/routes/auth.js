@@ -8,6 +8,7 @@
 import express from 'express';
 import passport from 'passport';
 import crypto from 'crypto';
+import stripe from '../config/stripe.js';
 import User from '../models/User.js';
 import Usage from '../models/Usage.js';
 import {
@@ -16,7 +17,7 @@ import {
   generateToken,
   sanitizeUser
 } from '../middleware/auth.js';
-import { sendPasswordResetEmail } from '../services/emailService.js';
+import { sendPasswordResetEmail, sendVerificationEmail } from '../services/emailService.js';
 
 const router = express.Router();
 
@@ -55,6 +56,19 @@ router.post(
           // Don't fail signup if migration fails - log and continue
           console.error('[Auth] Failed to migrate anonymous usage:', migrationError);
         }
+      }
+
+      // Generate verification token and send verification email
+      try {
+        const verificationToken = await User.createVerificationToken(user.id);
+        await sendVerificationEmail({
+          to: user.email,
+          verificationToken
+        });
+        console.log(`Verification email sent to: ${user.email}`);
+      } catch (emailError) {
+        // Don't fail signup if email fails - log and continue
+        console.error('Failed to send verification email:', emailError);
       }
 
       // Generate JWT token
@@ -204,6 +218,129 @@ router.get('/me', requireAuth, async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to fetch user data'
+    });
+  }
+});
+
+// ============================================================================
+// PATCH /api/auth/profile - Update User Profile
+// ============================================================================
+router.patch('/profile', requireAuth, async (req, res) => {
+  try {
+    const { email, first_name, last_name } = req.body;
+    const userId = req.user.id;
+
+    // At least one field must be provided
+    if (!email && !first_name && !last_name) {
+      return res.status(400).json({
+        success: false,
+        error: 'At least one field (email, first_name, last_name) is required'
+      });
+    }
+
+    // If updating name, both first and last name must be provided
+    if ((first_name && !last_name) || (!first_name && last_name)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Both first_name and last_name are required'
+      });
+    }
+
+    // Validate email if provided
+    if (email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid email format'
+        });
+      }
+
+      // Check if email is already taken by another user
+      const existingUser = await User.findByEmail(email);
+      if (existingUser && existingUser.id !== userId) {
+        return res.status(409).json({
+          success: false,
+          error: 'Email already in use'
+        });
+      }
+    }
+
+    // Validate first_name if provided
+    if (first_name) {
+      const trimmedFirstName = first_name.trim();
+      if (trimmedFirstName.length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'First name cannot be empty'
+        });
+      }
+      if (trimmedFirstName.length > 100) {
+        return res.status(400).json({
+          success: false,
+          error: 'First name must be less than 100 characters'
+        });
+      }
+    }
+
+    // Validate last_name if provided
+    if (last_name) {
+      const trimmedLastName = last_name.trim();
+      if (trimmedLastName.length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'Last name cannot be empty'
+        });
+      }
+      if (trimmedLastName.length > 150) {
+        return res.status(400).json({
+          success: false,
+          error: 'Last name must be less than 150 characters'
+        });
+      }
+    }
+
+    // Get current user to check if Stripe customer exists
+    const currentUser = await User.findById(userId);
+
+    // Update email in database if provided
+    let updatedUser = currentUser;
+    if (email) {
+      updatedUser = await User.updateEmail(userId, email);
+    }
+
+    // Update name in database if provided
+    if (first_name && last_name) {
+      updatedUser = await User.updateName(userId, first_name.trim(), last_name.trim());
+    }
+
+    // If user has a Stripe customer, update their info
+    if (currentUser.stripe_customer_id) {
+      try {
+        const stripeUpdates = {};
+        if (email) stripeUpdates.email = email;
+        if (first_name && last_name) {
+          stripeUpdates.name = `${first_name.trim()} ${last_name.trim()}`;
+        }
+
+        await stripe.customers.update(currentUser.stripe_customer_id, stripeUpdates);
+        console.log(`✅ Updated Stripe customer for user ${userId}:`, Object.keys(stripeUpdates).join(', '));
+      } catch (stripeError) {
+        // Log but don't fail the request - database is source of truth
+        console.error('Failed to update Stripe customer:', stripeError);
+      }
+    }
+
+    res.json({
+      success: true,
+      user: sanitizeUser(updatedUser),
+      message: 'Profile updated successfully'
+    });
+  } catch (error) {
+    console.error('Update profile error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update profile'
     });
   }
 });
@@ -443,6 +580,96 @@ router.post(
       res.status(500).json({
         success: false,
         error: 'Failed to reset password'
+      });
+    }
+  }
+);
+
+// ============================================================================
+// POST /api/auth/verify-email - Verify Email Address
+// ============================================================================
+router.post(
+  '/verify-email',
+  validateBody(['token']),
+  async (req, res) => {
+    try {
+      const { token } = req.body;
+
+      // Find user by verification token
+      const user = await User.findByVerificationToken(token);
+
+      if (!user) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid or expired verification token'
+        });
+      }
+
+      // Mark email as verified
+      const updatedUser = await User.markEmailAsVerified(user.id);
+
+      console.log(`Email verified for user: ${updatedUser.email}`);
+
+      res.json({
+        success: true,
+        message: 'Email verified successfully',
+        user: sanitizeUser(updatedUser)
+      });
+    } catch (error) {
+      console.error('Email verification error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to verify email'
+      });
+    }
+  }
+);
+
+// ============================================================================
+// POST /api/auth/resend-verification - Resend Verification Email
+// ============================================================================
+router.post(
+  '/resend-verification',
+  requireAuth,
+  async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await User.findById(userId);
+
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          error: 'User not found'
+        });
+      }
+
+      if (user.email_verified) {
+        return res.status(400).json({
+          success: false,
+          error: 'Email already verified'
+        });
+      }
+
+      // Generate new verification token
+      const verificationToken = await User.createVerificationToken(userId);
+
+      // Send verification email
+      await sendVerificationEmail({
+        to: user.email,
+        verificationToken
+      });
+
+      console.log(`Verification email resent to: ${user.email}`);
+
+      res.json({
+        success: true,
+        message: 'Verification email sent'
+      });
+    } catch (error) {
+      console.error('Resend verification error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to send verification email'
       });
     }
   }
