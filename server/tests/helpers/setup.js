@@ -7,7 +7,13 @@
 process.env.NODE_ENV = 'test';
 process.env.CLAUDE_API_KEY = process.env.CLAUDE_API_KEY || 'test-api-key-12345';
 process.env.PORT = '3001'; // Different port to avoid conflicts
-process.env.POSTGRES_URL = process.env.POSTGRES_URL || 'postgresql://test:test@localhost:5432/test_db';
+
+// Database priority: Docker test DB → Dev DB from .env → fallback
+// Docker: postgresql://test:test@localhost:5432/test_db
+// Dev: Read from .env file (POSTGRES_URL)
+if (!process.env.POSTGRES_URL) {
+  process.env.POSTGRES_URL = 'postgresql://test:test@localhost:5432/test_db';
+}
 
 // Load environment variables from .env (after setting defaults)
 import 'dotenv/config';
