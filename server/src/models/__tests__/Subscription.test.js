@@ -12,13 +12,19 @@ import Subscription from '../Subscription.js';
 import User from '../User.js';
 import { sql } from '@vercel/postgres';
 
-describe('Subscription Model', () => {
+const describeOrSkip = skipIfNoDb();
+
+describeOrSkip('Subscription Model', () => {
   let testUser;
+  let testRunId;
 
   beforeEach(async () => {
+    // Generate unique test run ID to prevent duplicate subscription IDs across test runs
+    testRunId = Date.now();
+
     // Create a test user
     testUser = await User.create({
-      email: `test-sub-${Date.now()}@example.com`,
+      email: `test-sub-${testRunId}@example.com`,
       password: 'test-password-123',
     });
   });
@@ -35,7 +41,7 @@ describe('Subscription Model', () => {
     it('should create a new subscription', async () => {
       const subscriptionData = {
         userId: testUser.id,
-        stripeSubscriptionId: 'sub_test_123',
+        stripeSubscriptionId: `sub_test_${testRunId}`,
         stripePriceId: 'price_test_123',
         tier: 'pro',
         status: 'active',
@@ -48,7 +54,7 @@ describe('Subscription Model', () => {
 
       expect(subscription).toBeDefined();
       expect(subscription.user_id).toBe(testUser.id);
-      expect(subscription.stripe_subscription_id).toBe('sub_test_123');
+      expect(subscription.stripe_subscription_id).toBe(`sub_test_${testRunId}`);
       expect(subscription.tier).toBe('pro');
       expect(subscription.status).toBe('active');
     });
@@ -59,7 +65,7 @@ describe('Subscription Model', () => {
 
       const subscription = await Subscription.create({
         userId: testUser.id,
-        stripeSubscriptionId: 'sub_trial_123',
+        stripeSubscriptionId: `sub_trial_${testRunId}`,
         stripePriceId: 'price_test_123',
         tier: 'starter',
         status: 'trialing',
@@ -78,7 +84,7 @@ describe('Subscription Model', () => {
     it('should enforce unique stripe_subscription_id', async () => {
       const subscriptionData = {
         userId: testUser.id,
-        stripeSubscriptionId: 'sub_unique_test',
+        stripeSubscriptionId: `sub_unique_${testRunId}`,
         stripePriceId: 'price_test_123',
         tier: 'pro',
         status: 'active',
@@ -97,7 +103,7 @@ describe('Subscription Model', () => {
     it('should validate tier values', async () => {
       const subscriptionData = {
         userId: testUser.id,
-        stripeSubscriptionId: 'sub_invalid_tier',
+        stripeSubscriptionId: `sub_invalid_${testRunId}`,
         stripePriceId: 'price_test_123',
         tier: 'invalid_tier', // Invalid tier
         status: 'active',
@@ -115,7 +121,7 @@ describe('Subscription Model', () => {
     it('should find subscription by Stripe ID', async () => {
       const created = await Subscription.create({
         userId: testUser.id,
-        stripeSubscriptionId: 'sub_find_test',
+        stripeSubscriptionId: `sub_find_${testRunId}`,
         stripePriceId: 'price_test_123',
         tier: 'pro',
         status: 'active',
@@ -123,11 +129,11 @@ describe('Subscription Model', () => {
         currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       });
 
-      const found = await Subscription.findByStripeId('sub_find_test');
+      const found = await Subscription.findByStripeId(`sub_find_${testRunId}`);
 
       expect(found).toBeDefined();
       expect(found.id).toBe(created.id);
-      expect(found.stripe_subscription_id).toBe('sub_find_test');
+      expect(found.stripe_subscription_id).toBe(`sub_find_${testRunId}`);
     });
 
     it('should return null if subscription not found', async () => {
@@ -140,7 +146,7 @@ describe('Subscription Model', () => {
     it('should return active subscription for user', async () => {
       await Subscription.create({
         userId: testUser.id,
-        stripeSubscriptionId: 'sub_active_test',
+        stripeSubscriptionId: `sub_active_${testRunId}`,
         stripePriceId: 'price_test_123',
         tier: 'pro',
         status: 'active',
@@ -158,7 +164,7 @@ describe('Subscription Model', () => {
     it('should return trialing subscription as active', async () => {
       await Subscription.create({
         userId: testUser.id,
-        stripeSubscriptionId: 'sub_trial_active',
+        stripeSubscriptionId: `sub_trial_active_${testRunId}`,
         stripePriceId: 'price_test_123',
         tier: 'starter',
         status: 'trialing',
@@ -183,7 +189,7 @@ describe('Subscription Model', () => {
       // Create older subscription
       await Subscription.create({
         userId: testUser.id,
-        stripeSubscriptionId: 'sub_old',
+        stripeSubscriptionId: `sub_old_${testRunId}`,
         stripePriceId: 'price_test_123',
         tier: 'starter',
         status: 'active',
@@ -197,7 +203,7 @@ describe('Subscription Model', () => {
       // Create newer subscription
       await Subscription.create({
         userId: testUser.id,
-        stripeSubscriptionId: 'sub_new',
+        stripeSubscriptionId: `sub_new_${testRunId}`,
         stripePriceId: 'price_test_456',
         tier: 'pro',
         status: 'active',
@@ -207,7 +213,7 @@ describe('Subscription Model', () => {
 
       const active = await Subscription.getActiveSubscription(testUser.id);
 
-      expect(active.stripe_subscription_id).toBe('sub_new');
+      expect(active.stripe_subscription_id).toBe(`sub_new_${testRunId}`);
       expect(active.tier).toBe('pro');
     });
   });
@@ -216,7 +222,7 @@ describe('Subscription Model', () => {
     it('should update subscription status', async () => {
       const subscription = await Subscription.create({
         userId: testUser.id,
-        stripeSubscriptionId: 'sub_update_test',
+        stripeSubscriptionId: `sub_update_${testRunId}`,
         stripePriceId: 'price_test_123',
         tier: 'pro',
         status: 'active',
@@ -224,7 +230,7 @@ describe('Subscription Model', () => {
         currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       });
 
-      const updated = await Subscription.update('sub_update_test', {
+      const updated = await Subscription.update(`sub_update_${testRunId}`, {
         status: 'canceled',
       });
 
@@ -235,7 +241,7 @@ describe('Subscription Model', () => {
     it('should update multiple fields', async () => {
       await Subscription.create({
         userId: testUser.id,
-        stripeSubscriptionId: 'sub_multi_update',
+        stripeSubscriptionId: `sub_multi_${testRunId}`,
         stripePriceId: 'price_test_123',
         tier: 'starter',
         status: 'active',
@@ -244,7 +250,7 @@ describe('Subscription Model', () => {
       });
 
       const newPeriodEnd = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000);
-      const updated = await Subscription.update('sub_multi_update', {
+      const updated = await Subscription.update(`sub_multi_${testRunId}`, {
         tier: 'pro',
         stripePriceId: 'price_test_456',
         currentPeriodEnd: newPeriodEnd,
@@ -267,7 +273,7 @@ describe('Subscription Model', () => {
     it('should cancel subscription at period end', async () => {
       await Subscription.create({
         userId: testUser.id,
-        stripeSubscriptionId: 'sub_cancel_test',
+        stripeSubscriptionId: `sub_cancel_${testRunId}`,
         stripePriceId: 'price_test_123',
         tier: 'pro',
         status: 'active',
@@ -275,7 +281,7 @@ describe('Subscription Model', () => {
         currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       });
 
-      const canceled = await Subscription.cancel('sub_cancel_test', true);
+      const canceled = await Subscription.cancel(`sub_cancel_${testRunId}`, true);
 
       expect(canceled.status).toBe('active'); // Still active until period end
       expect(canceled.cancel_at_period_end).toBe(true);
@@ -286,7 +292,7 @@ describe('Subscription Model', () => {
     it('should cancel subscription immediately', async () => {
       await Subscription.create({
         userId: testUser.id,
-        stripeSubscriptionId: 'sub_cancel_immediate',
+        stripeSubscriptionId: `sub_cancel_imm_${testRunId}`,
         stripePriceId: 'price_test_123',
         tier: 'pro',
         status: 'active',
@@ -294,7 +300,7 @@ describe('Subscription Model', () => {
         currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       });
 
-      const canceled = await Subscription.cancel('sub_cancel_immediate', false);
+      const canceled = await Subscription.cancel(`sub_cancel_imm_${testRunId}`, false);
 
       expect(canceled.status).toBe('canceled');
       expect(canceled.cancel_at_period_end).toBe(false);
@@ -308,7 +314,7 @@ describe('Subscription Model', () => {
       // Create various subscriptions
       await Subscription.create({
         userId: testUser.id,
-        stripeSubscriptionId: 'sub_stats_1',
+        stripeSubscriptionId: `sub_stats_${testRunId}`,
         stripePriceId: 'price_test_123',
         tier: 'starter',
         status: 'active',
