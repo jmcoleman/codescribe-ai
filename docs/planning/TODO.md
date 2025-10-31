@@ -1288,6 +1288,15 @@ All email verification functionality has been implemented and verified:
 
 **Reference:** See `private/SECURITY-AUDIT-OCT-2025.md` for full audit report
 
+#### Design System Improvements (Phase 3 Prep)
+
+- [ ] **[ENHANCEMENT]** Update brand-color-palette.html to include both light and dark mode palettes
+  - [ ] Add dark mode color sections (slate-950, slate-900, slate-800 for surfaces)
+  - [ ] Include refined semantic colors (amber-400 instead of yellow, green-400, red-400)
+  - [ ] Add shadow/glow system documentation (purple-400/30 for CTAs)
+  - [ ] Create toggle to preview both themes in the HTML file
+  - [ ] Reference: DARK-MODE-SPEC.md lines 150-250
+
 #### Email Service Improvements (Future Evaluation)
 
 - [ ] **[TECH-DEBT]** Extract email templates to separate files (Handlebars/EJS) for easier editing and version control

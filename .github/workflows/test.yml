@@ -58,18 +58,21 @@ jobs:
         env:
           NODE_ENV: test
           CLAUDE_API_KEY: test-key-12345
+          POSTGRES_URL: postgresql://test:test@localhost:5432/test_db
 
       - name: Run integration tests
         run: cd server && npm run test:integration
         env:
           NODE_ENV: test
           CLAUDE_API_KEY: test-key-12345
+          POSTGRES_URL: postgresql://test:test@localhost:5432/test_db
 
       - name: Generate coverage report
         run: cd server && npm run test:coverage
         env:
           NODE_ENV: test
           CLAUDE_API_KEY: test-key-12345
+          POSTGRES_URL: postgresql://test:test@localhost:5432/test_db
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
@@ -84,6 +87,7 @@ jobs:
         env:
           NODE_ENV: test
           CLAUDE_API_KEY: test-key-12345
+          POSTGRES_URL: postgresql://test:test@localhost:5432/test_db
 
   test-frontend:
     name: Frontend Tests
