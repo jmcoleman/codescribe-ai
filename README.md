@@ -295,17 +295,24 @@ To enable authentication features, set `ENABLE_AUTH=true` and configure addition
 
 | Variable | Description |
 |----------|-------------|
+| `STRIPE_ENV` | Stripe environment: `sandbox` (default, test mode) or `production` (live mode) |
 | `STRIPE_SECRET_KEY` | Stripe secret key (test mode: `sk_test_...`, live mode: `sk_live_...`) |
 | `STRIPE_PUBLISHABLE_KEY` | Stripe publishable key (test mode: `pk_test_...`, live mode: `pk_live_...`) |
 | `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret (get from Stripe Dashboard → Webhooks) |
-| `STRIPE_PRICE_STARTER_MONTHLY` | Price ID for Starter tier monthly ($10/mo) |
-| `STRIPE_PRICE_STARTER_ANNUAL` | Price ID for Starter tier annual ($96/yr) |
-| `STRIPE_PRICE_PRO_MONTHLY` | Price ID for Pro tier monthly ($25/mo) |
-| `STRIPE_PRICE_PRO_ANNUAL` | Price ID for Pro tier annual ($240/yr) |
-| `STRIPE_PRICE_TEAM_MONTHLY` | Price ID for Team tier monthly ($50/mo) |
-| `STRIPE_PRICE_TEAM_ANNUAL` | Price ID for Team tier annual ($480/yr) |
+| `STRIPE_PRICE_STARTER_MONTHLY` | Price ID for Starter tier monthly ($12/mo) |
+| `STRIPE_PRICE_STARTER_ANNUAL` | Price ID for Starter tier annual ($120/yr) |
+| `STRIPE_PRICE_PRO_MONTHLY` | Price ID for Pro tier monthly ($29/mo) |
+| `STRIPE_PRICE_PRO_ANNUAL` | Price ID for Pro tier annual ($288/yr) |
+| `STRIPE_PRICE_TEAM_MONTHLY` | Price ID for Team tier monthly ($99/mo) |
+| `STRIPE_PRICE_TEAM_ANNUAL` | Price ID for Team tier annual ($984/yr) |
 | `STRIPE_SUCCESS_URL` | Redirect URL after successful payment (e.g., `http://localhost:5173/payment/success`) |
 | `STRIPE_CANCEL_URL` | Redirect URL when payment is cancelled (e.g., `http://localhost:5173/pricing`) |
+
+> **Stripe Environment Modes:**
+> - **`sandbox` (default):** Uses Stripe test mode with test cards and test price IDs. No real charges.
+> - **`production`:** Uses Stripe live mode with real payments and live price IDs.
+>
+> By default, both frontend and backend use `sandbox` mode, allowing safe testing even in production deployments. Switch to `production` mode via Vercel environment variables when ready to accept real payments.
 
 **Optional OAuth variables** (`server/.env`):
 
@@ -321,6 +328,7 @@ To enable authentication features, set `ENABLE_AUTH=true` and configure addition
 | Variable | Description |
 |----------|-------------|
 | `VITE_ENABLE_AUTH` | Set to `true` to show authentication UI (Sign In button, user menu, etc.) |
+| `VITE_STRIPE_ENV` | Stripe environment: `sandbox` (default, test cards) or `production` (real payments) |
 | `VITE_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key for frontend (test mode: `pk_test_...`, live mode: `pk_live_...`) |
 
 **Example with authentication and payments enabled:**
@@ -342,6 +350,7 @@ RESEND_API_KEY=re_your_api_key_here
 EMAIL_FROM="CodeScribe AI <noreply@codescribeai.com>"
 
 # Stripe Payments
+STRIPE_ENV=sandbox  # Use 'sandbox' for testing (default), 'production' for live payments
 STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key
 STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_publishable_key
 STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
@@ -365,6 +374,7 @@ MIGRATION_SECRET=generated-secret-min-32-chars
 # client/.env
 VITE_API_URL=http://localhost:3000
 VITE_ENABLE_AUTH=true
+VITE_STRIPE_ENV=sandbox  # Use 'sandbox' for test cards (default), 'production' for real payments
 VITE_STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_publishable_key
 ```
 

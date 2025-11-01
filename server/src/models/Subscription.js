@@ -25,6 +25,7 @@ class Subscription {
    * @param {string} data.status - Status: 'active', 'trialing', 'canceled', etc.
    * @param {Date} data.currentPeriodStart - Billing period start
    * @param {Date} data.currentPeriodEnd - Billing period end
+   * @param {boolean} [data.livemode=false] - True if production subscription, false if test/sandbox
    * @param {boolean} [data.cancelAtPeriodEnd=false] - Cancel at period end
    * @param {Date} [data.trialStart] - Trial start date
    * @param {Date} [data.trialEnd] - Trial end date
@@ -39,6 +40,7 @@ class Subscription {
     status,
     currentPeriodStart,
     currentPeriodEnd,
+    livemode = false,
     cancelAtPeriodEnd = false,
     trialStart = null,
     trialEnd = null,
@@ -53,6 +55,7 @@ class Subscription {
         status,
         current_period_start,
         current_period_end,
+        livemode,
         cancel_at_period_end,
         trial_start,
         trial_end,
@@ -65,6 +68,7 @@ class Subscription {
         ${status},
         ${currentPeriodStart},
         ${currentPeriodEnd},
+        ${livemode},
         ${cancelAtPeriodEnd},
         ${trialStart},
         ${trialEnd},
@@ -191,6 +195,10 @@ class Subscription {
     if (updates.trialEnd !== undefined || updates.trial_end !== undefined) {
       setClauses.push(`trial_end = $${setClauses.length + 1}`);
       values.push(updates.trialEnd || updates.trial_end);
+    }
+    if (updates.livemode !== undefined) {
+      setClauses.push(`livemode = $${setClauses.length + 1}`);
+      values.push(updates.livemode);
     }
 
     if (setClauses.length === 0) {

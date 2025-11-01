@@ -184,8 +184,18 @@ export async function sendPasswordResetEmail({ to, resetToken }) {
     console.error('Error details:', {
       name: error.name,
       message: error.message,
+      statusCode: error.statusCode,
       stack: error.stack?.split('\n')[0]
     });
+
+    // Check if it's a Resend rate limit error (429 Too Many Requests)
+    if (error.statusCode === 429 || error.message?.toLowerCase().includes('too many requests')) {
+      const customError = new Error('Email service is temporarily unavailable due to high demand. Please try again in a few minutes.');
+      customError.code = 'RESEND_RATE_LIMIT';
+      customError.statusCode = 503; // Service Unavailable
+      throw customError;
+    }
+
     throw new Error('Failed to send password reset email');
   }
 }
@@ -283,6 +293,21 @@ export async function sendVerificationEmail({ to, verificationToken }) {
     return result;
   } catch (error) {
     console.error('Failed to send verification email:', error);
+    console.error('Error details:', {
+      name: error.name,
+      message: error.message,
+      statusCode: error.statusCode,
+      stack: error.stack?.split('\n')[0]
+    });
+
+    // Check if it's a Resend rate limit error (429 Too Many Requests)
+    if (error.statusCode === 429 || error.message?.toLowerCase().includes('too many requests')) {
+      const customError = new Error('Email service is temporarily unavailable due to high demand. Please try again in a few minutes.');
+      customError.code = 'RESEND_RATE_LIMIT';
+      customError.statusCode = 503; // Service Unavailable
+      throw customError;
+    }
+
     throw new Error('Failed to send verification email');
   }
 }

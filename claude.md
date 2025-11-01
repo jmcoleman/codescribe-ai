@@ -37,7 +37,9 @@ AI-powered documentation generator with real-time streaming, quality scoring (0-
 |----------|----------|--------------|
 | [ARCHITECTURE-OVERVIEW.md](docs/architecture/ARCHITECTURE-OVERVIEW.md) | Visual system architecture | Mermaid diagram, layer overview, quick reference |
 | [ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md) | Deep technical details | Design patterns, data flows, security, deployment |
-| [SUBSCRIPTION-MANAGEMENT.md](docs/architecture/SUBSCRIPTION-MANAGEMENT.md) | Subscription flows ⭐ | Hybrid proration (upgrade/downgrade), testing guide, webhooks |
+| [ERROR-HANDLING-PATTERNS.md](docs/architecture/ERROR-HANDLING-PATTERNS.md) | Error handling patterns ⭐ | App vs external API errors (429 vs 503), email/Claude patterns, HTTP status codes |
+| [SUBSCRIPTION-FLOWS.md](docs/architecture/SUBSCRIPTION-FLOWS.md) | Subscription flows ⭐ | Unauthenticated users, email/OAuth signup, billing periods, sessionStorage intent |
+| [SUBSCRIPTION-MANAGEMENT.md](docs/architecture/SUBSCRIPTION-MANAGEMENT.md) | Subscription management ⭐ | Hybrid proration (upgrade/downgrade), testing guide, webhooks |
 | [PROMPT-CACHING-GUIDE.md](docs/architecture/PROMPT-CACHING-GUIDE.md) | Cost optimization ⭐ | Caching strategy, adding examples, savings analysis ($50-300/mo) |
 | [05-Dev-Guide.md](docs/planning/mvp/05-Dev-Guide.md) | Implementation patterns | Complete service code, best practices, deployment |
 | [API-Reference.md](docs/api/API-Reference.md) | API specs | 4 endpoints, request/response formats, error codes |
@@ -100,21 +102,22 @@ AI-powered documentation generator with real-time streaming, quality scoring (0-
 **Infrastructure:** Vercel | Neon (free tier: 512 MB, 20 projects) | SSE streaming
 
 ### Prompt Caching (Cost Optimization)
-> **💰 Saves $50-300/month** | Active November 1, 2025 | See [PROMPT-CACHING-GUIDE.md](docs/architecture/PROMPT-CACHING-GUIDE.md) for details
+> **💰 Saves $100-400/month** | Active October 31, 2025 | 1-hour TTL with auto-refresh | See [PROMPT-CACHING-GUIDE.md](docs/architecture/PROMPT-CACHING-GUIDE.md) for details
 
 **What we cache:**
 - **System prompts** (doc type instructions ~2K tokens) - Always cached (90% cost reduction)
 - **Default/example code** - Cached when detected (additional 50% reduction)
 
 **How it works:**
-- Anthropic caches processed prompts for 5 minutes
-- Second user within 5 min = 90% savings on cached portions
+- Anthropic caches processed prompts for **1 hour** (with auto-refresh on each use)
+- Cache stays warm indefinitely with 1+ user/hour during business hours
+- 90% savings on cached portions, 21-25% overall cost reduction
 - Automatic detection: `code === DEFAULT_CODE` triggers caching
 
 **Implementation:**
 ```javascript
-// Backend: claudeClient.js adds cache_control to prompts
-cache_control: { type: 'ephemeral' }
+// Backend: claudeClient.js adds 1-hour cache_control to prompts
+cache_control: { type: 'ephemeral', ttl: '1h' }
 
 // Frontend: App.jsx detects default code
 const isDefaultCode = code === DEFAULT_CODE;
@@ -123,11 +126,11 @@ await generate(code, docType, language, isDefaultCode);
 
 **Monitor performance:**
 ```bash
-# Look for cache stats in backend logs (starts Nov 1)
+# Look for cache stats in backend logs
 [ClaudeClient] Cache stats: { cache_read_input_tokens: 2000 } # 90% savings!
 ```
 
-**Test when API resets:** `node server/tests/prompt-caching.test.js` (November 1, 2025)
+**Key insight:** Auto-refresh keeps cache warm during business hours (1+ user/hour = quasi-indefinite caching)
 
 **Adding new examples:** Update `EXAMPLE_CODES` in [defaultCode.js](client/src/constants/defaultCode.js), use exact string matching for cache hits
 
@@ -143,6 +146,8 @@ await generate(code, docType, language, isDefaultCode);
 | API/Endpoints | API Reference |
 | Design/UI | Figma Guide, Brand Color Palette |
 | Architecture | ARCHITECTURE-OVERVIEW.md (visual), ARCHITECTURE.md (technical) |
+| Error Handling | ERROR-HANDLING-PATTERNS.md (app vs external API errors, 429 vs 503, email/Claude patterns) |
+| Subscription Flows | SUBSCRIPTION-FLOWS.md (unauthenticated signup, email/OAuth, billing periods) |
 | Subscriptions/Payments | SUBSCRIPTION-MANAGEMENT.md (upgrade/downgrade flows, proration, webhooks) |
 | Performance | OPTIMIZATION-GUIDE.md |
 | Cost Optimization | PROMPT-CACHING-GUIDE.md (caching strategy, adding examples, savings) |
@@ -168,7 +173,8 @@ await generate(code, docType, language, isDefaultCode);
 - **Testing:** Testing README (overview) → COMPONENT-TEST-COVERAGE.md (details) → frontend-testing-guide.md (patterns) → TEST-FIXES-OCT-2025.md (fixes & patterns) → SKIPPED-TESTS.md (maintenance)
 - **Test Debugging:** TEST-FIXES-OCT-2025.md (10 patterns, 6 insights) for fixing auth tests, mocking, validation
 - **Skipped Tests:** SKIPPED-TESTS.md - Update on every release, quarterly review (15 frontend tests intentionally skipped)
-- **Error Handling:** ERROR-HANDLING-UX.md (UX patterns, priority system) → USAGE-PROMPTS.md (usage warnings/limits) → TOAST-SYSTEM.md (success toasts)
+- **Error Handling:** ERROR-HANDLING-PATTERNS.md (app vs API errors, HTTP status codes) → ERROR-HANDLING-UX.md (UX patterns, priority system) → USAGE-PROMPTS.md (usage warnings/limits) → TOAST-SYSTEM.md (success toasts)
+- **Subscriptions:** SUBSCRIPTION-FLOWS.md (unauthenticated flow, sessionStorage) → SUBSCRIPTION-MANAGEMENT.md (upgrades, proration, webhooks)
 - **Accessibility:** ACCESSIBILITY-AUDIT.MD (results) → SCREEN-READER-TESTING-GUIDE.md (procedures)
 - **Release Process:** RELEASE-QUICKSTART.md - Two-phase process (Phase 1: Prep for Release, Phase 2: Release Deployment)
 

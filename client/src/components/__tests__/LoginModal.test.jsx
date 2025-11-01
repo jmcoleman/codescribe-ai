@@ -615,4 +615,209 @@ describe('LoginModal', () => {
       });
     });
   });
+
+  describe('Pending Subscription Redirect', () => {
+    beforeEach(() => {
+      sessionStorage.clear();
+    });
+
+    it('should redirect to checkout when pending subscription exists after login', async () => {
+      const user = userEvent.setup();
+      const originalLocation = window.location;
+      delete window.location;
+      window.location = { href: '' };
+
+      // Store pending subscription intent
+      sessionStorage.setItem(
+        'codescribeai:session:subscription:pending-intent',
+        JSON.stringify({
+          tier: 'pro',
+          billingPeriod: 'monthly',
+          tierName: 'Pro',
+        })
+      );
+
+      // Mock successful login
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          success: true,
+          token: 'test-token',
+          user: { id: 1, email: 'test@example.com', emailVerified: true },
+        }),
+      });
+
+      // Mock successful checkout session creation
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ url: 'https://checkout.stripe.com/test-session' }),
+      });
+
+      renderLoginModal();
+
+      const emailInput = screen.getByLabelText(/email address/i);
+      const passwordInput = screen.getByLabelText(/^password$/i);
+      const submitButton = screen.getByRole('button', { name: /sign in/i });
+
+      await user.type(emailInput, 'test@example.com');
+      await user.type(passwordInput, 'password123');
+      await user.click(submitButton);
+
+      // Should redirect to Stripe checkout
+      await waitFor(() => {
+        expect(window.location.href).toBe('https://checkout.stripe.com/test-session');
+      });
+
+      // Pending subscription should be cleared from storage
+      expect(sessionStorage.getItem('codescribeai:session:subscription:pending-intent')).toBeNull();
+
+      // Modal should NOT be closed (user is being redirected)
+      expect(mockOnClose).not.toHaveBeenCalled();
+
+      window.location = originalLocation;
+    });
+
+    it('should close modal normally when no pending subscription exists', async () => {
+      const user = userEvent.setup();
+
+      // Mock successful login
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          success: true,
+          token: 'test-token',
+          user: { id: 1, email: 'test@example.com' },
+        }),
+      });
+
+      renderLoginModal();
+
+      const emailInput = screen.getByLabelText(/email address/i);
+      const passwordInput = screen.getByLabelText(/^password$/i);
+      const submitButton = screen.getByRole('button', { name: /sign in/i });
+
+      await user.type(emailInput, 'test@example.com');
+      await user.type(passwordInput, 'password123');
+      await user.click(submitButton);
+
+      // Should close modal normally
+      await waitFor(() => {
+        expect(mockOnClose).toHaveBeenCalled();
+      });
+    });
+
+    it('should close modal if checkout creation fails after login', async () => {
+      const user = userEvent.setup();
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      // Store pending subscription intent
+      sessionStorage.setItem(
+        'codescribeai:session:subscription:pending-intent',
+        JSON.stringify({
+          tier: 'pro',
+          billingPeriod: 'monthly',
+          tierName: 'Pro',
+        })
+      );
+
+      // Mock successful login
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          success: true,
+          token: 'test-token',
+          user: { id: 1, email: 'test@example.com', emailVerified: true },
+        }),
+      });
+
+      // Mock failed checkout session creation
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+      });
+
+      renderLoginModal();
+
+      const emailInput = screen.getByLabelText(/email address/i);
+      const passwordInput = screen.getByLabelText(/^password$/i);
+      const submitButton = screen.getByRole('button', { name: /sign in/i });
+
+      await user.type(emailInput, 'test@example.com');
+      await user.type(passwordInput, 'password123');
+      await user.click(submitButton);
+
+      // Should close modal even though checkout failed
+      await waitFor(() => {
+        expect(mockOnClose).toHaveBeenCalled();
+      });
+
+      // Should log error
+      expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to create checkout session after login');
+
+      // Should clear pending subscription
+      expect(sessionStorage.getItem('codescribeai:session:subscription:pending-intent')).toBeNull();
+
+      consoleErrorSpy.mockRestore();
+    });
+
+    it('should keep pending subscription and close modal when user has unverified email', async () => {
+      const user = userEvent.setup();
+
+      // Store pending subscription intent
+      sessionStorage.setItem(
+        'codescribeai:session:subscription:pending-intent',
+        JSON.stringify({
+          tier: 'pro',
+          billingPeriod: 'monthly',
+          tierName: 'Pro',
+        })
+      );
+
+      // Mock successful login
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          success: true,
+          token: 'test-token',
+          user: { id: 1, email: 'test@example.com', emailVerified: false },
+        }),
+      });
+
+      // Mock 403 unverified email error
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 403,
+        json: async () => ({
+          error: 'Email verification required',
+          emailVerified: false,
+        }),
+      });
+
+      renderLoginModal();
+
+      const emailInput = screen.getByLabelText(/email address/i);
+      const passwordInput = screen.getByLabelText(/^password$/i);
+      const submitButton = screen.getByRole('button', { name: /sign in/i });
+
+      await user.type(emailInput, 'test@example.com');
+      await user.type(passwordInput, 'password123');
+      await user.click(submitButton);
+
+      // Should close modal
+      await waitFor(() => {
+        expect(mockOnClose).toHaveBeenCalled();
+      });
+
+      // Should KEEP pending subscription (for PricingPage to show verification modal)
+      const storedIntent = sessionStorage.getItem('codescribeai:session:subscription:pending-intent');
+      expect(storedIntent).toBeTruthy();
+      const intent = JSON.parse(storedIntent);
+      expect(intent.tier).toBe('pro');
+      expect(intent.billingPeriod).toBe('monthly');
+    });
+  });
 });

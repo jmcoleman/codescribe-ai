@@ -28,6 +28,12 @@ export const STORAGE_KEYS = {
   // OAuth Flow (sessionStorage - temporary timing data)
   OAUTH_START_TIME: 'codescribeai:session:oauth:start-time',
   OAUTH_CONTEXT: 'codescribeai:session:oauth:context',
+
+  // UI Banners (sessionStorage - dismissed state for current session)
+  EMAIL_VERIFICATION_BANNER_DISMISSED: 'codescribeai:session:ui:email-verification-banner-dismissed',
+
+  // Subscription Flow (sessionStorage - temporary subscription intent before verification)
+  PENDING_SUBSCRIPTION: 'codescribeai:session:subscription:pending-intent',
 };
 
 /**
