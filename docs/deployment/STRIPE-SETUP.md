@@ -127,15 +127,38 @@ Based on [server/src/config/tiers.js](../../server/src/config/tiers.js):
 
 ## 🔑 Step 3: Configure Environment Variables
 
+### Stripe Environment Modes
+
+CodeScribe AI supports two Stripe environments:
+
+- **`sandbox` (default):** Uses Stripe test mode with test cards and test price IDs. No real charges.
+- **`production`:** Uses Stripe live mode with real payments and live price IDs.
+
+By default, both frontend and backend use `sandbox` mode. This allows you to:
+- Develop and test locally without risk of real charges
+- Test in production deployment with Stripe test cards
+- Switch to live mode by updating a single environment variable when ready
+
+### Backend Configuration
+
 Add these to `server/.env`:
 
 ```bash
-# Stripe Configuration
+# Stripe Environment: 'sandbox' (default) or 'production'
+# - sandbox: Uses Stripe test mode (test cards, test price IDs, no real charges)
+# - production: Uses Stripe live mode (real payments, live price IDs)
+# Set to 'production' in Vercel environment variables when ready to go live
+STRIPE_ENV=sandbox
+
+# Stripe API Keys
+# Test mode (sandbox): sk_test_xxxxx and pk_test_xxxxx
+# Live mode (production): sk_live_xxxxx and pk_live_xxxxx
 STRIPE_SECRET_KEY=sk_test_xxxxx
 STRIPE_PUBLISHABLE_KEY=pk_test_xxxxx
 STRIPE_WEBHOOK_SECRET=whsec_xxxxx  # From Step 4
 
-# Price IDs (from Step 2)
+# Price IDs - Sandbox/Test Mode (from Step 2)
+# Replace with live mode price IDs when STRIPE_ENV=production
 STRIPE_PRICE_STARTER_MONTHLY=price_xxxxx
 STRIPE_PRICE_STARTER_ANNUAL=price_xxxxx
 STRIPE_PRICE_PRO_MONTHLY=price_xxxxx
@@ -149,12 +172,38 @@ STRIPE_CANCEL_URL=http://localhost:5173/pricing
 CLIENT_URL=http://localhost:5173
 ```
 
+### Frontend Configuration
+
 Add to `client/.env`:
 
 ```bash
+# Stripe Environment: 'sandbox' (default) or 'production'
+# - sandbox: Uses Stripe test mode (test cards, no real charges)
+# - production: Uses Stripe live mode (real payments)
+# Override via Vercel environment variable for production testing
+VITE_STRIPE_ENV=sandbox
+
 # Stripe Publishable Key (safe for frontend)
+# Test mode (sandbox): pk_test_xxxxx
+# Live mode (production): pk_live_xxxxx
 VITE_STRIPE_PUBLISHABLE_KEY=pk_test_xxxxx
 ```
+
+### Switching to Production
+
+When you're ready to accept real payments:
+
+1. **Update Vercel Environment Variables:**
+   - Backend: Set `STRIPE_ENV=production`
+   - Frontend: Set `VITE_STRIPE_ENV=production`
+   - Update `STRIPE_SECRET_KEY` to live key (`sk_live_xxxxx`)
+   - Update `STRIPE_PUBLISHABLE_KEY` to live key (`pk_live_xxxxx`)
+   - Update `VITE_STRIPE_PUBLISHABLE_KEY` to live key
+   - Update all price IDs to live mode price IDs
+
+2. **Redeploy:** Changes take effect on next deployment
+
+3. **Test in Production:** With `VITE_STRIPE_ENV=sandbox` in Vercel, you can test the production deployment with test cards before going live
 
 ---
 
@@ -417,18 +466,40 @@ echo $STRIPE_PRICE_STARTER_MONTHLY
 
 ## ✅ Go-Live Checklist
 
-Before deploying to production:
+Before accepting real payments:
 
+### Stripe Configuration
 - [ ] Switch to live mode in Stripe Dashboard
-- [ ] Update `.env` with live API keys (`pk_live_`, `sk_live_`)
-- [ ] Update webhook URL to `https://codescribeai.com/api/webhooks/stripe`
-- [ ] Test with live mode test cards
 - [ ] Complete Stripe business verification
-- [ ] Set up payment method required for free trials (if applicable)
-- [ ] Configure email receipts in Stripe Dashboard
-- [ ] Add links to Terms of Service and Privacy Policy in Checkout
+- [ ] Create live mode products and price IDs (mirror test mode setup)
+- [ ] Set up production webhook endpoint: `https://codescribeai.com/api/webhooks/stripe`
+
+### Environment Variables (Vercel)
+- [ ] Set `STRIPE_ENV=production` (backend)
+- [ ] Set `VITE_STRIPE_ENV=production` (frontend)
+- [ ] Update `STRIPE_SECRET_KEY` to live key (`sk_live_xxxxx`)
+- [ ] Update `STRIPE_PUBLISHABLE_KEY` to live key (`pk_live_xxxxx`)
+- [ ] Update `VITE_STRIPE_PUBLISHABLE_KEY` to live key (`pk_live_xxxxx`)
+- [ ] Update all `STRIPE_PRICE_*` variables to live mode price IDs
+- [ ] Update `STRIPE_WEBHOOK_SECRET` to production webhook secret
+
+### Testing & Verification
+- [ ] Test subscription flow with real payment method
+- [ ] Verify webhook delivery in Stripe Dashboard (live mode)
 - [ ] Test subscription cancellation flow
-- [ ] Monitor webhook delivery in production
+- [ ] Test failed payment handling
+- [ ] Verify email receipts are configured in Stripe Dashboard
+
+### Legal & Compliance
+- [ ] Add links to Terms of Service in Checkout
+- [ ] Add link to Privacy Policy in Checkout
+- [ ] Set up payment method required for free trials (if applicable)
+- [ ] Configure tax collection if required
+
+### Monitoring
+- [ ] Set up alerts for failed webhooks
+- [ ] Monitor subscription metrics in Stripe Dashboard
+- [ ] Monitor webhook delivery logs
 
 ---
 

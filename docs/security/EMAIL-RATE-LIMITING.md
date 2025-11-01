@@ -333,6 +333,7 @@ If Resend quota is consistently exceeded:
 
 ## Related Documentation
 
+- [ERROR-HANDLING-PATTERNS.md](../architecture/ERROR-HANDLING-PATTERNS.md) - App vs external API error handling (429 vs 503)
 - [FREEMIUM-API-PROTECTION.md](./FREEMIUM-API-PROTECTION.md) - API rate limiting
 - [RESEND-SETUP.md](../deployment/RESEND-SETUP.md) - Email service setup
 - [EMAIL-VERIFICATION-SYSTEM.md](../authentication/EMAIL-VERIFICATION-SYSTEM.md) - Email verification flow

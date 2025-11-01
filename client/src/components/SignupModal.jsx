@@ -15,7 +15,7 @@ import { trackOAuth } from '../utils/analytics';
 import { STORAGE_KEYS, setSessionItem } from '../constants/storage';
 import { API_URL } from '../config/api';
 
-export function SignupModal({ isOpen, onClose, onSwitchToLogin }) {
+export function SignupModal({ isOpen, onClose, onSwitchToLogin, subscriptionContext }) {
   const { signup, error: authError, clearError } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -305,6 +305,19 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }) {
 
         {/* Content */}
         <div className="p-6 space-y-6">
+          {/* Subscription Context Banner */}
+          {subscriptionContext && (
+            <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
+              <p className="text-sm text-purple-900">
+                <span className="font-semibold">Subscribing to {subscriptionContext.tierName}</span>
+                <br />
+                <span className="text-purple-700">
+                  Sign up and verify your email to complete your subscription
+                </span>
+              </p>
+            </div>
+          )}
+
           {/* Error Message */}
           {errorMessage && (
             <div

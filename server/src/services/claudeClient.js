@@ -79,18 +79,18 @@ class ClaudeClient {
           messages: [{
             role: 'user',
             content: cacheUserMessage
-              ? [{ type: 'text', text: prompt, cache_control: { type: 'ephemeral' } }]
+              ? [{ type: 'text', text: prompt, cache_control: { type: 'ephemeral', ttl: '1h' } }]
               : prompt
           }],
         };
 
-        // Add system prompt with caching if provided
+        // Add system prompt with caching if provided (1-hour TTL)
         if (systemPrompt) {
           requestParams.system = [
             {
               type: 'text',
               text: systemPrompt,
-              cache_control: { type: 'ephemeral' }
+              cache_control: { type: 'ephemeral', ttl: '1h' }
             }
           ];
         }
@@ -150,19 +150,19 @@ class ClaudeClient {
         messages: [{
           role: 'user',
           content: cacheUserMessage
-            ? [{ type: 'text', text: prompt, cache_control: { type: 'ephemeral' } }]
+            ? [{ type: 'text', text: prompt, cache_control: { type: 'ephemeral', ttl: '1h' } }]
             : prompt
         }],
         stream: true,
       };
 
-      // Add system prompt with caching if provided
+      // Add system prompt with caching if provided (1-hour TTL)
       if (systemPrompt) {
         requestParams.system = [
           {
             type: 'text',
             text: systemPrompt,
-            cache_control: { type: 'ephemeral' }
+            cache_control: { type: 'ephemeral', ttl: '1h' }
           }
         ];
       }

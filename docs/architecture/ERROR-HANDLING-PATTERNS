@@ -1,0 +1,480 @@
+# Error Handling Patterns
+
+**Purpose:** Document error propagation and HTTP status code conventions across the stack
+**Created:** October 31, 2025
+**Last Updated:** October 31, 2025
+**Status:** ✅ Active Guidelines
+
+---
+
+## Overview
+
+CodeScribe AI uses distinct HTTP status codes to differentiate between **app-level errors** and **external API errors**. This allows the frontend to provide appropriate user feedback and recovery options.
+
+### Core Principle
+
+**External service failures should return 503 (Service Unavailable), not the original error status code.**
+
+**Why?**
+- Distinguishes app logic errors from dependency failures
+- Allows different UI patterns (retry vs. fix input)
+- Prevents confusion between "you hit our limit" vs "the service is unavailable"
+- Follows HTTP semantics: 503 = "service dependency unavailable"
+
+---
+
+## HTTP Status Code Conventions
+
+### Success (2xx)
+
+| Code | Meaning | Use Case |
+|------|---------|----------|
+| **200** | OK | Successful request |
+| **201** | Created | Resource created (user signup) |
+
+### Client Errors (4xx)
+
+| Code | Meaning | Use Case | User Action |
+|------|---------|----------|-------------|
+| **400** | Bad Request | Invalid input (validation failed) | Fix input and retry |
+| **401** | Unauthorized | Missing/invalid/expired token | Sign in again |
+| **403** | Forbidden | Valid token but insufficient permissions | Upgrade plan or contact support |
+| **404** | Not Found | Resource doesn't exist | Check URL or search |
+| **429** | Too Many Requests | **App rate limit** exceeded (our limits) | Wait specified time, then retry |
+
+### Server Errors (5xx)
+
+| Code | Meaning | Use Case | User Action |
+|------|---------|----------|-------------|
+| **500** | Internal Server Error | Unexpected app error | Report to support if persistent |
+| **503** | Service Unavailable | **External API failure** (Resend, Claude) | Wait and retry (service dependency down) |
+
+---
+
+## Pattern 1: Email Service Errors
+
+### Architecture Flow
+
+```
+emailService.js → auth.js → Frontend Components
+```
+
+### Implementation
+
+#### 1. Service Layer (emailService.js)
+
+**Detects external API rate limit and creates custom error:**
+
+```javascript
+// File: server/src/services/emailService.js
+// Lines: 293-299 (sendVerificationEmail), 192-197 (sendPasswordResetEmail)
+
+try {
+  const result = await client.emails.send(emailData);
+  return result;
+} catch (error) {
+  // Check if it's a Resend rate limit error (429 Too Many Requests)
+  if (error.statusCode === 429 || error.message?.toLowerCase().includes('too many requests')) {
+    const customError = new Error('Email service is temporarily unavailable due to high demand. Please try again in a few minutes.');
+    customError.code = 'RESEND_RATE_LIMIT';
+    customError.statusCode = 503; // Service Unavailable
+    throw customError;
+  }
+
+  throw new Error('Failed to send verification email');
+}
+```
+
+**Key Points:**
+- Detects Resend's 429 error (external service rate limit)
+- Creates custom error with `code: 'RESEND_RATE_LIMIT'`
+- Sets `statusCode: 503` (not 429) to distinguish from app rate limits
+- Generic user message (don't expose Resend implementation details)
+
+#### 2. Route Layer (auth.js)
+
+**Distinguishes between app rate limit (429) and external API rate limit (503):**
+
+```javascript
+// File: server/src/routes/auth.js
+// Lines: 721-766
+
+// Check app rate limit (5 minute cooldown)
+const rateLimit = checkEmailRateLimit(rateLimitKey, EMAIL_VERIFICATION_COOLDOWN_MS);
+
+if (!rateLimit.allowed) {
+  // App rate limit - show formatted time remaining
+  const minutes = Math.floor(rateLimit.remainingSeconds / 60);
+  const seconds = rateLimit.remainingSeconds % 60;
+  const timeStr = minutes > 0
+    ? `${minutes} minute${minutes !== 1 ? 's' : ''} and ${seconds} second${seconds !== 1 ? 's' : ''}`
+    : `${seconds} second${seconds !== 1 ? 's' : ''}`;
+
+  return res.status(429).json({
+    success: false,
+    error: `Please wait ${timeStr} before requesting another verification email`
+  });
+}
+
+try {
+  // Send verification email
+  await sendVerificationEmail({ to: user.email, verificationToken });
+
+  res.json({ success: true, message: 'Verification email sent' });
+} catch (error) {
+  // Check if it's a Resend API rate limit error
+  if (error.code === 'RESEND_RATE_LIMIT') {
+    return res.status(503).json({
+      success: false,
+      error: error.message || 'Email service is temporarily unavailable. Please try again in a few minutes.'
+    });
+  }
+
+  // Generic error response for all other errors
+  res.status(500).json({
+    success: false,
+    error: 'Failed to send verification email'
+  });
+}
+```
+
+**Key Points:**
+- App rate limit returns **429** with specific time remaining
+- Resend rate limit returns **503** with generic retry message
+- Different status codes allow frontend to show different UX
+
+#### 3. Frontend Components
+
+**Modal displays inline errors, banner uses toasts:**
+
+```javascript
+// File: client/src/components/VerificationRequiredModal.jsx
+// Lines: 40-52
+
+if (response.ok) {
+  toastSuccess('Verification email sent! Please check your inbox.');
+  setTimeout(() => onClose(), 1500);
+} else {
+  // Handle specific error cases - all shown in modal
+  if (response.status === 401) {
+    // Authentication failed - session expired
+    setError('Your session has expired. Please close this modal and sign in again.');
+  } else if (response.status === 503) {
+    // Resend API rate limit - service temporarily unavailable
+    setError(data.error || 'Email service is temporarily unavailable. Please try again in a few minutes.');
+  } else {
+    // All other errors (429, 400, 500, etc.) - show in modal
+    setError(data.error || 'Failed to send verification email. Please try again.');
+  }
+}
+```
+
+```javascript
+// File: client/src/components/UnverifiedEmailBanner.jsx
+// Lines: 44-63
+
+if (response.ok) {
+  toastSuccess('Verification email sent! Please check your inbox.');
+} else {
+  // Handle specific error cases
+  if (response.status === 429) {
+    // App rate limit - user can retry later
+    toastError(data.error || 'Please wait before requesting another verification email');
+  } else if (response.status === 503) {
+    // Resend API rate limit - service temporarily unavailable
+    toastError(data.error || 'Email service is temporarily unavailable. Please try again in a few minutes.');
+  } else if (response.status === 401) {
+    // Authentication failed - session expired, need to sign in again
+    toastError('Session expired. Please sign in again.');
+    window.location.reload();
+  } else {
+    // Other API errors - show in toast
+    toastError(data.error || 'Failed to send verification email');
+  }
+}
+```
+
+**Key Points:**
+- **429**: Shows formatted time remaining (e.g., "Please wait 4 minutes and 34 seconds...")
+- **503**: Shows generic retry message (no countdown - external limit duration unknown)
+- **401**: Forces re-authentication
+- **Modal**: All errors display inline with AlertCircle icon (NOT toasts)
+- **Banner**: All errors use toast notifications
+
+### Error Response Examples
+
+#### App Rate Limit (429)
+
+```json
+{
+  "success": false,
+  "error": "Please wait 4 minutes and 34 seconds before requesting another verification email"
+}
+```
+
+**User Experience:**
+- Clear countdown timer
+- User knows exactly when they can retry
+- Indicates app-level protection (not external service issue)
+
+#### Resend API Rate Limit (503)
+
+```json
+{
+  "success": false,
+  "error": "Email service is temporarily unavailable due to high demand. Please try again in a few minutes."
+}
+```
+
+**User Experience:**
+- Generic retry message (no specific time)
+- Indicates external service issue (not user's fault)
+- Doesn't expose Resend implementation details
+
+---
+
+## Pattern 2: Claude API Errors
+
+### Architecture Flow
+
+```
+claudeClient.js → docGenerator.js → API routes → Frontend
+```
+
+### Implementation
+
+#### 1. Service Layer (claudeClient.js)
+
+**Extracts user-friendly error messages and retries with exponential backoff:**
+
+```javascript
+// File: server/src/services/claudeClient.js
+// Lines: 17-59, 113-130
+
+extractErrorMessage(error) {
+  // Try to parse error.message if it contains JSON (from Anthropic SDK errors)
+  if (error.message) {
+    try {
+      // Check if message contains a JSON error object
+      // Format: "400 {"type":"error","error":{"type":"invalid_request_error","message":"..."}}"
+      const jsonMatch = error.message.match(/\d{3}\s+(\{.*\})/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[1]);
+
+        // Handle nested structure: {error: {type: "...", message: "..."}}
+        if (parsed.error && typeof parsed.error === 'object' && parsed.error.message) {
+          return JSON.stringify({
+            error: parsed.error.type || 'Error',
+            message: parsed.error.message
+          });
+        }
+
+        // Handle flat structure: {type: "...", message: "..."}
+        if (parsed.message) {
+          return JSON.stringify({
+            error: parsed.type || 'Error',
+            message: parsed.message
+          });
+        }
+      }
+    } catch (e) {
+      // Not JSON, continue to return original message
+    }
+
+    return error.message;
+  }
+
+  // Check if error has a structured error object from Anthropic
+  if (error.error && typeof error.error === 'object') {
+    return JSON.stringify({
+      error: error.error.type || 'Error',
+      message: error.error.message || 'An error occurred while generating documentation'
+    });
+  }
+
+  return 'An error occurred while generating documentation';
+}
+
+async generate(prompt, options = {}) {
+  let retries = 0;
+
+  while (retries < this.maxRetries) {
+    try {
+      const response = await this.client.messages.create(requestParams);
+      return response.content[0].text;
+    } catch (error) {
+      retries++;
+      if (retries === this.maxRetries) {
+        // Log the full error for development debugging
+        console.error('[ClaudeClient] Full API error after retries:', error);
+
+        // Throw a new error with just the user-friendly message
+        const userMessage = this.extractErrorMessage(error);
+        const enhancedError = new Error(userMessage);
+        // Preserve original error for backend logging, but don't send to frontend
+        enhancedError.originalError = error;
+        throw enhancedError;
+      }
+
+      // Exponential backoff: 2^retries seconds
+      await this.sleep(Math.pow(2, retries) * 1000);
+    }
+  }
+}
+```
+
+**Key Points:**
+- **3 retries** with exponential backoff (1s, 2s, 4s)
+- Extracts structured error messages from Anthropic SDK
+- Logs full error for debugging, returns user-friendly message
+- No custom error codes (yet) - just message extraction
+- Handles transient failures automatically (rate limits, network issues)
+
+#### 2. Frontend Error Handling
+
+**Displays errors in persistent banner, not toast:**
+
+```javascript
+// File: client/src/hooks/useDocGeneration.js
+// Error flows to ErrorBanner component
+
+// Error parsing and display
+const errorObject = JSON.parse(errorMessage);
+// ErrorBanner shows: errorObject.error + errorObject.message
+
+// Examples:
+// - "invalid_request_error: prompt is too long"
+// - "rate_limit_error: You have exceeded your rate limit"
+// - "overloaded_error: The API is temporarily overloaded"
+```
+
+**Key Points:**
+- All errors display in **ErrorBanner** (persistent, dismissible)
+- **No toasts for errors** (per UX guidelines)
+- Structured error messages parsed as JSON
+- Technical details available (error type + message)
+
+### Error Response Examples
+
+#### Claude API Rate Limit
+
+```json
+{
+  "error": "rate_limit_error",
+  "message": "Your API key has exceeded the rate limit. Please wait and try again."
+}
+```
+
+**User Experience:**
+- Clear error type and message
+- Persistent banner (doesn't auto-hide)
+- User can dismiss and retry manually
+
+#### Claude API Overloaded
+
+```json
+{
+  "error": "overloaded_error",
+  "message": "The API is temporarily overloaded. Please try again in a moment."
+}
+```
+
+**User Experience:**
+- Indicates external service issue (not user's fault)
+- Suggests retry after brief wait
+- Automatic retry already attempted (3x with backoff)
+
+---
+
+## Pattern Comparison
+
+### Email Service (Resend)
+
+| Aspect | Implementation |
+|--------|---------------|
+| **Detection** | `error.statusCode === 429` or message includes "too many requests" |
+| **Custom Error** | `code: 'RESEND_RATE_LIMIT'`, `statusCode: 503` |
+| **Retries** | None (immediate error) |
+| **Frontend** | Modal: inline error; Banner: toast |
+| **Status Codes** | 429 (app limit), 503 (Resend limit), 401 (auth), 500 (other) |
+
+### Documentation Service (Claude)
+
+| Aspect | Implementation |
+|--------|---------------|
+| **Detection** | Parse Anthropic SDK error messages |
+| **Custom Error** | Enhanced error with user-friendly message |
+| **Retries** | 3 attempts with exponential backoff (1s, 2s, 4s) |
+| **Frontend** | ErrorBanner (persistent, dismissible) |
+| **Status Codes** | All errors return 500 (after retries exhausted) |
+
+---
+
+## Key Differences
+
+### 1. Retry Strategy
+
+**Email Service:**
+- ❌ **No retries** - User controls retry timing
+- **Why:** Email sending is not idempotent (could send duplicates)
+- **UX:** User clicks "Resend" button after waiting
+
+**Claude API:**
+- ✅ **3 retries with backoff** - Automatic recovery
+- **Why:** Transient failures are common (rate limits, overloads)
+- **UX:** User sees loading state, errors only after retries exhausted
+
+### 2. Error Codes
+
+**Email Service:**
+- Uses **custom error code** (`RESEND_RATE_LIMIT`)
+- **Converts 429 → 503** to distinguish external vs. app limits
+- Multiple status codes for different scenarios (401, 429, 503, 500)
+
+**Claude API:**
+- Uses **structured error messages** (JSON with type + message)
+- No custom error codes (yet)
+- Single status code (500) after retries exhausted
+
+### 3. Frontend Display
+
+**Email Service:**
+- **Modal:** Inline error banner with AlertCircle icon
+- **Banner:** Toast notification
+- Different patterns for different contexts
+
+**Claude API:**
+- **Always ErrorBanner:** Persistent, dismissible error display
+- No toasts for errors (per UX guidelines)
+- Consistent pattern across all generation errors
+
+---
+
+## Future Improvements
+
+### Email Service
+
+1. **Add retry logic for transient failures** (network errors, 500s)
+2. **Exponential backoff countdown** in UI (disable button with timer)
+3. **Circuit breaker** for repeated Resend failures
+
+### Claude API
+
+1. **Add custom error code** for rate limits (similar to Resend pattern)
+2. **Return 503 for Claude rate limits** instead of 500
+3. **Show retry countdown** in ErrorBanner for rate limits
+4. **Distinguish between user errors (400) and service errors (503)**
+
+---
+
+## Related Documentation
+
+- [EMAIL-RATE-LIMITING.md](../security/EMAIL-RATE-LIMITING.md) - Email rate limit strategy
+- [ERROR-HANDLING-UX.md](../components/ERROR-HANDLING-UX.md) - Frontend error display patterns
+- [FREEMIUM-API-PROTECTION.md](../security/FREEMIUM-API-PROTECTION.md) - API protection strategy
+- [PROMPT-CACHING-GUIDE.md](./PROMPT-CACHING-GUIDE.md) - Claude API optimization
+
+---
+
+**Last Updated:** October 31, 2025
+**Version:** 1.0.0

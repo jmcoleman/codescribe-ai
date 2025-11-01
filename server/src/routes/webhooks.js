@@ -424,6 +424,7 @@ async function createOrUpdateSubscription(stripeSubscription, userId, createdVia
     status: stripeSubscription.status,
     currentPeriodStart: new Date(stripeSubscription.current_period_start * 1000),
     currentPeriodEnd: new Date(stripeSubscription.current_period_end * 1000),
+    livemode: stripeSubscription.livemode, // Track test vs production subscriptions
     cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end,
     canceledAt: stripeSubscription.canceled_at
       ? new Date(stripeSubscription.canceled_at * 1000)
@@ -451,10 +452,19 @@ async function createOrUpdateSubscription(stripeSubscription, userId, createdVia
     console.log(`✅ Created subscription ${stripeSubscription.id} (via: ${createdVia})`);
   }
 
-  // Update user's tier if subscription is active
+  // Update user's tier ONLY if subscription is active AND in production mode
+  // Test/sandbox subscriptions (livemode=false) are recorded but don't upgrade tier
   if (['active', 'trialing'].includes(stripeSubscription.status)) {
-    await User.updateTier(userId, tier);
-    console.log(`✅ Updated user ${userId} tier to ${tier}`);
+    if (stripeSubscription.livemode === true) {
+      // Production subscription - upgrade tier
+      await User.updateTier(userId, tier);
+      console.log(`✅ Updated user ${userId} tier to ${tier} (production subscription)`);
+    } else {
+      // Test/sandbox subscription - record but don't upgrade tier
+      console.log(`⚠️  Test subscription (livemode=false) - tier unchanged for user ${userId}`);
+      console.log(`   Subscription tier: ${tier}, User tier: unchanged (still free)`);
+      // Still process subscription for analytics and testing checkout flow
+    }
   }
 }
 

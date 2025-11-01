@@ -1,7 +1,7 @@
 # Subscription Management Guide
 
 **Epic:** 2.4 - Payment Integration
-**Last Updated:** October 30, 2025
+**Last Updated:** October 31, 2025
 **Status:** Production Ready (Test Mode)
 
 ## Overview
@@ -507,6 +507,167 @@ CLIENT_URL=http://localhost:5173
 ### Email Notifications (Epic 2.7)
 - [ ] **Transactional Emails** - Send emails on upgrade/downgrade/renewal
 - [ ] **Personalized Templates** - Use name field for all emails
+
+---
+
+## Test vs Production Subscriptions
+
+### Overview
+
+CodeScribe AI automatically detects whether subscriptions are created in **Stripe test mode** (sandbox) or **live mode** (production) using Stripe's built-in `livemode` boolean property. This allows:
+
+1. ✅ **Test checkout flow** - Users can complete Stripe Checkout to test the UX
+2. ✅ **Prevent tier upgrades** - Test subscriptions don't upgrade user tiers (stays FREE)
+3. ✅ **Analytics** - Track which tiers users tested vs actually purchased
+4. ✅ **Debugging** - Distinguish test data from production data
+
+### How It Works
+
+**Stripe's `livemode` Property:**
+- Every Stripe object (subscription, payment, customer) includes `livemode: boolean`
+- `livemode: false` - Created with test API keys (sandbox, test cards)
+- `livemode: true` - Created with live API keys (production, real payments)
+
+**CodeScribe Implementation:**
+
+1. **Webhook Processing** ([webhooks.js:427](../../server/src/routes/webhooks.js#L427))
+   ```javascript
+   const subscriptionData = {
+     // ... other fields
+     livemode: stripeSubscription.livemode, // Track test vs production
+   };
+   ```
+
+2. **Tier Upgrade Logic** ([webhooks.js:455-468](../../server/src/routes/webhooks.js#L455-L468))
+   ```javascript
+   if (['active', 'trialing'].includes(stripeSubscription.status)) {
+     if (stripeSubscription.livemode === true) {
+       // Production subscription - upgrade tier
+       await User.updateTier(userId, tier);
+       console.log(`✅ Updated user ${userId} tier to ${tier} (production)`);
+     } else {
+       // Test subscription - record but don't upgrade tier
+       console.log(`⚠️  Test subscription (livemode=false) - tier unchanged`);
+       // Still process subscription for analytics and testing
+     }
+   }
+   ```
+
+3. **Database Storage** ([Migration 009](../../server/src/db/migrations/009-add-livemode-to-subscriptions.sql))
+   ```sql
+   ALTER TABLE subscriptions
+   ADD COLUMN livemode BOOLEAN NOT NULL DEFAULT false;
+
+   CREATE INDEX idx_subscriptions_livemode ON subscriptions(livemode);
+   ```
+
+### Example Scenarios
+
+#### Scenario 1: Test User (Sandbox Checkout)
+
+**Setup:**
+- Production app connected to Stripe **test mode** (default)
+- Environment: `STRIPE_ENV=sandbox`
+- API Keys: `sk_test_xxx`, `pk_test_xxx`
+
+**Flow:**
+1. User clicks "Subscribe to Starter" → Opens Stripe Checkout
+2. User enters test card: `4242 4242 4242 4242`
+3. Stripe creates subscription with `livemode: false`
+4. Webhook fires → Subscription created in database with `livemode: false`
+5. **User tier stays FREE** (no upgrade)
+6. Subscription visible in database for analytics
+
+**Database Record:**
+```sql
+subscription_id | user_id | tier    | status | livemode | user_actual_tier
+sub_test_123   | 42      | starter | active | false    | free
+```
+
+**Benefit:** Users can test checkout UX without getting extra API credits
+
+---
+
+#### Scenario 2: Production User (Live Checkout)
+
+**Setup:**
+- Production app connected to Stripe **live mode**
+- Environment: `STRIPE_ENV=production`
+- API Keys: `sk_live_xxx`, `pk_live_xxx`
+
+**Flow:**
+1. User clicks "Subscribe to Starter" → Opens Stripe Checkout
+2. User enters real payment method
+3. Stripe creates subscription with `livemode: true`
+4. Webhook fires → Subscription created with `livemode: true`
+5. **User tier upgraded to STARTER** (real subscription)
+6. User gets 50 generations/month immediately
+
+**Database Record:**
+```sql
+subscription_id | user_id | tier    | status | livemode | user_actual_tier
+sub_live_456   | 42      | starter | active | true     | starter
+```
+
+**Benefit:** Real payments correctly upgrade user tiers
+
+---
+
+### Analytics Queries
+
+**Count test vs production subscriptions:**
+```sql
+SELECT
+  livemode,
+  tier,
+  COUNT(*) as count
+FROM subscriptions
+WHERE status IN ('active', 'trialing')
+GROUP BY livemode, tier
+ORDER BY livemode DESC, tier;
+```
+
+**Find users who tested but didn't subscribe:**
+```sql
+SELECT
+  u.id,
+  u.email,
+  s.tier as tested_tier,
+  s.created_at as test_date
+FROM users u
+JOIN subscriptions s ON s.user_id = u.id
+WHERE s.livemode = false
+  AND u.tier = 'free'
+  AND NOT EXISTS (
+    SELECT 1 FROM subscriptions s2
+    WHERE s2.user_id = u.id AND s2.livemode = true
+  );
+```
+
+### Migration from LOCK_USER_TIERS
+
+**Old Approach (Deprecated):**
+```bash
+# .env
+LOCK_USER_TIERS=true  # Manual flag to prevent tier upgrades
+```
+
+**New Approach (Active):**
+- Automatic detection via `subscription.livemode`
+- No manual configuration needed
+- Works across dev/preview/production environments
+- Stripe controls the mode via API keys
+
+**Migration Steps:**
+1. ✅ Added `livemode` column to subscriptions table (Migration 009)
+2. ✅ Updated `Subscription.create()` to store livemode ([Subscription.js:43](../../server/src/models/Subscription.js#L43))
+3. ✅ Updated webhooks to check livemode instead of env var ([webhooks.js:458](../../server/src/routes/webhooks.js#L458))
+4. ✅ Removed `LOCK_USER_TIERS` from .env.example
+
+**Benefits:**
+- Simpler configuration (no manual flag to remember)
+- Automatic detection prevents human error
+- Analytics on test behavior included free
 
 ---
 

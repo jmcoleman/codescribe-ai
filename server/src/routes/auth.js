@@ -723,9 +723,16 @@ router.post(
       const rateLimit = checkEmailRateLimit(rateLimitKey, EMAIL_VERIFICATION_COOLDOWN_MS);
 
       if (!rateLimit.allowed) {
+        // Format remaining time as minutes and seconds for readability
+        const minutes = Math.floor(rateLimit.remainingSeconds / 60);
+        const seconds = rateLimit.remainingSeconds % 60;
+        const timeStr = minutes > 0
+          ? `${minutes} minute${minutes !== 1 ? 's' : ''} and ${seconds} second${seconds !== 1 ? 's' : ''}`
+          : `${seconds} second${seconds !== 1 ? 's' : ''}`;
+
         return res.status(429).json({
           success: false,
-          error: `Please wait ${rateLimit.remainingSeconds} seconds before requesting another verification email`
+          error: `Please wait ${timeStr} before requesting another verification email`
         });
       }
 
@@ -749,6 +756,16 @@ router.post(
       });
     } catch (error) {
       console.error('Resend verification error:', error);
+
+      // Check if it's a Resend API rate limit error
+      if (error.code === 'RESEND_RATE_LIMIT') {
+        return res.status(503).json({
+          success: false,
+          error: error.message || 'Email service is temporarily unavailable. Please try again in a few minutes.'
+        });
+      }
+
+      // Generic error response for all other errors
       res.status(500).json({
         success: false,
         error: 'Failed to send verification email'

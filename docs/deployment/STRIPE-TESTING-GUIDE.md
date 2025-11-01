@@ -11,12 +11,15 @@
 
 **Backend (.env):**
 ```bash
-# Stripe keys from dashboard
+# Stripe Environment (defaults to sandbox if not set)
+STRIPE_ENV=sandbox  # Use 'sandbox' for testing, 'production' for live payments
+
+# Stripe keys from dashboard (test mode for sandbox)
 STRIPE_SECRET_KEY=sk_test_xxxxx
 STRIPE_PUBLISHABLE_KEY=pk_test_xxxxx
 STRIPE_WEBHOOK_SECRET=whsec_xxxxx  # From stripe listen
 
-# Price IDs from Stripe products
+# Price IDs from Stripe products (test mode IDs)
 STRIPE_PRICE_STARTER_MONTHLY=price_xxxxx
 STRIPE_PRICE_STARTER_ANNUAL=price_xxxxx
 STRIPE_PRICE_PRO_MONTHLY=price_xxxxx
@@ -35,9 +38,14 @@ ENABLE_AUTH=true
 
 **Frontend (.env):**
 ```bash
+# Stripe Environment (defaults to sandbox if not set)
+VITE_STRIPE_ENV=sandbox  # Use 'sandbox' for test cards, 'production' for real payments
+
 VITE_STRIPE_PUBLISHABLE_KEY=pk_test_xxxxx
 VITE_ENABLE_AUTH=true
 ```
+
+**Note:** The `STRIPE_ENV` and `VITE_STRIPE_ENV` variables control whether you're using Stripe's test mode (sandbox) or live mode (production). By default, sandbox mode is used, allowing you to test with test cards without any risk of real charges.
 
 ### Step 2: Start Services
 

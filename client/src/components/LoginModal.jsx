@@ -12,7 +12,7 @@ import { Button } from './Button';
 import { useAuth } from '../contexts/AuthContext';
 import { toastCompact } from '../utils/toast';
 import { trackOAuth } from '../utils/analytics';
-import { STORAGE_KEYS, setSessionItem } from '../constants/storage';
+import { STORAGE_KEYS, setSessionItem, getSessionItem, removeSessionItem } from '../constants/storage';
 import { API_URL } from '../config/api';
 
 export function LoginModal({ isOpen, onClose, onSwitchToSignup, onSwitchToForgot }) {
@@ -200,7 +200,74 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup, onSwitchToForgot
 
       if (result.success) {
         toastCompact('Welcome back!', 'success');
-        onClose();
+
+        // Check for pending subscription intent (from pricing page)
+        const pendingSubscriptionStr = getSessionItem(STORAGE_KEYS.PENDING_SUBSCRIPTION);
+
+        if (pendingSubscriptionStr) {
+          try {
+            const pendingSubscription = JSON.parse(pendingSubscriptionStr);
+
+            // Get auth token for checkout
+            const token = result.token || localStorage.getItem('token');
+
+            // Create checkout session
+            const checkoutResponse = await fetch(`${API_URL}/api/payments/create-checkout-session`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                tier: pendingSubscription.tier,
+                billingPeriod: pendingSubscription.billingPeriod,
+              }),
+            });
+
+            if (checkoutResponse.ok) {
+              const { url } = await checkoutResponse.json();
+
+              // Clear pending subscription from storage (only after successful checkout creation)
+              removeSessionItem(STORAGE_KEYS.PENDING_SUBSCRIPTION);
+
+              // Redirect to Stripe Checkout
+              window.location.href = url;
+              return; // Don't close modal, user is being redirected
+            } else if (checkoutResponse.status === 403) {
+              // Check if it's an unverified email error
+              try {
+                const errorData = await checkoutResponse.json();
+                if (errorData.emailVerified === false) {
+                  // User logged in but email not verified
+                  // Keep pending subscription intent for after verification
+                  // Close login modal and let PricingPage handle verification modal
+                  onClose();
+                  return;
+                }
+              } catch (e) {
+                // Error parsing response, fall through to generic error
+              }
+
+              // Other 403 error - clear intent and close
+              removeSessionItem(STORAGE_KEYS.PENDING_SUBSCRIPTION);
+              console.error('Failed to create checkout session after login: forbidden');
+              onClose();
+            } else {
+              // Checkout failed for other reason - clear intent and let user try again
+              removeSessionItem(STORAGE_KEYS.PENDING_SUBSCRIPTION);
+              console.error('Failed to create checkout session after login');
+              onClose();
+            }
+          } catch (error) {
+            // Failed to parse or process pending subscription - clear intent and close
+            removeSessionItem(STORAGE_KEYS.PENDING_SUBSCRIPTION);
+            console.error('Error processing pending subscription:', error);
+            onClose();
+          }
+        } else {
+          // No pending subscription - just close modal
+          onClose();
+        }
       } else {
         // Server/auth errors - use flushSync to ensure DOM updates before focus
         flushSync(() => {

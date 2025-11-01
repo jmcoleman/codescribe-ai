@@ -3,15 +3,33 @@
  *
  * Shows a banner at the top of the page for users with unverified emails.
  * Allows users to resend verification email.
+ * Dismissal state persists for the entire session (until browser tab closes).
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Mail, X, Loader2 } from 'lucide-react';
 import { toastSuccess, toastError } from '../utils/toast';
+import { STORAGE_KEYS, getSessionItem, setSessionItem, removeSessionItem } from '../constants/storage';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function UnverifiedEmailBanner({ user, onDismiss }) {
   const [isResending, setIsResending] = useState(false);
-  const [isDismissed, setIsDismissed] = useState(false);
+  const { getToken } = useAuth();
+
+  // Check sessionStorage for dismiss state (persists across navigation)
+  const [isDismissed, setIsDismissed] = useState(() => {
+    return getSessionItem(STORAGE_KEYS.EMAIL_VERIFICATION_BANNER_DISMISSED) === 'true';
+  });
+
+  // Reset dismiss state when user changes (e.g., login/logout)
+  useEffect(() => {
+    // If user changes or logs out, reset the dismissed state
+    if (!user || user.email_verified) {
+      // User logged out or email is now verified - clear dismiss state
+      removeSessionItem(STORAGE_KEYS.EMAIL_VERIFICATION_BANNER_DISMISSED);
+      setIsDismissed(false);
+    }
+  }, [user?.id, user?.email_verified]); // Track user ID and verification status
 
   // Don't show if user is verified or banner is dismissed
   if (!user || user.email_verified || isDismissed) {
@@ -22,7 +40,7 @@ export default function UnverifiedEmailBanner({ user, onDismiss }) {
     setIsResending(true);
 
     try {
-      const token = localStorage.getItem('token');
+      const token = getToken();
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/resend-verification`, {
         method: 'POST',
         headers: {
@@ -36,17 +54,35 @@ export default function UnverifiedEmailBanner({ user, onDismiss }) {
       if (response.ok) {
         toastSuccess('Verification email sent! Please check your inbox.');
       } else {
-        toastError(data.error || 'Failed to send verification email');
+        // Handle specific error cases
+        if (response.status === 429) {
+          // App rate limit - user can retry later
+          toastError(data.error || 'Please wait before requesting another verification email');
+        } else if (response.status === 503) {
+          // Resend API rate limit - service temporarily unavailable
+          toastError(data.error || 'Email service is temporarily unavailable. Please try again in a few minutes.');
+        } else if (response.status === 401) {
+          // Authentication failed - session expired, need to sign in again
+          toastError('Session expired. Please sign in again.');
+          // Let the app handle the redirect/login modal
+          window.location.reload();
+        } else {
+          // Other API errors - show in toast
+          toastError(data.error || 'Failed to send verification email');
+        }
       }
     } catch (error) {
+      // Only network errors (fetch failures) end up here
       console.error('Resend verification error:', error);
-      toastError('An error occurred. Please try again.');
+      toastError('Network error. Please check your connection and try again.');
     } finally {
       setIsResending(false);
     }
   };
 
   const handleDismiss = () => {
+    // Store dismiss state in sessionStorage (persists until tab closes)
+    setSessionItem(STORAGE_KEYS.EMAIL_VERIFICATION_BANNER_DISMISSED, 'true');
     setIsDismissed(true);
     if (onDismiss) {
       onDismiss();

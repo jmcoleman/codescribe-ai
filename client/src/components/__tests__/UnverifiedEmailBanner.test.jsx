@@ -14,11 +14,19 @@ vi.mock('../../utils/toast', () => ({
   toastError: vi.fn(),
 }));
 
+// Mock AuthContext
+vi.mock('../../contexts/AuthContext', () => ({
+  useAuth: () => ({
+    getToken: () => 'mock-token',
+  }),
+}));
+
 describe('UnverifiedEmailBanner', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     global.fetch = vi.fn();
     localStorage.clear();
+    sessionStorage.clear();
   });
 
   const unverifiedUser = {

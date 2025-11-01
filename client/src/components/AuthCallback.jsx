@@ -11,6 +11,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { trackOAuth } from '../utils/analytics';
 import { STORAGE_KEYS, getSessionItem, removeSessionItem, setStorageItem } from '../constants/storage';
+import { API_URL } from '../config/api';
 
 export function AuthCallback() {
   const navigate = useNavigate();
@@ -70,6 +71,47 @@ export function AuthCallback() {
 
           // Clear any previous auth errors
           clearError();
+
+          // Check for pending subscription
+          const pendingSubscriptionStr = getSessionItem(STORAGE_KEYS.PENDING_SUBSCRIPTION);
+
+          if (pendingSubscriptionStr) {
+            try {
+              const pendingSubscription = JSON.parse(pendingSubscriptionStr);
+
+              // Clear pending subscription from storage
+              removeSessionItem(STORAGE_KEYS.PENDING_SUBSCRIPTION);
+
+              // Redirect to create checkout session
+              // OAuth users are automatically verified, so we can proceed directly
+              const checkoutResponse = await fetch(`${API_URL}/api/payments/create-checkout-session`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`,
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                  tier: pendingSubscription.tier,
+                  billingPeriod: pendingSubscription.billingPeriod,
+                }),
+              });
+
+              if (checkoutResponse.ok) {
+                const { url } = await checkoutResponse.json();
+                window.location.href = url; // Redirect to Stripe Checkout
+                return;
+              } else {
+                // If checkout fails, redirect to pricing page
+                console.error('Checkout creation failed after OAuth');
+                window.location.href = '/pricing';
+                return;
+              }
+            } catch (error) {
+              console.error('Failed to process pending subscription:', error);
+              // Fall through to normal home redirect
+            }
+          }
 
           // Redirect to home page with full page reload
           // This triggers AuthContext initialization with the new token

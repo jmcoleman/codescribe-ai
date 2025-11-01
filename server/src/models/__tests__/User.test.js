@@ -189,7 +189,8 @@ describeOrSkip('User Model', () => {
         id: 1,
         email: 'github@example.com',
         github_id: 'gh123',
-        tier: 'free'
+        tier: 'free',
+        email_verified: true
       };
 
       sql.mockResolvedValue({ rows: [mockUser] });
@@ -203,22 +204,24 @@ describeOrSkip('User Model', () => {
       expect(sql).toHaveBeenCalledTimes(1);
     });
 
-    it('should link GitHub account to existing email', async () => {
+    it('should link GitHub account to existing email and mark as verified', async () => {
       const existingUser = {
         id: 1,
         email: 'user@example.com',
         github_id: null,
-        tier: 'free'
+        tier: 'free',
+        email_verified: false
       };
 
       const updatedUser = {
         ...existingUser,
-        github_id: 'gh456'
+        github_id: 'gh456',
+        email_verified: true
       };
 
       // First call: check by GitHub ID (not found)
       // Second call: check by email (found)
-      // Third call: update with GitHub ID
+      // Third call: update with GitHub ID and mark email as verified
       sql
         .mockResolvedValueOnce({ rows: [] })
         .mockResolvedValueOnce({ rows: [existingUser] })
@@ -230,20 +233,22 @@ describeOrSkip('User Model', () => {
       });
 
       expect(user.github_id).toBe('gh456');
+      expect(user.email_verified).toBe(true);
       expect(sql).toHaveBeenCalledTimes(3);
     });
 
-    it('should create new user if not found', async () => {
+    it('should create new user with verified email', async () => {
       const newUser = {
         id: 2,
         email: 'newgithub@example.com',
         github_id: 'gh789',
-        tier: 'free'
+        tier: 'free',
+        email_verified: true
       };
 
       // First call: check by GitHub ID (not found)
       // Second call: check by email (not found)
-      // Third call: create new user
+      // Third call: create new user with verified email
       sql
         .mockResolvedValueOnce({ rows: [] })
         .mockResolvedValueOnce({ rows: [] })
@@ -255,6 +260,7 @@ describeOrSkip('User Model', () => {
       });
 
       expect(user).toEqual(newUser);
+      expect(user.email_verified).toBe(true);
       expect(sql).toHaveBeenCalledTimes(3);
     });
   });
@@ -692,16 +698,18 @@ describeOrSkip('User Model', () => {
       sql
         .mockResolvedValueOnce({ rows: [] }) // Not found by GitHub ID
         .mockResolvedValueOnce({ rows: [] }) // Not found by email
-        .mockResolvedValueOnce({ rows: [{ id: 1, email, github_id: githubId, tier: 'free' }] }); // Created
+        .mockResolvedValueOnce({ rows: [{ id: 1, email, github_id: githubId, tier: 'free', email_verified: true }] }); // Created with verified email
 
       const created = await User.findOrCreateByGithub({ githubId, email });
       expect(created.github_id).toBe(githubId);
+      expect(created.email_verified).toBe(true);
 
       // Second login - should find existing user
       sql.mockResolvedValueOnce({ rows: [created] }); // Found by GitHub ID
 
       const found = await User.findOrCreateByGithub({ githubId, email });
       expect(found.id).toBe(created.id);
+      expect(found.email_verified).toBe(true);
     });
   });
 

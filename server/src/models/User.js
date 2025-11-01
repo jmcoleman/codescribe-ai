@@ -77,14 +77,17 @@ class User {
 
   /**
    * Create or update a user from GitHub OAuth
+   * GitHub OAuth users are automatically marked as verified since GitHub
+   * has already verified their email address.
+   *
    * @param {string} githubId - GitHub user ID
    * @param {string} email - User email
-   * @returns {Promise<Object>} User object
+   * @returns {Promise<Object>} User object with email_verified=true
    */
   static async findOrCreateByGithub({ githubId, email }) {
     // Try to find existing user by GitHub ID
     let result = await sql`
-      SELECT id, email, github_id, tier, created_at
+      SELECT id, email, github_id, tier, email_verified, created_at
       FROM users
       WHERE github_id = ${githubId}
     `;
@@ -95,27 +98,29 @@ class User {
 
     // Try to find by email and link GitHub account
     result = await sql`
-      SELECT id, email, github_id, tier, created_at
+      SELECT id, email, github_id, tier, email_verified, created_at
       FROM users
       WHERE email = ${email}
     `;
 
     if (result.rows.length > 0) {
-      // Link GitHub account to existing user
+      // Link GitHub account to existing user and mark email as verified
+      // (GitHub has already verified the email address)
       const updateResult = await sql`
         UPDATE users
-        SET github_id = ${githubId}, updated_at = NOW()
+        SET github_id = ${githubId}, email_verified = true, updated_at = NOW()
         WHERE id = ${result.rows[0].id}
-        RETURNING id, email, github_id, tier, created_at
+        RETURNING id, email, github_id, tier, email_verified, created_at
       `;
       return updateResult.rows[0];
     }
 
-    // Create new user
+    // Create new user with verified email
+    // (GitHub has already verified the email address)
     const createResult = await sql`
-      INSERT INTO users (email, github_id, tier)
-      VALUES (${email}, ${githubId}, 'free')
-      RETURNING id, email, github_id, tier, created_at
+      INSERT INTO users (email, github_id, tier, email_verified)
+      VALUES (${email}, ${githubId}, 'free', true)
+      RETURNING id, email, github_id, tier, email_verified, created_at
     `;
 
     return createResult.rows[0];

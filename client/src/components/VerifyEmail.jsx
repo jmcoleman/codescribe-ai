@@ -8,10 +8,14 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import { STORAGE_KEYS, getSessionItem, removeSessionItem } from '../constants/storage';
+import { API_URL } from '../config/api';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function VerifyEmail() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { getToken } = useAuth();
   const [status, setStatus] = useState('verifying'); // 'verifying' | 'success' | 'error'
   const [message, setMessage] = useState('');
 
@@ -38,12 +42,59 @@ export default function VerifyEmail() {
 
         if (response.ok) {
           setStatus('success');
-          setMessage('Your email has been verified successfully!');
 
-          // Redirect to home after 3 seconds
-          setTimeout(() => {
-            navigate('/');
-          }, 3000);
+          // Check for pending subscription
+          const pendingSubscriptionStr = getSessionItem(STORAGE_KEYS.PENDING_SUBSCRIPTION);
+
+          if (pendingSubscriptionStr) {
+            try {
+              const pendingSubscription = JSON.parse(pendingSubscriptionStr);
+              setMessage(`Your email has been verified! Redirecting to complete your ${pendingSubscription.tierName} subscription...`);
+
+              // Clear pending subscription from storage
+              removeSessionItem(STORAGE_KEYS.PENDING_SUBSCRIPTION);
+
+              // Redirect to create checkout session
+              setTimeout(async () => {
+                try {
+                  const token = getToken();
+                  const checkoutResponse = await fetch(`${API_URL}/api/payments/create-checkout-session`, {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${token}`,
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                      tier: pendingSubscription.tier,
+                      billingPeriod: pendingSubscription.billingPeriod,
+                    }),
+                  });
+
+                  if (checkoutResponse.ok) {
+                    const { url } = await checkoutResponse.json();
+                    window.location.href = url; // Redirect to Stripe Checkout
+                  } else {
+                    // If checkout fails, redirect to pricing page
+                    navigate('/pricing');
+                  }
+                } catch (error) {
+                  console.error('Checkout redirect error:', error);
+                  navigate('/pricing');
+                }
+              }, 2000);
+            } catch (error) {
+              console.error('Failed to parse pending subscription:', error);
+              setMessage('Your email has been verified successfully!');
+              setTimeout(() => navigate('/'), 3000);
+            }
+          } else {
+            // No pending subscription, normal redirect
+            setMessage('Your email has been verified successfully!');
+            setTimeout(() => {
+              navigate('/');
+            }, 3000);
+          }
         } else {
           setStatus('error');
           setMessage(data.error || 'Verification failed. The link may have expired.');
