@@ -722,15 +722,22 @@ npm run test:e2e:headed       # With browser UI (for debugging)
 
 ### 🚀 Future Development
 
-**Phase 2 - Payments Infrastructure (Current):**
-- ✅ Epic 2.1: Authentication & User Management - **COMPLETE**
-- 🚧 Epic 2.2: Tier System & Feature Flags (Free → Starter → Pro → Team → Enterprise)
-- 📋 Epic 2.3: Payment Integration (Stripe)
-- 📋 Epic 2.4: UI Integration & User Dashboard
+**Phase 2 - Payments Infrastructure (Current - v2.4.2):**
+- ✅ Epic 2.1: Authentication & User Management (v2.0.0) - **COMPLETE**
+- ✅ Epic 2.2: Tier System & Feature Flags (v2.1.0-v2.2.0) - **COMPLETE**
+- ✅ Epic 2.3: UX Enhancements & File Upload (v2.3.0) - **COMPLETE**
+- ✅ Epic 2.4: Payment Integration & Test Infrastructure (v2.4.0-v2.4.2) - **COMPLETE**
+  - Stripe integration (test + live modes)
+  - Email rate limiting & verification
+  - Livemode detection for subscriptions
+  - 1-hour prompt caching ($100-400/mo savings)
+- 📋 Epic 2.5: Essential Legal (Terms & Privacy) - **PLANNED**
+- 📋 Epic 2.6: UI Integration & Usage Dashboard - **PLANNED**
+- 📋 Epic 2.7: Production Launch (Post-LLC, Jan 14+ 2026) - **PLANNED**
 
 **Upcoming Phases:**
-- **Phase 3:** UX Enhancements (Dark mode, multi-file support, custom prompts)
-- **Phase 4:** Documentation Capabilities (OpenAPI, custom templates, exports)
+- **Phase 3:** Dark Mode & UI Enhancements (Theming system, layout improvements, accessibility)
+- **Phase 4:** Documentation Capabilities (OpenAPI, multi-file support, custom templates)
 - **Phase 5:** Developer Tools (CLI, VS Code extension, API client)
 - **Phase 6:** Enterprise Readiness (SSO, audit logs, white-label, teams)
 

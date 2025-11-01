@@ -65,8 +65,8 @@
       "text": "codescribeai.com",
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
-    "footerLeft": "<strong>CodeScribe AI</strong> \u00b7 Strategic Roadmap v3.4",
-    "footer": "Phase 1 Complete \u00b7 Phase 2: Epic 2.4 Complete (Payment Integration - Test Mode) \u00b7 Launch: Mid-Jan 2026",
+    "footerLeft": "<strong>CodeScribe AI</strong> \u00b7 Strategic Roadmap v3.5",
+    "footer": "Phase 1 Complete \u00b7 Phase 2: Epic 2.4 Complete (v2.4.2 - Livemode & Caching) \u00b7 Launch: Mid-Jan 2026",
     "lastUpdated": "October 31, 2025"
   },
   "columns": [
@@ -257,6 +257,45 @@
             "Interactive roadmap enhancements (D hotkey for dark mode)",
             "1,662 tests (1,625 passing, 36 skipped, 1 failing) - 97.8% pass rate",
             "Note: Custom receipts deferred to Epic 2.7 (production launch)"
+          ]
+        },
+        {
+          "version": "v2.4.1",
+          "title": "Email Rate Limiting & UI Improvements",
+          "duration": "1 day",
+          "status": "\u2713 Complete",
+          "completedDate": "Oct 31, 2025",
+          "badge": "Production Fix",
+          "features": [
+            "Email rate limiting system (5-min cooldown, 10/day verification, 3/hour + 10/day password resets)",
+            "Email service mocking for dev/test (TEST_RESEND_MOCK flag, prevents quota waste)",
+            "Enhanced production logging (detailed email logs with URLs, IDs, timestamps)",
+            "UnverifiedEmailBanner redesign (brand gradient, compact layout, indigo button)",
+            "ConfirmationModal alignment fix (title/close button)",
+            "95 tests fixed (27 emailService, 28 auth-password-reset, 27 email-verification, 13 integration)",
+            "1,662 tests (1,626 passing, 36 skipped, 0 failures) - 97.8% pass rate",
+            "EMAIL-RATE-LIMITING.md documentation",
+            "Removed npm run migrate from vercel.json"
+          ]
+        },
+        {
+          "version": "v2.4.2",
+          "title": "Livemode Detection & Prompt Caching",
+          "duration": "1 day",
+          "status": "\u2713 Complete",
+          "completedDate": "Oct 31, 2025",
+          "badge": "Cost Optimization",
+          "features": [
+            "Migration 009: livemode column to subscriptions table (test vs production detection)",
+            "Prevent tier upgrades from Stripe test mode subscriptions (only livemode=true upgrades tiers)",
+            "1-hour prompt caching with auto-refresh (extended from 5 minutes)",
+            "Expected savings: $100-400/month in production (90% cost reduction on cached prompts)",
+            "Quasi-indefinite caching with steady traffic (1+ user/hour keeps cache warm)",
+            "64 frontend tests fixed (AuthProvider wrapper for VerifyEmail and UnverifiedEmailBanner)",
+            "2 backend tests fixed (livemode flag in webhook mocks)",
+            "Coverage thresholds updated for livemode changes (unified 90% for services)",
+            "1,657 tests (1,657 passing, 39 skipped) - 97.7% pass rate",
+            "Enhanced documentation (SUBSCRIPTION-FLOWS.md, SUBSCRIPTION-MANAGEMENT.md, PROMPT-CACHING-GUIDE.md)"
           ]
         }
       ]
