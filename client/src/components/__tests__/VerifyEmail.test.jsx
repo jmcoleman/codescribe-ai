@@ -7,6 +7,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { BrowserRouter, useSearchParams, useNavigate } from 'react-router-dom';
 import VerifyEmail from '../VerifyEmail';
+import { AuthProvider } from '../../contexts/AuthContext';
 
 // Mock react-router-dom hooks
 vi.mock('react-router-dom', async () => {
@@ -29,13 +30,21 @@ describe('VerifyEmail', () => {
     useSearchParams.mockReturnValue([mockSearchParams]);
     vi.clearAllMocks();
     global.fetch = vi.fn();
+
+    // Mock initial auth check to return not authenticated
+    global.fetch.mockResolvedValue({
+      ok: false,
+      status: 401,
+    });
   });
 
   const renderComponent = () => {
     return render(
-      <BrowserRouter>
-        <VerifyEmail />
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          <VerifyEmail />
+        </BrowserRouter>
+      </AuthProvider>
     );
   };
 
