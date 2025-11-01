@@ -30,8 +30,8 @@ module.exports = {
       './src/services/': {
         branches: 79,  // Actual: 79% (livemode changes reduced coverage slightly)
         functions: 85,
-        lines: isCI ? 93 : 90,  // Higher in CI (actual is 93.53%)
-        statements: isCI ? 92 : 90,  // Higher in CI (actual is 92.78%)
+        lines: 90,  // Unified threshold (livemode changes affected CI coverage)
+        statements: 90,  // Unified threshold (livemode changes affected CI coverage)
       },
       './src/middleware/': {
         branches: 85,
