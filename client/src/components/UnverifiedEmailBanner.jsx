@@ -11,6 +11,7 @@ import { Mail, X, Loader2 } from 'lucide-react';
 import { toastSuccess, toastError } from '../utils/toast';
 import { STORAGE_KEYS, getSessionItem, setSessionItem, removeSessionItem } from '../constants/storage';
 import { useAuth } from '../contexts/AuthContext';
+import { API_URL } from '../config/api';
 
 export default function UnverifiedEmailBanner({ user, onDismiss }) {
   const [isResending, setIsResending] = useState(false);
