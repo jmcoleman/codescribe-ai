@@ -66,7 +66,7 @@
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
     "footerLeft": "<strong>CodeScribe AI</strong> \u00b7 Strategic Roadmap v3.5",
-    "footer": "Phase 1 Complete \u00b7 Phase 2: Epic 2.4 Complete (v2.4.4 - Contact Sales & Email Fixes) \u00b7 Launch: Mid-Jan 2026",
+    "footer": "Phase 1 Complete \u00b7 Phase 2: Epic 2.4 Complete (v2.4.5 - Refined Light Theme v2.0) \u00b7 Launch: Mid-Jan 2026",
     "lastUpdated": "November 2, 2025"
   },
   "columns": [
@@ -346,6 +346,31 @@
             "Roadmap: Added Calendly integration and Gmail 'Send As' to backlog",
             "Complete test coverage: ContactSalesModal (25 tests), PricingPage (6 new), contact.test.js (backend), VerifyEmail (8 new)",
             "1,734 tests (1,695 passing, 39 skipped, 0 failing) - 97.8% pass rate"
+          ]
+        },
+        {
+          "version": "v2.4.5",
+          "title": "Refined Light Theme v2.0 & UX Improvements",
+          "duration": "1 day",
+          "status": "\u2713 Complete",
+          "completedDate": "Nov 2, 2025",
+          "badge": "Visual Polish",
+          "features": [
+            "Refined Light Theme v2.0: Custom Monaco Editor theme (purple keywords, green strings, cyan numbers, slate text)",
+            "Custom Prism syntax highlighting in DocPanel matching Monaco theme",
+            "Uniform code block backgrounds (slate-50) with proper borders",
+            "Disabled bracket pair colorization for cleaner appearance",
+            "Enhanced font rendering (antialiasing, optimizeLegibility)",
+            "Removed global Tailwind code styles causing unwanted backgrounds",
+            "All token types explicitly set to background: 'none' for clean rendering",
+            "Mermaid Diagram Enhancements: Darkened borders (purple-600, slate-400) for better definition",
+            "Pricing Page Large Display: Constrained card width, better gap spacing, subtle purple shadows",
+            "Refined scaling (lg:scale-[1.02]) and enhanced button shadows",
+            "Fixed Contact Sales modal intent cleanup (prevents unwanted auto-open)",
+            "Fixed code block background highlighting",
+            "Fixed Monaco editor background artifacts",
+            "USER-ROLES-SYSTEM.md planning document (309 lines)",
+            "1,786 tests (1,747 passing, 39 skipped) - 97.82% pass rate"
           ]
         }
       ]
