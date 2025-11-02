@@ -40,8 +40,8 @@ router.post(
       // Get user's full name (prefer provided name if user doesn't have one)
       let userName = '';
       if (user.first_name && user.last_name) {
-        // Use existing name from database
-        userName = `${user.first_name} ${user.last_name}`.trim();
+        // Use existing name from database (trim each part to handle extra whitespace)
+        userName = `${user.first_name.trim()} ${user.last_name.trim()}`;
       } else if (firstName && lastName) {
         // Use name provided in form
         userName = `${firstName.trim()} ${lastName.trim()}`;

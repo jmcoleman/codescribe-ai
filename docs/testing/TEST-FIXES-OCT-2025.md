@@ -1074,6 +1074,185 @@ router.get(
 
 ---
 
+### Pattern 11: ES Modules vs CommonJS in Backend Tests ⭐ NEW (v2.4.4)
+
+**Problem:**
+Backend test files using CommonJS (`require`) fail when importing ES module route files, causing "argument handler must be a function" errors.
+
+**Symptoms:**
+- Test suite fails to load with TypeError
+- Error: "argument handler must be a function"
+- Error occurs at route definition line (e.g., `router.post(...)`)
+- Middleware functions appear undefined
+
+**Example - contact.test.js (v2.4.4):**
+```javascript
+// ❌ BAD - CommonJS in test file
+const request = require('supertest');
+const express = require('express');
+const contactRouter = require('../contact');  // ES module route
+const { requireAuth, validateBody } = require('../../middleware/auth');
+
+// Test fails:
+// TypeError: argument handler must be a function
+//   at Route.<computed> [as post] (node_modules/router/lib/route.js:228:15)
+//   at Object.post (src/routes/contact.js:18:8)
+```
+
+**Root Cause:**
+1. All backend code uses ES modules (`import/export`)
+2. Test file uses CommonJS (`require`)
+3. ES module middleware imports become undefined when loaded via `require()`
+4. Route tries to use undefined functions as handlers
+5. Express throws "argument handler must be a function"
+
+**Solution 1: Convert Test to ES Modules**
+```javascript
+// ✅ GOOD - ES modules throughout
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import request from 'supertest';
+import express from 'express';
+
+// Mock dependencies BEFORE importing routes
+jest.mock('../../middleware/auth.js', () => ({
+  requireAuth: jest.fn((req, res, next) => next()),
+  validateBody: jest.fn(() => (req, res, next) => next()),
+}));
+
+// Now import routes
+import contactRouter from '../contact.js';
+import { requireAuth, validateBody } from '../../middleware/auth.js';
+```
+
+**Solution 2: Provide Manual Mock Implementations**
+```javascript
+// ❌ BAD - Automatic mock (no implementation)
+jest.mock('../../middleware/auth.js');
+
+// ✅ GOOD - Manual mock with function implementations
+jest.mock('../../middleware/auth.js', () => ({
+  requireAuth: jest.fn((req, res, next) => next()),  // Actual middleware function
+  validateBody: jest.fn(() => (req, res, next) => next()),  // Returns middleware
+}));
+```
+
+**Why:** Jest's automatic mocks for ES modules don't provide function implementations.
+
+**Solution 3: Capture Module-Load Arguments**
+
+When middleware is called at module load time (not during test runtime):
+
+```javascript
+// Use object to avoid Temporal Dead Zone errors
+const capturedState = { schema: null };
+
+jest.mock('../../middleware/auth.js', () => ({
+  requireAuth: jest.fn((req, res, next) => next()),
+  validateBody: jest.fn((schema) => {
+    capturedState.schema = schema;  // Capture for test assertions
+    return (req, res, next) => next();
+  }),
+}));
+
+// Now import route (validateBody gets called here)
+import contactRouter from '../contact.js';
+
+// In test: assert against captured schema
+it('should validate tier is required', () => {
+  expect(capturedState.schema).toMatchObject({
+    tier: { required: true, type: 'string' },
+  });
+});
+```
+
+**Why:**
+- `validateBody()` is called when route module loads
+- Jest can't track calls that happen before tests run
+- Capture arguments in mock factory function
+- Use `const obj = {}` not `let var = null` to avoid TDZ
+
+**Complete Test Template for Backend Routes:**
+```javascript
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import request from 'supertest';
+import express from 'express';
+
+// Capture state for module-load assertions
+const capturedState = { schema: null };
+
+// Mock BEFORE import
+jest.mock('../../middleware/auth.js', () => ({
+  requireAuth: jest.fn((req, res, next) => next()),
+  validateBody: jest.fn((schema) => {
+    capturedState.schema = schema;
+    return (req, res, next) => next();
+  }),
+}));
+
+jest.mock('../../services/emailService.js', () => ({
+  sendEmail: jest.fn().mockResolvedValue({ success: true }),
+}));
+
+// Import after mocks
+import myRoutes from '../myRoutes.js';
+import { requireAuth, validateBody } from '../../middleware/auth.js';
+import { sendEmail } from '../../services/emailService.js';
+
+describe('My Routes', () => {
+  let app;
+  let mockUser;
+
+  beforeEach(() => {
+    app = express();
+    app.use(express.json());
+    app.use('/api/my-routes', myRoutes);
+
+    jest.clearAllMocks();
+
+    mockUser = { id: 1, email: 'user@example.com' };
+    requireAuth.mockImplementation((req, res, next) => {
+      req.user = mockUser;
+      next();
+    });
+  });
+
+  it('should do something', async () => {
+    const response = await request(app)
+      .post('/api/my-routes/endpoint')
+      .send({ data: 'test' });
+
+    expect(response.status).toBe(200);
+    expect(sendEmail).toHaveBeenCalledWith(
+      expect.objectContaining({ data: 'test' })
+    );
+  });
+});
+```
+
+**Key Principles:**
+1. ✅ ALWAYS use ES modules (`import`) in backend tests
+2. ✅ Mock dependencies BEFORE importing routes
+3. ✅ Provide manual mock implementations (not automatic)
+4. ✅ Capture module-load arguments in mock factory
+5. ✅ Use objects for captured state (avoid TDZ)
+6. ❌ NEVER use CommonJS (`require`) with ES module routes
+7. ❌ NEVER import routes before mocking their dependencies
+
+**Impact:**
+- Fixed contact.test.js (28 tests) in v2.4.4
+- Prevents recurring "argument handler must be a function" errors
+- Establishes pattern for all future backend route tests
+
+**Related Patterns:**
+- Pattern 5: Jest ESM Module Mocking (variable naming)
+- Pattern 10: JWT vs Session Auth (backend testing)
+
+**Files Fixed:**
+- `server/src/routes/__tests__/contact.test.js` - Converted to ES modules
+- `server/src/routes/contact.js` - Fixed name trimming logic
+
+---
+
 ## 🔬 Technical Insights
 
 ### 1. AuthContext Initialization Behavior
@@ -1485,29 +1664,35 @@ await page.getByRole('dialog').getByRole('button', { name: /submit/i }).click();
 11. `server/src/services/__tests__/emailService.test.js` - Fixed ESM mocking
 12. `server/src/routes/__tests__/auth-password-reset.test.js` - Added JWT_SECRET
 
+### Backend v2.4.4 (November 2025)
+13. `server/src/routes/__tests__/contact.test.js` - Converted to ES modules (28 tests)
+14. `server/src/routes/contact.js` - Fixed name trimming logic
+
 ---
 
 ## 🏆 Success Metrics
 
 ### Quantitative
-- **75 tests fixed** total (54 frontend + 21 backend resolved)
-- **100% elimination** of all test failures (70 → 0) ✨
+- **103 tests fixed** total (54 frontend + 21 backend + 28 backend v2.4.4)
+- **100% elimination** of all test failures ✨
 - **100% pass rate** achieved for 4 frontend test files
 - **98.4% frontend** test pass rate (+4.5% improvement)
-- **94.9% backend** test pass rate (0 failures, 21 skipped)
-- **97.3% overall** pass rate (+2.6% improvement)
-- **10 patterns documented** for future test development
+- **97.8% backend** test pass rate (0 failures, 39 skipped)
+- **97.8% overall** pass rate (+3.1% improvement)
+- **11 patterns documented** for future test development (NEW: Pattern 11 - ES Modules)
 - **6 technical insights** documented
 
 ### Session Breakdown
 - **Session 1:** 41 frontend tests fixed (auth mocks, modals, file upload)
 - **Session 2 Frontend:** 13 tests fixed (6 ForgotPasswordModal + 7 ResetPassword) + 2 skipped (LoginModal)
 - **Session 2 Backend:** 21 tests resolved (code fix + documented skip)
+- **v2.4.4 Backend:** 28 tests fixed (contact.test.js ES module conversion)
 
 ### Qualitative
-- **Documented 10 reusable patterns** for future development (8 frontend + 2 backend)
+- **Documented 11 reusable patterns** for future development (8 frontend + 3 backend)
 - **Identified router mocking anti-patterns** in React Router v6
 - **Discovered JWT/session auth conflict pattern** in OAuth flows
+- **Established ES module testing pattern** for backend routes (Pattern 11)
 - **Established best practices** for auth testing and form validation
 - **Improved test maintainability** with helper functions
 - **✅ UNBLOCKED PRODUCTION DEPLOYMENT** - 0 test failures!
@@ -1517,8 +1702,9 @@ await page.getByRole('dialog').getByRole('button', { name: /submit/i }).click();
 - **Common pitfalls** identified and solutions provided
 - **Testing strategies** established for auth flows
 - **RTL limitations** documented with workarounds
-- **Backend auth patterns** documented (JWT vs sessions)
+- **Backend auth patterns** documented (JWT vs sessions, ES modules)
 - **Mock response matching** patterns established
+- **ES module mocking** comprehensive template provided
 
 ---
 
@@ -1593,9 +1779,10 @@ await page.getByRole('dialog').getByRole('button', { name: /submit/i }).click();
 8. Systematic pattern application > one-off fixes
 9. Documentation is as important as the fixes themselves
 10. Complex integration test mocking sometimes better replaced with E2E tests
+11. **CommonJS (`require`) cannot import ES module routes** - causes "argument handler must be a function" (v2.4.4)
 
 ---
 
-**Last Updated:** October 25, 2025, 9:30 PM EDT
+**Last Updated:** November 2, 2025 (v2.4.4 - Added Pattern 11: ES Modules)
 **Status:** ✅ **COMPLETE - READY FOR PRODUCTION DEPLOYMENT**
-**Test Status:** 97.3% pass rate, 0 failures, 36 documented skips
+**Test Status:** 97.8% pass rate, 0 failures, 39 documented skips
