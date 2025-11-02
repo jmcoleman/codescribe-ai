@@ -1,4 +1,4 @@
-<html lang="en" style="--color-purple-600: #9333ea; --color-purple-700: #7e22ce; --color-purple-50: #faf5ff; --color-purple-100: #f3e8ff; --color-cyan-600: #0891b2; --color-cyan-500: #06b6d4; --color-cyan-50: #ecfeff; --color-green-600: #16a34a; --color-green-500: #22c55e; --color-green-50: #f0fdf4; --color-slate-50: #f8fafc; --color-slate-100: #f1f5f9; --color-slate-200: #e2e8f0; --color-slate-300: #cbd5e1; --color-slate-500: #64748b; --color-slate-600: #475569; --color-slate-700: #334155; --color-slate-900: #0f172a; --color-header-gradient-start: #7e22ce; --color-header-gradient-end: #9333ea; --color-column-label: #64748b; --color-column-title: #0f172a; --color-column-border: #e2e8f0; --color-card-border: #e2e8f0;"><head>
+<html lang="en" style="--color-purple-600: #c084fc; --color-purple-700: #a78bfa; --color-purple-50: #1e1b4b; --color-purple-100: #312e81; --color-cyan-600: #22d3ee; --color-cyan-500: #06b6d4; --color-cyan-50: #083344; --color-green-600: #4ade80; --color-green-500: #22c55e; --color-green-50: #052e16; --color-slate-50: #020617; --color-slate-100: #0f172a; --color-slate-200: #1e293b; --color-slate-300: #334155; --color-slate-500: #94a3b8; --color-slate-600: #cbd5e1; --color-slate-700: #e2e8f0; --color-slate-900: #f8fafc; --color-header-gradient-start: #a78bfa; --color-header-gradient-end: #c084fc; --color-column-label: #94a3b8; --color-column-title: #f8fafc; --color-column-border: #1e293b; --color-card-border: #1e293b;" data-theme="dark"><head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CodeScribe AI Roadmap</title>
@@ -1043,6 +1043,64 @@
           transform: rotate(360deg);
         }
       }
+    </style><style>
+      @keyframes slideIn {
+        from {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+      @keyframes slideOut {
+        from {
+          transform: translateX(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+      }
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style><style>
+      @keyframes slideIn {
+        from {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+      @keyframes slideOut {
+        from {
+          transform: translateX(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+      }
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
     </style></head>
 <body data-new-gr-c-s-check-loaded="14.1259.0" data-gr-ext-installed="">
   <div class="page">
@@ -1059,7 +1117,7 @@
           <div class="header-controls">
             <button class="theme-toggle" id="themeToggle" title="Toggle dark mode (D)" aria-label="Toggle dark mode">
               <!-- Sun icon (shown in dark mode) -->
-              <svg class="sun-icon" style="display: none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg class="sun-icon" style="display: block;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="5"></circle>
                 <line x1="12" y1="1" x2="12" y2="3"></line>
                 <line x1="12" y1="21" x2="12" y2="23"></line>
@@ -1071,7 +1129,7 @@
                 <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
               </svg>
               <!-- Moon icon (shown in light mode) -->
-              <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+              <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
                 <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
               </svg>
             </button>
@@ -1098,7 +1156,7 @@ Press D to toggle dark mode"></div>
             <div class="column-title">Completed</div>
             <div class="column-timeline">Phase 1: Core Capabilities</div>
           </div>
-          <div class="column-body"><div class="phase-card"><div class="phase-header"><div class="phase-title">Web Application (MVP)</div><div class="phase-version">v1.0.0</div></div><ul class="feature-list"><li>4 documentation types (README, JSDoc, API, ARCHITECTURE)</li><li>Monaco Editor with syntax highlighting (24+ languages)</li><li>Real-time streaming with SSE</li><li>Quality scoring system (0-100 scale, 5 criteria)</li><li>File upload &amp; drag-and-drop</li><li>Copy-to-clipboard &amp; download</li><li>Responsive design (mobile, tablet, desktop)</li><li>660+ tests (100% passing)</li><li>95.81% backend code coverage</li><li>Mermaid diagram support</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">WCAG AA Compliance</div><div class="phase-version">v1.2.0</div></div><ul class="feature-list"><li>WCAG 2.1 AA compliance (95/100 score)</li><li>Lighthouse accessibility: 100/100</li><li>0 automated accessibility violations</li><li>Full keyboard navigation</li><li>Screen reader compatibility (NVDA, VoiceOver)</li><li>AAA color contrast (18.2:1 ratio)</li><li>Focus traps in modals</li><li>Skip navigation link</li></ul><div class="metric-badge">660+ Tests · 100% Passing</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Performance &amp; Infrastructure</div><div class="phase-version">v1.2.0</div></div><ul class="feature-list"><li>Vercel deployment with custom domain</li><li>GitHub Actions CI/CD pipeline</li><li>Test-gated deployments</li><li>Bundle optimization (78KB gzipped)</li><li>Lazy loading (Monaco, Mermaid, DocPanel)</li><li>Lighthouse performance: 75/100 (+67%)</li><li>95.81% backend code coverage</li><li>Cross-browser testing (Chrome, Firefox, Safari, Edge)</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Security &amp; Quality</div><div class="phase-version">v1.2.0</div></div><ul class="feature-list"><li>Environment variable sanitization</li><li>API key protection (server-side only)</li><li>Rate limiting (10/min, 100/hour per IP)</li><li>Input validation and sanitization</li><li>File upload security checks</li><li>HSTS headers for security</li><li>CORS configuration</li><li>Comprehensive error handling</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Bug Fixes</div><div class="phase-version">v1.2.1</div></div><ul class="feature-list"><li>DocPanel footer alignment (pixel-perfect match with CodePanel)</li><li>Download button UX fix (removed checkmark animation)</li><li>Sign-in button hidden (ENABLE_AUTH feature flag)</li><li>Examples modal preview persistence and focus alignment</li><li>Visual regression testing (Chrome, Firefox, Safari)</li><li>Mobile testing (iOS, Android)</li><li>Cross-browser compatibility verification</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Maintenance Release</div><div class="phase-version">v1.2.2</div></div><ul class="feature-list"><li>Mobile clipboard fallback (non-secure contexts)</li><li>Download button UX simplification (removed checkmark)</li><li>Enhanced mobile accessibility (focus indicators)</li><li>Test coverage for edge cases (58 error handling tests)</li><li>Cross-browser test plan with mobile file upload docs</li><li>GitHub import feature flag (hidden until v2.0)</li><li>16 files updated, 260+ net lines added</li><li>All 660+ tests passing (46 ControlBar tests + 6 skipped)</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Authentication &amp; Database (Epic 2.1)</div><div class="phase-version">v2.0.0</div></div><ul class="feature-list"><li>Passport.js authentication (local, GitHub OAuth, JWT)</li><li>Email/password login with bcrypt hashing</li><li>Complete password reset flow with email verification</li><li>Neon Postgres database via Vercel Marketplace</li><li>User schema with auth fields (reset tokens, GitHub ID, tier)</li><li>Resend email service with branded templates</li><li>Account linking (OAuth users can add password)</li><li>Password visibility toggles (eye/eyeOff icons)</li><li>100 tests fixed/added (1,347 total, 97.5% pass rate)</li><li>Backend coverage: ALL CI thresholds met (86.84% models, 65.41% routes)</li><li>GitHub Actions CI passing</li><li>Production deployment (October 26, 2025)</li></ul><div class="metric-badge">Phase 2 Started</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Tier System &amp; Feature Flags (Epic 2.2)</div><div class="phase-version">v2.1.0-v2.2.0</div></div><ul class="feature-list"><li>Backend: Protect /api/generate and /api/generate-stream with requireAuth</li><li>Backend: Usage schema (user_id, daily_count, monthly_count, daily_reset, monthly_reset)</li><li>Backend: Usage tracking with incrementUsage() after each generation</li><li>Backend: Daily/monthly reset logic with lazy reset (serverless-friendly)</li><li>Frontend: Include JWT bearer token in API requests (Authorization: Bearer &lt;token&gt;)</li><li>Frontend: Usage warning banner (80% threshold with dynamic multipliers)</li><li>Frontend: Usage limit modal (100% threshold - blocks further usage)</li><li>Frontend: useUsageTracking hook for fetching usage data</li><li>Frontend: Error handling priority system (Usage Limit &gt; API &gt; Network &gt; Validation)</li><li>3-tier system: Free (10 docs), Starter (50 docs $12), Pro (200 docs $29)</li><li>Open Core model: All 4 doc types in Free tier (adoption engine)</li><li>Deferred to Epic 2.5: Usage dashboard UI with progress bars and charts</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">UX Enhancements &amp; File Upload (Epic 2.3)</div><div class="phase-version">v2.3.0</div></div><ul class="feature-list"><li>Drag-and-drop file upload with visual purple overlay</li><li>Clear button for code editor (reset code/filename/language)</li><li>Dynamic filename display in Monaco editor header</li><li>Mobile menu logout button for authenticated users</li><li>Upgrade to Claude Sonnet 4.5 (claude-sonnet-4-5-20250929)</li><li>Page width expansion for better space utilization</li><li>15 new tests (drag-drop, clear button, logout)</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Payment Integration &amp; Test Infrastructure (Epic 2.4)</div><div class="phase-version">v2.4.0</div></div><ul class="feature-list"><li>Stripe SDK integration with test mode</li><li>Subscription management (create, update, cancel via webhooks)</li><li>Upgrade/downgrade flows with hybrid proration (documented in SUBSCRIPTION-MANAGEMENT.md)</li><li>Webhook handling (6 events: checkout completed, subscription created/updated/deleted, invoice paid/failed)</li><li>Pricing page UI (4 tiers with monthly/annual toggle)</li><li>Stripe Customer Portal integration for account management</li><li>Test mode validation with Stripe CLI - all flows working</li><li>Database schema: subscriptions table, stripe_customer_id column, name fields (Migration 008)</li><li>Subscription model with 9 methods (create, findByUserId, update, cancel, etc.)</li><li>Bidirectional name sync between app and Stripe</li><li>Customer origin tracking (app, stripe_dashboard, api, migration)</li><li>41 backend tests fixed (email verification, name sync, origin tracking, webhooks)</li><li>15 frontend tests fixed (file upload with MemoryRouter)</li><li>Pricing page added to mobile menu</li><li>Interactive roadmap enhancements (D hotkey for dark mode)</li><li>1,662 tests (1,625 passing, 36 skipped, 1 failing) - 97.8% pass rate</li><li>Note: Custom receipts deferred to Epic 2.7 (production launch)</li></ul><div class="metric-badge">Test Mode</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Email Rate Limiting &amp; UI Improvements</div><div class="phase-version">v2.4.1</div></div><ul class="feature-list"><li>Email rate limiting system (5-min cooldown, 10/day verification, 3/hour + 10/day password resets)</li><li>Email service mocking for dev/test (TEST_RESEND_MOCK flag, prevents quota waste)</li><li>Enhanced production logging (detailed email logs with URLs, IDs, timestamps)</li><li>UnverifiedEmailBanner redesign (brand gradient, compact layout, indigo button)</li><li>ConfirmationModal alignment fix (title/close button)</li><li>95 tests fixed (27 emailService, 28 auth-password-reset, 27 email-verification, 13 integration)</li><li>1,662 tests (1,626 passing, 36 skipped, 0 failures) - 97.8% pass rate</li><li>EMAIL-RATE-LIMITING.md documentation</li><li>Removed npm run migrate from vercel.json</li></ul><div class="metric-badge">Production Fix</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Livemode Detection &amp; Prompt Caching</div><div class="phase-version">v2.4.2</div></div><ul class="feature-list"><li>Migration 009: livemode column to subscriptions table (test vs production detection)</li><li>Prevent tier upgrades from Stripe test mode subscriptions (only livemode=true upgrades tiers)</li><li>1-hour prompt caching with auto-refresh (extended from 5 minutes)</li><li>Expected savings: $100-400/month in production (90% cost reduction on cached prompts)</li><li>Quasi-indefinite caching with steady traffic (1+ user/hour keeps cache warm)</li><li>64 frontend tests fixed (AuthProvider wrapper for VerifyEmail and UnverifiedEmailBanner)</li><li>2 backend tests fixed (livemode flag in webhook mocks)</li><li>Coverage thresholds updated for livemode changes (unified 90% for services)</li><li>1,657 tests (1,657 passing, 39 skipped) - 97.7% pass rate</li><li>Enhanced documentation (SUBSCRIPTION-FLOWS.md, SUBSCRIPTION-MANAGEMENT.md, PROMPT-CACHING-GUIDE.md)</li></ul><div class="metric-badge">Cost Optimization</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Payment Routes &amp; Email Verification Fixes</div><div class="phase-version">v2.4.3</div></div><ul class="feature-list"><li>Added payment and webhook routes to api/index.js (Vercel serverless function)</li><li>Fixed 404 errors on /api/payments/create-checkout-session in production</li><li>Added refreshUser() method to AuthContext to update user state after verification</li><li>Fixed banner persistence issue (banner now disappears immediately after verification)</li><li>Fixed UnverifiedEmailBanner, VerificationRequiredModal, VerifyEmail to use centralized API_URL config</li><li>Eliminated 'undefined' API URLs in production (/undefined/api/...)</li><li>Updated DEPLOYMENT-CHECKLIST.md with 30+ missing environment variables</li><li>Added comprehensive Stripe environment variable documentation (12 variables)</li><li>Moved prompt-caching-manual.js from server/tests/ to server/scripts/</li><li>1,662 tests (1,626 passing, 36 skipped, 0 failing) - 97.8% pass rate</li></ul><div class="metric-badge">Production Fix</div></div></div>
+          <div class="column-body"><div class="phase-card"><div class="phase-header"><div class="phase-title">Web Application (MVP)</div><div class="phase-version">v1.0.0</div></div><ul class="feature-list"><li>4 documentation types (README, JSDoc, API, ARCHITECTURE)</li><li>Monaco Editor with syntax highlighting (24+ languages)</li><li>Real-time streaming with SSE</li><li>Quality scoring system (0-100 scale, 5 criteria)</li><li>File upload &amp; drag-and-drop</li><li>Copy-to-clipboard &amp; download</li><li>Responsive design (mobile, tablet, desktop)</li><li>660+ tests (100% passing)</li><li>95.81% backend code coverage</li><li>Mermaid diagram support</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">WCAG AA Compliance</div><div class="phase-version">v1.2.0</div></div><ul class="feature-list"><li>WCAG 2.1 AA compliance (95/100 score)</li><li>Lighthouse accessibility: 100/100</li><li>0 automated accessibility violations</li><li>Full keyboard navigation</li><li>Screen reader compatibility (NVDA, VoiceOver)</li><li>AAA color contrast (18.2:1 ratio)</li><li>Focus traps in modals</li><li>Skip navigation link</li></ul><div class="metric-badge">660+ Tests · 100% Passing</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Performance &amp; Infrastructure</div><div class="phase-version">v1.2.0</div></div><ul class="feature-list"><li>Vercel deployment with custom domain</li><li>GitHub Actions CI/CD pipeline</li><li>Test-gated deployments</li><li>Bundle optimization (78KB gzipped)</li><li>Lazy loading (Monaco, Mermaid, DocPanel)</li><li>Lighthouse performance: 75/100 (+67%)</li><li>95.81% backend code coverage</li><li>Cross-browser testing (Chrome, Firefox, Safari, Edge)</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Security &amp; Quality</div><div class="phase-version">v1.2.0</div></div><ul class="feature-list"><li>Environment variable sanitization</li><li>API key protection (server-side only)</li><li>Rate limiting (10/min, 100/hour per IP)</li><li>Input validation and sanitization</li><li>File upload security checks</li><li>HSTS headers for security</li><li>CORS configuration</li><li>Comprehensive error handling</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Bug Fixes</div><div class="phase-version">v1.2.1</div></div><ul class="feature-list"><li>DocPanel footer alignment (pixel-perfect match with CodePanel)</li><li>Download button UX fix (removed checkmark animation)</li><li>Sign-in button hidden (ENABLE_AUTH feature flag)</li><li>Examples modal preview persistence and focus alignment</li><li>Visual regression testing (Chrome, Firefox, Safari)</li><li>Mobile testing (iOS, Android)</li><li>Cross-browser compatibility verification</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Maintenance Release</div><div class="phase-version">v1.2.2</div></div><ul class="feature-list"><li>Mobile clipboard fallback (non-secure contexts)</li><li>Download button UX simplification (removed checkmark)</li><li>Enhanced mobile accessibility (focus indicators)</li><li>Test coverage for edge cases (58 error handling tests)</li><li>Cross-browser test plan with mobile file upload docs</li><li>GitHub import feature flag (hidden until v2.0)</li><li>16 files updated, 260+ net lines added</li><li>All 660+ tests passing (46 ControlBar tests + 6 skipped)</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Authentication &amp; Database (Epic 2.1)</div><div class="phase-version">v2.0.0</div></div><ul class="feature-list"><li>Passport.js authentication (local, GitHub OAuth, JWT)</li><li>Email/password login with bcrypt hashing</li><li>Complete password reset flow with email verification</li><li>Neon Postgres database via Vercel Marketplace</li><li>User schema with auth fields (reset tokens, GitHub ID, tier)</li><li>Resend email service with branded templates</li><li>Account linking (OAuth users can add password)</li><li>Password visibility toggles (eye/eyeOff icons)</li><li>100 tests fixed/added (1,347 total, 97.5% pass rate)</li><li>Backend coverage: ALL CI thresholds met (86.84% models, 65.41% routes)</li><li>GitHub Actions CI passing</li><li>Production deployment (October 26, 2025)</li></ul><div class="metric-badge">Phase 2 Started</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Tier System &amp; Feature Flags (Epic 2.2)</div><div class="phase-version">v2.1.0-v2.2.0</div></div><ul class="feature-list"><li>Backend: Protect /api/generate and /api/generate-stream with requireAuth</li><li>Backend: Usage schema (user_id, daily_count, monthly_count, daily_reset, monthly_reset)</li><li>Backend: Usage tracking with incrementUsage() after each generation</li><li>Backend: Daily/monthly reset logic with lazy reset (serverless-friendly)</li><li>Frontend: Include JWT bearer token in API requests (Authorization: Bearer &lt;token&gt;)</li><li>Frontend: Usage warning banner (80% threshold with dynamic multipliers)</li><li>Frontend: Usage limit modal (100% threshold - blocks further usage)</li><li>Frontend: useUsageTracking hook for fetching usage data</li><li>Frontend: Error handling priority system (Usage Limit &gt; API &gt; Network &gt; Validation)</li><li>3-tier system: Free (10 docs), Starter (50 docs $12), Pro (200 docs $29)</li><li>Open Core model: All 4 doc types in Free tier (adoption engine)</li><li>Deferred to Epic 2.5: Usage dashboard UI with progress bars and charts</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">UX Enhancements &amp; File Upload (Epic 2.3)</div><div class="phase-version">v2.3.0</div></div><ul class="feature-list"><li>Drag-and-drop file upload with visual purple overlay</li><li>Clear button for code editor (reset code/filename/language)</li><li>Dynamic filename display in Monaco editor header</li><li>Mobile menu logout button for authenticated users</li><li>Upgrade to Claude Sonnet 4.5 (claude-sonnet-4-5-20250929)</li><li>Page width expansion for better space utilization</li><li>15 new tests (drag-drop, clear button, logout)</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Payment Integration &amp; Test Infrastructure (Epic 2.4)</div><div class="phase-version">v2.4.0</div></div><ul class="feature-list"><li>Stripe SDK integration with test mode</li><li>Subscription management (create, update, cancel via webhooks)</li><li>Upgrade/downgrade flows with hybrid proration (documented in SUBSCRIPTION-MANAGEMENT.md)</li><li>Webhook handling (6 events: checkout completed, subscription created/updated/deleted, invoice paid/failed)</li><li>Pricing page UI (4 tiers with monthly/annual toggle)</li><li>Stripe Customer Portal integration for account management</li><li>Test mode validation with Stripe CLI - all flows working</li><li>Database schema: subscriptions table, stripe_customer_id column, name fields (Migration 008)</li><li>Subscription model with 9 methods (create, findByUserId, update, cancel, etc.)</li><li>Bidirectional name sync between app and Stripe</li><li>Customer origin tracking (app, stripe_dashboard, api, migration)</li><li>41 backend tests fixed (email verification, name sync, origin tracking, webhooks)</li><li>15 frontend tests fixed (file upload with MemoryRouter)</li><li>Pricing page added to mobile menu</li><li>Interactive roadmap enhancements (D hotkey for dark mode)</li><li>1,662 tests (1,625 passing, 36 skipped, 1 failing) - 97.8% pass rate</li><li>Note: Custom receipts deferred to Epic 2.7 (production launch)</li></ul><div class="metric-badge">Test Mode</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Email Rate Limiting &amp; UI Improvements</div><div class="phase-version">v2.4.1</div></div><ul class="feature-list"><li>Email rate limiting system (5-min cooldown, 10/day verification, 3/hour + 10/day password resets)</li><li>Email service mocking for dev/test (TEST_RESEND_MOCK flag, prevents quota waste)</li><li>Enhanced production logging (detailed email logs with URLs, IDs, timestamps)</li><li>UnverifiedEmailBanner redesign (brand gradient, compact layout, indigo button)</li><li>ConfirmationModal alignment fix (title/close button)</li><li>95 tests fixed (27 emailService, 28 auth-password-reset, 27 email-verification, 13 integration)</li><li>1,662 tests (1,626 passing, 36 skipped, 0 failures) - 97.8% pass rate</li><li>EMAIL-RATE-LIMITING.md documentation</li><li>Removed npm run migrate from vercel.json</li></ul><div class="metric-badge">Production Fix</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Livemode Detection &amp; Prompt Caching</div><div class="phase-version">v2.4.2</div></div><ul class="feature-list"><li>Migration 009: livemode column to subscriptions table (test vs production detection)</li><li>Prevent tier upgrades from Stripe test mode subscriptions (only livemode=true upgrades tiers)</li><li>1-hour prompt caching with auto-refresh (extended from 5 minutes)</li><li>Expected savings: $100-400/month in production (90% cost reduction on cached prompts)</li><li>Quasi-indefinite caching with steady traffic (1+ user/hour keeps cache warm)</li><li>64 frontend tests fixed (AuthProvider wrapper for VerifyEmail and UnverifiedEmailBanner)</li><li>2 backend tests fixed (livemode flag in webhook mocks)</li><li>Coverage thresholds updated for livemode changes (unified 90% for services)</li><li>1,657 tests (1,657 passing, 39 skipped) - 97.7% pass rate</li><li>Enhanced documentation (SUBSCRIPTION-FLOWS.md, SUBSCRIPTION-MANAGEMENT.md, PROMPT-CACHING-GUIDE.md)</li></ul><div class="metric-badge">Cost Optimization</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Payment Routes &amp; Email Verification Fixes</div><div class="phase-version">v2.4.3</div></div><ul class="feature-list"><li>Added payment and webhook routes to api/index.js (Vercel serverless function)</li><li>Fixed 404 errors on /api/payments/create-checkout-session in production</li><li>Added refreshUser() method to AuthContext to update user state after verification</li><li>Fixed banner persistence issue (banner now disappears immediately after verification)</li><li>Fixed UnverifiedEmailBanner, VerificationRequiredModal, VerifyEmail to use centralized API_URL config</li><li>Eliminated 'undefined' API URLs in production (/undefined/api/...)</li><li>Updated DEPLOYMENT-CHECKLIST.md with 30+ missing environment variables</li><li>Added comprehensive Stripe environment variable documentation (12 variables)</li><li>Moved prompt-caching-manual.js from server/tests/ to server/scripts/</li><li>1,662 tests (1,626 passing, 36 skipped, 0 failing) - 97.8% pass rate</li></ul><div class="metric-badge">Production Fix</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Contact Sales Feature &amp; Critical Email Bug Fixes</div><div class="phase-version">v2.4.4</div></div><ul class="feature-list"><li>Contact Sales Feature: Server-side email via Resend for Enterprise/Team tiers</li><li>ContactSalesModal component with loading/success/error states</li><li>Smart name collection: optional first/last name fields (shown only if user lacks name)</li><li>Progressive data collection strategy (name collected at point of contact, not signup)</li><li>Backend name resolution priority: database → form input → empty fallback</li><li>POST /api/contact/sales endpoint (requires authentication)</li><li>Email forwarding setup for sales@codescribeai.com via Namecheap</li><li>EMAIL-FORWARDING-SETUP.md documentation (263 lines)</li><li>CRITICAL: Fixed email verification token timezone bug (tokens expiring in 4 hours instead of 24)</li><li>Added .toISOString() to User.js:378 for proper PostgreSQL timezone handling</li><li>Fixed Contact Sales modal not auto-opening after authentication</li><li>Fixed VerifyEmail and AuthCallback tier-aware routing (prevents Stripe checkout for enterprise/team)</li><li>Complete subscription flow documented with visual Mermaid diagram in SUBSCRIPTION-FLOWS.md</li><li>Payment UX: Removed forced 5-second auto-redirect on PaymentSuccess</li><li>Added 'Manage Subscription' button (opens Stripe billing portal)</li><li>ContactSalesModal UX: Removed auto-close, added explicit Close button</li><li>CLAUDE.md: Added Modal &amp; Email Confirmation UX guidelines</li><li>Roadmap: Added Calendly integration and Gmail 'Send As' to backlog</li><li>Complete test coverage: ContactSalesModal (25 tests), PricingPage (6 new), contact.test.js (backend), VerifyEmail (8 new)</li><li>1,734 tests (1,695 passing, 39 skipped, 0 failing) - 97.8% pass rate</li></ul><div class="metric-badge">Critical Fix + Feature</div></div></div>
         </div>
 
         <!-- NOW Column -->
@@ -1128,7 +1186,7 @@ Press D to toggle dark mode"></div>
             <div class="column-title">Future Expansion</div>
             <div class="column-timeline">Phases 4-6: Advanced Features &amp; Enterprise</div>
           </div>
-          <div class="column-body"><div class="phase-card"><div class="phase-header"><div class="phase-title">OpenAPI/Swagger Generation</div><div class="phase-version">Epic 4.3</div></div><ul class="feature-list"><li>New OPENAPI doc type</li><li>YAML output (OpenAPI 3.0 specification)</li><li>Parse API routes (Express, Flask, FastAPI)</li><li>Quality scoring for API specs</li><li>Schema definitions and examples</li><li>Security and authentication docs</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Custom Templates &amp; Export Formats</div><div class="phase-version">Epic 4.4</div></div><ul class="feature-list"><li>User-defined documentation templates</li><li>Template library (community templates)</li><li>Export to markdown, HTML, PDF</li><li>Template variables and placeholders</li><li>Template preview and validation</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">CLI Tool</div><div class="phase-version">Epic 5.1</div></div><ul class="feature-list"><li>Command-line interface with Commander.js</li><li>Two modes: Cloud (default) and Local (--local flag)</li><li>Cloud mode: OAuth login flow (opens browser, saves JWT token)</li><li>Cloud mode: Offline-capable JWT authentication (passport-jwt)</li><li>Local mode: User provides own Claude API key (bypasses platform)</li><li>Local mode: No usage tracking, full privacy</li><li>File path support (single file or directory)</li><li>Batch processing with glob patterns</li><li>Configuration file support (.codescriberc)</li><li>Cross-platform support (Windows, macOS, Linux)</li><li>npm package publication</li><li>CI/CD integration (GitHub Actions, GitLab CI, Jenkins)</li></ul><div class="metric-badge">CI/CD Automation</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">MCP Server</div><div class="phase-version">Epic 5.2</div></div><ul class="feature-list"><li>Model Context Protocol server implementation</li><li>Works in Claude Desktop, Claude Code, Cursor, Zed out of the box</li><li>Two modes: Cloud (default) and Local (--local flag)</li><li>Cloud mode: OAuth/JWT authentication with platform</li><li>Local mode: User provides own Claude API key (full privacy)</li><li>MCP tools: generate_docs, analyze_code, score_quality</li><li>Support for file paths, directories, and GitHub URLs</li><li>Natural language interface ('document this repo')</li><li>Shared auth system with web app and CLI</li><li>Most exciting for current AI-native developer audience</li></ul><div class="metric-badge">Claude-Native Integration</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">VS Code Extension</div><div class="phase-version">Epic 5.3</div></div><ul class="feature-list"><li>Right-click 'Generate Documentation' menu</li><li>Two implementation options: native extension OR MCP integration via Cline</li><li>OAuth login flow in IDE (same as web/CLI/MCP)</li><li>JWT token storage in VS Code SecretStorage</li><li>Inline documentation preview (WebView)</li><li>Quality score in status bar</li><li>Suggestions in problems panel</li><li>Extension settings (API key, doc type, mode selection)</li><li>VS Code Marketplace publication</li><li>Note: Cursor has native MCP support (Epic 5.2 covers Cursor)</li></ul><div class="metric-badge">VS Code Specific</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">SSO &amp; Advanced Authentication</div><div class="phase-version">Epic 6.1</div></div><ul class="feature-list"><li>SAML 2.0 integration (passport-saml strategy)</li><li>OAuth 2.0 providers (Okta, Auth0, Azure AD)</li><li>Just-In-Time (JIT) user provisioning</li><li>Role-based access control (RBAC) enhancement</li><li>Multi-factor authentication (MFA)</li></ul><div class="metric-badge">passport-saml</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Audit Logs &amp; Compliance</div><div class="phase-version">Epic 6.2</div></div><ul class="feature-list"><li>Comprehensive audit logging</li><li>Log export (CSV, JSON formats)</li><li>GDPR compliance tools</li><li>SOC 2 Type II preparation</li><li>Retention policies and data lifecycle</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">On-Premise Deployment</div><div class="phase-version">Epic 6.3</div></div><ul class="feature-list"><li>Docker containerization with Passport.js</li><li>Kubernetes deployment manifests</li><li>Self-hosted authentication (no external dependencies)</li><li>Customer-controlled user data (PostgreSQL)</li><li>Air-gapped environment support</li><li>License key validation system</li><li>Automatic updates (opt-in)</li></ul><div class="metric-badge">Self-Hosted Auth</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Testing Infrastructure Improvements</div><div class="phase-version">Epic 6.4</div></div><ul class="feature-list"><li>Playwright E2E tests for GitHub OAuth (replace 21 skipped integration tests)</li><li>Contract testing for GitHub API integration</li><li>Production OAuth monitoring and alerting</li><li>Manual regression test checklist documentation</li><li>E2E tests for critical user flows (signup, login, generate docs)</li><li>Visual regression testing with Percy or Chromatic</li><li>Performance testing with Lighthouse CI</li><li>Test coverage reporting improvements</li></ul><div class="metric-badge">E2E + Integration</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Optional Enhancements</div><div class="phase-version">Backlog</div></div><ul class="feature-list"><li>Documentation history and saved projects</li><li>GitHub repository integration</li><li>Multi-language support (i18n for UI)</li><li>Advanced Mermaid diagram auto-generation</li><li>Changelog generation from git history</li><li>Team collaboration features</li><li>Advanced analytics and monitoring</li></ul></div></div>
+          <div class="column-body"><div class="phase-card"><div class="phase-header"><div class="phase-title">OpenAPI/Swagger Generation</div><div class="phase-version">Epic 4.3</div></div><ul class="feature-list"><li>New OPENAPI doc type</li><li>YAML output (OpenAPI 3.0 specification)</li><li>Parse API routes (Express, Flask, FastAPI)</li><li>Quality scoring for API specs</li><li>Schema definitions and examples</li><li>Security and authentication docs</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Custom Templates &amp; Export Formats</div><div class="phase-version">Epic 4.4</div></div><ul class="feature-list"><li>User-defined documentation templates</li><li>Template library (community templates)</li><li>Export to markdown, HTML, PDF</li><li>Template variables and placeholders</li><li>Template preview and validation</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">CLI Tool</div><div class="phase-version">Epic 5.1</div></div><ul class="feature-list"><li>Command-line interface with Commander.js</li><li>Two modes: Cloud (default) and Local (--local flag)</li><li>Cloud mode: OAuth login flow (opens browser, saves JWT token)</li><li>Cloud mode: Offline-capable JWT authentication (passport-jwt)</li><li>Local mode: User provides own Claude API key (bypasses platform)</li><li>Local mode: No usage tracking, full privacy</li><li>File path support (single file or directory)</li><li>Batch processing with glob patterns</li><li>Configuration file support (.codescriberc)</li><li>Cross-platform support (Windows, macOS, Linux)</li><li>npm package publication</li><li>CI/CD integration (GitHub Actions, GitLab CI, Jenkins)</li></ul><div class="metric-badge">CI/CD Automation</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">MCP Server</div><div class="phase-version">Epic 5.2</div></div><ul class="feature-list"><li>Model Context Protocol server implementation</li><li>Works in Claude Desktop, Claude Code, Cursor, Zed out of the box</li><li>Two modes: Cloud (default) and Local (--local flag)</li><li>Cloud mode: OAuth/JWT authentication with platform</li><li>Local mode: User provides own Claude API key (full privacy)</li><li>MCP tools: generate_docs, analyze_code, score_quality</li><li>Support for file paths, directories, and GitHub URLs</li><li>Natural language interface ('document this repo')</li><li>Shared auth system with web app and CLI</li><li>Most exciting for current AI-native developer audience</li></ul><div class="metric-badge">Claude-Native Integration</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">VS Code Extension</div><div class="phase-version">Epic 5.3</div></div><ul class="feature-list"><li>Right-click 'Generate Documentation' menu</li><li>Two implementation options: native extension OR MCP integration via Cline</li><li>OAuth login flow in IDE (same as web/CLI/MCP)</li><li>JWT token storage in VS Code SecretStorage</li><li>Inline documentation preview (WebView)</li><li>Quality score in status bar</li><li>Suggestions in problems panel</li><li>Extension settings (API key, doc type, mode selection)</li><li>VS Code Marketplace publication</li><li>Note: Cursor has native MCP support (Epic 5.2 covers Cursor)</li></ul><div class="metric-badge">VS Code Specific</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">SSO &amp; Advanced Authentication</div><div class="phase-version">Epic 6.1</div></div><ul class="feature-list"><li>SAML 2.0 integration (passport-saml strategy)</li><li>OAuth 2.0 providers (Okta, Auth0, Azure AD)</li><li>Just-In-Time (JIT) user provisioning</li><li>Role-based access control (RBAC) enhancement</li><li>Multi-factor authentication (MFA)</li></ul><div class="metric-badge">passport-saml</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Audit Logs &amp; Compliance</div><div class="phase-version">Epic 6.2</div></div><ul class="feature-list"><li>Comprehensive audit logging</li><li>Log export (CSV, JSON formats)</li><li>GDPR compliance tools</li><li>SOC 2 Type II preparation</li><li>Retention policies and data lifecycle</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">On-Premise Deployment</div><div class="phase-version">Epic 6.3</div></div><ul class="feature-list"><li>Docker containerization with Passport.js</li><li>Kubernetes deployment manifests</li><li>Self-hosted authentication (no external dependencies)</li><li>Customer-controlled user data (PostgreSQL)</li><li>Air-gapped environment support</li><li>License key validation system</li><li>Automatic updates (opt-in)</li></ul><div class="metric-badge">Self-Hosted Auth</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Testing Infrastructure Improvements</div><div class="phase-version">Epic 6.4</div></div><ul class="feature-list"><li>Playwright E2E tests for GitHub OAuth (replace 21 skipped integration tests)</li><li>Contract testing for GitHub API integration</li><li>Production OAuth monitoring and alerting</li><li>Manual regression test checklist documentation</li><li>E2E tests for critical user flows (signup, login, generate docs)</li><li>Visual regression testing with Percy or Chromatic</li><li>Performance testing with Lighthouse CI</li><li>Test coverage reporting improvements</li></ul><div class="metric-badge">E2E + Integration</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Optional Enhancements</div><div class="phase-version">Backlog</div></div><ul class="feature-list"><li>Calendly integration for Enterprise/Team sales</li><li>Gmail 'Send As' setup for sales@codescribeai.com replies</li><li>Documentation history and saved projects</li><li>GitHub repository integration</li><li>Multi-language support (i18n for UI)</li><li>Advanced Mermaid diagram auto-generation</li><li>Changelog generation from git history</li><li>Team collaboration features</li><li>Advanced analytics and monitoring</li></ul></div></div>
         </div>
       </div>
     </div>
@@ -1136,8 +1194,8 @@ Press D to toggle dark mode"></div>
     <footer>
       <div class="footer-content">
         <div class="footer-left"><strong>CodeScribe AI</strong> · Strategic Roadmap v3.5</div>
-        <div class="footer-center">Phase 1 Complete · Phase 2: Epic 2.4 Complete (v2.4.3 - Payment Routes Fixes) · Launch: Mid-Jan 2026</div>
-        <div class="footer-right">Last Updated: November 1, 2025</div>
+        <div class="footer-center">Phase 1 Complete · Phase 2: Epic 2.4 Complete (v2.4.4 - Contact Sales &amp; Email Fixes) · Launch: Mid-Jan 2026</div>
+        <div class="footer-right">Last Updated: November 2, 2025</div>
       </div>
     </footer>
   </div>
@@ -1216,8 +1274,8 @@ Press D to toggle dark mode"></div>
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
     "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.5",
-    "footer": "Phase 1 Complete · Phase 2: Epic 2.4 Complete (v2.4.3 - Payment Routes Fixes) · Launch: Mid-Jan 2026",
-    "lastUpdated": "November 1, 2025"
+    "footer": "Phase 1 Complete · Phase 2: Epic 2.4 Complete (v2.4.4 - Contact Sales & Email Fixes) · Launch: Mid-Jan 2026",
+    "lastUpdated": "November 2, 2025"
   },
   "columns": [
     {
@@ -1466,6 +1524,36 @@ Press D to toggle dark mode"></div>
             "Added comprehensive Stripe environment variable documentation (12 variables)",
             "Moved prompt-caching-manual.js from server/tests/ to server/scripts/",
             "1,662 tests (1,626 passing, 36 skipped, 0 failing) - 97.8% pass rate"
+          ]
+        },
+        {
+          "version": "v2.4.4",
+          "title": "Contact Sales Feature & Critical Email Bug Fixes",
+          "duration": "1 day",
+          "status": "✓ Complete",
+          "completedDate": "Nov 2, 2025",
+          "badge": "Critical Fix + Feature",
+          "features": [
+            "Contact Sales Feature: Server-side email via Resend for Enterprise/Team tiers",
+            "ContactSalesModal component with loading/success/error states",
+            "Smart name collection: optional first/last name fields (shown only if user lacks name)",
+            "Progressive data collection strategy (name collected at point of contact, not signup)",
+            "Backend name resolution priority: database → form input → empty fallback",
+            "POST /api/contact/sales endpoint (requires authentication)",
+            "Email forwarding setup for sales@codescribeai.com via Namecheap",
+            "EMAIL-FORWARDING-SETUP.md documentation (263 lines)",
+            "CRITICAL: Fixed email verification token timezone bug (tokens expiring in 4 hours instead of 24)",
+            "Added .toISOString() to User.js:378 for proper PostgreSQL timezone handling",
+            "Fixed Contact Sales modal not auto-opening after authentication",
+            "Fixed VerifyEmail and AuthCallback tier-aware routing (prevents Stripe checkout for enterprise/team)",
+            "Complete subscription flow documented with visual Mermaid diagram in SUBSCRIPTION-FLOWS.md",
+            "Payment UX: Removed forced 5-second auto-redirect on PaymentSuccess",
+            "Added 'Manage Subscription' button (opens Stripe billing portal)",
+            "ContactSalesModal UX: Removed auto-close, added explicit Close button",
+            "CLAUDE.md: Added Modal & Email Confirmation UX guidelines",
+            "Roadmap: Added Calendly integration and Gmail 'Send As' to backlog",
+            "Complete test coverage: ContactSalesModal (25 tests), PricingPage (6 new), contact.test.js (backend), VerifyEmail (8 new)",
+            "1,734 tests (1,695 passing, 39 skipped, 0 failing) - 97.8% pass rate"
           ]
         }
       ]
@@ -1805,6 +1893,8 @@ Press D to toggle dark mode"></div>
           "duration": "TBD",
           "status": "Backlog (User Feedback Driven)",
           "features": [
+            "Calendly integration for Enterprise/Team sales",
+            "Gmail 'Send As' setup for sales@codescribeai.com replies",
             "Documentation history and saved projects",
             "GitHub repository integration",
             "Multi-language support (i18n for UI)",
@@ -2314,6 +2404,82 @@ Press D to toggle dark mode"></div>
 	// ]]>
 </script>
 <grammarly-desktop-integration data-grammarly-shadow-root="true"></grammarly-desktop-integration><!-- Code injected by live-server -->
+<script>
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					var parent = elem.parentElement || head;
+					parent.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					parent.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
+</script>
+<!-- Code injected by live-server -->
+<script>
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					var parent = elem.parentElement || head;
+					parent.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					parent.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
+</script>
+<!-- Code injected by live-server -->
 <script>
 	// <![CDATA[  <-- For SVG support
 	if ('WebSocket' in window) {
