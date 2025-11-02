@@ -66,8 +66,8 @@
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
     "footerLeft": "<strong>CodeScribe AI</strong> \u00b7 Strategic Roadmap v3.5",
-    "footer": "Phase 1 Complete \u00b7 Phase 2: Epic 2.4 Complete (v2.4.2 - Livemode & Caching) \u00b7 Launch: Mid-Jan 2026",
-    "lastUpdated": "October 31, 2025"
+    "footer": "Phase 1 Complete \u00b7 Phase 2: Epic 2.4 Complete (v2.4.3 - Payment Routes Fixes) \u00b7 Launch: Mid-Jan 2026",
+    "lastUpdated": "November 1, 2025"
   },
   "columns": [
     {
@@ -296,6 +296,26 @@
             "Coverage thresholds updated for livemode changes (unified 90% for services)",
             "1,657 tests (1,657 passing, 39 skipped) - 97.7% pass rate",
             "Enhanced documentation (SUBSCRIPTION-FLOWS.md, SUBSCRIPTION-MANAGEMENT.md, PROMPT-CACHING-GUIDE.md)"
+          ]
+        },
+        {
+          "version": "v2.4.3",
+          "title": "Payment Routes & Email Verification Fixes",
+          "duration": "1 day",
+          "status": "\u2713 Complete",
+          "completedDate": "Nov 1, 2025",
+          "badge": "Production Fix",
+          "features": [
+            "Added payment and webhook routes to api/index.js (Vercel serverless function)",
+            "Fixed 404 errors on /api/payments/create-checkout-session in production",
+            "Added refreshUser() method to AuthContext to update user state after verification",
+            "Fixed banner persistence issue (banner now disappears immediately after verification)",
+            "Fixed UnverifiedEmailBanner, VerificationRequiredModal, VerifyEmail to use centralized API_URL config",
+            "Eliminated 'undefined' API URLs in production (/undefined/api/...)",
+            "Updated DEPLOYMENT-CHECKLIST.md with 30+ missing environment variables",
+            "Added comprehensive Stripe environment variable documentation (12 variables)",
+            "Moved prompt-caching-manual.js from server/tests/ to server/scripts/",
+            "1,662 tests (1,626 passing, 36 skipped, 0 failing) - 97.8% pass rate"
           ]
         }
       ]
