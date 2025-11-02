@@ -477,7 +477,7 @@ Every skipped test in this document has:
 - [Testing README](README.md) - Test overview and quick commands
 - [COMPONENT-TEST-COVERAGE.md](COMPONENT-TEST-COVERAGE.md) - Component coverage matrix
 - [frontend-testing-guide.md](frontend-testing-guide.md) - React testing patterns
-- [TEST-FIXES-OCT-2025.md](TEST-FIXES-OCT-2025.md) - Test debugging patterns
+- [TEST-PATTERNS-GUIDE.md](TEST-PATTERNS-GUIDE.md) - Test debugging patterns
 - [DB-MIGRATION-MANAGEMENT.MD](../database/DB-MIGRATION-MANAGEMENT.MD) - Database testing workflow
 - [DATABASE-TESTING-GUIDE.md](../database/DATABASE-TESTING-GUIDE.md) - Database test procedures
 

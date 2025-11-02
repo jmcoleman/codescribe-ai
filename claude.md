@@ -12,7 +12,7 @@
 AI-powered documentation generator with real-time streaming, quality scoring (0-100), and WCAG 2.1 AA compliance.
 
 **Key Metrics:**
-- 1,662 tests (1,625 passing, 36 skipped, 1 flaky) | 95.81% backend coverage
+- 1,786 tests (1,747 passing, 39 skipped) | 97.82% pass rate | 91.83% backend coverage
 - Lighthouse: 75/100 performance (+67%), 100/100 accessibility
 - Bundle: 78KB gzipped (-85% reduction)
 - Accessibility: 95/100 score, 0 axe violations
@@ -48,10 +48,10 @@ AI-powered documentation generator with real-time streaming, quality scoring (0-
 | Document | Use Case | Key Contents |
 |----------|----------|--------------|
 | [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) | Performance optimization | Lazy loading, bundle analysis, Core Web Vitals, maintenance |
-| [Testing README](docs/testing/README.md) | Test navigation hub | 1,662 test stats, quick commands, coverage overview |
+| [Testing README](docs/testing/README.md) | Test navigation hub | 1,786 test stats, quick commands, coverage overview |
 | [COMPONENT-TEST-COVERAGE.md](docs/testing/COMPONENT-TEST-COVERAGE.md) | Coverage details ⭐ | 13/18 components tested, category breakdown, gaps |
 | [frontend-testing-guide.md](docs/testing/frontend-testing-guide.md) | React testing patterns | Vitest + RTL, mocking, a11y, interactions |
-| [TEST-FIXES-OCT-2025.md](docs/testing/TEST-FIXES-OCT-2025.md) | Test fix patterns ⭐⚠️ | **103 tests fixed, 11 patterns** (Pattern 11: ES Modules!), 6 insights, 97.8% pass rate |
+| [TEST-PATTERNS-GUIDE.md](docs/testing/TEST-PATTERNS-GUIDE.md) | Test fix patterns ⭐⚠️ | **103 tests fixed, 11 patterns** (Pattern 11: ES Modules!), 6 insights, 97.8% pass rate |
 
 **Specialized Tests:** [ERROR-HANDLING-TESTS.md](docs/testing/ERROR-HANDLING-TESTS.md) (58 tests) | [MERMAID-DIAGRAM-TESTS.md](docs/testing/MERMAID-DIAGRAM-TESTS.md) (14 tests) | [CROSS-BROWSER-TEST-PLAN.md](docs/testing/CROSS-BROWSER-TEST-PLAN.md) | [ACCESSIBILITY-AUDIT.MD](docs/testing/ACCESSIBILITY-AUDIT.MD)
 
@@ -151,8 +151,8 @@ await generate(code, docType, language, isDefaultCode);
 | Subscriptions/Payments | SUBSCRIPTION-MANAGEMENT.md (upgrade/downgrade flows, proration, webhooks) |
 | Performance | OPTIMIZATION-GUIDE.md |
 | Cost Optimization | PROMPT-CACHING-GUIDE.md (caching strategy, adding examples, savings) |
-| Testing | Testing README, COMPONENT-TEST-COVERAGE.md, TEST-FIXES-OCT-2025.md, SKIPPED-TESTS.md |
-| Test Fixes/Patterns | TEST-FIXES-OCT-2025.md (10 patterns, 6 insights, frontend + backend) |
+| Testing | Testing README, COMPONENT-TEST-COVERAGE.md, TEST-PATTERNS-GUIDE.md, SKIPPED-TESTS.md |
+| Test Fixes/Patterns | TEST-PATTERNS-GUIDE.md (10 patterns, 6 insights, frontend + backend) |
 | Skipped Tests | SKIPPED-TESTS.md (36 tests documented, quarterly review schedule) |
 | Accessibility | ACCESSIBILITY-AUDIT.MD, SCREEN-READER-TESTING-GUIDE.md |
 | Components | TOAST-SYSTEM.md, ERROR-HANDLING-UX.md, USAGE-PROMPTS.md, COPYBUTTON.md, etc. |
@@ -170,8 +170,8 @@ await generate(code, docType, language, isDefaultCode);
 ### 3. Key Cross-References
 - **Architecture:** ARCHITECTURE-OVERVIEW.md (visual) → ARCHITECTURE.md (technical) → Dev Guide (implementation)
 - **Performance:** OPTIMIZATION-GUIDE.md (comprehensive) → Dev Guide (techniques) → ARCHITECTURE.md (targets)
-- **Testing:** Testing README (overview) → COMPONENT-TEST-COVERAGE.md (details) → frontend-testing-guide.md (patterns) → TEST-FIXES-OCT-2025.md (fixes & patterns) → SKIPPED-TESTS.md (maintenance)
-- **Test Debugging:** TEST-FIXES-OCT-2025.md (10 patterns, 6 insights) for fixing auth tests, mocking, validation
+- **Testing:** Testing README (overview) → COMPONENT-TEST-COVERAGE.md (details) → frontend-testing-guide.md (patterns) → TEST-PATTERNS-GUIDE.md (fixes & patterns) → SKIPPED-TESTS.md (maintenance)
+- **Test Debugging:** TEST-PATTERNS-GUIDE.md (10 patterns, 6 insights) for fixing auth tests, mocking, validation
 - **Skipped Tests:** SKIPPED-TESTS.md - Update on every release, quarterly review (15 frontend tests intentionally skipped)
 - **Error Handling:** ERROR-HANDLING-PATTERNS.md (app vs API errors, HTTP status codes) → ERROR-HANDLING-UX.md (UX patterns, priority system) → USAGE-PROMPTS.md (usage warnings/limits) → TOAST-SYSTEM.md (success toasts)
 - **Subscriptions:** SUBSCRIPTION-FLOWS.md (unauthenticated flow, sessionStorage) → SUBSCRIPTION-MANAGEMENT.md (upgrades, proration, webhooks)
@@ -222,7 +222,7 @@ const request = require('supertest');
 const myRoute = require('../myRoute');
 ```
 
-**✅ ALWAYS:** Use ES modules (`import`) - **Pattern 11 in TEST-FIXES-OCT-2025.md**
+**✅ ALWAYS:** Use ES modules (`import`) - **Pattern 11 in TEST-PATTERNS-GUIDE.md**
 ```javascript
 // GOOD: ES modules throughout
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
@@ -242,13 +242,13 @@ import myRoute from '../myRoute.js';
 - All backend code uses ES modules
 - CommonJS `require()` cannot import ES modules properly
 - Middleware functions become undefined → "argument handler must be a function"
-- **This is Pattern 11 in TEST-FIXES-OCT-2025.md** - full template available
+- **This is Pattern 11 in TEST-PATTERNS-GUIDE.md** - full template available
 
 **Quick Checklist:**
 - [ ] Using `import` not `require`?
 - [ ] Mocking dependencies BEFORE importing routes?
 - [ ] Providing manual mock implementations (not automatic)?
-- [ ] See [TEST-FIXES-OCT-2025.md Pattern 11](docs/testing/TEST-FIXES-OCT-2025.md#pattern-11-es-modules-vs-commonjs-in-backend-tests--new-v244) for complete template
+- [ ] See [TEST-PATTERNS-GUIDE.md Pattern 11](docs/testing/TEST-PATTERNS-GUIDE.md#pattern-11-es-modules-vs-commonjs-in-backend-tests--new-v244) for complete template
 
 ### Timezone Awareness (EST/EDT)
 **When adding session labels to docs:**
@@ -410,11 +410,12 @@ cd server && npm test           # Run backend tests (get counts)
 **When you say "prep for release", I will automatically:**
 
 1. **Run test counts** and get current results
-2. **Update CHANGELOG.md** with new version entry
-3. **Update TODO.md** with completed items
-4. **Update test counts** in all documentation
-5. **Verify version consistency** across all package.json files
-6. **Check for missing versions** (no gaps between v2.4.0 → v2.4.1 → v2.4.2, etc.)
+2. **Update CHANGELOG.md** with new version entry and test counts
+3. **Update README.md** with current test coverage metrics
+4. **Update TODO.md** with completed items and new tasks
+5. **Update test counts** in all documentation (claude.md, docs/testing/README.md)
+6. **Verify version consistency** across all package.json files
+7. **Check for missing versions** (no gaps between v2.4.0 → v2.4.1 → v2.4.2, etc.)
 
 **You only need to:**
 - Bump version numbers in package.json files (root, client, server)
@@ -435,9 +436,9 @@ cd .. && cd server && npm test 2>&1 | grep "Tests:"
 # Output example: Tests:       21 skipped, 373 passed, 394 total
 
 # 2. Update documentation with new counts
-# - claude.md line 15: "1,662 tests (1,625 passing, 36 skipped, 1 flaky)"
-# - claude.md line 47: "1,662 test stats"
-# - claude.md line 380: "1,662 tests (1,104 frontend, 521 backend, 36 skipped)"
+# - claude.md line 15: "1,786 tests (1,747 passing, 39 skipped)"
+# - claude.md line 51: "1,786 test stats"
+# - claude.md line 479: "1,786 tests (1,173 frontend, 574 backend, 39 skipped)"
 # - docs/testing/README.md lines 11-27: Update all test breakdowns
 
 # 3. Verify skipped tests documentation is current
@@ -460,10 +461,12 @@ cd server && npm test 2>&1 | grep "skipped"
 - [ ] `package.json` (root) - Bump version
 - [ ] `client/package.json` - Bump version
 - [ ] `server/package.json` - Bump version
-- [ ] `claude.md` - Update test counts (3 locations: lines 15, 47, 284)
-- [ ] `docs/testing/README.md` - Update Quick Stats section (lines 11-27)
+- [ ] `CHANGELOG.md` - Add version entry with changes and test counts
+- [ ] `README.md` - Update test coverage section with current metrics
+- [ ] `TODO.md` - Mark completed items, add new tasks for next version
+- [ ] `claude.md` - Update test counts (multiple locations)
+- [ ] `docs/testing/README.md` - Update Quick Stats section
 - [ ] `docs/testing/SKIPPED-TESTS.md` - Verify skipped test counts and update "Last Updated" date
-- [ ] `CHANGELOG.md` - Add version entry with changes
 - [ ] Run `npm run versions` to verify all dependencies are current
 
 ---
@@ -476,7 +479,7 @@ cd server && npm test 2>&1 | grep "skipped"
 **Final Metrics:**
 - Accessibility: 95/100, WCAG 2.1 AA, 0 axe violations
 - Performance: 75/100 Lighthouse (+67%), 78KB bundle (-85%)
-- Testing: 1,662 tests (1,104 frontend, 521 backend, 36 skipped, 1 failing), 97.8% passing
+- Testing: 1,786 tests (1,173 frontend, 574 backend, 39 skipped), 97.82% passing
 - Deployment: Vercel + GitHub Actions CI/CD, custom domain
 
 **Optional:** README screenshots, demo video, extended manual a11y testing
@@ -543,10 +546,18 @@ codescribe-ai/
 
 ## 🔄 Version History
 
-**Current: v2.4.1** - Email Rate Limiting & UI Fixes (October 31, 2025): **Email Rate Limiting System** (5-min cooldown, 10/day limits, industry-standard); **Email Service Mocking** (auto-mock in dev/test, TEST_RESEND_MOCK flag, prevents quota waste); **Enhanced Production Logging** (detailed email logs with URLs, IDs, timestamps); **UnverifiedEmailBanner Redesign** (brand gradient, compact layout, indigo button, 11 tests updated); **ConfirmationModal Fix** (title/close button alignment); **95 tests fixed** (27 emailService, 28 auth-password-reset, 27 email-verification, 13 integration); **1,662 tests** (1,104 frontend, 522 backend, 36 skipped, 0 failing, 97.8% pass rate); EMAIL-RATE-LIMITING.md documentation; removed npm run migrate from vercel.json
+**Current: v2.4.4** - Contact Sales & Test Coverage (November 2, 2025): **Contact Sales Feature** (authenticated contact form, tier validation, email service integration, 28 comprehensive tests); **Backend Test Coverage** (24 emailService tests added, 91.83% coverage achieved, all CI thresholds met); **Test Documentation** (Pattern 11: ES Modules in Backend Tests, Pattern 11 added to CLAUDE.md guidelines); **UsageWarningBanner Fix** (timeout cleanup to prevent memory leaks); **1,786 tests** (1,173 frontend, 574 backend, 39 skipped, 97.82% pass rate); v2.4.4-BACKEND-TEST-FIX.md documentation
 
 <details>
-<summary>Previous Versions (v1.0-v2.4)</summary>
+<summary>Previous Versions (v1.0-v2.4.1)</summary>
+
+- **v2.4.1** - Email Rate Limiting & UI Fixes (October 31, 2025)
+  - Email Rate Limiting System (5-min cooldown, 10/day limits)
+  - Email Service Mocking (auto-mock in dev/test, TEST_RESEND_MOCK flag)
+  - Enhanced Production Logging (detailed email logs)
+  - UnverifiedEmailBanner Redesign (brand gradient, compact layout)
+  - 95 tests fixed (27 emailService, 28 auth-password-reset, 27 email-verification, 13 integration)
+  - 1,662 tests (1,104 frontend, 522 backend, 36 skipped, 97.8% pass rate)
 
 - **v2.4.0** - Test Infrastructure & Mobile UX Improvements (October 31, 2025)
   - 41 Backend Tests Fixed (email verification, name sync, origin tracking, webhooks)

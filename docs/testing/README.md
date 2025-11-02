@@ -2,30 +2,31 @@
 
 **Project:** CodeScribe AI - Intelligent Code Documentation Generator
 **Testing Status:** ✅ Comprehensive Coverage Across 3 Frameworks
-**Last Updated:** October 29, 2025 (v2.3.0)
+**Last Updated:** November 2, 2025 (v2.4.4)
 
 ---
 
 ## 📊 Quick Stats
 
-- **Total Tests:** 1,503 tests (1,467 passing, 36 skipped)
-  - **Frontend:** 1,036 tests | 15 skipped (Vitest + React Testing Library)
+- **Total Tests:** 1,786 tests (1,747 passing, 39 skipped)
+  - **Frontend:** 1,173 tests | 18 skipped (Vitest + React Testing Library)
     - Component Tests: 18/18 components (100% coverage)
     - Integration Tests: Auth, OAuth, password reset, upload, error handling, usage tracking
     - UI Tests: Toast system, modals, forms, storage helpers, pricing page
-    - New in v2.3.0: Drag-drop upload (6 tests), clear button (5 tests), logout (3 tests)
-  - **Backend:** 431 tests | 21 skipped (Jest + Supertest)
-    - Unit Tests: Services, models, utilities, middleware, usage tracking
-    - Integration Tests: Prompt quality, API contracts, authentication, tier system
+    - New in v2.4.4: UsageWarningBanner timeout cleanup fix
+  - **Backend:** 574 tests | 21 skipped (Jest + Supertest)
+    - Unit Tests: Services (28 emailService tests added), models, utilities, middleware
+    - Integration Tests: Prompt quality, API contracts, authentication, tier system, contact sales
     - Security Tests: Password hashing, JWT validation, OAuth flows, usage quotas
+    - New in v2.4.4: Contact Sales feature (28 tests), emailService coverage (24 tests)
   - **Database:** 21 tests (skipped in default suite, run separately with Docker PostgreSQL)
     - Migration validation, schema checks, constraints, user quotas, anonymous quotas
   - **E2E:** 10 tests (Playwright - file upload flow)
-- **Pass Rate:** 97.6% (1,467/1,503)
-- **Backend Coverage:** 95.81% statements, 88.72% branches
-- **Test Execution Time:** Frontend ~10.6s, Backend ~6.5s, Database ~0.25s, E2E ~45s
-- **Coverage Target:** 70% ✅ EXCEEDED (95.81% backend)
-- **Recent Updates:** Drag-drop upload, clear button, logout tests (Oct 29, 2025 - v2.3.0)
+- **Pass Rate:** 97.82% (1,747/1,786)
+- **Backend Coverage:** 91.83% statements (services), 95.81% overall, 88.72% branches
+- **Test Execution Time:** Frontend ~11s, Backend ~7.1s, Database ~0.25s, E2E ~45s
+- **Coverage Target:** 90% ✅ EXCEEDED (91.83% services coverage)
+- **Recent Updates:** Contact Sales tests, emailService coverage, timeout fixes (Nov 2, 2025 - v2.4.4)
 
 ---
 
