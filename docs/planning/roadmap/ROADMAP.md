@@ -1,8 +1,8 @@
 # CodeScribe AI - Product Roadmap
 
-**Last Updated:** October 31, 2025
+**Last Updated:** November 1, 2025
 **Current Phase:** Phase 2 - 🔄 **IN PROGRESS** (Payments Infrastructure - Epic 2.4 Complete)
-**Current Release:** v2.4.2 (Livemode Detection & Prompt Caching Complete)
+**Current Release:** v2.4.3 (Payment Routes & Email Verification Fixes Complete)
 **Production URL:** [https://codescribeai.com](https://codescribeai.com)
 
 ---
@@ -537,6 +537,89 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 - [SUBSCRIPTION-FLOWS.md](../../architecture/SUBSCRIPTION-FLOWS.md) - Subscription flows
 - [SUBSCRIPTION-MANAGEMENT.md](../../architecture/SUBSCRIPTION-MANAGEMENT.md) - Management guide
 - [CHANGELOG.md](../../../CHANGELOG.md) - Complete v2.4.2 release notes
+
+---
+
+### 🔧 v2.4.3: Payment Routes & Email Verification Fixes (1 day - Nov 1, 2025)
+
+**Timeline:** November 1, 2025
+**Actual Duration:** 1 day
+**Status:** ✅ **COMPLETE**
+
+#### Completed Features
+
+**Payment Routes Production Fix (CRITICAL)** - ✅ Complete
+- ✅ Added payment and webhook routes to `api/index.js` (Vercel serverless function)
+- ✅ Fixed 404 errors on `/api/payments/create-checkout-session` in production
+- ✅ Added `ENABLE_AUTH` feature flag matching `server.js`
+- ✅ Mounted `/api/webhooks` before `express.json()` for Stripe signature verification
+- ✅ Fixed subscription checkout flow in production
+
+**Email Verification UX Improvements** - ✅ Complete
+- ✅ Added `refreshUser()` method to `AuthContext` to update user state after verification
+- ✅ Fixed banner persistence issue (banner now disappears immediately after verification)
+- ✅ No page refresh needed after email verification
+- ✅ Seamless user experience for verified users
+
+**API Configuration Fixes** - ✅ Complete
+- ✅ Fixed `UnverifiedEmailBanner.jsx` to use centralized `API_URL` config
+- ✅ Fixed `VerificationRequiredModal.jsx` to use centralized `API_URL` config
+- ✅ Fixed `VerifyEmail.jsx` to use centralized `API_URL` config
+- ✅ Eliminated "undefined" API URLs in production (`/undefined/api/...`)
+- ✅ Email resend button now works in production
+
+**Documentation Improvements** - ✅ Complete
+- ✅ Updated DEPLOYMENT-CHECKLIST.md with 30+ missing environment variables
+- ✅ Added comprehensive Stripe environment variable documentation (12 variables)
+- ✅ Added frontend configuration variables (VITE_ENABLE_AUTH, VITE_STRIPE_*)
+- ✅ Added CI/CD Deploy Hooks Configuration section
+- ✅ Added Email DNS Configuration section
+- ✅ Added Environment Separation Verification section
+- ✅ Moved `prompt-caching-manual.js` from `server/tests/` to `server/scripts/`
+- ✅ Updated PROMPT-CACHING-GUIDE.md with correct file paths
+
+#### Root Cause Analysis
+**Why "It Worked Before":**
+- Local testing used `server/src/server.js` (has payment routes) ✅
+- Production uses `api/index.js` for Vercel serverless (was missing routes) ❌
+- This release adds routes to `api/index.js` ✅
+
+**Timeline:**
+1. Local testing: ✅ Works (uses `server/src/server.js`)
+2. Production deployment: ❌ Failed (uses `api/index.js` without payment routes)
+3. v2.4.3 release: ✅ Fixed (added routes to `api/index.js`)
+
+#### Files Changed (9 files)
+- `api/index.js`: +50 lines (payment/webhook routes, ENABLE_AUTH flag)
+- `client/src/contexts/AuthContext.jsx`: +34 lines (refreshUser method)
+- `client/src/components/VerifyEmail.jsx`: +7 lines (call refreshUser)
+- `client/src/components/UnverifiedEmailBanner.jsx`: API_URL import
+- `client/src/components/VerificationRequiredModal.jsx`: API_URL import
+- `docs/deployment/DEPLOYMENT-CHECKLIST.md`: +208 lines (comprehensive env vars)
+- `docs/architecture/PROMPT-CACHING-GUIDE.md`: file path updates
+- `server/scripts/prompt-caching-manual.js`: moved from tests/
+- `package.json` (all 3): version bump to 2.4.3
+- `server/src/config/stripe.js`: version updated to 2.4.3
+
+#### Testing & Quality Metrics
+- ✅ **1,662 total tests** (1,626 passing, 36 skipped, 0 failing) - **97.8% pass rate**
+  - Frontend: 1,104 passed, 15 skipped (1,119 total)
+  - Backend: 522 passed, 21 skipped (543 total)
+
+#### Success Criteria - ✅ All Achieved
+- ✅ Payment checkout works in production (no 404 errors)
+- ✅ Email verification banner disappears immediately (no refresh needed)
+- ✅ Email resend button works in production (no undefined URLs)
+- ✅ Comprehensive deployment documentation with all environment variables
+- ✅ All tests passing (0 failures)
+
+**Release:** v2.4.3 (November 1, 2025)
+
+**Reference Documentation:**
+- [DEPLOYMENT-CHECKLIST.md](../../deployment/DEPLOYMENT-CHECKLIST.md) - Updated with 30+ env vars
+- [RELEASE-v2.4.3.md](../../../RELEASE-v2.4.3.md) - Complete release summary
+- [PROMPT-CACHING-GUIDE.md](../../architecture/PROMPT-CACHING-GUIDE.md) - Updated file paths
+- [CHANGELOG.md](../../../CHANGELOG.md) - Complete v2.4.3 release notes
 
 ---
 
