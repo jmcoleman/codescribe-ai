@@ -145,6 +145,8 @@ server/
 │   │   └── docGenerator.js       # Prompt splitting logic
 │   └── routes/
 │       └── api.js                # isDefaultCode parameter handling
+├── scripts/
+│   └── prompt-caching-manual.js  # Cache verification script
 client/
 ├── src/
 │   ├── constants/
@@ -152,8 +154,6 @@ client/
 │   ├── hooks/
 │   │   └── useDocGeneration.js   # isDefaultCode parameter
 │   └── App.jsx                   # Cache detection logic
-tests/
-└── prompt-caching.test.js        # Cache verification script
 ```
 
 ### Request Flow
@@ -331,7 +331,7 @@ const handleExampleSelect = (exampleKey) => {
 Run the cache test with the new example:
 
 ```bash
-node server/tests/prompt-caching.test.js
+node server/scripts/prompt-caching-manual.js
 ```
 
 Expected output:

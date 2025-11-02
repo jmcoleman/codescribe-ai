@@ -15,7 +15,7 @@ import { useAuth } from '../contexts/AuthContext';
 export default function VerifyEmail() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { getToken } = useAuth();
+  const { getToken, refreshUser } = useAuth();
   const [status, setStatus] = useState('verifying'); // 'verifying' | 'success' | 'error'
   const [message, setMessage] = useState('');
 
@@ -30,7 +30,7 @@ export default function VerifyEmail() {
       }
 
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/verify-email`, {
+        const response = await fetch(`${API_URL}/api/auth/verify-email`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -42,6 +42,9 @@ export default function VerifyEmail() {
 
         if (response.ok) {
           setStatus('success');
+
+          // Refresh user data to update email_verified status
+          await refreshUser();
 
           // Check for pending subscription
           const pendingSubscriptionStr = getSessionItem(STORAGE_KEYS.PENDING_SUBSCRIPTION);

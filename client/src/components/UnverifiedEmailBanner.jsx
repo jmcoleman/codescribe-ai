@@ -41,7 +41,7 @@ export default function UnverifiedEmailBanner({ user, onDismiss }) {
 
     try {
       const token = getToken();
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/resend-verification`, {
+      const response = await fetch(`${API_URL}/api/auth/resend-verification`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
