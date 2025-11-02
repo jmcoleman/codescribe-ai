@@ -3,11 +3,78 @@ import { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vs } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { CopyButton } from './CopyButton';
 import { DownloadButton } from './DownloadButton';
 import { DocPanelGeneratingSkeleton } from './SkeletonLoader';
 import { MermaidDiagram } from './MermaidDiagram';
+
+// Custom Prism theme matching Monaco editor theme
+const codescribeLightTheme = {
+  'code[class*="language-"]': {
+    color: '#334155',
+    background: 'none',
+    textShadow: 'none',
+    fontFamily: 'JetBrains Mono, Menlo, Monaco, Consolas, monospace',
+    fontSize: '13px',
+    textAlign: 'left',
+    whiteSpace: 'pre',
+    wordSpacing: 'normal',
+    wordBreak: 'normal',
+    wordWrap: 'normal',
+    lineHeight: '1.5',
+    tabSize: 4,
+    hyphens: 'none',
+  },
+  'pre[class*="language-"]': {
+    color: '#334155',
+    background: 'none',
+    textShadow: 'none',
+    fontFamily: 'JetBrains Mono, Menlo, Monaco, Consolas, monospace',
+    fontSize: '13px',
+    textAlign: 'left',
+    whiteSpace: 'pre',
+    wordSpacing: 'normal',
+    wordBreak: 'normal',
+    wordWrap: 'normal',
+    lineHeight: '1.5',
+    tabSize: 4,
+    hyphens: 'none',
+    padding: '1em',
+    margin: '.5em 0',
+    overflow: 'auto',
+  },
+  'comment': { color: '#94A3B8', fontStyle: 'italic', background: 'none' },
+  'prolog': { color: '#94A3B8', background: 'none' },
+  'doctype': { color: '#94A3B8', background: 'none' },
+  'cdata': { color: '#94A3B8', background: 'none' },
+  'punctuation': { color: '#334155', background: 'none' },
+  'property': { color: '#334155', background: 'none' },
+  'tag': { color: '#334155', background: 'none' },
+  'boolean': { color: '#9333EA', background: 'none' },
+  'number': { color: '#0891B2', background: 'none' },
+  'constant': { color: '#0891B2', background: 'none' },
+  'symbol': { color: '#334155', background: 'none' },
+  'deleted': { color: '#DC2626', background: 'none' },
+  'selector': { color: '#334155', background: 'none' },
+  'attr-name': { color: '#334155', background: 'none' },
+  'string': { color: '#16A34A', background: 'none' },
+  'char': { color: '#16A34A', background: 'none' },
+  'builtin': { color: '#334155', background: 'none' },
+  'inserted': { color: '#16A34A', background: 'none' },
+  'operator': { color: '#334155', background: 'none' },
+  'entity': { color: '#334155', background: 'none' },
+  'url': { color: '#0891B2', background: 'none' },
+  '.language-css .token.string': { color: '#16A34A', background: 'none' },
+  '.style .token.string': { color: '#16A34A', background: 'none' },
+  'atrule': { color: '#9333EA', background: 'none' },
+  'attr-value': { color: '#16A34A', background: 'none' },
+  'keyword': { color: '#9333EA', background: 'none' },
+  'function': { color: '#334155', background: 'none' },
+  'class-name': { color: '#334155', background: 'none' },
+  'regex': { color: '#16A34A', background: 'none' },
+  'important': { color: '#DC2626', fontWeight: 'bold', background: 'none' },
+  'variable': { color: '#334155', background: 'none' },
+};
 import { STORAGE_KEYS, getStorageItem, setStorageItem } from '../constants/storage';
 
 export function DocPanel({
@@ -127,7 +194,7 @@ export function DocPanel({
         {isGenerating && !documentation ? (
           <DocPanelGeneratingSkeleton />
         ) : documentation ? (
-          <div className="max-w-none text-sm leading-relaxed [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mb-4 [&_h1]:mt-0 [&_h1:not(:first-child)]:mt-6 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:mb-3 [&_h2:not(:first-child)]:mt-5 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:mb-2 [&_h3:not(:first-child)]:mt-4 [&_p]:mb-3 [&_ul]:mb-3 [&_ol]:mb-3 [&_li]:ml-4 [&_strong]:font-semibold [&_code]:bg-slate-100 [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-[13px] [&_code]:font-mono">
+          <div className="max-w-none text-sm leading-relaxed [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mb-4 [&_h1]:mt-0 [&_h1:not(:first-child)]:mt-6 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:mb-3 [&_h2:not(:first-child)]:mt-5 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:mb-2 [&_h3:not(:first-child)]:mt-4 [&_p]:mb-3 [&_ul]:mb-3 [&_ol]:mb-3 [&_li]:ml-4 [&_strong]:font-semibold">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{
@@ -191,14 +258,17 @@ export function DocPanel({
                   // Handle other code blocks
                   return !inline && match ? (
                     <SyntaxHighlighter
-                      style={vs}
+                      style={codescribeLightTheme}
                       language={match[1]}
                       PreTag="div"
                       customStyle={{
                         fontSize: '13px !important',
                         lineHeight: '1.5',
-                        margin: 0,
+                        margin: '1.5rem 0',
                         padding: '1rem',
+                        backgroundColor: '#F8FAFC',
+                        border: '1px solid #E2E8F0',
+                        borderRadius: '0.5rem',
                       }}
                       codeTagProps={{
                         style: {

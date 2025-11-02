@@ -324,7 +324,7 @@ export function PricingPage() {
         </div>
 
         {/* Pricing Tiers */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 max-w-7xl mx-auto">
           {tiers.map((tier) => {
             const Icon = tier.icon;
             const isLoading = loading === tier.id;
@@ -335,9 +335,9 @@ export function PricingPage() {
             return (
               <div
                 key={tier.name}
-                className={`relative rounded-2xl border-2 p-5 bg-white transition-all duration-200 hover:shadow-xl flex flex-col ${
+                className={`relative rounded-2xl border-2 p-6 bg-white transition-all duration-200 hover:shadow-xl flex flex-col max-w-sm mx-auto w-full ${
                   tier.popular
-                    ? 'border-purple-600 shadow-lg scale-105'
+                    ? 'border-purple-600 shadow-lg shadow-purple-600/10 lg:scale-[1.02]'
                     : 'border-slate-200 hover:border-purple-300'
                 }`}
               >
@@ -389,7 +389,7 @@ export function PricingPage() {
                   disabled={isLoading || isCurrentTier}
                   className={`w-full py-3 px-4 rounded-lg font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-auto ${
                     tier.ctaVariant === 'primary'
-                      ? 'bg-purple-600 text-white hover:bg-purple-700 hover:shadow-lg'
+                      ? 'bg-purple-600 text-white hover:bg-purple-700 active:bg-purple-800 shadow-lg shadow-purple-600/20'
                       : 'bg-slate-100 text-slate-900 hover:bg-slate-200'
                   }`}
                 >
@@ -476,7 +476,12 @@ export function PricingPage() {
       {/* Contact Sales Modal */}
       <ContactSalesModal
         isOpen={showContactSalesModal}
-        onClose={() => setShowContactSalesModal(false)}
+        onClose={() => {
+          setShowContactSalesModal(false);
+          // Clear pending subscription intent when modal is closed
+          removeSessionItem(STORAGE_KEYS.PENDING_SUBSCRIPTION);
+          setPendingSubscription(null);
+        }}
         tier={contactSalesTier}
       />
 

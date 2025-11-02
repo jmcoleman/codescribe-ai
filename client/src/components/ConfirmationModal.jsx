@@ -90,17 +90,17 @@ export function ConfirmationModal({
     warning: {
       icon: <AlertTriangle className="w-6 h-6 text-purple-600" />,
       iconBg: 'bg-slate-100 ring-2 ring-purple-200',
-      confirmButton: 'bg-purple-600 hover:bg-purple-700 active:bg-purple-800 focus:ring-purple-600 shadow-sm hover:shadow transition-all duration-200'
+      confirmButton: 'bg-purple-600 hover:bg-purple-700 active:bg-purple-800 focus:ring-purple-600 shadow-lg shadow-purple-600/20 transition-all duration-200'
     },
     danger: {
       icon: <AlertTriangle className="w-6 h-6 text-red-600" />,
       iconBg: 'bg-slate-100 ring-2 ring-red-200',
-      confirmButton: 'bg-red-600 hover:bg-red-700 active:bg-red-800 focus:ring-red-600 shadow-sm hover:shadow transition-all duration-200'
+      confirmButton: 'bg-red-600 hover:bg-red-700 active:bg-red-800 focus:ring-red-600 shadow-lg shadow-red-600/20 transition-all duration-200'
     },
     info: {
       icon: <AlertTriangle className="w-6 h-6 text-indigo-600" />,
       iconBg: 'bg-slate-100 ring-2 ring-indigo-200',
-      confirmButton: 'bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 focus:ring-indigo-600 shadow-sm hover:shadow transition-all duration-200'
+      confirmButton: 'bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 focus:ring-indigo-600 shadow-lg shadow-indigo-600/20 transition-all duration-200'
     }
   };
 

@@ -613,7 +613,7 @@ See [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) for complete
   - Integration: file upload, quality scoring, prompt quality
   - Mermaid generation tests
   - **Coverage**: 91.83% services statements, 95.81% overall, 88.72% branches
-  - **Pass Rate**: 97.82% (574 passing, 21 skipped)
+  - **Pass Rate**: 96.5% (574 passing, 21 skipped)
 - **Frontend Tests**: 1,173 tests (Vitest + React Testing Library)
   - Component tests with accessibility checks (18/18 components tested)
   - Authentication UI: SignupModal, LoginModal, ForgotPasswordModal, ResetPasswordModal
@@ -621,12 +621,12 @@ See [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) for complete
   - Mermaid diagram rendering tests
   - Toast notification system tests (33 tests)
   - **Coverage**: 100% critical user paths
-  - **Pass Rate**: 98.4% (922 passing, 15 skipped, 0 failures)
+  - **Pass Rate**: 98.5% (1,173 passing, 18 skipped)
 - **E2E Tests**: 10 tests across 5 browsers (Playwright)
   - Cross-browser validation (Chromium, Firefox, WebKit, Chrome, Edge)
   - File upload + generate workflows
   - **Pass Rate**: 100% (10/10 tests passing)
-- **Overall Pass Rate**: 97.5% (1,335 passing, 36 skipped, 0 failures)
+- **Overall Pass Rate**: 97.82% (1,747 passing, 39 skipped)
 
 **Running Tests:**
 ```bash

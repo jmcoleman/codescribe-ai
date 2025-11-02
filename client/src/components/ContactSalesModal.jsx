@@ -83,7 +83,7 @@ export function ContactSalesModal({ isOpen, onClose, tier = 'enterprise' }) {
   if (success) {
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative text-center">
+        <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 relative text-center">
           {/* Close button */}
           <button
             onClick={handleClose}
@@ -109,7 +109,7 @@ export function ContactSalesModal({ isOpen, onClose, tier = 'enterprise' }) {
           {/* Close button */}
           <button
             onClick={handleClose}
-            className="w-full py-2.5 px-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg"
+            className="w-full py-2.5 px-4 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white rounded-lg font-semibold shadow-lg shadow-purple-600/20 transition-all duration-200"
           >
             Close
           </button>
@@ -121,7 +121,7 @@ export function ContactSalesModal({ isOpen, onClose, tier = 'enterprise' }) {
   // Form view
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 relative">
         {/* Close button */}
         <button
           onClick={handleClose}
@@ -132,16 +132,16 @@ export function ContactSalesModal({ isOpen, onClose, tier = 'enterprise' }) {
           <X className="w-5 h-5" />
         </button>
 
-        {/* Icon */}
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-purple-100 text-purple-600 mb-4">
-          <Mail className="w-8 h-8" />
+        {/* Header with Icon */}
+        <div className="flex items-center gap-3 mb-2">
+          <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-purple-100 text-purple-600">
+            <Mail className="w-5 h-5" />
+          </div>
+          <h2 className="text-2xl font-bold text-slate-900">
+            Contact Sales
+          </h2>
         </div>
-
-        {/* Header */}
-        <h2 className="text-2xl font-bold text-slate-900 mb-2">
-          Contact Sales
-        </h2>
-        <p className="text-slate-600 mb-6">
+        <p className="text-slate-500 mb-6">
           Interested in the {tier.charAt(0).toUpperCase() + tier.slice(1)} plan? Let's chat about your needs.
         </p>
 
@@ -149,13 +149,10 @@ export function ContactSalesModal({ isOpen, onClose, tier = 'enterprise' }) {
         <form onSubmit={handleContactSales} className="space-y-4">
           {/* User info (read-only display if name exists, or input fields if not) */}
           {user?.first_name && user?.last_name ? (
-            <div className="bg-slate-50 rounded-lg p-4 space-y-2">
+            <div className="bg-slate-50 rounded-lg p-4">
               <p className="text-sm text-slate-600">
-                <span className="font-medium">Name:</span>{' '}
+                <span className="font-medium">From:</span>{' '}
                 {`${user.first_name} ${user.last_name}`.trim()}
-              </p>
-              <p className="text-sm text-slate-600">
-                <span className="font-medium">Email:</span> {user?.email || 'Not provided'}
               </p>
             </div>
           ) : (
@@ -172,7 +169,6 @@ export function ContactSalesModal({ isOpen, onClose, tier = 'enterprise' }) {
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   required
-                  placeholder="John"
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={loading}
                 />
@@ -189,17 +185,9 @@ export function ContactSalesModal({ isOpen, onClose, tier = 'enterprise' }) {
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   required
-                  placeholder="Doe"
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={loading}
                 />
-              </div>
-
-              {/* Email display */}
-              <div className="bg-slate-50 rounded-lg p-4">
-                <p className="text-sm text-slate-600">
-                  <span className="font-medium">Email:</span> {user?.email || 'Not provided'}
-                </p>
               </div>
             </>
           )}
@@ -239,7 +227,7 @@ export function ContactSalesModal({ isOpen, onClose, tier = 'enterprise' }) {
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 py-2.5 px-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-1 py-2.5 px-4 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white rounded-lg font-semibold shadow-lg shadow-purple-600/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>

@@ -127,13 +127,13 @@ export const CustomToast = ({
                     }}
                     className={`inline-flex items-center gap-1.5 ${
                       compact ? 'px-3 py-1.5 text-xs' : 'px-4 py-2 text-xs'
-                    } font-semibold rounded-lg shadow-sm ${
+                    } font-semibold rounded-lg ${
                       action.variant === 'primary'
-                        ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white hover:from-purple-700 hover:to-purple-800 focus:ring-purple-600 shadow-purple-200'
+                        ? 'bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white focus:ring-purple-600 shadow-lg shadow-purple-600/20'
                         : action.variant === 'danger'
-                        ? 'bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800 focus:ring-red-600 shadow-red-200'
+                        ? 'bg-red-600 hover:bg-red-700 active:bg-red-800 text-white focus:ring-red-600 shadow-lg shadow-red-600/20'
                         : 'bg-slate-100 text-slate-700 hover:bg-slate-200 focus:ring-slate-400 border border-slate-300'
-                    } transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 hover:shadow-md active:scale-95`}
+                    } transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-95`}
                   >
                     {action.icon && <action.icon className="h-3.5 w-3.5" />}
                     {action.label}
@@ -226,8 +226,8 @@ export const ProgressToast = ({
           <div
             className={`h-3 transition-all duration-500 ease-out ${
               isComplete
-                ? 'bg-gradient-to-r from-green-500 to-green-600 shadow-lg shadow-green-200'
-                : 'bg-gradient-to-r from-purple-500 via-purple-600 to-indigo-600 shadow-lg shadow-purple-200'
+                ? 'bg-green-600 shadow-sm shadow-green-600/20'
+                : 'bg-purple-600 shadow-sm shadow-purple-600/20'
             }`}
             style={{ width: `${progressClamped}%` }}
             role="progressbar"
@@ -291,7 +291,7 @@ export const UndoToast = ({ t, message, onUndo }) => {
             onUndo?.();
             toast.dismiss(t.id);
           }}
-          className="ml-4 flex-shrink-0 inline-flex items-center px-4 py-2 text-sm font-bold text-white bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-purple-600 transition-all duration-150 shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40 active:scale-95"
+          className="ml-4 flex-shrink-0 inline-flex items-center px-4 py-2 text-sm font-bold text-white bg-purple-600 hover:bg-purple-700 active:bg-purple-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-purple-600 transition-all duration-150 shadow-lg shadow-purple-600/20 active:scale-95"
         >
           Undo
         </button>
@@ -421,13 +421,13 @@ export const AvatarToast = ({ t, type = 'info', title, message, avatarUrl, avata
                         toast.dismiss(t.id);
                       }
                     }}
-                    className={`inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg shadow-sm ${
+                    className={`inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg ${
                       action.variant === 'primary'
-                        ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white hover:from-purple-700 hover:to-purple-800 focus:ring-purple-600 shadow-purple-200'
+                        ? 'bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white focus:ring-purple-600 shadow-lg shadow-purple-600/20'
                         : action.variant === 'danger'
-                        ? 'bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800 focus:ring-red-600 shadow-red-200'
+                        ? 'bg-red-600 hover:bg-red-700 active:bg-red-800 text-white focus:ring-red-600 shadow-lg shadow-red-600/20'
                         : 'bg-slate-100 text-slate-700 hover:bg-slate-200 focus:ring-slate-400 border border-slate-300'
-                    } transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 hover:shadow-md active:scale-95`}
+                    } transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-95`}
                   >
                     {action.icon && <action.icon className="h-3.5 w-3.5" />}
                     {action.label}
@@ -559,13 +559,13 @@ export const ExpandableToast = ({ t, type = 'info', title, preview, fullContent,
                         toast.dismiss(t.id);
                       }
                     }}
-                    className={`inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg shadow-sm ${
+                    className={`inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg ${
                       action.variant === 'primary'
-                        ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white hover:from-purple-700 hover:to-purple-800 focus:ring-purple-600 shadow-purple-200'
+                        ? 'bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white focus:ring-purple-600 shadow-lg shadow-purple-600/20'
                         : action.variant === 'danger'
-                        ? 'bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800 focus:ring-red-600 shadow-red-200'
+                        ? 'bg-red-600 hover:bg-red-700 active:bg-red-800 text-white focus:ring-red-600 shadow-lg shadow-red-600/20'
                         : 'bg-slate-100 text-slate-700 hover:bg-slate-200 focus:ring-slate-400 border border-slate-300'
-                    } transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 hover:shadow-md active:scale-95`}
+                    } transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-95`}
                   >
                     {action.icon && <action.icon className="h-3.5 w-3.5" />}
                     {action.label}

@@ -390,12 +390,12 @@ Use this hierarchy to maintain consistency:
 
 1. **Create Base**
    - Rectangle: 160 × 40px
-   - Fill: Linear gradient
-     - Stop 1 (0%): #A855F7
-     - Stop 2 (100%): #9333EA
-     - Angle: 90°
+   - Fill: Solid color #9333EA (purple-600)
    - Corner radius: 8px
-   - Effect: `shadow/purple`
+   - Effect: Drop shadow
+     - Color: #9333EA (purple-600) at 20% opacity
+     - Y offset: 4px
+     - Blur: 12px
 
 2. **Add Auto Layout**
    - Select rectangle
@@ -423,13 +423,16 @@ Use this hierarchy to maintain consistency:
 6. **Add Variants**
    - Click "+" next to component name
    - Add property: "State"
-   - Values: Default, Hover, Loading, Disabled
-   - For Hover: Darken gradient to #9333EA → #7E22CE
+   - Values: Default, Hover, Active, Loading, Disabled
+   - For Hover: Change fill to #7E22CE (purple-700)
+   - For Active: Change fill to #6B21A8 (purple-800)
    - For Loading: Replace text with spinner icon
    - For Disabled: Opacity 50%
 
-**Result:** 
-✅ Reusable button component with 4 states
+**Result:**
+✅ Reusable button component with 5 states
+
+**Design Note:** This matches the refined light theme design system (v2.0) - solid purple with subtle shadow, no gradients.
 
 ---
 

@@ -34,7 +34,7 @@ export function PaymentCancel() {
         <div className="space-y-3">
           <button
             onClick={() => navigate('/pricing')}
-            className="w-full py-3 px-6 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg"
+            className="w-full py-3 px-6 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white rounded-lg font-semibold shadow-lg shadow-purple-600/20 transition-all duration-200"
           >
             View Pricing Plans
           </button>

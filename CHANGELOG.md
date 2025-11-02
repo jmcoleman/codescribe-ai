@@ -9,6 +9,72 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.4.5] - 2025-11-02
+
+**Status:** ✅ Refined Light Theme v2.0 & UX Improvements
+
+### Added
+- **Refined Light Theme v2.0**
+  - Custom Monaco Editor theme matching design system (purple keywords, green strings, cyan numbers, slate text)
+  - Custom Prism syntax highlighting in DocPanel matching Monaco theme
+  - Uniform code block backgrounds (slate-50) with proper borders
+  - Disabled bracket pair colorization for cleaner appearance
+  - Enhanced font rendering (antialiasing, optimizeLegibility)
+  - Removed global Tailwind code styles causing unwanted backgrounds
+  - All token types explicitly set to `background: 'none'` for clean rendering
+
+- **Mermaid Diagram Enhancements**
+  - Darkened borders for better definition (purple-600, slate-400)
+  - Improved visual hierarchy and readability
+  - Consistent with code block styling
+
+- **Pricing Page Large Display Improvements**
+  - Constrained card width (max-w-sm per card, max-w-7xl container)
+  - Better gap spacing (gap-6 instead of gap-4)
+  - Subtle purple shadow on Pro card (shadow-lg shadow-purple-600/10)
+  - Refined scaling (lg:scale-[1.02] instead of scale-105)
+  - Enhanced button shadows (shadow-lg shadow-purple-600/20)
+  - Increased padding (p-6) for better content spacing
+
+### Fixed
+- **Contact Sales Modal Intent Cleanup**
+  - Clear pending subscription intent from sessionStorage when modal closed/canceled
+  - Prevents unwanted modal auto-open on subsequent visits
+  - Matches cleanup pattern used in SignupModal and LoginModal
+
+- **Code Block Background Highlighting**
+  - Removed Tailwind arbitrary variants applying slate-100 to all code elements
+  - Fixed faint background on individual tokens within code blocks
+  - Clean uniform backgrounds across entire code block containers
+
+- **Monaco Editor Background Artifacts**
+  - Disabled word/symbol highlighting backgrounds
+  - Added font smoothing CSS properties
+  - Fixed rendering artifacts that appeared as subtle backgrounds
+
+### Documentation
+- **USER-ROLES-SYSTEM.md Planning Document** (309 lines)
+  - Comprehensive plan for role-based unlimited usage system
+  - user_roles table design with audit trail
+  - Phase 1: Core infrastructure (~3 hours)
+  - Phase 2: Admin features (future)
+  - Security considerations and migration strategy
+
+### Testing
+- **Frontend:** 1,173 passed | 18 skipped (1,191 total)
+- **Backend:** 574 passed | 21 skipped (595 total)
+- **Total:** 1,747 passed | 39 skipped (1,786 total)
+- **Pass Rate:** 97.82%
+
+### Technical Details
+- Monaco Editor: Custom theme with inherit: false, explicit token colors
+- DocPanel: Removed `[&_code]:bg-slate-100` and related Tailwind variants
+- LazyMonacoEditor: Added 6 background disabling theme colors
+- CodePanel: Added font smoothing CSS properties
+- PricingPage: Layout improvements for large displays
+
+---
+
 ## [2.4.4] - 2025-11-02
 
 **Status:** ✅ Contact Sales Feature & Critical Email Bug Fixes

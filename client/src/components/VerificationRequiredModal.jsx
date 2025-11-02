@@ -175,7 +175,7 @@ export default function VerificationRequiredModal({ isOpen, onClose, userEmail }
               <button
                 onClick={handleResend}
                 disabled={isResending}
-                className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-lg shadow-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 active:bg-purple-800 rounded-lg shadow-lg shadow-purple-600/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
               >
                 {isResending ? (
                   <>
@@ -196,7 +196,7 @@ export default function VerificationRequiredModal({ isOpen, onClose, userEmail }
               disabled={isResending}
               className={`w-full px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 ${
                 emailSent
-                  ? 'text-white bg-purple-600 hover:bg-purple-700 shadow-sm'
+                  ? 'text-white bg-purple-600 hover:bg-purple-700 active:bg-purple-800 shadow-lg shadow-purple-600/20'
                   : 'text-slate-700 bg-slate-100 hover:bg-slate-200'
               }`}
             >

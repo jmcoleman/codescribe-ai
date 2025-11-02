@@ -54,7 +54,7 @@ export const MermaidDiagram = memo(function MermaidDiagram({ chart, id }) {
           <button
             type="button"
             onClick={() => setShowDiagram(true)}
-            className="flex-shrink-0 px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 focus-visible:ring-offset-2"
+            className="flex-shrink-0 px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 active:bg-purple-800 shadow-lg shadow-purple-600/20 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 focus-visible:ring-offset-2"
           >
             Show
           </button>
