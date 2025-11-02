@@ -31,7 +31,7 @@ const stripe = process.env.STRIPE_SECRET_KEY
       apiVersion: '2024-11-20.acacia', // Latest stable version
       appInfo: {
         name: 'CodeScribe AI',
-        version: '2.4.0',
+        version: '2.4.2',
         url: 'https://codescribeai.com',
       },
     })
