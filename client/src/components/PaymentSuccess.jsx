@@ -1,26 +1,43 @@
-import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, Settings } from 'lucide-react';
 
 /**
  * Payment Success Page
  *
  * Shown after successful Stripe Checkout completion.
  * Epic: 2.4 - Payment Integration
+ *
+ * UX Best Practice: User-controlled navigation (no auto-redirect)
+ * Follows industry standards: Stripe, Shopify, GitHub Sponsors
  */
 export function PaymentSuccess() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get('session_id');
 
-  useEffect(() => {
-    // Auto-redirect to home after 5 seconds
-    const timer = setTimeout(() => {
-      navigate('/');
-    }, 5000);
+  const handleManageSubscription = async () => {
+    try {
+      // Create Stripe billing portal session
+      const response = await fetch('/api/payments/create-portal-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
 
-    return () => clearTimeout(timer);
-  }, [navigate]);
+      if (!response.ok) {
+        throw new Error('Failed to create portal session');
+      }
+
+      const { url } = await response.json();
+      window.location.href = url;
+    } catch (error) {
+      console.error('Error opening billing portal:', error);
+      // Fallback: navigate to home if portal fails
+      navigate('/');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-white flex items-center justify-center p-4">
@@ -52,14 +69,18 @@ export function PaymentSuccess() {
         <div className="space-y-3">
           <button
             onClick={() => navigate('/')}
-            className="w-full py-3 px-6 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-all duration-200"
+            className="w-full py-3 px-6 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg"
           >
             Start Generating Docs
           </button>
 
-          <p className="text-sm text-slate-600">
-            Redirecting to app in 5 seconds...
-          </p>
+          <button
+            onClick={handleManageSubscription}
+            className="w-full py-3 px-6 bg-white text-slate-700 border border-slate-300 rounded-lg font-medium hover:bg-slate-50 transition-all duration-200 flex items-center justify-center gap-2"
+          >
+            <Settings className="w-4 h-4" />
+            Manage Subscription
+          </button>
         </div>
       </div>
     </div>

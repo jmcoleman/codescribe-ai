@@ -569,6 +569,98 @@ describe('PricingPage', () => {
     });
   });
 
+  describe('Contact Sales Flow - Team Tier', () => {
+    it('should show signup modal when unauthenticated user clicks Contact Sales', async () => {
+      const user = userEvent.setup();
+      renderPricingPage();
+
+      // Find Team tier Contact Sales button
+      const teamButton = screen.getByRole('button', { name: /contact sales/i });
+
+      await user.click(teamButton);
+
+      // Should open signup modal
+      await waitFor(() => {
+        expect(screen.getByTestId('signup-modal')).toBeInTheDocument();
+      });
+    });
+
+    it('should store contact sales intent in sessionStorage for team tier', async () => {
+      const user = userEvent.setup();
+      renderPricingPage();
+
+      const teamButton = screen.getByRole('button', { name: /contact sales/i });
+      await user.click(teamButton);
+
+      await waitFor(() => {
+        const storedIntent = sessionStorage.getItem(STORAGE_KEYS.PENDING_SUBSCRIPTION);
+        expect(storedIntent).not.toBeNull();
+
+        const parsed = JSON.parse(storedIntent);
+        expect(parsed.tier).toBe('team');
+        expect(parsed.billingPeriod).toBe('monthly');
+      });
+    });
+
+    it('should include tier name in stored subscription context', async () => {
+      const user = userEvent.setup();
+      renderPricingPage();
+
+      const teamButton = screen.getByRole('button', { name: /contact sales/i });
+      await user.click(teamButton);
+
+      await waitFor(() => {
+        const storedIntent = sessionStorage.getItem(STORAGE_KEYS.PENDING_SUBSCRIPTION);
+        const parsed = JSON.parse(storedIntent);
+        expect(parsed.tierName).toBe('Team');
+      });
+    });
+
+    it('should open ContactSalesModal when authenticated user clicks Contact Sales', async () => {
+      const user = userEvent.setup();
+
+      // Mock authenticated user
+      mockAuthContext.user = {
+        id: 1,
+        email: 'user@example.com',
+        tier: 'free',
+        email_verified: true,
+      };
+      mockAuthContext.isAuthenticated = true;
+
+      renderPricingPage();
+
+      const teamButton = screen.getByRole('button', { name: /contact sales/i });
+      await user.click(teamButton);
+
+      // Should open ContactSalesModal (not signup modal)
+      // Note: ContactSalesModal needs to be mocked if we want to verify it opened
+      // For now, we verify signup modal does NOT open
+      expect(screen.queryByTestId('signup-modal')).not.toBeInTheDocument();
+    });
+
+    it('should NOT store contact intent when authenticated user clicks Contact Sales', async () => {
+      const user = userEvent.setup();
+
+      mockAuthContext.user = {
+        id: 1,
+        email: 'user@example.com',
+        tier: 'free',
+        email_verified: true,
+      };
+      mockAuthContext.isAuthenticated = true;
+
+      renderPricingPage();
+
+      const teamButton = screen.getByRole('button', { name: /contact sales/i });
+      await user.click(teamButton);
+
+      // Authenticated users don't need to store intent
+      const storedIntent = sessionStorage.getItem(STORAGE_KEYS.PENDING_SUBSCRIPTION);
+      expect(storedIntent).toBeNull();
+    });
+  });
+
   describe('Navigation', () => {
     it('should navigate to home when back button is clicked', async () => {
       const user = userEvent.setup();

@@ -9,7 +9,73 @@
 
 ## Overview
 
-CodeScribe AI supports multiple subscription flows to handle both authenticated and unauthenticated users attempting to subscribe. For **paid tiers** (Starter, Pro, Team), the system uses sessionStorage to preserve subscription intent across authentication and email verification steps. **Free tier** has a simplified flow with no payment required.
+CodeScribe AI supports multiple subscription flows to handle both authenticated and unauthenticated users attempting to subscribe. For **paid tiers** (Pro, Premium), the system uses sessionStorage to preserve subscription intent across authentication and email verification steps. **Enterprise/Team tiers** use a Contact Sales flow, and **Free tier** has a simplified flow with no payment required.
+
+### High-Level Flow Diagram
+
+```mermaid
+graph TB
+    Start[User Clicks Subscribe/Contact Sales] --> Auth{Authenticated?}
+
+    Auth -->|Yes| TierCheck{Which Tier?}
+    Auth -->|No| StoreIntent[Store Intent in sessionStorage]
+
+    StoreIntent --> ShowModal[Show Signup Modal]
+    ShowModal --> SignupMethod{Signup Method?}
+
+    SignupMethod -->|Email/Password| EmailSignup[Create Account<br/>Unverified]
+    SignupMethod -->|GitHub OAuth| OAuthFlow[OAuth Complete<br/>Auto-Verified]
+
+    EmailSignup --> VerifyEmail[Email Verification Required]
+    VerifyEmail --> ClickLink[User Clicks Verification Link]
+    ClickLink --> VerifyPage[VerifyEmail Page]
+
+    VerifyPage --> CheckTier1{Pending Tier?}
+    OAuthFlow --> AuthCallbackPage[AuthCallback Page]
+    AuthCallbackPage --> CheckTier2{Pending Tier?}
+
+    CheckTier1 -->|Free| HomeRedirect[Redirect to Home]
+    CheckTier1 -->|Pro/Premium| StripeCheckout1[Create Stripe Checkout]
+    CheckTier1 -->|Enterprise/Team| PricingRedirect1[Redirect to Pricing<br/>Keep sessionStorage]
+
+    CheckTier2 -->|Free| HomeRedirect
+    CheckTier2 -->|Pro/Premium| StripeCheckout2[Create Stripe Checkout]
+    CheckTier2 -->|Enterprise/Team| PricingRedirect2[Redirect to Pricing<br/>Keep sessionStorage]
+
+    TierCheck -->|Free| HomeRedirect
+    TierCheck -->|Pro/Premium| StripeCheckout3[Create Stripe Checkout]
+    TierCheck -->|Enterprise/Team| ContactModal[Open Contact Sales Modal]
+
+    PricingRedirect1 --> AutoOpen[PricingPage useEffect]
+    PricingRedirect2 --> AutoOpen
+    AutoOpen --> ContactModal
+
+    ContactModal --> SubmitForm[User Submits Form]
+    SubmitForm --> SendEmail[Email to sales@<br/>via Resend API]
+
+    StripeCheckout1 --> StripePage[Stripe Checkout Page]
+    StripeCheckout2 --> StripePage
+    StripeCheckout3 --> StripePage
+
+    StripePage --> Payment{Payment?}
+    Payment -->|Success| PaymentSuccess[Payment Success Page]
+    Payment -->|Cancelled| PaymentCancel[Payment Cancel Page]
+
+    style Start fill:#e0e7ff
+    style StoreIntent fill:#e9d5ff
+    style VerifyEmail fill:#fef3c7
+    style ContactModal fill:#ddd6fe
+    style StripePage fill:#bfdbfe
+    style PaymentSuccess fill:#bbf7d0
+    style SendEmail fill:#bbf7d0
+```
+
+**Legend:**
+- 🟣 **Purple** - SessionStorage operations
+- 🟡 **Yellow** - Email verification steps
+- 🔵 **Blue** - Stripe payment flow
+- 🟢 **Green** - Success endpoints (payment/contact sales)
+- 💜 **Dark Purple** - Contact Sales modal
 
 ### Key Principles
 
@@ -18,6 +84,7 @@ CodeScribe AI supports multiple subscription flows to handle both authenticated 
 3. **Clear Communication** - Users always know what they're subscribing to
 4. **Flexible Authentication** - Supports email/password and OAuth (GitHub)
 5. **Email Verification Required** - Non-OAuth users must verify email before checkout (paid) or app access (free)
+6. **Tier-Aware Routing** - Enterprise/Team tiers route to Contact Sales instead of Stripe Checkout
 
 ---
 
@@ -409,18 +476,204 @@ graph TB
 - **Paid Tiers:** Store subscription intent → Email verification → Checkout → Stripe
 - **Free Tier:** Show signup modal → Email verification → Home page (no checkout)
 
-### Team Tier (Contact Sales)
+### Enterprise & Team Tiers (Contact Sales)
 
-**Implementation:** [PricingPage.jsx:65-69](../../client/src/components/PricingPage.jsx#L65-L69)
+**Enterprise and Team tiers use a Contact Sales flow instead of Stripe Checkout.**
+
+**Implementation:** [PricingPage.jsx:80-105](../../client/src/components/PricingPage.jsx#L80-L105)
 
 ```javascript
-if (tier === 'team') {
-  window.location.href = 'mailto:sales@codescribeai.com?subject=Team Plan Inquiry';
+// Enterprise and Team tiers - contact sales
+if (tier === 'enterprise' || tier === 'team') {
+  if (!isAuthenticated) {
+    // Must be authenticated to contact sales (so we know who to contact)
+    // Store contact sales intent for post-auth flow
+    const contactSalesIntent = {
+      tier: tier.toLowerCase(),
+      billingPeriod: 'monthly', // Not used for contact sales, but kept for consistency
+      tierName: tiers.find(t => t.id === tier)?.name || tier,
+    };
+
+    // Store in sessionStorage for post-auth redirect
+    setSessionItem(STORAGE_KEYS.PENDING_SUBSCRIPTION, JSON.stringify(contactSalesIntent));
+
+    // Store in component state for modal context
+    setPendingSubscription(contactSalesIntent);
+
+    // Show signup modal
+    setShowSignupModal(true);
+    return;
+  }
+  // Show contact sales modal
+  setContactSalesTier(tier);
+  setShowContactSalesModal(true);
   return;
 }
 ```
 
-**Behavior:** Opens email client to contact sales
+**Behavior:**
+- **Authenticated users:** Opens ContactSalesModal directly
+- **Unauthenticated users:** Shows signup modal → After auth → Opens ContactSalesModal automatically
+
+---
+
+#### Contact Sales Flow for Unauthenticated Users
+
+```mermaid
+graph TB
+    A[User on Pricing Page<br/>Not Logged In] --> B[Click Contact Sales<br/>on Enterprise/Team]
+    B --> C[Store Contact Sales Intent<br/>sessionStorage]
+    C --> D[Open SignupModal<br/>Show Purple Banner]
+    D --> E{Sign Up Method?}
+    E -->|Email/Password| F[Account Created<br/>Verification Email Sent]
+    E -->|GitHub OAuth| G[OAuth Flow Complete]
+    F --> H[Click Verification Link]
+    H --> I[VerifyEmail Page]
+    I --> J{Tier is Enterprise/Team?}
+    J -->|Yes| K[Redirect to /pricing<br/>Keep sessionStorage]
+    J -->|No| L[Create Stripe Checkout]
+    G --> M[AuthCallback Page]
+    M --> N{Tier is Enterprise/Team?}
+    N -->|Yes| O[Redirect to /pricing<br/>Keep sessionStorage]
+    N -->|No| P[Create Stripe Checkout]
+    K --> Q[PricingPage useEffect]
+    O --> Q
+    Q --> R[Auto-open ContactSalesModal]
+    R --> S[User Submits Form]
+    S --> T[Email Sent to sales@<br/>via Resend API]
+
+    style C fill:#e9d5ff
+    style J fill:#fef3c7
+    style K fill:#dcfce7
+    style Q fill:#dcfce7
+```
+
+**Key Differences from Paid Tiers:**
+1. **No Stripe Checkout:** Enterprise/Team never create checkout sessions
+2. **Email Verification Logic:** VerifyEmail.jsx checks tier type and routes accordingly
+3. **sessionStorage Preserved:** Contact sales intent kept in storage for PricingPage to consume
+4. **Server-Side Email:** ContactSalesModal submits to `/api/contact/sales` endpoint
+
+---
+
+#### Email Verification Redirect Logic
+
+**File:** [VerifyEmail.jsx:56-103](../../client/src/components/VerifyEmail.jsx#L56-L103)
+
+The email verification component now checks if the pending subscription is for enterprise/team and handles the redirect differently:
+
+```javascript
+// Check if this is a Contact Sales tier (enterprise/team)
+const isContactSalesTier = pendingSubscription.tier === 'enterprise' || pendingSubscription.tier === 'team';
+
+if (isContactSalesTier) {
+  // Enterprise/Team tiers: Redirect to pricing (Contact Sales modal will auto-open)
+  setMessage(`Your email has been verified! Redirecting to contact our sales team...`);
+
+  // Keep pending subscription in storage (PricingPage will consume it)
+  setTimeout(() => {
+    navigate('/pricing');
+  }, 2000);
+} else {
+  // Pro/Premium tiers: Create Stripe checkout session
+  setMessage(`Your email has been verified! Redirecting to complete your ${pendingSubscription.tierName} subscription...`);
+
+  // Clear pending subscription from storage
+  removeSessionItem(STORAGE_KEYS.PENDING_SUBSCRIPTION);
+
+  // Redirect to create checkout session
+  setTimeout(async () => {
+    // ... Stripe checkout logic
+  }, 2000);
+}
+```
+
+**User Messages:**
+- **Enterprise/Team:** "Your email has been verified! Redirecting to contact our sales team..."
+- **Pro/Premium:** "Your email has been verified! Redirecting to complete your Pro subscription..."
+
+---
+
+#### Contact Sales Modal
+
+**File:** [ContactSalesModal.jsx](../../client/src/components/ContactSalesModal.jsx)
+
+**Features:**
+- Pre-filled user information (name, email from auth context)
+- **Smart name collection:** Required name fields shown only if user doesn't have first_name/last_name
+- Optional message field for additional details
+- Server-side email submission (no client-side dependencies)
+- Loading, success, and error states
+- Success confirmation with explicit close button
+
+**Name Collection Strategy:**
+
+The modal uses conditional rendering to minimize friction while ensuring sales inquiries always include a name:
+
+1. **User has name in database** (from Stripe checkout or OAuth):
+   - Shows read-only display: "Name: John Doe"
+   - No duplicate data entry required
+
+2. **User missing name** (email/password signup, no prior Stripe checkout):
+   - Shows required input fields: "First Name*" and "Last Name*"
+   - User must provide name to submit inquiry
+   - Name collected at natural point (when contacting sales)
+
+**Implementation:**
+```jsx
+{user?.first_name && user?.last_name ? (
+  // Show read-only display
+  <div className="bg-slate-50 rounded-lg p-4">
+    <p>Name: {user.first_name} {user.last_name}</p>
+    <p>Email: {user.email}</p>
+  </div>
+) : (
+  // Show name input fields (required)
+  <>
+    <input name="firstName" required placeholder="John" />
+    <input name="lastName" required placeholder="Doe" />
+  </>
+)}
+```
+
+**API Endpoint:** `POST /api/contact/sales`
+
+**Request Body:**
+```json
+{
+  "tier": "enterprise",
+  "message": "Looking for a custom plan for 50 users...",
+  "firstName": "John",     // Optional: only if user doesn't have name
+  "lastName": "Doe"        // Optional: only if user doesn't have name
+}
+```
+
+**Backend Name Resolution** ([contact.js:40-51](../../server/src/routes/contact.js#L40-L51)):
+```javascript
+// Priority: Database name > Form name > Empty
+if (user.first_name && user.last_name) {
+  userName = `${user.first_name} ${user.last_name}`.trim();
+} else if (firstName && lastName) {
+  userName = `${firstName.trim()} ${lastName.trim()}`;
+} else {
+  userName = user.first_name || user.last_name || '';
+}
+```
+
+**Email Delivery:**
+- Sent via Resend API to `sales@codescribeai.com`
+- Forwarded to personal Gmail via Namecheap email forwarding
+- Reply-To header set to user's email for easy responses
+- Branded HTML email template with user details (including collected name)
+
+**Name Collection Benefits:**
+- ✅ Zero friction signup (no name required initially)
+- ✅ Always have name for sales inquiries (required fields when needed)
+- ✅ No duplicate data entry (respects existing user data)
+- ✅ Progressive disclosure (ask only when needed)
+- ✅ Professional sales emails (always include proper contact name)
+
+**See:** [EMAIL-FORWARDING-SETUP.md](../deployment/EMAIL-FORWARDING-SETUP.md) for email configuration details
 
 ### User Already on Selected Tier
 
@@ -545,5 +798,5 @@ Your email has been verified! Redirecting to complete your Pro subscription...
 
 ---
 
-**Last Updated:** October 31, 2025
-**Version:** 1.0.0
+**Last Updated:** November 2, 2025
+**Version:** 1.1.0 - Added Enterprise/Team Contact Sales flow with email verification redirect logic

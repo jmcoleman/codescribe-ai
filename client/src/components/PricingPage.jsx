@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { API_URL } from '../config/api';
 import { toastError } from '../utils/toast';
 import VerificationRequiredModal from './VerificationRequiredModal';
+import { ContactSalesModal } from './ContactSalesModal';
 import { STORAGE_KEYS, setSessionItem, getSessionItem, removeSessionItem } from '../constants/storage';
 
 // Lazy load auth modals
@@ -33,6 +34,8 @@ export function PricingPage() {
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [showSignupModal, setShowSignupModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showContactSalesModal, setShowContactSalesModal] = useState(false);
+  const [contactSalesTier, setContactSalesTier] = useState('enterprise');
   const [pendingSubscription, setPendingSubscription] = useState(null);
   const [billingPeriod, setBillingPeriod] = useState('monthly'); // 'monthly' or 'yearly'
 
@@ -74,6 +77,33 @@ export function PricingPage() {
       return;
     }
 
+    // Enterprise and Team tiers - contact sales
+    if (tier === 'enterprise' || tier === 'team') {
+      if (!isAuthenticated) {
+        // Must be authenticated to contact sales (so we know who to contact)
+        // Store contact sales intent for post-auth flow
+        const contactSalesIntent = {
+          tier: tier.toLowerCase(),
+          billingPeriod: 'monthly', // Not used for contact sales, but kept for consistency
+          tierName: tiers.find(t => t.id === tier)?.name || tier,
+        };
+
+        // Store in sessionStorage for post-auth redirect
+        setSessionItem(STORAGE_KEYS.PENDING_SUBSCRIPTION, JSON.stringify(contactSalesIntent));
+
+        // Store in component state for modal context
+        setPendingSubscription(contactSalesIntent);
+
+        // Show signup modal
+        setShowSignupModal(true);
+        return;
+      }
+      // Show contact sales modal
+      setContactSalesTier(tier);
+      setShowContactSalesModal(true);
+      return;
+    }
+
     // If not authenticated, store subscription intent and show signup modal
     // (only for paid tiers that need checkout after verification)
     if (!isAuthenticated) {
@@ -91,12 +121,6 @@ export function PricingPage() {
 
       // Show signup modal
       setShowSignupModal(true);
-      return;
-    }
-
-    // Team tier - contact sales (for now)
-    if (tier === 'team') {
-      window.location.href = 'mailto:sales@codescribeai.com?subject=Team Plan Inquiry';
       return;
     }
 
@@ -447,6 +471,13 @@ export function PricingPage() {
         isOpen={showVerificationModal}
         onClose={() => setShowVerificationModal(false)}
         userEmail={user?.email}
+      />
+
+      {/* Contact Sales Modal */}
+      <ContactSalesModal
+        isOpen={showContactSalesModal}
+        onClose={() => setShowContactSalesModal(false)}
+        tier={contactSalesTier}
       />
 
       {/* Auth Modals */}

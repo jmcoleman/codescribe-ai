@@ -5,6 +5,7 @@ import apiRoutes from './routes/api.js';
 import migrateRoutes from './routes/migrate.js';
 import webhookRoutes from './routes/webhooks.js';
 import paymentRoutes from './routes/payments.js';
+import contactRoutes from './routes/contact.js';
 import errorHandler from './middleware/errorHandler.js';
 
 const app = express();
@@ -125,6 +126,7 @@ if (ENABLE_AUTH && authRoutes) {
 }
 if (ENABLE_AUTH) {
   app.use('/api/payments', paymentRoutes);
+  app.use('/api/contact', contactRoutes);
 }
 app.use('/api/migrate', migrateRoutes);
 app.use('/api', apiRoutes);

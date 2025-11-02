@@ -76,6 +76,7 @@ This document serves as the complete navigation hub for all CodeScribe AI docume
 - [MVP-DEPLOY-LAUNCH.md](planning/mvp/MVP-DEPLOY-LAUNCH.md) - Deployment checklist and guide
 - [VERCEL-POSTGRES-SETUP.md](deployment/VERCEL-POSTGRES-SETUP.md) - Neon database setup
 - [RESEND-SETUP.md](deployment/RESEND-SETUP.md) - Email service configuration
+- [EMAIL-FORWARDING-SETUP.md](deployment/EMAIL-FORWARDING-SETUP.md) - Namecheap email forwarding (sales@, support@)
 - [DATABASE-ENVIRONMENT-CHECKLIST.md](deployment/DATABASE-ENVIRONMENT-CHECKLIST.md) - Environment setup
 
 **Performance & Optimization:**

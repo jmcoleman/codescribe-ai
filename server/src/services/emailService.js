@@ -312,7 +312,135 @@ export async function sendVerificationEmail({ to, verificationToken }) {
   }
 }
 
+/**
+ * Send contact sales inquiry email
+ * @param {Object} options - Email options
+ * @param {string} options.userName - User's full name
+ * @param {string} options.userEmail - User's email
+ * @param {string} options.userId - User's ID
+ * @param {string} options.currentTier - User's current tier
+ * @param {string} options.interestedTier - Tier they're interested in (enterprise/team)
+ * @param {string} options.message - User's message (optional)
+ * @returns {Promise<Object>} Send result
+ */
+export async function sendContactSalesEmail({ userName, userEmail, userId, currentTier, interestedTier, message }) {
+  const subject = `${interestedTier.charAt(0).toUpperCase() + interestedTier.slice(1)} Plan Inquiry from ${userName || userEmail}`;
+
+  const emailData = {
+    from: FROM_EMAIL,
+    to: 'sales@codescribeai.com',
+    replyTo: userEmail,
+    subject,
+    html: `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Contact Sales Inquiry</title>
+          </head>
+          <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #334155; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: linear-gradient(135deg, #9333ea 0%, #6366f1 100%); padding: 40px 20px; text-align: center; border-radius: 8px 8px 0 0;">
+              <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 700;">New Sales Inquiry</h1>
+            </div>
+
+            <div style="background: #ffffff; padding: 40px 30px; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 8px 8px;">
+              <h2 style="color: #1e293b; margin-top: 0; font-size: 24px;">
+                ${interestedTier.charAt(0).toUpperCase() + interestedTier.slice(1)} Plan Inquiry
+              </h2>
+
+              <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 24px 0;">
+                <h3 style="color: #475569; margin: 0 0 16px 0; font-size: 16px; font-weight: 600;">Contact Information</h3>
+                <table style="width: 100%; border-collapse: collapse;">
+                  <tr>
+                    <td style="padding: 8px 0; color: #64748b; font-weight: 600; width: 120px;">Name:</td>
+                    <td style="padding: 8px 0; color: #1e293b;">${userName || 'Not provided'}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px 0; color: #64748b; font-weight: 600;">Email:</td>
+                    <td style="padding: 8px 0; color: #1e293b;"><a href="mailto:${userEmail}" style="color: #6366f1; text-decoration: none;">${userEmail}</a></td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px 0; color: #64748b; font-weight: 600;">User ID:</td>
+                    <td style="padding: 8px 0; color: #1e293b;">${userId}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px 0; color: #64748b; font-weight: 600;">Current Tier:</td>
+                    <td style="padding: 8px 0; color: #1e293b;">${currentTier.charAt(0).toUpperCase() + currentTier.slice(1)}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px 0; color: #64748b; font-weight: 600;">Interested In:</td>
+                    <td style="padding: 8px 0; color: #1e293b; font-weight: 600;">${interestedTier.charAt(0).toUpperCase() + interestedTier.slice(1)} Plan</td>
+                  </tr>
+                </table>
+              </div>
+
+              ${message ? `
+                <div style="margin: 24px 0;">
+                  <h3 style="color: #475569; margin: 0 0 12px 0; font-size: 16px; font-weight: 600;">Additional Message</h3>
+                  <div style="background: #f8fafc; padding: 16px; border-radius: 6px; border-left: 4px solid #6366f1;">
+                    <p style="color: #1e293b; margin: 0; white-space: pre-wrap;">${message}</p>
+                  </div>
+                </div>
+              ` : ''}
+
+              <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
+                <p style="color: #64748b; font-size: 14px; margin: 0;">
+                  <strong>Next Steps:</strong> Respond directly to this email or reach out to ${userEmail} to schedule a call.
+                </p>
+              </div>
+            </div>
+
+            ${getEmailFooter(CLIENT_URL)}
+          </body>
+        </html>
+      `
+  };
+
+  // Mock in dev/test, send real emails in production
+  if (shouldMockEmails()) {
+    return await mockEmailSend(emailData);
+  }
+
+  // Production: send real email via Resend
+  const client = getResendClient();
+  if (!client) {
+    throw new Error('Email service not configured. Please set RESEND_API_KEY environment variable.');
+  }
+
+  try {
+    const result = await client.emails.send(emailData);
+    console.log('\n📧 [EMAIL SENT] Contact Sales Inquiry');
+    console.log('  To:', emailData.to);
+    console.log('  From User:', userEmail);
+    console.log('  Subject:', emailData.subject);
+    console.log('  Interested Tier:', interestedTier);
+    console.log('  Email ID:', result.data?.id);
+    console.log('  Timestamp:', new Date().toISOString());
+    return result;
+  } catch (error) {
+    console.error('Failed to send contact sales email:', error);
+    console.error('Error details:', {
+      name: error.name,
+      message: error.message,
+      statusCode: error.statusCode,
+      stack: error.stack?.split('\n')[0]
+    });
+
+    // Check if it's a Resend rate limit error (429 Too Many Requests)
+    if (error.statusCode === 429 || error.message?.toLowerCase().includes('too many requests')) {
+      const customError = new Error('Email service is temporarily unavailable due to high demand. Please try again in a few minutes.');
+      customError.code = 'RESEND_RATE_LIMIT';
+      customError.statusCode = 503; // Service Unavailable
+      throw customError;
+    }
+
+    throw new Error('Failed to send contact sales email');
+  }
+}
+
 export default {
   sendPasswordResetEmail,
-  sendVerificationEmail
+  sendVerificationEmail,
+  sendContactSalesEmail
 };

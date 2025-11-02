@@ -1382,6 +1382,8 @@ Features are tracked here when they:
 - May become their own phase in the future
 
 **Potential Future Features (Backlog):**
+- Calendly integration for Enterprise/Team sales
+- Gmail "Send As" setup for sales@codescribeai.com replies
 - Documentation history and saved projects
 - GitHub repository integration (auto-detect repo, generate docs)
 - Multi-language support (i18n for UI)
