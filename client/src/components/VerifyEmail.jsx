@@ -179,7 +179,7 @@ export default function VerifyEmail() {
           {status === 'error' && (
             <button
               onClick={() => navigate('/')}
-              className="inline-flex items-center justify-center px-6 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors"
+              className="inline-flex items-center justify-center px-6 py-2.5 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-medium rounded-lg shadow-lg shadow-purple-600/20 transition-all duration-200"
             >
               Return to Home
             </button>

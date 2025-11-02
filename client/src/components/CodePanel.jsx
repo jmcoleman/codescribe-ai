@@ -97,7 +97,7 @@ export function CodePanel({
 
         {/* Right: Language badge + Clear + Copy buttons */}
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-600 uppercase">{language}</span>
+          <span className="inline-flex items-center px-2 py-1 text-xs font-medium text-cyan-800 bg-cyan-100 border border-cyan-300 rounded-md uppercase">{language}</span>
           {code && !readOnly && onClear && (
             <button
               type="button"
@@ -121,7 +121,14 @@ export function CodePanel({
       </div>
 
       {/* Monaco Editor - Lazy loaded */}
-      <div className="flex-1 overflow-hidden">
+      <div
+        className="flex-1 overflow-hidden"
+        style={{
+          WebkitFontSmoothing: 'antialiased',
+          MozOsxFontSmoothing: 'grayscale',
+          textRendering: 'optimizeLegibility',
+        }}
+      >
         <Suspense fallback={<EditorLoadingFallback />}>
           <LazyMonacoEditor
             height="100%"
@@ -138,8 +145,9 @@ export function CodePanel({
               automaticLayout: true,
               padding: { top: 24, bottom: 16 },
               ariaLabel: readOnly ? 'Code editor, read-only' : 'Code editor, type or paste your code here',
+              bracketPairColorization: { enabled: false }, // Disable bracket colorization
             }}
-            theme="vs-light"
+            theme="codescribe-light"
           />
         </Suspense>
       </div>
@@ -150,8 +158,8 @@ export function CodePanel({
           {lines} lines • {chars} chars
         </span>
         <div className="flex items-center gap-1.5 text-xs">
-          <Zap className="w-3 h-3 text-purple-500" aria-hidden="true" />
-          <span className="text-slate-600">Ready to analyze</span>
+          <Zap className="w-3 h-3 text-cyan-600" aria-hidden="true" />
+          <span className="text-cyan-600 font-medium">Ready to analyze</span>
         </div>
       </div>
 

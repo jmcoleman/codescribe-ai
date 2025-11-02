@@ -208,7 +208,7 @@ describe('CodePanel', () => {
     it('renders Zap icon in status', () => {
       const { container } = render(<CodePanel {...defaultProps} />);
       // Zap icon has specific classes
-      const zapIcon = container.querySelector('.text-purple-500');
+      const zapIcon = container.querySelector('.text-cyan-600');
       expect(zapIcon).toBeInTheDocument();
     });
   });

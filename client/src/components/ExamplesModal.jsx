@@ -225,7 +225,7 @@ const ExampleCard = React.forwardRef(({ example, isSelected, onPreview, onLoad }
             e.stopPropagation();
             onLoad();
           }}
-          className="flex-shrink-0 p-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 hover:scale-[1.05] hover:shadow-md transition-all duration-200 motion-reduce:transition-none focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 shadow-sm active:scale-[0.98] active:brightness-95"
+          className="flex-shrink-0 p-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 active:bg-purple-800 hover:scale-[1.05] shadow-lg shadow-purple-600/20 transition-all duration-200 motion-reduce:transition-none focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 active:scale-[0.98]"
           aria-label={`Load ${example.title} example`}
           title="Load into editor"
         >
@@ -246,7 +246,7 @@ function ExamplePreview({ example, onLoad }) {
         <button
           type="button"
           onClick={onLoad}
-          className="w-full px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 hover:scale-[1.02] hover:shadow-lg transition-all duration-200 motion-reduce:transition-none font-semibold text-sm shadow-md focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 active:scale-[0.98] active:brightness-95"
+          className="w-full px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 active:bg-purple-800 hover:scale-[1.02] shadow-lg shadow-purple-600/20 transition-all duration-200 motion-reduce:transition-none font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 active:scale-[0.98]"
         >
           Load This Example
         </button>

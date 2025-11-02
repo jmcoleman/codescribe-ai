@@ -58,6 +58,15 @@ export default {
           600: '#DC2626',  // Main error (WCAG AA compliant)
           700: '#B91C1C',  // Error buttons/destructive
         },
+        // Code/Technical Accent (Cyan) - NEW in v2.0
+        cyan: {
+          50: '#ECFEFF',   // Code element backgrounds
+          100: '#CFFAFE',  // Light tint
+          200: '#A5F3FC',  // Subtle highlight
+          500: '#06B6D4',  // Links in code context
+          600: '#0891B2',  // Main code accent (WCAG AAA: 7.8:1)
+          700: '#0E7490',  // Hover states
+        },
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],

@@ -10,14 +10,14 @@ mermaid.initialize({
   themeVariables: {
     primaryColor: '#9333ea',
     primaryTextColor: '#1e293b',
-    primaryBorderColor: '#c084fc',
+    primaryBorderColor: '#7c3aed', // purple-600 - darker, more defined borders
     lineColor: '#64748b',
     secondaryColor: '#e0e7ff',
     tertiaryColor: '#f1f5f9',
     background: '#ffffff',
     mainBkg: '#ffffff',
     secondBkg: '#f8fafc',
-    borderColor: '#cbd5e1',
+    borderColor: '#94a3b8', // slate-400 - darker borders for better definition
     arrowheadColor: '#64748b',
     fontFamily: 'Inter, system-ui, sans-serif',
     fontSize: '14px'

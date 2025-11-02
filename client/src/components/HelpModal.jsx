@@ -281,7 +281,7 @@ export function HelpModal({ isOpen, onClose }) {
           <button
             type="button"
             onClick={handleClose}
-            className="w-full px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
+            className="w-full px-4 py-3 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white rounded-lg font-medium shadow-lg shadow-purple-600/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
           >
             Got it, let's start!
           </button>

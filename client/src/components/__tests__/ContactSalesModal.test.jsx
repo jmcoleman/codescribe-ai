@@ -90,7 +90,7 @@ describe('ContactSalesModal', () => {
     it('should show read-only name display when user has first and last name', () => {
       render(<ContactSalesModal isOpen={true} onClose={vi.fn()} tier="enterprise" />);
 
-      expect(screen.getByText(/name:/i)).toBeInTheDocument();
+      expect(screen.getByText(/from:/i)).toBeInTheDocument();
       expect(screen.getByText('John Doe')).toBeInTheDocument();
 
       // Should NOT show name input fields
@@ -98,11 +98,12 @@ describe('ContactSalesModal', () => {
       expect(screen.queryByLabelText(/last name/i)).not.toBeInTheDocument();
     });
 
-    it('should display user email in read-only section', () => {
+    it('should not display user email to protect privacy', () => {
       render(<ContactSalesModal isOpen={true} onClose={vi.fn()} tier="enterprise" />);
 
-      expect(screen.getByText(/email:/i)).toBeInTheDocument();
-      expect(screen.getByText('john@example.com')).toBeInTheDocument();
+      // Email should not be visible in the UI for privacy
+      expect(screen.queryByText(/email:/i)).not.toBeInTheDocument();
+      expect(screen.queryByText('john@example.com')).not.toBeInTheDocument();
     });
   });
 
@@ -135,11 +136,12 @@ describe('ContactSalesModal', () => {
       expect(labels.length).toBeGreaterThanOrEqual(2); // At least first and last name
     });
 
-    it('should still display email in read-only section when name missing', () => {
+    it('should not display email in UI when name is missing', () => {
       render(<ContactSalesModal isOpen={true} onClose={vi.fn()} tier="enterprise" />);
 
-      expect(screen.getByText(/email:/i)).toBeInTheDocument();
-      expect(screen.getByText('user@example.com')).toBeInTheDocument();
+      // Email should not be visible in the UI for privacy
+      expect(screen.queryByText(/email:/i)).not.toBeInTheDocument();
+      expect(screen.queryByText('user@example.com')).not.toBeInTheDocument();
     });
   });
 
