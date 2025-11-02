@@ -548,7 +548,7 @@ Use this checklist for each release. There are two distinct phases:
 - **Form Validation:** FORM-VALIDATION-GUIDE.md v1.3 (client-server patterns, focus management, flushSync)
 - **Test Data Utilities:** client/src/utils/README.md (comprehensive usage guide)
 - **Database Migrations:** DB-MIGRATION-MANAGEMENT.md, PRODUCTION-DB-SETUP.md with migration API details
-- **Testing Documentation:** TEST-FIXES-OCT-2025.md Session 3 (coverage improvement details)
+- **Testing Documentation:** TEST-PATTERNS-GUIDE.md Session 3 (coverage improvement details)
 
 **Dependencies Added:**
 - resend (^4.0.1) - Email sending service

@@ -322,7 +322,7 @@ Delivered a production-ready AI documentation tool from concept to deployment in
    - Category analysis (critical, core, utility, future)
    - Testing patterns and recommendations
 
-10. **[Test Fixes Guide](../testing/TEST-FIXES-OCT-2025.md)** - Testing patterns
+10. **[Test Fixes Guide](../testing/TEST-PATTERNS-GUIDE.md)** - Testing patterns
     - 75 tests fixed across frontend and backend
     - 10 reusable test fix patterns
     - 6 technical insights for test stability

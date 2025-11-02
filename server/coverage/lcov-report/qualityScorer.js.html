@@ -30,9 +30,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">97.36% </span>
+                <span class="strong">97.4% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>74/76</span>
+                <span class='fraction'>75/77</span>
             </div>
         
             
@@ -336,7 +336,15 @@
 <a name='L271'></a><a href='#L271'>271</a>
 <a name='L272'></a><a href='#L272'>272</a>
 <a name='L273'></a><a href='#L273'>273</a>
-<a name='L274'></a><a href='#L274'>274</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L274'></a><a href='#L274'>274</a>
+<a name='L275'></a><a href='#L275'>275</a>
+<a name='L276'></a><a href='#L276'>276</a>
+<a name='L277'></a><a href='#L277'>277</a>
+<a name='L278'></a><a href='#L278'>278</a>
+<a name='L279'></a><a href='#L279'>279</a>
+<a name='L280'></a><a href='#L280'>280</a>
+<a name='L281'></a><a href='#L281'>281</a>
+<a name='L282'></a><a href='#L282'>282</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">45x</span>
 <span class="cline-any cline-yes">45x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -353,6 +361,7 @@
 <span class="cline-any cline-yes">45x</span>
 <span class="cline-any cline-yes">18x</span>
 <span class="cline-any cline-yes">18x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -367,6 +376,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">45x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -374,12 +384,14 @@
 <span class="cline-any cline-yes">45x</span>
 <span class="cline-any cline-yes">16x</span>
 <span class="cline-any cline-yes">16x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">29x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -417,6 +429,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">45x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">45x</span>
@@ -438,6 +451,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">45x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -481,9 +495,11 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">45x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">45x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -609,7 +625,7 @@
 <span class="cline-any cline-yes">177x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">45x</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">export function calculateQualityScore(documentation, codeAnalysis) {
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">export function calculateQualityScore(documentation, codeAnalysis, docType = 'README') {
   let score = 0;
   const breakdown = {};
 &nbsp;
@@ -628,12 +644,14 @@
     breakdown.overview = {
       present: true,
       points: 20,
+      maxPoints: 20,
       status: 'complete'
     };
   } else {
     breakdown.overview = {
       present: false,
       points: 0,
+      maxPoints: 20,
       status: 'missing',
       suggestion: 'Add an overview section describing what the code does'
     };
@@ -646,15 +664,17 @@
   
   if (hasInstallation) {
     score += 15;
-    breakdown.installation = { 
-      present: true, 
+    breakdown.installation = {
+      present: true,
       points: 15,
+      maxPoints: 15,
       status: 'complete'
     };
   } else {
-    breakdown.installation = { 
-      present: false, 
+    breakdown.installation = {
+      present: false,
       points: 0,
+      maxPoints: 15,
       status: 'missing',
       suggestion: 'Add installation or setup instructions'
     };
@@ -681,10 +701,11 @@
   }
 &nbsp;
   score += examplePoints;
-  breakdown.examples = { 
-    present: exampleCount &gt; 0, 
+  breakdown.examples = {
+    present: exampleCount &gt; 0,
     count: exampleCount,
     points: examplePoints,
+    maxPoints: 20,
     status: exampleStatus,
     suggestion: exampleSuggestion
   };
@@ -710,11 +731,12 @@
     apiSuggestion = `Document remaining functions (${functionsCovered}/${totalFunctions} covered)`;
   }
 &nbsp;
-  breakdown.apiDocs = { 
-    present: apiPoints &gt; 0, 
+  breakdown.apiDocs = {
+    present: apiPoints &gt; 0,
     coverage: `${functionsCovered}/${totalFunctions}`,
     coveragePercent: Math.round(coverageRatio * 100),
     points: apiPoints,
+    maxPoints: 25,
     status: apiStatus,
     suggestion: apiSuggestion
   };
@@ -743,12 +765,13 @@
   }
 &nbsp;
   score += structurePoints;
-  breakdown.structure = { 
-    present: headerCount &gt; 0, 
+  breakdown.structure = {
+    present: headerCount &gt; 0,
     headers: headerCount,
     hasCodeBlocks,
     hasBulletPoints,
     points: structurePoints,
+    maxPoints: 20,
     status: structureStatus,
     suggestion: structureSuggestion
   };
@@ -760,7 +783,8 @@
     score,
     grade,
     breakdown,
-    summary: generateSummary(score, breakdown)
+    summary: generateSummary(score, breakdown),
+    docType
   };
 }
 &nbsp;
@@ -889,7 +913,7 @@ function getTopSuggestion(breakdown) {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-10-14T13:33:43.418Z
+                at 2025-11-02T18:18:00.218Z
             </div>
         <script src="prettify.js"></script>
         <script>

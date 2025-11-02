@@ -459,7 +459,7 @@ For a complete navigation guide with descriptions of all documentation, see **[D
 **Development & Testing:**
 - **[Dev Guide](docs/planning/mvp/05-Dev-Guide.md)** - Implementation guide with code examples
 - **[Testing Hub](docs/testing/README.md)** - 1,381+ tests, coverage reports, test patterns
-- **[Test Fixes Guide](docs/testing/TEST-FIXES-OCT-2025.md)** - Testing patterns & best practices
+- **[Test Fixes Guide](docs/testing/TEST-PATTERNS-GUIDE.md)** - Testing patterns & best practices
 
 **Design & UX:**
 - **[Figma Design System](docs/planning/mvp/07-Figma-Guide.md)** - Complete UI/UX design system
@@ -603,17 +603,18 @@ See [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) for complete
 
 ### 📊 Testing & Quality
 
-**Comprehensive Test Coverage: 1,381+ Tests**
-- **Backend Tests**: 434 tests (Jest + Supertest)
-  - Service layer: qualityScorer, claudeClient, codeParser, docGenerator
+**Comprehensive Test Coverage: 1,786 Tests**
+- **Backend Tests**: 574 tests (Jest + Supertest)
+  - Service layer: qualityScorer, claudeClient, codeParser, docGenerator, emailService
   - Authentication: 102 tests (auth middleware, user model, OAuth flows)
   - Database migrations: 40 tests (naming, checksums, ordering)
+  - Contact Sales: 28 tests (email sending, tier validation, name resolution)
   - Password reset: 25 tests (email verification, token validation, security)
   - Integration: file upload, quality scoring, prompt quality
   - Mermaid generation tests
-  - **Coverage**: 95.81% statements, 88.72% branches, 86.84% models, 65.41% routes
-  - **Pass Rate**: 95.2% (413 passing, 21 skipped, 0 failures)
-- **Frontend Tests**: 937 tests (Vitest + React Testing Library)
+  - **Coverage**: 91.83% services statements, 95.81% overall, 88.72% branches
+  - **Pass Rate**: 97.82% (574 passing, 21 skipped)
+- **Frontend Tests**: 1,173 tests (Vitest + React Testing Library)
   - Component tests with accessibility checks (18/18 components tested)
   - Authentication UI: SignupModal, LoginModal, ForgotPasswordModal, ResetPasswordModal
   - Integration tests for App workflows

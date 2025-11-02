@@ -103,7 +103,7 @@ This document serves as the complete navigation hub for all CodeScribe AI docume
 
 **Testing Documentation:**
 - [testing/README.md](testing/README.md) - Testing hub (1,381+ tests)
-- [TEST-FIXES-OCT-2025.md](testing/TEST-FIXES-OCT-2025.md) - Test fix patterns (75 tests fixed, 25 added)
+- [TEST-PATTERNS-GUIDE.md](testing/TEST-PATTERNS-GUIDE.md) - Test fix patterns (75 tests fixed, 25 added)
 - [COMPONENT-TEST-COVERAGE.md](testing/COMPONENT-TEST-COVERAGE.md) - Coverage report (18/18 components)
 - [frontend-testing-guide.md](testing/frontend-testing-guide.md) - React testing patterns
 - [CROSS-BROWSER-TEST-PLAN.md](testing/CROSS-BROWSER-TEST-PLAN.md) - E2E strategy
