@@ -51,7 +51,7 @@ AI-powered documentation generator with real-time streaming, quality scoring (0-
 | [Testing README](docs/testing/README.md) | Test navigation hub | 1,662 test stats, quick commands, coverage overview |
 | [COMPONENT-TEST-COVERAGE.md](docs/testing/COMPONENT-TEST-COVERAGE.md) | Coverage details ⭐ | 13/18 components tested, category breakdown, gaps |
 | [frontend-testing-guide.md](docs/testing/frontend-testing-guide.md) | React testing patterns | Vitest + RTL, mocking, a11y, interactions |
-| [TEST-FIXES-OCT-2025.md](docs/testing/TEST-FIXES-OCT-2025.md) | Test fix patterns ⭐ | 75 tests fixed, 10 patterns, 6 technical insights, 97.3% pass rate |
+| [TEST-FIXES-OCT-2025.md](docs/testing/TEST-FIXES-OCT-2025.md) | Test fix patterns ⭐⚠️ | **103 tests fixed, 11 patterns** (Pattern 11: ES Modules!), 6 insights, 97.8% pass rate |
 
 **Specialized Tests:** [ERROR-HANDLING-TESTS.md](docs/testing/ERROR-HANDLING-TESTS.md) (58 tests) | [MERMAID-DIAGRAM-TESTS.md](docs/testing/MERMAID-DIAGRAM-TESTS.md) (14 tests) | [CROSS-BROWSER-TEST-PLAN.md](docs/testing/CROSS-BROWSER-TEST-PLAN.md) | [ACCESSIBILITY-AUDIT.MD](docs/testing/ACCESSIBILITY-AUDIT.MD)
 
@@ -212,6 +212,43 @@ await page.waitForSelector('.monaco-editor', { state: 'visible', timeout: 10000 
 - [ ] UI update? → `expect().toBeVisible()` or `waitForFunction()`
 - [ ] Lazy component? → Wait for selector + initialization
 - [ ] Arbitrary timeout? → Replace with event-based waiting
+
+### Backend Testing: ES Modules Required ⚠️
+
+**❌ NEVER:** Use CommonJS (`require`) in backend test files
+```javascript
+// BAD: Causes "argument handler must be a function" error
+const request = require('supertest');
+const myRoute = require('../myRoute');
+```
+
+**✅ ALWAYS:** Use ES modules (`import`) - **Pattern 11 in TEST-FIXES-OCT-2025.md**
+```javascript
+// GOOD: ES modules throughout
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import request from 'supertest';
+
+// Mock BEFORE import (critical!)
+jest.mock('../../middleware/auth.js', () => ({
+  requireAuth: jest.fn((req, res, next) => next()),
+  validateBody: jest.fn(() => (req, res, next) => next()),
+}));
+
+// Import routes AFTER mocks
+import myRoute from '../myRoute.js';
+```
+
+**Why This Matters:**
+- All backend code uses ES modules
+- CommonJS `require()` cannot import ES modules properly
+- Middleware functions become undefined → "argument handler must be a function"
+- **This is Pattern 11 in TEST-FIXES-OCT-2025.md** - full template available
+
+**Quick Checklist:**
+- [ ] Using `import` not `require`?
+- [ ] Mocking dependencies BEFORE importing routes?
+- [ ] Providing manual mock implementations (not automatic)?
+- [ ] See [TEST-FIXES-OCT-2025.md Pattern 11](docs/testing/TEST-FIXES-OCT-2025.md#pattern-11-es-modules-vs-commonjs-in-backend-tests--new-v244) for complete template
 
 ### Timezone Awareness (EST/EDT)
 **When adding session labels to docs:**

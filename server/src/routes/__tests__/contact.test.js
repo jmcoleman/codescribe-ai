@@ -6,15 +6,30 @@
  * Related: SUBSCRIPTION-FLOWS.md, ContactSalesModal.jsx
  */
 
-const request = require('supertest');
-const express = require('express');
-const contactRouter = require('../contact');
-const { requireAuth, validateBody } = require('../../middleware/auth');
-const { sendContactSalesEmail } = require('../../services/emailService');
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import request from 'supertest';
+import express from 'express';
 
-// Mock dependencies
-jest.mock('../../middleware/auth');
-jest.mock('../../services/emailService');
+// Track what schema validateBody was called with (use object to avoid TDZ)
+const capturedState = { schema: null };
+
+// Mock dependencies BEFORE importing routes
+jest.mock('../../middleware/auth.js', () => ({
+  requireAuth: jest.fn((req, res, next) => next()),
+  validateBody: jest.fn((schema) => {
+    capturedState.schema = schema; // Capture the schema for test assertions
+    return (req, res, next) => next();
+  }),
+}));
+
+jest.mock('../../services/emailService.js', () => ({
+  sendContactSalesEmail: jest.fn().mockResolvedValue({ success: true }),
+}));
+
+// Now import routes and mocked modules
+import contactRouter from '../contact.js';
+import { requireAuth, validateBody } from '../../middleware/auth.js';
+import { sendContactSalesEmail } from '../../services/emailService.js';
 
 describe('Contact Sales Routes', () => {
   let app;
@@ -172,7 +187,7 @@ describe('Contact Sales Routes', () => {
 
         expect(sendContactSalesEmail).toHaveBeenCalledWith(
           expect.objectContaining({
-            userName: 'John  Doe', // Trimmed by .trim() on combined string
+            userName: 'John Doe', // Each part trimmed individually
           })
         );
       });
@@ -450,27 +465,17 @@ describe('Contact Sales Routes', () => {
 
     describe('Request Body Validation', () => {
       it('should validate tier is required', async () => {
-        await request(app)
-          .post('/api/contact/sales')
-          .send({ message: 'Test' });
-
-        expect(validateBody).toHaveBeenCalledWith(
-          expect.objectContaining({
-            tier: { required: true, type: 'string' },
-          })
-        );
+        // Check the schema that was captured when route was loaded
+        expect(capturedState.schema).toMatchObject({
+          tier: { required: true, type: 'string' },
+        });
       });
 
       it('should validate tier is string type', async () => {
-        await request(app)
-          .post('/api/contact/sales')
-          .send({ tier: 'enterprise' });
-
-        expect(validateBody).toHaveBeenCalledWith(
-          expect.objectContaining({
-            tier: { required: true, type: 'string' },
-          })
-        );
+        // Check the schema that was captured when route was loaded
+        expect(capturedState.schema).toMatchObject({
+          tier: { required: true, type: 'string' },
+        });
       });
 
       it('should allow optional message field', async () => {
