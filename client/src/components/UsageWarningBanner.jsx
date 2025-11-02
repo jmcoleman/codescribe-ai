@@ -1,5 +1,5 @@
 import { X, AlertCircle, ArrowRight } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 /**
  * Usage warning banner for 80-99% quota usage (soft limit)
@@ -34,6 +34,7 @@ export function UsageWarningBanner({
 }) {
   const [isVisible, setIsVisible] = useState(true);
   const [isExiting, setIsExiting] = useState(false);
+  const dismissTimerRef = useRef(null);
 
   // Reset visibility when usage changes
   useEffect(() => {
@@ -43,10 +44,19 @@ export function UsageWarningBanner({
     }
   }, [usage]);
 
+  // Clean up timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (dismissTimerRef.current) {
+        clearTimeout(dismissTimerRef.current);
+      }
+    };
+  }, []);
+
   const handleDismiss = () => {
     setIsExiting(true);
     // Wait for exit animation to complete
-    setTimeout(() => {
+    dismissTimerRef.current = setTimeout(() => {
       setIsVisible(false);
       onDismiss?.();
     }, 200); // Match exit animation duration
