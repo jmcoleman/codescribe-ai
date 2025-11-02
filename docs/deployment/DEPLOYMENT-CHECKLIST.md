@@ -19,10 +19,15 @@
 - [x] Pushed to GitHub
 
 ### 2. Configuration Files
-- [x] `vercel.json` created
+- [x] `vercel.json` created with:
+  - `buildCommand` includes `npm run migrate` for automatic database migrations
+  - `git.deploymentEnabled.main = false` (uses CI/CD Deploy Hooks instead)
+  - Routes configuration for API endpoints
 - [x] `.gitignore` configured (excludes .env, node_modules, etc.)
 - [x] `server/.env.example` exists
 - [x] CORS configured for production URL
+
+> **See:** [VERCEL-DEPLOYMENT-GUIDE.md](./VERCEL-DEPLOYMENT-GUIDE.md) for complete vercel.json configuration
 
 ### 3. Build Scripts
 - [x] Frontend build script: `npm run build`
@@ -30,34 +35,133 @@
 - [x] Root install script: `npm run install:all`
 
 ### 4. Environment Variables Ready
+
+> **📚 Complete Reference:** See [VERCEL-ENVIRONMENT-VARIABLES.md](./VERCEL-ENVIRONMENT-VARIABLES.md) for detailed environment variable documentation.
+
+#### Core Application
 - [x] ✅ `CLAUDE_API_KEY` (configured in Vercel)
 - [x] ✅ `NODE_ENV=production`
-- [x] ✅ `PORT=3000`
-- [x] ✅ `ALLOWED_ORIGINS` (configured for production URL)
-- [x] ✅ `VITE_API_URL` (configured for production URL)
-- [x] ✅ Rate limiting configs (using defaults)
-- [x] ✅ `POSTGRES_URL` (Neon database connection string)
-- [x] ✅ `SESSION_SECRET` (secure random string)
-- [x] ✅ `GITHUB_CLIENT_ID` (OAuth app credentials)
-- [x] ✅ `GITHUB_CLIENT_SECRET` (OAuth app credentials)
+- [x] ✅ `PORT=3000` (optional, Vercel sets automatically)
+
+#### Database (Neon Postgres)
+> **Note:** Auto-injected when you connect Neon via Vercel Marketplace. Use separate database for production.
+- [x] ✅ `POSTGRES_URL` (pooled connection for general queries)
+- [x] ✅ `POSTGRES_PRISMA_URL` (PgBouncer connection for ORM)
+- [x] ✅ `POSTGRES_URL_NON_POOLING` (direct connection for migrations - **CRITICAL**)
+- [x] ✅ `POSTGRES_DATABASE` (database name metadata)
+
+#### Authentication
+- [x] ✅ `ENABLE_AUTH=true` (backend feature flag)
+- [x] ✅ `VITE_ENABLE_AUTH=true` (frontend feature flag)
+- [x] ✅ `SESSION_SECRET` (secure random string via `openssl rand -base64 32`)
+- [x] ✅ `GITHUB_CLIENT_ID` (OAuth app credentials - see [GITHUB-OAUTH-SETUP.md](./GITHUB-OAUTH-SETUP.md))
+- [x] ✅ `GITHUB_CLIENT_SECRET` (OAuth app secret)
+- [x] ✅ `GITHUB_CALLBACK_URL` (https://codescribeai.com/api/auth/github/callback)
+
+#### Email (Resend)
+> **Setup Guide:** See [RESEND-SETUP.md](./RESEND-SETUP.md) for email configuration.
 - [x] ✅ `RESEND_API_KEY` (email service API key)
-- [x] ✅ `EMAIL_FROM` (verified sender email)
-- [x] ✅ `CLIENT_URL` (frontend URL for OAuth callbacks)
+- [x] ✅ `EMAIL_FROM` (verified sender: `CodeScribe AI <noreply@mail.codescribeai.com>`)
+
+#### Stripe Payments
+> **Setup Guide:** See [STRIPE-SETUP.md](./STRIPE-SETUP.md) for complete Stripe configuration.
+- [x] ✅ `STRIPE_ENV=sandbox` (use 'production' when ready for live payments)
+- [x] ✅ `STRIPE_SECRET_KEY` (sk_test_xxx for sandbox, sk_live_xxx for production)
+- [x] ✅ `STRIPE_PUBLISHABLE_KEY` (pk_test_xxx for sandbox, pk_live_xxx for production)
+- [x] ✅ `STRIPE_WEBHOOK_SECRET` (webhook signature verification - from Stripe Dashboard)
+- [x] ✅ `STRIPE_PRICE_STARTER_MONTHLY` (price ID from Stripe dashboard)
+- [x] ✅ `STRIPE_PRICE_STARTER_ANNUAL` (price ID from Stripe dashboard)
+- [x] ✅ `STRIPE_PRICE_PRO_MONTHLY` (price ID from Stripe dashboard)
+- [x] ✅ `STRIPE_PRICE_PRO_ANNUAL` (price ID from Stripe dashboard)
+- [x] ✅ `STRIPE_PRICE_TEAM_MONTHLY` (price ID from Stripe dashboard)
+- [x] ✅ `STRIPE_PRICE_TEAM_ANNUAL` (price ID from Stripe dashboard)
+- [x] ✅ `STRIPE_SUCCESS_URL` (https://codescribeai.com/payment/success)
+- [x] ✅ `STRIPE_CANCEL_URL` (https://codescribeai.com/pricing)
+
+#### Frontend Configuration
+- [x] ✅ `VITE_ENABLE_AUTH=true` (enable authentication features)
+- [x] ✅ `VITE_STRIPE_ENV=sandbox` (match backend STRIPE_ENV)
+- [x] ✅ `VITE_STRIPE_PUBLISHABLE_KEY` (pk_test_xxx for sandbox)
+
+#### CORS & URLs
+- [x] ✅ `ALLOWED_ORIGINS=https://codescribeai.com,https://www.codescribeai.com`
+- [x] ✅ `CLIENT_URL=https://codescribeai.com`
+
+#### Rate Limiting (Optional - has defaults)
+- [x] ✅ `RATE_LIMIT_WINDOW_MS=60000` (default: 1 minute)
+- [x] ✅ `RATE_LIMIT_MAX=10` (default: 10 requests per window)
+- [x] ✅ `RATE_LIMIT_HOURLY_MAX=100` (default: 100 requests per hour)
 
 ### 5. Database Migrations
-- [x] ✅ Run database migrations before deployment
-  ```bash
-  # For development/staging
-  cd server
-  node src/db/runMigration.js
 
-  # For production (with env var override)
-  POSTGRES_URL="production-db-url" node src/db/runMigration.js
+> **IMPORTANT:** Migrations now run AUTOMATICALLY during Vercel deployment via `vercel.json` buildCommand. Manual runs are for testing only.
+
+#### Pre-Deployment Migration Testing (Optional but Recommended)
+- [x] ✅ Test migrations in Docker sandbox first:
+  ```bash
+  cd server
+  npm run test:db:setup      # Start Docker test database
+  npm run test:db            # Run migration tests
+  npm run test:db:teardown   # Clean up
+  ```
+- [x] ✅ Apply to Neon dev database (requires user approval after sandbox passes):
+  ```bash
+  cd server
+  npm run migrate            # Apply to Neon dev (uses POSTGRES_URL_NON_POOLING)
+  npm run migrate:validate   # Verify migration integrity
   ```
 - [x] ✅ Verify migration success (check table output)
 - [x] ✅ Test database connection from application
 
-> **Note:** Always run migrations BEFORE deploying code that depends on new schema changes. This ensures zero-downtime deployments.
+#### Production Deployment Migration (Automatic)
+- [x] ✅ Vercel buildCommand automatically runs migrations:
+  ```
+  cd server && npm install && npm run migrate && cd ../client && npm install && npm run build
+  ```
+- [x] ✅ Migrations use `POSTGRES_URL_NON_POOLING` (direct connection, not pooled)
+- [x] ✅ Separate production database configured in Neon (codescribe-prod vs codescribe-db)
+
+> **See:** [DB-MIGRATION-MANAGEMENT.MD](../database/DB-MIGRATION-MANAGEMENT.MD) for complete migration workflow and [DATABASE-ENVIRONMENT-CHECKLIST.md](./DATABASE-ENVIRONMENT-CHECKLIST.md) for environment separation.
+
+### 6. CI/CD Deploy Hooks Configuration
+
+> **Test-Gated Deployment:** Deployments only proceed if all tests pass via GitHub Actions.
+
+- [x] ✅ GitHub Actions test workflow configured (`.github/workflows/test.yml`)
+- [x] ✅ Vercel Deploy Hook created in Vercel Dashboard → Settings → Deploy Hooks
+- [x] ✅ `VERCEL_DEPLOY_HOOK` secret added to GitHub repo (Settings → Secrets)
+- [x] ✅ Auto-deploy disabled in `vercel.json` (`git.deploymentEnabled.main = false`)
+- [x] ✅ Test-gated deployment verified (push to main → tests run → deploy on pass)
+
+> **See:** [VERCEL-DEPLOYMENT-GUIDE.md](./VERCEL-DEPLOYMENT-GUIDE.md) for CI/CD configuration details.
+
+### 7. Email DNS Configuration (Custom Domain)
+
+> **Required for production email functionality.** See [RESEND-SETUP.md](./RESEND-SETUP.md) and [CUSTOM-DOMAIN-SETUP.md](./CUSTOM-DOMAIN-SETUP.md) for detailed setup.
+
+#### Resend (Outbound) - Subdomain: `mail.codescribeai.com`
+- [x] ✅ SPF record: `send.mail` → `v=spf1 include:_spf.resend.com ~all`
+- [x] ✅ DKIM record: `resend._domainkey.mail` → (DKIM key from Resend Dashboard)
+- [x] ✅ MX record: `send.mail` → `feedback-smtp.us-east-1.amazonses.com` (priority 10)
+- [x] ✅ DMARC record: `_dmarc` → `v=DMARC1; p=none;`
+- [x] ✅ Domain verified in Resend Dashboard (green checkmark)
+
+#### Namecheap Email Forwarding (Inbound) - Root Domain
+- [x] ✅ Configure in Namecheap: Domain tab → "Redirect Email"
+- [x] ✅ Set Mail Settings to "Email Forwarding" mode
+- [x] ✅ Add forwarding rule: `support@codescribeai.com` → your Gmail
+- [x] ✅ Click confirmation email to activate forwarding
+
+### 8. Environment Separation Verification
+
+> **CRITICAL:** Production must use separate resources from development.
+
+- [x] ✅ Production database separate from dev (codescribe-prod vs codescribe-db)
+- [x] ✅ Production `SESSION_SECRET` different from dev
+- [x] ✅ Production `EMAIL_FROM` uses production domain (`noreply@mail.codescribeai.com`)
+- [x] ✅ Production GitHub OAuth app separate OR callbacks include production URL
+- [x] ✅ Production Stripe keys different from dev (live vs test)
+- [x] ✅ Run [DATABASE-ENVIRONMENT-CHECKLIST.md](./DATABASE-ENVIRONMENT-CHECKLIST.md) verification
 
 ---
 
@@ -78,41 +182,32 @@ git push origin main
 5. Vercel will auto-detect the `vercel.json` configuration
 
 ### Step 3: Configure Environment Variables
-In Vercel Dashboard → Settings → Environment Variables, add:
 
-**Required:**
-```
-CLAUDE_API_KEY=sk-ant-api03-YOUR_API_KEY_HERE
-NODE_ENV=production
-PORT=3000
-```
+> **📚 Full List:** See **Section 4: Environment Variables Ready** above for the complete list of 40+ environment variables.
 
-**Production (custom domain):**
-```
-ALLOWED_ORIGINS=https://codescribeai.com
-VITE_API_URL=https://codescribeai.com
-```
+In Vercel Dashboard → Settings → Environment Variables, configure ALL variables from Section 4:
 
-**Optional (has defaults):**
-```
-RATE_LIMIT_WINDOW_MS=60000
-RATE_LIMIT_MAX=10
-RATE_LIMIT_HOURLY_MAX=100
-```
+**Critical Variables to Set:**
+- Core: `CLAUDE_API_KEY`, `NODE_ENV`, `PORT`
+- Database: Auto-injected by Neon integration (4 variables)
+- Auth: `ENABLE_AUTH`, `VITE_ENABLE_AUTH`, `SESSION_SECRET`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `GITHUB_CALLBACK_URL`
+- Email: `RESEND_API_KEY`, `EMAIL_FROM`
+- Stripe: `STRIPE_ENV`, `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`, 6 price IDs, success/cancel URLs
+- Frontend: `VITE_ENABLE_AUTH`, `VITE_STRIPE_ENV`, `VITE_STRIPE_PUBLISHABLE_KEY`
+- CORS: `ALLOWED_ORIGINS`, `CLIENT_URL`
+
+> **Reference Guides:**
+> - [VERCEL-ENVIRONMENT-VARIABLES.md](./VERCEL-ENVIRONMENT-VARIABLES.md) - Complete variable reference
+> - [STRIPE-SETUP.md](./STRIPE-SETUP.md) - Stripe configuration
+> - [GITHUB-OAUTH-SETUP.md](./GITHUB-OAUTH-SETUP.md) - OAuth configuration
+> - [RESEND-SETUP.md](./RESEND-SETUP.md) - Email configuration
 
 ### Step 4: Deploy
 1. Click "Deploy" in Vercel
 2. Wait for build to complete (~2-3 minutes)
 3. Note the assigned URL (e.g., `https://codescribe-ai.vercel.app`)
 
-### Step 5: Update Environment Variables
-After first deployment, update these with the actual URL:
-1. Go to Vercel Dashboard → Settings → Environment Variables
-2. Update `ALLOWED_ORIGINS` with your Vercel URL
-3. Update `VITE_API_URL` with your Vercel URL
-4. Click "Redeploy" to apply changes
-
-### Step 6: Test Production Deployment
+### Step 5: Test Production Deployment
 ```bash
 # Health check
 curl https://your-url.vercel.app/api/health
@@ -127,7 +222,7 @@ curl -X POST https://your-url.vercel.app/api/generate \
   }'
 ```
 
-### Step 7: Final Verification
+### Step 6: Final Verification
 - [x] ✅ Visit the deployed URL in browser
 - [x] ✅ Test file upload feature
 - [x] ✅ Test code input and documentation generation
@@ -413,7 +508,24 @@ Deployment is successful when:
 
 ## 📚 Related Documentation
 
-For deployment insights and learnings from this deployment, see:
+### Core Deployment Guides
+- **[VERCEL-DEPLOYMENT-GUIDE.md](./VERCEL-DEPLOYMENT-GUIDE.md)** - Master deployment guide
+- **[VERCEL-ENVIRONMENT-VARIABLES.md](./VERCEL-ENVIRONMENT-VARIABLES.md)** - Complete environment variable reference
 - **[DEPLOYMENT-LEARNINGS.md](./DEPLOYMENT-LEARNINGS.md)** - Critical learnings, troubleshooting, and best practices
-- **[README.md](../../README.md)** - Updated with production deployment status
-- **[PRD.md](../planning/01-PRD.md)** - Phase 1.5 deployment milestone completed
+- **[RELEASE-QUICKSTART.md](./RELEASE-QUICKSTART.md)** - Standard release process
+
+### Service Configuration
+- **[STRIPE-SETUP.md](./STRIPE-SETUP.md)** - Stripe payment integration
+- **[STRIPE-TESTING-GUIDE.md](./STRIPE-TESTING-GUIDE.md)** - Stripe testing procedures
+- **[GITHUB-OAUTH-SETUP.md](./GITHUB-OAUTH-SETUP.md)** - GitHub OAuth configuration
+- **[RESEND-SETUP.md](./RESEND-SETUP.md)** - Email service configuration
+- **[CUSTOM-DOMAIN-SETUP.md](./CUSTOM-DOMAIN-SETUP.md)** - Custom domain setup
+
+### Database & Infrastructure
+- **[DATABASE-ENVIRONMENT-CHECKLIST.md](./DATABASE-ENVIRONMENT-CHECKLIST.md)** - Environment separation verification
+- **[VERCEL-POSTGRES-SETUP.md](./VERCEL-POSTGRES-SETUP.md)** - Neon Postgres configuration
+- **[DB-MIGRATION-MANAGEMENT.MD](../database/DB-MIGRATION-MANAGEMENT.MD)** - Migration workflow
+
+### Other Resources
+- **[README.md](../../README.md)** - Project overview with live demo
+- **[PRD.md](../planning/mvp/01-PRD.md)** - Product requirements and roadmap

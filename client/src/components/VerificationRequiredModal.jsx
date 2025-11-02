@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { Mail, X, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { toastSuccess } from '../utils/toast';
 import { useAuth } from '../contexts/AuthContext';
+import { API_URL } from '../config/api';
 
 export default function VerificationRequiredModal({ isOpen, onClose, userEmail }) {
   const [isResending, setIsResending] = useState(false);
@@ -26,7 +27,7 @@ export default function VerificationRequiredModal({ isOpen, onClose, userEmail }
       const token = getToken();
       console.log('[VerificationRequiredModal] Sending resend request...');
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/resend-verification`, {
+      const response = await fetch(`${API_URL}/api/auth/resend-verification`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

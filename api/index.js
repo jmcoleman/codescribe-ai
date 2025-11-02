@@ -5,11 +5,16 @@ import session from 'express-session';
 import passport from 'passport';
 import apiRoutes from '../server/src/routes/api.js';
 import authRoutes from '../server/src/routes/auth.js';
+import paymentRoutes from '../server/src/routes/payments.js';
+import webhookRoutes from '../server/src/routes/webhooks.js';
 import migrateRoutes from '../server/src/routes/migrate.js';
 import errorHandler from '../server/src/middleware/errorHandler.js';
 import '../server/src/config/passport.js'; // Initialize passport strategies
 
 const app = express();
+
+// Feature flag for authentication
+const ENABLE_AUTH = process.env.ENABLE_AUTH === 'true';
 
 // Configure CORS to expose rate limit headers
 const corsOptions = {
@@ -21,29 +26,40 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
+// IMPORTANT: Webhooks route MUST come BEFORE express.json()
+// Stripe webhooks need raw body for signature verification
+if (ENABLE_AUTH) {
+  app.use('/api/webhooks', webhookRoutes);
+}
+
 app.use(express.json({ limit: '10mb' }));
 
 // Session configuration (required for authentication)
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET || 'fallback-secret-change-in-production',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: process.env.NODE_ENV === 'production',
-      httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000 // 24 hours
-    }
-  })
-);
+if (ENABLE_AUTH) {
+  app.use(
+    session({
+      secret: process.env.SESSION_SECRET || 'fallback-secret-change-in-production',
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        secure: process.env.NODE_ENV === 'production',
+        httpOnly: true,
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+      }
+    })
+  );
 
-// Initialize Passport
-app.use(passport.initialize());
-app.use(passport.session());
+  // Initialize Passport
+  app.use(passport.initialize());
+  app.use(passport.session());
+}
 
 // Mount routes
 app.use('/api', apiRoutes);
-app.use('/api/auth', authRoutes);
+if (ENABLE_AUTH) {
+  app.use('/api/auth', authRoutes);
+  app.use('/api/payments', paymentRoutes);
+}
 app.use('/api/migrate', migrateRoutes);
 
 app.use(errorHandler);

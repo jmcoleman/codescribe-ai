@@ -26,6 +26,7 @@ const dummyAuthContext = {
   forgotPassword: async () => { throw new Error('Authentication is disabled'); },
   resetPassword: async () => { throw new Error('Authentication is disabled'); },
   getToken: () => null,
+  refreshUser: async () => {},
   clearError: () => {},
 };
 
@@ -259,6 +260,38 @@ export function AuthProvider({ children }) {
   };
 
   /**
+   * Refresh user data from server
+   * Useful after email verification or profile updates
+   */
+  const refreshUser = async () => {
+    try {
+      const token = getStorageItem(STORAGE_KEYS.AUTH_TOKEN);
+
+      if (!token) {
+        return;
+      }
+
+      const response = await fetch(`${API_URL}/api/auth/me`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        return;
+      }
+
+      const data = await response.json();
+
+      if (data.success && data.user) {
+        setUser(data.user);
+      }
+    } catch (err) {
+      console.error('Error refreshing user:', err);
+    }
+  };
+
+  /**
    * Clear error state
    */
   const clearError = () => {
@@ -276,6 +309,7 @@ export function AuthProvider({ children }) {
     forgotPassword,
     resetPassword,
     getToken,
+    refreshUser,
     clearError,
   };
 
