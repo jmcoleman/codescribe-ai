@@ -66,8 +66,8 @@
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
     "footerLeft": "<strong>CodeScribe AI</strong> \u00b7 Strategic Roadmap v3.5",
-    "footer": "Phase 1 Complete \u00b7 Phase 2: Epic 2.4 Complete (v2.4.3 - Payment Routes Fixes) \u00b7 Launch: Mid-Jan 2026",
-    "lastUpdated": "November 1, 2025"
+    "footer": "Phase 1 Complete \u00b7 Phase 2: Epic 2.4 Complete (v2.4.4 - Contact Sales & Email Fixes) \u00b7 Launch: Mid-Jan 2026",
+    "lastUpdated": "November 2, 2025"
   },
   "columns": [
     {
@@ -316,6 +316,36 @@
             "Added comprehensive Stripe environment variable documentation (12 variables)",
             "Moved prompt-caching-manual.js from server/tests/ to server/scripts/",
             "1,662 tests (1,626 passing, 36 skipped, 0 failing) - 97.8% pass rate"
+          ]
+        },
+        {
+          "version": "v2.4.4",
+          "title": "Contact Sales Feature & Critical Email Bug Fixes",
+          "duration": "1 day",
+          "status": "\u2713 Complete",
+          "completedDate": "Nov 2, 2025",
+          "badge": "Critical Fix + Feature",
+          "features": [
+            "Contact Sales Feature: Server-side email via Resend for Enterprise/Team tiers",
+            "ContactSalesModal component with loading/success/error states",
+            "Smart name collection: optional first/last name fields (shown only if user lacks name)",
+            "Progressive data collection strategy (name collected at point of contact, not signup)",
+            "Backend name resolution priority: database → form input → empty fallback",
+            "POST /api/contact/sales endpoint (requires authentication)",
+            "Email forwarding setup for sales@codescribeai.com via Namecheap",
+            "EMAIL-FORWARDING-SETUP.md documentation (263 lines)",
+            "CRITICAL: Fixed email verification token timezone bug (tokens expiring in 4 hours instead of 24)",
+            "Added .toISOString() to User.js:378 for proper PostgreSQL timezone handling",
+            "Fixed Contact Sales modal not auto-opening after authentication",
+            "Fixed VerifyEmail and AuthCallback tier-aware routing (prevents Stripe checkout for enterprise/team)",
+            "Complete subscription flow documented with visual Mermaid diagram in SUBSCRIPTION-FLOWS.md",
+            "Payment UX: Removed forced 5-second auto-redirect on PaymentSuccess",
+            "Added 'Manage Subscription' button (opens Stripe billing portal)",
+            "ContactSalesModal UX: Removed auto-close, added explicit Close button",
+            "CLAUDE.md: Added Modal & Email Confirmation UX guidelines",
+            "Roadmap: Added Calendly integration and Gmail 'Send As' to backlog",
+            "Complete test coverage: ContactSalesModal (25 tests), PricingPage (6 new), contact.test.js (backend), VerifyEmail (8 new)",
+            "1,734 tests (1,695 passing, 39 skipped, 0 failing) - 97.8% pass rate"
           ]
         }
       ]
@@ -655,6 +685,8 @@
           "duration": "TBD",
           "status": "Backlog (User Feedback Driven)",
           "features": [
+            "Calendly integration for Enterprise/Team sales",
+            "Gmail 'Send As' setup for sales@codescribeai.com replies",
             "Documentation history and saved projects",
             "GitHub repository integration",
             "Multi-language support (i18n for UI)",

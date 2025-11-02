@@ -8,6 +8,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { BrowserRouter, useSearchParams, useNavigate } from 'react-router-dom';
 import VerifyEmail from '../VerifyEmail';
 import { AuthProvider } from '../../contexts/AuthContext';
+import { STORAGE_KEYS } from '../../constants/storage';
 
 // Mock react-router-dom hooks
 vi.mock('react-router-dom', async () => {
@@ -16,6 +17,21 @@ vi.mock('react-router-dom', async () => {
     ...actual,
     useSearchParams: vi.fn(),
     useNavigate: vi.fn(),
+  };
+});
+
+// Mock AuthContext
+const mockRefreshUser = vi.fn().mockResolvedValue(undefined);
+const mockGetToken = vi.fn().mockReturnValue('mock-token');
+
+vi.mock('../../contexts/AuthContext', async () => {
+  const actual = await vi.importActual('../../contexts/AuthContext');
+  return {
+    ...actual,
+    useAuth: () => ({
+      refreshUser: mockRefreshUser,
+      getToken: mockGetToken,
+    }),
   };
 });
 
@@ -29,6 +45,13 @@ describe('VerifyEmail', () => {
     useNavigate.mockReturnValue(mockNavigate);
     useSearchParams.mockReturnValue([mockSearchParams]);
     vi.clearAllMocks();
+
+    // Reset mock functions
+    mockRefreshUser.mockClear();
+    mockRefreshUser.mockResolvedValue(undefined);
+    mockGetToken.mockClear();
+    mockGetToken.mockReturnValue('mock-token');
+
     global.fetch = vi.fn();
 
     // Mock initial auth check to return not authenticated
@@ -582,6 +605,260 @@ describe('VerifyEmail', () => {
       // Wait a bit to ensure no redirect happens
       await new Promise(resolve => setTimeout(resolve, 100));
       expect(mockNavigate).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Tier-Aware Routing (Enterprise/Team vs Pro/Premium)', () => {
+    beforeEach(() => {
+      sessionStorage.clear();
+    });
+
+    it('should redirect to pricing for enterprise tier with pending subscription', async () => {
+      mockSearchParams.set('token', 'valid-token');
+
+      // Store enterprise tier intent
+      sessionStorage.setItem(
+        STORAGE_KEYS.PENDING_SUBSCRIPTION,
+        JSON.stringify({
+          tier: 'enterprise',
+          billingPeriod: 'monthly',
+          tierName: 'Enterprise',
+        })
+      );
+
+      global.fetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          success: true,
+          message: 'Email verified',
+        }),
+      });
+
+      renderComponent();
+
+      // Wait for the tier-specific message (component sets message after refreshUser completes)
+      await waitFor(() => {
+        const text = screen.getByText(/redirecting to contact our sales team/i);
+        expect(text).toBeInTheDocument();
+      }, { timeout: 3000 });
+
+      // Should redirect to pricing (not home, not checkout)
+      await waitFor(
+        () => {
+          expect(mockNavigate).toHaveBeenCalledWith('/pricing');
+        },
+        { timeout: 2500 }
+      );
+
+      // sessionStorage should be preserved for PricingPage
+      const preserved = sessionStorage.getItem(STORAGE_KEYS.PENDING_SUBSCRIPTION);
+      expect(preserved).not.toBeNull();
+    });
+
+    it('should redirect to pricing for team tier with pending subscription', async () => {
+      mockSearchParams.set('token', 'valid-token');
+
+      sessionStorage.setItem(
+        STORAGE_KEYS.PENDING_SUBSCRIPTION,
+        JSON.stringify({
+          tier: 'team',
+          billingPeriod: 'monthly',
+          tierName: 'Team',
+        })
+      );
+
+      global.fetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true }),
+      });
+
+      renderComponent();
+
+      await waitFor(() => {
+        expect(screen.getByText(/redirecting to contact our sales team/i)).toBeInTheDocument();
+      });
+
+      await waitFor(
+        () => {
+          expect(mockNavigate).toHaveBeenCalledWith('/pricing');
+        },
+        { timeout: 2500 }
+      );
+    });
+
+    it('should NOT redirect to pricing for pro tier', async () => {
+      mockSearchParams.set('token', 'valid-token');
+
+      sessionStorage.setItem(
+        STORAGE_KEYS.PENDING_SUBSCRIPTION,
+        JSON.stringify({
+          tier: 'pro',
+          billingPeriod: 'monthly',
+          tierName: 'Pro',
+        })
+      );
+
+      global.fetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ success: true }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ url: 'https://checkout.stripe.com/test' }),
+        });
+
+      renderComponent();
+
+      await waitFor(() => {
+        expect(screen.getByText(/redirecting to complete your pro subscription/i)).toBeInTheDocument();
+      });
+
+      // Should NOT navigate to pricing
+      await new Promise(resolve => setTimeout(resolve, 100));
+      expect(mockNavigate).not.toHaveBeenCalledWith('/pricing');
+    });
+
+    it('should preserve sessionStorage for enterprise tier', async () => {
+      mockSearchParams.set('token', 'valid-token');
+
+      const enterpriseIntent = {
+        tier: 'enterprise',
+        billingPeriod: 'monthly',
+        tierName: 'Enterprise',
+      };
+
+      sessionStorage.setItem(
+        STORAGE_KEYS.PENDING_SUBSCRIPTION,
+        JSON.stringify(enterpriseIntent)
+      );
+
+      global.fetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true }),
+      });
+
+      renderComponent();
+
+      await waitFor(() => {
+        expect(mockNavigate).toHaveBeenCalledWith('/pricing');
+      }, { timeout: 2500 });
+
+      // Verify sessionStorage was NOT cleared
+      const preserved = sessionStorage.getItem(STORAGE_KEYS.PENDING_SUBSCRIPTION);
+      expect(preserved).toBe(JSON.stringify(enterpriseIntent));
+    });
+
+    it('should clear sessionStorage for pro tier before checkout', async () => {
+      mockSearchParams.set('token', 'valid-token');
+
+      sessionStorage.setItem(
+        STORAGE_KEYS.PENDING_SUBSCRIPTION,
+        JSON.stringify({
+          tier: 'pro',
+          billingPeriod: 'yearly',
+          tierName: 'Pro',
+        })
+      );
+
+      global.fetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ success: true }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ url: 'https://checkout.stripe.com/test' }),
+        });
+
+      renderComponent();
+
+      await waitFor(() => {
+        expect(screen.getByText(/redirecting to complete your pro subscription/i)).toBeInTheDocument();
+      });
+
+      // Wait for sessionStorage to be cleared
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Verify sessionStorage was cleared for pro tier
+      const cleared = sessionStorage.getItem(STORAGE_KEYS.PENDING_SUBSCRIPTION);
+      expect(cleared).toBeNull();
+    });
+
+    it('should show appropriate message for enterprise tier', async () => {
+      mockSearchParams.set('token', 'valid-token');
+
+      sessionStorage.setItem(
+        STORAGE_KEYS.PENDING_SUBSCRIPTION,
+        JSON.stringify({
+          tier: 'enterprise',
+          billingPeriod: 'monthly',
+          tierName: 'Enterprise',
+        })
+      );
+
+      global.fetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true }),
+      });
+
+      renderComponent();
+
+      await waitFor(() => {
+        expect(screen.getByText(/your email has been verified! redirecting to contact our sales team/i)).toBeInTheDocument();
+      });
+    });
+
+    it('should show appropriate message for pro tier', async () => {
+      mockSearchParams.set('token', 'valid-token');
+
+      sessionStorage.setItem(
+        STORAGE_KEYS.PENDING_SUBSCRIPTION,
+        JSON.stringify({
+          tier: 'pro',
+          billingPeriod: 'monthly',
+          tierName: 'Pro',
+        })
+      );
+
+      global.fetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ success: true }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ url: 'https://checkout.stripe.com/test' }),
+        });
+
+      renderComponent();
+
+      await waitFor(() => {
+        expect(screen.getByText(/redirecting to complete your pro subscription/i)).toBeInTheDocument();
+      });
+    });
+
+    it('should handle no pending subscription gracefully', async () => {
+      mockSearchParams.set('token', 'valid-token');
+
+      global.fetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true }),
+      });
+
+      renderComponent();
+
+      await waitFor(() => {
+        expect(screen.getByText(/your email has been verified successfully/i)).toBeInTheDocument();
+      });
+
+      // Should redirect to home (default behavior)
+      await waitFor(
+        () => {
+          expect(mockNavigate).toHaveBeenCalledWith('/');
+        },
+        { timeout: 3500 }
+      );
     });
   });
 });

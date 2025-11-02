@@ -2,7 +2,7 @@
 
 **Status:** 📋 **ACTIVE** (Post-Production Enhancements)
 **Current Phase:** Phase 2 🚧 In Progress (Epic 2.1 ✅ Complete | Epic 2.2 ✅ Complete | Epic 2.3 ✅ Complete | Epic 2.4 ✅ Complete)
-**Last Updated:** October 31, 2025 - v2.4.0
+**Last Updated:** November 2, 2025 - v2.4.4
 
 > **📌 Navigation Tip:**
 > - **In VS Code:** Use `Cmd+Shift+O` (Mac) or `Ctrl+Shift+O` (Windows/Linux) to see all headings and jump to sections
@@ -703,6 +703,113 @@ All email verification functionality has been implemented and verified:
 
 ---
 
+### v2.4.3 - API Configuration Hotfix
+
+**Completed:** November 2, 2025
+**Status:** ✅ **DEPLOYED**
+**Goal:** Fix missing API_URL import in UnverifiedEmailBanner
+
+#### Completed Items (All ✅)
+
+**Bug Fixes:**
+- [x] Added missing API_URL import to UnverifiedEmailBanner.jsx
+- [x] Updated all package.json versions to 2.4.3
+- [x] Updated Stripe config version to 2.4.3
+
+**Documentation:**
+- [x] ROADMAP.md updated with v2.4.3 release notes
+- [x] Interactive roadmap (HTML and JSON) updated
+
+**Final Metrics:**
+- 1,696 tests (1,657 passing, 39 skipped) - 97.7% pass rate
+
+**Release:** v2.4.3 (November 2, 2025)
+
+---
+
+### v2.4.2 - Payment Routes & Email UX Fixes
+
+**Completed:** November 1, 2025
+**Status:** ✅ **DEPLOYED**
+**Goal:** Critical production payment routes and email verification UX fixes
+
+#### Completed Items (All ✅)
+
+**Payment Routes (Production Fix):**
+- [x] Mount /api/payments and /api/webhooks in api/index.js (Vercel serverless)
+- [x] Add ENABLE_AUTH feature flag checks matching server.js
+- [x] Fix 404 errors on subscription checkout in production
+- [x] Ensure webhook route comes before express.json() for Stripe signature verification
+
+**Email Verification UX:**
+- [x] Add refreshUser() method to AuthContext to update user state
+- [x] Call refreshUser() after successful email verification in VerifyEmail
+- [x] Fix banner still showing after verification until page refresh
+
+**API Configuration:**
+- [x] Fix UnverifiedEmailBanner.jsx to use API_URL config
+- [x] Fix VerificationRequiredModal.jsx to use API_URL config
+- [x] Fix VerifyEmail.jsx to use API_URL config
+- [x] Prevents undefined in production API URLs
+
+**Release:** v2.4.2 (November 1, 2025)
+
+**Reference Documentation:**
+- [API_URL Config Pattern](../../client/src/config/api.js)
+- [AuthContext](../../client/src/contexts/AuthContext.jsx)
+
+---
+
+### v2.4.4 - Contact Sales Feature & Complete Test Coverage
+
+**Completed:** November 2, 2025
+**Status:** ✅ **COMPLETE** - Ready for deployment
+**Goal:** Enterprise/Team tier Contact Sales feature with comprehensive test coverage
+
+#### Completed Items (All ✅)
+
+**Contact Sales Feature:**
+- [x] ContactSalesModal component with smart name collection
+- [x] POST /api/contact/sales backend endpoint
+- [x] Server-side email via Resend (replaces mailto: links)
+- [x] Progressive data collection (name at point of contact, not signup)
+- [x] Backend name resolution priority: database → form → fallback
+- [x] Email forwarding setup (sales@codescribeai.com)
+- [x] Tier-aware routing in VerifyEmail and AuthCallback
+- [x] SessionStorage intent preservation for enterprise/team tiers
+
+**Critical Bug Fixes:**
+- [x] Email verification token timezone bug fixed (tokens expiring in 4 hours)
+- [x] Contact Sales modal auto-open after authentication
+- [x] VerifyEmail redirect message conditional display
+
+**Test Coverage (39 new tests):**
+- [x] ContactSalesModal.test.jsx - 25 tests (name collection, form submission, states)
+- [x] contact.test.js - Backend integration tests (authentication, tier validation)
+- [x] PricingPage.test.jsx - 6 new tests (Contact Sales flow)
+- [x] VerifyEmail.test.jsx - 8 new tests (tier-aware routing)
+
+**Documentation:**
+- [x] EMAIL-FORWARDING-SETUP.md - Email configuration guide
+- [x] SUBSCRIPTION-FLOWS.md - Updated with visual Mermaid diagrams
+- [x] v2.4.4-TEST-COVERAGE-SUMMARY.md - Complete test documentation
+- [x] CLAUDE.md - Modal & Email Confirmation UX guidelines
+
+**Final Metrics:**
+- 1,734 tests (1,695 passing, 39 skipped) - 97.8% pass rate
+- Frontend: 1,173 passing | 18 skipped (1,191 total)
+- Backend: 522 passing | 21 skipped (543 total)
+
+**Release:** v2.4.4 (November 2, 2025)
+
+**Reference Documentation:**
+- [CHANGELOG.md](../../../CHANGELOG.md) - Complete v2.4.4 release notes
+- [v2.4.4-TEST-COVERAGE-SUMMARY.md](../../releases/v2.4.4-TEST-COVERAGE-SUMMARY.md) - Test coverage details
+- [EMAIL-FORWARDING-SETUP.md](../../deployment/EMAIL-FORWARDING-SETUP.md) - Email setup guide
+- [SUBSCRIPTION-FLOWS.md](../../architecture/SUBSCRIPTION-FLOWS.md) - Contact Sales flow diagrams
+
+---
+
 ### Epic 2.5: Essential Legal (Terms & Privacy)
 
 **Estimated Duration:** 1-2 days
@@ -1307,6 +1414,15 @@ All email verification functionality has been implemented and verified:
 - [ ] **[ENHANCEMENT]** Add better error logging with detailed context (to, error message, stack trace)
 - [ ] **[ENHANCEMENT]** Implement email input validation before sending
 - [ ] **[FEATURE]** A/B test email templates to optimize engagement (when scaling)
+
+#### Sales & Enterprise Improvements (Future Enhancements)
+
+- [ ] **[ENHANCEMENT]** Calendly integration for Enterprise/Team sales calls (1-2 days)
+  - [ ] Replace mailto: links with Calendly embedded widget or direct link
+  - [ ] Add "Schedule a Call" button alongside "Contact Sales" in ContactSalesModal
+  - [ ] Track conversion from pricing page to scheduled call
+  - [ ] Industry standard: Vercel, Stripe, Linear, etc.
+  - [ ] Benefits: Professional UX, automatic scheduling, timezone handling, calendar integration
 
 ---
 

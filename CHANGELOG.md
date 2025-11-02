@@ -9,6 +9,140 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.4.4] - 2025-11-02
+
+**Status:** ✅ Contact Sales Feature & Critical Email Bug Fixes
+
+### Added
+- **Contact Sales Feature** (Enterprise/Team Tiers)
+  - Server-side email via Resend (replaces unreliable mailto: links)
+  - ContactSalesModal component with loading/success/error states
+  - `/api/contact/sales` endpoint (requires authentication)
+  - Smart name collection: optional first/last name fields (shown only if user lacks name)
+  - Progressive data collection strategy (name collected at point of contact, not signup)
+  - Backend name resolution priority: database → form input → empty fallback
+  - Branded HTML email template with user details and Reply-To header
+  - Email forwarding setup for sales@codescribeai.com
+  - Works for ALL users (mobile, web, no email client needed)
+  - Rate limiting and spam prevention via authentication
+
+- **Email Forwarding Documentation**
+  - EMAIL-FORWARDING-SETUP.md guide (263 lines)
+  - Namecheap REDIRECT EMAIL configuration instructions
+  - Testing procedures for sales@ and support@ forwarding
+  - Gmail filter setup for inbox organization
+  - Reply flow explanation with Reply-To header mechanism
+  - Gmail "Send As" optional enhancement documented
+
+- **Modal UX Guidelines** (CLAUDE.md)
+  - New "Modal & Email Confirmation UX" section
+  - Never auto-close important confirmation modals
+  - Industry best practices (user-controlled dismissal)
+  - Implementation patterns and examples
+
+### Fixed
+- **Email Verification Token Timezone Bug** (CRITICAL)
+  - Tokens were expiring in ~4 hours instead of 24 hours
+  - Root cause: JavaScript Date object timezone conversion in PostgreSQL
+  - Solution: Added `.toISOString()` to User.js:378
+  - All 27 email verification tests passing
+
+- **Enterprise/Team Tier Subscription Flow**
+  - Fixed Contact Sales modal not auto-opening after authentication
+  - Added sessionStorage persistence for enterprise/team contact intent
+  - Fixed VerifyEmail and AuthCallback tier-aware routing (prevents Stripe checkout for enterprise/team)
+  - Enterprise/team tiers now redirect to pricing → auto-open Contact Sales modal
+  - Documented complete subscription flow with visual Mermaid diagram
+
+- **ContactSalesModal Auto-Close UX**
+  - Removed 3-second auto-close timer
+  - Added Close button (X) in top-right corner
+  - Added prominent "Close" button at bottom
+  - Users now control when to dismiss modal
+
+### Changed
+- **Payment Success/Cancel UX Improvements**
+  - Removed forced 5-second auto-redirect on PaymentSuccess
+  - Added "Manage Subscription" button (opens Stripe billing portal)
+  - Enhanced button styling with brand gradients and shadows
+  - Updated PaymentCancel for styling consistency
+  - Follows industry best practices (Stripe, Shopify, GitHub Sponsors)
+
+- **Roadmap Updates**
+  - Added Calendly integration to Optional Enhancements (TODO.md, roadmap-data.json)
+  - Added Gmail "Send As" enhancement to roadmap
+
+### Documentation
+- EMAIL-FORWARDING-SETUP.md - Complete email forwarding guide
+- SUBSCRIPTION-FLOWS.md - Updated with complete visual diagram and name collection strategy
+- server/src/routes/contact.js - Contact sales API endpoint with smart name handling
+- client/src/components/ContactSalesModal.jsx - Conditional name fields implementation
+- MORNING-REVIEW.md - Session summary with testing checklist
+- DOCUMENTATION-MAP.md - Added EMAIL-FORWARDING-SETUP.md reference
+
+### Test Coverage
+- **ContactSalesModal.test.jsx** (NEW - 25 tests): Name collection, form submission, loading/error/success states
+- **PricingPage.test.jsx** (UPDATED - 6 new tests): Contact Sales flow for Team tier
+- **contact.test.js** (NEW - Backend integration tests): Authentication, tier validation, name resolution, email sending
+- **VerifyEmail.test.jsx** (UPDATED - 8 new tests): Tier-aware routing for enterprise/team/pro/premium
+- Frontend: 1,173 passed | 18 skipped (1,191 total)
+- Backend: 522 passed | 21 skipped (543 total)
+- **Total: 1,695 passed | 39 skipped (1,734 total)**
+
+---
+
+## [2.4.3] - 2025-11-02
+
+**Status:** ✅ API Configuration Hotfix
+
+### Fixed
+- **Missing API_URL Import**
+  - Added missing API_URL import to UnverifiedEmailBanner.jsx
+  - Prevents undefined API URLs in production
+
+### Changed
+- Updated all package.json versions to 2.4.3
+- Updated Stripe config version to 2.4.3
+
+### Documentation
+- ROADMAP.md updated with v2.4.3 release notes
+- Interactive roadmap (HTML and JSON) updated
+
+### Test Coverage
+- Frontend: 1,135 passed | 18 skipped (1,153 total)
+- Backend: 522 passed | 21 skipped (543 total)
+- **Total: 1,657 passed | 39 skipped (1,696 total) - 97.7% pass rate**
+
+---
+
+## [2.4.2] - 2025-11-01
+
+**Status:** ✅ Payment Routes & Email UX Fixes
+
+### Fixed
+- **Payment Routes (Production Critical)**
+  - Mount /api/payments and /api/webhooks in api/index.js for Vercel serverless
+  - Add ENABLE_AUTH feature flag checks matching server.js
+  - Fix 404 errors on subscription checkout in production
+  - Ensure webhook route comes before express.json() for Stripe signature verification
+
+- **Email Verification UX**
+  - Add refreshUser() method to AuthContext to update user state
+  - Call refreshUser() after successful email verification in VerifyEmail
+  - Fix banner still showing after verification until page refresh
+
+- **API Configuration**
+  - Fix UnverifiedEmailBanner.jsx to use API_URL config
+  - Fix VerificationRequiredModal.jsx to use API_URL config
+  - Fix VerifyEmail.jsx to use API_URL config
+  - Prevents undefined in production API URLs
+
+### Documentation
+- API_URL Config Pattern documented
+- AuthContext refreshUser() method documented
+
+---
+
 ## [2.4.1] - 2025-10-31
 
 **Status:** ✅ Email Rate Limiting & UI Fixes

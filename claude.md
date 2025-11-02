@@ -297,6 +297,43 @@ npm run versions  # See VERSION-CHECKER.md for details
 
 **⚠️ SAFETY RULE: Never run `npm run migrate` (Neon) without explicit user approval after Docker sandbox tests pass.**
 
+### Modal & Email Confirmation UX
+
+**❌ NEVER:** Auto-close success modals after sending emails or completing important actions
+```javascript
+// BAD: Auto-closes, user can't read confirmation
+setSuccess(true);
+setTimeout(() => onClose(), 3000);
+```
+
+**✅ ALWAYS:** Require explicit user action to close confirmation modals
+```javascript
+// GOOD: User controls when to close
+setSuccess(true);
+// Show success message with explicit "Close" button
+// User clicks button to dismiss
+```
+
+**Rationale:**
+- Users need time to read and understand confirmation messages
+- Email confirmations often contain important information (what was sent, where it went)
+- Auto-closing modals create anxiety ("Did it work? What did it say?")
+- Industry best practice (Stripe, Gmail, Slack): User-controlled dismissal
+
+**Implementation pattern:**
+1. Show success state with clear confirmation message
+2. Provide prominent "Close" button (full-width primary button)
+3. Optional: Add X button in top-right corner for quick dismissal
+4. Never use auto-close timers for email/payment/important action confirmations
+
+**Examples of when to apply:**
+- ✅ Email sent confirmations (contact forms, password reset requests)
+- ✅ Payment/subscription confirmations
+- ✅ Account changes (email updates, password changes)
+- ✅ Important form submissions (support tickets, inquiries)
+- ❌ Temporary notifications (use toast notifications instead)
+- ❌ Non-critical actions (file uploads, simple updates)
+
 ---
 
 ## 🚀 Quick Commands
@@ -331,9 +368,26 @@ cd server && npm test           # Run backend tests (get counts)
 
 ---
 
-## 📋 Version Bump Checklist
+## 📋 "Prep for Release" Checklist
 
-**IMPORTANT:** When incrementing version in package.json files, always update test counts:
+**When you say "prep for release", I will automatically:**
+
+1. **Run test counts** and get current results
+2. **Update CHANGELOG.md** with new version entry
+3. **Update TODO.md** with completed items
+4. **Update test counts** in all documentation
+5. **Verify version consistency** across all package.json files
+6. **Check for missing versions** (no gaps between v2.4.0 → v2.4.1 → v2.4.2, etc.)
+
+**You only need to:**
+- Bump version numbers in package.json files (root, client, server)
+- Then say "prep for release"
+
+---
+
+## 📋 Manual Version Bump Reference (For Your Records)
+
+**If you need to manually check test counts:**
 
 ```bash
 # 1. Get current test counts

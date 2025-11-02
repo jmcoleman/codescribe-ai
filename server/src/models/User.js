@@ -375,7 +375,7 @@ class User {
     await sql`
       UPDATE users
       SET verification_token = ${token},
-          verification_token_expires = ${expires},
+          verification_token_expires = ${expires.toISOString()},
           updated_at = NOW()
       WHERE id = ${id}
     `;

@@ -52,40 +52,55 @@ export default function VerifyEmail() {
           if (pendingSubscriptionStr) {
             try {
               const pendingSubscription = JSON.parse(pendingSubscriptionStr);
-              setMessage(`Your email has been verified! Redirecting to complete your ${pendingSubscription.tierName} subscription...`);
 
-              // Clear pending subscription from storage
-              removeSessionItem(STORAGE_KEYS.PENDING_SUBSCRIPTION);
+              // Check if this is a Contact Sales tier (enterprise/team)
+              const isContactSalesTier = pendingSubscription.tier === 'enterprise' || pendingSubscription.tier === 'team';
 
-              // Redirect to create checkout session
-              setTimeout(async () => {
-                try {
-                  const token = getToken();
-                  const checkoutResponse = await fetch(`${API_URL}/api/payments/create-checkout-session`, {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                      'Authorization': `Bearer ${token}`,
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify({
-                      tier: pendingSubscription.tier,
-                      billingPeriod: pendingSubscription.billingPeriod,
-                    }),
-                  });
+              if (isContactSalesTier) {
+                // Enterprise/Team tiers: Redirect to pricing (Contact Sales modal will auto-open)
+                setMessage(`Your email has been verified! Redirecting to contact our sales team...`);
 
-                  if (checkoutResponse.ok) {
-                    const { url } = await checkoutResponse.json();
-                    window.location.href = url; // Redirect to Stripe Checkout
-                  } else {
-                    // If checkout fails, redirect to pricing page
+                // Keep pending subscription in storage (PricingPage will consume it)
+                setTimeout(() => {
+                  navigate('/pricing');
+                }, 2000);
+              } else {
+                // Pro/Premium tiers: Create Stripe checkout session
+                setMessage(`Your email has been verified! Redirecting to complete your ${pendingSubscription.tierName} subscription...`);
+
+                // Clear pending subscription from storage
+                removeSessionItem(STORAGE_KEYS.PENDING_SUBSCRIPTION);
+
+                // Redirect to create checkout session
+                setTimeout(async () => {
+                  try {
+                    const token = getToken();
+                    const checkoutResponse = await fetch(`${API_URL}/api/payments/create-checkout-session`, {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                      },
+                      credentials: 'include',
+                      body: JSON.stringify({
+                        tier: pendingSubscription.tier,
+                        billingPeriod: pendingSubscription.billingPeriod,
+                      }),
+                    });
+
+                    if (checkoutResponse.ok) {
+                      const { url } = await checkoutResponse.json();
+                      window.location.href = url; // Redirect to Stripe Checkout
+                    } else {
+                      // If checkout fails, redirect to pricing page
+                      navigate('/pricing');
+                    }
+                  } catch (error) {
+                    console.error('Checkout redirect error:', error);
                     navigate('/pricing');
                   }
-                } catch (error) {
-                  console.error('Checkout redirect error:', error);
-                  navigate('/pricing');
-                }
-              }, 2000);
+                }, 2000);
+              }
             } catch (error) {
               console.error('Failed to parse pending subscription:', error);
               setMessage('Your email has been verified successfully!');
@@ -155,7 +170,7 @@ export default function VerifyEmail() {
           </p>
 
           {/* Actions */}
-          {status === 'success' && (
+          {status === 'success' && !message.includes('Redirecting') && (
             <p className="text-sm text-slate-500 dark:text-slate-400">
               Redirecting you to the home page...
             </p>

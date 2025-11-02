@@ -79,33 +79,44 @@ export function AuthCallback() {
             try {
               const pendingSubscription = JSON.parse(pendingSubscriptionStr);
 
-              // Clear pending subscription from storage
-              removeSessionItem(STORAGE_KEYS.PENDING_SUBSCRIPTION);
+              // Check if this is a Contact Sales tier (enterprise/team)
+              const isContactSalesTier = pendingSubscription.tier === 'enterprise' || pendingSubscription.tier === 'team';
 
-              // Redirect to create checkout session
-              // OAuth users are automatically verified, so we can proceed directly
-              const checkoutResponse = await fetch(`${API_URL}/api/payments/create-checkout-session`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${token}`,
-                },
-                credentials: 'include',
-                body: JSON.stringify({
-                  tier: pendingSubscription.tier,
-                  billingPeriod: pendingSubscription.billingPeriod,
-                }),
-              });
-
-              if (checkoutResponse.ok) {
-                const { url } = await checkoutResponse.json();
-                window.location.href = url; // Redirect to Stripe Checkout
-                return;
-              } else {
-                // If checkout fails, redirect to pricing page
-                console.error('Checkout creation failed after OAuth');
+              if (isContactSalesTier) {
+                // Enterprise/Team tiers: Redirect to pricing (Contact Sales modal will auto-open)
+                // Keep pending subscription in storage (PricingPage will consume it)
                 window.location.href = '/pricing';
                 return;
+              } else {
+                // Pro/Premium tiers: Create Stripe checkout session
+                // Clear pending subscription from storage
+                removeSessionItem(STORAGE_KEYS.PENDING_SUBSCRIPTION);
+
+                // Redirect to create checkout session
+                // OAuth users are automatically verified, so we can proceed directly
+                const checkoutResponse = await fetch(`${API_URL}/api/payments/create-checkout-session`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                  },
+                  credentials: 'include',
+                  body: JSON.stringify({
+                    tier: pendingSubscription.tier,
+                    billingPeriod: pendingSubscription.billingPeriod,
+                  }),
+                });
+
+                if (checkoutResponse.ok) {
+                  const { url } = await checkoutResponse.json();
+                  window.location.href = url; // Redirect to Stripe Checkout
+                  return;
+                } else {
+                  // If checkout fails, redirect to pricing page
+                  console.error('Checkout creation failed after OAuth');
+                  window.location.href = '/pricing';
+                  return;
+                }
               }
             } catch (error) {
               console.error('Failed to process pending subscription:', error);
