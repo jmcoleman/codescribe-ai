@@ -400,41 +400,63 @@ router.get(
 // ============================================================================
 router.get(
   '/github/callback',
-  passport.authenticate('github', {
-    failureRedirect: '/login?error=github_auth_failed'
-  }),
-  async (req, res) => {
-    try {
-      // User authenticated via GitHub
-      const user = req.user;
+  (req, res, next) => {
+    passport.authenticate('github', (err, user, info) => {
+      if (err) {
+        console.error('[Auth] GitHub OAuth error:', err);
+        return res.status(500).json({
+          error: 'Internal server error',
+          message: 'GitHub authentication failed',
+          details: process.env.NODE_ENV === 'development' ? err.message : undefined
+        });
+      }
 
       if (!user) {
-        return res.redirect('/login?error=no_user_data');
+        console.error('[Auth] GitHub OAuth failed - no user returned:', info);
+        return res.redirect('/login?error=github_auth_failed');
       }
 
-      // Migrate any anonymous usage from this IP to the user account
-      const ipAddress = req.ip || req.socket.remoteAddress || 'unknown';
-      if (ipAddress && ipAddress !== 'unknown') {
-        try {
-          await Usage.migrateAnonymousUsage(ipAddress, user.id);
-          console.log(`[Auth] Migrated anonymous usage for IP ${ipAddress} to user ${user.id} (GitHub OAuth)`);
-        } catch (migrationError) {
-          // Don't fail OAuth callback if migration fails - log and continue
-          console.error('[Auth] Failed to migrate anonymous usage:', migrationError);
+      // Manually establish login session
+      req.logIn(user, async (loginErr) => {
+        if (loginErr) {
+          console.error('[Auth] Session login error:', loginErr);
+          return res.status(500).json({
+            error: 'Internal server error',
+            message: 'Failed to establish session',
+            details: process.env.NODE_ENV === 'development' ? loginErr.message : undefined
+          });
         }
-      }
 
-      // Generate JWT token
-      const token = generateToken(user);
+        try {
+          // Migrate any anonymous usage from this IP to the user account
+          const ipAddress = req.ip || req.socket.remoteAddress || 'unknown';
+          if (ipAddress && ipAddress !== 'unknown') {
+            try {
+              await Usage.migrateAnonymousUsage(ipAddress, user.id);
+              console.log(`[Auth] Migrated anonymous usage for IP ${ipAddress} to user ${user.id} (GitHub OAuth)`);
+            } catch (migrationError) {
+              // Don't fail OAuth callback if migration fails - log and continue
+              console.error('[Auth] Failed to migrate anonymous usage:', migrationError);
+            }
+          }
 
-      // Redirect to frontend with token
-      // Frontend will extract token from URL and store it
-      const frontendUrl = process.env.CLIENT_URL || 'http://localhost:5173';
-      res.redirect(`${frontendUrl}/auth/callback?token=${token}`);
-    } catch (error) {
-      console.error('GitHub callback error:', error);
-      res.redirect('/login?error=callback_failed');
-    }
+          // Generate JWT token
+          const token = generateToken(user);
+
+          // Redirect to frontend with token
+          // Frontend will extract token from URL and store it
+          const frontendUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+          res.redirect(`${frontendUrl}/auth/callback?token=${token}`);
+        } catch (error) {
+          console.error('[Auth] GitHub callback error:', error);
+          return res.status(500).json({
+            error: 'Internal server error',
+            message: 'An unexpected error occurred',
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+          });
+        }
+      });
+    })(req, res, next);
   }
 );
 
