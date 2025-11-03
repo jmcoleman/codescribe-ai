@@ -66,7 +66,7 @@
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
     "footerLeft": "<strong>CodeScribe AI</strong> \u00b7 Strategic Roadmap v3.5",
-    "footer": "Phase 1 Complete \u00b7 Phase 2: Epic 2.4 Complete (v2.4.5 - Refined Light Theme v2.0) \u00b7 Launch: Mid-Jan 2026",
+    "footer": "Phase 1 Complete \u00b7 Phase 2: Epic 2.4 Complete (v2.4.6 - Billing Period Persistence & Help Modal UX) \u00b7 Launch: Mid-Jan 2026",
     "lastUpdated": "November 2, 2025"
   },
   "columns": [
@@ -371,6 +371,30 @@
             "Fixed Monaco editor background artifacts",
             "USER-ROLES-SYSTEM.md planning document (309 lines)",
             "1,786 tests (1,747 passing, 39 skipped) - 97.82% pass rate"
+          ]
+        },
+        {
+          "version": "v2.4.6",
+          "title": "Billing Period Persistence & Help Modal UX",
+          "duration": "1 day",
+          "status": "\u2713 Complete",
+          "completedDate": "Nov 2, 2025",
+          "badge": "UX Improvements",
+          "features": [
+            "Help Modal Tabbed Interface: 3-tab organization (Quick Start, Quality Scores, FAQs)",
+            "FAQ accordion UI with smooth animations and improved content discoverability",
+            "Refined light theme consistency for HelpModal (white backgrounds, slate borders)",
+            "Billing Period Persistence: Monthly/annual selection persists via sessionStorage",
+            "Seamless user experience across page refreshes with subscription intent storage",
+            "Help Button UX Improvements: Desktop text 'Help' button, mobile only in hamburger menu",
+            "Cleaner mobile navigation (removed redundant header icon)",
+            "Contact Sales Character Limit: 750 chars with live counter and validation",
+            "Stripe API Alignment: Updated 'yearly' to 'annual' for backend consistency",
+            "Fixed 4 PricingPage test failures (billing period terminology)",
+            "Viewport Optimization: Increased modal max-height by 60px for better content visibility",
+            "STORAGE-CONVENTIONS.md: sessionStorage patterns documentation",
+            "Complete test coverage: 9 files updated with test fixes",
+            "1,785 tests (1,746 passing, 39 skipped, 0 failing) - 97.82% pass rate"
           ]
         }
       ]
