@@ -22,6 +22,11 @@ vi.stubEnv('VITE_ENABLE_AUTH', 'true');
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
+  Link: ({ to, children, className }) => (
+    <a href={to} className={className}>
+      {children}
+    </a>
+  ),
 }));
 
 // Mock auth context

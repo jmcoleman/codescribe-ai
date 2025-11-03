@@ -6,6 +6,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { BrowserRouter } from 'react-router-dom';
 import { SignupModal } from '../SignupModal';
 import { AuthProvider } from '../../contexts/AuthContext';
 
@@ -33,13 +34,15 @@ describe('SignupModal', () => {
 
   const renderSignupModal = (isOpen = true) => {
     return render(
-      <AuthProvider>
-        <SignupModal
-          isOpen={isOpen}
-          onClose={mockOnClose}
-          onSwitchToLogin={mockOnSwitchToLogin}
-        />
-      </AuthProvider>
+      <BrowserRouter>
+        <AuthProvider>
+          <SignupModal
+            isOpen={isOpen}
+            onClose={mockOnClose}
+            onSwitchToLogin={mockOnSwitchToLogin}
+          />
+        </AuthProvider>
+      </BrowserRouter>
     );
   };
 
@@ -236,11 +239,13 @@ describe('SignupModal', () => {
       const emailInput = screen.getByLabelText(/email address/i);
       const passwordInput = screen.getByLabelText(/^password$/i);
       const confirmInput = screen.getByLabelText(/confirm password/i);
+      const termsCheckbox = screen.getByRole('checkbox', { name: /accept the terms/i });
       const submitButton = screen.getByRole('button', { name: /create account/i });
 
       await user.type(emailInput, 'newuser@example.com');
       await user.type(passwordInput, 'StrongPass123');
       await user.type(confirmInput, 'StrongPass123');
+      await user.click(termsCheckbox);
       await user.click(submitButton);
 
       await waitFor(() => {
@@ -277,11 +282,13 @@ describe('SignupModal', () => {
       const emailInput = screen.getByLabelText(/email address/i);
       const passwordInput = screen.getByLabelText(/^password$/i);
       const confirmInput = screen.getByLabelText(/confirm password/i);
+      const termsCheckbox = screen.getByRole('checkbox', { name: /accept the terms/i });
       const submitButton = screen.getByRole('button', { name: /create account/i });
 
       await user.type(emailInput, 'existing@example.com');
       await user.type(passwordInput, 'Password123');
       await user.type(confirmInput, 'Password123');
+      await user.click(termsCheckbox);
       await user.click(submitButton);
 
       await waitFor(() => {
@@ -319,11 +326,13 @@ describe('SignupModal', () => {
       const emailInput = screen.getByLabelText(/email address/i);
       const passwordInput = screen.getByLabelText(/^password$/i);
       const confirmInput = screen.getByLabelText(/confirm password/i);
+      const termsCheckbox = screen.getByRole('checkbox', { name: /accept the terms/i });
       const submitButton = screen.getByRole('button', { name: /create account/i });
 
       await user.type(emailInput, 'test@example.com');
       await user.type(passwordInput, 'Password123');
       await user.type(confirmInput, 'Password123');
+      await user.click(termsCheckbox);
       await user.click(submitButton);
 
       expect(screen.getByText(/creating account/i)).toBeInTheDocument();
@@ -417,9 +426,11 @@ describe('SignupModal', () => {
       const emailInput = screen.getByLabelText(/email address/i);
       const passwordInput = screen.getByLabelText(/^password$/i);
       const confirmInput = screen.getByLabelText(/confirm password/i);
+      const termsCheckbox = screen.getByRole('checkbox', { name: /accept the terms/i });
 
       await user.type(emailInput, 'test@example.com');
       await user.type(passwordInput, 'Password123');
+      await user.click(termsCheckbox);
       await user.type(confirmInput, 'Password123{Enter}');
 
       await waitFor(() => {
@@ -471,24 +482,28 @@ describe('SignupModal', () => {
 
       // Close modal
       rerender(
-        <AuthProvider>
-          <SignupModal
-            isOpen={false}
-            onClose={mockOnClose}
-            onSwitchToLogin={mockOnSwitchToLogin}
-          />
-        </AuthProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <SignupModal
+              isOpen={false}
+              onClose={mockOnClose}
+              onSwitchToLogin={mockOnSwitchToLogin}
+            />
+          </AuthProvider>
+        </BrowserRouter>
       );
 
       // Reopen modal
       rerender(
-        <AuthProvider>
-          <SignupModal
-            isOpen={true}
-            onClose={mockOnClose}
-            onSwitchToLogin={mockOnSwitchToLogin}
-          />
-        </AuthProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <SignupModal
+              isOpen={true}
+              onClose={mockOnClose}
+              onSwitchToLogin={mockOnSwitchToLogin}
+            />
+          </AuthProvider>
+        </BrowserRouter>
       );
 
       await waitFor(() => {
@@ -638,11 +653,13 @@ describe('SignupModal', () => {
       const emailInput = screen.getByLabelText(/email address/i);
       const passwordInput = screen.getByLabelText(/^password$/i);
       const confirmInput = screen.getByLabelText(/confirm password/i);
+      const termsCheckbox = screen.getByRole('checkbox', { name: /accept the terms/i });
       const submitButton = screen.getByRole('button', { name: /create account/i });
 
       await user.type(emailInput, 'test@example.com');
       await user.type(passwordInput, 'Password123');
       await user.type(confirmInput, 'Password123');
+      await user.click(termsCheckbox);
       await user.click(submitButton);
 
       // During loading, toggle buttons should be disabled

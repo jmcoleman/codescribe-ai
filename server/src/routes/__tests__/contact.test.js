@@ -16,6 +16,7 @@ const capturedState = { schema: null };
 // Mock dependencies BEFORE importing routes
 jest.mock('../../middleware/auth.js', () => ({
   requireAuth: jest.fn((req, res, next) => next()),
+  optionalAuth: jest.fn((req, res, next) => next()), // Added for /support endpoint
   validateBody: jest.fn((schema) => {
     capturedState.schema = schema; // Capture the schema for test assertions
     return (req, res, next) => next();
@@ -24,6 +25,7 @@ jest.mock('../../middleware/auth.js', () => ({
 
 jest.mock('../../services/emailService.js', () => ({
   sendContactSalesEmail: jest.fn().mockResolvedValue({ success: true }),
+  sendSupportEmail: jest.fn().mockResolvedValue({ success: true }), // Added for /support endpoint
 }));
 
 // Now import routes and mocked modules

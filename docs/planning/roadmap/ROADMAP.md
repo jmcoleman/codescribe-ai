@@ -1,8 +1,8 @@
 # CodeScribe AI - Product Roadmap
 
-**Last Updated:** November 2, 2025
-**Current Phase:** Phase 2 - 🔄 **IN PROGRESS** (Payments Infrastructure - Epic 2.4 Complete)
-**Current Release:** v2.4.6 (Billing Period Persistence & Help Modal UX Complete)
+**Last Updated:** November 3, 2025
+**Current Phase:** Phase 2 - ✅ **Epic 2.5 Phase 1-2 COMPLETE** (Legal Compliance Foundation)
+**Current Release:** v2.5.0 (Epic 2.5: Legal Compliance - Phase 1-2 Complete)
 **Production URL:** [https://codescribeai.com](https://codescribeai.com)
 
 ---
@@ -770,10 +770,11 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 - Epic 2.4: Payment Integration & Test Infrastructure (3 days) - ✅ **COMPLETE** (v2.4.0-v2.4.2)
 
 **Next Steps for Phase 2:**
-- Epic 2.5: Essential Legal (Terms & Privacy) (1-2 days) - 📋 Planned
+- Epic 2.5: Legal Compliance - Phase 1-2 (2 days) - ✅ **COMPLETE** (v2.5.0)
+- Epic 2.5: Legal Compliance - Phase 3-4 (2-3 days) - 📋 Planned (Account Settings, User Data Rights)
 - Epic 2.6: UI Integration & Usage Dashboard (2-3 days) - 📋 Planned
 - Epic 2.7: Production Launch (Post-LLC) (1-2 days) - 📋 Planned (Jan 14+ 2026)
-- Target completion: v2.5.0-v2.7.0 releases
+- Target completion: v2.5.x-v2.7.0 releases
 
 ---
 
@@ -821,8 +822,8 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 ## 💰 Phase 2: Payments Infrastructure (IN PROGRESS)
 
 **Timeline:** October 21 - January 2026 (Build Fast, Launch When Validated)
-**Status:** 🔄 **IN PROGRESS** - Foundation Complete (v2.0.0-v2.4.6), Remaining Epics in Sprint
-**Current Release:** v2.4.6 (Billing Period Persistence & Help Modal UX Complete)
+**Status:** 🔄 **IN PROGRESS** - Foundation + Legal Complete (v2.0.0-v2.5.0), Remaining Epics in Sprint
+**Current Release:** v2.5.0 (Epic 2.5: Legal Compliance - Phase 1-2 Complete)
 **Target Launch:** Mid-January 2026 (validation-driven, not calendar-driven)
 **Strategic Goal:** Enable sustainable business model with Open Core + Generous Free Tier architecture
 
@@ -834,15 +835,14 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 - ✅ Oct 21-26: Epic 2.1 (Authentication & Database) - v2.0.0
 - ✅ Oct 27-29: Epic 2.2 (Tier System & Feature Flags) - v2.1.0-v2.2.0
 - ✅ Oct 29: Epic 2.3 (UX Enhancements) - v2.3.0
-- ✅ Oct 30: Epic 2.4 (Payment Integration - Test Mode) - v2.4.0
+- ✅ Oct 30-Nov 2: Epic 2.4 (Payment Integration - Test Mode) - v2.4.0-v2.4.6
+- ✅ Nov 3: Epic 2.5 Phase 1-2 (Legal Compliance Foundation) - v2.5.0
 
-**Aggressive Sprint (Nov-Dec 2025):**
-- 📋 Nov 2-8: Epic 2.5 Phase 1 (T&Cs placeholders) - v2.5.1
-- 📋 Nov 9-22: Epic 2.6 (Usage Dashboard + Account Settings) - v2.6.0
-- 📋 Nov 23-29: Epic 2.8 (Subscription Management UI) - v2.8.0
-- 📋 Dec 1-7: Epic 2.5 Phase 2-3 (Self-hosted T&Cs + Settings) - v2.5.2
-- 📋 Dec 8-14: Epic 2.5 Phase 4-6 (Data rights + Email) - v2.5.3
-- ✅ Mid-December: ALL CODE COMPLETE
+**Remaining Sprint (Nov-Dec 2025):**
+- 📋 Nov 4-10: Epic 2.5 Phase 3-4 (Account Settings + User Data Rights) - v2.5.1-v2.5.2
+- 📋 Nov 11-24: Epic 2.6 (Usage Dashboard + Account Settings) - v2.6.0
+- 📋 Nov 25-Dec 1: Epic 2.8 (Subscription Management UI) - v2.8.0
+- 📋 Mid-December: ALL CODE COMPLETE
 
 **Validation & Marketing (Dec 2025 - Jan 2026):**
 - 🎯 User acquisition and feedback collection
@@ -1005,55 +1005,58 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 
 **Note:** Upgrade/downgrade flows moved to Epic 2.8. Custom receipts/invoices moved to Epic 2.7.
 
-#### Epic 2.5: Legal Compliance & User Rights (3-4 days) - 📋 **CRITICAL - REQUIRED BEFORE EPIC 2.4**
+#### Epic 2.5: Legal Compliance & User Rights (4 days total) - 🔄 **Phase 1-2 COMPLETE**
 
+**Release:** v2.5.0 (November 3, 2025) - **Phase 1-2 Complete**
 **Priority:** CRITICAL (must complete before accepting payments)
 **Goal:** GDPR/CCPA compliance + user data rights infrastructure
 **Reference:** [EPIC-2.5-COMPLIANCE.md](./EPIC-2.5-COMPLIANCE.md) for full implementation spec
 
-**Phase 1: UI Placeholders (Week 1-2, 1 day)**
-- Generate Terms + Privacy via Termly.io (30 min each)
-- Create Footer component with T&Cs links
-- Add T&Cs checkbox to SignupModal (disabled placeholder)
+**Phase 1: UI Placeholders (1 day) - ✅ COMPLETE**
+- ✅ Footer component with Terms/Privacy links (appears on all pages)
+- ✅ Contact Support button in footer
+- ✅ Responsive design with proper spacing
 
-**Phase 2: Self-Hosted Policies (Week 10, 1 day)**
-- TermsOfService.jsx + PrivacyPolicy.jsx components
-- Routes: `/terms` and `/privacy`
-- Enable T&Cs checkbox (required for signup)
+**Phase 2: Self-Hosted Policies (1 day) - ✅ COMPLETE**
+- ✅ TermsOfService.jsx component with comprehensive content
+- ✅ PrivacyPolicy.jsx component with GDPR compliance
+- ✅ Routes: `/terms` and `/privacy`
+- ✅ Version tracking system (2025-11-02 format)
+- ✅ Back button navigation to previous page
+- ✅ TermsAcceptanceModal with smart acceptance detection
+- ✅ Version-based re-acceptance system (tracks terms_version_accepted, privacy_version_accepted)
+- ✅ Backend legal routes (/api/legal/versions, /api/legal/status, /api/legal/accept)
+- ✅ Database migration 010: 4 new columns + 4 indexes
+- ✅ Contact Support Modal for legal questions and support inquiries
+- ✅ Email service: sendSupportEmail() for contact support flow
+- ✅ Full test coverage: 1,955 tests (1,283 frontend, 672 backend, 97.8% pass rate)
+- ✅ +134 new tests across 9 new test files
 
-**Phase 3: Account Settings UI (Week 10, 1 day)**
+**Phase 3: Account Settings UI (1-2 days) - 📋 PLANNED (v2.5.1)**
 - Settings page with 4 tabs: Account | Privacy | Subscription | Danger Zone
 - Analytics opt-out toggle
 - Change email/password
 - Delete account button
+- User profile management
 
-**Phase 4: User Data Rights (Week 11, 1 day)**
+**Phase 4: User Data Rights (1-2 days) - 📋 PLANNED (v2.5.2)**
 - Data export: GET /api/user/data-export (JSON download)
 - Account deletion: 30-day soft delete with restore
 - Analytics opt-out: Conditional Vercel Analytics loading
 - Email notifications via Resend
+- Compliance with GDPR/CCPA data rights
 
-**Phase 5: Policy Updates (Week 11, 0.5 days)**
-- policy_acceptance table (track versions)
-- Policy update banner/modal
-- Email notification 30 days before changes
-
-**Phase 6: Email Infrastructure (Week 11, 0.5 days)**
-- 8 transactional email templates (Resend)
-- support@codescribeai.com forwarding
-- Response templates for support
-
-**Database Changes:**
+**Database Migration 010 (Already Complete):**
 ```sql
+-- ✅ Already implemented in v2.5.0
+ALTER TABLE users ADD COLUMN terms_accepted_at TIMESTAMPTZ;
+ALTER TABLE users ADD COLUMN terms_version_accepted VARCHAR(20);
+ALTER TABLE users ADD COLUMN privacy_accepted_at TIMESTAMPTZ;
+ALTER TABLE users ADD COLUMN privacy_version_accepted VARCHAR(20);
+
+-- 📋 Future (Phase 3-4):
 ALTER TABLE users ADD COLUMN analytics_enabled BOOLEAN DEFAULT true;
 ALTER TABLE users ADD COLUMN deletion_scheduled_at TIMESTAMPTZ;
-
-CREATE TABLE policy_acceptance (
-  user_id INTEGER,
-  policy_type VARCHAR(50),
-  version VARCHAR(20),
-  accepted_at TIMESTAMPTZ
-);
 ```
 
 #### Epic 2.6: UI Integration & Usage Dashboard (2-3 days) - 📋 **PLANNED**
@@ -1522,6 +1525,31 @@ Features are tracked here when they:
 - May become their own phase in the future
 
 **Potential Future Features (Backlog):**
+
+**Security & Compliance Enhancements (Post-v2.5.0):**
+- **Audit Logging System** (v2.6.0 or later)
+  - Separate audit table for legal acceptance events
+  - Log IP address + user agent for compliance
+  - Immutable audit trail (append-only)
+  - Estimated: 2-3 days
+- **Legal Acceptance Email Confirmations** (Optional UX enhancement)
+  - Send confirmation email after T&Cs acceptance
+  - Example: "You accepted Terms v2025-11-02 on Nov 2, 2025"
+  - Builds trust, provides user records
+  - Estimated: 1 day
+- **Terms Change Notification Emails** (Optional UX enhancement)
+  - Send email notification when Terms/Privacy Policy change
+  - Example: "We've updated our Terms of Service (v2025-12-01)"
+  - Include summary of changes and deadline to re-accept
+  - Industry standard: GitHub, Stripe, Vercel all do this
+  - Estimated: 1-2 days
+- **Compliance Admin Dashboard** (Enterprise feature)
+  - View acceptance rates by version
+  - Track users needing re-acceptance
+  - Compliance reporting (GDPR, SOC 2)
+  - Estimated: 3-4 days
+
+**Product Features:**
 - Calendly integration for Enterprise/Team sales
 - Gmail "Send As" setup for sales@codescribeai.com replies
 - Documentation history and saved projects

@@ -1,38 +1,44 @@
 import { useState, useEffect } from 'react';
 import { Copy, Check } from 'lucide-react';
-import { toastCopied, toastError } from '../utils/toast';
+import { toastError } from '../utils/toast';
 
 /**
  * CopyButton - Enterprise-grade copy-to-clipboard button
  *
  * Features:
  * - Smooth icon transition (Copy → Check)
- * - Color animation on success
- * - Auto-reset after 2 seconds
+ * - Subtle color change on check icon (cyan accent for code/technical success)
+ * - Text label changes (Copy → Copied) when showLabel is true
+ * - Auto-reset after 1 second
  * - Accessible with ARIA labels
  * - Reduced motion support
  * - Haptic feedback (if available)
+ *
+ * Note: No toast notification - button state provides sufficient visual feedback
+ * Pattern: Matches Clear button style (subtle, professional, no background change)
  *
  * @param {string} text - Text to copy to clipboard
  * @param {string} className - Additional CSS classes
  * @param {string} size - Button size: 'sm' | 'md' | 'lg'
  * @param {string} variant - Button variant: 'ghost' | 'outline' | 'solid'
+ * @param {boolean} showLabel - Show text label alongside icon
  */
 export function CopyButton({
   text,
   className = '',
   size = 'md',
   variant = 'ghost',
-  ariaLabel = 'Copy to clipboard'
+  ariaLabel = 'Copy to clipboard',
+  showLabel = false
 }) {
   const [copied, setCopied] = useState(false);
 
-  // Auto-reset after 2 seconds
+  // Auto-reset after 1 second
   useEffect(() => {
     if (copied) {
       const timer = setTimeout(() => {
         setCopied(false);
-      }, 2000);
+      }, 1000);
 
       return () => clearTimeout(timer);
     }
@@ -63,8 +69,8 @@ export function CopyButton({
 
       setCopied(true);
 
-      // Show success toast
-      toastCopied();
+      // Visual feedback via button state change (icon + color)
+      // No toast notification - button provides sufficient visual feedback
 
       // Haptic feedback on supported devices
       if (navigator.vibrate) {
@@ -78,9 +84,9 @@ export function CopyButton({
 
   // Size variants
   const sizeClasses = {
-    sm: 'p-1.5',
-    md: 'p-2',
-    lg: 'p-2.5',
+    sm: showLabel ? 'px-2.5 py-1.5' : 'p-1.5',
+    md: showLabel ? 'px-2.5 py-1.5' : 'p-2',
+    lg: showLabel ? 'px-3 py-2' : 'p-2.5',
   };
 
   const iconSizes = {
@@ -89,17 +95,17 @@ export function CopyButton({
     lg: 'w-5 h-5',
   };
 
-  // Style variants
+  const textSizes = {
+    sm: 'text-xs',
+    md: 'text-xs',
+    lg: 'text-sm',
+  };
+
+  // Style variants - no background/border change, consistent with Clear button
   const variantClasses = {
-    ghost: copied
-      ? 'bg-green-50 text-green-600 border border-green-200'
-      : 'bg-transparent text-slate-600 hover:bg-slate-100 border border-transparent',
-    outline: copied
-      ? 'bg-green-50 text-green-600 border border-green-300'
-      : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 hover:border-slate-300',
-    solid: copied
-      ? 'bg-green-600 text-white border border-green-600'
-      : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200',
+    ghost: 'bg-transparent text-slate-600 hover:bg-slate-100 border border-transparent',
+    outline: 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 hover:border-slate-300',
+    solid: 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200',
   };
 
   const iconSize = iconSizes[size];
@@ -110,24 +116,31 @@ export function CopyButton({
       data-testid="copy-btn"
       onClick={handleCopy}
       className={`
+        ${showLabel ? 'inline-flex items-center gap-1.5' : ''}
         ${sizeClasses[size]}
         ${variantClasses[variant]}
+        ${showLabel ? 'font-medium' : ''}
         rounded-lg
         transition-all duration-200
-        hover:scale-[1.05]
+        hover:scale-[1.02]
         active:scale-[0.98]
         focus:outline-none
         focus:ring-2
         focus:ring-purple-600
         focus:ring-offset-2
         motion-reduce:transition-none
-        relative
+        ${!showLabel ? 'relative' : ''}
+        ${copied ? 'pointer-events-none' : ''}
         ${className}
       `}
       aria-label={copied ? 'Copied!' : ariaLabel}
       title={copied ? 'Copied!' : ariaLabel}
-      disabled={copied}
     >
+      {/* Screen reader announcement */}
+      <span className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {copied && 'Copied to clipboard'}
+      </span>
+
       {/* Icon with smooth cross-fade animation */}
       <div className="relative flex items-center justify-center">
         {/* Copy Icon */}
@@ -137,17 +150,27 @@ export function CopyButton({
             transition-all duration-200 ease-out
             ${copied ? 'opacity-0 scale-50 rotate-90 absolute' : 'opacity-100 scale-100 rotate-0'}
           `}
+          aria-hidden="true"
         />
 
         {/* Check Icon */}
         <Check
           className={`
             ${iconSize}
+            ${copied ? 'text-cyan-600' : ''}
             transition-all duration-200 ease-out
             ${copied ? 'opacity-100 scale-100 rotate-0' : 'opacity-0 scale-50 -rotate-90 absolute'}
           `}
+          aria-hidden="true"
         />
       </div>
+
+      {/* Optional text label */}
+      {showLabel && (
+        <span className={textSizes[size]}>
+          {copied ? 'Copied' : 'Copy'}
+        </span>
+      )}
     </button>
   );
 }
@@ -155,6 +178,7 @@ export function CopyButton({
 /**
  * CopyButtonWithText - Copy button with label text
  * For use in headers, toolbars, etc.
+ * Pattern: Matches main CopyButton style (subtle, professional)
  */
 export function CopyButtonWithText({
   text,
@@ -167,7 +191,7 @@ export function CopyButtonWithText({
     if (copied) {
       const timer = setTimeout(() => {
         setCopied(false);
-      }, 2000);
+      }, 1000);
 
       return () => clearTimeout(timer);
     }
@@ -198,8 +222,8 @@ export function CopyButtonWithText({
 
       setCopied(true);
 
-      // Show success toast
-      toastCopied();
+      // Visual feedback via button state change (icon + text)
+      // No toast notification - button provides sufficient visual feedback
 
       if (navigator.vibrate) {
         navigator.vibrate(50);
@@ -225,31 +249,32 @@ export function CopyButtonWithText({
         focus:ring-purple-600
         focus:ring-offset-2
         motion-reduce:transition-none
-        ${copied
-          ? 'bg-green-50 text-green-700 border border-green-200 shadow-sm'
-          : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'
-        }
+        bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200
+        ${copied ? 'pointer-events-none' : ''}
         ${className}
       `}
       aria-label={copied ? 'Copied!' : 'Copy to clipboard'}
-      disabled={copied}
     >
       {/* Icon with smooth transition */}
-      <Copy
-        className={`
-          w-4 h-4
-          transition-all duration-200
-          ${copied ? 'opacity-0 scale-50 rotate-90' : 'opacity-100 scale-100 rotate-0'}
-        `}
-      />
-      <Check
-        className={`
-          w-4 h-4
-          absolute
-          transition-all duration-200
-          ${copied ? 'opacity-100 scale-100 rotate-0' : 'opacity-0 scale-50 -rotate-90'}
-        `}
-      />
+      <div className="relative flex items-center justify-center">
+        <Copy
+          className={`
+            w-4 h-4
+            transition-all duration-200 ease-out
+            ${copied ? 'opacity-0 scale-50 rotate-90 absolute' : 'opacity-100 scale-100 rotate-0'}
+          `}
+          aria-hidden="true"
+        />
+        <Check
+          className={`
+            w-4 h-4
+            ${copied ? 'text-cyan-600' : ''}
+            transition-all duration-200 ease-out
+            ${copied ? 'opacity-100 scale-100 rotate-0' : 'opacity-0 scale-50 -rotate-90 absolute'}
+          `}
+          aria-hidden="true"
+        />
+      </div>
 
       {/* Text label */}
       <span className="transition-all duration-200">

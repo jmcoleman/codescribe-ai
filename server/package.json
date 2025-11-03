@@ -1,10 +1,11 @@
 {
   "name": "server",
-  "version": "2.4.6",
+  "version": "2.5.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "dev": "nodemon index.js",
+    "dev:stripe": "concurrently --kill-others --names \"SERVER,STRIPE\" --prefix-colors \"cyan,magenta\" \"nodemon index.js\" \"stripe listen --forward-to localhost:3000/api/webhooks/stripe\"",
     "dev:test": "NODE_ENV=test node -r dotenv/config index.js dotenv_config_path=.env.test",
     "start": "node index.js",
     "test": "jest",
@@ -59,6 +60,7 @@
     "@babel/core": "^7.28.4",
     "@babel/preset-env": "^7.28.3",
     "babel-jest": "^30.2.0",
+    "concurrently": "^9.2.1",
     "jest": "^30.2.0",
     "nodemon": "^3.1.10",
     "passport-mock-strategy": "^2.0.0",

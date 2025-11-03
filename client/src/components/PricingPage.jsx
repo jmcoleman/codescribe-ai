@@ -297,44 +297,48 @@ export function PricingPage() {
           <span className="font-medium">Back</span>
         </button>
 
-        <div className="text-center mb-6">
-          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-3">
+        <div className="text-center mb-3">
+          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-1.5">
             Simple, Transparent Pricing
           </h1>
-          <p className="text-lg text-slate-600 max-w-2xl mx-auto mb-6">
+          <p className="text-lg text-slate-600 max-w-2xl mx-auto mb-3">
             Choose the plan that fits your needs. All plans include full language support.
           </p>
 
-          {/* Billing Period Toggle */}
-          <div className="inline-flex items-center gap-3 p-1 bg-slate-100 rounded-lg">
-            <button
-              onClick={() => setBillingPeriod('monthly')}
-              className={`px-6 py-2 rounded-md font-medium transition-all ${
-                billingPeriod === 'monthly'
-                  ? 'bg-white text-slate-900 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Monthly
-            </button>
-            <button
-              onClick={() => setBillingPeriod('annual')}
-              className={`px-6 py-2 rounded-md font-medium transition-all flex items-center gap-2 ${
-                billingPeriod === 'annual'
-                  ? 'bg-white text-slate-900 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Yearly
-              <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold">
-                Save 17%
-              </span>
-            </button>
+          {/* Billing Period Toggle - wrapper has padding to prevent focus ring clipping */}
+          <div className="inline-block p-1">
+            <div className="inline-flex items-center gap-0.5 p-1 bg-slate-100 rounded-lg">
+              <button
+                onClick={() => setBillingPeriod('monthly')}
+                className={`relative px-6 py-2 rounded-md font-medium transition-[background-color,box-shadow,color] duration-200 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 focus-visible:z-10 ${
+                  billingPeriod === 'monthly'
+                    ? 'bg-white text-slate-900 shadow-md'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                }`}
+                aria-pressed={billingPeriod === 'monthly'}
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setBillingPeriod('annual')}
+                className={`relative px-6 py-2 rounded-md font-medium transition-[background-color,box-shadow,color] duration-200 ease-out flex items-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 focus-visible:z-10 ${
+                  billingPeriod === 'annual'
+                    ? 'bg-white text-slate-900 shadow-md'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                }`}
+                aria-pressed={billingPeriod === 'annual'}
+              >
+                Yearly
+                <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold">
+                  Save 17%
+                </span>
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Pricing Tiers */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-4 max-w-7xl mx-auto">
           {tiers.map((tier) => {
             const Icon = tier.icon;
             const isLoading = loading === tier.id;
@@ -375,14 +379,16 @@ export function PricingPage() {
                   <h3 className="text-xl font-bold text-slate-900 mb-1.5">{tier.name}</h3>
                   <p className="text-xs text-slate-600 mb-3 min-h-[2rem] flex items-center justify-center">{tier.description}</p>
                   <div className="mb-1">
-                    <span className="text-3xl font-bold text-slate-900">{displayPrice}</span>
+                    <span key={`${tier.id}-${billingPeriod}-price`} className="text-3xl font-bold text-slate-900 inline-block animate-fade-in-slow">{displayPrice}</span>
                     <span className="text-sm text-slate-600 ml-1">/ {tier.period}</span>
                   </div>
-                  {showYearlySavings && (
-                    <p className="text-xs text-green-700 font-medium">
-                      {tier.yearlyTotal}/year (save {tier.savingsPercent})
-                    </p>
-                  )}
+                  <div className="h-5">
+                    {showYearlySavings && (
+                      <p key={`${tier.id}-${billingPeriod}-savings`} className="text-xs text-green-700 font-medium animate-fade-in-slow">
+                        {tier.yearlyTotal}/year (save {tier.savingsPercent})
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 <ul className="space-y-2.5 mb-4 flex-grow">
@@ -419,13 +425,28 @@ export function PricingPage() {
           })}
         </div>
 
-        {/* Coming Soon Note */}
-        <div className="text-center mb-12 space-y-1">
+        {/* Feature highlights & coming soon note */}
+        <div className="text-center mb-6 space-y-1.5">
           <p className="text-sm text-slate-600">
             All tiers include: <span className="font-semibold">All 10 languages</span> • <span className="font-semibold">4 doc types</span> • <span className="font-semibold">Real-time streaming</span> • <span className="font-semibold">Quality scoring</span>
           </p>
           <p className="text-xs text-slate-500">
             * Features marked with an asterisk are coming soon
+          </p>
+        </div>
+
+        {/* Legal disclaimer */}
+        <div className="text-center mb-8">
+          <p className="text-sm text-slate-600">
+            By subscribing, you agree to our{' '}
+            <a href="/terms" className="text-purple-600 hover:text-purple-700 underline">
+              Terms of Service
+            </a>
+            {' '}and{' '}
+            <a href="/privacy" className="text-purple-600 hover:text-purple-700 underline">
+              Privacy Policy
+            </a>
+            .
           </p>
         </div>
 

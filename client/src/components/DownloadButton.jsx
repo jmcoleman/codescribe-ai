@@ -1,5 +1,5 @@
 import { Download } from 'lucide-react';
-import { toastCompact, toastError } from '../utils/toast';
+import { toastError } from '../utils/toast';
 
 /**
  * DownloadButton - Enterprise-grade download button
@@ -22,6 +22,7 @@ import { toastCompact, toastError } from '../utils/toast';
  * @param {string} size - Button size: 'sm' | 'md' | 'lg'
  * @param {string} variant - Button variant: 'ghost' | 'outline' | 'solid'
  * @param {string} ariaLabel - Accessible label for screen readers
+ * @param {boolean} showLabel - Show text label alongside icon
  */
 export function DownloadButton({
   content,
@@ -29,7 +30,8 @@ export function DownloadButton({
   className = '',
   size = 'md',
   variant = 'ghost',
-  ariaLabel = 'Download'
+  ariaLabel = 'Download',
+  showLabel = false
 }) {
 
   const handleDownload = () => {
@@ -61,13 +63,8 @@ export function DownloadButton({
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
-      // Show success toast
-      toastCompact('Downloaded!', 'success');
-
-      // Haptic feedback on supported devices
-      if (navigator.vibrate) {
-        navigator.vibrate(50);
-      }
+      // No success toast - browser's download notification provides sufficient feedback
+      // We cannot reliably detect if user actually saved the file or canceled the dialog
     } catch (err) {
       console.error('Failed to download file:', err);
       toastError('Unable to download file. Please try again.');
@@ -76,15 +73,21 @@ export function DownloadButton({
 
   // Size variants
   const sizeClasses = {
-    sm: 'p-1.5',
-    md: 'p-2',
-    lg: 'p-2.5',
+    sm: showLabel ? 'px-2.5 py-1.5' : 'p-1.5',
+    md: showLabel ? 'px-2.5 py-1.5' : 'p-2',
+    lg: showLabel ? 'px-3 py-2' : 'p-2.5',
   };
 
   const iconSizes = {
     sm: 'w-3.5 h-3.5',
     md: 'w-4 h-4',
     lg: 'w-5 h-5',
+  };
+
+  const textSizes = {
+    sm: 'text-xs',
+    md: 'text-xs',
+    lg: 'text-sm',
   };
 
   // Style variants (no state changes - icon stays consistent)
@@ -102,11 +105,13 @@ export function DownloadButton({
       data-testid="download-btn"
       onClick={handleDownload}
       className={`
+        ${showLabel ? 'inline-flex items-center gap-1.5' : ''}
         ${sizeClasses[size]}
         ${variantClasses[variant]}
+        ${showLabel ? 'font-medium' : ''}
         rounded-lg
         transition-all duration-200
-        hover:scale-[1.05]
+        hover:scale-[1.02]
         active:scale-[0.98]
         focus:outline-none
         focus:ring-2
@@ -120,6 +125,11 @@ export function DownloadButton({
     >
       {/* Static Download Icon - No state transitions */}
       <Download className={iconSize} aria-hidden="true" />
+
+      {/* Optional text label */}
+      {showLabel && (
+        <span className={textSizes[size]}>Download</span>
+      )}
     </button>
   );
 }

@@ -1,4 +1,4 @@
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { CheckCircle2, Settings } from 'lucide-react';
 
 /**
@@ -12,8 +12,6 @@ import { CheckCircle2, Settings } from 'lucide-react';
  */
 export function PaymentSuccess() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const sessionId = searchParams.get('session_id');
 
   const handleManageSubscription = async () => {
     try {
@@ -54,17 +52,11 @@ export function PaymentSuccess() {
           Your subscription has been activated successfully.
         </p>
 
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-8">
           <p className="text-sm text-green-800">
             You now have access to all your plan features. Start generating documentation right away!
           </p>
         </div>
-
-        {sessionId && (
-          <p className="text-xs text-slate-500 mb-6">
-            Session ID: {sessionId}
-          </p>
-        )}
 
         <div className="space-y-3">
           <button

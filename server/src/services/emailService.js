@@ -49,6 +49,9 @@ async function mockEmailSend(emailData) {
   console.log('  To:', emailData.to);
   console.log('  Subject:', emailData.subject);
   console.log('  From:', emailData.from);
+  if (emailData.replyTo) {
+    console.log('  Reply-To:', emailData.replyTo);
+  }
   if (emailData.html) {
     // Extract URLs from HTML for easy testing
     const urls = emailData.html.match(/https?:\/\/[^\s"<>]+/g);
@@ -439,8 +442,156 @@ export async function sendContactSalesEmail({ userName, userEmail, userId, curre
   }
 }
 
+/**
+ * Send support request email
+ * @param {Object} options - Email options
+ * @param {string} options.userName - User's name
+ * @param {string} options.userEmail - User's email
+ * @param {string} [options.userId] - User ID (optional for unauthenticated users)
+ * @param {string} [options.currentTier] - User's current tier (optional for unauthenticated users)
+ * @param {string} options.subject - Support request category
+ * @param {string} options.message - Support request message
+ * @returns {Promise<Object>} Send result
+ */
+export async function sendSupportEmail({ userName, userEmail, userId, currentTier, subject, message }) {
+  const subjectLabels = {
+    general: 'General Question',
+    bug: 'Bug Report',
+    feature: 'Feature Request',
+    account: 'Account Issue',
+    billing: 'Billing Question',
+    other: 'Other'
+  };
+
+  const subjectLabel = subjectLabels[subject] || 'Support Request';
+  const emailSubject = `${subjectLabel} from ${userName || userEmail}`;
+
+  // Format "from" to show user's name for better context
+  // e.g., "John Doe via CodeScribe AI <noreply@mail.codescribeai.com>"
+  const fromField = userName
+    ? `${userName} via CodeScribe AI <noreply@mail.codescribeai.com>`
+    : FROM_EMAIL;
+
+  const emailData = {
+    from: fromField,
+    to: 'support@codescribeai.com',
+    replyTo: userEmail,
+    subject: emailSubject,
+    html: `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Support Request</title>
+          </head>
+          <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #334155; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: linear-gradient(135deg, #9333ea 0%, #6366f1 100%); padding: 40px 20px; text-align: center; border-radius: 8px 8px 0 0;">
+              <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 700;">New Support Request</h1>
+            </div>
+
+            <div style="background: #ffffff; padding: 40px 30px; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 8px 8px;">
+              <div style="background: #f8fafc; padding: 16px; border-radius: 8px; margin-bottom: 24px; border-left: 4px solid #6366f1;">
+                <h2 style="color: #1e293b; margin: 0; font-size: 20px;">
+                  ${subjectLabel}
+                </h2>
+              </div>
+
+              <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 24px 0;">
+                <h3 style="color: #475569; margin: 0 0 16px 0; font-size: 16px; font-weight: 600;">Contact Information</h3>
+                <table style="width: 100%; border-collapse: collapse;">
+                  <tr>
+                    <td style="padding: 8px 0; color: #64748b; font-weight: 600; width: 120px;">Name:</td>
+                    <td style="padding: 8px 0; color: #1e293b;">${userName || 'Not provided'}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px 0; color: #64748b; font-weight: 600;">Email:</td>
+                    <td style="padding: 8px 0; color: #1e293b;"><a href="mailto:${userEmail}" style="color: #6366f1; text-decoration: none;">${userEmail}</a></td>
+                  </tr>
+                  ${userId ? `
+                    <tr>
+                      <td style="padding: 8px 0; color: #64748b; font-weight: 600;">User ID:</td>
+                      <td style="padding: 8px 0; color: #1e293b;">${userId}</td>
+                    </tr>
+                  ` : ''}
+                  ${currentTier ? `
+                    <tr>
+                      <td style="padding: 8px 0; color: #64748b; font-weight: 600;">Current Tier:</td>
+                      <td style="padding: 8px 0; color: #1e293b;">${currentTier.charAt(0).toUpperCase() + currentTier.slice(1)}</td>
+                    </tr>
+                  ` : ''}
+                  <tr>
+                    <td style="padding: 8px 0; color: #64748b; font-weight: 600;">Category:</td>
+                    <td style="padding: 8px 0; color: #1e293b; font-weight: 600;">${subjectLabel}</td>
+                  </tr>
+                </table>
+              </div>
+
+              <div style="margin: 24px 0;">
+                <h3 style="color: #475569; margin: 0 0 12px 0; font-size: 16px; font-weight: 600;">Message</h3>
+                <div style="background: #f8fafc; padding: 16px; border-radius: 6px; border-left: 4px solid #6366f1;">
+                  <p style="color: #1e293b; margin: 0; white-space: pre-wrap;">${message}</p>
+                </div>
+              </div>
+
+              <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
+                <p style="color: #64748b; font-size: 14px; margin: 0;">
+                  <strong>Next Steps:</strong> Respond directly to this email or reach out to ${userEmail} to assist with their request.
+                </p>
+              </div>
+            </div>
+
+            ${getEmailFooter(CLIENT_URL)}
+          </body>
+        </html>
+      `
+  };
+
+  // Mock in dev/test, send real emails in production
+  if (shouldMockEmails()) {
+    return await mockEmailSend(emailData);
+  }
+
+  // Production: send real email via Resend
+  const client = getResendClient();
+  if (!client) {
+    throw new Error('Email service not configured. Please set RESEND_API_KEY environment variable.');
+  }
+
+  try {
+    const result = await client.emails.send(emailData);
+    console.log('\n📧 [EMAIL SENT] Support Request');
+    console.log('  To:', emailData.to);
+    console.log('  From User:', userEmail);
+    console.log('  Subject:', emailData.subject);
+    console.log('  Category:', subjectLabel);
+    console.log('  Email ID:', result.data?.id);
+    console.log('  Timestamp:', new Date().toISOString());
+    return result;
+  } catch (error) {
+    console.error('Failed to send support email:', error);
+    console.error('Error details:', {
+      name: error.name,
+      message: error.message,
+      statusCode: error.statusCode,
+      stack: error.stack?.split('\n')[0]
+    });
+
+    // Check if it's a Resend rate limit error (429 Too Many Requests)
+    if (error.statusCode === 429 || error.message?.toLowerCase().includes('too many requests')) {
+      const customError = new Error('Email service is temporarily unavailable due to high demand. Please try again in a few minutes.');
+      customError.code = 'RESEND_RATE_LIMIT';
+      customError.statusCode = 503; // Service Unavailable
+      throw customError;
+    }
+
+    throw new Error('Failed to send support email');
+  }
+}
+
 export default {
   sendPasswordResetEmail,
   sendVerificationEmail,
-  sendContactSalesEmail
+  sendContactSalesEmail,
+  sendSupportEmail
 };

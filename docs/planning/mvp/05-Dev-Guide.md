@@ -241,6 +241,121 @@ codescribe-ai/
 
 ---
 
+## 🚀 Development Workflow
+
+### Quick Start
+
+**Start all services (Client + Server + Stripe webhooks):**
+```bash
+npm run dev
+```
+
+This single command automatically starts:
+- **CLIENT** (green prefix) - React dev server
+  - URL: `http://localhost:5173`
+  - Hot Module Replacement (HMR) enabled
+  - Tailwind CSS with JIT compilation
+- **SERVER** (cyan prefix) - Node.js + Express backend
+  - URL: `http://localhost:3000`
+  - Auto-restart on file changes (nodemon)
+  - API endpoints under `/api/*`
+- **STRIPE** (magenta prefix) - Stripe webhook forwarding
+  - Forwards webhooks to `http://localhost:3000/api/webhooks/stripe`
+  - Real-time webhook event logging
+
+**Environment Configuration:**
+
+- **Authentication**: Disabled by default (`ENABLE_AUTH=false`, `VITE_ENABLE_AUTH=false`)
+  - To enable: Set both flags to `true` in `.env` files
+  - Requires database and OAuth/email configuration
+- **Payments**: Disabled by default (`ENABLE_PAYMENTS=false`, `VITE_ENABLE_PAYMENTS=false`)
+  - To enable: Set flags to `true` and configure Stripe keys
+- **AI Generation**: Always enabled (requires `CLAUDE_API_KEY`)
+
+See [Environment Variables](#environment-variables) section for full configuration details.
+
+### Stripe Webhook Development
+
+**Why webhook forwarding?**
+
+When testing Stripe subscriptions locally, webhooks cannot reach `localhost` by default. The Stripe CLI solves this by forwarding test webhooks from Stripe's servers to your local development server.
+
+**One-Time Setup:**
+
+1. Install Stripe CLI (if not already installed):
+   ```bash
+   # macOS
+   brew install stripe/stripe-cli/stripe
+
+   # Other platforms: https://stripe.com/docs/stripe-cli
+   ```
+
+2. Authenticate with Stripe:
+   ```bash
+   stripe login
+   ```
+   This opens your browser to authenticate. Authentication persists across sessions.
+
+**Daily Development:**
+
+Just run `npm run dev` from the project root. The Stripe CLI will automatically:
+- Connect to your Stripe test account
+- Forward webhooks to `http://localhost:3000/api/webhooks/stripe`
+- Display webhook events in real-time (magenta output)
+
+**Verify Connection:**
+
+When the STRIPE process starts, you should see:
+```
+[STRIPE] Ready! Your webhook signing secret is whsec_xxxxx (^C to quit)
+```
+
+**Testing Subscription Flow:**
+
+1. Navigate to `/pricing` in your app
+2. Click "Subscribe" on any tier
+3. Complete checkout with test card: `4242 4242 4242 4242`
+4. Watch the webhook arrive in your terminal (magenta output)
+5. Verify subscription created in database:
+   ```sql
+   SELECT * FROM subscriptions WHERE user_id = YOUR_USER_ID;
+   ```
+
+**What Gets Synced:**
+
+When a webhook arrives, the backend automatically:
+- Creates/updates subscription record in `subscriptions` table
+- Updates user tier in `users` table
+- Handles subscription lifecycle events (created, updated, canceled)
+
+**Troubleshooting:**
+
+- **"stripe: command not found"** → Install Stripe CLI (see one-time setup)
+- **"Authentication required"** → Run `stripe login`
+- **No webhook output** → Check that Stripe CLI is running (look for magenta `[STRIPE]` prefix)
+- **Webhooks not processing** → Verify your `.env` has `STRIPE_WEBHOOK_SECRET` (optional for local dev with CLI)
+
+**Alternative: Server-Only Development**
+
+If you only need the backend with Stripe webhooks:
+```bash
+cd server
+npm run dev:stripe
+```
+
+**Webhook Events Reference:**
+
+Common events handled by the app:
+- `checkout.session.completed` - New subscription created
+- `customer.subscription.updated` - Plan changed, payment method updated
+- `customer.subscription.deleted` - Subscription canceled
+- `invoice.payment_succeeded` - Recurring payment processed
+- `invoice.payment_failed` - Payment failed
+
+See [SUBSCRIPTION-MANAGEMENT.md](../../architecture/SUBSCRIPTION-MANAGEMENT.md) for detailed webhook handling logic.
+
+---
+
 ## 📝 Core Implementation Details
 
 ### 1. Claude API Integration (Day 1)

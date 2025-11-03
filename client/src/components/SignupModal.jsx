@@ -8,6 +8,7 @@
 import { X, Mail, Lock, Github, AlertCircle, Check, Eye, EyeOff } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { flushSync } from 'react-dom';
+import { Link } from 'react-router-dom';
 import { Button } from './Button';
 import { useAuth } from '../contexts/AuthContext';
 import { toastCompact } from '../utils/toast';
@@ -31,6 +32,8 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin, subscriptionCont
   const lastProcessedTrigger = useRef(0); // Track last trigger we processed
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [termsError, setTermsError] = useState('');
 
   const modalRef = useRef(null);
   const emailInputRef = useRef(null);
@@ -67,6 +70,7 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin, subscriptionCont
       setEmailError('');
       setPasswordError('');
       setConfirmPasswordError('');
+      setTermsError('');
       clearError();
 
       // Focus email input
@@ -88,6 +92,8 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin, subscriptionCont
       setEmailError('');
       setPasswordError('');
       setConfirmPasswordError('');
+      setTermsError('');
+      setAcceptedTerms(false);
       clearError();
       setIsLoading(false);
     }
@@ -175,12 +181,14 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin, subscriptionCont
     setEmailError('');
     setPasswordError('');
     setConfirmPasswordError('');
+    setTermsError('');
     clearError();
 
     let hasErrors = false;
     let emailValidationError = '';
     let passwordValidationError = '';
     let confirmPasswordValidationError = '';
+    let termsValidationError = '';
 
     // Validate email
     if (!email.trim()) {
@@ -213,6 +221,12 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin, subscriptionCont
       hasErrors = true;
     }
 
+    // Validate terms acceptance
+    if (!acceptedTerms) {
+      termsValidationError = 'You must accept the Terms of Service and Privacy Policy';
+      hasErrors = true;
+    }
+
     // Stop if validation errors exist
     if (hasErrors) {
       // Use flushSync to ensure DOM updates before focus management
@@ -220,6 +234,7 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin, subscriptionCont
         if (emailValidationError) setEmailError(emailValidationError);
         if (passwordValidationError) setPasswordError(passwordValidationError);
         if (confirmPasswordValidationError) setConfirmPasswordError(confirmPasswordValidationError);
+        if (termsValidationError) setTermsError(termsValidationError);
         setFocusTrigger(prev => prev + 1); // Increment to trigger focus effect
       });
       return;
@@ -506,6 +521,54 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin, subscriptionCont
               {confirmPasswordError && (
                 <p id="confirm-password-error" className="mt-1.5 text-sm text-red-600" role="alert">
                   {confirmPasswordError}
+                </p>
+              )}
+            </div>
+
+            {/* Terms Acceptance Checkbox */}
+            <div>
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={acceptedTerms}
+                  onChange={(e) => {
+                    setAcceptedTerms(e.target.checked);
+                    // Clear error when user checks the box
+                    if (termsError) setTermsError('');
+                  }}
+                  className={`mt-1 w-4 h-4 text-purple-600 border-slate-300 rounded focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 cursor-pointer ${
+                    termsError ? 'border-red-300' : ''
+                  }`}
+                  disabled={isLoading}
+                  aria-invalid={!!termsError}
+                  aria-describedby={termsError ? 'terms-error' : undefined}
+                />
+                <span className="text-sm text-slate-700 group-hover:text-slate-900 select-none">
+                  I have read and accept the{' '}
+                  <Link
+                    to="/terms"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-purple-600 hover:text-purple-700 font-medium underline"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Terms of Service
+                  </Link>
+                  {' '}and{' '}
+                  <Link
+                    to="/privacy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-purple-600 hover:text-purple-700 font-medium underline"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Privacy Policy
+                  </Link>
+                </span>
+              </label>
+              {termsError && (
+                <p id="terms-error" className="mt-1.5 text-sm text-red-600 ml-7" role="alert">
+                  {termsError}
                 </p>
               )}
             </div>

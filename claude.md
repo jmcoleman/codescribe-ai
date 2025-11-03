@@ -12,7 +12,7 @@
 AI-powered documentation generator with real-time streaming, quality scoring (0-100), and WCAG 2.1 AA compliance.
 
 **Key Metrics:**
-- 1,785 tests (1,746 passing, 39 skipped) | 97.82% pass rate | 91.83% backend coverage
+- 1,955 tests (1,905 passing/skipped, 12 pre-existing failures) | 97.8% pass rate | 91.83% backend coverage
 - Lighthouse: 75/100 performance (+67%), 100/100 accessibility
 - Bundle: 78KB gzipped (-85% reduction)
 - Accessibility: 95/100 score, 0 axe violations
@@ -48,7 +48,7 @@ AI-powered documentation generator with real-time streaming, quality scoring (0-
 | Document | Use Case | Key Contents |
 |----------|----------|--------------|
 | [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) | Performance optimization | Lazy loading, bundle analysis, Core Web Vitals, maintenance |
-| [Testing README](docs/testing/README.md) | Test navigation hub | 1,786 test stats, quick commands, coverage overview |
+| [Testing README](docs/testing/README.md) | Test navigation hub | 1,955 test stats, quick commands, coverage overview |
 | [COMPONENT-TEST-COVERAGE.md](docs/testing/COMPONENT-TEST-COVERAGE.md) | Coverage details ⭐ | 13/18 components tested, category breakdown, gaps |
 | [frontend-testing-guide.md](docs/testing/frontend-testing-guide.md) | React testing patterns | Vitest + RTL, mocking, a11y, interactions |
 | [TEST-PATTERNS-GUIDE.md](docs/testing/TEST-PATTERNS-GUIDE.md) | Test fix patterns ⭐⚠️ | **103 tests fixed, 11 patterns** (Pattern 11: ES Modules!), 6 insights, 97.8% pass rate |
@@ -546,10 +546,20 @@ codescribe-ai/
 
 ## 🔄 Version History
 
-**Current: v2.4.6** - Billing Period Persistence & Help Modal UX (November 2, 2025): **Help Modal Tabbed Interface** (3-tab organization: Quick Start, Quality Scores, FAQs); **Billing Period Persistence** (monthly/annual selection persists via sessionStorage); **Stripe API Alignment** ('yearly' → 'annual' for backend compatibility); **Refined Light Theme** (HelpModal styling consistency); **Viewport Optimization** (+60px height); **Help Button UX** (desktop text button, mobile in menu only); **Character Limit** (750 chars with counter in ContactSalesModal); **1,785 tests** (1,172 frontend, 574 backend, 39 skipped, 97.82% pass rate)
+**Current: v2.5.0** - Epic 2.5: Legal Compliance - Phase 1-2 Complete (November 3, 2025): **Privacy Policy & Terms Pages** (GDPR compliance, version tracking); **Terms Acceptance System** (TermsAcceptanceModal, version-based re-acceptance workflow); **Contact Support Modal** (authenticated/unauthenticated support requests, 1000 char limit); **Footer Component** (legal links, support button); **Database Migration 010** (4 new columns, 4 indexes for terms/privacy acceptance); **Backend API** (3 legal endpoints, requireTermsAcceptance middleware); **+134 new tests** (9 new test files); **1,955 tests** (1,283 frontend, 672 backend, 97.8% pass rate)
 
 <details>
-<summary>Previous Versions (v1.0-v2.4.5)</summary>
+<summary>Previous Versions (v1.0-v2.4.6)</summary>
+
+- **v2.4.6** - Billing Period Persistence & Help Modal UX (November 2, 2025)
+  - Help Modal Tabbed Interface (3-tab organization: Quick Start, Quality Scores, FAQs)
+  - Billing Period Persistence (monthly/annual selection persists via sessionStorage)
+  - Stripe API Alignment ('yearly' → 'annual' for backend compatibility)
+  - Refined Light Theme (HelpModal styling consistency)
+  - Viewport Optimization (+60px height)
+  - Help Button UX (desktop text button, mobile in menu only)
+  - Character Limit (750 chars with counter in ContactSalesModal)
+  - 1,785 tests (1,172 frontend, 574 backend, 39 skipped, 97.82% pass rate)
 
 - **v2.4.5** - Refined Light Theme v2.0 & UX Improvements (November 2, 2025)
   - Custom Monaco Editor theme (purple keywords, green strings, cyan numbers)
@@ -679,7 +689,7 @@ codescribe-ai/
 - **v1.1** - Documentation restructure (subdirectories)
 - **v1.0** - Initial CLAUDE.md with complete doc map
 
-Last updated: October 31, 2025
+Last updated: November 3, 2025
 </details>
 
 ---

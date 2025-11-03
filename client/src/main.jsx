@@ -13,6 +13,8 @@ import { PricingPage } from './components/PricingPage.jsx'
 import { PaymentSuccess } from './components/PaymentSuccess.jsx'
 import { PaymentCancel } from './components/PaymentCancel.jsx'
 import VerifyEmail from './components/VerifyEmail.jsx'
+import TermsOfService from './pages/TermsOfService.jsx'
+import PrivacyPolicy from './pages/PrivacyPolicy.jsx'
 
 // Only load analytics and speed insights in production
 // Use hostname check - works reliably in Vercel deployments
@@ -33,6 +35,8 @@ createRoot(document.getElementById('root')).render(
             <Route path="/pricing" element={<PricingPage />} />
             <Route path="/payment/success" element={<PaymentSuccess />} />
             <Route path="/payment/cancel" element={<PaymentCancel />} />
+            <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
           </Routes>
         </AuthProvider>
       </BrowserRouter>

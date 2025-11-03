@@ -4,6 +4,7 @@ import { Header } from './components/Header';
 import { MobileMenu } from './components/MobileMenu';
 import { ControlBar } from './components/ControlBar';
 import { CodePanel } from './components/CodePanel';
+import Footer from './components/Footer';
 import { useDocGeneration } from './hooks/useDocGeneration';
 import { useUsageTracking } from './hooks/useUsageTracking';
 import { ErrorBanner } from './components/ErrorBanner';
@@ -23,6 +24,8 @@ const QualityScoreModal = lazy(() => import('./components/QualityScore').then(m 
 const ExamplesModal = lazy(() => import('./components/ExamplesModal').then(m => ({ default: m.ExamplesModal })));
 const HelpModal = lazy(() => import('./components/HelpModal').then(m => ({ default: m.HelpModal })));
 const ConfirmationModal = lazy(() => import('./components/ConfirmationModal').then(m => ({ default: m.ConfirmationModal })));
+const TermsAcceptanceModal = lazy(() => import('./components/TermsAcceptanceModal').then(m => ({ default: m.default })));
+const ContactSupportModal = lazy(() => import('./components/ContactSupportModal').then(m => ({ default: m.ContactSupportModal })));
 
 // Loading fallback for modals - full screen to prevent layout shift
 function ModalLoadingFallback() {
@@ -48,7 +51,7 @@ import {
 import { API_URL } from './config/api.js';
 
 function App() {
-  const { getToken, user } = useAuth();
+  const { getToken, user, checkLegalStatus, acceptLegalDocuments } = useAuth();
   const [code, setCode] = useState(DEFAULT_CODE);
   const [docType, setDocType] = useState('README');
   const [language, setLanguage] = useState('javascript');
@@ -60,13 +63,83 @@ function App() {
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [showUsageLimitModal, setShowUsageLimitModal] = useState(false);
   const [showUsageWarning, setShowUsageWarning] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [showSupportModal, setShowSupportModal] = useState(false);
+  const [legalStatus, setLegalStatus] = useState(null);
   const [largeCodeStats, setLargeCodeStats] = useState(null);
   const [uploadError, setUploadError] = useState(null);
   const fileInputRef = useRef(null);
+  const examplesButtonRef = useRef(null);
+
+  // Track if we just accepted terms to prevent re-checking immediately after
+  const justAcceptedTermsRef = useRef(false);
 
   // Usage tracking
   const { usage, refetch: refetchUsage, checkThreshold, canGenerate, getUsageForPeriod } = useUsageTracking();
   const [mockUsage, setMockUsage] = useState(null);
+
+  // Check legal acceptance status on mount for authenticated users
+  useEffect(() => {
+    const checkUserLegalStatus = async () => {
+      // Only check for authenticated users
+      if (!user) {
+        setLegalStatus(null);
+        setShowTermsModal(false);
+        return;
+      }
+
+      // Skip check if we just accepted terms (prevents race condition)
+      if (justAcceptedTermsRef.current) {
+        justAcceptedTermsRef.current = false;
+        return;
+      }
+
+      try {
+        const status = await checkLegalStatus();
+        setLegalStatus(status);
+
+        // Show modal if user needs to accept/re-accept terms
+        if (status.needs_reacceptance) {
+          setShowTermsModal(true);
+        }
+      } catch (error) {
+        console.error('Error checking legal status:', error);
+        // Don't block the app if legal status check fails
+        // User can still use the app, and we'll check again on next load
+      }
+    };
+
+    checkUserLegalStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]); // Only run when user changes, not when checkLegalStatus changes
+
+  // Handle legal document acceptance
+  const handleAcceptLegalDocuments = async (acceptance) => {
+    try {
+      // Set flag to prevent re-checking legal status when user state updates
+      justAcceptedTermsRef.current = true;
+
+      await acceptLegalDocuments(acceptance);
+      // Close modal on success
+      setShowTermsModal(false);
+      // Update legal status
+      setLegalStatus({
+        needs_reacceptance: false,
+        details: {
+          terms: { needs_acceptance: false },
+          privacy: { needs_acceptance: false },
+        },
+      });
+      // Show success toast
+      toastCompact('Terms accepted successfully', 'success');
+    } catch (error) {
+      console.error('Error accepting legal documents:', error);
+      // Reset flag on error so user can try again
+      justAcceptedTermsRef.current = false;
+      // Error will be shown in the modal
+      throw error;
+    }
+  };
 
   // Listen for direct banner/modal show/hide events (for UI testing)
   useEffect(() => {
@@ -131,7 +204,7 @@ function App() {
 
   // Prevent body scroll and layout shift when any modal opens
   useEffect(() => {
-    const isAnyModalOpen = showQualityModal || showExamplesModal || showHelpModal || showConfirmationModal || showUsageLimitModal;
+    const isAnyModalOpen = showQualityModal || showExamplesModal || showHelpModal || showConfirmationModal || showUsageLimitModal || showTermsModal || showSupportModal;
 
     if (isAnyModalOpen) {
       // Calculate scrollbar width BEFORE hiding overflow
@@ -149,7 +222,7 @@ function App() {
       document.body.style.overflow = '';
       document.body.style.paddingRight = '';
     };
-  }, [showQualityModal, showExamplesModal, showHelpModal]);
+  }, [showQualityModal, showExamplesModal, showHelpModal, showTermsModal, showSupportModal]);
   
   const {
     generate,
@@ -454,7 +527,7 @@ function App() {
   // Error toasts removed - errors are displayed via ErrorBanner component instead
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="h-screen bg-slate-50 flex flex-col overflow-hidden">
       {/* Skip to Main Content Link - for keyboard navigation */}
       <a
         href="#main-content"
@@ -501,7 +574,7 @@ function App() {
       />
 
       {/* Main Content */}
-      <main id="main-content" className="flex-1 w-full px-4 sm:px-6 lg:px-8 py-6">
+      <main id="main-content" className="flex-1 w-full px-4 sm:px-6 lg:px-8 py-6 overflow-auto flex flex-col">
         {/* Priority Banner Section - Show only most critical message */}
         {/* Priority Order: 1) Email Verification (handled above), 2) Claude API Error, 3) Upload Error, 4) Generation Error, 5) Usage Warning */}
         {error ? (
@@ -544,9 +617,9 @@ function App() {
         />
 
         {/* Split View: Code + Documentation */}
-        <div className="mt-6 flex flex-col lg:grid lg:grid-cols-2 gap-4 lg:gap-6">
+        <div className="mt-6 flex-1 flex flex-col lg:grid lg:grid-cols-2 gap-4 lg:gap-6 min-h-0">
           {/* Left: Code Panel */}
-          <div className="h-[500px] lg:h-[calc(100vh-220px)] flex-shrink-0">
+          <div className="h-[500px] lg:h-full flex-shrink-0">
             <CodePanel
               code={code}
               onChange={setCode}
@@ -555,11 +628,12 @@ function App() {
               onFileDrop={handleFileDrop}
               onClear={handleClear}
               onExamplesClick={() => setShowExamplesModal(true)}
+              examplesButtonRef={examplesButtonRef}
             />
           </div>
 
           {/* Right: Documentation Panel */}
-          <div className="h-[500px] lg:h-[calc(100vh-220px)] flex-shrink-0">
+          <div className="h-[500px] lg:h-full flex-shrink-0">
             <Suspense fallback={<LoadingFallback />}>
               <DocPanel
               documentation={documentation}
@@ -596,7 +670,13 @@ function App() {
         <Suspense fallback={<ModalLoadingFallback />}>
           <ExamplesModal
             isOpen={showExamplesModal}
-            onClose={() => setShowExamplesModal(false)}
+            onClose={() => {
+              setShowExamplesModal(false);
+              // Return focus to Examples button after modal closes
+              setTimeout(() => {
+                examplesButtonRef.current?.focus();
+              }, 0);
+            }}
             onLoadExample={handleLoadExample}
             currentCode={code}
           />
@@ -685,6 +765,34 @@ function App() {
           onUpgrade={handleUpgradeClick}
         />
       )}
+
+      {/* Terms Acceptance Modal - Non-dismissible when terms need acceptance */}
+      {showTermsModal && (
+        <Suspense fallback={<ModalLoadingFallback />}>
+          <TermsAcceptanceModal
+            isOpen={showTermsModal}
+            onAccept={handleAcceptLegalDocuments}
+            missingAcceptance={legalStatus?.details}
+            currentVersions={{
+              terms: legalStatus?.details?.terms?.current_version,
+              privacy: legalStatus?.details?.privacy?.current_version,
+            }}
+          />
+        </Suspense>
+      )}
+
+      {/* Contact Support Modal */}
+      {showSupportModal && (
+        <Suspense fallback={<ModalLoadingFallback />}>
+          <ContactSupportModal
+            isOpen={showSupportModal}
+            onClose={() => setShowSupportModal(false)}
+          />
+        </Suspense>
+      )}
+
+      {/* Footer */}
+      <Footer onSupportClick={() => setShowSupportModal(true)} />
     </div>
   );
 }

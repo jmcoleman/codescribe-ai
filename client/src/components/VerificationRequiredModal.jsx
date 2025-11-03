@@ -10,8 +10,10 @@ import { Mail, X, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { toastSuccess } from '../utils/toast';
 import { useAuth } from '../contexts/AuthContext';
 import { API_URL } from '../config/api';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 export default function VerificationRequiredModal({ isOpen, onClose, userEmail }) {
+  const modalRef = useFocusTrap(isOpen, onClose);
   const [isResending, setIsResending] = useState(false);
   const [error, setError] = useState(null);
   const [emailSent, setEmailSent] = useState(false);
@@ -91,6 +93,7 @@ export default function VerificationRequiredModal({ isOpen, onClose, userEmail }
         aria-labelledby="verification-modal-title"
       >
         <div
+          ref={modalRef}
           className="bg-white rounded-lg shadow-2xl max-w-md w-full p-6 relative"
           onClick={(e) => e.stopPropagation()}
         >

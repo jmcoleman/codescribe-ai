@@ -1,6 +1,6 @@
-import { X, LogOut } from 'lucide-react';
+import { X, LogOut, FileText, Shield } from 'lucide-react';
 import { useEffect, useRef, useState, lazy, Suspense } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Button } from './Button';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -21,6 +21,13 @@ export function MobileMenu({ isOpen, onClose, onHelpClick }) {
   const closeButtonRef = useRef(null);
   const previousFocusRef = useRef(null);
   const [allowClickOutside, setAllowClickOutside] = useState(false);
+
+  // Context-aware pricing button label
+  const getPricingLabel = () => {
+    if (!isAuthenticated) return 'Pricing';
+    if (user?.tier === 'free') return 'Upgrade';
+    return 'Subscription';
+  };
 
   // Delay enabling click-outside to prevent immediate close on menu open
   useEffect(() => {
@@ -146,7 +153,7 @@ export function MobileMenu({ isOpen, onClose, onHelpClick }) {
             <MenuItem
               onClick={handlePricingClick}
             >
-              Pricing
+              {getPricingLabel()}
             </MenuItem>
             <MenuItem
               onClick={handleHelpClick}
@@ -157,6 +164,17 @@ export function MobileMenu({ isOpen, onClose, onHelpClick }) {
             >
               Help & FAQ
             </MenuItem>
+
+            {/* Divider */}
+            <div className="h-px bg-slate-200 my-2" />
+
+            {/* Legal Links */}
+            <MenuLink to="/terms" icon={FileText}>
+              Terms of Service
+            </MenuLink>
+            <MenuLink to="/privacy" icon={Shield}>
+              Privacy Policy
+            </MenuLink>
           </nav>
 
           {/* Footer */}
@@ -242,5 +260,17 @@ function MenuItem({ children, onClick, onMouseEnter }) {
     >
       {children}
     </button>
+  );
+}
+
+function MenuLink({ to, icon: Icon, children }) {
+  return (
+    <Link
+      to={to}
+      className="flex items-center gap-2 w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 hover:translate-x-1 rounded-lg transition-all duration-200 motion-reduce:transition-none active:bg-slate-100"
+    >
+      <Icon className="w-4 h-4 text-slate-500" aria-hidden="true" />
+      {children}
+    </Link>
   );
 }

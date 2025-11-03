@@ -458,7 +458,7 @@ For a complete navigation guide with descriptions of all documentation, see **[D
 
 **Development & Testing:**
 - **[Dev Guide](docs/planning/mvp/05-Dev-Guide.md)** - Implementation guide with code examples
-- **[Testing Hub](docs/testing/README.md)** - 1,381+ tests, coverage reports, test patterns
+- **[Testing Hub](docs/testing/README.md)** - 1,955 tests, coverage reports, test patterns
 - **[Test Fixes Guide](docs/testing/TEST-PATTERNS-GUIDE.md)** - Testing patterns & best practices
 
 **Design & UX:**
@@ -695,10 +695,10 @@ npm run test:e2e:headed       # With browser UI (for debugging)
 - Production deployment with CI/CD (GitHub Actions)
 
 **Quality Metrics:**
-- **1,299 tests** (926 frontend, 373 backend, 10 E2E) - 97.5% pass rate
-- **Backend coverage:** 95.81% statements, 88.72% branches
-- **Frontend coverage:** 100% critical paths, 18/18 components tested
-- **E2E:** 100% pass rate across 5 browsers (Chromium, Firefox, WebKit, Chrome, Edge)
+- **1,955 tests** (1,283 frontend, 672 backend) - 97.8% pass rate
+- **Backend coverage:** 91.83% overall (649 passing, 21 skipped, 2 pre-existing failures)
+- **Frontend coverage:** 100% critical paths, all new legal/terms components tested
+- **Database:** 14 migration tests (Docker sandbox + Neon dev validation)
 
 ### ✅ Phase 2 - Epic 2.1 Complete (Oct 20-28, 2025)
 
