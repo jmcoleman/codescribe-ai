@@ -31,6 +31,7 @@ describe('UsageWarningBanner', () => {
   });
 
   it('calls onDismiss when close button clicked', () => {
+    vi.useFakeTimers();
     const onDismiss = vi.fn();
     const onUpgrade = vi.fn();
 
@@ -50,9 +51,10 @@ describe('UsageWarningBanner', () => {
     expect(onDismiss).not.toHaveBeenCalled();
 
     // Fast forward through animation
-    setTimeout(() => {
-      expect(onDismiss).toHaveBeenCalledTimes(1);
-    }, 250);
+    vi.advanceTimersByTime(200);
+    expect(onDismiss).toHaveBeenCalledTimes(1);
+
+    vi.useRealTimers();
   });
 
   it('calls onUpgrade when upgrade button clicked', () => {

@@ -157,7 +157,7 @@ describe('ContactSalesModal', () => {
     });
 
     it('should submit form without name fields when user has name', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null }); // Instant typing for test speed
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({ success: true, message: 'Inquiry sent' }),
