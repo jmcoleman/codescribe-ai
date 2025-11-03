@@ -2,14 +2,14 @@
 
 **Project:** CodeScribe AI - Intelligent Code Documentation Generator
 **Testing Status:** ✅ Comprehensive Coverage Across 3 Frameworks
-**Last Updated:** November 2, 2025 (v2.4.4)
+**Last Updated:** November 2, 2025 (v2.4.6)
 
 ---
 
 ## 📊 Quick Stats
 
-- **Total Tests:** 1,786 tests (1,747 passing, 39 skipped)
-  - **Frontend:** 1,173 tests | 18 skipped (Vitest + React Testing Library)
+- **Total Tests:** 1,785 tests (1,746 passing, 39 skipped)
+  - **Frontend:** 1,172 tests | 18 skipped (Vitest + React Testing Library)
     - Component Tests: 18/18 components (100% coverage)
     - Integration Tests: Auth, OAuth, password reset, upload, error handling, usage tracking
     - UI Tests: Toast system, modals, forms, storage helpers, pricing page
@@ -22,11 +22,11 @@
   - **Database:** 21 tests (skipped in default suite, run separately with Docker PostgreSQL)
     - Migration validation, schema checks, constraints, user quotas, anonymous quotas
   - **E2E:** 10 tests (Playwright - file upload flow)
-- **Pass Rate:** 97.82% (1,747/1,786)
+- **Pass Rate:** 97.82% (1,746/1,785)
 - **Backend Coverage:** 91.83% statements (services), 95.81% overall, 88.72% branches
 - **Test Execution Time:** Frontend ~11s, Backend ~7.1s, Database ~0.25s, E2E ~45s
 - **Coverage Target:** 90% ✅ EXCEEDED (91.83% services coverage)
-- **Recent Updates:** Contact Sales tests, emailService coverage, timeout fixes (Nov 2, 2025 - v2.4.4)
+- **Recent Updates:** Help Modal UX (tabbed interface), billing period persistence, Stripe API alignment (Nov 2, 2025 - v2.4.6)
 
 ---
 
@@ -184,9 +184,9 @@ git commit -m "Add migration XXX with tests"
 #### [Component Test Coverage](./COMPONENT-TEST-COVERAGE.md) ⭐ **START HERE**
 **Complete overview of all component tests**
 
-- ✅ **1,022 frontend tests** - 1,007 passing, 15 skipped (97.6%)
+- ✅ **1,172 frontend tests** - 1,154 passing, 18 skipped (98.5%)
 - ✅ **18/18 components** - All components tested
-- ✅ **Recent additions:** MobileMenu (26), UsageWarningBanner, UsageLimitModal, PricingPage
+- ✅ **Recent additions:** PricingPage (35 tests), ContactSalesModal, HelpModal
 
 **Key Features:**
 - Detailed test breakdown by component
@@ -221,7 +221,7 @@ git commit -m "Add migration XXX with tests"
 #### [Skipped Tests Reference](./SKIPPED-TESTS.md) ⭐ **MAINTENANCE**
 **Central reference for all intentionally skipped tests**
 
-- 36 total skipped tests (15 frontend, 21 backend)
+- 39 total skipped tests (18 frontend, 21 backend)
 - Complete justification for each skip
 - Line numbers and file paths for quick reference
 - Verification commands and review schedule
@@ -745,10 +745,10 @@ npm test -- -t "should render documentation"
 
 ---
 
-**Last Updated:** October 13, 2025
+**Last Updated:** November 2, 2025 (v2.4.6)
 **Test Framework Versions:**
 - Vitest: 3.2.4
 - React Testing Library: 16.3.0
 - Jest: 29.7.0
 
-**Status:** ✅ All tests passing, ready for production
+**Status:** ✅ All tests passing (97.82%), ready for production

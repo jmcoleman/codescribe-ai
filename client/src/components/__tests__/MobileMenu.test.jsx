@@ -9,7 +9,7 @@ import { AuthProvider } from '../../contexts/AuthContext';
  *
  * Tests the mobile navigation menu including:
  * - Opening/closing behavior
- * - Navigation items (Examples, Pricing, Help)
+ * - Navigation items (Pricing, Help)
  * - Authentication integration (Sign In button, user info)
  * - Auth modal integration (Login, Signup, Forgot Password)
  * - Accessibility (keyboard navigation, ARIA labels)
@@ -43,7 +43,6 @@ vi.mock('../../contexts/AuthContext', () => ({
 
 describe('MobileMenu', () => {
   const mockOnClose = vi.fn();
-  const mockOnExamplesClick = vi.fn();
   const mockOnHelpClick = vi.fn();
 
   beforeEach(() => {
@@ -58,7 +57,6 @@ describe('MobileMenu', () => {
         <MobileMenu
           isOpen={isOpen}
           onClose={mockOnClose}
-          onExamplesClick={mockOnExamplesClick}
           onHelpClick={mockOnHelpClick}
         />
       </AuthProvider>
@@ -95,12 +93,6 @@ describe('MobileMenu', () => {
   });
 
   describe('Navigation Items', () => {
-    it('should render Examples menu item', () => {
-      renderMobileMenu(true);
-
-      expect(screen.getByText('Examples')).toBeInTheDocument();
-    });
-
     it('should render Pricing menu item', () => {
       renderMobileMenu(true);
 
@@ -111,17 +103,6 @@ describe('MobileMenu', () => {
       renderMobileMenu(true);
 
       expect(screen.getByText('Help & FAQ')).toBeInTheDocument();
-    });
-
-    it('should call onExamplesClick and close menu when Examples clicked', async () => {
-      const user = userEvent.setup();
-      renderMobileMenu(true);
-
-      const examplesButton = screen.getByText('Examples');
-      await user.click(examplesButton);
-
-      expect(mockOnExamplesClick).toHaveBeenCalledTimes(1);
-      expect(mockOnClose).toHaveBeenCalledTimes(1);
     });
 
     it('should navigate to /pricing and close menu when Pricing clicked', async () => {

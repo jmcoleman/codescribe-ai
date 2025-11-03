@@ -37,7 +37,17 @@ export function PricingPage() {
   const [showContactSalesModal, setShowContactSalesModal] = useState(false);
   const [contactSalesTier, setContactSalesTier] = useState('enterprise');
   const [pendingSubscription, setPendingSubscription] = useState(null);
-  const [billingPeriod, setBillingPeriod] = useState('monthly'); // 'monthly' or 'yearly'
+
+  // Initialize billing period from sessionStorage or default to 'monthly'
+  const [billingPeriod, setBillingPeriod] = useState(() => {
+    const saved = getSessionItem(STORAGE_KEYS.BILLING_PERIOD);
+    return saved === 'annual' ? 'annual' : 'monthly';
+  });
+
+  // Persist billing period to sessionStorage whenever it changes
+  useEffect(() => {
+    setSessionItem(STORAGE_KEYS.BILLING_PERIOD, billingPeriod);
+  }, [billingPeriod]);
 
   // Auto-trigger checkout if user just logged in with pending subscription
   useEffect(() => {
@@ -308,9 +318,9 @@ export function PricingPage() {
               Monthly
             </button>
             <button
-              onClick={() => setBillingPeriod('yearly')}
+              onClick={() => setBillingPeriod('annual')}
               className={`px-6 py-2 rounded-md font-medium transition-all flex items-center gap-2 ${
-                billingPeriod === 'yearly'
+                billingPeriod === 'annual'
                   ? 'bg-white text-slate-900 shadow-sm'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
@@ -329,8 +339,8 @@ export function PricingPage() {
             const Icon = tier.icon;
             const isLoading = loading === tier.id;
             const isCurrentTier = user?.tier === tier.id;
-            const displayPrice = billingPeriod === 'yearly' ? tier.yearlyPrice : tier.monthlyPrice;
-            const showYearlySavings = billingPeriod === 'yearly' && tier.yearlyTotal;
+            const displayPrice = billingPeriod === 'annual' ? tier.yearlyPrice : tier.monthlyPrice;
+            const showYearlySavings = billingPeriod === 'annual' && tier.yearlyTotal;
 
             return (
               <div

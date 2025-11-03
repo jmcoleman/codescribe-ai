@@ -1,4 +1,4 @@
-import { Menu, HelpCircle, LogOut, User } from 'lucide-react';
+import { Menu, LogOut, User } from 'lucide-react';
 import { useState, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from './Button';
@@ -13,7 +13,7 @@ const ForgotPasswordModal = lazy(() => import('./ForgotPasswordModal').then(m =>
 // Feature flag: Authentication enabled (from environment variable)
 const ENABLE_AUTH = import.meta.env.VITE_ENABLE_AUTH === 'true';
 
-export function Header({ onMenuClick, onExamplesClick, onHelpClick }) {
+export function Header({ onMenuClick, onHelpClick }) {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -72,36 +72,22 @@ export function Header({ onMenuClick, onExamplesClick, onHelpClick }) {
             <div className="hidden md:flex items-center gap-2">
               <Button
                 variant="secondary"
-                onClick={onExamplesClick}
-                onMouseEnter={() => {
-                  // Preload ExamplesModal on hover to prevent layout shift on first click
-                  import('./ExamplesModal').catch(() => {});
-                }}
-              >
-                Examples
-              </Button>
-
-              <Button
-                variant="secondary"
                 onClick={() => navigate('/pricing')}
               >
                 Pricing
               </Button>
 
-              {/* Help Icon Button */}
-              <button
-                type="button"
+              {/* Help Button - Desktop (text) */}
+              <Button
+                variant="secondary"
                 onClick={onHelpClick}
                 onMouseEnter={() => {
                   // Preload HelpModal on hover to prevent layout shift on first click
                   import('./HelpModal').catch(() => {});
                 }}
-                className="p-2 hover:bg-slate-100 rounded-lg transition-all duration-200 active:scale-95 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
-                aria-label="Help and FAQ"
-                title="Help and FAQ"
               >
-                <HelpCircle className="w-5 h-5 text-slate-600" aria-hidden="true" />
-              </button>
+                Help
+              </Button>
 
               {ENABLE_AUTH && (
                 <>

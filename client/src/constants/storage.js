@@ -34,6 +34,7 @@ export const STORAGE_KEYS = {
 
   // Subscription Flow (sessionStorage - temporary subscription intent before verification)
   PENDING_SUBSCRIPTION: 'codescribeai:session:subscription:pending-intent',
+  BILLING_PERIOD: 'codescribeai:session:subscription:billing-period',
 };
 
 /**

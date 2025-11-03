@@ -2,6 +2,7 @@ import { X, Sparkles, FileText, Star, ChevronDown } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 export function HelpModal({ isOpen, onClose }) {
+  const [activeTab, setActiveTab] = useState('quickstart'); // 'quickstart', 'quality', 'faq'
   const [expandedFAQ, setExpandedFAQ] = useState(null);
   const modalRef = useRef(null);
   const closeButtonRef = useRef(null);
@@ -104,11 +105,11 @@ export function HelpModal({ isOpen, onClose }) {
     >
       <div
         ref={modalRef}
-        className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col ring-1 ring-slate-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between rounded-t-xl z-10">
+        <div className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between rounded-t-xl">
           <h2 id="help-modal-title" className="text-xl font-semibold text-slate-900">
             Help & Quick Start
           </h2>
@@ -123,161 +124,218 @@ export function HelpModal({ isOpen, onClose }) {
           </button>
         </div>
 
+        {/* Tabs */}
+        <div className="border-b border-slate-200 bg-slate-50">
+          <div className="flex px-6">
+            <button
+              type="button"
+              onClick={() => setActiveTab('quickstart')}
+              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-purple-600 ${
+                activeTab === 'quickstart'
+                  ? 'border-purple-600 text-purple-600'
+                  : 'border-transparent text-slate-600 hover:text-slate-900 hover:border-slate-300'
+              }`}
+              aria-selected={activeTab === 'quickstart'}
+              role="tab"
+            >
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4" />
+                Quick Start
+              </div>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('quality')}
+              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-purple-600 ${
+                activeTab === 'quality'
+                  ? 'border-purple-600 text-purple-600'
+                  : 'border-transparent text-slate-600 hover:text-slate-900 hover:border-slate-300'
+              }`}
+              aria-selected={activeTab === 'quality'}
+              role="tab"
+            >
+              <div className="flex items-center gap-2">
+                <Star className="w-4 h-4" />
+                Quality Scores
+              </div>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('faq')}
+              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-purple-600 ${
+                activeTab === 'faq'
+                  ? 'border-purple-600 text-purple-600'
+                  : 'border-transparent text-slate-600 hover:text-slate-900 hover:border-slate-300'
+              }`}
+              aria-selected={activeTab === 'faq'}
+              role="tab"
+            >
+              <div className="flex items-center gap-2">
+                <FileText className="w-4 h-4" />
+                FAQs
+              </div>
+            </button>
+          </div>
+        </div>
+
         {/* Content */}
-        <div className="px-6 py-6 space-y-8" id="help-modal-description">
-          {/* Quick Start Guide */}
-          <section>
-            <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-purple-600" />
-              Quick Start Guide
-            </h3>
-            <ol className="space-y-3">
-              <li className="flex gap-3">
-                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-sm font-semibold">
-                  1
-                </span>
-                <div>
-                  <p className="text-slate-900 font-medium">Paste or upload your code</p>
-                  <p className="text-sm text-slate-600 mt-1">
-                    Use the left panel to paste code directly, or click "Upload Files" to select a file from your computer.
-                  </p>
-                </div>
-              </li>
-              <li className="flex gap-3">
-                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-sm font-semibold">
-                  2
-                </span>
-                <div>
-                  <p className="text-slate-900 font-medium">Select documentation type</p>
-                  <p className="text-sm text-slate-600 mt-1">
-                    Choose README.md for project documentation, JSDoc for inline comments, API for endpoint documentation, or Architecture for system design overviews.
-                  </p>
-                </div>
-              </li>
-              <li className="flex gap-3">
-                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-sm font-semibold">
-                  3
-                </span>
-                <div>
-                  <p className="text-slate-900 font-medium">Generate and review</p>
-                  <p className="text-sm text-slate-600 mt-1">
-                    Click "Generate Docs" and watch your documentation stream in real-time. Review the quality score to see what's working well and what could be improved.
-                  </p>
-                </div>
-              </li>
-            </ol>
-          </section>
+        <div className="flex-1 overflow-y-auto px-6 py-6" id="help-modal-description" role="tabpanel">
+          {/* Quick Start Tab */}
+          {activeTab === 'quickstart' && (
+            <section>
+              <h3 className="text-lg font-semibold text-slate-900 mb-4">
+                Quick Start Guide
+              </h3>
+              <ol className="space-y-3">
+                <li className="flex gap-3">
+                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-sm font-semibold">
+                    1
+                  </span>
+                  <div>
+                    <p className="text-slate-900 font-medium">Paste or upload your code</p>
+                    <p className="text-sm text-slate-600 mt-1">
+                      Use the left panel to paste code directly, or click "Upload Files" to select a file from your computer.
+                    </p>
+                  </div>
+                </li>
+                <li className="flex gap-3">
+                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-sm font-semibold">
+                    2
+                  </span>
+                  <div>
+                    <p className="text-slate-900 font-medium">Select documentation type</p>
+                    <p className="text-sm text-slate-600 mt-1">
+                      Choose README.md for project documentation, JSDoc for inline comments, API for endpoint documentation, or Architecture for system design overviews.
+                    </p>
+                  </div>
+                </li>
+                <li className="flex gap-3">
+                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-sm font-semibold">
+                    3
+                  </span>
+                  <div>
+                    <p className="text-slate-900 font-medium">Generate and review</p>
+                    <p className="text-sm text-slate-600 mt-1">
+                      Click "Generate Docs" and watch your documentation stream in real-time. Review the quality score to see what's working well and what could be improved.
+                    </p>
+                  </div>
+                </li>
+              </ol>
+            </section>
+          )}
 
-          {/* Quality Score Explanation */}
-          <section>
-            <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-              <Star className="w-5 h-5 text-yellow-600" />
-              Understanding Quality Scores
-            </h3>
-            <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-3">
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-12 text-center">
-                  <span className="inline-block px-2 py-1 bg-green-100 text-green-800 text-xs font-bold rounded">
-                    A
-                  </span>
+          {/* Quality Score Tab */}
+          {activeTab === 'quality' && (
+            <section>
+              <h3 className="text-lg font-semibold text-slate-900 mb-4">
+                Understanding Quality Scores
+              </h3>
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-12 text-center">
+                    <span className="inline-block px-2 py-1 bg-green-100 text-green-800 text-xs font-bold rounded">
+                      A
+                    </span>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-slate-700">
+                      <strong className="text-slate-900">90-100 points:</strong> Excellent documentation with comprehensive coverage, clear examples, and professional formatting.
+                    </p>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm text-slate-700">
-                    <strong className="text-slate-900">90-100 points:</strong> Excellent documentation with comprehensive coverage, clear examples, and professional formatting.
-                  </p>
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-12 text-center">
+                    <span className="inline-block px-2 py-1 bg-green-100 text-green-800 text-xs font-bold rounded">
+                      B
+                    </span>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-slate-700">
+                      <strong className="text-slate-900">80-89 points:</strong> Good documentation with most sections covered, may need minor improvements.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-12 text-center">
+                    <span className="inline-block px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-bold rounded">
+                      C
+                    </span>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-slate-700">
+                      <strong className="text-slate-900">70-79 points:</strong> Adequate documentation with some gaps, should add more examples or details.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-12 text-center">
+                    <span className="inline-block px-2 py-1 bg-red-100 text-red-700 text-xs font-bold rounded">
+                      D-F
+                    </span>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-slate-700">
+                      <strong className="text-slate-900">Below 70:</strong> Needs significant improvement. Review the breakdown for specific suggestions.
+                    </p>
+                  </div>
                 </div>
               </div>
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-12 text-center">
-                  <span className="inline-block px-2 py-1 bg-green-100 text-green-800 text-xs font-bold rounded">
-                    B
-                  </span>
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm text-slate-700">
-                    <strong className="text-slate-900">80-89 points:</strong> Good documentation with most sections covered, may need minor improvements.
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-12 text-center">
-                  <span className="inline-block px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-bold rounded">
-                    C
-                  </span>
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm text-slate-700">
-                    <strong className="text-slate-900">70-79 points:</strong> Adequate documentation with some gaps, should add more examples or details.
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-12 text-center">
-                  <span className="inline-block px-2 py-1 bg-red-100 text-red-700 text-xs font-bold rounded">
-                    D-F
-                  </span>
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm text-slate-700">
-                    <strong className="text-slate-900">Below 70:</strong> Needs significant improvement. Review the breakdown for specific suggestions.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </section>
+            </section>
+          )}
 
-          {/* FAQ - Collapsible */}
-          <section>
-            <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-              <FileText className="w-5 h-5 text-indigo-600" />
-              Frequently Asked Questions
-            </h3>
-            <div className="space-y-2">
-              {faqs.map((faq, index) => {
-                const isExpanded = expandedFAQ === index;
-                return (
-                  <div key={index} className="border border-slate-200 rounded-lg overflow-hidden transition-all duration-200 hover:shadow-sm">
-                    <button
-                      type="button"
-                      onClick={() => toggleFAQ(index)}
-                      className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-slate-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-purple-600"
-                      aria-expanded={isExpanded}
-                      aria-controls={`faq-answer-${index}`}
-                    >
-                      <span className="text-sm font-semibold text-slate-900 pr-4">
-                        {faq.question}
-                      </span>
-                      <ChevronDown
-                        className={`w-4 h-4 text-slate-600 flex-shrink-0 transition-transform duration-300 ease-in-out ${
-                          isExpanded ? 'rotate-180' : 'rotate-0'
+          {/* FAQ Tab */}
+          {activeTab === 'faq' && (
+            <section>
+              <h3 className="text-lg font-semibold text-slate-900 mb-4">
+                Frequently Asked Questions
+              </h3>
+              <div className="space-y-2">
+                {faqs.map((faq, index) => {
+                  const isExpanded = expandedFAQ === index;
+                  return (
+                    <div key={index} className="border border-slate-200 rounded-lg overflow-hidden transition-all duration-200 hover:shadow-sm">
+                      <button
+                        type="button"
+                        onClick={() => toggleFAQ(index)}
+                        className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-slate-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-purple-600"
+                        aria-expanded={isExpanded}
+                        aria-controls={`faq-answer-${index}`}
+                      >
+                        <span className="text-sm font-semibold text-slate-900 pr-4">
+                          {faq.question}
+                        </span>
+                        <ChevronDown
+                          className={`w-4 h-4 text-slate-600 flex-shrink-0 transition-transform duration-300 ease-in-out ${
+                            isExpanded ? 'rotate-180' : 'rotate-0'
+                          }`}
+                        />
+                      </button>
+                      <div
+                        id={`faq-answer-${index}`}
+                        className={`grid transition-all duration-300 ease-in-out ${
+                          isExpanded ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
                         }`}
-                      />
-                    </button>
-                    <div
-                      id={`faq-answer-${index}`}
-                      className={`grid transition-all duration-300 ease-in-out ${
-                        isExpanded ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
-                      }`}
-                      role="region"
-                      aria-hidden={!isExpanded}
-                    >
-                      <div className="overflow-hidden">
-                        <div className="px-4 py-3 bg-slate-50 border-t border-slate-200">
-                          <p className="text-sm text-slate-700 leading-relaxed">
-                            {faq.answer}
-                          </p>
+                        role="region"
+                        aria-hidden={!isExpanded}
+                      >
+                        <div className="overflow-hidden">
+                          <div className="px-4 py-3 bg-slate-50 border-t border-slate-200">
+                            <p className="text-sm text-slate-700 leading-relaxed">
+                              {faq.answer}
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          </section>
+                  );
+                })}
+              </div>
+            </section>
+          )}
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-slate-50 border-t border-slate-200 px-6 py-4 rounded-b-xl z-10">
+        <div className="bg-slate-50 border-t border-slate-200 px-6 py-4 rounded-b-xl">
           <button
             type="button"
             onClick={handleClose}

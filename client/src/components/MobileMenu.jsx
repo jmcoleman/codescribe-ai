@@ -12,7 +12,7 @@ const ForgotPasswordModal = lazy(() => import('./ForgotPasswordModal').then(m =>
 // Feature flag: Authentication enabled (from environment variable)
 const ENABLE_AUTH = import.meta.env.VITE_ENABLE_AUTH === 'true';
 
-export function MobileMenu({ isOpen, onClose, onExamplesClick, onHelpClick }) {
+export function MobileMenu({ isOpen, onClose, onHelpClick }) {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -63,11 +63,6 @@ export function MobileMenu({ isOpen, onClose, onExamplesClick, onHelpClick }) {
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
-
-  const handleExamplesClick = () => {
-    onExamplesClick();
-    onClose();
-  };
 
   const handleHelpClick = () => {
     onHelpClick();
@@ -148,15 +143,6 @@ export function MobileMenu({ isOpen, onClose, onExamplesClick, onHelpClick }) {
 
           {/* Menu Items */}
           <nav className="flex-1 p-4 space-y-2">
-            <MenuItem
-              onClick={handleExamplesClick}
-              onMouseEnter={() => {
-                // Preload ExamplesModal on hover to prevent layout shift on first click
-                import('./ExamplesModal').catch(() => {});
-              }}
-            >
-              Examples
-            </MenuItem>
             <MenuItem
               onClick={handlePricingClick}
             >

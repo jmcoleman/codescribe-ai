@@ -1,8 +1,8 @@
 # Skipped Tests Reference
 
 **Purpose:** Central reference for all intentionally skipped tests in the codebase
-**Last Updated:** October 31, 2025 (v2.4.1)
-**Total Skipped:** 15 frontend tests + 21 backend integration tests = **36 total**
+**Last Updated:** November 2, 2025 (v2.4.6)
+**Total Skipped:** 18 frontend tests + 21 backend integration tests = **39 total**
 
 **Note:** Backend database tests (21 tests in `/src/db/__tests__/`) are **excluded** via `jest.config.cjs`, not "skipped" with `.skip()`. They run separately in Docker sandbox before deployment and are NOT counted in this document's skip tracking.
 
@@ -12,16 +12,17 @@
 
 | Category | Location | Count | Impact | Reason |
 |----------|----------|-------|--------|--------|
-| **Frontend Tests** | | **15** | | |
+| **Frontend Tests** | | **18** | | |
 | GitHub Import Feature | ControlBar | 6 | ✅ None | Feature not implemented (Phase 3) |
 | Timing-Dependent Tests | CopyButton | 4 | ✅ None | Prevent flaky CI/CD |
+| Pricing Page Tests | PricingPage | 3 | ✅ None | Feature tests (subscription intent storage) |
 | Focus Management Edge Cases | LoginModal | 2 | ✅ None | jsdom limitations |
 | Debug Logging Tests | MermaidDiagram | 2 | ✅ None | Development only |
 | Focus Restoration | QualityScore | 1 | ✅ None | jsdom limitations |
 | **Backend Tests** | | **21** | | |
 | GitHub OAuth Integration | tests/integration | 21 | ✅ None | Complex Passport.js mocking (feature works in production) |
 
-**Total Skipped:** 36 tests (15 frontend, 21 backend)
+**Total Skipped:** 39 tests (18 frontend, 21 backend)
 
 **Deployment Impact:** ✅ **NONE** - All skipped tests are intentional and documented
 

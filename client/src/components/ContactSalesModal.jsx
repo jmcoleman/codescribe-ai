@@ -17,6 +17,9 @@ export function ContactSalesModal({ isOpen, onClose, tier = 'enterprise' }) {
   const [error, setError] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [message, setMessage] = useState('');
+
+  const MAX_MESSAGE_LENGTH = 750;
 
   if (!isOpen) return null;
 
@@ -25,10 +28,8 @@ export function ContactSalesModal({ isOpen, onClose, tier = 'enterprise' }) {
     setLoading(true);
     setError('');
 
-    const formData = new FormData(e.target);
-    const message = formData.get('message');
-
     // Get name from form if user doesn't have one yet
+    const formData = new FormData(e.target);
     const providedFirstName = formData.get('firstName');
     const providedLastName = formData.get('lastName');
 
@@ -42,18 +43,28 @@ export function ContactSalesModal({ isOpen, onClose, tier = 'enterprise' }) {
         },
         body: JSON.stringify({
           tier,
-          message: message || '',
+          message: message.trim() || '',
           // Include name if provided via form
           firstName: providedFirstName || undefined,
           lastName: providedLastName || undefined
         })
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to send inquiry');
+        // Try to parse error as JSON, fallback to status text
+        let errorMessage = 'Failed to send inquiry';
+        try {
+          const data = await response.json();
+          errorMessage = data.error || data.message || errorMessage;
+        } catch (parseError) {
+          // Response wasn't JSON, use status text
+          errorMessage = response.statusText || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
+
+      // Parse success response
+      await response.json();
 
       // Show success state
       setSuccess(true);
@@ -75,6 +86,7 @@ export function ContactSalesModal({ isOpen, onClose, tier = 'enterprise' }) {
         setError('');
         setFirstName('');
         setLastName('');
+        setMessage('');
       }, 300);
     }
   };
@@ -82,34 +94,34 @@ export function ContactSalesModal({ isOpen, onClose, tier = 'enterprise' }) {
   // Success view
   if (success) {
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-        <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 relative text-center">
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8 relative text-center">
           {/* Close button */}
           <button
             onClick={handleClose}
-            className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors"
+            className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors p-1 hover:bg-slate-100 rounded-lg active:scale-95 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
             aria-label="Close modal"
           >
             <X className="w-5 h-5" />
           </button>
 
-          {/* Success icon */}
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-100 text-green-600 mb-4">
+          {/* Success icon with refined styling */}
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-50 text-green-600 mb-6 ring-2 ring-green-100 shadow-lg shadow-green-600/10">
             <CheckCircle2 className="w-12 h-12" />
           </div>
 
           {/* Success message */}
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">
+          <h2 className="text-2xl font-bold text-slate-900 mb-3">
             Message Sent!
           </h2>
-          <p className="text-slate-600 mb-6">
+          <p className="text-slate-600 leading-relaxed mb-8">
             Thank you for your interest in the {tier.charAt(0).toUpperCase() + tier.slice(1)} plan. Our sales team will be in touch soon!
           </p>
 
-          {/* Close button */}
+          {/* Close button with refined styling */}
           <button
             onClick={handleClose}
-            className="w-full py-2.5 px-4 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white rounded-lg font-semibold shadow-lg shadow-purple-600/20 transition-all duration-200"
+            className="w-full py-3 px-4 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white rounded-lg font-semibold shadow-lg shadow-purple-600/20 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
           >
             Close
           </button>
@@ -120,13 +132,13 @@ export function ContactSalesModal({ isOpen, onClose, tier = 'enterprise' }) {
 
   // Form view
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 relative">
         {/* Close button */}
         <button
           onClick={handleClose}
           disabled={loading}
-          className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors p-1 hover:bg-slate-100 rounded-lg active:scale-95 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
           aria-label="Close modal"
         >
           <X className="w-5 h-5" />
@@ -144,6 +156,13 @@ export function ContactSalesModal({ isOpen, onClose, tier = 'enterprise' }) {
         <p className="text-slate-500 mb-6">
           Interested in the {tier.charAt(0).toUpperCase() + tier.slice(1)} plan? Let's chat about your needs.
         </p>
+
+        {/* Error message */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-6">
+            <p className="text-sm text-red-800">{error}</p>
+          </div>
+        )}
 
         {/* Form */}
         <form onSubmit={handleContactSales} className="space-y-4">
@@ -194,25 +213,26 @@ export function ContactSalesModal({ isOpen, onClose, tier = 'enterprise' }) {
 
           {/* Optional message */}
           <div>
-            <label htmlFor="message" className="block text-sm font-medium text-slate-700 mb-2">
-              Additional Information (Optional)
-            </label>
+            <div className="flex items-center justify-between mb-2">
+              <label htmlFor="message" className="block text-sm font-medium text-slate-700">
+                Additional Information (Optional)
+              </label>
+              <span className={`text-xs ${message.length > MAX_MESSAGE_LENGTH ? 'text-red-600 font-medium' : 'text-slate-500'}`}>
+                {message.length}/{MAX_MESSAGE_LENGTH}
+              </span>
+            </div>
             <textarea
               id="message"
               name="message"
               rows={4}
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              maxLength={MAX_MESSAGE_LENGTH}
               placeholder="Tell us about your team size, specific needs, or any questions..."
               className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={loading}
             />
           </div>
-
-          {/* Error message */}
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-              <p className="text-sm text-red-800">{error}</p>
-            </div>
-          )}
 
           {/* Actions */}
           <div className="flex gap-3">
