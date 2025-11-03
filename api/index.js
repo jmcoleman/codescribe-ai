@@ -40,6 +40,7 @@ app.use(express.json({ limit: '10mb' }));
 // Session configuration (required for authentication)
 if (ENABLE_AUTH) {
   // Use PostgreSQL session storage for Vercel serverless
+  // connectPgSimple is a function that takes the session constructor
   const PgSession = connectPgSimple(session);
 
   app.use(
@@ -58,6 +59,7 @@ if (ENABLE_AUTH) {
       cookie: {
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
+        sameSite: 'lax', // Required for OAuth redirects
         maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
       }
     })
