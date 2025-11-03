@@ -134,12 +134,14 @@ export function ResetPassword() {
         {/* Success Message */}
         {successMessage && (
           <div
-            className="mb-6 flex items-start gap-3 p-4 bg-green-50 border border-green-200 rounded-lg"
+            className="mb-6 flex items-start gap-3 p-4 bg-green-50 border border-green-200 rounded-lg shadow-sm ring-1 ring-green-100"
             role="alert"
           >
-            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
-            <div className="space-y-1">
-              <p className="text-sm text-green-800 font-medium">{successMessage}</p>
+            <div className="flex-shrink-0 flex items-center justify-center w-5 h-5 rounded-full bg-green-100 mt-0.5">
+              <CheckCircle className="w-4 h-4 text-green-600" aria-hidden="true" />
+            </div>
+            <div className="space-y-1 flex-1">
+              <p className="text-sm text-green-800 font-semibold leading-relaxed">{successMessage}</p>
               <p className="text-xs text-green-700">Redirecting to home page...</p>
             </div>
           </div>
@@ -148,11 +150,13 @@ export function ResetPassword() {
         {/* Error Message */}
         {errorMessage && !successMessage && (
           <div
-            className="mb-6 flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-lg"
+            className="mb-6 flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-lg shadow-sm ring-1 ring-red-100"
             role="alert"
           >
-            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
-            <p className="text-sm text-red-800">{errorMessage}</p>
+            <div className="flex-shrink-0 flex items-center justify-center w-5 h-5 rounded-full bg-red-100 mt-0.5">
+              <AlertCircle className="w-4 h-4 text-red-600" aria-hidden="true" />
+            </div>
+            <p className="text-sm text-red-800 font-medium leading-relaxed flex-1">{errorMessage}</p>
           </div>
         )}
 

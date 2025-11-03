@@ -294,7 +294,7 @@ describe('PricingPage', () => {
         const parsedIntent = JSON.parse(storedIntent);
         expect(parsedIntent).toEqual({
           tier: 'starter',
-          billingPeriod: 'yearly',
+          billingPeriod: 'annual',
           tierName: 'Starter',
         });
       });
@@ -433,7 +433,7 @@ describe('PricingPage', () => {
             method: 'POST',
             body: JSON.stringify({
               tier: 'starter',
-              billingPeriod: 'yearly',
+              billingPeriod: 'annual',
             }),
           })
         );
@@ -741,7 +741,7 @@ describe('PricingPage', () => {
 
         expect(parsedIntent).toEqual({
           tier: 'pro',
-          billingPeriod: 'yearly',
+          billingPeriod: 'annual',
           tierName: 'Pro',
         });
       });
@@ -778,7 +778,7 @@ describe('PricingPage', () => {
       await waitFor(() => {
         const storedIntent = sessionStorage.getItem(STORAGE_KEYS.PENDING_SUBSCRIPTION);
         const parsedIntent = JSON.parse(storedIntent);
-        expect(parsedIntent.billingPeriod).toBe('yearly');
+        expect(parsedIntent.billingPeriod).toBe('annual');
       });
     });
   });

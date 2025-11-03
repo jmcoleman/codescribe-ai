@@ -487,7 +487,6 @@ function App() {
       {/* Header */}
       <Header
         onMenuClick={() => setShowMobileMenu(true)}
-        onExamplesClick={() => setShowExamplesModal(true)}
         onHelpClick={() => setShowHelpModal(true)}
       />
 
@@ -498,7 +497,6 @@ function App() {
       <MobileMenu
         isOpen={showMobileMenu}
         onClose={() => setShowMobileMenu(false)}
-        onExamplesClick={() => setShowExamplesModal(true)}
         onHelpClick={() => setShowHelpModal(true)}
       />
 
@@ -548,7 +546,7 @@ function App() {
         {/* Split View: Code + Documentation */}
         <div className="mt-6 flex flex-col lg:grid lg:grid-cols-2 gap-4 lg:gap-6">
           {/* Left: Code Panel */}
-          <div className="h-[500px] lg:h-[calc(100vh-280px)] flex-shrink-0">
+          <div className="h-[500px] lg:h-[calc(100vh-220px)] flex-shrink-0">
             <CodePanel
               code={code}
               onChange={setCode}
@@ -556,11 +554,12 @@ function App() {
               language={language}
               onFileDrop={handleFileDrop}
               onClear={handleClear}
+              onExamplesClick={() => setShowExamplesModal(true)}
             />
           </div>
 
           {/* Right: Documentation Panel */}
-          <div className="h-[500px] lg:h-[calc(100vh-280px)] flex-shrink-0">
+          <div className="h-[500px] lg:h-[calc(100vh-220px)] flex-shrink-0">
             <Suspense fallback={<LoadingFallback />}>
               <DocPanel
               documentation={documentation}

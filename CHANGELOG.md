@@ -9,6 +9,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.4.6] - 2025-11-02
+
+**Status:** ✅ Billing Period Persistence & Help Modal UX
+
+### Added
+- **Help Modal Tabbed Interface**
+  - 3-tab organization: Quick Start, Quality Scores, FAQs
+  - Better content scannability and organization
+  - Smooth tab transitions with purple accent styling
+  - Proper ARIA attributes for accessibility
+
+- **Character Limit with Counter**
+  - 750 character limit for ContactSalesModal textarea
+  - Real-time character counter with visual feedback
+  - Red text when approaching/at limit
+
+- **Billing Period Persistence**
+  - Added `BILLING_PERIOD` to sessionStorage constants
+  - Persists monthly/annual selection across Stripe checkout navigation
+  - User returns to their selected billing view after checkout
+
+### Changed
+- **Help Button UX Improvements**
+  - Desktop: Text "Help" button (matches Pricing button style)
+  - Mobile: Removed redundant icon from header (kept in hamburger menu only)
+  - Cleaner, more discoverable navigation
+
+- **Viewport Height Optimization**
+  - Increased CodePanel/DocPanel height by 60px (from calc(100vh-280px) to calc(100vh-220px))
+  - Reduced whitespace, better use of available screen space
+
+- **Refined Light Theme Consistency**
+  - Applied to HelpModal: shadow-2xl, ring-1 ring-slate-200
+  - Matches ContactSalesModal and ResetPassword styling
+  - Consistent backdrop-blur-sm across all modals
+
+### Fixed
+- **Stripe API Alignment**
+  - Changed 'yearly' to 'annual' throughout PricingPage to match backend API
+  - Resolved 400 Bad Request errors during checkout
+  - Updated 4 PricingPage tests to expect 'annual' instead of 'yearly'
+
+### Testing
+- **Test Results**: 1,746 passed | 39 skipped (1,785 total) | 97.82% pass rate
+  - Frontend: 1,172 passed | 18 skipped (1,190 total)
+  - Backend: 574 passed | 21 skipped (595 total)
+
+---
+
 ## [2.4.5] - 2025-11-02
 
 **Status:** ✅ Refined Light Theme v2.0 & UX Improvements

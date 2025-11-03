@@ -12,7 +12,7 @@
 AI-powered documentation generator with real-time streaming, quality scoring (0-100), and WCAG 2.1 AA compliance.
 
 **Key Metrics:**
-- 1,786 tests (1,747 passing, 39 skipped) | 97.82% pass rate | 91.83% backend coverage
+- 1,785 tests (1,746 passing, 39 skipped) | 97.82% pass rate | 91.83% backend coverage
 - Lighthouse: 75/100 performance (+67%), 100/100 accessibility
 - Bundle: 78KB gzipped (-85% reduction)
 - Accessibility: 95/100 score, 0 axe violations
@@ -436,9 +436,9 @@ cd .. && cd server && npm test 2>&1 | grep "Tests:"
 # Output example: Tests:       21 skipped, 373 passed, 394 total
 
 # 2. Update documentation with new counts
-# - claude.md line 15: "1,786 tests (1,747 passing, 39 skipped)"
-# - claude.md line 51: "1,786 test stats"
-# - claude.md line 479: "1,786 tests (1,173 frontend, 574 backend, 39 skipped)"
+# - claude.md line 15: "1,785 tests (1,746 passing, 39 skipped)"
+# - claude.md line 51: "1,785 test stats"
+# - claude.md line 479: "1,785 tests (1,172 frontend, 574 backend, 39 skipped)"
 # - docs/testing/README.md lines 11-27: Update all test breakdowns
 
 # 3. Verify skipped tests documentation is current
@@ -479,7 +479,7 @@ cd server && npm test 2>&1 | grep "skipped"
 **Final Metrics:**
 - Accessibility: 95/100, WCAG 2.1 AA, 0 axe violations
 - Performance: 75/100 Lighthouse (+67%), 78KB bundle (-85%)
-- Testing: 1,786 tests (1,173 frontend, 574 backend, 39 skipped), 97.82% passing
+- Testing: 1,785 tests (1,172 frontend, 574 backend, 39 skipped), 97.82% passing
 - Deployment: Vercel + GitHub Actions CI/CD, custom domain
 
 **Optional:** README screenshots, demo video, extended manual a11y testing
@@ -546,10 +546,26 @@ codescribe-ai/
 
 ## 🔄 Version History
 
-**Current: v2.4.4** - Contact Sales & Test Coverage (November 2, 2025): **Contact Sales Feature** (authenticated contact form, tier validation, email service integration, 28 comprehensive tests); **Backend Test Coverage** (24 emailService tests added, 91.83% coverage achieved, all CI thresholds met); **Test Documentation** (Pattern 11: ES Modules in Backend Tests, Pattern 11 added to CLAUDE.md guidelines); **UsageWarningBanner Fix** (timeout cleanup to prevent memory leaks); **1,786 tests** (1,173 frontend, 574 backend, 39 skipped, 97.82% pass rate); v2.4.4-BACKEND-TEST-FIX.md documentation
+**Current: v2.4.6** - Billing Period Persistence & Help Modal UX (November 2, 2025): **Help Modal Tabbed Interface** (3-tab organization: Quick Start, Quality Scores, FAQs); **Billing Period Persistence** (monthly/annual selection persists via sessionStorage); **Stripe API Alignment** ('yearly' → 'annual' for backend compatibility); **Refined Light Theme** (HelpModal styling consistency); **Viewport Optimization** (+60px height); **Help Button UX** (desktop text button, mobile in menu only); **Character Limit** (750 chars with counter in ContactSalesModal); **1,785 tests** (1,172 frontend, 574 backend, 39 skipped, 97.82% pass rate)
 
 <details>
-<summary>Previous Versions (v1.0-v2.4.1)</summary>
+<summary>Previous Versions (v1.0-v2.4.5)</summary>
+
+- **v2.4.5** - Refined Light Theme v2.0 & UX Improvements (November 2, 2025)
+  - Custom Monaco Editor theme (purple keywords, green strings, cyan numbers)
+  - Custom Prism syntax highlighting matching Monaco theme
+  - Mermaid diagram enhancements (darkened borders, better hierarchy)
+  - Pricing Page large display improvements (constrained cards, better spacing)
+  - Contact Sales Modal intent cleanup (sessionStorage cleanup on close)
+  - Fixed code block background artifacts and Monaco editor rendering
+  - 1,786 tests (1,173 frontend, 574 backend, 39 skipped, 97.82% pass rate)
+
+- **v2.4.4** - Contact Sales & Test Coverage (November 2, 2025)
+  - Contact Sales Feature (authenticated contact form, tier validation, 28 tests)
+  - Backend Test Coverage (24 emailService tests, 91.83% coverage)
+  - Pattern 11: ES Modules in Backend Tests documentation
+  - UsageWarningBanner Fix (timeout cleanup to prevent memory leaks)
+  - 1,786 tests (1,173 frontend, 574 backend, 39 skipped, 97.82% pass rate)
 
 - **v2.4.1** - Email Rate Limiting & UI Fixes (October 31, 2025)
   - Email Rate Limiting System (5-min cooldown, 10/day limits)

@@ -18,13 +18,9 @@ vi.mock('../LazyMonacoEditor', () => ({
   ),
 }));
 
-// Mock CopyButton
-vi.mock('../CopyButton', () => ({
-  CopyButton: ({ text, ariaLabel }) => (
-    <button data-testid="copy-button" aria-label={ariaLabel}>
-      Copy ({text?.length} chars)
-    </button>
-  ),
+// Mock toast utilities
+vi.mock('../utils/toast', () => ({
+  toastCopied: vi.fn(),
 }));
 
 describe('CodePanel', () => {
@@ -39,12 +35,6 @@ describe('CodePanel', () => {
     it('renders the code panel with default props', () => {
       render(<CodePanel {...defaultProps} />);
       expect(screen.getByText('example.js')).toBeInTheDocument();
-    });
-
-    it('renders traffic light decorations', () => {
-      const { container } = render(<CodePanel {...defaultProps} />);
-      const trafficLights = container.querySelectorAll('.w-3.h-3.rounded-full');
-      expect(trafficLights).toHaveLength(3);
     });
 
     it('displays filename in header', () => {
@@ -108,27 +98,21 @@ describe('CodePanel', () => {
     });
   });
 
-  describe('CopyButton Integration', () => {
-    it('renders CopyButton when code is present', () => {
+  describe('Copy Button', () => {
+    it('renders copy button when code is present', () => {
       render(<CodePanel {...defaultProps} code="some code" />);
-      expect(screen.getByTestId('copy-button')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /copy code to clipboard/i })).toBeInTheDocument();
+      expect(screen.getByText('Copy')).toBeInTheDocument();
     });
 
-    it('does not render CopyButton when code is empty', () => {
+    it('does not render copy button when code is empty', () => {
       render(<CodePanel {...defaultProps} code="" />);
-      expect(screen.queryByTestId('copy-button')).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /copy code to clipboard/i })).not.toBeInTheDocument();
     });
 
-    it('passes correct aria-label to CopyButton', () => {
+    it('shows "Copy" text by default', () => {
       render(<CodePanel {...defaultProps} />);
-      const copyButton = screen.getByTestId('copy-button');
-      expect(copyButton).toHaveAttribute('aria-label', 'Copy code to clipboard');
-    });
-
-    it('passes code content to CopyButton', () => {
-      render(<CodePanel {...defaultProps} code="test code" />);
-      // CopyButton mock shows "(X chars)" format
-      expect(screen.getByText(/\(9 chars\)/i)).toBeInTheDocument();
+      expect(screen.getByText('Copy')).toBeInTheDocument();
     });
   });
 
@@ -261,10 +245,10 @@ describe('CodePanel', () => {
       expect(container.querySelector('div')).toBeInTheDocument();
     });
 
-    it('CopyButton has aria-label', () => {
+    it('copy button has aria-label', () => {
       render(<CodePanel {...defaultProps} />);
-      const copyButton = screen.getByTestId('copy-button');
-      expect(copyButton).toHaveAttribute('aria-label');
+      const copyButton = screen.getByRole('button', { name: /copy code to clipboard/i });
+      expect(copyButton).toHaveAttribute('aria-label', 'Copy code to clipboard');
     });
 
     it('displays filename for screen readers', () => {
@@ -406,6 +390,35 @@ describe('CodePanel', () => {
 
       // Overlay should not appear
       expect(screen.queryByText('Drop file to upload')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('Examples Button', () => {
+    it('shows examples button when onExamplesClick is provided', () => {
+      const onExamplesClick = vi.fn();
+      render(<CodePanel {...defaultProps} onExamplesClick={onExamplesClick} />);
+
+      const examplesButton = screen.getByRole('button', { name: /load code examples/i });
+      expect(examplesButton).toBeInTheDocument();
+      expect(examplesButton).toHaveTextContent('Examples');
+    });
+
+    it('does not show examples button when onExamplesClick is not provided', () => {
+      render(<CodePanel {...defaultProps} />);
+
+      const examplesButton = screen.queryByRole('button', { name: /load code examples/i });
+      expect(examplesButton).not.toBeInTheDocument();
+    });
+
+    it('calls onExamplesClick when examples button is clicked', async () => {
+      const onExamplesClick = vi.fn();
+      const user = userEvent.setup();
+      render(<CodePanel {...defaultProps} onExamplesClick={onExamplesClick} />);
+
+      const examplesButton = screen.getByRole('button', { name: /load code examples/i });
+      await user.click(examplesButton);
+
+      expect(onExamplesClick).toHaveBeenCalledTimes(1);
     });
   });
 
