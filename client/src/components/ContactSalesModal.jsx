@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { X, Mail, CheckCircle2, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { API_URL } from '../config/api';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 /**
  * Contact Sales Modal
@@ -12,6 +13,7 @@ import { API_URL } from '../config/api';
  */
 export function ContactSalesModal({ isOpen, onClose, tier = 'enterprise' }) {
   const { user, getToken } = useAuth();
+  const modalRef = useFocusTrap(isOpen, onClose);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
@@ -95,7 +97,7 @@ export function ContactSalesModal({ isOpen, onClose, tier = 'enterprise' }) {
   if (success) {
     return (
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-        <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8 relative text-center">
+        <div ref={modalRef} className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8 relative text-center">
           {/* Close button */}
           <button
             onClick={handleClose}
@@ -133,7 +135,7 @@ export function ContactSalesModal({ isOpen, onClose, tier = 'enterprise' }) {
   // Form view
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 relative">
+      <div ref={modalRef} className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 relative">
         {/* Close button */}
         <button
           onClick={handleClose}

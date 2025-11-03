@@ -87,7 +87,8 @@ class User {
   static async findOrCreateByGithub({ githubId, email }) {
     // Try to find existing user by GitHub ID
     let result = await sql`
-      SELECT id, email, github_id, tier, email_verified, created_at
+      SELECT id, email, github_id, tier, email_verified,
+             terms_accepted_at, terms_version_accepted, privacy_accepted_at, privacy_version_accepted, created_at
       FROM users
       WHERE github_id = ${githubId}
     `;
@@ -98,7 +99,8 @@ class User {
 
     // Try to find by email and link GitHub account
     result = await sql`
-      SELECT id, email, github_id, tier, email_verified, created_at
+      SELECT id, email, github_id, tier, email_verified,
+             terms_accepted_at, terms_version_accepted, privacy_accepted_at, privacy_version_accepted, created_at
       FROM users
       WHERE email = ${email}
     `;
@@ -110,7 +112,8 @@ class User {
         UPDATE users
         SET github_id = ${githubId}, email_verified = true, updated_at = NOW()
         WHERE id = ${result.rows[0].id}
-        RETURNING id, email, github_id, tier, email_verified, created_at
+        RETURNING id, email, github_id, tier, email_verified,
+                  terms_accepted_at, terms_version_accepted, privacy_accepted_at, privacy_version_accepted, created_at
       `;
       return updateResult.rows[0];
     }
@@ -120,7 +123,8 @@ class User {
     const createResult = await sql`
       INSERT INTO users (email, github_id, tier, email_verified)
       VALUES (${email}, ${githubId}, 'free', true)
-      RETURNING id, email, github_id, tier, email_verified, created_at
+      RETURNING id, email, github_id, tier, email_verified,
+                terms_accepted_at, terms_version_accepted, privacy_accepted_at, privacy_version_accepted, created_at
     `;
 
     return createResult.rows[0];
@@ -133,7 +137,8 @@ class User {
    */
   static async findById(id) {
     const result = await sql`
-      SELECT id, email, first_name, last_name, github_id, tier, stripe_customer_id, customer_created_via, email_verified, created_at
+      SELECT id, email, first_name, last_name, github_id, tier, stripe_customer_id, customer_created_via, email_verified,
+             terms_accepted_at, terms_version_accepted, privacy_accepted_at, privacy_version_accepted, created_at
       FROM users
       WHERE id = ${id}
     `;
@@ -148,7 +153,8 @@ class User {
    */
   static async findByEmail(email) {
     const result = await sql`
-      SELECT id, email, first_name, last_name, password_hash, github_id, tier, stripe_customer_id, customer_created_via, created_at
+      SELECT id, email, first_name, last_name, password_hash, github_id, tier, stripe_customer_id, customer_created_via,
+             email_verified, terms_accepted_at, terms_version_accepted, privacy_accepted_at, privacy_version_accepted, created_at
       FROM users
       WHERE email = ${email}
     `;
@@ -416,6 +422,89 @@ class User {
     `;
 
     return result.rows[0];
+  }
+
+  /**
+   * Record user's acceptance of Terms of Service
+   * @param {number} id - User ID
+   * @param {string} version - Terms version (e.g., '2025-11-02')
+   * @returns {Promise<Object>} Updated user object
+   */
+  static async acceptTerms(id, version) {
+    const result = await sql`
+      UPDATE users
+      SET terms_accepted_at = NOW(),
+          terms_version_accepted = ${version},
+          updated_at = NOW()
+      WHERE id = ${id}
+      RETURNING id, email, terms_accepted_at, terms_version_accepted
+    `;
+
+    return result.rows[0];
+  }
+
+  /**
+   * Record user's acceptance of Privacy Policy
+   * @param {number} id - User ID
+   * @param {string} version - Privacy policy version (e.g., '2025-11-02')
+   * @returns {Promise<Object>} Updated user object
+   */
+  static async acceptPrivacyPolicy(id, version) {
+    const result = await sql`
+      UPDATE users
+      SET privacy_accepted_at = NOW(),
+          privacy_version_accepted = ${version},
+          updated_at = NOW()
+      WHERE id = ${id}
+      RETURNING id, email, privacy_accepted_at, privacy_version_accepted
+    `;
+
+    return result.rows[0];
+  }
+
+  /**
+   * Record user's acceptance of both Terms and Privacy Policy
+   * @param {number} id - User ID
+   * @param {string} termsVersion - Terms version
+   * @param {string} privacyVersion - Privacy policy version
+   * @returns {Promise<Object>} Updated user object
+   */
+  static async acceptLegalDocuments(id, termsVersion, privacyVersion) {
+    const result = await sql`
+      UPDATE users
+      SET terms_accepted_at = NOW(),
+          terms_version_accepted = ${termsVersion},
+          privacy_accepted_at = NOW(),
+          privacy_version_accepted = ${privacyVersion},
+          updated_at = NOW()
+      WHERE id = ${id}
+      RETURNING id, email, terms_accepted_at, terms_version_accepted,
+                privacy_accepted_at, privacy_version_accepted
+    `;
+
+    return result.rows[0];
+  }
+
+  /**
+   * Get users who need to re-accept legal documents
+   * (Users whose accepted version doesn't match current version)
+   * @param {string} currentTermsVersion - Current Terms version
+   * @param {string} currentPrivacyVersion - Current Privacy version
+   * @returns {Promise<Array>} Users who need to re-accept
+   */
+  static async getUsersNeedingReacceptance(currentTermsVersion, currentPrivacyVersion) {
+    const result = await sql`
+      SELECT id, email, terms_version_accepted, privacy_version_accepted,
+             terms_accepted_at, privacy_accepted_at
+      FROM users
+      WHERE terms_version_accepted != ${currentTermsVersion}
+         OR privacy_version_accepted != ${currentPrivacyVersion}
+         OR terms_version_accepted IS NULL
+         OR privacy_version_accepted IS NULL
+      ORDER BY id
+    `;
+
+    return result.rows;
   }
 }
 

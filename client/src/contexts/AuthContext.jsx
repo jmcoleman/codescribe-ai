@@ -28,6 +28,8 @@ const dummyAuthContext = {
   getToken: () => null,
   refreshUser: async () => {},
   clearError: () => {},
+  acceptLegalDocuments: async () => { throw new Error('Authentication is disabled'); },
+  checkLegalStatus: async () => ({ needs_reacceptance: false }),
 };
 
 export function AuthProvider({ children }) {
@@ -298,6 +300,75 @@ export function AuthProvider({ children }) {
     setError(null);
   };
 
+  /**
+   * Accept current Terms of Service and Privacy Policy
+   * @param {Object} acceptance - Object with accept_terms and accept_privacy booleans
+   * @returns {Promise<Object>} Success result or error
+   */
+  const acceptLegalDocuments = async (acceptance) => {
+    try {
+      const token = getStorageItem(STORAGE_KEYS.AUTH_TOKEN);
+
+      if (!token) {
+        throw new Error('Not authenticated');
+      }
+
+      const response = await fetch(`${API_URL}/api/legal/accept`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(acceptance),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to record legal acceptance');
+      }
+
+      // Refresh user data to get updated legal acceptance fields
+      await refreshUser();
+
+      return { success: true, data };
+    } catch (err) {
+      console.error('Legal acceptance error:', err);
+      setError(err.message);
+      throw err;
+    }
+  };
+
+  /**
+   * Check if user needs to re-accept legal documents
+   * @returns {Promise<Object>} Status object with needs_reacceptance flag
+   */
+  const checkLegalStatus = async () => {
+    try {
+      const token = getStorageItem(STORAGE_KEYS.AUTH_TOKEN);
+
+      if (!token) {
+        return { needs_reacceptance: false };
+      }
+
+      const response = await fetch(`${API_URL}/api/legal/status`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to check legal status');
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (err) {
+      console.error('Error checking legal status:', err);
+      return { needs_reacceptance: false };
+    }
+  };
+
   const value = {
     user,
     isLoading,
@@ -311,6 +382,8 @@ export function AuthProvider({ children }) {
     getToken,
     refreshUser,
     clearError,
+    acceptLegalDocuments,
+    checkLegalStatus,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

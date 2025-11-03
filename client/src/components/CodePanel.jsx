@@ -1,6 +1,6 @@
 import { lazy, Suspense, useState } from 'react';
-import { Zap, Loader2, Upload, RefreshCw, BookOpen, Copy, Check } from 'lucide-react';
-import { toastCopied } from '../utils/toast';
+import { Zap, Loader2, Upload, RefreshCw, BookOpen } from 'lucide-react';
+import { CopyButton } from './CopyButton';
 
 // Lazy load Monaco Editor to reduce initial bundle size
 const LazyMonacoEditor = lazy(() =>
@@ -27,10 +27,11 @@ export function CodePanel({
   readOnly = false,
   onFileDrop,
   onClear,
-  onExamplesClick
+  onExamplesClick,
+  examplesButtonRef
 }) {
   const [isDragging, setIsDragging] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
 
   // Count lines and characters
   const lines = code.split('\n').length;
@@ -86,6 +87,10 @@ export function CodePanel({
       {/* Header */}
       <div className="flex items-center justify-between px-4 h-12 bg-slate-50 border-b border-slate-200">
         <h2 className="sr-only">Code Input</h2>
+        {/* Screen reader announcement for clear action */}
+        <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+          {isClearing && 'Editor cleared'}
+        </div>
         {/* Left: Filename + Language badge */}
         <div className="flex items-center gap-2">
           <span className="text-sm text-slate-600">{filename}</span>
@@ -97,6 +102,7 @@ export function CodePanel({
           {onExamplesClick && (
             <button
               type="button"
+              ref={examplesButtonRef}
               onClick={() => {
                 // Preload ExamplesModal on click
                 import('./ExamplesModal').catch(() => {});
@@ -117,39 +123,31 @@ export function CodePanel({
           {code && !readOnly && onClear && (
             <button
               type="button"
-              onClick={onClear}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 rounded-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
+              onClick={() => {
+                setIsClearing(true);
+                onClear();
+                // Reset clearing state after animation completes
+                setTimeout(() => setIsClearing(false), 500);
+              }}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 rounded-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 ${isClearing ? 'opacity-75 pointer-events-none' : ''}`}
               aria-label="Clear editor"
               title="Clear editor"
             >
-              <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
+              <RefreshCw
+                className={`w-3.5 h-3.5 ${isClearing ? 'animate-spin-once' : ''}`}
+                aria-hidden="true"
+              />
               <span>Clear</span>
             </button>
           )}
           {code && (
-            <button
-              type="button"
-              onClick={async () => {
-                try {
-                  await navigator.clipboard.writeText(code);
-                  setCopied(true);
-                  toastCopied('Code copied to clipboard');
-                  setTimeout(() => setCopied(false), 2000);
-                } catch (err) {
-                  console.error('Failed to copy:', err);
-                }
-              }}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 rounded-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
-              aria-label={copied ? 'Copied!' : 'Copy code to clipboard'}
-              title={copied ? 'Copied!' : 'Copy code to clipboard'}
-            >
-              {copied ? (
-                <Check className="w-3.5 h-3.5 text-green-600" aria-hidden="true" />
-              ) : (
-                <Copy className="w-3.5 h-3.5" aria-hidden="true" />
-              )}
-              <span>{copied ? 'Copied' : 'Copy'}</span>
-            </button>
+            <CopyButton
+              text={code}
+              size="md"
+              variant="outline"
+              ariaLabel="Copy code to clipboard"
+              showLabel={true}
+            />
           )}
         </div>
       </div>

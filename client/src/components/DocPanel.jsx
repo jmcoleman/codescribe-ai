@@ -173,7 +173,8 @@ export function DocPanel({
               docType={qualityScore?.docType || 'documentation'}
               size="md"
               variant="outline"
-              ariaLabel="Download doc"
+              ariaLabel="Download documentation"
+              showLabel={true}
             />
           )}
 
@@ -183,7 +184,8 @@ export function DocPanel({
               text={documentation}
               size="md"
               variant="outline"
-              ariaLabel="Copy doc"
+              ariaLabel="Copy documentation"
+              showLabel={true}
             />
           )}
         </div>

@@ -158,6 +158,15 @@ router.post('/create-checkout-session', requireAuth, requireVerifiedEmail, async
       ],
       success_url: `${CHECKOUT_URLS.success}?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: CHECKOUT_URLS.cancel,
+      // Consent collection for Terms of Service and Privacy Policy
+      consent_collection: {
+        terms_of_service: 'required',
+      },
+      custom_text: {
+        terms_of_service_acceptance: {
+          message: 'I agree to the [Terms of Service](https://codescribeai.com/terms) and [Privacy Policy](https://codescribeai.com/privacy)',
+        },
+      },
       metadata: {
         userId: user.id,
         tier: tier,

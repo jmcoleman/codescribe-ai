@@ -66,8 +66,8 @@
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
     "footerLeft": "<strong>CodeScribe AI</strong> \u00b7 Strategic Roadmap v3.5",
-    "footer": "Phase 1 Complete \u00b7 Phase 2: Epic 2.4 Complete (v2.4.6 - Billing Period Persistence & Help Modal UX) \u00b7 Launch: Mid-Jan 2026",
-    "lastUpdated": "November 2, 2025"
+    "footer": "Phase 1 Complete \u00b7 Phase 2: Epic 2.5 Phase 1-2 Complete (Legal Compliance) \u00b7 Launch: Mid-Jan 2026",
+    "lastUpdated": "November 3, 2025"
   },
   "columns": [
     {
@@ -396,6 +396,35 @@
             "Complete test coverage: 9 files updated with test fixes",
             "1,785 tests (1,746 passing, 39 skipped, 0 failing) - 97.82% pass rate"
           ]
+        },
+        {
+          "version": "v2.5.0",
+          "title": "Epic 2.5: Legal Compliance - Phase 1-2",
+          "duration": "2 days",
+          "status": "\u2713 Complete",
+          "completedDate": "Nov 3, 2025",
+          "badge": "Phase 1-2 Complete",
+          "features": [
+            "Terms of Service page (TermsOfService.jsx with /terms route)",
+            "Privacy Policy page (PrivacyPolicy.jsx with /privacy route)",
+            "Footer component with Terms/Privacy links (appears on all pages)",
+            "TermsAcceptanceModal with smart acceptance detection",
+            "Version-based re-acceptance system (tracks terms_version_accepted, privacy_version_accepted)",
+            "Contact Support Modal for legal questions and support inquiries",
+            "Backend legal routes (/api/legal/status, /api/legal/accept)",
+            "Database migration 010: terms/privacy acceptance tracking (4 new columns)",
+            "User model methods: acceptTerms(), acceptPrivacy(), getLegalStatus()",
+            "Legal version constants system (server/src/constants/legalVersions.js)",
+            "Email service: sendSupportInquiry() for contact support flow",
+            "Contact routes: POST /api/contact/support with authentication",
+            "Full test coverage: Footer, TermsAcceptanceModal, ContactSupportModal, legal routes",
+            "AuthContext integration: checkLegalStatus(), acceptLegalDocuments()",
+            "Smart acceptance flow: GitHub OAuth users bypass terms, email signup requires acceptance",
+            "Dev Guide updates: Development workflow, Stripe webhook setup",
+            "1,955 tests (1,283 frontend, 672 backend, 97.8% pass rate)",
+            "+134 new tests across 9 new test files",
+            "Documentation updates (CHANGELOG, README, CLAUDE.md, testing docs)"
+          ]
         }
       ]
     },
@@ -406,21 +435,23 @@
       "subtitle": "Phase 2 & 3: Payments + Dark Mode",
       "phases": [
         {
-          "version": "Epic 2.5",
-          "title": "Essential Legal (Terms & Privacy)",
-          "duration": "1-2 days",
+          "version": "v2.5.1-v2.5.x",
+          "title": "Epic 2.5: Legal Compliance - Phase 3-4",
+          "duration": "2-3 days",
           "status": "Planned",
-          "badge": "CRITICAL - Before Stripe",
+          "badge": "Phase 3-4",
           "features": [
-            "Terms of Service page (TermsOfService.jsx with /terms route)",
-            "Privacy Policy page (PrivacyPolicy.jsx with /privacy route)",
-            "Footer component with Terms/Privacy links",
-            "T&Cs acceptance checkbox on signup/payment forms",
-            "Basic policy acceptance tracking (database: users.terms_accepted_at)",
-            "Email support setup (support@codescribeai.com)",
-            "Minimum viable compliance for payment processing",
-            "15-20 tests (forms, routes, database)",
-            "Must complete before Epic 2.4 (Payment Integration)"
+            "Phase 3: Account Settings UI (1-2 days)",
+            "Account Settings page with tabbed interface",
+            "Legal Preferences tab: View accepted T&C/Privacy versions, re-accept option",
+            "Data & Privacy tab: View data collection status, analytics opt-out toggle",
+            "Email Preferences tab: Marketing/product update opt-in/opt-out",
+            "Phase 4: User Data Rights (1-2 days)",
+            "Data export endpoint: Download all user data (JSON/CSV)",
+            "Account deletion flow: Soft delete with 30-day grace period",
+            "Data retention UI: Show what data is stored and for how long",
+            "Analytics opt-out implementation: Disable Vercel Analytics tracking",
+            "GDPR compliance: Right to access, rectification, erasure, data portability"
           ]
         },
         {
@@ -449,17 +480,17 @@
           "status": "Ready to Implement",
           "badge": "Design Complete",
           "features": [
-            "Light theme refinements: 20% opacity purple shadows on primary buttons",
-            "Light theme: Cyan accents for code elements (brand continuity)",
-            "Light theme: Simplified button system (solid, no gradients)",
+            "\u2713 Light theme refinements: 20% opacity purple shadows on primary buttons",
+            "\u2713 Light theme: Cyan accents for code elements (brand continuity)",
+            "\u2713 Light theme: Simplified button system (solid, no gradients)",
             "Dark mode: Neon Cyberpunk theme (slate-950 backgrounds, purple-400, cyan-400)",
             "Dark mode: 30% opacity purple shadows for premium glow effect",
             "Dark mode toggle with theme persistence (localStorage + system preference)",
             "ThemeProvider context with Tailwind class-based switching",
-            "Monaco Editor theme sync (vs-dark/vs-light)",
+            "\u2713 Monaco Editor theme sync (vs-dark/vs-light)",
             "Mermaid diagram dark theme with brand colors",
-            "WCAG AAA contrast (all colors 7:1+ on backgrounds)",
-            "Design specs: DARK-MODE-SPEC.md (959 lines), LIGHT-THEME-DESIGN-SYSTEM.md",
+            "\u2713 WCAG AAA contrast (all colors 7:1+ on backgrounds)",
+            "\u2713 Design specs: DARK-MODE-SPEC.md (959 lines), LIGHT-THEME-DESIGN-SYSTEM.md",
             "Figma guide v4.0 with refined shadow system and dark theme specs"
           ]
         }

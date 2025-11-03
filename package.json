@@ -1,11 +1,11 @@
 {
   "name": "codescribe-ai",
-  "version": "2.4.6",
+  "version": "2.5.0",
   "description": "AI-powered code documentation generator",
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev": "concurrently --kill-others --names \"CLIENT,SERVER,STRIPE\" --prefix-colors \"green,cyan,magenta\" --prefix \"{name}\" --prefix-length 8 \"npm run dev:client\" \"npm run dev:server\" \"stripe listen --forward-to localhost:3000/api/webhooks/stripe\"",
     "dev:server": "cd server && npm run dev",
     "dev:client": "cd client && npm run dev",
     "install:all": "npm install && cd server && npm install && cd ../client && npm install",

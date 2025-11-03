@@ -1,6 +1,7 @@
-import { Menu, LogOut, User } from 'lucide-react';
+import { Menu as MenuIcon, LogOut, User, FileText, Shield, ChevronDown } from 'lucide-react';
 import { useState, lazy, Suspense } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { Menu } from '@headlessui/react';
 import { Button } from './Button';
 import { Logo } from './Logo';
 import { useAuth } from '../contexts/AuthContext';
@@ -19,6 +20,13 @@ export function Header({ onMenuClick, onHelpClick }) {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showSignupModal, setShowSignupModal] = useState(false);
   const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
+
+  // Context-aware pricing button label
+  const getPricingLabel = () => {
+    if (!isAuthenticated) return 'Pricing';
+    if (user?.tier === 'free') return 'Upgrade';
+    return 'Subscription';
+  };
 
   const handleSignInClick = () => {
     setShowLoginModal(true);
@@ -74,7 +82,7 @@ export function Header({ onMenuClick, onHelpClick }) {
                 variant="secondary"
                 onClick={() => navigate('/pricing')}
               >
-                Pricing
+                {getPricingLabel()}
               </Button>
 
               {/* Help Button - Desktop (text) */}
@@ -92,27 +100,63 @@ export function Header({ onMenuClick, onHelpClick }) {
               {ENABLE_AUTH && (
                 <>
                   {isAuthenticated ? (
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        className="flex items-center gap-2 px-3 py-2 hover:bg-slate-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
-                        aria-label="User account"
-                      >
+                    <Menu as="div" className="relative">
+                      <Menu.Button className="flex items-center gap-2 px-3 py-2 hover:bg-slate-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2">
                         <User className="w-5 h-5 text-slate-600" aria-hidden="true" />
                         <span className="text-sm font-medium text-slate-700">
                           {user?.email?.split('@')[0] || 'Account'}
                         </span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleLogout}
-                        className="p-2 hover:bg-slate-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
-                        aria-label="Sign out"
-                        title="Sign out"
-                      >
-                        <LogOut className="w-5 h-5 text-slate-600" aria-hidden="true" />
-                      </button>
-                    </div>
+                        <ChevronDown className="w-4 h-4 text-slate-500" aria-hidden="true" />
+                      </Menu.Button>
+
+                      <Menu.Items className="absolute right-0 mt-2 w-56 origin-top-right rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                        <div className="p-1">
+                          <Menu.Item>
+                            {({ active }) => (
+                              <Link
+                                to="/terms"
+                                className={`${
+                                  active ? 'bg-slate-100' : ''
+                                } group flex items-center gap-3 w-full px-3 py-2 text-sm text-slate-700 rounded-md transition-colors`}
+                              >
+                                <FileText className="w-4 h-4 text-slate-500" aria-hidden="true" />
+                                Terms of Service
+                              </Link>
+                            )}
+                          </Menu.Item>
+
+                          <Menu.Item>
+                            {({ active }) => (
+                              <Link
+                                to="/privacy"
+                                className={`${
+                                  active ? 'bg-slate-100' : ''
+                                } group flex items-center gap-3 w-full px-3 py-2 text-sm text-slate-700 rounded-md transition-colors`}
+                              >
+                                <Shield className="w-4 h-4 text-slate-500" aria-hidden="true" />
+                                Privacy Policy
+                              </Link>
+                            )}
+                          </Menu.Item>
+
+                          <div className="h-px bg-slate-200 my-1" />
+
+                          <Menu.Item>
+                            {({ active }) => (
+                              <button
+                                onClick={handleLogout}
+                                className={`${
+                                  active ? 'bg-slate-100' : ''
+                                } group flex items-center gap-3 w-full px-3 py-2 text-sm text-slate-700 rounded-md transition-colors`}
+                              >
+                                <LogOut className="w-4 h-4 text-slate-500" aria-hidden="true" />
+                                Sign Out
+                              </button>
+                            )}
+                          </Menu.Item>
+                        </div>
+                      </Menu.Items>
+                    </Menu>
                   ) : (
                     <Button
                       variant="dark"
@@ -137,7 +181,7 @@ export function Header({ onMenuClick, onHelpClick }) {
               className="md:hidden p-2 hover:bg-slate-100 hover:scale-[1.05] rounded-lg transition-all duration-200 motion-reduce:transition-none active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
               aria-label="Open menu"
             >
-              <Menu className="w-6 h-6 text-slate-600" aria-hidden="true" />
+              <MenuIcon className="w-6 h-6 text-slate-600" aria-hidden="true" />
             </button>
           </nav>
         </div>

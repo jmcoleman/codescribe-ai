@@ -2,31 +2,32 @@
 
 **Project:** CodeScribe AI - Intelligent Code Documentation Generator
 **Testing Status:** ✅ Comprehensive Coverage Across 3 Frameworks
-**Last Updated:** November 2, 2025 (v2.4.6)
+**Last Updated:** November 3, 2025 (v2.4.7)
 
 ---
 
 ## 📊 Quick Stats
 
-- **Total Tests:** 1,785 tests (1,746 passing, 39 skipped)
-  - **Frontend:** 1,172 tests | 18 skipped (Vitest + React Testing Library)
-    - Component Tests: 18/18 components (100% coverage)
-    - Integration Tests: Auth, OAuth, password reset, upload, error handling, usage tracking
-    - UI Tests: Toast system, modals, forms, storage helpers, pricing page
-    - New in v2.4.4: UsageWarningBanner timeout cleanup fix
-  - **Backend:** 574 tests | 21 skipped (Jest + Supertest)
-    - Unit Tests: Services (28 emailService tests added), models, utilities, middleware
-    - Integration Tests: Prompt quality, API contracts, authentication, tier system, contact sales
-    - Security Tests: Password hashing, JWT validation, OAuth flows, usage quotas
-    - New in v2.4.4: Contact Sales feature (28 tests), emailService coverage (24 tests)
-  - **Database:** 21 tests (skipped in default suite, run separately with Docker PostgreSQL)
-    - Migration validation, schema checks, constraints, user quotas, anonymous quotas
+- **Total Tests:** 1,955 tests (1,905 passing/skipped, 12 pre-existing failures)
+  - **Frontend:** 1,283 tests | 19 skipped (Vitest + React Testing Library)
+    - Component Tests: All new legal/terms components tested (ContactSupportModal, TermsAcceptanceModal, Footer)
+    - Integration Tests: Auth, OAuth, password reset, upload, error handling, usage tracking, legal pages
+    - UI Tests: Toast system, modals, forms, storage helpers, pricing page, focus trap
+    - New in v2.4.7: +82 tests (ContactSupportModal 9, TermsAcceptanceModal, LegalPages, Footer, useFocusTrap)
+  - **Backend:** 672 tests | 21 skipped (Jest + Supertest)
+    - Unit Tests: Services, models, utilities, middleware (emailService, requireTermsAcceptance)
+    - Integration Tests: Prompt quality, API contracts, authentication, tier system, contact sales, legal endpoints
+    - Security Tests: Password hashing, JWT validation, OAuth flows, usage quotas, legal acceptance
+    - New in v2.4.7: +52 tests (26 legal routes, legalVersions constants, requireTermsAcceptance middleware)
+  - **Database:** 14 migration-010 tests (Docker sandbox + Neon dev validation)
+    - Schema changes (4 columns), indexes (4), constraints, backward compatibility
+    - Terms/Privacy acceptance tracking, version strings
   - **E2E:** 10 tests (Playwright - file upload flow)
-- **Pass Rate:** 97.82% (1,746/1,785)
+- **Pass Rate:** 97.8% (1,905/1,955, excluding 12 pre-existing failures)
 - **Backend Coverage:** 91.83% statements (services), 95.81% overall, 88.72% branches
-- **Test Execution Time:** Frontend ~11s, Backend ~7.1s, Database ~0.25s, E2E ~45s
+- **Test Execution Time:** Frontend ~19.6s, Backend ~7.0s, Database ~0.3s, E2E ~45s
 - **Coverage Target:** 90% ✅ EXCEEDED (91.83% services coverage)
-- **Recent Updates:** Help Modal UX (tabbed interface), billing period persistence, Stripe API alignment (Nov 2, 2025 - v2.4.6)
+- **Recent Updates:** Legal documents system, terms acceptance, contact support, Footer component, migration-010 (Nov 3, 2025 - v2.4.7)
 
 ---
 

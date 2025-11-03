@@ -9,6 +9,105 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.5.0] - 2025-11-03
+
+**Status:** ✅ Epic 2.5: Legal Compliance - Phase 1-2 Complete
+
+**Epic Progress:** Phase 1 (UI Placeholders) ✅ | Phase 2 (Self-Hosted Policies) ✅ | Phase 3 (Account Settings) 📋 Planned | Phase 4 (User Data Rights) 📋 Planned
+
+### Added
+- **Privacy Policy & Terms of Service Pages**
+  - Comprehensive Privacy Policy (privacy-first code processing, GDPR compliance)
+  - Complete Terms of Service (tier structure, billing, usage limits)
+  - Version tracking system (2025-11-02 format)
+  - Back button navigation to previous page
+  - Semantic HTML structure with proper heading hierarchy
+
+- **Terms Acceptance System**
+  - TermsAcceptanceModal for blocking users until legal documents accepted
+  - Tracks acceptance of both Terms and Privacy Policy independently
+  - Version-based re-acceptance workflow (triggers on version updates)
+  - Backend API for checking acceptance status and recording acceptance
+  - Database migration (010) with 4 new columns + 4 indexes
+
+- **Contact Support Modal**
+  - Support request form for authenticated and unauthenticated users
+  - Auto-fills name/email for authenticated users
+  - Name fields for authenticated users without profile data
+  - 1000 character limit with real-time counter
+  - Server-side email delivery via Resend API
+  - Focus trap accessibility (Escape key to close)
+
+- **Footer Component**
+  - Privacy Policy and Terms of Service links
+  - Contact Support button
+  - Responsive design with proper spacing
+
+- **Database Schema (Migration 010)**
+  - `terms_accepted_at` (TIMESTAMP) - When user accepted Terms
+  - `terms_version_accepted` (VARCHAR(20)) - Version string accepted
+  - `privacy_accepted_at` (TIMESTAMP) - When user accepted Privacy
+  - `privacy_version_accepted` (VARCHAR(20)) - Version string accepted
+  - 4 indexes for query optimization
+  - Backward compatible (NULL values allowed)
+
+- **Backend API Endpoints**
+  - `GET /api/legal/versions` - Get current version info (public)
+  - `GET /api/legal/status` - Check if user needs re-acceptance (auth required)
+  - `POST /api/legal/accept` - Record legal acceptance (auth required)
+  - `POST /api/contact/support` - Send support email (optional auth)
+
+- **Middleware & Utilities**
+  - `requireTermsAcceptance` middleware to block users needing re-acceptance
+  - Legal version constants (`CURRENT_TERMS_VERSION`, `CURRENT_PRIVACY_VERSION`)
+  - `needsLegalReacceptance()` utility function
+  - `sendSupportEmail()` service function
+
+### Changed
+- **AuthContext Enhancement**
+  - Added `acceptLegalDocuments()` method
+  - Added `checkLegalStatus()` method
+  - Integrated with legal acceptance API
+
+- **User Model Updates**
+  - Added `acceptLegalDocuments(userId, termsVersion, privacyVersion)` static method
+  - Returns updated user with acceptance timestamps
+
+- **Contact Routes**
+  - Added `/support` endpoint alongside existing `/sales` endpoint
+  - Uses `optionalAuth` middleware for flexibility
+  - Validates subject and message fields
+
+### Fixed
+- **Test Suite (Pattern 11: ES Modules)**
+  - Fixed legal.test.js to use CommonJS-style Jest mocks
+  - Fixed contact.test.js by adding `optionalAuth` and `sendSupportEmail` mocks
+  - All backend route tests now properly mock middleware
+
+### Tests
+- **Frontend: 1,283 tests** (1,256 passing, 19 skipped, 8 failing*)
+  - +82 new tests from 5 new test files
+  - ContactSupportModal: 9 tests (100% passing)
+  - TermsAcceptanceModal: Full coverage
+  - LegalPages: Privacy Policy & Terms of Service
+  - Footer: Links and support button
+  - useFocusTrap: Accessibility hook (1 flaky test skipped)
+
+- **Backend: 672 tests** (649 passing, 21 skipped, 2 failing*)
+  - +52 new tests from 4 new test files
+  - Legal routes: 26 tests (100% passing)
+  - Legal constants: Version validation
+  - requireTermsAcceptance middleware: Full coverage
+  - Migration 010: 14 tests (Docker sandbox + Neon dev)
+
+- **Total: 1,955 tests** (1,905 passing/skipped, 1,972 total with skipped)
+  - **+134 new tests** added
+  - **97.8% pass rate** (excluding pre-existing failures*)
+
+*Pre-existing failures unrelated to this release: ContactSalesModal schema validation (2), CopyButton (6)
+
+---
+
 ## [2.4.6] - 2025-11-02
 
 **Status:** ✅ Billing Period Persistence & Help Modal UX
