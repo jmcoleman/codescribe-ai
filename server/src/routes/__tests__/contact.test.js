@@ -508,4 +508,289 @@ describe('Contact Sales Routes', () => {
       });
     });
   });
+
+  describe('POST /api/contact/support', () => {
+    let mockUser;
+    const { sendSupportEmail } = require('../../services/emailService.js');
+
+    beforeEach(() => {
+      mockUser = {
+        id: 1,
+        email: 'user@example.com',
+        first_name: 'John',
+        last_name: 'Doe',
+        tier: 'pro',
+      };
+
+      // Mock optionalAuth to add user when present
+      const { optionalAuth } = require('../../middleware/auth.js');
+      optionalAuth.mockImplementation((req, res, next) => {
+        req.user = mockUser;
+        next();
+      });
+    });
+
+    describe('Authenticated Users', () => {
+      it('should send support request for authenticated user', async () => {
+        const response = await request(app)
+          .post('/api/contact/support')
+          .send({
+            subject: 'bug',
+            message: 'I found a bug in the documentation generator.'
+          });
+
+        expect(response.status).toBe(200);
+        expect(response.body.success).toBe(true);
+        expect(sendSupportEmail).toHaveBeenCalledWith({
+          userName: 'John Doe',
+          userEmail: 'user@example.com',
+          userId: 1,
+          currentTier: 'pro',
+          subject: 'bug',
+          message: 'I found a bug in the documentation generator.'
+        });
+      });
+
+      it('should use form name when user has no name', async () => {
+        mockUser.first_name = null;
+        mockUser.last_name = null;
+
+        await request(app)
+          .post('/api/contact/support')
+          .send({
+            subject: 'general',
+            message: 'Test message',
+            firstName: 'Jane',
+            lastName: 'Smith'
+          });
+
+        expect(sendSupportEmail).toHaveBeenCalledWith(
+          expect.objectContaining({
+            userName: 'Jane Smith'
+          })
+        );
+      });
+
+      it('should use "free" as default tier if user has no tier', async () => {
+        mockUser.tier = undefined;
+
+        await request(app)
+          .post('/api/contact/support')
+          .send({
+            subject: 'account',
+            message: 'Test'
+          });
+
+        expect(sendSupportEmail).toHaveBeenCalledWith(
+          expect.objectContaining({
+            currentTier: 'free'
+          })
+        );
+      });
+    });
+
+    describe('Unauthenticated Users', () => {
+      beforeEach(() => {
+        const { optionalAuth } = require('../../middleware/auth.js');
+        optionalAuth.mockImplementation((req, res, next) => {
+          req.user = null; // No user
+          next();
+        });
+      });
+
+      it('should send support request for unauthenticated user', async () => {
+        const response = await request(app)
+          .post('/api/contact/support')
+          .send({
+            firstName: 'Jane',
+            lastName: 'Smith',
+            email: 'jane@example.com',
+            subject: 'feature',
+            message: 'I would like to request a new feature.'
+          });
+
+        expect(response.status).toBe(200);
+        expect(response.body.success).toBe(true);
+        expect(sendSupportEmail).toHaveBeenCalledWith({
+          userName: 'Jane Smith',
+          userEmail: 'jane@example.com',
+          userId: null,
+          currentTier: null,
+          subject: 'feature',
+          message: 'I would like to request a new feature.'
+        });
+      });
+
+      it('should require firstName for unauthenticated users', async () => {
+        const response = await request(app)
+          .post('/api/contact/support')
+          .send({
+            lastName: 'Smith',
+            email: 'jane@example.com',
+            subject: 'general',
+            message: 'Test'
+          });
+
+        expect(response.status).toBe(400);
+        expect(response.body.error).toMatch(/first name.*required/i);
+      });
+
+      it('should require lastName for unauthenticated users', async () => {
+        const response = await request(app)
+          .post('/api/contact/support')
+          .send({
+            firstName: 'Jane',
+            email: 'jane@example.com',
+            subject: 'general',
+            message: 'Test'
+          });
+
+        expect(response.status).toBe(400);
+        expect(response.body.error).toMatch(/last name.*required/i);
+      });
+
+      it('should require email for unauthenticated users', async () => {
+        const response = await request(app)
+          .post('/api/contact/support')
+          .send({
+            firstName: 'Jane',
+            lastName: 'Smith',
+            subject: 'general',
+            message: 'Test'
+          });
+
+        expect(response.status).toBe(400);
+        expect(response.body.error).toMatch(/email.*required/i);
+      });
+    });
+
+    describe('Subject Validation', () => {
+      it('should accept valid subject categories', async () => {
+        const validSubjects = ['general', 'bug', 'feature', 'account', 'billing', 'other'];
+
+        for (const subject of validSubjects) {
+          jest.clearAllMocks();
+          const response = await request(app)
+            .post('/api/contact/support')
+            .send({
+              subject,
+              message: 'Test message'
+            });
+
+          expect(response.status).toBe(200);
+        }
+      });
+
+      it('should reject invalid subject category', async () => {
+        const response = await request(app)
+          .post('/api/contact/support')
+          .send({
+            subject: 'invalid_category',
+            message: 'Test'
+          });
+
+        expect(response.status).toBe(400);
+        expect(response.body.error).toMatch(/invalid subject/i);
+      });
+
+      it('should handle case-insensitive subject names', async () => {
+        const response = await request(app)
+          .post('/api/contact/support')
+          .send({
+            subject: 'BUG',
+            message: 'Test'
+          });
+
+        expect(response.status).toBe(200);
+        expect(sendSupportEmail).toHaveBeenCalledWith(
+          expect.objectContaining({
+            subject: 'bug' // Lowercased
+          })
+        );
+      });
+    });
+
+    describe('Error Handling', () => {
+      it('should handle Resend rate limit errors', async () => {
+        const rateLimitError = new Error('Rate limit exceeded');
+        rateLimitError.code = 'RESEND_RATE_LIMIT';
+        sendSupportEmail.mockRejectedValueOnce(rateLimitError);
+
+        const response = await request(app)
+          .post('/api/contact/support')
+          .send({
+            subject: 'general',
+            message: 'Test'
+          });
+
+        expect(response.status).toBe(503);
+        expect(response.body.error).toBe('Rate limit exceeded');
+      });
+
+      it('should return 500 for general email sending errors', async () => {
+        sendSupportEmail.mockRejectedValueOnce(new Error('Email service down'));
+
+        const response = await request(app)
+          .post('/api/contact/support')
+          .send({
+            subject: 'general',
+            message: 'Test'
+          });
+
+        expect(response.status).toBe(500);
+        expect(response.body.error).toMatch(/failed to send support request/i);
+      });
+
+      it('should suggest direct email contact on error', async () => {
+        sendSupportEmail.mockRejectedValueOnce(new Error('Service error'));
+
+        const response = await request(app)
+          .post('/api/contact/support')
+          .send({
+            subject: 'general',
+            message: 'Test'
+          });
+
+        expect(response.body.error).toMatch(/support@codescribeai\.com/);
+      });
+
+      it('should log errors to console', async () => {
+        const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+        sendSupportEmail.mockRejectedValueOnce(new Error('Test error'));
+
+        await request(app)
+          .post('/api/contact/support')
+          .send({
+            subject: 'general',
+            message: 'Test'
+          });
+
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
+          'Contact support error:',
+          expect.any(Error)
+        );
+
+        consoleErrorSpy.mockRestore();
+      });
+    });
+
+    describe('Logging', () => {
+      it('should log support request to console', async () => {
+        const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+
+        await request(app)
+          .post('/api/contact/support')
+          .send({
+            subject: 'bug',
+            message: 'Test'
+          });
+
+        expect(consoleSpy).toHaveBeenCalledWith(
+          expect.stringContaining('[Contact Support]')
+        );
+
+        consoleSpy.mockRestore();
+      });
+    });
+  });
 });

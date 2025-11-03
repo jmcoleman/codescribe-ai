@@ -29,7 +29,7 @@ jest.mock('resend', () => {
 });
 
 // Now import emailService (after env vars and mock are set)
-import { sendPasswordResetEmail, sendVerificationEmail, sendContactSalesEmail, __resetResendClient } from '../emailService.js';
+import { sendPasswordResetEmail, sendVerificationEmail, sendContactSalesEmail, sendSupportEmail, __resetResendClient } from '../emailService.js';
 
 describe('Email Service', () => {
   beforeEach(() => {
@@ -721,6 +721,362 @@ describe('Email Service', () => {
       const callArgs = mockSendEmail.mock.calls[0][0];
       expect(callArgs.html).toContain('white-space: pre-wrap');
       expect(callArgs.html).toContain('Line 1\nLine 2\nLine 3');
+    });
+  });
+
+  // ============================================================================
+  // Support Request Emails
+  // ============================================================================
+  describe('sendSupportEmail', () => {
+    const validParams = {
+      userName: 'John Doe',
+      userEmail: 'john@example.com',
+      userId: 'user_123',
+      currentTier: 'pro',
+      subject: 'bug',
+      message: 'I found a bug in the documentation generator.'
+    };
+
+    it('should send email to support@codescribeai.com', async () => {
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_123' } });
+
+      await sendSupportEmail(validParams);
+
+      expect(mockSendEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: 'support@codescribeai.com'
+        })
+      );
+    });
+
+    it('should include replyTo with user email', async () => {
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_123' } });
+
+      await sendSupportEmail(validParams);
+
+      expect(mockSendEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          replyTo: 'john@example.com'
+        })
+      );
+    });
+
+    it('should map subject codes to labels correctly', async () => {
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_123' } });
+
+      const subjects = [
+        { code: 'general', label: 'General Question' },
+        { code: 'bug', label: 'Bug Report' },
+        { code: 'feature', label: 'Feature Request' },
+        { code: 'account', label: 'Account Issue' },
+        { code: 'billing', label: 'Billing Question' },
+        { code: 'other', label: 'Other' }
+      ];
+
+      for (const { code, label } of subjects) {
+        mockSendEmail.mockClear();
+        await sendSupportEmail({ ...validParams, subject: code });
+
+        const callArgs = mockSendEmail.mock.calls[0][0];
+        expect(callArgs.subject).toContain(label);
+      }
+    });
+
+    it('should include subject label and user name in subject line', async () => {
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_123' } });
+
+      await sendSupportEmail(validParams);
+
+      expect(mockSendEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          subject: 'Bug Report from John Doe'
+        })
+      );
+    });
+
+    it('should use email in subject when name not provided', async () => {
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_123' } });
+
+      await sendSupportEmail({
+        ...validParams,
+        userName: ''
+      });
+
+      expect(mockSendEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          subject: 'Bug Report from john@example.com'
+        })
+      );
+    });
+
+    it('should use "Support Request" for unknown subject codes', async () => {
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_123' } });
+
+      await sendSupportEmail({
+        ...validParams,
+        subject: 'unknown_code'
+      });
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.subject).toContain('Support Request');
+    });
+
+    it('should include user name in from field when provided', async () => {
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_123' } });
+
+      await sendSupportEmail(validParams);
+
+      expect(mockSendEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          from: 'John Doe via CodeScribe AI <noreply@mail.codescribeai.com>'
+        })
+      );
+    });
+
+    it('should use FROM_EMAIL when user name not provided', async () => {
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_123' } });
+
+      await sendSupportEmail({
+        ...validParams,
+        userName: ''
+      });
+
+      expect(mockSendEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          from: expect.stringContaining('CodeScribe AI')
+        })
+      );
+    });
+
+    it('should include user name in email HTML', async () => {
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_123' } });
+
+      await sendSupportEmail(validParams);
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('John Doe');
+    });
+
+    it('should display "Not provided" when userName is empty', async () => {
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_123' } });
+
+      await sendSupportEmail({
+        ...validParams,
+        userName: ''
+      });
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('Not provided');
+    });
+
+    it('should include user email in HTML', async () => {
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_123' } });
+
+      await sendSupportEmail(validParams);
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('john@example.com');
+    });
+
+    it('should include user ID when provided', async () => {
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_123' } });
+
+      await sendSupportEmail(validParams);
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('user_123');
+    });
+
+    it('should omit user ID section when not provided', async () => {
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_123' } });
+
+      const { userId, ...paramsWithoutUserId } = validParams;
+      await sendSupportEmail(paramsWithoutUserId);
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).not.toContain('User ID:');
+    });
+
+    it('should include current tier when provided', async () => {
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_123' } });
+
+      await sendSupportEmail(validParams);
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('Pro'); // Capitalized
+    });
+
+    it('should omit current tier section when not provided', async () => {
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_123' } });
+
+      const { currentTier, ...paramsWithoutTier } = validParams;
+      await sendSupportEmail(paramsWithoutTier);
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).not.toContain('Current Tier:');
+    });
+
+    it('should include subject category label in HTML', async () => {
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_123' } });
+
+      await sendSupportEmail(validParams);
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('Bug Report');
+    });
+
+    it('should include user message in HTML', async () => {
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_123' } });
+
+      await sendSupportEmail(validParams);
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('I found a bug in the documentation generator.');
+    });
+
+    it('should return email ID on success', async () => {
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_456' } });
+
+      const result = await sendSupportEmail(validParams);
+
+      expect(result.data.id).toBe('email_456');
+    });
+
+    it('should log email details on success', async () => {
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_789' } });
+
+      await sendSupportEmail(validParams);
+
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('📧 [EMAIL SENT] Support Request'));
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('To:'), 'support@codescribeai.com');
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('From User:'), 'john@example.com');
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Category:'), 'Bug Report');
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Email ID:'), 'email_789');
+
+      consoleSpy.mockRestore();
+    });
+
+    it('should throw error on email service failure', async () => {
+      mockSendEmail.mockRejectedValue(new Error('Service error'));
+
+      await expect(
+        sendSupportEmail(validParams)
+      ).rejects.toThrow('Failed to send support email');
+    });
+
+    it('should log error details on failure', async () => {
+      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+      const testError = new Error('Service error');
+      testError.statusCode = 500;
+      mockSendEmail.mockRejectedValue(testError);
+
+      await expect(
+        sendSupportEmail(validParams)
+      ).rejects.toThrow();
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to send support email'),
+        expect.any(Error)
+      );
+
+      consoleErrorSpy.mockRestore();
+    });
+
+    it('should handle Resend rate limit errors (429)', async () => {
+      const rateLimitError = new Error('Too many requests');
+      rateLimitError.statusCode = 429;
+      mockSendEmail.mockRejectedValue(rateLimitError);
+
+      await expect(
+        sendSupportEmail(validParams)
+      ).rejects.toThrow('Email service is temporarily unavailable due to high demand');
+
+      try {
+        await sendSupportEmail(validParams);
+      } catch (error) {
+        expect(error.code).toBe('RESEND_RATE_LIMIT');
+        expect(error.statusCode).toBe(503);
+      }
+    });
+
+    it('should handle rate limit errors by message content', async () => {
+      const rateLimitError = new Error('Too many requests - rate limit exceeded');
+      mockSendEmail.mockRejectedValue(rateLimitError);
+
+      await expect(
+        sendSupportEmail(validParams)
+      ).rejects.toThrow('Email service is temporarily unavailable due to high demand');
+    });
+
+    it('should handle special characters in user name', async () => {
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_123' } });
+
+      await sendSupportEmail({
+        ...validParams,
+        userName: "O'Reilly & Associates"
+      });
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain("O'Reilly & Associates");
+    });
+
+    it('should handle special characters in message', async () => {
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_123' } });
+
+      await sendSupportEmail({
+        ...validParams,
+        message: 'Error: <div> tags & symbols'
+      });
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('Error: <div> tags & symbols');
+    });
+
+    it('should preserve newlines in message', async () => {
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_123' } });
+
+      await sendSupportEmail({
+        ...validParams,
+        message: 'Step 1: Do this\nStep 2: Do that\nStep 3: Done'
+      });
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('white-space: pre-wrap');
+      expect(callArgs.html).toContain('Step 1: Do this\nStep 2: Do that\nStep 3: Done');
+    });
+
+    it('should work for unauthenticated users (no userId or currentTier)', async () => {
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_123' } });
+
+      await sendSupportEmail({
+        userName: 'Jane Smith',
+        userEmail: 'jane@example.com',
+        subject: 'general',
+        message: 'I have a question about pricing.'
+      });
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.to).toBe('support@codescribeai.com');
+      expect(callArgs.html).toContain('Jane Smith');
+      expect(callArgs.html).toContain('jane@example.com');
+      expect(callArgs.html).not.toContain('User ID:');
+      expect(callArgs.html).not.toContain('Current Tier:');
+    });
+
+    it('should handle all subject categories', async () => {
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_123' } });
+
+      const categories = ['general', 'bug', 'feature', 'account', 'billing', 'other'];
+
+      for (const category of categories) {
+        mockSendEmail.mockClear();
+        await sendSupportEmail({ ...validParams, subject: category });
+
+        const callArgs = mockSendEmail.mock.calls[0][0];
+        expect(callArgs.html).toContain('Category:');
+        expect(callArgs.to).toBe('support@codescribeai.com');
+      }
     });
   });
 });

@@ -46,10 +46,11 @@ describe('CopyButton', () => {
     const button = screen.getByRole('button', { name: /copy to clipboard/i });
     await user.click(button);
 
-    // Check button is disabled (indicating copied state)
+    // Check button has pointer-events-none (indicating copied state)
+    // Note: Design changed from disabled to pointer-events-none for consistency
     await waitFor(() => {
       const btn = container.querySelector('button');
-      expect(btn).toBeDisabled();
+      expect(btn).toHaveClass('pointer-events-none');
       expect(btn).toHaveAttribute('aria-label', 'Copied!');
     });
   });
@@ -153,39 +154,45 @@ describe('CopyButton', () => {
       expect(button).toHaveClass('bg-slate-100', 'text-slate-700');
     });
 
-    it('changes to success colors after copying (ghost)', async () => {
+    it('maintains consistent styling after copying (ghost)', async () => {
       const user = userEvent.setup();
       render(<CopyButton text="test" variant="ghost" />);
 
       const button = screen.getByRole('button');
       await user.click(button);
 
+      // Design no longer changes colors when copied - stays consistent
       await waitFor(() => {
-        expect(button).toHaveClass('bg-green-50', 'text-green-600', 'border-green-200');
+        expect(button).toHaveClass('pointer-events-none');
+        expect(button).toHaveClass('bg-transparent', 'text-slate-600');
       });
     });
 
-    it('changes to success colors after copying (outline)', async () => {
+    it('maintains consistent styling after copying (outline)', async () => {
       const user = userEvent.setup();
       render(<CopyButton text="test" variant="outline" />);
 
       const button = screen.getByRole('button');
       await user.click(button);
 
+      // Design no longer changes colors when copied - stays consistent
       await waitFor(() => {
-        expect(button).toHaveClass('bg-green-50', 'text-green-600', 'border-green-300');
+        expect(button).toHaveClass('pointer-events-none');
+        expect(button).toHaveClass('bg-white', 'text-slate-600');
       });
     });
 
-    it('changes to success colors after copying (solid)', async () => {
+    it('maintains consistent styling after copying (solid)', async () => {
       const user = userEvent.setup();
       render(<CopyButton text="test" variant="solid" />);
 
       const button = screen.getByRole('button');
       await user.click(button);
 
+      // Design no longer changes colors when copied - stays consistent
       await waitFor(() => {
-        expect(button).toHaveClass('bg-green-600', 'text-white');
+        expect(button).toHaveClass('pointer-events-none');
+        expect(button).toHaveClass('bg-slate-100', 'text-slate-700');
       });
     });
   });
@@ -266,7 +273,7 @@ describe('CopyButton', () => {
     it('applies hover scale effect', () => {
       render(<CopyButton text="test" />);
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('hover:scale-[1.05]');
+      expect(button).toHaveClass('hover:scale-[1.02]');
     });
 
     it('applies active scale effect', () => {
@@ -339,20 +346,23 @@ describe('CopyButtonWithText', () => {
     const button = screen.getByRole('button');
     await user.click(button);
 
+    // Design changed from disabled to pointer-events-none for consistency
     await waitFor(() => {
-      expect(button).toBeDisabled();
+      expect(button).toHaveClass('pointer-events-none');
     });
   });
 
-  it('changes to success styling after copying', async () => {
+  it('maintains consistent styling after copying', async () => {
     const user = userEvent.setup();
     render(<CopyButtonWithText text="test" label="Copy" />);
 
     const button = screen.getByRole('button');
     await user.click(button);
 
+    // Design no longer changes colors when copied - stays consistent
     await waitFor(() => {
-      expect(button).toHaveClass('bg-green-50', 'text-green-700', 'border-green-200');
+      expect(button).toHaveClass('pointer-events-none');
+      expect(button).toHaveClass('bg-slate-100', 'text-slate-700');
     });
   });
 

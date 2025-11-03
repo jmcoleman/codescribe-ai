@@ -160,7 +160,7 @@ describe('DownloadButton', () => {
   });
 
   describe('Success Feedback', () => {
-    it('should show success toast after download', async () => {
+    it('should not show success toast after download (browser provides feedback)', async () => {
       const user = userEvent.setup();
       const { toastCompact } = await import('../../utils/toast');
 
@@ -169,7 +169,9 @@ describe('DownloadButton', () => {
       const button = screen.getByTestId('download-btn');
       await user.click(button);
 
-      expect(toastCompact).toHaveBeenCalledWith('Downloaded!', 'success');
+      // Design decision: No success toast - browser's download notification provides feedback
+      // We cannot reliably detect if user actually saved the file or canceled the dialog
+      expect(toastCompact).not.toHaveBeenCalled();
     });
 
     it('should keep same aria-label after download (no state change)', async () => {
