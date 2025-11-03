@@ -10,15 +10,16 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import request from 'supertest';
 import express from 'express';
 
-// Track what schema validateBody was called with (use object to avoid TDZ)
-const capturedState = { schema: null };
+// Track what schemas validateBody was called with (use object to avoid TDZ)
+// Since we have multiple routes (/sales and /support), we need to track all schemas
+const capturedState = { schemas: [] };
 
 // Mock dependencies BEFORE importing routes
 jest.mock('../../middleware/auth.js', () => ({
   requireAuth: jest.fn((req, res, next) => next()),
   optionalAuth: jest.fn((req, res, next) => next()), // Added for /support endpoint
   validateBody: jest.fn((schema) => {
-    capturedState.schema = schema; // Capture the schema for test assertions
+    capturedState.schemas.push(schema); // Capture all schemas for test assertions
     return (req, res, next) => next();
   }),
 }));
@@ -468,14 +469,16 @@ describe('Contact Sales Routes', () => {
     describe('Request Body Validation', () => {
       it('should validate tier is required', async () => {
         // Check the schema that was captured when route was loaded
-        expect(capturedState.schema).toMatchObject({
+        // schemas[0] is /sales route, schemas[1] is /support route
+        expect(capturedState.schemas[0]).toMatchObject({
           tier: { required: true, type: 'string' },
         });
       });
 
       it('should validate tier is string type', async () => {
         // Check the schema that was captured when route was loaded
-        expect(capturedState.schema).toMatchObject({
+        // schemas[0] is /sales route, schemas[1] is /support route
+        expect(capturedState.schemas[0]).toMatchObject({
           tier: { required: true, type: 'string' },
         });
       });
