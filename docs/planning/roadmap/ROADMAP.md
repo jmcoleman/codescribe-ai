@@ -2,7 +2,7 @@
 
 **Last Updated:** November 2, 2025
 **Current Phase:** Phase 2 - 🔄 **IN PROGRESS** (Payments Infrastructure - Epic 2.4 Complete)
-**Current Release:** v2.4.5 (Refined Light Theme v2.0 & UX Improvements Complete)
+**Current Release:** v2.4.6 (Billing Period Persistence & Help Modal UX Complete)
 **Production URL:** [https://codescribeai.com](https://codescribeai.com)
 
 ---
@@ -623,6 +623,146 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 
 ---
 
+### 📧 v2.4.4: Contact Sales & Test Coverage (1 day - Nov 2, 2025)
+
+**Timeline:** November 2, 2025
+**Actual Duration:** 1 day
+**Status:** ✅ **COMPLETE**
+
+#### Completed Features
+
+**Contact Sales Feature** - ✅ Complete
+- ✅ Authenticated contact form for interested customers
+- ✅ Tier validation (only Starter/Professional/Business can contact sales)
+- ✅ Email delivery to support@codescribeai.com
+- ✅ User-friendly modal UI with tier/billing period pre-filling
+- ✅ 28 comprehensive tests (form validation, tier validation, email delivery)
+
+**Backend Test Coverage Improvements** - ✅ Complete
+- ✅ 24 new emailService tests (91.83% coverage achieved)
+- ✅ Pattern 11 documentation: ES Modules in Backend Tests
+- ✅ Fixed UsageWarningBanner timeout cleanup (prevent memory leaks)
+- ✅ All CI thresholds met
+
+#### Testing & Quality Metrics
+- ✅ **1,786 total tests** (1,747 passing, 39 skipped, 0 failing) - **97.82% pass rate**
+  - Frontend: 1,173 passed, 18 skipped (1,191 total)
+  - Backend: 574 passed, 21 skipped (595 total)
+- ✅ Backend coverage: 91.83% services, 95.81% overall
+
+**Release:** v2.4.4 (November 2, 2025)
+
+**Reference Documentation:**
+- [CHANGELOG.md](../../../CHANGELOG.md) - Complete v2.4.4 release notes
+- [TEST-PATTERNS-GUIDE.md](../../testing/TEST-PATTERNS-GUIDE.md) - Pattern 11: ES Modules
+
+---
+
+### 🎨 v2.4.5: Refined Light Theme v2.0 & UX Improvements (1 day - Nov 2, 2025)
+
+**Timeline:** November 2, 2025
+**Actual Duration:** 1 day
+**Status:** ✅ **COMPLETE**
+
+#### Completed Features
+
+**Custom Monaco Editor Theme** - ✅ Complete
+- ✅ Purple keywords, green strings, cyan numbers matching brand
+- ✅ Custom Prism syntax highlighting for markdown code blocks
+- ✅ Consistent theming across editor and documentation panels
+
+**Mermaid Diagram Enhancements** - ✅ Complete
+- ✅ Darkened borders for better visual hierarchy
+- ✅ Improved node contrast and readability
+- ✅ Better integration with light theme
+
+**Pricing Page UX** - ✅ Complete
+- ✅ Large display improvements (constrained cards, better spacing)
+- ✅ Contact Sales Modal intent cleanup (sessionStorage cleanup on close)
+- ✅ Fixed code block background artifacts
+
+**Monaco Editor Rendering** - ✅ Complete
+- ✅ Fixed background artifacts in code display
+- ✅ Improved editor initialization and rendering
+
+#### Testing & Quality Metrics
+- ✅ **1,786 total tests** (1,747 passing, 39 skipped, 0 failing) - **97.82% pass rate**
+  - Frontend: 1,173 passed, 18 skipped (1,191 total)
+  - Backend: 574 passed, 21 skipped (595 total)
+
+**Release:** v2.4.5 (November 2, 2025)
+
+**Reference Documentation:**
+- [CHANGELOG.md](../../../CHANGELOG.md) - Complete v2.4.5 release notes
+- [THEME-DESIGN-SUMMARY.md](../../design/theming/THEME-DESIGN-SUMMARY.md) - Light theme specs
+
+---
+
+### 🔄 v2.4.6: Billing Period Persistence & Help Modal UX (1 day - Nov 2, 2025)
+
+**Timeline:** November 2, 2025
+**Actual Duration:** 1 day
+**Status:** ✅ **COMPLETE**
+
+#### Completed Features
+
+**Help Modal Tabbed Interface** - ✅ Complete
+- ✅ 3-tab organization: Quick Start, Quality Scores, FAQs
+- ✅ FAQ accordion UI with smooth animations
+- ✅ Refined light theme consistency (white backgrounds, slate borders)
+- ✅ Improved content accessibility and discoverability
+
+**Billing Period Persistence** - ✅ Complete
+- ✅ Monthly/annual selection persists via sessionStorage
+- ✅ Seamless user experience across page refreshes
+- ✅ Consistent with subscription intent storage pattern
+
+**Help Button UX Improvements** - ✅ Complete
+- ✅ Desktop: Text "Help" button for better clarity
+- ✅ Mobile: Removed redundant header icon (only in hamburger menu)
+- ✅ Cleaner mobile navigation experience
+
+**Contact Sales Character Limit** - ✅ Complete
+- ✅ 750 character limit with live counter
+- ✅ User-friendly validation messaging
+
+**Stripe API Alignment** - ✅ Complete
+- ✅ Updated 'yearly' to 'annual' for backend consistency
+- ✅ Fixed 4 PricingPage test failures
+
+**Viewport Optimization** - ✅ Complete
+- ✅ Increased modal max-height by 60px for better content visibility
+
+#### Files Changed (9 files)
+- `client/src/components/Header.jsx`: Help button UX
+- `client/src/components/HelpModal.jsx`: Tabbed interface
+- `client/src/components/PricingPage.jsx`: Billing period persistence
+- `client/src/components/ContactSalesModal.jsx`: Character counter
+- `client/src/components/__tests__/PricingPage.test.jsx`: yearly → annual
+- `client/src/constants/storage.js`: BILLING_PERIOD key
+- `CHANGELOG.md`, `README.md`, `CLAUDE.md`: Updated test counts and version info
+- `docs/testing/README.md`, `docs/testing/SKIPPED-TESTS.md`: Updated test metrics
+
+#### Testing & Quality Metrics
+- ✅ **1,785 total tests** (1,746 passing, 39 skipped, 0 failing) - **97.82% pass rate**
+  - Frontend: 1,172 passed, 18 skipped (1,190 total)
+  - Backend: 574 passed, 21 skipped (595 total)
+
+#### Success Criteria - ✅ All Achieved
+- ✅ Help Modal provides organized, accessible content
+- ✅ Billing period selection persists across sessions
+- ✅ Help button UX is clear on desktop, clean on mobile
+- ✅ Stripe API terminology is consistent (annual)
+- ✅ All tests passing (97.82% pass rate)
+
+**Release:** v2.4.6 (November 2, 2025)
+
+**Reference Documentation:**
+- [CHANGELOG.md](../../../CHANGELOG.md) - Complete v2.4.6 release notes
+- [STORAGE-CONVENTIONS.md](../../architecture/STORAGE-CONVENTIONS.md) - sessionStorage patterns
+
+---
+
 **Completed Phase 2 Epics:**
 - Epic 2.1: Authentication & User Management (5 days) - ✅ **COMPLETE** (v2.0.0)
 - Epic 2.2: Tier System & Feature Flags (3 days) - ✅ **COMPLETE** (v2.1.0-v2.2.0)
@@ -681,8 +821,8 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 ## 💰 Phase 2: Payments Infrastructure (IN PROGRESS)
 
 **Timeline:** October 21 - January 2026 (Build Fast, Launch When Validated)
-**Status:** 🔄 **IN PROGRESS** - Foundation Complete (v2.0.0-v2.4.2), Remaining Epics in Sprint
-**Current Release:** v2.4.2 (Livemode Detection & Prompt Caching Complete)
+**Status:** 🔄 **IN PROGRESS** - Foundation Complete (v2.0.0-v2.4.6), Remaining Epics in Sprint
+**Current Release:** v2.4.6 (Billing Period Persistence & Help Modal UX Complete)
 **Target Launch:** Mid-January 2026 (validation-driven, not calendar-driven)
 **Strategic Goal:** Enable sustainable business model with Open Core + Generous Free Tier architecture
 
