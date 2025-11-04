@@ -1253,6 +1253,198 @@ describe('My Routes', () => {
 
 ---
 
+### Pattern 12: Database Integration Test Mocking for CI ⭐ NEW (v2.5.1)
+
+**Problem:**
+Integration tests that make real database calls fail in CI because the database isn't available. Need to mock database operations while maintaining test coverage.
+
+**Symptoms:**
+- Tests fail with `NeonDbError: Error connecting to database: fetch failed`
+- Database tests run fine locally but fail in CI
+- Tests use `sql` from `@vercel/postgres` directly
+- Tests create real users and make actual database queries
+
+**Example - settings.test.js (v2.5.1):**
+```javascript
+// ❌ BAD - Real database calls
+import { sql } from '@vercel/postgres';
+
+describe('Settings API Tests', () => {
+  beforeAll(async () => {
+    // Tries to create real user in database
+    testUser = await User.create({
+      email: 'test@example.com',
+      password: 'password123'
+    });
+  });
+
+  it('should change password', async () => {
+    // Fails in CI - no database connection
+    const result = await sql`SELECT * FROM users WHERE id = ${testUser.id}`;
+  });
+});
+```
+
+**Root Cause:**
+1. Tests make real database calls using `@vercel/postgres`
+2. CI environment doesn't have database configured
+3. Tests require actual Neon PostgreSQL connection
+4. Should use Jest auto-mocks instead of real database
+
+**Solution: Use Jest Auto-Mocks (Pattern from auth.test.js)**
+
+```javascript
+// ✅ GOOD - Mock database for CI
+import { describe, it, expect, beforeAll, beforeEach, jest } from '@jest/globals';
+import request from 'supertest';
+import express from 'express';
+
+// Mock dependencies BEFORE importing routes
+jest.mock('../../src/models/User.js');  // Auto-mock User model
+jest.mock('@vercel/postgres');          // Auto-mock SQL
+
+// Import AFTER mocks
+import authRoutes from '../../src/routes/auth.js';
+import User from '../../src/models/User.js';
+import { sql } from '@vercel/postgres';
+
+describe('Settings API Integration Tests', () => {
+  let app;
+  let testUser;
+  let authToken;
+
+  beforeAll(() => {
+    // Set up Express app
+    app = express();
+    app.use(express.json());
+    app.use('/api/auth', authRoutes);
+
+    // Create mock test user (no database)
+    testUser = {
+      id: 1,
+      email: 'test@example.com',
+      password_hash: 'hashed_password',
+      tier: 'free'
+    };
+
+    authToken = generateToken(testUser);
+  });
+
+  beforeEach(() => {
+    // Clear all mocks before each test
+    jest.clearAllMocks();
+  });
+
+  it('should change password', async () => {
+    // Mock SQL query result
+    sql.mockResolvedValueOnce({
+      rows: [{
+        id: testUser.id,
+        email: testUser.email,
+        password_hash: testUser.password_hash
+      }]
+    });
+
+    // Mock User methods
+    User.validatePassword.mockResolvedValue(true);
+    User.updatePassword.mockResolvedValue(undefined);
+
+    const response = await request(app)
+      .patch('/api/auth/password')
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({
+        currentPassword: 'oldpass',
+        newPassword: 'newpass'
+      });
+
+    expect(response.status).toBe(200);
+    expect(User.updatePassword).toHaveBeenCalledWith(testUser.id, 'newpass');
+  });
+});
+```
+
+**Key Differences from Manual Mocks:**
+
+❌ **Don't** create manual mock factories:
+```javascript
+// BAD - Manual factory mock
+jest.mock('../../src/models/User.js', () => {
+  const users = new Map();
+  return {
+    create: jest.fn(async (data) => { /* complex logic */ }),
+    findById: jest.fn(async (id) => users.get(id))
+  };
+});
+```
+
+✅ **Do** use Jest auto-mocks and set return values per test:
+```javascript
+// GOOD - Auto-mock + per-test setup
+jest.mock('../../src/models/User.js');
+
+it('test name', async () => {
+  User.findById.mockResolvedValue(mockUser);
+  User.updatePassword.mockResolvedValue(undefined);
+  // ... rest of test
+});
+```
+
+**When Routes Use SQL Directly:**
+
+Some routes bypass the User model and query the database directly:
+
+```javascript
+// Route code that uses SQL directly
+const result = await sql`SELECT id, email FROM users WHERE id = ${userId}`;
+const user = result.rows[0];
+```
+
+Mock both the User model AND the sql function:
+
+```javascript
+// Mock sql to return appropriate data
+sql.mockResolvedValueOnce({
+  rows: [{
+    id: 1,
+    email: 'test@example.com',
+    password_hash: 'hashed_password'
+  }]
+});
+```
+
+**Key Principles:**
+1. ✅ Use `jest.mock('../../src/models/User.js')` without implementation
+2. ✅ Mock `@vercel/postgres` for routes that use SQL directly
+3. ✅ Set mock return values in each test with `.mockResolvedValue()`
+4. ✅ Call `jest.clearAllMocks()` in `beforeEach()`
+5. ✅ Follow the same pattern as auth.test.js and other integration tests
+6. ❌ DON'T create manual factory mocks with internal state
+7. ❌ DON'T make real database calls in default CI test suite
+
+**When to Use Real Database:**
+- Docker sandbox tests: `npm run test:db:setup && npm run test:db`
+- Pre-deployment integration testing
+- Migration validation
+
+**Impact:**
+- Fixed settings.test.js (17 tests) in v2.5.1
+- All integration tests pass in CI without database
+- Maintains test coverage while avoiding CI dependencies
+- Follows established pattern from auth.test.js
+
+**Related Patterns:**
+- Pattern 11: ES Modules vs CommonJS (backend test imports)
+- Pattern 5: Jest ESM Module Mocking (variable naming)
+
+**Files Fixed:**
+- `server/tests/integration/settings.test.js` - Converted to auto-mocks (17 tests)
+
+**Test Counts:**
+- Before: 11 failures (database connection errors)
+- After: 17 passing (100% pass rate)
+
+---
+
 ## 🔬 Technical Insights
 
 ### 1. AuthContext Initialization Behavior

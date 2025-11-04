@@ -1,15 +1,20 @@
 /**
  * Integration Tests: Settings API Endpoints
  * Tests password change, account deletion, and preferences update
+ *
+ * Note: This test mocks database operations for CI. For full integration testing
+ * with real database, use Docker sandbox: npm run test:db:setup && npm run test:db
  */
 
-import { describe, it, expect, beforeAll, afterAll, beforeEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeAll, beforeEach, jest } from '@jest/globals';
 import request from 'supertest';
 import express from 'express';
-import { sql } from '@vercel/postgres';
 
-// Mock Stripe config BEFORE importing routes
-// Note: We define mocks inside the factory to avoid hoisting issues
+// Mock dependencies BEFORE importing routes
+jest.mock('../../src/models/User.js');
+jest.mock('@vercel/postgres');
+
+// Mock Stripe config
 jest.mock('../../src/config/stripe.js', () => {
   const { jest: jestGlobal } = require('@jest/globals');
 
@@ -42,13 +47,14 @@ jest.mock('../../src/config/stripe.js', () => {
 import authRoutes from '../../src/routes/auth.js';
 import User from '../../src/models/User.js';
 import { generateToken } from '../../src/middleware/auth.js';
+import { sql } from '@vercel/postgres';
 
 describe('Settings API Integration Tests', () => {
   let app;
   let testUser;
   let authToken;
 
-  beforeAll(async () => {
+  beforeAll(() => {
     // Set up test environment
     process.env.JWT_SECRET = 'test-jwt-secret-key-for-testing';
     process.env.SESSION_SECRET = 'test-session-secret-key';
@@ -61,36 +67,47 @@ describe('Settings API Integration Tests', () => {
     // Mount auth routes (auth middleware is included in the routes)
     app.use('/api/auth', authRoutes);
 
-    // Create test user with email auth
-    testUser = await User.create({
+    // Create test user
+    testUser = {
+      id: 1,
       email: 'settings-test@example.com',
-      password: 'OldPassword123!',
+      password_hash: 'hashed_OldPassword123!',
       tier: 'starter',
       first_name: 'Settings',
-      last_name: 'Test'
-    });
+      last_name: 'Test',
+      github_id: null,
+      stripe_customer_id: null,
+      analytics_enabled: true,
+      created_at: new Date(),
+      last_login: new Date()
+    };
 
-    // Generate real JWT token
+    // Generate JWT token
     authToken = generateToken(testUser);
   });
 
   beforeEach(() => {
-    // Reset Stripe mocks before each test
-    global.mockStripeList.mockReset();
-    global.mockStripeCancel.mockReset();
-  });
-
-  afterAll(async () => {
-    // Clean up test user if still exists
-    try {
-      await sql`DELETE FROM users WHERE email = 'settings-test@example.com'`;
-    } catch (err) {
-      // User already deleted - that's ok
-    }
+    // Clear all mocks before each test
+    jest.clearAllMocks();
   });
 
   describe('PATCH /api/auth/password', () => {
     it('should successfully change password with valid current password', async () => {
+      // Mock SQL query for getting user
+      sql.mockResolvedValueOnce({
+        rows: [{
+          id: testUser.id,
+          email: testUser.email,
+          password_hash: testUser.password_hash,
+          github_id: testUser.github_id,
+          tier: testUser.tier
+        }]
+      });
+
+      // Mock User methods
+      User.validatePassword.mockResolvedValue(true); // Current password is valid
+      User.updatePassword.mockResolvedValue(undefined);
+
       const response = await request(app)
         .patch('/api/auth/password')
         .set('Authorization', `Bearer ${authToken}`)
@@ -101,17 +118,23 @@ describe('Settings API Integration Tests', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.message).toBe('Password updated successfully');
-
-      // Verify new password works (use findByEmail to get password_hash)
-      const updatedUser = await User.findByEmail(testUser.email);
-      const isValid = await User.validatePassword('NewPassword456!', updatedUser.password_hash);
-      expect(isValid).toBe(true);
-
-      // Reset password for other tests
-      await User.updatePassword(testUser.id, 'OldPassword123!');
+      expect(User.updatePassword).toHaveBeenCalledWith(testUser.id, 'NewPassword456!');
     });
 
     it('should reject password change with incorrect current password', async () => {
+      // Mock SQL query for getting user
+      sql.mockResolvedValueOnce({
+        rows: [{
+          id: testUser.id,
+          email: testUser.email,
+          password_hash: testUser.password_hash,
+          github_id: testUser.github_id,
+          tier: testUser.tier
+        }]
+      });
+
+      User.validatePassword.mockResolvedValue(false); // Current password is invalid
+
       const response = await request(app)
         .patch('/api/auth/password')
         .set('Authorization', `Bearer ${authToken}`)
@@ -125,13 +148,20 @@ describe('Settings API Integration Tests', () => {
     });
 
     it('should reject password change for OAuth users', async () => {
-      // Create GitHub OAuth user
-      const oauthUser = await User.findOrCreateByGithub({
-        githubId: 'settings-test-github-123',
-        email: 'oauth-settings@example.com'
-      });
+      const oauthUser = {
+        id: 2,
+        email: 'oauth-settings@example.com',
+        password_hash: null,
+        github_id: 'settings-test-github-123',
+        tier: 'free'
+      };
 
       const oauthToken = generateToken(oauthUser);
+
+      // Mock SQL query for OAuth user
+      sql.mockResolvedValueOnce({
+        rows: [oauthUser]
+      });
 
       const response = await request(app)
         .patch('/api/auth/password')
@@ -143,9 +173,6 @@ describe('Settings API Integration Tests', () => {
 
       expect(response.status).toBe(400);
       expect(response.body.error).toContain('GitHub account');
-
-      // Clean up
-      await sql`DELETE FROM users WHERE id = ${oauthUser.id}`;
     });
 
     it('should reject password change without authentication', async () => {
@@ -160,6 +187,17 @@ describe('Settings API Integration Tests', () => {
     });
 
     it('should validate new password length', async () => {
+      // Mock SQL query for getting user
+      sql.mockResolvedValueOnce({
+        rows: [{
+          id: testUser.id,
+          email: testUser.email,
+          password_hash: testUser.password_hash,
+          github_id: testUser.github_id,
+          tier: testUser.tier
+        }]
+      });
+
       const response = await request(app)
         .patch('/api/auth/password')
         .set('Authorization', `Bearer ${authToken}`)
@@ -173,6 +211,17 @@ describe('Settings API Integration Tests', () => {
     });
 
     it('should require both passwords', async () => {
+      // Mock SQL query for getting user
+      sql.mockResolvedValueOnce({
+        rows: [{
+          id: testUser.id,
+          email: testUser.email,
+          password_hash: testUser.password_hash,
+          github_id: testUser.github_id,
+          tier: testUser.tier
+        }]
+      });
+
       const response = await request(app)
         .patch('/api/auth/password')
         .set('Authorization', `Bearer ${authToken}`)
@@ -188,6 +237,11 @@ describe('Settings API Integration Tests', () => {
 
   describe('PATCH /api/auth/preferences', () => {
     it('should successfully update analytics preference to false', async () => {
+      const updatedUser = { ...testUser, analytics_enabled: false };
+
+      User.updatePreferences.mockResolvedValue(updatedUser);
+      User.findById.mockResolvedValue(updatedUser);
+
       const response = await request(app)
         .patch('/api/auth/preferences')
         .set('Authorization', `Bearer ${authToken}`)
@@ -198,13 +252,15 @@ describe('Settings API Integration Tests', () => {
       expect(response.status).toBe(200);
       expect(response.body.message).toBe('Preferences updated successfully');
       expect(response.body.preferences.analytics_enabled).toBe(false);
-
-      // Verify in database
-      const updatedUser = await User.findById(testUser.id);
-      expect(updatedUser.analytics_enabled).toBe(false);
+      expect(User.updatePreferences).toHaveBeenCalledWith(testUser.id, { analytics_enabled: false });
     });
 
     it('should successfully update analytics preference to true', async () => {
+      const updatedUser = { ...testUser, analytics_enabled: true };
+
+      User.updatePreferences.mockResolvedValue(updatedUser);
+      User.findById.mockResolvedValue(updatedUser);
+
       const response = await request(app)
         .patch('/api/auth/preferences')
         .set('Authorization', `Bearer ${authToken}`)
@@ -214,10 +270,6 @@ describe('Settings API Integration Tests', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.preferences.analytics_enabled).toBe(true);
-
-      // Verify in database
-      const updatedUser = await User.findById(testUser.id);
-      expect(updatedUser.analytics_enabled).toBe(true);
     });
 
     it('should reject preference update without authentication', async () => {
@@ -277,41 +329,44 @@ describe('Settings API Integration Tests', () => {
     });
 
     it('should successfully delete account with FREE tier (no Stripe)', async () => {
-      // Create temporary test user
-      const tempUser = await User.create({
-        email: `temp-delete-${Date.now()}@example.com`,
-        password: 'Password123!',
-        tier: 'free'
-      });
+      const freeUser = {
+        id: 3,
+        email: 'temp-delete@example.com',
+        password_hash: 'hashed_password',
+        tier: 'free',
+        stripe_customer_id: null
+      };
 
-      const tempToken = generateToken(tempUser);
+      const freeToken = generateToken(freeUser);
+
+      User.findById.mockResolvedValue(freeUser);
+      User.deleteById.mockResolvedValue(true);
 
       const response = await request(app)
         .delete('/api/auth/account')
-        .set('Authorization', `Bearer ${tempToken}`)
+        .set('Authorization', `Bearer ${freeToken}`)
         .send({
           confirmation: 'DELETE MY ACCOUNT'
         });
 
       expect(response.status).toBe(200);
       expect(response.body.message).toBe('Account deleted successfully');
-
-      // Verify user is deleted
-      const deletedUser = await User.findById(tempUser.id);
-      expect(deletedUser).toBeNull();
+      expect(User.deleteById).toHaveBeenCalledWith(freeUser.id);
     });
 
     it('should cancel Stripe subscription before deleting paid account', async () => {
-      // Create temporary paid user
-      const paidUser = await User.create({
-        email: `paid-delete-${Date.now()}@example.com`,
-        password: 'Password123!',
-        tier: 'pro'
-      });
+      const paidUser = {
+        id: 4,
+        email: 'paid-delete@example.com',
+        password_hash: 'hashed_password',
+        tier: 'pro',
+        stripe_customer_id: 'cus_test123'
+      };
 
-      // Add Stripe customer ID
-      const customerId = `cus_test_${Date.now()}`;
-      await User.updateStripeCustomerId(paidUser.id, customerId, 'app');
+      const paidToken = generateToken(paidUser);
+
+      User.findById.mockResolvedValue(paidUser);
+      User.deleteById.mockResolvedValue(true);
 
       // Mock Stripe subscription list
       global.mockStripeList.mockResolvedValue({
@@ -329,8 +384,6 @@ describe('Settings API Integration Tests', () => {
         status: 'canceled'
       });
 
-      const paidToken = generateToken(paidUser);
-
       const response = await request(app)
         .delete('/api/auth/account')
         .set('Authorization', `Bearer ${paidToken}`)
@@ -340,34 +393,33 @@ describe('Settings API Integration Tests', () => {
 
       expect(response.status).toBe(200);
       expect(global.mockStripeList).toHaveBeenCalledWith({
-        customer: customerId,
+        customer: paidUser.stripe_customer_id,
         status: 'active',
         limit: 1
       });
       expect(global.mockStripeCancel).toHaveBeenCalledWith('sub_test123');
-
-      // Verify user is deleted
-      const deletedUser = await User.findById(paidUser.id);
-      expect(deletedUser).toBeNull();
+      expect(User.deleteById).toHaveBeenCalledWith(paidUser.id);
     });
 
     it('should handle Stripe cancellation errors gracefully', async () => {
-      // Create temporary paid user
-      const paidUser = await User.create({
-        email: `stripe-error-delete-${Date.now()}@example.com`,
-        password: 'Password123!',
-        tier: 'pro'
-      });
+      const paidUser = {
+        id: 5,
+        email: 'stripe-error-delete@example.com',
+        password_hash: 'hashed_password',
+        tier: 'pro',
+        stripe_customer_id: 'cus_error'
+      };
 
-      await User.updateStripeCustomerId(paidUser.id, `cus_error_${Date.now()}`, 'app');
+      const paidToken = generateToken(paidUser);
+
+      User.findById.mockResolvedValue(paidUser);
+      User.deleteById.mockResolvedValue(true);
 
       // Mock Stripe to throw error
       global.mockStripeList.mockResolvedValue({
         data: [{ id: 'sub_error123', status: 'active' }]
       });
       global.mockStripeCancel.mockRejectedValue(new Error('Stripe API error'));
-
-      const paidToken = generateToken(paidUser);
 
       const response = await request(app)
         .delete('/api/auth/account')
@@ -377,31 +429,29 @@ describe('Settings API Integration Tests', () => {
         });
 
       // Should still succeed (graceful error handling)
-      // Account deletion continues even if Stripe cancellation fails
       expect(response.status).toBe(200);
       expect(response.body.message).toBe('Account deleted successfully');
-
-      // Verify user is deleted (even though Stripe failed)
-      const deletedUser = await User.findById(paidUser.id);
-      expect(deletedUser).toBeNull();
+      expect(User.deleteById).toHaveBeenCalledWith(paidUser.id);
     });
 
     it('should skip Stripe cancellation if no active subscriptions', async () => {
-      // Create temporary paid user
-      const paidUser = await User.create({
-        email: `no-sub-delete-${Date.now()}@example.com`,
-        password: 'Password123!',
-        tier: 'starter'
-      });
+      const paidUser = {
+        id: 6,
+        email: 'no-sub-delete@example.com',
+        password_hash: 'hashed_password',
+        tier: 'starter',
+        stripe_customer_id: 'cus_nosub'
+      };
 
-      await User.updateStripeCustomerId(paidUser.id, `cus_nosub_${Date.now()}`, 'app');
+      const paidToken = generateToken(paidUser);
+
+      User.findById.mockResolvedValue(paidUser);
+      User.deleteById.mockResolvedValue(true);
 
       // Mock Stripe - no active subscriptions
       global.mockStripeList.mockResolvedValue({
         data: []
       });
-
-      const paidToken = generateToken(paidUser);
 
       const response = await request(app)
         .delete('/api/auth/account')
@@ -413,10 +463,7 @@ describe('Settings API Integration Tests', () => {
       expect(response.status).toBe(200);
       expect(global.mockStripeList).toHaveBeenCalled();
       expect(global.mockStripeCancel).not.toHaveBeenCalled();
-
-      // Verify user is deleted
-      const deletedUser = await User.findById(paidUser.id);
-      expect(deletedUser).toBeNull();
+      expect(User.deleteById).toHaveBeenCalledWith(paidUser.id);
     });
   });
 });
