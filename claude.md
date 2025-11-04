@@ -12,7 +12,7 @@
 AI-powered documentation generator with real-time streaming, quality scoring (0-100), and WCAG 2.1 AA compliance.
 
 **Key Metrics:**
-- 1,955 tests (1,905 passing/skipped, 12 pre-existing failures) | 97.8% pass rate | 91.83% backend coverage
+- 2,015 tests (1,966 passing, 40 skipped, 9 pre-existing failures) | 98.91% pass rate | 91.83% backend coverage
 - Lighthouse: 75/100 performance (+67%), 100/100 accessibility
 - Bundle: 78KB gzipped (-85% reduction)
 - Accessibility: 95/100 score, 0 axe violations
@@ -546,10 +546,20 @@ codescribe-ai/
 
 ## 🔄 Version History
 
-**Current: v2.5.0** - Epic 2.5: Legal Compliance - Phase 1-2 Complete (November 3, 2025): **Privacy Policy & Terms Pages** (GDPR compliance, version tracking); **Terms Acceptance System** (TermsAcceptanceModal, version-based re-acceptance workflow); **Contact Support Modal** (authenticated/unauthenticated support requests, 1000 char limit); **Footer Component** (legal links, support button); **Database Migration 010** (4 new columns, 4 indexes for terms/privacy acceptance); **Backend API** (3 legal endpoints, requireTermsAcceptance middleware); **+134 new tests** (9 new test files); **1,955 tests** (1,283 frontend, 672 backend, 97.8% pass rate)
+**Current: v2.5.1** - Epic 2.5: Legal Compliance - Phase 3 Complete (November 4, 2025): **Settings Page** (4-tab navigation: Account, Privacy, Subscription, Danger Zone); **Analytics Opt-Out** (database-stored preference, conditional Vercel Analytics loading); **Account Management** (email/password change, profile display); **Cache Control** (strict headers on user-specific endpoints); **Attribution Footer** (CodeScribe AI branding on all generated docs); **Database Migration 011** (analytics_enabled column + index); **+60 tests** (Settings integration tests); **2,015 tests** (1,283 frontend, 732 backend, 98.91% pass rate)
 
 <details>
-<summary>Previous Versions (v1.0-v2.4.6)</summary>
+<summary>Previous Versions (v1.0-v2.5.0)</summary>
+
+- **v2.5.0** - Epic 2.5: Legal Compliance - Phase 1-2 Complete (November 3, 2025)
+  - Privacy Policy & Terms Pages (GDPR compliance, version tracking)
+  - Terms Acceptance System (TermsAcceptanceModal, version-based re-acceptance)
+  - Contact Support Modal (authenticated/unauthenticated requests, 1000 char limit)
+  - Footer Component (legal links, support button)
+  - Database Migration 010 (4 new columns, 4 indexes for terms/privacy acceptance)
+  - Backend API (3 legal endpoints, requireTermsAcceptance middleware)
+  - +134 new tests (9 new test files)
+  - 1,955 tests (1,283 frontend, 672 backend, 97.8% pass rate)
 
 - **v2.4.6** - Billing Period Persistence & Help Modal UX (November 2, 2025)
   - Help Modal Tabbed Interface (3-tab organization: Quick Start, Quality Scores, FAQs)

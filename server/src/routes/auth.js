@@ -8,6 +8,7 @@
 import express from 'express';
 import passport from 'passport';
 import crypto from 'crypto';
+import { sql } from '@vercel/postgres';
 import stripe from '../config/stripe.js';
 import User from '../models/User.js';
 import Usage from '../models/Usage.js';
@@ -239,6 +240,11 @@ router.post('/logout', requireAuth, (req, res) => {
 // ============================================================================
 router.get('/me', requireAuth, async (req, res) => {
   try {
+    // Prevent caching of user-specific data
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+
     // req.user should contain at least { id }
     const user = await User.findById(req.user.id);
 
@@ -381,6 +387,182 @@ router.patch('/profile', requireAuth, async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to update profile'
+    });
+  }
+});
+
+// ============================================================================
+// PATCH /api/auth/password - Change Password
+// ============================================================================
+router.patch('/password', requireAuth, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user.id;
+
+    // Get user with password_hash (findById doesn't include it for security)
+    const result = await sql`
+      SELECT id, email, password_hash, github_id, tier
+      FROM users
+      WHERE id = ${userId}
+    `;
+    const user = result.rows[0];
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+
+    // Only allow password change for email auth users (not OAuth)
+    // OAuth users are identified by having a github_id
+    if (user.github_id) {
+      return res.status(400).json({
+        success: false,
+        error: 'Password management is handled through your GitHub account'
+      });
+    }
+
+    // Validate inputs
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        error: 'Current password and new password are required'
+      });
+    }
+
+    if (newPassword.length < 8) {
+      return res.status(400).json({
+        success: false,
+        error: 'New password must be at least 8 characters'
+      });
+    }
+
+    // Verify current password
+    const isValid = await User.validatePassword(currentPassword, user.password_hash);
+    if (!isValid) {
+      return res.status(401).json({
+        success: false,
+        error: 'Current password is incorrect'
+      });
+    }
+
+    // Update password
+    await User.updatePassword(userId, newPassword);
+
+    res.json({
+      success: true,
+      message: 'Password updated successfully'
+    });
+  } catch (error) {
+    console.error('Change password error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to change password'
+    });
+  }
+});
+
+// ============================================================================
+// DELETE /api/auth/account - Delete Account
+// ============================================================================
+router.delete('/account', requireAuth, async (req, res) => {
+  try {
+    const { confirmation } = req.body;
+    const userId = req.user.id;
+
+    // Require explicit confirmation
+    if (confirmation !== 'DELETE MY ACCOUNT') {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid confirmation. Please type DELETE MY ACCOUNT'
+      });
+    }
+
+    // Get user to check for active subscription
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+
+    // Cancel active Stripe subscription if exists
+    if (user.stripe_customer_id && user.tier !== 'free') {
+      try {
+        // Cancel subscription immediately
+        const subscriptions = await stripe.subscriptions.list({
+          customer: user.stripe_customer_id,
+          status: 'active',
+          limit: 1
+        });
+
+        if (subscriptions.data.length > 0) {
+          await stripe.subscriptions.cancel(subscriptions.data[0].id);
+          console.log(`✅ Canceled subscription for user ${userId}`);
+        }
+      } catch (stripeError) {
+        console.error('Failed to cancel subscription:', stripeError);
+        // Continue with account deletion even if subscription cancellation fails
+      }
+    }
+
+    // Delete user account
+    await User.deleteById(userId);
+
+    // Destroy session
+    if (req.session) {
+      req.session.destroy((err) => {
+        if (err) {
+          console.error('Session destruction error:', err);
+        }
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Account deleted successfully'
+    });
+  } catch (error) {
+    console.error('Delete account error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete account'
+    });
+  }
+});
+
+// ============================================================================
+// PATCH /api/auth/preferences - Update User Preferences
+// ============================================================================
+router.patch('/preferences', requireAuth, async (req, res) => {
+  try {
+    const { analytics_enabled } = req.body;
+    const userId = req.user.id;
+
+    // Validate input
+    if (typeof analytics_enabled !== 'boolean') {
+      return res.status(400).json({
+        success: false,
+        error: 'analytics_enabled must be a boolean'
+      });
+    }
+
+    // Update preferences in database
+    await User.updatePreferences(userId, { analytics_enabled });
+
+    res.json({
+      success: true,
+      message: 'Preferences updated successfully',
+      preferences: { analytics_enabled }
+    });
+  } catch (error) {
+    console.error('Update preferences error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update preferences'
     });
   }
 });

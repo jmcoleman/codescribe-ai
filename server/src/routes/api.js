@@ -105,6 +105,13 @@ router.post('/generate-stream', apiLimiter, generationLimiter, checkUsage(), asy
       }
     });
 
+    // Send attribution footer as final chunk
+    const attribution = `\n\n\n\n---\n\n*Generated with [CodeScribe AI](https://codescribeai.com) - AI-powered code documentation*`;
+    res.write(`data: ${JSON.stringify({
+      type: 'chunk',
+      content: attribution
+    })}\n\n`);
+
     // Track usage after successful generation
     const userIdentifier = req.user?.id || `ip:${req.ip || req.socket?.remoteAddress || 'unknown'}`;
     try {
@@ -250,6 +257,11 @@ router.post('/upload', apiLimiter, (req, res) => {
 // Supports both authenticated users (by user ID) and anonymous users (by IP)
 router.get('/user/usage', async (req, res) => {
   try {
+    // Prevent caching of user-specific data
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+
     // Support both authenticated users and anonymous users
     const userIdentifier = req.user?.id || `ip:${req.ip || req.socket?.remoteAddress || 'unknown'}`;
     const tier = req.user?.tier || 'free';
@@ -299,6 +311,11 @@ router.get('/user/usage', async (req, res) => {
 // GET /api/user/tier-features - Get current user's tier and feature access
 router.get('/user/tier-features', requireAuth, async (req, res) => {
   try {
+    // Prevent caching of user-specific data
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+
     const tier = req.user.tier || 'free';
     const tierConfig = TIER_FEATURES[tier];
 

@@ -1,8 +1,8 @@
 ## 🔧 CODESCRIBE AI TODO LIST
 
 **Status:** 📋 **ACTIVE** (Post-Production Enhancements)
-**Current Phase:** Phase 2 🚧 In Progress (Epic 2.1-2.4 ✅ Complete | Epic 2.5 Phase 1-2 ✅ Complete)
-**Last Updated:** November 3, 2025 - v2.5.0
+**Current Phase:** Phase 2 🚧 In Progress (Epic 2.1-2.4 ✅ Complete | Epic 2.5 Phase 1-3 ✅ Complete)
+**Last Updated:** November 4, 2025 - v2.5.1
 
 > **📌 Navigation Tip:**
 > - **In VS Code:** Use `Cmd+Shift+O` (Mac) or `Ctrl+Shift+O` (Windows/Linux) to see all headings and jump to sections
@@ -861,11 +861,11 @@ All email verification functionality has been implemented and verified:
 
 ### Epic 2.5: Legal Compliance & User Rights
 
-**Estimated Duration:** 4 days total (Phase 1-2: 2 days ✅ Complete, Phase 3-4: 2-3 days 📋 Planned)
-**Status:** 🔄 **Phase 1-2 COMPLETE** - v2.5.0 (November 3, 2025)
-**Release:** v2.5.0 (Epic 2.5: Legal Compliance - Phase 1-2 Complete)
+**Estimated Duration:** 4 days total (Phase 1-2: 2 days ✅, Phase 3: 1 day ✅, Phase 4: 1-2 days 📋 Planned)
+**Status:** 🔄 **Phase 1-3 COMPLETE** - v2.5.1 (November 4, 2025)
+**Release:** v2.5.1 (Epic 2.5: Legal Compliance - Phase 3 Complete)
 
-**Note:** Phase 1-2 complete. Phase 3-4 required before launching live Stripe payments.
+**Note:** Phase 1-3 complete. Phase 4 required before launching live Stripe payments.
 
 #### Phase 1-2: Completed Tasks (v2.5.0) ✅
 
@@ -928,21 +928,30 @@ All email verification functionality has been implemented and verified:
 - [x] ✅ All legal tests passing (97.8% pass rate)
 - [x] ✅ Foundation for legal compliance complete
 
-#### Phase 3-4: Remaining Tasks (v2.5.1-v2.5.2) 📋 Planned
+#### Phase 3: Completed Tasks (v2.5.1) ✅
 
-- [ ] **Account Settings UI (Phase 3)**
-  - [ ] Settings page with 4 tabs: Account | Privacy | Subscription | Danger Zone
-  - [ ] Analytics opt-out toggle
-  - [ ] Change email/password
-  - [ ] Delete account button
-  - [ ] User profile management
+- [x] **Account Settings UI**
+  - [x] Settings page with 4 tabs: Account | Privacy | Subscription | Danger Zone
+  - [x] Analytics opt-out toggle (stored in database)
+  - [x] Change email/password forms with validation
+  - [x] Delete account button with confirmation modal
+  - [x] User profile management (name, dates, OAuth indicator)
+  - [x] AnalyticsWrapper for conditional Vercel Analytics loading
+  - [x] Backend API endpoints (profile, email, password, preferences)
+  - [x] Database migration 011 (analytics_enabled column + index)
+  - [x] Cache control headers on user-specific endpoints
+  - [x] Attribution footer on all generated documentation
+  - [x] Settings integration tests (26 tests)
+  - [x] SETTINGS-UX-PATTERNS.md documentation
 
-- [ ] **User Data Rights (Phase 4)**
+#### Phase 4: Remaining Tasks (v2.5.2) 📋 Planned
+
+- [ ] **User Data Rights**
   - [ ] Data export: GET /api/user/data-export (JSON download)
-  - [ ] Account deletion: 30-day soft delete with restore
-  - [ ] Analytics opt-out: Conditional Vercel Analytics loading
-  - [ ] Email notifications via Resend
-  - [ ] Compliance with GDPR/CCPA data rights
+  - [ ] Account deletion backend: 30-day soft delete with restore
+  - [ ] Account deletion cron job (permanent deletion after 30 days)
+  - [ ] Email notifications via Resend (deletion requested, restored, completed)
+  - [ ] Compliance with GDPR/CCPA data rights (right to erasure, data portability)
 
 ---
 

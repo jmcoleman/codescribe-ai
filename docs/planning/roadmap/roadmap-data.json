@@ -66,8 +66,8 @@
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
     "footerLeft": "<strong>CodeScribe AI</strong> \u00b7 Strategic Roadmap v3.5",
-    "footer": "Phase 1 Complete \u00b7 Phase 2: Epic 2.5 Phase 1-2 Complete (Legal Compliance) \u00b7 Launch: Mid-Jan 2026",
-    "lastUpdated": "November 3, 2025"
+    "footer": "Phase 1 Complete \u00b7 Phase 2: Epic 2.5 Phase 1-3 Complete (Legal Compliance) \u00b7 Launch: Mid-Jan 2026",
+    "lastUpdated": "November 4, 2025"
   },
   "columns": [
     {
@@ -425,6 +425,32 @@
             "+134 new tests across 9 new test files",
             "Documentation updates (CHANGELOG, README, CLAUDE.md, testing docs)"
           ]
+        },
+        {
+          "version": "v2.5.1",
+          "title": "Epic 2.5: Legal Compliance - Phase 3",
+          "duration": "1 day",
+          "status": "\u2713 Complete",
+          "completedDate": "Nov 4, 2025",
+          "badge": "Phase 3 Complete",
+          "features": [
+            "Settings Page: 4-tab navigation (Account | Privacy | Subscription | Danger Zone)",
+            "AccountTab: Profile display, email/password change forms with validation",
+            "PrivacyTab: Analytics opt-out toggle (stored in database preferences)",
+            "SubscriptionTab: Usage stats, billing info, Stripe Customer Portal integration",
+            "DangerZoneTab: Account deletion with confirmation modal",
+            "AnalyticsWrapper: Conditional Vercel Analytics loading based on user preference",
+            "Backend API: 5 new endpoints (profile, email, password, preferences)",
+            "Database migration 011: analytics_enabled column + index",
+            "Cache Control: Strict headers on user-specific endpoints (no 304 responses)",
+            "Attribution Footer: CodeScribe AI branding on all generated documentation",
+            "Mobile-responsive layout with proper tab keyboard navigation",
+            "Settings integration tests: 26 new tests",
+            "SETTINGS-UX-PATTERNS.md documentation",
+            "2,015 tests (1,283 frontend, 732 backend, 98.91% pass rate)",
+            "+60 tests (26 settings, 10 migration-011, 24 emailService improvements)",
+            "Documentation updates (CHANGELOG, README, CLAUDE.md, TODO.md, testing docs)"
+          ]
         }
       ]
     },
@@ -435,23 +461,19 @@
       "subtitle": "Phase 2 & 3: Payments + Dark Mode",
       "phases": [
         {
-          "version": "v2.5.1-v2.5.x",
-          "title": "Epic 2.5: Legal Compliance - Phase 3-4",
-          "duration": "2-3 days",
+          "version": "v2.5.2",
+          "title": "Epic 2.5: Legal Compliance - Phase 4",
+          "duration": "1-2 days",
           "status": "Planned",
-          "badge": "Phase 3-4",
+          "badge": "Phase 4",
           "features": [
-            "Phase 3: Account Settings UI (1-2 days)",
-            "Account Settings page with tabbed interface",
-            "Legal Preferences tab: View accepted T&C/Privacy versions, re-accept option",
-            "Data & Privacy tab: View data collection status, analytics opt-out toggle",
-            "Email Preferences tab: Marketing/product update opt-in/opt-out",
             "Phase 4: User Data Rights (1-2 days)",
-            "Data export endpoint: Download all user data (JSON/CSV)",
-            "Account deletion flow: Soft delete with 30-day grace period",
-            "Data retention UI: Show what data is stored and for how long",
-            "Analytics opt-out implementation: Disable Vercel Analytics tracking",
-            "GDPR compliance: Right to access, rectification, erasure, data portability"
+            "Data export endpoint: GET /api/user/data-export (JSON download)",
+            "Account deletion backend: 30-day soft delete with restore option",
+            "Account deletion cron job: Permanent deletion after 30 days",
+            "Email notifications via Resend (deletion requested, restored, completed)",
+            "GDPR/CCPA compliance: Right to erasure, data portability",
+            "Data retention UI: Show what data is stored and for how long"
           ]
         },
         {

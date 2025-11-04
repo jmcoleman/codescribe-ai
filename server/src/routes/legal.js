@@ -41,6 +41,11 @@ router.get('/versions', (_req, res) => {
  */
 router.get('/status', requireAuth, async (req, res) => {
   try {
+    // Prevent caching of user-specific data
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+
     // Fetch full user record from database (req.user from JWT only has id)
     const user = await User.findById(req.user.id);
 

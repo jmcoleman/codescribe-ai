@@ -27,6 +27,7 @@ const dummyAuthContext = {
   resetPassword: async () => { throw new Error('Authentication is disabled'); },
   getToken: () => null,
   refreshUser: async () => {},
+  updateProfile: async () => { throw new Error('Authentication is disabled'); },
   clearError: () => {},
   acceptLegalDocuments: async () => { throw new Error('Authentication is disabled'); },
   checkLegalStatus: async () => ({ needs_reacceptance: false }),
@@ -294,6 +295,47 @@ export function AuthProvider({ children }) {
   };
 
   /**
+   * Update user profile
+   */
+  const updateProfile = async (updates) => {
+    try {
+      setError(null);
+
+      const token = getStorageItem(STORAGE_KEYS.AUTH_TOKEN);
+
+      if (!token) {
+        throw new Error('Not authenticated');
+      }
+
+      const response = await fetch('/api/auth/profile', {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updates),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update profile');
+      }
+
+      // Update user state with new data
+      if (data.user) {
+        setUser(data.user);
+      }
+
+      return { success: true, user: data.user };
+    } catch (err) {
+      const errorMessage = err.message || 'Failed to update profile';
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    }
+  };
+
+  /**
    * Clear error state
    */
   const clearError = () => {
@@ -381,6 +423,7 @@ export function AuthProvider({ children }) {
     resetPassword,
     getToken,
     refreshUser,
+    updateProfile,
     clearError,
     acceptLegalDocuments,
     checkLegalStatus,

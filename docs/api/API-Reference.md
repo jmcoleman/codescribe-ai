@@ -1360,6 +1360,134 @@ app.use(errorHandler);
 
 ---
 
+## 🔒 Cache Control for User-Specific Data
+
+### Problem: 304 Not Modified After Authentication
+
+When users authenticate (especially after OAuth sign-in), browsers may serve stale cached data from before authentication, causing user-specific endpoints to return incorrect data.
+
+**Example Issue:**
+```
+User signs in with GitHub OAuth → Browser requests /api/user/usage
+→ Browser returns 304 Not Modified with anonymous data (cached from before sign-in)
+→ User sees wrong usage statistics
+```
+
+### Solution: Strict Cache Control Headers
+
+All user-specific endpoints **must** include strict cache control headers to prevent browser caching:
+
+```javascript
+// Prevent caching of user-specific data
+res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+res.setHeader('Pragma', 'no-cache');
+res.setHeader('Expires', '0');
+```
+
+### Affected Endpoints
+
+These endpoints include cache control headers because they return user-specific data:
+
+1. **`GET /api/user/usage`** - Usage statistics differ per user/authentication state
+2. **`GET /api/user/tier-features`** - Feature access varies by user tier
+3. **`GET /api/legal/status`** - Legal document acceptance status varies per user
+4. **`GET /api/auth/me`** - Current user profile data
+5. **`POST /api/generate-stream`** - SSE streaming already includes `Cache-Control: no-cache`
+
+### Why This Matters
+
+**User-specific data characteristics:**
+- Changes based on authentication state (anonymous vs authenticated)
+- Varies per user (different tiers, usage limits, feature access)
+- Should never be served from cache after authentication state changes
+
+**Cache Control Headers Explained:**
+
+| Header | Purpose |
+|--------|---------|
+| `Cache-Control: no-cache, no-store, must-revalidate` | Prevents caching and forces revalidation |
+| `Pragma: no-cache` | HTTP/1.0 backward compatibility |
+| `Expires: 0` | Additional cache prevention for older clients |
+
+### Implementation Example
+
+```javascript
+// server/src/routes/api.js
+router.get('/api/user/usage', async (req, res) => {
+  try {
+    // Prevent caching of user-specific data
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+
+    const userIdentifier = req.user?.id || `ip:${req.ip}`;
+    const tier = req.user?.tier || 'free';
+
+    const usage = await Usage.getUserUsage(userIdentifier);
+
+    res.json({
+      tier,
+      daily: { /* ... */ },
+      monthly: { /* ... */ }
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to retrieve usage' });
+  }
+});
+```
+
+### Testing Cache Control
+
+**1. Verify headers in browser DevTools:**
+```
+Request URL: https://codescribeai.com/api/user/usage
+Status: 200 OK (should NOT be 304)
+Response Headers:
+  Cache-Control: no-cache, no-store, must-revalidate
+  Pragma: no-cache
+  Expires: 0
+```
+
+**2. Test authentication state changes:**
+```bash
+# 1. Make request as anonymous user
+curl -v http://localhost:3000/api/user/usage
+
+# 2. Authenticate (get token)
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user@example.com","password":"password"}'
+
+# 3. Make request as authenticated user (should return 200, NOT 304)
+curl -v http://localhost:3000/api/user/usage \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+**3. Check for 304 responses (should not happen):**
+```javascript
+// Frontend: Monitor for unexpected 304s
+fetch('/api/user/usage')
+  .then(response => {
+    if (response.status === 304) {
+      console.error('❌ BUG: Got 304 for user-specific data!');
+    }
+  });
+```
+
+### When to Use Cache Control
+
+**✅ Always use for:**
+- User-specific data (usage, preferences, subscriptions)
+- Authentication-dependent responses
+- Data that varies per user/session
+
+**❌ Don't use for:**
+- Public, static endpoints (`/api/tiers`, `/api/health`)
+- Data that's identical for all users
+- Responses where caching improves performance without correctness issues
+
+---
+
 ## 🧪 Testing Your API
 
 ### Manual Testing with cURL

@@ -1,4 +1,4 @@
-import { Menu as MenuIcon, LogOut, User, FileText, Shield, ChevronDown } from 'lucide-react';
+import { Menu as MenuIcon, LogOut, User, FileText, Shield, ChevronDown, Settings } from 'lucide-react';
 import { useState, lazy, Suspense } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Menu } from '@headlessui/react';
@@ -57,22 +57,22 @@ export function Header({ onMenuClick, onHelpClick }) {
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Left: Logo + Title */}
-          <div className="flex items-center gap-3">
+          <Link to="/" className="flex items-center gap-3 group">
             {/* Logo */}
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-purple p-1">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-purple p-1 transition-transform group-hover:scale-105">
               <Logo className="w-full h-full" aria-hidden="true" />
             </div>
 
             {/* Title + Tagline */}
             <div>
-              <h1 className="text-lg sm:text-xl font-semibold text-slate-900">
+              <h1 className="text-lg sm:text-xl font-semibold text-slate-900 group-hover:text-purple-600 transition-colors">
                 CodeScribe AI
               </h1>
               <p className="text-xs text-slate-600 hidden lg:block">
                 Intelligent Code Documentation
               </p>
             </div>
-          </div>
+          </Link>
 
           {/* Right: Navigation */}
           <nav className="flex items-center gap-2">
@@ -111,6 +111,22 @@ export function Header({ onMenuClick, onHelpClick }) {
 
                       <Menu.Items className="absolute right-0 mt-2 w-56 origin-top-right rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
                         <div className="p-1">
+                          <Menu.Item>
+                            {({ active }) => (
+                              <Link
+                                to="/settings"
+                                className={`${
+                                  active ? 'bg-slate-100' : ''
+                                } group flex items-center gap-3 w-full px-3 py-2 text-sm text-slate-700 rounded-md transition-colors`}
+                              >
+                                <Settings className="w-4 h-4 text-slate-500" aria-hidden="true" />
+                                Settings
+                              </Link>
+                            )}
+                          </Menu.Item>
+
+                          <div className="h-px bg-slate-200 my-1" />
+
                           <Menu.Item>
                             {({ active }) => (
                               <Link

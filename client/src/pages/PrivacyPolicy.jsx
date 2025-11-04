@@ -5,6 +5,7 @@
  * Legal document defining how we collect, use, and protect user data
  */
 
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 
@@ -13,6 +14,18 @@ const EFFECTIVE_DATE = 'November 2, 2025';
 
 export default function PrivacyPolicy() {
   const navigate = useNavigate();
+
+  // ESC key to navigate back (same as Back button)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        navigate(-1);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [navigate]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50/30 to-indigo-50/20">

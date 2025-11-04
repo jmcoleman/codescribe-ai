@@ -14,6 +14,14 @@ export default defineConfig({
       template: 'treemap', // Use treemap visualization (other options: sunburst, network)
     }),
   ],
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+    },
+  },
   test: {
     globals: true,
     environment: 'jsdom',

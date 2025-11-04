@@ -44,7 +44,12 @@ This is a comprehensive example showing various markdown features including code
   - Nested item
   - Another nested item
 
-**This download button is working perfectly!**`;
+**This download button is working perfectly!**
+
+
+---
+
+*Generated with [CodeScribe AI](https://codescribeai.com) - AI-powered code documentation*`;
 
 /**
  * Sample code for the CodePanel
