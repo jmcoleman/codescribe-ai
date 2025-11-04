@@ -771,7 +771,8 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 
 **Next Steps for Phase 2:**
 - Epic 2.5: Legal Compliance - Phase 1-2 (2 days) - ✅ **COMPLETE** (v2.5.0)
-- Epic 2.5: Legal Compliance - Phase 3-4 (2-3 days) - 📋 Planned (Account Settings, User Data Rights)
+- Epic 2.5: Legal Compliance - Phase 3 (1 day) - ✅ **COMPLETE** (v2.5.1)
+- Epic 2.5: Legal Compliance - Phase 4 (1-2 days) - 📋 Planned (User Data Rights - v2.5.2)
 - Epic 2.6: UI Integration & Usage Dashboard (2-3 days) - 📋 Planned
 - Epic 2.7: Production Launch (Post-LLC) (1-2 days) - 📋 Planned (Jan 14+ 2026)
 - Target completion: v2.5.x-v2.7.0 releases
@@ -839,9 +840,10 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 - ✅ Nov 3: Epic 2.5 Phase 1-2 (Legal Compliance Foundation) - v2.5.0
 
 **Remaining Sprint (Nov-Dec 2025):**
-- 📋 Nov 4-10: Epic 2.5 Phase 3-4 (Account Settings + User Data Rights) - v2.5.1-v2.5.2
-- 📋 Nov 11-24: Epic 2.6 (Usage Dashboard + Account Settings) - v2.6.0
-- 📋 Nov 25-Dec 1: Epic 2.8 (Subscription Management UI) - v2.8.0
+- ✅ Nov 4: Epic 2.5 Phase 3 (Account Settings UI) - v2.5.1
+- 📋 Nov 5-7: Epic 2.5 Phase 4 (User Data Rights) - v2.5.2
+- 📋 Nov 8-20: Epic 2.6 (Usage Dashboard + UI Integration) - v2.6.0
+- 📋 Nov 21-Dec 1: Epic 2.8 (Subscription Management UI) - v2.8.0
 - 📋 Mid-December: ALL CODE COMPLETE
 
 **Validation & Marketing (Dec 2025 - Jan 2026):**
@@ -1032,31 +1034,45 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 - ✅ Full test coverage: 1,955 tests (1,283 frontend, 672 backend, 97.8% pass rate)
 - ✅ +134 new tests across 9 new test files
 
-**Phase 3: Account Settings UI (1-2 days) - 📋 PLANNED (v2.5.1)**
-- Settings page with 4 tabs: Account | Privacy | Subscription | Danger Zone
-- Analytics opt-out toggle
-- Change email/password
-- Delete account button
-- User profile management
+**Phase 3: Account Settings UI (1 day) - ✅ COMPLETE (v2.5.1 - Nov 4, 2025)**
+- ✅ Settings page with 4 tabs: Account | Privacy | Subscription | Danger Zone
+- ✅ AccountTab: Profile display, email/password change forms with validation
+- ✅ PrivacyTab: Analytics opt-out toggle (stored in database preferences)
+- ✅ SubscriptionTab: Usage stats, billing info, Stripe Customer Portal integration
+- ✅ DangerZoneTab: Account deletion with confirmation modal
+- ✅ AnalyticsWrapper: Conditional Vercel Analytics loading based on user preference
+- ✅ Backend API: 5 new endpoints (profile, email, password, preferences)
+- ✅ Database migration 011: analytics_enabled column + index
+- ✅ Cache Control: Strict headers on user-specific endpoints (no 304 responses)
+- ✅ Attribution Footer: CodeScribe AI branding on all generated documentation
+- ✅ Mobile-responsive layout with proper tab keyboard navigation
+- ✅ Settings integration tests: 26 new tests
+- ✅ SETTINGS-UX-PATTERNS.md documentation
+- ✅ 2,015 tests (1,283 frontend, 732 backend, 98.91% pass rate)
+- ✅ +60 tests (26 settings, 10 migration-011, 24 emailService improvements)
 
 **Phase 4: User Data Rights (1-2 days) - 📋 PLANNED (v2.5.2)**
 - Data export: GET /api/user/data-export (JSON download)
-- Account deletion: 30-day soft delete with restore
-- Analytics opt-out: Conditional Vercel Analytics loading
-- Email notifications via Resend
-- Compliance with GDPR/CCPA data rights
+- Account deletion backend: 30-day soft delete with restore option
+- Account deletion cron job: Permanent deletion after 30 days
+- Email notifications via Resend (deletion requested, restored, completed)
+- Compliance with GDPR/CCPA data rights (right to erasure, data portability)
+- Data retention UI: Show what data is stored and for how long
 
-**Database Migration 010 (Already Complete):**
+**Database Migrations (Complete):**
 ```sql
--- ✅ Already implemented in v2.5.0
+-- ✅ Migration 010: Implemented in v2.5.0
 ALTER TABLE users ADD COLUMN terms_accepted_at TIMESTAMPTZ;
 ALTER TABLE users ADD COLUMN terms_version_accepted VARCHAR(20);
 ALTER TABLE users ADD COLUMN privacy_accepted_at TIMESTAMPTZ;
 ALTER TABLE users ADD COLUMN privacy_version_accepted VARCHAR(20);
 
--- 📋 Future (Phase 3-4):
+-- ✅ Migration 011: Implemented in v2.5.1
 ALTER TABLE users ADD COLUMN analytics_enabled BOOLEAN DEFAULT true;
+
+-- 📋 Future (Phase 4 - v2.5.2):
 ALTER TABLE users ADD COLUMN deletion_scheduled_at TIMESTAMPTZ;
+ALTER TABLE users ADD COLUMN deletion_reason TEXT;
 ```
 
 #### Epic 2.6: UI Integration & Usage Dashboard (2-3 days) - 📋 **PLANNED**
