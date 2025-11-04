@@ -669,7 +669,7 @@ describe('PricingPage', () => {
       const backButton = screen.getByRole('button', { name: /back/i });
       await user.click(backButton);
 
-      expect(mockNavigate).toHaveBeenCalledWith('/');
+      expect(mockNavigate).toHaveBeenCalledWith(-1);
     });
   });
 
@@ -787,7 +787,7 @@ describe('PricingPage', () => {
     it('should have proper aria-label for back button', () => {
       renderPricingPage();
 
-      const backButton = screen.getByLabelText(/go back to home page/i);
+      const backButton = screen.getByLabelText(/go back/i);
       expect(backButton).toBeInTheDocument();
     });
 

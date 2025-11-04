@@ -138,7 +138,7 @@ class User {
   static async findById(id) {
     const result = await sql`
       SELECT id, email, first_name, last_name, github_id, tier, stripe_customer_id, customer_created_via, email_verified,
-             terms_accepted_at, terms_version_accepted, privacy_accepted_at, privacy_version_accepted, created_at
+             terms_accepted_at, terms_version_accepted, privacy_accepted_at, privacy_version_accepted, analytics_enabled, created_at
       FROM users
       WHERE id = ${id}
     `;
@@ -343,7 +343,8 @@ class User {
       SET email = ${newEmail},
           updated_at = NOW()
       WHERE id = ${id}
-      RETURNING id, email, name, tier, stripe_customer_id
+      RETURNING id, email, first_name, last_name, github_id, tier, stripe_customer_id, customer_created_via, email_verified,
+                terms_accepted_at, terms_version_accepted, privacy_accepted_at, privacy_version_accepted, analytics_enabled, created_at
     `;
 
     return result.rows[0];
@@ -363,7 +364,8 @@ class User {
           last_name = ${lastName},
           updated_at = NOW()
       WHERE id = ${id}
-      RETURNING id, email, first_name, last_name, tier, stripe_customer_id
+      RETURNING id, email, first_name, last_name, github_id, tier, stripe_customer_id, customer_created_via, email_verified,
+                terms_accepted_at, terms_version_accepted, privacy_accepted_at, privacy_version_accepted, analytics_enabled, created_at
     `;
 
     return result.rows[0];
@@ -505,6 +507,36 @@ class User {
     `;
 
     return result.rows;
+  }
+
+  /**
+   * Delete user by ID (alias for delete method)
+   * @param {number} id - User ID
+   * @returns {Promise<boolean>} True if deleted
+   */
+  static async deleteById(id) {
+    return this.delete(id);
+  }
+
+  /**
+   * Update user preferences
+   * @param {number} id - User ID
+   * @param {Object} preferences - Preferences to update
+   * @param {boolean} preferences.analytics_enabled - Analytics enabled flag
+   * @returns {Promise<Object>} Updated user object
+   */
+  static async updatePreferences(id, preferences) {
+    const { analytics_enabled } = preferences;
+
+    const result = await sql`
+      UPDATE users
+      SET analytics_enabled = ${analytics_enabled},
+          updated_at = NOW()
+      WHERE id = ${id}
+      RETURNING id, email, analytics_enabled
+    `;
+
+    return result.rows[0];
   }
 }
 

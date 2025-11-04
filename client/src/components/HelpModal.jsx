@@ -132,8 +132,8 @@ export function HelpModal({ isOpen, onClose }) {
               onClick={() => setActiveTab('quickstart')}
               className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-purple-600 ${
                 activeTab === 'quickstart'
-                  ? 'border-purple-600 text-purple-600'
-                  : 'border-transparent text-slate-600 hover:text-slate-900 hover:border-slate-300'
+                  ? 'border-purple-600 text-purple-600 dark:text-purple-400'
+                  : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600'
               }`}
               aria-selected={activeTab === 'quickstart'}
               role="tab"
@@ -148,8 +148,8 @@ export function HelpModal({ isOpen, onClose }) {
               onClick={() => setActiveTab('quality')}
               className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-purple-600 ${
                 activeTab === 'quality'
-                  ? 'border-purple-600 text-purple-600'
-                  : 'border-transparent text-slate-600 hover:text-slate-900 hover:border-slate-300'
+                  ? 'border-purple-600 text-purple-600 dark:text-purple-400'
+                  : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600'
               }`}
               aria-selected={activeTab === 'quality'}
               role="tab"
@@ -164,8 +164,8 @@ export function HelpModal({ isOpen, onClose }) {
               onClick={() => setActiveTab('faq')}
               className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-purple-600 ${
                 activeTab === 'faq'
-                  ? 'border-purple-600 text-purple-600'
-                  : 'border-transparent text-slate-600 hover:text-slate-900 hover:border-slate-300'
+                  ? 'border-purple-600 text-purple-600 dark:text-purple-400'
+                  : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600'
               }`}
               aria-selected={activeTab === 'faq'}
               role="tab"

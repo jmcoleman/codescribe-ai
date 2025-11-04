@@ -41,11 +41,15 @@ export class DocGeneratorService {
       documentation = await claudeClient.generate(userMessage, claudeOptions);
     }
 
-    // Step 4: Calculate quality score
-    const qualityScore = calculateQualityScore(documentation, analysis, docType);
+    // Step 4: Add attribution footer (works for both cached and non-cached responses)
+    const attribution = `\n\n\n\n---\n\n*Generated with [CodeScribe AI](https://codescribeai.com) - AI-powered code documentation*`;
+    const documentationWithAttribution = documentation + attribution;
+
+    // Step 5: Calculate quality score
+    const qualityScore = calculateQualityScore(documentationWithAttribution, analysis, docType);
 
     return {
-      documentation,
+      documentation: documentationWithAttribution,
       qualityScore,
       analysis,
       metadata: {

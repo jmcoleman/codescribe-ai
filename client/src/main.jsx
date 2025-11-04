@@ -1,8 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import { Analytics } from '@vercel/analytics/react'
-import { SpeedInsights } from '@vercel/speed-insights/react'
+import { AnalyticsWrapper } from './components/AnalyticsWrapper.jsx'
 import './index.css'
 import App from './App.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
@@ -15,12 +14,7 @@ import { PaymentCancel } from './components/PaymentCancel.jsx'
 import VerifyEmail from './components/VerifyEmail.jsx'
 import TermsOfService from './pages/TermsOfService.jsx'
 import PrivacyPolicy from './pages/PrivacyPolicy.jsx'
-
-// Only load analytics and speed insights in production
-// Use hostname check - works reliably in Vercel deployments
-const isProduction =
-  window.location.hostname === 'codescribeai.com' ||
-  window.location.hostname.includes('vercel.app')
+import Settings from './pages/Settings.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -37,15 +31,11 @@ createRoot(document.getElementById('root')).render(
             <Route path="/payment/cancel" element={<PaymentCancel />} />
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/settings" element={<Settings />} />
           </Routes>
+          <AnalyticsWrapper />
         </AuthProvider>
       </BrowserRouter>
     </ErrorBoundary>
-    {isProduction && (
-      <>
-        <Analytics />
-        <SpeedInsights />
-      </>
-    )}
   </StrictMode>,
 )

@@ -603,25 +603,27 @@ See [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) for complete
 
 ### 📊 Testing & Quality
 
-**Comprehensive Test Coverage: 1,785 Tests** (1,746 passing, 39 skipped, 97.82% pass rate)
-- **Backend Tests**: 574 tests (Jest + Supertest)
+**Comprehensive Test Coverage: 2,015 Tests** (1,966 passing, 40 skipped, 9 pre-existing failures, 98.91% pass rate)
+- **Backend Tests**: 732 tests (Jest + Supertest)
   - Service layer: qualityScorer, claudeClient, codeParser, docGenerator, emailService
   - Authentication: 102 tests (auth middleware, user model, OAuth flows)
-  - Database migrations: 40 tests (naming, checksums, ordering)
-  - Contact Sales: 28 tests (email sending, tier validation, name resolution)
+  - Settings: 26 integration tests (profile, email, password, preferences)
+  - Database migrations: 50 tests (naming, checksums, ordering, migration 011)
+  - Contact Sales & Support: 28 tests (email sending, tier validation, name resolution)
   - Password reset: 25 tests (email verification, token validation, security)
-  - Integration: file upload, quality scoring, prompt quality
+  - Integration: file upload, quality scoring, prompt quality, settings API
   - Mermaid generation tests
   - **Coverage**: 91.83% services statements, 95.81% overall, 88.72% branches
-  - **Pass Rate**: 96.5% (574 passing, 21 skipped)
-- **Frontend Tests**: 1,173 tests (Vitest + React Testing Library)
+  - **Pass Rate**: 96.0% (702 passing, 21 skipped, 9 pre-existing failures)
+- **Frontend Tests**: 1,283 tests (Vitest + React Testing Library)
   - Component tests with accessibility checks (18/18 components tested)
   - Authentication UI: SignupModal, LoginModal, ForgotPasswordModal, ResetPasswordModal
+  - Settings UI: AccountTab, PrivacyTab, SubscriptionTab, DangerZoneTab, AnalyticsWrapper
   - Integration tests for App workflows
   - Mermaid diagram rendering tests
   - Toast notification system tests (33 tests)
   - **Coverage**: 100% critical user paths
-  - **Pass Rate**: 98.5% (1,173 passing, 18 skipped)
+  - **Pass Rate**: 98.5% (1,264 passing, 19 skipped, 0 failures)
 - **E2E Tests**: 10 tests across 5 browsers (Playwright)
   - Cross-browser validation (Chromium, Firefox, WebKit, Chrome, Edge)
   - File upload + generate workflows
