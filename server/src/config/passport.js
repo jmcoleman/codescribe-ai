@@ -68,17 +68,22 @@ passport.use(
  * GitHub OAuth Strategy
  */
 if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
+  const callbackURL = process.env.GITHUB_CALLBACK_URL || 'http://localhost:3000/api/auth/github/callback';
+
   passport.use(
     new GitHubStrategy(
       {
         clientID: process.env.GITHUB_CLIENT_ID,
         clientSecret: process.env.GITHUB_CLIENT_SECRET,
-        callbackURL: process.env.GITHUB_CALLBACK_URL || 'http://localhost:3000/api/auth/github/callback',
+        callbackURL,
       },
       async (accessToken, refreshToken, profile, done) => {
         try {
+          console.log('[Passport] GitHub OAuth callback invoked for user:', profile.username);
+
           // Extract email from GitHub profile
           const email = profile.emails?.[0]?.value || `${profile.username}@github.user`;
+          console.log('[Passport] Email extracted:', email);
 
           // Find or create user
           const user = await User.findOrCreateByGithub({
@@ -86,8 +91,10 @@ if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
             email,
           });
 
+          console.log('[Passport] User found/created:', user.id);
           return done(null, user);
         } catch (error) {
+          console.error('[Passport] GitHub strategy error:', error);
           return done(error);
         }
       }
@@ -97,6 +104,7 @@ if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
   // Mask the client ID for security (show first 8 chars only)
   const maskedClientId = process.env.GITHUB_CLIENT_ID.substring(0, 8) + '...';
   console.log(`✅ GitHub OAuth configured (Client ID: ${maskedClientId})`);
+  console.log(`✅ GitHub callback URL: ${callbackURL}`);
 } else {
   console.warn('⚠️  GitHub OAuth not configured (missing GITHUB_CLIENT_ID or GITHUB_CLIENT_SECRET)');
 }
