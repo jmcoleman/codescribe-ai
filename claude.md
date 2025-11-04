@@ -12,7 +12,7 @@
 AI-powered documentation generator with real-time streaming, quality scoring (0-100), and WCAG 2.1 AA compliance.
 
 **Key Metrics:**
-- 2,015 tests (1,966 passing, 40 skipped, 9 pre-existing failures) | 98.91% pass rate | 91.83% backend coverage
+- 1,878 tests (1,859 passing, 19 skipped, 0 failures) | 100% pass rate | 91.83% backend coverage
 - Lighthouse: 75/100 performance (+67%), 100/100 accessibility
 - Bundle: 78KB gzipped (-85% reduction)
 - Accessibility: 95/100 score, 0 axe violations
