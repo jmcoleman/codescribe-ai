@@ -46,6 +46,8 @@ function greet(name) {
     };
 
     const mockDocumentation = '# Documentation\n\nThis is great documentation!';
+    const attribution = `\n\n\n\n---\n\n*Generated with [CodeScribe AI](https://codescribeai.com) - AI-powered code documentation*`;
+    const mockDocumentationWithAttribution = mockDocumentation + attribution;
 
     const mockQualityScore = {
       score: 85,
@@ -75,7 +77,7 @@ function greet(name) {
         docType: 'README',
       });
 
-      expect(result.documentation).toBe(mockDocumentation);
+      expect(result.documentation).toBe(mockDocumentationWithAttribution);
       expect(result.qualityScore).toEqual(mockQualityScore);
       expect(result.analysis).toEqual(mockAnalysis);
       expect(result.metadata).toHaveProperty('language', 'javascript');
@@ -131,7 +133,7 @@ function greet(name) {
       await docGenerator.generateDocumentation(sampleCode);
 
       expect(calculateQualityScore).toHaveBeenCalledWith(
-        mockDocumentation,
+        mockDocumentationWithAttribution,
         mockAnalysis,
         'README'
       );
@@ -170,7 +172,7 @@ function greet(name) {
         docType: 'JSDOC',
       });
 
-      expect(result.documentation).toBe(mockDocumentation);
+      expect(result.documentation).toBe(mockDocumentationWithAttribution);
       expect(result.metadata.docType).toBe('JSDOC');
       const callArgs = claudeClient.generate.mock.calls[0];
       expect(callArgs[1].systemPrompt).toContain('JSDoc');
@@ -181,7 +183,7 @@ function greet(name) {
         docType: 'API',
       });
 
-      expect(result.documentation).toBe(mockDocumentation);
+      expect(result.documentation).toBe(mockDocumentationWithAttribution);
       expect(result.metadata.docType).toBe('API');
       const callArgs = claudeClient.generate.mock.calls[0];
       expect(callArgs[1].systemPrompt).toContain('API documentation');
@@ -192,7 +194,7 @@ function greet(name) {
         docType: 'ARCHITECTURE',
       });
 
-      expect(result.documentation).toBe(mockDocumentation);
+      expect(result.documentation).toBe(mockDocumentationWithAttribution);
       expect(result.metadata.docType).toBe('ARCHITECTURE');
       const callArgs = claudeClient.generate.mock.calls[0];
       expect(callArgs[1].systemPrompt).toContain('architectural');
@@ -203,7 +205,7 @@ function greet(name) {
         docType: 'UNKNOWN',
       });
 
-      expect(result.documentation).toBe(mockDocumentation);
+      expect(result.documentation).toBe(mockDocumentationWithAttribution);
       const callArgs = claudeClient.generate.mock.calls[0];
       expect(callArgs[1].systemPrompt).toContain('README.md');
     });
@@ -221,7 +223,7 @@ function greet(name) {
         docType: 'README',
       });
 
-      expect(result.documentation).toBe(mockDocumentation);
+      expect(result.documentation).toBe(mockDocumentationWithAttribution);
       expect(result.metadata.codeLength).toBe(0);
     });
 
@@ -460,6 +462,7 @@ export function add(a, b) {
       };
 
       const mockDoc = '# Add Function\n\nAdds two numbers.';
+      const mockDocWithAttribution = mockDoc + `\n\n\n\n---\n\n*Generated with [CodeScribe AI](https://codescribeai.com) - AI-powered code documentation*`;
       const mockScore = { score: 90, grade: 'A' };
 
       parseCode.mockResolvedValue(mockAnalysis);
@@ -475,7 +478,7 @@ export function add(a, b) {
 
       // Verify result structure
       expect(result).toEqual({
-        documentation: mockDoc,
+        documentation: mockDocWithAttribution,
         qualityScore: mockScore,
         analysis: mockAnalysis,
         metadata: expect.objectContaining({
@@ -557,12 +560,14 @@ export function add(a, b) {
         complexity: 'simple',
       });
 
-      claudeClient.generate.mockResolvedValue('# Simple Script');
+      const simpleDoc = '# Simple Script';
+      const simpleDocWithAttribution = simpleDoc + `\n\n\n\n---\n\n*Generated with [CodeScribe AI](https://codescribeai.com) - AI-powered code documentation*`;
+      claudeClient.generate.mockResolvedValue(simpleDoc);
       calculateQualityScore.mockReturnValue({ score: 50, grade: 'F' });
 
       const result = await docGenerator.generateDocumentation(simpleCode);
 
-      expect(result.documentation).toBe('# Simple Script');
+      expect(result.documentation).toBe(simpleDocWithAttribution);
       expect(result.analysis.functions).toHaveLength(0);
     });
 
