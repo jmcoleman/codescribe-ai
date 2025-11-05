@@ -65,9 +65,9 @@
       "text": "codescribeai.com",
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
-    "footerLeft": "<strong>CodeScribe AI</strong> \u00b7 Strategic Roadmap v3.5",
-    "footer": "Phase 1 Complete \u00b7 Phase 2: Epic 2.5 Phase 1-3 Complete (Legal Compliance) \u00b7 Launch: Mid-Jan 2026",
-    "lastUpdated": "November 4, 2025"
+    "footerLeft": "<strong>CodeScribe AI</strong> \u00b7 Strategic Roadmap v3.6",
+    "footer": "Phase 1 Complete \u00b7 Phase 2: Epic 2.5 Complete (Legal Compliance) \u00b7 Launch: Mid-Jan 2026",
+    "lastUpdated": "November 4, 2025 (Epic 2.5 Phase 4 Complete)"
   },
   "columns": [
     {
@@ -451,6 +451,49 @@
             "+60 tests (26 settings, 10 migration-011, 24 emailService improvements)",
             "Documentation updates (CHANGELOG, README, CLAUDE.md, TODO.md, testing docs)"
           ]
+        },
+        {
+          "version": "v2.5.2",
+          "title": "Account Deletion & Restoration System",
+          "duration": "0.5 days",
+          "status": "\u2713 Complete",
+          "completedDate": "Nov 4, 2025",
+          "badge": "100% Pass Rate",
+          "features": [
+            "Automatic Account Restoration: Email/password signup restores scheduled-deletion accounts",
+            "GitHub OAuth Restoration: GitHub sign-in restores scheduled-deletion accounts",
+            "Settings ESC Handler: Fixed modal cancel behavior (checks for open modals before navigating)",
+            "User Model Updates: findByEmail returns deletion fields, findOrCreateByGithub has restoration logic",
+            "Auth Route Updates: Signup detects scheduled-deletion, restores account, updates password",
+            "Backend Tests: +5 tests (2 new GitHub OAuth restoration, 3 updated for deletion fields)",
+            "Frontend Test Fixes: Updated 4 tests for 30-day grace period messaging",
+            "User Model: 64 tests (GitHub OAuth restoration, email/password restoration)",
+            "2,225 tests (1,370 frontend, 855 backend, 100% pass rate)",
+            "Documentation updates (CHANGELOG, README, CLAUDE.md, testing docs, SKIPPED-TESTS.md)"
+          ]
+        },
+        {
+          "version": "Epic 2.5 Phase 4",
+          "title": "Epic 2.5: Legal Compliance - Phase 4",
+          "duration": "2 days",
+          "status": "\u2713 Complete",
+          "completedDate": "Nov 4, 2025",
+          "badge": "Phase 4 Complete",
+          "features": [
+            "Permanent Deletion Cron Job: Daily job at 2:00 AM UTC for 30-day expired accounts",
+            "Cron Endpoint: POST /api/cron/permanent-deletions with Bearer token auth",
+            "Permanent Deletion Job: processPermanentDeletions() with error handling",
+            "Email Notifications: sendAccountDeletionEmail, sendAccountRestoredEmail via Resend",
+            "Tombstone Pattern: Preserves user_id/stripe_customer_id, NULLs PII (email, name, password)",
+            "Data Retention: 7-year financial record retention, aggregate-then-delete usage analytics",
+            "GDPR/CCPA Compliance: Article 17 (Right to Erasure) + Article 17(3)(b) (Legal Obligation)",
+            "Vercel Cron Configuration: vercel.json with daily schedule",
+            "Database Migration 012: soft delete columns (deletion_scheduled_at, deleted_at, deletion_reason)",
+            "Database Migration 013: subscription retention (prevents CASCADE deletion)",
+            "Database Migration 014: usage analytics aggregation table",
+            "Comprehensive Testing: 32+ tests (cron endpoint, deletion job, migrations)",
+            "Documentation: USER-DELETION-COMPLIANCE.md (1,500+ lines, industry research)"
+          ]
         }
       ]
     },
@@ -460,22 +503,6 @@
       "title": "Active",
       "subtitle": "Phase 2 & 3: Payments + Dark Mode",
       "phases": [
-        {
-          "version": "v2.5.2",
-          "title": "Epic 2.5: Legal Compliance - Phase 4",
-          "duration": "1-2 days",
-          "status": "Planned",
-          "badge": "Phase 4",
-          "features": [
-            "Phase 4: User Data Rights (1-2 days)",
-            "Data export endpoint: GET /api/user/data-export (JSON download)",
-            "Account deletion backend: 30-day soft delete with restore option",
-            "Account deletion cron job: Permanent deletion after 30 days",
-            "Email notifications via Resend (deletion requested, restored, completed)",
-            "GDPR/CCPA compliance: Right to erasure, data portability",
-            "Data retention UI: Show what data is stored and for how long"
-          ]
-        },
         {
           "version": "Epic 2.6",
           "title": "UI Integration & Usage Dashboard",
