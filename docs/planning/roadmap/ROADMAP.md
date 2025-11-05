@@ -1,8 +1,8 @@
 # CodeScribe AI - Product Roadmap
 
-**Last Updated:** November 3, 2025
-**Current Phase:** Phase 2 - ✅ **Epic 2.5 Phase 1-2 COMPLETE** (Legal Compliance Foundation)
-**Current Release:** v2.5.0 (Epic 2.5: Legal Compliance - Phase 1-2 Complete)
+**Last Updated:** November 4, 2025
+**Current Phase:** Phase 2 - ✅ **Epic 2.5 COMPLETE** (Legal Compliance - All 4 Phases)
+**Current Release:** v2.5.2 (Epic 2.5: User Data Rights & Restoration - Epic Complete)
 **Production URL:** [https://codescribeai.com](https://codescribeai.com)
 
 ---
@@ -769,13 +769,15 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 - Epic 2.3: UX Enhancements & File Upload (1 day) - ✅ **COMPLETE** (v2.3.0)
 - Epic 2.4: Payment Integration & Test Infrastructure (3 days) - ✅ **COMPLETE** (v2.4.0-v2.4.2)
 
-**Next Steps for Phase 2:**
+**Completed in Phase 2:**
 - Epic 2.5: Legal Compliance - Phase 1-2 (2 days) - ✅ **COMPLETE** (v2.5.0)
 - Epic 2.5: Legal Compliance - Phase 3 (1 day) - ✅ **COMPLETE** (v2.5.1)
-- Epic 2.5: Legal Compliance - Phase 4 (1-2 days) - 📋 Planned (User Data Rights - v2.5.2)
+- Epic 2.5: Legal Compliance - Phase 4 (2.5 days) - ✅ **COMPLETE** (v2.5.2)
+
+**Next Steps for Phase 2:**
 - Epic 2.6: UI Integration & Usage Dashboard (2-3 days) - 📋 Planned
 - Epic 2.7: Production Launch (Post-LLC) (1-2 days) - 📋 Planned (Jan 14+ 2026)
-- Target completion: v2.5.x-v2.7.0 releases
+- Target completion: v2.6.x-v2.7.0 releases
 
 ---
 
@@ -823,8 +825,8 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 ## 💰 Phase 2: Payments Infrastructure (IN PROGRESS)
 
 **Timeline:** October 21 - January 2026 (Build Fast, Launch When Validated)
-**Status:** 🔄 **IN PROGRESS** - Foundation + Legal Complete (v2.0.0-v2.5.0), Remaining Epics in Sprint
-**Current Release:** v2.5.0 (Epic 2.5: Legal Compliance - Phase 1-2 Complete)
+**Status:** 🔄 **IN PROGRESS** - Foundation + Legal Complete (v2.0.0-v2.5.2), Remaining Epics in Sprint
+**Current Release:** v2.5.2 (Epic 2.5: User Data Rights & Restoration - Epic Complete)
 **Target Launch:** Mid-January 2026 (validation-driven, not calendar-driven)
 **Strategic Goal:** Enable sustainable business model with Open Core + Generous Free Tier architecture
 
@@ -838,11 +840,11 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 - ✅ Oct 29: Epic 2.3 (UX Enhancements) - v2.3.0
 - ✅ Oct 30-Nov 2: Epic 2.4 (Payment Integration - Test Mode) - v2.4.0-v2.4.6
 - ✅ Nov 3: Epic 2.5 Phase 1-2 (Legal Compliance Foundation) - v2.5.0
+- ✅ Nov 4: Epic 2.5 Phase 3 (Account Settings UI) - v2.5.1
+- ✅ Nov 4: Epic 2.5 Phase 4 (User Data Rights) - v2.5.2
 
 **Remaining Sprint (Nov-Dec 2025):**
-- ✅ Nov 4: Epic 2.5 Phase 3 (Account Settings UI) - v2.5.1
-- 📋 Nov 5-7: Epic 2.5 Phase 4 (User Data Rights) - v2.5.2
-- 📋 Nov 8-20: Epic 2.6 (Usage Dashboard + UI Integration) - v2.6.0
+- 📋 Nov 5-20: Epic 2.6 (Usage Dashboard + UI Integration) - v2.6.0
 - 📋 Nov 21-Dec 1: Epic 2.8 (Subscription Management UI) - v2.8.0
 - 📋 Mid-December: ALL CODE COMPLETE
 
@@ -1007,19 +1009,19 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 
 **Note:** Upgrade/downgrade flows moved to Epic 2.8. Custom receipts/invoices moved to Epic 2.7.
 
-#### Epic 2.5: Legal Compliance & User Rights (4 days total) - 🔄 **Phase 1-2 COMPLETE**
+#### Epic 2.5: Legal Compliance & User Rights (5.5 days total) - ✅ **COMPLETE**
 
-**Release:** v2.5.0 (November 3, 2025) - **Phase 1-2 Complete**
+**Releases:** v2.5.0-v2.5.2 (November 3-4, 2025)
 **Priority:** CRITICAL (must complete before accepting payments)
 **Goal:** GDPR/CCPA compliance + user data rights infrastructure
 **Reference:** [EPIC-2.5-COMPLIANCE.md](./EPIC-2.5-COMPLIANCE.md) for full implementation spec
 
-**Phase 1: UI Placeholders (1 day) - ✅ COMPLETE**
+**Phase 1: UI Placeholders (1 day) - ✅ COMPLETE (v2.5.0)**
 - ✅ Footer component with Terms/Privacy links (appears on all pages)
 - ✅ Contact Support button in footer
 - ✅ Responsive design with proper spacing
 
-**Phase 2: Self-Hosted Policies (1 day) - ✅ COMPLETE**
+**Phase 2: Self-Hosted Policies (1 day) - ✅ COMPLETE (v2.5.0)**
 - ✅ TermsOfService.jsx component with comprehensive content
 - ✅ PrivacyPolicy.jsx component with GDPR compliance
 - ✅ Routes: `/terms` and `/privacy`
@@ -1051,13 +1053,23 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 - ✅ 2,015 tests (1,283 frontend, 732 backend, 98.91% pass rate)
 - ✅ +60 tests (26 settings, 10 migration-011, 24 emailService improvements)
 
-**Phase 4: User Data Rights (1-2 days) - 📋 PLANNED (v2.5.2)**
-- Data export: GET /api/user/data-export (JSON download)
-- Account deletion backend: 30-day soft delete with restore option
-- Account deletion cron job: Permanent deletion after 30 days
-- Email notifications via Resend (deletion requested, restored, completed)
-- Compliance with GDPR/CCPA data rights (right to erasure, data portability)
-- Data retention UI: Show what data is stored and for how long
+**Phase 4: User Data Rights (2.5 days) - ✅ COMPLETE (v2.5.2 - Nov 4, 2025)**
+- ✅ Permanent deletion cron job (2:00 AM UTC / 9:00 PM EST daily)
+- ✅ Cron endpoint: POST /api/cron/permanent-deletions with Bearer token auth
+- ✅ Tombstone deletion pattern (preserves user_id/stripe_customer_id, NULLs PII)
+- ✅ Automatic account restoration via email/password signup
+- ✅ GitHub OAuth account restoration (2 scenarios: pre-existing GitHub link, new GitHub link)
+- ✅ Email notifications: sendAccountDeletionEmail, sendAccountRestoredEmail
+- ✅ Data retention: 7-year financial records, aggregate-then-delete usage analytics
+- ✅ GDPR/CCPA compliance: Article 17 + Article 17(3)(b) + Article 5
+- ✅ Database migration 012: soft delete columns (deletion_scheduled_at, deleted_at, deletion_reason)
+- ✅ Database migration 013: subscription retention (prevents CASCADE deletion)
+- ✅ Database migration 014: usage analytics aggregation table
+- ✅ Vercel Cron Jobs configuration in vercel.json
+- ✅ Settings ESC handler fix (checks for open modals before navigating)
+- ✅ 96+ tests (64 deletion/restoration, 32 cron/migrations)
+- ✅ 2,225 tests (1,370 frontend, 855 backend, 100% pass rate)
+- ✅ USER-DELETION-COMPLIANCE.md (1,500+ lines, industry research)
 
 **Database Migrations (Complete):**
 ```sql
@@ -1070,9 +1082,13 @@ ALTER TABLE users ADD COLUMN privacy_version_accepted VARCHAR(20);
 -- ✅ Migration 011: Implemented in v2.5.1
 ALTER TABLE users ADD COLUMN analytics_enabled BOOLEAN DEFAULT true;
 
--- 📋 Future (Phase 4 - v2.5.2):
+-- ✅ Migration 012: Implemented in v2.5.2
 ALTER TABLE users ADD COLUMN deletion_scheduled_at TIMESTAMPTZ;
-ALTER TABLE users ADD COLUMN deletion_reason TEXT;
+ALTER TABLE users ADD COLUMN deleted_at TIMESTAMPTZ;
+ALTER TABLE users ADD COLUMN deletion_reason VARCHAR(500);
+
+-- ✅ Migration 013: Implemented in v2.5.2 (subscription retention)
+-- ✅ Migration 014: Implemented in v2.5.2 (usage analytics aggregation)
 ```
 
 #### Epic 2.6: UI Integration & Usage Dashboard (2-3 days) - 📋 **PLANNED**

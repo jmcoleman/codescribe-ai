@@ -11,9 +11,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.5.2] - 2025-11-04
 
-**Status:** ✅ Account Deletion & Restoration System Complete
+**Status:** ✅ Epic 2.5 Complete: Legal Compliance (Phases 1-4)
 
-### Added
+**Epic Summary:** Complete GDPR/CCPA compliance system with privacy policy, terms of service, account settings, user data rights, and permanent deletion automation.
+
+### Added - Epic 2.5 Phase 4: User Data Rights
+
+- **Permanent Deletion Cron Job**
+  - Daily automated job at 2:00 AM UTC (9:00 PM EST)
+  - Processes accounts 30+ days past `deletion_scheduled_at`
+  - Vercel Cron Jobs integration via vercel.json
+  - Bearer token authentication (`CRON_SECRET` env variable)
+  - Endpoint: `POST /api/cron/permanent-deletions`
+  - Job function: `processPermanentDeletions()` in User model
+  - Comprehensive error handling and logging
+
+- **Tombstone Deletion Pattern**
+  - Preserves: `user_id`, `stripe_customer_id`, `tier`, timestamps
+  - NULLs PII: `email`, `first_name`, `last_name`, `password_hash`, `github_id`, `github_username`
+  - Maintains foreign key integrity for subscriptions and usage quotas
+  - Sets `deleted_at` timestamp for audit trail
+  - Enables billing dispute resolution without PII
+
 - **Automatic Account Restoration**
   - Email/password signup automatically restores accounts scheduled for deletion
   - GitHub OAuth sign-in restores accounts scheduled for deletion
@@ -21,13 +40,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Success message: "Account deletion cancelled. Welcome back!"
   - Documented in USER-DELETION-COMPLIANCE.md (Q&A section)
 
+- **Email Notifications**
+  - `sendAccountDeletionEmail()` - Sent when deletion is scheduled (30-day notice)
+  - `sendAccountRestoredEmail()` - Sent when account is restored
+  - Resend API integration with error handling
+  - Email templates include grace period information
+
+- **Database Migrations**
+  - **Migration 012**: Soft delete columns
+    - `deletion_scheduled_at` (TIMESTAMP)
+    - `deleted_at` (TIMESTAMP)
+    - `deletion_reason` (VARCHAR(500))
+    - Index: `idx_users_deletion_scheduled`
+  - **Migration 013**: Subscription retention
+    - Prevents CASCADE deletion of subscriptions
+    - Preserves billing history for 7-year retention
+  - **Migration 014**: Usage analytics aggregation
+    - `usage_analytics_aggregate` table
+    - Aggregate-then-delete pattern for GDPR compliance
+    - Anonymized analytics (no user_id linkage)
+
 - **Backend Tests**
+  - 64 deletion & restoration tests (User model)
+  - 32 cron job & migration tests
   - 2 new User.test.js tests for GitHub OAuth restoration scenarios
   - Test: "should restore account when GitHub user is scheduled for deletion"
   - Test: "should restore and link when email account is scheduled for deletion"
   - Updated 3 existing tests to include deletion fields
 
 ### Changed
+
 - **Settings.jsx ESC Key Handler**
   - Now checks for open modals before navigating home
   - Prevents modal Cancel button from redirecting to home page
@@ -38,6 +80,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `findOrCreateByGithub()` includes restoration logic for 2 scenarios:
     - User with GitHub linked before deletion
     - User linking GitHub to email/password account after deletion
+  - Added `scheduleAccountDeletion(userId, reason)` static method
+  - Added `restoreAccount(userId)` static method
+  - Added `processPermanentDeletions()` static method (cron job)
+  - Added `aggregateUserUsageData(userId)` static method
 
 - **Auth Routes (auth.js)**
   - Signup endpoint detects scheduled-deletion accounts
@@ -45,21 +91,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Logs user in with restored account
   - Returns `restored: true` flag in response
 
+- **Vercel Configuration (vercel.json)**
+  - Added `crons` array with daily schedule
+  - Path: `/api/cron/permanent-deletions`
+  - Schedule: `0 2 * * *` (2:00 AM UTC daily)
+
 ### Fixed
+
 - **Frontend Test Failures (4 tests)**
   - DangerZoneTab: Updated text expectations for 30-day grace period
   - DangerZoneTab: Fixed modal heading test with proper timing
   - AccountTab: Fixed cancel button test to check disabled inputs
 
 ### Testing
+
 - **Test Counts:** 2,225 total tests (2,184 passed, 41 skipped, 0 failed)
   - Frontend: 1,350 passed | 20 skipped | 0 failed (1,370 total)
   - Backend: 834 passed | 21 skipped | 0 failed (855 total)
   - **100% pass rate** ✅
 
 ### Documentation
-- Updated USER-DELETION-COMPLIANCE.md with re-signup Q&A (lines 1345-1404)
-- Documented both email/password and GitHub OAuth restoration flows
+
+- **USER-DELETION-COMPLIANCE.md** (1,500+ lines)
+  - Industry research (GitHub, Stripe, AWS approaches)
+  - Tombstone pattern justification
+  - GDPR/CCPA legal analysis
+  - 7-year retention requirements
+  - Data retention timeline
+  - Re-signup Q&A section (lines 1345-1404)
+- Updated README.md with test counts
+- Updated CLAUDE.md with version history
+- Updated docs/testing/README.md and SKIPPED-TESTS.md
+
+### Legal Compliance
+
+- **GDPR Article 17**: Right to Erasure (PII deleted after 30 days)
+- **GDPR Article 17(3)(b)**: Legal Obligation Exemption (financial records retained 7 years)
+- **GDPR Article 5**: Data Minimization (aggregate-then-delete pattern)
+- **CCPA**: Right to deletion with business exception for legal obligations
+- **Financial Regulations**: IRS 7-year retention, Stripe chargeback resolution
 
 ---
 
