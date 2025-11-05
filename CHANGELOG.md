@@ -9,6 +9,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.5.2] - 2025-11-04
+
+**Status:** ✅ Account Deletion & Restoration System Complete
+
+### Added
+- **Automatic Account Restoration**
+  - Email/password signup automatically restores accounts scheduled for deletion
+  - GitHub OAuth sign-in restores accounts scheduled for deletion
+  - Restoration updates password, sends verification email, logs user in
+  - Success message: "Account deletion cancelled. Welcome back!"
+  - Documented in USER-DELETION-COMPLIANCE.md (Q&A section)
+
+- **Backend Tests**
+  - 2 new User.test.js tests for GitHub OAuth restoration scenarios
+  - Test: "should restore account when GitHub user is scheduled for deletion"
+  - Test: "should restore and link when email account is scheduled for deletion"
+  - Updated 3 existing tests to include deletion fields
+
+### Changed
+- **Settings.jsx ESC Key Handler**
+  - Now checks for open modals before navigating home
+  - Prevents modal Cancel button from redirecting to home page
+  - Uses DOM query: `document.querySelector('.fixed.inset-0.z-50')`
+
+- **User Model (User.js)**
+  - `findByEmail()` now returns `deletion_scheduled_at` and `deleted_at` fields
+  - `findOrCreateByGithub()` includes restoration logic for 2 scenarios:
+    - User with GitHub linked before deletion
+    - User linking GitHub to email/password account after deletion
+
+- **Auth Routes (auth.js)**
+  - Signup endpoint detects scheduled-deletion accounts
+  - Restores account, updates password, sends verification email
+  - Logs user in with restored account
+  - Returns `restored: true` flag in response
+
+### Fixed
+- **Frontend Test Failures (4 tests)**
+  - DangerZoneTab: Updated text expectations for 30-day grace period
+  - DangerZoneTab: Fixed modal heading test with proper timing
+  - AccountTab: Fixed cancel button test to check disabled inputs
+
+### Testing
+- **Test Counts:** 2,225 total tests (2,184 passed, 41 skipped, 0 failed)
+  - Frontend: 1,350 passed | 20 skipped | 0 failed (1,370 total)
+  - Backend: 834 passed | 21 skipped | 0 failed (855 total)
+  - **100% pass rate** ✅
+
+### Documentation
+- Updated USER-DELETION-COMPLIANCE.md with re-signup Q&A (lines 1345-1404)
+- Documented both email/password and GitHub OAuth restoration flows
+
+---
+
 ## [2.5.1] - 2025-11-04
 
 **Status:** ✅ Epic 2.5: Legal Compliance - Phase 3 Complete

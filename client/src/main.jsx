@@ -15,6 +15,7 @@ import VerifyEmail from './components/VerifyEmail.jsx'
 import TermsOfService from './pages/TermsOfService.jsx'
 import PrivacyPolicy from './pages/PrivacyPolicy.jsx'
 import Settings from './pages/Settings.jsx'
+import { RestoreAccount } from './pages/RestoreAccount.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -25,6 +26,7 @@ createRoot(document.getElementById('root')).render(
             <Route path="/" element={<App />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/restore-account" element={<RestoreAccount />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/pricing" element={<PricingPage />} />
             <Route path="/payment/success" element={<PaymentSuccess />} />

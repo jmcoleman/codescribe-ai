@@ -5,6 +5,8 @@ import docGenerator from '../services/docGenerator.js';
 import { apiLimiter, generationLimiter } from '../middleware/rateLimiter.js';
 import { checkUsage, incrementUsage } from '../middleware/tierGate.js';
 import Usage from '../models/Usage.js';
+import User from '../models/User.js';
+import emailService from '../services/emailService.js';
 import { TIER_FEATURES, TIER_PRICING } from '../config/tiers.js';
 import { requireAuth } from '../middleware/auth.js';
 
@@ -429,6 +431,118 @@ router.get('/tiers', (req, res) => {
     console.error('[Tiers] Failed to get tiers:', error);
     res.status(500).json({
       error: 'Failed to retrieve tiers',
+      message: error.message
+    });
+  }
+});
+
+// GET /api/user/data-export - Export all user data (GDPR/CCPA compliance)
+router.get('/user/data-export', requireAuth, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    console.log(`[Data Export] User ${userId} requested data export`);
+
+    // Get complete user data export
+    const exportData = await User.exportUserData(userId);
+
+    // Set headers for JSON download
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+    const filename = `codescribe-ai-data-export-${timestamp}.json`;
+
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+
+    console.log(`[Data Export] Sending data export to user ${userId}`);
+    res.json(exportData);
+  } catch (error) {
+    console.error('[Data Export] Failed:', error);
+    res.status(500).json({
+      error: 'Failed to export user data',
+      message: error.message
+    });
+  }
+});
+
+// POST /api/user/delete-account - Schedule account for deletion (soft delete)
+router.post('/user/delete-account', requireAuth, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { reason } = req.body;
+
+    console.log(`[Account Deletion] User ${userId} requested account deletion`);
+
+    // Schedule account for deletion (30-day grace period)
+    const user = await User.scheduleForDeletion(userId, reason || null);
+
+    // Send deletion scheduled email with restore link
+    const userName = `${user.first_name || ''} ${user.last_name || ''}`.trim();
+    await emailService.sendDeletionScheduledEmail(
+      user.email,
+      userName,
+      user.restore_token,
+      user.deletion_scheduled_at
+    );
+
+    console.log(`[Account Deletion] Deletion scheduled for user ${userId} on ${user.deletion_scheduled_at}`);
+
+    res.json({
+      message: 'Account deletion scheduled successfully',
+      deletion_date: user.deletion_scheduled_at,
+      grace_period_days: 30
+    });
+  } catch (error) {
+    console.error('[Account Deletion] Failed:', error);
+    res.status(500).json({
+      error: 'Failed to schedule account deletion',
+      message: error.message
+    });
+  }
+});
+
+// POST /api/user/restore-account - Restore account (cancel scheduled deletion)
+router.post('/user/restore-account', async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).json({
+        error: 'Restore token is required'
+      });
+    }
+
+    console.log(`[Account Restore] Restore token received`);
+
+    // Find user by restore token
+    const user = await User.findByRestoreToken(token);
+
+    if (!user) {
+      return res.status(404).json({
+        error: 'Invalid or expired restore token'
+      });
+    }
+
+    // Restore account (cancel deletion)
+    const restoredUser = await User.restoreAccount(user.id);
+
+    // Send confirmation email
+    const userName = `${restoredUser.first_name || ''} ${restoredUser.last_name || ''}`.trim();
+    await emailService.sendAccountRestoredEmail(
+      restoredUser.email,
+      userName
+    );
+
+    console.log(`[Account Restore] Account restored for user ${user.id}`);
+
+    res.json({
+      message: 'Account restored successfully',
+      email: restoredUser.email
+    });
+  } catch (error) {
+    console.error('[Account Restore] Failed:', error);
+    res.status(500).json({
+      error: 'Failed to restore account',
       message: error.message
     });
   }

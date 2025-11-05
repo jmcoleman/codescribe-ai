@@ -7,6 +7,7 @@ import webhookRoutes from './routes/webhooks.js';
 import paymentRoutes from './routes/payments.js';
 import contactRoutes from './routes/contact.js';
 import legalRoutes from './routes/legal.js';
+import cronRoutes from './routes/cron.js';
 import errorHandler from './middleware/errorHandler.js';
 
 const app = express();
@@ -35,6 +36,8 @@ if (ENABLE_AUTH) {
 
       await initializeDatabase();
       console.log('✓ Database tables initialized');
+
+      console.log('✓ Permanent deletion cron job configured via Vercel Cron (Daily at 2:00 AM UTC)');
     } catch (error) {
       console.error('Database initialization failed:', error);
       // Don't exit - allow server to start for health checks
@@ -130,6 +133,7 @@ if (ENABLE_AUTH) {
   app.use('/api/contact', contactRoutes);
   app.use('/api/legal', legalRoutes);
 }
+app.use('/api/cron', cronRoutes);
 app.use('/api/migrate', migrateRoutes);
 app.use('/api', apiRoutes);
 

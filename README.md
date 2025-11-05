@@ -603,19 +603,20 @@ See [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) for complete
 
 ### 📊 Testing & Quality
 
-**Comprehensive Test Coverage: 1,878 Tests** (1,859 passing, 19 skipped, 100% pass rate)
-- **Backend Tests**: 595 tests (Jest + Supertest, 17 integration tests excluded)
+**Comprehensive Test Coverage: 2,225 Tests** (2,184 passing, 41 skipped, 100% pass rate)
+- **Backend Tests**: 855 tests (Jest + Supertest)
   - Service layer: qualityScorer, claudeClient, codeParser, docGenerator, emailService
   - Authentication: 102 tests (auth middleware, user model, OAuth flows)
   - Settings: 26 integration tests (profile, email, password, preferences)
   - Database migrations: 50 tests (naming, checksums, ordering, migration 011)
   - Contact Sales & Support: 28 tests (email sending, tier validation, name resolution)
   - Password reset: 25 tests (email verification, token validation, security)
+  - User deletion & restoration: 64 tests (GitHub OAuth restoration, email/password restoration)
   - Integration: file upload, quality scoring, prompt quality, settings API
   - Mermaid generation tests
   - **Coverage**: 91.83% services statements, 95.81% overall, 88.72% branches
-  - **Pass Rate**: 96.0% (702 passing, 21 skipped, 9 pre-existing failures)
-- **Frontend Tests**: 1,283 tests (Vitest + React Testing Library)
+  - **Pass Rate**: 100% (834 passing, 21 skipped, 0 failures)
+- **Frontend Tests**: 1,370 tests (Vitest + React Testing Library)
   - Component tests with accessibility checks (18/18 components tested)
   - Authentication UI: SignupModal, LoginModal, ForgotPasswordModal, ResetPasswordModal
   - Settings UI: AccountTab, PrivacyTab, SubscriptionTab, DangerZoneTab, AnalyticsWrapper
@@ -623,22 +624,22 @@ See [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) for complete
   - Mermaid diagram rendering tests
   - Toast notification system tests (33 tests)
   - **Coverage**: 100% critical user paths
-  - **Pass Rate**: 98.5% (1,264 passing, 19 skipped, 0 failures)
+  - **Pass Rate**: 100% (1,350 passing, 20 skipped, 0 failures)
 - **E2E Tests**: 10 tests across 5 browsers (Playwright)
   - Cross-browser validation (Chromium, Firefox, WebKit, Chrome, Edge)
   - File upload + generate workflows
   - **Pass Rate**: 100% (10/10 tests passing)
-- **Overall Pass Rate**: 97.82% (1,747 passing, 39 skipped)
+- **Overall Pass Rate**: 100% (2,184 passing, 41 skipped)
 
 **Running Tests:**
 ```bash
 # Frontend tests (from client/)
-npm test              # Run all tests once (926 tests)
+npm test              # Run all tests once (1,370 tests)
 npm run test:ui       # Interactive UI mode
 npm run test:coverage # Generate coverage report
 
 # Backend tests (from server/)
-npm test              # Run all tests (373 tests, excludes database suite)
+npm test              # Run all tests (855 tests, includes 21 skipped database tests)
 npm run test:watch    # Watch mode for development
 npm run test:coverage # Generate coverage report with thresholds
 

@@ -28,10 +28,15 @@ export default function Settings() {
   };
 
   // ESC key to navigate home (power user feature)
+  // Only if no modals are open (modals handle their own ESC)
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
-        navigate('/');
+        // Check if any modal is open (has backdrop)
+        const hasOpenModal = document.querySelector('.fixed.inset-0.z-50');
+        if (!hasOpenModal) {
+          navigate('/');
+        }
       }
     };
 
@@ -92,7 +97,6 @@ export default function Settings() {
               {TABS.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
-                const isDanger = tab.id === 'danger';
 
                 return (
                   <button
@@ -101,9 +105,7 @@ export default function Settings() {
                     className={`
                       flex items-center gap-2 px-6 py-4 border-b-2 font-medium text-sm whitespace-nowrap transition-colors
                       ${isActive
-                        ? isDanger
-                          ? 'border-red-500 text-red-600 dark:text-red-400'
-                          : 'border-purple-600 text-purple-600 dark:text-purple-400'
+                        ? 'border-purple-600 text-purple-600 dark:text-purple-400'
                         : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600'
                       }
                     `}
