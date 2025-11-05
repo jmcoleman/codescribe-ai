@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { Mail, Lock, User, Save, Check, AlertCircle } from 'lucide-react';
+import { Mail, Lock, User, Save, Check, AlertCircle, Download } from 'lucide-react';
 import { toastCompact } from '../../utils/toast';
 
 export function AccountTab() {
@@ -101,7 +101,7 @@ export function AccountTab() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Profile Information */}
       <div>
         <div className="flex items-center justify-between mb-6">
@@ -117,7 +117,7 @@ export function AccountTab() {
           {!isEditing && (
             <button
               onClick={() => setIsEditing(true)}
-              className="px-4 py-2 text-sm font-medium text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 transition-colors"
+              className="px-4 py-2 text-sm font-medium text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 rounded"
             >
               Edit
             </button>
@@ -185,20 +185,26 @@ export function AccountTab() {
           )}
 
           {/* Action Buttons */}
-          {isEditing && (
+          <div
+            className={`overflow-hidden transition-all duration-200 ${
+              isEditing
+                ? 'max-h-20 opacity-100'
+                : 'max-h-0 opacity-0'
+            }`}
+          >
             <div className="flex gap-3">
               <button
                 type="button"
                 onClick={cancelEdit}
                 disabled={isSaving}
-                className="flex-1 py-2.5 px-4 bg-slate-100 text-slate-900 rounded-lg font-medium hover:bg-slate-200 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 py-2.5 px-4 bg-slate-100 text-slate-900 rounded-lg font-medium hover:bg-slate-200 active:bg-slate-300 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600 dark:active:bg-slate-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-slate-600 focus:ring-offset-2"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isSaving}
-                className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white rounded-lg font-semibold shadow-lg shadow-purple-600/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white rounded-lg font-semibold shadow-lg shadow-purple-600/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
               >
                 {isSaving ? (
                   <>
@@ -213,7 +219,7 @@ export function AccountTab() {
                 )}
               </button>
             </div>
-          )}
+          </div>
         </form>
       </div>
 
@@ -233,7 +239,7 @@ export function AccountTab() {
             {!showPasswordForm && (
               <button
                 onClick={() => setShowPasswordForm(true)}
-                className="px-4 py-2 text-sm font-medium text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 transition-colors"
+                className="px-4 py-2 text-sm font-medium text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 rounded"
               >
                 Change Password
               </button>
@@ -299,7 +305,7 @@ export function AccountTab() {
               <div className="flex gap-3">
                 <button
                   type="submit"
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white rounded-lg font-semibold shadow-lg shadow-purple-600/20 transition-all duration-200"
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white rounded-lg font-semibold shadow-lg shadow-purple-600/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
                 >
                   <Check className="w-5 h-5" aria-hidden="true" />
                   <span>Update Password</span>
@@ -313,7 +319,7 @@ export function AccountTab() {
                     setConfirmPassword('');
                     setPasswordError('');
                   }}
-                  className="flex-1 py-2.5 px-4 bg-slate-100 text-slate-900 rounded-lg font-medium hover:bg-slate-200 transition-all duration-200"
+                  className="flex-1 py-2.5 px-4 bg-slate-100 text-slate-900 rounded-lg font-medium hover:bg-slate-200 active:bg-slate-300 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600 dark:active:bg-slate-500 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:ring-offset-2"
                 >
                   Cancel
                 </button>
@@ -328,6 +334,95 @@ export function AccountTab() {
           )}
         </div>
       )}
+
+      {/* Data Export Section (GDPR/CCPA) */}
+      <div>
+        <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-6 border border-slate-200 dark:border-slate-700">
+          <div className="flex items-start gap-3 mb-4">
+            <Download className="w-5 h-5 text-purple-600 dark:text-purple-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
+            <div className="flex-1">
+              <h2 className="text-base font-semibold text-slate-900 dark:text-white mb-1">
+                Export Your Data
+              </h2>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                Download all your account data in JSON format (GDPR/CCPA compliance)
+              </p>
+            </div>
+          </div>
+
+          {/* Collapsible Details */}
+          <details className="mb-4 group">
+            <summary className="text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer hover:text-slate-900 dark:hover:text-slate-200 transition-colors list-none flex items-center gap-2">
+              <svg
+                className="w-4 h-4 transition-transform group-open:rotate-90"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+              What's included in the export
+            </summary>
+            <ul className="list-disc list-inside space-y-1.5 mt-3 ml-6 text-sm text-slate-600 dark:text-slate-400">
+              <li>Profile information (name, email, tier)</li>
+              <li>Account settings and preferences</li>
+              <li>Usage history and statistics</li>
+              <li>Subscription and billing information</li>
+            </ul>
+          </details>
+
+          <button
+            onClick={async () => {
+              try {
+                const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+                const token = localStorage.getItem('token');
+
+                const response = await fetch(`${API_URL}/api/user/data-export`, {
+                  method: 'GET',
+                  headers: {
+                    'Authorization': `Bearer ${token}`
+                  }
+                });
+
+                if (!response.ok) {
+                  const data = await response.json();
+                  throw new Error(data.error || 'Failed to export data');
+                }
+
+                // Get the filename from Content-Disposition header or use default
+                const contentDisposition = response.headers.get('Content-Disposition');
+                let filename = 'codescribe-ai-data-export.json';
+                if (contentDisposition) {
+                  const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+                  if (filenameMatch) {
+                    filename = filenameMatch[1];
+                  }
+                }
+
+                // Download the file
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+
+                toastCompact('Data export downloaded successfully', 'success');
+              } catch (error) {
+                toastCompact(error.message || 'Failed to export data', 'error');
+              }
+            }}
+            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white rounded-lg font-semibold shadow-lg shadow-purple-600/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
+          >
+            <Download className="w-5 h-5" aria-hidden="true" />
+            <span>Download My Data</span>
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

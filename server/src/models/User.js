@@ -88,30 +88,50 @@ class User {
     // Try to find existing user by GitHub ID
     let result = await sql`
       SELECT id, email, github_id, tier, email_verified,
-             terms_accepted_at, terms_version_accepted, privacy_accepted_at, privacy_version_accepted, created_at
+             terms_accepted_at, terms_version_accepted, privacy_accepted_at, privacy_version_accepted,
+             deletion_scheduled_at, deleted_at, created_at
       FROM users
       WHERE github_id = ${githubId}
     `;
 
     if (result.rows.length > 0) {
-      return result.rows[0];
+      const user = result.rows[0];
+
+      // If account is scheduled for deletion, restore it
+      if (user.deletion_scheduled_at && !user.deleted_at) {
+        console.log(`[GitHub OAuth] User ${user.id} signing in with scheduled-deletion account - restoring account`);
+        await User.restoreAccount(user.id);
+        // Fetch updated user data without deletion fields
+        return await User.findById(user.id);
+      }
+
+      return user;
     }
 
     // Try to find by email and link GitHub account
     result = await sql`
       SELECT id, email, github_id, tier, email_verified,
-             terms_accepted_at, terms_version_accepted, privacy_accepted_at, privacy_version_accepted, created_at
+             terms_accepted_at, terms_version_accepted, privacy_accepted_at, privacy_version_accepted,
+             deletion_scheduled_at, deleted_at, created_at
       FROM users
       WHERE email = ${email}
     `;
 
     if (result.rows.length > 0) {
+      const existingUser = result.rows[0];
+
+      // If account is scheduled for deletion, restore it before linking
+      if (existingUser.deletion_scheduled_at && !existingUser.deleted_at) {
+        console.log(`[GitHub OAuth] User ${existingUser.id} linking GitHub to scheduled-deletion account - restoring account`);
+        await User.restoreAccount(existingUser.id);
+      }
+
       // Link GitHub account to existing user and mark email as verified
       // (GitHub has already verified the email address)
       const updateResult = await sql`
         UPDATE users
         SET github_id = ${githubId}, email_verified = true, updated_at = NOW()
-        WHERE id = ${result.rows[0].id}
+        WHERE id = ${existingUser.id}
         RETURNING id, email, github_id, tier, email_verified,
                   terms_accepted_at, terms_version_accepted, privacy_accepted_at, privacy_version_accepted, created_at
       `;
@@ -154,7 +174,8 @@ class User {
   static async findByEmail(email) {
     const result = await sql`
       SELECT id, email, first_name, last_name, password_hash, github_id, tier, stripe_customer_id, customer_created_via,
-             email_verified, terms_accepted_at, terms_version_accepted, privacy_accepted_at, privacy_version_accepted, created_at
+             email_verified, terms_accepted_at, terms_version_accepted, privacy_accepted_at, privacy_version_accepted,
+             deletion_scheduled_at, deleted_at, created_at
       FROM users
       WHERE email = ${email}
     `;
@@ -516,6 +537,305 @@ class User {
    */
   static async deleteById(id) {
     return this.delete(id);
+  }
+
+  /**
+   * Schedule account for deletion (soft delete with 30-day grace period)
+   * Sets deletion_scheduled_at to NOW() + 30 days and generates restore token
+   * User can restore account within 30 days by clicking restore link in email
+   *
+   * @param {number} id - User ID
+   * @param {string|null} reason - Optional reason for deletion (for product insights)
+   * @returns {Promise<Object>} User object with restore_token
+   */
+  static async scheduleForDeletion(id, reason = null) {
+    // Generate secure restore token
+    const restoreToken = crypto.randomBytes(32).toString('hex');
+
+    // Schedule deletion for 30 days from now
+    const deletionScheduledAt = new Date();
+    deletionScheduledAt.setDate(deletionScheduledAt.getDate() + 30);
+
+    const result = await sql`
+      UPDATE users
+      SET deletion_scheduled_at = ${deletionScheduledAt.toISOString()},
+          deletion_reason = ${reason},
+          restore_token = ${restoreToken},
+          updated_at = NOW()
+      WHERE id = ${id}
+        AND deleted_at IS NULL
+      RETURNING id, email, first_name, last_name, deletion_scheduled_at, restore_token
+    `;
+
+    if (result.rows.length === 0) {
+      throw new Error('User not found or already deleted');
+    }
+
+    return result.rows[0];
+  }
+
+  /**
+   * Find user by restore token
+   * Used when user clicks restore link in deletion confirmation email
+   *
+   * @param {string} restoreToken - Restore token from email link
+   * @returns {Promise<Object|null>} User object or null if not found
+   */
+  static async findByRestoreToken(restoreToken) {
+    const result = await sql`
+      SELECT id, email, first_name, last_name, deletion_scheduled_at, restore_token
+      FROM users
+      WHERE restore_token = ${restoreToken}
+        AND deletion_scheduled_at IS NOT NULL
+        AND deleted_at IS NULL
+    `;
+
+    return result.rows[0] || null;
+  }
+
+  /**
+   * Restore account (cancel scheduled deletion)
+   * Clears deletion_scheduled_at, deletion_reason, and restore_token
+   *
+   * @param {number} id - User ID
+   * @returns {Promise<Object>} Restored user object
+   */
+  static async restoreAccount(id) {
+    const result = await sql`
+      UPDATE users
+      SET deletion_scheduled_at = NULL,
+          deletion_reason = NULL,
+          restore_token = NULL,
+          updated_at = NOW()
+      WHERE id = ${id}
+        AND deletion_scheduled_at IS NOT NULL
+        AND deleted_at IS NULL
+      RETURNING id, email, first_name, last_name
+    `;
+
+    if (result.rows.length === 0) {
+      throw new Error('User not found or deletion not scheduled');
+    }
+
+    return result.rows[0];
+  }
+
+  /**
+   * Find accounts scheduled for permanent deletion
+   * Returns users where deletion_scheduled_at <= NOW() and not yet deleted
+   * Used by cron job to permanently delete expired accounts
+   *
+   * @returns {Promise<Array>} Array of user objects ready for deletion
+   */
+  static async findExpiredDeletions() {
+    const result = await sql`
+      SELECT id, email, first_name, last_name, deletion_scheduled_at, deletion_reason
+      FROM users
+      WHERE deletion_scheduled_at <= NOW()
+        AND deleted_at IS NULL
+      ORDER BY deletion_scheduled_at ASC
+    `;
+
+    return result.rows;
+  }
+
+  /**
+   * Find all users whose deletion grace period has expired
+   * Returns users where deletion_scheduled_at is in the past and user hasn't been deleted yet
+   *
+   * @returns {Promise<Array>} Array of users ready for permanent deletion
+   */
+  static async findExpiredDeletions() {
+    const result = await sql`
+      SELECT
+        id,
+        email,
+        first_name,
+        last_name,
+        deletion_scheduled_at,
+        deletion_reason
+      FROM users
+      WHERE deletion_scheduled_at IS NOT NULL
+        AND deletion_scheduled_at <= NOW()
+        AND deleted_at IS NULL
+      ORDER BY deletion_scheduled_at ASC
+    `;
+
+    return result.rows;
+  }
+
+  /**
+   * Permanently delete account using tombstone approach (GDPR/CCPA compliant)
+   *
+   * Strategy:
+   * 1. Aggregate user_quotas data into usage_analytics_aggregate (business intelligence)
+   * 2. Delete granular user_quotas records (data minimization)
+   * 3. Tombstone user record: NULL all PII, keep IDs for billing/legal compliance
+   * 4. Keep user row (don't DELETE) so subscriptions.user_id foreign key remains valid
+   *
+   * GDPR Compliance:
+   * - Article 17(3)(b): Legal obligation exemption for financial records (7 years)
+   * - Article 5: Data minimization (aggregate analytics, delete granular data)
+   * - Billing records preserved but effectively anonymized (no PII linkable)
+   *
+   * @param {number} id - User ID
+   * @returns {Promise<Object>} Deleted user info (id, stripe_customer_id)
+   */
+  static async permanentlyDelete(id) {
+    // Step 1: Aggregate usage data before deletion (preserve business intelligence)
+    await sql`
+      INSERT INTO usage_analytics_aggregate (
+        tier,
+        account_age_days,
+        created_at_month,
+        total_daily_count,
+        total_monthly_count,
+        avg_daily_count,
+        avg_monthly_count,
+        usage_periods_count
+      )
+      SELECT
+        u.tier,
+        EXTRACT(DAY FROM NOW() - u.created_at)::INTEGER,
+        DATE_TRUNC('month', u.created_at)::DATE,
+        COALESCE(SUM(uq.daily_count), 0),
+        COALESCE(SUM(uq.monthly_count), 0),
+        COALESCE(AVG(uq.daily_count), 0),
+        COALESCE(AVG(uq.monthly_count), 0),
+        COUNT(uq.id)
+      FROM users u
+      LEFT JOIN user_quotas uq ON uq.user_id = u.id
+      WHERE u.id = ${id}
+      GROUP BY u.tier, u.created_at
+    `;
+
+    // Step 2: Delete granular usage data (data minimization)
+    await sql`
+      DELETE FROM user_quotas
+      WHERE user_id = ${id}
+    `;
+
+    // Step 3: Tombstone user record - NULL all PII but preserve IDs for billing/legal
+    const result = await sql`
+      UPDATE users
+      SET
+        -- NULL all PII fields (GDPR right to erasure)
+        email = NULL,
+        first_name = NULL,
+        last_name = NULL,
+        password_hash = NULL,
+        github_id = NULL,
+        verification_token = NULL,
+        verification_token_expires = NULL,
+        restore_token = NULL,
+        deletion_reason = NULL,
+
+        -- Mark as deleted (tombstone marker)
+        deleted_at = NOW(),
+        updated_at = NOW()
+
+        -- PRESERVE: id, stripe_customer_id, tier, created_at, tier_updated_at
+        -- These fields required for:
+        -- - Billing disputes (stripe_customer_id correlates to Stripe records)
+        -- - Tax audits (tier + created_at for revenue reporting)
+        -- - Legal compliance (7-year retention requirement)
+        -- - Foreign key integrity (subscriptions.user_id references users.id)
+
+      WHERE id = ${id}
+        AND deleted_at IS NULL
+      RETURNING id, stripe_customer_id, tier, created_at
+    `;
+
+    if (result.rows.length === 0) {
+      throw new Error('User not found or already deleted');
+    }
+
+    return result.rows[0];
+  }
+
+  /**
+   * Get user data export (GDPR/CCPA compliance - right to access)
+   * Returns all user data in structured JSON format
+   *
+   * @param {number} id - User ID
+   * @returns {Promise<Object>} Complete user data export
+   */
+  static async exportUserData(id) {
+    // Get user profile data
+    const userResult = await sql`
+      SELECT id, email, first_name, last_name, github_id, tier, tier_updated_at,
+             stripe_customer_id, customer_created_via,
+             email_verified, verification_token_expires,
+             terms_accepted_at, terms_version_accepted,
+             privacy_accepted_at, privacy_version_accepted,
+             analytics_enabled,
+             created_at, updated_at,
+             deletion_scheduled_at, deletion_reason
+      FROM users
+      WHERE id = ${id}
+    `;
+
+    if (userResult.rows.length === 0) {
+      throw new Error('User not found');
+    }
+
+    const user = userResult.rows[0];
+
+    // Get usage quota data
+    const quotasResult = await sql`
+      SELECT period_start_date, daily_count, monthly_count, last_reset_date
+      FROM user_quotas
+      WHERE user_id = ${id}
+      ORDER BY period_start_date DESC
+    `;
+
+    // Get subscription data (if exists)
+    const subscriptionsResult = await sql`
+      SELECT subscription_id, status, current_period_start, current_period_end,
+             cancel_at_period_end, canceled_at
+      FROM subscriptions
+      WHERE user_id = ${id}
+      ORDER BY created_at DESC
+    `;
+
+    // Note: Anonymous quotas are IP-based only (no user_id column)
+    // When user signs up, their IP usage is migrated to user_quotas
+    // We cannot include pre-signup anonymous data as there's no user linkage
+
+    return {
+      export_date: new Date().toISOString(),
+      export_version: '1.0',
+      user_profile: {
+        id: user.id,
+        email: user.email,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        github_connected: !!user.github_id,
+        tier: user.tier,
+        tier_updated_at: user.tier_updated_at,
+        stripe_customer_id: user.stripe_customer_id,
+        customer_created_via: user.customer_created_via,
+        email_verified: user.email_verified,
+        terms_accepted_at: user.terms_accepted_at,
+        terms_version_accepted: user.terms_version_accepted,
+        privacy_accepted_at: user.privacy_accepted_at,
+        privacy_version_accepted: user.privacy_version_accepted,
+        analytics_enabled: user.analytics_enabled,
+        created_at: user.created_at,
+        updated_at: user.updated_at,
+        deletion_scheduled_at: user.deletion_scheduled_at,
+        deletion_reason: user.deletion_reason
+      },
+      usage_history: quotasResult.rows,
+      subscriptions: subscriptionsResult.rows,
+      data_retention_policy: {
+        code_processing: 'Code is processed in memory only and never stored',
+        generated_documentation: 'Not stored on our servers',
+        account_data: 'Retained until account deletion',
+        usage_logs: 'Retained for billing and analytics purposes',
+        deletion_grace_period: '30 days'
+      }
+    };
   }
 
   /**

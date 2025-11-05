@@ -190,7 +190,9 @@ describeOrSkip('User Model', () => {
         email: 'github@example.com',
         github_id: 'gh123',
         tier: 'free',
-        email_verified: true
+        email_verified: true,
+        deletion_scheduled_at: null,
+        deleted_at: null
       };
 
       sql.mockResolvedValue({ rows: [mockUser] });
@@ -210,7 +212,9 @@ describeOrSkip('User Model', () => {
         email: 'user@example.com',
         github_id: null,
         tier: 'free',
-        email_verified: false
+        email_verified: false,
+        deletion_scheduled_at: null,
+        deleted_at: null
       };
 
       const updatedUser = {
@@ -262,6 +266,85 @@ describeOrSkip('User Model', () => {
       expect(user).toEqual(newUser);
       expect(user.email_verified).toBe(true);
       expect(sql).toHaveBeenCalledTimes(3);
+    });
+
+    it('should restore account when GitHub user is scheduled for deletion', async () => {
+      const scheduledForDeletion = {
+        id: 1,
+        email: 'deleted@example.com',
+        github_id: 'gh123',
+        tier: 'pro',
+        email_verified: true,
+        deletion_scheduled_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+        deleted_at: null
+      };
+
+      const restoredUser = {
+        id: 1,
+        email: 'deleted@example.com',
+        github_id: 'gh123',
+        tier: 'pro',
+        email_verified: true
+      };
+
+      // First call: check by GitHub ID (found with deletion_scheduled_at)
+      // Second call: restoreAccount (mocked via User.restoreAccount)
+      // Third call: findById (after restoration)
+      sql
+        .mockResolvedValueOnce({ rows: [scheduledForDeletion] })
+        .mockResolvedValueOnce({ rows: [restoredUser] }) // restoreAccount UPDATE
+        .mockResolvedValueOnce({ rows: [restoredUser] }); // findById
+
+      const user = await User.findOrCreateByGithub({
+        githubId: 'gh123',
+        email: 'deleted@example.com'
+      });
+
+      expect(user).toEqual(restoredUser);
+      expect(user.id).toBe(1);
+      expect(user.github_id).toBe('gh123');
+      // Should have called restoreAccount and findById
+      expect(sql).toHaveBeenCalledTimes(3);
+    });
+
+    it('should restore and link when email account is scheduled for deletion', async () => {
+      const scheduledForDeletion = {
+        id: 1,
+        email: 'user@example.com',
+        github_id: null,
+        tier: 'free',
+        email_verified: false,
+        deletion_scheduled_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        deleted_at: null
+      };
+
+      const linkedUser = {
+        id: 1,
+        email: 'user@example.com',
+        github_id: 'gh456',
+        tier: 'free',
+        email_verified: true
+      };
+
+      // First call: check by GitHub ID (not found)
+      // Second call: check by email (found with deletion_scheduled_at)
+      // Third call: restoreAccount (mocked)
+      // Fourth call: link GitHub account
+      sql
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [scheduledForDeletion] })
+        .mockResolvedValueOnce({ rows: [{ id: 1 }] }) // restoreAccount UPDATE
+        .mockResolvedValueOnce({ rows: [linkedUser] }); // UPDATE with GitHub ID
+
+      const user = await User.findOrCreateByGithub({
+        githubId: 'gh456',
+        email: 'user@example.com'
+      });
+
+      expect(user.github_id).toBe('gh456');
+      expect(user.email_verified).toBe(true);
+      // Should have restored account before linking
+      expect(sql).toHaveBeenCalledTimes(4);
     });
   });
 

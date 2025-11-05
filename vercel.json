@@ -28,5 +28,11 @@
     "api/index.js": {
       "maxDuration": 60
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/permanent-deletions",
+      "schedule": "0 2 * * *"
+    }
+  ]
 }

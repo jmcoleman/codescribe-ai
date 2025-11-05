@@ -589,9 +589,363 @@ export async function sendSupportEmail({ userName, userEmail, userId, currentTie
   }
 }
 
+/**
+ * Send account deletion scheduled email
+ * Notifies user that their account is scheduled for deletion with restore link
+ *
+ * @param {string} userEmail - User email address
+ * @param {string} userName - User display name
+ * @param {string} restoreToken - Restore token for canceling deletion
+ * @param {Date} deletionDate - When permanent deletion will occur
+ * @returns {Promise<Object>} Email send result
+ */
+async function sendDeletionScheduledEmail(userEmail, userName, restoreToken, deletionDate) {
+  const restoreUrl = `${CLIENT_URL}/restore-account?token=${restoreToken}`;
+  const displayName = userName || userEmail.split('@')[0];
+
+  // Format deletion date
+  const deletionDateFormatted = new Date(deletionDate).toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+    timeZoneName: 'short'
+  });
+
+  const emailData = {
+    from: FROM_EMAIL,
+    to: userEmail,
+    subject: 'Account Deletion Scheduled - CodeScribe AI',
+    html: `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Account Deletion Scheduled</title>
+      </head>
+      <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #334155;">
+        <table role="presentation" style="width: 100%; background-color: #f8fafc;">
+          <tr>
+            <td style="padding: 40px 20px;">
+              <table role="presentation" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);">
+                <tr>
+                  <td style="padding: 40px 40px 32px;">
+                    <!-- Header with gradient -->
+                    <div style="background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%); padding: 24px; border-radius: 8px 8px 0 0; margin: -40px -40px 32px;">
+                      <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600; text-align: center;">
+                        ⚠️ Account Deletion Scheduled
+                      </h1>
+                    </div>
+
+                    <p style="margin: 0 0 24px; font-size: 16px; color: #334155;">
+                      Hi ${displayName},
+                    </p>
+
+                    <p style="margin: 0 0 24px; font-size: 16px; color: #334155;">
+                      We've received your request to delete your CodeScribe AI account. Your account is scheduled for permanent deletion on:
+                    </p>
+
+                    <div style="background-color: #fef2f2; border-left: 4px solid #dc2626; padding: 16px; margin: 0 0 24px; border-radius: 4px;">
+                      <p style="margin: 0; font-size: 16px; font-weight: 600; color: #dc2626;">
+                        ${deletionDateFormatted}
+                      </p>
+                    </div>
+
+                    <div style="background-color: #eff6ff; border: 1px solid #bfdbfe; padding: 16px; margin: 0 0 24px; border-radius: 4px;">
+                      <h3 style="margin: 0 0 8px; font-size: 14px; font-weight: 600; color: #1e40af;">
+                        ℹ️ What happens next:
+                      </h3>
+                      <ul style="margin: 8px 0 0; padding-left: 20px; font-size: 14px; color: #1e3a8a;">
+                        <li style="margin-bottom: 4px;">Your account remains accessible for <strong>30 days</strong></li>
+                        <li style="margin-bottom: 4px;">You can cancel deletion anytime by clicking the button below</li>
+                        <li style="margin-bottom: 4px;">After 30 days, all your data will be permanently deleted</li>
+                        <li style="margin-bottom: 0;">Deletion includes: profile, usage history, subscription, and preferences</li>
+                      </ul>
+                    </div>
+
+                    <p style="margin: 0 0 24px; font-size: 16px; color: #334155;">
+                      <strong>Changed your mind?</strong> Click the button below to restore your account:
+                    </p>
+
+                    <!-- CTA Button -->
+                    <div style="text-align: center; margin: 32px 0;">
+                      <a href="${restoreUrl}" style="display: inline-block; background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 6px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px rgba(124, 58, 237, 0.2);">
+                        Restore My Account
+                      </a>
+                    </div>
+
+                    <p style="margin: 24px 0 0; font-size: 14px; color: #64748b;">
+                      Or copy and paste this URL into your browser:<br>
+                      <a href="${restoreUrl}" style="color: #7c3aed; word-break: break-all;">${restoreUrl}</a>
+                    </p>
+
+                    <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
+                      <p style="margin: 0; font-size: 14px; color: #64748b;">
+                        If you did not request account deletion, please contact us immediately at <a href="mailto:support@codescribeai.com" style="color: #7c3aed;">support@codescribeai.com</a>.
+                      </p>
+                    </div>
+
+                    ${getEmailFooter(CLIENT_URL)}
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
+    `
+  };
+
+  // Mock in dev/test, send real emails in production
+  if (shouldMockEmails()) {
+    return await mockEmailSend(emailData);
+  }
+
+  // Production: send real email via Resend
+  const client = getResendClient();
+  if (!client) {
+    throw new Error('Email service not configured. Please set RESEND_API_KEY environment variable.');
+  }
+
+  try {
+    const result = await client.emails.send(emailData);
+    console.log('\n📧 [EMAIL SENT] Account Deletion Scheduled');
+    console.log('  To:', userEmail);
+    console.log('  Deletion Date:', deletionDateFormatted);
+    console.log('  Email ID:', result.data?.id);
+    return result;
+  } catch (error) {
+    console.error('Failed to send deletion scheduled email:', error);
+    throw new Error('Failed to send deletion scheduled email');
+  }
+}
+
+/**
+ * Send account restored confirmation email
+ * Notifies user that their account deletion was successfully canceled
+ *
+ * @param {string} userEmail - User email address
+ * @param {string} userName - User display name
+ * @returns {Promise<Object>} Email send result
+ */
+async function sendAccountRestoredEmail(userEmail, userName) {
+  const displayName = userName || userEmail.split('@')[0];
+
+  const emailData = {
+    from: FROM_EMAIL,
+    to: userEmail,
+    subject: 'Account Restored Successfully - CodeScribe AI',
+    html: `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Account Restored</title>
+      </head>
+      <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #334155;">
+        <table role="presentation" style="width: 100%; background-color: #f8fafc;">
+          <tr>
+            <td style="padding: 40px 20px;">
+              <table role="presentation" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);">
+                <tr>
+                  <td style="padding: 40px 40px 32px;">
+                    <!-- Header with gradient -->
+                    <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 24px; border-radius: 8px 8px 0 0; margin: -40px -40px 32px;">
+                      <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600; text-align: center;">
+                        ✅ Account Restored Successfully
+                      </h1>
+                    </div>
+
+                    <p style="margin: 0 0 24px; font-size: 16px; color: #334155;">
+                      Hi ${displayName},
+                    </p>
+
+                    <p style="margin: 0 0 24px; font-size: 16px; color: #334155;">
+                      Great news! Your CodeScribe AI account has been successfully restored. The scheduled deletion has been canceled.
+                    </p>
+
+                    <div style="background-color: #d1fae5; border-left: 4px solid #10b981; padding: 16px; margin: 0 0 24px; border-radius: 4px;">
+                      <p style="margin: 0; font-size: 16px; font-weight: 600; color: #065f46;">
+                        Your account is now active and all features are available.
+                      </p>
+                    </div>
+
+                    <p style="margin: 0 0 24px; font-size: 16px; color: #334155;">
+                      You can continue using CodeScribe AI without any interruption. All your data and settings have been preserved.
+                    </p>
+
+                    <!-- CTA Button -->
+                    <div style="text-align: center; margin: 32px 0;">
+                      <a href="${CLIENT_URL}" style="display: inline-block; background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 6px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px rgba(124, 58, 237, 0.2);">
+                        Go to Dashboard
+                      </a>
+                    </div>
+
+                    <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
+                      <p style="margin: 0; font-size: 14px; color: #64748b;">
+                        If you have any questions, feel free to contact us at <a href="mailto:support@codescribeai.com" style="color: #7c3aed;">support@codescribeai.com</a>.
+                      </p>
+                    </div>
+
+                    ${getEmailFooter(CLIENT_URL)}
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
+    `
+  };
+
+  // Mock in dev/test, send real emails in production
+  if (shouldMockEmails()) {
+    return await mockEmailSend(emailData);
+  }
+
+  // Production: send real email via Resend
+  const client = getResendClient();
+  if (!client) {
+    throw new Error('Email service not configured. Please set RESEND_API_KEY environment variable.');
+  }
+
+  try {
+    const result = await client.emails.send(emailData);
+    console.log('\n📧 [EMAIL SENT] Account Restored');
+    console.log('  To:', userEmail);
+    console.log('  Email ID:', result.data?.id);
+    return result;
+  } catch (error) {
+    console.error('Failed to send account restored email:', error);
+    throw new Error('Failed to send account restored email');
+  }
+}
+
+/**
+ * Send final deletion warning email (sent 24 hours before permanent deletion)
+ * Last chance notification before permanent deletion
+ *
+ * @param {string} userEmail - User email address
+ * @param {string} userName - User display name
+ * @param {string} restoreToken - Restore token for canceling deletion
+ * @returns {Promise<Object>} Email send result
+ */
+async function sendFinalDeletionWarningEmail(userEmail, userName, restoreToken) {
+  const restoreUrl = `${CLIENT_URL}/restore-account?token=${restoreToken}`;
+  const displayName = userName || userEmail.split('@')[0];
+
+  const emailData = {
+    from: FROM_EMAIL,
+    to: userEmail,
+    subject: '⚠️ FINAL WARNING: Account Deletion Tomorrow - CodeScribe AI',
+    html: `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Final Deletion Warning</title>
+      </head>
+      <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #334155;">
+        <table role="presentation" style="width: 100%; background-color: #f8fafc;">
+          <tr>
+            <td style="padding: 40px 20px;">
+              <table role="presentation" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);">
+                <tr>
+                  <td style="padding: 40px 40px 32px;">
+                    <!-- Header with gradient -->
+                    <div style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); padding: 24px; border-radius: 8px 8px 0 0; margin: -40px -40px 32px;">
+                      <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600; text-align: center;">
+                        ⚠️ FINAL WARNING: Deletion Tomorrow
+                      </h1>
+                    </div>
+
+                    <p style="margin: 0 0 24px; font-size: 16px; color: #334155;">
+                      Hi ${displayName},
+                    </p>
+
+                    <p style="margin: 0 0 24px; font-size: 16px; color: #334155;">
+                      This is your <strong>final reminder</strong> that your CodeScribe AI account will be <strong>permanently deleted in 24 hours</strong>.
+                    </p>
+
+                    <div style="background-color: #fef2f2; border: 2px solid #dc2626; padding: 16px; margin: 0 0 24px; border-radius: 4px;">
+                      <h3 style="margin: 0 0 8px; font-size: 16px; font-weight: 600; color: #dc2626;">
+                        ⏰ This is your last chance!
+                      </h3>
+                      <p style="margin: 0; font-size: 14px; color: #7f1d1d;">
+                        After 24 hours, all your data will be permanently deleted and cannot be recovered.
+                      </p>
+                    </div>
+
+                    <p style="margin: 0 0 24px; font-size: 16px; color: #334155;">
+                      If you want to keep your account, click the button below immediately:
+                    </p>
+
+                    <!-- CTA Button -->
+                    <div style="text-align: center; margin: 32px 0;">
+                      <a href="${restoreUrl}" style="display: inline-block; background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 6px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px rgba(220, 38, 38, 0.3);">
+                        Restore My Account Now
+                      </a>
+                    </div>
+
+                    <p style="margin: 24px 0 0; font-size: 14px; color: #64748b;">
+                      Or copy and paste this URL into your browser:<br>
+                      <a href="${restoreUrl}" style="color: #dc2626; word-break: break-all;">${restoreUrl}</a>
+                    </p>
+
+                    <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
+                      <p style="margin: 0; font-size: 14px; color: #64748b;">
+                        If you're ready to say goodbye, you don't need to do anything. Your account will be automatically deleted tomorrow.
+                      </p>
+                    </div>
+
+                    ${getEmailFooter(CLIENT_URL)}
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
+    `
+  };
+
+  // Mock in dev/test, send real emails in production
+  if (shouldMockEmails()) {
+    return await mockEmailSend(emailData);
+  }
+
+  // Production: send real email via Resend
+  const client = getResendClient();
+  if (!client) {
+    throw new Error('Email service not configured. Please set RESEND_API_KEY environment variable.');
+  }
+
+  try {
+    const result = await client.emails.send(emailData);
+    console.log('\n📧 [EMAIL SENT] Final Deletion Warning');
+    console.log('  To:', userEmail);
+    console.log('  Email ID:', result.data?.id);
+    return result;
+  } catch (error) {
+    console.error('Failed to send final deletion warning email:', error);
+    throw new Error('Failed to send final deletion warning email');
+  }
+}
+
 export default {
   sendPasswordResetEmail,
   sendVerificationEmail,
   sendContactSalesEmail,
-  sendSupportEmail
+  sendSupportEmail,
+  sendDeletionScheduledEmail,
+  sendAccountRestoredEmail,
+  sendFinalDeletionWarningEmail
 };

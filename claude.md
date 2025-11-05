@@ -12,7 +12,7 @@
 AI-powered documentation generator with real-time streaming, quality scoring (0-100), and WCAG 2.1 AA compliance.
 
 **Key Metrics:**
-- 1,878 tests (1,859 passing, 19 skipped, 0 failures) | 100% pass rate | 91.83% backend coverage
+- 2,225 tests (2,184 passing, 41 skipped, 0 failures) | 100% pass rate | 91.83% backend coverage
 - Lighthouse: 75/100 performance (+67%), 100/100 accessibility
 - Bundle: 78KB gzipped (-85% reduction)
 - Accessibility: 95/100 score, 0 axe violations
@@ -48,7 +48,7 @@ AI-powered documentation generator with real-time streaming, quality scoring (0-
 | Document | Use Case | Key Contents |
 |----------|----------|--------------|
 | [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) | Performance optimization | Lazy loading, bundle analysis, Core Web Vitals, maintenance |
-| [Testing README](docs/testing/README.md) | Test navigation hub | 1,955 test stats, quick commands, coverage overview |
+| [Testing README](docs/testing/README.md) | Test navigation hub | 2,225 test stats, quick commands, coverage overview |
 | [COMPONENT-TEST-COVERAGE.md](docs/testing/COMPONENT-TEST-COVERAGE.md) | Coverage details ⭐ | 13/18 components tested, category breakdown, gaps |
 | [frontend-testing-guide.md](docs/testing/frontend-testing-guide.md) | React testing patterns | Vitest + RTL, mocking, a11y, interactions |
 | [TEST-PATTERNS-GUIDE.md](docs/testing/TEST-PATTERNS-GUIDE.md) | Test fix patterns ⭐⚠️ | **103 tests fixed, 11 patterns** (Pattern 11: ES Modules!), 6 insights, 97.8% pass rate |
@@ -436,9 +436,9 @@ cd .. && cd server && npm test 2>&1 | grep "Tests:"
 # Output example: Tests:       21 skipped, 373 passed, 394 total
 
 # 2. Update documentation with new counts
-# - claude.md line 15: "1,785 tests (1,746 passing, 39 skipped)"
-# - claude.md line 51: "1,785 test stats"
-# - claude.md line 479: "1,785 tests (1,172 frontend, 574 backend, 39 skipped)"
+# - claude.md line 15: "2,225 tests (2,184 passing, 41 skipped)"
+# - claude.md line 51: "2,225 test stats"
+# - claude.md line 482: "2,225 tests (1,370 frontend, 855 backend, 41 skipped)"
 # - docs/testing/README.md lines 11-27: Update all test breakdowns
 
 # 3. Verify skipped tests documentation is current
@@ -479,7 +479,7 @@ cd server && npm test 2>&1 | grep "skipped"
 **Final Metrics:**
 - Accessibility: 95/100, WCAG 2.1 AA, 0 axe violations
 - Performance: 75/100 Lighthouse (+67%), 78KB bundle (-85%)
-- Testing: 1,785 tests (1,172 frontend, 574 backend, 39 skipped), 97.82% passing
+- Testing: 2,225 tests (1,370 frontend, 855 backend, 41 skipped), 100% passing
 - Deployment: Vercel + GitHub Actions CI/CD, custom domain
 
 **Optional:** README screenshots, demo video, extended manual a11y testing
@@ -546,10 +546,20 @@ codescribe-ai/
 
 ## 🔄 Version History
 
-**Current: v2.5.1** - Epic 2.5: Legal Compliance - Phase 3 Complete (November 4, 2025): **Settings Page** (4-tab navigation: Account, Privacy, Subscription, Danger Zone); **Analytics Opt-Out** (database-stored preference, conditional Vercel Analytics loading); **Account Management** (email/password change, profile display); **Cache Control** (strict headers on user-specific endpoints); **Attribution Footer** (CodeScribe AI branding on all generated docs); **Database Migration 011** (analytics_enabled column + index); **+60 tests** (Settings integration tests); **2,015 tests** (1,283 frontend, 732 backend, 98.91% pass rate)
+**Current: v2.5.2** - Account Deletion & Restoration System Complete (November 4, 2025): **Automatic Account Restoration** (email/password and GitHub OAuth restore accounts scheduled for deletion); **Settings ESC Handler Fix** (checks for open modals before navigating home); **User Model Updates** (restoration logic in findOrCreateByGithub); **Auth Route Updates** (signup detects and restores scheduled-deletion accounts); **Backend Tests** (+5 new/updated tests for restoration flows); **Frontend Test Fixes** (4 tests updated for 30-day grace period text); **2,225 tests** (1,370 frontend, 855 backend, 100% pass rate)
 
 <details>
-<summary>Previous Versions (v1.0-v2.5.0)</summary>
+<summary>Previous Versions (v1.0-v2.5.1)</summary>
+
+- **v2.5.1** - Epic 2.5: Legal Compliance - Phase 3 Complete (November 4, 2025)
+  - Settings Page (4-tab navigation: Account, Privacy, Subscription, Danger Zone)
+  - Analytics Opt-Out (database-stored preference, conditional Vercel Analytics loading)
+  - Account Management (email/password change, profile display)
+  - Cache Control (strict headers on user-specific endpoints)
+  - Attribution Footer (CodeScribe AI branding on all generated docs)
+  - Database Migration 011 (analytics_enabled column + index)
+  - +60 tests (Settings integration tests)
+  - 2,015 tests (1,283 frontend, 732 backend, 98.91% pass rate)
 
 - **v2.5.0** - Epic 2.5: Legal Compliance - Phase 1-2 Complete (November 3, 2025)
   - Privacy Policy & Terms Pages (GDPR compliance, version tracking)

@@ -1,7 +1,7 @@
 # Vercel Environment Variables - Complete Reference
 
 **Project:** CodeScribe AI
-**Last Updated:** October 27, 2025
+**Last Updated:** November 4, 2025
 
 ---
 
@@ -124,6 +124,17 @@ SESSION_SECRET=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 
 # ============================================================================
+# CRON JOBS (Vercel Cron)
+# ============================================================================
+
+# Cron Secret (for authenticating Vercel Cron requests)
+# How to generate: openssl rand -base64 32
+# Used for: POST /api/cron/permanent-deletions endpoint security
+# ⚠️ CRITICAL: Only Vercel Cron should have this secret
+CRON_SECRET=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+
+# ============================================================================
 # CORS CONFIGURATION
 # ============================================================================
 
@@ -174,6 +185,9 @@ EMAIL_FROM=CodeScribe AI <preview@mail.codescribeai.com>
 
 # Session Secret - Different from production for security
 SESSION_SECRET=DIFFERENT_SECRET_FROM_PRODUCTION
+
+# Cron Secret - Different from production for security
+CRON_SECRET=DIFFERENT_SECRET_FROM_PRODUCTION
 
 # Client URL - Dynamically set by Vercel to preview URL
 CLIENT_URL=(Vercel sets automatically to https://codescribe-ai-git-BRANCH-USER.vercel.app)
@@ -259,6 +273,16 @@ EMAIL_FROM=CodeScribe AI <dev@mail.codescribeai.com>
 # Generate with: openssl rand -base64 32
 # Different from production
 SESSION_SECRET=LOCAL_DEV_SECRET_DIFFERENT_FROM_PROD
+
+
+# ============================================================================
+# CRON JOBS (Vercel Cron)
+# ============================================================================
+
+# Generate with: openssl rand -base64 32
+# Different from production
+# Used for manual testing of cron endpoint locally
+CRON_SECRET=LOCAL_DEV_CRON_SECRET_DIFFERENT_FROM_PROD
 
 
 # ============================================================================
@@ -369,6 +393,40 @@ openssl rand -base64 32
 
 ---
 
+### Cron Job Variables
+
+| Variable | Required | Environment-Specific | Description |
+|----------|----------|---------------------|-------------|
+| `CRON_SECRET` | ✅ Yes | ✅ Yes (unique per env) | Secret for Vercel Cron authentication |
+
+**How to generate:**
+```bash
+openssl rand -base64 32
+```
+
+**Purpose:**
+- Authenticates requests from Vercel Cron Jobs to `/api/cron/permanent-deletions` endpoint
+- Prevents unauthorized execution of scheduled tasks
+- Required for user account permanent deletion system (GDPR/CCPA compliance)
+
+**⚠️ CRITICAL:** Use different secret for each environment. Only Vercel Cron should have this secret.
+
+**What happens if not set:**
+- Cron endpoint returns `500 Internal Server Error`
+- Vercel Dashboard shows failed cron executions
+- No permanent deletions are processed
+- Error logged: `[Cron] CRON_SECRET environment variable not configured`
+
+**How to detect missing variable:**
+1. Vercel Dashboard → Cron Jobs → Check for failed executions
+2. Vercel Logs → Filter by `/api/cron/permanent-deletions` → Look for 500 errors
+3. Check response body: `{"success": false, "error": "Server configuration error"}`
+
+**Related documentation:**
+- [USER-DELETION-COMPLIANCE.md](../database/USER-DELETION-COMPLIANCE.md) - Permanent deletion system
+
+---
+
 ### CORS Variables
 
 | Variable | Required | Environment-Specific | Description |
@@ -405,6 +463,7 @@ openssl rand -base64 32
 - ❌ `GITHUB_CLIENT_SECRET`
 - ❌ `RESEND_API_KEY`
 - ❌ `SESSION_SECRET`
+- ❌ `CRON_SECRET`
 - ❌ `POSTGRES_URL` (contains password)
 
 **Verify:** Check `.gitignore` includes `server/.env`
@@ -412,6 +471,7 @@ openssl rand -base64 32
 ### Use Different Secrets Per Environment
 
 - ✅ Different `SESSION_SECRET` for prod/preview/dev
+- ✅ Different `CRON_SECRET` for prod/preview/dev
 - ✅ Different `CLAUDE_API_KEY` if possible (track costs separately)
 - ❌ Never use production database credentials locally
 
@@ -481,6 +541,7 @@ npm run db:test
 | `RESEND_API_KEY` | ✅ | ✅ | ✅ | Resend Dashboard |
 | `EMAIL_FROM` | noreply@ | preview@ | dev@ | Manual |
 | `SESSION_SECRET` | unique | unique | unique | `openssl rand -base64 32` |
+| `CRON_SECRET` | unique | unique | unique | `openssl rand -base64 32` |
 | `ALLOWED_ORIGINS` | codescribeai.com | (dynamic) | localhost | Manual |
 | `CLIENT_URL` | codescribeai.com | (dynamic) | localhost:5173 | Manual |
 
@@ -501,6 +562,6 @@ npm run db:test
 
 ---
 
-**Last Updated:** October 27, 2025
-**Version:** 1.0
+**Last Updated:** November 4, 2025
+**Version:** 1.1
 **Maintained By:** CodeScribe AI Team

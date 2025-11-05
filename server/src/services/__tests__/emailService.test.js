@@ -29,7 +29,7 @@ jest.mock('resend', () => {
 });
 
 // Now import emailService (after env vars and mock are set)
-import { sendPasswordResetEmail, sendVerificationEmail, sendContactSalesEmail, sendSupportEmail, __resetResendClient } from '../emailService.js';
+import emailService, { sendPasswordResetEmail, sendVerificationEmail, sendContactSalesEmail, sendSupportEmail, __resetResendClient } from '../emailService.js';
 
 describe('Email Service', () => {
   beforeEach(() => {
@@ -1077,6 +1077,468 @@ describe('Email Service', () => {
         expect(callArgs.html).toContain('Category:');
         expect(callArgs.to).toBe('support@codescribeai.com');
       }
+    });
+  });
+
+  // ============================================================================
+  // Account Deletion Emails (Epic 2.5 Phase 4)
+  // ============================================================================
+  describe('sendDeletionScheduledEmail', () => {
+    const validEmail = 'user@example.com';
+    const validName = 'John Doe';
+    const validToken = 'restore-token-abc123';
+    const validDeletionDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days from now
+
+    beforeEach(() => {
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_123' } });
+    });
+
+    it('should send email with correct recipient', async () => {
+      await emailService.sendDeletionScheduledEmail(
+        validEmail,
+        validName,
+        validToken,
+        validDeletionDate
+      );
+
+      expect(mockSendEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: validEmail
+        })
+      );
+    });
+
+    it('should include correct subject line', async () => {
+      await emailService.sendDeletionScheduledEmail(
+        validEmail,
+        validName,
+        validToken,
+        validDeletionDate
+      );
+
+      expect(mockSendEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          subject: 'Account Deletion Scheduled - CodeScribe AI'
+        })
+      );
+    });
+
+    it('should include restore link with token', async () => {
+      await emailService.sendDeletionScheduledEmail(
+        validEmail,
+        validName,
+        validToken,
+        validDeletionDate
+      );
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('/restore-account?token=' + validToken);
+    });
+
+    it('should include formatted deletion date', async () => {
+      await emailService.sendDeletionScheduledEmail(
+        validEmail,
+        validName,
+        validToken,
+        validDeletionDate
+      );
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      // Should contain date components
+      expect(callArgs.html).toMatch(/\d{4}/); // Year
+      expect(callArgs.html).toContain('day'); // Weekday (e.g., "Monday")
+    });
+
+    it('should display user name in greeting', async () => {
+      await emailService.sendDeletionScheduledEmail(
+        validEmail,
+        validName,
+        validToken,
+        validDeletionDate
+      );
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain(`Hi ${validName}`);
+    });
+
+    it('should fallback to email username when name not provided', async () => {
+      await emailService.sendDeletionScheduledEmail(
+        validEmail,
+        null,
+        validToken,
+        validDeletionDate
+      );
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('Hi user'); // From user@example.com
+    });
+
+    it('should mention 30-day grace period', async () => {
+      await emailService.sendDeletionScheduledEmail(
+        validEmail,
+        validName,
+        validToken,
+        validDeletionDate
+      );
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('30 days');
+    });
+
+    it('should include restore button CTA', async () => {
+      await emailService.sendDeletionScheduledEmail(
+        validEmail,
+        validName,
+        validToken,
+        validDeletionDate
+      );
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('Restore My Account');
+    });
+
+    it('should list what data will be deleted', async () => {
+      await emailService.sendDeletionScheduledEmail(
+        validEmail,
+        validName,
+        validToken,
+        validDeletionDate
+      );
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('profile');
+      expect(callArgs.html).toContain('usage history');
+      expect(callArgs.html).toContain('subscription');
+      expect(callArgs.html).toContain('preferences');
+    });
+
+    it('should include warning emoji in subject', async () => {
+      await emailService.sendDeletionScheduledEmail(
+        validEmail,
+        validName,
+        validToken,
+        validDeletionDate
+      );
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('⚠️');
+    });
+
+    it('should use correct from address', async () => {
+      await emailService.sendDeletionScheduledEmail(
+        validEmail,
+        validName,
+        validToken,
+        validDeletionDate
+      );
+
+      expect(mockSendEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          from: expect.stringContaining('CodeScribe AI')
+        })
+      );
+    });
+
+    it('should throw error when email sending fails', async () => {
+      mockSendEmail.mockRejectedValue(new Error('Network error'));
+
+      await expect(
+        emailService.sendDeletionScheduledEmail(
+          validEmail,
+          validName,
+          validToken,
+          validDeletionDate
+        )
+      ).rejects.toThrow('Failed to send deletion scheduled email');
+    });
+
+    it('should include footer with support contact', async () => {
+      await emailService.sendDeletionScheduledEmail(
+        validEmail,
+        validName,
+        validToken,
+        validDeletionDate
+      );
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('support@codescribeai.com');
+    });
+  });
+
+  describe('sendAccountRestoredEmail', () => {
+    const validEmail = 'user@example.com';
+    const validName = 'John Doe';
+
+    beforeEach(() => {
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_123' } });
+    });
+
+    it('should send email with correct recipient', async () => {
+      await emailService.sendAccountRestoredEmail(validEmail, validName);
+
+      expect(mockSendEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: validEmail
+        })
+      );
+    });
+
+    it('should include correct subject line', async () => {
+      await emailService.sendAccountRestoredEmail(validEmail, validName);
+
+      expect(mockSendEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          subject: 'Account Restored Successfully - CodeScribe AI'
+        })
+      );
+    });
+
+    it('should display user name in greeting', async () => {
+      await emailService.sendAccountRestoredEmail(validEmail, validName);
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain(`Hi ${validName}`);
+    });
+
+    it('should fallback to email username when name not provided', async () => {
+      await emailService.sendAccountRestoredEmail(validEmail, null);
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('Hi user'); // From user@example.com
+    });
+
+    it('should confirm account is active', async () => {
+      await emailService.sendAccountRestoredEmail(validEmail, validName);
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('successfully restored');
+      expect(callArgs.html).toContain('now active');
+    });
+
+    it('should mention deletion was canceled', async () => {
+      await emailService.sendAccountRestoredEmail(validEmail, validName);
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('canceled');
+    });
+
+    it('should include success emoji', async () => {
+      await emailService.sendAccountRestoredEmail(validEmail, validName);
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('✅');
+    });
+
+    it('should include dashboard link CTA', async () => {
+      await emailService.sendAccountRestoredEmail(validEmail, validName);
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('Go to Dashboard');
+      expect(callArgs.html).toContain(process.env.CLIENT_URL);
+    });
+
+    it('should use green gradient for success header', async () => {
+      await emailService.sendAccountRestoredEmail(validEmail, validName);
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('#10b981'); // Green gradient
+    });
+
+    it('should use correct from address', async () => {
+      await emailService.sendAccountRestoredEmail(validEmail, validName);
+
+      expect(mockSendEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          from: expect.stringContaining('CodeScribe AI')
+        })
+      );
+    });
+
+    it('should throw error when email sending fails', async () => {
+      mockSendEmail.mockRejectedValue(new Error('Network error'));
+
+      await expect(
+        emailService.sendAccountRestoredEmail(validEmail, validName)
+      ).rejects.toThrow('Failed to send account restored email');
+    });
+
+    it('should mention data was preserved', async () => {
+      await emailService.sendAccountRestoredEmail(validEmail, validName);
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('data');
+      expect(callArgs.html).toContain('preserved');
+    });
+  });
+
+  describe('sendFinalDeletionWarningEmail', () => {
+    const validEmail = 'user@example.com';
+    const validName = 'John Doe';
+    const validToken = 'restore-token-abc123';
+
+    beforeEach(() => {
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_123' } });
+    });
+
+    it('should send email with correct recipient', async () => {
+      await emailService.sendFinalDeletionWarningEmail(
+        validEmail,
+        validName,
+        validToken
+      );
+
+      expect(mockSendEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: validEmail
+        })
+      );
+    });
+
+    it('should include urgent subject line with warning emoji', async () => {
+      await emailService.sendFinalDeletionWarningEmail(
+        validEmail,
+        validName,
+        validToken
+      );
+
+      expect(mockSendEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          subject: expect.stringContaining('⚠️ FINAL WARNING')
+        })
+      );
+      expect(mockSendEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          subject: expect.stringContaining('Tomorrow')
+        })
+      );
+    });
+
+    it('should include restore link with token', async () => {
+      await emailService.sendFinalDeletionWarningEmail(
+        validEmail,
+        validName,
+        validToken
+      );
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('/restore-account?token=' + validToken);
+    });
+
+    it('should display user name in greeting', async () => {
+      await emailService.sendFinalDeletionWarningEmail(
+        validEmail,
+        validName,
+        validToken
+      );
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain(`Hi ${validName}`);
+    });
+
+    it('should fallback to email username when name not provided', async () => {
+      await emailService.sendFinalDeletionWarningEmail(
+        validEmail,
+        null,
+        validToken
+      );
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('Hi user'); // From user@example.com
+    });
+
+    it('should emphasize 24-hour deadline', async () => {
+      await emailService.sendFinalDeletionWarningEmail(
+        validEmail,
+        validName,
+        validToken
+      );
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('24 hours');
+    });
+
+    it('should use urgent language and styling', async () => {
+      await emailService.sendFinalDeletionWarningEmail(
+        validEmail,
+        validName,
+        validToken
+      );
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('final reminder');
+      expect(callArgs.html).toContain('last chance');
+      expect(callArgs.html).toContain('permanently deleted');
+    });
+
+    it('should use red gradient for urgency', async () => {
+      await emailService.sendFinalDeletionWarningEmail(
+        validEmail,
+        validName,
+        validToken
+      );
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('#dc2626'); // Red gradient
+    });
+
+    it('should include urgent CTA button', async () => {
+      await emailService.sendFinalDeletionWarningEmail(
+        validEmail,
+        validName,
+        validToken
+      );
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('Restore My Account Now');
+    });
+
+    it('should warn data cannot be recovered', async () => {
+      await emailService.sendFinalDeletionWarningEmail(
+        validEmail,
+        validName,
+        validToken
+      );
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('cannot be recovered');
+    });
+
+    it('should use correct from address', async () => {
+      await emailService.sendFinalDeletionWarningEmail(
+        validEmail,
+        validName,
+        validToken
+      );
+
+      expect(mockSendEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          from: expect.stringContaining('CodeScribe AI')
+        })
+      );
+    });
+
+    it('should throw error when email sending fails', async () => {
+      mockSendEmail.mockRejectedValue(new Error('Network error'));
+
+      await expect(
+        emailService.sendFinalDeletionWarningEmail(
+          validEmail,
+          validName,
+          validToken
+        )
+      ).rejects.toThrow('Failed to send final deletion warning email');
+    });
+
+    it('should mention automatic deletion if no action taken', async () => {
+      await emailService.sendFinalDeletionWarningEmail(
+        validEmail,
+        validName,
+        validToken
+      );
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('automatically deleted');
+      expect(callArgs.html).toContain('tomorrow');
     });
   });
 });

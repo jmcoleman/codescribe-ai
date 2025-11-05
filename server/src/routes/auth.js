@@ -8,6 +8,7 @@
 import express from 'express';
 import passport from 'passport';
 import crypto from 'crypto';
+import bcrypt from 'bcrypt';
 import { sql } from '@vercel/postgres';
 import stripe from '../config/stripe.js';
 import User from '../models/User.js';
@@ -77,7 +78,71 @@ router.post(
 
       // Check if user already exists
       const existingUser = await User.findByEmail(email);
+
       if (existingUser) {
+        // If account is scheduled for deletion (not yet permanently deleted), restore it
+        if (existingUser.deletion_scheduled_at && !existingUser.deleted_at) {
+          console.log(`[Auth] User ${existingUser.id} signing up with scheduled-deletion account - restoring account`);
+
+          // Restore the account (cancels deletion)
+          await User.restoreAccount(existingUser.id);
+
+          // Update password for the restored account
+          const password_hash = await bcrypt.hash(password, 10);
+          await sql`
+            UPDATE users
+            SET password_hash = ${password_hash}, updated_at = NOW()
+            WHERE id = ${existingUser.id}
+          `;
+
+          // Fetch updated user data
+          const user = await User.findById(existingUser.id);
+
+          // Migrate any anonymous usage from this IP to the restored user account
+          const ipAddress = req.ip || req.socket.remoteAddress || 'unknown';
+          if (ipAddress && ipAddress !== 'unknown') {
+            try {
+              await Usage.migrateAnonymousUsage(ipAddress, user.id);
+              console.log(`[Auth] Migrated anonymous usage for IP ${ipAddress} to restored user ${user.id}`);
+            } catch (migrationError) {
+              console.error('[Auth] Failed to migrate anonymous usage:', migrationError);
+            }
+          }
+
+          // Generate verification token and send verification email
+          try {
+            const verificationToken = await User.createVerificationToken(user.id);
+            await sendVerificationEmail({
+              to: user.email,
+              verificationToken
+            });
+            console.log(`Verification email sent to: ${user.email}`);
+          } catch (emailError) {
+            console.error('Failed to send verification email:', emailError);
+          }
+
+          // Generate JWT token
+          const token = generateToken(user);
+
+          // Log user in via session
+          req.login(user, (err) => {
+            if (err) {
+              console.error('Session login error:', err);
+            }
+
+            return res.status(200).json({
+              success: true,
+              message: 'Account deletion cancelled. Welcome back!',
+              restored: true,
+              user: sanitizeUser(user),
+              token
+            });
+          });
+          return;
+        }
+
+        // If account is permanently deleted (email is NULL), this won't match
+        // If account exists and is NOT scheduled for deletion, it's a duplicate
         return res.status(409).json({
           success: false,
           error: 'User with this email already exists'
