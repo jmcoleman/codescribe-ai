@@ -62,6 +62,7 @@
 > **Setup Guide:** See [RESEND-SETUP.md](./RESEND-SETUP.md) for email configuration.
 - [x] ✅ `RESEND_API_KEY` (email service API key)
 - [x] ✅ `EMAIL_FROM` (verified sender: `CodeScribe AI <noreply@mail.codescribeai.com>`)
+- [x] ✅ `MOCK_EMAILS` (optional - controls email mocking: `true`=always mock, `false`=always send, not set=auto)
 
 #### Stripe Payments
 > **Setup Guide:** See [STRIPE-SETUP.md](./STRIPE-SETUP.md) for complete Stripe configuration.

@@ -268,7 +268,7 @@
           "badge": "Production Fix",
           "features": [
             "Email rate limiting system (5-min cooldown, 10/day verification, 3/hour + 10/day password resets)",
-            "Email service mocking for dev/test (TEST_RESEND_MOCK flag, prevents quota waste)",
+            "Email service mocking for dev/test (MOCK_EMAILS env var, prevents quota waste)",
             "Enhanced production logging (detailed email logs with URLs, IDs, timestamps)",
             "UnverifiedEmailBanner redesign (brand gradient, compact layout, indigo button)",
             "ConfirmationModal alignment fix (title/close button)",
@@ -796,6 +796,7 @@
           "duration": "TBD",
           "status": "Backlog (User Feedback Driven)",
           "features": [
+            "Support ticket ID tracking system (database table + email display)",
             "Calendly integration for Enterprise/Team sales",
             "Gmail 'Send As' setup for sales@codescribeai.com replies",
             "Documentation history and saved projects",

@@ -436,12 +436,13 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 - ✅ In-memory cache (upgradeable to Redis for multi-region)
 - ✅ EMAIL-RATE-LIMITING.md documentation with testing guide
 
-**Email Service Mocking** - ✅ Complete
+**Email Service Mocking** - ✅ Complete (Refactored v2.5.3)
+- ✅ Simplified `MOCK_EMAILS` environment variable (removed confusing `TEST_RESEND_MOCK`)
+- ✅ Intuitive behavior: `true`=always mock, `false`=always send, not set=auto-detect
+- ✅ Safety check: Forces mocking if `MOCK_EMAILS=false` but no API key
 - ✅ Auto-mock emails in dev/test environments to prevent quota waste
-- ✅ `shouldMockEmails()` function for environment detection
-- ✅ `TEST_RESEND_MOCK` flag for testing with Resend mocks
+- ✅ `shouldMockEmails()` function with clear environment detection
 - ✅ `resetEmailCooldown()` helper for testing rate limit logic
-- ✅ Prevents accidental Resend quota exhaustion during development
 
 **Enhanced Production Email Logging** - ✅ Complete
 - ✅ Detailed logs with recipient, subject, URLs, email IDs, and ISO timestamps

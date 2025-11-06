@@ -70,6 +70,7 @@ function App() {
   const [uploadError, setUploadError] = useState(null);
   const fileInputRef = useRef(null);
   const examplesButtonRef = useRef(null);
+  const headerRef = useRef(null);
 
   // Track if we just accepted terms to prevent re-checking immediately after
   const justAcceptedTermsRef = useRef(false);
@@ -112,6 +113,15 @@ function App() {
     checkUserLegalStatus();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]); // Only run when user changes, not when checkLegalStatus changes
+
+  // Reopen support modal after user logs in (if they came from support modal)
+  useEffect(() => {
+    if (user && sessionStorage.getItem('pendingSupportModal') === 'true') {
+      // User just logged in and had pending support modal
+      sessionStorage.removeItem('pendingSupportModal');
+      setShowSupportModal(true);
+    }
+  }, [user]);
 
   // Handle legal document acceptance
   const handleAcceptLegalDocuments = async (acceptance) => {
@@ -559,6 +569,7 @@ function App() {
 
       {/* Header */}
       <Header
+        ref={headerRef}
         onMenuClick={() => setShowMobileMenu(true)}
         onHelpClick={() => setShowHelpModal(true)}
       />
@@ -787,6 +798,12 @@ function App() {
           <ContactSupportModal
             isOpen={showSupportModal}
             onClose={() => setShowSupportModal(false)}
+            onShowLogin={() => {
+              // Set sessionStorage flag so we reopen support modal after login
+              // (persists across OAuth redirects which cause page reload)
+              sessionStorage.setItem('pendingSupportModal', 'true');
+              headerRef.current?.openLoginModal();
+            }}
           />
         </Suspense>
       )}

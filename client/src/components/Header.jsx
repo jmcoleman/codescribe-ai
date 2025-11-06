@@ -1,5 +1,5 @@
 import { Menu as MenuIcon, LogOut, User, FileText, Shield, ChevronDown, Settings } from 'lucide-react';
-import { useState, lazy, Suspense } from 'react';
+import { useState, lazy, Suspense, forwardRef, useImperativeHandle } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Menu } from '@headlessui/react';
 import { Button } from './Button';
@@ -14,7 +14,7 @@ const ForgotPasswordModal = lazy(() => import('./ForgotPasswordModal').then(m =>
 // Feature flag: Authentication enabled (from environment variable)
 const ENABLE_AUTH = import.meta.env.VITE_ENABLE_AUTH === 'true';
 
-export function Header({ onMenuClick, onHelpClick }) {
+export const Header = forwardRef(function Header({ onMenuClick, onHelpClick }, ref) {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -51,6 +51,12 @@ export function Header({ onMenuClick, onHelpClick }) {
     setShowLoginModal(false);
     setShowForgotPasswordModal(true);
   };
+
+  // Expose methods to parent via ref
+  useImperativeHandle(ref, () => ({
+    openLoginModal: () => setShowLoginModal(true),
+    openSignupModal: () => setShowSignupModal(true)
+  }));
 
   return (
     <header className="bg-white border-b border-slate-200">
@@ -234,4 +240,4 @@ export function Header({ onMenuClick, onHelpClick }) {
       )}
     </header>
   );
-}
+});

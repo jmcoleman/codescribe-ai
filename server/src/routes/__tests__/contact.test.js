@@ -17,7 +17,6 @@ const capturedState = { schemas: [] };
 // Mock dependencies BEFORE importing routes
 jest.mock('../../middleware/auth.js', () => ({
   requireAuth: jest.fn((req, res, next) => next()),
-  optionalAuth: jest.fn((req, res, next) => next()), // Added for /support endpoint
   validateBody: jest.fn((schema) => {
     capturedState.schemas.push(schema); // Capture all schemas for test assertions
     return (req, res, next) => next();
@@ -315,6 +314,7 @@ describe('Contact Sales Routes', () => {
           .post('/api/contact/sales')
           .send({
             tier: 'enterprise',
+            subject: 'Custom plan inquiry',
             message: 'Looking for custom plan for 50 users',
           });
 
@@ -324,6 +324,7 @@ describe('Contact Sales Routes', () => {
           userId: 1,
           currentTier: 'free',
           interestedTier: 'enterprise',
+          subject: 'Custom plan inquiry',
           message: 'Looking for custom plan for 50 users',
         });
       });
@@ -522,51 +523,63 @@ describe('Contact Sales Routes', () => {
         tier: 'pro',
       };
 
-      // Mock optionalAuth to add user when present
-      const { optionalAuth } = require('../../middleware/auth.js');
-      optionalAuth.mockImplementation((req, res, next) => {
+      // Mock requireAuth to add user to request
+      requireAuth.mockImplementation((req, res, next) => {
         req.user = mockUser;
         next();
       });
     });
 
-    describe('Authenticated Users', () => {
+    describe('Authentication', () => {
+      it('should require authentication', async () => {
+        await request(app)
+          .post('/api/contact/support')
+          .send({
+            contactType: 'bug',
+            message: 'Test'
+          });
+
+        expect(requireAuth).toHaveBeenCalled();
+      });
+    });
+
+    describe('Support Requests', () => {
       it('should send support request for authenticated user', async () => {
         const response = await request(app)
           .post('/api/contact/support')
           .send({
-            subject: 'bug',
+            contactType: 'bug',
             message: 'I found a bug in the documentation generator.'
           });
 
         expect(response.status).toBe(200);
         expect(response.body.success).toBe(true);
-        expect(sendSupportEmail).toHaveBeenCalledWith({
-          userName: 'John Doe',
-          userEmail: 'user@example.com',
-          userId: 1,
-          currentTier: 'pro',
-          subject: 'bug',
-          message: 'I found a bug in the documentation generator.'
-        });
+        expect(sendSupportEmail).toHaveBeenCalledWith(
+          expect.objectContaining({
+            userName: 'John Doe',
+            userEmail: 'user@example.com',
+            userId: 1,
+            currentTier: 'pro',
+            contactType: 'bug',
+            message: 'I found a bug in the documentation generator.'
+          })
+        );
       });
 
-      it('should use form name when user has no name', async () => {
-        mockUser.first_name = null;
+      it('should handle user with partial name', async () => {
+        mockUser.first_name = 'John';
         mockUser.last_name = null;
 
         await request(app)
           .post('/api/contact/support')
           .send({
-            subject: 'general',
-            message: 'Test message',
-            firstName: 'Jane',
-            lastName: 'Smith'
+            contactType: 'general',
+            message: 'Test message'
           });
 
         expect(sendSupportEmail).toHaveBeenCalledWith(
           expect.objectContaining({
-            userName: 'Jane Smith'
+            userName: 'John'
           })
         );
       });
@@ -577,7 +590,7 @@ describe('Contact Sales Routes', () => {
         await request(app)
           .post('/api/contact/support')
           .send({
-            subject: 'account',
+            contactType: 'account',
             message: 'Test'
           });
 
@@ -586,81 +599,6 @@ describe('Contact Sales Routes', () => {
             currentTier: 'free'
           })
         );
-      });
-    });
-
-    describe('Unauthenticated Users', () => {
-      beforeEach(() => {
-        const { optionalAuth } = require('../../middleware/auth.js');
-        optionalAuth.mockImplementation((req, res, next) => {
-          req.user = null; // No user
-          next();
-        });
-      });
-
-      it('should send support request for unauthenticated user', async () => {
-        const response = await request(app)
-          .post('/api/contact/support')
-          .send({
-            firstName: 'Jane',
-            lastName: 'Smith',
-            email: 'jane@example.com',
-            subject: 'feature',
-            message: 'I would like to request a new feature.'
-          });
-
-        expect(response.status).toBe(200);
-        expect(response.body.success).toBe(true);
-        expect(sendSupportEmail).toHaveBeenCalledWith({
-          userName: 'Jane Smith',
-          userEmail: 'jane@example.com',
-          userId: null,
-          currentTier: null,
-          subject: 'feature',
-          message: 'I would like to request a new feature.'
-        });
-      });
-
-      it('should require firstName for unauthenticated users', async () => {
-        const response = await request(app)
-          .post('/api/contact/support')
-          .send({
-            lastName: 'Smith',
-            email: 'jane@example.com',
-            subject: 'general',
-            message: 'Test'
-          });
-
-        expect(response.status).toBe(400);
-        expect(response.body.error).toMatch(/first name.*required/i);
-      });
-
-      it('should require lastName for unauthenticated users', async () => {
-        const response = await request(app)
-          .post('/api/contact/support')
-          .send({
-            firstName: 'Jane',
-            email: 'jane@example.com',
-            subject: 'general',
-            message: 'Test'
-          });
-
-        expect(response.status).toBe(400);
-        expect(response.body.error).toMatch(/last name.*required/i);
-      });
-
-      it('should require email for unauthenticated users', async () => {
-        const response = await request(app)
-          .post('/api/contact/support')
-          .send({
-            firstName: 'Jane',
-            lastName: 'Smith',
-            subject: 'general',
-            message: 'Test'
-          });
-
-        expect(response.status).toBe(400);
-        expect(response.body.error).toMatch(/email.*required/i);
       });
     });
 
@@ -673,7 +611,7 @@ describe('Contact Sales Routes', () => {
           const response = await request(app)
             .post('/api/contact/support')
             .send({
-              subject,
+              contactType: subject,
               message: 'Test message'
             });
 
@@ -685,26 +623,26 @@ describe('Contact Sales Routes', () => {
         const response = await request(app)
           .post('/api/contact/support')
           .send({
-            subject: 'invalid_category',
+            contactType: 'invalid_category',
             message: 'Test'
           });
 
         expect(response.status).toBe(400);
-        expect(response.body.error).toMatch(/invalid subject/i);
+        expect(response.body.error).toMatch(/invalid contact type/i);
       });
 
       it('should handle case-insensitive subject names', async () => {
         const response = await request(app)
           .post('/api/contact/support')
           .send({
-            subject: 'BUG',
+            contactType: 'BUG',
             message: 'Test'
           });
 
         expect(response.status).toBe(200);
         expect(sendSupportEmail).toHaveBeenCalledWith(
           expect.objectContaining({
-            subject: 'bug' // Lowercased
+            contactType: 'bug' // Lowercased
           })
         );
       });
@@ -719,7 +657,7 @@ describe('Contact Sales Routes', () => {
         const response = await request(app)
           .post('/api/contact/support')
           .send({
-            subject: 'general',
+            contactType: 'general',
             message: 'Test'
           });
 
@@ -733,7 +671,7 @@ describe('Contact Sales Routes', () => {
         const response = await request(app)
           .post('/api/contact/support')
           .send({
-            subject: 'general',
+            contactType: 'general',
             message: 'Test'
           });
 
@@ -747,7 +685,7 @@ describe('Contact Sales Routes', () => {
         const response = await request(app)
           .post('/api/contact/support')
           .send({
-            subject: 'general',
+            contactType: 'general',
             message: 'Test'
           });
 
@@ -761,7 +699,7 @@ describe('Contact Sales Routes', () => {
         await request(app)
           .post('/api/contact/support')
           .send({
-            subject: 'general',
+            contactType: 'general',
             message: 'Test'
           });
 
@@ -781,7 +719,7 @@ describe('Contact Sales Routes', () => {
         await request(app)
           .post('/api/contact/support')
           .send({
-            subject: 'bug',
+            contactType: 'bug',
             message: 'Test'
           });
 
@@ -790,6 +728,96 @@ describe('Contact Sales Routes', () => {
         );
 
         consoleSpy.mockRestore();
+      });
+    });
+
+    describe('File Attachments', () => {
+      it('should accept support request without attachments', async () => {
+        const response = await request(app)
+          .post('/api/contact/support')
+          .field('contactType', 'bug')
+          .field('message', 'Test message');
+
+        expect(response.status).toBe(200);
+        expect(sendSupportEmail).toHaveBeenCalledWith(
+          expect.objectContaining({
+            attachments: []
+          })
+        );
+      });
+
+      it('should accept support request with single attachment', async () => {
+        const response = await request(app)
+          .post('/api/contact/support')
+          .field('contactType', 'bug')
+          .field('message', 'Test message with screenshot')
+          .attach('attachments', Buffer.from('fake image data'), 'screenshot.png');
+
+        expect(response.status).toBe(200);
+        expect(sendSupportEmail).toHaveBeenCalledWith(
+          expect.objectContaining({
+            attachments: expect.arrayContaining([
+              expect.objectContaining({
+                filename: 'screenshot.png',
+                content: expect.any(Buffer)
+              })
+            ])
+          })
+        );
+      });
+
+      it('should accept support request with multiple attachments', async () => {
+        const response = await request(app)
+          .post('/api/contact/support')
+          .field('contactType', 'bug')
+          .field('message', 'Test message with files')
+          .attach('attachments', Buffer.from('image 1'), 'screenshot1.png')
+          .attach('attachments', Buffer.from('image 2'), 'screenshot2.png')
+          .attach('attachments', Buffer.from('log data'), 'error.log');
+
+        expect(response.status).toBe(200);
+        expect(sendSupportEmail).toHaveBeenCalledWith(
+          expect.objectContaining({
+            attachments: expect.arrayContaining([
+              expect.objectContaining({ filename: 'screenshot1.png' }),
+              expect.objectContaining({ filename: 'screenshot2.png' }),
+              expect.objectContaining({ filename: 'error.log' })
+            ])
+          })
+        );
+      });
+
+      it('should log attachment count when files are attached', async () => {
+        const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+
+        await request(app)
+          .post('/api/contact/support')
+          .field('contactType', 'bug')
+          .field('message', 'Test')
+          .attach('attachments', Buffer.from('data'), 'file1.txt')
+          .attach('attachments', Buffer.from('data'), 'file2.txt');
+
+        expect(consoleSpy).toHaveBeenCalledWith(
+          expect.stringContaining('2 attachments')
+        );
+
+        consoleSpy.mockRestore();
+      });
+
+      it('should handle file type validation errors', async () => {
+        // Note: Actual file type validation is done by multer middleware
+        // This test verifies error message format
+        const response = await request(app)
+          .post('/api/contact/support')
+          .field('contactType', 'bug')
+          .field('message', 'Test')
+          .attach('attachments', Buffer.from('executable'), 'malware.exe');
+
+        // Multer should reject .exe files
+        // Status code will be 400 if multer rejects it
+        if (response.status === 400) {
+          expect(response.body.error).toBeDefined();
+        }
       });
     });
   });

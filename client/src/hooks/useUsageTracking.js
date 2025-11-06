@@ -156,8 +156,12 @@ export function useUsageTracking() {
 
   // Auto-fetch on mount and when user changes
   useEffect(() => {
+    // Only fetch usage for authenticated users
+    if (!user) {
+      return;
+    }
     fetchUsage();
-  }, [fetchUsage, user?.id]);
+  }, [fetchUsage, user]);
 
   return {
     usage,

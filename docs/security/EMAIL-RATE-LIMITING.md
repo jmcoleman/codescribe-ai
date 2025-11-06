@@ -208,11 +208,30 @@ To change rate limits, edit:
 
 ### How It Works
 
-Emails are automatically mocked in non-production environments to prevent quota waste:
+Emails can be mocked to prevent quota waste during development and testing.
 
-**Environment Detection:**
-- `NODE_ENV !== 'production'` → Emails are mocked
-- `NODE_ENV === 'production'` → Real emails sent via Resend
+**Configuration via `MOCK_EMAILS` environment variable:**
+
+| `MOCK_EMAILS` | Behavior |
+|---------------|----------|
+| `true` | Always mock (dev, test, production) - logs to console only |
+| `false` | Always send real emails via Resend |
+| Not set | Mock in dev/test, send real in production (safe default) |
+
+**Environment Variable Configuration:**
+```bash
+# server/.env
+
+# To send real emails in development (for testing):
+MOCK_EMAILS=false
+
+# To force mocking in any environment:
+MOCK_EMAILS=true
+
+# Default (recommended): Leave unset for automatic detection
+# MOCK_EMAILS=
+```
+
 
 **Mock Email Output:**
 ```
@@ -240,6 +259,7 @@ Emails are automatically mocked in non-production environments to prevent quota 
 ✅ **Safe testing** - Test rate limiting without hitting real email limits
 ✅ **Easy debugging** - See verification/reset URLs directly in logs
 ✅ **Consistent logging** - Same format in dev and production for easy monitoring
+✅ **Flexible testing** - Override mocking to test real emails (attachments, deliverability) in dev
 
 ---
 
@@ -249,7 +269,7 @@ Emails are automatically mocked in non-production environments to prevent quota 
 
 **Test verification resend cooldown:**
 ```bash
-# Start dev server (emails will be mocked automatically)
+# Start dev server (emails will be mocked automatically unless MOCK_EMAILS=false)
 cd server && npm run dev
 
 # 1. Sign up new user
@@ -266,6 +286,23 @@ Authorization: Bearer <token>
 # Expected: "Please wait X seconds..."
 
 # 4. Wait 5 minutes and retry (should succeed)
+```
+
+**Testing Real Emails in Development:**
+```bash
+# Add to server/.env to send real emails
+MOCK_EMAILS=false
+
+# Start dev server
+cd server && npm run dev
+
+# Now all emails will be sent via Resend (uses quota!)
+# Use this for testing:
+# - Email attachments (file support requests)
+# - Deliverability issues
+# - Email formatting/design
+# - Rate limiting with real email service
+
 ```
 
 ### Automated Tests

@@ -19,6 +19,7 @@ export function ContactSalesModal({ isOpen, onClose, tier = 'enterprise' }) {
   const [error, setError] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
 
   const MAX_MESSAGE_LENGTH = 750;
@@ -45,6 +46,7 @@ export function ContactSalesModal({ isOpen, onClose, tier = 'enterprise' }) {
         },
         body: JSON.stringify({
           tier,
+          subject: subject.trim() || '',
           message: message.trim() || '',
           // Include name if provided via form
           firstName: providedFirstName || undefined,
@@ -88,6 +90,7 @@ export function ContactSalesModal({ isOpen, onClose, tier = 'enterprise' }) {
         setError('');
         setFirstName('');
         setLastName('');
+        setSubject('');
         setMessage('');
       }, 300);
     }
@@ -168,17 +171,9 @@ export function ContactSalesModal({ isOpen, onClose, tier = 'enterprise' }) {
 
         {/* Form */}
         <form onSubmit={handleContactSales} className="space-y-4">
-          {/* User info (read-only display if name exists, or input fields if not) */}
-          {user?.first_name && user?.last_name ? (
-            <div className="bg-slate-50 rounded-lg p-4">
-              <p className="text-sm text-slate-600">
-                <span className="font-medium">From:</span>{' '}
-                {`${user.first_name} ${user.last_name}`.trim()}
-              </p>
-            </div>
-          ) : (
+          {/* Name input fields (only shown if user doesn't have name) */}
+          {!user?.first_name || !user?.last_name ? (
             <>
-              {/* Name input fields (shown if user doesn't have name) */}
               <div>
                 <label htmlFor="firstName" className="block text-sm font-medium text-slate-700 mb-2">
                   First Name <span className="text-red-500">*</span>
@@ -211,7 +206,25 @@ export function ContactSalesModal({ isOpen, onClose, tier = 'enterprise' }) {
                 />
               </div>
             </>
-          )}
+          ) : null}
+
+          {/* Subject field */}
+          <div>
+            <label htmlFor="subject" className="block text-sm font-medium text-slate-700 mb-2">
+              Subject <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              id="subject"
+              name="subject"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              required
+              placeholder="e.g., Enterprise pricing inquiry"
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={loading}
+            />
+          </div>
 
           {/* Optional message */}
           <div>

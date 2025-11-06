@@ -51,16 +51,17 @@ Complete guide for configuring Resend email service with custom domain verificat
 1. [Prerequisites](#prerequisites)
 2. [Email Address Overview](#email-address-overview)
 3. [Inbound Email Setup (support@)](#inbound-email-setup-support)
-4. [Environment Configuration Strategy](#environment-configuration-strategy)
-5. [Step 1: Create Resend Account](#step-1-create-resend-account)
-6. [Step 2: Generate API Key](#step-2-generate-api-key)
-7. [Step 3: Add Domain in Resend](#step-3-add-domain-in-resend)
-8. [Step 4: Configure DNS Records in Namecheap](#step-4-configure-dns-records-in-namecheap)
-9. [Step 5: Verify Domain](#step-5-verify-domain)
-10. [Step 6: Update Environment Variables](#step-6-update-environment-variables)
-11. [Step 7: Test Email Sending](#step-7-test-email-sending)
-12. [Troubleshooting](#troubleshooting)
-13. [Cost Analysis](#cost-analysis)
+4. [Gmail "Send Mail As" Configuration](#gmail-send-mail-as-configuration)
+5. [Environment Configuration Strategy](#environment-configuration-strategy)
+6. [Step 1: Create Resend Account](#step-1-create-resend-account)
+7. [Step 2: Generate API Key](#step-2-generate-api-key)
+8. [Step 3: Add Domain in Resend](#step-3-add-domain-in-resend)
+9. [Step 4: Configure DNS Records in Namecheap](#step-4-configure-dns-records-in-namecheap)
+10. [Step 5: Verify Domain](#step-5-verify-domain)
+11. [Step 6: Update Environment Variables](#step-6-update-environment-variables)
+12. [Step 7: Test Email Sending](#step-7-test-email-sending)
+13. [Troubleshooting](#troubleshooting)
+14. [Cost Analysis](#cost-analysis)
 
 ---
 
@@ -176,23 +177,9 @@ Forward `support@codescribeai.com` to your personal Gmail/Outlook account.
    - Check your personal inbox (and spam folder)
    - Expected delivery time: 1-5 minutes
 
-6. **Optional: Set Up "Send As" in Gmail**
+6. **Optional: Set Up "Send As" in Gmail (Recommended)**
 
-   To reply **as** `support@codescribeai.com` from Gmail:
-
-   - In Gmail, go to **Settings** → **Accounts and Import**
-   - Click **"Add another email address"**
-   - Enter name: `CodeScribe AI Support`
-   - Enter email: `support@codescribeai.com`
-   - Follow Gmail's verification steps (may require SMTP credentials)
-
-   **SMTP Settings for Namecheap Private Email (if required):**
-   - **SMTP Server:** `mail.privateemail.com`
-   - **Port:** `587` (TLS) or `465` (SSL)
-   - **Username:** `support@codescribeai.com`
-   - **Password:** Your email password (set in Namecheap)
-
-   **Note:** Free forwarding may not support SMTP "Send as" without upgrading to Namecheap Private Email ($0.99/mo first year, then ~$9.88/yr).
+   See [Gmail "Send Mail As" Configuration](#gmail-send-mail-as-configuration) below for detailed setup instructions.
 
 ---
 
@@ -428,6 +415,386 @@ Need help? Contact us at <a href="mailto:support@codescribeai.com">support@codes
 2. Configure DNS/MX records in Namecheap
 3. Test email delivery by sending to `support@codescribeai.com`
 4. Update email templates if needed (e.g., add ticket system link)
+
+---
+
+## Gmail "Send Mail As" Configuration
+
+**Purpose:** Reply to support emails FROM `support@codescribeai.com` instead of your personal Gmail address.
+
+**Why this matters:**
+- Maintains professional brand identity
+- Users see replies from `support@codescribeai.com` (not your personal email)
+- Your personal email remains private
+- Works with free Namecheap email forwarding (no paid hosting needed)
+
+**Prerequisites:**
+- Email forwarding already set up (see [Option A: Namecheap Email Forwarding](#option-a-email-forwarding-via-namecheap-free-recommended-) above)
+- Support emails successfully forwarding to your personal Gmail
+- Access to Gmail account where emails are forwarded
+
+---
+
+### Step-by-Step Setup
+
+#### 1. Access Gmail Settings
+
+1. Log in to your Gmail account (where `support@codescribeai.com` emails are forwarded)
+2. Click the **gear icon** (⚙️) in the top-right corner
+3. Click **"See all settings"**
+4. Navigate to the **"Accounts and Import"** tab
+
+#### 2. Add Another Email Address
+
+1. Find the section: **"Send mail as:"**
+2. Click **"Add another email address"**
+
+   A popup window will appear:
+
+   ```
+   ┌─────────────────────────────────────────────────────────┐
+   │ Add another email address                               │
+   ├─────────────────────────────────────────────────────────┤
+   │ Name:  [CodeScribe AI Support                        ]  │
+   │ Email: [support@codescribeai.com                     ]  │
+   │                                                         │
+   │ ☑ Treat as an alias                                    │
+   │                                                         │
+   │                                    [Next Step] [Cancel] │
+   └─────────────────────────────────────────────────────────┘
+   ```
+
+3. Fill in the fields:
+   - **Name:** `CodeScribe AI Support` (this is what users will see)
+   - **Email address:** `support@codescribeai.com`
+   - **Treat as an alias:** ✅ Keep this checked (recommended)
+
+4. Click **"Next Step"**
+
+#### 3. Choose Verification Method
+
+Gmail will show two options:
+
+**Option A: Send through Gmail (Recommended for Free Forwarding) ⭐**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ Send mail through:                                              │
+├─────────────────────────────────────────────────────────────────┤
+│ ○ Gmail (easier to set up)                                     │
+│   Reply from support@codescribeai.com using Gmail's servers.   │
+│   Recommended if you don't have SMTP credentials.              │
+│                                                                 │
+│ ○ Other SMTP server (advanced)                                 │
+│   Requires SMTP credentials from email hosting provider.       │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+- **Select:** ○ **Gmail (easier to set up)**
+- Click **"Next Step"**
+
+**Why choose "Gmail"?**
+- ✅ No SMTP credentials needed
+- ✅ Works with free Namecheap forwarding
+- ✅ Simpler setup (5 minutes)
+- ✅ Uses Gmail's reliable infrastructure
+- ⚠️ "Reply-To" header shows your Gmail (only visible if recipient inspects headers)
+- ⚠️ "From" still shows `support@codescribeai.com` to users (most important!)
+
+**Option B: Other SMTP server (Advanced)**
+
+Only choose this if:
+- You have paid email hosting (Namecheap Private Email, Google Workspace, etc.)
+- You have SMTP credentials for `support@codescribeai.com`
+- You need complete email header control
+
+**SMTP Settings (if using Option B):**
+
+For **Namecheap Private Email** ($0.99/mo first year):
+- **SMTP Server:** `mail.privateemail.com`
+- **Port:** `587` (TLS recommended) or `465` (SSL)
+- **Username:** `support@codescribeai.com`
+- **Password:** Your email account password (set in Namecheap)
+
+For **Google Workspace**:
+- **SMTP Server:** `smtp.gmail.com`
+- **Port:** `587` (TLS recommended) or `465` (SSL)
+- **Username:** `support@codescribeai.com`
+- **Password:** Your Google Workspace password (or App Password if 2FA enabled)
+
+**Note:** Free Namecheap email forwarding does NOT provide SMTP access - you would need to upgrade to Namecheap Private Email or use Option A (Gmail).
+
+#### 4. Verify Email Address
+
+Gmail will send a verification email to `support@codescribeai.com`:
+
+1. **Check your Gmail inbox** - The verification email will be forwarded to your personal Gmail (due to email forwarding setup)
+
+2. **Find the verification email** from Gmail Team:
+   - **Subject:** "Gmail Confirmation - Send mail as support@codescribeai.com"
+   - **From:** `email-forwarding-noreply@google.com`
+
+3. **Two verification options:**
+
+   **Option 1: Click the link in the email (easiest)**
+   - Open the verification email
+   - Click the confirmation link
+   - You'll see: "The email address has been verified!"
+
+   **Option 2: Enter the confirmation code**
+   - Copy the 9-digit confirmation code from the email
+   - Return to the Gmail settings window (still open)
+   - Paste the code in the "Confirmation code" field
+   - Click **"Verify"**
+
+4. **Success confirmation:**
+   - You'll see a green checkmark: ✅ "Verification complete"
+   - The new email address will appear in your "Send mail as" list
+
+#### 5. Set as Default (Optional)
+
+1. In **Gmail Settings** → **Accounts and Import** → **"Send mail as:"**
+2. Find: `CodeScribe AI Support <support@codescribeai.com>`
+3. Click **"make default"** next to it
+
+**Effect:**
+- All new emails will default to sending FROM `support@codescribeai.com`
+- You can still switch to your personal email when composing
+
+**Recommendation:**
+- **Don't set as default** if you use Gmail for personal emails
+- **Do set as default** if this Gmail account is dedicated to CodeScribe AI support
+
+#### 6. Reply to Support Emails
+
+**When replying to forwarded support emails:**
+
+1. Open a support request email (forwarded from `support@codescribeai.com`)
+2. Click **"Reply"**
+3. Check the **"From:"** field at the top of the compose window:
+
+   ```
+   From: [CodeScribe AI Support <support@codescribeai.com> ▼]
+   ```
+
+4. **If needed, change the sender:**
+   - Click the dropdown (▼) next to the "From:" field
+   - Select: `CodeScribe AI Support <support@codescribeai.com>`
+
+5. Compose your reply and click **"Send"**
+
+**What the recipient sees:**
+```
+From: CodeScribe AI Support <support@codescribeai.com>
+To: customer@example.com
+Subject: Re: Help with account issue
+
+Hi [Customer Name],
+
+Thanks for reaching out! I can help with that...
+
+Best regards,
+CodeScribe AI Support Team
+```
+
+**What the recipient does NOT see:**
+- Your personal Gmail address (protected by Gmail's "Send as" system)
+- Your real name (unless you include it in the signature)
+
+---
+
+### How It Works
+
+**Email Flow Diagram:**
+
+```
+Customer Sends Email
+        │
+        ▼
+support@codescribeai.com (Namecheap forwarding)
+        │
+        ▼
+your-personal@gmail.com (received in inbox)
+        │
+        ▼
+You Reply (select "Send as" support@codescribeai.com)
+        │
+        ▼
+Gmail sends email
+        │
+        ▼
+Customer receives email FROM support@codescribeai.com ✅
+```
+
+**Technical Details:**
+
+**Using Option A (Gmail SMTP):**
+- Gmail sends the email on behalf of `support@codescribeai.com`
+- Email headers include:
+  - `From: CodeScribe AI Support <support@codescribeai.com>`
+  - `Reply-To: your-personal@gmail.com` (hidden from normal view)
+  - `X-Google-Original-From: support@codescribeai.com`
+- Most users only see the "From" field, which shows `support@codescribeai.com`
+- Technical recipients inspecting full headers may see Gmail infrastructure
+- **Privacy:** Your personal email is NOT exposed to normal users
+
+**Using Option B (Custom SMTP):**
+- Gmail connects to your email hosting's SMTP server
+- Email headers include:
+  - `From: CodeScribe AI Support <support@codescribeai.com>`
+  - `Reply-To: support@codescribeai.com`
+  - No Gmail references in headers
+- Complete control over email headers
+- Requires paid email hosting with SMTP access
+
+---
+
+### Troubleshooting
+
+#### Verification Email Not Arriving
+
+**Problem:** No verification email in inbox after 5-10 minutes
+
+**Solutions:**
+1. **Check spam folder** - Gmail verification emails sometimes get filtered
+2. **Verify email forwarding is working:**
+   - Send a test email to `support@codescribeai.com` from another account
+   - Confirm it arrives in your Gmail inbox
+   - If forwarding isn't working, see [Option A: Email Forwarding](#option-a-email-forwarding-via-namecheap-free-recommended-) setup
+3. **Check Namecheap forwarding activation:**
+   - You must click the confirmation link Namecheap sent when you set up forwarding
+   - Forwarding will NOT work until confirmed
+4. **Wait longer:** DNS changes can take up to 30 minutes
+5. **Try again:** Click "Resend verification email" in Gmail settings
+
+#### "Send as" Not Appearing in Dropdown
+
+**Problem:** `support@codescribeai.com` doesn't show in "From:" dropdown when composing
+
+**Solutions:**
+1. **Verify email address is verified:**
+   - Go to Gmail Settings → Accounts and Import → "Send mail as:"
+   - Check for green checkmark next to `support@codescribeai.com`
+   - If no checkmark, complete verification first
+2. **Refresh Gmail:**
+   - Close and reopen Gmail
+   - Or hard refresh: `Cmd+Shift+R` (Mac) or `Ctrl+Shift+R` (Windows)
+3. **Clear browser cache** (if still not appearing)
+
+#### Emails Rejected or Bounced
+
+**Problem:** Emails sent as `support@codescribeai.com` are rejected by recipient's server
+
+**Solutions:**
+1. **Check SPF record:** Add Gmail to your SPF record if using Option A (Gmail SMTP):
+   ```
+   v=spf1 include:_spf.resend.com include:_spf.google.com ~all
+   ```
+   - This authorizes Gmail to send on behalf of your domain
+   - Add to Namecheap Advanced DNS as TXT record (Host: `@`)
+
+2. **Wait for DNS propagation:** After adding SPF record, wait 30 minutes to 2 hours
+
+3. **Test email deliverability:** Use [mail-tester.com](https://www.mail-tester.com/)
+   - Send email from `support@codescribeai.com` to the address provided
+   - Check your spam score and authentication results
+
+4. **Consider DMARC policy:** Add or update DMARC record to allow Gmail:
+   ```
+   v=DMARC1; p=none; rua=mailto:dmarc@codescribeai.com
+   ```
+   - `p=none` allows both Resend and Gmail to send
+   - Monitor reports at `dmarc@codescribeai.com` (also set up forwarding)
+
+#### "Reply-To" Concerns
+
+**Problem:** Worried that your personal email is exposed in "Reply-To" header
+
+**Understanding:**
+- **Normal users:** Only see "From: support@codescribeai.com" in their email client
+- **Technical users:** Can inspect full headers and see "Reply-To: your-personal@gmail.com"
+- **Privacy level:** Medium (exposed only to advanced users inspecting headers)
+
+**Solutions if you need higher privacy:**
+1. **Use Option B (Custom SMTP):**
+   - Requires paid email hosting (Namecheap Private Email $0.99/mo, Google Workspace $6/mo)
+   - Provides complete header control, no Gmail references
+2. **Use Google Workspace:**
+   - Full professional email hosting
+   - No "Send as" needed - you directly log in as `support@codescribeai.com`
+   - See [Option B: Google Workspace](#option-b-google-workspace--microsoft-365-paid-professional)
+3. **Accept the trade-off:**
+   - For most small businesses and startups, Gmail "Send as" is perfectly acceptable
+   - 99%+ of users never inspect email headers
+   - Cost savings vs paid hosting may be worth it
+
+---
+
+### Best Practices
+
+1. **Use a Professional Signature:**
+   ```
+   Best regards,
+   CodeScribe AI Support Team
+
+   https://codescribeai.com
+   support@codescribeai.com
+   ```
+
+2. **Create a Gmail Filter:**
+   - Auto-label emails forwarded from `support@codescribeai.com`
+   - Keep support requests organized
+   - Set up in Gmail Settings → Filters and Blocked Addresses
+
+3. **Set Up Canned Responses:**
+   - Gmail Settings → Advanced → Enable "Templates"
+   - Create templates for common support replies
+   - Saves time responding to frequent questions
+
+4. **Use Gmail Keyboard Shortcuts:**
+   - Enable in Gmail Settings → General → Keyboard shortcuts
+   - `R` = Reply (auto-selects "Send as" if default)
+   - `Shift+R` = Reply all
+   - `F` = Forward
+
+5. **Monitor Email Deliverability:**
+   - Periodically check spam folder for false positives
+   - Ask customers to whitelist `support@codescribeai.com`
+   - Use [mail-tester.com](https://www.mail-tester.com/) to check spam score
+
+---
+
+### Privacy & Security Notes
+
+**What is exposed:**
+- Your "Send as" configuration (only to you in Gmail settings)
+- Technical email headers (only visible to advanced users)
+
+**What is NOT exposed:**
+- Your personal email address (to normal users)
+- Your real name (unless you include it in signature)
+- Your Gmail account password
+
+**Security recommendations:**
+1. **Enable 2-Factor Authentication (2FA)** on your Gmail account
+2. **Use a strong password** for Gmail
+3. **Review account activity** regularly in Gmail settings
+4. **Don't share Gmail login credentials** with team members (use Google Workspace instead)
+
+**When to upgrade to paid hosting:**
+- Your team grows beyond 1-2 people (use Google Workspace shared mailbox)
+- You need complete email header privacy
+- You require advanced email features (shared calendars, team drives)
+- You're processing sensitive customer data (HIPAA, PCI compliance)
+
+---
+
+### Related Documentation
+
+- [Option A: Namecheap Email Forwarding](#option-a-email-forwarding-via-namecheap-free-recommended-) - Initial setup
+- [Option B: Google Workspace](#option-b-google-workspace--microsoft-365-paid-professional) - Professional alternative
+- [Support Email Configuration](#inbound-email-setup-support) - Overview of support email setup
+- [EMAIL-RATE-LIMITING.md](../security/EMAIL-RATE-LIMITING.md) - Support email quotas
 
 ---
 
@@ -1574,6 +1941,25 @@ See [RESEND-SETUP.md lines 234-346](RESEND-SETUP.md#option-c-resend-inbound-webh
 
 ## Changelog
 
+- **v4.1** (November 5, 2025) - Gmail "Send Mail As" Configuration
+  - **New Section Added:**
+    - Comprehensive [Gmail "Send Mail As" Configuration](#gmail-send-mail-as-configuration) guide (350+ lines)
+    - Step-by-step setup instructions with visual diagrams
+    - Two verification methods: Gmail SMTP (recommended) vs Custom SMTP (advanced)
+    - SMTP configuration details for Namecheap Private Email and Google Workspace
+    - Complete troubleshooting section (verification issues, bounced emails, privacy concerns)
+    - Email flow diagrams showing how forwarding + "Send as" works together
+    - Technical details about email headers and privacy implications
+    - Best practices for professional support workflows
+    - Security recommendations and when to upgrade to paid hosting
+  - **Updated Quick Start:**
+    - Changed step 6 in Namecheap Email Forwarding to reference new Gmail configuration section
+    - Removed brief inline instructions (now in dedicated section)
+  - **Updated Table of Contents:**
+    - Added Gmail "Send Mail As" Configuration as item #4
+    - Renumbered subsequent sections
+  - **Goal:** Provide complete guidance for replying FROM `support@codescribeai.com` using free Gmail "Send as" feature, eliminating need for paid email hosting for solo founders
+
 - **v4.0** (October 27, 2025) - Documentation Reorganization & Real-World Setup
   - **Major Restructure:**
     - Added "Quick Start - Your Actual Setup" section at top showing CodeScribe AI's actual configuration
@@ -1666,5 +2052,5 @@ See [RESEND-SETUP.md lines 234-346](RESEND-SETUP.md#option-c-resend-inbound-webh
 
 ---
 
-**Last Updated:** October 27, 2025
+**Last Updated:** November 5, 2025
 **Maintained By:** CodeScribe AI Team

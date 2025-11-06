@@ -140,11 +140,51 @@ app.use('/api', apiRoutes);
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+
+// Determine email mock status (matches shouldMockEmails logic in emailService.js)
+function getEmailStatus() {
+  const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+  const MOCK_EMAILS = process.env.MOCK_EMAILS;
+  const HAS_RESEND_KEY = !!process.env.RESEND_API_KEY;
+
+  // If MOCK_EMAILS is explicitly set, respect it
+  if (MOCK_EMAILS === 'true') {
+    return 'MOCKED (MOCK_EMAILS=true)';
+  }
+
+  if (MOCK_EMAILS === 'false') {
+    if (!HAS_RESEND_KEY) {
+      return 'MOCKED (no API key - forced)';
+    }
+    return IS_PRODUCTION ? 'ENABLED (Resend)' : 'ENABLED (Resend - dev mode)';
+  }
+
+  // Otherwise: mock in dev/test, real in production (safe default)
+  if (IS_PRODUCTION) {
+    return HAS_RESEND_KEY ? 'ENABLED (Resend)' : 'DISABLED (no API key)';
+  } else {
+    return HAS_RESEND_KEY ? 'MOCKED (development)' : 'MOCKED (no API key)';
+  }
+}
+
+const server = app.listen(PORT, () => {
   console.log('\n' + '='.repeat(60));
   console.log('🚀 CodeScribe AI Server');
   console.log('='.repeat(60));
   console.log(`📍 URL: http://localhost:${PORT}`);
   console.log(`🔐 Auth: ${ENABLE_AUTH ? 'ENABLED' : 'DISABLED'}`);
+  console.log(`📧 Emails: ${getEmailStatus()}`);
   console.log('='.repeat(60) + '\n');
+  console.log('✅ Server is listening and ready to accept requests');
+});
+
+// Prevent premature exit
+server.on('error', (error) => {
+  console.error('❌ Server error:', error);
+  process.exit(1);
+});
+
+// Log if server closes unexpectedly
+server.on('close', () => {
+  console.log('⚠️ Server closed');
 });

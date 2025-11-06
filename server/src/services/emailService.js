@@ -8,19 +8,48 @@
  */
 
 import { Resend } from 'resend';
+import {
+  passwordResetTemplate,
+  emailVerificationTemplate,
+  supportRequestTemplate,
+  contactSalesTemplate,
+  deletionScheduledTemplate,
+  accountRestoredTemplate,
+  finalDeletionWarningTemplate
+} from './emailTemplates/index.js';
 
 // Initialize Resend lazily - will be created when needed
 // This allows tests to set env vars before initialization
 let resend = null;
 
-// Detect environment - mock emails in dev/test, send real emails in production
-// TEST_RESEND_MOCK allows tests to bypass MOCK_EMAILS and use their own Resend mocks
+/**
+ * Determine whether to mock emails or send real emails via Resend
+ *
+ * Behavior:
+ * - MOCK_EMAILS=true: Always mock (dev, test, production)
+ * - MOCK_EMAILS=false: Always send real emails (dev, test, production)
+ * - MOCK_EMAILS not set: Mock in dev/test, real in production (safe default)
+ *
+ * @returns {boolean} True if emails should be mocked, false to send real emails
+ */
 function shouldMockEmails() {
   const IS_PRODUCTION = process.env.NODE_ENV === 'production';
-  const TEST_RESEND_MOCK = process.env.TEST_RESEND_MOCK === 'true';
-  const MOCK_EMAILS_OVERRIDE = process.env.MOCK_EMAILS === 'true';
+  const MOCK_EMAILS = process.env.MOCK_EMAILS;
+  const HAS_RESEND_KEY = !!process.env.RESEND_API_KEY;
 
-  return (!IS_PRODUCTION && !TEST_RESEND_MOCK) || MOCK_EMAILS_OVERRIDE;
+  // If MOCK_EMAILS is explicitly set, respect it
+  if (MOCK_EMAILS === 'true') return true;
+  if (MOCK_EMAILS === 'false') {
+    // Safety check: don't send real emails if no API key
+    if (!HAS_RESEND_KEY) {
+      console.warn('⚠️ MOCK_EMAILS=false but RESEND_API_KEY not set. Forcing mocking.');
+      return true;
+    }
+    return false;
+  }
+
+  // Otherwise: mock in dev/test, real in production (safe default)
+  return !IS_PRODUCTION;
 }
 
 function getResendClient() {
@@ -105,61 +134,14 @@ export async function sendPasswordResetEmail({ to, resetToken }) {
     from: FROM_EMAIL,
     to,
     subject: 'Reset Your Password - CodeScribe AI',
-    html: `
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Reset Your Password</title>
-          </head>
-          <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #334155; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <div style="background: linear-gradient(135deg, #9333ea 0%, #6366f1 100%); padding: 40px 20px; text-align: center; border-radius: 8px 8px 0 0;">
-              <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 700;">CodeScribe AI</h1>
-            </div>
-
-            <div style="background: #ffffff; padding: 40px 30px; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 8px 8px;">
-              <h2 style="color: #1e293b; margin-top: 0; font-size: 24px;">Reset Your Password</h2>
-
-              <p style="color: #475569; font-size: 16px; margin: 20px 0;">
-                We received a request to reset your password. Click the button below to create a new password:
-              </p>
-
-              <div style="text-align: center; margin: 32px 0;">
-                <a href="${resetUrl}"
-                   style="background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%);
-                          color: white;
-                          padding: 14px 32px;
-                          text-decoration: none;
-                          border-radius: 6px;
-                          font-weight: 600;
-                          display: inline-block;
-                          font-size: 16px;">
-                  Reset Password
-                </a>
-              </div>
-
-              <p style="color: #64748b; font-size: 14px; margin: 24px 0 8px 0;">
-                Or copy and paste this link into your browser:
-              </p>
-              <p style="color: #6366f1; font-size: 14px; word-break: break-all; background: #f8fafc; padding: 12px; border-radius: 4px; margin: 0;">
-                ${resetUrl}
-              </p>
-
-              <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
-                <p style="color: #64748b; font-size: 14px; margin: 8px 0;">
-                  <strong>This link will expire in 1 hour.</strong>
-                </p>
-                <p style="color: #64748b; font-size: 14px; margin: 8px 0;">
-                  If you didn't request a password reset, you can safely ignore this email. Your password will not be changed.
-                </p>
-              </div>
-            </div>
-
-            ${getEmailFooter(CLIENT_URL)}
-          </body>
-        </html>
-      `
+    html: passwordResetTemplate({
+      userEmail: to,
+      resetLink: resetUrl,
+      expirationMinutes: 60,
+      currentTier: undefined, // No tier for transactional emails
+      environment: process.env.NODE_ENV,
+      clientUrl: CLIENT_URL
+    })
   };
 
   // Mock in dev/test, send real emails in production
@@ -217,61 +199,14 @@ export async function sendVerificationEmail({ to, verificationToken }) {
     from: FROM_EMAIL,
     to,
     subject: 'Verify Your Email - CodeScribe AI',
-    html: `
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Verify Your Email</title>
-          </head>
-          <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #334155; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <div style="background: linear-gradient(135deg, #9333ea 0%, #6366f1 100%); padding: 40px 20px; text-align: center; border-radius: 8px 8px 0 0;">
-              <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 700;">CodeScribe AI</h1>
-            </div>
-
-            <div style="background: #ffffff; padding: 40px 30px; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 8px 8px;">
-              <h2 style="color: #1e293b; margin-top: 0; font-size: 24px;">Welcome to CodeScribe AI!</h2>
-
-              <p style="color: #475569; font-size: 16px; margin: 20px 0;">
-                Thanks for signing up! Please verify your email address to get started:
-              </p>
-
-              <div style="text-align: center; margin: 32px 0;">
-                <a href="${verifyUrl}"
-                   style="background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%);
-                          color: white;
-                          padding: 14px 32px;
-                          text-decoration: none;
-                          border-radius: 6px;
-                          font-weight: 600;
-                          display: inline-block;
-                          font-size: 16px;">
-                  Verify Email
-                </a>
-              </div>
-
-              <p style="color: #64748b; font-size: 14px; margin: 24px 0 8px 0;">
-                Or copy and paste this link into your browser:
-              </p>
-              <p style="color: #6366f1; font-size: 14px; word-break: break-all; background: #f8fafc; padding: 12px; border-radius: 4px; margin: 0;">
-                ${verifyUrl}
-              </p>
-
-              <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
-                <p style="color: #64748b; font-size: 14px; margin: 8px 0;">
-                  <strong>This link will expire in 24 hours.</strong>
-                </p>
-                <p style="color: #64748b; font-size: 14px; margin: 8px 0;">
-                  If you didn't create an account, you can safely ignore this email.
-                </p>
-              </div>
-            </div>
-
-            ${getEmailFooter(CLIENT_URL)}
-          </body>
-        </html>
-      `
+    html: emailVerificationTemplate({
+      userEmail: to,
+      verificationLink: verifyUrl,
+      expirationHours: 24,
+      currentTier: undefined, // No tier for transactional emails
+      environment: process.env.NODE_ENV,
+      clientUrl: CLIENT_URL
+    })
   };
 
   // Mock in dev/test, send real emails in production
@@ -326,78 +261,42 @@ export async function sendVerificationEmail({ to, verificationToken }) {
  * @param {string} options.message - User's message (optional)
  * @returns {Promise<Object>} Send result
  */
-export async function sendContactSalesEmail({ userName, userEmail, userId, currentTier, interestedTier, message }) {
-  const subject = `${interestedTier.charAt(0).toUpperCase() + interestedTier.slice(1)} Plan Inquiry from ${userName || userEmail}`;
+export async function sendContactSalesEmail({ userName, userEmail, userId, currentTier, interestedTier, subject: userSubject, message }) {
+  // Build email subject line using free-form subject text
+  const subject = userSubject
+    ? `Sales Inquiry: ${userSubject}`
+    : `Sales Inquiry from ${userName || userEmail}`;
+
+  // Sales email destination
+  // Default to sales@codescribeai.com (works if domain is verified in Resend)
+  // Override with SALES_EMAIL env var to send directly to personal email (useful for dev/free tier)
+  const salesEmail = process.env.SALES_EMAIL || 'sales@codescribeai.com';
+
+  // Generate email HTML using template
+  const html = contactSalesTemplate({
+    userName,
+    userEmail,
+    userId,
+    currentTier,
+    interestedTier,
+    subject: userSubject,
+    message,
+    environment: process.env.NODE_ENV,
+    clientUrl: CLIENT_URL
+  });
+
+  // Format "from" to show user's name for better context
+  // e.g., "John Doe via CodeScribe AI <noreply@mail.codescribeai.com>"
+  const fromField = userName
+    ? `${userName} via CodeScribe AI <noreply@mail.codescribeai.com>`
+    : FROM_EMAIL;
 
   const emailData = {
-    from: FROM_EMAIL,
-    to: 'sales@codescribeai.com',
+    from: fromField,
+    to: salesEmail,
     replyTo: userEmail,
     subject,
-    html: `
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Contact Sales Inquiry</title>
-          </head>
-          <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #334155; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <div style="background: linear-gradient(135deg, #9333ea 0%, #6366f1 100%); padding: 40px 20px; text-align: center; border-radius: 8px 8px 0 0;">
-              <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 700;">New Sales Inquiry</h1>
-            </div>
-
-            <div style="background: #ffffff; padding: 40px 30px; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 8px 8px;">
-              <h2 style="color: #1e293b; margin-top: 0; font-size: 24px;">
-                ${interestedTier.charAt(0).toUpperCase() + interestedTier.slice(1)} Plan Inquiry
-              </h2>
-
-              <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 24px 0;">
-                <h3 style="color: #475569; margin: 0 0 16px 0; font-size: 16px; font-weight: 600;">Contact Information</h3>
-                <table style="width: 100%; border-collapse: collapse;">
-                  <tr>
-                    <td style="padding: 8px 0; color: #64748b; font-weight: 600; width: 120px;">Name:</td>
-                    <td style="padding: 8px 0; color: #1e293b;">${userName || 'Not provided'}</td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 8px 0; color: #64748b; font-weight: 600;">Email:</td>
-                    <td style="padding: 8px 0; color: #1e293b;"><a href="mailto:${userEmail}" style="color: #6366f1; text-decoration: none;">${userEmail}</a></td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 8px 0; color: #64748b; font-weight: 600;">User ID:</td>
-                    <td style="padding: 8px 0; color: #1e293b;">${userId}</td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 8px 0; color: #64748b; font-weight: 600;">Current Tier:</td>
-                    <td style="padding: 8px 0; color: #1e293b;">${currentTier.charAt(0).toUpperCase() + currentTier.slice(1)}</td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 8px 0; color: #64748b; font-weight: 600;">Interested In:</td>
-                    <td style="padding: 8px 0; color: #1e293b; font-weight: 600;">${interestedTier.charAt(0).toUpperCase() + interestedTier.slice(1)} Plan</td>
-                  </tr>
-                </table>
-              </div>
-
-              ${message ? `
-                <div style="margin: 24px 0;">
-                  <h3 style="color: #475569; margin: 0 0 12px 0; font-size: 16px; font-weight: 600;">Additional Message</h3>
-                  <div style="background: #f8fafc; padding: 16px; border-radius: 6px; border-left: 4px solid #6366f1;">
-                    <p style="color: #1e293b; margin: 0; white-space: pre-wrap;">${message}</p>
-                  </div>
-                </div>
-              ` : ''}
-
-              <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
-                <p style="color: #64748b; font-size: 14px; margin: 0;">
-                  <strong>Next Steps:</strong> Respond directly to this email or reach out to ${userEmail} to schedule a call.
-                </p>
-              </div>
-            </div>
-
-            ${getEmailFooter(CLIENT_URL)}
-          </body>
-        </html>
-      `
+    html
   };
 
   // Mock in dev/test, send real emails in production
@@ -451,10 +350,11 @@ export async function sendContactSalesEmail({ userName, userEmail, userId, curre
  * @param {string} [options.currentTier] - User's current tier (optional for unauthenticated users)
  * @param {string} options.subject - Support request category
  * @param {string} options.message - Support request message
+ * @param {Array} [options.attachments] - Optional file attachments (array of {filename, content, contentType})
  * @returns {Promise<Object>} Send result
  */
-export async function sendSupportEmail({ userName, userEmail, userId, currentTier, subject, message }) {
-  const subjectLabels = {
+export async function sendSupportEmail({ userName, userEmail, userId, currentTier, contactType, subjectText, message, attachments = [] }) {
+  const contactTypeLabels = {
     general: 'General Question',
     bug: 'Bug Report',
     feature: 'Feature Request',
@@ -463,8 +363,28 @@ export async function sendSupportEmail({ userName, userEmail, userId, currentTie
     other: 'Other'
   };
 
-  const subjectLabel = subjectLabels[subject] || 'Support Request';
-  const emailSubject = `${subjectLabel} from ${userName || userEmail}`;
+  const contactTypeLabel = contactTypeLabels[contactType] || 'Support Request';
+
+  // Format current date/time for display
+  // Format: "Wed, Nov 5, 2025 at 1:53 PM EST"
+  const date = new Date();
+  const dateStr = date.toLocaleDateString('en-US', {
+    weekday: 'short',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+  const timeStr = date.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZoneName: 'short'
+  });
+  const requestDateTime = `${dateStr} at ${timeStr}`;
+
+  // Build email subject: no tier badge (tier info is in email body + X-Priority header)
+  const emailSubject = subjectText
+    ? `${contactTypeLabel}: ${subjectText}`
+    : `${contactTypeLabel} from ${userName || userEmail}`;
 
   // Format "from" to show user's name for better context
   // e.g., "John Doe via CodeScribe AI <noreply@mail.codescribeai.com>"
@@ -472,80 +392,62 @@ export async function sendSupportEmail({ userName, userEmail, userId, currentTie
     ? `${userName} via CodeScribe AI <noreply@mail.codescribeai.com>`
     : FROM_EMAIL;
 
+  // Support email destination
+  // Default to support@codescribeai.com (works if domain is verified in Resend)
+  // Override with SUPPORT_EMAIL env var to send directly to personal email (useful for dev/free tier)
+  const supportEmail = process.env.SUPPORT_EMAIL || 'support@codescribeai.com';
+
+  // Generate email HTML using template
+  const html = supportRequestTemplate({
+    userName,
+    userEmail,
+    userId,
+    currentTier,
+    contactType,
+    subjectText,
+    message,
+    attachments,
+    requestDateTime,
+    contactTypeLabel,
+    environment: process.env.NODE_ENV,
+    clientUrl: CLIENT_URL
+  });
+
+  // Map tier to email priority (for sorting in inbox)
+  // Enterprise/Team: Urgent (1) - 4-hour SLA
+  // Pro: High (2) - 24-hour SLA
+  // Starter: Normal (3) - 48-hour SLA
+  // Free: Low (5) - 5-day SLA
+  const tierPriority = {
+    enterprise: { priority: 1, sla: '4 hours' },
+    team: { priority: 1, sla: '4 hours' },
+    pro: { priority: 2, sla: '24 hours' },
+    starter: { priority: 3, sla: '48 hours' },
+    free: { priority: 5, sla: '5 days' }
+  };
+
+  const tier = (currentTier || 'free').toLowerCase();
+  const { priority, sla } = tierPriority[tier] || tierPriority.free;
+
   const emailData = {
     from: fromField,
-    to: 'support@codescribeai.com',
+    to: supportEmail,
     replyTo: userEmail,
     subject: emailSubject,
-    html: `
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Support Request</title>
-          </head>
-          <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #334155; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <div style="background: linear-gradient(135deg, #9333ea 0%, #6366f1 100%); padding: 40px 20px; text-align: center; border-radius: 8px 8px 0 0;">
-              <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 700;">New Support Request</h1>
-            </div>
-
-            <div style="background: #ffffff; padding: 40px 30px; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 8px 8px;">
-              <div style="background: #f8fafc; padding: 16px; border-radius: 8px; margin-bottom: 24px; border-left: 4px solid #6366f1;">
-                <h2 style="color: #1e293b; margin: 0; font-size: 20px;">
-                  ${subjectLabel}
-                </h2>
-              </div>
-
-              <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 24px 0;">
-                <h3 style="color: #475569; margin: 0 0 16px 0; font-size: 16px; font-weight: 600;">Contact Information</h3>
-                <table style="width: 100%; border-collapse: collapse;">
-                  <tr>
-                    <td style="padding: 8px 0; color: #64748b; font-weight: 600; width: 120px;">Name:</td>
-                    <td style="padding: 8px 0; color: #1e293b;">${userName || 'Not provided'}</td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 8px 0; color: #64748b; font-weight: 600;">Email:</td>
-                    <td style="padding: 8px 0; color: #1e293b;"><a href="mailto:${userEmail}" style="color: #6366f1; text-decoration: none;">${userEmail}</a></td>
-                  </tr>
-                  ${userId ? `
-                    <tr>
-                      <td style="padding: 8px 0; color: #64748b; font-weight: 600;">User ID:</td>
-                      <td style="padding: 8px 0; color: #1e293b;">${userId}</td>
-                    </tr>
-                  ` : ''}
-                  ${currentTier ? `
-                    <tr>
-                      <td style="padding: 8px 0; color: #64748b; font-weight: 600;">Current Tier:</td>
-                      <td style="padding: 8px 0; color: #1e293b;">${currentTier.charAt(0).toUpperCase() + currentTier.slice(1)}</td>
-                    </tr>
-                  ` : ''}
-                  <tr>
-                    <td style="padding: 8px 0; color: #64748b; font-weight: 600;">Category:</td>
-                    <td style="padding: 8px 0; color: #1e293b; font-weight: 600;">${subjectLabel}</td>
-                  </tr>
-                </table>
-              </div>
-
-              <div style="margin: 24px 0;">
-                <h3 style="color: #475569; margin: 0 0 12px 0; font-size: 16px; font-weight: 600;">Message</h3>
-                <div style="background: #f8fafc; padding: 16px; border-radius: 6px; border-left: 4px solid #6366f1;">
-                  <p style="color: #1e293b; margin: 0; white-space: pre-wrap;">${message}</p>
-                </div>
-              </div>
-
-              <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
-                <p style="color: #64748b; font-size: 14px; margin: 0;">
-                  <strong>Next Steps:</strong> Respond directly to this email or reach out to ${userEmail} to assist with their request.
-                </p>
-              </div>
-            </div>
-
-            ${getEmailFooter(CLIENT_URL)}
-          </body>
-        </html>
-      `
+    html,
+    headers: {
+      'X-Priority': String(priority),
+      'X-MSMail-Priority': priority === 1 ? 'High' : priority === 2 ? 'High' : 'Normal',
+      'Importance': priority === 1 ? 'high' : priority === 2 ? 'high' : 'normal',
+      'X-CodeScribe-Tier': tier.toUpperCase(),
+      'X-CodeScribe-SLA': sla
+    }
   };
+
+  // Add attachments to email data if provided
+  if (attachments.length > 0) {
+    emailData.attachments = attachments;
+  }
 
   // Mock in dev/test, send real emails in production
   if (shouldMockEmails()) {
@@ -564,7 +466,7 @@ export async function sendSupportEmail({ userName, userEmail, userId, currentTie
     console.log('  To:', emailData.to);
     console.log('  From User:', userEmail);
     console.log('  Subject:', emailData.subject);
-    console.log('  Category:', subjectLabel);
+    console.log('  Type:', contactTypeLabel);
     console.log('  Email ID:', result.data?.id);
     console.log('  Timestamp:', new Date().toISOString());
     return result;
@@ -618,86 +520,15 @@ async function sendDeletionScheduledEmail(userEmail, userName, restoreToken, del
     from: FROM_EMAIL,
     to: userEmail,
     subject: 'Account Deletion Scheduled - CodeScribe AI',
-    html: `
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Account Deletion Scheduled</title>
-      </head>
-      <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #334155;">
-        <table role="presentation" style="width: 100%; background-color: #f8fafc;">
-          <tr>
-            <td style="padding: 40px 20px;">
-              <table role="presentation" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);">
-                <tr>
-                  <td style="padding: 40px 40px 32px;">
-                    <!-- Header with gradient -->
-                    <div style="background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%); padding: 24px; border-radius: 8px 8px 0 0; margin: -40px -40px 32px;">
-                      <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600; text-align: center;">
-                        ⚠️ Account Deletion Scheduled
-                      </h1>
-                    </div>
-
-                    <p style="margin: 0 0 24px; font-size: 16px; color: #334155;">
-                      Hi ${displayName},
-                    </p>
-
-                    <p style="margin: 0 0 24px; font-size: 16px; color: #334155;">
-                      We've received your request to delete your CodeScribe AI account. Your account is scheduled for permanent deletion on:
-                    </p>
-
-                    <div style="background-color: #fef2f2; border-left: 4px solid #dc2626; padding: 16px; margin: 0 0 24px; border-radius: 4px;">
-                      <p style="margin: 0; font-size: 16px; font-weight: 600; color: #dc2626;">
-                        ${deletionDateFormatted}
-                      </p>
-                    </div>
-
-                    <div style="background-color: #eff6ff; border: 1px solid #bfdbfe; padding: 16px; margin: 0 0 24px; border-radius: 4px;">
-                      <h3 style="margin: 0 0 8px; font-size: 14px; font-weight: 600; color: #1e40af;">
-                        ℹ️ What happens next:
-                      </h3>
-                      <ul style="margin: 8px 0 0; padding-left: 20px; font-size: 14px; color: #1e3a8a;">
-                        <li style="margin-bottom: 4px;">Your account remains accessible for <strong>30 days</strong></li>
-                        <li style="margin-bottom: 4px;">You can cancel deletion anytime by clicking the button below</li>
-                        <li style="margin-bottom: 4px;">After 30 days, all your data will be permanently deleted</li>
-                        <li style="margin-bottom: 0;">Deletion includes: profile, usage history, subscription, and preferences</li>
-                      </ul>
-                    </div>
-
-                    <p style="margin: 0 0 24px; font-size: 16px; color: #334155;">
-                      <strong>Changed your mind?</strong> Click the button below to restore your account:
-                    </p>
-
-                    <!-- CTA Button -->
-                    <div style="text-align: center; margin: 32px 0;">
-                      <a href="${restoreUrl}" style="display: inline-block; background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 6px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px rgba(124, 58, 237, 0.2);">
-                        Restore My Account
-                      </a>
-                    </div>
-
-                    <p style="margin: 24px 0 0; font-size: 14px; color: #64748b;">
-                      Or copy and paste this URL into your browser:<br>
-                      <a href="${restoreUrl}" style="color: #7c3aed; word-break: break-all;">${restoreUrl}</a>
-                    </p>
-
-                    <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
-                      <p style="margin: 0; font-size: 14px; color: #64748b;">
-                        If you did not request account deletion, please contact us immediately at <a href="mailto:support@codescribeai.com" style="color: #7c3aed;">support@codescribeai.com</a>.
-                      </p>
-                    </div>
-
-                    ${getEmailFooter(CLIENT_URL)}
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-        </table>
-      </body>
-      </html>
-    `
+    html: deletionScheduledTemplate({
+      userEmail,
+      userName: displayName,
+      restoreLink: restoreUrl,
+      deletionDate: deletionDateFormatted,
+      currentTier: undefined, // No tier for transactional emails
+      environment: process.env.NODE_ENV,
+      clientUrl: CLIENT_URL
+    })
   };
 
   // Mock in dev/test, send real emails in production
@@ -739,69 +570,13 @@ async function sendAccountRestoredEmail(userEmail, userName) {
     from: FROM_EMAIL,
     to: userEmail,
     subject: 'Account Restored Successfully - CodeScribe AI',
-    html: `
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Account Restored</title>
-      </head>
-      <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #334155;">
-        <table role="presentation" style="width: 100%; background-color: #f8fafc;">
-          <tr>
-            <td style="padding: 40px 20px;">
-              <table role="presentation" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);">
-                <tr>
-                  <td style="padding: 40px 40px 32px;">
-                    <!-- Header with gradient -->
-                    <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 24px; border-radius: 8px 8px 0 0; margin: -40px -40px 32px;">
-                      <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600; text-align: center;">
-                        ✅ Account Restored Successfully
-                      </h1>
-                    </div>
-
-                    <p style="margin: 0 0 24px; font-size: 16px; color: #334155;">
-                      Hi ${displayName},
-                    </p>
-
-                    <p style="margin: 0 0 24px; font-size: 16px; color: #334155;">
-                      Great news! Your CodeScribe AI account has been successfully restored. The scheduled deletion has been canceled.
-                    </p>
-
-                    <div style="background-color: #d1fae5; border-left: 4px solid #10b981; padding: 16px; margin: 0 0 24px; border-radius: 4px;">
-                      <p style="margin: 0; font-size: 16px; font-weight: 600; color: #065f46;">
-                        Your account is now active and all features are available.
-                      </p>
-                    </div>
-
-                    <p style="margin: 0 0 24px; font-size: 16px; color: #334155;">
-                      You can continue using CodeScribe AI without any interruption. All your data and settings have been preserved.
-                    </p>
-
-                    <!-- CTA Button -->
-                    <div style="text-align: center; margin: 32px 0;">
-                      <a href="${CLIENT_URL}" style="display: inline-block; background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 6px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px rgba(124, 58, 237, 0.2);">
-                        Go to Dashboard
-                      </a>
-                    </div>
-
-                    <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
-                      <p style="margin: 0; font-size: 14px; color: #64748b;">
-                        If you have any questions, feel free to contact us at <a href="mailto:support@codescribeai.com" style="color: #7c3aed;">support@codescribeai.com</a>.
-                      </p>
-                    </div>
-
-                    ${getEmailFooter(CLIENT_URL)}
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-        </table>
-      </body>
-      </html>
-    `
+    html: accountRestoredTemplate({
+      userEmail,
+      userName: displayName,
+      currentTier: undefined, // No tier for transactional emails
+      environment: process.env.NODE_ENV,
+      clientUrl: CLIENT_URL
+    })
   };
 
   // Mock in dev/test, send real emails in production
@@ -844,77 +619,14 @@ async function sendFinalDeletionWarningEmail(userEmail, userName, restoreToken) 
     from: FROM_EMAIL,
     to: userEmail,
     subject: '⚠️ FINAL WARNING: Account Deletion Tomorrow - CodeScribe AI',
-    html: `
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Final Deletion Warning</title>
-      </head>
-      <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #334155;">
-        <table role="presentation" style="width: 100%; background-color: #f8fafc;">
-          <tr>
-            <td style="padding: 40px 20px;">
-              <table role="presentation" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);">
-                <tr>
-                  <td style="padding: 40px 40px 32px;">
-                    <!-- Header with gradient -->
-                    <div style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); padding: 24px; border-radius: 8px 8px 0 0; margin: -40px -40px 32px;">
-                      <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600; text-align: center;">
-                        ⚠️ FINAL WARNING: Deletion Tomorrow
-                      </h1>
-                    </div>
-
-                    <p style="margin: 0 0 24px; font-size: 16px; color: #334155;">
-                      Hi ${displayName},
-                    </p>
-
-                    <p style="margin: 0 0 24px; font-size: 16px; color: #334155;">
-                      This is your <strong>final reminder</strong> that your CodeScribe AI account will be <strong>permanently deleted in 24 hours</strong>.
-                    </p>
-
-                    <div style="background-color: #fef2f2; border: 2px solid #dc2626; padding: 16px; margin: 0 0 24px; border-radius: 4px;">
-                      <h3 style="margin: 0 0 8px; font-size: 16px; font-weight: 600; color: #dc2626;">
-                        ⏰ This is your last chance!
-                      </h3>
-                      <p style="margin: 0; font-size: 14px; color: #7f1d1d;">
-                        After 24 hours, all your data will be permanently deleted and cannot be recovered.
-                      </p>
-                    </div>
-
-                    <p style="margin: 0 0 24px; font-size: 16px; color: #334155;">
-                      If you want to keep your account, click the button below immediately:
-                    </p>
-
-                    <!-- CTA Button -->
-                    <div style="text-align: center; margin: 32px 0;">
-                      <a href="${restoreUrl}" style="display: inline-block; background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 6px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px rgba(220, 38, 38, 0.3);">
-                        Restore My Account Now
-                      </a>
-                    </div>
-
-                    <p style="margin: 24px 0 0; font-size: 14px; color: #64748b;">
-                      Or copy and paste this URL into your browser:<br>
-                      <a href="${restoreUrl}" style="color: #dc2626; word-break: break-all;">${restoreUrl}</a>
-                    </p>
-
-                    <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
-                      <p style="margin: 0; font-size: 14px; color: #64748b;">
-                        If you're ready to say goodbye, you don't need to do anything. Your account will be automatically deleted tomorrow.
-                      </p>
-                    </div>
-
-                    ${getEmailFooter(CLIENT_URL)}
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-        </table>
-      </body>
-      </html>
-    `
+    html: finalDeletionWarningTemplate({
+      userEmail,
+      userName: displayName,
+      restoreLink: restoreUrl,
+      currentTier: undefined, // No tier for transactional emails
+      environment: process.env.NODE_ENV,
+      clientUrl: CLIENT_URL
+    })
   };
 
   // Mock in dev/test, send real emails in production

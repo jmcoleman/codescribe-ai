@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, HelpCircle, CheckCircle2, Loader2 } from 'lucide-react';
+import { X, HelpCircle, CheckCircle2, Loader2, Paperclip, XCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { API_URL } from '../config/api';
 import { useFocusTrap } from '../hooks/useFocusTrap';
@@ -7,65 +7,209 @@ import { useFocusTrap } from '../hooks/useFocusTrap';
 /**
  * Contact Support Modal
  *
- * Server-side contact form for support requests
+ * Server-side contact form for support requests (authenticated users only)
  * Sends email via Resend API for reliable delivery
- * Similar to ContactSalesModal but for support inquiries
+ * Supports file attachments (up to 5 files, 10MB each)
  */
-export function ContactSupportModal({ isOpen, onClose }) {
-  const { user, getToken, isAuthenticated } = useAuth();
+export function ContactSupportModal({ isOpen, onClose, onShowLogin }) {
+  const { user, getToken } = useAuth();
   const modalRef = useFocusTrap(isOpen, onClose);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [subject, setSubject] = useState('general');
+  const [contactType, setContactType] = useState('general');
+  const [subjectDetails, setSubjectDetails] = useState('');
   const [message, setMessage] = useState('');
+  const [attachments, setAttachments] = useState([]);
+  const [isDragging, setIsDragging] = useState(false);
 
   const MAX_MESSAGE_LENGTH = 1000;
+  const MAX_FILES = 5;
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
   if (!isOpen) return null;
+
+  // If user is not authenticated, show login prompt
+  if (!user) {
+    return (
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div ref={modalRef} className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 relative text-center">
+          {/* Close button */}
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors p-1 hover:bg-slate-100 rounded-lg active:scale-95 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
+            aria-label="Close modal"
+          >
+            <X className="w-5 h-5" />
+          </button>
+
+          {/* Icon */}
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-purple-100 text-purple-600 mb-4">
+            <HelpCircle className="w-8 h-8" />
+          </div>
+
+          {/* Message */}
+          <h2 className="text-2xl font-bold text-slate-900 mb-3">
+            Sign In Required
+          </h2>
+          <p className="text-slate-600 mb-6 leading-relaxed">
+            Please sign in to contact support. This helps us provide better assistance and track your requests.
+          </p>
+
+          {/* Actions */}
+          <div className="flex gap-3">
+            <button
+              onClick={onClose}
+              className="flex-1 py-2.5 px-4 bg-slate-100 text-slate-900 rounded-lg font-medium hover:bg-slate-200 transition-all duration-200"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                // Open login modal first, then close support modal
+                onShowLogin?.();
+                onClose();
+              }}
+              className="flex-1 py-2.5 px-4 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white rounded-lg font-semibold shadow-lg shadow-purple-600/20 transition-all duration-200"
+            >
+              Sign In
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const processFiles = (files) => {
+    // Check if adding these files would exceed the limit
+    if (attachments.length + files.length > MAX_FILES) {
+      setError(`Maximum ${MAX_FILES} files allowed. You currently have ${attachments.length} file${attachments.length !== 1 ? 's' : ''}.`);
+      return false;
+    }
+
+    // Validate each file
+    for (const file of files) {
+      if (file.size > MAX_FILE_SIZE) {
+        setError(`File "${file.name}" is too large. Maximum size is 10MB per file.`);
+        return false;
+      }
+    }
+
+    // Add files to attachments
+    setAttachments(prev => [...prev, ...files]);
+    setError(''); // Clear any previous errors
+    return true;
+  };
+
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files || []);
+    processFiles(files);
+  };
+
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (loading || attachments.length >= MAX_FILES) return;
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Only set dragging to false if we're leaving the drop zone itself
+    if (e.currentTarget === e.target) {
+      setIsDragging(false);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    if (loading || attachments.length >= MAX_FILES) return;
+
+    const files = Array.from(e.dataTransfer.files || []);
+    processFiles(files);
+  };
+
+  // Prevent default drag and drop behavior on the modal backdrop
+  const handleBackdropDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleBackdropDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const removeAttachment = (index) => {
+    setAttachments(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
-    // Get form data
-    const formData = new FormData(e.target);
-    const providedFirstName = formData.get('firstName');
-    const providedLastName = formData.get('lastName');
-    const providedEmail = formData.get('email');
+    console.log('[ContactSupport] Starting submission...');
+    console.log('[ContactSupport] Contact Type:', contactType);
+    console.log('[ContactSupport] Subject:', subjectDetails);
+    console.log('[ContactSupport] Message:', message);
+    console.log('[ContactSupport] Attachments:', attachments.length);
 
     try {
+      // Create FormData for file upload
+      const formData = new FormData();
+
+      // Add text fields manually
+      formData.append('contactType', contactType);
+      formData.append('subjectText', subjectDetails.trim());
+      formData.append('message', message.trim());
+
+      // Add attachments
+      attachments.forEach((file) => {
+        formData.append('attachments', file);
+      });
+
+      // Add auth token (required for support requests)
+      const token = await getToken();
+      console.log('[ContactSupport] Got auth token:', token ? 'Yes' : 'No');
+
       const headers = {
-        'Content-Type': 'application/json'
+        'Authorization': `Bearer ${token}`
       };
 
-      // Add auth token if user is authenticated
-      if (isAuthenticated) {
-        const token = await getToken();
-        headers['Authorization'] = `Bearer ${token}`;
-      }
+      console.log('[ContactSupport] Sending to:', `${API_URL}/api/contact/support`);
 
+      // Note: Don't set Content-Type header - browser will set it automatically with boundary
       const response = await fetch(`${API_URL}/api/contact/support`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({
-          subject,
-          message: message.trim(),
-          // Include name/email for unauthenticated users
-          firstName: providedFirstName || undefined,
-          lastName: providedLastName || undefined,
-          email: providedEmail || undefined
-        })
+        body: formData
       });
+
+      console.log('[ContactSupport] Response status:', response.status);
 
       if (!response.ok) {
         let errorMessage = 'Failed to send support request';
         try {
           const data = await response.json();
+          console.log('[ContactSupport] Error response:', data);
           errorMessage = data.error || data.message || errorMessage;
         } catch (parseError) {
           errorMessage = response.statusText || errorMessage;
@@ -73,14 +217,15 @@ export function ContactSupportModal({ isOpen, onClose }) {
         throw new Error(errorMessage);
       }
 
-      await response.json();
+      const result = await response.json();
+      console.log('[ContactSupport] Success response:', result);
 
       // Show success state
       setSuccess(true);
       setLoading(false);
 
     } catch (err) {
-      console.error('Contact support error:', err);
+      console.error('[ContactSupport] Error:', err);
       setError(err.message || 'Failed to send support request. Please try again.');
       setLoading(false);
     }
@@ -93,11 +238,10 @@ export function ContactSupportModal({ isOpen, onClose }) {
       setTimeout(() => {
         setSuccess(false);
         setError('');
-        setFirstName('');
-        setLastName('');
-        setEmail('');
-        setSubject('general');
+        setContactType('general');
+        setSubjectDetails('');
         setMessage('');
+        setAttachments([]);
       }, 300);
     }
   };
@@ -141,9 +285,57 @@ export function ContactSupportModal({ isOpen, onClose }) {
     );
   }
 
+  // Get response time based on tier
+  const getResponseTimeInfo = () => {
+    const tier = user?.tier || 'free';
+
+    switch (tier.toLowerCase()) {
+      case 'enterprise':
+      case 'team':
+        return {
+          time: '24-48 hours',
+          badge: 'Priority Support',
+          bgColor: 'bg-purple-50',
+          textColor: 'text-purple-700',
+          borderColor: 'border-purple-200'
+        };
+      case 'pro':
+        return {
+          time: '2-3 business days',
+          badge: 'Pro Support',
+          bgColor: 'bg-indigo-50',
+          textColor: 'text-indigo-700',
+          borderColor: 'border-indigo-200'
+        };
+      case 'starter':
+        return {
+          time: '3-5 business days',
+          badge: 'Standard Support',
+          bgColor: 'bg-blue-50',
+          textColor: 'text-blue-700',
+          borderColor: 'border-blue-200'
+        };
+      case 'free':
+      default:
+        return {
+          time: '5-7 business days',
+          badge: 'Community Support',
+          bgColor: 'bg-slate-50',
+          textColor: 'text-slate-700',
+          borderColor: 'border-slate-200'
+        };
+    }
+  };
+
+  const responseTimeInfo = getResponseTimeInfo();
+
   // Form view
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+      onDragOver={handleBackdropDragOver}
+      onDrop={handleBackdropDrop}
+    >
       <div ref={modalRef} className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 relative max-h-[90vh] overflow-y-auto">
         {/* Close button */}
         <button
@@ -164,131 +356,29 @@ export function ContactSupportModal({ isOpen, onClose }) {
             Contact Support
           </h2>
         </div>
-        <p className="text-slate-500 mb-6">
+        <p className="text-slate-500 mb-5">
           Have a question or need help? We're here to assist you.
         </p>
 
         {/* Error message */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-6">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
             <p className="text-sm text-red-800">{error}</p>
           </div>
         )}
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Authenticated user info OR name/email fields */}
-          {isAuthenticated && user?.first_name && user?.last_name ? (
-            <div className="bg-slate-50 rounded-lg p-4">
-              <p className="text-sm text-slate-600">
-                <span className="font-medium">From:</span>{' '}
-                {`${user.first_name} ${user.last_name}`.trim()} ({user.email})
-              </p>
-            </div>
-          ) : (
-            <>
-              {/* Name fields for unauthenticated users or users without names */}
-              {!isAuthenticated && (
-                <>
-                  <div>
-                    <label htmlFor="firstName" className="block text-sm font-medium text-slate-700 mb-2">
-                      First Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      id="firstName"
-                      name="firstName"
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      required
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
-                      disabled={loading}
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="lastName" className="block text-sm font-medium text-slate-700 mb-2">
-                      Last Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      id="lastName"
-                      name="lastName"
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      required
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
-                      disabled={loading}
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">
-                      Email <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="email"
-                      id="email"
-                      name="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
-                      disabled={loading}
-                    />
-                  </div>
-                </>
-              )}
-
-              {/* Name fields for authenticated users without names */}
-              {isAuthenticated && (!user?.first_name || !user?.last_name) && (
-                <>
-                  <div>
-                    <label htmlFor="firstName" className="block text-sm font-medium text-slate-700 mb-2">
-                      First Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      id="firstName"
-                      name="firstName"
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      required
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
-                      disabled={loading}
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="lastName" className="block text-sm font-medium text-slate-700 mb-2">
-                      Last Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      id="lastName"
-                      name="lastName"
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      required
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
-                      disabled={loading}
-                    />
-                  </div>
-                </>
-              )}
-            </>
-          )}
-
-          {/* Subject dropdown */}
+        <form onSubmit={handleSubmit} className="space-y-3.5">
+          {/* Contact Type dropdown */}
           <div>
-            <label htmlFor="subject" className="block text-sm font-medium text-slate-700 mb-2">
-              Subject <span className="text-red-500">*</span>
+            <label htmlFor="contactType" className="block text-sm font-medium text-slate-700 mb-1.5">
+              Contact Type <span className="text-red-500">*</span>
             </label>
             <select
-              id="subject"
-              name="subject"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
+              id="contactType"
+              name="contactType"
+              value={contactType}
+              onChange={(e) => setContactType(e.target.value)}
               required
               className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={loading}
@@ -302,9 +392,27 @@ export function ContactSupportModal({ isOpen, onClose }) {
             </select>
           </div>
 
+          {/* Subject input */}
+          <div>
+            <label htmlFor="subjectDetails" className="block text-sm font-medium text-slate-700 mb-1.5">
+              Subject
+            </label>
+            <input
+              type="text"
+              id="subjectDetails"
+              name="subjectDetails"
+              value={subjectDetails}
+              onChange={(e) => setSubjectDetails(e.target.value)}
+              placeholder="e.g., Cannot upload files larger than 5MB"
+              maxLength={100}
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={loading}
+            />
+          </div>
+
           {/* Message */}
           <div>
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center justify-between mb-1.5">
               <label htmlFor="message" className="block text-sm font-medium text-slate-700">
                 Message <span className="text-red-500">*</span>
               </label>
@@ -315,7 +423,7 @@ export function ContactSupportModal({ isOpen, onClose }) {
             <textarea
               id="message"
               name="message"
-              rows={5}
+              rows={4}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               maxLength={MAX_MESSAGE_LENGTH}
@@ -326,8 +434,93 @@ export function ContactSupportModal({ isOpen, onClose }) {
             />
           </div>
 
+          {/* File Attachments */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">
+              Attachments
+            </label>
+
+            {/* File input with drag and drop */}
+            <div
+              onDragEnter={handleDragEnter}
+              onDragLeave={handleDragLeave}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+            >
+              <label className="cursor-pointer">
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*,.pdf,.txt,.csv,.zip,.json,.js,.html,.css"
+                  onChange={handleFileChange}
+                  disabled={loading || attachments.length >= MAX_FILES}
+                  className="hidden"
+                />
+                <div className={`flex flex-col items-center justify-center gap-1 px-4 py-3 border-2 border-dashed rounded-lg transition-all ${
+                  isDragging
+                    ? 'border-purple-500 bg-purple-50 text-purple-700'
+                    : loading || attachments.length >= MAX_FILES
+                    ? 'border-slate-200 bg-slate-50 cursor-not-allowed text-slate-400'
+                    : 'border-slate-300 hover:border-purple-400 hover:bg-purple-50 text-slate-700'
+                }`}>
+                  <Paperclip className="w-4 h-4" />
+                  <span className="text-sm font-medium">
+                    {isDragging
+                      ? 'Drop files here...'
+                      : attachments.length >= MAX_FILES
+                      ? `Maximum ${MAX_FILES} files reached`
+                      : 'Click or drag files'}
+                  </span>
+                  <span className="text-xs text-slate-500">
+                    Up to {MAX_FILES} files, 10MB each
+                  </span>
+                </div>
+              </label>
+            </div>
+
+            {/* File list */}
+            {attachments.length > 0 && (
+              <div className="mt-2 space-y-1.5">
+                {attachments.map((file, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between gap-2 px-2.5 py-1.5 bg-slate-50 rounded border border-slate-200"
+                  >
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <Paperclip className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs text-slate-700 truncate">{file.name}</p>
+                        <p className="text-[10px] text-slate-500">{formatFileSize(file.size)}</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeAttachment(index)}
+                      disabled={loading}
+                      className="text-slate-400 hover:text-red-600 transition-colors p-0.5 hover:bg-red-50 rounded disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                      aria-label={`Remove ${file.name}`}
+                    >
+                      <XCircle className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Response Time Info - Right before submit */}
+          <div className="bg-cyan-50 border border-cyan-200 rounded-lg px-3 py-2.5 flex items-start gap-2">
+            <svg className="w-4 h-4 text-cyan-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div className="flex-1 text-xs">
+              <span className="font-semibold text-cyan-900">{responseTimeInfo.badge}</span>
+              <span className="text-cyan-700"> • Response within {responseTimeInfo.time}</span>
+            </div>
+          </div>
+
           {/* Actions */}
-          <div className="flex gap-3">
+          <div className="flex gap-3 pt-3">
             <button
               type="button"
               onClick={handleClose}
@@ -352,11 +545,6 @@ export function ContactSupportModal({ isOpen, onClose }) {
             </button>
           </div>
         </form>
-
-        {/* Footer note */}
-        <p className="text-xs text-slate-500 text-center mt-4">
-          Your support request will be sent to our team via email.
-        </p>
       </div>
     </div>
   );

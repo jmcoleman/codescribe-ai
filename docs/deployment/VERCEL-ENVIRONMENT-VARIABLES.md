@@ -265,6 +265,13 @@ GITHUB_CALLBACK_URL=http://localhost:3000/api/auth/github/callback
 RESEND_API_KEY=(same as production - shared API key)
 EMAIL_FROM=CodeScribe AI <dev@mail.codescribeai.com>
 
+# Email Mocking Configuration
+# Controls whether emails are sent via Resend or mocked to console
+# - MOCK_EMAILS=true: Always mock (logs to console)
+# - MOCK_EMAILS=false: Always send real emails via Resend
+# - Not set: Mock in dev/test, real in production (safe default, recommended)
+# MOCK_EMAILS=false
+
 
 # ============================================================================
 # SESSION MANAGEMENT
@@ -363,6 +370,7 @@ RATE_LIMIT_HOURLY_MAX=1000
 |----------|----------|---------------------|-------------|
 | `RESEND_API_KEY` | ✅ Yes | No (shared API key) | Resend API authentication |
 | `EMAIL_FROM` | ✅ Yes | ✅ Yes (per environment) | Email sender address |
+| `MOCK_EMAILS` | ⚠️ Optional | ✅ Yes | Control email mocking behavior |
 
 **Where to get:**
 - RESEND_API_KEY: [resend.com/api-keys](https://resend.com/api-keys)
@@ -375,6 +383,12 @@ RATE_LIMIT_HOURLY_MAX=1000
 - Development: `dev@mail.codescribeai.com`
 
 **⚠️ IMPORTANT:** Must use `@mail.codescribeai.com` subdomain (verified in Resend)
+
+**MOCK_EMAILS Configuration:**
+- `MOCK_EMAILS=true`: Always mock (logs to console only)
+- `MOCK_EMAILS=false`: Always send real emails via Resend
+- Not set (default): Mock in dev/test, real in production
+- **Example:** `MOCK_EMAILS=false` in `server/.env` to test real email delivery in development
 
 ---
 
