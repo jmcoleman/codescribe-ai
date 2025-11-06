@@ -28,6 +28,8 @@ dist-ssr
 .env.local
 .env.test
 .env.backup*
+server/.env.bak
+server/.env.bak2
 *.key
 
 # Ignore all Postman environment files
