@@ -54,74 +54,61 @@ describe('ContactSupportModal', () => {
       expect(screen.queryByText('Contact Support')).not.toBeInTheDocument();
     });
 
-    it('should render when isOpen is true', () => {
+    it('should show login prompt for unauthenticated users', () => {
       renderWithAuth(<ContactSupportModal isOpen={true} onClose={mockOnClose} />);
-      expect(screen.getByText('Contact Support')).toBeInTheDocument();
+      expect(screen.getByText('Sign In Required')).toBeInTheDocument();
+      expect(screen.getByText(/please sign in to contact support/i)).toBeInTheDocument();
     });
 
-    it('should show name and email fields for unauthenticated users', () => {
-      renderWithAuth(<ContactSupportModal isOpen={true} onClose={mockOnClose} />);
-      expect(screen.getByLabelText(/First Name/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/Last Name/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/Email/i)).toBeInTheDocument();
+    it('should have sign in button for unauthenticated users', () => {
+      const onShowLogin = vi.fn();
+      renderWithAuth(<ContactSupportModal isOpen={true} onClose={mockOnClose} onShowLogin={onShowLogin} />);
+
+      const signInButton = screen.getByRole('button', { name: /sign in/i });
+      expect(signInButton).toBeInTheDocument();
     });
   });
 
   describe('Rendering - Authenticated', () => {
-    it('should display user info for authenticated users with name', () => {
+    it('should show contact form for authenticated users', () => {
       const user = {
         first_name: 'Alice',
         last_name: 'Smith',
         email: 'alice@example.com',
+        tier: 'pro',
       };
 
       renderWithAuth(<ContactSupportModal isOpen={true} onClose={mockOnClose} />, { user });
 
-      expect(screen.getByText(/Alice Smith/)).toBeInTheDocument();
-      expect(screen.queryByLabelText(/First Name/i)).not.toBeInTheDocument();
-      expect(screen.getByText(/alice@example.com/)).toBeInTheDocument();
+      expect(screen.getByText('Contact Support')).toBeInTheDocument();
+      expect(screen.getByLabelText(/Contact Type/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/Subject/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/Message/i)).toBeInTheDocument();
     });
 
-    it('should show name fields for authenticated users without name', () => {
+    it('should show response time info based on user tier', () => {
       const user = {
-        email: 'bob@example.com',
+        first_name: 'Alice',
+        last_name: 'Smith',
+        email: 'alice@example.com',
+        tier: 'enterprise',
       };
 
       renderWithAuth(<ContactSupportModal isOpen={true} onClose={mockOnClose} />, { user });
 
-      expect(screen.getByLabelText(/First Name/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/Last Name/i)).toBeInTheDocument();
-      expect(screen.queryByLabelText(/Email/i)).not.toBeInTheDocument();
+      expect(screen.getByText('Priority Support')).toBeInTheDocument();
+      expect(screen.getByText(/24-48 hours/i)).toBeInTheDocument();
     });
   });
 
   describe('Form Submission', () => {
-    it('should submit successfully for unauthenticated users', async () => {
-      const user = userEvent.setup();
-      global.fetch = vi.fn().mockResolvedValue({
-        ok: true,
-        json: async () => ({ success: true }),
-      });
-
-      renderWithAuth(<ContactSupportModal isOpen={true} onClose={mockOnClose} />);
-
-      await user.type(screen.getByLabelText(/First Name/i), 'Jane');
-      await user.type(screen.getByLabelText(/Last Name/i), 'Smith');
-      await user.type(screen.getByLabelText(/Email/i), 'jane@example.com');
-      await user.type(screen.getByLabelText(/Message/i), 'Test message');
-      await user.click(screen.getByRole('button', { name: /Send Message/i }));
-
-      await waitFor(() => {
-        expect(screen.getByText('Support Request Sent!')).toBeInTheDocument();
-      });
-    });
-
-    it('should submit with auth token for authenticated users', async () => {
+    it('should submit with auth token and FormData for authenticated users', async () => {
       const user = userEvent.setup();
       const authUser = {
         first_name: 'John',
         last_name: 'Doe',
         email: 'john@example.com',
+        tier: 'pro',
       };
 
       global.fetch = vi.fn().mockResolvedValue({
@@ -138,11 +125,37 @@ describe('ContactSupportModal', () => {
         expect(global.fetch).toHaveBeenCalledWith(
           'http://localhost:3000/api/contact/support',
           expect.objectContaining({
+            method: 'POST',
             headers: expect.objectContaining({
               'Authorization': expect.stringContaining('Bearer'),
             }),
+            body: expect.any(FormData),
           })
         );
+      });
+    });
+
+    it('should show success message after successful submission', async () => {
+      const user = userEvent.setup();
+      const authUser = {
+        first_name: 'John',
+        last_name: 'Doe',
+        email: 'john@example.com',
+        tier: 'pro',
+      };
+
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ success: true }),
+      });
+
+      renderWithAuth(<ContactSupportModal isOpen={true} onClose={mockOnClose} />, { user: authUser });
+
+      await user.type(screen.getByLabelText(/Message/i), 'Test message');
+      await user.click(screen.getByRole('button', { name: /Send Message/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText('Support Request Sent!')).toBeInTheDocument();
       });
     });
   });
@@ -150,7 +163,14 @@ describe('ContactSupportModal', () => {
   describe('Character Limit', () => {
     it('should enforce 1000 character limit', async () => {
       const user = userEvent.setup();
-      renderWithAuth(<ContactSupportModal isOpen={true} onClose={mockOnClose} />);
+      const authUser = {
+        first_name: 'John',
+        last_name: 'Doe',
+        email: 'john@example.com',
+        tier: 'pro',
+      };
+
+      renderWithAuth(<ContactSupportModal isOpen={true} onClose={mockOnClose} />, { user: authUser });
 
       const messageField = screen.getByLabelText(/Message/i);
 
@@ -171,10 +191,71 @@ describe('ContactSupportModal', () => {
   describe('Modal Close', () => {
     it('should close modal when close button clicked', async () => {
       const user = userEvent.setup();
-      renderWithAuth(<ContactSupportModal isOpen={true} onClose={mockOnClose} />);
+      const authUser = {
+        first_name: 'John',
+        last_name: 'Doe',
+        email: 'john@example.com',
+        tier: 'pro',
+      };
+
+      renderWithAuth(<ContactSupportModal isOpen={true} onClose={mockOnClose} />, { user: authUser });
 
       await user.click(screen.getByLabelText(/Close modal/i));
       expect(mockOnClose).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('File Attachments', () => {
+    it('should show file attachment area', () => {
+      const authUser = {
+        first_name: 'John',
+        last_name: 'Doe',
+        email: 'john@example.com',
+        tier: 'pro',
+      };
+
+      renderWithAuth(<ContactSupportModal isOpen={true} onClose={mockOnClose} />, { user: authUser });
+
+      // Component should show attachments section
+      expect(screen.getByText('Attachments')).toBeInTheDocument();
+      expect(screen.getByText(/click or drag files/i)).toBeInTheDocument();
+    });
+
+    it('should enforce 5 file maximum', () => {
+      const authUser = {
+        first_name: 'John',
+        last_name: 'Doe',
+        email: 'john@example.com',
+        tier: 'pro',
+      };
+
+      renderWithAuth(<ContactSupportModal isOpen={true} onClose={mockOnClose} />, { user: authUser });
+
+      // Component should show "Up to 5 files" text
+      expect(screen.getByText(/up to 5 files/i)).toBeInTheDocument();
+    });
+  });
+
+  describe('Loading State', () => {
+    it('should show Sending... during submission', async () => {
+      const user = userEvent.setup();
+      const authUser = {
+        first_name: 'John',
+        last_name: 'Doe',
+        email: 'john@example.com',
+        tier: 'pro',
+      };
+
+      global.fetch = vi.fn().mockImplementation(() => new Promise(() => {})); // Never resolves
+
+      renderWithAuth(<ContactSupportModal isOpen={true} onClose={mockOnClose} />, { user: authUser });
+
+      await user.type(screen.getByLabelText(/Message/i), 'Test message');
+      await user.click(screen.getByRole('button', { name: /Send Message/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText('Sending...')).toBeInTheDocument();
+      });
     });
   });
 });

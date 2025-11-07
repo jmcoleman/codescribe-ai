@@ -458,7 +458,7 @@ For a complete navigation guide with descriptions of all documentation, see **[D
 
 **Development & Testing:**
 - **[Dev Guide](docs/planning/mvp/05-Dev-Guide.md)** - Implementation guide with code examples
-- **[Testing Hub](docs/testing/README.md)** - 1,955 tests, coverage reports, test patterns
+- **[Testing Hub](docs/testing/README.md)** - 2,250 tests, coverage reports, test patterns
 - **[Test Fixes Guide](docs/testing/TEST-PATTERNS-GUIDE.md)** - Testing patterns & best practices
 
 **Design & UX:**
@@ -603,43 +603,44 @@ See [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) for complete
 
 ### 📊 Testing & Quality
 
-**Comprehensive Test Coverage: 2,225 Tests** (2,184 passing, 41 skipped, 100% pass rate)
-- **Backend Tests**: 855 tests (Jest + Supertest)
+**Comprehensive Test Coverage: 2,250 Tests** (2,209 passing, 41 skipped, 100% pass rate)
+- **Backend Tests**: 877 tests (Jest + Supertest)
   - Service layer: qualityScorer, claudeClient, codeParser, docGenerator, emailService
   - Authentication: 102 tests (auth middleware, user model, OAuth flows)
   - Settings: 26 integration tests (profile, email, password, preferences)
   - Database migrations: 50 tests (naming, checksums, ordering, migration 011)
-  - Contact Sales & Support: 28 tests (email sending, tier validation, name resolution)
+  - Contact Sales & Support: 73 tests (email sending, tier validation, name resolution, templates, attachments)
   - Password reset: 25 tests (email verification, token validation, security)
   - User deletion & restoration: 64 tests (GitHub OAuth restoration, email/password restoration)
   - Integration: file upload, quality scoring, prompt quality, settings API
   - Mermaid generation tests
   - **Coverage**: 91.83% services statements, 95.81% overall, 88.72% branches
-  - **Pass Rate**: 100% (834 passing, 21 skipped, 0 failures)
-- **Frontend Tests**: 1,370 tests (Vitest + React Testing Library)
+  - **Pass Rate**: 100% (856 passing, 21 skipped, 0 failures)
+- **Frontend Tests**: 1,373 tests (Vitest + React Testing Library)
   - Component tests with accessibility checks (18/18 components tested)
   - Authentication UI: SignupModal, LoginModal, ForgotPasswordModal, ResetPasswordModal
   - Settings UI: AccountTab, PrivacyTab, SubscriptionTab, DangerZoneTab, AnalyticsWrapper
+  - Contact & Support Modals: ContactSalesModal (25 tests), ContactSupportModal (12 tests)
   - Integration tests for App workflows
   - Mermaid diagram rendering tests
   - Toast notification system tests (33 tests)
   - **Coverage**: 100% critical user paths
-  - **Pass Rate**: 100% (1,350 passing, 20 skipped, 0 failures)
+  - **Pass Rate**: 100% (1,353 passing, 20 skipped, 0 failures)
 - **E2E Tests**: 10 tests across 5 browsers (Playwright)
   - Cross-browser validation (Chromium, Firefox, WebKit, Chrome, Edge)
   - File upload + generate workflows
   - **Pass Rate**: 100% (10/10 tests passing)
-- **Overall Pass Rate**: 100% (2,184 passing, 41 skipped)
+- **Overall Pass Rate**: 100% (2,209 passing, 41 skipped)
 
 **Running Tests:**
 ```bash
 # Frontend tests (from client/)
-npm test              # Run all tests once (1,370 tests)
+npm test              # Run all tests once (1,373 tests)
 npm run test:ui       # Interactive UI mode
 npm run test:coverage # Generate coverage report
 
 # Backend tests (from server/)
-npm test              # Run all tests (855 tests, includes 21 skipped database tests)
+npm test              # Run all tests (877 tests, includes 21 skipped database tests)
 npm run test:watch    # Watch mode for development
 npm run test:coverage # Generate coverage report with thresholds
 

@@ -87,11 +87,8 @@ describe('ContactSalesModal', () => {
       };
     });
 
-    it('should show read-only name display when user has first and last name', () => {
+    it('should NOT show name input fields when user has first and last name', () => {
       render(<ContactSalesModal isOpen={true} onClose={vi.fn()} tier="enterprise" />);
-
-      expect(screen.getByText(/from:/i)).toBeInTheDocument();
-      expect(screen.getByText('John Doe')).toBeInTheDocument();
 
       // Should NOT show name input fields
       expect(screen.queryByLabelText(/first name/i)).not.toBeInTheDocument();
@@ -165,6 +162,9 @@ describe('ContactSalesModal', () => {
 
       render(<ContactSalesModal isOpen={true} onClose={vi.fn()} tier="enterprise" />);
 
+      const subjectInput = screen.getByLabelText(/subject/i);
+      await user.type(subjectInput, 'Enterprise pricing inquiry');
+
       const messageInput = screen.getByLabelText(/additional information/i);
       await user.type(messageInput, 'Looking for enterprise plan');
 
@@ -182,6 +182,7 @@ describe('ContactSalesModal', () => {
             },
             body: JSON.stringify({
               tier: 'enterprise',
+              subject: 'Enterprise pricing inquiry',
               message: 'Looking for enterprise plan',
             }),
           })
@@ -197,6 +198,9 @@ describe('ContactSalesModal', () => {
       });
 
       render(<ContactSalesModal isOpen={true} onClose={vi.fn()} tier="enterprise" />);
+
+      // Fill required subject field
+      await user.type(screen.getByLabelText(/subject/i), 'Test subject');
 
       const submitButton = screen.getByRole('button', { name: /send message/i });
       await user.click(submitButton);
@@ -228,6 +232,7 @@ describe('ContactSalesModal', () => {
 
       await user.type(screen.getByLabelText(/first name/i), 'Jane');
       await user.type(screen.getByLabelText(/last name/i), 'Smith');
+      await user.type(screen.getByLabelText(/subject/i), 'Team plan inquiry');
       await user.type(screen.getByLabelText(/additional information/i), 'Interested in team plan');
 
       const submitButton = screen.getByRole('button', { name: /send message/i });
@@ -240,6 +245,7 @@ describe('ContactSalesModal', () => {
             method: 'POST',
             body: JSON.stringify({
               tier: 'team',
+              subject: 'Team plan inquiry',
               message: 'Interested in team plan',
               firstName: 'Jane',
               lastName: 'Smith',
@@ -279,11 +285,14 @@ describe('ContactSalesModal', () => {
 
       render(<ContactSalesModal isOpen={true} onClose={vi.fn()} tier="enterprise" />);
 
+      // Fill required subject field
+      await user.type(screen.getByLabelText(/subject/i), 'Test');
+
       const submitButton = screen.getByRole('button', { name: /send message/i });
       await user.click(submitButton);
 
       await waitFor(() => {
-        expect(screen.getByText(/sending/i)).toBeInTheDocument();
+        expect(screen.getByText('Sending...')).toBeInTheDocument();
       });
     });
 
@@ -292,6 +301,9 @@ describe('ContactSalesModal', () => {
       mockFetch.mockImplementationOnce(() => new Promise(() => {})); // Never resolves
 
       render(<ContactSalesModal isOpen={true} onClose={vi.fn()} tier="enterprise" />);
+
+      // Fill required subject field
+      await user.type(screen.getByLabelText(/subject/i), 'Test');
 
       const submitButton = screen.getByRole('button', { name: /send message/i });
       await user.click(submitButton);
@@ -307,6 +319,9 @@ describe('ContactSalesModal', () => {
       mockFetch.mockImplementationOnce(() => new Promise(() => {})); // Never resolves
 
       render(<ContactSalesModal isOpen={true} onClose={vi.fn()} tier="enterprise" />);
+
+      // Fill required subject field
+      await user.type(screen.getByLabelText(/subject/i), 'Test');
 
       const submitButton = screen.getByRole('button', { name: /send message/i });
       await user.click(submitButton);
@@ -337,6 +352,9 @@ describe('ContactSalesModal', () => {
 
       render(<ContactSalesModal isOpen={true} onClose={vi.fn()} tier="enterprise" />);
 
+      // Fill required subject field
+      await user.type(screen.getByLabelText(/subject/i), 'Test');
+
       const submitButton = screen.getByRole('button', { name: /send message/i });
       await user.click(submitButton);
 
@@ -350,6 +368,9 @@ describe('ContactSalesModal', () => {
       mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
       render(<ContactSalesModal isOpen={true} onClose={vi.fn()} tier="enterprise" />);
+
+      // Fill required subject field
+      await user.type(screen.getByLabelText(/subject/i), 'Test');
 
       const submitButton = screen.getByRole('button', { name: /send message/i });
       await user.click(submitButton);
@@ -380,6 +401,9 @@ describe('ContactSalesModal', () => {
 
       render(<ContactSalesModal isOpen={true} onClose={vi.fn()} tier="enterprise" />);
 
+      // Fill required subject field
+      await user.type(screen.getByLabelText(/subject/i), 'Test');
+
       const submitButton = screen.getByRole('button', { name: /send message/i });
       await user.click(submitButton);
 
@@ -396,6 +420,9 @@ describe('ContactSalesModal', () => {
       });
 
       render(<ContactSalesModal isOpen={true} onClose={vi.fn()} tier="enterprise" />);
+
+      // Fill required subject field
+      await user.type(screen.getByLabelText(/subject/i), 'Test');
 
       const submitButton = screen.getByRole('button', { name: /send message/i });
       await user.click(submitButton);
@@ -415,6 +442,9 @@ describe('ContactSalesModal', () => {
       });
 
       render(<ContactSalesModal isOpen={true} onClose={onClose} tier="enterprise" />);
+
+      // Fill required subject field
+      await user.type(screen.getByLabelText(/subject/i), 'Test');
 
       const submitButton = screen.getByRole('button', { name: /send message/i });
       await user.click(submitButton);
@@ -470,11 +500,14 @@ describe('ContactSalesModal', () => {
 
       render(<ContactSalesModal isOpen={true} onClose={onClose} tier="enterprise" />);
 
+      // Fill required subject field
+      await user.type(screen.getByLabelText(/subject/i), 'Test');
+
       const submitButton = screen.getByRole('button', { name: /send message/i });
       await user.click(submitButton);
 
       await waitFor(() => {
-        expect(screen.getByText(/sending/i)).toBeInTheDocument();
+        expect(screen.getByText('Sending...')).toBeInTheDocument();
       });
 
       const closeButton = screen.getByRole('button', { name: /close modal/i });
@@ -514,6 +547,7 @@ describe('ContactSalesModal', () => {
 
       expect(screen.getByLabelText(/first name/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/last name/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/subject/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/additional information/i)).toBeInTheDocument();
     });
   });

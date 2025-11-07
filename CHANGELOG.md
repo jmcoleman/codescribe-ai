@@ -9,6 +9,118 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.5.3] - 2025-11-06
+
+**Status:** ✅ Email System Overhaul & Test Suite Coverage
+
+**Summary:** Complete email templating system with branded HTML templates, support request attachments, comprehensive test coverage improvements, and extensive documentation.
+
+### Added - Email Templating System
+
+- **Base Email Template Architecture**
+  - Branded HTML base template with responsive design
+  - CodeScribe AI branding (purple/indigo color scheme)
+  - Consistent header, footer, and call-to-action buttons
+  - 7 specialized email templates extending base template
+
+- **Email Templates**
+  - Welcome email for new users
+  - Email verification with branded design
+  - Password reset with security messaging
+  - Support request confirmation (user-facing)
+  - Support request notification (internal)
+  - Contact sales inquiry confirmation
+  - Contact sales notification (internal)
+
+- **Email Priority System**
+  - Tier-based priority filtering: X-Priority header (1-5 scale)
+  - Enterprise: Priority 1 (Highest)
+  - Team: Priority 2 (High)
+  - Pro: Priority 3 (Normal)
+  - Free: Priority 4 (Low)
+  - System: Priority 5 (Lowest)
+
+- **Support Request Attachments**
+  - Multer middleware for file upload handling
+  - Support for up to 5 files per request
+  - 10MB per file, 50MB total limit
+  - Allowed file types: images (jpg, png, gif), documents (pdf, txt, log)
+  - Base64 encoding for Resend API compatibility
+  - Attachment display in email templates with file count
+
+- **Email Service Enhancements**
+  - `sendWelcomeEmail()` - Onboarding email for new users
+  - `sendSupportEmail()` - Support requests with attachments
+  - Template helpers for consistent branding
+  - Priority calculation based on user tier
+
+### Fixed - Backend Test Coverage
+
+- **Contact Route Tests (45 tests fixed)**
+  - Fixed User model mocking pattern (automatic mocking vs manual factory)
+  - Pattern 11 documented: ES Modules mocking in backend tests
+  - Added `User.findById.mockResolvedValue()` in nested beforeEach blocks
+  - Fixed test expectation to include `subject` field
+  - Result: 45/45 tests passing (was 0/45)
+
+- **Email Service Tests (19 new tests added)**
+  - Rate limit error handling tests (4 tests)
+    - Password reset rate limit (429 → 503 conversion)
+    - Verification email rate limit (429 → 503 conversion)
+  - Support email attachment tests (3 tests)
+    - Single attachment template rendering
+    - Multiple attachments (2 files) template rendering
+    - No attachments default behavior
+  - Utility function tests (12 tests)
+    - `shouldMockEmails()` environment detection
+    - `mockEmailSend()` mock behavior verification
+    - `getResendClient()` environment-based client selection
+  - Branch Coverage: 79.41% (exceeded 79% threshold)
+
+### Fixed - Frontend Test Coverage
+
+- **ContactSalesModal Tests (11 tests fixed)**
+  - Added required `subject` field to all form submissions
+  - Updated success message expectation: "Message Sent!"
+  - Updated loading state expectation: "Sending..."
+  - Result: 25/25 tests passing
+
+- **ContactSupportModal Tests (7 tests fixed)**
+  - Rewrote unauthenticated flow tests (expects "Sign In Required")
+  - Changed API expectations from JSON to FormData
+  - Updated success message: "Support Request Sent!"
+  - Result: 12/12 tests passing
+
+### Documentation
+
+- **New Guides (5 files, 3,000+ lines)**
+  - EMAIL-TEMPLATING-SYSTEM.md (comprehensive email architecture)
+  - SUPPORT-ATTACHMENTS.md (file upload implementation guide)
+  - EMAIL-TESTING-GUIDE.md (testing patterns for email flows)
+  - EMAIL-SECURITY.md (attachment validation, rate limiting)
+  - EMAIL-TROUBLESHOOTING.md (common issues and solutions)
+
+- **Updated Documentation**
+  - TEST-PATTERNS-GUIDE.md: Added Pattern 11 (ES Modules mocking)
+  - ERROR-HANDLING-PATTERNS.md: Email-specific error codes
+  - API-Reference.md: Support attachment endpoints
+
+### Test Results
+
+- **Backend:** 856 passing, 21 skipped (877 total)
+- **Frontend:** 1,353 passing, 20 skipped (1,373 total)
+- **Combined:** 2,209 passing, 41 skipped (2,250 total)
+- **Pass Rate:** 100% (0 failures)
+- **Backend Coverage:** 79.41% branches (services)
+
+### CI/CD
+
+- GitHub Actions: All checks passing ✅
+- Coverage thresholds met: 79.41% > 79% required
+- Zero test failures across all suites
+
+---
+
 ## [2.5.2] - 2025-11-04
 
 **Status:** ✅ Epic 2.5 Complete: Legal Compliance (Phases 1-4)
