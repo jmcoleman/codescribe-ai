@@ -181,7 +181,10 @@ describe('ContactSupportModal', () => {
 
       // The field enforces maxLength=1000, so it should only have 1000 chars
       await waitFor(() => {
-        expect(screen.getByText('1000/1000')).toBeInTheDocument();
+        // Use flexible text matcher since text may be split across elements
+        expect(screen.getByText((_content, element) => {
+          return element?.textContent === '1000/1000';
+        })).toBeInTheDocument();
       });
 
       expect(messageField.value.length).toBe(1000);
