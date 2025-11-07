@@ -206,7 +206,10 @@ describe('ContactSalesModal', () => {
       await user.click(submitButton);
 
       await waitFor(() => {
-        expect(screen.getByText('Message Sent!')).toBeInTheDocument();
+        // Use flexible text matcher since text may be split across elements
+        expect(screen.getByText((_content, element) => {
+          return element?.textContent === 'Message Sent!';
+        })).toBeInTheDocument();
         expect(screen.getByText(/our sales team will be in touch soon/i)).toBeInTheDocument();
       });
     });
@@ -408,7 +411,10 @@ describe('ContactSalesModal', () => {
       await user.click(submitButton);
 
       await waitFor(() => {
-        expect(screen.getByText('Message Sent!')).toBeInTheDocument();
+        // Use flexible text matcher since text may be split across elements
+        expect(screen.getByText((_content, element) => {
+          return element?.textContent === 'Message Sent!';
+        })).toBeInTheDocument();
       });
     });
 
