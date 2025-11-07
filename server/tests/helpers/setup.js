@@ -18,6 +18,10 @@ if (!process.env.POSTGRES_URL) {
 // Load environment variables from .env (after setting defaults)
 import 'dotenv/config';
 
+// CRITICAL: Remove RESEND_API_KEY to force email mocking in tests
+// This prevents tests from sending real emails via Resend API
+delete process.env.RESEND_API_KEY;
+
 // Detect if we're in CI environment (GitHub Actions)
 const isCI = process.env.CI === 'true' || process.env.GITHUB_ACTIONS === 'true';
 

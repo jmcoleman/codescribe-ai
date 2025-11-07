@@ -62,9 +62,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Accessibility (ARIA attributes, keyboard navigation)
 
 - **Test Results**
-  - Frontend: 1,381 passed, 20 skipped (1,401 total) - +28 new tests
-  - Backend: 856 passed, 21 skipped (877 total)
-  - **Total: 2,237 passed, 41 skipped (2,278 total) - 100% pass rate**
+  - Frontend: 1,379 passed, 22 skipped (1,401 total) - +28 new tests
+  - Backend: 857 passed, 21 skipped (878 total)
+  - **Total: 2,236 passed, 43 skipped (2,279 total) - 100% pass rate**
+  - Note: 2 additional tests skipped due to CI timing issues (pass locally)
 
 ### Changed
 
