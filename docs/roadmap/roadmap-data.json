@@ -65,9 +65,9 @@
       "text": "codescribeai.com",
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
-    "footerLeft": "<strong>CodeScribe AI</strong> \u00b7 Strategic Roadmap v3.8",
-    "footer": "Phase 1 Complete \u00b7 Phase 2: Epic 2.5 Complete (Legal Compliance - All 4 Phases) \u00b7 Launch: Mid-Jan 2026",
-    "lastUpdated": "November 6, 2025 (v2.5.3 - Test Suite Comprehensive Coverage)"
+    "footerLeft": "<strong>CodeScribe AI</strong> \u00b7 Strategic Roadmap v3.9",
+    "footer": "Phase 1 Complete \u00b7 Phase 2 Complete (Epic 2.6 - Usage Dashboard) \u00b7 Launch: Mid-Jan 2026",
+    "lastUpdated": "November 7, 2025 (v2.6.0 - Epic 2.6: Usage Dashboard Complete)"
   },
   "columns": [
     {
@@ -513,6 +513,42 @@
             "Coverage: Backend 79.41% branches, Frontend 44/44 test files passing",
             "Zero test failures, all thresholds met, production-ready"
           ]
+        },
+        {
+          "version": "v2.6.0",
+          "title": "Epic 2.6: UI Integration & Usage Dashboard",
+          "duration": "2 days",
+          "status": "✓ Complete",
+          "completedDate": "Nov 7, 2025",
+          "badge": "Phase 2 Complete",
+          "features": [
+            "Modern Usage Dashboard Page: Industry best practices from Stripe, Vercel, Linear, and Notion",
+            "Side-by-side daily and monthly usage cards with real-time data",
+            "Smart color-coded status indicators: Green (0-59%) → Yellow (60-79%) → Orange (80-99%) → Red (100%)",
+            "Animated progress bars with percentage labels and ARIA attributes",
+            "Reset countdowns with relative ('in 5 days') and absolute dates",
+            "Contextual upgrade prompts (shown when usage > 60%)",
+            "Quick action cards (Pricing, Settings, Documentation)",
+            "Loading skeletons for better perceived performance",
+            "Unlimited tier support with infinity symbols for enterprise users",
+            "Fully accessible (WCAG 2.1 AA compliant)",
+            "Mobile-responsive layout with card stacking",
+            "Enhanced Header: User profile dropdown with tier badge display",
+            "Tier badge shows paid tier (Starter, Pro, Team, Enterprise) with Sparkles icon",
+            "User info header in dropdown with email and current plan",
+            "Mobile Menu: Usage Dashboard and Settings links for authenticated users",
+            "Routing: Added /usage route in React Router",
+            "Usage Dashboard Test Suite: 28 tests, 100% passing",
+            "Test coverage: Authentication, loading states, tier badges, usage cards, progress bars, accessibility",
+            "UI Improvements: RefreshCw icon added to refresh button, upgrade banner repositioned to top, condensed to single-line layout, tier badge made compact",
+            "Authentication Fix: Added credentials: 'include' to useUsageTracking.js for session cookie transmission",
+            "SQL Period Matching: Changed from range (<=) to exact match (=) for period_start_date",
+            "Migration Fix: Added GREATEST() for last_reset_date in ON CONFLICT to preserve daily counts after anonymous-to-authenticated migration",
+            "Final Results: 2,278 tests (2,237 passing, 41 skipped), 100% pass rate",
+            "Frontend: 1,401 tests (1,381 passing, 20 skipped) - +28 new tests",
+            "Backend: 877 tests (856 passing, 21 skipped)",
+            "Phase 2: Payments Infrastructure now 100% complete"
+          ]
         }
       ]
     },
@@ -520,27 +556,8 @@
       "id": "now",
       "label": "Now",
       "title": "Active",
-      "subtitle": "Phase 2 & 3: Payments + Dark Mode",
+      "subtitle": "Phase 3: Dark Mode & UX Enhancements",
       "phases": [
-        {
-          "version": "Epic 2.6",
-          "title": "UI Integration & Usage Dashboard",
-          "duration": "2-3 days",
-          "status": "Planned",
-          "badge": "Planned",
-          "features": [
-            "Usage dashboard page/modal for proactive viewing (deferred from Epic 2.2)",
-            "Display: \"X/10 docs used this month\" with progress bar",
-            "Visual indicators (green → yellow → red based on usage %)",
-            "Show reset date (\"Resets on March 1\")",
-            "Usage history chart (optional)",
-            "User profile menu (usage stats link, settings, logout)",
-            "Tier badges in header for authenticated users",
-            "Feature gates in UI (Pro badges on locked features)",
-            "Loading states and error handling",
-            "Complete Phase 2: Payments Infrastructure"
-          ]
-        },
         {
           "version": "Epic 3.1",
           "title": "Theme Refinements & Dark Mode",
