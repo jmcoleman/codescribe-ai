@@ -28,10 +28,13 @@ jest.mock('../../services/emailService.js', () => ({
   sendSupportEmail: jest.fn().mockResolvedValue({ success: true }), // Added for /support endpoint
 }));
 
+jest.mock('../../models/User.js');
+
 // Now import routes and mocked modules
 import contactRouter from '../contact.js';
 import { requireAuth, validateBody } from '../../middleware/auth.js';
-import { sendContactSalesEmail } from '../../services/emailService.js';
+import { sendContactSalesEmail, sendSupportEmail } from '../../services/emailService.js';
+import User from '../../models/User.js';
 
 describe('Contact Sales Routes', () => {
   let app;
@@ -62,8 +65,12 @@ describe('Contact Sales Routes', () => {
     // Mock validateBody to pass through
     validateBody.mockImplementation(() => (req, res, next) => next());
 
-    // Mock email service
+    // Mock User.findById to return the mock user
+    User.findById.mockResolvedValue(mockUser);
+
+    // Mock email services
     sendContactSalesEmail.mockResolvedValue({ success: true });
+    sendSupportEmail.mockResolvedValue({ success: true });
   });
 
   describe('POST /api/contact/sales', () => {
@@ -141,6 +148,7 @@ describe('Contact Sales Routes', () => {
           req.user = mockUser;
           next();
         });
+        User.findById.mockResolvedValue(mockUser);
       });
 
       it('should use database name when user has full name', async () => {
@@ -157,6 +165,7 @@ describe('Contact Sales Routes', () => {
           userId: 1,
           currentTier: 'free',
           interestedTier: 'enterprise',
+          subject: '',
           message: 'Interested in enterprise plan',
         });
       });
@@ -206,6 +215,7 @@ describe('Contact Sales Routes', () => {
           req.user = mockUser;
           next();
         });
+        User.findById.mockResolvedValue(mockUser);
       });
 
       it('should use form name when user has no name', async () => {
@@ -307,6 +317,7 @@ describe('Contact Sales Routes', () => {
           req.user = mockUser;
           next();
         });
+        User.findById.mockResolvedValue(mockUser);
       });
 
       it('should send email with all user details', async () => {
@@ -402,6 +413,7 @@ describe('Contact Sales Routes', () => {
           req.user = mockUser;
           next();
         });
+        User.findById.mockResolvedValue(mockUser);
       });
 
       it('should handle Resend rate limit errors', async () => {
@@ -528,6 +540,7 @@ describe('Contact Sales Routes', () => {
         req.user = mockUser;
         next();
       });
+      User.findById.mockResolvedValue(mockUser);
     });
 
     describe('Authentication', () => {
