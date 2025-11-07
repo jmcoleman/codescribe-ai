@@ -155,7 +155,10 @@ describe('ContactSupportModal', () => {
       await user.click(screen.getByRole('button', { name: /Send Message/i }));
 
       await waitFor(() => {
-        expect(screen.getByText('Support Request Sent!')).toBeInTheDocument();
+        // Use flexible text matcher since text may be split across elements
+        expect(screen.getByText((_content, element) => {
+          return element?.textContent === 'Support Request Sent!';
+        })).toBeInTheDocument();
       });
     });
   });
@@ -257,7 +260,10 @@ describe('ContactSupportModal', () => {
       await user.click(screen.getByRole('button', { name: /Send Message/i }));
 
       await waitFor(() => {
-        expect(screen.getByText('Sending...')).toBeInTheDocument();
+        // Use flexible text matcher since text may be split across elements
+        expect(screen.getByText((_content, element) => {
+          return element?.textContent === 'Sending...';
+        })).toBeInTheDocument();
       });
     });
   });

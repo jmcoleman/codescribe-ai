@@ -672,22 +672,25 @@ npm run test:e2e:headed       # With browser UI (for debugging)
 
 ## Development Status
 
-**Current Phase:** Phase 2 - Payments Infrastructure (Epic 2.1 ✅ COMPLETE)
+**Current Phase:** Phase 2 - Payments Infrastructure (Epic 2.1-2.6 ✅ COMPLETE)
 **Production Status:** 🚀 **LIVE** at [codescribeai.com](https://codescribeai.com)
-**Last Updated:** October 28, 2025
+**Last Updated:** November 7, 2025 (v2.6.0)
 
 ### Phase Summary
 
 - **Phase 1.0 (Oct 11-16, 2025):** ✅ Core MVP features, streaming, quality scoring, testing
 - **Phase 1.5 (Oct 16-19, 2025):** ✅ WCAG 2.1 AA compliance, production deployment, analytics
-- **Phase 2 - Epic 2.1 (Oct 20-28, 2025):** ✅ Authentication & user management system
-  - Email/password authentication with bcrypt + JWT
-  - GitHub OAuth integration with loading states & analytics
-  - Password reset flow with Resend email service
-  - PostgreSQL database with Neon (3 migrations: users, sessions, quotas)
-  - Storage naming conventions & helper utilities
-  - 200+ authentication tests (102 auth tests + password reset + OAuth)
-- **Phase 2 - Next Epic:** 🚧 Epic 2.2 - Tier system & feature flags (Free → Starter → Pro → Team → Enterprise)
+- **Phase 2 - Epic 2.1 (Oct 20-28, 2025):** ✅ Authentication & user management
+- **Phase 2 - Epic 2.2 (Oct 28-29, 2025):** ✅ Usage tracking & quota system backend
+- **Phase 2 - Epic 2.3 (Oct 29, 2025):** ✅ UX enhancements & file upload improvements
+- **Phase 2 - Epic 2.4 (Oct 31-Nov 2, 2025):** ✅ Payment integration & contact sales
+- **Phase 2 - Epic 2.5 (Nov 2-6, 2025):** ✅ Legal compliance (Terms, Privacy, Settings)
+- **Phase 2 - Epic 2.6 (Nov 5-7, 2025):** ✅ Usage Dashboard & Admin Tools
+  - Modern usage analytics dashboard with daily/monthly tracking
+  - Admin-only dashboard with global metrics & CSV export
+  - Critical bug fixes (authentication, SQL, migration preservation)
+  - 2,238 tests passing (100% pass rate)
+- **Phase 2 - Next Epic:** 📋 Epic 2.8 - Subscription Management UI (Customer Portal, upgrade/downgrade flows)
 
 ### ✅ Phase 1.0 & 1.5 Complete (Oct 11-19, 2025)
 
@@ -701,46 +704,67 @@ npm run test:e2e:headed       # With browser UI (for debugging)
 - Production deployment with CI/CD (GitHub Actions)
 
 **Quality Metrics:**
-- **1,955 tests** (1,283 frontend, 672 backend) - 97.8% pass rate
-- **Backend coverage:** 91.83% overall (649 passing, 21 skipped, 2 pre-existing failures)
-- **Frontend coverage:** 100% critical paths, all new legal/terms components tested
+- **2,279 tests** (1,401 frontend, 878 backend) - 100% pass rate
+- **Backend coverage:** 91.83% overall (857 passing, 21 skipped)
+- **Frontend coverage:** 100% critical paths (1,381 passing, 20 skipped)
 - **Database:** 14 migration tests (Docker sandbox + Neon dev validation)
 
-### ✅ Phase 2 - Epic 2.1 Complete (Oct 20-28, 2025)
+### ✅ Phase 2 - Epic 2.6 Complete (Nov 5-7, 2025)
 
-**Authentication & User Management:**
-- Email/password authentication (bcrypt + JWT) with secure session management
-- GitHub OAuth integration with loading states & OAuth timing analytics
-- Password reset flow with Resend email service (token generation, validation, expiry)
-- PostgreSQL database with Neon (free tier: 512MB, supports 50K users)
-- 5 database migrations: users, sessions, user_quotas, indexes, tier tracking
-- Storage naming conventions (codescribeai:type:category:key) with helper utilities
-- Database testing infrastructure (Docker PostgreSQL, Jest config, 21 tests)
+**Usage Dashboard & Admin Tools:**
+- **Modern Usage Analytics Dashboard** (/usage)
+  - Daily and monthly usage tracking with visual progress bars
+  - Color-coded status indicators (Normal/High Usage/At Limit)
+  - Reset countdown timers with absolute dates
+  - Tier upgrade prompts with dynamic multipliers
+  - Refresh button with loading animations
+  - Quick action cards (Pricing, Settings, Documentation)
+  - Fully responsive layout (desktop grid, mobile stacked)
 
-**Testing & Documentation:**
-- **200+ new authentication tests** added (total now 1,299 tests)
-  - 102 auth tests (middleware, user model, OAuth flows, security)
-  - 25 password reset tests (email verification, token validation)
-  - 21 database tests (migrations, schema, constraints, quotas)
-  - OAuth loading states & analytics tests
-- Database naming standards documentation (DB-NAMING-STANDARDS.md)
-- Storage conventions guide (STORAGE-CONVENTIONS.md)
-- Authentication deployment guides (OAuth setup, email setup, database setup)
+- **Admin Dashboard** (/admin/usage)
+  - Role-based access control (admin email whitelist)
+  - Global metrics (total users, generations, active subscriptions)
+  - Tier distribution breakdown with percentages
+  - Recent activity table with user details
+  - Export to CSV functionality
+  - Real-time data refresh
+
+**Critical Bug Fixes:**
+- **Authentication Fix:** Added `credentials: 'include'` for session cookie transmission
+- **SQL Period Matching:** Changed from range (<=) to exact match (=) for accurate quota tracking
+- **Migration Preservation:** Added GREATEST() for last_reset_date to preserve daily counts during anonymous-to-authenticated migration
+- **UI Improvements:** RefreshCw icon, banner repositioning, compact tier badge
+
+**Testing & Quality:**
+- **2,238 tests passing** (100% pass rate) - 1,381 frontend, 857 backend
+- 22 new/updated tests (useUsageTracking, Usage model, UsageDashboard, LegalPages)
+- 2 test fixes for flaky timing and text matching issues
+- Updated documentation (CHANGELOG, ROADMAP, TODO, README)
 
 ### 🚀 Future Development
 
-**Phase 2 - Payments Infrastructure (Current - v2.4.2):**
-- ✅ Epic 2.1: Authentication & User Management (v2.0.0) - **COMPLETE**
+**Phase 2 - Payments Infrastructure (Current - v2.6.0):**
+- ✅ Epic 2.1: Authentication & User Management (v2.0.0-v2.0.1) - **COMPLETE**
 - ✅ Epic 2.2: Tier System & Feature Flags (v2.1.0-v2.2.0) - **COMPLETE**
 - ✅ Epic 2.3: UX Enhancements & File Upload (v2.3.0) - **COMPLETE**
-- ✅ Epic 2.4: Payment Integration & Test Infrastructure (v2.4.0-v2.4.2) - **COMPLETE**
+- ✅ Epic 2.4: Payment Integration & Test Infrastructure (v2.4.0-v2.4.6) - **COMPLETE**
   - Stripe integration (test + live modes)
   - Email rate limiting & verification
-  - Livemode detection for subscriptions
+  - Contact sales & support features
   - 1-hour prompt caching ($100-400/mo savings)
-- 📋 Epic 2.5: Essential Legal (Terms & Privacy) - **PLANNED**
-- 📋 Epic 2.6: UI Integration & Usage Dashboard - **PLANNED**
+- ✅ Epic 2.5: Legal Compliance (v2.5.0-v2.5.3) - **COMPLETE**
+  - Terms of Service & Privacy Policy pages
+  - Terms acceptance system with version tracking
+  - Settings page (Account, Privacy, Subscription, Danger Zone)
+  - Account deletion & restoration (30-day grace period)
+  - Email system overhaul with branded templates
+- ✅ Epic 2.6: Usage Dashboard & Admin Tools (v2.6.0) - **COMPLETE**
+  - Modern usage analytics dashboard with daily/monthly tracking
+  - Admin dashboard with global metrics & CSV export
+  - Critical bug fixes (auth, SQL, migrations)
+  - 2,238 tests passing (100% pass rate)
 - 📋 Epic 2.7: Production Launch (Post-LLC, Jan 14+ 2026) - **PLANNED**
+- 📋 Epic 2.8: Subscription Management UI - **PLANNED**
 
 **Upcoming Phases:**
 - **Phase 3:** Dark Mode & UI Enhancements (Theming system, layout improvements, accessibility)
