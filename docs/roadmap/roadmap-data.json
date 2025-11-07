@@ -65,9 +65,9 @@
       "text": "codescribeai.com",
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
-    "footerLeft": "<strong>CodeScribe AI</strong> \u00b7 Strategic Roadmap v3.7",
+    "footerLeft": "<strong>CodeScribe AI</strong> \u00b7 Strategic Roadmap v3.8",
     "footer": "Phase 1 Complete \u00b7 Phase 2: Epic 2.5 Complete (Legal Compliance - All 4 Phases) \u00b7 Launch: Mid-Jan 2026",
-    "lastUpdated": "November 4, 2025 (v2.5.2 - Epic 2.5 Complete)"
+    "lastUpdated": "November 6, 2025 (v2.5.3 - Test Suite Comprehensive Coverage)"
   },
   "columns": [
     {
@@ -268,7 +268,7 @@
           "badge": "Production Fix",
           "features": [
             "Email rate limiting system (5-min cooldown, 10/day verification, 3/hour + 10/day password resets)",
-            "Email service mocking for dev/test (TEST_RESEND_MOCK flag, prevents quota waste)",
+            "Email service mocking for dev/test (MOCK_EMAILS env var, prevents quota waste)",
             "Enhanced production logging (detailed email logs with URLs, IDs, timestamps)",
             "UnverifiedEmailBanner redesign (brand gradient, compact layout, indigo button)",
             "ConfirmationModal alignment fix (title/close button)",
@@ -475,6 +475,43 @@
             "Comprehensive Testing: 96+ tests (64 deletion/restoration, 32 cron/migrations)",
             "2,225 tests (1,370 frontend, 855 backend, 100% pass rate)",
             "Documentation: USER-DELETION-COMPLIANCE.md (1,500+ lines, industry research)"
+          ]
+        },
+        {
+          "version": "v2.5.3",
+          "title": "Email System Overhaul & Test Suite Coverage",
+          "duration": "2 days",
+          "status": "\u2713 Complete",
+          "completedDate": "Nov 6, 2025",
+          "badge": "Production Ready",
+          "features": [
+            "Email Templating System: 7 branded templates (password reset, verification, support, sales, deletion)",
+            "Support Request Attachments: File upload support (5 files max, 10MB each, 7 allowed types)",
+            "Email Template Architecture: Base template system with consistent branding across all emails",
+            "Enhanced Contact Support: File attachments, 6 subject categories, tier-based priority (1-5)",
+            "Email Priority Filtering: X-Priority headers for inbox sorting (Enterprise=1, Pro=2, Starter=3, Free=5)",
+            "SLA Documentation: Tier-based response times (Enterprise 4hrs, Pro 24hrs, Starter 48hrs, Free 5 days)",
+            "ContactSupportModal Redesign: Attachment UI, drag-and-drop, file validation, loading states",
+            "Email Configuration: Comprehensive .env.example with 24 variables (Resend, Stripe, OAuth)",
+            "Security: SECURITY-GIT-SECRETS.md documentation (143 lines) for API key protection",
+            ".gitignore Updates: Ignore .env backup files (*.env.backup, .env.local.backup)",
+            "Backend: Fixed contact.test.js User model mocking (45/45 tests passing)",
+            "Backend: Added 19 emailService tests for branch coverage (+3.28% to 79.41%)",
+            "Backend: Rate limit tests for password reset and verification emails (4 new tests)",
+            "Backend: Support email attachment tests (3 new tests covering 0, 1, and 3+ files)",
+            "Backend: Utility function tests for emailService (12 tests: mocking, client, caching)",
+            "Backend: All coverage thresholds met (79.41% branches exceeds 79% requirement)",
+            "Frontend: Fixed ContactSalesModal tests (25/25 passing, 11 tests updated)",
+            "Frontend: Fixed ContactSupportModal tests (12/12 passing, 7 tests rewritten)",
+            "Frontend: Updated success messages, loading states, form submissions to match implementation",
+            "Frontend: Fixed unauthenticated vs authenticated user flows",
+            "Documentation: EMAIL-TEMPLATING-GUIDE.md (1,407 lines), EMAIL-PRIORITY-FILTERING.md (668 lines)",
+            "Documentation: COMMUNITY-SUPPORT-STRATEGY.md (457 lines), EMAIL-CONFIGURATION.md (278 lines)",
+            "Test Pattern Documentation: Pattern 11 (ES Modules) in TEST-PATTERNS-GUIDE.md",
+            "CI/CD: GitHub Actions passing for both backend and frontend",
+            "Final Results: 2,209 passing tests (856 backend, 1,353 frontend), 100% pass rate",
+            "Coverage: Backend 79.41% branches, Frontend 44/44 test files passing",
+            "Zero test failures, all thresholds met, production-ready"
           ]
         }
       ]
@@ -796,6 +833,7 @@
           "duration": "TBD",
           "status": "Backlog (User Feedback Driven)",
           "features": [
+            "Support ticket ID tracking system (database table + email display)",
             "Calendly integration for Enterprise/Team sales",
             "Gmail 'Send As' setup for sales@codescribeai.com replies",
             "Documentation history and saved projects",
