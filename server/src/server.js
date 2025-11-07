@@ -8,6 +8,7 @@ import paymentRoutes from './routes/payments.js';
 import contactRoutes from './routes/contact.js';
 import legalRoutes from './routes/legal.js';
 import cronRoutes from './routes/cron.js';
+import adminRoutes from './routes/admin.js';
 import errorHandler from './middleware/errorHandler.js';
 
 const app = express();
@@ -132,6 +133,7 @@ if (ENABLE_AUTH) {
   app.use('/api/payments', paymentRoutes);
   app.use('/api/contact', contactRoutes);
   app.use('/api/legal', legalRoutes);
+  app.use('/api/admin', adminRoutes); // Admin routes (requires auth + admin email)
 }
 app.use('/api/cron', cronRoutes);
 app.use('/api/migrate', migrateRoutes);

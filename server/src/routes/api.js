@@ -271,6 +271,10 @@ router.get('/user/usage', async (req, res) => {
     // Get usage from database
     const usage = await Usage.getUserUsage(userIdentifier);
 
+    // DEBUG: Log what we got from getUserUsage
+    console.log('[Usage API] userIdentifier:', userIdentifier);
+    console.log('[Usage API] getUserUsage returned:', JSON.stringify(usage, null, 2));
+
     // Get tier limits
     const tierConfig = TIER_FEATURES[tier];
     const dailyLimit = tierConfig.dailyGenerations;

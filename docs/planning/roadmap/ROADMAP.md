@@ -1,8 +1,8 @@
 # CodeScribe AI - Product Roadmap
 
-**Last Updated:** November 6, 2025
-**Current Phase:** Phase 2 - ✅ **Epic 2.5 COMPLETE** (Legal Compliance - All 4 Phases)
-**Current Release:** v2.5.3 (Email System Overhaul & Test Suite Coverage)
+**Last Updated:** November 7, 2025
+**Current Phase:** Phase 2 - ✅ **Epic 2.6 COMPLETE** (Usage Dashboard & Admin Tools)
+**Current Release:** v2.6.0 (Usage Dashboard, Admin Tools & Bug Fixes)
 **Production URL:** [https://codescribeai.com](https://codescribeai.com)
 
 ---
@@ -776,9 +776,10 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 - Epic 2.5: Legal Compliance - Phase 4 (2.5 days) - ✅ **COMPLETE** (v2.5.2)
 
 **Next Steps for Phase 2:**
-- Epic 2.6: UI Integration & Usage Dashboard (2-3 days) - 📋 Planned
+- Epic 2.6: UI Integration & Usage Dashboard (3 days) - ✅ **COMPLETE** (v2.6.0)
 - Epic 2.7: Production Launch (Post-LLC) (1-2 days) - 📋 Planned (Jan 14+ 2026)
-- Target completion: v2.6.x-v2.7.0 releases
+- Epic 2.8: Subscription Management UI (2-3 days) - 📋 Planned (Nov 8-20, 2025)
+- Target completion: v2.8.0 releases
 
 ---
 
@@ -846,8 +847,8 @@ Build a comprehensive AI-powered documentation toolkit that transforms how devel
 - ✅ Nov 6: v2.5.3 (Email System Overhaul & Test Suite Coverage)
 
 **Remaining Sprint (Nov-Dec 2025):**
-- 📋 Nov 5-20: Epic 2.6 (Usage Dashboard + UI Integration) - v2.6.0
-- 📋 Nov 21-Dec 1: Epic 2.8 (Subscription Management UI) - v2.8.0
+- ✅ Nov 5-7: Epic 2.6 (Usage Dashboard + Admin Tools + Bug Fixes) - v2.6.0
+- 📋 Nov 8-20: Epic 2.8 (Subscription Management UI) - v2.8.0
 - 📋 Mid-December: ALL CODE COMPLETE
 
 **Validation & Marketing (Dec 2025 - Jan 2026):**
@@ -1107,21 +1108,40 @@ ALTER TABLE users ADD COLUMN deletion_reason VARCHAR(500);
 -- ✅ Migration 014: Implemented in v2.5.2 (usage analytics aggregation)
 ```
 
-#### Epic 2.6: UI Integration & Usage Dashboard (2-3 days) - 📋 **PLANNED**
+#### Epic 2.6: UI Integration & Usage Dashboard (3 days) - ✅ **COMPLETE** (v2.6.0)
 
-**Usage Dashboard UI (from Epic 2.2):**
-- Usage dashboard page/modal for proactive viewing
-- Display: "X/10 docs used this month" (Free), "X/50 docs used" (Starter), "X/200 docs used" (Pro)
-- Progress bar with visual indicators (green → yellow → red)
-- Show reset date ("Resets on March 1")
-- Usage history chart (optional)
+**Timeline:** November 5-7, 2025
+**Status:** ✅ **100% COMPLETE**
 
-**UI Integration:**
-- User profile menu (usage stats link, settings, logout)
-- Tier badges in header for authenticated users
-- Feature gates in UI (Pro badges on locked features)
-- Loading states and error handling
-- Complete Phase 2: Payments Infrastructure
+**Usage Dashboard UI:**
+- ✅ Modern usage dashboard page with daily/monthly tracking
+- ✅ Visual progress bars with color-coded status (Normal/High Usage/At Limit)
+- ✅ Reset countdown timers with absolute dates
+- ✅ Tier upgrade prompts with dynamic multipliers
+- ✅ Refresh button with loading states
+- ✅ Quick action cards (Pricing, Settings, Documentation)
+- ✅ Responsive layout (desktop grid, mobile stacked)
+
+**Admin Dashboard:**
+- ✅ Admin-only usage analytics page (/admin/usage)
+- ✅ Global metrics (total users, generations, active subscriptions)
+- ✅ Tier distribution breakdown
+- ✅ Recent activity table with user details
+- ✅ Export to CSV functionality
+- ✅ Role-based access control (admin email whitelist)
+
+**Bug Fixes:**
+- ✅ Authentication fix: Added credentials: 'include' for session cookies
+- ✅ SQL period matching: Changed from range (<=) to exact match (=)
+- ✅ Migration fix: Added GREATEST() for last_reset_date preservation
+- ✅ UI improvements: RefreshCw icon, banner repositioning, compact tier badge
+
+**Testing:**
+- ✅ 2,238 tests passing (1,381 frontend, 857 backend)
+- ✅ 22 new/updated tests (useUsageTracking, Usage model, UsageDashboard, LegalPages)
+- ✅ 100% pass rate (41 intentionally skipped)
+
+**Reference:** [CHANGELOG.md v2.6.0](../../CHANGELOG.md)
 
 #### Epic 2.7: Production Launch (1-2 days) - 📋 **PLANNED (Post-LLC)**
 

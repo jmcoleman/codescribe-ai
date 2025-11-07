@@ -42,6 +42,7 @@ export function useUsageTracking() {
       const response = await fetch(`${API_URL}/api/user/usage`, {
         method: 'GET',
         headers,
+        credentials: 'include', // Send session cookies for authentication
       });
 
       if (!response.ok) {

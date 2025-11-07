@@ -360,9 +360,12 @@ Use this hierarchy to maintain consistency:
 
 ---
 
-## 🧱 Component Library (14 Components)
+## 🧱 Component Library (15 Components)
 
-**Total Components:** 14 (8 core + 6 accessibility components from Phase 1.5)
+**Total Components:** 15 (8 core + 6 accessibility + 1 navigation from v2.6)
+
+**Navigation Component (v2.6 - November 2025):**
+15. **Back Button** - Browser history navigation with hover animation
 
 **Core UI Components (Original - Phase 1):**
 1. Button (Primary)
@@ -390,12 +393,14 @@ Use this hierarchy to maintain consistency:
 
 1. **Create Base**
    - Rectangle: 160 × 40px
-   - Fill: Solid color #9333EA (purple-600)
+   - Fill: **Solid color** #9333EA (purple-600) - **NO GRADIENTS**
    - Corner radius: 8px
-   - Effect: Drop shadow
+   - Effect: Drop shadow (subtle depth)
      - Color: #9333EA (purple-600) at 20% opacity
-     - Y offset: 4px
-     - Blur: 12px
+     - X offset: 0px
+     - Y offset: 10px
+     - Blur: 15px
+     - Spread: -3px
 
 2. **Add Auto Layout**
    - Select rectangle
@@ -432,7 +437,10 @@ Use this hierarchy to maintain consistency:
 **Result:**
 ✅ Reusable button component with 5 states
 
-**Design Note:** This matches the refined light theme design system (v2.0) - solid purple with subtle shadow, no gradients.
+**Design Note:** This matches the refined light theme design system (v2.0):
+- **Solid color backgrounds** (no gradients)
+- **Subtle colored shadows** for depth (20% opacity)
+- **Clean, professional appearance** aligned with modern SaaS design
 
 ---
 
@@ -944,6 +952,64 @@ export class AuthService {
 
 ---
 
+### Component 15: Back Button (Navigation - v2.6)
+
+**Purpose:** Browser history navigation for all secondary pages
+
+1. **Button Container**
+   - Auto layout: Horizontal
+   - Padding: 8px (implicit from content)
+   - Gap: 8px
+   - Background: Transparent (hover: none)
+   - Cursor: Pointer
+
+2. **Arrow Icon**
+   - Icon: ArrowLeft (Lucide)
+   - Size: 16×16 (w-4 h-4)
+   - Color: `color/slate-600` (default)
+   - Transition: transform 200ms
+
+3. **Text Label**
+   - Text: "Back"
+   - Style: `text/label-medium`
+   - Color: `color/slate-600` (default)
+
+4. **Hover State**
+   - Icon color: `color/purple-600`
+   - Text color: `color/purple-600`
+   - Icon transform: `translateX(-4px)` (subtle left slide)
+   - All transitions: 200ms ease
+
+5. **States:**
+   - **Default:** Slate-600 icon + text
+   - **Hover:** Purple-600 + icon slides left 4px
+   - **Active:** Slightly darker purple (purple-700)
+
+6. **Spacing in Layout:**
+   - Position: Top-left of page content
+   - Margin bottom: 16px (mb-4)
+   - Above page heading/title
+
+7. **ARIA Attributes:**
+   - `aria-label` not needed (text is visible)
+   - Icon marked `aria-hidden="true"`
+
+8. **Implementation Note:**
+   - Uses `navigate(-1)` NOT `navigate('/')`
+   - Respects browser history navigation
+   - Label is always "Back" (not "Back to Home")
+
+9. Create component: "Nav/BackButton"
+
+**Example Usage in Pages:**
+- Terms of Service page
+- Privacy Policy page
+- Settings page
+- Usage Dashboard page
+- Pricing page
+
+---
+
 ## 🎯 Accessibility Design Patterns (Phase 1.5)
 
 ### Pattern 1: Keyboard Navigation Indicators
@@ -1225,7 +1291,7 @@ Before finalizing:
 - [ ] Letter spacing adjusted
 
 ### Components
-- [ ] All 14 components created (8 core + 6 accessibility)
+- [ ] All 15 components created (8 core + 6 accessibility + 1 navigation)
 - [ ] Variants cover all states (default, hover, focus, active, disabled)
 - [ ] ARIA annotations added to accessibility components
 - [ ] Focus states use purple ring (2px, 2px offset)
@@ -1233,6 +1299,7 @@ Before finalizing:
 - [ ] Interactive icons have aria-label annotations
 - [ ] Auto layout used throughout
 - [ ] Constraints set for responsive behavior
+- [ ] Back button uses browser history navigation pattern
 
 ### Shadows
 - [ ] All shadows are styles
@@ -1485,9 +1552,17 @@ open docs/design/theming/brand-color-palette.html
 
 ---
 
-**Document Version:** 2.0
-**Last Updated:** October 18, 2025
-**Changes in v2.0:**
+**Document Version:** 2.1
+**Last Updated:** November 7, 2025
+
+**Changes in v2.1:**
+- Added Component 15: Back Button (Navigation pattern)
+- Updated component library count (14 → 15 components)
+- Clarified button styling: **solid colors + shadows, NO GRADIENTS**
+- Updated shadow specifications for Figma (X/Y offset, blur, spread)
+- Added implementation notes for browser history navigation
+
+**Changes in v2.0:** (October 18, 2025)
 - Added 6 accessibility components (Phase 1.5)
 - Added Accessibility Design Patterns section
 - Updated component library count (8 → 14 components)
@@ -1496,7 +1571,8 @@ open docs/design/theming/brand-color-palette.html
 - Added animation specifications for Error Banner
 - Updated component checklist with accessibility requirements
 
-**Previous Version:** 1.0 (October 2025 - Pre-Accessibility)
+**Previous Versions:**
+- v1.0 (October 2025) - Pre-Accessibility baseline
 
 ---
 

@@ -5,9 +5,9 @@
  * Legal document defining how we collect, use, and protect user data
  */
 
-import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
+import { PageLayout } from '../components/PageLayout';
 
 const PRIVACY_VERSION = '2025-11-02';
 const EFFECTIVE_DATE = 'November 2, 2025';
@@ -15,35 +15,19 @@ const EFFECTIVE_DATE = 'November 2, 2025';
 export default function PrivacyPolicy() {
   const navigate = useNavigate();
 
-  // ESC key to navigate back (same as Back button)
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        navigate(-1);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [navigate]);
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50/30 to-indigo-50/20">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <button
-            onClick={() => navigate(-1)}
-            className="inline-flex items-center gap-2 text-slate-600 hover:text-purple-600 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back</span>
-          </button>
-        </div>
-      </header>
+    <PageLayout>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-2">
+        <button
+          onClick={() => navigate(-1)}
+          className="inline-flex items-center gap-2 text-slate-600 hover:text-purple-600 transition-colors group"
+        >
+          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" aria-hidden="true" />
+          <span className="font-medium">Back</span>
+        </button>
+      </div>
 
-      {/* Content */}
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
         <div className="bg-white rounded-xl shadow-lg ring-1 ring-slate-200 p-8 sm:p-12">
           {/* Title */}
           <h1 className="text-4xl font-bold text-slate-900 mb-2">
@@ -369,7 +353,7 @@ export default function PrivacyPolicy() {
             </div>
           </section>
         </div>
-      </main>
-    </div>
+      </div>
+    </PageLayout>
   );
 }

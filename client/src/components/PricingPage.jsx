@@ -7,6 +7,7 @@ import { toastError } from '../utils/toast';
 import VerificationRequiredModal from './VerificationRequiredModal';
 import { ContactSalesModal } from './ContactSalesModal';
 import { STORAGE_KEYS, setSessionItem, getSessionItem, removeSessionItem } from '../constants/storage';
+import { PageLayout } from './PageLayout';
 
 // Lazy load auth modals
 const SignupModal = lazy(() => import('./SignupModal').then(m => ({ default: m.SignupModal })));
@@ -284,36 +285,27 @@ export function PricingPage() {
     { name: 'PHP', extensions: '.php', emoji: '🐘' }
   ];
 
-  // ESC key to navigate back (same as Back button)
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        navigate(-1);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [navigate]);
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <PageLayout showGradient={false} className="bg-gradient-to-b from-slate-50 to-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 sm:pt-4 pb-1">
         {/* Back Button - top left, outside centered container */}
         <button
           onClick={() => navigate(-1)}
-          className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 mb-4 transition-colors group"
+          className="inline-flex items-center gap-2 text-slate-600 hover:text-purple-600 mb-1 sm:mb-2 transition-colors group"
           aria-label="Go back"
         >
-          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" aria-hidden="true" />
           <span className="font-medium">Back</span>
         </button>
+      </div>
 
-        <div className="text-center mb-3">
-          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-1.5">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-2 sm:pb-4">
+
+        <div className="text-center mb-1 sm:mb-2">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 mb-1">
             Simple, Transparent Pricing
           </h1>
-          <p className="text-lg text-slate-600 max-w-2xl mx-auto mb-3">
+          <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto mb-1 sm:mb-2">
             Choose the plan that fits your needs. All plans include full language support.
           </p>
 
@@ -350,7 +342,7 @@ export function PricingPage() {
         </div>
 
         {/* Pricing Tiers */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-4 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-2 sm:mb-3 max-w-7xl mx-auto">
           {tiers.map((tier) => {
             const Icon = tier.icon;
             const isLoading = loading === tier.id;
@@ -361,7 +353,7 @@ export function PricingPage() {
             return (
               <div
                 key={tier.name}
-                className={`relative rounded-2xl border-2 p-6 bg-white transition-all duration-200 hover:shadow-xl flex flex-col max-w-sm mx-auto w-full ${
+                className={`relative rounded-2xl border-2 p-4 sm:p-5 bg-white transition-all duration-200 hover:shadow-xl flex flex-col max-w-sm mx-auto w-full ${
                   tier.popular
                     ? 'border-purple-600 shadow-lg shadow-purple-600/10 lg:scale-[1.02]'
                     : 'border-slate-200 hover:border-purple-300'
@@ -384,14 +376,14 @@ export function PricingPage() {
                   </div>
                 )}
 
-                <div className="text-center mb-4">
-                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-purple-100 text-purple-600 mb-3">
-                    <Icon className="w-6 h-6" />
+                <div className="text-center mb-2 sm:mb-3">
+                  <div className="inline-flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-purple-100 text-purple-600 mb-1.5 sm:mb-2">
+                    <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
                   </div>
-                  <h3 className="text-xl font-bold text-slate-900 mb-1.5">{tier.name}</h3>
-                  <p className="text-xs text-slate-600 mb-3 min-h-[2rem] flex items-center justify-center">{tier.description}</p>
-                  <div className="mb-1">
-                    <span key={`${tier.id}-${billingPeriod}-price`} className="text-3xl font-bold text-slate-900 inline-block animate-fade-in-slow">{displayPrice}</span>
+                  <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-1">{tier.name}</h3>
+                  <p className="text-xs text-slate-600 mb-1.5 sm:mb-2 min-h-[2rem] flex items-center justify-center">{tier.description}</p>
+                  <div className="mb-0.5">
+                    <span key={`${tier.id}-${billingPeriod}-price`} className="text-2xl sm:text-3xl font-bold text-slate-900 inline-block animate-fade-in-slow">{displayPrice}</span>
                     <span className="text-sm text-slate-600 ml-1">/ {tier.period}</span>
                   </div>
                   <div className="h-5">
@@ -403,7 +395,7 @@ export function PricingPage() {
                   </div>
                 </div>
 
-                <ul className="space-y-2.5 mb-4 flex-grow">
+                <ul className="space-y-1.5 sm:space-y-2 mb-2 sm:mb-3 flex-grow">
                   {tier.features.map((feature, idx) => (
                     <li key={idx} className="flex items-start gap-2 text-sm">
                       <Check className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
@@ -438,8 +430,8 @@ export function PricingPage() {
         </div>
 
         {/* Feature highlights & coming soon note */}
-        <div className="text-center mb-6 space-y-1.5">
-          <p className="text-sm text-slate-600">
+        <div className="text-center mb-2 sm:mb-3 space-y-0.5 sm:space-y-1">
+          <p className="text-xs sm:text-sm text-slate-600">
             All tiers include: <span className="font-semibold">All 10 languages</span> • <span className="font-semibold">4 doc types</span> • <span className="font-semibold">Real-time streaming</span> • <span className="font-semibold">Quality scoring</span>
           </p>
           <p className="text-xs text-slate-500">
@@ -448,8 +440,8 @@ export function PricingPage() {
         </div>
 
         {/* Legal disclaimer */}
-        <div className="text-center mb-8">
-          <p className="text-sm text-slate-600">
+        <div className="text-center mb-4 sm:mb-6">
+          <p className="text-xs sm:text-sm text-slate-600">
             By subscribing, you agree to our{' '}
             <a href="/terms" className="text-purple-600 hover:text-purple-700 underline">
               Terms of Service
@@ -563,6 +555,6 @@ export function PricingPage() {
           />
         )}
       </Suspense>
-    </div>
+    </PageLayout>
   );
 }

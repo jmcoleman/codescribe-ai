@@ -1,4 +1,4 @@
-import { Menu as MenuIcon, LogOut, User, FileText, Shield, ChevronDown, Settings } from 'lucide-react';
+import { Menu as MenuIcon, LogOut, User, FileText, Shield, ChevronDown, Settings, BarChart3, Sparkles } from 'lucide-react';
 import { useState, lazy, Suspense, forwardRef, useImperativeHandle } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Menu } from '@headlessui/react';
@@ -20,6 +20,14 @@ export const Header = forwardRef(function Header({ onMenuClick, onHelpClick }, r
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showSignupModal, setShowSignupModal] = useState(false);
   const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
+
+  // List of admin emails (must match server-side list)
+  const ADMIN_EMAILS = [
+    'jenni.m.coleman@gmail.com',
+  ];
+
+  // Check if current user is an admin
+  const isAdmin = isAuthenticated && user?.email && ADMIN_EMAILS.includes(user.email);
 
   // Context-aware pricing button label
   const getPricingLabel = () => {
@@ -61,17 +69,17 @@ export const Header = forwardRef(function Header({ onMenuClick, onHelpClick }, r
   return (
     <header className="bg-white border-b border-slate-200">
       <div className="w-full px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-14 sm:h-16">
           {/* Left: Logo + Title */}
-          <Link to="/" className="flex items-center gap-3 group">
+          <Link to="/" className="flex items-center gap-2 sm:gap-3 group">
             {/* Logo */}
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-purple p-1 transition-transform group-hover:scale-105">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-purple p-1 transition-transform group-hover:scale-105">
               <Logo className="w-full h-full" aria-hidden="true" />
             </div>
 
             {/* Title + Tagline */}
             <div>
-              <h1 className="text-lg sm:text-xl font-semibold text-slate-900 group-hover:text-purple-600 transition-colors">
+              <h1 className="text-base sm:text-lg lg:text-xl font-semibold text-slate-900 group-hover:text-purple-600 transition-colors">
                 CodeScribe AI
               </h1>
               <p className="text-xs text-slate-600 hidden lg:block">
@@ -108,15 +116,70 @@ export const Header = forwardRef(function Header({ onMenuClick, onHelpClick }, r
                   {isAuthenticated ? (
                     <Menu as="div" className="relative">
                       <Menu.Button className="flex items-center gap-2 px-3 py-2 hover:bg-slate-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2">
-                        <User className="w-5 h-5 text-slate-600" aria-hidden="true" />
-                        <span className="text-sm font-medium text-slate-700">
-                          {user?.email?.split('@')[0] || 'Account'}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <User className="w-5 h-5 text-slate-600" aria-hidden="true" />
+                          <div className="flex flex-col items-start">
+                            <span className="text-sm font-medium text-slate-700">
+                              {user?.email?.split('@')[0] || 'Account'}
+                            </span>
+                            {/* Tier badge */}
+                            {user?.tier && user.tier !== 'free' && (
+                              <span className="inline-flex items-center gap-1 text-xs font-semibold text-purple-600">
+                                <Sparkles className="w-3 h-3" aria-hidden="true" />
+                                {user.tier.charAt(0).toUpperCase() + user.tier.slice(1)}
+                              </span>
+                            )}
+                          </div>
+                        </div>
                         <ChevronDown className="w-4 h-4 text-slate-500" aria-hidden="true" />
                       </Menu.Button>
 
                       <Menu.Items className="absolute right-0 mt-2 w-56 origin-top-right rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
                         <div className="p-1">
+                          {/* User info header */}
+                          <div className="px-3 py-2 mb-1">
+                            <p className="text-xs text-slate-500">Signed in as</p>
+                            <p className="text-sm font-medium text-slate-900 truncate">{user?.email}</p>
+                            {user?.tier && (
+                              <p className="text-xs text-purple-600 font-semibold mt-0.5 capitalize">
+                                {user.tier} Plan
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="h-px bg-slate-200 my-1" />
+
+                          <Menu.Item>
+                            {({ active }) => (
+                              <Link
+                                to="/usage"
+                                className={`${
+                                  active ? 'bg-slate-100' : ''
+                                } group flex items-center gap-3 w-full px-3 py-2 text-sm text-slate-700 rounded-md transition-colors`}
+                              >
+                                <BarChart3 className="w-4 h-4 text-slate-500" aria-hidden="true" />
+                                Usage Dashboard
+                              </Link>
+                            )}
+                          </Menu.Item>
+
+                          {/* Admin Menu Item - Only visible to admins */}
+                          {isAdmin && (
+                            <Menu.Item>
+                              {({ active }) => (
+                                <Link
+                                  to="/admin/usage"
+                                  className={`${
+                                    active ? 'bg-slate-100' : ''
+                                  } group flex items-center gap-3 w-full px-3 py-2 text-sm text-slate-700 rounded-md transition-colors`}
+                                >
+                                  <Shield className="w-4 h-4 text-slate-500" aria-hidden="true" />
+                                  Admin Dashboard
+                                </Link>
+                              )}
+                            </Menu.Item>
+                          )}
+
                           <Menu.Item>
                             {({ active }) => (
                               <Link

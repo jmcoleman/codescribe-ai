@@ -16,6 +16,7 @@ import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
 import PrivacyPolicy from '../PrivacyPolicy';
 import TermsOfService from '../TermsOfService';
+import { AuthProvider } from '../../contexts/AuthContext';
 
 // Mock useNavigate
 const mockNavigate = vi.fn();
@@ -27,7 +28,13 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-const RouterWrapper = ({ children }) => <BrowserRouter>{children}</BrowserRouter>;
+const RouterWrapper = ({ children }) => (
+  <BrowserRouter>
+    <AuthProvider>
+      {children}
+    </AuthProvider>
+  </BrowserRouter>
+);
 
 describe('Privacy Policy Page', () => {
   beforeEach(() => {
@@ -138,11 +145,12 @@ describe('Privacy Policy Page', () => {
         </RouterWrapper>
       );
 
-      const h1 = screen.getByRole('heading', { level: 1 });
+      const h1Elements = screen.getAllByRole('heading', { level: 1 });
       const h2Elements = screen.getAllByRole('heading', { level: 2 });
       const h3Elements = screen.getAllByRole('heading', { level: 3 });
 
-      expect(h1).toBeInTheDocument();
+      // Allow multiple h1s (Header logo + page title)
+      expect(h1Elements.length).toBeGreaterThanOrEqual(1);
       expect(h2Elements.length).toBeGreaterThan(0);
       expect(h3Elements.length).toBeGreaterThan(0);
     });
@@ -299,11 +307,12 @@ describe('Terms of Service Page', () => {
         </RouterWrapper>
       );
 
-      const h1 = screen.getByRole('heading', { level: 1 });
+      const h1Elements = screen.getAllByRole('heading', { level: 1 });
       const h2Elements = screen.getAllByRole('heading', { level: 2 });
       const h3Elements = screen.getAllByRole('heading', { level: 3 });
 
-      expect(h1).toBeInTheDocument();
+      // Allow multiple h1s (Header logo + page title)
+      expect(h1Elements.length).toBeGreaterThanOrEqual(1);
       expect(h2Elements.length).toBeGreaterThan(0);
       expect(h3Elements.length).toBeGreaterThan(0);
     });

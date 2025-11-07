@@ -75,7 +75,7 @@ describe('useUsageTracking', () => {
       });
     });
 
-    it('sends Authorization header when user is authenticated', async () => {
+    it('sends Authorization header and credentials when user is authenticated', async () => {
       const mockResponse = {
         tier: 'free',
         daily: {
@@ -108,6 +108,7 @@ describe('useUsageTracking', () => {
             headers: expect.objectContaining({
               Authorization: 'Bearer mock-token',
             }),
+            credentials: 'include', // Critical: enables session cookie transmission
           })
         );
       });

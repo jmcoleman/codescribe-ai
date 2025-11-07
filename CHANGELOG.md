@@ -9,6 +9,97 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.6.0] - 2025-11-07
+
+**Status:** ✅ Epic 2.6: UI Integration & Usage Dashboard Complete
+
+**Summary:** Modern usage dashboard with industry best practices, enhanced header with tier badges, comprehensive test coverage, and critical bug fixes for authentication and migration. Phase 2: Payments Infrastructure now complete.
+
+### Added - Usage Dashboard
+
+- **Modern Usage Dashboard Page** (`/usage` route)
+  - Industry best practices from Stripe, Vercel, Linear, and Notion
+  - Side-by-side daily and monthly usage cards with real-time data
+  - Smart color-coded status indicators: Green (0-59%) → Yellow (60-79%) → Orange (80-99%) → Red (100%)
+  - Animated progress bars with percentage labels
+  - Reset countdowns with relative ("in 5 days") and absolute dates
+  - Contextual upgrade prompts (shown when usage > 60%)
+  - Quick action cards (Pricing, Settings, Documentation)
+  - Loading skeletons for better perceived performance
+  - Unlimited tier support with infinity symbols for enterprise
+  - Fully accessible (WCAG 2.1 AA compliant with ARIA labels)
+  - Mobile-responsive layout with card stacking
+
+- **Enhanced Header Component**
+  - User profile dropdown with tier badge display
+  - "Usage Dashboard" link prominently placed in menu
+  - Tier badge shows paid tier (Starter, Pro, Team, Enterprise) below username
+  - User info header in dropdown with email and current plan
+  - Sparkles icon for premium tier visual indicator
+
+- **Mobile Menu Integration**
+  - Usage Dashboard link for authenticated users
+  - Settings link added for easy access
+  - Consistent navigation across desktop and mobile
+
+- **Routing**
+  - Added `/usage` route in React Router (main.jsx)
+  - Integrated with existing route structure
+
+### Testing
+
+- **Usage Dashboard Test Suite** (28 tests, 100% passing)
+  - Authentication and redirect tests
+  - Loading states and skeleton tests
+  - Tier badge display for all tiers (free, starter, pro, team, enterprise)
+  - Usage card rendering with correct data
+  - Status badge color coding (healthy, caution, warning, critical)
+  - Progress bar percentages and accessibility
+  - Upgrade prompt conditional rendering
+  - Quick action navigation tests
+  - Refresh functionality tests
+  - Unlimited usage for enterprise tier
+  - Accessibility (ARIA attributes, keyboard navigation)
+
+- **Test Results**
+  - Frontend: 1,381 passed, 20 skipped (1,401 total) - +28 new tests
+  - Backend: 856 passed, 21 skipped (877 total)
+  - **Total: 2,237 passed, 41 skipped (2,278 total) - 100% pass rate**
+
+### Changed
+
+- Header component now displays tier badges for paid users
+- Profile dropdown includes user email and tier information
+- Mobile menu reorganized with authenticated user section
+- **Usage Dashboard UI Improvements**
+  - Added RefreshCw icon to refresh button to match Admin Dashboard pattern
+  - Moved "Ready for More" upgrade banner to top of page (after tier badge, before usage cards)
+  - Condensed upgrade banner to single-line horizontal layout for better space utilization
+  - Repositioned tier badge below upgrade banner and made more compact (reduced padding and text size)
+
+### Fixed
+
+- **Critical Authentication Bug** - Added `credentials: 'include'` to [useUsageTracking.js:45](client/src/hooks/useUsageTracking.js#L45) to enable session cookie transmission. This fixes the issue where authenticated users were incorrectly treated as anonymous on the Usage Dashboard.
+- **SQL Period Matching** - Changed query from range match (`<=`) to exact match (`=`) for `period_start_date` in [Usage.js:96](server/src/models/Usage.js#L96), matching the pattern used in admin and anonymous queries.
+- **Migration Daily Count Preservation** - Fixed anonymous-to-authenticated migration to preserve daily usage counts by adding `last_reset_date = GREATEST(user_quotas.last_reset_date, EXCLUDED.last_reset_date)` to the ON CONFLICT clause in [Usage.js:537](server/src/models/Usage.js#L537). This ensures the most recent reset date is used and prevents incorrect daily resets after migration.
+
+### Documentation
+
+- Added comprehensive implementation summary
+- Updated test documentation with new counts
+- Enhanced navigation documentation
+
+### Notes
+
+- **Phase 2: Payments Infrastructure** is now complete with Epic 2.6
+- Backend usage tracking API already implemented (Epic 2.2)
+- Frontend `useUsageTracking` hook already available
+- All quota enforcement systems already in place
+- This epic completes the UI layer for usage visibility
+- All authentication and migration bugs fixed and verified
+
+---
+
 ## [2.5.3] - 2025-11-06
 
 **Status:** ✅ Email System Overhaul & Test Suite Coverage

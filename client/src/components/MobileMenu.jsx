@@ -1,4 +1,4 @@
-import { X, LogOut, FileText, Shield } from 'lucide-react';
+import { X, LogOut, FileText, Shield, BarChart3, Settings } from 'lucide-react';
 import { useEffect, useRef, useState, lazy, Suspense } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from './Button';
@@ -164,6 +164,19 @@ export function MobileMenu({ isOpen, onClose, onHelpClick }) {
             >
               Help & FAQ
             </MenuItem>
+
+            {/* Authenticated user links */}
+            {ENABLE_AUTH && isAuthenticated && (
+              <>
+                <div className="h-px bg-slate-200 my-2" />
+                <MenuLink to="/usage" icon={BarChart3}>
+                  Usage Dashboard
+                </MenuLink>
+                <MenuLink to="/settings" icon={Settings}>
+                  Settings
+                </MenuLink>
+              </>
+            )}
 
             {/* Divider */}
             <div className="h-px bg-slate-200 my-2" />

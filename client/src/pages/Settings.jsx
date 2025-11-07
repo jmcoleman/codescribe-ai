@@ -6,6 +6,7 @@ import { AccountTab } from '../components/settings/AccountTab';
 import { PrivacyTab } from '../components/settings/PrivacyTab';
 import { SubscriptionTab } from '../components/settings/SubscriptionTab';
 import { DangerZoneTab } from '../components/settings/DangerZoneTab';
+import { PageLayout } from '../components/PageLayout';
 
 const TABS = [
   { id: 'account', label: 'Account', icon: User },
@@ -66,30 +67,25 @@ export default function Settings() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
-      {/* Header */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          {/* Back button */}
-          <button
-            onClick={() => navigate('/')}
-            className="inline-flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors mb-4"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back to Home</span>
-          </button>
+    <PageLayout showGradient={false} className="bg-gradient-to-br from-slate-50 to-slate-100">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-2">
+        <button
+          onClick={() => navigate(-1)}
+          className="inline-flex items-center gap-2 text-slate-600 hover:text-purple-600 transition-colors group mb-4"
+        >
+          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" aria-hidden="true" />
+          <span className="font-medium">Back</span>
+        </button>
 
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Settings</h1>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-              Manage your account settings and preferences
-            </p>
-          </div>
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Settings</h1>
+          <p className="mt-1 text-sm text-slate-600">
+            Manage your account settings and preferences
+          </p>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
         <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
           {/* Tab Navigation */}
           <div className="border-b border-slate-200 dark:border-slate-700">
@@ -125,6 +121,6 @@ export default function Settings() {
           </div>
         </div>
       </div>
-    </div>
+    </PageLayout>
   );
 }

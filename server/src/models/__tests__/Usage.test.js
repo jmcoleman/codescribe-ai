@@ -437,6 +437,42 @@ describeOrSkip('Usage Model', () => {
       expect(result.message).toBe('No anonymous usage found for this IP');
       expect(sql).toHaveBeenCalledTimes(1);
     });
+
+    it('should preserve the most recent last_reset_date during migration', async () => {
+      // Scenario: Anonymous user has newer last_reset_date (today)
+      // than existing authenticated user's last_reset_date (3 days ago)
+      // Migration should preserve the newer date to prevent incorrect daily resets
+      const today = new Date();
+
+      const mockAnonymousUsage = {
+        daily_count: 1,
+        monthly_count: 1,
+        last_reset_date: today, // Newer reset date from anonymous user
+        period_start_date: new Date(2025, 10, 1),
+      };
+
+      const mockMergedUsage = {
+        user_id: 1,
+        daily_count: 10, // 9 (existing) + 1 (anonymous)
+        monthly_count: 10, // 9 (existing) + 1 (anonymous)
+        last_reset_date: today, // Should preserve the newer date via GREATEST()
+        period_start_date: new Date(2025, 10, 1),
+      };
+
+      sql
+        .mockResolvedValueOnce({ rows: [mockAnonymousUsage] })
+        .mockResolvedValueOnce({ rows: [mockMergedUsage] })
+        .mockResolvedValueOnce({ rowCount: 1 });
+
+      const result = await Usage.migrateAnonymousUsage('192.168.1.1', 1);
+
+      expect(result.migrated).toBe(true);
+      expect(result.usage.dailyGenerations).toBe(10);
+      expect(result.usage.monthlyGenerations).toBe(10);
+
+      // Verify that migration was called with correct parameters
+      expect(sql).toHaveBeenCalledTimes(3); // Get anonymous, merge, delete
+    });
   });
 
   describe('Edge Cases', () => {

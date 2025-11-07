@@ -11,15 +11,15 @@ export default function Footer({ onSupportClick }) {
 
   return (
     <footer className="bg-white/80 backdrop-blur-sm border-t border-slate-200 mt-auto">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
           {/* Copyright */}
-          <div className="text-slate-600 text-sm">
+          <div className="text-slate-600 text-xs sm:text-sm">
             © {currentYear} CodeScribe AI. All rights reserved.
           </div>
 
           {/* Legal Links */}
-          <nav className="flex items-center gap-6 text-sm">
+          <nav className="flex items-center gap-4 sm:gap-6 text-xs sm:text-sm">
             <Link
               to="/terms"
               className="text-slate-600 hover:text-purple-600 transition-colors"

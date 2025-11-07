@@ -83,6 +83,7 @@ class Usage {
       `;
     } else {
       // Authenticated user tracked by user_id
+      // Get the current period record (exact match like admin query and anonymous query)
       result = await sql`
         SELECT
           user_id,
@@ -533,6 +534,7 @@ class Usage {
       DO UPDATE SET
         daily_count = user_quotas.daily_count + ${anonymousUsage.daily_count},
         monthly_count = user_quotas.monthly_count + ${anonymousUsage.monthly_count},
+        last_reset_date = GREATEST(user_quotas.last_reset_date, EXCLUDED.last_reset_date),
         updated_at = NOW()
       RETURNING
         user_id,
