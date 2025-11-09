@@ -347,9 +347,13 @@ describe('ContactSalesModal', () => {
       const submitButton = screen.getByRole('button', { name: /send message/i });
       await user.click(submitButton);
 
+      // Wait for loading state - first wait for "Sending..." text as confirmation
       await waitFor(() => {
-        expect(submitButton).toBeDisabled();
+        expect(screen.getByText('Sending...')).toBeInTheDocument();
       }, { timeout: 3000 });
+
+      // Then verify button is disabled
+      expect(submitButton).toBeDisabled();
     });
   });
 
