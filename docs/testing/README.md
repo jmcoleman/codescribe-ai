@@ -2,36 +2,36 @@
 
 **Project:** CodeScribe AI - Intelligent Code Documentation Generator
 **Testing Status:** ✅ Comprehensive Coverage Across 3 Frameworks
-**Last Updated:** November 6, 2025 (v2.5.3)
+**Last Updated:** November 8, 2025 (v2.7.0)
 
 ---
 
 ## 📊 Quick Stats
 
-- **Total Tests:** 2,250 tests (2,209 passing, 41 skipped, 0 failures)
-  - **Frontend:** 1,373 tests | 20 skipped (Vitest + React Testing Library)
-    - Component Tests: All legal/terms/settings/contact components tested
+- **Total Tests:** 2,386 tests (2,343 passing, 43 skipped, 0 failures)
+  - **Frontend:** 1,508 tests | 22 skipped (Vitest + React Testing Library)
+    - Component Tests: All components with dark mode variants tested
+    - Dark Mode Tests: 106 tests (ThemeContext, ThemeToggle, all components, integration)
     - Integration Tests: Auth, OAuth, password reset, upload, error handling, usage tracking, legal pages
     - UI Tests: Toast system, modals, forms, storage helpers, pricing page, focus trap
-    - Contact Modals: ContactSalesModal (25 tests), ContactSupportModal (12 tests)
-    - New in v2.5.3: Fixed 37 modal tests (11 ContactSalesModal, 7 ContactSupportModal, 19 new emailService)
-    - **Pass Rate:** 100% (1,353 passing, 20 skipped, 0 failures)
-  - **Backend:** 877 tests | 21 skipped (Jest + Supertest)
+    - Contact Modals: ContactSalesModal (25 tests), ContactSupportModal (12 tests - getToken Promise fix)
+    - New in v2.7.0: 106 dark mode tests, 3 critical test fixes (ContactSupportModal, DocPanel, UsageLimitModal)
+    - **Pass Rate:** 98.5% (1,486 passing, 22 skipped, 0 failures)
+  - **Backend:** 878 tests | 21 skipped (Jest + Supertest)
     - Unit Tests: Services, models, utilities, middleware (emailService, requireTermsAcceptance, tierGate)
     - Integration Tests: Prompt quality, API contracts, authentication, tier system, contact sales/support, legal endpoints
     - Security Tests: Password hashing, JWT validation, OAuth flows, usage quotas, email rate limiting
     - Email Tests: 73 tests (contact route 45, emailService 28 - templates, attachments, rate limits)
-    - New in v2.5.3: Fixed 45 contact route tests (User model mocking), added 19 emailService tests (79.41% branches)
-    - **Pass Rate:** 100% (856 passing, 21 skipped, 0 failures)
+    - **Pass Rate:** 100% (857 passing, 21 skipped, 0 failures)
   - **Database:** 24 migration tests (Docker sandbox + Neon dev validation)
     - Migration-010: 14 tests (terms/privacy acceptance tracking)
     - Migration-011: 10 tests (analytics_enabled column + index)
   - **E2E:** 10 tests (Playwright - file upload flow)
-- **Pass Rate:** 100% (2,209/2,209 non-skipped tests passing, 0 failures) ✅
+- **Pass Rate:** 100% (2,343/2,343 non-skipped tests passing, 0 failures) ✅
 - **Backend Coverage:** 91.83% statements (services), 95.81% overall, 79.41% branches (services)
-- **Test Execution Time:** Frontend ~19.7s, Backend ~7.1s, Database ~0.3s, E2E ~45s
+- **Test Execution Time:** Frontend ~19.8s, Backend ~7.1s, Database ~0.3s, E2E ~45s
 - **Coverage Target:** 90% ✅ EXCEEDED (91.83% services statements, 79.41% services branches)
-- **Recent Updates:** Email templating system (7 templates), support attachments (5 files max), test coverage improvements (64 tests fixed/added), Pattern 11 ES Modules mocking (Nov 6, 2025 - v2.5.3)
+- **Recent Updates:** Dark mode implementation (106 tests), critical CI fixes (ContactSupportModal getToken Promise, DocPanel button count, UsageLimitModal text), ThemeContext error handling (Nov 8, 2025 - v2.7.0)
 
 ---
 

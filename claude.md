@@ -12,7 +12,7 @@
 AI-powered documentation generator with real-time streaming, quality scoring (0-100), and WCAG 2.1 AA compliance.
 
 **Key Metrics:**
-- 2,250 tests (2,209 passing, 41 skipped, 0 failures) | 100% pass rate | 91.83% backend coverage
+- 2,386 tests (2,343 passing, 43 skipped, 0 failures) | 100% pass rate | 91.83% backend coverage
 - Lighthouse: 75/100 performance (+67%), 100/100 accessibility
 - Bundle: 78KB gzipped (-85% reduction)
 - Accessibility: 95/100 score, 0 axe violations
@@ -48,7 +48,7 @@ AI-powered documentation generator with real-time streaming, quality scoring (0-
 | Document | Use Case | Key Contents |
 |----------|----------|--------------|
 | [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) | Performance optimization | Lazy loading, bundle analysis, Core Web Vitals, maintenance |
-| [Testing README](docs/testing/README.md) | Test navigation hub | 2,250 test stats, quick commands, coverage overview |
+| [Testing README](docs/testing/README.md) | Test navigation hub | 2,386 test stats, quick commands, coverage overview |
 | [COMPONENT-TEST-COVERAGE.md](docs/testing/COMPONENT-TEST-COVERAGE.md) | Coverage details ⭐ | 13/18 components tested, category breakdown, gaps |
 | [frontend-testing-guide.md](docs/testing/frontend-testing-guide.md) | React testing patterns | Vitest + RTL, mocking, a11y, interactions |
 | [TEST-PATTERNS-GUIDE.md](docs/testing/TEST-PATTERNS-GUIDE.md) | Test fix patterns ⭐⚠️ | **103 tests fixed, 11 patterns** (Pattern 11: ES Modules!), 6 insights, 97.8% pass rate |
@@ -546,10 +546,28 @@ codescribe-ai/
 
 ## 🔄 Version History
 
-**Current: v2.5.3** - Email System Overhaul & Test Suite Coverage (November 6, 2025): **Email Templating System** (7 branded templates with base architecture); **Support Request Attachments** (5 files max, 10MB each, FormData submission); **Email Priority Filtering** (X-Priority 1-5 based on tier); **Backend Test Coverage** (45 contact tests fixed, 19 emailService tests added, 79.41% branches); **Frontend Test Coverage** (37 modal tests fixed: ContactSalesModal 25/25, ContactSupportModal 12/12); **Test Pattern 11** (ES Modules mocking documented); **Documentation** (5 new guides: templating, attachments, testing, security, troubleshooting); **2,250 tests** (1,373 frontend, 877 backend, 100% pass rate)
+**Current: v2.7.0** - Dark Mode Complete - 100% CI Pass Rate (November 8, 2025): **Theme System** (ThemeContext, ThemeToggle, localStorage persistence, system preference detection); **Dark Mode Styling** (Tailwind dark: variants, Monaco/Prism custom themes, Mermaid diagrams, 13 components); **106 Dark Mode Tests** (ThemeContext, ThemeToggle, integration, all components); **Critical Test Fixes** (ContactSupportModal getToken Promise, DocPanel button count, UsageLimitModal text); **ThemeContext Error Handling** (localStorage/matchMedia try/catch); **2,386 tests** (1,486 frontend, 857 backend, 43 skipped, 100% pass rate)
 
 <details>
-<summary>Previous Versions (v1.0-v2.5.2)</summary>
+<summary>Previous Versions (v1.0-v2.6.0)</summary>
+
+- **v2.6.0** - UI Integration & Usage Dashboard Complete (November 7, 2025)
+  - Usage Dashboard Page (daily/monthly cards, color-coded status, upgrade prompts)
+  - Enhanced Header (tier badges, usage link, profile dropdown)
+  - Mobile Menu Integration (usage/settings links)
+  - +146 tests (UsageDashboard, Header, MobileMenu, Backend API)
+  - Critical Bug Fixes (GitHub OAuth, database migrations, usage API)
+  - 2,225 tests (1,370 frontend, 855 backend, 100% pass rate)
+
+- **v2.5.3** - Email System Overhaul & Test Suite Coverage (November 6, 2025)
+  - Email Templating System (7 branded templates with base architecture)
+  - Support Request Attachments (5 files max, 10MB each, FormData submission)
+  - Email Priority Filtering (X-Priority 1-5 based on tier)
+  - Backend Test Coverage (45 contact tests fixed, 19 emailService tests added, 79.41% branches)
+  - Frontend Test Coverage (37 modal tests fixed: ContactSalesModal 25/25, ContactSupportModal 12/12)
+  - Test Pattern 11 (ES Modules mocking documented)
+  - Documentation (5 new guides: templating, attachments, testing, security, troubleshooting)
+  - 2,250 tests (1,373 frontend, 877 backend, 100% pass rate)
 
 - **v2.5.2** - Account Deletion & Restoration System Complete (November 4, 2025)
   - Automatic Account Restoration (email/password and GitHub OAuth)
@@ -718,7 +736,7 @@ codescribe-ai/
 - **v1.1** - Documentation restructure (subdirectories)
 - **v1.0** - Initial CLAUDE.md with complete doc map
 
-Last updated: November 3, 2025
+Last updated: November 8, 2025
 </details>
 
 ---

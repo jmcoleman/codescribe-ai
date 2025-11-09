@@ -458,7 +458,7 @@ For a complete navigation guide with descriptions of all documentation, see **[D
 
 **Development & Testing:**
 - **[Dev Guide](docs/planning/mvp/05-Dev-Guide.md)** - Implementation guide with code examples
-- **[Testing Hub](docs/testing/README.md)** - 2,250 tests, coverage reports, test patterns
+- **[Testing Hub](docs/testing/README.md)** - 2,386 tests, coverage reports, test patterns
 - **[Test Fixes Guide](docs/testing/TEST-PATTERNS-GUIDE.md)** - Testing patterns & best practices
 
 **Design & UX:**
@@ -603,7 +603,7 @@ See [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) for complete
 
 ### 📊 Testing & Quality
 
-**Comprehensive Test Coverage: 2,279 Tests** (2,238 passing, 41 skipped, 100% pass rate)
+**Comprehensive Test Coverage: 2,386 Tests** (2,343 passing, 43 skipped, 100% pass rate)
 - **Backend Tests**: 878 tests (Jest + Supertest)
   - Service layer: qualityScorer, claudeClient, codeParser, docGenerator, emailService
   - Authentication: 102 tests (auth middleware, user model, OAuth flows)
@@ -689,7 +689,7 @@ npm run test:e2e:headed       # With browser UI (for debugging)
   - Modern usage analytics dashboard with daily/monthly tracking
   - Admin-only dashboard with global metrics & CSV export
   - Critical bug fixes (authentication, SQL, migration preservation)
-  - 2,238 tests passing (100% pass rate)
+  - 2,343 tests passing (100% pass rate)
 - **Phase 2 - Next Epic:** 📋 Epic 2.8 - Subscription Management UI (Customer Portal, upgrade/downgrade flows)
 
 ### ✅ Phase 1.0 & 1.5 Complete (Oct 11-19, 2025)
@@ -736,7 +736,7 @@ npm run test:e2e:headed       # With browser UI (for debugging)
 - **UI Improvements:** RefreshCw icon, banner repositioning, compact tier badge
 
 **Testing & Quality:**
-- **2,238 tests passing** (100% pass rate) - 1,381 frontend, 857 backend
+- **2,343 tests passing** (100% pass rate) - 1,486 frontend, 857 backend
 - 22 new/updated tests (useUsageTracking, Usage model, UsageDashboard, LegalPages)
 - 2 test fixes for flaky timing and text matching issues
 - Updated documentation (CHANGELOG, ROADMAP, TODO, README)
@@ -762,7 +762,7 @@ npm run test:e2e:headed       # With browser UI (for debugging)
   - Modern usage analytics dashboard with daily/monthly tracking
   - Admin dashboard with global metrics & CSV export
   - Critical bug fixes (auth, SQL, migrations)
-  - 2,238 tests passing (100% pass rate)
+  - 2,343 tests passing (100% pass rate)
 - 📋 Epic 2.7: Production Launch (Post-LLC, Jan 14+ 2026) - **PLANNED**
 - 📋 Epic 2.8: Subscription Management UI - **PLANNED**
 
