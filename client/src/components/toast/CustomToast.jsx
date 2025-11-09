@@ -28,39 +28,39 @@ export const CustomToast = ({
   const typeConfig = {
     success: {
       icon: CheckCircle2,
-      iconColor: 'text-green-600',
-      iconBgColor: 'bg-gradient-to-br from-green-50 to-green-100',
-      bgColor: 'bg-white',
-      borderColor: 'border-green-300',
-      ringColor: 'focus:ring-green-500',
-      shadowColor: 'shadow-green-100',
+      iconColor: 'text-green-600 dark:text-green-400',
+      iconBgColor: 'bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/30',
+      bgColor: 'bg-white dark:bg-slate-800',
+      borderColor: 'border-cyan-300 dark:border-cyan-700',
+      ringColor: 'focus:ring-green-500 dark:focus:ring-green-400',
+      shadowColor: 'shadow-green-100 dark:shadow-green-900/30',
     },
     error: {
       icon: AlertCircle,
-      iconColor: 'text-red-600',
-      iconBgColor: 'bg-gradient-to-br from-red-50 to-red-100',
-      bgColor: 'bg-white',
-      borderColor: 'border-red-300',
-      ringColor: 'focus:ring-red-600',
-      shadowColor: 'shadow-red-100',
+      iconColor: 'text-red-600 dark:text-red-400',
+      iconBgColor: 'bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-800/30',
+      bgColor: 'bg-white dark:bg-slate-800',
+      borderColor: 'border-cyan-300 dark:border-cyan-700',
+      ringColor: 'focus:ring-red-600 dark:focus:ring-red-400',
+      shadowColor: 'shadow-red-100 dark:shadow-red-900/30',
     },
     warning: {
       icon: AlertTriangle,
-      iconColor: 'text-yellow-600',
-      iconBgColor: 'bg-gradient-to-br from-yellow-50 to-yellow-100',
-      bgColor: 'bg-white',
-      borderColor: 'border-yellow-300',
-      ringColor: 'focus:ring-yellow-500',
-      shadowColor: 'shadow-yellow-100',
+      iconColor: 'text-yellow-600 dark:text-yellow-400',
+      iconBgColor: 'bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/30 dark:to-yellow-800/30',
+      bgColor: 'bg-white dark:bg-slate-800',
+      borderColor: 'border-cyan-300 dark:border-cyan-700',
+      ringColor: 'focus:ring-yellow-500 dark:focus:ring-yellow-400',
+      shadowColor: 'shadow-yellow-100 dark:shadow-yellow-900/30',
     },
     info: {
       icon: Info,
-      iconColor: 'text-indigo-600',
-      iconBgColor: 'bg-gradient-to-br from-indigo-50 to-indigo-100',
-      bgColor: 'bg-white',
-      borderColor: 'border-indigo-300',
-      ringColor: 'focus:ring-purple-600',
-      shadowColor: 'shadow-indigo-100',
+      iconColor: 'text-indigo-600 dark:text-indigo-400',
+      iconBgColor: 'bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/30 dark:to-indigo-800/30',
+      bgColor: 'bg-white dark:bg-slate-800',
+      borderColor: 'border-cyan-300 dark:border-cyan-700',
+      ringColor: 'focus:ring-purple-600 dark:focus:ring-purple-400',
+      shadowColor: 'shadow-indigo-100 dark:shadow-indigo-900/30',
     },
   };
 
@@ -97,7 +97,7 @@ export const CustomToast = ({
               <p
                 className={`${
                   compact ? 'text-xs' : 'text-sm'
-                } font-semibold text-slate-900 leading-tight`}
+                } font-semibold text-slate-900 dark:text-slate-100 leading-tight`}
               >
                 {title}
               </p>
@@ -106,7 +106,7 @@ export const CustomToast = ({
               <p
                 className={`${title ? 'mt-1' : ''} ${
                   compact ? 'text-xs' : 'text-sm'
-                } text-slate-700 leading-relaxed`}
+                } text-slate-700 dark:text-slate-300 leading-relaxed`}
               >
                 {message}
               </p>
@@ -129,10 +129,10 @@ export const CustomToast = ({
                       compact ? 'px-3 py-1.5 text-xs' : 'px-4 py-2 text-xs'
                     } font-semibold rounded-lg ${
                       action.variant === 'primary'
-                        ? 'bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white focus:ring-purple-600 shadow-lg shadow-purple-600/20'
+                        ? 'bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-700 dark:hover:bg-purple-800 dark:active:bg-purple-900 text-white focus:ring-purple-600 dark:focus:ring-purple-400 shadow-lg shadow-purple-600/20 dark:shadow-purple-900/30'
                         : action.variant === 'danger'
-                        ? 'bg-red-600 hover:bg-red-700 active:bg-red-800 text-white focus:ring-red-600 shadow-lg shadow-red-600/20'
-                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200 focus:ring-slate-400 border border-slate-300'
+                        ? 'bg-red-600 hover:bg-red-700 active:bg-red-800 dark:bg-red-700 dark:hover:bg-red-800 dark:active:bg-red-900 text-white focus:ring-red-600 dark:focus:ring-red-400 shadow-lg shadow-red-600/20 dark:shadow-red-900/30'
+                        : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600 focus:ring-slate-400 dark:focus:ring-slate-500 border border-slate-300 dark:border-slate-600'
                     } transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-95`}
                   >
                     {action.icon && <action.icon className="h-3.5 w-3.5" />}
@@ -147,13 +147,13 @@ export const CustomToast = ({
 
       {/* Dismiss button */}
       {dismissible && (
-        <div className="flex border-l border-slate-200">
+        <div className="flex border-l border-slate-200 dark:border-slate-700">
           <button
             type="button"
             onClick={() => toast.dismiss(t.id)}
             className={`w-full border border-transparent rounded-none rounded-r-xl ${
               compact ? 'p-2' : 'p-3'
-            } flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-50/80 focus:outline-none focus:ring-2 focus:ring-inset ${
+            } flex items-center justify-center text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-50/80 dark:hover:bg-slate-700/80 focus:outline-none focus:ring-2 focus:ring-inset ${
               config.ringColor
             } transition-all duration-200 active:scale-95`}
             aria-label="Dismiss notification"
@@ -192,9 +192,7 @@ export const ProgressToast = ({
     <div
       className={`${
         t.visible ? 'animate-toast-enter' : 'animate-toast-leave'
-      } max-w-md w-full bg-white rounded-xl pointer-events-auto flex border ${
-        isComplete ? 'border-green-300' : 'border-purple-300'
-      } backdrop-blur-sm transform transition-all duration-300 ease-out shadow-[0_20px_50px_rgba(0,0,0,0.12),0_8px_20px_rgba(0,0,0,0.08)]`}
+      } max-w-md w-full bg-white dark:bg-slate-800 rounded-xl pointer-events-auto flex border border-cyan-300 dark:border-cyan-700 backdrop-blur-sm transform transition-all duration-300 ease-out shadow-[0_20px_50px_rgba(0,0,0,0.12),0_8px_20px_rgba(0,0,0,0.08)]`}
       role="status"
       aria-live="polite"
       aria-atomic="true"
@@ -205,29 +203,29 @@ export const ProgressToast = ({
           <div className="flex-shrink-0">
             <div
               className={`${
-                isComplete ? 'bg-gradient-to-br from-green-50 to-green-100' : 'bg-gradient-to-br from-purple-50 to-purple-100'
+                isComplete ? 'bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/30' : 'bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30'
               } rounded-lg p-2 ring-1 ring-white/50 shadow-sm flex items-center justify-center`}
             >
               {isComplete ? (
-                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
               ) : (
-                <div className="animate-spin rounded-full h-4 w-4 border-2 border-purple-600 border-t-transparent"></div>
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-purple-600 dark:border-purple-400 border-t-transparent"></div>
               )}
             </div>
           </div>
           <div className="ml-3 flex-1 min-w-0">
-            <p className="text-sm font-semibold text-slate-900 leading-tight">{title}</p>
-            {message && <p className="mt-1 text-sm text-slate-700 leading-relaxed">{message}</p>}
+            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 leading-tight">{title}</p>
+            {message && <p className="mt-1 text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{message}</p>}
           </div>
         </div>
 
         {/* Progress bar */}
-        <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden shadow-inner ring-1 ring-slate-300/50">
+        <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-3 overflow-hidden shadow-inner ring-1 ring-slate-300/50 dark:ring-slate-600/50">
           <div
             className={`h-3 transition-all duration-500 ease-out ${
               isComplete
-                ? 'bg-green-600 shadow-sm shadow-green-600/20'
-                : 'bg-purple-600 shadow-sm shadow-purple-600/20'
+                ? 'bg-green-600 dark:bg-green-500 shadow-sm shadow-green-600/20 dark:shadow-green-500/20'
+                : 'bg-purple-600 dark:bg-purple-500 shadow-sm shadow-purple-600/20 dark:shadow-purple-500/20'
             }`}
             style={{ width: `${progressClamped}%` }}
             role="progressbar"
@@ -240,21 +238,21 @@ export const ProgressToast = ({
         {/* Progress percentage */}
         {showPercentage && (
           <div className="mt-2.5 flex items-center justify-between">
-            <p className="text-xs text-slate-600 font-medium">
+            <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">
               {isComplete ? 'Complete' : 'In progress...'}
             </p>
-            <p className="text-xs font-bold text-slate-800 tabular-nums">{Math.round(progressClamped)}%</p>
+            <p className="text-xs font-bold text-slate-800 dark:text-slate-200 tabular-nums">{Math.round(progressClamped)}%</p>
           </div>
         )}
       </div>
 
       {/* Dismiss button */}
       {dismissible && (
-        <div className="flex border-l border-slate-200">
+        <div className="flex border-l border-slate-200 dark:border-slate-700">
           <button
             type="button"
             onClick={() => toast.dismiss(t.id)}
-            className="w-full border border-transparent rounded-none rounded-r-xl p-3 flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-50/80 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-purple-600 transition-all duration-200 active:scale-95"
+            className="w-full border border-transparent rounded-none rounded-r-xl p-3 flex items-center justify-center text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-50/80 dark:hover:bg-slate-700/80 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-purple-600 dark:focus:ring-purple-400 transition-all duration-200 active:scale-95"
             aria-label="Dismiss notification"
           >
             <X className="h-4 w-4" />
@@ -350,20 +348,20 @@ export const CompactToast = ({ t, type = 'info', message }) => {
 export const AvatarToast = ({ t, type = 'info', title, message, avatarUrl, avatarAlt, actions = [] }) => {
   const typeConfig = {
     success: {
-      borderColor: 'border-green-300',
-      ringColor: 'focus:ring-green-500',
+      borderColor: 'border-cyan-300 dark:border-cyan-700',
+      ringColor: 'focus:ring-green-500 dark:focus:ring-green-400',
     },
     error: {
-      borderColor: 'border-red-300',
-      ringColor: 'focus:ring-red-600',
+      borderColor: 'border-cyan-300 dark:border-cyan-700',
+      ringColor: 'focus:ring-red-600 dark:focus:ring-red-400',
     },
     warning: {
-      borderColor: 'border-yellow-300',
-      ringColor: 'focus:ring-yellow-500',
+      borderColor: 'border-cyan-300 dark:border-cyan-700',
+      ringColor: 'focus:ring-yellow-500 dark:focus:ring-yellow-400',
     },
     info: {
-      borderColor: 'border-indigo-300',
-      ringColor: 'focus:ring-purple-600',
+      borderColor: 'border-cyan-300 dark:border-cyan-700',
+      ringColor: 'focus:ring-purple-600 dark:focus:ring-purple-400',
     },
   };
 
@@ -373,7 +371,7 @@ export const AvatarToast = ({ t, type = 'info', title, message, avatarUrl, avata
     <div
       className={`${
         t.visible ? 'animate-toast-enter' : 'animate-toast-leave'
-      } max-w-md w-full bg-white rounded-xl pointer-events-auto flex border ${
+      } max-w-md w-full bg-white dark:bg-slate-800 rounded-xl pointer-events-auto flex border ${
         config.borderColor
       } backdrop-blur-sm transform transition-all duration-300 ease-out hover:shadow-[0_25px_60px_rgba(0,0,0,0.15)] shadow-[0_20px_50px_rgba(0,0,0,0.12),0_8px_20px_rgba(0,0,0,0.08)]`}
       role="alert"
@@ -388,10 +386,10 @@ export const AvatarToast = ({ t, type = 'info', title, message, avatarUrl, avata
               <img
                 src={avatarUrl}
                 alt={avatarAlt || 'Avatar'}
-                className="h-10 w-10 rounded-full ring-2 ring-white shadow-lg object-cover"
+                className="h-10 w-10 rounded-full ring-2 ring-white dark:ring-slate-700 shadow-lg object-cover"
               />
             ) : (
-              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-purple-500 via-purple-600 to-indigo-600 ring-2 ring-white shadow-lg flex items-center justify-center">
+              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-purple-500 via-purple-600 to-indigo-600 ring-2 ring-white dark:ring-slate-700 shadow-lg flex items-center justify-center">
                 <span className="text-white text-sm font-bold">
                   {title?.charAt(0) || '?'}
                 </span>
@@ -401,9 +399,9 @@ export const AvatarToast = ({ t, type = 'info', title, message, avatarUrl, avata
 
           {/* Content */}
           <div className="ml-3 flex-1 min-w-0">
-            {title && <p className="text-sm font-semibold text-slate-900 leading-tight">{title}</p>}
+            {title && <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 leading-tight">{title}</p>}
             {message && (
-              <p className={`${title ? 'mt-1' : ''} text-sm text-slate-700 leading-relaxed`}>
+              <p className={`${title ? 'mt-1' : ''} text-sm text-slate-700 dark:text-slate-300 leading-relaxed`}>
                 {message}
               </p>
             )}
@@ -423,10 +421,10 @@ export const AvatarToast = ({ t, type = 'info', title, message, avatarUrl, avata
                     }}
                     className={`inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg ${
                       action.variant === 'primary'
-                        ? 'bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white focus:ring-purple-600 shadow-lg shadow-purple-600/20'
+                        ? 'bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-700 dark:hover:bg-purple-800 dark:active:bg-purple-900 text-white focus:ring-purple-600 dark:focus:ring-purple-400 shadow-lg shadow-purple-600/20 dark:shadow-purple-900/30'
                         : action.variant === 'danger'
-                        ? 'bg-red-600 hover:bg-red-700 active:bg-red-800 text-white focus:ring-red-600 shadow-lg shadow-red-600/20'
-                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200 focus:ring-slate-400 border border-slate-300'
+                        ? 'bg-red-600 hover:bg-red-700 active:bg-red-800 dark:bg-red-700 dark:hover:bg-red-800 dark:active:bg-red-900 text-white focus:ring-red-600 dark:focus:ring-red-400 shadow-lg shadow-red-600/20 dark:shadow-red-900/30'
+                        : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600 focus:ring-slate-400 dark:focus:ring-slate-500 border border-slate-300 dark:border-slate-600'
                     } transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-95`}
                   >
                     {action.icon && <action.icon className="h-3.5 w-3.5" />}
@@ -440,11 +438,11 @@ export const AvatarToast = ({ t, type = 'info', title, message, avatarUrl, avata
       </div>
 
       {/* Dismiss button */}
-      <div className="flex border-l border-slate-200">
+      <div className="flex border-l border-slate-200 dark:border-slate-700">
         <button
           type="button"
           onClick={() => toast.dismiss(t.id)}
-          className={`w-full border border-transparent rounded-none rounded-r-xl p-3 flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-50/80 focus:outline-none focus:ring-2 focus:ring-inset ${config.ringColor} transition-all duration-200 active:scale-95`}
+          className={`w-full border border-transparent rounded-none rounded-r-xl p-3 flex items-center justify-center text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-50/80 dark:hover:bg-slate-700/80 focus:outline-none focus:ring-2 focus:ring-inset ${config.ringColor} transition-all duration-200 active:scale-95`}
           aria-label="Dismiss notification"
         >
           <X className="h-4 w-4" />
@@ -471,31 +469,31 @@ export const ExpandableToast = ({ t, type = 'info', title, preview, fullContent,
   const typeConfig = {
     success: {
       icon: CheckCircle2,
-      iconColor: 'text-green-600',
-      iconBgColor: 'bg-gradient-to-br from-green-50 to-green-100',
-      borderColor: 'border-green-300',
-      ringColor: 'focus:ring-green-500',
+      iconColor: 'text-green-600 dark:text-green-400',
+      iconBgColor: 'bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/30',
+      borderColor: 'border-cyan-300 dark:border-cyan-700',
+      ringColor: 'focus:ring-green-500 dark:focus:ring-green-400',
     },
     error: {
       icon: AlertCircle,
-      iconColor: 'text-red-600',
-      iconBgColor: 'bg-gradient-to-br from-red-50 to-red-100',
-      borderColor: 'border-red-300',
-      ringColor: 'focus:ring-red-600',
+      iconColor: 'text-red-600 dark:text-red-400',
+      iconBgColor: 'bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-800/30',
+      borderColor: 'border-cyan-300 dark:border-cyan-700',
+      ringColor: 'focus:ring-red-600 dark:focus:ring-red-400',
     },
     warning: {
       icon: AlertTriangle,
-      iconColor: 'text-yellow-600',
-      iconBgColor: 'bg-gradient-to-br from-yellow-50 to-yellow-100',
-      borderColor: 'border-yellow-300',
-      ringColor: 'focus:ring-yellow-500',
+      iconColor: 'text-yellow-600 dark:text-yellow-400',
+      iconBgColor: 'bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/30 dark:to-yellow-800/30',
+      borderColor: 'border-cyan-300 dark:border-cyan-700',
+      ringColor: 'focus:ring-yellow-500 dark:focus:ring-yellow-400',
     },
     info: {
       icon: Info,
-      iconColor: 'text-indigo-600',
-      iconBgColor: 'bg-gradient-to-br from-indigo-50 to-indigo-100',
-      borderColor: 'border-indigo-300',
-      ringColor: 'focus:ring-purple-600',
+      iconColor: 'text-indigo-600 dark:text-indigo-400',
+      iconBgColor: 'bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/30 dark:to-indigo-800/30',
+      borderColor: 'border-cyan-300 dark:border-cyan-700',
+      ringColor: 'focus:ring-purple-600 dark:focus:ring-purple-400',
     },
   };
 
@@ -506,7 +504,7 @@ export const ExpandableToast = ({ t, type = 'info', title, preview, fullContent,
     <div
       className={`${
         t.visible ? 'animate-toast-enter' : 'animate-toast-leave'
-      } max-w-md w-full bg-white rounded-xl pointer-events-auto flex border ${
+      } max-w-md w-full bg-white dark:bg-slate-800 rounded-xl pointer-events-auto flex border ${
         config.borderColor
       } backdrop-blur-sm transform transition-all duration-300 ease-out hover:shadow-[0_25px_60px_rgba(0,0,0,0.15)] shadow-[0_20px_50px_rgba(0,0,0,0.12),0_8px_20px_rgba(0,0,0,0.08)]`}
       role="alert"
@@ -524,14 +522,14 @@ export const ExpandableToast = ({ t, type = 'info', title, preview, fullContent,
 
           {/* Content */}
           <div className="ml-3 flex-1 min-w-0">
-            {title && <p className="text-sm font-semibold text-slate-900 leading-tight">{title}</p>}
+            {title && <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 leading-tight">{title}</p>}
 
             {/* Preview/Full Content */}
             <div className="mt-1.5">
               {isExpanded ? (
-                <div className="text-sm text-slate-700 leading-relaxed">{fullContent}</div>
+                <div className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{fullContent}</div>
               ) : (
-                <p className="text-sm text-slate-700 leading-relaxed line-clamp-2">{preview}</p>
+                <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed line-clamp-2">{preview}</p>
               )}
             </div>
 
@@ -540,7 +538,7 @@ export const ExpandableToast = ({ t, type = 'info', title, preview, fullContent,
               <button
                 type="button"
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="mt-2.5 text-xs font-semibold text-purple-600 hover:text-purple-700 focus:outline-none focus:underline underline-offset-2 transition-colors duration-150"
+                className="mt-2.5 text-xs font-semibold text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 focus:outline-none focus:underline underline-offset-2 transition-colors duration-150"
               >
                 {isExpanded ? 'Show less' : 'Show more'}
               </button>
@@ -561,10 +559,10 @@ export const ExpandableToast = ({ t, type = 'info', title, preview, fullContent,
                     }}
                     className={`inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg ${
                       action.variant === 'primary'
-                        ? 'bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white focus:ring-purple-600 shadow-lg shadow-purple-600/20'
+                        ? 'bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-700 dark:hover:bg-purple-800 dark:active:bg-purple-900 text-white focus:ring-purple-600 dark:focus:ring-purple-400 shadow-lg shadow-purple-600/20 dark:shadow-purple-900/30'
                         : action.variant === 'danger'
-                        ? 'bg-red-600 hover:bg-red-700 active:bg-red-800 text-white focus:ring-red-600 shadow-lg shadow-red-600/20'
-                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200 focus:ring-slate-400 border border-slate-300'
+                        ? 'bg-red-600 hover:bg-red-700 active:bg-red-800 dark:bg-red-700 dark:hover:bg-red-800 dark:active:bg-red-900 text-white focus:ring-red-600 dark:focus:ring-red-400 shadow-lg shadow-red-600/20 dark:shadow-red-900/30'
+                        : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600 focus:ring-slate-400 dark:focus:ring-slate-500 border border-slate-300 dark:border-slate-600'
                     } transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-95`}
                   >
                     {action.icon && <action.icon className="h-3.5 w-3.5" />}
@@ -578,11 +576,11 @@ export const ExpandableToast = ({ t, type = 'info', title, preview, fullContent,
       </div>
 
       {/* Dismiss button */}
-      <div className="flex border-l border-slate-200">
+      <div className="flex border-l border-slate-200 dark:border-slate-700">
         <button
           type="button"
           onClick={() => toast.dismiss(t.id)}
-          className={`w-full border border-transparent rounded-none rounded-r-xl p-3 flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-50/80 focus:outline-none focus:ring-2 focus:ring-inset ${config.ringColor} transition-all duration-200 active:scale-95`}
+          className={`w-full border border-transparent rounded-none rounded-r-xl p-3 flex items-center justify-center text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-50/80 dark:hover:bg-slate-700/80 focus:outline-none focus:ring-2 focus:ring-inset ${config.ringColor} transition-all duration-200 active:scale-95`}
           aria-label="Dismiss notification"
         >
           <X className="h-4 w-4" />

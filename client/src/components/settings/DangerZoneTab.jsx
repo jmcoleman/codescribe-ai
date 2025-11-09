@@ -84,9 +84,9 @@ export function DangerZoneTab() {
   return (
     <div className="space-y-6">
       {/* Compact Privacy Info Banner */}
-      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-        <p className="text-sm text-blue-800 dark:text-blue-200 flex items-start gap-2">
-          <Shield className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
+      <div className="bg-blue-50 dark:bg-cyan-950/20 border border-blue-200 dark:border-cyan-400/30 rounded-lg p-4">
+        <p className="text-sm text-blue-800 dark:text-cyan-200 flex items-start gap-2">
+          <Shield className="w-4 h-4 flex-shrink-0 dark:text-cyan-400" aria-hidden="true" />
           <span>
             Deleting your account removes only account data. Your code is never stored on our servers.
           </span>
@@ -146,7 +146,7 @@ export function DangerZoneTab() {
         {/* Button VISIBLE without scrolling */}
         <button
           onClick={() => setShowDeleteConfirmation(true)}
-          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white rounded-lg font-semibold shadow-lg shadow-red-600/20 transition-all duration-200"
+          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-red-600 hover:bg-red-700 active:bg-red-800 dark:bg-red-700 dark:hover:bg-red-800 dark:active:bg-red-900 text-white rounded-lg font-semibold shadow-lg shadow-red-600/20 dark:shadow-red-900/30 transition-all duration-200"
         >
           <Trash2 className="w-5 h-5" aria-hidden="true" />
           <span>Delete My Account</span>
@@ -214,7 +214,7 @@ export function DangerZoneTab() {
               <button
                 onClick={handleDeleteAccount}
                 disabled={confirmationText !== 'DELETE MY ACCOUNT' || isDeleting}
-                className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white rounded-lg font-semibold shadow-lg shadow-red-600/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 bg-red-600 hover:bg-red-700 active:bg-red-800 dark:bg-red-700 dark:hover:bg-red-800 dark:active:bg-red-900 text-white rounded-lg font-semibold shadow-lg shadow-red-600/20 dark:shadow-red-900/30 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isDeleting ? (
                   <>

@@ -1,7 +1,8 @@
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
 import { CodePanel } from '../CodePanel';
+import { renderWithTheme as render } from '../../__tests__/utils/renderWithTheme';
 
 // Mock LazyMonacoEditor to avoid loading Monaco in tests
 vi.mock('../LazyMonacoEditor', () => ({

@@ -309,7 +309,7 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup, onSwitchToForgot
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+      className="modal-backdrop"
       onClick={handleBackdropClick}
       role="dialog"
       aria-modal="true"
@@ -317,24 +317,24 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup, onSwitchToForgot
     >
       <div
         ref={modalRef}
-        className="bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+        className="modal-container max-w-md w-full max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-200">
+        <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700">
           <h2
             id="login-modal-title"
-            className="text-2xl font-semibold text-slate-900"
+            className="text-2xl font-semibold text-slate-900 dark:text-slate-100"
           >
             Sign In
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="p-2 hover:bg-slate-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
+            className="icon-btn interactive-scale-sm focus-ring-light"
             aria-label="Close login modal"
           >
-            <X className="w-5 h-5 text-slate-600" aria-hidden="true" />
+            <X className="w-5 h-5 text-slate-600 dark:text-slate-400" aria-hidden="true" />
           </button>
         </div>
 
@@ -343,11 +343,11 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup, onSwitchToForgot
           {/* Error Message */}
           {errorMessage && (
             <div
-              className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-lg"
+              className="flex items-start gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/50 rounded-lg"
               role="alert"
             >
-              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
-              <p className="text-sm text-red-800">{errorMessage}</p>
+              <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
+              <p className="text-sm text-red-800 dark:text-red-200">{errorMessage}</p>
             </div>
           )}
 
@@ -357,7 +357,7 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup, onSwitchToForgot
             <div>
               <label
                 htmlFor="login-email"
-                className="block text-sm font-medium text-slate-700 mb-2"
+                className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
               >
                 Email Address
               </label>
@@ -376,8 +376,8 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup, onSwitchToForgot
                     if (emailError) setEmailError('');
                   }}
                   placeholder="you@example.com"
-                  className={`block w-full pl-10 pr-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-shadow ${
-                    emailError ? 'border-red-300 bg-red-50' : 'border-slate-300'
+                  className={`block w-full pl-10 pr-3 py-2.5 border rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-600 dark:focus:ring-purple-400 focus:border-transparent transition-shadow ${
+                    emailError ? 'border-red-300 dark:border-red-500 bg-red-50 dark:bg-red-900/20' : 'border-slate-300 dark:border-slate-600'
                   }`}
                   autoComplete="off"
                   disabled={isLoading}
@@ -386,7 +386,7 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup, onSwitchToForgot
                 />
               </div>
               {emailError && (
-                <p id="email-error" className="mt-1.5 text-sm text-red-600" role="alert">
+                <p id="email-error" className="mt-1.5 text-sm text-red-600 dark:text-red-400" role="alert">
                   {emailError}
                 </p>
               )}
@@ -396,7 +396,7 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup, onSwitchToForgot
             <div>
               <label
                 htmlFor="login-password"
-                className="block text-sm font-medium text-slate-700 mb-2"
+                className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
               >
                 Password
               </label>
@@ -415,8 +415,8 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup, onSwitchToForgot
                     if (passwordError) setPasswordError('');
                   }}
                   placeholder="Enter your password"
-                  className={`block w-full pl-10 pr-11 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-shadow ${
-                    passwordError ? 'border-red-300 bg-red-50' : 'border-slate-300'
+                  className={`block w-full pl-10 pr-11 py-2.5 border rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-600 dark:focus:ring-purple-400 focus:border-transparent transition-shadow ${
+                    passwordError ? 'border-red-300 dark:border-red-500 bg-red-50 dark:bg-red-900/20' : 'border-slate-300 dark:border-slate-600'
                   }`}
                   autoComplete="current-password"
                   disabled={isLoading}
@@ -426,7 +426,7 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup, onSwitchToForgot
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none focus:text-slate-600 transition-colors"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-400 focus:outline-none focus:text-slate-600 dark:focus:text-slate-400 transition-colors"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                   disabled={isLoading}
                 >
@@ -438,7 +438,7 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup, onSwitchToForgot
                 </button>
               </div>
               {passwordError && (
-                <p id="password-error" className="mt-1.5 text-sm text-red-600" role="alert">
+                <p id="password-error" className="mt-1.5 text-sm text-red-600 dark:text-red-400" role="alert">
                   {passwordError}
                 </p>
               )}
@@ -449,7 +449,7 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup, onSwitchToForgot
               <button
                 type="button"
                 onClick={onSwitchToForgot}
-                className="text-sm text-purple-600 hover:text-purple-700 font-medium focus:outline-none focus:underline"
+                className="text-sm text-purple-600 dark:text-cyan-400 hover:text-purple-700 dark:hover:text-cyan-300 font-medium focus:outline-none focus:underline"
                 disabled={isLoading}
               >
                 Forgot password?
@@ -470,10 +470,10 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup, onSwitchToForgot
           {/* Divider */}
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-slate-300" />
+              <div className="w-full border-t border-slate-300 dark:border-slate-600" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-slate-500">Or continue with</span>
+              <span className="px-2 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400">Or continue with</span>
             </div>
           </div>
 
@@ -482,28 +482,28 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup, onSwitchToForgot
             type="button"
             onClick={handleGithubLogin}
             disabled={isLoading || isGithubLoading}
-            className="w-full flex items-center justify-center gap-3 px-4 py-2.5 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn-secondary w-full flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isGithubLoading ? (
               <>
-                <div className="w-5 h-5 border-2 border-slate-300 border-t-slate-700 rounded-full animate-spin" aria-hidden="true" />
-                <span className="text-sm font-medium text-slate-700">Connecting to GitHub...</span>
+                <div className="w-5 h-5 border-2 border-slate-300 dark:border-slate-600 border-t-slate-700 rounded-full animate-spin" aria-hidden="true" />
+                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Connecting to GitHub...</span>
               </>
             ) : (
               <>
-                <Github className="w-5 h-5 text-slate-700" aria-hidden="true" />
-                <span className="text-sm font-medium text-slate-700">GitHub</span>
+                <Github className="w-5 h-5 text-slate-700 dark:text-slate-300" aria-hidden="true" />
+                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">GitHub</span>
               </>
             )}
           </button>
 
           {/* Sign Up Link */}
-          <p className="text-center text-sm text-slate-600">
+          <p className="text-center text-sm text-slate-600 dark:text-slate-400">
             Don't have an account?{' '}
             <button
               type="button"
               onClick={onSwitchToSignup}
-              className="text-purple-600 hover:text-purple-700 font-medium focus:outline-none focus:underline"
+              className="text-purple-600 dark:text-cyan-400 hover:text-purple-700 dark:hover:text-cyan-300 font-medium focus:outline-none focus:underline"
               disabled={isLoading}
             >
               Sign up

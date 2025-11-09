@@ -4,6 +4,17 @@
 @tailwind components;
 @tailwind utilities;
 
+/* CSS Variables for Code Blocks */
+:root {
+  --code-bg: #F8FAFC;
+  --code-border: #E2E8F0;
+}
+
+.dark {
+  --code-bg: #1E293B;
+  --code-border: #334155;
+}
+
 /* Minimum page width - must be outside @layer to take precedence */
 html,
 body {
@@ -24,18 +35,55 @@ body {
 
   /* Default focus-visible style for all interactive elements */
   *:focus-visible {
-    @apply outline-none ring-2 ring-purple-600 ring-offset-2;
+    @apply outline-none ring-2 ring-purple-600 dark:ring-purple-400 ring-offset-2 ring-offset-white dark:ring-offset-slate-950;
   }
 
   /* High contrast mode support - ensure focus indicators are visible */
   @media (prefers-contrast: high) {
     *:focus-visible {
-      @apply ring-4 ring-purple-600 ring-offset-4;
+      @apply ring-4 ring-purple-600 dark:ring-purple-400 ring-offset-4;
     }
   }
 }
 
-/* Custom Scrollbar */
+/* Dark Mode Scrollbar */
+@layer utilities {
+  .dark .scrollbar-custom::-webkit-scrollbar-track {
+    @apply bg-slate-800 rounded;
+  }
+
+  .dark .scrollbar-custom::-webkit-scrollbar-thumb {
+    @apply bg-slate-600 rounded hover:bg-slate-500;
+  }
+}
+
+/* Custom Scrollbar - Applied to all scrollable elements */
+@layer base {
+  /* Apply to all elements with overflow scrolling */
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  *::-webkit-scrollbar-track {
+    @apply bg-slate-100 rounded;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 rounded hover:bg-slate-400;
+  }
+
+  /* Dark mode scrollbars */
+  .dark *::-webkit-scrollbar-track {
+    @apply bg-slate-800 rounded;
+  }
+
+  .dark *::-webkit-scrollbar-thumb {
+    @apply bg-slate-600 rounded hover:bg-slate-500;
+  }
+}
+
+/* Custom Scrollbar utility class (for explicit usage if needed) */
 @layer utilities {
   .scrollbar-custom::-webkit-scrollbar {
     width: 8px;
@@ -48,6 +96,75 @@ body {
 
   .scrollbar-custom::-webkit-scrollbar-thumb {
     @apply bg-slate-300 rounded hover:bg-slate-400;
+  }
+
+  /* Common UI Patterns */
+
+  /* Focus Ring - Purple theme */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-purple-600 dark:focus:ring-purple-400 focus:ring-offset-2;
+  }
+
+  .focus-ring-light {
+    @apply focus-ring focus:ring-offset-white dark:focus:ring-offset-slate-950;
+  }
+
+  .focus-ring-dark {
+    @apply focus-ring focus:ring-offset-slate-900 dark:focus:ring-offset-slate-800;
+  }
+
+  /* Transitions */
+  .transition-smooth {
+    @apply transition-all duration-200 motion-reduce:transition-none;
+  }
+
+  .transition-colors-smooth {
+    @apply transition-colors duration-200 motion-reduce:transition-none;
+  }
+
+  /* Interactive States */
+  .interactive-scale {
+    @apply hover:scale-[1.02] active:scale-[0.98] transition-transform duration-200 motion-reduce:transition-none;
+  }
+
+  .interactive-scale-sm {
+    @apply hover:scale-[1.05] active:scale-95 transition-transform duration-200 motion-reduce:transition-none;
+  }
+
+  /* Modal Container */
+  .modal-container {
+    @apply bg-white dark:bg-slate-800 rounded-xl shadow-2xl ring-1 ring-slate-200 dark:ring-slate-700;
+  }
+
+  .modal-backdrop {
+    @apply fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4;
+  }
+
+  /* Button Base Styles */
+  .btn-base {
+    @apply px-4 py-2 rounded-lg font-medium transition-smooth focus-ring-light;
+  }
+
+  .btn-primary {
+    @apply btn-base bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-700 dark:hover:bg-purple-800 dark:active:bg-purple-900 text-white shadow-lg shadow-purple-600/20 dark:shadow-purple-900/30;
+  }
+
+  .btn-secondary {
+    @apply btn-base bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-900 dark:text-slate-100;
+  }
+
+  /* Icon Button */
+  .icon-btn {
+    @apply p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors-smooth focus-ring-light;
+  }
+
+  /* Input Field */
+  .input-field {
+    @apply w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-transparent transition-shadow;
+  }
+
+  .input-error {
+    @apply border-red-300 dark:border-red-500 bg-red-50 dark:bg-red-900/20;
   }
 
   /* Screen Reader Only - Hidden visually but accessible to screen readers */
@@ -74,51 +191,157 @@ body {
     clip: auto;
     white-space: normal;
   }
+
+  /* Toast Dark Mode Support */
+  /* Target only Sonner toast notifications, not all status/alert elements */
+  @media (prefers-color-scheme: dark) {
+    [data-sonner-toast] {
+      background: rgb(30 41 59) !important; /* slate-800 for dark mode */
+      color: rgb(241 245 249) !important; /* slate-100 for dark mode */
+      border-color: rgb(51 65 85) !important; /* slate-700 for dark mode */
+    }
+  }
+
+  /* If using dark class (Tailwind dark mode class strategy) */
+  .dark [data-sonner-toast] {
+    background: rgb(30 41 59) !important; /* slate-800 for dark mode */
+    color: rgb(241 245 249) !important; /* slate-100 for dark mode */
+    border-color: rgb(51 65 85) !important; /* slate-700 for dark mode */
+  }
 }
 
 /* Prose Styles for Markdown */
 .prose {
-  @apply text-slate-700;
+  @apply text-slate-700 dark:text-slate-300 max-w-none;
+}
+
+/* Dark mode prose invert utility */
+.dark .prose-invert {
+  @apply text-slate-200;
+}
+
+.prose h1,
+.dark .prose-invert h1 {
+  @apply text-2xl font-bold mb-4 mt-0;
 }
 
 .prose h1 {
-  @apply text-2xl font-semibold text-slate-900 mb-4 mt-6;
+  @apply text-slate-900;
+}
+
+.dark .prose-invert h1 {
+  @apply text-slate-100;
+}
+
+.prose h1:not(:first-child),
+.dark .prose-invert h1:not(:first-child) {
+  @apply mt-6;
+}
+
+.prose h2,
+.dark .prose-invert h2 {
+  @apply text-xl font-bold mb-3;
 }
 
 .prose h2 {
-  @apply text-xl font-semibold text-slate-900 mb-3 mt-5;
+  @apply text-slate-900;
+}
+
+.dark .prose-invert h2 {
+  @apply text-slate-100;
+}
+
+.prose h2:not(:first-child),
+.dark .prose-invert h2:not(:first-child) {
+  @apply mt-5;
+}
+
+.prose h3,
+.dark .prose-invert h3 {
+  @apply text-base font-semibold mb-2;
 }
 
 .prose h3 {
-  @apply text-lg font-semibold text-slate-900 mb-2 mt-4;
+  @apply text-slate-900;
 }
 
-.prose p {
-  @apply mb-4 leading-relaxed;
+.dark .prose-invert h3 {
+  @apply text-slate-100;
 }
 
-.prose ul, .prose ol {
-  @apply mb-4 ml-6;
+.prose h3:not(:first-child),
+.dark .prose-invert h3:not(:first-child) {
+  @apply mt-4;
 }
 
-.prose li {
+.prose p,
+.dark .prose-invert p {
+  @apply mb-3 leading-relaxed;
+}
+
+.prose ul,
+.prose ol,
+.dark .prose-invert ul,
+.dark .prose-invert ol {
+  @apply mb-3 ml-4;
+}
+
+.prose li,
+.dark .prose-invert li {
   @apply mb-1;
+}
+
+.prose strong,
+.dark .prose-invert strong {
+  @apply font-semibold;
+}
+
+.prose strong {
+  @apply text-slate-900;
+}
+
+.dark .prose-invert strong {
+  @apply text-slate-100;
 }
 
 .prose code {
   @apply bg-slate-100 px-1.5 py-0.5 rounded text-xs font-mono text-slate-800;
 }
 
+.dark .prose-invert code {
+  @apply bg-slate-800 text-slate-200;
+}
+
 .prose pre {
   @apply bg-slate-50 p-4 rounded-lg overflow-x-auto mb-4 border border-slate-200;
 }
 
-.prose pre code {
+.dark .prose-invert pre {
+  @apply bg-slate-900/50 border-slate-700;
+}
+
+.prose pre code,
+.dark .prose-invert pre code {
   @apply bg-transparent p-0;
 }
 
 .prose a {
   @apply text-purple-600 hover:text-purple-700 underline;
+}
+
+.dark .prose-invert a {
+  @apply text-cyan-400 hover:text-cyan-300;
+}
+
+/* Attribution footer styling - smaller, more subtle */
+.prose em,
+.dark .prose-invert em {
+  @apply text-xs text-slate-500 dark:text-slate-400 not-italic;
+}
+
+.prose hr + p em,
+.dark .prose-invert hr + p em {
+  @apply text-xs text-slate-500 dark:text-slate-400;
 }
 
 /* Loading Animation */

@@ -1,9 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
+import { renderWithTheme as render } from './utils/renderWithTheme';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import App from '../App';
 import { AuthProvider } from '../contexts/AuthContext';
+import { ThemeProvider } from '../contexts/ThemeContext';
 
 /**
  * File Upload Integration Tests
@@ -39,13 +41,15 @@ describe('App - File Upload Integration', () => {
     vi.restoreAllMocks();
   });
 
-  // Helper to render App with AuthProvider and Router
+  // Helper to render App with ThemeProvider, AuthProvider and Router
   const renderApp = () => {
     return render(
       <MemoryRouter>
-        <AuthProvider>
-          <App />
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <App />
+          </AuthProvider>
+        </ThemeProvider>
       </MemoryRouter>
     );
   };

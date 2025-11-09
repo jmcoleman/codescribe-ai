@@ -29,16 +29,17 @@ import {
 const DEFAULT_OPTIONS = {
   duration: 4000,
   position: 'top-right',
+  className: '', // Allow Tailwind classes
   style: {
     borderRadius: '0.75rem', // 12px - matches CustomToast rounded-xl
-    background: '#FFFFFF', // white for clean, modern look
-    color: '#0F172A', // slate-900 for high contrast
+    background: 'rgb(255 255 255)', // white for light mode - updated by dark mode media query
+    color: 'rgb(15 23 42)', // slate-900 for light mode - updated by dark mode media query
     fontSize: '0.875rem', // 14px - text-sm - CONSISTENT across all toasts
     fontFamily: 'Inter, system-ui, sans-serif',
     fontWeight: '400', // font-normal
     padding: '1rem', // 16px - matches CustomToast p-4
     maxWidth: '28rem', // 448px - matches CustomToast max-w-md
-    border: '1px solid #CBD5E1', // slate-300 border - matches CustomToast default
+    border: '1px solid #67E8F9', // cyan-300 - brand cyan border for consistency
     boxShadow: '0 20px 50px rgba(0, 0, 0, 0.12), 0 8px 20px rgba(0, 0, 0, 0.08)', // matches CustomToast
     backdropFilter: 'blur(8px)', // matches CustomToast backdrop-blur-sm
     display: 'flex', // Enable flexbox
@@ -48,11 +49,11 @@ const DEFAULT_OPTIONS = {
   success: {
     duration: 3000,
     iconTheme: {
-      primary: '#16A34A', // green-600 (WCAG AA compliant)
+      primary: '#16A34A', // green-600 (WCAG AA compliant) - icon indicates success
       secondary: '#FFFFFF', // white background for icon
     },
     style: {
-      border: '1px solid #86EFAC', // green-300 - matches CustomToast success border
+      border: '1px solid #67E8F9', // cyan-300 - consistent brand border (status shown via icon)
       boxShadow: '0 20px 50px rgba(0, 0, 0, 0.12), 0 8px 20px rgba(0, 0, 0, 0.08)', // consistent shadow
       fontSize: '0.875rem', // text-sm - CONSISTENT
       fontWeight: '400', // font-normal - CONSISTENT
@@ -61,11 +62,11 @@ const DEFAULT_OPTIONS = {
   error: {
     duration: 5000,
     iconTheme: {
-      primary: '#DC2626', // red-600 (WCAG AA compliant)
+      primary: '#DC2626', // red-600 (WCAG AA compliant) - icon indicates error
       secondary: '#FFFFFF', // white background for icon
     },
     style: {
-      border: '1px solid #FCA5A5', // red-300 - matches CustomToast error border
+      border: '1px solid #67E8F9', // cyan-300 - consistent brand border (status shown via icon)
       boxShadow: '0 20px 50px rgba(0, 0, 0, 0.12), 0 8px 20px rgba(0, 0, 0, 0.08)', // consistent shadow
       fontSize: '0.875rem', // text-sm - CONSISTENT
       fontWeight: '400', // font-normal - CONSISTENT
@@ -73,11 +74,11 @@ const DEFAULT_OPTIONS = {
   },
   loading: {
     iconTheme: {
-      primary: '#A855F7', // purple-500 (brand primary)
+      primary: '#A855F7', // purple-500 (brand primary) - icon indicates loading
       secondary: '#FFFFFF', // white background for icon
     },
     style: {
-      border: '1px solid #C4B5FD', // purple-300 - matches brand
+      border: '1px solid #67E8F9', // cyan-300 - consistent brand border (status shown via icon)
       boxShadow: '0 20px 50px rgba(0, 0, 0, 0.12), 0 8px 20px rgba(0, 0, 0, 0.08)', // consistent shadow
       fontSize: '0.875rem', // text-sm - CONSISTENT
       fontWeight: '400', // font-normal - CONSISTENT
@@ -530,14 +531,14 @@ export const toastBatch = (title, total, completed = 0, failed = 0) => {
 export const toastShortcut = (shortcut, action) => {
   return toast.custom(
     () => (
-      <div className="flex items-center gap-3 bg-white text-slate-900 px-5 py-3.5 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.12),0_8px_20px_rgba(0,0,0,0.08)] border border-slate-300 backdrop-blur-sm">
-        <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-lg flex items-center justify-center ring-1 ring-white/50 shadow-sm">
+      <div className="flex items-center gap-3 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 px-5 py-3.5 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.12),0_8px_20px_rgba(0,0,0,0.08)] border border-slate-300 dark:border-slate-700 backdrop-blur-sm">
+        <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/30 dark:to-indigo-900/30 rounded-lg flex items-center justify-center ring-1 ring-white/50 shadow-sm">
           <span className="text-base">⌨️</span>
         </div>
-        <kbd className="px-3 py-1.5 text-xs font-bold text-slate-800 bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-300 rounded-lg shadow-sm font-mono tracking-wide">
+        <kbd className="px-3 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-200 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-700 dark:to-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg shadow-sm font-mono tracking-wide">
           {shortcut}
         </kbd>
-        <span className="text-sm text-slate-700 font-semibold tracking-tight">{action}</span>
+        <span className="text-sm text-slate-700 dark:text-slate-300 font-semibold tracking-tight">{action}</span>
       </div>
     ),
     {

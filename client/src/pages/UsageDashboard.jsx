@@ -5,6 +5,7 @@ import {
   Zap,
   Calendar,
   ArrowRight,
+  ArrowLeft,
   AlertCircle,
   Sparkles,
   ChevronRight,
@@ -118,59 +119,59 @@ export function UsageDashboard() {
   // Status color classes
   const statusColors = {
     healthy: {
-      bg: 'bg-green-50',
-      border: 'border-green-200',
-      text: 'text-green-700',
-      progress: 'bg-green-500',
-      ring: 'ring-green-100',
-      icon: 'text-green-600'
+      bg: 'bg-green-50 dark:bg-green-900/20',
+      border: 'border-green-200 dark:border-green-800',
+      text: 'text-green-700 dark:text-green-400',
+      progress: 'bg-green-500 dark:bg-green-400',
+      ring: 'ring-green-100 dark:ring-green-900/30',
+      icon: 'text-green-600 dark:text-green-400'
     },
     caution: {
-      bg: 'bg-yellow-50',
-      border: 'border-yellow-200',
-      text: 'text-yellow-700',
-      progress: 'bg-yellow-500',
-      ring: 'ring-yellow-100',
-      icon: 'text-yellow-600'
+      bg: 'bg-yellow-50 dark:bg-yellow-900/20',
+      border: 'border-yellow-200 dark:border-yellow-800',
+      text: 'text-yellow-700 dark:text-yellow-400',
+      progress: 'bg-yellow-500 dark:bg-yellow-400',
+      ring: 'ring-yellow-100 dark:ring-yellow-900/30',
+      icon: 'text-yellow-600 dark:text-yellow-400'
     },
     warning: {
-      bg: 'bg-orange-50',
-      border: 'border-orange-200',
-      text: 'text-orange-700',
-      progress: 'bg-orange-500',
-      ring: 'ring-orange-100',
-      icon: 'text-orange-600'
+      bg: 'bg-orange-50 dark:bg-orange-900/20',
+      border: 'border-orange-200 dark:border-orange-800',
+      text: 'text-orange-700 dark:text-orange-400',
+      progress: 'bg-orange-500 dark:bg-orange-400',
+      ring: 'ring-orange-100 dark:ring-orange-900/30',
+      icon: 'text-orange-600 dark:text-orange-400'
     },
     critical: {
-      bg: 'bg-red-50',
-      border: 'border-red-200',
-      text: 'text-red-700',
-      progress: 'bg-red-500',
-      ring: 'ring-red-100',
-      icon: 'text-red-600'
+      bg: 'bg-red-50 dark:bg-red-900/20',
+      border: 'border-red-200 dark:border-red-800',
+      text: 'text-red-700 dark:text-red-400',
+      progress: 'bg-red-500 dark:bg-red-400',
+      ring: 'ring-red-100 dark:ring-red-900/30',
+      icon: 'text-red-600 dark:text-red-400'
     }
   };
 
   // Loading skeleton
   if (isLoading && !usage) {
     return (
-      <PageLayout showGradient={false} className="bg-gradient-to-b from-slate-50 to-white">
+      <PageLayout showGradient={false} className="bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-950">
         <div className="container mx-auto px-4 max-w-6xl pt-6 pb-12">
           {/* Header skeleton */}
           <div className="mb-8 animate-pulse">
-            <div className="h-8 bg-slate-200 rounded-lg w-48 mb-3"></div>
-            <div className="h-4 bg-slate-200 rounded-lg w-96"></div>
+            <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded-lg w-48 mb-3"></div>
+            <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded-lg w-96"></div>
           </div>
 
           {/* Cards skeleton */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <div className="bg-white rounded-xl border border-slate-200 p-6 h-64 animate-pulse">
-              <div className="h-6 bg-slate-200 rounded w-32 mb-4"></div>
-              <div className="h-32 bg-slate-100 rounded mb-4"></div>
+            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 h-64 animate-pulse">
+              <div className="h-6 bg-slate-200 dark:bg-slate-700 rounded w-32 mb-4"></div>
+              <div className="h-32 bg-slate-100 dark:bg-slate-700 rounded mb-4"></div>
             </div>
-            <div className="bg-white rounded-xl border border-slate-200 p-6 h-64 animate-pulse">
-              <div className="h-6 bg-slate-200 rounded w-32 mb-4"></div>
-              <div className="h-32 bg-slate-100 rounded mb-4"></div>
+            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 h-64 animate-pulse">
+              <div className="h-6 bg-slate-200 dark:bg-slate-700 rounded w-32 mb-4"></div>
+              <div className="h-32 bg-slate-100 dark:bg-slate-700 rounded mb-4"></div>
             </div>
           </div>
         </div>
@@ -179,21 +180,31 @@ export function UsageDashboard() {
   }
 
   return (
-    <PageLayout showGradient={false} className="bg-gradient-to-b from-slate-50 to-white">
+    <PageLayout showGradient={false} className="bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-950">
       <div className="container mx-auto px-4 max-w-6xl pt-6 pb-12">
+        {/* Back Button */}
+        <button
+          onClick={() => navigate(-1)}
+          className="inline-flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors mb-6 group focus:outline-none focus:ring-2 focus:ring-purple-600 dark:focus:ring-purple-400 focus:ring-offset-2 dark:focus:ring-offset-slate-900 rounded-lg px-2 py-1"
+          aria-label="Go back to previous page"
+        >
+          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" aria-hidden="true" />
+          <span className="font-medium">Back</span>
+        </button>
+
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">
-            <h1 className="text-3xl font-bold text-slate-900">
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
               Usage Dashboard
             </h1>
             <button
               onClick={handleRefresh}
               disabled={refreshing}
               className={`
-                inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg
-                hover:bg-slate-50 hover:border-slate-300 transition-all duration-200
-                focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2
+                inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg
+                hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-600 transition-all duration-200
+                focus:outline-none focus:ring-2 focus:ring-purple-600 dark:focus:ring-purple-400 focus:ring-offset-2 dark:focus:ring-offset-slate-900
                 disabled:opacity-50 disabled:cursor-not-allowed
                 ${refreshing ? 'animate-pulse' : ''}
               `}
@@ -202,21 +213,21 @@ export function UsageDashboard() {
               {refreshing ? 'Refreshing...' : 'Refresh'}
             </button>
           </div>
-          <p className="text-slate-600">
+          <p className="text-slate-600 dark:text-slate-400">
             Monitor your document generation usage and quota limits
           </p>
         </div>
 
         {/* Upgrade prompt (show if usage > 60% or at limit) */}
         {nextTierPath && (monthlyUsage?.percentage >= 60 || dailyUsage?.percentage >= 60) && (
-          <div className="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-lg p-4 mb-6">
+          <div className="bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 border border-purple-200 dark:border-purple-700 rounded-lg p-4 mb-6">
             <div className="flex items-center gap-3">
-              <div className="flex-shrink-0 bg-purple-600 p-2 rounded-lg">
+              <div className="flex-shrink-0 bg-purple-600 dark:bg-purple-500 p-2 rounded-lg">
                 <Zap className="w-4 h-4 text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-slate-700">
-                  <span className="font-semibold text-slate-900">Ready for more?</span>{' '}
+                <p className="text-sm text-slate-700 dark:text-slate-300">
+                  <span className="font-semibold text-slate-900 dark:text-slate-100">Ready for more?</span>{' '}
                   Upgrade to <span className="font-semibold">{nextTierPath.name}</span> and get{' '}
                   {nextTierPath.multiplier ? (
                     <span className="font-semibold">{nextTierPath.multiplier}x more generations</span>
@@ -228,7 +239,7 @@ export function UsageDashboard() {
               </div>
               <button
                 onClick={() => navigate('/pricing')}
-                className="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-b from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white text-sm font-semibold rounded-lg transition-all duration-200 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
+                className="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white text-sm font-semibold rounded-lg transition-all duration-200 shadow-lg shadow-purple-600/20 hover:shadow-purple-600/30 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
               >
                 Upgrade
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -239,9 +250,9 @@ export function UsageDashboard() {
 
         {/* Current tier badge */}
         <div className="mb-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-purple-50 border border-purple-200 rounded-full">
-            <Sparkles className="w-3.5 h-3.5 text-purple-600" />
-            <span className="text-xs font-semibold text-purple-900 capitalize">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded-full">
+            <Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+            <span className="text-xs font-semibold text-purple-900 dark:text-purple-300 capitalize">
               {currentTierInfo.name} Plan
             </span>
           </div>
@@ -255,7 +266,7 @@ export function UsageDashboard() {
             usage={dailyUsage}
             status={dailyStatus}
             statusColors={statusColors}
-            icon={<Clock className="w-5 h-5 text-purple-600" />}
+            icon={<Clock className="w-5 h-5 text-purple-600 dark:text-purple-400" />}
             formatResetDate={formatResetDate}
             formatAbsoluteDate={formatAbsoluteDate}
           />
@@ -266,7 +277,7 @@ export function UsageDashboard() {
             usage={monthlyUsage}
             status={monthlyStatus}
             statusColors={statusColors}
-            icon={<Calendar className="w-5 h-5 text-purple-600" />}
+            icon={<Calendar className="w-5 h-5 text-purple-600 dark:text-purple-400" />}
             formatResetDate={formatResetDate}
             formatAbsoluteDate={formatAbsoluteDate}
           />
@@ -312,16 +323,16 @@ function UsageCard({ title, usage, status, statusColors, icon, formatResetDate, 
 
   return (
     <div className={`
-      bg-white rounded-xl border border-slate-200 p-6
-      transition-all duration-200 hover:shadow-lg hover:border-slate-300
+      bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6
+      transition-all duration-200 hover:shadow-lg dark:hover:shadow-slate-900/50 hover:border-slate-300 dark:hover:border-slate-600
     `}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+          <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 border border-transparent dark:border-purple-400 rounded-lg flex items-center justify-center">
             {icon}
           </div>
-          <h3 className="text-base font-semibold text-slate-900">{title}</h3>
+          <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">{title}</h3>
         </div>
 
         {/* Status badge */}
@@ -336,19 +347,19 @@ function UsageCard({ title, usage, status, statusColors, icon, formatResetDate, 
       {/* Usage numbers */}
       <div className="mb-4">
         <div className="flex items-baseline gap-2 mb-1">
-          <span className="text-4xl font-bold text-slate-900">
+          <span className="text-4xl font-bold text-slate-900 dark:text-slate-100">
             {isUnlimited ? '∞' : used.toLocaleString()}
           </span>
           {!isUnlimited && (
             <>
-              <span className="text-xl text-slate-400">/</span>
-              <span className="text-2xl font-semibold text-slate-600">
+              <span className="text-xl text-slate-400 dark:text-slate-500">/</span>
+              <span className="text-2xl font-semibold text-slate-600 dark:text-slate-300">
                 {usage.limit.toLocaleString()}
               </span>
             </>
           )}
         </div>
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-slate-600 dark:text-slate-400">
           {isUnlimited ? 'Unlimited generations' : `${usage.remaining.toLocaleString()} remaining`}
         </p>
       </div>
@@ -356,7 +367,7 @@ function UsageCard({ title, usage, status, statusColors, icon, formatResetDate, 
       {/* Progress bar */}
       {!isUnlimited && (
         <div className="mb-4">
-          <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+          <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-3 overflow-hidden">
             <div
               className={`h-full ${colors.progress} transition-all duration-500 ease-out`}
               style={{ width: `${Math.min(percentage, 100)}%` }}
@@ -368,27 +379,27 @@ function UsageCard({ title, usage, status, statusColors, icon, formatResetDate, 
             />
           </div>
           <div className="flex items-center justify-between mt-1.5">
-            <span className="text-xs text-slate-500">0%</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400">0%</span>
             <span className={`text-xs font-semibold ${colors.text}`}>
               {percentage}%
             </span>
-            <span className="text-xs text-slate-500">100%</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400">100%</span>
           </div>
         </div>
       )}
 
       {/* Reset info */}
-      <div className="bg-slate-50 border border-slate-200 rounded-lg p-3">
+      <div className="bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg p-3">
         <div className="flex items-center gap-2">
-          <Clock className="w-4 h-4 text-slate-500" />
+          <Clock className="w-4 h-4 text-slate-500 dark:text-slate-400" />
           <div className="flex-1">
-            <p className="text-xs font-medium text-slate-600">Resets in</p>
-            <p className="text-sm font-semibold text-slate-900">
+            <p className="text-xs font-medium text-slate-600 dark:text-slate-400">Resets in</p>
+            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
               {formatResetDate(usage.resetDate)}
             </p>
           </div>
           <div className="text-right">
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               {formatAbsoluteDate(usage.resetDate)}
             </p>
           </div>
@@ -397,7 +408,7 @@ function UsageCard({ title, usage, status, statusColors, icon, formatResetDate, 
 
       {/* Warning message for high usage */}
       {status === 'critical' && (
-        <div className="mt-3 flex items-start gap-2 text-xs text-red-700">
+        <div className="mt-3 flex items-start gap-2 text-xs text-red-700 dark:text-red-400">
           <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
           <p>
             You've reached your limit. Quota will reset {formatResetDate(usage.resetDate)}.
@@ -417,12 +428,12 @@ function QuickActionCard({ icon, title, description, onClick, disabled = false }
       onClick={onClick}
       disabled={disabled}
       className={`
-        bg-white border border-slate-200 rounded-lg p-4
+        bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4
         transition-all duration-200
-        focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2
+        focus:outline-none focus:ring-2 focus:ring-purple-600 dark:focus:ring-purple-400 focus:ring-offset-2 dark:focus:ring-offset-slate-900
         ${disabled
           ? 'opacity-50 cursor-not-allowed'
-          : 'hover:border-purple-300 hover:shadow-md group'
+          : 'hover:border-purple-300 dark:hover:border-purple-600 hover:shadow-md dark:hover:shadow-slate-900/50 group'
         }
       `}
     >
@@ -430,21 +441,21 @@ function QuickActionCard({ icon, title, description, onClick, disabled = false }
         <div className={`
           w-10 h-10 rounded-lg flex items-center justify-center transition-colors
           ${disabled
-            ? 'bg-slate-100 text-slate-400'
-            : 'bg-purple-100 text-purple-600 group-hover:bg-purple-200'
+            ? 'bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500'
+            : 'bg-purple-100 dark:bg-purple-900/30 border border-transparent dark:border-purple-400 text-purple-600 dark:text-purple-400 group-hover:bg-purple-200 dark:group-hover:bg-purple-900/50'
           }
         `}>
           {icon}
         </div>
         <div className="flex-1 text-left">
-          <h4 className="text-sm font-semibold text-slate-900 mb-0.5">
+          <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-0.5">
             {title}
-            {disabled && <span className="ml-2 text-xs text-slate-500">(Coming soon)</span>}
+            {disabled && <span className="ml-2 text-xs text-slate-500 dark:text-slate-400">(Coming soon)</span>}
           </h4>
-          <p className="text-xs text-slate-600">{description}</p>
+          <p className="text-xs text-slate-600 dark:text-slate-400">{description}</p>
         </div>
         {!disabled && (
-          <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-purple-600 transition-colors" />
+          <ChevronRight className="w-4 h-4 text-slate-400 dark:text-slate-500 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors" />
         )}
       </div>
     </button>

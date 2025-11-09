@@ -89,6 +89,7 @@ export function MobileMenu({ isOpen, onClose, onHelpClick }) {
   const handleLogout = async () => {
     await logout();
     onClose();
+    navigate('/');
   };
 
   const switchToSignup = () => {
@@ -128,23 +129,23 @@ export function MobileMenu({ isOpen, onClose, onHelpClick }) {
           {/* Menu Panel */}
           <div
               data-testid="mobile-menu"
-              className="fixed top-0 right-0 bottom-0 w-64 bg-white shadow-xl z-50 md:hidden"
+              className="fixed top-0 right-0 bottom-0 w-64 bg-white dark:bg-slate-900 shadow-xl z-50 md:hidden transition-colors"
               role="dialog"
               aria-modal="true"
               aria-label="Mobile menu"
             >
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-slate-200">
-            <span className="text-sm font-semibold text-slate-900">Menu</span>
+          <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
+            <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">Menu</span>
             <button
               type="button"
               ref={closeButtonRef}
               onClick={onClose}
-              className="p-1 hover:bg-slate-100 hover:scale-[1.05] rounded transition-all duration-200 motion-reduce:transition-none active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
+              className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 hover:scale-[1.05] rounded transition-all duration-200 motion-reduce:transition-none active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-purple-600 dark:focus:ring-purple-400 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-900"
               aria-label="Close menu"
             >
-              <X className="w-5 h-5 text-slate-600" aria-hidden="true" />
+              <X className="w-5 h-5 text-slate-600 dark:text-slate-400" aria-hidden="true" />
             </button>
           </div>
 
@@ -168,7 +169,7 @@ export function MobileMenu({ isOpen, onClose, onHelpClick }) {
             {/* Authenticated user links */}
             {ENABLE_AUTH && isAuthenticated && (
               <>
-                <div className="h-px bg-slate-200 my-2" />
+                <div className="h-px bg-slate-200 dark:bg-slate-700 my-2" />
                 <MenuLink to="/usage" icon={BarChart3}>
                   Usage Dashboard
                 </MenuLink>
@@ -179,7 +180,7 @@ export function MobileMenu({ isOpen, onClose, onHelpClick }) {
             )}
 
             {/* Divider */}
-            <div className="h-px bg-slate-200 my-2" />
+            <div className="h-px bg-slate-200 dark:bg-slate-700 my-2" />
 
             {/* Legal Links */}
             <MenuLink to="/terms" icon={FileText}>
@@ -192,13 +193,13 @@ export function MobileMenu({ isOpen, onClose, onHelpClick }) {
 
           {/* Footer */}
           {ENABLE_AUTH && (
-            <div className="p-4 border-t border-slate-200">
+            <div className="p-4 border-t border-slate-200 dark:border-slate-700">
               {isAuthenticated ? (
-                <div className="text-sm text-slate-600">
-                  <div className="font-medium text-slate-900 mb-1">
+                <div className="text-sm text-slate-600 dark:text-slate-400">
+                  <div className="font-medium text-slate-900 dark:text-slate-100 mb-1">
                     {user?.email || user?.name || 'User'}
                   </div>
-                  <div className="text-xs text-slate-500 mb-3">
+                  <div className="text-xs text-slate-500 dark:text-slate-400 mb-3">
                     {user?.tier ? `${user.tier.charAt(0).toUpperCase() + user.tier.slice(1)} tier` : 'Free tier'}
                   </div>
                   <Button
@@ -269,7 +270,7 @@ function MenuItem({ children, onClick, onMouseEnter }) {
       type="button"
       onClick={onClick}
       onMouseEnter={onMouseEnter}
-      className="w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 hover:translate-x-1 rounded-lg transition-all duration-200 motion-reduce:transition-none active:bg-slate-100"
+      className="w-full px-3 py-2 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 hover:translate-x-1 rounded-lg transition-all duration-200 motion-reduce:transition-none active:bg-slate-100 dark:active:bg-slate-700"
     >
       {children}
     </button>
@@ -280,9 +281,9 @@ function MenuLink({ to, icon: Icon, children }) {
   return (
     <Link
       to={to}
-      className="flex items-center gap-2 w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 hover:translate-x-1 rounded-lg transition-all duration-200 motion-reduce:transition-none active:bg-slate-100"
+      className="flex items-center gap-2 w-full px-3 py-2 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 hover:translate-x-1 rounded-lg transition-all duration-200 motion-reduce:transition-none active:bg-slate-100 dark:active:bg-slate-700"
     >
-      <Icon className="w-4 h-4 text-slate-500" aria-hidden="true" />
+      <Icon className="w-4 h-4 text-slate-500 dark:text-slate-400" aria-hidden="true" />
       {children}
     </Link>
   );

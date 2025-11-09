@@ -34,7 +34,7 @@ export default function TermsOfService() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-2">
         <button
           onClick={() => navigate(-1)}
-          className="inline-flex items-center gap-2 text-slate-600 hover:text-purple-600 transition-colors group"
+          className="inline-flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors group"
         >
           <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
           <span className="font-medium">Back</span>
@@ -43,18 +43,18 @@ export default function TermsOfService() {
 
       {/* Content */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-        <div className="bg-white rounded-xl shadow-lg ring-1 ring-slate-200 p-8 sm:p-12">
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg ring-1 ring-slate-200 dark:ring-slate-700 p-8 sm:p-12 [&_strong]:text-slate-900 [&_strong]:dark:text-slate-100">
           {/* Title */}
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">
+          <h1 className="text-4xl font-bold text-slate-900 dark:text-slate-100 mb-2">
             Terms of Service
           </h1>
-          <p className="text-slate-600 mb-8">
+          <p className="text-slate-600 dark:text-slate-400 mb-8">
             <strong>Effective Date:</strong> {EFFECTIVE_DATE} | <strong>Version:</strong> {TERMS_VERSION}
           </p>
 
           {/* Introduction */}
           <section className="mb-8 prose prose-slate max-w-none">
-            <p className="text-lg text-slate-700 leading-relaxed">
+            <p className="text-lg text-slate-700 dark:text-slate-300 leading-relaxed">
               Welcome to CodeScribe AI. By accessing or using our service, you agree to be bound by these Terms of Service
               ("Terms"). Please read them carefully.
             </p>
@@ -62,8 +62,8 @@ export default function TermsOfService() {
 
           {/* 1. Acceptance of Terms */}
           <section className="mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">1. Acceptance of Terms</h2>
-            <div className="prose prose-slate max-w-none text-slate-700">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-4">1. Acceptance of Terms</h2>
+            <div className="prose dark:prose-invert prose-slate max-w-none text-slate-700 dark:text-slate-300">
               <p>
                 By creating an account, accessing, or using CodeScribe AI (the "Service"), you agree to be bound by these Terms
                 and our Privacy Policy. If you do not agree to these Terms, you may not use the Service.
@@ -73,8 +73,8 @@ export default function TermsOfService() {
 
           {/* 2. Description of Service */}
           <section className="mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">2. Description of Service</h2>
-            <div className="prose prose-slate max-w-none text-slate-700">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-4">2. Description of Service</h2>
+            <div className="prose dark:prose-invert prose-slate max-w-none text-slate-700 dark:text-slate-300">
               <p>
                 CodeScribe AI is an AI-powered documentation generation service that helps developers create high-quality
                 documentation for their code. The Service uses Claude AI to analyze code and generate various types of
@@ -85,8 +85,8 @@ export default function TermsOfService() {
 
           {/* 3. Account Registration */}
           <section className="mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">3. Account Registration</h2>
-            <div className="prose prose-slate max-w-none text-slate-700">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-4">3. Account Registration</h2>
+            <div className="prose dark:prose-invert prose-slate max-w-none text-slate-700 dark:text-slate-300">
               <ul className="space-y-2">
                 <li>You must provide accurate and complete information when creating an account</li>
                 <li>You are responsible for maintaining the security of your account credentials</li>
@@ -99,9 +99,9 @@ export default function TermsOfService() {
 
           {/* 4. Subscription Tiers and Billing */}
           <section className="mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">4. Subscription Tiers and Billing</h2>
-            <div className="prose prose-slate max-w-none text-slate-700">
-              <h3 className="text-xl font-semibold text-slate-900 mt-4 mb-2">4.1 Available Tiers</h3>
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-4">4. Subscription Tiers and Billing</h2>
+            <div className="prose dark:prose-invert prose-slate max-w-none text-slate-700 dark:text-slate-300">
+              <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mt-4 mb-2">4.1 Available Tiers</h3>
               <p>We offer the following subscription tiers:</p>
               <ul className="space-y-2">
                 <li><strong>Free:</strong> 10 documentation generations per month, 3 per day, 100KB file size limit</li>
@@ -111,19 +111,19 @@ export default function TermsOfService() {
                 <li><strong>Enterprise:</strong> Custom pricing - Unlimited generations, 50MB file size limit, custom features</li>
               </ul>
 
-              <h3 className="text-xl font-semibold text-slate-900 mt-6 mb-2">4.2 Billing Cycle</h3>
+              <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mt-6 mb-2">4.2 Billing Cycle</h3>
               <p>
                 Paid subscriptions are billed on a monthly or annual basis, depending on your selection. You will be charged
                 at the beginning of each billing cycle for the upcoming period.
               </p>
 
-              <h3 className="text-xl font-semibold text-slate-900 mt-6 mb-2">4.3 Payment Processing</h3>
+              <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mt-6 mb-2">4.3 Payment Processing</h3>
               <p>
                 All payments are processed securely through Stripe. We do not store your credit card information. By providing
                 payment information, you authorize us to charge your payment method for all fees associated with your subscription.
               </p>
 
-              <h3 className="text-xl font-semibold text-slate-900 mt-6 mb-2">4.4 Price Changes</h3>
+              <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mt-6 mb-2">4.4 Price Changes</h3>
               <p>
                 We reserve the right to change our pricing at any time. If we change the price of your subscription, we will
                 provide at least 30 days' notice before the change takes effect. Continued use of the Service after the price
@@ -134,12 +134,12 @@ export default function TermsOfService() {
 
           {/* 5. Cancellation and Refunds */}
           <section className="mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">5. Cancellation and Refunds</h2>
-            <div className="prose prose-slate max-w-none text-slate-700">
-              <h3 className="text-xl font-semibold text-slate-900 mt-4 mb-2">5.1 Cancellation Policy</h3>
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-4">5. Cancellation and Refunds</h2>
+            <div className="prose dark:prose-invert prose-slate max-w-none text-slate-700 dark:text-slate-300">
+              <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mt-4 mb-2">5.1 Cancellation Policy</h3>
               <p>
                 You may cancel your subscription at any time through your account settings or by contacting us at{' '}
-                <a href="mailto:support@codescribeai.com" className="text-purple-600 hover:text-purple-700">
+                <a href="mailto:support@codescribeai.com" className="text-purple-600 dark:text-cyan-400 hover:text-purple-700 dark:hover:text-cyan-300">
                   support@codescribeai.com
                 </a>
                 . When you cancel:
@@ -151,14 +151,14 @@ export default function TermsOfService() {
                 <li>You will not be charged for subsequent billing periods</li>
               </ul>
 
-              <h3 className="text-xl font-semibold text-slate-900 mt-6 mb-2">5.2 No Refunds</h3>
+              <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mt-6 mb-2">5.2 No Refunds</h3>
               <p>
                 <strong>All subscription fees are non-refundable.</strong> We do not provide refunds or credits for partial
                 months of service, upgrade/downgrade refunds, or refunds for months unused with an open account. This is
                 standard industry practice for SaaS (Software as a Service) products.
               </p>
 
-              <h3 className="text-xl font-semibold text-slate-900 mt-6 mb-2">5.3 Downgrading</h3>
+              <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mt-6 mb-2">5.3 Downgrading</h3>
               <p>
                 If you downgrade your subscription, the change will take effect at the end of your current billing period.
                 You will retain access to your current tier's features until that time.
@@ -168,8 +168,8 @@ export default function TermsOfService() {
 
           {/* 6. Usage Limits and Fair Use */}
           <section className="mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">6. Usage Limits and Fair Use</h2>
-            <div className="prose prose-slate max-w-none text-slate-700">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-4">6. Usage Limits and Fair Use</h2>
+            <div className="prose dark:prose-invert prose-slate max-w-none text-slate-700 dark:text-slate-300">
               <p>
                 Usage limits are enforced per tier as described above. We track usage based on:
               </p>
@@ -186,21 +186,21 @@ export default function TermsOfService() {
 
           {/* 7. Intellectual Property */}
           <section className="mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">7. Intellectual Property</h2>
-            <div className="prose prose-slate max-w-none text-slate-700">
-              <h3 className="text-xl font-semibold text-slate-900 mt-4 mb-2">7.1 Your Content</h3>
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-4">7. Intellectual Property</h2>
+            <div className="prose dark:prose-invert prose-slate max-w-none text-slate-700 dark:text-slate-300">
+              <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mt-4 mb-2">7.1 Your Content</h3>
               <p>
                 You retain all ownership rights to the code you submit to the Service and the documentation generated by the Service.
                 We do not claim ownership of your content.
               </p>
 
-              <h3 className="text-xl font-semibold text-slate-900 mt-6 mb-2">7.2 Our Service</h3>
+              <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mt-6 mb-2">7.2 Our Service</h3>
               <p>
                 The Service, including its original content, features, and functionality, is owned by CodeScribe AI and is
                 protected by international copyright, trademark, and other intellectual property laws.
               </p>
 
-              <h3 className="text-xl font-semibold text-slate-900 mt-6 mb-2">7.3 License to Use Service</h3>
+              <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mt-6 mb-2">7.3 License to Use Service</h3>
               <p>
                 We grant you a limited, non-exclusive, non-transferable, revocable license to access and use the Service
                 for your personal or business purposes, subject to these Terms.
@@ -210,11 +210,11 @@ export default function TermsOfService() {
 
           {/* 8. Privacy and Data Protection */}
           <section className="mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">8. Privacy and Data Protection</h2>
-            <div className="prose prose-slate max-w-none text-slate-700">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-4">8. Privacy and Data Protection</h2>
+            <div className="prose dark:prose-invert prose-slate max-w-none text-slate-700 dark:text-slate-300">
               <p>
                 Your use of the Service is also governed by our{' '}
-                <Link to="/privacy" className="text-purple-600 hover:text-purple-700 font-medium">
+                <Link to="/privacy" className="text-purple-600 dark:text-cyan-400 hover:text-purple-700 dark:hover:text-cyan-300 font-medium">
                   Privacy Policy
                 </Link>
                 . Key points include:
@@ -230,8 +230,8 @@ export default function TermsOfService() {
 
           {/* 9. Prohibited Conduct */}
           <section className="mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">9. Prohibited Conduct</h2>
-            <div className="prose prose-slate max-w-none text-slate-700">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-4">9. Prohibited Conduct</h2>
+            <div className="prose dark:prose-invert prose-slate max-w-none text-slate-700 dark:text-slate-300">
               <p>You agree not to:</p>
               <ul className="space-y-2">
                 <li>Use the Service for any illegal purpose or in violation of any laws</li>
@@ -248,8 +248,8 @@ export default function TermsOfService() {
 
           {/* 10. Termination */}
           <section className="mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">10. Termination</h2>
-            <div className="prose prose-slate max-w-none text-slate-700">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-4">10. Termination</h2>
+            <div className="prose dark:prose-invert prose-slate max-w-none text-slate-700 dark:text-slate-300">
               <p>
                 We reserve the right to suspend or terminate your account at any time, with or without notice, for violations
                 of these Terms or for any other reason. Upon termination:
@@ -265,8 +265,8 @@ export default function TermsOfService() {
 
           {/* 11. Disclaimers */}
           <section className="mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">11. Disclaimers</h2>
-            <div className="prose prose-slate max-w-none text-slate-700">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-4">11. Disclaimers</h2>
+            <div className="prose dark:prose-invert prose-slate max-w-none text-slate-700 dark:text-slate-300">
               <p>
                 THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
                 INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
@@ -285,8 +285,8 @@ export default function TermsOfService() {
 
           {/* 12. Limitation of Liability */}
           <section className="mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">12. Limitation of Liability</h2>
-            <div className="prose prose-slate max-w-none text-slate-700">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-4">12. Limitation of Liability</h2>
+            <div className="prose dark:prose-invert prose-slate max-w-none text-slate-700 dark:text-slate-300">
               <p>
                 TO THE MAXIMUM EXTENT PERMITTED BY LAW, CODESCRIBE AI SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL,
                 CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR ANY LOSS OF PROFITS OR REVENUES, WHETHER INCURRED DIRECTLY OR INDIRECTLY,
@@ -301,8 +301,8 @@ export default function TermsOfService() {
 
           {/* 13. Changes to Terms */}
           <section className="mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">13. Changes to Terms</h2>
-            <div className="prose prose-slate max-w-none text-slate-700">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-4">13. Changes to Terms</h2>
+            <div className="prose dark:prose-invert prose-slate max-w-none text-slate-700 dark:text-slate-300">
               <p>
                 We reserve the right to modify these Terms at any time. When we make changes, we will:
               </p>
@@ -319,20 +319,20 @@ export default function TermsOfService() {
 
           {/* 14. Contact Information */}
           <section className="mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">14. Contact Information</h2>
-            <div className="prose prose-slate max-w-none text-slate-700">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-4">14. Contact Information</h2>
+            <div className="prose dark:prose-invert prose-slate max-w-none text-slate-700 dark:text-slate-300">
               <p>
                 If you have any questions about these Terms, please contact us at:
               </p>
               <p className="font-medium">
                 Email:{' '}
-                <a href="mailto:support@codescribeai.com" className="text-purple-600 hover:text-purple-700">
+                <a href="mailto:support@codescribeai.com" className="text-purple-600 dark:text-cyan-400 hover:text-purple-700 dark:hover:text-cyan-300">
                   support@codescribeai.com
                 </a>
               </p>
               <p className="font-medium">
                 Website:{' '}
-                <a href="https://codescribeai.com" className="text-purple-600 hover:text-purple-700">
+                <a href="https://codescribeai.com" className="text-purple-600 dark:text-cyan-400 hover:text-purple-700 dark:hover:text-cyan-300">
                   https://codescribeai.com
                 </a>
               </p>

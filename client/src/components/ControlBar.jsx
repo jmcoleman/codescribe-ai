@@ -23,7 +23,7 @@ export function ControlBar({
   ];
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-4">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm p-4 transition-colors">
       <h2 className="sr-only">Documentation Controls</h2>
       <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
         {/* Left: Actions */}
@@ -50,7 +50,7 @@ export function ControlBar({
           )}
 
           {/* Divider (hidden on mobile) */}
-          <div className="hidden sm:block w-px h-6 bg-slate-300" />
+          <div className="hidden sm:block w-px h-6 bg-slate-300 dark:bg-slate-600" />
 
           {/* Doc Type Select */}
           <Select

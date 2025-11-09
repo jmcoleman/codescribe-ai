@@ -96,12 +96,12 @@ export default function AdminUsage() {
 
   if (loading) {
     return (
-      <PageLayout showGradient={false} className="bg-gradient-to-b from-slate-50 to-white">
+      <PageLayout showGradient={false} className="bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-950">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-12">
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-center">
-              <RefreshCw className="w-8 h-8 text-purple-600 animate-spin mx-auto mb-4" />
-              <p className="text-slate-600">Loading usage statistics...</p>
+              <RefreshCw className="w-8 h-8 text-purple-600 dark:text-purple-400 animate-spin mx-auto mb-4" />
+              <p className="text-slate-600 dark:text-slate-400">Loading usage statistics...</p>
             </div>
           </div>
         </div>
@@ -111,18 +111,18 @@ export default function AdminUsage() {
 
   if (error) {
     return (
-      <PageLayout showGradient={false} className="bg-gradient-to-b from-slate-50 to-white">
+      <PageLayout showGradient={false} className="bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-950">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-12">
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-center">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Activity className="w-8 h-8 text-red-600" />
+              <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Activity className="w-8 h-8 text-red-600 dark:text-red-400" />
               </div>
-              <h2 className="text-xl font-semibold text-slate-900 mb-2">Failed to Load Statistics</h2>
-              <p className="text-slate-600 mb-4">{error}</p>
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-2">Failed to Load Statistics</h2>
+              <p className="text-slate-600 dark:text-slate-400 mb-4">{error}</p>
               <button
                 onClick={fetchStats}
-                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 text-white rounded-lg transition-colors"
               >
                 Try Again
               </button>
@@ -134,13 +134,13 @@ export default function AdminUsage() {
   }
 
   return (
-    <PageLayout showGradient={false} className="bg-gradient-to-b from-slate-50 to-white">
+    <PageLayout showGradient={false} className="bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-950">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-12">
         {/* Header */}
         <div className="mb-6">
           <button
             onClick={() => navigate(-1)}
-            className="inline-flex items-center gap-2 text-slate-600 hover:text-purple-600 transition-colors group mb-4"
+            className="inline-flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:text-purple-400 transition-colors group mb-4"
           >
             <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" aria-hidden="true" />
             <span className="font-medium">Back</span>
@@ -148,18 +148,18 @@ export default function AdminUsage() {
 
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-slate-900">Admin Usage Statistics</h1>
-              <p className="text-slate-600 mt-1">Monitor anonymous and authenticated user activity</p>
+              <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Admin Usage Statistics</h1>
+              <p className="text-slate-600 dark:text-slate-400 mt-1">Monitor anonymous and authenticated user activity</p>
             </div>
             <div className="flex items-center gap-3">
               {/* Filter Buttons */}
-              <div className="inline-flex items-center bg-white border border-slate-200 rounded-lg p-1 shadow-sm">
+              <div className="inline-flex items-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-1 shadow-sm">
                 <button
                   onClick={() => setUserTypeFilter('all')}
                   className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
                     userTypeFilter === 'all'
                       ? 'bg-purple-600 text-white'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-700'
                   }`}
                 >
                   <Filter className="w-3.5 h-3.5" />
@@ -170,7 +170,7 @@ export default function AdminUsage() {
                   className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
                     userTypeFilter === 'anonymous'
                       ? 'bg-purple-600 text-white'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-700'
                   }`}
                 >
                   <Globe className="w-3.5 h-3.5" />
@@ -181,7 +181,7 @@ export default function AdminUsage() {
                   className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
                     userTypeFilter === 'authenticated'
                       ? 'bg-purple-600 text-white'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-700'
                   }`}
                 >
                   <Users className="w-3.5 h-3.5" />
@@ -191,7 +191,7 @@ export default function AdminUsage() {
 
               <button
                 onClick={fetchStats}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors shadow-sm"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors shadow-sm"
                 title="Refresh statistics"
               >
                 <RefreshCw className="w-4 h-4" />
@@ -207,38 +207,38 @@ export default function AdminUsage() {
           <>
             {/* Overall Summary */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 animate-fadeIn">
-              <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <Users className="w-5 h-5 text-purple-600" />
+                  <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 border border-transparent dark:border-purple-400 rounded-lg flex items-center justify-center">
+                    <Users className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                   </div>
                   <div>
-                    <div className="text-2xl font-bold text-slate-900">{(stats.summary.totalIPs + stats.summary.totalUsers).toLocaleString()}</div>
-                    <div className="text-sm text-slate-600">Total Users</div>
+                    <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">{(stats.summary.totalIPs + stats.summary.totalUsers).toLocaleString()}</div>
+                    <div className="text-sm text-slate-600 dark:text-slate-400">Total Users</div>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <FileText className="w-5 h-5 text-purple-600" />
+                  <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 border border-transparent dark:border-purple-400 rounded-lg flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                   </div>
                   <div>
-                    <div className="text-2xl font-bold text-slate-900">{stats.summary.totalGenerations.toLocaleString()}</div>
-                    <div className="text-sm text-slate-600">Total Generations</div>
+                    <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">{stats.summary.totalGenerations.toLocaleString()}</div>
+                    <div className="text-sm text-slate-600 dark:text-slate-400">Total Generations</div>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <Clock className="w-5 h-5 text-purple-600" />
+                  <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 border border-transparent dark:border-purple-400 rounded-lg flex items-center justify-center">
+                    <Clock className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                   </div>
                   <div>
-                    <div className="text-2xl font-bold text-slate-900">{stats.last24Hours.totalActive.toLocaleString()}</div>
-                    <div className="text-sm text-slate-600">Active (24h)</div>
+                    <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">{stats.last24Hours.totalActive.toLocaleString()}</div>
+                    <div className="text-sm text-slate-600 dark:text-slate-400">Active (24h)</div>
                   </div>
                 </div>
               </div>
@@ -247,57 +247,57 @@ export default function AdminUsage() {
             {/* Comparison Cards */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
               {/* Anonymous Users Card */}
-              <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <Globe className="w-5 h-5 text-purple-600" />
+                  <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 border border-transparent dark:border-purple-400 rounded-lg flex items-center justify-center">
+                    <Globe className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-slate-900">Anonymous Users</h3>
-                    <p className="text-xs text-slate-600">Tracked by IP address</p>
+                    <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Anonymous Users</h3>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">Tracked by IP address</p>
                   </div>
                 </div>
 
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-slate-600">Users</span>
-                    <span className="text-lg font-bold text-slate-900">{stats.summary.totalIPs.toLocaleString()}</span>
+                    <span className="text-sm text-slate-600 dark:text-slate-400">Users</span>
+                    <span className="text-lg font-bold text-slate-900 dark:text-slate-100">{stats.summary.totalIPs.toLocaleString()}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-slate-600">Generations</span>
-                    <span className="text-lg font-bold text-slate-900">{stats.summary.anonymousGenerations.toLocaleString()}</span>
+                    <span className="text-sm text-slate-600 dark:text-slate-400">Generations</span>
+                    <span className="text-lg font-bold text-slate-900 dark:text-slate-100">{stats.summary.anonymousGenerations.toLocaleString()}</span>
                   </div>
-                  <div className="flex items-center justify-between pt-3 border-t border-slate-200">
-                    <span className="text-sm font-medium text-slate-700">% of Total</span>
-                    <span className="text-lg font-bold text-purple-600">{stats.summary.anonymousPercentage}%</span>
+                  <div className="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-700">
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">% of Total</span>
+                    <span className="text-lg font-bold text-purple-600 dark:text-purple-400">{stats.summary.anonymousPercentage}%</span>
                   </div>
                 </div>
               </div>
 
               {/* Authenticated Users Card */}
-              <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <Users className="w-5 h-5 text-purple-600" />
+                  <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 border border-transparent dark:border-purple-400 rounded-lg flex items-center justify-center">
+                    <Users className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-slate-900">Authenticated Users</h3>
-                    <p className="text-xs text-slate-600">Registered accounts</p>
+                    <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Authenticated Users</h3>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">Registered accounts</p>
                   </div>
                 </div>
 
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-slate-600">Users</span>
-                    <span className="text-lg font-bold text-slate-900">{stats.summary.totalUsers.toLocaleString()}</span>
+                    <span className="text-sm text-slate-600 dark:text-slate-400">Users</span>
+                    <span className="text-lg font-bold text-slate-900 dark:text-slate-100">{stats.summary.totalUsers.toLocaleString()}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-slate-600">Generations</span>
-                    <span className="text-lg font-bold text-slate-900">{stats.summary.authenticatedGenerations.toLocaleString()}</span>
+                    <span className="text-sm text-slate-600 dark:text-slate-400">Generations</span>
+                    <span className="text-lg font-bold text-slate-900 dark:text-slate-100">{stats.summary.authenticatedGenerations.toLocaleString()}</span>
                   </div>
-                  <div className="flex items-center justify-between pt-3 border-t border-slate-200">
-                    <span className="text-sm font-medium text-slate-700">% of Total</span>
-                    <span className="text-lg font-bold text-purple-600">{stats.summary.authenticatedPercentage}%</span>
+                  <div className="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-700">
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">% of Total</span>
+                    <span className="text-lg font-bold text-purple-600 dark:text-purple-400">{stats.summary.authenticatedPercentage}%</span>
                   </div>
                 </div>
               </div>
@@ -307,56 +307,56 @@ export default function AdminUsage() {
           <>
             {/* Single User Type View */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-              <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 border border-transparent dark:border-purple-400 rounded-lg flex items-center justify-center">
                     {userTypeFilter === 'anonymous' ? (
-                      <Globe className="w-5 h-5 text-purple-600" />
+                      <Globe className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                     ) : (
-                      <Users className="w-5 h-5 text-purple-600" />
+                      <Users className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                     )}
                   </div>
                   <div>
-                    <div className="text-2xl font-bold text-slate-900">
+                    <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
                       {userTypeFilter === 'anonymous'
                         ? stats.summary.totalIPs.toLocaleString()
                         : stats.summary.totalUsers.toLocaleString()}
                     </div>
-                    <div className="text-sm text-slate-600">
+                    <div className="text-sm text-slate-600 dark:text-slate-400">
                       {userTypeFilter === 'anonymous' ? 'Unique IPs' : 'Total Users'}
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <FileText className="w-5 h-5 text-purple-600" />
+                  <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 border border-transparent dark:border-purple-400 rounded-lg flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                   </div>
                   <div>
-                    <div className="text-2xl font-bold text-slate-900">
+                    <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
                       {userTypeFilter === 'anonymous'
                         ? stats.summary.anonymousGenerations.toLocaleString()
                         : stats.summary.authenticatedGenerations.toLocaleString()}
                     </div>
-                    <div className="text-sm text-slate-600">Generations</div>
+                    <div className="text-sm text-slate-600 dark:text-slate-400">Generations</div>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <Clock className="w-5 h-5 text-purple-600" />
+                  <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 border border-transparent dark:border-purple-400 rounded-lg flex items-center justify-center">
+                    <Clock className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                   </div>
                   <div>
-                    <div className="text-2xl font-bold text-slate-900">
+                    <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
                       {userTypeFilter === 'anonymous'
                         ? stats.last24Hours.activeAnonymous.toLocaleString()
                         : stats.last24Hours.activeAuthenticated.toLocaleString()}
                     </div>
-                    <div className="text-sm text-slate-600">Active (24h)</div>
+                    <div className="text-sm text-slate-600 dark:text-slate-400">Active (24h)</div>
                   </div>
                 </div>
               </div>
@@ -367,14 +367,14 @@ export default function AdminUsage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Top Users (Anonymous IPs and/or Authenticated Users) */}
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-slate-200">
-              <h2 className="text-lg font-semibold text-slate-900">
+          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+            <div className="p-6 border-b border-slate-200 dark:border-slate-700">
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
                 {userTypeFilter === 'anonymous' ? 'Top IPs (Last 7 Days)' :
                  userTypeFilter === 'authenticated' ? 'Top Users (Last 7 Days)' :
                  'Top Users (Last 7 Days)'}
               </h2>
-              <p className="text-sm text-slate-600 mt-1">
+              <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
                 {userTypeFilter === 'anonymous' ? 'Most active anonymous users' :
                  userTypeFilter === 'authenticated' ? 'Most active authenticated users' :
                  'Most active users across all types'}
@@ -382,26 +382,26 @@ export default function AdminUsage() {
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-slate-50 border-b border-slate-200">
+                <thead className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
                       {userTypeFilter === 'authenticated' ? 'User' : userTypeFilter === 'anonymous' ? 'IP Address' : 'User'}
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-slate-600 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-right text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
                       Generations
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-slate-600 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-right text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
                       Days
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-200">
+                <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
                   {userTypeFilter === 'all' ? (
                     // Show both anonymous and authenticated when "all" is selected
                     <>
                       {stats.topIPs.length === 0 && stats.topUsers.length === 0 ? (
                         <tr>
-                          <td colSpan="3" className="px-6 py-8 text-center text-slate-600">
+                          <td colSpan="3" className="px-6 py-8 text-center text-slate-600 dark:text-slate-400">
                             No data available
                           </td>
                         </tr>
@@ -411,29 +411,27 @@ export default function AdminUsage() {
                           {stats.topIPs.map((ip, index) => (
                             <tr
                               key={`ip-${ip.ipAddress}`}
-                              className="hover:bg-slate-50 transition-colors cursor-pointer"
+                              className="hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors cursor-pointer"
                               onClick={() => fetchIPDetails(ip.ipAddress)}
                             >
                               <td className="px-6 py-4">
                                 <div className="flex items-center gap-3">
-                                  <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                    <span className="text-xs font-semibold text-purple-600">
-                                      #{index + 1}
-                                    </span>
-                                  </div>
+                                  <span className="text-sm font-bold text-purple-600 dark:text-purple-400 w-8 flex-shrink-0">
+                                    #{index + 1}
+                                  </span>
                                   <div>
-                                    <div className="text-sm font-mono text-slate-900">{ip.ipAddress}</div>
-                                    <div className="text-xs text-slate-500">Anonymous</div>
+                                    <div className="text-sm font-mono text-slate-900 dark:text-slate-100">{ip.ipAddress}</div>
+                                    <div className="text-xs text-slate-500 dark:text-slate-400">Anonymous</div>
                                   </div>
                                 </div>
                               </td>
                               <td className="px-6 py-4 text-right">
-                                <span className="text-sm font-semibold text-slate-900">
+                                <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                                   {ip.totalGenerations}
                                 </span>
                               </td>
                               <td className="px-6 py-4 text-right">
-                                <span className="text-sm text-slate-600">{ip.daysActive}</span>
+                                <span className="text-sm text-slate-600 dark:text-slate-400">{ip.daysActive}</span>
                               </td>
                             </tr>
                           ))}
@@ -441,28 +439,26 @@ export default function AdminUsage() {
                           {stats.topUsers.map((user, index) => (
                             <tr
                               key={`user-${user.userId}`}
-                              className="hover:bg-slate-50 transition-colors"
+                              className="hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                             >
                               <td className="px-6 py-4">
                                 <div className="flex items-center gap-3">
-                                  <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                    <span className="text-xs font-semibold text-purple-600">
-                                      #{stats.topIPs.length + index + 1}
-                                    </span>
-                                  </div>
+                                  <span className="text-sm font-bold text-purple-600 dark:text-purple-400 w-8 flex-shrink-0">
+                                    #{stats.topIPs.length + index + 1}
+                                  </span>
                                   <div>
-                                    <div className="text-sm text-slate-900">{user.email}</div>
-                                    <div className="text-xs text-slate-500 capitalize">{user.tier}</div>
+                                    <div className="text-sm text-slate-900 dark:text-slate-100">{user.email}</div>
+                                    <div className="text-xs text-slate-500 dark:text-slate-400 capitalize">{user.tier}</div>
                                   </div>
                                 </div>
                               </td>
                               <td className="px-6 py-4 text-right">
-                                <span className="text-sm font-semibold text-slate-900">
+                                <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                                   {user.totalGenerations}
                                 </span>
                               </td>
                               <td className="px-6 py-4 text-right">
-                                <span className="text-sm text-slate-600">{user.daysActive}</span>
+                                <span className="text-sm text-slate-600 dark:text-slate-400">{user.daysActive}</span>
                               </td>
                             </tr>
                           ))}
@@ -474,7 +470,7 @@ export default function AdminUsage() {
                     <>
                       {stats.topIPs.length === 0 ? (
                         <tr>
-                          <td colSpan="3" className="px-6 py-8 text-center text-slate-600">
+                          <td colSpan="3" className="px-6 py-8 text-center text-slate-600 dark:text-slate-400">
                             No data available
                           </td>
                         </tr>
@@ -482,26 +478,24 @@ export default function AdminUsage() {
                         stats.topIPs.map((ip, index) => (
                           <tr
                             key={ip.ipAddress}
-                            className="hover:bg-slate-50 transition-colors cursor-pointer"
+                            className="hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors cursor-pointer"
                             onClick={() => fetchIPDetails(ip.ipAddress)}
                           >
                             <td className="px-6 py-4">
                               <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                  <span className="text-xs font-semibold text-purple-600">
-                                    #{index + 1}
-                                  </span>
-                                </div>
-                                <span className="text-sm font-mono text-slate-900">{ip.ipAddress}</span>
+                                <span className="text-sm font-bold text-purple-600 dark:text-purple-400 w-8 flex-shrink-0">
+                                  #{index + 1}
+                                </span>
+                                <span className="text-sm font-mono text-slate-900 dark:text-slate-100">{ip.ipAddress}</span>
                               </div>
                             </td>
                             <td className="px-6 py-4 text-right">
-                              <span className="text-sm font-semibold text-slate-900">
+                              <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                                 {ip.totalGenerations}
                               </span>
                             </td>
                             <td className="px-6 py-4 text-right">
-                              <span className="text-sm text-slate-600">{ip.daysActive}</span>
+                              <span className="text-sm text-slate-600 dark:text-slate-400">{ip.daysActive}</span>
                             </td>
                           </tr>
                         ))
@@ -512,7 +506,7 @@ export default function AdminUsage() {
                     <>
                       {stats.topUsers.length === 0 ? (
                         <tr>
-                          <td colSpan="3" className="px-6 py-8 text-center text-slate-600">
+                          <td colSpan="3" className="px-6 py-8 text-center text-slate-600 dark:text-slate-400">
                             No data available
                           </td>
                         </tr>
@@ -520,28 +514,26 @@ export default function AdminUsage() {
                         stats.topUsers.map((user, index) => (
                           <tr
                             key={user.userId}
-                            className="hover:bg-slate-50 transition-colors"
+                            className="hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                           >
                             <td className="px-6 py-4">
                               <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                  <span className="text-xs font-semibold text-purple-600">
-                                    #{index + 1}
-                                  </span>
-                                </div>
+                                <span className="text-sm font-bold text-purple-600 dark:text-purple-400 w-8 flex-shrink-0">
+                                  #{index + 1}
+                                </span>
                                 <div>
-                                  <div className="text-sm text-slate-900">{user.email}</div>
-                                  <div className="text-xs text-slate-500 capitalize">{user.tier}</div>
+                                  <div className="text-sm text-slate-900 dark:text-slate-100">{user.email}</div>
+                                  <div className="text-xs text-slate-500 dark:text-slate-400 capitalize">{user.tier}</div>
                                 </div>
                               </div>
                             </td>
                             <td className="px-6 py-4 text-right">
-                              <span className="text-sm font-semibold text-slate-900">
+                              <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                                 {user.totalGenerations}
                               </span>
                             </td>
                             <td className="px-6 py-4 text-right">
-                              <span className="text-sm text-slate-600">{user.daysActive}</span>
+                              <span className="text-sm text-slate-600 dark:text-slate-400">{user.daysActive}</span>
                             </td>
                           </tr>
                         ))
@@ -554,10 +546,10 @@ export default function AdminUsage() {
           </div>
 
           {/* Recent Activity */}
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-slate-200">
-              <h2 className="text-lg font-semibold text-slate-900">Recent Activity</h2>
-              <p className="text-sm text-slate-600 mt-1">
+          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+            <div className="p-6 border-b border-slate-200 dark:border-slate-700">
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Recent Activity</h2>
+              <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
                 {userTypeFilter === 'anonymous' ? 'Last 50 anonymous sessions' :
                  userTypeFilter === 'authenticated' ? 'Last 50 authenticated sessions' :
                  'Last 50 sessions across all types'}
@@ -565,26 +557,26 @@ export default function AdminUsage() {
             </div>
             <div className="overflow-x-auto max-h-[400px] overflow-y-auto">
               <table className="w-full">
-                <thead className="bg-slate-50 border-b border-slate-200 sticky top-0">
+                <thead className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700 sticky top-0">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
                       {userTypeFilter === 'authenticated' ? 'User' : userTypeFilter === 'anonymous' ? 'IP Address' : 'User'}
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-slate-600 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-right text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
                       Today
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-slate-600 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-right text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
                       Month
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-200">
+                <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
                   {userTypeFilter === 'all' ? (
                     // Show both anonymous and authenticated when "all" is selected
                     <>
                       {stats.recentAnonymous.length === 0 && stats.recentAuthenticated.length === 0 ? (
                         <tr>
-                          <td colSpan="3" className="px-6 py-8 text-center text-slate-600">
+                          <td colSpan="3" className="px-6 py-8 text-center text-slate-600 dark:text-slate-400">
                             No recent activity
                           </td>
                         </tr>
@@ -600,31 +592,31 @@ export default function AdminUsage() {
                             .map((activity) => (
                               <tr
                                 key={activity.type === 'anonymous' ? `anon-${activity.ipAddress}-${activity.lastActivity}` : `auth-${activity.userId}-${activity.lastActivity}`}
-                                className="hover:bg-slate-50 transition-colors cursor-pointer"
+                                className="hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors cursor-pointer"
                                 onClick={() => activity.type === 'anonymous' && fetchIPDetails(activity.ipAddress)}
                               >
                                 <td className="px-6 py-4">
                                   <div>
-                                    <div className="text-sm text-slate-900">
+                                    <div className="text-sm text-slate-900 dark:text-slate-100">
                                       {activity.type === 'anonymous' ? (
-                                        <span className="font-mono">{activity.ipAddress}</span>
+                                        <span className="font-mono text-slate-900 dark:text-slate-100">{activity.ipAddress}</span>
                                       ) : (
                                         activity.email
                                       )}
                                     </div>
-                                    <div className="text-xs text-slate-500 capitalize">
+                                    <div className="text-xs text-slate-500 dark:text-slate-400 capitalize">
                                       {activity.type === 'anonymous' ? 'Anonymous' : activity.tier}
                                     </div>
-                                    <div className="text-xs text-slate-500 mt-1">
+                                    <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                                       {formatDate(activity.lastActivity)}
                                     </div>
                                   </div>
                                 </td>
                                 <td className="px-6 py-4 text-right">
-                                  <span className="text-sm text-slate-900">{activity.dailyCount}</span>
+                                  <span className="text-sm text-slate-900 dark:text-slate-100">{activity.dailyCount}</span>
                                 </td>
                                 <td className="px-6 py-4 text-right">
-                                  <span className="text-sm font-semibold text-slate-900">
+                                  <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                                     {activity.monthlyCount}
                                   </span>
                                 </td>
@@ -638,7 +630,7 @@ export default function AdminUsage() {
                     <>
                       {stats.recentAnonymous.length === 0 ? (
                         <tr>
-                          <td colSpan="3" className="px-6 py-8 text-center text-slate-600">
+                          <td colSpan="3" className="px-6 py-8 text-center text-slate-600 dark:text-slate-400">
                             No recent activity
                           </td>
                         </tr>
@@ -646,22 +638,22 @@ export default function AdminUsage() {
                         stats.recentAnonymous.map((activity) => (
                           <tr
                             key={`${activity.ipAddress}-${activity.lastActivity}`}
-                            className="hover:bg-slate-50 transition-colors cursor-pointer"
+                            className="hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors cursor-pointer"
                             onClick={() => fetchIPDetails(activity.ipAddress)}
                           >
                             <td className="px-6 py-4">
                               <div>
-                                <div className="text-sm font-mono text-slate-900">{activity.ipAddress}</div>
-                                <div className="text-xs text-slate-500 mt-1">
+                                <div className="text-sm font-mono text-slate-900 dark:text-slate-100">{activity.ipAddress}</div>
+                                <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                                   {formatDate(activity.lastActivity)}
                                 </div>
                               </div>
                             </td>
                             <td className="px-6 py-4 text-right">
-                              <span className="text-sm text-slate-900">{activity.dailyCount}</span>
+                              <span className="text-sm text-slate-900 dark:text-slate-100">{activity.dailyCount}</span>
                             </td>
                             <td className="px-6 py-4 text-right">
-                              <span className="text-sm font-semibold text-slate-900">
+                              <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                                 {activity.monthlyCount}
                               </span>
                             </td>
@@ -674,7 +666,7 @@ export default function AdminUsage() {
                     <>
                       {stats.recentAuthenticated.length === 0 ? (
                         <tr>
-                          <td colSpan="3" className="px-6 py-8 text-center text-slate-600">
+                          <td colSpan="3" className="px-6 py-8 text-center text-slate-600 dark:text-slate-400">
                             No recent activity
                           </td>
                         </tr>
@@ -682,22 +674,22 @@ export default function AdminUsage() {
                         stats.recentAuthenticated.map((activity) => (
                           <tr
                             key={`${activity.userId}-${activity.lastActivity}`}
-                            className="hover:bg-slate-50 transition-colors"
+                            className="hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                           >
                             <td className="px-6 py-4">
                               <div>
-                                <div className="text-sm text-slate-900">{activity.email}</div>
-                                <div className="text-xs text-slate-500 capitalize">{activity.tier}</div>
-                                <div className="text-xs text-slate-500 mt-1">
+                                <div className="text-sm text-slate-900 dark:text-slate-100">{activity.email}</div>
+                                <div className="text-xs text-slate-500 dark:text-slate-400 capitalize">{activity.tier}</div>
+                                <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                                   {formatDate(activity.lastActivity)}
                                 </div>
                               </div>
                             </td>
                             <td className="px-6 py-4 text-right">
-                              <span className="text-sm text-slate-900">{activity.dailyCount}</span>
+                              <span className="text-sm text-slate-900 dark:text-slate-100">{activity.dailyCount}</span>
                             </td>
                             <td className="px-6 py-4 text-right">
-                              <span className="text-sm font-semibold text-slate-900">
+                              <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                                 {activity.monthlyCount}
                               </span>
                             </td>
@@ -715,28 +707,28 @@ export default function AdminUsage() {
         {/* IP Details Modal */}
         {selectedIP && (
           <div
-            className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/50 dark:bg-black/70 z-50 flex items-center justify-center p-4"
             onClick={() => {
               setSelectedIP(null);
               setIpDetails(null);
             }}
           >
             <div
-              className="bg-white rounded-xl shadow-xl max-w-3xl w-full max-h-[80vh] overflow-hidden"
+              className="bg-white dark:bg-slate-800 rounded-xl shadow-xl dark:shadow-slate-900/50 max-w-3xl w-full max-h-[80vh] overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="p-6 border-b border-slate-200">
+              <div className="p-6 border-b border-slate-200 dark:border-slate-700">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-xl font-semibold text-slate-900">IP Address Details</h2>
-                    <p className="text-sm font-mono text-slate-600 mt-1">{selectedIP}</p>
+                    <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">IP Address Details</h2>
+                    <p className="text-sm font-mono text-slate-600 dark:text-slate-400 mt-1">{selectedIP}</p>
                   </div>
                   <button
                     onClick={() => {
                       setSelectedIP(null);
                       setIpDetails(null);
                     }}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors"
+                    className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 transition-colors"
                   >
                     ×
                   </button>
@@ -745,60 +737,60 @@ export default function AdminUsage() {
 
               {loadingIP ? (
                 <div className="p-12 text-center">
-                  <RefreshCw className="w-8 h-8 text-purple-600 animate-spin mx-auto mb-4" />
-                  <p className="text-slate-600">Loading IP details...</p>
+                  <RefreshCw className="w-8 h-8 text-purple-600 dark:text-purple-400 animate-spin mx-auto mb-4" />
+                  <p className="text-slate-600 dark:text-slate-400">Loading IP details...</p>
                 </div>
               ) : ipDetails ? (
                 <div className="p-6 overflow-y-auto max-h-[calc(80vh-100px)]">
                   {/* Summary */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-slate-50 rounded-lg p-4">
-                      <div className="text-2xl font-bold text-slate-900">
+                    <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-4">
+                      <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
                         {ipDetails.summary.totalGenerations}
                       </div>
-                      <div className="text-xs text-slate-600 mt-1">Total Generations</div>
+                      <div className="text-xs text-slate-600 dark:text-slate-400 mt-1">Total Generations</div>
                     </div>
-                    <div className="bg-slate-50 rounded-lg p-4">
-                      <div className="text-2xl font-bold text-slate-900">
+                    <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-4">
+                      <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
                         {ipDetails.summary.periodsActive}
                       </div>
-                      <div className="text-xs text-slate-600 mt-1">Periods Active</div>
+                      <div className="text-xs text-slate-600 dark:text-slate-400 mt-1">Periods Active</div>
                     </div>
-                    <div className="bg-slate-50 rounded-lg p-4">
-                      <div className="text-sm font-medium text-slate-900">
+                    <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-4">
+                      <div className="text-sm font-medium text-slate-900 dark:text-slate-100">
                         {formatDateOnly(ipDetails.summary.firstSeen)}
                       </div>
-                      <div className="text-xs text-slate-600 mt-1">First Seen</div>
+                      <div className="text-xs text-slate-600 dark:text-slate-400 mt-1">First Seen</div>
                     </div>
-                    <div className="bg-slate-50 rounded-lg p-4">
-                      <div className="text-sm font-medium text-slate-900">
+                    <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-4">
+                      <div className="text-sm font-medium text-slate-900 dark:text-slate-100">
                         {formatDateOnly(ipDetails.summary.lastActivity)}
                       </div>
-                      <div className="text-xs text-slate-600 mt-1">Last Activity</div>
+                      <div className="text-xs text-slate-600 dark:text-slate-400 mt-1">Last Activity</div>
                     </div>
                   </div>
 
                   {/* History */}
-                  <h3 className="text-sm font-semibold text-slate-900 mb-3">Usage History</h3>
+                  <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-3">Usage History</h3>
                   <div className="space-y-3">
                     {ipDetails.history.map((period, index) => (
                       <div
                         key={index}
-                        className="bg-slate-50 rounded-lg p-4 flex items-center justify-between"
+                        className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-4 flex items-center justify-between"
                       >
                         <div>
-                          <div className="text-sm font-medium text-slate-900">
+                          <div className="text-sm font-medium text-slate-900 dark:text-slate-100">
                             {formatDateOnly(period.periodStart)}
                           </div>
-                          <div className="text-xs text-slate-600 mt-1">
+                          <div className="text-xs text-slate-600 dark:text-slate-400 mt-1">
                             Last active: {formatDate(period.lastActivity)}
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-lg font-bold text-slate-900">
+                          <div className="text-lg font-bold text-slate-900 dark:text-slate-100">
                             {period.monthlyCount}
                           </div>
-                          <div className="text-xs text-slate-600">generations</div>
+                          <div className="text-xs text-slate-600 dark:text-slate-400">generations</div>
                         </div>
                       </div>
                     ))}

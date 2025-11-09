@@ -6,7 +6,8 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
+import { renderWithTheme as render } from '../../__tests__/utils/renderWithTheme';
 import userEvent from '@testing-library/user-event';
 import { DocPanel } from '../DocPanel';
 import mermaid from 'mermaid';

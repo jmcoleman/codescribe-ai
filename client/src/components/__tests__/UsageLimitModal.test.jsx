@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { screen, fireEvent } from '@testing-library/react';
+import { renderWithTheme as render } from '../../__tests__/utils/renderWithTheme';
 import { UsageLimitModal } from '../UsageLimitModal';
 
 describe('UsageLimitModal', () => {

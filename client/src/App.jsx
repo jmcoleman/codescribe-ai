@@ -537,7 +537,7 @@ function App() {
   // Error toasts removed - errors are displayed via ErrorBanner component instead
 
   return (
-    <div className="h-screen bg-slate-50 flex flex-col overflow-hidden">
+    <div className="h-screen bg-slate-50 dark:bg-slate-950 flex flex-col overflow-hidden transition-colors">
       {/* Skip to Main Content Link - for keyboard navigation */}
       <a
         href="#main-content"
@@ -630,7 +630,7 @@ function App() {
         {/* Split View: Code + Documentation */}
         <div className="mt-6 flex-1 flex flex-col lg:grid lg:grid-cols-2 gap-4 lg:gap-6 min-h-0">
           {/* Left: Code Panel */}
-          <div className="h-[500px] lg:h-full flex-shrink-0">
+          <div className="h-[600px] lg:h-full lg:min-w-0 lg:overflow-hidden">
             <CodePanel
               code={code}
               onChange={setCode}
@@ -644,7 +644,7 @@ function App() {
           </div>
 
           {/* Right: Documentation Panel */}
-          <div className="h-[500px] lg:h-full flex-shrink-0">
+          <div className="h-[600px] lg:h-full lg:min-w-0 lg:overflow-hidden">
             <Suspense fallback={<LoadingFallback />}>
               <DocPanel
               documentation={documentation}

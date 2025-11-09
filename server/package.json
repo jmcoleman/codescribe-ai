@@ -26,6 +26,7 @@
     "migrate": "node -r dotenv/config src/db/migrate.js",
     "migrate:status": "node -r dotenv/config src/db/migrate.js status",
     "migrate:validate": "node -r dotenv/config src/db/migrate.js validate",
+    "reset:user": "node -r dotenv/config scripts/reset-dev-user.js",
     "test:db": "jest --config jest.config.db.cjs",
     "test:db:watch": "jest --config jest.config.db.cjs --watch",
     "test:db:setup": "docker-compose -f docker-compose.test.yml up -d",

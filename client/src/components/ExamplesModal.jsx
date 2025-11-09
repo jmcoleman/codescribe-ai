@@ -104,39 +104,39 @@ export function ExamplesModal({ isOpen, onClose, onLoadExample, currentCode }) {
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-in fade-in duration-200"
+      className="modal-backdrop animate-in fade-in duration-200"
       onClick={handleBackdropClick}
     >
       <div
         ref={modalRef}
         onClick={(e) => e.stopPropagation()}
-        className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200"
+        className="modal-container max-w-4xl w-full max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200"
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
-          <h2 id="modal-title" className="text-lg font-semibold text-slate-900">Code Examples</h2>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+          <h2 id="modal-title" className="text-lg font-semibold text-slate-900 dark:text-slate-100">Code Examples</h2>
           <button
             type="button"
             ref={closeButtonRef}
             onClick={onClose}
-            className="p-2 hover:bg-purple-50 hover:scale-[1.05] rounded-lg transition-all duration-200 motion-reduce:transition-none focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 active:scale-[0.98]"
+            className="icon-btn interactive-scale-sm focus-ring-dark"
             aria-label="Close examples modal"
           >
-            <X className="w-5 h-5 text-slate-600 hover:text-purple-600 transition-colors" />
+            <X className="w-5 h-5 text-slate-600 dark:text-slate-400" />
           </button>
         </div>
 
         {/* Body */}
         <div className="grid grid-cols-1 md:grid-cols-2 h-[calc(90vh-120px)]">
           {/* Left: Example List */}
-          <div className="border-r border-slate-200 overflow-y-auto">
+          <div className="border-r border-slate-200 dark:border-slate-700 overflow-y-auto bg-white dark:bg-slate-900">
             <div className="p-6">
-              <div className="bg-slate-100 py-2 px-3 rounded-lg mb-4">
-                <p className="text-xs text-slate-700">
-                  Click a card to preview • Click <ChevronRight className="w-3.5 h-3.5 inline mx-0.5 text-purple-600" /> to load
+              <div className="bg-slate-100 dark:bg-slate-800 py-2 px-3 rounded-lg mb-4">
+                <p className="text-xs text-slate-700 dark:text-slate-300">
+                  Click a card to preview • Click <ChevronRight className="w-3.5 h-3.5 inline mx-0.5 text-purple-600 dark:text-purple-400" /> to load
                 </p>
               </div>
               <div className="space-y-3">
@@ -157,14 +157,14 @@ export function ExamplesModal({ isOpen, onClose, onLoadExample, currentCode }) {
           </div>
 
           {/* Right: Preview */}
-          <div className="overflow-y-auto bg-slate-50">
+          <div className="overflow-y-auto bg-slate-100 dark:bg-slate-800">
             {selectedExample ? (
               <ExamplePreview example={selectedExample} onLoad={() => handleLoadExample(selectedExample)} />
             ) : (
               <div className="flex items-center justify-center h-full p-6 text-center">
                 <div>
-                  <Code2 className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                  <p className="text-sm text-slate-500">
+                  <Code2 className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
                     Select an example to preview
                   </p>
                 </div>
@@ -188,10 +188,10 @@ const ExampleCard = React.forwardRef(({ example, isSelected, onPreview, onLoad }
   return (
     <div
       ref={ref}
-      className={`p-4 rounded-lg border transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 ${
+      className={`p-4 rounded-lg border transition-smooth cursor-pointer focus-ring-dark ${
         isSelected
-          ? 'border-purple-500 bg-purple-50 shadow-sm'
-          : 'border-slate-200 bg-white hover:border-purple-300 hover:bg-purple-50/50 hover:shadow-sm'
+          ? 'border-purple-500 dark:border-purple-400 bg-purple-50 dark:bg-purple-950/20 shadow-sm'
+          : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-purple-300 dark:hover:border-purple-500 hover:bg-purple-50/50 dark:hover:bg-purple-950/10 hover:shadow-sm'
       }`}
       onClick={onPreview}
       onKeyDown={handleKeyDown}
@@ -202,17 +202,17 @@ const ExampleCard = React.forwardRef(({ example, isSelected, onPreview, onLoad }
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-semibold text-slate-900 mb-1.5">
+          <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-1.5">
             {example.title}
           </h3>
-          <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed mb-3">
+          <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed mb-3">
             {example.description}
           </p>
           <div className="flex items-center gap-2">
-            <span className="text-xs px-2 py-1 bg-indigo-100 text-indigo-700 rounded-md font-medium">
+            <span className="text-xs px-2 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 rounded-md font-medium border border-transparent dark:border-indigo-500/50">
               {example.docType}
             </span>
-            <span className="text-xs px-2 py-1 bg-slate-100 text-slate-600 rounded-md font-medium">
+            <span className="text-xs px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-md font-medium">
               {example.language}
             </span>
           </div>
@@ -225,7 +225,7 @@ const ExampleCard = React.forwardRef(({ example, isSelected, onPreview, onLoad }
             e.stopPropagation();
             onLoad();
           }}
-          className="flex-shrink-0 p-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 active:bg-purple-800 hover:scale-[1.05] shadow-lg shadow-purple-600/20 transition-all duration-200 motion-reduce:transition-none focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 active:scale-[0.98]"
+          className="flex-shrink-0 p-2 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-700 dark:hover:bg-purple-800 dark:active:bg-purple-900 text-white rounded-lg interactive-scale-sm shadow-lg shadow-purple-600/20 dark:shadow-purple-900/30 focus-ring-dark"
           aria-label={`Load ${example.title} example`}
           title="Load into editor"
         >
@@ -242,19 +242,19 @@ function ExamplePreview({ example, onLoad }) {
   return (
     <div className="flex flex-col h-full">
       {/* Action Button */}
-      <div className="p-6 border-b border-slate-200 bg-white">
+      <div className="p-6 border-b border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800">
         <button
           type="button"
           onClick={onLoad}
-          className="w-full px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 active:bg-purple-800 hover:scale-[1.02] shadow-lg shadow-purple-600/20 transition-all duration-200 motion-reduce:transition-none font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 active:scale-[0.98]"
+          className="btn-primary w-full interactive-scale text-sm font-semibold focus-ring-dark"
         >
           Load This Example
         </button>
       </div>
 
       {/* Code Preview */}
-      <div className="flex-1 overflow-y-auto bg-white">
-        <pre className="text-xs font-mono text-slate-800 leading-relaxed p-6 h-full">
+      <div className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900">
+        <pre className="text-xs font-mono text-slate-800 dark:text-slate-200 leading-relaxed p-6 h-full">
           <code>{example.code}</code>
         </pre>
       </div>

@@ -99,34 +99,34 @@ export function ContactSalesModal({ isOpen, onClose, tier = 'enterprise' }) {
   // Success view
   if (success) {
     return (
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-        <div ref={modalRef} className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8 relative text-center">
+      <div className="modal-backdrop">
+        <div ref={modalRef} className="modal-container max-w-lg w-full p-8 text-center">
           {/* Close button */}
           <button
             onClick={handleClose}
-            className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors p-1 hover:bg-slate-100 rounded-lg active:scale-95 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
+            className="absolute top-4 right-4 icon-btn interactive-scale-sm focus-ring-light"
             aria-label="Close modal"
           >
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5 text-slate-600 dark:text-slate-400" />
           </button>
 
           {/* Success icon with refined styling */}
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-50 text-green-600 mb-6 ring-2 ring-green-100 shadow-lg shadow-green-600/10">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 mb-6 ring-2 ring-green-100 dark:ring-green-500/30 shadow-lg shadow-green-600/10 dark:shadow-green-900/20">
             <CheckCircle2 className="w-12 h-12" />
           </div>
 
           {/* Success message */}
-          <h2 className="text-2xl font-bold text-slate-900 mb-3">
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-3">
             Message Sent!
           </h2>
-          <p className="text-slate-600 leading-relaxed mb-8">
+          <p className="text-slate-600 dark:text-slate-400 leading-relaxed mb-8">
             Thank you for your interest in the {tier.charAt(0).toUpperCase() + tier.slice(1)} plan. Our sales team will be in touch soon!
           </p>
 
           {/* Close button with refined styling */}
           <button
             onClick={handleClose}
-            className="w-full py-3 px-4 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white rounded-lg font-semibold shadow-lg shadow-purple-600/20 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
+            className="btn-primary w-full py-3 px-4"
           >
             Close
           </button>
@@ -137,35 +137,35 @@ export function ContactSalesModal({ isOpen, onClose, tier = 'enterprise' }) {
 
   // Form view
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div ref={modalRef} className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 relative">
+    <div className="modal-backdrop">
+      <div ref={modalRef} className="modal-container max-w-lg w-full p-6">
         {/* Close button */}
         <button
           onClick={handleClose}
           disabled={loading}
-          className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors p-1 hover:bg-slate-100 rounded-lg active:scale-95 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="absolute top-4 right-4 icon-btn interactive-scale-sm focus-ring-light disabled:opacity-50 disabled:cursor-not-allowed"
           aria-label="Close modal"
         >
-          <X className="w-5 h-5" />
+          <X className="w-5 h-5 text-slate-600 dark:text-slate-400" />
         </button>
 
         {/* Header with Icon */}
         <div className="flex items-center gap-3 mb-2">
-          <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-purple-100 text-purple-600">
+          <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">
             <Mail className="w-5 h-5" />
           </div>
-          <h2 className="text-2xl font-bold text-slate-900">
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
             Contact Sales
           </h2>
         </div>
-        <p className="text-slate-500 mb-6">
+        <p className="text-slate-500 dark:text-slate-400 mb-6">
           Interested in the {tier.charAt(0).toUpperCase() + tier.slice(1)} plan? Let's chat about your needs.
         </p>
 
         {/* Error message */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-6">
-            <p className="text-sm text-red-800">{error}</p>
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/50 rounded-lg p-3 mb-6">
+            <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
           </div>
         )}
 
@@ -175,7 +175,7 @@ export function ContactSalesModal({ isOpen, onClose, tier = 'enterprise' }) {
           {!user?.first_name || !user?.last_name ? (
             <>
               <div>
-                <label htmlFor="firstName" className="block text-sm font-medium text-slate-700 mb-2">
+                <label htmlFor="firstName" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                   First Name <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -185,13 +185,13 @@ export function ContactSalesModal({ isOpen, onClose, tier = 'enterprise' }) {
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   required
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 border-slate-300 dark:border-slate-600 focus:ring-2 focus:ring-purple-600 dark:focus:ring-purple-400 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={loading}
                 />
               </div>
 
               <div>
-                <label htmlFor="lastName" className="block text-sm font-medium text-slate-700 mb-2">
+                <label htmlFor="lastName" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                   Last Name <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -201,7 +201,7 @@ export function ContactSalesModal({ isOpen, onClose, tier = 'enterprise' }) {
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   required
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 border-slate-300 dark:border-slate-600 focus:ring-2 focus:ring-purple-600 dark:focus:ring-purple-400 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={loading}
                 />
               </div>
@@ -210,7 +210,7 @@ export function ContactSalesModal({ isOpen, onClose, tier = 'enterprise' }) {
 
           {/* Subject field */}
           <div>
-            <label htmlFor="subject" className="block text-sm font-medium text-slate-700 mb-2">
+            <label htmlFor="subject" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
               Subject <span className="text-red-500">*</span>
             </label>
             <input
@@ -221,7 +221,7 @@ export function ContactSalesModal({ isOpen, onClose, tier = 'enterprise' }) {
               onChange={(e) => setSubject(e.target.value)}
               required
               placeholder="e.g., Enterprise pricing inquiry"
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 border-slate-300 dark:border-slate-600 focus:ring-2 focus:ring-purple-600 dark:focus:ring-purple-400 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={loading}
             />
           </div>
@@ -229,10 +229,10 @@ export function ContactSalesModal({ isOpen, onClose, tier = 'enterprise' }) {
           {/* Optional message */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label htmlFor="message" className="block text-sm font-medium text-slate-700">
+              <label htmlFor="message" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
                 Additional Information (Optional)
               </label>
-              <span className={`text-xs ${message.length > MAX_MESSAGE_LENGTH ? 'text-red-600 font-medium' : 'text-slate-500'}`}>
+              <span className={`text-xs ${message.length > MAX_MESSAGE_LENGTH ? 'text-red-600 dark:text-red-400 font-medium' : 'text-slate-500 dark:text-slate-400'}`}>
                 {message.length}/{MAX_MESSAGE_LENGTH}
               </span>
             </div>
@@ -244,7 +244,7 @@ export function ContactSalesModal({ isOpen, onClose, tier = 'enterprise' }) {
               onChange={(e) => setMessage(e.target.value)}
               maxLength={MAX_MESSAGE_LENGTH}
               placeholder="Tell us about your team size, specific needs, or any questions..."
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 border-slate-300 dark:border-slate-600 focus:ring-2 focus:ring-purple-600 dark:focus:ring-purple-400 focus:border-transparent resize-none disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={loading}
             />
           </div>
@@ -255,14 +255,14 @@ export function ContactSalesModal({ isOpen, onClose, tier = 'enterprise' }) {
               type="button"
               onClick={handleClose}
               disabled={loading}
-              className="flex-1 py-2.5 px-4 bg-slate-100 text-slate-900 rounded-lg font-medium hover:bg-slate-200 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-secondary flex-1 py-2.5 px-4"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 py-2.5 px-4 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white rounded-lg font-semibold shadow-lg shadow-purple-600/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="btn-primary flex-1 py-2.5 px-4 flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>
@@ -277,7 +277,7 @@ export function ContactSalesModal({ isOpen, onClose, tier = 'enterprise' }) {
         </form>
 
         {/* Footer note */}
-        <p className="text-xs text-slate-500 text-center mt-4">
+        <p className="text-xs text-slate-500 dark:text-slate-400 text-center mt-4">
           Your inquiry will be sent to our sales team via email.
         </p>
       </div>

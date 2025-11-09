@@ -20,7 +20,7 @@ export default function PrivacyPolicy() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-2">
         <button
           onClick={() => navigate(-1)}
-          className="inline-flex items-center gap-2 text-slate-600 hover:text-purple-600 transition-colors group"
+          className="inline-flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors group"
         >
           <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" aria-hidden="true" />
           <span className="font-medium">Back</span>
@@ -28,18 +28,18 @@ export default function PrivacyPolicy() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-        <div className="bg-white rounded-xl shadow-lg ring-1 ring-slate-200 p-8 sm:p-12">
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg ring-1 ring-slate-200 dark:ring-slate-700 p-8 sm:p-12 [&_strong]:text-slate-900 [&_strong]:dark:text-slate-100">
           {/* Title */}
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">
+          <h1 className="text-4xl font-bold text-slate-900 dark:text-slate-100 mb-2">
             Privacy Policy
           </h1>
-          <p className="text-slate-600 mb-8">
+          <p className="text-slate-600 dark:text-slate-400 mb-8">
             <strong>Effective Date:</strong> {EFFECTIVE_DATE} | <strong>Version:</strong> {PRIVACY_VERSION}
           </p>
 
           {/* Introduction */}
-          <section className="mb-8 prose prose-slate max-w-none">
-            <p className="text-lg text-slate-700 leading-relaxed">
+          <section className="mb-8 prose dark:prose-invert prose-slate max-w-none">
+            <p className="text-lg text-slate-700 dark:text-slate-300 leading-relaxed">
               At CodeScribe AI, we take your privacy seriously. This Privacy Policy explains how we collect, use, disclose,
               and safeguard your information when you use our service.
             </p>
@@ -47,10 +47,10 @@ export default function PrivacyPolicy() {
 
           {/* 1. Information We Collect */}
           <section className="mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">1. Information We Collect</h2>
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-4">1. Information We Collect</h2>
 
-            <h3 className="text-xl font-semibold text-slate-900 mt-6 mb-3">1.1 Account Information</h3>
-            <div className="prose prose-slate max-w-none text-slate-700">
+            <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mt-6 mb-3">1.1 Account Information</h3>
+            <div className="prose dark:prose-invert prose-slate max-w-none text-slate-700 dark:text-slate-300">
               <p>When you create an account, we collect:</p>
               <ul className="space-y-2">
                 <li><strong>Email address:</strong> Used for authentication and communication</li>
@@ -62,8 +62,8 @@ export default function PrivacyPolicy() {
               </ul>
             </div>
 
-            <h3 className="text-xl font-semibold text-slate-900 mt-6 mb-3">1.2 Usage Data</h3>
-            <div className="prose prose-slate max-w-none text-slate-700">
+            <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mt-6 mb-3">1.2 Usage Data</h3>
+            <div className="prose dark:prose-invert prose-slate max-w-none text-slate-700 dark:text-slate-300">
               <p>To enforce usage limits and improve our service, we collect:</p>
               <ul className="space-y-2">
                 <li><strong>Documentation generation count:</strong> Number of documents generated (daily and monthly)</li>
@@ -77,8 +77,8 @@ export default function PrivacyPolicy() {
               </p>
             </div>
 
-            <h3 className="text-xl font-semibold text-slate-900 mt-6 mb-3">1.3 Payment Information</h3>
-            <div className="prose prose-slate max-w-none text-slate-700">
+            <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mt-6 mb-3">1.3 Payment Information</h3>
+            <div className="prose dark:prose-invert prose-slate max-w-none text-slate-700 dark:text-slate-300">
               <p>
                 When you subscribe to a paid tier, we use Stripe to process payments. We collect:
               </p>
@@ -94,8 +94,8 @@ export default function PrivacyPolicy() {
               </p>
             </div>
 
-            <h3 className="text-xl font-semibold text-slate-900 mt-6 mb-3">1.4 Automatically Collected Information</h3>
-            <div className="prose prose-slate max-w-none text-slate-700">
+            <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mt-6 mb-3">1.4 Automatically Collected Information</h3>
+            <div className="prose dark:prose-invert prose-slate max-w-none text-slate-700 dark:text-slate-300">
               <ul className="space-y-2">
                 <li><strong>Browser type and version:</strong> For compatibility and analytics</li>
                 <li><strong>Operating system:</strong> For compatibility</li>
@@ -108,8 +108,8 @@ export default function PrivacyPolicy() {
 
           {/* 2. How We Use Your Information */}
           <section className="mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">2. How We Use Your Information</h2>
-            <div className="prose prose-slate max-w-none text-slate-700">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-4">2. How We Use Your Information</h2>
+            <div className="prose dark:prose-invert prose-slate max-w-none text-slate-700 dark:text-slate-300">
               <p>We use the information we collect to:</p>
               <ul className="space-y-2">
                 <li><strong>Provide the Service:</strong> Generate documentation, manage your account, enforce usage limits</li>
@@ -124,10 +124,10 @@ export default function PrivacyPolicy() {
 
           {/* 3. Data Processing and Storage */}
           <section className="mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">3. Data Processing and Storage</h2>
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-4">3. Data Processing and Storage</h2>
 
-            <h3 className="text-xl font-semibold text-slate-900 mt-4 mb-3">3.1 Code Processing (Privacy-First)</h3>
-            <div className="prose prose-slate max-w-none text-slate-700">
+            <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mt-4 mb-3">3.1 Code Processing (Privacy-First)</h3>
+            <div className="prose dark:prose-invert prose-slate max-w-none text-slate-700 dark:text-slate-300">
               <p>
                 <strong>Your code is processed in memory only and is NEVER stored on our servers.</strong> Here's how it works:
               </p>
@@ -139,13 +139,13 @@ export default function PrivacyPolicy() {
                 <li>Our server sends documentation directly to your browser</li>
                 <li><strong>Code and documentation are purged from memory immediately</strong></li>
               </ul>
-              <p className="mt-4 font-medium text-purple-700">
+              <p className="mt-4 font-medium text-purple-700 dark:text-purple-400">
                 We have zero visibility into your code after processing. It is not logged, stored, or retained in any form.
               </p>
             </div>
 
-            <h3 className="text-xl font-semibold text-slate-900 mt-6 mb-3">3.2 Database Storage</h3>
-            <div className="prose prose-slate max-w-none text-slate-700">
+            <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mt-6 mb-3">3.2 Database Storage</h3>
+            <div className="prose dark:prose-invert prose-slate max-w-none text-slate-700 dark:text-slate-300">
               <p>We store the following in our Neon PostgreSQL database:</p>
               <ul className="space-y-2">
                 <li><strong>Account data:</strong> Email, password hash, name, tier, GitHub ID</li>
@@ -159,8 +159,8 @@ export default function PrivacyPolicy() {
               </p>
             </div>
 
-            <h3 className="text-xl font-semibold text-slate-900 mt-6 mb-3">3.3 Third-Party Services</h3>
-            <div className="prose prose-slate max-w-none text-slate-700">
+            <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mt-6 mb-3">3.3 Third-Party Services</h3>
+            <div className="prose dark:prose-invert prose-slate max-w-none text-slate-700 dark:text-slate-300">
               <p>We use the following third-party services that process your data:</p>
               <ul className="space-y-2">
                 <li>
@@ -187,8 +187,8 @@ export default function PrivacyPolicy() {
 
           {/* 4. Data Sharing and Disclosure */}
           <section className="mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">4. Data Sharing and Disclosure</h2>
-            <div className="prose prose-slate max-w-none text-slate-700">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-4">4. Data Sharing and Disclosure</h2>
+            <div className="prose dark:prose-invert prose-slate max-w-none text-slate-700 dark:text-slate-300">
               <p>
                 <strong>We do not sell, rent, or trade your personal information.</strong> We only share your data in the
                 following limited circumstances:
@@ -212,8 +212,8 @@ export default function PrivacyPolicy() {
 
           {/* 5. Data Retention */}
           <section className="mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">5. Data Retention</h2>
-            <div className="prose prose-slate max-w-none text-slate-700">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-4">5. Data Retention</h2>
+            <div className="prose dark:prose-invert prose-slate max-w-none text-slate-700 dark:text-slate-300">
               <ul className="space-y-2">
                 <li><strong>Account data:</strong> Retained until you delete your account</li>
                 <li><strong>Usage data:</strong> Retained for 12 months for quota enforcement and analytics</li>
@@ -227,8 +227,8 @@ export default function PrivacyPolicy() {
 
           {/* 6. Your Rights (GDPR & Privacy) */}
           <section className="mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">6. Your Rights (GDPR & Privacy)</h2>
-            <div className="prose prose-slate max-w-none text-slate-700">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-4">6. Your Rights (GDPR & Privacy)</h2>
+            <div className="prose dark:prose-invert prose-slate max-w-none text-slate-700 dark:text-slate-300">
               <p>You have the following rights regarding your personal data:</p>
               <ul className="space-y-2">
                 <li><strong>Access:</strong> Request a copy of the personal data we hold about you</li>
@@ -241,7 +241,7 @@ export default function PrivacyPolicy() {
               </ul>
               <p className="mt-4">
                 To exercise these rights, contact us at{' '}
-                <a href="mailto:support@codescribeai.com" className="text-purple-600 hover:text-purple-700">
+                <a href="mailto:support@codescribeai.com" className="text-purple-600 dark:text-cyan-400 hover:text-purple-700 dark:hover:text-cyan-300">
                   support@codescribeai.com
                 </a>
                 . We will respond within 30 days.
@@ -251,8 +251,8 @@ export default function PrivacyPolicy() {
 
           {/* 7. Security */}
           <section className="mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">7. Security</h2>
-            <div className="prose prose-slate max-w-none text-slate-700">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-4">7. Security</h2>
+            <div className="prose dark:prose-invert prose-slate max-w-none text-slate-700 dark:text-slate-300">
               <p>We implement industry-standard security measures to protect your data:</p>
               <ul className="space-y-2">
                 <li><strong>Encryption in transit:</strong> All data transmitted via HTTPS (TLS 1.3)</li>
@@ -272,8 +272,8 @@ export default function PrivacyPolicy() {
 
           {/* 8. Cookies and Tracking */}
           <section className="mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">8. Cookies and Tracking</h2>
-            <div className="prose prose-slate max-w-none text-slate-700">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-4">8. Cookies and Tracking</h2>
+            <div className="prose dark:prose-invert prose-slate max-w-none text-slate-700 dark:text-slate-300">
               <p>We use minimal cookies and tracking:</p>
               <ul className="space-y-2">
                 <li>
@@ -291,8 +291,8 @@ export default function PrivacyPolicy() {
 
           {/* 9. International Data Transfers */}
           <section className="mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">9. International Data Transfers</h2>
-            <div className="prose prose-slate max-w-none text-slate-700">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-4">9. International Data Transfers</h2>
+            <div className="prose dark:prose-invert prose-slate max-w-none text-slate-700 dark:text-slate-300">
               <p>
                 Our services are hosted on AWS infrastructure (via Neon and Vercel). Your data may be transferred to and
                 processed in countries outside your country of residence. We ensure that all data transfers comply with
@@ -303,8 +303,8 @@ export default function PrivacyPolicy() {
 
           {/* 10. Children's Privacy */}
           <section className="mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">10. Children's Privacy</h2>
-            <div className="prose prose-slate max-w-none text-slate-700">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-4">10. Children's Privacy</h2>
+            <div className="prose dark:prose-invert prose-slate max-w-none text-slate-700 dark:text-slate-300">
               <p>
                 Our Service is intended for users aged 13 and older. We do not knowingly collect personal information from
                 children under 13. If you are a parent or guardian and believe your child has provided us with personal
@@ -315,8 +315,8 @@ export default function PrivacyPolicy() {
 
           {/* 11. Changes to Privacy Policy */}
           <section className="mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">11. Changes to Privacy Policy</h2>
-            <div className="prose prose-slate max-w-none text-slate-700">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-4">11. Changes to Privacy Policy</h2>
+            <div className="prose dark:prose-invert prose-slate max-w-none text-slate-700 dark:text-slate-300">
               <p>
                 We may update this Privacy Policy from time to time. When we make changes, we will:
               </p>
@@ -333,20 +333,20 @@ export default function PrivacyPolicy() {
 
           {/* 12. Contact Us */}
           <section className="mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">12. Contact Us</h2>
-            <div className="prose prose-slate max-w-none text-slate-700">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-4">12. Contact Us</h2>
+            <div className="prose dark:prose-invert prose-slate max-w-none text-slate-700 dark:text-slate-300">
               <p>
                 If you have any questions about this Privacy Policy or our data practices, please contact us at:
               </p>
               <p className="font-medium">
                 Email:{' '}
-                <a href="mailto:support@codescribeai.com" className="text-purple-600 hover:text-purple-700">
+                <a href="mailto:support@codescribeai.com" className="text-purple-600 dark:text-cyan-400 hover:text-purple-700 dark:hover:text-cyan-300">
                   support@codescribeai.com
                 </a>
               </p>
               <p className="font-medium">
                 Website:{' '}
-                <a href="https://codescribeai.com" className="text-purple-600 hover:text-purple-700">
+                <a href="https://codescribeai.com" className="text-purple-600 dark:text-cyan-400 hover:text-purple-700 dark:hover:text-cyan-300">
                   https://codescribeai.com
                 </a>
               </p>

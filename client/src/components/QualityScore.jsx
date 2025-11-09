@@ -85,31 +85,31 @@ export function QualityScoreModal({ qualityScore, onClose }) {
       onClick={handleBackdropClick}
     >
       <div
-        className="bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-200"
+        className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-200"
         role="dialog"
         aria-modal="true"
         aria-labelledby="quality-modal-title"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-200 flex-shrink-0">
-          <h2 id="quality-modal-title" className="text-sm font-semibold text-slate-900">Quality Breakdown</h2>
+        <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-200 dark:border-slate-700 flex-shrink-0">
+          <h2 id="quality-modal-title" className="text-sm font-semibold text-slate-900 dark:text-slate-100">Quality Breakdown</h2>
           <button
             type="button"
             ref={closeButtonRef}
             onClick={onClose}
-            className="p-1.5 hover:bg-purple-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
+            className="p-1.5 hover:bg-purple-50 dark:hover:bg-purple-900/30 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-purple-600 dark:focus:ring-purple-400 focus:ring-offset-2 dark:focus:ring-offset-slate-800"
             aria-label="Close quality breakdown modal"
           >
-            <X className="w-4 h-4 text-slate-600 hover:text-purple-600 transition-colors" aria-hidden="true" />
+            <X className="w-4 h-4 text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors" aria-hidden="true" />
           </button>
         </div>
 
         {/* Overall Score */}
-        <div className="px-4 py-2.5 bg-gradient-to-br from-purple-50 to-white border-b border-slate-200 flex-shrink-0">
+        <div className="px-4 py-2.5 bg-gradient-to-br from-purple-50 to-white dark:from-purple-950/30 dark:to-slate-800 border-b border-slate-200 dark:border-slate-700 flex-shrink-0">
           <div className="text-center">
-            <div className="text-2xl font-bold text-purple-600 mb-0.5">{score}/100</div>
-            <div className="text-xs text-slate-600">
+            <div className="text-2xl font-bold text-purple-600 dark:text-purple-400 mb-0.5">{score}/100</div>
+            <div className="text-xs text-slate-600 dark:text-slate-400">
               <span className={`font-bold ${getGradeColor(grade)}`}>Grade: {grade}</span>
               <span className="mx-1">•</span>
               <span>{docType}</span>
@@ -118,7 +118,7 @@ export function QualityScoreModal({ qualityScore, onClose }) {
         </div>
 
         {/* Criteria Breakdown */}
-        <div className="px-3 py-3 flex-1 min-h-0 overflow-y-auto bg-slate-50" tabIndex={-1}>
+        <div className="px-3 py-3 flex-1 min-h-0 overflow-y-auto bg-slate-50 dark:bg-slate-900" tabIndex={-1}>
           <div className="space-y-2">
             {Object.entries(breakdown).map(([key, criteria]) => (
               <CriteriaItem key={key} name={formatCriteriaName(key, docType)} criteria={criteria} />
@@ -127,15 +127,12 @@ export function QualityScoreModal({ qualityScore, onClose }) {
         </div>
 
         {/* Footer - Copy Report Button */}
-        <div className="px-4 py-2.5 bg-white border-t border-slate-200 flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-slate-600">Share this report</p>
-            <CopyButtonWithText
-              text={generateQualityReportText()}
-              label="Copy Report"
-              className="shadow-sm"
-            />
-          </div>
+        <div className="px-4 py-2.5 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 flex-shrink-0">
+          <CopyButtonWithText
+            text={generateQualityReportText()}
+            label="Copy Report"
+            className="shadow-sm w-full justify-center"
+          />
         </div>
       </div>
     </div>
@@ -164,7 +161,7 @@ function CriteriaItem({ name, criteria }) {
   const percentage = (points / maxPoints) * 100;
 
   return (
-    <div className="p-2.5 bg-white rounded-lg border border-slate-200 hover:border-purple-200 hover:bg-purple-50/30 transition-all">
+    <div className="p-2.5 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
       {/* Screen reader status text */}
       <span className="sr-only">
         {name}: {statusText}. Score: {points} out of {maxPoints} points.
@@ -173,16 +170,16 @@ function CriteriaItem({ name, criteria }) {
       <div className="flex items-center justify-between mb-1.5">
         <div className="flex items-center gap-1.5">
           {icon}
-          <span className="text-sm font-medium text-slate-800" aria-hidden="true">{name}</span>
+          <span className="text-sm font-medium text-slate-800 dark:text-slate-200" aria-hidden="true">{name}</span>
         </div>
-        <span className="text-sm font-semibold text-slate-700" aria-hidden="true">
+        <span className="text-sm font-semibold text-slate-700 dark:text-slate-300" aria-hidden="true">
           {points}/{maxPoints}
         </span>
       </div>
 
       {/* Progress Bar */}
       <div
-        className="w-full h-1 bg-slate-100 rounded-full overflow-hidden mb-1.5"
+        className="w-full h-1 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden mb-1.5"
         role="progressbar"
         aria-valuenow={points}
         aria-valuemin={0}
@@ -191,9 +188,9 @@ function CriteriaItem({ name, criteria }) {
       >
         <div
           className={`h-full transition-all duration-300 ease-out ${
-            status === 'complete' ? 'bg-purple-500' :
-            status === 'partial' ? 'bg-indigo-400' :
-            'bg-slate-300'
+            status === 'complete' ? 'bg-purple-500 dark:bg-purple-400' :
+            status === 'partial' ? 'bg-indigo-400 dark:bg-indigo-300' :
+            'bg-slate-300 dark:bg-slate-600'
           }`}
           style={{ width: `${percentage}%` }}
         />
@@ -201,7 +198,7 @@ function CriteriaItem({ name, criteria }) {
 
       {/* Suggestion */}
       {criteria.suggestion && (
-        <p className="text-sm text-slate-600 leading-relaxed">{criteria.suggestion}</p>
+        <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{criteria.suggestion}</p>
       )}
     </div>
   );
@@ -240,11 +237,11 @@ function formatCriteriaName(key, docType = 'README') {
 
 function getGradeColor(grade) {
   switch (grade) {
-    case 'A': return 'text-purple-600';
-    case 'B': return 'text-indigo-600';
-    case 'C': return 'text-slate-600';
+    case 'A': return 'text-purple-600 dark:text-purple-400';
+    case 'B': return 'text-indigo-600 dark:text-indigo-400';
+    case 'C': return 'text-slate-600 dark:text-slate-400';
     case 'D':
-    case 'F': return 'text-slate-500';
-    default: return 'text-slate-600';
+    case 'F': return 'text-slate-500 dark:text-slate-500';
+    default: return 'text-slate-600 dark:text-slate-400';
   }
 }

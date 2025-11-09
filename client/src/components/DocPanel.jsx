@@ -1,4 +1,4 @@
-import { Sparkles, CheckCircle, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Sparkles, CheckCircle, AlertCircle, ChevronDown, ChevronUp, MoreVertical, Download, Copy } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -7,6 +7,7 @@ import { CopyButton } from './CopyButton';
 import { DownloadButton } from './DownloadButton';
 import { DocPanelGeneratingSkeleton } from './SkeletonLoader';
 import { MermaidDiagram } from './MermaidDiagram';
+import { useTheme } from '../contexts/ThemeContext';
 
 // Custom Prism theme matching Monaco editor theme
 const codescribeLightTheme = {
@@ -75,6 +76,75 @@ const codescribeLightTheme = {
   'important': { color: '#DC2626', fontWeight: 'bold', background: 'none' },
   'variable': { color: '#334155', background: 'none' },
 };
+
+// Dark theme for Prism (Neon Cyberpunk)
+const codescribeDarkTheme = {
+  'code[class*="language-"]': {
+    color: '#E2E8F0',
+    background: 'none',
+    textShadow: 'none',
+    fontFamily: 'JetBrains Mono, Menlo, Monaco, Consolas, monospace',
+    fontSize: '13px',
+    textAlign: 'left',
+    whiteSpace: 'pre',
+    wordSpacing: 'normal',
+    wordBreak: 'normal',
+    wordWrap: 'normal',
+    lineHeight: '1.5',
+    tabSize: 4,
+    hyphens: 'none',
+  },
+  'pre[class*="language-"]': {
+    color: '#E2E8F0',
+    background: 'none',
+    textShadow: 'none',
+    fontFamily: 'JetBrains Mono, Menlo, Monaco, Consolas, monospace',
+    fontSize: '13px',
+    textAlign: 'left',
+    whiteSpace: 'pre',
+    wordSpacing: 'normal',
+    wordBreak: 'normal',
+    wordWrap: 'normal',
+    lineHeight: '1.5',
+    tabSize: 4,
+    hyphens: 'none',
+    padding: '1em',
+    margin: '.5em 0',
+    overflow: 'auto',
+  },
+  'comment': { color: '#64748B', fontStyle: 'italic', background: 'none' },
+  'prolog': { color: '#64748B', background: 'none' },
+  'doctype': { color: '#64748B', background: 'none' },
+  'cdata': { color: '#64748B', background: 'none' },
+  'punctuation': { color: '#E2E8F0', background: 'none' },
+  'property': { color: '#E2E8F0', background: 'none' },
+  'tag': { color: '#E2E8F0', background: 'none' },
+  'boolean': { color: '#C084FC', background: 'none' },
+  'number': { color: '#22D3EE', background: 'none' },
+  'constant': { color: '#22D3EE', background: 'none' },
+  'symbol': { color: '#E2E8F0', background: 'none' },
+  'deleted': { color: '#F87171', background: 'none' },
+  'selector': { color: '#E2E8F0', background: 'none' },
+  'attr-name': { color: '#E2E8F0', background: 'none' },
+  'string': { color: '#4ADE80', background: 'none' },
+  'char': { color: '#4ADE80', background: 'none' },
+  'builtin': { color: '#E2E8F0', background: 'none' },
+  'inserted': { color: '#4ADE80', background: 'none' },
+  'operator': { color: '#E2E8F0', background: 'none' },
+  'entity': { color: '#E2E8F0', background: 'none' },
+  'url': { color: '#22D3EE', background: 'none' },
+  '.language-css .token.string': { color: '#4ADE80', background: 'none' },
+  '.style .token.string': { color: '#4ADE80', background: 'none' },
+  'atrule': { color: '#C084FC', background: 'none' },
+  'attr-value': { color: '#4ADE80', background: 'none' },
+  'keyword': { color: '#C084FC', background: 'none' },
+  'function': { color: '#E2E8F0', background: 'none' },
+  'class-name': { color: '#E2E8F0', background: 'none' },
+  'regex': { color: '#4ADE80', background: 'none' },
+  'important': { color: '#F87171', fontWeight: 'bold', background: 'none' },
+  'variable': { color: '#E2E8F0', background: 'none' },
+};
+
 import { STORAGE_KEYS, getStorageItem, setStorageItem } from '../constants/storage';
 
 export function DocPanel({
@@ -85,14 +155,33 @@ export function DocPanel({
   onUpload,
   onGenerate
 }) {
+  const { theme } = useTheme();
+
   // Load initial state from localStorage
   const [isExpanded, setIsExpanded] = useState(() => {
     const stored = getStorageItem(STORAGE_KEYS.REPORT_EXPANDED);
     return stored === 'true';
   });
 
+  // Mobile menu state
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const mobileMenuRef = useRef(null);
+
   // Track mermaid diagram counter to ensure unique IDs
   const mermaidCounterRef = useRef(0);
+
+  // Close mobile menu when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target)) {
+        setShowMobileMenu(false);
+      }
+    }
+    if (showMobileMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showMobileMenu]);
 
   // Reset counter when documentation changes (new generation)
   useEffect(() => {
@@ -117,7 +206,7 @@ export function DocPanel({
 
 
   return (
-    <div data-testid="doc-panel" className="flex flex-col h-full bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+    <div data-testid="doc-panel" className="flex flex-col h-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm overflow-hidden transition-colors">
       {/* Live Region for Screen Reader Announcements */}
       <div
         role="status"
@@ -132,89 +221,157 @@ export function DocPanel({
       </div>
 
       {/* Header */}
-      <div className="flex items-center justify-between px-4 h-12 bg-purple-50 border-b border-purple-200">
+      <div className="flex items-center justify-between px-4 h-12 bg-purple-50 dark:bg-purple-400/15 border-b border-purple-200 dark:border-slate-700 transition-colors">
         {/* Left: Icon + Title */}
         <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-purple-600" aria-hidden="true" />
-          <h2 className="text-sm text-slate-800">
+          <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400" aria-hidden="true" />
+          <h2 className="text-sm text-slate-600 dark:text-slate-300">
             Generated Documentation
           </h2>
         </div>
 
-        {/* Right: Quality Score + Copy Button */}
+        {/* Right: Quality Score + Action Buttons */}
         <div className="flex items-center gap-2">
-          {/* Quality Score */}
+          {/* Quality Score - Always visible */}
           {qualityScore && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                onViewBreakdown();
-              }}
-              className="flex items-center gap-2 px-3 py-1.5 bg-white border border-purple-200 rounded-lg hover:bg-purple-50 hover:scale-[1.02] hover:shadow-sm transition-all duration-200 motion-reduce:transition-none active:scale-[0.98]"
-              aria-label="View quality score breakdown"
-              title="View breakdown"
-            >
-              <span className="text-xs text-slate-600">Quality:</span>
-              <span className="text-xs font-semibold text-purple-700">
-                {qualityScore.score}/100
-              </span>
-              <span className={`text-sm font-bold ${getGradeColor(qualityScore.grade)}`}>
-                {qualityScore.grade} {getGradeLabel(qualityScore.grade)}
-              </span>
-            </button>
+            <>
+              {/* Mobile: Condensed Score */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  onViewBreakdown();
+                }}
+                className="sm:hidden flex items-center gap-1.5 px-2 py-1 bg-white dark:bg-slate-800 border border-purple-200 dark:border-purple-400/30 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-400/15 transition-colors"
+                aria-label={`Quality score: ${qualityScore.grade} ${qualityScore.score}/100`}
+                title="View breakdown"
+              >
+                <span className="text-xs font-semibold text-purple-700 dark:text-purple-400">
+                  {qualityScore.score}
+                </span>
+                <span className={`text-xs font-bold ${getGradeColor(qualityScore.grade)}`}>
+                  {qualityScore.grade}
+                </span>
+              </button>
+
+              {/* Desktop: Full Score */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  onViewBreakdown();
+                }}
+                className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-800 border border-purple-200 dark:border-purple-400/30 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-400/15 hover:scale-[1.02] hover:shadow-sm transition-all duration-200 motion-reduce:transition-none active:scale-[0.98]"
+                aria-label="View quality score breakdown"
+                title="View breakdown"
+              >
+                <span className="text-xs text-slate-600 dark:text-slate-400">Quality:</span>
+                <span className="text-xs font-semibold text-purple-700 dark:text-purple-400">
+                  {qualityScore.score}/100
+                </span>
+                <span className={`text-sm font-bold ${getGradeColor(qualityScore.grade)}`}>
+                  {qualityScore.grade} {getGradeLabel(qualityScore.grade)}
+                </span>
+              </button>
+            </>
           )}
 
-          {/* Download Button - Only show when documentation exists */}
+          {/* Desktop: Download and Copy Buttons */}
           {documentation && (
-            <DownloadButton
-              content={documentation}
-              docType={qualityScore?.docType || 'documentation'}
-              size="md"
-              variant="outline"
-              ariaLabel="Download documentation"
-              showLabel={true}
-            />
-          )}
+            <>
+              <div className="hidden md:flex items-center gap-2">
+                <DownloadButton
+                  content={documentation}
+                  docType={qualityScore?.docType || 'documentation'}
+                  size="md"
+                  variant="outline"
+                  ariaLabel="Download documentation"
+                  showLabel={true}
+                />
+                <CopyButton
+                  text={documentation}
+                  size="md"
+                  variant="outline"
+                  ariaLabel="Copy documentation"
+                  showLabel={true}
+                />
+              </div>
 
-          {/* Copy Button - Only show when documentation exists */}
-          {documentation && (
-            <CopyButton
-              text={documentation}
-              size="md"
-              variant="outline"
-              ariaLabel="Copy documentation"
-              showLabel={true}
-            />
+              {/* Mobile: Overflow Menu */}
+              <div className="md:hidden relative" ref={mobileMenuRef}>
+                <button
+                  type="button"
+                  onClick={() => setShowMobileMenu(!showMobileMenu)}
+                  className="p-2 hover:bg-purple-50 dark:hover:bg-purple-400/15 rounded-lg transition-colors"
+                  aria-label="More actions"
+                  aria-expanded={showMobileMenu}
+                >
+                  <MoreVertical className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                </button>
+
+                {/* Dropdown Menu */}
+                {showMobileMenu && (
+                  <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg overflow-hidden z-50">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const blob = new Blob([documentation], { type: 'text/markdown' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `${qualityScore?.docType || 'documentation'}.md`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                        setShowMobileMenu(false);
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-left"
+                    >
+                      <Download className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                      <span className="text-sm text-slate-700 dark:text-slate-200">Download</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(documentation);
+                        setShowMobileMenu(false);
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-left"
+                    >
+                      <Copy className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                      <span className="text-sm text-slate-700 dark:text-slate-200">Copy</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </>
           )}
         </div>
       </div>
 
       {/* Body - Documentation Content */}
-      <div className="flex-1 overflow-y-auto px-6 py-4">
+      <div className="flex-1 overflow-y-auto px-4 py-4 bg-white dark:bg-slate-900">
         {isGenerating && !documentation ? (
           <DocPanelGeneratingSkeleton />
         ) : documentation ? (
-          <div className="max-w-none text-sm leading-relaxed [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mb-4 [&_h1]:mt-0 [&_h1:not(:first-child)]:mt-6 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:mb-3 [&_h2:not(:first-child)]:mt-5 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:mb-2 [&_h3:not(:first-child)]:mt-4 [&_p]:mb-3 [&_ul]:mb-3 [&_ol]:mb-3 [&_li]:ml-4 [&_strong]:font-semibold">
+          <div className="prose prose-slate dark:prose-invert max-w-none">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{
                 pre({ node, children, ...props }) {
-                  // Check if this is a code block
-                  const codeChild = children?.[0];
-                  const isCodeBlock = codeChild?.type === 'code';
-
-                  if (isCodeBlock) {
-                    const codeClassName = codeChild?.props?.className || '';
-                    // If it's a mermaid code block, skip the pre wrapper
-                    if (codeClassName.includes('language-mermaid')) {
-                      return <div className="not-prose">{children}</div>;
-                    }
-                  }
-
-                  // For other code blocks, keep the pre wrapper
-                  return <pre {...props}>{children}</pre>;
+                  // Styled pre wrapper that matches our theme
+                  return (
+                    <pre
+                      className="my-6 rounded-lg overflow-auto border dark:border-slate-700 border-slate-200 bg-slate-50 dark:bg-slate-800"
+                      style={{
+                        backgroundColor: theme === 'dark' ? '#1E293B' : '#F8FAFC',
+                      }}
+                      {...props}
+                    >
+                      {children}
+                    </pre>
+                  );
                 },
                 code({ node, inline, className, children, ...props }) {
                   const match = /language-(\w+)/.exec(className || '');
@@ -232,10 +389,10 @@ export function DocPanel({
                     // Show placeholder if still generating OR diagram looks incomplete
                     if (isGenerating || looksIncomplete) {
                       return (
-                        <div className="my-6 p-4 bg-slate-50 border border-slate-200 rounded-lg min-h-[300px] flex items-center justify-center">
+                        <div className="my-6 p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg min-h-[300px] flex items-center justify-center transition-colors">
                           <div className="text-center">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-2"></div>
-                            <p className="text-sm text-slate-600">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 dark:border-purple-400 mx-auto mb-2"></div>
+                            <p className="text-sm text-slate-600 dark:text-slate-400">
                               {isGenerating
                                 ? 'Diagram will render when generation completes...'
                                 : 'Completing diagram...'}
@@ -260,22 +417,25 @@ export function DocPanel({
                   // Handle other code blocks
                   return !inline && match ? (
                     <SyntaxHighlighter
-                      style={codescribeLightTheme}
+                      style={theme === 'dark' ? codescribeDarkTheme : codescribeLightTheme}
                       language={match[1]}
                       PreTag="div"
+                      wrapLines={false}
                       customStyle={{
-                        fontSize: '13px !important',
+                        fontSize: '13px',
                         lineHeight: '1.5',
-                        margin: '1.5rem 0',
+                        margin: 0,
                         padding: '1rem',
-                        backgroundColor: '#F8FAFC',
-                        border: '1px solid #E2E8F0',
-                        borderRadius: '0.5rem',
+                        backgroundColor: 'transparent',
+                        border: 'none',
+                        fontFamily: 'JetBrains Mono, Menlo, Monaco, Consolas, monospace',
                       }}
                       codeTagProps={{
                         style: {
                           fontSize: '13px',
                           fontFamily: 'JetBrains Mono, Menlo, Monaco, Consolas, monospace',
+                          backgroundColor: 'transparent',
+                          padding: 0,
                         }
                       }}
                       {...props}
@@ -283,7 +443,7 @@ export function DocPanel({
                       {String(children).replace(/\n$/, '')}
                     </SyntaxHighlighter>
                   ) : (
-                    <code className="bg-slate-100 px-1 py-0.5 rounded text-[13px] font-mono" {...props}>
+                    <code className="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-cyan-300 px-1 py-0.5 rounded text-[13px] font-mono" {...props}>
                       {children}
                     </code>
                   );
@@ -295,31 +455,31 @@ export function DocPanel({
           </div>
         ) : (
           <div
-            className="flex flex-col items-center justify-center h-full text-center px-6"
+            className="flex flex-col items-center justify-center h-full text-center px-6 bg-white dark:bg-slate-900"
             role="status"
           >
-            <h3 className="text-xl font-semibold text-slate-900 mb-3">
+            <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-3">
               Ready to Generate Documentation
             </h3>
-            <p className="text-sm text-slate-600 mb-8 max-w-md">
+            <p className="text-sm text-slate-600 dark:text-slate-400 mb-8 max-w-md">
               Your AI-generated documentation will appear here with real-time streaming and quality scoring.
             </p>
 
             {/* Quick Start Steps */}
-            <div className="bg-purple-50 border border-purple-200 rounded-lg p-5 max-w-md text-left shadow-lg">
-              <h4 className="text-sm font-semibold text-slate-900 mb-3 text-center">
+            <div className="bg-purple-50 dark:bg-purple-400/15 border border-purple-200 dark:border-purple-400/30 rounded-lg p-5 max-w-md text-left shadow-lg transition-colors">
+              <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-3 text-center">
                 Quick Start
               </h4>
-              <ol className="space-y-2.5 text-xs text-slate-700">
+              <ol className="space-y-2.5 text-xs text-slate-700 dark:text-slate-300">
                 <li className="flex gap-2">
-                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs font-bold">1</span>
+                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-purple-600 dark:bg-purple-400 text-white dark:text-slate-950 flex items-center justify-center text-xs font-bold">1</span>
                   <span>
                     Paste your code or click{' '}
                     {onUpload ? (
                       <button
                         type="button"
                         onClick={onUpload}
-                        className="inline-flex items-center px-2 py-0.5 border border-slate-300 bg-white text-slate-700 rounded text-xs font-bold hover:bg-slate-50 hover:border-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-1"
+                        className="inline-flex items-center px-2 py-0.5 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-400 dark:hover:border-slate-500 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-600 dark:focus:ring-purple-400 focus:ring-offset-1"
                       >
                         Upload Files
                       </button>
@@ -329,18 +489,18 @@ export function DocPanel({
                   </span>
                 </li>
                 <li className="flex gap-2">
-                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs font-bold">2</span>
+                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-purple-600 dark:bg-purple-400 text-white dark:text-slate-950 flex items-center justify-center text-xs font-bold">2</span>
                   <span>Select documentation type (README, JSDoc, API, or ARCHITECTURE)</span>
                 </li>
                 <li className="flex gap-2">
-                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs font-bold">3</span>
+                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-purple-600 dark:bg-purple-400 text-white dark:text-slate-950 flex items-center justify-center text-xs font-bold">3</span>
                   <span>
                     Click{' '}
                     {onGenerate ? (
                       <button
                         type="button"
                         onClick={onGenerate}
-                        className="inline-flex items-center px-2 py-0.5 border border-slate-300 bg-white text-slate-700 rounded text-xs font-bold hover:bg-slate-50 hover:border-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-1"
+                        className="inline-flex items-center px-2 py-0.5 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-400 dark:hover:border-slate-500 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-600 dark:focus:ring-purple-400 focus:ring-offset-1"
                       >
                         Generate Docs
                       </button>
@@ -353,7 +513,7 @@ export function DocPanel({
               </ol>
             </div>
 
-            <p className="text-xs text-slate-500 mt-6">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-6">
               Not sure where to start? Try the <strong>Examples</strong> button above or click the <strong>?</strong> icon for help.
             </p>
           </div>
@@ -364,18 +524,18 @@ export function DocPanel({
       {qualityScore && (
         <div>
             {/* Quick Stats */}
-            <div className="flex items-center justify-between px-4 py-2 bg-slate-50 border-t border-slate-200">
+            <div className="flex items-center justify-between px-4 py-2 bg-slate-50 dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 transition-colors">
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-1.5 text-xs">
-                  <CheckCircle className="w-3 h-3 text-success" aria-hidden="true" />
-                  <span className="text-slate-600">
+                  <CheckCircle className="w-3 h-3 text-green-600 dark:text-green-400" aria-hidden="true" />
+                  <span className="text-slate-600 dark:text-slate-400">
                     {qualityScore.summary.strengths.length} criteria met
                   </span>
                 </div>
                 {qualityScore.summary.improvements.length > 0 && (
                   <div className="flex items-center gap-1.5 text-xs">
-                    <AlertCircle className="w-3 h-3 text-warning" aria-hidden="true" />
-                    <span className="text-slate-600">
+                    <AlertCircle className="w-3 h-3 text-yellow-600 dark:text-amber-400" aria-hidden="true" />
+                    <span className="text-slate-600 dark:text-slate-400">
                       {qualityScore.summary.improvements.length} areas to improve
                     </span>
                   </div>
@@ -390,7 +550,7 @@ export function DocPanel({
               aria-expanded={isExpanded}
               aria-controls="quality-report-details"
               aria-label={isExpanded ? "Hide details" : "Show details"}
-              className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50 transition-colors duration-200 motion-reduce:transition-none focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 rounded px-2 active:bg-purple-100"
+              className="flex items-center gap-1 text-xs text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-400/15 transition-colors duration-200 motion-reduce:transition-none focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 rounded px-2 active:bg-purple-100 dark:active:bg-purple-400/20"
             >
               <span className="font-medium">{isExpanded ? "Hide details" : "Show details"}</span>
               {isExpanded ? (
@@ -410,11 +570,11 @@ export function DocPanel({
               isExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
             }`}
           >
-            <div className="px-4 pb-3 pt-2 border-t border-slate-200">
+            <div className="px-4 pb-3 pt-2 border-t border-slate-200 dark:border-slate-700">
               {/* Document Type */}
-              <div className="mb-2 pb-2 border-b border-slate-200">
-                <span className="text-xs text-slate-600">
-                  Document Type: <span className="font-medium text-slate-700">{qualityScore.docType}</span>
+              <div className="mb-2 pb-2 border-b border-slate-200 dark:border-slate-700">
+                <span className="text-xs text-slate-600 dark:text-slate-400">
+                  Document Type: <span className="font-medium text-slate-700 dark:text-slate-300">{qualityScore.docType}</span>
                 </span>
               </div>
 
@@ -423,15 +583,15 @@ export function DocPanel({
                 {qualityScore.summary.strengths.length > 0 && (
                   <div>
                     <div className="flex items-center gap-1.5 mb-1.5">
-                      <CheckCircle className="w-3.5 h-3.5 text-success" aria-hidden="true" />
-                      <span className="text-xs font-semibold text-slate-800">Strengths</span>
+                      <CheckCircle className="w-3.5 h-3.5 text-green-600 dark:text-green-400" aria-hidden="true" />
+                      <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">Strengths</span>
                     </div>
                     <ul className="space-y-1 ml-5">
                       {qualityScore.summary.strengths.map((key) => {
                         const criteria = qualityScore.breakdown[key];
                         return (
-                          <li key={key} className="text-xs text-slate-600">
-                            <span className="font-medium text-slate-700">
+                          <li key={key} className="text-xs text-slate-600 dark:text-slate-400">
+                            <span className="font-medium text-slate-700 dark:text-slate-300">
                               {formatCriteriaName(key, qualityScore.docType)}:
                             </span>{' '}
                             {criteria?.suggestion || 'Well done!'}
@@ -446,15 +606,15 @@ export function DocPanel({
                 {qualityScore.summary.improvements.length > 0 && (
                   <div>
                     <div className="flex items-center gap-1.5 mb-1.5">
-                      <AlertCircle className="w-3.5 h-3.5 text-warning" aria-hidden="true" />
-                      <span className="text-xs font-semibold text-slate-800">Areas to Improve</span>
+                      <AlertCircle className="w-3.5 h-3.5 text-yellow-600 dark:text-amber-400" aria-hidden="true" />
+                      <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">Areas to Improve</span>
                     </div>
                     <ul className="space-y-1 ml-5">
                       {qualityScore.summary.improvements.map((key) => {
                         const criteria = qualityScore.breakdown[key];
                         return (
-                          <li key={key} className="text-xs text-slate-600">
-                            <span className="font-medium text-slate-700">
+                          <li key={key} className="text-xs text-slate-600 dark:text-slate-400">
+                            <span className="font-medium text-slate-700 dark:text-slate-300">
                               {formatCriteriaName(key, qualityScore.docType)}:
                             </span>{' '}
                             {criteria?.suggestion || 'Consider improving this section'}
@@ -476,12 +636,12 @@ export function DocPanel({
 // Helper functions
 function getGradeColor(grade) {
   switch (grade) {
-    case 'A': return 'text-success';
-    case 'B': return 'text-blue-600';
-    case 'C': return 'text-warning';
+    case 'A': return 'text-green-600 dark:text-green-400';
+    case 'B': return 'text-blue-600 dark:text-blue-400';
+    case 'C': return 'text-yellow-600 dark:text-yellow-400';
     case 'D':
-    case 'F': return 'text-error';
-    default: return 'text-slate-600';
+    case 'F': return 'text-red-600 dark:text-red-400';
+    default: return 'text-slate-600 dark:text-slate-400';
   }
 }
 

@@ -140,7 +140,7 @@ export function ForgotPasswordModal({ isOpen, onClose, onSwitchToLogin }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+      className="modal-backdrop"
       onClick={handleBackdropClick}
       role="dialog"
       aria-modal="true"
@@ -148,24 +148,24 @@ export function ForgotPasswordModal({ isOpen, onClose, onSwitchToLogin }) {
     >
       <div
         ref={modalRef}
-        className="bg-white rounded-xl shadow-2xl max-w-md w-full"
+        className="modal-container max-w-md w-full"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-200">
+        <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700">
           <h2
             id="forgot-password-modal-title"
-            className="text-2xl font-semibold text-slate-900"
+            className="text-2xl font-semibold text-slate-900 dark:text-slate-100"
           >
             Reset Password
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="p-2 hover:bg-slate-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
+            className="icon-btn interactive-scale-sm focus-ring-light"
             aria-label="Close forgot password modal"
           >
-            <X className="w-5 h-5 text-slate-600" aria-hidden="true" />
+            <X className="w-5 h-5 text-slate-600 dark:text-slate-400" aria-hidden="true" />
           </button>
         </div>
 
@@ -173,7 +173,7 @@ export function ForgotPasswordModal({ isOpen, onClose, onSwitchToLogin }) {
         <div className="p-6 space-y-6">
           {/* Description */}
           {!successMessage && (
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-slate-600 dark:text-slate-400">
               Enter your email address and we'll send you a link to reset your password.
             </p>
           )}
@@ -181,24 +181,24 @@ export function ForgotPasswordModal({ isOpen, onClose, onSwitchToLogin }) {
           {/* Error Message */}
           {errorMessage && (
             <div
-              className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-lg"
+              className="flex items-start gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/50 rounded-lg"
               role="alert"
             >
-              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
-              <p className="text-sm text-red-800">{errorMessage}</p>
+              <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
+              <p className="text-sm text-red-800 dark:text-red-200">{errorMessage}</p>
             </div>
           )}
 
           {/* Success Message */}
           {successMessage && (
             <div
-              className="flex items-start gap-3 p-4 bg-green-50 border border-green-200 rounded-lg"
+              className="flex items-start gap-3 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-500/50 rounded-lg"
               role="alert"
             >
-              <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
+              <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
               <div className="space-y-2">
-                <p className="text-sm text-green-800">{successMessage}</p>
-                <p className="text-xs text-green-700">
+                <p className="text-sm text-green-800 dark:text-green-200">{successMessage}</p>
+                <p className="text-xs text-green-700 dark:text-green-300">
                   Please check your email inbox and spam folder.
                 </p>
               </div>
@@ -212,13 +212,13 @@ export function ForgotPasswordModal({ isOpen, onClose, onSwitchToLogin }) {
               <div>
                 <label
                   htmlFor="forgot-password-email"
-                  className="block text-sm font-medium text-slate-700 mb-2"
+                  className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
                 >
                   Email Address
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Mail className="w-5 h-5 text-slate-400" aria-hidden="true" />
+                    <Mail className="w-5 h-5 text-slate-400 dark:text-slate-500" aria-hidden="true" />
                   </div>
                   <input
                     ref={emailInputRef}
@@ -227,7 +227,7 @@ export function ForgotPasswordModal({ isOpen, onClose, onSwitchToLogin }) {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@example.com"
-                    className="block w-full pl-10 pr-3 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-shadow"
+                    className="block w-full pl-10 pr-3 py-2.5 border rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-purple-600 dark:focus:ring-purple-400 focus:border-transparent transition-shadow"
                     autoComplete="email"
                     disabled={isLoading}
                   />
@@ -247,11 +247,11 @@ export function ForgotPasswordModal({ isOpen, onClose, onSwitchToLogin }) {
           )}
 
           {/* Back to Login Link */}
-          <div className="pt-4 border-t border-slate-200">
+          <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
             <button
               type="button"
               onClick={onSwitchToLogin}
-              className="text-sm text-purple-600 hover:text-purple-700 font-medium focus:outline-none focus:underline"
+              className="text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium focus:outline-none focus:underline"
               disabled={isLoading}
             >
               ← Back to Sign In

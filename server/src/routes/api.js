@@ -8,7 +8,7 @@ import Usage from '../models/Usage.js';
 import User from '../models/User.js';
 import emailService from '../services/emailService.js';
 import { TIER_FEATURES, TIER_PRICING } from '../config/tiers.js';
-import { requireAuth } from '../middleware/auth.js';
+import { requireAuth, optionalAuth } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -22,7 +22,7 @@ function formatBytes(bytes) {
 }
 
 // Line 17 - add before route handler
-router.post('/generate', apiLimiter, generationLimiter, checkUsage(), async (req, res) => {
+router.post('/generate', apiLimiter, generationLimiter, optionalAuth, checkUsage(), async (req, res) => {
   try {
     const { code, docType, language, isDefaultCode } = req.body;
 
@@ -68,7 +68,7 @@ router.post('/generate', apiLimiter, generationLimiter, checkUsage(), async (req
 });
 
 // Line 51 - add before route handler
-router.post('/generate-stream', apiLimiter, generationLimiter, checkUsage(), async (req, res) => {
+router.post('/generate-stream', apiLimiter, generationLimiter, optionalAuth, checkUsage(), async (req, res) => {
   try {
     const { code, docType, language, isDefaultCode } = req.body;
 
@@ -257,7 +257,7 @@ router.post('/upload', apiLimiter, (req, res) => {
 
 // GET /api/user/usage - Get current user's usage statistics
 // Supports both authenticated users (by user ID) and anonymous users (by IP)
-router.get('/user/usage', async (req, res) => {
+router.get('/user/usage', optionalAuth, async (req, res) => {
   try {
     // Prevent caching of user-specific data
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -270,10 +270,6 @@ router.get('/user/usage', async (req, res) => {
 
     // Get usage from database
     const usage = await Usage.getUserUsage(userIdentifier);
-
-    // DEBUG: Log what we got from getUserUsage
-    console.log('[Usage API] userIdentifier:', userIdentifier);
-    console.log('[Usage API] getUserUsage returned:', JSON.stringify(usage, null, 2));
 
     // Get tier limits
     const tierConfig = TIER_FEATURES[tier];

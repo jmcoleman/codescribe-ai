@@ -92,9 +92,9 @@ export function DownloadButton({
 
   // Style variants (no state changes - icon stays consistent)
   const variantClasses = {
-    ghost: 'bg-transparent text-slate-600 hover:bg-slate-100 border border-transparent',
-    outline: 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 hover:border-slate-300',
-    solid: 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200',
+    ghost: 'bg-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent',
+    outline: 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500',
+    solid: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-600',
   };
 
   const iconSize = iconSizes[size];
@@ -115,8 +115,9 @@ export function DownloadButton({
         active:scale-[0.98]
         focus:outline-none
         focus:ring-2
-        focus:ring-purple-600
+        focus:ring-purple-600 dark:focus:ring-purple-400
         focus:ring-offset-2
+        focus:ring-offset-white dark:focus:ring-offset-slate-800
         motion-reduce:transition-none
         ${className}
       `}

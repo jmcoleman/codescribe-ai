@@ -77,46 +77,38 @@ export default function VerificationRequiredModal({ isOpen, onClose, userEmail }
   };
 
   return (
-    <>
-      {/* Backdrop */}
+    <div
+      className="modal-backdrop"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="verification-modal-title"
+    >
       <div
-        className="fixed inset-0 bg-black/50 z-50 transition-opacity"
-        onClick={onClose}
-        aria-hidden="true"
-      />
-
-      {/* Modal */}
-      <div
-        className="fixed inset-0 z-50 flex items-center justify-center p-4"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="verification-modal-title"
+        ref={modalRef}
+        className="modal-container max-w-md w-full p-6 relative"
+        onClick={(e) => e.stopPropagation()}
       >
-        <div
-          ref={modalRef}
-          className="bg-white rounded-lg shadow-2xl max-w-md w-full p-6 relative"
-          onClick={(e) => e.stopPropagation()}
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 icon-btn interactive-scale-sm focus-ring-light"
+          aria-label="Close modal"
         >
-          {/* Close button */}
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors"
-            aria-label="Close modal"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <X className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+        </button>
 
           {/* Icon */}
           <div className="flex justify-center mb-4">
             <div className={`w-16 h-16 rounded-full flex items-center justify-center ring-4 ${
               emailSent
-                ? 'bg-gradient-to-br from-green-100 to-emerald-100 ring-green-50'
-                : 'bg-gradient-to-br from-indigo-100 to-purple-100 ring-indigo-50'
+                ? 'bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 ring-green-50 dark:ring-green-500/20'
+                : 'bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 ring-indigo-50 dark:ring-indigo-500/20'
             }`}>
               {emailSent ? (
-                <CheckCircle2 className="w-8 h-8 text-green-600" aria-hidden="true" />
+                <CheckCircle2 className="w-8 h-8 text-green-600 dark:text-green-400" aria-hidden="true" />
               ) : (
-                <Mail className="w-8 h-8 text-indigo-600" aria-hidden="true" />
+                <Mail className="w-8 h-8 text-indigo-600 dark:text-indigo-400" aria-hidden="true" />
               )}
             </div>
           </div>
@@ -125,25 +117,25 @@ export default function VerificationRequiredModal({ isOpen, onClose, userEmail }
           <div className="text-center mb-6">
             <h2
               id="verification-modal-title"
-              className="text-2xl font-bold text-slate-900 mb-2"
+              className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2"
             >
               {emailSent ? 'Check Your Email' : 'Email Verification Required'}
             </h2>
             {emailSent ? (
               <>
-                <p className="text-slate-600 mb-3">
+                <p className="text-slate-600 dark:text-slate-400 mb-3">
                   We've sent a verification link to your email address.
                 </p>
                 {userEmail && (
-                  <p className="text-sm text-slate-700 font-medium mb-3">
+                  <p className="text-sm text-slate-700 dark:text-slate-300 font-medium mb-3">
                     {userEmail}
                   </p>
                 )}
-                <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4 text-left">
-                  <p className="text-sm text-slate-700 mb-2">
+                <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-500/50 rounded-lg p-4 text-left">
+                  <p className="text-sm text-slate-700 dark:text-slate-300 mb-2">
                     <strong>Next steps:</strong>
                   </p>
-                  <ol className="text-sm text-slate-600 space-y-1 list-decimal list-inside">
+                  <ol className="text-sm text-slate-600 dark:text-slate-400 space-y-1 list-decimal list-inside">
                     <li>Check your email inbox</li>
                     <li>Click the verification link</li>
                     <li>Return here to complete your subscription</li>
@@ -152,11 +144,11 @@ export default function VerificationRequiredModal({ isOpen, onClose, userEmail }
               </>
             ) : (
               <>
-                <p className="text-slate-600">
+                <p className="text-slate-600 dark:text-slate-400">
                   Please verify your email address to subscribe to paid plans.
                 </p>
                 {userEmail && (
-                  <p className="text-sm text-slate-500 mt-2">
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
                     Verification email will be sent to <span className="font-medium">{userEmail}</span>
                   </p>
                 )}
@@ -166,9 +158,9 @@ export default function VerificationRequiredModal({ isOpen, onClose, userEmail }
 
           {/* Error Message */}
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
-              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-red-800">{error}</p>
+            <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/50 rounded-lg flex items-start gap-2">
+              <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
             </div>
           )}
 
@@ -178,7 +170,7 @@ export default function VerificationRequiredModal({ isOpen, onClose, userEmail }
               <button
                 onClick={handleResend}
                 disabled={isResending}
-                className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 active:bg-purple-800 rounded-lg shadow-lg shadow-purple-600/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+                className="btn-primary w-full inline-flex items-center justify-center gap-2 px-4 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isResending ? (
                   <>
@@ -199,15 +191,14 @@ export default function VerificationRequiredModal({ isOpen, onClose, userEmail }
               disabled={isResending}
               className={`w-full px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 ${
                 emailSent
-                  ? 'text-white bg-purple-600 hover:bg-purple-700 active:bg-purple-800 shadow-lg shadow-purple-600/20'
-                  : 'text-slate-700 bg-slate-100 hover:bg-slate-200'
+                  ? 'btn-primary'
+                  : 'btn-secondary'
               }`}
             >
               {emailSent ? 'Got it, thanks!' : 'Cancel'}
             </button>
           </div>
-        </div>
       </div>
-    </>
+    </div>
   );
 }

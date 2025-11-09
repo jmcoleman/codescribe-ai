@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
+import { renderWithTheme as render } from '../../__tests__/utils/renderWithTheme';
 import userEvent from '@testing-library/user-event';
 import { ExamplesModal } from '../ExamplesModal';
 import { codeExamples } from '../../data/examples';

@@ -1,6 +1,7 @@
-import { lazy, Suspense, useState } from 'react';
-import { Zap, Loader2, Upload, RefreshCw, BookOpen } from 'lucide-react';
+import { lazy, Suspense, useState, useRef, useEffect } from 'react';
+import { Zap, Loader2, Upload, RefreshCw, BookOpen, MoreVertical, Copy } from 'lucide-react';
 import { CopyButton } from './CopyButton';
+import { useTheme } from '../contexts/ThemeContext';
 
 // Lazy load Monaco Editor to reduce initial bundle size
 const LazyMonacoEditor = lazy(() =>
@@ -10,10 +11,10 @@ const LazyMonacoEditor = lazy(() =>
 // Loading fallback component with skeleton UI
 function EditorLoadingFallback() {
   return (
-    <div className="flex items-center justify-center h-full bg-slate-50">
+    <div className="flex items-center justify-center h-full bg-slate-50 dark:bg-slate-800">
       <div className="flex flex-col items-center gap-3">
-        <Loader2 className="w-8 h-8 text-purple-500 animate-spin" aria-hidden="true" />
-        <p className="text-sm text-slate-600">Loading editor...</p>
+        <Loader2 className="w-8 h-8 text-purple-500 dark:text-purple-400 animate-spin" aria-hidden="true" />
+        <p className="text-sm text-slate-600 dark:text-slate-400">Loading editor...</p>
       </div>
     </div>
   );
@@ -30,12 +31,28 @@ export function CodePanel({
   onExamplesClick,
   examplesButtonRef
 }) {
+  const { theme } = useTheme();
   const [isDragging, setIsDragging] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const mobileMenuRef = useRef(null);
 
   // Count lines and characters
   const lines = code.split('\n').length;
   const chars = code.length;
+
+  // Click-outside detection for mobile menu
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target)) {
+        setShowMobileMenu(false);
+      }
+    }
+    if (showMobileMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showMobileMenu]);
 
   // Drag and drop handlers
   const handleDragEnter = (e) => {
@@ -78,14 +95,14 @@ export function CodePanel({
   return (
     <div
       data-testid="code-panel"
-      className="flex flex-col h-full bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden relative"
+      className="flex flex-col h-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm overflow-hidden relative transition-colors"
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 h-12 bg-slate-50 border-b border-slate-200">
+      <div className="flex items-center justify-between px-4 h-12 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 transition-colors">
         <h2 className="sr-only">Code Input</h2>
         {/* Screen reader announcement for clear action */}
         <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
@@ -93,62 +110,144 @@ export function CodePanel({
         </div>
         {/* Left: Filename + Language badge */}
         <div className="flex items-center gap-2">
-          <span className="text-sm text-slate-600">{filename}</span>
-          <span className="inline-flex items-center px-2 py-1 text-xs font-medium text-cyan-800 bg-cyan-50 rounded-md uppercase">{language}</span>
+          <span className="text-sm text-slate-600 dark:text-slate-400">{filename}</span>
+          <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium text-cyan-800 dark:text-cyan-300 bg-cyan-50 dark:bg-cyan-400/15 border border-cyan-200 dark:border-cyan-400/30 rounded-full uppercase">{language}</span>
         </div>
 
-        {/* Right: Examples + Clear + Copy buttons */}
+        {/* Right: Desktop buttons + Mobile menu */}
         <div className="flex items-center gap-2">
-          {onExamplesClick && (
-            <button
-              type="button"
-              ref={examplesButtonRef}
-              onClick={() => {
-                // Preload ExamplesModal on click
-                import('./ExamplesModal').catch(() => {});
-                onExamplesClick();
-              }}
-              onMouseEnter={() => {
-                // Preload ExamplesModal on hover
-                import('./ExamplesModal').catch(() => {});
-              }}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 rounded-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
-              aria-label="Load code examples"
-              title="Load code examples"
-            >
-              <BookOpen className="w-3.5 h-3.5" aria-hidden="true" />
-              <span>Examples</span>
-            </button>
-          )}
-          {code && !readOnly && onClear && (
-            <button
-              type="button"
-              onClick={() => {
-                setIsClearing(true);
-                onClear();
-                // Reset clearing state after animation completes
-                setTimeout(() => setIsClearing(false), 500);
-              }}
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 rounded-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 ${isClearing ? 'opacity-75 pointer-events-none' : ''}`}
-              aria-label="Clear editor"
-              title="Clear editor"
-            >
-              <RefreshCw
-                className={`w-3.5 h-3.5 ${isClearing ? 'animate-spin-once' : ''}`}
-                aria-hidden="true"
+          {/* Desktop: Show all buttons */}
+          <div className="hidden md:flex items-center gap-2">
+            {onExamplesClick && (
+              <button
+                type="button"
+                ref={examplesButtonRef}
+                onClick={() => {
+                  // Preload ExamplesModal on click
+                  import('./ExamplesModal').catch(() => {});
+                  onExamplesClick();
+                }}
+                onMouseEnter={() => {
+                  // Preload ExamplesModal on hover
+                  import('./ExamplesModal').catch(() => {});
+                }}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500 rounded-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-purple-600 dark:focus:ring-purple-400 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-900"
+                aria-label="Load code examples"
+                title="Load code examples"
+              >
+                <BookOpen className="w-3.5 h-3.5" aria-hidden="true" />
+                <span>Examples</span>
+              </button>
+            )}
+            {code && !readOnly && onClear && (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsClearing(true);
+                  onClear();
+                  // Reset clearing state after animation completes
+                  setTimeout(() => setIsClearing(false), 500);
+                }}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500 rounded-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-purple-600 dark:focus:ring-purple-400 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-900 ${isClearing ? 'opacity-75 pointer-events-none' : ''}`}
+                aria-label="Clear editor"
+                title="Clear editor"
+              >
+                <RefreshCw
+                  className={`w-3.5 h-3.5 ${isClearing ? 'animate-spin-once' : ''}`}
+                  aria-hidden="true"
+                />
+                <span>Clear</span>
+              </button>
+            )}
+            {code && (
+              <CopyButton
+                text={code}
+                size="md"
+                variant="outline"
+                ariaLabel="Copy code to clipboard"
+                showLabel={true}
               />
-              <span>Clear</span>
+            )}
+          </div>
+
+          {/* Mobile: Overflow menu */}
+          <div className="md:hidden relative" ref={mobileMenuRef}>
+            <button
+              type="button"
+              onClick={() => setShowMobileMenu(!showMobileMenu)}
+              className="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-purple-600 dark:focus:ring-purple-400 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-900"
+              aria-label="More actions"
+              aria-expanded={showMobileMenu}
+            >
+              <MoreVertical className="w-4 h-4" aria-hidden="true" />
             </button>
-          )}
-          {code && (
-            <CopyButton
-              text={code}
-              size="md"
-              variant="outline"
-              ariaLabel="Copy code to clipboard"
-              showLabel={true}
-            />
-          )}
+
+            {showMobileMenu && (
+              <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg py-1 z-50">
+                {onExamplesClick && (
+                  <button
+                    type="button"
+                    ref={examplesButtonRef}
+                    onClick={() => {
+                      import('./ExamplesModal').catch(() => {});
+                      onExamplesClick();
+                      setShowMobileMenu(false);
+                    }}
+                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                  >
+                    <BookOpen className="w-4 h-4" aria-hidden="true" />
+                    <span>Examples</span>
+                  </button>
+                )}
+                {code && !readOnly && onClear && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsClearing(true);
+                      onClear();
+                      setTimeout(() => setIsClearing(false), 500);
+                      setShowMobileMenu(false);
+                    }}
+                    className={`w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors ${isClearing ? 'opacity-75 pointer-events-none' : ''}`}
+                  >
+                    <RefreshCw
+                      className={`w-4 h-4 ${isClearing ? 'animate-spin-once' : ''}`}
+                      aria-hidden="true"
+                    />
+                    <span>Clear</span>
+                  </button>
+                )}
+                {code && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        if (navigator.clipboard && window.isSecureContext) {
+                          await navigator.clipboard.writeText(code);
+                        } else {
+                          const textArea = document.createElement('textarea');
+                          textArea.value = code;
+                          textArea.style.position = 'fixed';
+                          textArea.style.left = '-999999px';
+                          document.body.appendChild(textArea);
+                          textArea.select();
+                          document.execCommand('copy');
+                          textArea.remove();
+                        }
+                        setShowMobileMenu(false);
+                      } catch (err) {
+                        console.error('Failed to copy:', err);
+                      }
+                    }}
+                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                  >
+                    <Copy className="w-4 h-4" aria-hidden="true" />
+                    <span>Copy</span>
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -179,29 +278,29 @@ export function CodePanel({
               ariaLabel: readOnly ? 'Code editor, read-only' : 'Code editor, type or paste your code here',
               bracketPairColorization: { enabled: false }, // Disable bracket colorization
             }}
-            theme="codescribe-light"
+            theme={theme === 'dark' ? 'codescribe-dark' : 'codescribe-light'}
           />
         </Suspense>
       </div>
 
       {/* Footer */}
-      <div className="flex items-center justify-between px-4 py-2 bg-slate-50 border-t border-slate-200">
-        <span className="text-xs text-slate-600">
+      <div className="flex items-center justify-between px-4 py-2 bg-slate-50 dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 transition-colors">
+        <span className="text-xs text-slate-600 dark:text-slate-400">
           {lines} lines • {chars} chars
         </span>
         <div className="flex items-center gap-1.5 text-xs">
-          <Zap className="w-3 h-3 text-cyan-600" aria-hidden="true" />
-          <span className="text-cyan-600 font-medium">Ready to analyze</span>
+          <Zap className="w-3 h-3 text-cyan-600 dark:text-cyan-400" aria-hidden="true" />
+          <span className="text-cyan-600 dark:text-cyan-400 font-medium">Ready to analyze</span>
         </div>
       </div>
 
       {/* Drag and Drop Overlay */}
       {isDragging && (
-        <div className="absolute inset-0 bg-purple-500/10 backdrop-blur-sm border-2 border-dashed border-purple-500 rounded-xl flex items-center justify-center z-50">
-          <div className="flex flex-col items-center gap-3 text-purple-600">
+        <div className="absolute inset-0 bg-purple-500/10 dark:bg-purple-400/20 backdrop-blur-sm border-2 border-dashed border-purple-500 dark:border-purple-400 rounded-xl flex items-center justify-center z-50">
+          <div className="flex flex-col items-center gap-3 text-purple-600 dark:text-purple-400">
             <Upload className="w-12 h-12" aria-hidden="true" />
             <p className="text-lg font-semibold">Drop file to upload</p>
-            <p className="text-sm text-purple-500">Release to load your code</p>
+            <p className="text-sm text-purple-500 dark:text-purple-300">Release to load your code</p>
           </div>
         </div>
       )}

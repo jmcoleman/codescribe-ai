@@ -103,9 +103,9 @@ export function CopyButton({
 
   // Style variants - no background/border change, consistent with Clear button
   const variantClasses = {
-    ghost: 'bg-transparent text-slate-600 hover:bg-slate-100 border border-transparent',
-    outline: 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 hover:border-slate-300',
-    solid: 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200',
+    ghost: 'bg-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent',
+    outline: 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500',
+    solid: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-600',
   };
 
   const iconSize = iconSizes[size];
@@ -126,8 +126,9 @@ export function CopyButton({
         active:scale-[0.98]
         focus:outline-none
         focus:ring-2
-        focus:ring-purple-600
+        focus:ring-purple-600 dark:focus:ring-purple-400
         focus:ring-offset-2
+        focus:ring-offset-white dark:focus:ring-offset-slate-800
         motion-reduce:transition-none
         ${!showLabel ? 'relative' : ''}
         ${copied ? 'pointer-events-none' : ''}
@@ -157,7 +158,7 @@ export function CopyButton({
         <Check
           className={`
             ${iconSize}
-            ${copied ? 'text-cyan-600' : ''}
+            ${copied ? 'text-cyan-600 dark:text-cyan-400' : ''}
             transition-all duration-200 ease-out
             ${copied ? 'opacity-100 scale-100 rotate-0' : 'opacity-0 scale-50 -rotate-90 absolute'}
           `}
@@ -246,10 +247,11 @@ export function CopyButtonWithText({
         active:scale-[0.98]
         focus:outline-none
         focus:ring-2
-        focus:ring-purple-600
+        focus:ring-purple-600 dark:focus:ring-purple-400
         focus:ring-offset-2
+        focus:ring-offset-white dark:focus:ring-offset-slate-800
         motion-reduce:transition-none
-        bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200
+        bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600
         ${copied ? 'pointer-events-none' : ''}
         ${className}
       `}
@@ -268,7 +270,7 @@ export function CopyButtonWithText({
         <Check
           className={`
             w-4 h-4
-            ${copied ? 'text-cyan-600' : ''}
+            ${copied ? 'text-cyan-600 dark:text-cyan-400' : ''}
             transition-all duration-200 ease-out
             ${copied ? 'opacity-100 scale-100 rotate-0' : 'opacity-0 scale-50 -rotate-90 absolute'}
           `}

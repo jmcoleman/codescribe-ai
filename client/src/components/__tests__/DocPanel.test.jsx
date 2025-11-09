@@ -1,8 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { DocPanel } from '../DocPanel';
 import { STORAGE_KEYS } from '../../constants/storage';
+import { renderWithTheme as render } from '../../__tests__/utils/renderWithTheme';
 
 describe('DocPanel Component', () => {
   beforeEach(() => {

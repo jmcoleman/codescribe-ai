@@ -1,0 +1,374 @@
+import { describe, it, expect, beforeEach } from 'vitest';
+import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { BrowserRouter } from 'react-router-dom';
+import { ThemeProvider } from '../../contexts/ThemeContext';
+import { AuthProvider } from '../../contexts/AuthContext';
+import { Header } from '../../components/Header';
+import { Footer } from '../../components/Footer';
+import { ThemeToggle } from '../../components/ThemeToggle';
+
+/**
+ * Integration tests for dark mode theming
+ * Tests the complete dark mode experience across multiple components
+ */
+
+describe('Dark Mode Integration', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    document.documentElement.classList.remove('dark');
+  });
+
+  const renderWithProviders = (component) => {
+    return render(
+      <BrowserRouter>
+        <AuthProvider>
+          <ThemeProvider>
+            {component}
+          </ThemeProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    );
+  };
+
+  describe('Theme Persistence', () => {
+    it('persists theme across component remounts', async () => {
+      const user = userEvent.setup();
+
+      // Render and toggle to dark
+      const { unmount } = renderWithProviders(<ThemeToggle />);
+
+      const button = screen.getByRole('button', { name: /switch to dark mode/i });
+      await user.click(button);
+
+      expect(localStorage.getItem('codescribeai:settings:theme')).toBe('dark');
+      expect(document.documentElement.classList.contains('dark')).toBe(true);
+
+      // Unmount and remount
+      unmount();
+
+      renderWithProviders(<ThemeToggle />);
+
+      // Should still be dark
+      expect(screen.getByRole('button', { name: /switch to light mode/i })).toBeInTheDocument();
+      expect(document.documentElement.classList.contains('dark')).toBe(true);
+    });
+
+    it('persists theme across different components', async () => {
+      const user = userEvent.setup();
+
+      // Render Header with ThemeToggle in it
+      renderWithProviders(
+        <>
+          <Header />
+          <ThemeToggle />
+        </>
+      );
+
+      // Toggle using standalone ThemeToggle
+      const toggleButton = screen.getByRole('button', { name: /switch to dark mode/i });
+      await user.click(toggleButton);
+
+      // Verify theme is persisted
+      expect(localStorage.getItem('codescribeai:settings:theme')).toBe('dark');
+
+      // Verify DOM class
+      expect(document.documentElement.classList.contains('dark')).toBe(true);
+    });
+  });
+
+  describe('Header Dark Mode Styling', () => {
+    it('applies dark mode styles to Header', () => {
+      localStorage.setItem('codescribeai:settings:theme', 'dark');
+
+      renderWithProviders(<Header />);
+
+      const header = screen.getByRole('banner');
+      expect(header.className).toContain('dark:bg-slate-900');
+      expect(header.className).toContain('dark:border-slate-800');
+    });
+
+    it('ThemeToggle in Header shows correct icon in dark mode', () => {
+      localStorage.setItem('codescribeai:settings:theme', 'dark');
+
+      renderWithProviders(<Header />);
+
+      const header = screen.getByRole('banner');
+      const themeButton = within(header).getByRole('button', { name: /switch to light mode/i });
+
+      expect(themeButton).toBeInTheDocument();
+
+      // Sun icon should be visible in dark mode
+      const sunIcon = themeButton.querySelector('.lucide-sun');
+      expect(sunIcon.className).toContain('scale-100');
+      expect(sunIcon.className).toContain('opacity-100');
+    });
+
+    it('toggles Header appearance when switching themes', async () => {
+      const user = userEvent.setup();
+
+      renderWithProviders(<Header />);
+
+      const header = screen.getByRole('banner');
+      const themeButton = within(header).getByRole('button', { name: /switch to dark mode/i });
+
+      // Start in light mode - check that dark mode classes exist but aren't active
+      expect(header.className).toContain('bg-white');
+
+      // Toggle to dark
+      await user.click(themeButton);
+
+      // DOM should have dark class
+      expect(document.documentElement.classList.contains('dark')).toBe(true);
+    });
+  });
+
+  describe('Footer Dark Mode Styling', () => {
+    it('applies dark mode styles to Footer', () => {
+      localStorage.setItem('codescribeai:settings:theme', 'dark');
+
+      renderWithProviders(<Footer />);
+
+      const footer = screen.getByRole('contentinfo');
+      expect(footer.className).toContain('dark:bg-slate-900');
+      expect(footer.className).toContain('dark:border-slate-800');
+    });
+
+    it('Footer links have dark mode hover states', () => {
+      localStorage.setItem('codescribeai:settings:theme', 'dark');
+
+      renderWithProviders(<Footer />);
+
+      const privacyLink = screen.getByRole('link', { name: /privacy policy/i });
+      expect(privacyLink.className).toContain('dark:text-slate-400');
+      expect(privacyLink.className).toContain('dark:hover:text-purple-400');
+    });
+  });
+
+  describe('Multi-Component Dark Mode Sync', () => {
+    it('synchronizes theme across Header, Footer, and ThemeToggle', async () => {
+      const user = userEvent.setup();
+
+      renderWithProviders(
+        <>
+          <Header />
+          <Footer />
+          <ThemeToggle />
+        </>
+      );
+
+      // All should start in light mode
+      expect(document.documentElement.classList.contains('dark')).toBe(false);
+
+      // Toggle from standalone ThemeToggle
+      const toggleButton = screen.getByRole('button', { name: /switch to dark mode/i });
+      await user.click(toggleButton);
+
+      // Verify DOM has dark class
+      expect(document.documentElement.classList.contains('dark')).toBe(true);
+
+      // Verify localStorage
+      expect(localStorage.getItem('codescribeai:settings:theme')).toBe('dark');
+
+      // Find the ThemeToggle in Header and verify it also updated
+      const header = screen.getByRole('banner');
+      const headerThemeButton = within(header).getByRole('button', { name: /switch to light mode/i });
+      expect(headerThemeButton).toBeInTheDocument();
+    });
+
+    it('maintains theme consistency across rapid toggles', async () => {
+      const user = userEvent.setup();
+
+      renderWithProviders(
+        <>
+          <Header />
+          <ThemeToggle />
+        </>
+      );
+
+      const toggleButton = screen.getByRole('button', { name: /switch to dark mode/i });
+
+      // Rapid toggles
+      await user.click(toggleButton); // -> dark
+      expect(document.documentElement.classList.contains('dark')).toBe(true);
+
+      const darkButton = screen.getByRole('button', { name: /switch to light mode/i });
+      await user.click(darkButton); // -> light
+      expect(document.documentElement.classList.contains('dark')).toBe(false);
+
+      const lightButton = screen.getByRole('button', { name: /switch to dark mode/i });
+      await user.click(lightButton); // -> dark
+      expect(document.documentElement.classList.contains('dark')).toBe(true);
+
+      // Verify final state in localStorage
+      expect(localStorage.getItem('codescribeai:settings:theme')).toBe('dark');
+    });
+  });
+
+  describe('System Preference Integration', () => {
+    it('respects system preference on first load', () => {
+      // Clear any stored preference
+      localStorage.clear();
+
+      renderWithProviders(<ThemeToggle />);
+
+      // Should initialize based on system preference
+      // This test doesn't mock matchMedia, so it will use the actual system preference
+      const theme = localStorage.getItem('codescribeai:settings:theme');
+      expect(theme).toMatch(/^(light|dark)$/);
+    });
+
+    it('manual preference overrides system preference', async () => {
+      const user = userEvent.setup();
+
+      renderWithProviders(<ThemeToggle />);
+
+      // Set manual preference to dark
+      const button = screen.getByRole('button');
+      if (button.getAttribute('aria-label').includes('dark mode')) {
+        await user.click(button);
+      }
+
+      // Verify manual preference is stored
+      expect(localStorage.getItem('codescribeai:settings:theme')).toBe('dark');
+
+      // Even if system preference is light, manual preference should persist
+      expect(document.documentElement.classList.contains('dark')).toBe(true);
+    });
+  });
+
+  describe('Accessibility in Dark Mode', () => {
+    it('maintains accessible focus indicators in dark mode', () => {
+      localStorage.setItem('codescribeai:settings:theme', 'dark');
+
+      renderWithProviders(<ThemeToggle />);
+
+      const button = screen.getByRole('button');
+      expect(button.className).toContain('dark:focus-visible:ring-purple-400');
+      expect(button.className).toContain('dark:focus-visible:ring-offset-slate-950');
+    });
+
+    it('maintains accessible aria-labels in both modes', async () => {
+      const user = userEvent.setup();
+
+      renderWithProviders(<ThemeToggle />);
+
+      // Light mode
+      let button = screen.getByRole('button', { name: /switch to dark mode/i });
+      expect(button).toHaveAccessibleName(/switch to dark mode/i);
+
+      // Toggle to dark
+      await user.click(button);
+
+      // Dark mode
+      button = screen.getByRole('button', { name: /switch to light mode/i });
+      expect(button).toHaveAccessibleName(/switch to light mode/i);
+    });
+
+    it('Header navigation remains accessible in dark mode', () => {
+      localStorage.setItem('codescribeai:settings:theme', 'dark');
+
+      renderWithProviders(<Header />);
+
+      // Logo link should be accessible
+      const logoLink = screen.getByRole('link', { name: /codescribe ai/i });
+      expect(logoLink).toBeInTheDocument();
+      expect(logoLink).toHaveAccessibleName();
+    });
+
+    it('Footer links remain accessible in dark mode', () => {
+      localStorage.setItem('codescribeai:settings:theme', 'dark');
+
+      renderWithProviders(<Footer />);
+
+      const privacyLink = screen.getByRole('link', { name: /privacy policy/i });
+      const termsLink = screen.getByRole('link', { name: /terms of service/i });
+
+      expect(privacyLink).toHaveAccessibleName(/privacy policy/i);
+      expect(termsLink).toHaveAccessibleName(/terms of service/i);
+    });
+  });
+
+  describe('Storage Convention Compliance', () => {
+    it('uses correct storage key format', async () => {
+      const user = userEvent.setup();
+
+      renderWithProviders(<ThemeToggle />);
+
+      const button = screen.getByRole('button');
+      await user.click(button);
+
+      // Verify storage key follows codescribeai:type:category:key pattern
+      const storageKey = 'codescribeai:settings:theme';
+      expect(localStorage.getItem(storageKey)).toBeDefined();
+      expect(localStorage.getItem(storageKey)).toMatch(/^(light|dark)$/);
+    });
+
+    it('does not create duplicate theme storage keys', async () => {
+      const user = userEvent.setup();
+
+      renderWithProviders(
+        <>
+          <ThemeToggle />
+          <Header />
+        </>
+      );
+
+      // Toggle theme multiple times
+      const button = screen.getByRole('button');
+      await user.click(button);
+      await user.click(screen.getByRole('button'));
+
+      // Check that only one theme key exists
+      const allKeys = Object.keys(localStorage);
+      const themeKeys = allKeys.filter(key => key.includes('theme'));
+
+      expect(themeKeys).toHaveLength(1);
+      expect(themeKeys[0]).toBe('codescribeai:settings:theme');
+    });
+  });
+
+  describe('Performance', () => {
+    it('theme toggle responds immediately', async () => {
+      const user = userEvent.setup();
+
+      renderWithProviders(<ThemeToggle />);
+
+      const button = screen.getByRole('button', { name: /switch to dark mode/i });
+      const startTime = performance.now();
+
+      await user.click(button);
+
+      const endTime = performance.now();
+      const duration = endTime - startTime;
+
+      // Should update within reasonable time (< 100ms for the state update)
+      expect(duration).toBeLessThan(100);
+
+      // Verify theme changed
+      expect(document.documentElement.classList.contains('dark')).toBe(true);
+    });
+
+    it('does not cause unnecessary re-renders', async () => {
+      const user = userEvent.setup();
+
+      renderWithProviders(
+        <>
+          <Header />
+          <Footer />
+          <ThemeToggle />
+        </>
+      );
+
+      const button = screen.getByRole('button', { name: /switch to dark mode/i });
+
+      // Toggle theme
+      await user.click(button);
+
+      // All components should still be present and functional
+      expect(screen.getByRole('banner')).toBeInTheDocument();
+      expect(screen.getByRole('contentinfo')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /switch to light mode/i })).toBeInTheDocument();
+    });
+  });
+});
