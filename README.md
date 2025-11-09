@@ -458,7 +458,7 @@ For a complete navigation guide with descriptions of all documentation, see **[D
 
 **Development & Testing:**
 - **[Dev Guide](docs/planning/mvp/05-Dev-Guide.md)** - Implementation guide with code examples
-- **[Testing Hub](docs/testing/README.md)** - 2,386 tests, coverage reports, test patterns
+- **[Testing Hub](docs/testing/README.md)** - 2,386 tests (2,343 passing, 43 skipped), coverage reports, test patterns
 - **[Test Fixes Guide](docs/testing/TEST-PATTERNS-GUIDE.md)** - Testing patterns & best practices
 
 **Design & UX:**
@@ -604,7 +604,7 @@ See [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) for complete
 ### 📊 Testing & Quality
 
 **Comprehensive Test Coverage: 2,386 Tests** (2,343 passing, 43 skipped, 100% pass rate)
-- **Backend Tests**: 878 tests (Jest + Supertest)
+- **Backend Tests**: 878 tests (857 passing, 21 skipped) - Jest + Supertest
   - Service layer: qualityScorer, claudeClient, codeParser, docGenerator, emailService
   - Authentication: 102 tests (auth middleware, user model, OAuth flows)
   - Settings: 26 integration tests (profile, email, password, preferences)
@@ -616,7 +616,7 @@ See [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) for complete
   - Mermaid generation tests
   - **Coverage**: 91.83% services statements, 95.81% overall, 88.72% branches
   - **Pass Rate**: 100% (857 passing, 21 skipped, 0 failures)
-- **Frontend Tests**: 1,401 tests (Vitest + React Testing Library)
+- **Frontend Tests**: 1,508 tests (1,486 passing, 22 skipped) - Vitest + React Testing Library
   - Component tests with accessibility checks (18/18 components tested)
   - Authentication UI: SignupModal, LoginModal, ForgotPasswordModal, ResetPasswordModal
   - Settings UI: AccountTab, PrivacyTab, SubscriptionTab, DangerZoneTab, AnalyticsWrapper

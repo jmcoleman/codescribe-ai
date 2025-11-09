@@ -9,6 +9,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.7.1] - 2025-11-09
+
+**Status:** ✅ ErrorBoundary Dark Mode & Production Bug Fix
+
+**Summary:** Fixed ErrorBoundary dark mode display, horizontal scrolling for long stack traces, and critical production bug in AdminUsage page. Added manual testing route for ErrorBoundary verification.
+
+### Fixed
+
+- **ErrorBoundary Dark Mode**
+  - Added theme detection (`getThemePreference()`) from localStorage and system preferences
+  - Applied dark class manually to `document.documentElement` (ErrorBoundary wraps ThemeProvider)
+  - Full dark mode styling with `dark:` variants for all colors
+  - Icon border in dark mode: `border-2 border-transparent dark:border-red-800/50`
+  - Improved error message readability: `dark:bg-red-950/30 dark:text-red-200`
+  - Better contrast for stack traces: `dark:bg-slate-800/50`
+  - Modal width increased from `max-w-2xl` to `max-w-4xl` for long stack traces
+
+- **ErrorBoundary Horizontal Scrolling**
+  - Removed CSS Grid animation (was interfering with overflow)
+  - Applied `overflow-x-auto` directly to `<pre>` elements
+  - All code blocks (Error Message, Stack Trace, Component Stack) now scroll horizontally
+  - Simplified details/summary styling with arrow rotation animation only
+
+- **AdminUsage Production Bug**
+  - Fixed missing `AlertCircle` icon import from lucide-react
+  - Was causing ErrorBoundary to trigger in production when admin stats failed to load
+  - Error state now properly displays with AlertCircle icon
+
+### Added
+
+- **Manual Testing Route**
+  - `/test-error` route for ErrorBoundary testing in all environments
+  - `ErrorTest.jsx` component to intentionally trigger errors
+  - Route documented in `main.jsx` and component JSDoc
+  - Manual testing section added to `ERROR-HANDLING-TESTS.md`
+
+### Documentation
+
+- Updated `ERROR-HANDLING-TESTS.md` with Manual Testing Route section
+- Added inline comments to `/test-error` route in `main.jsx`
+- Enhanced `ErrorTest.jsx` component documentation
+
+### Test Results
+
+- **Total: 2,343 passed | 43 skipped (2,386 total) - 100% pass rate**
+  - Frontend: 1,486 passed | 22 skipped (1,508 total) - 98.5% pass rate
+  - Backend: 857 passed | 21 skipped (878 total) - 100% pass rate
+- **Coverage**: 91.83% backend coverage maintained
+
+---
+
 ## [2.7.0] - 2025-11-08
 
 **Status:** ✅ Dark Mode Complete - 100% CI Pass Rate

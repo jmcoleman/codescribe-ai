@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, Globe, FileText, Clock, RefreshCw, Filter } from 'lucide-react';
+import { ArrowLeft, Users, Globe, FileText, Clock, RefreshCw, Filter, AlertCircle } from 'lucide-react';
 import { PageLayout } from '../components/PageLayout';
 import toast from 'react-hot-toast';
 
@@ -116,7 +116,7 @@ export default function AdminUsage() {
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-center">
               <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Activity className="w-8 h-8 text-red-600 dark:text-red-400" />
+                <AlertCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
               </div>
               <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-2">Failed to Load Statistics</h2>
               <p className="text-slate-600 dark:text-slate-400 mb-4">{error}</p>

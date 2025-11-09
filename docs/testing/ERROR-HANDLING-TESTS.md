@@ -341,6 +341,30 @@ The ErrorBoundary component already has comprehensive test coverage in `client/s
 
 ---
 
+## Manual Testing Route
+
+For manual testing of ErrorBoundary in both light and dark modes:
+
+**Test Route:** `/test-error`
+**Component:** `ErrorTest.jsx`
+**Purpose:** Intentionally triggers ErrorBoundary to verify:
+- Dark mode styling and theme detection
+- Error UI layout and responsiveness
+- Horizontal scrolling for long stack traces
+- Copy buttons and error details display
+
+**How to Use:**
+1. Navigate to `http://localhost:5174/test-error` (development) or `https://codescribeai.com/test-error` (production)
+2. Toggle dark mode in your system settings or app theme
+3. Click "Trigger Error" button
+4. Verify ErrorBoundary displays correctly in current theme
+5. Test horizontal scrolling on Stack Trace and Component Stack
+6. Test Copy buttons for error details
+
+**Note:** This route is available in all environments for testing purposes and can be accessed anytime to verify ErrorBoundary functionality.
+
+---
+
 ## Related Documentation
 
 - **ERROR-HANDLING-UX.md** - UX guidelines and research-based best practices
@@ -364,6 +388,6 @@ The test suite follows industry best practices from Testing Library and Vitest, 
 
 ---
 
-**Last Updated:** October 16, 2025  
-**Maintained By:** CodeScribe AI Team  
-**Version:** 1.0
+**Last Updated:** November 9, 2025
+**Maintained By:** CodeScribe AI Team
+**Version:** 1.1

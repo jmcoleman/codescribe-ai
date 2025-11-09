@@ -1,8 +1,8 @@
 # CodeScribe AI - Product Roadmap
 
-**Last Updated:** November 8, 2025
+**Last Updated:** November 9, 2025
 **Current Phase:** Phase 3 - ✅ **Epic 3.1 COMPLETE** (Dark Mode) | 🟡 **Epic 3.3 IN PROGRESS** (Advanced File Handling)
-**Current Release:** v2.7.0 (Dark Mode Complete - 100% CI Pass Rate)
+**Current Release:** v2.7.1 (ErrorBoundary Dark Mode & Production Bug Fix)
 **Production URL:** [https://codescribeai.com](https://codescribeai.com)
 
 ---
@@ -1320,8 +1320,8 @@ ALTER TABLE subscriptions ADD COLUMN stripe_receipt_url VARCHAR(500);
 ## 🎨 Phase 3: UX Enhancements (IN PROGRESS)
 
 **Timeline:** November 8 - TBD
-**Status:** 🔄 **IN PROGRESS** - Epic 3.1 Complete (v2.7.0), Epic 3.3 Active
-**Current Release:** v2.7.0 (Dark Mode Complete)
+**Status:** 🔄 **IN PROGRESS** - Epic 3.1 Complete (v2.7.1), Epic 3.3 Active
+**Current Release:** v2.7.1 (ErrorBoundary Dark Mode & Production Bug Fix)
 **Target Release:** v3.x.x series
 **Strategic Goal:** Transform user experience with customization, flexibility, and advanced file handling capabilities
 
@@ -1329,6 +1329,7 @@ ALTER TABLE subscriptions ADD COLUMN stripe_receipt_url VARCHAR(500);
 
 **Completed:**
 - ✅ Nov 8: Epic 3.1 (Dark Mode Complete) - v2.7.0
+- ✅ Nov 9: v2.7.1 (ErrorBoundary Dark Mode & Production Bug Fix)
 
 **In Progress:**
 - 🟡 Nov 8+: Epic 3.3 (Advanced File Handling) - IN PROGRESS
@@ -1365,6 +1366,36 @@ ALTER TABLE subscriptions ADD COLUMN stripe_receipt_url VARCHAR(500);
 **Documentation:**
 - [DARK-MODE-SPEC.md](../DARK-MODE-SPEC.md) - Implementation guide
 - [CHANGELOG.md v2.7.0](../../CHANGELOG.md) - Complete release notes
+
+#### v2.7.1: ErrorBoundary Dark Mode & Production Bug Fix (1 day) - ✅ COMPLETE
+**Status:** ✅ Complete | Released November 9, 2025 (v2.7.1)
+**Type:** Bug Fix Release
+
+**Fixed:**
+- ✅ ErrorBoundary Dark Mode: Theme detection from localStorage and system preferences
+- ✅ Manual dark class application to document.documentElement (ErrorBoundary wraps ThemeProvider)
+- ✅ Full dark mode styling with dark: variants for all colors
+- ✅ Improved error message readability: dark:bg-red-950/30 dark:text-red-200
+- ✅ Better contrast for stack traces: dark:bg-slate-800/50
+- ✅ Icon border in dark mode: border-2 border-transparent dark:border-red-800/50
+- ✅ Horizontal scrolling for long stack traces (removed CSS Grid interference)
+- ✅ Modal width increased from max-w-2xl to max-w-4xl
+- ✅ Production bug: Fixed missing AlertCircle icon import in AdminUsage.jsx
+
+**Added:**
+- ✅ /test-error manual testing route for ErrorBoundary verification
+- ✅ ErrorTest.jsx component to intentionally trigger errors
+- ✅ Route documented in main.jsx with inline comments
+- ✅ Manual Testing Route section in ERROR-HANDLING-TESTS.md
+
+**Test Results:**
+- Frontend: 1,486 passed | 22 skipped (1,508 total) - 98.5% pass rate
+- Backend: 857 passed | 21 skipped (878 total) - 100% pass rate
+- Total: 2,343 passed | 43 skipped (2,386 total) - **100% pass rate**
+
+**Documentation:**
+- [CHANGELOG.md v2.7.1](../../CHANGELOG.md) - Complete release notes
+- [ERROR-HANDLING-TESTS.md](../../testing/ERROR-HANDLING-TESTS.md) - Manual testing route documentation
 
 #### Epic 3.3: Advanced File Handling (2-3 days) - 🟡 IN PROGRESS
 **Status:** 🟡 In Progress | Started November 8, 2025

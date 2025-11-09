@@ -478,7 +478,7 @@ describe('ErrorBoundary Component', () => {
         </ErrorBoundary>
       );
 
-      const content = container.querySelector('.max-w-2xl');
+      const content = container.querySelector('.max-w-4xl');
       expect(content).toBeInTheDocument();
     });
 

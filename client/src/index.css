@@ -359,3 +359,24 @@ body {
   background: linear-gradient(to right, rgb(241 245 249) 4%, rgb(226 232 240) 25%, rgb(241 245 249) 36%);
   background-size: 1000px 100%;
 }
+
+/* Details/Summary Styling */
+details summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+details summary::-webkit-details-marker {
+  display: none;
+}
+
+details summary::before {
+  content: '▶';
+  display: inline-block;
+  margin-right: 0.5rem;
+  transition: transform 200ms ease-out;
+}
+
+details[open] summary::before {
+  transform: rotate(90deg);
+}

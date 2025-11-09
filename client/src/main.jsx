@@ -19,6 +19,7 @@ import Settings from './pages/Settings.jsx'
 import { RestoreAccount } from './pages/RestoreAccount.jsx'
 import { UsageDashboard } from './pages/UsageDashboard.jsx'
 import AdminUsage from './pages/AdminUsage.jsx'
+import { ErrorTest } from './components/ErrorTest.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -40,6 +41,8 @@ createRoot(document.getElementById('root')).render(
               <Route path="/settings" element={<Settings />} />
               <Route path="/usage" element={<UsageDashboard />} />
               <Route path="/admin/usage" element={<AdminUsage />} />
+              {/* Testing route - triggers ErrorBoundary for dark mode and UI testing */}
+              <Route path="/test-error" element={<ErrorTest />} />
             </Routes>
             <AnalyticsWrapper />
           </AuthProvider>

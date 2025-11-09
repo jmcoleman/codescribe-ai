@@ -546,10 +546,18 @@ codescribe-ai/
 
 ## 🔄 Version History
 
-**Current: v2.7.0** - Dark Mode Complete - 100% CI Pass Rate (November 8, 2025): **Theme System** (ThemeContext, ThemeToggle, localStorage persistence, system preference detection); **Dark Mode Styling** (Tailwind dark: variants, Monaco/Prism custom themes, Mermaid diagrams, 13 components); **106 Dark Mode Tests** (ThemeContext, ThemeToggle, integration, all components); **Critical Test Fixes** (ContactSupportModal getToken Promise, DocPanel button count, UsageLimitModal text); **ThemeContext Error Handling** (localStorage/matchMedia try/catch); **2,386 tests** (1,486 frontend, 857 backend, 43 skipped, 100% pass rate)
+**Current: v2.7.1** - ErrorBoundary Dark Mode & Production Bug Fix (November 9, 2025): **ErrorBoundary Dark Mode** (theme detection, manual dark class application, improved readability); **Horizontal Scrolling** (removed CSS Grid, overflow-x-auto on pre tags); **AdminUsage Fix** (missing AlertCircle icon import); **Manual Testing** (/test-error route, ErrorTest component, documentation); **2,386 tests** (2,343 passing, 43 skipped, 100% pass rate)
 
 <details>
-<summary>Previous Versions (v1.0-v2.6.0)</summary>
+<summary>Previous Versions (v1.0-v2.7.0)</summary>
+
+- **v2.7.0** - Dark Mode Complete - 100% CI Pass Rate (November 8, 2025)
+  - Theme System (ThemeContext, ThemeToggle, localStorage persistence, system preference detection)
+  - Dark Mode Styling (Tailwind dark: variants, Monaco/Prism custom themes, Mermaid diagrams, 13 components)
+  - 106 Dark Mode Tests (ThemeContext, ThemeToggle, integration, all components)
+  - Critical Test Fixes (ContactSupportModal getToken Promise, DocPanel button count, UsageLimitModal text)
+  - ThemeContext Error Handling (localStorage/matchMedia try/catch)
+  - 2,386 tests (1,486 frontend, 857 backend, 43 skipped, 100% pass rate)
 
 - **v2.6.0** - UI Integration & Usage Dashboard Complete (November 7, 2025)
   - Usage Dashboard Page (daily/monthly cards, color-coded status, upgrade prompts)
@@ -736,7 +744,7 @@ codescribe-ai/
 - **v1.1** - Documentation restructure (subdirectories)
 - **v1.0** - Initial CLAUDE.md with complete doc map
 
-Last updated: November 8, 2025
+Last updated: November 9, 2025
 </details>
 
 ---
