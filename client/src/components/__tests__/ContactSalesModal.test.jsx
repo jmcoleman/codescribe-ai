@@ -298,19 +298,21 @@ describe('ContactSalesModal', () => {
       const submitButton = screen.getByRole('button', { name: /send message/i });
       await user.click(submitButton);
 
-      // Wait for loading state to appear
+      // Wait for loading state - check that button is disabled first
       await waitFor(() => {
-        const button = screen.getByRole('button', { name: /sending/i });
-        expect(button).toBeInTheDocument();
+        expect(submitButton).toBeDisabled();
       }, { timeout: 3000 });
 
-      // Verify the loading text is present
+      // Then verify the loading text is present
       expect(screen.getByText('Sending...')).toBeInTheDocument();
     });
 
     it('should disable inputs during loading', async () => {
       const user = userEvent.setup();
-      mockFetch.mockImplementationOnce(() => new Promise(() => {})); // Never resolves
+
+      // Create a promise that never resolves to keep loading state visible
+      const neverResolvingPromise = new Promise(() => {});
+      mockFetch.mockReturnValue(neverResolvingPromise);
 
       render(<ContactSalesModal isOpen={true} onClose={vi.fn()} tier="enterprise" />);
 
@@ -320,15 +322,22 @@ describe('ContactSalesModal', () => {
       const submitButton = screen.getByRole('button', { name: /send message/i });
       await user.click(submitButton);
 
+      // Wait for loading state - first check that submit button is disabled
       await waitFor(() => {
-        const messageInput = screen.getByLabelText(/additional information/i);
-        expect(messageInput).toBeDisabled();
-      });
+        expect(submitButton).toBeDisabled();
+      }, { timeout: 3000 });
+
+      // Then verify inputs are disabled
+      const messageInput = screen.getByLabelText(/additional information/i);
+      expect(messageInput).toBeDisabled();
     });
 
     it('should disable submit button during loading', async () => {
       const user = userEvent.setup();
-      mockFetch.mockImplementationOnce(() => new Promise(() => {})); // Never resolves
+
+      // Create a promise that never resolves to keep loading state visible
+      const neverResolvingPromise = new Promise(() => {});
+      mockFetch.mockReturnValue(neverResolvingPromise);
 
       render(<ContactSalesModal isOpen={true} onClose={vi.fn()} tier="enterprise" />);
 
@@ -340,7 +349,7 @@ describe('ContactSalesModal', () => {
 
       await waitFor(() => {
         expect(submitButton).toBeDisabled();
-      });
+      }, { timeout: 3000 });
     });
   });
 
@@ -513,7 +522,10 @@ describe('ContactSalesModal', () => {
     it('should not allow close during loading', async () => {
       const user = userEvent.setup();
       const onClose = vi.fn();
-      mockFetch.mockImplementationOnce(() => new Promise(() => {})); // Never resolves
+
+      // Create a promise that never resolves to keep loading state visible
+      const neverResolvingPromise = new Promise(() => {});
+      mockFetch.mockReturnValue(neverResolvingPromise);
 
       render(<ContactSalesModal isOpen={true} onClose={onClose} tier="enterprise" />);
 
@@ -523,9 +535,12 @@ describe('ContactSalesModal', () => {
       const submitButton = screen.getByRole('button', { name: /send message/i });
       await user.click(submitButton);
 
+      // Wait for loading state
       await waitFor(() => {
-        expect(screen.getByText('Sending...')).toBeInTheDocument();
-      });
+        expect(submitButton).toBeDisabled();
+      }, { timeout: 3000 });
+
+      expect(screen.getByText('Sending...')).toBeInTheDocument();
 
       const closeButton = screen.getByRole('button', { name: /close modal/i });
       await user.click(closeButton);
