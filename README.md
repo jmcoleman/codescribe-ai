@@ -41,7 +41,7 @@ Transform code into comprehensive, professional documentation in seconds using A
 - [License](#license)
 - [Author](#author)
 
-## Project Structure
+## Project Structure 
 
 ```
 codescribe-ai/
