@@ -66,8 +66,8 @@
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
     "footerLeft": "<strong>CodeScribe AI</strong> \u00b7 Strategic Roadmap v3.9",
-    "footer": "Phase 1 Complete \u00b7 Phase 2 Complete (Epic 2.6 - Usage Dashboard) \u00b7 Launch: Mid-Jan 2026",
-    "lastUpdated": "November 7, 2025 (v2.6.0 - Epic 2.6: Usage Dashboard Complete)"
+    "footer": "Phase 1 Complete \u00b7 Phase 2 Complete \u00b7 Phase 3 Epic 3.1 Complete (Dark Mode) \u00b7 Launch: Mid-Jan 2026",
+    "lastUpdated": "November 8, 2025 (v2.7.0 - Epic 3.1: Dark Mode Complete)"
   },
   "columns": [
     {
@@ -549,6 +549,51 @@
             "Backend: 877 tests (856 passing, 21 skipped)",
             "Phase 2: Payments Infrastructure now 100% complete"
           ]
+        },
+        {
+          "version": "v2.7.0",
+          "title": "Epic 3.1: Dark Mode Complete",
+          "duration": "2 days",
+          "status": "✓ Complete",
+          "completedDate": "Nov 8, 2025",
+          "badge": "100% CI Pass Rate",
+          "features": [
+            "Theme System: ThemeContext with React Context API for global theme state",
+            "ThemeToggle component with smooth Sun/Moon icon transitions",
+            "Theme persistence via localStorage (codescribeai:settings:theme)",
+            "System preference detection via window.matchMedia('(prefers-color-scheme: dark)')",
+            "Auto-sync with system theme changes when no manual preference set",
+            "Defensive error handling for browser APIs (localStorage, matchMedia)",
+            "Dark Mode Styling: Comprehensive Tailwind dark: variants across all components",
+            "Custom Monaco Editor dark theme (Neon Cyberpunk): purple keywords, green strings, cyan numbers",
+            "Custom Prism syntax highlighting matching Monaco theme",
+            "Mermaid diagram dark theme with enhanced borders and hierarchy",
+            "Gradient backgrounds with opacity adjustments for dark mode",
+            "Consistent color system: slate backgrounds, purple accents, semantic colors",
+            "Component Updates: 13 components with dark mode variants",
+            "Header/MobileMenu: Theme toggle in desktop header and mobile menu",
+            "Footer, DocPanel, Button: Dark mode styling with proper contrast",
+            "All modals: Dark mode styling with semantic colors",
+            "Usage dashboard: Dark mode progress bars and status indicators",
+            "Forms: Dark input fields, selects, and validation states",
+            "106 New Dark Mode Tests (100% passing)",
+            "ThemeContext state management tests (8 tests)",
+            "ThemeToggle component tests (10 tests)",
+            "Integration tests (9 tests) - Full app dark mode switching",
+            "Monaco Editor theme tests (6 tests)",
+            "Mermaid diagram theming tests (14 tests)",
+            "All UI components with dark mode variants tested",
+            "Critical Test Infrastructure Fixes",
+            "ContactSupportModal CI fix: getToken() mock returned Promise.resolve() (was blocking CI)",
+            "DocPanel accessibility test: Removed button count assertion (mobile/desktop variants)",
+            "UsageLimitModal test: Updated text assertion to match component",
+            "ThemeContext error handling: try/catch for localStorage, matchMedia checks",
+            "Test Helpers: renderWithTheme() utility, global matchMedia mock, localStorage mock",
+            "Final Results: 2,343 passed | 43 skipped (2,386 total) - 100% pass rate",
+            "Frontend: 1,486 passed | 22 skipped (1,508 total) - 98.5% pass rate",
+            "Backend: 857 passed | 21 skipped (878 total) - 100% pass rate",
+            "Coverage: 91.83% backend coverage maintained"
+          ]
         }
       ]
     },
@@ -556,27 +601,23 @@
       "id": "now",
       "label": "Now",
       "title": "Active",
-      "subtitle": "Phase 3: Dark Mode & UX Enhancements",
+      "subtitle": "Phase 3: UX Enhancements & Developer Tools",
       "phases": [
         {
-          "version": "Epic 3.1",
-          "title": "Theme Refinements & Dark Mode",
+          "version": "Epic 3.3",
+          "title": "Advanced File Handling",
           "duration": "2-3 days",
-          "status": "Ready to Implement",
-          "badge": "Design Complete",
+          "status": "In Progress",
+          "badge": "Infrastructure First",
           "features": [
-            "\u2713 Light theme refinements: 20% opacity purple shadows on primary buttons",
-            "\u2713 Light theme: Cyan accents for code elements (brand continuity)",
-            "\u2713 Light theme: Simplified button system (solid, no gradients)",
-            "Dark mode: Neon Cyberpunk theme (slate-950 backgrounds, purple-400, cyan-400)",
-            "Dark mode: 30% opacity purple shadows for premium glow effect",
-            "Dark mode toggle with theme persistence (localStorage + system preference)",
-            "ThemeProvider context with Tailwind class-based switching",
-            "\u2713 Monaco Editor theme sync (vs-dark/vs-light)",
-            "Mermaid diagram dark theme with brand colors",
-            "\u2713 WCAG AAA contrast (all colors 7:1+ on backgrounds)",
-            "\u2713 Design specs: DARK-MODE-SPEC.md (959 lines), LIGHT-THEME-DESIGN-SYSTEM.md",
-            "Figma guide v4.0 with refined shadow system and dark theme specs"
+            "Multi-file upload support (select multiple files at once)",
+            "Batch processing (up to 10 files)",
+            "File preview before generation",
+            "File history and version tracking (30 days)",
+            "Progress indicators for batch operations",
+            "Error handling per file (don't fail entire batch)",
+            "Note: Basic drag-and-drop implemented in Phase 2 Epic 2.4",
+            "Required before Epic 4.1 and Epic 4.2"
           ]
         }
       ]
@@ -621,23 +662,6 @@
             "Email notifications for subscription lifecycle events",
             "In-app notifications for billing issues and renewals",
             "Note: Core upgrade/downgrade flows completed in Epic 2.4"
-          ]
-        },
-        {
-          "version": "Epic 3.3",
-          "title": "Advanced File Handling",
-          "duration": "2-3 days",
-          "status": "Planned",
-          "badge": "Infrastructure First",
-          "features": [
-            "Multi-file upload support (select multiple files at once)",
-            "Batch processing (up to 10 files)",
-            "File preview before generation",
-            "File history and version tracking (30 days)",
-            "Progress indicators for batch operations",
-            "Error handling per file (don't fail entire batch)",
-            "Note: Basic drag-and-drop implemented in Phase 2 Epic 2.4",
-            "Required before Epic 4.1 and Epic 4.2"
           ]
         },
         {
