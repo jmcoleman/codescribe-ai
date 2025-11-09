@@ -268,15 +268,17 @@ describe('ContactSupportModal', () => {
 
       // Click submit button
       const submitButton = screen.getByRole('button', { name: /Send Message/i });
+
+      // Click and wait for the form to actually submit
       await user.click(submitButton);
 
-      // Wait for loading state - check that button is disabled first
+      // Wait for loading text to appear (which happens when form submits)
       await waitFor(() => {
-        expect(submitButton).toBeDisabled();
+        expect(screen.getByText('Sending...')).toBeInTheDocument();
       }, { timeout: 3000 });
 
-      // Then verify the loading text is present
-      expect(screen.getByText('Sending...')).toBeInTheDocument();
+      // Verify button is disabled during submission
+      expect(submitButton).toBeDisabled();
     });
   });
 });
