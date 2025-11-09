@@ -67,7 +67,7 @@
     },
     "footerLeft": "<strong>CodeScribe AI</strong> \u00b7 Strategic Roadmap v3.9",
     "footer": "Phase 1 Complete \u00b7 Phase 2 Complete \u00b7 Phase 3 Epic 3.1 Complete (Dark Mode) \u00b7 Launch: Mid-Jan 2026",
-    "lastUpdated": "November 8, 2025 (v2.7.0 - Epic 3.1: Dark Mode Complete)"
+    "lastUpdated": "November 9, 2025 (v2.7.1 - ErrorBoundary Dark Mode & Production Bug Fix)"
   },
   "columns": [
     {
@@ -590,6 +590,46 @@
             "ThemeContext error handling: try/catch for localStorage, matchMedia checks",
             "Test Helpers: renderWithTheme() utility, global matchMedia mock, localStorage mock",
             "Final Results: 2,343 passed | 43 skipped (2,386 total) - 100% pass rate",
+            "Frontend: 1,486 passed | 22 skipped (1,508 total) - 98.5% pass rate",
+            "Backend: 857 passed | 21 skipped (878 total) - 100% pass rate",
+            "Coverage: 91.83% backend coverage maintained"
+          ]
+        },
+        {
+          "version": "v2.7.1",
+          "title": "ErrorBoundary Dark Mode & Production Bug Fix",
+          "duration": "1 day",
+          "status": "✓ Complete",
+          "completedDate": "Nov 9, 2025",
+          "badge": "Bug Fix",
+          "features": [
+            "ErrorBoundary Dark Mode Implementation",
+            "Theme detection via getThemePreference() from localStorage and system preferences",
+            "Manual dark class application to document.documentElement (ErrorBoundary wraps ThemeProvider)",
+            "Full dark mode styling with dark: variants for all colors",
+            "Icon border in dark mode: border-2 border-transparent dark:border-red-800/50",
+            "Improved error message readability: dark:bg-red-950/30 dark:text-red-200",
+            "Better contrast for stack traces: dark:bg-slate-800/50",
+            "Modal width increased from max-w-2xl to max-w-4xl for long stack traces",
+            "ErrorBoundary Horizontal Scrolling Fix",
+            "Removed CSS Grid animation (was interfering with overflow behavior)",
+            "Applied overflow-x-auto directly to <pre> elements",
+            "All code blocks (Error Message, Stack Trace, Component Stack) now scroll horizontally",
+            "Simplified details/summary styling with arrow rotation animation only",
+            "Production Bug Fix: AdminUsage Icon Import",
+            "Fixed missing AlertCircle icon import from lucide-react in AdminUsage.jsx",
+            "Error state now properly displays with AlertCircle icon",
+            "Was causing ErrorBoundary to trigger in production when admin stats failed to load",
+            "Manual Testing Route for ErrorBoundary",
+            "/test-error route for ErrorBoundary testing in all environments",
+            "ErrorTest.jsx component to intentionally trigger errors",
+            "Route documented in main.jsx with inline comments",
+            "Component documented with comprehensive JSDoc",
+            "Manual Testing Route section added to ERROR-HANDLING-TESTS.md",
+            "Documentation Updates",
+            "ERROR-HANDLING-TESTS.md updated to v1.1 with Manual Testing Route section",
+            "Updated last updated date to November 9, 2025",
+            "Test Results: 2,343 passed | 43 skipped (2,386 total) - 100% pass rate",
             "Frontend: 1,486 passed | 22 skipped (1,508 total) - 98.5% pass rate",
             "Backend: 857 passed | 21 skipped (878 total) - 100% pass rate",
             "Coverage: 91.83% backend coverage maintained"
