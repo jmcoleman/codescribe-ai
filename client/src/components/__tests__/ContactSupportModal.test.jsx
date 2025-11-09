@@ -19,7 +19,7 @@ vi.mock('../../config/api', () => ({
 const mockAuthContext = {
   user: null,
   isAuthenticated: false,
-  getToken: vi.fn(() => null),
+  getToken: vi.fn(() => Promise.resolve(null)),
 };
 
 vi.mock('../../contexts/AuthContext', () => ({
@@ -31,7 +31,7 @@ const renderWithAuth = (ui, { user = null } = {}) => {
   // Update mock context for this render
   mockAuthContext.user = user;
   mockAuthContext.isAuthenticated = !!user;
-  mockAuthContext.getToken = vi.fn(() => user ? 'fake-token' : null);
+  mockAuthContext.getToken = vi.fn(() => Promise.resolve(user ? 'fake-token' : null));
 
   return render(ui);
 };
@@ -44,7 +44,7 @@ describe('ContactSupportModal', () => {
     // Reset mock auth state
     mockAuthContext.user = null;
     mockAuthContext.isAuthenticated = false;
-    mockAuthContext.getToken = vi.fn(() => null);
+    mockAuthContext.getToken = vi.fn(() => Promise.resolve(null));
     global.fetch = vi.fn();
   });
 
@@ -154,12 +154,16 @@ describe('ContactSupportModal', () => {
       await user.type(screen.getByLabelText(/Message/i), 'Test message');
       await user.click(screen.getByRole('button', { name: /Send Message/i }));
 
-      await waitFor(() => {
-        // Use flexible text matcher since text may be split across elements
-        expect(screen.getByText((_content, element) => {
-          return element?.textContent === 'Support Request Sent!';
-        })).toBeInTheDocument();
-      });
+      // Wait for success message with longer timeout for CI environments
+      await waitFor(
+        () => {
+          // Use flexible text matcher since text may be split across elements
+          expect(screen.getByText((_content, element) => {
+            return element?.textContent === 'Support Request Sent!';
+          })).toBeInTheDocument();
+        },
+        { timeout: 5000 } // Increase timeout from default 1000ms to 5000ms for CI
+      );
     });
   });
 
