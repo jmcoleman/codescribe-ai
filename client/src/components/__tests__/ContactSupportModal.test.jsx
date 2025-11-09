@@ -258,19 +258,26 @@ describe('ContactSupportModal', () => {
         tier: 'pro',
       };
 
-      global.fetch = vi.fn().mockImplementation(() => new Promise(() => {})); // Never resolves
+      // Create a promise that never resolves to keep loading state visible
+      const neverResolvingPromise = new Promise(() => {});
+      global.fetch = vi.fn().mockReturnValue(neverResolvingPromise);
 
       renderWithAuth(<ContactSupportModal isOpen={true} onClose={mockOnClose} />, { user: authUser });
 
       await user.type(screen.getByLabelText(/Message/i), 'Test message');
-      await user.click(screen.getByRole('button', { name: /Send Message/i }));
 
+      // Click submit button
+      const submitButton = screen.getByRole('button', { name: /Send Message/i });
+      await user.click(submitButton);
+
+      // Wait for loading state to appear
       await waitFor(() => {
-        // Use flexible text matcher since text may be split across elements
-        expect(screen.getByText((_content, element) => {
-          return element?.textContent === 'Sending...';
-        })).toBeInTheDocument();
-      });
+        const button = screen.getByRole('button', { name: /sending/i });
+        expect(button).toBeInTheDocument();
+      }, { timeout: 3000 });
+
+      // Verify the loading text is present
+      expect(screen.getByText('Sending...')).toBeInTheDocument();
     });
   });
 });

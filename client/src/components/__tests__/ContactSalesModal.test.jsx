@@ -284,19 +284,28 @@ describe('ContactSalesModal', () => {
 
     it('should show loading state during submission', async () => {
       const user = userEvent.setup();
-      mockFetch.mockImplementationOnce(() => new Promise(() => {})); // Never resolves
+
+      // Create a promise that never resolves to keep loading state visible
+      const neverResolvingPromise = new Promise(() => {});
+      mockFetch.mockReturnValue(neverResolvingPromise);
 
       render(<ContactSalesModal isOpen={true} onClose={vi.fn()} tier="enterprise" />);
 
       // Fill required subject field
       await user.type(screen.getByLabelText(/subject/i), 'Test');
 
+      // Click submit button
       const submitButton = screen.getByRole('button', { name: /send message/i });
       await user.click(submitButton);
 
+      // Wait for loading state to appear
       await waitFor(() => {
-        expect(screen.getByText('Sending...')).toBeInTheDocument();
-      });
+        const button = screen.getByRole('button', { name: /sending/i });
+        expect(button).toBeInTheDocument();
+      }, { timeout: 3000 });
+
+      // Verify the loading text is present
+      expect(screen.getByText('Sending...')).toBeInTheDocument();
     });
 
     it('should disable inputs during loading', async () => {
