@@ -5,7 +5,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from '../../contexts/ThemeContext';
 import { AuthProvider } from '../../contexts/AuthContext';
 import { Header } from '../../components/Header';
-import { Footer } from '../../components/Footer';
+import Footer from '../../components/Footer';
 import { ThemeToggle } from '../../components/ThemeToggle';
 
 /**
@@ -65,9 +65,9 @@ describe('Dark Mode Integration', () => {
         </>
       );
 
-      // Toggle using standalone ThemeToggle
-      const toggleButton = screen.getByRole('button', { name: /switch to dark mode/i });
-      await user.click(toggleButton);
+      // Toggle using standalone ThemeToggle (use getAllByRole since there are 2 buttons)
+      const toggleButtons = screen.getAllByRole('button', { name: /switch to dark mode/i });
+      await user.click(toggleButtons[0]);
 
       // Verify theme is persisted
       expect(localStorage.getItem('codescribeai:settings:theme')).toBe('dark');
@@ -85,7 +85,7 @@ describe('Dark Mode Integration', () => {
 
       const header = screen.getByRole('banner');
       expect(header.className).toContain('dark:bg-slate-900');
-      expect(header.className).toContain('dark:border-slate-800');
+      expect(header.className).toContain('dark:border-slate-700');
     });
 
     it('ThemeToggle in Header shows correct icon in dark mode', () => {
@@ -100,8 +100,9 @@ describe('Dark Mode Integration', () => {
 
       // Sun icon should be visible in dark mode
       const sunIcon = themeButton.querySelector('.lucide-sun');
-      expect(sunIcon.className).toContain('scale-100');
-      expect(sunIcon.className).toContain('opacity-100');
+      const classValue = sunIcon.getAttribute('class');
+      expect(classValue).toContain('scale-100');
+      expect(classValue).toContain('opacity-100');
     });
 
     it('toggles Header appearance when switching themes', async () => {
@@ -130,8 +131,8 @@ describe('Dark Mode Integration', () => {
       renderWithProviders(<Footer />);
 
       const footer = screen.getByRole('contentinfo');
-      expect(footer.className).toContain('dark:bg-slate-900');
-      expect(footer.className).toContain('dark:border-slate-800');
+      expect(footer.className).toContain('dark:bg-slate-900/80');
+      expect(footer.className).toContain('dark:border-slate-700');
     });
 
     it('Footer links have dark mode hover states', () => {
@@ -160,9 +161,9 @@ describe('Dark Mode Integration', () => {
       // All should start in light mode
       expect(document.documentElement.classList.contains('dark')).toBe(false);
 
-      // Toggle from standalone ThemeToggle
-      const toggleButton = screen.getByRole('button', { name: /switch to dark mode/i });
-      await user.click(toggleButton);
+      // Toggle from standalone ThemeToggle (get all buttons and use first one)
+      const toggleButtons = screen.getAllByRole('button', { name: /switch to dark mode/i });
+      await user.click(toggleButtons[0]);
 
       // Verify DOM has dark class
       expect(document.documentElement.classList.contains('dark')).toBe(true);
@@ -186,18 +187,18 @@ describe('Dark Mode Integration', () => {
         </>
       );
 
-      const toggleButton = screen.getByRole('button', { name: /switch to dark mode/i });
+      const toggleButtons = screen.getAllByRole('button', { name: /switch to dark mode/i });
 
       // Rapid toggles
-      await user.click(toggleButton); // -> dark
+      await user.click(toggleButtons[0]); // -> dark
       expect(document.documentElement.classList.contains('dark')).toBe(true);
 
-      const darkButton = screen.getByRole('button', { name: /switch to light mode/i });
-      await user.click(darkButton); // -> light
+      const darkButtons = screen.getAllByRole('button', { name: /switch to light mode/i });
+      await user.click(darkButtons[0]); // -> light
       expect(document.documentElement.classList.contains('dark')).toBe(false);
 
-      const lightButton = screen.getByRole('button', { name: /switch to dark mode/i });
-      await user.click(lightButton); // -> dark
+      const lightButtons = screen.getAllByRole('button', { name: /switch to dark mode/i });
+      await user.click(lightButtons[0]); // -> dark
       expect(document.documentElement.classList.contains('dark')).toBe(true);
 
       // Verify final state in localStorage
@@ -314,10 +315,10 @@ describe('Dark Mode Integration', () => {
         </>
       );
 
-      // Toggle theme multiple times
-      const button = screen.getByRole('button');
-      await user.click(button);
-      await user.click(screen.getByRole('button'));
+      // Toggle theme multiple times (use getAllByRole since there are 2 buttons)
+      const buttons = screen.getAllByRole('button');
+      await user.click(buttons[0]);
+      await user.click(buttons[0]);
 
       // Check that only one theme key exists
       const allKeys = Object.keys(localStorage);
@@ -360,15 +361,16 @@ describe('Dark Mode Integration', () => {
         </>
       );
 
-      const button = screen.getByRole('button', { name: /switch to dark mode/i });
+      const buttons = screen.getAllByRole('button', { name: /switch to dark mode/i });
 
       // Toggle theme
-      await user.click(button);
+      await user.click(buttons[0]);
 
       // All components should still be present and functional
       expect(screen.getByRole('banner')).toBeInTheDocument();
       expect(screen.getByRole('contentinfo')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /switch to light mode/i })).toBeInTheDocument();
+      // Should now have dark mode buttons (multiple)
+      expect(screen.getAllByRole('button', { name: /switch to light mode/i }).length).toBeGreaterThan(0);
     });
   });
 });

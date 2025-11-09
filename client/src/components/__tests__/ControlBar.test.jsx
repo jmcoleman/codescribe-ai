@@ -317,7 +317,7 @@ describe('ControlBar Component', () => {
       render(<ControlBar {...defaultProps} />);
 
       const generateButton = screen.getByRole('button', { name: /generate docs/i });
-      expect(generateButton).toHaveClass('bg-gradient-to-b', 'from-purple-500', 'to-purple-600');
+      expect(generateButton).toHaveClass('bg-purple-600', 'hover:bg-purple-700');
     });
 
     it('should display sparkles icon when not generating', () => {

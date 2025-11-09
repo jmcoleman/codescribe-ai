@@ -5,9 +5,8 @@
 
 import request from 'supertest';
 import express from 'express';
-import apiRoutes from '../api.js';
 
-// Mock dependencies
+// Mock dependencies BEFORE importing routes
 jest.mock('../../models/Usage.js');
 jest.mock('../../middleware/auth.js', () => ({
   requireAuth: (req, res, next) => {
@@ -15,6 +14,10 @@ jest.mock('../../middleware/auth.js', () => ({
     if (!req.user) {
       return res.status(401).json({ success: false, error: 'Authentication required' });
     }
+    next();
+  },
+  optionalAuth: (req, res, next) => {
+    // optionalAuth passes through regardless of auth state
     next();
   },
 }));
@@ -30,6 +33,8 @@ jest.mock('../../services/docGenerator.js', () => ({
   generateDocumentation: jest.fn(),
 }));
 
+// Import AFTER all mocks are set up
+import apiRoutes from '../api.js';
 import Usage from '../../models/Usage.js';
 
 describe('Usage and Tier API Endpoints', () => {

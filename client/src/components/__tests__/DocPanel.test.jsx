@@ -279,7 +279,7 @@ x = 1
       );
 
       const gradeElement = screen.getByText(/A \(Excellent\)/);
-      expect(gradeElement).toHaveClass('text-success');
+      expect(gradeElement).toHaveClass('text-green-600');
     });
 
     it('should render correct grade color for B grade', () => {
@@ -306,7 +306,7 @@ x = 1
       );
 
       const gradeElement = screen.getByText(/C \(Fair\)/);
-      expect(gradeElement).toHaveClass('text-warning');
+      expect(gradeElement).toHaveClass('text-yellow-600');
     });
 
     it('should render correct grade color for D grade', () => {
@@ -320,7 +320,7 @@ x = 1
       );
 
       const gradeElement = screen.getByText(/D \(Poor\)/);
-      expect(gradeElement).toHaveClass('text-error');
+      expect(gradeElement).toHaveClass('text-red-600');
     });
 
     it('should render correct grade color for F grade', () => {
@@ -334,7 +334,7 @@ x = 1
       );
 
       const gradeElement = screen.getByText(/F \(Failing\)/);
-      expect(gradeElement).toHaveClass('text-error');
+      expect(gradeElement).toHaveClass('text-red-600');
     });
 
     it('should call onViewBreakdown when quality badge clicked', async () => {
@@ -600,8 +600,9 @@ Retrieve all users.
         />
       );
 
-      const buttons = screen.getAllByRole('button');
-      expect(buttons).toHaveLength(4); // Download button + Copy button + Quality score button + Expand button
+      // Verify specific accessible buttons are present
+      // Note: DOM may contain both mobile and desktop variants (hidden with CSS)
+      // So we check for specific buttons by their accessible names instead of counting all buttons
 
       // Download button
       const downloadButton = screen.getByRole('button', { name: /Download doc/i });

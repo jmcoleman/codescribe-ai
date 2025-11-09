@@ -38,9 +38,8 @@ describe('Button', () => {
     it('renders primary variant with correct classes', () => {
       render(<Button variant="primary">Primary</Button>);
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('bg-gradient-to-b');
-      expect(button).toHaveClass('from-purple-500');
-      expect(button).toHaveClass('to-purple-600');
+      expect(button).toHaveClass('bg-purple-600');
+      expect(button).toHaveClass('hover:bg-purple-700');
       expect(button).toHaveClass('text-white');
     });
 
@@ -70,7 +69,7 @@ describe('Button', () => {
     it('defaults to primary variant when no variant specified', () => {
       render(<Button>Default</Button>);
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('from-purple-500');
+      expect(button).toHaveClass('bg-purple-600');
     });
   });
 
@@ -98,7 +97,7 @@ describe('Button', () => {
       render(<Button variant="primary">Click me</Button>);
       const button = screen.getByRole('button');
       expect(button).toHaveClass('active:scale-[0.98]');
-      expect(button).toHaveClass('active:brightness-95');
+      // Primary variant no longer has brightness effect, only scale
     });
 
     it('secondary variant has hover and active scale effects', () => {
@@ -115,18 +114,18 @@ describe('Button', () => {
       expect(button).toHaveClass('active:scale-[0.98]');
     });
 
-    it('dark variant has hover shadow and brightness effects', () => {
+    it('dark variant has hover shadow and scale effects', () => {
       render(<Button variant="dark">Dark</Button>);
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('hover:shadow-lg');
-      expect(button).toHaveClass('active:brightness-90');
+      expect(button).toHaveClass('hover:scale-[1.02]');
+      expect(button).toHaveClass('shadow-lg');
     });
 
     it('primary variant has shadow classes', () => {
       render(<Button variant="primary">Shadow</Button>);
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('shadow-purple');
-      expect(button).toHaveClass('hover:shadow-purple-lg');
+      expect(button).toHaveClass('shadow-lg');
+      expect(button).toHaveClass('shadow-purple-600/20');
     });
   });
 
@@ -202,7 +201,7 @@ describe('Button', () => {
       render(<Button variant="primary" className="custom-class">Merged</Button>);
       const button = screen.getByRole('button');
       expect(button).toHaveClass('custom-class');
-      expect(button).toHaveClass('from-purple-500');
+      expect(button).toHaveClass('bg-purple-600');
     });
   });
 

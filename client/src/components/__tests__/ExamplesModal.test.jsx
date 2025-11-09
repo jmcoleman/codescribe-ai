@@ -376,10 +376,8 @@ describe('ExamplesModal', () => {
       const firstExample = codeExamples[0];
       const card = screen.getByLabelText(`Preview ${firstExample.title} example`);
 
-      // Check if focus styles are present
-      expect(card.className).toContain('focus:outline-none');
-      expect(card.className).toContain('focus:ring-2');
-      expect(card.className).toContain('focus:ring-purple-600');
+      // Check if focus styles are present (using utility class)
+      expect(card.className).toContain('focus-ring-dark');
     });
 
     it('should allow keyboard navigation through entire modal', async () => {

@@ -64,8 +64,9 @@ describe('MermaidDiagram - Dark Mode', () => {
       const container = screen.getByRole('button', { name: /show/i }).closest('div.flex.items-center.justify-between');
       const icon = container.querySelector('svg');
 
-      expect(icon.className).toContain('text-slate-600');
-      expect(icon.className).toContain('dark:text-slate-400');
+      const classValue = icon.getAttribute('class');
+      expect(classValue).toContain('text-slate-600');
+      expect(classValue).toContain('dark:text-slate-400');
     });
 
     it('applies light mode styles to text labels', () => {

@@ -101,7 +101,7 @@ describe('UsageLimitModal', () => {
       />
     );
 
-    expect(screen.getByText(/Upgrade for More Generations/i)).toBeInTheDocument();
+    expect(screen.getByText(/Upgrade to unlock more generations and premium features/i)).toBeInTheDocument();
     expect(screen.getByText(/Starting at/i)).toBeInTheDocument();
     expect(screen.getByText(/\$12/)).toBeInTheDocument();
   });

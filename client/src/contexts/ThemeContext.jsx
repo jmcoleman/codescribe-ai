@@ -5,11 +5,20 @@ const ThemeContext = createContext();
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
     // Priority: localStorage > system preference > default
-    const stored = localStorage.getItem('codescribeai:settings:theme');
-    if (stored) return stored;
+    try {
+      const stored = localStorage.getItem('codescribeai:settings:theme');
+      if (stored) return stored;
+    } catch (e) {
+      // localStorage not available
+    }
 
-    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      return 'dark';
+    // Check system preference
+    try {
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark';
+      }
+    } catch (e) {
+      // matchMedia not available
     }
 
     return 'light';
@@ -25,22 +34,37 @@ export function ThemeProvider({ children }) {
     }
 
     // Persist
-    localStorage.setItem('codescribeai:settings:theme', theme);
+    try {
+      localStorage.setItem('codescribeai:settings:theme', theme);
+    } catch (e) {
+      // localStorage not available or full
+    }
   }, [theme]);
 
   // Listen for system preference changes
   useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    if (!window.matchMedia) return;
 
-    const handleChange = (e) => {
-      // Only auto-switch if user hasn't manually set preference
-      if (!localStorage.getItem('codescribeai:settings:theme')) {
-        setTheme(e.matches ? 'dark' : 'light');
-      }
-    };
+    try {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      if (!mediaQuery || !mediaQuery.addEventListener) return;
 
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
+      const handleChange = (e) => {
+        // Only auto-switch if user hasn't manually set preference
+        try {
+          if (!localStorage.getItem('codescribeai:settings:theme')) {
+            setTheme(e.matches ? 'dark' : 'light');
+          }
+        } catch (err) {
+          // localStorage not available
+        }
+      };
+
+      mediaQuery.addEventListener('change', handleChange);
+      return () => mediaQuery.removeEventListener('change', handleChange);
+    } catch (e) {
+      // matchMedia not properly supported
+    }
   }, []);
 
   const toggleTheme = () => {

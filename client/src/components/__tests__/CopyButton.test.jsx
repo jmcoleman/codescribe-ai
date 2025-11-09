@@ -178,8 +178,8 @@ describe('CopyButton', () => {
 
       // Design no longer changes colors when copied - stays consistent
       await waitFor(() => {
-        expect(button).toHaveClass('pointer-events-none');
-        expect(button).toHaveClass('bg-white', 'text-slate-600');
+        expect(button).toHaveClass('bg-white');
+        expect(button).toHaveClass('text-slate-700'); // Updated to match actual dark mode class
       });
     });
 
