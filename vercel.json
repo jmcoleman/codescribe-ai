@@ -18,14 +18,10 @@
       ]
     }
   ],
-  "routes": [
+  "rewrites": [
     {
-      "src": "/favicon.svg",
-      "dest": "/favicon.svg"
-    },
-    {
-      "src": "/api/(.*)",
-      "dest": "/api"
+      "source": "/api/:path*",
+      "destination": "/api"
     }
   ],
   "functions": {
