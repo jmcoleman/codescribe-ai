@@ -262,11 +262,14 @@ describe('ContactSupportModal', () => {
       const neverResolvingPromise = new Promise(() => {});
       global.fetch = vi.fn().mockReturnValue(neverResolvingPromise);
 
+      // Set mock BEFORE renderWithAuth so it doesn't get overwritten
+      mockAuthContext.user = authUser;
+      mockAuthContext.isAuthenticated = true;
       // Also make getToken never resolve to ensure loading state is visible
       // Pattern 5: Async State Updates - keep component in loading state
       mockAuthContext.getToken = vi.fn(() => neverResolvingPromise);
 
-      renderWithAuth(<ContactSupportModal isOpen={true} onClose={mockOnClose} />, { user: authUser });
+      render(<ContactSupportModal isOpen={true} onClose={mockOnClose} />);
 
       await user.type(screen.getByLabelText(/Message/i), 'Test message');
 
