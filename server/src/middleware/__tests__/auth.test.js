@@ -8,6 +8,7 @@ import {
   requireAuth,
   optionalAuth,
   requireTier,
+  requireVerifiedEmail,
   validateBody,
   generateToken,
   sanitizeUser
@@ -119,6 +120,27 @@ describe('Auth Middleware', () => {
 
       expect(next).toHaveBeenCalled();
       expect(req.user.id).toBe(789); // JWT takes precedence
+    });
+
+    it('should clear invalid session when user is not loaded', () => {
+      req.isAuthenticated.mockReturnValue(true);
+      req.user = null; // Session exists but user not loaded
+      req.logout = jest.fn((callback) => callback());
+      req.session = {
+        destroy: jest.fn((callback) => callback())
+      };
+
+      requireAuth(req, res, next);
+
+      expect(req.logout).toHaveBeenCalled();
+      expect(req.session.destroy).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        error: 'Invalid session - please log in again',
+        sessionCleared: true
+      });
+      expect(next).not.toHaveBeenCalled();
     });
   });
 
@@ -566,6 +588,34 @@ describe('Auth Middleware', () => {
       requireAuth(req, res, next);
 
       expect(res.status).toHaveBeenCalledWith(401);
+      expect(next).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('requireVerifiedEmail', () => {
+    it('should reject request without user', async () => {
+      req.user = null;
+
+      await requireVerifiedEmail(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        error: 'Authentication required'
+      });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('should reject request with user missing id', async () => {
+      req.user = { email: 'test@test.com' }; // No id
+
+      await requireVerifiedEmail(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        error: 'Authentication required'
+      });
       expect(next).not.toHaveBeenCalled();
     });
   });
