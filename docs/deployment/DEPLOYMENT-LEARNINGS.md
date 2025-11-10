@@ -508,7 +508,8 @@ vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN
 1. =� **Custom Domain:** Add custom domain (e.g., codescribe.ai)
 2. =� **Analytics:** Integrate Vercel Analytics for usage tracking
 3. = **Error Tracking:** Add Sentry or similar for production error monitoring
-4. = **Preview Deployments:** Utilize Vercel preview deployments for PR testing
+4. =
+ **Preview Deployments:** Utilize Vercel preview deployments for PR testing
 5. � **Edge Functions:** Consider using Vercel Edge Functions for lower latency
 
 ---
@@ -1408,3 +1409,25 @@ To prevent future missed tags, add to deployment process:
 - DEPLOYMENT-CHECKLIST.md updated with release tagging section
 
 **Date:** October 23, 2025
+
+---
+
+## Issue 11: Passport Session Deserialization Failures in Vercel Serverless
+
+**Error:** `Failed to deserialize user out of session`
+
+**Root Cause:** Login was creating BOTH sessions AND JWT tokens. Session middleware ran first, failed in serverless, blocked JWT auth.
+
+**Solution:** Removed `req.login()` and `req.logIn()` from login endpoints - pure JWT authentication only.
+
+**Key Lesson:** Serverless = Stateless. Don't mix authentication methods. JWT is the correct pattern for Vercel.
+
+**Timeline:** 6 hours debugging, 15 minutes to fix once root cause found.
+
+**Git Commits:**
+- `f3c350e` - fix: remove session creation from JWT-based login flows  
+- `b68af23` - fix: use standard pg.Pool instead of @vercel/postgres for sessions
+- `50ebcca` - fix: use static imports and Vercel postgres pool for sessions
+
+**Date:** November 10, 2025  
+**Status:** ✅ Resolved
