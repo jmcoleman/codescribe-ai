@@ -13,12 +13,12 @@ import jwt from 'jsonwebtoken';
  * Attaches user to req.user if authenticated
  * Returns 401 if not authenticated
  */
-const requireAuth = (req, res, next) => {
+const requireAuth = async (req, res, next) => {
   // Try JWT first (for API clients)
   const token = extractTokenFromHeader(req);
 
   if (token) {
-    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
       if (err) {
         return res.status(401).json({
           success: false,
@@ -26,9 +26,27 @@ const requireAuth = (req, res, next) => {
         });
       }
 
-      // Token is valid, user ID is in decoded.sub
-      req.user = { id: decoded.sub };
-      return next();
+      // Token is valid, fetch full user data including tier
+      try {
+        const User = (await import('../models/User.js')).default;
+        const user = await User.findById(decoded.sub);
+
+        if (!user) {
+          return res.status(401).json({
+            success: false,
+            error: 'User not found'
+          });
+        }
+
+        req.user = user;
+        return next();
+      } catch (error) {
+        console.error('[Auth] Error fetching user data:', error);
+        return res.status(500).json({
+          success: false,
+          error: 'Authentication error'
+        });
+      }
     });
   }
   // Fall back to session authentication
@@ -65,13 +83,24 @@ const requireAuth = (req, res, next) => {
  * Attaches user to req.user if authenticated, but doesn't fail if not
  * Useful for endpoints that have different behavior for authenticated users
  */
-const optionalAuth = (req, res, next) => {
+const optionalAuth = async (req, res, next) => {
   const token = extractTokenFromHeader(req);
 
   if (token) {
-    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
       if (!err && decoded.sub) {
-        req.user = { id: decoded.sub };
+        try {
+          // Fetch full user data including tier
+          const User = (await import('../models/User.js')).default;
+          const user = await User.findById(decoded.sub);
+
+          if (user) {
+            req.user = user;
+          }
+        } catch (error) {
+          console.error('[Auth] Error fetching user data in optionalAuth:', error);
+          // Don't fail the request, just continue without user
+        }
       }
       next();
     });
