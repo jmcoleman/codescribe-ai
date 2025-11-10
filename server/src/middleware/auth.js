@@ -33,6 +33,22 @@ const requireAuth = (req, res, next) => {
   }
   // Fall back to session authentication
   else if (req.isAuthenticated && req.isAuthenticated()) {
+    // Check if session deserialization actually loaded a user
+    if (!req.user) {
+      console.log('[Auth] Session exists but no user loaded - clearing session');
+      // Destroy invalid session
+      req.logout((err) => {
+        if (err) console.error('[Auth] Error logging out:', err);
+      });
+      req.session.destroy((err) => {
+        if (err) console.error('[Auth] Error destroying session:', err);
+      });
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid session - please log in again',
+        sessionCleared: true
+      });
+    }
     return next();
   }
   // No valid authentication found
