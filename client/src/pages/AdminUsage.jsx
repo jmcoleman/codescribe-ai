@@ -23,16 +23,28 @@ export default function AdminUsage() {
         credentials: 'include'
       });
 
-      const data = await response.json();
-
+      // Check status code BEFORE parsing JSON
       if (!response.ok) {
         if (response.status === 403) {
           toast.error('Admin access required');
           navigate('/');
           return;
         }
-        throw new Error(data.message || 'Failed to fetch usage statistics');
+
+        // Try to parse error as JSON, fallback to generic message
+        let errorMessage = 'Failed to fetch usage statistics';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+        } catch (jsonError) {
+          // Response isn't JSON (probably HTML error page)
+          errorMessage = `Server error (${response.status}): ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
       }
+
+      // Now safe to parse successful response
+      const data = await response.json();
 
       if (data.success) {
         setStats(data.data);
@@ -55,11 +67,21 @@ export default function AdminUsage() {
         credentials: 'include'
       });
 
-      const data = await response.json();
-
+      // Check status code BEFORE parsing JSON
       if (!response.ok) {
-        throw new Error(data.message || 'Failed to fetch IP details');
+        let errorMessage = 'Failed to fetch IP details';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+        } catch (jsonError) {
+          // Response isn't JSON (probably HTML error page)
+          errorMessage = `Server error (${response.status}): ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
       }
+
+      // Now safe to parse successful response
+      const data = await response.json();
 
       if (data.success) {
         setIpDetails(data.data);

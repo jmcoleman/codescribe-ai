@@ -228,10 +228,15 @@ router.get('/usage-stats', requireAuth, requireAdmin, async (req, res) => {
 
   } catch (error) {
     console.error('Error fetching usage stats:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      code: error.code
+    });
     res.status(500).json({
       success: false,
       error: 'Internal server error',
-      message: 'Failed to fetch usage statistics'
+      message: `Failed to fetch usage statistics: ${error.message}`
     });
   }
 });
@@ -301,10 +306,15 @@ router.get('/usage-stats/ip/:ipAddress', requireAuth, requireAdmin, async (req, 
 
   } catch (error) {
     console.error('Error fetching IP usage stats:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      code: error.code
+    });
     res.status(500).json({
       success: false,
       error: 'Internal server error',
-      message: 'Failed to fetch IP usage statistics'
+      message: `Failed to fetch IP usage statistics: ${error.message}`
     });
   }
 });
