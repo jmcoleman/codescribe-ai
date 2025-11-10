@@ -797,6 +797,62 @@ npm test Usage.test.js
 
 ## Monitoring
 
+### Manual Reset (Administrative)
+
+**When to use:** After clearing production sessions or for fresh baseline tracking
+
+```sql
+-- Reset all usage counts to zero for authenticated users
+UPDATE user_quotas
+SET daily_count = 0,
+    monthly_count = 0,
+    last_reset_date = NOW(),
+    period_start_date = CURRENT_DATE,
+    updated_at = NOW();
+
+-- Reset anonymous quotas
+UPDATE anonymous_quotas
+SET daily_count = 0,
+    monthly_count = 0,
+    last_reset_date = NOW(),
+    period_start_date = CURRENT_DATE,
+    updated_at = NOW();
+
+-- Verify reset
+SELECT
+    COUNT(*) as total_users,
+    SUM(daily_count) as total_daily,
+    SUM(monthly_count) as total_monthly
+FROM user_quotas;
+-- Should return: all zeros
+
+SELECT
+    COUNT(*) as total_anonymous,
+    SUM(daily_count) as total_daily,
+    SUM(monthly_count) as total_monthly
+FROM anonymous_quotas;
+-- Should return: all zeros
+```
+
+**What gets reset:**
+- ✅ Daily generation counts → 0
+- ✅ Monthly generation counts → 0
+- ✅ Reset timestamps → NOW() (establishes new baseline)
+
+**What stays intact:**
+- ✅ User accounts and profiles
+- ✅ Subscription tiers
+- ✅ Quota limits (daily_limit, monthly_limit)
+- ✅ All other user data
+
+**Use cases:**
+- Clean baseline after session cleanup
+- Fresh start for improved codebase
+- Debugging usage tracking issues
+- Zero active users during maintenance window
+
+---
+
 ### Key Metrics to Track
 
 **Usage Statistics:**
