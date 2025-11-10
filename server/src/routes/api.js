@@ -264,15 +264,31 @@ router.get('/user/usage', optionalAuth, async (req, res) => {
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
 
+    console.log('[Usage] Request received:', {
+      hasUser: !!req.user,
+      userId: req.user?.id,
+      userTier: req.user?.tier,
+      ip: req.ip || req.socket?.remoteAddress
+    });
+
     // Support both authenticated users and anonymous users
     const userIdentifier = req.user?.id || `ip:${req.ip || req.socket?.remoteAddress || 'unknown'}`;
     const tier = req.user?.tier || 'free';
 
+    console.log('[Usage] Identifier and tier:', { userIdentifier, tier });
+
     // Get usage from database
     const usage = await Usage.getUserUsage(userIdentifier);
+    console.log('[Usage] Usage retrieved:', usage);
 
     // Get tier limits
     const tierConfig = TIER_FEATURES[tier];
+    console.log('[Usage] Tier config:', { tier, dailyLimit: tierConfig?.dailyGenerations, monthlyLimit: tierConfig?.monthlyGenerations });
+
+    if (!tierConfig) {
+      throw new Error(`Invalid tier: ${tier}`);
+    }
+
     const dailyLimit = tierConfig.dailyGenerations;
     const monthlyLimit = tierConfig.monthlyGenerations;
 
@@ -284,7 +300,7 @@ router.get('/user/usage', optionalAuth, async (req, res) => {
 
     const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
 
-    res.json({
+    const response = {
       tier,
       daily: {
         used: usage.dailyGenerations,
@@ -300,9 +316,17 @@ router.get('/user/usage', optionalAuth, async (req, res) => {
         daily: tomorrow.toISOString(),
         monthly: nextMonth.toISOString()
       }
-    });
+    };
+
+    console.log('[Usage] Sending response:', response);
+    res.json(response);
   } catch (error) {
-    console.error('[Usage] Failed to get user usage:', error);
+    console.error('[Usage] Failed to get user usage:', {
+      message: error.message,
+      stack: error.stack,
+      tier: req.user?.tier,
+      userId: req.user?.id
+    });
     res.status(500).json({
       error: 'Failed to retrieve usage',
       message: error.message
