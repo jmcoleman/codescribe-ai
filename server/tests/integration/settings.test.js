@@ -89,6 +89,9 @@ describe('Settings API Integration Tests', () => {
   beforeEach(() => {
     // Clear all mocks before each test
     jest.clearAllMocks();
+
+    // Mock User.findById for requireAuth middleware (needed for all authenticated requests)
+    User.findById.mockResolvedValue(testUser);
   });
 
   describe('PATCH /api/auth/password', () => {

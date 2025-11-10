@@ -325,7 +325,7 @@ describe('Auth Routes Integration Tests', () => {
         .get('/api/auth/me')
         .set('Authorization', `Bearer ${token}`);
 
-      expect(response.status).toBe(404);
+      expect(response.status).toBe(401);
       expect(response.body.success).toBe(false);
       expect(response.body.error).toBe('User not found');
     });
@@ -351,6 +351,9 @@ describe('Auth Routes Integration Tests', () => {
         });
 
       const token = signupResponse.body.token;
+
+      // Mock findById for the logout request (requireAuth needs it)
+      User.findById.mockResolvedValue(mockUser);
 
       // Logout
       const response = await request(app)

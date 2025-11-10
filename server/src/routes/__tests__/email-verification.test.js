@@ -275,13 +275,13 @@ describeOrSkip('Email Verification Routes', () => {
       expect(User.findById).not.toHaveBeenCalled();
     });
 
-    it('should return 404 if user not found', async () => {
+    it('should return 401 if user not found', async () => {
       User.findById.mockResolvedValue(null);
 
       const response = await request(app)
         .post('/api/auth/resend-verification')
         .set('Authorization', `Bearer ${createTestToken(1)}`)
-        .expect(404);
+        .expect(401);
 
       expect(response.body).toEqual({
         success: false,

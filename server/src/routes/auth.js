@@ -310,19 +310,11 @@ router.get('/me', requireAuth, async (req, res) => {
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
 
-    // req.user should contain at least { id }
-    const user = await User.findById(req.user.id);
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        error: 'User not found'
-      });
-    }
-
+    // req.user is already populated by requireAuth middleware with full user data
+    // No need to query database again
     res.json({
       success: true,
-      user: sanitizeUser(user)
+      user: sanitizeUser(req.user)
     });
   } catch (error) {
     console.error('Get current user error:', error);
