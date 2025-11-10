@@ -1,5 +1,9 @@
 import express from 'express';
 import cors from 'cors';
+import session from 'express-session';
+import connectPgSimple from 'connect-pg-simple';
+import passport from 'passport';
+import { db } from '@vercel/postgres';
 
 import apiRoutes from './routes/api.js';
 import migrateRoutes from './routes/migrate.js';
@@ -10,6 +14,9 @@ import legalRoutes from './routes/legal.js';
 import cronRoutes from './routes/cron.js';
 import adminRoutes from './routes/admin.js';
 import errorHandler from './middleware/errorHandler.js';
+import { initializeDatabase, testConnection } from './db/connection.js';
+import authRoutesModule from './routes/auth.js';
+import './config/passport.js'; // Initialize passport strategies
 
 const app = express();
 
@@ -21,18 +28,10 @@ app.set('trust proxy', 1);
 // Feature flag for authentication
 const ENABLE_AUTH = process.env.ENABLE_AUTH === 'true';
 
-// Conditional imports and initialization for auth features
+// Conditional initialization for auth features
 let authRoutes;
 if (ENABLE_AUTH) {
-  const session = await import('express-session');
-  const connectPgSimple = await import('connect-pg-simple');
-  const passport = await import('passport');
-  const { initializeDatabase, testConnection } = await import('./db/connection.js');
-  const authRoutesModule = await import('./routes/auth.js');
-  authRoutes = authRoutesModule.default;
-
-  // Import passport configuration
-  await import('./config/passport.js');
+  authRoutes = authRoutesModule;
 
   // Initialize database on startup
   (async () => {
@@ -75,17 +74,15 @@ if (ENABLE_AUTH) {
   app.use(express.json({ limit: '10mb' }));
 
   // Session configuration (for Passport)
-  const PgSession = connectPgSimple.default(session.default);
+  const PgSession = connectPgSimple(session);
 
   app.use(
-    session.default({
+    session({
       store: new PgSession({
-        conObject: {
-          connectionString: process.env.POSTGRES_URL,
-          ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-        },
+        pool: db, // Use Vercel's postgres pool (optimized for serverless)
         tableName: 'session',
-        createTableIfMissing: false // We create it in initializeDatabase
+        createTableIfMissing: false, // We create it in initializeDatabase
+        errorLog: (...args) => console.error('[Session Store]', ...args) // Log session store errors
       }),
       secret: process.env.SESSION_SECRET || 'your-session-secret-change-in-production',
       resave: false,
@@ -93,14 +90,15 @@ if (ENABLE_AUTH) {
       cookie: {
         secure: process.env.NODE_ENV === 'production', // HTTPS only in production
         httpOnly: true,
-        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax' // Required for cross-origin in production
       }
     })
   );
 
   // Initialize Passport
-  app.use(passport.default.initialize());
-  app.use(passport.default.session());
+  app.use(passport.initialize());
+  app.use(passport.session());
 
   console.log('✓ Authentication features enabled');
 } else {
