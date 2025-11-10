@@ -298,13 +298,13 @@ describe('ContactSalesModal', () => {
       const submitButton = screen.getByRole('button', { name: /send message/i });
       await user.click(submitButton);
 
-      // Wait for loading state - check that button is disabled first
+      // Wait for loading state - check for "Sending..." text first to confirm render
       await waitFor(() => {
-        expect(submitButton).toBeDisabled();
+        expect(screen.getByText('Sending...')).toBeInTheDocument();
       }, { timeout: 3000 });
 
-      // Then verify the loading text is present
-      expect(screen.getByText('Sending...')).toBeInTheDocument();
+      // Then verify button is disabled
+      expect(submitButton).toBeDisabled();
     });
 
     it('should disable inputs during loading', async () => {
@@ -322,12 +322,13 @@ describe('ContactSalesModal', () => {
       const submitButton = screen.getByRole('button', { name: /send message/i });
       await user.click(submitButton);
 
-      // Wait for loading state - first check that submit button is disabled
+      // Wait for loading state - check for "Sending..." text first to confirm render
       await waitFor(() => {
-        expect(submitButton).toBeDisabled();
+        expect(screen.getByText('Sending...')).toBeInTheDocument();
       }, { timeout: 3000 });
 
-      // Then verify inputs are disabled
+      // Then verify submit button and inputs are disabled
+      expect(submitButton).toBeDisabled();
       const messageInput = screen.getByLabelText(/additional information/i);
       expect(messageInput).toBeDisabled();
     });
@@ -539,12 +540,13 @@ describe('ContactSalesModal', () => {
       const submitButton = screen.getByRole('button', { name: /send message/i });
       await user.click(submitButton);
 
-      // Wait for loading state
+      // Wait for loading state - check for "Sending..." text first to confirm render
       await waitFor(() => {
-        expect(submitButton).toBeDisabled();
+        expect(screen.getByText('Sending...')).toBeInTheDocument();
       }, { timeout: 3000 });
 
-      expect(screen.getByText('Sending...')).toBeInTheDocument();
+      // Verify button is disabled
+      expect(submitButton).toBeDisabled();
 
       const closeButton = screen.getByRole('button', { name: /close modal/i });
       await user.click(closeButton);
