@@ -1,8 +1,8 @@
 # Skipped Tests Reference
 
 **Purpose:** Central reference for all intentionally skipped tests in the codebase
-**Last Updated:** November 9, 2025 (v2.7.1)
-**Total Skipped:** 25 frontend tests + 21 backend integration tests = **46 total**
+**Last Updated:** November 10, 2025 (v2.7.2)
+**Total Skipped:** 26 frontend tests + 21 backend integration tests = **47 total**
 
 **Note:** Backend database tests (21 tests in `/src/db/__tests__/`) are **excluded** via `jest.config.cjs`, not "skipped" with `.skip()`. They run separately in Docker sandbox before deployment and are NOT counted in this document's skip tracking.
 
@@ -12,10 +12,10 @@
 
 | Category | Location | Count | Impact | Reason |
 |----------|----------|-------|--------|--------|
-| **Frontend Tests** | | **25** | | |
+| **Frontend Tests** | | **26** | | |
 | GitHub Import Feature | ControlBar | 6 | ✅ None | Feature not implemented (Phase 3) |
 | Timing-Dependent Tests | CopyButton | 4 | ✅ None | Prevent flaky CI/CD |
-| React 18 Batching Tests | ContactSalesModal | 3 | ✅ None | Loading/success state race conditions |
+| React 18 Batching Tests | ContactSalesModal, ContactSupportModal | 4 | ✅ None | Loading/success state race conditions |
 | Email Verification Tests | UnverifiedEmailBanner | 3 | ✅ None | Email rate limiting timing issues |
 | Focus Management Edge Cases | LoginModal | 2 | ✅ None | jsdom limitations |
 | Debug Logging Tests | MermaidDiagram | 2 | ✅ None | Development only |
@@ -26,7 +26,7 @@
 | **Backend Tests** | | **21** | | |
 | GitHub OAuth Integration | tests/integration | 21 | ✅ None | Complex Passport.js mocking (feature works in production) |
 
-**Total Skipped:** 46 tests (25 frontend, 21 backend)
+**Total Skipped:** 47 tests (26 frontend, 21 backend)
 
 **Deployment Impact:** ✅ **NONE** - All skipped tests are intentional and documented
 
@@ -157,14 +157,15 @@ Consider unskipping if:
 
 ---
 
-## 🟡 Frontend: React 18 Batching Tests (3 tests)
+## 🟡 Frontend: React 18 Batching Tests (4 tests)
 
 ### Status: ✅ **REACT 18 AUTOMATIC BATCHING RACE CONDITION**
 
-### File
-`client/src/components/__tests__/ContactSalesModal.test.jsx`
+### Files
+- `client/src/components/__tests__/ContactSalesModal.test.jsx` (3 tests)
+- `client/src/components/__tests__/ContactSupportModal.test.jsx` (1 test)
 
-### Skipped Tests
+### Skipped Tests - ContactSalesModal
 1. **Line 196:** `should show success state after successful submission`
    - Tests "Message Sent!" success view renders after form submission
    - **Issue:** React 18 batches `setSuccess(true)` + `setLoading(false)` together
@@ -181,6 +182,14 @@ Consider unskipping if:
    - Tests success icon (CheckCircle2) renders in success view
    - **Issue:** Same React 18 batching race condition as test #1
    - Success state doesn't render predictably within test timeout
+
+### Skipped Tests - ContactSupportModal
+4. **Line 255:** `should show Sending... during submission`
+   - Tests "Sending..." loading text appears during form submission
+   - **Issue:** React 18 batches `setLoading(true)` with form submit handler
+   - Race condition between button click, async `getToken()`, and batched state update
+   - Even with 3000ms timeout, test fails intermittently in CI
+   - Identical pattern to ContactSalesModal test #2
 
 ### Why Skipped
 **React 18 automatic batching:**
