@@ -258,27 +258,32 @@ describe('ContactSupportModal', () => {
         tier: 'pro',
       };
 
-      // Create a promise that never resolves to keep loading state visible
+      // Create promises that never resolve to keep loading state visible
       const neverResolvingPromise = new Promise(() => {});
       global.fetch = vi.fn().mockReturnValue(neverResolvingPromise);
+
+      // Also make getToken never resolve to ensure loading state is visible
+      // Pattern 5: Async State Updates - keep component in loading state
+      mockAuthContext.getToken = vi.fn(() => neverResolvingPromise);
 
       renderWithAuth(<ContactSupportModal isOpen={true} onClose={mockOnClose} />, { user: authUser });
 
       await user.type(screen.getByLabelText(/Message/i), 'Test message');
 
-      // Click submit button
+      // Get submit button before clicking
       const submitButton = screen.getByRole('button', { name: /Send Message/i });
 
-      // Click and wait for the form to actually submit
+      // Click submit button
       await user.click(submitButton);
 
-      // Wait for loading text to appear (which happens when form submits)
+      // Wait for "Sending..." text to appear first (Pattern 5)
       await waitFor(() => {
         expect(screen.getByText('Sending...')).toBeInTheDocument();
       }, { timeout: 3000 });
 
-      // Verify button is disabled during submission
-      expect(submitButton).toBeDisabled();
+      // Then verify button is disabled (get fresh reference by type=submit)
+      const loadingButton = screen.getByRole('button', { name: /Sending/i });
+      expect(loadingButton).toBeDisabled();
     });
   });
 });

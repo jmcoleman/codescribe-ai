@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { X, HelpCircle, CheckCircle2, Loader2, Paperclip, XCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { API_URL } from '../config/api';
@@ -22,10 +22,20 @@ export function ContactSupportModal({ isOpen, onClose, onShowLogin }) {
   const [message, setMessage] = useState('');
   const [attachments, setAttachments] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
+  const resetTimeoutRef = useRef(null);
 
   const MAX_MESSAGE_LENGTH = 1000;
   const MAX_FILES = 5;
   const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (resetTimeoutRef.current) {
+        clearTimeout(resetTimeoutRef.current);
+      }
+    };
+  }, []);
 
   if (!isOpen) return null;
 
@@ -235,7 +245,8 @@ export function ContactSupportModal({ isOpen, onClose, onShowLogin }) {
     if (!loading) {
       onClose();
       // Reset state after close animation
-      setTimeout(() => {
+      // Store timeout ID so it can be cleaned up on unmount
+      resetTimeoutRef.current = setTimeout(() => {
         setSuccess(false);
         setError('');
         setContactType('general');
