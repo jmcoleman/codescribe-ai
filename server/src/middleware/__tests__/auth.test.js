@@ -14,11 +14,18 @@ import {
   sanitizeUser
 } from '../auth.js';
 
+// Mock User model
+jest.mock('../../models/User.js');
+
 describe('Auth Middleware', () => {
   let req, res, next;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     process.env.JWT_SECRET = 'test-secret-key';
+
+    // Reset the User mock
+    const User = (await import('../../models/User.js')).default;
+    User.findById = jest.fn();
 
     req = {
       headers: {},
@@ -32,17 +39,25 @@ describe('Auth Middleware', () => {
     };
 
     next = jest.fn();
+
+    // Reset mocks
+    jest.clearAllMocks();
   });
 
   describe('requireAuth', () => {
-    it('should allow request with valid JWT token', () => {
+    it('should allow request with valid JWT token', async () => {
+      const User = (await import('../../models/User.js')).default;
+      const mockUser = { id: 123, tier: 'free', email: 'test@example.com' };
+      User.findById.mockResolvedValue(mockUser);
+
       const token = jwt.sign({ sub: 123 }, process.env.JWT_SECRET, { expiresIn: '1h' });
       req.headers.authorization = `Bearer ${token}`;
 
-      requireAuth(req, res, next);
+      await requireAuth(req, res, next);
 
+      expect(User.findById).toHaveBeenCalledWith(123);
       expect(next).toHaveBeenCalled();
-      expect(req.user).toEqual({ id: 123 });
+      expect(req.user).toEqual(mockUser);
       expect(res.status).not.toHaveBeenCalled();
     });
 
@@ -100,24 +115,34 @@ describe('Auth Middleware', () => {
       expect(next).not.toHaveBeenCalled();
     });
 
-    it('should accept token without "Bearer " prefix', () => {
+    it('should accept token without "Bearer " prefix', async () => {
+      const User = (await import('../../models/User.js')).default;
+      const mockUser = { id: 456, tier: 'pro', email: 'test2@example.com' };
+      User.findById.mockResolvedValue(mockUser);
+
       const token = jwt.sign({ sub: 456 }, process.env.JWT_SECRET, { expiresIn: '1h' });
       req.headers.authorization = token;
 
-      requireAuth(req, res, next);
+      await requireAuth(req, res, next);
 
+      expect(User.findById).toHaveBeenCalledWith(456);
       expect(next).toHaveBeenCalled();
-      expect(req.user).toEqual({ id: 456 });
+      expect(req.user).toEqual(mockUser);
     });
 
-    it('should prioritize JWT over session', () => {
+    it('should prioritize JWT over session', async () => {
+      const User = (await import('../../models/User.js')).default;
+      const mockUser = { id: 789, tier: 'team', email: 'test3@example.com' };
+      User.findById.mockResolvedValue(mockUser);
+
       const token = jwt.sign({ sub: 789 }, process.env.JWT_SECRET, { expiresIn: '1h' });
       req.headers.authorization = `Bearer ${token}`;
       req.isAuthenticated.mockReturnValue(true);
       req.user = { id: 999 };
 
-      requireAuth(req, res, next);
+      await requireAuth(req, res, next);
 
+      expect(User.findById).toHaveBeenCalledWith(789);
       expect(next).toHaveBeenCalled();
       expect(req.user.id).toBe(789); // JWT takes precedence
     });
@@ -145,14 +170,19 @@ describe('Auth Middleware', () => {
   });
 
   describe('optionalAuth', () => {
-    it('should attach user if JWT is valid', () => {
+    it('should attach user if JWT is valid', async () => {
+      const User = (await import('../../models/User.js')).default;
+      const mockUser = { id: 123, tier: 'free', email: 'test@example.com' };
+      User.findById.mockResolvedValue(mockUser);
+
       const token = jwt.sign({ sub: 123 }, process.env.JWT_SECRET, { expiresIn: '1h' });
       req.headers.authorization = `Bearer ${token}`;
 
-      optionalAuth(req, res, next);
+      await optionalAuth(req, res, next);
 
+      expect(User.findById).toHaveBeenCalledWith(123);
       expect(next).toHaveBeenCalled();
-      expect(req.user).toEqual({ id: 123 });
+      expect(req.user).toEqual(mockUser);
     });
 
     it('should attach user if session is valid', () => {

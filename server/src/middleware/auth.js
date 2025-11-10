@@ -18,36 +18,38 @@ const requireAuth = async (req, res, next) => {
   const token = extractTokenFromHeader(req);
 
   if (token) {
-    jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
-      if (err) {
+    try {
+      // Verify token synchronously
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+      // Token is valid, fetch full user data including tier
+      const User = (await import('../models/User.js')).default;
+      const user = await User.findById(decoded.sub);
+
+      if (!user) {
+        return res.status(401).json({
+          success: false,
+          error: 'User not found'
+        });
+      }
+
+      req.user = user;
+      return next();
+    } catch (error) {
+      // JWT verification failed or database error
+      if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
         return res.status(401).json({
           success: false,
           error: 'Invalid or expired token'
         });
       }
 
-      // Token is valid, fetch full user data including tier
-      try {
-        const User = (await import('../models/User.js')).default;
-        const user = await User.findById(decoded.sub);
-
-        if (!user) {
-          return res.status(401).json({
-            success: false,
-            error: 'User not found'
-          });
-        }
-
-        req.user = user;
-        return next();
-      } catch (error) {
-        console.error('[Auth] Error fetching user data:', error);
-        return res.status(500).json({
-          success: false,
-          error: 'Authentication error'
-        });
-      }
-    });
+      console.error('[Auth] Error fetching user data:', error);
+      return res.status(500).json({
+        success: false,
+        error: 'Authentication error'
+      });
+    }
   }
   // Fall back to session authentication
   else if (req.isAuthenticated && req.isAuthenticated()) {
@@ -87,29 +89,30 @@ const optionalAuth = async (req, res, next) => {
   const token = extractTokenFromHeader(req);
 
   if (token) {
-    jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
-      if (!err && decoded.sub) {
-        try {
-          // Fetch full user data including tier
-          const User = (await import('../models/User.js')).default;
-          const user = await User.findById(decoded.sub);
+    try {
+      // Verify token synchronously
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-          if (user) {
-            req.user = user;
-          }
-        } catch (error) {
-          console.error('[Auth] Error fetching user data in optionalAuth:', error);
-          // Don't fail the request, just continue without user
+      if (decoded.sub) {
+        // Fetch full user data including tier
+        const User = (await import('../models/User.js')).default;
+        const user = await User.findById(decoded.sub);
+
+        if (user) {
+          req.user = user;
         }
       }
-      next();
-    });
+    } catch (error) {
+      // JWT verification failed or database error - continue without user
+      console.error('[Auth] Error in optionalAuth:', error.message);
+    }
+    return next();
   } else if (req.isAuthenticated && req.isAuthenticated()) {
     // User is authenticated via session
-    next();
+    return next();
   } else {
     // Not authenticated, but that's okay
-    next();
+    return next();
   }
 };
 
