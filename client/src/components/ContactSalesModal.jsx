@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { X, Mail, CheckCircle2, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { API_URL } from '../config/api';
@@ -21,8 +21,18 @@ export function ContactSalesModal({ isOpen, onClose, tier = 'enterprise' }) {
   const [lastName, setLastName] = useState('');
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
+  const resetTimeoutRef = useRef(null);
 
   const MAX_MESSAGE_LENGTH = 750;
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (resetTimeoutRef.current) {
+        clearTimeout(resetTimeoutRef.current);
+      }
+    };
+  }, []);
 
   if (!isOpen) return null;
 
@@ -85,7 +95,8 @@ export function ContactSalesModal({ isOpen, onClose, tier = 'enterprise' }) {
     if (!loading) {
       onClose();
       // Reset state after close animation
-      setTimeout(() => {
+      // Store timeout ID so it can be cleaned up on unmount
+      resetTimeoutRef.current = setTimeout(() => {
         setSuccess(false);
         setError('');
         setFirstName('');
