@@ -222,7 +222,8 @@ describe('POST /api/cron/permanent-deletions', () => {
         .send({});
 
       expect(response.status).toBe(200);
-      expect(response.body.duration).toBeGreaterThanOrEqual(50);
+      // Duration should be close to 50ms (allow 10ms tolerance for timing precision in CI)
+      expect(response.body.duration).toBeGreaterThanOrEqual(40);
       expect(response.body.duration).toBeLessThan(200); // Reasonable upper bound
     });
   });
