@@ -157,16 +157,40 @@ class User {
    * @returns {Promise<Object|null>} User object or null
    */
   static async findById(id) {
-    const result = await sql`
-      SELECT id, email, first_name, last_name, github_id, tier, stripe_customer_id, customer_created_via, email_verified,
-             terms_accepted_at, terms_version_accepted, privacy_accepted_at, privacy_version_accepted, analytics_enabled,
-             deletion_scheduled_at, created_at
-      FROM users
-      WHERE id = ${id}
-        AND deleted_at IS NULL
-    `;
+    console.log(`[User.findById] Looking up user ${id}`);
+    try {
+      const result = await sql`
+        SELECT id, email, first_name, last_name, github_id, tier, stripe_customer_id, customer_created_via, email_verified,
+               terms_accepted_at, terms_version_accepted, privacy_accepted_at, privacy_version_accepted, analytics_enabled,
+               deletion_scheduled_at, deleted_at, created_at
+        FROM users
+        WHERE id = ${id}
+          AND (deleted_at IS NULL OR deleted_at IS NOT NULL)
+      `;
 
-    return result.rows[0] || null;
+      const user = result.rows[0] || null;
+
+      // Log what we found
+      if (user) {
+        console.log(`[User.findById] Found user:`, { id: user.id, email: user.email, tier: user.tier, deleted_at: user.deleted_at });
+        // Filter out soft-deleted users
+        if (user.deleted_at) {
+          console.log(`[User.findById] User ${id} is soft-deleted, returning null`);
+          return null;
+        }
+      } else {
+        console.log(`[User.findById] No user found with ID ${id}`);
+      }
+
+      return user;
+    } catch (error) {
+      console.error(`[User.findById] Error finding user ${id}:`, {
+        message: error.message,
+        stack: error.stack,
+        code: error.code
+      });
+      throw error;
+    }
   }
 
   /**
