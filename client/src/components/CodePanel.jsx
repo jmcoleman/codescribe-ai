@@ -253,34 +253,36 @@ export function CodePanel({
 
       {/* Monaco Editor - Lazy loaded */}
       <div
-        className="flex-1 overflow-hidden"
+        className="flex-1 min-h-0 overflow-hidden relative"
         style={{
           WebkitFontSmoothing: 'antialiased',
           MozOsxFontSmoothing: 'grayscale',
           textRendering: 'optimizeLegibility',
         }}
       >
-        <Suspense fallback={<EditorLoadingFallback />}>
-          <LazyMonacoEditor
-            height="100%"
-            language={language}
-            value={code}
-            onChange={onChange}
-            options={{
-              minimap: { enabled: false },
-              fontSize: 13,
-              fontFamily: 'JetBrains Mono, monospace',
-              lineNumbers: 'on',
-              scrollBeyondLastLine: false,
-              readOnly,
-              automaticLayout: true,
-              padding: { top: 24, bottom: 16 },
-              ariaLabel: readOnly ? 'Code editor, read-only' : 'Code editor, type or paste your code here',
-              bracketPairColorization: { enabled: false }, // Disable bracket colorization
-            }}
-            theme={theme === 'dark' ? 'codescribe-dark' : 'codescribe-light'}
-          />
-        </Suspense>
+        <div className="absolute inset-0">
+          <Suspense fallback={<EditorLoadingFallback />}>
+            <LazyMonacoEditor
+              height="100%"
+              language={language}
+              value={code}
+              onChange={onChange}
+              options={{
+                minimap: { enabled: false },
+                fontSize: 13,
+                fontFamily: 'JetBrains Mono, monospace',
+                lineNumbers: 'on',
+                scrollBeyondLastLine: false,
+                readOnly,
+                automaticLayout: true,
+                padding: { top: 24, bottom: 16 },
+                ariaLabel: readOnly ? 'Code editor, read-only' : 'Code editor, type or paste your code here',
+                bracketPairColorization: { enabled: false }, // Disable bracket colorization
+              }}
+              theme={theme === 'dark' ? 'codescribe-dark' : 'codescribe-light'}
+            />
+          </Suspense>
+        </div>
       </div>
 
       {/* Footer */}
