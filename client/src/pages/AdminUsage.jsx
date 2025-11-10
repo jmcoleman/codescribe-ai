@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Users, Globe, FileText, Clock, RefreshCw, Filter, AlertCircle } from 'lucide-react';
 import { PageLayout } from '../components/PageLayout';
+import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
 
 export default function AdminUsage() {
   const navigate = useNavigate();
+  const { getToken } = useAuth();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -19,7 +21,11 @@ export default function AdminUsage() {
     setError(null);
 
     try {
+      const token = await getToken();
       const response = await fetch('/api/admin/usage-stats', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
         credentials: 'include'
       });
 
@@ -63,7 +69,11 @@ export default function AdminUsage() {
   const fetchIPDetails = async (ipAddress) => {
     setLoadingIP(true);
     try {
+      const token = await getToken();
       const response = await fetch(`/api/admin/usage-stats/ip/${encodeURIComponent(ipAddress)}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
         credentials: 'include'
       });
 
