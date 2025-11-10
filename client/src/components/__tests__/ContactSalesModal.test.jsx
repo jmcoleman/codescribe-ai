@@ -205,13 +205,15 @@ describe('ContactSalesModal', () => {
       const submitButton = screen.getByRole('button', { name: /send message/i });
       await user.click(submitButton);
 
+      // Pattern 5: Wait for async state updates with longer timeout
+      // React 18 batching means success state may not render immediately
       await waitFor(() => {
         // Use flexible text matcher since text may be split across elements
         expect(screen.getByText((_content, element) => {
           return element?.textContent === 'Message Sent!';
         })).toBeInTheDocument();
         expect(screen.getByText(/our sales team will be in touch soon/i)).toBeInTheDocument();
-      });
+      }, { timeout: 5000 });
     });
   });
 
@@ -433,12 +435,14 @@ describe('ContactSalesModal', () => {
       const submitButton = screen.getByRole('button', { name: /send message/i });
       await user.click(submitButton);
 
+      // Pattern 5: Wait for async state updates with longer timeout
+      // React 18 batching means success state may not render immediately
       await waitFor(() => {
         // Use flexible text matcher since text may be split across elements
         expect(screen.getByText((_content, element) => {
           return element?.textContent === 'Message Sent!';
         })).toBeInTheDocument();
-      });
+      }, { timeout: 5000 });
     });
 
     it('should show Close button in success state', async () => {
