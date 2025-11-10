@@ -425,16 +425,18 @@ describeOrSkip('User Model', () => {
 
   describe('delete', () => {
     it('should delete user and return true', async () => {
-      sql.mockResolvedValue({ rowCount: 1 });
+      sql.mockResolvedValueOnce({ rowCount: 1 }); // Delete sessions
+      sql.mockResolvedValueOnce({ rowCount: 1 }); // Delete user
 
       const result = await User.delete(123);
 
       expect(result).toBe(true);
-      expect(sql).toHaveBeenCalledTimes(1);
+      expect(sql).toHaveBeenCalledTimes(2);
     });
 
     it('should return false if user not found', async () => {
-      sql.mockResolvedValue({ rowCount: 0 });
+      sql.mockResolvedValueOnce({ rowCount: 0 }); // Delete sessions
+      sql.mockResolvedValueOnce({ rowCount: 0 }); // Delete user
 
       const result = await User.delete(999);
 
@@ -768,7 +770,8 @@ describeOrSkip('User Model', () => {
       expect(upgraded.tier).toBe('pro');
 
       // Delete
-      sql.mockResolvedValueOnce({ rowCount: 1 });
+      sql.mockResolvedValueOnce({ rowCount: 1 }); // Delete sessions
+      sql.mockResolvedValueOnce({ rowCount: 1 }); // Delete user
       const deleted = await User.delete(1);
       expect(deleted).toBe(true);
     });

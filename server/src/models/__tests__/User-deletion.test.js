@@ -299,13 +299,16 @@ describe('User Model - Deletion & Data Export', () => {
     it('should use tombstone approach: aggregate usage, delete quotas, NULL PII', async () => {
       const userId = 1;
 
-      // First query: Aggregate usage data
+      // First query: Delete user sessions
       sql.mockResolvedValueOnce({ rowCount: 1 });
 
-      // Second query: Delete user_quotas
+      // Second query: Aggregate usage data
+      sql.mockResolvedValueOnce({ rowCount: 1 });
+
+      // Third query: Delete user_quotas
       sql.mockResolvedValueOnce({ rowCount: 2 });
 
-      // Third query: Tombstone user (NULL PII, keep IDs)
+      // Fourth query: Tombstone user (NULL PII, keep IDs)
       sql.mockResolvedValueOnce({
         rows: [{
           id: userId,
@@ -317,37 +320,41 @@ describe('User Model - Deletion & Data Export', () => {
 
       const result = await User.permanentlyDelete(userId);
 
-      expect(sql).toHaveBeenCalledTimes(3);
+      expect(sql).toHaveBeenCalledTimes(4);
       expect(result.id).toBe(userId);
       expect(result.stripe_customer_id).toBe('cus_123');
       expect(result.tier).toBe('pro');
 
-      // Verify first query aggregates to usage_analytics_aggregate
+      // Verify first query deletes sessions
       const firstCall = sql.mock.calls[0][0];
-      expect(firstCall.join('')).toContain('INSERT INTO usage_analytics_aggregate');
-      expect(firstCall.join('')).toContain('account_age_days');
-      expect(firstCall.join('')).toContain('total_monthly_count');
+      expect(firstCall.join('')).toContain('DELETE FROM session');
 
-      // Verify second query deletes user_quotas
+      // Verify second query aggregates to usage_analytics_aggregate
       const secondCall = sql.mock.calls[1][0];
-      expect(secondCall.join('')).toContain('DELETE FROM user_quotas');
+      expect(secondCall.join('')).toContain('INSERT INTO usage_analytics_aggregate');
+      expect(secondCall.join('')).toContain('account_age_days');
+      expect(secondCall.join('')).toContain('total_monthly_count');
 
-      // Verify third query tombstones user (NULLs PII but preserves IDs)
+      // Verify third query deletes user_quotas
       const thirdCall = sql.mock.calls[2][0];
-      expect(thirdCall.join('')).toContain('email = NULL');
-      expect(thirdCall.join('')).toContain('first_name = NULL');
-      expect(thirdCall.join('')).toContain('password_hash = NULL');
-      expect(thirdCall.join('')).toContain('deleted_at = NOW()');
+      expect(thirdCall.join('')).toContain('DELETE FROM user_quotas');
+
+      // Verify fourth query tombstones user (NULLs PII but preserves IDs)
+      const fourthCall = sql.mock.calls[3][0];
+      expect(fourthCall.join('')).toContain('email = NULL');
+      expect(fourthCall.join('')).toContain('first_name = NULL');
+      expect(fourthCall.join('')).toContain('password_hash = NULL');
+      expect(fourthCall.join('')).toContain('deleted_at = NOW()');
       // User row NOT deleted - tombstone approach
-      expect(thirdCall.join('')).not.toContain('DELETE FROM users');
+      expect(fourthCall.join('')).not.toContain('DELETE FROM users');
     });
 
     it('should throw error if user not found', async () => {
-      // Mock first two queries (aggregate and delete quotas)
-      sql.mockResolvedValueOnce({ rowCount: 0 });
-      sql.mockResolvedValueOnce({ rowCount: 0 });
-      // Third query (tombstone) returns no rows
-      sql.mockResolvedValueOnce({ rows: [] });
+      // Mock all four queries
+      sql.mockResolvedValueOnce({ rowCount: 0 }); // Delete sessions
+      sql.mockResolvedValueOnce({ rowCount: 0 }); // Aggregate usage
+      sql.mockResolvedValueOnce({ rowCount: 0 }); // Delete quotas
+      sql.mockResolvedValueOnce({ rows: [] }); // Tombstone returns no rows
 
       await expect(User.permanentlyDelete(999))
         .rejects
@@ -355,26 +362,27 @@ describe('User Model - Deletion & Data Export', () => {
     });
 
     it('should only delete accounts not already deleted', async () => {
-      // Mock first two queries (aggregate and delete quotas)
-      sql.mockResolvedValueOnce({ rowCount: 0 });
-      sql.mockResolvedValueOnce({ rowCount: 0 });
-      // Third query (tombstone) returns no rows (user already deleted)
-      sql.mockResolvedValueOnce({ rows: [] });
+      // Mock all four queries
+      sql.mockResolvedValueOnce({ rowCount: 0 }); // Delete sessions
+      sql.mockResolvedValueOnce({ rowCount: 0 }); // Aggregate usage
+      sql.mockResolvedValueOnce({ rowCount: 0 }); // Delete quotas
+      sql.mockResolvedValueOnce({ rows: [] }); // Tombstone returns no rows (user already deleted)
 
       // This should throw because no rows returned
       await expect(User.permanentlyDelete(1))
         .rejects
         .toThrow('User not found or already deleted');
 
-      // Verify WHERE clause checks deleted_at IS NULL
-      const tombstoneCall = sql.mock.calls[2][0];
+      // Verify WHERE clause checks deleted_at IS NULL (index 3 = fourth query)
+      const tombstoneCall = sql.mock.calls[3][0];
       expect(tombstoneCall.join('')).toContain('deleted_at IS NULL');
     });
 
     it('should preserve stripe_customer_id for billing dispute resolution', async () => {
       const userId = 1;
 
-      // Mock all three queries
+      // Mock all four queries
+      sql.mockResolvedValueOnce({ rowCount: 1 }); // Delete sessions
       sql.mockResolvedValueOnce({ rowCount: 1 }); // Aggregate
       sql.mockResolvedValueOnce({ rowCount: 2 }); // Delete quotas
       sql.mockResolvedValueOnce({
@@ -391,8 +399,8 @@ describe('User Model - Deletion & Data Export', () => {
       // Stripe customer ID preserved for billing disputes
       expect(result.stripe_customer_id).toBe('cus_stripe_billing_123');
 
-      // Verify RETURNING clause includes stripe_customer_id
-      const tombstoneCall = sql.mock.calls[2][0];
+      // Verify RETURNING clause includes stripe_customer_id (index 3 = fourth query)
+      const tombstoneCall = sql.mock.calls[3][0];
       expect(tombstoneCall.join('')).toContain('RETURNING id, stripe_customer_id, tier, created_at');
     });
   });

@@ -223,7 +223,7 @@ class User {
   static async delete(id) {
     // Delete user's sessions first (prevent orphaned sessions)
     await sql`
-      DELETE FROM sessions
+      DELETE FROM session
       WHERE sess::jsonb->'passport'->>'user' = ${id.toString()}
     `;
 
@@ -694,7 +694,7 @@ class User {
   static async permanentlyDelete(id) {
     // Step 0: Delete user's sessions (prevent orphaned sessions)
     await sql`
-      DELETE FROM sessions
+      DELETE FROM session
       WHERE sess::jsonb->'passport'->>'user' = ${id.toString()}
     `;
 
