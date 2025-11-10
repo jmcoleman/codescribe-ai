@@ -8,6 +8,7 @@
 import express from 'express';
 import { sql } from '@vercel/postgres';
 import { requireAuth } from '../middleware/auth.js';
+import User from '../models/User.js';
 
 const router = express.Router();
 
@@ -15,22 +16,51 @@ const router = express.Router();
  * Middleware to check if user is an admin
  * Add your email to the ADMIN_EMAILS list to grant admin access
  */
-const requireAdmin = (req, res, next) => {
+const requireAdmin = async (req, res, next) => {
   // List of admin emails (add your email here)
   const ADMIN_EMAILS = [
     //'your-email@example.com', // Replace with your actual email
     'jenni.m.coleman@gmail.com'
   ];
 
-  if (!req.user || !ADMIN_EMAILS.includes(req.user.email)) {
-    return res.status(403).json({
+  try {
+    // requireAuth only sets req.user.id, we need to fetch the full user object
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      });
+    }
+
+    // Fetch user from database to get email
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+
+    // Check if user's email is in admin list
+    if (!ADMIN_EMAILS.includes(user.email)) {
+      return res.status(403).json({
+        success: false,
+        error: 'Forbidden',
+        message: 'Admin access required'
+      });
+    }
+
+    // Add full user object to request for downstream use
+    req.user = user;
+    next();
+  } catch (error) {
+    console.error('Error in requireAdmin middleware:', error);
+    return res.status(500).json({
       success: false,
-      error: 'Forbidden',
-      message: 'Admin access required'
+      error: 'Internal server error'
     });
   }
-
-  next();
 };
 
 /**
