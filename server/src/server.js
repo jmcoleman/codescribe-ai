@@ -13,6 +13,11 @@ import errorHandler from './middleware/errorHandler.js';
 
 const app = express();
 
+// Trust proxy - required for Vercel deployment
+// Allows Express to trust X-Forwarded-* headers from Vercel's proxy
+// This is necessary for express-rate-limit to identify real client IPs
+app.set('trust proxy', 1);
+
 // Feature flag for authentication
 const ENABLE_AUTH = process.env.ENABLE_AUTH === 'true';
 
