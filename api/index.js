@@ -11,6 +11,8 @@ import webhookRoutes from '../server/src/routes/webhooks.js';
 import migrateRoutes from '../server/src/routes/migrate.js';
 import contactRoutes from '../server/src/routes/contact.js';
 import legalRoutes from '../server/src/routes/legal.js';
+import cronRoutes from '../server/src/routes/cron.js';
+import adminRoutes from '../server/src/routes/admin.js';
 import errorHandler from '../server/src/middleware/errorHandler.js';
 import '../server/src/config/passport.js'; // Initialize passport strategies
 
@@ -77,7 +79,9 @@ if (ENABLE_AUTH) {
   app.use('/api/payments', paymentRoutes);
   app.use('/api/contact', contactRoutes);
   app.use('/api/legal', legalRoutes);
+  app.use('/api/admin', adminRoutes); // Admin routes (requires auth + admin email)
 }
+app.use('/api/cron', cronRoutes);
 app.use('/api/migrate', migrateRoutes);
 
 app.use(errorHandler);
