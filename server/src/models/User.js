@@ -216,10 +216,17 @@ class User {
 
   /**
    * Delete user by ID
+   * Also cleans up user's sessions to prevent orphaned session errors
    * @param {number} id - User ID
    * @returns {Promise<boolean>} True if deleted
    */
   static async delete(id) {
+    // Delete user's sessions first (prevent orphaned sessions)
+    await sql`
+      DELETE FROM sessions
+      WHERE sess::jsonb->'passport'->>'user' = ${id.toString()}
+    `;
+
     const result = await sql`
       DELETE FROM users
       WHERE id = ${id}
@@ -685,6 +692,12 @@ class User {
    * @returns {Promise<Object>} Deleted user info (id, stripe_customer_id)
    */
   static async permanentlyDelete(id) {
+    // Step 0: Delete user's sessions (prevent orphaned sessions)
+    await sql`
+      DELETE FROM sessions
+      WHERE sess::jsonb->'passport'->>'user' = ${id.toString()}
+    `;
+
     // Step 1: Aggregate usage data before deletion (preserve business intelligence)
     await sql`
       INSERT INTO usage_analytics_aggregate (
