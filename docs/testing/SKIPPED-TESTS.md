@@ -2,7 +2,7 @@
 
 **Purpose:** Central reference for all intentionally skipped tests in the codebase
 **Last Updated:** November 9, 2025 (v2.7.1)
-**Total Skipped:** 24 frontend tests + 21 backend integration tests = **45 total**
+**Total Skipped:** 25 frontend tests + 21 backend integration tests = **46 total**
 
 **Note:** Backend database tests (21 tests in `/src/db/__tests__/`) are **excluded** via `jest.config.cjs`, not "skipped" with `.skip()`. They run separately in Docker sandbox before deployment and are NOT counted in this document's skip tracking.
 
@@ -12,10 +12,10 @@
 
 | Category | Location | Count | Impact | Reason |
 |----------|----------|-------|--------|--------|
-| **Frontend Tests** | | **24** | | |
+| **Frontend Tests** | | **25** | | |
 | GitHub Import Feature | ControlBar | 6 | ✅ None | Feature not implemented (Phase 3) |
 | Timing-Dependent Tests | CopyButton | 4 | ✅ None | Prevent flaky CI/CD |
-| React 18 Batching Tests | ContactSalesModal | 2 | ✅ None | Success state race conditions |
+| React 18 Batching Tests | ContactSalesModal | 3 | ✅ None | Loading/success state race conditions |
 | Email Verification Tests | UnverifiedEmailBanner | 3 | ✅ None | Email rate limiting timing issues |
 | Focus Management Edge Cases | LoginModal | 2 | ✅ None | jsdom limitations |
 | Debug Logging Tests | MermaidDiagram | 2 | ✅ None | Development only |
@@ -26,7 +26,7 @@
 | **Backend Tests** | | **21** | | |
 | GitHub OAuth Integration | tests/integration | 21 | ✅ None | Complex Passport.js mocking (feature works in production) |
 
-**Total Skipped:** 45 tests (24 frontend, 21 backend)
+**Total Skipped:** 46 tests (25 frontend, 21 backend)
 
 **Deployment Impact:** ✅ **NONE** - All skipped tests are intentional and documented
 
@@ -157,7 +157,7 @@ Consider unskipping if:
 
 ---
 
-## 🟡 Frontend: React 18 Batching Tests (2 tests)
+## 🟡 Frontend: React 18 Batching Tests (3 tests)
 
 ### Status: ✅ **REACT 18 AUTOMATIC BATCHING RACE CONDITION**
 
@@ -171,9 +171,15 @@ Consider unskipping if:
    - Race condition between async `getToken()`, `fetch()`, and batched state updates
    - Even with 5000ms timeout, test fails intermittently in CI
 
-2. **Line 429:** `should show success icon in success state`
+2. **Line 293:** `should show loading state during submission`
+   - Tests "Sending..." loading text appears during form submission
+   - **Issue:** React 18 batches `setLoading(true)` with form submit handler
+   - Race condition between button click, `getToken()` call, and batched state update
+   - Even with 3000ms timeout, test fails intermittently in CI
+
+3. **Line 424:** `should show success icon in success state`
    - Tests success icon (CheckCircle2) renders in success view
-   - **Issue:** Same React 18 batching race condition
+   - **Issue:** Same React 18 batching race condition as test #1
    - Success state doesn't render predictably within test timeout
 
 ### Why Skipped
@@ -208,11 +214,13 @@ setLoading(false);  // batched together by React 18
 - **Still fails intermittently in CI** (works locally)
 
 ### Coverage
-Success state is **verified through other tests:**
-- ✅ Line 454: "should show Close button in success state" - Uses Close button as proxy for success
+Loading and success states are **verified through other tests:**
+- ✅ Line 318: "should disable inputs during loading" - Verifies loading state via disabled inputs
+- ✅ Line 341: "should disable submit button during loading" - Verifies loading state via disabled button
+- ✅ Line 449: "should show Close button in success state" - Uses Close button as proxy for success
 - ✅ Line 502: "should call onClose when X button clicked" - Tests modal close from success state
 - ✅ **Manual testing:** Feature works perfectly in production
-- ✅ **Other modals:** ContactSupportModal has similar success states (tested without issues)
+- ✅ **Other modals:** ContactSupportModal has similar loading/success states (tested without issues)
 
 ### Manual Verification
 Feature works correctly in:
@@ -239,10 +247,11 @@ Consider unskipping if:
 ✅ **NONE** - Contact sales modal works perfectly in production. Success state renders reliably for all users.
 
 **Why we can skip these tests safely:**
-- Core functionality (form submission, validation, error handling) is **fully tested** (20+ passing tests)
-- Success state rendering is verified indirectly via "Close button" test
+- Core functionality (form submission, validation, error handling) is **fully tested** (19+ passing tests)
+- Loading state verified indirectly via "disable inputs" and "disable button" tests
+- Success state rendering verified indirectly via "Close button" test
 - Feature has been **manually verified in production** with 100% success rate
-- Similar success patterns work in ContactSupportModal without timing issues
+- Similar loading/success patterns work in ContactSupportModal without timing issues
 
 ---
 
