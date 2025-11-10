@@ -152,15 +152,18 @@ class User {
 
   /**
    * Find user by ID
+   * Excludes deleted users (deleted_at IS NOT NULL)
    * @param {number} id - User ID
    * @returns {Promise<Object|null>} User object or null
    */
   static async findById(id) {
     const result = await sql`
       SELECT id, email, first_name, last_name, github_id, tier, stripe_customer_id, customer_created_via, email_verified,
-             terms_accepted_at, terms_version_accepted, privacy_accepted_at, privacy_version_accepted, analytics_enabled, created_at
+             terms_accepted_at, terms_version_accepted, privacy_accepted_at, privacy_version_accepted, analytics_enabled,
+             deletion_scheduled_at, created_at
       FROM users
       WHERE id = ${id}
+        AND deleted_at IS NULL
     `;
 
     return result.rows[0] || null;

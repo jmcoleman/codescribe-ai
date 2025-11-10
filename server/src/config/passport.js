@@ -21,10 +21,26 @@ passport.serializeUser((user, done) => {
  */
 passport.deserializeUser(async (id, done) => {
   try {
+    console.log(`[Passport] Deserializing user ID: ${id}`);
     const user = await User.findById(id);
+
+    if (!user) {
+      console.log(`[Passport] User not found for ID: ${id} - clearing invalid session`);
+      return done(null, false); // Null user = clear session, don't throw error
+    }
+
+    console.log(`[Passport] Successfully deserialized user: ${user.id} (${user.email})`);
     done(null, user);
   } catch (error) {
-    done(error, null);
+    console.error(`[Passport] Error deserializing user ID ${id}:`, {
+      message: error.message,
+      stack: error.stack,
+      code: error.code
+    });
+
+    // Don't propagate error - return false to clear invalid session
+    // This prevents 500 errors on all authenticated endpoints
+    done(null, false);
   }
 });
 

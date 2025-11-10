@@ -108,12 +108,14 @@ class Usage {
     }
 
     const usage = result.rows[0];
-    const lastResetDate = new Date(usage.last_reset_date);
-    lastResetDate.setHours(0, 0, 0, 0);
 
-    // Check if daily reset is needed
-    if (today.getTime() > lastResetDate.getTime()) {
-      // Daily counter needs reset
+    // Get UTC date strings for comparison (YYYY-MM-DD format)
+    const todayDateStr = today.toISOString().split('T')[0];
+    const lastResetDateStr = new Date(usage.last_reset_date).toISOString().split('T')[0];
+
+    // Check if daily reset is needed (different UTC calendar day)
+    if (todayDateStr !== lastResetDateStr) {
+      // Daily counter needs reset (it's a new day)
       await this.resetDailyUsage(userIdentifier);
       return {
         dailyGenerations: 0,
