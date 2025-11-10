@@ -7,6 +7,7 @@
 
 import passport from 'passport';
 import jwt from 'jsonwebtoken';
+import User from '../models/User.js';
 
 /**
  * Require authentication via JWT or session
@@ -23,7 +24,6 @@ const requireAuth = async (req, res, next) => {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
       // Token is valid, fetch full user data including tier
-      const User = (await import('../models/User.js')).default;
       const user = await User.findById(decoded.sub);
 
       if (!user) {
@@ -95,7 +95,6 @@ const optionalAuth = async (req, res, next) => {
 
       if (decoded.sub) {
         // Fetch full user data including tier
-        const User = (await import('../models/User.js')).default;
         const user = await User.findById(decoded.sub);
 
         if (user) {
