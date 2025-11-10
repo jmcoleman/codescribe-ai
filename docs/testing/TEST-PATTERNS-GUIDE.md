@@ -2229,6 +2229,143 @@ await user.type(emailInput, 'new value');
 
 ---
 
+### 7. Loading State Race Conditions (React 18+ Batching) ⭐ NEW - November 9, 2025
+
+**Discovery:**
+React 18+ automatic batching creates race conditions in loading state tests when async operations resolve too quickly.
+
+**Problem:**
+```javascript
+// Component code
+const handleSubmit = async () => {
+  setLoading(true);
+  const token = await getToken();  // Resolves immediately in tests!
+  const response = await fetch(...);  // Never resolves (test mock)
+  // ...
+};
+
+// Test code - FAILS
+const neverResolve = new Promise(() => {});
+global.fetch = vi.fn().mockReturnValue(neverResolve);
+mockAuthContext.getToken = vi.fn(() => Promise.resolve('token'));  // ❌ Resolves immediately!
+
+await user.click(submitButton);
+expect(screen.getByText('Sending...')).toBeInTheDocument();  // ❌ Fails - loading already gone!
+```
+
+**Root Cause:**
+1. `setLoading(true)` is called
+2. `await getToken()` resolves **immediately** (mock returns resolved promise)
+3. React 18 **batches** state updates - doesn't commit yet
+4. Code reaches `await fetch()` which never resolves
+5. React commits batched updates **after both operations complete**
+6. Test checks for loading state but it might already be past that micro-moment
+7. Results in flaky tests that sometimes pass, sometimes fail
+
+**Solution - Make ALL Async Operations Slow:**
+```javascript
+// ✅ GOOD - Both getToken AND fetch never resolve
+const neverResolve = new Promise(() => {});
+global.fetch = vi.fn().mockReturnValue(neverResolve);
+mockAuthContext.getToken = vi.fn(() => neverResolve);  // ✅ Also never resolves!
+
+await user.click(submitButton);
+
+// Wait for loading text FIRST (Pattern 5)
+await waitFor(() => {
+  expect(screen.getByText('Sending...')).toBeInTheDocument();
+}, { timeout: 3000 });
+
+// Then check disabled state (note: button text changed!)
+const loadingButton = screen.getByRole('button', { name: /Sending/i });
+expect(loadingButton).toBeDisabled();
+```
+
+**Additional Fix - Button Reference After State Change:**
+```javascript
+// ❌ BAD - Button text changes from "Send Message" to "Sending..."
+const submitButton = screen.getByRole('button', { name: /Send Message/i });
+await user.click(submitButton);
+await waitFor(() => {
+  expect(screen.getByText('Sending...')).toBeInTheDocument();
+});
+expect(submitButton).toBeDisabled();  // ❌ Still works, but wrong pattern
+
+// ✅ GOOD - Get fresh reference after state change
+const submitButton = screen.getByRole('button', { name: /Send Message/i });
+await user.click(submitButton);
+await waitFor(() => {
+  expect(screen.getByText('Sending...')).toBeInTheDocument();
+});
+const loadingButton = screen.getByRole('button', { name: /Sending/i });
+expect(loadingButton).toBeDisabled();  // ✅ Correct reference
+```
+
+**Timeout Cleanup (Required):**
+```javascript
+// Component code - MUST cleanup timeouts
+import { useState, useEffect, useRef } from 'react';
+
+export function MyModal({ isOpen, onClose }) {
+  const resetTimeoutRef = useRef(null);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (resetTimeoutRef.current) {
+        clearTimeout(resetTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleClose = () => {
+    onClose();
+    // Store timeout ID for cleanup
+    resetTimeoutRef.current = setTimeout(() => {
+      setSuccess(false);
+      setError('');
+      // ... reset other state
+    }, 300);
+  };
+
+  // ... rest of component
+}
+```
+
+**Why Timeout Cleanup Matters:**
+- Without cleanup, `setTimeout` continues after test teardown
+- When timeout fires, React tries to update state on unmounted component
+- Results in "window is not defined" error after test environment teardown
+- Causes CI failures even when tests pass locally
+
+**Pattern Applied:**
+- TEST-PATTERNS-GUIDE.md Pattern 5 (Async State Updates)
+- Timeout cleanup pattern (lines 2056-2059, Insight #2)
+
+**Key Principles:**
+1. ✅ DO make ALL async operations in component slow (getToken, fetch, etc.)
+2. ✅ DO wait for loading text FIRST before checking other state
+3. ✅ DO get fresh button references after text changes
+4. ✅ DO cleanup all timeouts with useEffect + useRef pattern
+5. ❌ DON'T let any async operation resolve immediately in loading tests
+6. ❌ DON'T use stale element references after state changes button text
+7. ✅ DO apply timeout cleanup to prevent teardown errors
+
+**Affected Components:**
+- ContactSalesModal (fixed November 2, 2025)
+- ContactSupportModal (fixed November 9, 2025)
+- Any modal with form submission + loading states
+
+**Impact:** Fixed recurring loading state test failures across 2 modal components
+
+**This is a PERMANENT FIX** that prevents:
+- Flaky loading state tests
+- React 18+ batching race conditions
+- Test environment teardown errors
+- Recurring CI failures
+
+---
+
 ## 📊 Test Suite Statistics
 
 ### Before Session
