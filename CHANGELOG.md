@@ -9,54 +9,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [2.7.1] - 2025-11-09
+## [2.7.1] - 2025-11-10
 
-**Status:** ✅ ErrorBoundary Dark Mode & Production Bug Fix
+**Status:** ✅ Admin Dashboard Fixes & Production Logging Cleanup
 
-**Summary:** Fixed ErrorBoundary dark mode display, horizontal scrolling for long stack traces, and critical production bug in AdminUsage page. Added manual testing route for ErrorBoundary verification.
+**Summary:** Fixed admin dashboard to show all registered users (LEFT JOIN query), added billing period indicators, improved UI spacing, secured production logs by removing sensitive user data, and fixed 4 backend test failures in Usage.test.js.
 
 ### Fixed
 
-- **ErrorBoundary Dark Mode**
-  - Added theme detection (`getThemePreference()`) from localStorage and system preferences
-  - Applied dark class manually to `document.documentElement` (ErrorBoundary wraps ThemeProvider)
-  - Full dark mode styling with `dark:` variants for all colors
-  - Icon border in dark mode: `border-2 border-transparent dark:border-red-800/50`
-  - Improved error message readability: `dark:bg-red-950/30 dark:text-red-200`
-  - Better contrast for stack traces: `dark:bg-slate-800/50`
-  - Modal width increased from `max-w-2xl` to `max-w-4xl` for long stack traces
+- **Admin Dashboard Query Fix** ([server/src/routes/admin.js](server/src/routes/admin.js))
+  - Changed from `FROM user_quotas` to `FROM users LEFT JOIN user_quotas` to include all registered users
+  - New users with zero usage now appear in admin dashboard
+  - Applied COALESCE for NULL handling in daily/monthly counts
+  - Fixed 3 queries: total counts, recent authenticated users, and user stats
 
-- **ErrorBoundary Horizontal Scrolling**
-  - Removed CSS Grid animation (was interfering with overflow)
-  - Applied `overflow-x-auto` directly to `<pre>` elements
-  - All code blocks (Error Message, Stack Trace, Component Stack) now scroll horizontally
-  - Simplified details/summary styling with arrow rotation animation only
+- **Backend Test Fixes** ([server/src/models/__tests__/Usage.test.js](server/src/models/__tests__/Usage.test.js))
+  - Fixed 4 failing tests: "should return usage for authenticated user", "should return usage for anonymous user by IP", "should trigger daily reset if needed", "should handle IPv6 addresses"
+  - Root cause: `last_reset_date: new Date()` created timestamps different from `today` variable, triggering unintended reset logic
+  - Solution: Changed to `last_reset_date: today` for consistent date comparisons
+  - Updated UTC date logic to local timezone: `new Date(today.getFullYear(), today.getMonth(), 1)`
 
-- **AdminUsage Production Bug**
-  - Fixed missing `AlertCircle` icon import from lucide-react
-  - Was causing ErrorBoundary to trigger in production when admin stats failed to load
-  - Error state now properly displays with AlertCircle icon
+- **Production Logging Security** (3 files)
+  - Wrapped sensitive logging (emails, IPs, user IDs) in `NODE_ENV === 'development'` checks
+  - [server/src/models/User.js](server/src/models/User.js): findById, findOrCreateByGithub, restoration logging
+  - [server/src/routes/auth.js](server/src/routes/auth.js): signup, login, password reset, email verification
+  - [server/src/middleware/auth.js](server/src/middleware/auth.js): session debugging, user loading
+  - Preserved all error logging for production debugging
 
 ### Added
 
-- **Manual Testing Route**
-  - `/test-error` route for ErrorBoundary testing in all environments
-  - `ErrorTest.jsx` component to intentionally trigger errors
-  - Route documented in `main.jsx` and component JSDoc
-  - Manual testing section added to `ERROR-HANDLING-TESTS.md`
+- **Billing Period Indicators** (2 files)
+  - [client/src/pages/AdminUsage.jsx](client/src/pages/AdminUsage.jsx): "Period: Nov 1–30, 2025" with Calendar icon
+  - [client/src/pages/UsageDashboard.jsx](client/src/pages/UsageDashboard.jsx): "Usage period: Nov 1–30, 2025" with Calendar icon
+  - `formatPeriod()` function calculates current month's first/last day
+  - Inline bullet-separated layout: subtitle • period indicator
+  - Mobile-responsive with flex-wrap
 
-### Documentation
+### Changed
 
-- Updated `ERROR-HANDLING-TESTS.md` with Manual Testing Route section
-- Added inline comments to `/test-error` route in `main.jsx`
-- Enhanced `ErrorTest.jsx` component documentation
+- **UI Spacing Improvements** (2 files)
+  - [client/src/pages/UsageDashboard.jsx](client/src/pages/UsageDashboard.jsx): Header margin reduced from `mb-8` to `mb-6`
+  - [client/src/pages/AdminUsage.jsx](client/src/pages/AdminUsage.jsx): Summary cards padding reduced from `p-6` to `p-4`
 
 ### Test Results
 
-- **Total: 2,343 passed | 43 skipped (2,386 total) - 100% pass rate**
-  - Frontend: 1,486 passed | 22 skipped (1,508 total) - 98.5% pass rate
-  - Backend: 857 passed | 21 skipped (878 total) - 100% pass rate
-- **Coverage**: 91.83% backend coverage maintained
+- **Total: 2,342 passed | 47 skipped (2,389 total) - 100% pass rate**
+  - Frontend: 1,482 passed | 26 skipped (1,508 total)
+  - Backend: 860 passed | 21 skipped (881 total)
+- All Usage.test.js tests now pass with correct date handling
 
 ---
 

@@ -94,6 +94,18 @@ export function UsageDashboard() {
     return `${monthNames[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
   };
 
+  // Format current billing period for display
+  const formatPeriod = () => {
+    const now = new Date();
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const month = monthNames[now.getMonth()];
+    const year = now.getFullYear();
+    const firstDay = 1;
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+
+    return `${month} ${firstDay}–${lastDay}, ${year}`;
+  };
+
   // Tier configuration
   const currentTier = user?.tier || 'free';
   const tierInfo = {
@@ -193,8 +205,8 @@ export function UsageDashboard() {
         </button>
 
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-2">
+        <div className="mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-2">
             <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
               Usage Dashboard
             </h1>
@@ -213,9 +225,17 @@ export function UsageDashboard() {
               {refreshing ? 'Refreshing...' : 'Refresh'}
             </button>
           </div>
-          <p className="text-slate-600 dark:text-slate-400">
-            Monitor your document generation usage and quota limits
-          </p>
+          <div className="flex items-center gap-3 flex-wrap">
+            <p className="text-slate-600 dark:text-slate-400">Monitor your document generation usage and quota limits</p>
+            <span className="text-slate-300 dark:text-slate-600">•</span>
+            {/* Period indicator */}
+            <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+              <Calendar className="w-4 h-4" aria-hidden="true" />
+              <span className="text-sm">
+                Usage period: <strong className="font-semibold">{formatPeriod()}</strong>
+              </span>
+            </div>
+          </div>
         </div>
 
         {/* Upgrade prompt (show if usage > 60% or at limit) */}

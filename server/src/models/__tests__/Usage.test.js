@@ -21,12 +21,17 @@ describeOrSkip('Usage Model', () => {
 
   describe('getUserUsage', () => {
     it('should return usage for authenticated user', async () => {
+      // Use current month's first day for period_start_date (local timezone, not UTC)
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const periodStart = new Date(today.getFullYear(), today.getMonth(), 1);
+
       const mockUsage = {
         user_id: 1,
         daily_count: 5,
         monthly_count: 25,
-        last_reset_date: new Date(),
-        period_start_date: new Date(2025, 9, 1), // Oct 1, 2025
+        last_reset_date: today,  // Use today instead of new Date() to avoid reset logic
+        period_start_date: periodStart,
       };
 
       sql.mockResolvedValue({ rows: [mockUsage] });
@@ -41,12 +46,17 @@ describeOrSkip('Usage Model', () => {
     });
 
     it('should return usage for anonymous user by IP', async () => {
+      // Use current month's first day for period_start_date (local timezone, not UTC)
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const periodStart = new Date(today.getFullYear(), today.getMonth(), 1);
+
       const mockUsage = {
         ip_address: '192.168.1.1',
         daily_count: 3,
         monthly_count: 10,
-        last_reset_date: new Date(),
-        period_start_date: new Date(2025, 9, 1),
+        last_reset_date: today,  // Use today to avoid reset logic
+        period_start_date: periodStart,
       };
 
       sql.mockResolvedValue({ rows: [mockUsage] });
@@ -70,15 +80,21 @@ describeOrSkip('Usage Model', () => {
     });
 
     it('should trigger daily reset if needed', async () => {
-      const yesterday = new Date();
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const yesterday = new Date(today);
       yesterday.setDate(yesterday.getDate() - 1);
+
+      // Use current month's first day for period_start_date (local timezone, not UTC)
+      const periodStart = new Date(today.getFullYear(), today.getMonth(), 1);
 
       const mockUsage = {
         user_id: 1,
         daily_count: 10,
         monthly_count: 50,
         last_reset_date: yesterday,
-        period_start_date: new Date(2025, 9, 1),
+        period_start_date: periodStart,
       };
 
       // First call: get usage (needs reset)
@@ -90,8 +106,8 @@ describeOrSkip('Usage Model', () => {
             user_id: 1,
             daily_count: 0,
             monthly_count: 50,
-            last_reset_date: new Date(),
-            period_start_date: new Date(2025, 9, 1),
+            last_reset_date: today,  // Use today for consistency
+            period_start_date: periodStart,
           }]
         });
 
@@ -483,12 +499,17 @@ describeOrSkip('Usage Model', () => {
     });
 
     it('should handle IPv6 addresses', async () => {
+      // Use current month's first day for period_start_date (local timezone, not UTC)
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const periodStart = new Date(today.getFullYear(), today.getMonth(), 1);
+
       const mockUsage = {
         ip_address: '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
         daily_count: 2,
         monthly_count: 5,
-        last_reset_date: new Date(),
-        period_start_date: new Date(2025, 9, 1),
+        last_reset_date: today,  // Use today to avoid reset logic
+        period_start_date: periodStart,
       };
 
       sql.mockResolvedValue({ rows: [mockUsage] });

@@ -12,7 +12,7 @@
 AI-powered documentation generator with real-time streaming, quality scoring (0-100), and WCAG 2.1 AA compliance.
 
 **Key Metrics:**
-- 2,386 tests (2,343 passing, 43 skipped, 0 failures) | 100% pass rate | 91.83% backend coverage
+- 2,389 tests (2,342 passing, 47 skipped, 0 failures) | 100% pass rate | 91.83% backend coverage
 - Lighthouse: 75/100 performance (+67%), 100/100 accessibility
 - Bundle: 78KB gzipped (-85% reduction)
 - Accessibility: 95/100 score, 0 axe violations
@@ -48,7 +48,7 @@ AI-powered documentation generator with real-time streaming, quality scoring (0-
 | Document | Use Case | Key Contents |
 |----------|----------|--------------|
 | [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) | Performance optimization | Lazy loading, bundle analysis, Core Web Vitals, maintenance |
-| [Testing README](docs/testing/README.md) | Test navigation hub | 2,386 test stats, quick commands, coverage overview |
+| [Testing README](docs/testing/README.md) | Test navigation hub | 2,389 test stats, quick commands, coverage overview |
 | [COMPONENT-TEST-COVERAGE.md](docs/testing/COMPONENT-TEST-COVERAGE.md) | Coverage details ⭐ | 13/18 components tested, category breakdown, gaps |
 | [frontend-testing-guide.md](docs/testing/frontend-testing-guide.md) | React testing patterns | Vitest + RTL, mocking, a11y, interactions |
 | [TEST-PATTERNS-GUIDE.md](docs/testing/TEST-PATTERNS-GUIDE.md) | Test fix patterns ⭐⚠️ | **103 tests fixed, 11 patterns** (Pattern 11: ES Modules!), 6 insights, 97.8% pass rate |
@@ -436,9 +436,9 @@ cd .. && cd server && npm test 2>&1 | grep "Tests:"
 # Output example: Tests:       21 skipped, 373 passed, 394 total
 
 # 2. Update documentation with new counts
-# - claude.md line 15: "2,250 tests (2,209 passing, 41 skipped)"
-# - claude.md line 51: "2,250 test stats"
-# - claude.md line 482: "2,250 tests (1,373 frontend, 877 backend, 41 skipped)"
+# - claude.md line 15: "2,389 tests (2,342 passing, 47 skipped)"
+# - claude.md line 51: "2,389 test stats"
+# - claude.md line 482: "2,389 tests (1,508 frontend, 881 backend, 47 skipped)"
 # - docs/testing/README.md lines 11-27: Update all test breakdowns
 
 # 3. Verify skipped tests documentation is current
@@ -479,7 +479,7 @@ cd server && npm test 2>&1 | grep "skipped"
 **Final Metrics:**
 - Accessibility: 95/100, WCAG 2.1 AA, 0 axe violations
 - Performance: 75/100 Lighthouse (+67%), 78KB bundle (-85%)
-- Testing: 2,250 tests (1,373 frontend, 877 backend, 41 skipped), 100% passing
+- Testing: 2,389 tests (1,508 frontend, 881 backend, 47 skipped), 100% passing
 - Deployment: Vercel + GitHub Actions CI/CD, custom domain
 
 **Optional:** README screenshots, demo video, extended manual a11y testing
@@ -546,7 +546,7 @@ codescribe-ai/
 
 ## 🔄 Version History
 
-**Current: v2.7.1** - ErrorBoundary Dark Mode & Production Bug Fix (November 9, 2025): **ErrorBoundary Dark Mode** (theme detection, manual dark class application, improved readability); **Horizontal Scrolling** (removed CSS Grid, overflow-x-auto on pre tags); **AdminUsage Fix** (missing AlertCircle icon import); **Manual Testing** (/test-error route, ErrorTest component, documentation); **2,386 tests** (2,343 passing, 43 skipped, 100% pass rate)
+**Current: v2.7.1** - Admin Dashboard Fixes & Production Logging Cleanup (November 10, 2025): **Admin Dashboard LEFT JOIN** (show all registered users, not just those with usage); **Billing Period Indicators** (formatPeriod function, Calendar icon, mobile-responsive); **Production Logging Security** (wrapped sensitive data in dev-only checks); **Backend Test Fixes** (4 Usage.test.js tests fixed with proper date handling); **UI Spacing** (reduced header/card padding); **2,389 tests** (2,342 passing, 47 skipped, 100% pass rate)
 
 <details>
 <summary>Previous Versions (v1.0-v2.7.0)</summary>
@@ -557,7 +557,7 @@ codescribe-ai/
   - 106 Dark Mode Tests (ThemeContext, ThemeToggle, integration, all components)
   - Critical Test Fixes (ContactSupportModal getToken Promise, DocPanel button count, UsageLimitModal text)
   - ThemeContext Error Handling (localStorage/matchMedia try/catch)
-  - 2,386 tests (1,486 frontend, 857 backend, 43 skipped, 100% pass rate)
+  - 2,389 tests (1,508 frontend, 881 backend, 47 skipped, 100% pass rate)
 
 - **v2.6.0** - UI Integration & Usage Dashboard Complete (November 7, 2025)
   - Usage Dashboard Page (daily/monthly cards, color-coded status, upgrade prompts)

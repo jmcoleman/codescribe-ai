@@ -55,13 +55,19 @@ const requireAuth = async (req, res, next) => {
   else if (req.isAuthenticated && req.isAuthenticated()) {
     // Check if session deserialization actually loaded a user
     if (!req.user) {
-      console.log('[Auth] Session exists but no user loaded - clearing session');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Auth] Session exists but no user loaded - clearing session');
+      }
       // Destroy invalid session
       req.logout((err) => {
-        if (err) console.error('[Auth] Error logging out:', err);
+        if (err && process.env.NODE_ENV === 'development') {
+          console.error('[Auth] Error logging out:', err);
+        }
       });
       req.session.destroy((err) => {
-        if (err) console.error('[Auth] Error destroying session:', err);
+        if (err && process.env.NODE_ENV === 'development') {
+          console.error('[Auth] Error destroying session:', err);
+        }
       });
       return res.status(401).json({
         success: false,
@@ -103,7 +109,9 @@ const optionalAuth = async (req, res, next) => {
       }
     } catch (error) {
       // JWT verification failed or database error - continue without user
-      console.error('[Auth] Error in optionalAuth:', error.message);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[Auth] Error in optionalAuth:', error.message);
+      }
     }
     return next();
   } else if (req.isAuthenticated && req.isAuthenticated()) {

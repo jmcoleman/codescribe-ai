@@ -99,7 +99,9 @@ class User {
 
       // If account is scheduled for deletion, restore it
       if (user.deletion_scheduled_at && !user.deleted_at) {
-        console.log(`[GitHub OAuth] User ${user.id} signing in with scheduled-deletion account - restoring account`);
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`[GitHub OAuth] User ${user.id} signing in with scheduled-deletion account - restoring account`);
+        }
         await User.restoreAccount(user.id);
         // Fetch updated user data without deletion fields
         return await User.findById(user.id);
@@ -122,7 +124,9 @@ class User {
 
       // If account is scheduled for deletion, restore it before linking
       if (existingUser.deletion_scheduled_at && !existingUser.deleted_at) {
-        console.log(`[GitHub OAuth] User ${existingUser.id} linking GitHub to scheduled-deletion account - restoring account`);
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`[GitHub OAuth] User ${existingUser.id} linking GitHub to scheduled-deletion account - restoring account`);
+        }
         await User.restoreAccount(existingUser.id);
       }
 
@@ -157,7 +161,6 @@ class User {
    * @returns {Promise<Object|null>} User object or null
    */
   static async findById(id) {
-    console.log(`[User.findById] Looking up user ${id}`);
     try {
       const result = await sql`
         SELECT id, email, first_name, last_name, github_id, tier, stripe_customer_id, customer_created_via, email_verified,
@@ -170,16 +173,21 @@ class User {
 
       const user = result.rows[0] || null;
 
-      // Log what we found
-      if (user) {
-        console.log(`[User.findById] Found user:`, { id: user.id, email: user.email, tier: user.tier, deleted_at: user.deleted_at });
-        // Filter out soft-deleted users
-        if (user.deleted_at) {
-          console.log(`[User.findById] User ${id} is soft-deleted, returning null`);
-          return null;
+      // Log what we found (development only)
+      if (process.env.NODE_ENV === 'development') {
+        if (user) {
+          console.log(`[User.findById] Found user:`, { id: user.id, email: user.email, tier: user.tier, deleted_at: user.deleted_at });
+          if (user.deleted_at) {
+            console.log(`[User.findById] User ${id} is soft-deleted, returning null`);
+          }
+        } else {
+          console.log(`[User.findById] No user found with ID ${id}`);
         }
-      } else {
-        console.log(`[User.findById] No user found with ID ${id}`);
+      }
+
+      // Filter out soft-deleted users
+      if (user && user.deleted_at) {
+        return null;
       }
 
       return user;

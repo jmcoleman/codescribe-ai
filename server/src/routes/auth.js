@@ -82,7 +82,9 @@ router.post(
       if (existingUser) {
         // If account is scheduled for deletion (not yet permanently deleted), restore it
         if (existingUser.deletion_scheduled_at && !existingUser.deleted_at) {
-          console.log(`[Auth] User ${existingUser.id} signing up with scheduled-deletion account - restoring account`);
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`[Auth] User ${existingUser.id} signing up with scheduled-deletion account - restoring account`);
+          }
 
           // Restore the account (cancels deletion)
           await User.restoreAccount(existingUser.id);
@@ -103,7 +105,9 @@ router.post(
           if (ipAddress && ipAddress !== 'unknown') {
             try {
               await Usage.migrateAnonymousUsage(ipAddress, user.id);
-              console.log(`[Auth] Migrated anonymous usage for IP ${ipAddress} to restored user ${user.id}`);
+              if (process.env.NODE_ENV === 'development') {
+                console.log(`[Auth] Migrated anonymous usage for IP ${ipAddress} to restored user ${user.id}`);
+              }
             } catch (migrationError) {
               console.error('[Auth] Failed to migrate anonymous usage:', migrationError);
             }
@@ -116,7 +120,9 @@ router.post(
               to: user.email,
               verificationToken
             });
-            console.log(`Verification email sent to: ${user.email}`);
+            if (process.env.NODE_ENV === 'development') {
+              console.log(`Verification email sent to: ${user.email}`);
+            }
           } catch (emailError) {
             console.error('Failed to send verification email:', emailError);
           }
@@ -157,7 +163,9 @@ router.post(
       if (ipAddress && ipAddress !== 'unknown') {
         try {
           await Usage.migrateAnonymousUsage(ipAddress, user.id);
-          console.log(`[Auth] Migrated anonymous usage for IP ${ipAddress} to user ${user.id}`);
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`[Auth] Migrated anonymous usage for IP ${ipAddress} to user ${user.id}`);
+          }
         } catch (migrationError) {
           // Don't fail signup if migration fails - log and continue
           console.error('[Auth] Failed to migrate anonymous usage:', migrationError);
@@ -171,7 +179,9 @@ router.post(
           to: user.email,
           verificationToken
         });
-        console.log(`Verification email sent to: ${user.email}`);
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`Verification email sent to: ${user.email}`);
+        }
       } catch (emailError) {
         // Don't fail signup if email fails - log and continue
         console.error('Failed to send verification email:', emailError);

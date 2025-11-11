@@ -88,11 +88,13 @@ router.get('/usage-stats', requireAuth, requireAdmin, async (req, res) => {
       `,
       sql`
         SELECT
-          COUNT(DISTINCT user_id) as total_users,
-          SUM(daily_count) as total_daily,
-          SUM(monthly_count) as total_monthly
-        FROM user_quotas
-        WHERE period_start_date = DATE_TRUNC('month', CURRENT_DATE)
+          COUNT(DISTINCT u.id) as total_users,
+          COALESCE(SUM(uq.daily_count), 0) as total_daily,
+          COALESCE(SUM(uq.monthly_count), 0) as total_monthly
+        FROM users u
+        LEFT JOIN user_quotas uq ON u.id = uq.user_id
+          AND uq.period_start_date = DATE_TRUNC('month', CURRENT_DATE)
+        WHERE u.deleted_at IS NULL
       `
     ]);
 
@@ -107,10 +109,12 @@ router.get('/usage-stats', requireAuth, requireAdmin, async (req, res) => {
       `,
       sql`
         SELECT
-          COUNT(DISTINCT user_id) as active_count,
-          SUM(daily_count) as generations
-        FROM user_quotas
-        WHERE updated_at >= NOW() - INTERVAL '24 hours'
+          COUNT(DISTINCT uq.user_id) as active_count,
+          SUM(uq.daily_count) as generations
+        FROM user_quotas uq
+        JOIN users u ON uq.user_id = u.id
+        WHERE uq.updated_at >= NOW() - INTERVAL '24 hours'
+          AND u.deleted_at IS NULL
       `
     ]);
 
@@ -146,6 +150,7 @@ router.get('/usage-stats', requireAuth, requireAdmin, async (req, res) => {
         FROM user_quotas uq
         JOIN users u ON uq.user_id = u.id
         WHERE uq.updated_at >= NOW() - INTERVAL '7 days'
+          AND u.deleted_at IS NULL
         GROUP BY uq.user_id, u.email, u.tier
         ORDER BY total_generations DESC
         LIMIT 10
@@ -169,18 +174,19 @@ router.get('/usage-stats', requireAuth, requireAdmin, async (req, res) => {
       `,
       sql`
         SELECT
-          uq.user_id,
+          u.id as user_id,
           u.email,
           u.tier,
-          uq.daily_count,
-          uq.monthly_count,
-          uq.updated_at,
+          COALESCE(uq.daily_count, 0) as daily_count,
+          COALESCE(uq.monthly_count, 0) as monthly_count,
+          COALESCE(uq.updated_at, u.created_at) as updated_at,
           uq.period_start_date,
-          uq.created_at
-        FROM user_quotas uq
-        JOIN users u ON uq.user_id = u.id
-        WHERE uq.period_start_date = DATE_TRUNC('month', CURRENT_DATE)
-        ORDER BY uq.updated_at DESC
+          COALESCE(uq.created_at, u.created_at) as created_at
+        FROM users u
+        LEFT JOIN user_quotas uq ON u.id = uq.user_id
+          AND uq.period_start_date = DATE_TRUNC('month', CURRENT_DATE)
+        WHERE u.deleted_at IS NULL
+        ORDER BY COALESCE(uq.updated_at, u.created_at) DESC
         LIMIT 50
       `
     ]);

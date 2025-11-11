@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, Globe, FileText, Clock, RefreshCw, Filter, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Users, Globe, FileText, Clock, RefreshCw, Filter, AlertCircle, Calendar } from 'lucide-react';
 import { PageLayout } from '../components/PageLayout';
 import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
@@ -126,6 +126,18 @@ export default function AdminUsage() {
     });
   };
 
+  // Format current billing period for display
+  const formatPeriod = () => {
+    const now = new Date();
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const month = monthNames[now.getMonth()];
+    const year = now.getFullYear();
+    const firstDay = 1;
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+
+    return `${month} ${firstDay}–${lastDay}, ${year}`;
+  };
+
   if (loading) {
     return (
       <PageLayout showGradient={false} className="bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-950">
@@ -181,7 +193,17 @@ export default function AdminUsage() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Admin Usage Statistics</h1>
-              <p className="text-slate-600 dark:text-slate-400 mt-1">Monitor anonymous and authenticated user activity</p>
+              <div className="flex items-center gap-3 flex-wrap">
+                <p className="text-slate-600 dark:text-slate-400">Monitor anonymous and authenticated user activity</p>
+                <span className="text-slate-300 dark:text-slate-600">•</span>
+                {/* Period indicator */}
+                <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                  <Calendar className="w-4 h-4" aria-hidden="true" />
+                  <span className="text-sm">
+                    Period: <strong className="font-semibold">{formatPeriod()}</strong>
+                  </span>
+                </div>
+              </div>
             </div>
             <div className="flex items-center gap-3">
               {/* Filter Buttons */}
@@ -239,8 +261,8 @@ export default function AdminUsage() {
           <>
             {/* Overall Summary */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 animate-fadeIn">
-              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
-                <div className="flex items-center gap-3 mb-2">
+              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 shadow-sm">
+                <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 border border-transparent dark:border-purple-400 rounded-lg flex items-center justify-center">
                     <Users className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                   </div>
@@ -251,8 +273,8 @@ export default function AdminUsage() {
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
-                <div className="flex items-center gap-3 mb-2">
+              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 shadow-sm">
+                <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 border border-transparent dark:border-purple-400 rounded-lg flex items-center justify-center">
                     <FileText className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                   </div>
@@ -263,8 +285,8 @@ export default function AdminUsage() {
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
-                <div className="flex items-center gap-3 mb-2">
+              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 shadow-sm">
+                <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 border border-transparent dark:border-purple-400 rounded-lg flex items-center justify-center">
                     <Clock className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                   </div>
