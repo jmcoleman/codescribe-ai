@@ -484,10 +484,7 @@ function App() {
         // Track code input method
         trackCodeInput('upload', data.file.content.length, detectedLanguage);
 
-        // Show success toast with compact variant for non-intrusive feedback
-        toastCompact(`File uploaded successfully`, 'success');
-
-        // Clear loading state
+        // Clear loading state (no success toast needed - file appearing in editor is clear feedback)
         setIsUploading(false);
       }
     } catch (error) {
