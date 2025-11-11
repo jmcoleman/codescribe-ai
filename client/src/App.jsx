@@ -305,13 +305,54 @@ function App() {
   };
 
   // Process file upload (used by both file input and drag-and-drop)
-  const processFileUpload = async (file) => {
+  const processFileUpload = async (file, retryCount = 0) => {
     if (!file) return;
 
     // Clear any previous upload errors
     setUploadError(null);
 
+    // Detect if file might be from cloud storage (Dropbox, Google Drive, etc.)
+    // Cloud storage files often have these characteristics on mobile:
+    const isLikelyCloudFile = file.size > 0 && (
+      !file.lastModified || // No modification date
+      file.type === '' // No MIME type initially
+    );
+
+    if (isLikelyCloudFile) {
+      console.log('[App] Detected potential cloud storage file (Dropbox/Google Drive)');
+      // Show a loading toast for cloud files to set expectations
+      if (retryCount === 0) {
+        toastCompact('Downloading file from cloud storage...', 'loading');
+      }
+    }
+
     try {
+      // CRITICAL FIX: For cloud files on mobile, we need to ensure the File is actually readable
+      // Mobile browsers may return a File reference that hasn't been downloaded yet from Dropbox/Drive
+      // Reading it first ensures it's available before we send it to the server
+      if (isLikelyCloudFile) {
+        console.log('[App] Pre-reading cloud file to ensure it\'s downloaded...');
+        try {
+          // Create a FileReader to force the browser to download/read the file
+          const reader = new FileReader();
+          await new Promise((resolve, reject) => {
+            reader.onload = () => {
+              console.log('[App] Cloud file successfully read, size:', reader.result.byteLength);
+              resolve();
+            };
+            reader.onerror = () => {
+              console.error('[App] Failed to read cloud file:', reader.error);
+              reject(new Error('Unable to read file from cloud storage. Please try downloading it to your device first.'));
+            };
+            // Read as ArrayBuffer to ensure we get the actual file content
+            reader.readAsArrayBuffer(file);
+          });
+        } catch (readError) {
+          console.error('[App] Cloud file read error:', readError);
+          throw readError;
+        }
+      }
+
       // Perform client-side validation
       const validation = validateFile(file);
 
@@ -343,11 +384,20 @@ function App() {
       const uploadUrl = API_URL ? `${API_URL}/api/upload` : '/api/upload';
       console.log('[App] Uploading file to:', uploadUrl);
 
+      // Create an AbortController for timeout handling
+      const controller = new AbortController();
+      // Longer timeout for cloud storage files (mobile needs time to download from Dropbox/Drive first)
+      const timeoutMs = isLikelyCloudFile ? 30000 : 15000; // 30s for cloud, 15s for local
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
       const response = await fetch(uploadUrl, {
         method: 'POST',
         headers,
         body: formData,
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -406,14 +456,42 @@ function App() {
         stack: error.stack,
         apiUrl: API_URL,
         uploadUrl: API_URL ? `${API_URL}/api/upload` : '/api/upload',
+        isCloudFile: isLikelyCloudFile,
+        retryCount,
       });
+
+      // Check if this is an AbortError (timeout)
+      const isTimeout = error.name === 'AbortError';
+
+      // Check if this is a transient network error that might benefit from retry
+      const isRetryable = (
+        error.name === 'TypeError' ||
+        error.message.includes('Failed to fetch') ||
+        isTimeout
+      ) && retryCount < 2; // Allow up to 2 retries
+
+      // If retryable and we haven't exceeded retry limit, try again
+      if (isRetryable) {
+        console.log(`[App] Retrying file upload (attempt ${retryCount + 1}/2)...`);
+        // Wait a bit before retrying (exponential backoff)
+        await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+        return processFileUpload(file, retryCount + 1);
+      }
 
       // Provide more helpful error messages based on error type
       let userFriendlyMessage = 'Unable to upload file';
 
-      if (error.message.includes('Failed to fetch') || error.name === 'TypeError') {
+      if (isTimeout) {
+        // Timeout error - provide context about cloud storage
+        userFriendlyMessage = isLikelyCloudFile
+          ? 'File upload timed out. When selecting files from Dropbox or Google Drive, your device needs to download the file first. Please ensure you have a stable connection and try again.'
+          : 'File upload timed out. Please check your internet connection and try again.';
+      } else if (error.message.includes('Failed to fetch') || error.name === 'TypeError') {
         // Network connectivity issues - provide more context
-        userFriendlyMessage = `Unable to connect to the server. URL attempted: ${API_URL ? `${API_URL}/api/upload` : '/api/upload'}. Please check your internet connection.`;
+        const cloudContext = isLikelyCloudFile
+          ? ' Note: Files from Dropbox/Google Drive require a stable connection to download first.'
+          : '';
+        userFriendlyMessage = `Unable to connect to the server.${cloudContext} Please check your internet connection and try again.`;
       } else if (error.message.includes('413') || error.message.includes('too large')) {
         // File too large
         userFriendlyMessage = 'File is too large to upload. Please choose a smaller file.';
