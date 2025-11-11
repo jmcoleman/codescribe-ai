@@ -536,10 +536,13 @@ function App() {
           : 'File upload timed out. Please check your internet connection and try again.';
       } else if (error.message.includes('Failed to fetch') || error.name === 'TypeError') {
         // Network connectivity issues - provide more context
-        const cloudContext = isLikelyCloudFile
-          ? ' Note: Files from Dropbox/Google Drive require a stable connection to download first.'
-          : '';
-        userFriendlyMessage = `Unable to connect to the server.${cloudContext} Please check your internet connection and try again.`;
+        if (isLikelyCloudFile) {
+          userFriendlyMessage = 'Unable to upload file from Dropbox/Google Drive.\n\n' +
+            '📥 Workaround: Download the file to your device first, then upload it from your Downloads folder.\n\n' +
+            'This is a known limitation on mobile browsers when accessing cloud storage files.';
+        } else {
+          userFriendlyMessage = 'Unable to connect to the server. Please check your internet connection and try again.';
+        }
       } else if (error.message.includes('413') || error.message.includes('too large')) {
         // File too large
         userFriendlyMessage = 'File is too large to upload. Please choose a smaller file.';
