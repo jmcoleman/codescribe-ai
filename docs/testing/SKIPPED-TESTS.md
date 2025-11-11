@@ -1,8 +1,8 @@
 # Skipped Tests Reference
 
 **Purpose:** Central reference for all intentionally skipped tests in the codebase
-**Last Updated:** November 10, 2025 (v2.7.2)
-**Total Skipped:** 26 frontend tests + 21 backend integration tests = **47 total**
+**Last Updated:** November 11, 2025 (v2.7.2)
+**Total Skipped:** 29 frontend tests + 21 backend integration tests = **50 total**
 
 **Note:** Backend database tests (21 tests in `/src/db/__tests__/`) are **excluded** via `jest.config.cjs`, not "skipped" with `.skip()`. They run separately in Docker sandbox before deployment and are NOT counted in this document's skip tracking.
 
@@ -12,10 +12,11 @@
 
 | Category | Location | Count | Impact | Reason |
 |----------|----------|-------|--------|--------|
-| **Frontend Tests** | | **26** | | |
+| **Frontend Tests** | | **29** | | |
 | GitHub Import Feature | ControlBar | 6 | ✅ None | Feature not implemented (Phase 3) |
 | Timing-Dependent Tests | CopyButton | 4 | ✅ None | Prevent flaky CI/CD |
 | React 18 Batching Tests | ContactSalesModal, ContactSupportModal | 4 | ✅ None | Loading/success state race conditions |
+| Header ThemeToggle Tests | DarkModeIntegration | 3 | ✅ None | Feature moved to Settings → Appearance (v2.7.2) |
 | Email Verification Tests | UnverifiedEmailBanner | 3 | ✅ None | Email rate limiting timing issues |
 | Focus Management Edge Cases | LoginModal | 2 | ✅ None | jsdom limitations |
 | Debug Logging Tests | MermaidDiagram | 2 | ✅ None | Development only |
@@ -26,7 +27,7 @@
 | **Backend Tests** | | **21** | | |
 | GitHub OAuth Integration | tests/integration | 21 | ✅ None | Complex Passport.js mocking (feature works in production) |
 
-**Total Skipped:** 47 tests (26 frontend, 21 backend)
+**Total Skipped:** 50 tests (29 frontend, 21 backend)
 
 **Deployment Impact:** ✅ **NONE** - All skipped tests are intentional and documented
 

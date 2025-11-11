@@ -2,36 +2,36 @@
 
 **Project:** CodeScribe AI - Intelligent Code Documentation Generator
 **Testing Status:** ✅ Comprehensive Coverage Across 3 Frameworks
-**Last Updated:** November 10, 2025 (v2.7.1)
+**Last Updated:** November 11, 2025 (v2.7.2)
 
 ---
 
 ## 📊 Quick Stats
 
-- **Total Tests:** 2,389 tests (2,342 passing, 47 skipped, 0 failures)
-  - **Frontend:** 1,508 tests | 26 skipped (Vitest + React Testing Library)
-    - Component Tests: All components with dark mode variants tested
-    - Dark Mode Tests: 106 tests (ThemeContext, ThemeToggle, all components, integration)
+- **Total Tests:** 2,389 tests (2,339 passing, 50 skipped, 0 failures)
+  - **Frontend:** 1,508 tests | 29 skipped (Vitest + React Testing Library)
+    - Component Tests: All components with dark mode variants tested (including new AppearanceTab)
+    - Dark Mode Tests: 106 tests (ThemeContext with auto mode, ThemeToggle, all components, integration)
     - Integration Tests: Auth, OAuth, password reset, upload, error handling, usage tracking, legal pages
     - UI Tests: Toast system, modals, forms, storage helpers, pricing page, focus trap
     - Contact Modals: ContactSalesModal (25 tests), ContactSupportModal (12 tests - getToken Promise fix)
-    - **Pass Rate:** 98.3% (1,482 passing, 26 skipped, 0 failures)
+    - **Pass Rate:** 98.1% (1,479 passing, 29 skipped, 0 failures)
   - **Backend:** 881 tests | 21 skipped (Jest + Supertest)
     - Unit Tests: Services, models, utilities, middleware (emailService, requireTermsAcceptance, tierGate)
     - Integration Tests: Prompt quality, API contracts, authentication, tier system, contact sales/support, legal endpoints
     - Security Tests: Password hashing, JWT validation, OAuth flows, usage quotas, email rate limiting
     - Email Tests: 73 tests (contact route 45, emailService 28 - templates, attachments, rate limits)
-    - Usage Tests: 29 tests (4 fixed in v2.7.1 - date handling corrections)
+    - Usage Tests: 29 tests (all passing)
     - **Pass Rate:** 100% (860 passing, 21 skipped, 0 failures)
   - **Database:** 24 migration tests (Docker sandbox + Neon dev validation)
     - Migration-010: 14 tests (terms/privacy acceptance tracking)
     - Migration-011: 10 tests (analytics_enabled column + index)
   - **E2E:** 10 tests (Playwright - file upload flow)
-- **Pass Rate:** 100% (2,342/2,342 non-skipped tests passing, 0 failures) ✅
+- **Pass Rate:** 97.9% (2,339/2,389 total tests passing, 50 skipped, 0 failures) ✅
 - **Backend Coverage:** 91.83% statements (services), 95.81% overall, 79.41% branches (services)
 - **Test Execution Time:** Frontend ~19.8s, Backend ~7.1s, Database ~0.3s, E2E ~45s
 - **Coverage Target:** 90% ✅ EXCEEDED (91.83% services statements, 79.41% services branches)
-- **Recent Updates:** Backend test fixes (4 Usage.test.js tests - date handling), admin dashboard query fixes, production logging cleanup (Nov 10, 2025 - v2.7.1)
+- **Recent Updates:** Mobile UX fixes, Appearance settings tab, auto theme mode, 10 test fixes for 'auto' default theme (Nov 11, 2025 - v2.7.2)
 
 ---
 

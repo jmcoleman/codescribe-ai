@@ -1,8 +1,8 @@
 # CodeScribe AI - Product Roadmap
 
-**Last Updated:** November 9, 2025
+**Last Updated:** November 11, 2025
 **Current Phase:** Phase 3 - ✅ **Epic 3.1 COMPLETE** (Dark Mode) | 🟡 **Epic 3.3 IN PROGRESS** (Advanced File Handling)
-**Current Release:** v2.7.1 (ErrorBoundary Dark Mode & Production Bug Fix)
+**Current Release:** v2.7.2 (Mobile UX Fixes & Appearance Settings Tab)
 **Production URL:** [https://codescribeai.com](https://codescribeai.com)
 
 ---
@@ -1320,8 +1320,8 @@ ALTER TABLE subscriptions ADD COLUMN stripe_receipt_url VARCHAR(500);
 ## 🎨 Phase 3: UX Enhancements (IN PROGRESS)
 
 **Timeline:** November 8 - TBD
-**Status:** 🔄 **IN PROGRESS** - Epic 3.1 Complete (v2.7.1), Epic 3.3 Active
-**Current Release:** v2.7.1 (ErrorBoundary Dark Mode & Production Bug Fix)
+**Status:** 🔄 **IN PROGRESS** - Epic 3.1 Complete (v2.7.2), Epic 3.3 Active
+**Current Release:** v2.7.2 (Mobile UX Fixes & Appearance Settings Tab)
 **Target Release:** v3.x.x series
 **Strategic Goal:** Transform user experience with customization, flexibility, and advanced file handling capabilities
 
@@ -1330,6 +1330,7 @@ ALTER TABLE subscriptions ADD COLUMN stripe_receipt_url VARCHAR(500);
 **Completed:**
 - ✅ Nov 8: Epic 3.1 (Dark Mode Complete) - v2.7.0
 - ✅ Nov 9: v2.7.1 (ErrorBoundary Dark Mode & Production Bug Fix)
+- ✅ Nov 11: v2.7.2 (Mobile UX Fixes & Appearance Settings Tab)
 
 **In Progress:**
 - 🟡 Nov 8+: Epic 3.3 (Advanced File Handling) - IN PROGRESS
@@ -1396,6 +1397,46 @@ ALTER TABLE subscriptions ADD COLUMN stripe_receipt_url VARCHAR(500);
 **Documentation:**
 - [CHANGELOG.md v2.7.1](../../CHANGELOG.md) - Complete release notes
 - [ERROR-HANDLING-TESTS.md](../../testing/ERROR-HANDLING-TESTS.md) - Manual testing route documentation
+
+#### v2.7.2: Mobile UX Fixes & Appearance Settings Tab (1 day) - ✅ COMPLETE
+**Status:** ✅ Complete | Released November 11, 2025 (v2.7.2)
+**Type:** Mobile UX & Theme Enhancement Release
+
+**Fixed:**
+- ✅ Mobile File Upload: Enhanced error logging with explicit URL construction (API_URL)
+- ✅ Mobile File Upload: Improved diagnostic information for connection failures
+- ✅ Mobile File Upload: Better error messages showing attempted URLs
+- ✅ Mobile Code Editor: Changed from fixed h-[600px] to responsive min-h-[600px] h-[70vh]
+- ✅ Mobile Code Editor: Prevents collapse when browser hides address bar
+- ✅ Mobile Code Editor: Adapts to different mobile screen sizes and orientations
+
+**Added:**
+- ✅ Appearance Settings Tab: New dedicated tab in Settings (2nd position)
+- ✅ Light/Dark/Auto Theme Options: Card-based UI with Sun/Moon/Monitor icons
+- ✅ Auto Theme Mode: Follows system preferences via matchMedia API
+- ✅ System Preference Detection: Auto-refresh when system preferences change
+
+**Changed:**
+- ✅ Theme System: ThemeContext now supports 'auto', 'light', 'dark' modes
+- ✅ Default Theme: Changed from 'light' to 'auto' (system preference)
+- ✅ Theme Controls: Removed from desktop Header and mobile menu
+- ✅ Theme Controls: Centralized in Settings → Appearance tab
+- ✅ UX Pattern: Follows industry standards (Discord, GitHub, Slack)
+
+**Test Suite:**
+- ✅ Fixed 7 ThemeContext tests for 'auto' default behavior
+- ✅ Skipped 3 Header ThemeToggle integration tests (feature moved to Settings)
+- ✅ Added comprehensive TODO comments explaining skipped tests
+- ✅ Maintained 100% pass rate on non-skipped tests
+
+**Test Results:**
+- Frontend: 1,479 passed | 29 skipped (1,508 total) - 98.1% pass rate
+- Backend: 860 passed | 21 skipped (881 total) - 100% pass rate
+- Total: 2,339 passed | 50 skipped (2,389 total) - **97.9% pass rate**
+
+**Documentation:**
+- [CHANGELOG.md v2.7.2](../../CHANGELOG.md) - Complete release notes
+- [SKIPPED-TESTS.md](../../testing/SKIPPED-TESTS.md) - Updated with Header ThemeToggle category
 
 #### Epic 3.3: Advanced File Handling (2-3 days) - 🟡 IN PROGRESS
 **Status:** 🟡 In Progress | Started November 8, 2025

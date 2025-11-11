@@ -761,7 +761,7 @@ See [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) for complete
 
 ### 📊 Testing & Quality
 
-**Comprehensive Test Coverage: 2,389 Tests** (2,342 passing, 47 skipped, 100% pass rate)
+**Comprehensive Test Coverage: 2,389 Tests** (2,339 passing, 50 skipped, 97.9% pass rate)
 - **Backend Tests**: 881 tests (860 passing, 21 skipped) - Jest + Supertest
   - Service layer: qualityScorer, claudeClient, codeParser, docGenerator, emailService
   - Authentication: 102 tests (auth middleware, user model, OAuth flows)
@@ -773,19 +773,20 @@ See [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) for complete
   - Integration: file upload, quality scoring, prompt quality, settings API
   - Mermaid generation tests
   - **Coverage**: 91.83% services statements, 95.81% overall, 88.72% branches
-  - **Pass Rate**: 100% (857 passing, 21 skipped, 0 failures)
-- **Frontend Tests**: 1,508 tests (1,482 passing, 26 skipped) - Vitest + React Testing Library
+  - **Pass Rate**: 100% (860 passing, 21 skipped, 0 failures)
+- **Frontend Tests**: 1,508 tests (1,479 passing, 29 skipped) - Vitest + React Testing Library
   - Component tests with accessibility checks (18/18 components tested)
   - Authentication UI: SignupModal, LoginModal, ForgotPasswordModal, ResetPasswordModal
-  - Settings UI: AccountTab, PrivacyTab, SubscriptionTab, DangerZoneTab, AnalyticsWrapper
+  - Settings UI: AccountTab, AppearanceTab, PrivacyTab, SubscriptionTab, DangerZoneTab, AnalyticsWrapper
   - Contact & Support Modals: ContactSalesModal (25 tests), ContactSupportModal (12 tests)
   - Usage Dashboard: 30 tests (usage cards, progress bars, tier badges, refresh, accessibility)
   - Legal Pages: 20 tests (PrivacyPolicy, TermsOfService - rendering, navigation, accessibility)
+  - Theme System: ThemeContext (auto/light/dark modes), AppearanceTab, Dark Mode integration
   - Integration tests for App workflows
   - Mermaid diagram rendering tests
   - Toast notification system tests (33 tests)
   - **Coverage**: 100% critical user paths
-  - **Pass Rate**: 100% (1,381 passing, 20 skipped, 0 failures)
+  - **Pass Rate**: 100% (1,479 passing, 29 skipped, 0 failures)
 - **E2E Tests**: 10 tests across 5 browsers (Playwright)
   - Cross-browser validation (Chromium, Firefox, WebKit, Chrome, Edge)
   - File upload + generate workflows

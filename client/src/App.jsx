@@ -339,7 +339,11 @@ function App() {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const response = await fetch(`${API_URL}/api/upload`, {
+      // Construct the upload URL - use absolute path for production
+      const uploadUrl = API_URL ? `${API_URL}/api/upload` : '/api/upload';
+      console.log('[App] Uploading file to:', uploadUrl);
+
+      const response = await fetch(uploadUrl, {
         method: 'POST',
         headers,
         body: formData,
@@ -395,14 +399,21 @@ function App() {
         toastCompact(`File uploaded successfully`, 'success');
       }
     } catch (error) {
-      console.error('Error uploading file:', error);
+      console.error('[App] Error uploading file:', error);
+      console.error('[App] Error details:', {
+        message: error.message,
+        name: error.name,
+        stack: error.stack,
+        apiUrl: API_URL,
+        uploadUrl: API_URL ? `${API_URL}/api/upload` : '/api/upload',
+      });
 
       // Provide more helpful error messages based on error type
       let userFriendlyMessage = 'Unable to upload file';
 
       if (error.message.includes('Failed to fetch') || error.name === 'TypeError') {
-        // Network connectivity issues
-        userFriendlyMessage = 'Unable to connect to the server to upload your file. Please check your internet connection and ensure the backend server is running.';
+        // Network connectivity issues - provide more context
+        userFriendlyMessage = `Unable to connect to the server. URL attempted: ${API_URL ? `${API_URL}/api/upload` : '/api/upload'}. Please check your internet connection.`;
       } else if (error.message.includes('413') || error.message.includes('too large')) {
         // File too large
         userFriendlyMessage = 'File is too large to upload. Please choose a smaller file.';
@@ -630,7 +641,7 @@ function App() {
         {/* Split View: Code + Documentation */}
         <div className="mt-6 flex-1 flex flex-col lg:grid lg:grid-cols-2 gap-4 lg:gap-6 min-h-0">
           {/* Left: Code Panel */}
-          <div className="h-[600px] lg:h-full lg:min-w-0 lg:overflow-hidden">
+          <div className="min-h-[600px] h-[70vh] lg:h-full lg:min-w-0 lg:overflow-hidden">
             <CodePanel
               code={code}
               onChange={setCode}
@@ -644,7 +655,7 @@ function App() {
           </div>
 
           {/* Right: Documentation Panel */}
-          <div className="h-[600px] lg:h-full lg:min-w-0 lg:overflow-hidden">
+          <div className="min-h-[600px] h-[70vh] lg:h-full lg:min-w-0 lg:overflow-hidden">
             <Suspense fallback={<LoadingFallback />}>
               <DocPanel
               documentation={documentation}

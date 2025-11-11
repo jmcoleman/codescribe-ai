@@ -88,7 +88,9 @@ describe('Dark Mode Integration', () => {
       expect(header.className).toContain('dark:border-slate-700');
     });
 
-    it('ThemeToggle in Header shows correct icon in dark mode', () => {
+    // TODO: Skipped because ThemeToggle was removed from Header in v2.7.2
+    // Theme controls are now in Settings → Appearance tab
+    it.skip('ThemeToggle in Header shows correct icon in dark mode', () => {
       localStorage.setItem('codescribeai:settings:theme', 'dark');
 
       renderWithProviders(<Header />);
@@ -105,7 +107,9 @@ describe('Dark Mode Integration', () => {
       expect(classValue).toContain('opacity-100');
     });
 
-    it('toggles Header appearance when switching themes', async () => {
+    // TODO: Skipped because ThemeToggle was removed from Header in v2.7.2
+    // Theme controls are now in Settings → Appearance tab
+    it.skip('toggles Header appearance when switching themes', async () => {
       const user = userEvent.setup();
 
       renderWithProviders(<Header />);
@@ -147,7 +151,9 @@ describe('Dark Mode Integration', () => {
   });
 
   describe('Multi-Component Dark Mode Sync', () => {
-    it('synchronizes theme across Header, Footer, and ThemeToggle', async () => {
+    // TODO: Skipped because ThemeToggle was removed from Header in v2.7.2
+    // Theme controls are now in Settings → Appearance tab
+    it.skip('synchronizes theme across Header, Footer, and ThemeToggle', async () => {
       const user = userEvent.setup();
 
       renderWithProviders(
@@ -213,10 +219,9 @@ describe('Dark Mode Integration', () => {
 
       renderWithProviders(<ThemeToggle />);
 
-      // Should initialize based on system preference
-      // This test doesn't mock matchMedia, so it will use the actual system preference
+      // Should initialize with 'auto' theme by default (v2.7.2+)
       const theme = localStorage.getItem('codescribeai:settings:theme');
-      expect(theme).toMatch(/^(light|dark)$/);
+      expect(theme).toBe('auto');
     });
 
     it('manual preference overrides system preference', async () => {

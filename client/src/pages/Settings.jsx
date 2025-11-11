@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { User, Shield, CreditCard, AlertTriangle, ArrowLeft } from 'lucide-react';
+import { User, Shield, CreditCard, AlertTriangle, ArrowLeft, Palette } from 'lucide-react';
 import { AccountTab } from '../components/settings/AccountTab';
+import { AppearanceTab } from '../components/settings/AppearanceTab';
 import { PrivacyTab } from '../components/settings/PrivacyTab';
 import { SubscriptionTab } from '../components/settings/SubscriptionTab';
 import { DangerZoneTab } from '../components/settings/DangerZoneTab';
@@ -10,6 +11,7 @@ import { PageLayout } from '../components/PageLayout';
 
 const TABS = [
   { id: 'account', label: 'Account', icon: User },
+  { id: 'appearance', label: 'Appearance', icon: Palette },
   { id: 'privacy', label: 'Privacy', icon: Shield },
   { id: 'subscription', label: 'Subscription', icon: CreditCard },
   { id: 'danger', label: 'Danger Zone', icon: AlertTriangle },
@@ -55,6 +57,8 @@ export default function Settings() {
     switch (activeTab) {
       case 'account':
         return <AccountTab />;
+      case 'appearance':
+        return <AppearanceTab />;
       case 'privacy':
         return <PrivacyTab />;
       case 'subscription':

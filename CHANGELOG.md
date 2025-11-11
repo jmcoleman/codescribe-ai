@@ -9,6 +9,66 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.7.2] - 2025-11-11
+
+**Status:** ✅ Mobile UX Fixes & Appearance Settings Tab
+
+**Summary:** Fixed mobile file upload errors, code editor viewport issues, and moved theme controls from header to a dedicated Settings → Appearance tab with Light/Dark/Auto options. Improved theme system to support automatic mode that follows system preferences.
+
+### Fixed
+
+- **Mobile File Upload Error** ([client/src/App.jsx](client/src/App.jsx:342-416))
+  - Added explicit URL construction for production environments
+  - Enhanced error logging with attempted URL details
+  - Better error messages showing connection issues on mobile
+
+- **Mobile Code Editor Collapsed** ([client/src/App.jsx](client/src/App.jsx:644,658))
+  - Changed from fixed `h-[600px]` to responsive `min-h-[600px] h-[70vh]`
+  - Uses viewport units for better mobile browser compatibility
+  - Adapts to address bar hiding/showing behavior
+
+- **Theme Test Failures** (2 test files, 10 tests fixed)
+  - [client/src/contexts/__tests__/ThemeContext.test.jsx](client/src/contexts/__tests__/ThemeContext.test.jsx): Updated 7 tests for 'auto' default theme
+  - [client/src/__tests__/integration/DarkModeIntegration.test.jsx](client/src/__tests__/integration/DarkModeIntegration.test.jsx): Skipped 3 Header ThemeToggle tests (feature moved to Settings)
+
+### Added
+
+- **Appearance Settings Tab** (3 new files)
+  - [client/src/components/settings/AppearanceTab.jsx](client/src/components/settings/AppearanceTab.jsx): New dedicated tab for theme settings
+  - Three theme options: Light, Dark, Automatic (follows system preference)
+  - Card-based UI with icons (Sun/Moon/Monitor) and clear descriptions
+  - Professional layout matching industry standards (Discord, GitHub, Slack)
+
+- **Auto Theme Mode** ([client/src/contexts/ThemeContext.jsx](client/src/contexts/ThemeContext.jsx))
+  - Added 'auto' theme that follows system preferences
+  - `getEffectiveTheme()` resolves 'auto' to 'light' or 'dark'
+  - Listens for system preference changes when in auto mode
+  - Defaults to 'auto' for new users
+
+### Changed
+
+- **Theme Controls Relocated** (industry-standard UX pattern)
+  - Removed ThemeToggle from desktop header ([client/src/components/Header.jsx](client/src/components/Header.jsx:97-98))
+  - Removed ThemeToggle from mobile menu header ([client/src/components/MobileMenu.jsx](client/src/components/MobileMenu.jsx))
+  - Theme settings now in Settings → Appearance tab (2nd tab)
+  - Clean navigation with settings in proper location
+
+- **Settings Tab Order** ([client/src/pages/Settings.jsx](client/src/pages/Settings.jsx:12-17))
+  - Account (profile, password, data export)
+  - **Appearance** (theme: Light/Dark/Auto) ← NEW
+  - Privacy (analytics, terms)
+  - Subscription (billing, plan)
+  - Danger Zone (delete account)
+
+### Testing
+
+- **Frontend:** 1479 passed | 29 skipped (1508 total)
+- **Backend:** 860 passed | 21 skipped (881 total)
+- **Grand Total:** 2389 tests (2339 passing, 50 skipped, 0 failures)
+- **Pass Rate:** 97.9% (100% of non-skipped tests pass)
+
+---
+
 ## [2.7.1] - 2025-11-10
 
 **Status:** ✅ Admin Dashboard Fixes & Production Logging Cleanup

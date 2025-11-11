@@ -28,12 +28,13 @@ describe('ThemeContext', () => {
   });
 
   describe('ThemeProvider Initialization', () => {
-    it('initializes with light theme by default', () => {
+    it('initializes with auto theme by default', () => {
       const { result } = renderHook(() => useTheme(), {
         wrapper: ThemeProvider,
       });
 
-      expect(result.current.theme).toBe('light');
+      expect(result.current.theme).toBe('auto');
+      // Auto should resolve to light when system preference is light (matchMedia.matches = false)
       expect(document.documentElement.classList.contains('dark')).toBe(false);
     });
 
@@ -48,7 +49,7 @@ describe('ThemeContext', () => {
       expect(document.documentElement.classList.contains('dark')).toBe(true);
     });
 
-    it('initializes with system preference when no stored theme', () => {
+    it('initializes with auto theme and resolves to dark when system preference is dark', () => {
       // Mock system preference for dark mode
       const matchMediaMock = vi.fn().mockImplementation(query => ({
         matches: query === '(prefers-color-scheme: dark)',
@@ -64,7 +65,8 @@ describe('ThemeContext', () => {
         wrapper: ThemeProvider,
       });
 
-      expect(result.current.theme).toBe('dark');
+      expect(result.current.theme).toBe('auto');
+      // Auto should resolve to dark when system preference is dark
       expect(document.documentElement.classList.contains('dark')).toBe(true);
 
       vi.unstubAllGlobals();
@@ -114,8 +116,8 @@ describe('ThemeContext', () => {
         wrapper: ThemeProvider,
       });
 
-      // Default light theme should be persisted
-      expect(localStorage.getItem('codescribeai:settings:theme')).toBe('light');
+      // Default auto theme should be persisted
+      expect(localStorage.getItem('codescribeai:settings:theme')).toBe('auto');
     });
 
     it('updates localStorage when toggling theme', () => {
@@ -184,13 +186,15 @@ describe('ThemeContext', () => {
   });
 
   describe('Theme Toggle', () => {
-    it('toggles from light to dark', () => {
+    it('toggles from auto to dark, then to light', () => {
       const { result } = renderHook(() => useTheme(), {
         wrapper: ThemeProvider,
       });
 
-      expect(result.current.theme).toBe('light');
+      // Starts as 'auto'
+      expect(result.current.theme).toBe('auto');
 
+      // First toggle: auto -> dark (since toggleTheme cycles between dark and light)
       act(() => {
         result.current.toggleTheme();
       });
@@ -219,8 +223,8 @@ describe('ThemeContext', () => {
         wrapper: ThemeProvider,
       });
 
-      // Start: light
-      expect(result.current.theme).toBe('light');
+      // Start: auto
+      expect(result.current.theme).toBe('auto');
 
       // Toggle 1: dark
       act(() => {
@@ -270,8 +274,8 @@ describe('ThemeContext', () => {
       vi.unstubAllGlobals();
     });
 
-    it('auto-switches theme on system preference change when no manual preference set', () => {
-      // This test verifies the listener is set up correctly
+    it('auto-switches theme on system preference change when in auto mode', () => {
+      // This test verifies the listener is set up correctly when in auto mode
       // The actual system preference change behavior is tested by the integration
       // Since we mock matchMedia globally, this test just verifies the structure
 
@@ -281,8 +285,8 @@ describe('ThemeContext', () => {
         wrapper: ThemeProvider,
       });
 
-      // Should start in light mode (matchMedia mock returns matches: false)
-      expect(result.current.theme).toBe('light');
+      // Should start in auto mode
+      expect(result.current.theme).toBe('auto');
 
       // Verify localStorage is empty initially (no manual preference)
       localStorage.clear();

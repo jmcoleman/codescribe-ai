@@ -4,7 +4,6 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Menu } from '@headlessui/react';
 import { Button } from './Button';
 import { Logo } from './Logo';
-import { ThemeToggle } from './ThemeToggle';
 import { useAuth } from '../contexts/AuthContext';
 
 // Lazy load auth modals
@@ -94,9 +93,6 @@ export const Header = forwardRef(function Header({ onMenuClick, onHelpClick }, r
           <nav className="flex items-center gap-2">
             {/* Desktop Nav */}
             <div className="hidden md:flex items-center gap-2">
-              {/* Theme Toggle */}
-              <ThemeToggle />
-
               <Button
                 variant="secondary"
                 onClick={() => navigate('/pricing')}
