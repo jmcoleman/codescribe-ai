@@ -380,7 +380,15 @@ function App() {
           });
         } catch (readError) {
           console.error('[App] Cloud file read error:', readError);
-          throw readError;
+
+          // Provide helpful message for cloud storage issues on mobile
+          const helpfulError = new Error(
+            'Unable to upload file directly from Dropbox or Google Drive.\n\n' +
+            '📥 Workaround: Download the file to your device first, then upload it from your Downloads folder.\n\n' +
+            'This is a known limitation on mobile browsers when accessing cloud storage files.'
+          );
+          helpfulError.name = readError.name;
+          throw helpfulError;
         }
       }
 
