@@ -20,25 +20,6 @@
     <meta name="twitter:description" content="AI-powered documentation generator with real-time streaming and quality scoring." />
     <meta name="twitter:image" content="https://codescribeai.com/linkedin-thumbnail.svg" />
     <title>CodeScribe AI - Intelligent Code Documentation Generator</title>
-
-    <!-- Mobile Debug Console - Loads with ?debug=true URL parameter -->
-    <script>
-      // Check if debug mode is enabled via URL parameter
-      const hasDebugParam = window.location.search.includes('debug=true');
-
-      if (hasDebugParam) {
-        // Load Eruda mobile debug console
-        const script = document.createElement('script');
-        script.src = 'https://cdn.jsdelivr.net/npm/eruda';
-        script.onload = function() {
-          if (window.eruda) {
-            window.eruda.init();
-            console.log('[Debug] Mobile console loaded - tap icon in bottom-right corner');
-          }
-        };
-        document.head.appendChild(script);
-      }
-    </script>
   </head>
   <body>
     <div id="root"></div>
