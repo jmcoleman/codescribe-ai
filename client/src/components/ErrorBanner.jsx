@@ -156,8 +156,9 @@ export function ErrorBanner({ error, retryAfter, onDismiss }) {
   const isMultiLine = errorMessage.includes('\n');
   const errorLines = isMultiLine ? errorMessage.split('\n') : [errorMessage];
 
-  // Check if we're in development mode
-  const isDevelopment = import.meta.env.DEV;
+  // Check if we're in development mode OR if it's an upload error (temporary for debugging)
+  const isUploadError = fullErrorObject && fullErrorObject.navigator;
+  const isDevelopment = import.meta.env.DEV || isUploadError;
 
   return (
     <div
