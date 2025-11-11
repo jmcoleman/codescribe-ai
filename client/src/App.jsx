@@ -334,12 +334,6 @@ function App() {
 
     if (isLikelyCloudFile) {
       console.log('[App] Detected potential cloud storage file (Dropbox/Google Drive)');
-      // Show a loading toast for cloud files to set expectations
-      if (retryCount === 0) {
-        toastCompact('Preparing file from cloud storage...', 'loading');
-      }
-    } else if (retryCount === 0) {
-      toastCompact('Uploading file...', 'loading');
     }
 
     try {
