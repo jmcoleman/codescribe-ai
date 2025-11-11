@@ -343,18 +343,20 @@ function App() {
     }
 
     try {
-      // CRITICAL FIX: For cloud files on mobile, we need to ensure the File is actually readable
+      // CRITICAL FIX: For cloud files on mobile, convert to Blob first
       // Mobile browsers may return a File reference that hasn't been downloaded yet from Dropbox/Drive
-      // Reading it first ensures it's available before we send it to the server
+      // Reading it as ArrayBuffer and converting to Blob ensures we have the actual data
+      let fileToUpload = file;
+
       if (isLikelyCloudFile) {
         console.log('[App] Pre-reading cloud file to ensure it\'s downloaded...');
         try {
           // Create a FileReader to force the browser to download/read the file
           const reader = new FileReader();
-          await new Promise((resolve, reject) => {
+          const fileData = await new Promise((resolve, reject) => {
             reader.onload = () => {
               console.log('[App] Cloud file successfully read, size:', reader.result.byteLength);
-              resolve();
+              resolve(reader.result);
             };
             reader.onerror = () => {
               console.error('[App] Failed to read cloud file:', reader.error);
@@ -363,14 +365,27 @@ function App() {
             // Read as ArrayBuffer to ensure we get the actual file content
             reader.readAsArrayBuffer(file);
           });
+
+          // Convert ArrayBuffer to Blob with correct MIME type
+          // Use File constructor to preserve filename
+          const blob = new Blob([fileData], { type: file.type || 'text/plain' });
+          fileToUpload = new File([blob], file.name, {
+            type: file.type || 'text/plain',
+            lastModified: file.lastModified || Date.now()
+          });
+          console.log('[App] Cloud file converted to File object:', {
+            name: fileToUpload.name,
+            size: fileToUpload.size,
+            type: fileToUpload.type
+          });
         } catch (readError) {
           console.error('[App] Cloud file read error:', readError);
           throw readError;
         }
       }
 
-      // Perform client-side validation
-      const validation = validateFile(file);
+      // Perform client-side validation (use the potentially converted file)
+      const validation = validateFile(fileToUpload);
 
       if (!validation.valid) {
         const errorMessage = getValidationErrorMessage(validation);
@@ -385,7 +400,7 @@ function App() {
 
       // Create FormData to send file to backend
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', fileToUpload);
 
       // Get auth token if available
       const token = getToken();
