@@ -12,7 +12,7 @@
 AI-powered documentation generator with real-time streaming, quality scoring (0-100), and WCAG 2.1 AA compliance.
 
 **Key Metrics:**
-- 2,389 tests (2,339 passing, 50 skipped, 0 failures) | 97.9% pass rate | 91.83% backend coverage
+- 2,385 tests (2,335 passing, 50 skipped, 0 failures) | 97.9% pass rate | 91.83% backend coverage
 - Lighthouse: 75/100 performance (+67%), 100/100 accessibility
 - Bundle: 78KB gzipped (-85% reduction)
 - Accessibility: 95/100 score, 0 axe violations
@@ -48,7 +48,7 @@ AI-powered documentation generator with real-time streaming, quality scoring (0-
 | Document | Use Case | Key Contents |
 |----------|----------|--------------|
 | [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) | Performance optimization | Lazy loading, bundle analysis, Core Web Vitals, maintenance |
-| [Testing README](docs/testing/README.md) | Test navigation hub | 2,389 test stats, quick commands, coverage overview |
+| [Testing README](docs/testing/README.md) | Test navigation hub | 2,385 test stats, quick commands, coverage overview |
 | [COMPONENT-TEST-COVERAGE.md](docs/testing/COMPONENT-TEST-COVERAGE.md) | Coverage details ⭐ | 13/18 components tested, category breakdown, gaps |
 | [frontend-testing-guide.md](docs/testing/frontend-testing-guide.md) | React testing patterns | Vitest + RTL, mocking, a11y, interactions |
 | [TEST-PATTERNS-GUIDE.md](docs/testing/TEST-PATTERNS-GUIDE.md) | Test fix patterns ⭐⚠️ | **103 tests fixed, 11 patterns** (Pattern 11: ES Modules!), 6 insights, 97.8% pass rate |
@@ -546,10 +546,18 @@ codescribe-ai/
 
 ## 🔄 Version History
 
-**Current: v2.7.2** - Mobile UX Fixes & Appearance Settings Tab (November 11, 2025): **Mobile Fixes** (file upload error logging, code editor viewport h-[70vh]); **Appearance Tab** (Light/Dark/Auto theme options in Settings); **Auto Theme Mode** (follows system preferences); **Theme Controls Relocated** (removed from Header/MobileMenu, now in Settings → Appearance); **Test Fixes** (10 tests updated for 'auto' default theme, 3 Header tests skipped); **2,389 tests** (2,339 passing, 50 skipped, 97.9% pass rate)
+**Current: v2.7.3** - UX Polish & Terminology Consistency (November 11, 2025): **Toast Fix** (page refresh prevention); **Terminology Updates** ("Download" → "Export", "Examples" → "Samples"); **User Display** (first name only, industry standard); **Dark Mode Fixes** (skeleton loader visibility); **DocPanel Spacing** (alignment with code panel); **Test Helper** (loadSkeleton() console function); **22 Test Fixes** (CodePanel, ExamplesModal, DownloadButton, DocPanel); **2,385 tests** (2,335 passing, 50 skipped, 97.9% pass rate)
 
 <details>
-<summary>Previous Versions (v1.0-v2.7.1)</summary>
+<summary>Previous Versions (v1.0-v2.7.2)</summary>
+
+- **v2.7.2** - Mobile UX Fixes & Appearance Settings Tab (November 11, 2025)
+  - Mobile Fixes (file upload error logging, code editor viewport h-[70vh])
+  - Appearance Tab (Light/Dark/Auto theme options in Settings)
+  - Auto Theme Mode (follows system preferences)
+  - Theme Controls Relocated (removed from Header/MobileMenu, now in Settings → Appearance)
+  - Test Fixes (10 tests updated for 'auto' default theme, 3 Header tests skipped)
+  - 2,389 tests (2,339 passing, 50 skipped, 97.9% pass rate)
 
 - **v2.7.1** - Admin Dashboard Fixes & Production Logging Cleanup (November 10, 2025)
   - Admin Dashboard LEFT JOIN (show all registered users, not just those with usage)

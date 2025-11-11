@@ -1,4 +1,4 @@
-import { Sparkles, CheckCircle, AlertCircle, ChevronDown, ChevronUp, MoreVertical, Download, Copy } from 'lucide-react';
+import { Sparkles, CheckCircle, AlertCircle, ChevronDown, ChevronUp, MoreVertical, Download, Copy, RefreshCw } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -153,7 +153,8 @@ export function DocPanel({
   isGenerating = false,
   onViewBreakdown,
   onUpload,
-  onGenerate
+  onGenerate,
+  onReset
 }) {
   const { theme } = useTheme();
 
@@ -162,6 +163,10 @@ export function DocPanel({
     const stored = getStorageItem(STORAGE_KEYS.REPORT_EXPANDED);
     return stored === 'true';
   });
+
+  // Track if documentation was just generated (not loaded from storage)
+  const [justGenerated, setJustGenerated] = useState(false);
+  const prevGeneratingRef = useRef(isGenerating);
 
   // Mobile menu state
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -187,6 +192,18 @@ export function DocPanel({
   useEffect(() => {
     mermaidCounterRef.current = 0;
   }, [documentation]);
+
+  // Track when generation completes (isGenerating changes from true to false)
+  useEffect(() => {
+    if (prevGeneratingRef.current && !isGenerating && documentation) {
+      // Generation just completed
+      setJustGenerated(true);
+      // Reset after announcement
+      const timeout = setTimeout(() => setJustGenerated(false), 3000);
+      return () => clearTimeout(timeout);
+    }
+    prevGeneratingRef.current = isGenerating;
+  }, [isGenerating, documentation]);
 
   // Persist state to localStorage whenever it changes
   useEffect(() => {
@@ -216,8 +233,8 @@ export function DocPanel({
       >
         {isGenerating && !documentation ? 'Generating documentation...' :
          isGenerating && documentation ? 'Updating documentation...' :
-         documentation ? `Documentation generated. Quality score: ${qualityScore?.score} out of 100, grade ${qualityScore?.grade}` :
-         'Ready to generate documentation'}
+         justGenerated && documentation ? `Documentation generated. Quality score: ${qualityScore?.score} out of 100, grade ${qualityScore?.grade}` :
+         ''}
       </div>
 
       {/* Header */}
@@ -278,7 +295,7 @@ export function DocPanel({
             </>
           )}
 
-          {/* Desktop: Download and Copy Buttons */}
+          {/* Desktop: Download, Copy, and Clear Buttons */}
           {documentation && (
             <>
               <div className="hidden md:flex items-center gap-2">
@@ -287,7 +304,7 @@ export function DocPanel({
                   docType={qualityScore?.docType || 'documentation'}
                   size="md"
                   variant="outline"
-                  ariaLabel="Download documentation"
+                  ariaLabel="Export documentation"
                   showLabel={true}
                 />
                 <CopyButton
@@ -297,6 +314,16 @@ export function DocPanel({
                   ariaLabel="Copy documentation"
                   showLabel={true}
                 />
+                <button
+                  type="button"
+                  onClick={onReset}
+                  className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-400 dark:hover:border-slate-500 active:scale-95 transition-all duration-200"
+                  aria-label="Clear documentation"
+                  title="Clear documentation"
+                >
+                  <RefreshCw className="w-4 h-4" aria-hidden="true" />
+                  <span>Clear</span>
+                </button>
               </div>
 
               {/* Mobile: Overflow Menu */}
@@ -329,7 +356,7 @@ export function DocPanel({
                       className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-left"
                     >
                       <Download className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-                      <span className="text-sm text-slate-700 dark:text-slate-200">Download</span>
+                      <span className="text-sm text-slate-700 dark:text-slate-200">Export</span>
                     </button>
                     <button
                       type="button"
@@ -342,6 +369,17 @@ export function DocPanel({
                       <Copy className="w-4 h-4 text-slate-600 dark:text-slate-400" />
                       <span className="text-sm text-slate-700 dark:text-slate-200">Copy</span>
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onReset();
+                        setShowMobileMenu(false);
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-left"
+                    >
+                      <RefreshCw className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                      <span className="text-sm text-slate-700 dark:text-slate-200">Clear</span>
+                    </button>
                   </div>
                 )}
               </div>
@@ -351,11 +389,11 @@ export function DocPanel({
       </div>
 
       {/* Body - Documentation Content */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 bg-white dark:bg-slate-900">
+      <div className="flex-1 overflow-y-auto px-4 py-3 bg-white dark:bg-slate-900">
         {isGenerating && !documentation ? (
           <DocPanelGeneratingSkeleton />
         ) : documentation ? (
-          <div className="prose prose-slate dark:prose-invert max-w-none">
+          <div className="prose prose-slate dark:prose-invert max-w-none [&>*:first-child]:mt-0">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{

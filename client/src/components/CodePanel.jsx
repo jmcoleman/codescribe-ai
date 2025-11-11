@@ -1,6 +1,7 @@
 import { lazy, Suspense, useState, useRef, useEffect } from 'react';
-import { Zap, Loader2, Upload, RefreshCw, BookOpen, MoreVertical, Copy } from 'lucide-react';
+import { Zap, Loader2, Upload, RefreshCw, BookOpen, MoreVertical, Copy, Download } from 'lucide-react';
 import { CopyButton } from './CopyButton';
+import { DownloadButton } from './DownloadButton';
 import { useTheme } from '../contexts/ThemeContext';
 
 // Lazy load Monaco Editor to reduce initial bundle size
@@ -132,12 +133,31 @@ export function CodePanel({
                   import('./ExamplesModal').catch(() => {});
                 }}
                 className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500 rounded-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-purple-600 dark:focus:ring-purple-400 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-900"
-                aria-label="Load code examples"
-                title="Load code examples"
+                aria-label="Load code samples"
+                title="Load code samples"
               >
                 <BookOpen className="w-3.5 h-3.5" aria-hidden="true" />
-                <span>Examples</span>
+                <span>Samples</span>
               </button>
+            )}
+            {code && (
+              <DownloadButton
+                content={code}
+                docType={`code-${language || 'txt'}`}
+                size="md"
+                variant="outline"
+                ariaLabel="Export code"
+                showLabel={true}
+              />
+            )}
+            {code && (
+              <CopyButton
+                text={code}
+                size="md"
+                variant="outline"
+                ariaLabel="Copy code to clipboard"
+                showLabel={true}
+              />
             )}
             {code && !readOnly && onClear && (
               <button
@@ -158,15 +178,6 @@ export function CodePanel({
                 />
                 <span>Clear</span>
               </button>
-            )}
-            {code && (
-              <CopyButton
-                text={code}
-                size="md"
-                variant="outline"
-                ariaLabel="Copy code to clipboard"
-                showLabel={true}
-              />
             )}
           </div>
 
@@ -196,25 +207,36 @@ export function CodePanel({
                     className="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                   >
                     <BookOpen className="w-4 h-4" aria-hidden="true" />
-                    <span>Examples</span>
+                    <span>Samples</span>
                   </button>
                 )}
-                {code && !readOnly && onClear && (
+                {code && (
                   <button
                     type="button"
                     onClick={() => {
-                      setIsClearing(true);
-                      onClear();
-                      setTimeout(() => setIsClearing(false), 500);
+                      // Create a blob and download
+                      const blob = new Blob([code], { type: 'text/plain' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      // Use filename with proper extension based on language
+                      const extension = language === 'javascript' ? 'js' :
+                                       language === 'typescript' ? 'ts' :
+                                       language === 'python' ? 'py' :
+                                       language === 'java' ? 'java' :
+                                       language === 'cpp' ? 'cpp' :
+                                       language === 'go' ? 'go' :
+                                       language === 'rust' ? 'rs' :
+                                       'txt';
+                      a.download = `code-${language || 'txt'}.${extension}`;
+                      a.click();
+                      URL.revokeObjectURL(url);
                       setShowMobileMenu(false);
                     }}
-                    className={`w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors ${isClearing ? 'opacity-75 pointer-events-none' : ''}`}
+                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                   >
-                    <RefreshCw
-                      className={`w-4 h-4 ${isClearing ? 'animate-spin-once' : ''}`}
-                      aria-hidden="true"
-                    />
-                    <span>Clear</span>
+                    <Download className="w-4 h-4" aria-hidden="true" />
+                    <span>Export</span>
                   </button>
                 )}
                 {code && (
@@ -243,6 +265,24 @@ export function CodePanel({
                   >
                     <Copy className="w-4 h-4" aria-hidden="true" />
                     <span>Copy</span>
+                  </button>
+                )}
+                {code && !readOnly && onClear && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsClearing(true);
+                      onClear();
+                      setTimeout(() => setIsClearing(false), 500);
+                      setShowMobileMenu(false);
+                    }}
+                    className={`w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors ${isClearing ? 'opacity-75 pointer-events-none' : ''}`}
+                  >
+                    <RefreshCw
+                      className={`w-4 h-4 ${isClearing ? 'animate-spin-once' : ''}`}
+                      aria-hidden="true"
+                    />
+                    <span>Clear</span>
                   </button>
                 )}
               </div>

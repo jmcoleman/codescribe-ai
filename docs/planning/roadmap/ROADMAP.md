@@ -2,7 +2,7 @@
 
 **Last Updated:** November 11, 2025
 **Current Phase:** Phase 3 - ✅ **Epic 3.1 COMPLETE** (Dark Mode) | 🟡 **Epic 3.3 IN PROGRESS** (Advanced File Handling)
-**Current Release:** v2.7.2 (Mobile UX Fixes & Appearance Settings Tab)
+**Current Release:** v2.7.3 (UX Polish & Terminology Consistency)
 **Production URL:** [https://codescribeai.com](https://codescribeai.com)
 
 ---
@@ -1320,8 +1320,8 @@ ALTER TABLE subscriptions ADD COLUMN stripe_receipt_url VARCHAR(500);
 ## 🎨 Phase 3: UX Enhancements (IN PROGRESS)
 
 **Timeline:** November 8 - TBD
-**Status:** 🔄 **IN PROGRESS** - Epic 3.1 Complete (v2.7.2), Epic 3.3 Active
-**Current Release:** v2.7.2 (Mobile UX Fixes & Appearance Settings Tab)
+**Status:** 🔄 **IN PROGRESS** - Epic 3.1 Complete (v2.7.3), Epic 3.3 Active
+**Current Release:** v2.7.3 (UX Polish & Terminology Consistency)
 **Target Release:** v3.x.x series
 **Strategic Goal:** Transform user experience with customization, flexibility, and advanced file handling capabilities
 
@@ -1331,6 +1331,7 @@ ALTER TABLE subscriptions ADD COLUMN stripe_receipt_url VARCHAR(500);
 - ✅ Nov 8: Epic 3.1 (Dark Mode Complete) - v2.7.0
 - ✅ Nov 9: v2.7.1 (ErrorBoundary Dark Mode & Production Bug Fix)
 - ✅ Nov 11: v2.7.2 (Mobile UX Fixes & Appearance Settings Tab)
+- ✅ Nov 11: v2.7.3 (UX Polish & Terminology Consistency)
 
 **In Progress:**
 - 🟡 Nov 8+: Epic 3.3 (Advanced File Handling) - IN PROGRESS
@@ -1437,6 +1438,59 @@ ALTER TABLE subscriptions ADD COLUMN stripe_receipt_url VARCHAR(500);
 **Documentation:**
 - [CHANGELOG.md v2.7.2](../../CHANGELOG.md) - Complete release notes
 - [SKIPPED-TESTS.md](../../testing/SKIPPED-TESTS.md) - Updated with Header ThemeToggle category
+
+#### v2.7.3: UX Polish & Terminology Consistency (0.5 days) - ✅ COMPLETE
+**Status:** ✅ Complete | Released November 11, 2025 (v2.7.3)
+**Type:** UX Polish Release
+
+**Fixed:**
+- ✅ Toast Notification: Added prevGeneratingRef to track previous isGenerating state
+- ✅ Toast Notification: Only shows when generation actually completes (not on page load)
+- ✅ Toast Notification: Prevents false 'documentation ready' notifications from localStorage data
+- ✅ Dark Mode Skeleton: Added dark:bg-slate-700 to skeleton bars
+- ✅ Dark Mode Skeleton: Added dark:bg-purple-900/30 to purple glow
+- ✅ Dark Mode Skeleton: Added dark:text-slate-200 and dark:text-slate-400 to status text
+- ✅ Dark Mode Skeleton: 'Generating documentation...' text now readable in dark mode
+- ✅ DocPanel Spacing: Reduced padding from py-4 to py-3
+- ✅ DocPanel Spacing: Added [&>*:first-child]:mt-0 to remove first child top margin
+- ✅ DocPanel Spacing: Documentation content now aligns with code panel
+
+**Changed:**
+- ✅ Button Terminology: Changed 'Download' to 'Export' across all download buttons
+- ✅ Button Terminology: Shorter terminology better fits mobile UI constraints
+- ✅ Button Terminology: Updated DownloadButton, CodePanel, DocPanel components
+- ✅ Examples → Samples: Changed 'Examples' to 'Samples' for more accurate representation
+- ✅ Examples → Samples: Updated button labels, modal title, placeholder text
+- ✅ Examples → Samples: Modal now says 'Code Samples', 'Select a code sample to preview', 'Load Sample'
+- ✅ Examples → Samples: Updated CodePanel, ExamplesModal, App.jsx toast notifications
+- ✅ User Display: Added getDisplayName() function in Header component
+- ✅ User Display: Shows first name only (industry standard: Gmail, Slack, Discord, GitHub)
+- ✅ User Display: Fallback to email username when first/last name not provided
+
+**Added:**
+- ✅ Test Helper: New loadSkeleton() console function for manual QA testing
+- ✅ Test Helper: Toggles skeleton UI without triggering API calls
+- ✅ Test Helper: Added testSkeletonMode state for isolated testing
+- ✅ Test Helper: Exposed to window object for easy browser console access
+
+**Test Suite:**
+- ✅ Fixed 22 tests for terminology changes
+- ✅ CodePanel.test.jsx: Updated 'examples' → 'samples'
+- ✅ ExamplesModal.test.jsx: Multiple pattern replacements
+- ✅ DownloadButton.test.jsx: Updated 'Download' → 'Export'
+- ✅ DocPanel.test.jsx: Updated 'Download doc' → 'Export doc'
+- ✅ Maintained 100% pass rate on non-skipped tests
+
+**Test Results:**
+- Frontend: 1,478 passed | 29 skipped (1,507 total) - 98.1% pass rate
+- Backend: 857 passed | 21 skipped (878 total) - 100% pass rate
+- Total: 2,335 passed | 50 skipped (2,385 total) - **97.9% pass rate**
+
+**Documentation:**
+- [CHANGELOG.md v2.7.3](../../CHANGELOG.md) - Complete release notes
+- [README.md](../../README.md) - Updated test counts and metrics
+- [CLAUDE.md](../../CLAUDE.md) - Updated version entry
+- [Testing README](../../testing/README.md) - Updated test statistics
 
 #### Epic 3.3: Advanced File Handling (2-3 days) - 🟡 IN PROGRESS
 **Status:** 🟡 In Progress | Started November 8, 2025

@@ -117,7 +117,7 @@ export function ExamplesModal({ isOpen, onClose, onLoadExample, currentCode }) {
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-700">
-          <h2 id="modal-title" className="text-lg font-semibold text-slate-900 dark:text-slate-100">Code Examples</h2>
+          <h2 id="modal-title" className="text-lg font-semibold text-slate-900 dark:text-slate-100">Code Samples</h2>
           <button
             type="button"
             ref={closeButtonRef}
@@ -165,7 +165,7 @@ export function ExamplesModal({ isOpen, onClose, onLoadExample, currentCode }) {
                 <div>
                   <Code2 className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
                   <p className="text-sm text-slate-500 dark:text-slate-400">
-                    Select an example to preview
+                    Select a code sample to preview
                   </p>
                 </div>
               </div>
@@ -226,7 +226,7 @@ const ExampleCard = React.forwardRef(({ example, isSelected, onPreview, onLoad }
             onLoad();
           }}
           className="flex-shrink-0 p-2 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-700 dark:hover:bg-purple-800 dark:active:bg-purple-900 text-white rounded-lg interactive-scale-sm shadow-lg shadow-purple-600/20 dark:shadow-purple-900/30 focus-ring-dark"
-          aria-label={`Load ${example.title} example`}
+          aria-label={`Load ${example.title} sample`}
           title="Load into editor"
         >
           <ChevronRight className="w-4 h-4" />
@@ -248,7 +248,7 @@ function ExamplePreview({ example, onLoad }) {
           onClick={onLoad}
           className="btn-primary w-full interactive-scale text-sm font-semibold focus-ring-dark"
         >
-          Load This Example
+          Load Sample
         </button>
       </div>
 

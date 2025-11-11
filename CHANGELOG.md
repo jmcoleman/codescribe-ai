@@ -7,6 +7,77 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- **Session-Based Authentication Code** (JWT-only authentication)
+  - Removed express-session, connect-pg-simple, and passport.session from [server/src/server.js](server/src/server.js)
+  - Removed session fallback logic from requireAuth and optionalAuth in [server/src/middleware/auth.js](server/src/middleware/auth.js)
+  - Removed passport serializeUser/deserializeUser functions from [server/src/config/passport.js](server/src/config/passport.js)
+  - Removed 3 session-related tests from [server/src/middleware/__tests__/auth.test.js](server/src/middleware/__tests__/auth.test.js)
+  - Clarified all authentication uses JWT tokens (both email/password and GitHub OAuth)
+  - Tests: All 858 backend tests pass (97.6% pass rate)
+
+---
+
+## [2.7.3] - 2025-11-11
+
+**Status:** ✅ UX Polish & Terminology Consistency
+
+**Summary:** Fixed toast notifications appearing on page refresh, improved button terminology for brevity and clarity ("Download" → "Export", "Examples" → "Samples"), updated user display names to industry standards (first name only), fixed dark mode visibility in skeleton loader, refined DocPanel spacing alignment, and added developer testing tool for skeleton UI.
+
+### Fixed
+
+- **Toast on Page Refresh** ([client/src/App.jsx](client/src/App.jsx:89-98))
+  - Added `prevGeneratingRef` to track previous `isGenerating` state
+  - Toast now only shows when generation actually completes (not on page load with persisted documentation)
+  - Prevents false "documentation ready" notifications from localStorage data
+
+- **Dark Mode Skeleton Visibility** ([client/src/components/SkeletonLoader.jsx](client/src/components/SkeletonLoader.jsx))
+  - Added `dark:bg-slate-700` to skeleton bars
+  - Added `dark:bg-purple-900/30` to purple glow
+  - Added `dark:text-slate-200` and `dark:text-slate-400` to status text
+  - "Generating documentation..." text now readable in dark mode
+
+- **DocPanel Top Spacing Alignment** ([client/src/components/DocPanel.jsx](client/src/components/DocPanel.jsx:91))
+  - Reduced padding from `py-4` to `py-3`
+  - Added `[&>*:first-child]:mt-0` to remove first child top margin
+  - Documentation content now aligns with code panel
+
+### Changed
+
+- **Button Terminology: "Download" → "Export"** (3 files + 2 test files)
+  - [client/src/components/DownloadButton.jsx](client/src/components/DownloadButton.jsx): Changed default ariaLabel and button text
+  - [client/src/components/CodePanel.jsx](client/src/components/CodePanel.jsx): Updated download button labels
+  - [client/src/components/DocPanel.jsx](client/src/components/DocPanel.jsx): Updated download button labels
+  - Shorter terminology better fits mobile UI constraints
+
+- **Terminology: "Examples" → "Samples"** (3 files + 2 test files)
+  - [client/src/components/CodePanel.jsx](client/src/components/CodePanel.jsx): Button text and aria-labels
+  - [client/src/components/ExamplesModal.jsx](client/src/components/ExamplesModal.jsx): Modal title, placeholder text ("Select a code sample to preview"), button text ("Load Sample")
+  - [client/src/App.jsx](client/src/App.jsx): Toast notification text
+  - More accurate representation of code snippets provided
+
+- **User Display Name** ([client/src/components/Header.jsx](client/src/components/Header.jsx:40-46))
+  - Added `getDisplayName()` function showing first name only (industry standard)
+  - Fallback to email username when first/last name not provided
+  - Follows best practices from Gmail, Slack, Discord, GitHub
+
+### Added
+
+- **Skeleton Loader Test Helper** ([client/src/utils/testData.js](client/src/utils/testData.js), [client/src/App.jsx](client/src/App.jsx:100-107))
+  - New `loadSkeleton()` console function for manual QA
+  - Toggles skeleton UI without triggering API calls
+  - Added `testSkeletonMode` state for isolated testing
+  - Exposed to window object for easy browser console access
+
+### Testing
+
+- **Frontend:** 1478 passed | 29 skipped (1507 total)
+- **Backend:** 857 passed | 21 skipped (878 total)
+- **Grand Total:** 2385 tests (2335 passing, 50 skipped, 0 failures)
+- **Pass Rate:** 97.9% (100% of non-skipped tests pass)
+- **Test Files Updated:** CodePanel.test.jsx, ExamplesModal.test.jsx, DownloadButton.test.jsx, DocPanel.test.jsx
+
 ---
 
 ## [2.7.2] - 2025-11-11

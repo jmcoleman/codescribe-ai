@@ -36,6 +36,15 @@ export const Header = forwardRef(function Header({ onMenuClick, onHelpClick }, r
     return 'Subscription';
   };
 
+  // Format display name: First name only (industry standard), else email username
+  const getDisplayName = () => {
+    if (user?.first_name) {
+      return user.first_name;
+    }
+    // Fallback to email username
+    return user?.email?.split('@')[0] || 'Account';
+  };
+
   const handleSignInClick = () => {
     setShowLoginModal(true);
   };
@@ -121,7 +130,7 @@ export const Header = forwardRef(function Header({ onMenuClick, onHelpClick }, r
                           <User className="w-5 h-5 text-slate-600 dark:text-slate-400" aria-hidden="true" />
                           <div className="flex flex-col items-start">
                             <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
-                              {user?.email?.split('@')[0] || 'Account'}
+                              {getDisplayName()}
                             </span>
                             {/* Tier badge */}
                             {user?.tier && user.tier !== 'free' && (

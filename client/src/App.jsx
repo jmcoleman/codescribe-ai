@@ -13,7 +13,7 @@ import { UsageLimitModal } from './components/UsageLimitModal';
 import UnverifiedEmailBanner from './components/UnverifiedEmailBanner';
 import { validateFile, getValidationErrorMessage } from './utils/fileValidation';
 import { trackCodeInput, trackFileUpload, trackExampleUsage, trackInteraction } from './utils/analytics';
-import { createTestDataLoader, exposeTestDataLoader } from './utils/testData';
+import { createTestDataLoader, exposeTestDataLoader, createSkeletonTestHelper, exposeSkeletonTestHelper } from './utils/testData';
 import { exposeUsageSimulator } from './utils/usageTestData';
 import { useAuth } from './contexts/AuthContext';
 import { DEFAULT_CODE } from './constants/defaultCode';
@@ -49,13 +49,16 @@ import {
   toastCompact,
 } from './utils/toast';
 import { API_URL } from './config/api.js';
+import { STORAGE_KEYS, getStorageItem, setStorageItem } from './constants/storage';
 
 function App() {
   const { getToken, user, checkLegalStatus, acceptLegalDocuments } = useAuth();
-  const [code, setCode] = useState(DEFAULT_CODE);
-  const [docType, setDocType] = useState('README');
-  const [language, setLanguage] = useState('javascript');
-  const [filename, setFilename] = useState('code.js');
+
+  // Load persisted state from localStorage on mount, fallback to defaults
+  const [code, setCode] = useState(() => getStorageItem(STORAGE_KEYS.EDITOR_CODE, DEFAULT_CODE));
+  const [docType, setDocType] = useState(() => getStorageItem(STORAGE_KEYS.EDITOR_DOC_TYPE, 'README'));
+  const [language, setLanguage] = useState(() => getStorageItem(STORAGE_KEYS.EDITOR_LANGUAGE, 'javascript'));
+  const [filename, setFilename] = useState(() => getStorageItem(STORAGE_KEYS.EDITOR_FILENAME, 'code.js'));
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showQualityModal, setShowQualityModal] = useState(false);
   const [showExamplesModal, setShowExamplesModal] = useState(false);
@@ -69,6 +72,7 @@ function App() {
   const [largeCodeStats, setLargeCodeStats] = useState(null);
   const [uploadError, setUploadError] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [testSkeletonMode, setTestSkeletonMode] = useState(false);
   const fileInputRef = useRef(null);
   const examplesButtonRef = useRef(null);
   const headerRef = useRef(null);
@@ -123,6 +127,23 @@ function App() {
       setShowSupportModal(true);
     }
   }, [user]);
+
+  // Persist editor state to localStorage whenever it changes
+  useEffect(() => {
+    setStorageItem(STORAGE_KEYS.EDITOR_CODE, code);
+  }, [code]);
+
+  useEffect(() => {
+    setStorageItem(STORAGE_KEYS.EDITOR_LANGUAGE, language);
+  }, [language]);
+
+  useEffect(() => {
+    setStorageItem(STORAGE_KEYS.EDITOR_FILENAME, filename);
+  }, [filename]);
+
+  useEffect(() => {
+    setStorageItem(STORAGE_KEYS.EDITOR_DOC_TYPE, docType);
+  }, [docType]);
 
   // Handle legal document acceptance
   const handleAcceptLegalDocuments = async (acceptance) => {
@@ -247,6 +268,36 @@ function App() {
     error,
     retryAfter
   } = useDocGeneration(refetchUsage);
+
+  // Load persisted documentation and quality score on mount
+  useEffect(() => {
+    const savedDoc = getStorageItem(STORAGE_KEYS.EDITOR_DOCUMENTATION);
+    const savedScore = getStorageItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE);
+
+    if (savedDoc) {
+      setDocumentation(savedDoc);
+    }
+    if (savedScore) {
+      try {
+        setQualityScore(JSON.parse(savedScore));
+      } catch (e) {
+        // Invalid JSON, ignore
+      }
+    }
+  }, [setDocumentation, setQualityScore]);
+
+  // Persist documentation and quality score to localStorage whenever they change
+  useEffect(() => {
+    if (documentation) {
+      setStorageItem(STORAGE_KEYS.EDITOR_DOCUMENTATION, documentation);
+    }
+  }, [documentation]);
+
+  useEffect(() => {
+    if (qualityScore) {
+      setStorageItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE, JSON.stringify(qualityScore));
+    }
+  }, [qualityScore]);
 
   const handleGenerate = async () => {
     if (code.trim()) {
@@ -639,7 +690,7 @@ function App() {
     trackCodeInput('example', example.code.length, example.language);
 
     // Use compact toast for quick, non-intrusive feedback
-    toastCompact('Example loaded successfully', 'success');
+    toastCompact('Sample loaded successfully', 'success');
   };
 
   const handleUpgradeClick = () => {
@@ -670,12 +721,23 @@ function App() {
     return cleanup;
   }, []);
 
-  // Show toast notifications for documentation generation success only
+  // Expose skeleton loader test helper (development/testing)
   useEffect(() => {
-    if (documentation && qualityScore && !isGenerating) {
-      // Documentation was successfully generated
+    const skeletonHelper = createSkeletonTestHelper(setDocumentation, setQualityScore, setTestSkeletonMode);
+    const cleanup = exposeSkeletonTestHelper(skeletonHelper);
+    return cleanup;
+  }, [setDocumentation, setQualityScore, setTestSkeletonMode]);
+
+  // Show toast notifications for documentation generation success only
+  // Track previous isGenerating state to detect generation completion
+  const prevGeneratingRef = useRef(isGenerating);
+
+  useEffect(() => {
+    // Only show toast if generation just completed (not loaded from storage)
+    if (prevGeneratingRef.current && !isGenerating && documentation && qualityScore) {
       toastDocGenerated(qualityScore.grade, qualityScore.score);
     }
+    prevGeneratingRef.current = isGenerating;
   }, [documentation, qualityScore, isGenerating]);
 
   // Error toasts removed - errors are displayed via ErrorBanner component instead
@@ -794,7 +856,7 @@ function App() {
               <DocPanel
               documentation={documentation}
               qualityScore={qualityScore}
-              isGenerating={isGenerating}
+              isGenerating={isGenerating || testSkeletonMode}
               onViewBreakdown={() => {
                 setShowQualityModal(true);
                 trackInteraction('view_quality_breakdown', {
@@ -804,6 +866,13 @@ function App() {
               }}
               onUpload={handleUpload}
               onGenerate={handleGenerate}
+              onReset={() => {
+                // Clear documentation and quality score from state
+                reset();
+                // Clear from localStorage (set to empty string so persistence effect doesn't re-add)
+                setStorageItem(STORAGE_KEYS.EDITOR_DOCUMENTATION, '');
+                setStorageItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE, '');
+              }}
             />
           </Suspense>
           </div>

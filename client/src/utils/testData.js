@@ -170,3 +170,44 @@ export const exposeTestDataLoader = (loaderFunction) => {
     delete window.loadTestDoc;
   };
 };
+
+/**
+ * Creates a skeleton loader test helper function
+ * @param {Function} setDocumentation - Set documentation state
+ * @param {Function} setQualityScore - Set quality score state
+ * @param {Function} setTestSkeletonMode - Set test skeleton mode state
+ * @returns {Function} Test helper function
+ */
+export const createSkeletonTestHelper = (setDocumentation, setQualityScore, setTestSkeletonMode) => {
+  let isSkeletonShowing = false;
+
+  return () => {
+    if (!isSkeletonShowing) {
+      // Show skeleton
+      setDocumentation('');
+      setQualityScore(null);
+      setTestSkeletonMode(true);
+      isSkeletonShowing = true;
+      console.log('✨ Skeleton loader visible. Type loadSkeleton() to toggle off.');
+    } else {
+      // Hide skeleton
+      setTestSkeletonMode(false);
+      isSkeletonShowing = false;
+      console.log('👍 Skeleton loader hidden.');
+    }
+  };
+};
+
+/**
+ * Exposes skeleton test helper to window object for console access
+ * @param {Function} helperFunction - The skeleton test helper function
+ * @returns {Function} Cleanup function to remove the window property
+ */
+export const exposeSkeletonTestHelper = (helperFunction) => {
+  window.loadSkeleton = helperFunction;
+
+  // Return cleanup function
+  return () => {
+    delete window.loadSkeleton;
+  };
+};

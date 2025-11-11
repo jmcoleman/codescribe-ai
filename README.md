@@ -459,7 +459,7 @@ For a complete navigation guide with descriptions of all documentation, see **[D
 
 **Development & Testing:**
 - **[Dev Guide](docs/planning/mvp/05-Dev-Guide.md)** - Implementation guide with code examples
-- **[Testing Hub](docs/testing/README.md)** - 2,389 tests (2,342 passing, 47 skipped), coverage reports, test patterns
+- **[Testing Hub](docs/testing/README.md)** - 2,385 tests (2,335 passing, 50 skipped), coverage reports, test patterns
 - **[Test Fixes Guide](docs/testing/TEST-PATTERNS-GUIDE.md)** - Testing patterns & best practices
 
 **Design & UX:**
@@ -761,8 +761,8 @@ See [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) for complete
 
 ### 📊 Testing & Quality
 
-**Comprehensive Test Coverage: 2,389 Tests** (2,339 passing, 50 skipped, 97.9% pass rate)
-- **Backend Tests**: 881 tests (860 passing, 21 skipped) - Jest + Supertest
+**Comprehensive Test Coverage: 2,385 Tests** (2,335 passing, 50 skipped, 97.9% pass rate)
+- **Backend Tests**: 878 tests (857 passing, 21 skipped) - Jest + Supertest
   - Service layer: qualityScorer, claudeClient, codeParser, docGenerator, emailService
   - Authentication: 102 tests (auth middleware, user model, OAuth flows)
   - Settings: 26 integration tests (profile, email, password, preferences)
@@ -773,8 +773,8 @@ See [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) for complete
   - Integration: file upload, quality scoring, prompt quality, settings API
   - Mermaid generation tests
   - **Coverage**: 91.83% services statements, 95.81% overall, 88.72% branches
-  - **Pass Rate**: 100% (860 passing, 21 skipped, 0 failures)
-- **Frontend Tests**: 1,508 tests (1,479 passing, 29 skipped) - Vitest + React Testing Library
+  - **Pass Rate**: 100% (857 passing, 21 skipped, 0 failures)
+- **Frontend Tests**: 1,507 tests (1,478 passing, 29 skipped) - Vitest + React Testing Library
   - Component tests with accessibility checks (18/18 components tested)
   - Authentication UI: SignupModal, LoginModal, ForgotPasswordModal, ResetPasswordModal
   - Settings UI: AccountTab, AppearanceTab, PrivacyTab, SubscriptionTab, DangerZoneTab, AnalyticsWrapper
@@ -786,7 +786,7 @@ See [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) for complete
   - Mermaid diagram rendering tests
   - Toast notification system tests (33 tests)
   - **Coverage**: 100% critical user paths
-  - **Pass Rate**: 100% (1,479 passing, 29 skipped, 0 failures)
+  - **Pass Rate**: 100% (1,478 passing, 29 skipped, 0 failures)
 - **E2E Tests**: 10 tests across 5 browsers (Playwright)
   - Cross-browser validation (Chromium, Firefox, WebKit, Chrome, Edge)
   - File upload + generate workflows
@@ -853,7 +853,7 @@ npm run test:e2e:headed       # With browser UI (for debugging)
   - Custom Monaco & Prism syntax highlighting themes
   - ThemeContext with localStorage and system preference detection
   - 106 dark mode tests + critical ErrorBoundary fixes
-  - 2,389 tests (2,342 passing, 47 skipped, 100% pass rate)
+  - 2,385 tests (2,335 passing, 50 skipped, 100% pass rate)
 - **Phase 2 - Next Epic:** 📋 Epic 2.8 - Subscription Management UI (Customer Portal, upgrade/downgrade flows)
 
 ### ✅ Phase 1.0 & 1.5 Complete (Oct 11-19, 2025)
@@ -868,9 +868,9 @@ npm run test:e2e:headed       # With browser UI (for debugging)
 - Production deployment with CI/CD (GitHub Actions)
 
 **Quality Metrics:**
-- **2,389 tests** (1,508 frontend, 881 backend) - 100% pass rate
-- **Backend coverage:** 91.83% overall (860 passing, 21 skipped)
-- **Frontend coverage:** 100% critical paths (1,482 passing, 26 skipped)
+- **2,385 tests** (1,507 frontend, 878 backend) - 100% pass rate
+- **Backend coverage:** 91.83% overall (857 passing, 21 skipped)
+- **Frontend coverage:** 100% critical paths (1,478 passing, 29 skipped)
 - **Database:** 14 migration tests (Docker sandbox + Neon dev validation)
 
 ### ✅ Phase 2 - Epic 2.6 Complete (Nov 5-7, 2025)
@@ -927,7 +927,7 @@ npm run test:e2e:headed       # With browser UI (for debugging)
   - Manual testing route (/test-error) for verification
 
 **Testing & Quality:**
-- **2,389 tests** (2,342 passing, 47 skipped) - 100% pass rate
+- **2,385 tests** (2,335 passing, 50 skipped) - 100% pass rate
 - 106 new dark mode tests (ThemeContext, ThemeToggle, components, integration)
 - 3 critical test fixes (ContactSupportModal, DocPanel, UsageLimitModal)
 - Updated documentation (CHANGELOG, ERROR-HANDLING-TESTS.md, ROADMAP)
@@ -958,7 +958,7 @@ npm run test:e2e:headed       # With browser UI (for debugging)
   - Custom syntax highlighting themes (Monaco, Prism)
   - ThemeContext with system preference detection
   - ErrorBoundary fixes & manual testing route
-  - 2,389 tests (100% pass rate)
+  - 2,385 tests (100% pass rate)
 - 📋 Epic 2.8: Subscription Management UI - **PLANNED**
   - Customer portal with upgrade/downgrade flows
   - Billing history and invoice management

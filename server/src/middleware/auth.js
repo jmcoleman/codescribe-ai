@@ -2,86 +2,56 @@
  * Authentication Middleware
  *
  * Provides middleware for protecting routes and validating requests.
- * Supports both JWT and session-based authentication.
+ * Uses JWT authentication only (both email/password and GitHub OAuth).
  */
 
-import passport from 'passport';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 
 /**
- * Require authentication via JWT or session
+ * Require authentication via JWT
  * Attaches user to req.user if authenticated
  * Returns 401 if not authenticated
  */
 const requireAuth = async (req, res, next) => {
-  // Try JWT first (for API clients)
   const token = extractTokenFromHeader(req);
 
-  if (token) {
-    try {
-      // Verify token synchronously
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-      // Token is valid, fetch full user data including tier
-      const user = await User.findById(decoded.sub);
-
-      if (!user) {
-        return res.status(401).json({
-          success: false,
-          error: 'User not found'
-        });
-      }
-
-      req.user = user;
-      return next();
-    } catch (error) {
-      // JWT verification failed or database error
-      if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
-        return res.status(401).json({
-          success: false,
-          error: 'Invalid or expired token'
-        });
-      }
-
-      console.error('[Auth] Error fetching user data:', error);
-      return res.status(500).json({
-        success: false,
-        error: 'Authentication error'
-      });
-    }
-  }
-  // Fall back to session authentication
-  else if (req.isAuthenticated && req.isAuthenticated()) {
-    // Check if session deserialization actually loaded a user
-    if (!req.user) {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[Auth] Session exists but no user loaded - clearing session');
-      }
-      // Destroy invalid session
-      req.logout((err) => {
-        if (err && process.env.NODE_ENV === 'development') {
-          console.error('[Auth] Error logging out:', err);
-        }
-      });
-      req.session.destroy((err) => {
-        if (err && process.env.NODE_ENV === 'development') {
-          console.error('[Auth] Error destroying session:', err);
-        }
-      });
-      return res.status(401).json({
-        success: false,
-        error: 'Invalid session - please log in again',
-        sessionCleared: true
-      });
-    }
-    return next();
-  }
-  // No valid authentication found
-  else {
+  if (!token) {
     return res.status(401).json({
       success: false,
       error: 'Authentication required'
+    });
+  }
+
+  try {
+    // Verify token synchronously
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Token is valid, fetch full user data including tier
+    const user = await User.findById(decoded.sub);
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+
+    req.user = user;
+    return next();
+  } catch (error) {
+    // JWT verification failed or database error
+    if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid or expired token'
+      });
+    }
+
+    console.error('[Auth] Error fetching user data:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Authentication error'
     });
   }
 };
@@ -94,33 +64,31 @@ const requireAuth = async (req, res, next) => {
 const optionalAuth = async (req, res, next) => {
   const token = extractTokenFromHeader(req);
 
-  if (token) {
-    try {
-      // Verify token synchronously
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-      if (decoded.sub) {
-        // Fetch full user data including tier
-        const user = await User.findById(decoded.sub);
-
-        if (user) {
-          req.user = user;
-        }
-      }
-    } catch (error) {
-      // JWT verification failed or database error - continue without user
-      if (process.env.NODE_ENV === 'development') {
-        console.error('[Auth] Error in optionalAuth:', error.message);
-      }
-    }
-    return next();
-  } else if (req.isAuthenticated && req.isAuthenticated()) {
-    // User is authenticated via session
-    return next();
-  } else {
+  if (!token) {
     // Not authenticated, but that's okay
     return next();
   }
+
+  try {
+    // Verify token synchronously
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    if (decoded.sub) {
+      // Fetch full user data including tier
+      const user = await User.findById(decoded.sub);
+
+      if (user) {
+        req.user = user;
+      }
+    }
+  } catch (error) {
+    // JWT verification failed or database error - continue without user
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[Auth] Error in optionalAuth:', error.message);
+    }
+  }
+
+  return next();
 };
 
 /**

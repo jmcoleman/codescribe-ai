@@ -61,16 +61,6 @@ describe('Auth Middleware', () => {
       expect(res.status).not.toHaveBeenCalled();
     });
 
-    it('should allow request with valid session', () => {
-      req.isAuthenticated.mockReturnValue(true);
-      req.user = { id: 123 };
-
-      requireAuth(req, res, next);
-
-      expect(next).toHaveBeenCalled();
-      expect(res.status).not.toHaveBeenCalled();
-    });
-
     it('should reject request without authentication', () => {
       req.isAuthenticated.mockReturnValue(false);
 
@@ -147,26 +137,6 @@ describe('Auth Middleware', () => {
       expect(req.user.id).toBe(789); // JWT takes precedence
     });
 
-    it('should clear invalid session when user is not loaded', () => {
-      req.isAuthenticated.mockReturnValue(true);
-      req.user = null; // Session exists but user not loaded
-      req.logout = jest.fn((callback) => callback());
-      req.session = {
-        destroy: jest.fn((callback) => callback())
-      };
-
-      requireAuth(req, res, next);
-
-      expect(req.logout).toHaveBeenCalled();
-      expect(req.session.destroy).toHaveBeenCalled();
-      expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({
-        success: false,
-        error: 'Invalid session - please log in again',
-        sessionCleared: true
-      });
-      expect(next).not.toHaveBeenCalled();
-    });
   });
 
   describe('optionalAuth', () => {
@@ -183,16 +153,6 @@ describe('Auth Middleware', () => {
       expect(User.findById).toHaveBeenCalledWith(123);
       expect(next).toHaveBeenCalled();
       expect(req.user).toEqual(mockUser);
-    });
-
-    it('should attach user if session is valid', () => {
-      req.isAuthenticated.mockReturnValue(true);
-      req.user = { id: 456 };
-
-      optionalAuth(req, res, next);
-
-      expect(next).toHaveBeenCalled();
-      expect(req.user).toEqual({ id: 456 });
     });
 
     it('should continue without user if not authenticated', () => {

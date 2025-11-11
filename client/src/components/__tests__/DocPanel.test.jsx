@@ -604,8 +604,8 @@ Retrieve all users.
       // Note: DOM may contain both mobile and desktop variants (hidden with CSS)
       // So we check for specific buttons by their accessible names instead of counting all buttons
 
-      // Download button
-      const downloadButton = screen.getByRole('button', { name: /Download doc/i });
+      // Export button
+      const downloadButton = screen.getByRole('button', { name: /Export doc/i });
       expect(downloadButton).toBeInTheDocument();
       expect(downloadButton).toBeEnabled();
 

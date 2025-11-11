@@ -1,9 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import session from 'express-session';
-import connectPgSimple from 'connect-pg-simple';
 import passport from 'passport';
-import pg from 'pg';
 
 import apiRoutes from './routes/api.js';
 import migrateRoutes from './routes/migrate.js';
@@ -17,8 +14,6 @@ import errorHandler from './middleware/errorHandler.js';
 import { initializeDatabase, testConnection } from './db/connection.js';
 import authRoutesModule from './routes/auth.js';
 import './config/passport.js'; // Initialize passport strategies
-
-const { Pool } = pg;
 
 const app = express();
 
@@ -75,52 +70,11 @@ if (ENABLE_AUTH) {
 
   app.use(express.json({ limit: '10mb' }));
 
-  // Session configuration (for Passport)
-  const PgSession = connectPgSimple(session);
-
-  // Create a dedicated pg Pool for session store
-  // connect-pg-simple requires a standard pg.Pool, not @vercel/postgres
-  const sessionPool = new Pool({
-    connectionString: process.env.POSTGRES_URL,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-    max: 2, // Limit connections for session store (serverless optimization)
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 10000,
-  });
-
-  sessionPool.on('error', (err) => {
-    console.error('[Session Pool] Unexpected error on idle client', err);
-  });
-
-  console.log('[Session] Initializing session store with postgres pool');
-
-  app.use(
-    session({
-      store: new PgSession({
-        pool: sessionPool,
-        tableName: 'session',
-        createTableIfMissing: false, // We create it in initializeDatabase
-        errorLog: (...args) => console.error('[Session Store]', ...args) // Log session store errors
-      }),
-      secret: process.env.SESSION_SECRET || 'your-session-secret-change-in-production',
-      resave: false,
-      saveUninitialized: false,
-      cookie: {
-        secure: process.env.NODE_ENV === 'production', // HTTPS only in production
-        httpOnly: true,
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax' // Required for cross-origin in production
-      }
-    })
-  );
-
-  console.log('[Session] Session middleware configured successfully');
-
-  // Initialize Passport
+  // Initialize Passport (JWT-only, no sessions)
+  // Both email/password and GitHub OAuth use JWT tokens
   app.use(passport.initialize());
-  app.use(passport.session());
 
-  console.log('✓ Authentication features enabled');
+  console.log('✓ Authentication features enabled (JWT-only)');
 } else {
   // CORS without auth features
   const developmentOrigins = ['http://localhost:5173', 'http://localhost:5174'];

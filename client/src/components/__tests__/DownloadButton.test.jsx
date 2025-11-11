@@ -43,7 +43,7 @@ describe('DownloadButton', () => {
 
     it('should use default aria-label when not provided', () => {
       render(<DownloadButton content="Test content" />);
-      const button = screen.getByLabelText('Download');
+      const button = screen.getByLabelText('Export');
       expect(button).toBeInTheDocument();
     });
 

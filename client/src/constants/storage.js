@@ -22,6 +22,14 @@ export const STORAGE_KEYS = {
   // UI State (localStorage - user preferences)
   REPORT_EXPANDED: 'codescribeai:local:ui:report-expanded',
 
+  // Editor State (localStorage - persists code/docs across refreshes)
+  EDITOR_CODE: 'codescribeai:local:editor:code',
+  EDITOR_LANGUAGE: 'codescribeai:local:editor:language',
+  EDITOR_FILENAME: 'codescribeai:local:editor:filename',
+  EDITOR_DOC_TYPE: 'codescribeai:local:editor:doc-type',
+  EDITOR_DOCUMENTATION: 'codescribeai:local:editor:documentation',
+  EDITOR_QUALITY_SCORE: 'codescribeai:local:editor:quality-score',
+
   // Toast History (localStorage - persists for debugging)
   TOAST_HISTORY: 'codescribeai:local:toast:history',
 

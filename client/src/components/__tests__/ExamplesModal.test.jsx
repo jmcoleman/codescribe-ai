@@ -22,12 +22,12 @@ describe('ExamplesModal', () => {
   describe('Rendering', () => {
     it('should not render when isOpen is false', () => {
       render(<ExamplesModal {...defaultProps} isOpen={false} />);
-      expect(screen.queryByText('Code Examples')).not.toBeInTheDocument();
+      expect(screen.queryByText('Code Samples')).not.toBeInTheDocument();
     });
 
     it('should render modal header when isOpen is true', () => {
       render(<ExamplesModal {...defaultProps} />);
-      expect(screen.getByText('Code Examples')).toBeInTheDocument();
+      expect(screen.getByText('Code Samples')).toBeInTheDocument();
     });
 
     it('should render all code examples', () => {
@@ -66,7 +66,7 @@ describe('ExamplesModal', () => {
 
     it('should render empty state for preview panel initially', () => {
       render(<ExamplesModal {...defaultProps} />);
-      expect(screen.getByText('Select an example to preview')).toBeInTheDocument();
+      expect(screen.getByText('Select a code sample to preview')).toBeInTheDocument();
     });
   });
 
@@ -80,8 +80,8 @@ describe('ExamplesModal', () => {
 
       await user.click(card);
 
-      // Preview should show "Load This Example" button and code
-      expect(screen.getByText('Load This Example')).toBeInTheDocument();
+      // Preview should show "Load Sample" button and code
+      expect(screen.getByText('Load Sample')).toBeInTheDocument();
 
       // Code should be visible
       const codeBlock = screen.getByText((content, element) => {
@@ -132,7 +132,7 @@ describe('ExamplesModal', () => {
       const firstExample = codeExamples[0];
 
       // Find the load button (ChevronRight) for the first example
-      const loadButtons = screen.getAllByLabelText(/Load .* example/);
+      const loadButtons = screen.getAllByLabelText(/Load .* sample/);
       await user.click(loadButtons[0]);
 
       expect(mockOnLoadExample).toHaveBeenCalledWith(firstExample);
@@ -143,7 +143,7 @@ describe('ExamplesModal', () => {
       const user = userEvent.setup();
       render(<ExamplesModal {...defaultProps} />);
 
-      const loadButtons = screen.getAllByLabelText(/Load .* example/);
+      const loadButtons = screen.getAllByLabelText(/Load .* sample/);
       await user.click(loadButtons[0]);
 
       expect(mockOnClose).toHaveBeenCalledTimes(1);
@@ -161,7 +161,7 @@ describe('ExamplesModal', () => {
       expect(card).not.toHaveClass('bg-purple-50');
 
       // Click load button
-      const loadButtons = screen.getAllByLabelText(/Load .* example/);
+      const loadButtons = screen.getAllByLabelText(/Load .* sample/);
       await user.click(loadButtons[0]);
 
       // Card should still not have selected styling (load button was clicked directly, not preview)
@@ -186,7 +186,7 @@ describe('ExamplesModal', () => {
       expect(codeBlock).toBeInTheDocument();
     });
 
-    it('should display "Load This Example" button in preview panel', async () => {
+    it('should display "Load Sample" button in preview panel', async () => {
       const user = userEvent.setup();
       render(<ExamplesModal {...defaultProps} />);
 
@@ -195,10 +195,10 @@ describe('ExamplesModal', () => {
 
       await user.click(card);
 
-      expect(screen.getByText('Load This Example')).toBeInTheDocument();
+      expect(screen.getByText('Load Sample')).toBeInTheDocument();
     });
 
-    it('should load example when clicking "Load This Example" button', async () => {
+    it('should load example when clicking "Load Sample" button', async () => {
       const user = userEvent.setup();
       render(<ExamplesModal {...defaultProps} />);
 
@@ -207,7 +207,7 @@ describe('ExamplesModal', () => {
 
       await user.click(card);
 
-      const loadButton = screen.getByText('Load This Example');
+      const loadButton = screen.getByText('Load Sample');
       await user.click(loadButton);
 
       expect(mockOnLoadExample).toHaveBeenCalledWith(firstExample);
@@ -224,7 +224,7 @@ describe('ExamplesModal', () => {
       await user.click(card);
 
       // Preview should show code immediately with Load button
-      expect(screen.getByText('Load This Example')).toBeInTheDocument();
+      expect(screen.getByText('Load Sample')).toBeInTheDocument();
 
       // Code should be visible in preview
       const codeBlock = screen.getByText((content, element) => {
@@ -260,7 +260,7 @@ describe('ExamplesModal', () => {
       render(<ExamplesModal {...defaultProps} />);
 
       codeExamples.forEach(example => {
-        expect(screen.getByLabelText(`Load ${example.title} example`)).toBeInTheDocument();
+        expect(screen.getByLabelText(`Load ${example.title} sample`)).toBeInTheDocument();
       });
     });
 
@@ -335,7 +335,7 @@ describe('ExamplesModal', () => {
       card.focus();
       await user.keyboard('{Enter}');
 
-      expect(screen.getByText('Load This Example')).toBeInTheDocument();
+      expect(screen.getByText('Load Sample')).toBeInTheDocument();
       expect(card).toHaveAttribute('aria-pressed', 'true');
     });
 
@@ -349,7 +349,7 @@ describe('ExamplesModal', () => {
       card.focus();
       await user.keyboard(' ');
 
-      expect(screen.getByText('Load This Example')).toBeInTheDocument();
+      expect(screen.getByText('Load Sample')).toBeInTheDocument();
       expect(card).toHaveAttribute('aria-pressed', 'true');
     });
 
@@ -409,7 +409,7 @@ describe('ExamplesModal', () => {
 
       // Card should be selected
       expect(card).toHaveAttribute('aria-pressed', 'true');
-      expect(screen.getByText('Load This Example')).toBeInTheDocument();
+      expect(screen.getByText('Load Sample')).toBeInTheDocument();
     });
 
     it('should support both Enter and Space consistently', async () => {
@@ -504,7 +504,7 @@ describe('ExamplesModal', () => {
     it('should have modal title with correct id', () => {
       render(<ExamplesModal {...defaultProps} />);
 
-      const title = screen.getByText('Code Examples');
+      const title = screen.getByText('Code Samples');
       expect(title).toHaveAttribute('id', 'modal-title');
     });
 
@@ -527,7 +527,7 @@ describe('ExamplesModal', () => {
       const user = userEvent.setup();
       render(<ExamplesModal {...defaultProps} />);
 
-      const loadButtons = screen.getAllByLabelText(/Load .* example/);
+      const loadButtons = screen.getAllByLabelText(/Load .* sample/);
 
       // Click multiple times rapidly
       await user.click(loadButtons[0]);
@@ -561,11 +561,11 @@ describe('ExamplesModal', () => {
 
       // Open modal
       rerender(<ExamplesModal {...defaultProps} isOpen={true} />);
-      expect(screen.getByText('Code Examples')).toBeInTheDocument();
+      expect(screen.getByText('Code Samples')).toBeInTheDocument();
 
       // Close modal
       rerender(<ExamplesModal {...defaultProps} isOpen={false} />);
-      expect(screen.queryByText('Code Examples')).not.toBeInTheDocument();
+      expect(screen.queryByText('Code Samples')).not.toBeInTheDocument();
     });
   });
 
@@ -573,7 +573,7 @@ describe('ExamplesModal', () => {
     it('should render all 7 examples', () => {
       render(<ExamplesModal {...defaultProps} />);
 
-      const exampleCards = screen.getAllByLabelText(/Load .* example/);
+      const exampleCards = screen.getAllByLabelText(/Load .* sample/);
       expect(exampleCards).toHaveLength(7);
     });
 

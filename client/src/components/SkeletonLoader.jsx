@@ -3,7 +3,7 @@
  * Provides animated placeholder elements with different variants
  */
 export function SkeletonLoader({ variant = 'text', className = '', ...props }) {
-  const baseClasses = 'animate-pulse bg-slate-200 rounded';
+  const baseClasses = 'animate-pulse bg-slate-200 dark:bg-slate-700 rounded';
 
   const variants = {
     text: 'h-4 w-full',
@@ -159,7 +159,7 @@ export function DocPanelGeneratingSkeleton() {
     <div className="flex flex-col items-center justify-center h-full text-center space-y-6">
       {/* Animated icon */}
       <div className="relative">
-        <div className="absolute inset-0 bg-purple-200 rounded-full blur-xl animate-pulse" />
+        <div className="absolute inset-0 bg-purple-200 dark:bg-purple-900/30 rounded-full blur-xl animate-pulse" />
         <div className="relative w-16 h-16 flex items-center justify-center text-4xl animate-bounce">
           ✨
         </div>
@@ -167,8 +167,8 @@ export function DocPanelGeneratingSkeleton() {
 
       {/* Status text */}
       <div className="space-y-2">
-        <p className="text-sm font-medium text-slate-700">Generating documentation...</p>
-        <p className="text-xs text-slate-500">This may take a few moments</p>
+        <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Generating documentation...</p>
+        <p className="text-xs text-slate-500 dark:text-slate-400">This may take a few moments</p>
       </div>
 
       {/* Animated lines representing streaming content */}
