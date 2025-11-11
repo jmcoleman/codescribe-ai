@@ -68,6 +68,7 @@ function App() {
   const [legalStatus, setLegalStatus] = useState(null);
   const [largeCodeStats, setLargeCodeStats] = useState(null);
   const [uploadError, setUploadError] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
   const examplesButtonRef = useRef(null);
   const headerRef = useRef(null);
@@ -308,8 +309,21 @@ function App() {
   const processFileUpload = async (file, retryCount = 0) => {
     if (!file) return;
 
-    // Clear any previous upload errors
+    // Clear any previous upload errors and set loading state
     setUploadError(null);
+    setIsUploading(true);
+
+    // Log detailed file information for debugging
+    console.log('[App] Processing file upload:', {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      lastModified: file.lastModified,
+      lastModifiedDate: file.lastModifiedDate,
+      retryCount,
+      userAgent: navigator.userAgent,
+      online: navigator.onLine,
+    });
 
     // Detect if file might be from cloud storage (Dropbox, Google Drive, etc.)
     // Cloud storage files often have these characteristics on mobile:
@@ -322,8 +336,10 @@ function App() {
       console.log('[App] Detected potential cloud storage file (Dropbox/Google Drive)');
       // Show a loading toast for cloud files to set expectations
       if (retryCount === 0) {
-        toastCompact('Downloading file from cloud storage...', 'loading');
+        toastCompact('Preparing file from cloud storage...', 'loading');
       }
+    } else if (retryCount === 0) {
+      toastCompact('Uploading file...', 'loading');
     }
 
     try {
@@ -447,6 +463,9 @@ function App() {
 
         // Show success toast with compact variant for non-intrusive feedback
         toastCompact(`File uploaded successfully`, 'success');
+
+        // Clear loading state
+        setIsUploading(false);
       }
     } catch (error) {
       console.error('[App] Error uploading file:', error);
@@ -458,6 +477,15 @@ function App() {
         uploadUrl: API_URL ? `${API_URL}/api/upload` : '/api/upload',
         isCloudFile: isLikelyCloudFile,
         retryCount,
+        navigator: {
+          online: navigator.onLine,
+          userAgent: navigator.userAgent,
+          connection: navigator.connection ? {
+            effectiveType: navigator.connection.effectiveType,
+            downlink: navigator.connection.downlink,
+            rtt: navigator.connection.rtt,
+          } : 'not available',
+        },
       });
 
       // Check if this is an AbortError (timeout)
@@ -522,6 +550,9 @@ function App() {
 
       setUploadError(JSON.stringify(errorObject));
 
+      // Clear loading state
+      setIsUploading(false);
+
       // Track failed file upload
       trackFileUpload({
         fileType: file.name.split('.').pop(),
@@ -530,6 +561,9 @@ function App() {
       });
 
       // No toast needed - error banner will display the error
+    } finally {
+      // Ensure loading state is always cleared
+      setIsUploading(false);
     }
   };
 
@@ -713,6 +747,7 @@ function App() {
           onUpload={handleUpload}
           onGithubImport={handleGithubImport}
           isGenerating={isGenerating}
+          isUploading={isUploading}
           generateDisabled={!code.trim()}
         />
 

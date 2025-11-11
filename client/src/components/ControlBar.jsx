@@ -12,6 +12,7 @@ export function ControlBar({
   onUpload,
   onGithubImport,
   isGenerating = false,
+  isUploading = false,
   generateDisabled = false,
   disabled = false
 }) {
@@ -32,9 +33,10 @@ export function ControlBar({
             variant="secondary"
             icon={Upload}
             onClick={onUpload}
-            disabled={disabled}
+            disabled={disabled || isUploading}
+            loading={isUploading}
           >
-            Upload Files
+            {isUploading ? 'Uploading...' : 'Upload Files'}
           </Button>
 
           {ENABLE_GITHUB_IMPORT && (
