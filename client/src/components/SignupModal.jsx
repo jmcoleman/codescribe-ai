@@ -324,11 +324,23 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin, subscriptionCont
           {subscriptionContext && (
             <div className="p-4 bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-900/50 rounded-lg">
               <p className="text-sm text-purple-900 dark:text-purple-100">
-                <span className="font-semibold">Subscribing to {subscriptionContext.tierName}</span>
-                <br />
-                <span className="text-purple-700 dark:text-purple-300">
-                  Sign up and verify your email to complete your subscription
-                </span>
+                {subscriptionContext.tier === 'team' || subscriptionContext.tier === 'enterprise' ? (
+                  <>
+                    <span className="font-semibold">Contact Sales - {subscriptionContext.tierName} Plan</span>
+                    <br />
+                    <span className="text-purple-700 dark:text-purple-300">
+                      Create an account to connect with our sales team and discuss your needs
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span className="font-semibold">Subscribing to {subscriptionContext.tierName}</span>
+                    <br />
+                    <span className="text-purple-700 dark:text-purple-300">
+                      Sign up and verify your email to complete your subscription
+                    </span>
+                  </>
+                )}
               </p>
             </div>
           )}

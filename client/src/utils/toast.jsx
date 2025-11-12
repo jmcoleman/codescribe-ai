@@ -39,7 +39,7 @@ const DEFAULT_OPTIONS = {
     fontWeight: '400', // font-normal
     padding: '1rem', // 16px - matches CustomToast p-4
     maxWidth: '28rem', // 448px - matches CustomToast max-w-md
-    border: '1px solid #67E8F9', // cyan-300 - brand cyan border for consistency
+    border: '1px solid rgb(203 213 225)', // slate-300 - neutral border for better app cohesion
     boxShadow: '0 20px 50px rgba(0, 0, 0, 0.12), 0 8px 20px rgba(0, 0, 0, 0.08)', // matches CustomToast
     backdropFilter: 'blur(8px)', // matches CustomToast backdrop-blur-sm
     display: 'flex', // Enable flexbox
@@ -53,7 +53,7 @@ const DEFAULT_OPTIONS = {
       secondary: '#FFFFFF', // white background for icon
     },
     style: {
-      border: '1px solid #67E8F9', // cyan-300 - consistent brand border (status shown via icon)
+      border: '1px solid rgb(203 213 225)', // slate-300 - neutral border for better app cohesion
       boxShadow: '0 20px 50px rgba(0, 0, 0, 0.12), 0 8px 20px rgba(0, 0, 0, 0.08)', // consistent shadow
       fontSize: '0.875rem', // text-sm - CONSISTENT
       fontWeight: '400', // font-normal - CONSISTENT
@@ -66,7 +66,7 @@ const DEFAULT_OPTIONS = {
       secondary: '#FFFFFF', // white background for icon
     },
     style: {
-      border: '1px solid #67E8F9', // cyan-300 - consistent brand border (status shown via icon)
+      border: '1px solid rgb(203 213 225)', // slate-300 - neutral border for better app cohesion
       boxShadow: '0 20px 50px rgba(0, 0, 0, 0.12), 0 8px 20px rgba(0, 0, 0, 0.08)', // consistent shadow
       fontSize: '0.875rem', // text-sm - CONSISTENT
       fontWeight: '400', // font-normal - CONSISTENT
@@ -78,7 +78,7 @@ const DEFAULT_OPTIONS = {
       secondary: '#FFFFFF', // white background for icon
     },
     style: {
-      border: '1px solid #67E8F9', // cyan-300 - consistent brand border (status shown via icon)
+      border: '1px solid rgb(203 213 225)', // slate-300 - neutral border for better app cohesion
       boxShadow: '0 20px 50px rgba(0, 0, 0, 0.12), 0 8px 20px rgba(0, 0, 0, 0.08)', // consistent shadow
       fontSize: '0.875rem', // text-sm - CONSISTENT
       fontWeight: '400', // font-normal - CONSISTENT

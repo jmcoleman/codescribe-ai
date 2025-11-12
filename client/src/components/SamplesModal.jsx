@@ -359,29 +359,29 @@ function SamplePreview({ sample, onLoad, loadButtonRef }) {
   return (
     <div className="flex flex-col h-full">
       {/* Code Preview */}
-      <div className="flex-1 overflow-y-auto bg-slate-800 dark:bg-slate-900">
+      <div className="flex-1 overflow-y-auto bg-slate-100 dark:bg-slate-900">
         <div className="h-full flex flex-col">
           {/* Enhanced Header with Title and Badges */}
-          <div className="px-4 py-3 border-b border-slate-700 bg-slate-800 dark:bg-slate-900">
+          <div className="px-4 py-3 border-b border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-900">
             <div className="flex items-center gap-2 mb-2">
-              <h4 className="text-sm font-semibold text-slate-200 flex-1">
+              <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-200 flex-1">
                 {sample.title}
               </h4>
               <span className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 rounded text-xs font-bold uppercase tracking-wide">
                 {sample.docType}
               </span>
-              <span className="px-2 py-0.5 bg-slate-700 dark:bg-slate-700 text-slate-300 dark:text-slate-300 rounded text-xs font-medium">
+              <span className="px-2 py-0.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs font-medium">
                 {sample.language}
               </span>
             </div>
             <div className="flex items-center justify-between gap-3">
-              <span className="text-xs text-slate-400 font-mono">
+              <span className="text-xs text-slate-600 dark:text-slate-400 font-mono">
                 {getFilename()}
               </span>
-              <span className="text-xs text-slate-500 font-medium">Preview</span>
+              <span className="text-xs text-slate-500 dark:text-slate-500 font-medium">Preview</span>
             </div>
           </div>
-          <pre className="flex-1 text-sm font-mono text-slate-200 leading-relaxed p-4 bg-slate-900 dark:bg-slate-950 overflow-x-auto">
+          <pre className="flex-1 text-sm font-mono text-slate-900 dark:text-slate-200 leading-relaxed p-4 bg-slate-50 dark:bg-slate-950 overflow-x-auto">
             <code>{sample.code}</code>
           </pre>
         </div>
