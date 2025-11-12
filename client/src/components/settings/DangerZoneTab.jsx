@@ -196,7 +196,7 @@ export function DangerZoneTab() {
                 value={confirmationText}
                 onChange={(e) => setConfirmationText(e.target.value)}
                 placeholder="Type here to confirm"
-                className="w-full px-4 py-2.5 border-2 border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400 transition-colors"
+                className="w-full px-4 py-2.5 border-2 border-slate-300 dark:border-slate-600 rounded-lg focus-visible:ring-2 focus-visible:ring-red-500 focus:border-red-500 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400 transition-colors"
               />
             </div>
 
@@ -207,7 +207,7 @@ export function DangerZoneTab() {
                   setConfirmationText('');
                 }}
                 disabled={isDeleting}
-                className="flex-1 py-2.5 px-4 bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg font-medium hover:bg-slate-200 active:bg-slate-300 dark:hover:bg-slate-600 dark:active:bg-slate-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-slate-600 focus:ring-offset-2"
+                className="flex-1 py-2.5 px-4 bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg font-medium hover:bg-slate-200 active:bg-slate-300 dark:hover:bg-slate-600 dark:active:bg-slate-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-600 focus-visible:ring-offset-2"
               >
                 Cancel
               </button>

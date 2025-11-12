@@ -206,7 +206,7 @@ export function ErrorBanner({ error, retryAfter, onDismiss }) {
         <button
           type="button"
           onClick={handleDismiss}
-          className="flex-shrink-0 text-red-400 hover:text-red-600 hover:bg-red-100 rounded-md p-1.5 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-2 motion-reduce:transition-none"
+          className="flex-shrink-0 text-red-400 hover:text-red-600 hover:bg-red-100 rounded-md p-1.5 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2 motion-reduce:transition-none"
           aria-label="Dismiss error"
         >
           <X className="h-4 w-4" aria-hidden="true" />

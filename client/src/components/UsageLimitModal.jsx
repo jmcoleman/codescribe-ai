@@ -287,7 +287,7 @@ export function UsageLimitModal({
               ref={upgradeButtonRef}
               type="button"
               onClick={onUpgrade}
-              className="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-700 dark:hover:bg-purple-800 dark:active:bg-purple-900 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg shadow-purple-600/20 dark:shadow-purple-900/30 hover:shadow-purple-600/30 dark:hover:shadow-purple-900/40 focus:outline-none focus:ring-2 focus:ring-purple-600 dark:focus:ring-purple-400 focus:ring-offset-2 dark:focus:ring-offset-slate-800"
+              className="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-700 dark:hover:bg-purple-800 dark:active:bg-purple-900 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg shadow-purple-600/20 dark:shadow-purple-900/30 hover:shadow-purple-600/30 dark:hover:shadow-purple-900/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-800"
             >
               Upgrade Now
               <ArrowRight className="w-4 h-4" aria-hidden="true" />
@@ -301,7 +301,7 @@ export function UsageLimitModal({
             </p>
             <button
               onClick={onClose}
-              className="text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium hover:underline focus:outline-none focus:ring-2 focus:ring-purple-600 dark:focus:ring-purple-400 focus:ring-offset-1 rounded px-2 py-1"
+              className="text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-1 rounded px-2 py-1"
             >
               Wait for reset {formatResetDate(usage?.resetDate, false)}
             </button>
@@ -315,7 +315,7 @@ export function UsageLimitModal({
             {' • '}
             <a
               href="/pricing"
-              className="text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 hover:underline focus:outline-none focus:ring-2 focus:ring-purple-600 dark:focus:ring-purple-400 focus:ring-offset-1 rounded"
+              className="text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-1 rounded"
             >
               Compare all plans
             </a>

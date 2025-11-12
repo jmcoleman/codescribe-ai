@@ -98,7 +98,7 @@ export function QualityScoreModal({ qualityScore, onClose }) {
             type="button"
             ref={closeButtonRef}
             onClick={onClose}
-            className="p-1.5 hover:bg-purple-50 dark:hover:bg-purple-900/30 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-purple-600 dark:focus:ring-purple-400 focus:ring-offset-2 dark:focus:ring-offset-slate-800"
+            className="p-1.5 hover:bg-purple-50 dark:hover:bg-purple-900/30 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-800"
             aria-label="Close quality breakdown modal"
           >
             <X className="w-4 h-4 text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors" aria-hidden="true" />

@@ -296,8 +296,8 @@ describe('DownloadButton', () => {
       render(<DownloadButton content="Test content" />);
       const button = screen.getByTestId('download-btn');
       expect(button.className).toContain('focus:outline-none');
-      expect(button.className).toContain('focus:ring-2');
-      expect(button.className).toContain('focus:ring-purple-600');
+      expect(button.className).toContain('focus-visible:ring-2');
+      expect(button.className).toContain('focus-visible:ring-purple-600');
     });
 
     it('should support reduced motion', () => {

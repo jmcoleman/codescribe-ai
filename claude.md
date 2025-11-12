@@ -12,7 +12,7 @@
 AI-powered documentation generator with real-time streaming, quality scoring (0-100), and WCAG 2.1 AA compliance.
 
 **Key Metrics:**
-- 2,385 tests (2,335 passing, 50 skipped, 0 failures) | 97.9% pass rate | 91.83% backend coverage
+- 2,391 tests (2,341 passing, 50 skipped, 0 failures) | 97.9% pass rate | 91.83% backend coverage
 - Lighthouse: 75/100 performance (+67%), 100/100 accessibility
 - Bundle: 78KB gzipped (-85% reduction)
 - Accessibility: 95/100 score, 0 axe violations
@@ -48,7 +48,7 @@ AI-powered documentation generator with real-time streaming, quality scoring (0-
 | Document | Use Case | Key Contents |
 |----------|----------|--------------|
 | [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) | Performance optimization | Lazy loading, bundle analysis, Core Web Vitals, maintenance |
-| [Testing README](docs/testing/README.md) | Test navigation hub | 2,385 test stats, quick commands, coverage overview |
+| [Testing README](docs/testing/README.md) | Test navigation hub | 2,391 test stats, quick commands, coverage overview |
 | [COMPONENT-TEST-COVERAGE.md](docs/testing/COMPONENT-TEST-COVERAGE.md) | Coverage details ⭐ | 13/18 components tested, category breakdown, gaps |
 | [frontend-testing-guide.md](docs/testing/frontend-testing-guide.md) | React testing patterns | Vitest + RTL, mocking, a11y, interactions |
 | [TEST-PATTERNS-GUIDE.md](docs/testing/TEST-PATTERNS-GUIDE.md) | Test fix patterns ⭐⚠️ | **103 tests fixed, 11 patterns** (Pattern 11: ES Modules!), 6 insights, 97.8% pass rate |
@@ -436,9 +436,9 @@ cd .. && cd server && npm test 2>&1 | grep "Tests:"
 # Output example: Tests:       21 skipped, 373 passed, 394 total
 
 # 2. Update documentation with new counts
-# - claude.md line 15: "2,389 tests (2,342 passing, 47 skipped)"
-# - claude.md line 51: "2,389 test stats"
-# - claude.md line 482: "2,389 tests (1,508 frontend, 881 backend, 47 skipped)"
+# - claude.md line 15: "2,391 tests (2,341 passing, 50 skipped)"
+# - claude.md line 51: "2,391 test stats"
+# - claude.md line 482: "2,391 tests (1,513 frontend, 878 backend, 50 skipped)"
 # - docs/testing/README.md lines 11-27: Update all test breakdowns
 
 # 3. Verify skipped tests documentation is current
@@ -479,7 +479,7 @@ cd server && npm test 2>&1 | grep "skipped"
 **Final Metrics:**
 - Accessibility: 95/100, WCAG 2.1 AA, 0 axe violations
 - Performance: 75/100 Lighthouse (+67%), 78KB bundle (-85%)
-- Testing: 2,389 tests (1,508 frontend, 881 backend, 47 skipped), 100% passing
+- Testing: 2,391 tests (1,513 frontend, 878 backend, 50 skipped), 100% passing
 - Deployment: Vercel + GitHub Actions CI/CD, custom domain
 
 **Optional:** README screenshots, demo video, extended manual a11y testing
@@ -546,10 +546,20 @@ codescribe-ai/
 
 ## 🔄 Version History
 
-**Current: v2.7.3** - UX Polish & Terminology Consistency (November 11, 2025): **Toast Fix** (page refresh prevention); **Terminology Updates** ("Download" → "Export", "Examples" → "Samples"); **User Display** (first name only, industry standard); **Dark Mode Fixes** (skeleton loader visibility); **DocPanel Spacing** (alignment with code panel); **Test Helper** (loadSkeleton() console function); **22 Test Fixes** (CodePanel, ExamplesModal, DownloadButton, DocPanel); **2,385 tests** (2,335 passing, 50 skipped, 97.9% pass rate)
+**Current: v2.7.4** - Modal Width Optimization & Terminology Refactoring (November 11, 2025): **Samples Modal Width** (max-w-4xl → max-w-5xl, 896px → 1024px); **Example→Sample Refactoring** (9 files: SamplesModal, codeSamples, state/props/functions renamed); **90 Test Fixes** (48 SamplesModal keyboard nav, 37 examples.test.js, 5 focus ring tests); **2,391 tests** (2,341 passing, 50 skipped, 97.9% pass rate)
 
 <details>
-<summary>Previous Versions (v1.0-v2.7.2)</summary>
+<summary>Previous Versions (v1.0-v2.7.3)</summary>
+
+- **v2.7.3** - UX Polish & Terminology Consistency (November 11, 2025)
+  - Toast Fix (page refresh prevention)
+  - Terminology Updates ("Download" → "Export", "Examples" → "Samples")
+  - User Display (first name only, industry standard)
+  - Dark Mode Fixes (skeleton loader visibility)
+  - DocPanel Spacing (alignment with code panel)
+  - Test Helper (loadSkeleton() console function)
+  - 22 Test Fixes (CodePanel, ExamplesModal, DownloadButton, DocPanel)
+  - 2,385 tests (2,335 passing, 50 skipped, 97.9% pass rate)
 
 - **v2.7.2** - Mobile UX Fixes & Appearance Settings Tab (November 11, 2025)
   - Mobile Fixes (file upload error logging, code editor viewport h-[70vh])

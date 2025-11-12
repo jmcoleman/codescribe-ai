@@ -196,7 +196,7 @@ export function ContactSalesModal({ isOpen, onClose, tier = 'enterprise' }) {
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   required
-                  className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 border-slate-300 dark:border-slate-600 focus:ring-2 focus:ring-purple-600 dark:focus:ring-purple-400 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 border-slate-300 dark:border-slate-600 focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={loading}
                 />
               </div>
@@ -212,7 +212,7 @@ export function ContactSalesModal({ isOpen, onClose, tier = 'enterprise' }) {
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   required
-                  className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 border-slate-300 dark:border-slate-600 focus:ring-2 focus:ring-purple-600 dark:focus:ring-purple-400 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 border-slate-300 dark:border-slate-600 focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={loading}
                 />
               </div>
@@ -232,7 +232,7 @@ export function ContactSalesModal({ isOpen, onClose, tier = 'enterprise' }) {
               onChange={(e) => setSubject(e.target.value)}
               required
               placeholder="e.g., Enterprise pricing inquiry"
-              className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 border-slate-300 dark:border-slate-600 focus:ring-2 focus:ring-purple-600 dark:focus:ring-purple-400 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 border-slate-300 dark:border-slate-600 focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={loading}
             />
           </div>
@@ -255,7 +255,7 @@ export function ContactSalesModal({ isOpen, onClose, tier = 'enterprise' }) {
               onChange={(e) => setMessage(e.target.value)}
               maxLength={MAX_MESSAGE_LENGTH}
               placeholder="Tell us about your team size, specific needs, or any questions..."
-              className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 border-slate-300 dark:border-slate-600 focus:ring-2 focus:ring-purple-600 dark:focus:ring-purple-400 focus:border-transparent resize-none disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 border-slate-300 dark:border-slate-600 focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus:border-transparent resize-none disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={loading}
             />
           </div>

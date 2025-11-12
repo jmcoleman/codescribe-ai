@@ -90,17 +90,17 @@ export function ConfirmationModal({
     warning: {
       icon: <AlertTriangle className="w-6 h-6 text-purple-600 dark:text-purple-400" />,
       iconBg: 'bg-slate-100 dark:bg-purple-900/20 ring-2 ring-purple-200 dark:ring-purple-500/50',
-      confirmButton: 'bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-700 dark:hover:bg-purple-800 dark:active:bg-purple-900 focus:ring-purple-600 dark:focus:ring-purple-400 shadow-lg shadow-purple-600/20 dark:shadow-purple-900/30 transition-all duration-200'
+      confirmButton: 'bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-700 dark:hover:bg-purple-800 dark:active:bg-purple-900 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 shadow-lg shadow-purple-600/20 dark:shadow-purple-900/30 transition-all duration-200'
     },
     danger: {
       icon: <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400" />,
       iconBg: 'bg-slate-100 dark:bg-red-900/20 ring-2 ring-red-200 dark:ring-red-500/50',
-      confirmButton: 'bg-red-600 hover:bg-red-700 active:bg-red-800 dark:bg-red-700 dark:hover:bg-red-800 dark:active:bg-red-900 focus:ring-red-600 dark:focus:ring-red-400 shadow-lg shadow-red-600/20 dark:shadow-red-900/30 transition-all duration-200'
+      confirmButton: 'bg-red-600 hover:bg-red-700 active:bg-red-800 dark:bg-red-700 dark:hover:bg-red-800 dark:active:bg-red-900 focus-visible:ring-red-600 dark:focus-visible:ring-red-400 shadow-lg shadow-red-600/20 dark:shadow-red-900/30 transition-all duration-200'
     },
     info: {
       icon: <AlertTriangle className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />,
       iconBg: 'bg-slate-100 dark:bg-indigo-900/20 ring-2 ring-indigo-200 dark:ring-indigo-500/50',
-      confirmButton: 'bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 dark:bg-indigo-700 dark:hover:bg-indigo-800 dark:active:bg-indigo-900 focus:ring-indigo-600 dark:focus:ring-indigo-400 shadow-lg shadow-indigo-600/20 dark:shadow-indigo-900/30 transition-all duration-200'
+      confirmButton: 'bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 dark:bg-indigo-700 dark:hover:bg-indigo-800 dark:active:bg-indigo-900 focus-visible:ring-indigo-600 dark:focus-visible:ring-indigo-400 shadow-lg shadow-indigo-600/20 dark:shadow-indigo-900/30 transition-all duration-200'
     }
   };
 
@@ -169,7 +169,7 @@ export function ConfirmationModal({
           <button
             type="button"
             onClick={handleConfirm}
-            className={`px-5 py-2.5 text-white rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-slate-800 ${styles.confirmButton}`}
+            className={`px-5 py-2.5 text-white rounded-lg font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-800 ${styles.confirmButton}`}
           >
             {confirmLabel}
           </button>

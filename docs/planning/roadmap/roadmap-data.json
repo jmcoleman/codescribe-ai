@@ -67,7 +67,7 @@
     },
     "footerLeft": "<strong>CodeScribe AI</strong> \u00b7 Strategic Roadmap v3.9",
     "footer": "Phase 1 Complete \u00b7 Phase 2 Complete \u00b7 Phase 3 Epic 3.1 Complete (Dark Mode) \u00b7 Launch: Mid-Jan 2026",
-    "lastUpdated": "November 11, 2025 (v2.7.3 - UX Polish & Terminology Consistency)"
+    "lastUpdated": "November 11, 2025 (v2.7.4 - Modal Width Optimization & Terminology Refactoring)"
   },
   "columns": [
     {
@@ -730,6 +730,44 @@
             "Coverage: 91.83% backend coverage maintained",
             "Documentation: Updated CHANGELOG, README, CLAUDE.md, testing docs"
           ]
+        },
+        {
+          "version": "v2.7.4",
+          "title": "Modal Width Optimization & Terminology Refactoring",
+          "duration": "0.5 days",
+          "status": "✓ Complete",
+          "completedDate": "Nov 11, 2025",
+          "badge": "UX & Code Quality",
+          "features": [
+            "Samples Modal Width Optimization",
+            "Increased modal width from max-w-4xl (896px) to max-w-5xl (1024px)",
+            "Better utilizes screen space for split-view (40/60) layout",
+            "Improves code preview readability on larger screens",
+            "Terminology Refactoring: Example → Sample",
+            "Renamed ExamplesModal.jsx to SamplesModal.jsx",
+            "Updated data export: codeExamples → codeSamples in examples.js",
+            "Renamed components: ExampleCard → SampleCard, ExamplePreview → SamplePreview",
+            "Updated state variables: selectedExample → selectedSample, showExamplesModal → showSamplesModal",
+            "Updated props: onExamplesClick → onSamplesClick, examplesButtonRef → samplesButtonRef",
+            "Updated functions: handleLoadExample → handleLoadSample, onLoadExample → onLoadSample",
+            "Refactored 9 files total: App.jsx, CodePanel.jsx, SamplesModal.jsx, examples.js, + tests",
+            "Test Suite Updates (90 tests fixed)",
+            "SamplesModal.test.jsx: 48 tests updated for keyboard navigation and focus trap",
+            "Fixed 'should navigate between cards using Tab key' test",
+            "Fixed 'should allow keyboard navigation through entire modal' test",
+            "Fixed 'should trap focus within modal' test (wraps to close button)",
+            "Fixed 'should trap focus backwards with Shift+Tab' test",
+            "Fixed 'should support both Enter and Space for preview' (auto-selected card label)",
+            "examples.test.js: 37 tests updated from codeExamples to codeSamples",
+            "Focus Ring Tests: 5 tests updated from focus:ring-2 to focus-visible:ring-2",
+            "Updated CopyButton.test.jsx (2 tests), DownloadButton.test.jsx (1 test)",
+            "Updated ErrorBanner.test.jsx (1 test), Select.test.jsx (1 test)",
+            "Test Results: 2,341 passed | 50 skipped (2,391 total) - 97.9% pass rate",
+            "Frontend: 1,484 passed | 29 skipped (1,513 total) - 98.1% pass rate",
+            "Backend: 857 passed | 21 skipped (878 total) - 100% pass rate",
+            "Coverage: 91.83% backend coverage maintained",
+            "Documentation: Updated CHANGELOG, README, CLAUDE.md, testing docs"
+          ]
         }
       ]
     },
@@ -754,6 +792,24 @@
             "Error handling per file (don't fail entire batch)",
             "Note: Basic drag-and-drop implemented in Phase 2 Epic 2.4",
             "Required before Epic 4.1 and Epic 4.2"
+          ]
+        },
+        {
+          "version": "Epic 4.1",
+          "title": "GitHub Integration",
+          "duration": "3-4 days",
+          "status": "Planned",
+          "badge": "Developer Adoption",
+          "features": [
+            "GitHub OAuth app for repository access",
+            "Repository browser (list user's repos, search)",
+            "Branch and path selection",
+            "File tree navigation",
+            "Import files directly from GitHub (single file or multiple)",
+            "Support for private repositories",
+            "Repository URL input (paste repo link)",
+            "Rate limiting and API quota management",
+            "Required before Epic 4.2 (primary source for multi-file docs)"
           ]
         }
       ]
@@ -798,24 +854,6 @@
             "Email notifications for subscription lifecycle events",
             "In-app notifications for billing issues and renewals",
             "Note: Core upgrade/downgrade flows completed in Epic 2.4"
-          ]
-        },
-        {
-          "version": "Epic 4.1",
-          "title": "GitHub Integration",
-          "duration": "3-4 days",
-          "status": "Planned",
-          "badge": "Developer Adoption",
-          "features": [
-            "GitHub OAuth app for repository access",
-            "Repository browser (list user's repos, search)",
-            "Branch and path selection",
-            "File tree navigation",
-            "Import files directly from GitHub (single file or multiple)",
-            "Support for private repositories",
-            "Repository URL input (paste repo link)",
-            "Rate limiting and API quota management",
-            "Required before Epic 4.2 (primary source for multi-file docs)"
           ]
         },
         {

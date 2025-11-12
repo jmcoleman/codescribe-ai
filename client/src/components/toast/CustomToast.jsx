@@ -31,8 +31,8 @@ export const CustomToast = ({
       iconColor: 'text-green-600 dark:text-green-400',
       iconBgColor: 'bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/30',
       bgColor: 'bg-white dark:bg-slate-800',
-      borderColor: 'border-cyan-300 dark:border-cyan-700',
-      ringColor: 'focus:ring-green-500 dark:focus:ring-green-400',
+      borderColor: 'border-cyan-300 dark:border-slate-700',
+      ringColor: 'focus-visible:ring-green-500 dark:focus-visible:ring-green-400',
       shadowColor: 'shadow-green-100 dark:shadow-green-900/30',
     },
     error: {
@@ -40,8 +40,8 @@ export const CustomToast = ({
       iconColor: 'text-red-600 dark:text-red-400',
       iconBgColor: 'bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-800/30',
       bgColor: 'bg-white dark:bg-slate-800',
-      borderColor: 'border-cyan-300 dark:border-cyan-700',
-      ringColor: 'focus:ring-red-600 dark:focus:ring-red-400',
+      borderColor: 'border-cyan-300 dark:border-slate-700',
+      ringColor: 'focus-visible:ring-red-600 dark:focus-visible:ring-red-400',
       shadowColor: 'shadow-red-100 dark:shadow-red-900/30',
     },
     warning: {
@@ -49,8 +49,8 @@ export const CustomToast = ({
       iconColor: 'text-yellow-600 dark:text-yellow-400',
       iconBgColor: 'bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/30 dark:to-yellow-800/30',
       bgColor: 'bg-white dark:bg-slate-800',
-      borderColor: 'border-cyan-300 dark:border-cyan-700',
-      ringColor: 'focus:ring-yellow-500 dark:focus:ring-yellow-400',
+      borderColor: 'border-cyan-300 dark:border-slate-700',
+      ringColor: 'focus-visible:ring-yellow-500 dark:focus-visible:ring-yellow-400',
       shadowColor: 'shadow-yellow-100 dark:shadow-yellow-900/30',
     },
     info: {
@@ -58,8 +58,8 @@ export const CustomToast = ({
       iconColor: 'text-indigo-600 dark:text-indigo-400',
       iconBgColor: 'bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/30 dark:to-indigo-800/30',
       bgColor: 'bg-white dark:bg-slate-800',
-      borderColor: 'border-cyan-300 dark:border-cyan-700',
-      ringColor: 'focus:ring-purple-600 dark:focus:ring-purple-400',
+      borderColor: 'border-cyan-300 dark:border-slate-700',
+      ringColor: 'focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400',
       shadowColor: 'shadow-indigo-100 dark:shadow-indigo-900/30',
     },
   };
@@ -129,11 +129,11 @@ export const CustomToast = ({
                       compact ? 'px-3 py-1.5 text-xs' : 'px-4 py-2 text-xs'
                     } font-semibold rounded-lg ${
                       action.variant === 'primary'
-                        ? 'bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-700 dark:hover:bg-purple-800 dark:active:bg-purple-900 text-white focus:ring-purple-600 dark:focus:ring-purple-400 shadow-lg shadow-purple-600/20 dark:shadow-purple-900/30'
+                        ? 'bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-700 dark:hover:bg-purple-800 dark:active:bg-purple-900 text-white focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 shadow-lg shadow-purple-600/20 dark:shadow-purple-900/30'
                         : action.variant === 'danger'
-                        ? 'bg-red-600 hover:bg-red-700 active:bg-red-800 dark:bg-red-700 dark:hover:bg-red-800 dark:active:bg-red-900 text-white focus:ring-red-600 dark:focus:ring-red-400 shadow-lg shadow-red-600/20 dark:shadow-red-900/30'
-                        : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600 focus:ring-slate-400 dark:focus:ring-slate-500 border border-slate-300 dark:border-slate-600'
-                    } transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-95`}
+                        ? 'bg-red-600 hover:bg-red-700 active:bg-red-800 dark:bg-red-700 dark:hover:bg-red-800 dark:active:bg-red-900 text-white focus-visible:ring-red-600 dark:focus-visible:ring-red-400 shadow-lg shadow-red-600/20 dark:shadow-red-900/30'
+                        : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600 focus-visible:ring-slate-400 dark:focus-visible:ring-slate-500 border border-slate-300 dark:border-slate-600'
+                    } transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-95`}
                   >
                     {action.icon && <action.icon className="h-3.5 w-3.5" />}
                     {action.label}
@@ -153,7 +153,7 @@ export const CustomToast = ({
             onClick={() => toast.dismiss(t.id)}
             className={`w-full border border-transparent rounded-none rounded-r-xl ${
               compact ? 'p-2' : 'p-3'
-            } flex items-center justify-center text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-50/80 dark:hover:bg-slate-700/80 focus:outline-none focus:ring-2 focus:ring-inset ${
+            } flex items-center justify-center text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-50/80 dark:hover:bg-slate-700/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset ${
               config.ringColor
             } transition-all duration-200 active:scale-95`}
             aria-label="Dismiss notification"
@@ -192,7 +192,7 @@ export const ProgressToast = ({
     <div
       className={`${
         t.visible ? 'animate-toast-enter' : 'animate-toast-leave'
-      } max-w-md w-full bg-white dark:bg-slate-800 rounded-xl pointer-events-auto flex border border-cyan-300 dark:border-cyan-700 backdrop-blur-sm transform transition-all duration-300 ease-out shadow-[0_20px_50px_rgba(0,0,0,0.12),0_8px_20px_rgba(0,0,0,0.08)]`}
+      } max-w-md w-full bg-white dark:bg-slate-800 rounded-xl pointer-events-auto flex border border-cyan-300 dark:border-slate-700 backdrop-blur-sm transform transition-all duration-300 ease-out shadow-[0_20px_50px_rgba(0,0,0,0.12),0_8px_20px_rgba(0,0,0,0.08)]`}
       role="status"
       aria-live="polite"
       aria-atomic="true"
@@ -252,7 +252,7 @@ export const ProgressToast = ({
           <button
             type="button"
             onClick={() => toast.dismiss(t.id)}
-            className="w-full border border-transparent rounded-none rounded-r-xl p-3 flex items-center justify-center text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-50/80 dark:hover:bg-slate-700/80 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-purple-600 dark:focus:ring-purple-400 transition-all duration-200 active:scale-95"
+            className="w-full border border-transparent rounded-none rounded-r-xl p-3 flex items-center justify-center text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-50/80 dark:hover:bg-slate-700/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 transition-all duration-200 active:scale-95"
             aria-label="Dismiss notification"
           >
             <X className="h-4 w-4" />
@@ -289,7 +289,7 @@ export const UndoToast = ({ t, message, onUndo }) => {
             onUndo?.();
             toast.dismiss(t.id);
           }}
-          className="ml-4 flex-shrink-0 inline-flex items-center px-4 py-2 text-sm font-bold text-white bg-purple-600 hover:bg-purple-700 active:bg-purple-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-purple-600 transition-all duration-150 shadow-lg shadow-purple-600/20 active:scale-95"
+          className="ml-4 flex-shrink-0 inline-flex items-center px-4 py-2 text-sm font-bold text-white bg-purple-600 hover:bg-purple-700 active:bg-purple-800 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 focus-visible:ring-purple-600 transition-all duration-150 shadow-lg shadow-purple-600/20 active:scale-95"
         >
           Undo
         </button>
@@ -348,20 +348,20 @@ export const CompactToast = ({ t, type = 'info', message }) => {
 export const AvatarToast = ({ t, type = 'info', title, message, avatarUrl, avatarAlt, actions = [] }) => {
   const typeConfig = {
     success: {
-      borderColor: 'border-cyan-300 dark:border-cyan-700',
-      ringColor: 'focus:ring-green-500 dark:focus:ring-green-400',
+      borderColor: 'border-cyan-300 dark:border-slate-700',
+      ringColor: 'focus-visible:ring-green-500 dark:focus-visible:ring-green-400',
     },
     error: {
-      borderColor: 'border-cyan-300 dark:border-cyan-700',
-      ringColor: 'focus:ring-red-600 dark:focus:ring-red-400',
+      borderColor: 'border-cyan-300 dark:border-slate-700',
+      ringColor: 'focus-visible:ring-red-600 dark:focus-visible:ring-red-400',
     },
     warning: {
-      borderColor: 'border-cyan-300 dark:border-cyan-700',
-      ringColor: 'focus:ring-yellow-500 dark:focus:ring-yellow-400',
+      borderColor: 'border-cyan-300 dark:border-slate-700',
+      ringColor: 'focus-visible:ring-yellow-500 dark:focus-visible:ring-yellow-400',
     },
     info: {
-      borderColor: 'border-cyan-300 dark:border-cyan-700',
-      ringColor: 'focus:ring-purple-600 dark:focus:ring-purple-400',
+      borderColor: 'border-cyan-300 dark:border-slate-700',
+      ringColor: 'focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400',
     },
   };
 
@@ -421,11 +421,11 @@ export const AvatarToast = ({ t, type = 'info', title, message, avatarUrl, avata
                     }}
                     className={`inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg ${
                       action.variant === 'primary'
-                        ? 'bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-700 dark:hover:bg-purple-800 dark:active:bg-purple-900 text-white focus:ring-purple-600 dark:focus:ring-purple-400 shadow-lg shadow-purple-600/20 dark:shadow-purple-900/30'
+                        ? 'bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-700 dark:hover:bg-purple-800 dark:active:bg-purple-900 text-white focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 shadow-lg shadow-purple-600/20 dark:shadow-purple-900/30'
                         : action.variant === 'danger'
-                        ? 'bg-red-600 hover:bg-red-700 active:bg-red-800 dark:bg-red-700 dark:hover:bg-red-800 dark:active:bg-red-900 text-white focus:ring-red-600 dark:focus:ring-red-400 shadow-lg shadow-red-600/20 dark:shadow-red-900/30'
-                        : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600 focus:ring-slate-400 dark:focus:ring-slate-500 border border-slate-300 dark:border-slate-600'
-                    } transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-95`}
+                        ? 'bg-red-600 hover:bg-red-700 active:bg-red-800 dark:bg-red-700 dark:hover:bg-red-800 dark:active:bg-red-900 text-white focus-visible:ring-red-600 dark:focus-visible:ring-red-400 shadow-lg shadow-red-600/20 dark:shadow-red-900/30'
+                        : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600 focus-visible:ring-slate-400 dark:focus-visible:ring-slate-500 border border-slate-300 dark:border-slate-600'
+                    } transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-95`}
                   >
                     {action.icon && <action.icon className="h-3.5 w-3.5" />}
                     {action.label}
@@ -442,7 +442,7 @@ export const AvatarToast = ({ t, type = 'info', title, message, avatarUrl, avata
         <button
           type="button"
           onClick={() => toast.dismiss(t.id)}
-          className={`w-full border border-transparent rounded-none rounded-r-xl p-3 flex items-center justify-center text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-50/80 dark:hover:bg-slate-700/80 focus:outline-none focus:ring-2 focus:ring-inset ${config.ringColor} transition-all duration-200 active:scale-95`}
+          className={`w-full border border-transparent rounded-none rounded-r-xl p-3 flex items-center justify-center text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-50/80 dark:hover:bg-slate-700/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset ${config.ringColor} transition-all duration-200 active:scale-95`}
           aria-label="Dismiss notification"
         >
           <X className="h-4 w-4" />
@@ -471,29 +471,29 @@ export const ExpandableToast = ({ t, type = 'info', title, preview, fullContent,
       icon: CheckCircle2,
       iconColor: 'text-green-600 dark:text-green-400',
       iconBgColor: 'bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/30',
-      borderColor: 'border-cyan-300 dark:border-cyan-700',
-      ringColor: 'focus:ring-green-500 dark:focus:ring-green-400',
+      borderColor: 'border-cyan-300 dark:border-slate-700',
+      ringColor: 'focus-visible:ring-green-500 dark:focus-visible:ring-green-400',
     },
     error: {
       icon: AlertCircle,
       iconColor: 'text-red-600 dark:text-red-400',
       iconBgColor: 'bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-800/30',
-      borderColor: 'border-cyan-300 dark:border-cyan-700',
-      ringColor: 'focus:ring-red-600 dark:focus:ring-red-400',
+      borderColor: 'border-cyan-300 dark:border-slate-700',
+      ringColor: 'focus-visible:ring-red-600 dark:focus-visible:ring-red-400',
     },
     warning: {
       icon: AlertTriangle,
       iconColor: 'text-yellow-600 dark:text-yellow-400',
       iconBgColor: 'bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/30 dark:to-yellow-800/30',
-      borderColor: 'border-cyan-300 dark:border-cyan-700',
-      ringColor: 'focus:ring-yellow-500 dark:focus:ring-yellow-400',
+      borderColor: 'border-cyan-300 dark:border-slate-700',
+      ringColor: 'focus-visible:ring-yellow-500 dark:focus-visible:ring-yellow-400',
     },
     info: {
       icon: Info,
       iconColor: 'text-indigo-600 dark:text-indigo-400',
       iconBgColor: 'bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/30 dark:to-indigo-800/30',
-      borderColor: 'border-cyan-300 dark:border-cyan-700',
-      ringColor: 'focus:ring-purple-600 dark:focus:ring-purple-400',
+      borderColor: 'border-cyan-300 dark:border-slate-700',
+      ringColor: 'focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400',
     },
   };
 
@@ -559,11 +559,11 @@ export const ExpandableToast = ({ t, type = 'info', title, preview, fullContent,
                     }}
                     className={`inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg ${
                       action.variant === 'primary'
-                        ? 'bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-700 dark:hover:bg-purple-800 dark:active:bg-purple-900 text-white focus:ring-purple-600 dark:focus:ring-purple-400 shadow-lg shadow-purple-600/20 dark:shadow-purple-900/30'
+                        ? 'bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-700 dark:hover:bg-purple-800 dark:active:bg-purple-900 text-white focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 shadow-lg shadow-purple-600/20 dark:shadow-purple-900/30'
                         : action.variant === 'danger'
-                        ? 'bg-red-600 hover:bg-red-700 active:bg-red-800 dark:bg-red-700 dark:hover:bg-red-800 dark:active:bg-red-900 text-white focus:ring-red-600 dark:focus:ring-red-400 shadow-lg shadow-red-600/20 dark:shadow-red-900/30'
-                        : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600 focus:ring-slate-400 dark:focus:ring-slate-500 border border-slate-300 dark:border-slate-600'
-                    } transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-95`}
+                        ? 'bg-red-600 hover:bg-red-700 active:bg-red-800 dark:bg-red-700 dark:hover:bg-red-800 dark:active:bg-red-900 text-white focus-visible:ring-red-600 dark:focus-visible:ring-red-400 shadow-lg shadow-red-600/20 dark:shadow-red-900/30'
+                        : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600 focus-visible:ring-slate-400 dark:focus-visible:ring-slate-500 border border-slate-300 dark:border-slate-600'
+                    } transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-95`}
                   >
                     {action.icon && <action.icon className="h-3.5 w-3.5" />}
                     {action.label}
@@ -580,7 +580,7 @@ export const ExpandableToast = ({ t, type = 'info', title, preview, fullContent,
         <button
           type="button"
           onClick={() => toast.dismiss(t.id)}
-          className={`w-full border border-transparent rounded-none rounded-r-xl p-3 flex items-center justify-center text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-50/80 dark:hover:bg-slate-700/80 focus:outline-none focus:ring-2 focus:ring-inset ${config.ringColor} transition-all duration-200 active:scale-95`}
+          className={`w-full border border-transparent rounded-none rounded-r-xl p-3 flex items-center justify-center text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-50/80 dark:hover:bg-slate-700/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset ${config.ringColor} transition-all duration-200 active:scale-95`}
           aria-label="Dismiss notification"
         >
           <X className="h-4 w-4" />

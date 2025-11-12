@@ -125,10 +125,10 @@ export function CopyButton({
         hover:scale-[1.02]
         active:scale-[0.98]
         focus:outline-none
-        focus:ring-2
-        focus:ring-purple-600 dark:focus:ring-purple-400
-        focus:ring-offset-2
-        focus:ring-offset-white dark:focus:ring-offset-slate-800
+        focus-visible:ring-2
+        focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400
+        focus-visible:ring-offset-2
+        focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-800
         motion-reduce:transition-none
         ${!showLabel ? 'relative' : ''}
         ${copied ? 'pointer-events-none' : ''}
@@ -246,10 +246,10 @@ export function CopyButtonWithText({
         hover:scale-[1.02]
         active:scale-[0.98]
         focus:outline-none
-        focus:ring-2
-        focus:ring-purple-600 dark:focus:ring-purple-400
-        focus:ring-offset-2
-        focus:ring-offset-white dark:focus:ring-offset-slate-800
+        focus-visible:ring-2
+        focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400
+        focus-visible:ring-offset-2
+        focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-800
         motion-reduce:transition-none
         bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600
         ${copied ? 'pointer-events-none' : ''}

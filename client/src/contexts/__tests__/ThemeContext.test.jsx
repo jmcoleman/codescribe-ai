@@ -343,6 +343,67 @@ describe('ThemeContext', () => {
       expect(typeof result.current.toggleTheme).toBe('function');
     });
 
+    it('provides effectiveTheme value', () => {
+      const { result } = renderHook(() => useTheme(), {
+        wrapper: ThemeProvider,
+      });
+
+      expect(result.current).toHaveProperty('effectiveTheme');
+      expect(typeof result.current.effectiveTheme).toBe('string');
+      expect(['light', 'dark']).toContain(result.current.effectiveTheme);
+    });
+
+    it('resolves effectiveTheme to light when theme is auto and system prefers light', () => {
+      const { result } = renderHook(() => useTheme(), {
+        wrapper: ThemeProvider,
+      });
+
+      // Default is auto, and matchMedia mock returns matches: false (light mode)
+      expect(result.current.theme).toBe('auto');
+      expect(result.current.effectiveTheme).toBe('light');
+    });
+
+    it('resolves effectiveTheme to dark when theme is auto and system prefers dark', () => {
+      const matchMediaMock = vi.fn().mockImplementation(query => ({
+        matches: query === '(prefers-color-scheme: dark)',
+        media: query,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      }));
+
+      vi.stubGlobal('matchMedia', matchMediaMock);
+
+      const { result } = renderHook(() => useTheme(), {
+        wrapper: ThemeProvider,
+      });
+
+      expect(result.current.theme).toBe('auto');
+      expect(result.current.effectiveTheme).toBe('dark');
+
+      vi.unstubAllGlobals();
+    });
+
+    it('returns effectiveTheme equal to theme when theme is explicitly set', () => {
+      const { result } = renderHook(() => useTheme(), {
+        wrapper: ThemeProvider,
+      });
+
+      act(() => {
+        result.current.setTheme('dark');
+      });
+
+      expect(result.current.theme).toBe('dark');
+      expect(result.current.effectiveTheme).toBe('dark');
+
+      act(() => {
+        result.current.setTheme('light');
+      });
+
+      expect(result.current.theme).toBe('light');
+      expect(result.current.effectiveTheme).toBe('light');
+    });
+
     it('throws error when used outside ThemeProvider', () => {
       // Suppress console.error for this test
       const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});

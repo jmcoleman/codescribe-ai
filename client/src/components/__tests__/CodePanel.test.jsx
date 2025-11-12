@@ -395,31 +395,31 @@ describe('CodePanel', () => {
   });
 
   describe('Examples Button', () => {
-    it('shows examples button when onExamplesClick is provided', () => {
-      const onExamplesClick = vi.fn();
-      render(<CodePanel {...defaultProps} onExamplesClick={onExamplesClick} />);
+    it('shows examples button when onSamplesClick is provided', () => {
+      const onSamplesClick = vi.fn();
+      render(<CodePanel {...defaultProps} onSamplesClick={onSamplesClick} />);
 
       const examplesButton = screen.getByRole('button', { name: /load code samples/i });
       expect(examplesButton).toBeInTheDocument();
       expect(examplesButton).toHaveTextContent('Samples');
     });
 
-    it('does not show examples button when onExamplesClick is not provided', () => {
+    it('does not show examples button when onSamplesClick is not provided', () => {
       render(<CodePanel {...defaultProps} />);
 
       const examplesButton = screen.queryByRole('button', { name: /load code samples/i });
       expect(examplesButton).not.toBeInTheDocument();
     });
 
-    it('calls onExamplesClick when examples button is clicked', async () => {
-      const onExamplesClick = vi.fn();
+    it('calls onSamplesClick when examples button is clicked', async () => {
+      const onSamplesClick = vi.fn();
       const user = userEvent.setup();
-      render(<CodePanel {...defaultProps} onExamplesClick={onExamplesClick} />);
+      render(<CodePanel {...defaultProps} onSamplesClick={onSamplesClick} />);
 
       const examplesButton = screen.getByRole('button', { name: /load code samples/i });
       await user.click(examplesButton);
 
-      expect(onExamplesClick).toHaveBeenCalledTimes(1);
+      expect(onSamplesClick).toHaveBeenCalledTimes(1);
     });
   });
 

@@ -9,7 +9,9 @@
       "Bash(cat:*)",
       "Bash(timeout 60 npm test -- --run App-FileUpload.test.jsx)",
       "Bash(npm run test:coverage:*)",
-      "Bash(sed:*)"
+      "Bash(sed:*)",
+      "Bash(find:*)",
+      "Bash(/Users/jcoleman-mbp/Developer/projects/codescribe-ai/client/src/components/__tests__/SamplesModal.test.jsx)"
     ],
     "deny": [],
     "ask": []

@@ -182,7 +182,7 @@ export function ResetPassword() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter new password"
-                  className="block w-full pl-10 pr-10 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-shadow"
+                  className="block w-full pl-10 pr-10 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 focus:border-transparent transition-shadow"
                   autoComplete="new-password"
                   disabled={isLoading || !!successMessage}
                   minLength={8}
@@ -258,7 +258,7 @@ export function ResetPassword() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Confirm new password"
-                  className="block w-full pl-10 pr-10 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-shadow"
+                  className="block w-full pl-10 pr-10 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 focus:border-transparent transition-shadow"
                   autoComplete="new-password"
                   disabled={isLoading || !!successMessage}
                   minLength={8}

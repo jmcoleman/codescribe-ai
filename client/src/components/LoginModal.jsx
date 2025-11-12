@@ -376,7 +376,7 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup, onSwitchToForgot
                     if (emailError) setEmailError('');
                   }}
                   placeholder="you@example.com"
-                  className={`block w-full pl-10 pr-3 py-2.5 border rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-600 dark:focus:ring-purple-400 focus:border-transparent transition-shadow ${
+                  className={`block w-full pl-10 pr-3 py-2.5 border rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus:border-transparent transition-shadow ${
                     emailError ? 'border-red-300 dark:border-red-500 bg-red-50 dark:bg-red-900/20' : 'border-slate-300 dark:border-slate-600'
                   }`}
                   autoComplete="off"
@@ -415,7 +415,7 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup, onSwitchToForgot
                     if (passwordError) setPasswordError('');
                   }}
                   placeholder="Enter your password"
-                  className={`block w-full pl-10 pr-11 py-2.5 border rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-600 dark:focus:ring-purple-400 focus:border-transparent transition-shadow ${
+                  className={`block w-full pl-10 pr-11 py-2.5 border rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus:border-transparent transition-shadow ${
                     passwordError ? 'border-red-300 dark:border-red-500 bg-red-50 dark:bg-red-900/20' : 'border-slate-300 dark:border-slate-600'
                   }`}
                   autoComplete="current-password"

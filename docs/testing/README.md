@@ -2,20 +2,20 @@
 
 **Project:** CodeScribe AI - Intelligent Code Documentation Generator
 **Testing Status:** ✅ Comprehensive Coverage Across 3 Frameworks
-**Last Updated:** November 11, 2025 (v2.7.3)
+**Last Updated:** November 11, 2025 (v2.7.4)
 
 ---
 
 ## 📊 Quick Stats
 
-- **Total Tests:** 2,385 tests (2,335 passing, 50 skipped, 0 failures)
-  - **Frontend:** 1,507 tests | 29 skipped (Vitest + React Testing Library)
-    - Component Tests: All components with dark mode variants tested (including new AppearanceTab)
+- **Total Tests:** 2,391 tests (2,341 passing, 50 skipped, 0 failures)
+  - **Frontend:** 1,513 tests | 29 skipped (Vitest + React Testing Library)
+    - Component Tests: All components with dark mode variants tested (including SamplesModal)
     - Dark Mode Tests: 106 tests (ThemeContext with auto mode, ThemeToggle, all components, integration)
     - Integration Tests: Auth, OAuth, password reset, upload, error handling, usage tracking, legal pages
     - UI Tests: Toast system, modals, forms, storage helpers, pricing page, focus trap
     - Contact Modals: ContactSalesModal (25 tests), ContactSupportModal (12 tests - getToken Promise fix)
-    - **Pass Rate:** 98.1% (1,478 passing, 29 skipped, 0 failures)
+    - **Pass Rate:** 98.1% (1,484 passing, 29 skipped, 0 failures)
   - **Backend:** 878 tests | 21 skipped (Jest + Supertest)
     - Unit Tests: Services, models, utilities, middleware (emailService, requireTermsAcceptance, tierGate)
     - Integration Tests: Prompt quality, API contracts, authentication, tier system, contact sales/support, legal endpoints
@@ -27,11 +27,11 @@
     - Migration-010: 14 tests (terms/privacy acceptance tracking)
     - Migration-011: 10 tests (analytics_enabled column + index)
   - **E2E:** 10 tests (Playwright - file upload flow)
-- **Pass Rate:** 97.9% (2,335/2,385 total tests passing, 50 skipped, 0 failures) ✅
+- **Pass Rate:** 97.9% (2,341/2,391 total tests passing, 50 skipped, 0 failures) ✅
 - **Backend Coverage:** 91.83% statements (services), 95.81% overall, 79.41% branches (services)
 - **Test Execution Time:** Frontend ~19.8s, Backend ~7.1s, Database ~0.3s, E2E ~45s
 - **Coverage Target:** 90% ✅ EXCEEDED (91.83% services statements, 79.41% services branches)
-- **Recent Updates:** UX polish, terminology consistency ("Download" → "Export", "Examples" → "Samples"), toast fix, dark mode skeleton visibility, 22 test fixes (Nov 11, 2025 - v2.7.3)
+- **Recent Updates:** Modal width optimization (max-w-5xl), Example→Sample terminology refactoring (9 files), 90 test fixes (48 SamplesModal, 37 examples.test.js, 5 focus ring) (Nov 11, 2025 - v2.7.4)
 
 ---
 

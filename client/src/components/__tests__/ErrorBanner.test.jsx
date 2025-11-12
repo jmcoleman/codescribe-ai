@@ -350,8 +350,8 @@ describe('ErrorBanner Component', () => {
       render(<ErrorBanner error="Test error" onDismiss={vi.fn()} />);
       const dismissButton = screen.getByRole('button', { name: /dismiss error/i });
       expect(dismissButton).toHaveClass('focus:outline-none');
-      expect(dismissButton).toHaveClass('focus:ring-2');
-      expect(dismissButton).toHaveClass('focus:ring-red-600');
+      expect(dismissButton).toHaveClass('focus-visible:ring-2');
+      expect(dismissButton).toHaveClass('focus-visible:ring-red-600');
     });
 
     it('should be keyboard accessible', async () => {

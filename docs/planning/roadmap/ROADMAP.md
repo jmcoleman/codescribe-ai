@@ -2,7 +2,7 @@
 
 **Last Updated:** November 11, 2025
 **Current Phase:** Phase 3 - ✅ **Epic 3.1 COMPLETE** (Dark Mode) | 🟡 **Epic 3.3 IN PROGRESS** (Advanced File Handling)
-**Current Release:** v2.7.3 (UX Polish & Terminology Consistency)
+**Current Release:** v2.7.4 (Modal Width Optimization & Terminology Refactoring)
 **Production URL:** [https://codescribeai.com](https://codescribeai.com)
 
 ---
@@ -1320,8 +1320,8 @@ ALTER TABLE subscriptions ADD COLUMN stripe_receipt_url VARCHAR(500);
 ## 🎨 Phase 3: UX Enhancements (IN PROGRESS)
 
 **Timeline:** November 8 - TBD
-**Status:** 🔄 **IN PROGRESS** - Epic 3.1 Complete (v2.7.3), Epic 3.3 Active
-**Current Release:** v2.7.3 (UX Polish & Terminology Consistency)
+**Status:** 🔄 **IN PROGRESS** - Epic 3.1 Complete (v2.7.4), Epic 3.3 Active
+**Current Release:** v2.7.4 (Modal Width Optimization & Terminology Refactoring)
 **Target Release:** v3.x.x series
 **Strategic Goal:** Transform user experience with customization, flexibility, and advanced file handling capabilities
 
@@ -1332,6 +1332,7 @@ ALTER TABLE subscriptions ADD COLUMN stripe_receipt_url VARCHAR(500);
 - ✅ Nov 9: v2.7.1 (ErrorBoundary Dark Mode & Production Bug Fix)
 - ✅ Nov 11: v2.7.2 (Mobile UX Fixes & Appearance Settings Tab)
 - ✅ Nov 11: v2.7.3 (UX Polish & Terminology Consistency)
+- ✅ Nov 11: v2.7.4 (Modal Width Optimization & Terminology Refactoring)
 
 **In Progress:**
 - 🟡 Nov 8+: Epic 3.3 (Advanced File Handling) - IN PROGRESS
@@ -1491,6 +1492,47 @@ ALTER TABLE subscriptions ADD COLUMN stripe_receipt_url VARCHAR(500);
 - [README.md](../../README.md) - Updated test counts and metrics
 - [CLAUDE.md](../../CLAUDE.md) - Updated version entry
 - [Testing README](../../testing/README.md) - Updated test statistics
+
+#### v2.7.4: Modal Width Optimization & Terminology Refactoring (0.5 days) - ✅ COMPLETE
+**Status:** ✅ Complete | Released November 11, 2025 (v2.7.4)
+**Type:** UX Enhancement & Code Quality Release
+
+**Changed:**
+- ✅ Modal Width: Increased Samples modal from max-w-4xl (896px) to max-w-5xl (1024px)
+- ✅ Modal Width: Better utilizes screen space for split-view (40/60) layout
+- ✅ Modal Width: Improves code preview readability on larger screens
+- ✅ Terminology: Renamed ExamplesModal.jsx to SamplesModal.jsx
+- ✅ Terminology: Updated data export from codeExamples to codeSamples
+- ✅ Terminology: Renamed ExampleCard → SampleCard, ExamplePreview → SamplePreview
+- ✅ Terminology: Updated state variables (selectedExample → selectedSample, showExamplesModal → showSamplesModal)
+- ✅ Terminology: Updated props (onExamplesClick → onSamplesClick, examplesButtonRef → samplesButtonRef)
+- ✅ Terminology: Updated functions (handleLoadExample → handleLoadSample, onLoadExample → onLoadSample)
+- ✅ Refactoring: 9 files total (App.jsx, CodePanel.jsx, SamplesModal.jsx, examples.js, + tests)
+
+**Test Suite (90 tests fixed):**
+- ✅ SamplesModal.test.jsx: 48 tests updated for keyboard navigation and focus trap
+  - Fixed 'should navigate between cards using Tab key' test
+  - Fixed 'should allow keyboard navigation through entire modal' test
+  - Fixed 'should trap focus within modal' test (wraps to close button)
+  - Fixed 'should trap focus backwards with Shift+Tab' test
+  - Fixed 'should support both Enter and Space for preview' (auto-selected card label)
+- ✅ examples.test.js: 37 tests updated from codeExamples to codeSamples
+- ✅ Focus Ring Tests: 5 tests updated from focus:ring-2 to focus-visible:ring-2
+  - CopyButton.test.jsx (2 tests), DownloadButton.test.jsx (1 test)
+  - ErrorBanner.test.jsx (1 test), Select.test.jsx (1 test)
+- ✅ Maintained 100% pass rate on non-skipped tests
+
+**Test Results:**
+- Frontend: 1,484 passed | 29 skipped (1,513 total) - 98.1% pass rate
+- Backend: 857 passed | 21 skipped (878 total) - 100% pass rate
+- Total: 2,341 passed | 50 skipped (2,391 total) - **97.9% pass rate**
+
+**Documentation:**
+- [CHANGELOG.md v2.7.4](../../CHANGELOG.md) - Complete release notes
+- [README.md](../../README.md) - Updated test counts and metrics
+- [CLAUDE.md](../../CLAUDE.md) - Updated version entry
+- [Testing README](../../testing/README.md) - Updated test statistics
+- [roadmap-data.json](roadmap-data.json) - Interactive roadmap updated
 
 #### Epic 3.3: Advanced File Handling (2-3 days) - 🟡 IN PROGRESS
 **Status:** 🟡 In Progress | Started November 8, 2025

@@ -151,7 +151,7 @@ export default function TermsAcceptanceModal({
                     type="checkbox"
                     checked={acceptedTerms}
                     onChange={(e) => setAcceptedTerms(e.target.checked)}
-                    className="mt-1 w-4 h-4 text-purple-600 border-slate-300 dark:border-slate-600 rounded focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 cursor-pointer"
+                    className="mt-1 w-4 h-4 text-purple-600 border-slate-300 dark:border-slate-600 rounded focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 cursor-pointer"
                     disabled={loading}
                   />
                   <span className="text-sm text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-slate-100 select-none">
@@ -174,7 +174,7 @@ export default function TermsAcceptanceModal({
                     type="checkbox"
                     checked={acceptedPrivacy}
                     onChange={(e) => setAcceptedPrivacy(e.target.checked)}
-                    className="mt-1 w-4 h-4 text-purple-600 border-slate-300 dark:border-slate-600 rounded focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 cursor-pointer"
+                    className="mt-1 w-4 h-4 text-purple-600 border-slate-300 dark:border-slate-600 rounded focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 cursor-pointer"
                     disabled={loading}
                   />
                   <span className="text-sm text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-slate-100 select-none">

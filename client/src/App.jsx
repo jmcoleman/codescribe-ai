@@ -21,7 +21,7 @@ import { DEFAULT_CODE } from './constants/defaultCode';
 // Lazy load heavy components that aren't needed on initial render
 const DocPanel = lazy(() => import('./components/DocPanel').then(m => ({ default: m.DocPanel })));
 const QualityScoreModal = lazy(() => import('./components/QualityScore').then(m => ({ default: m.QualityScoreModal })));
-const ExamplesModal = lazy(() => import('./components/ExamplesModal').then(m => ({ default: m.ExamplesModal })));
+const SamplesModal = lazy(() => import('./components/SamplesModal').then(m => ({ default: m.SamplesModal })));
 const HelpModal = lazy(() => import('./components/HelpModal').then(m => ({ default: m.HelpModal })));
 const ConfirmationModal = lazy(() => import('./components/ConfirmationModal').then(m => ({ default: m.ConfirmationModal })));
 const TermsAcceptanceModal = lazy(() => import('./components/TermsAcceptanceModal').then(m => ({ default: m.default })));
@@ -61,7 +61,7 @@ function App() {
   const [filename, setFilename] = useState(() => getStorageItem(STORAGE_KEYS.EDITOR_FILENAME, 'code.js'));
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showQualityModal, setShowQualityModal] = useState(false);
-  const [showExamplesModal, setShowExamplesModal] = useState(false);
+  const [showSamplesModal, setShowSamplesModal] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [showUsageLimitModal, setShowUsageLimitModal] = useState(false);
@@ -74,7 +74,7 @@ function App() {
   const [isUploading, setIsUploading] = useState(false);
   const [testSkeletonMode, setTestSkeletonMode] = useState(false);
   const fileInputRef = useRef(null);
-  const examplesButtonRef = useRef(null);
+  const samplesButtonRef = useRef(null);
   const headerRef = useRef(null);
 
   // Track if we just accepted terms to prevent re-checking immediately after
@@ -236,7 +236,7 @@ function App() {
 
   // Prevent body scroll and layout shift when any modal opens
   useEffect(() => {
-    const isAnyModalOpen = showQualityModal || showExamplesModal || showHelpModal || showConfirmationModal || showUsageLimitModal || showTermsModal || showSupportModal;
+    const isAnyModalOpen = showQualityModal || showSamplesModal || showHelpModal || showConfirmationModal || showUsageLimitModal || showTermsModal || showSupportModal;
 
     if (isAnyModalOpen) {
       // Calculate scrollbar width BEFORE hiding overflow
@@ -254,7 +254,7 @@ function App() {
       document.body.style.overflow = '';
       document.body.style.paddingRight = '';
     };
-  }, [showQualityModal, showExamplesModal, showHelpModal, showTermsModal, showSupportModal]);
+  }, [showQualityModal, showSamplesModal, showHelpModal, showTermsModal, showSupportModal]);
   
   const {
     generate,
@@ -660,13 +660,13 @@ function App() {
     // TODO: Implement GitHub import
   };
 
-  const handleLoadExample = (example) => {
-    setCode(example.code);
-    setDocType(example.docType);
-    setLanguage(example.language);
+  const handleLoadSample = (sample) => {
+    setCode(sample.code);
+    setDocType(sample.docType);
+    setLanguage(sample.language);
 
-    // Set filename based on example title and language
-    const exampleName = (example.title || example.docType).toLowerCase().replace(/\s+/g, '-');
+    // Set filename based on sample title and language
+    const sampleName = (sample.title || sample.docType).toLowerCase().replace(/\s+/g, '-');
     const extensionMap = {
       'javascript': '.js',
       'typescript': '.ts',
@@ -680,14 +680,14 @@ function App() {
       'ruby': '.rb',
       'php': '.php',
     };
-    const extension = extensionMap[example.language] || '.js';
-    setFilename(`${exampleName}${extension}`);
+    const extension = extensionMap[sample.language] || '.js';
+    setFilename(`${sampleName}${extension}`);
 
     reset(); // Clear any existing documentation and quality score
 
-    // Track example usage
-    trackExampleUsage(example.title || example.docType);
-    trackCodeInput('example', example.code.length, example.language);
+    // Track sample usage
+    trackExampleUsage(sample.title || sample.docType);
+    trackCodeInput('sample', sample.code.length, sample.language);
 
     // Use compact toast for quick, non-intrusive feedback
     toastCompact('Sample loaded successfully', 'success');
@@ -845,8 +845,8 @@ function App() {
               language={language}
               onFileDrop={handleFileDrop}
               onClear={handleClear}
-              onExamplesClick={() => setShowExamplesModal(true)}
-              examplesButtonRef={examplesButtonRef}
+              onSamplesClick={() => setShowSamplesModal(true)}
+              samplesButtonRef={samplesButtonRef}
             />
           </div>
 
@@ -890,19 +890,19 @@ function App() {
         </Suspense>
       )}
 
-      {/* Examples Modal */}
-      {showExamplesModal && (
+      {/* Samples Modal */}
+      {showSamplesModal && (
         <Suspense fallback={<ModalLoadingFallback />}>
-          <ExamplesModal
-            isOpen={showExamplesModal}
+          <SamplesModal
+            isOpen={showSamplesModal}
             onClose={() => {
-              setShowExamplesModal(false);
-              // Return focus to Examples button after modal closes
+              setShowSamplesModal(false);
+              // Return focus to Samples button after modal closes
               setTimeout(() => {
-                examplesButtonRef.current?.focus();
+                samplesButtonRef.current?.focus();
               }, 0);
             }}
-            onLoadExample={handleLoadExample}
+            onLoadSample={handleLoadSample}
             currentCode={code}
           />
         </Suspense>

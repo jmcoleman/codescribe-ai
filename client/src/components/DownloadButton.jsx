@@ -114,10 +114,10 @@ export function DownloadButton({
         hover:scale-[1.02]
         active:scale-[0.98]
         focus:outline-none
-        focus:ring-2
-        focus:ring-purple-600 dark:focus:ring-purple-400
-        focus:ring-offset-2
-        focus:ring-offset-white dark:focus:ring-offset-slate-800
+        focus-visible:ring-2
+        focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400
+        focus-visible:ring-offset-2
+        focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-800
         motion-reduce:transition-none
         ${className}
       `}

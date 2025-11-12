@@ -117,7 +117,7 @@ export function AccountTab() {
           {!isEditing && (
             <button
               onClick={() => setIsEditing(true)}
-              className="px-4 py-2 text-sm font-medium text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 rounded"
+              className="px-4 py-2 text-sm font-medium text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 focus-visible:ring-offset-2 rounded"
             >
               Edit
             </button>
@@ -136,7 +136,7 @@ export function AccountTab() {
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
               disabled={!isEditing}
-              className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:text-slate-600 dark:disabled:text-slate-400 disabled:cursor-not-allowed bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+              className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus-visible:ring-2 focus-visible:ring-purple-600 focus:border-transparent disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:text-slate-600 dark:disabled:text-slate-400 disabled:cursor-not-allowed bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
               placeholder="Enter your first name"
             />
           </div>
@@ -152,7 +152,7 @@ export function AccountTab() {
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
               disabled={!isEditing}
-              className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:text-slate-600 dark:disabled:text-slate-400 disabled:cursor-not-allowed bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+              className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus-visible:ring-2 focus-visible:ring-purple-600 focus:border-transparent disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:text-slate-600 dark:disabled:text-slate-400 disabled:cursor-not-allowed bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
               placeholder="Enter your last name"
             />
           </div>
@@ -170,7 +170,7 @@ export function AccountTab() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={!isEditing}
-                className="w-full pl-10 pr-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:text-slate-600 dark:disabled:text-slate-400 disabled:cursor-not-allowed bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+                className="w-full pl-10 pr-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus-visible:ring-2 focus-visible:ring-purple-600 focus:border-transparent disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:text-slate-600 dark:disabled:text-slate-400 disabled:cursor-not-allowed bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
                 placeholder="your.email@example.com"
               />
             </div>
@@ -197,14 +197,14 @@ export function AccountTab() {
                 type="button"
                 onClick={cancelEdit}
                 disabled={isSaving}
-                className="flex-1 py-2.5 px-4 bg-slate-100 text-slate-900 rounded-lg font-medium hover:bg-slate-200 active:bg-slate-300 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600 dark:active:bg-slate-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-slate-600 focus:ring-offset-2"
+                className="flex-1 py-2.5 px-4 bg-slate-100 text-slate-900 rounded-lg font-medium hover:bg-slate-200 active:bg-slate-300 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600 dark:active:bg-slate-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-600 focus-visible:ring-offset-2"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isSaving}
-                className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white rounded-lg font-semibold shadow-lg shadow-purple-600/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white rounded-lg font-semibold shadow-lg shadow-purple-600/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 focus-visible:ring-offset-2"
               >
                 {isSaving ? (
                   <>
@@ -239,7 +239,7 @@ export function AccountTab() {
             {!showPasswordForm && (
               <button
                 onClick={() => setShowPasswordForm(true)}
-                className="px-4 py-2 text-sm font-medium text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 rounded"
+                className="px-4 py-2 text-sm font-medium text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 focus-visible:ring-offset-2 rounded"
               >
                 Change Password
               </button>
@@ -258,7 +258,7 @@ export function AccountTab() {
                   id="currentPassword"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+                  className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus-visible:ring-2 focus-visible:ring-purple-600 focus:border-transparent bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
                   placeholder="Enter current password"
                 />
               </div>
@@ -273,7 +273,7 @@ export function AccountTab() {
                   id="newPassword"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+                  className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus-visible:ring-2 focus-visible:ring-purple-600 focus:border-transparent bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
                   placeholder="Enter new password (min. 8 characters)"
                 />
               </div>
@@ -288,7 +288,7 @@ export function AccountTab() {
                   id="confirmPassword"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+                  className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus-visible:ring-2 focus-visible:ring-purple-600 focus:border-transparent bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
                   placeholder="Confirm new password"
                 />
               </div>
@@ -305,7 +305,7 @@ export function AccountTab() {
               <div className="flex gap-3">
                 <button
                   type="submit"
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white rounded-lg font-semibold shadow-lg shadow-purple-600/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white rounded-lg font-semibold shadow-lg shadow-purple-600/20 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 focus-visible:ring-offset-2"
                 >
                   <Check className="w-5 h-5" aria-hidden="true" />
                   <span>Update Password</span>
@@ -319,7 +319,7 @@ export function AccountTab() {
                     setConfirmPassword('');
                     setPasswordError('');
                   }}
-                  className="flex-1 py-2.5 px-4 bg-slate-100 text-slate-900 rounded-lg font-medium hover:bg-slate-200 active:bg-slate-300 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600 dark:active:bg-slate-500 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:ring-offset-2"
+                  className="flex-1 py-2.5 px-4 bg-slate-100 text-slate-900 rounded-lg font-medium hover:bg-slate-200 active:bg-slate-300 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600 dark:active:bg-slate-500 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-600 focus-visible:ring-offset-2"
                 >
                   Cancel
                 </button>
@@ -416,7 +416,7 @@ export function AccountTab() {
                 toastCompact(error.message || 'Failed to export data', 'error');
               }
             }}
-            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white rounded-lg font-semibold shadow-lg shadow-purple-600/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
+            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white rounded-lg font-semibold shadow-lg shadow-purple-600/20 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 focus-visible:ring-offset-2"
           >
             <Download className="w-5 h-5" aria-hidden="true" />
             <span>Download My Data</span>

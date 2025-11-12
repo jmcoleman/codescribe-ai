@@ -1,5 +1,5 @@
-// Curated code examples for demonstration purposes
-export const codeExamples = [
+// Curated code samples for demonstration purposes
+export const codeSamples = [
   {
     id: 'simple-function',
     title: 'Simple Utility Function',

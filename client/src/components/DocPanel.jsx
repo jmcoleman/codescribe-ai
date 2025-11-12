@@ -156,7 +156,7 @@ export function DocPanel({
   onGenerate,
   onReset
 }) {
-  const { theme } = useTheme();
+  const { effectiveTheme } = useTheme();
 
   // Load initial state from localStorage
   const [isExpanded, setIsExpanded] = useState(() => {
@@ -403,7 +403,7 @@ export function DocPanel({
                     <pre
                       className="my-6 rounded-lg overflow-auto border dark:border-slate-700 border-slate-200 bg-slate-50 dark:bg-slate-800"
                       style={{
-                        backgroundColor: theme === 'dark' ? '#1E293B' : '#F8FAFC',
+                        backgroundColor: effectiveTheme === 'dark' ? '#1E293B' : '#F8FAFC',
                       }}
                       {...props}
                     >
@@ -455,7 +455,7 @@ export function DocPanel({
                   // Handle other code blocks
                   return !inline && match ? (
                     <SyntaxHighlighter
-                      style={theme === 'dark' ? codescribeDarkTheme : codescribeLightTheme}
+                      style={effectiveTheme === 'dark' ? codescribeDarkTheme : codescribeLightTheme}
                       language={match[1]}
                       PreTag="div"
                       wrapLines={false}
@@ -517,7 +517,7 @@ export function DocPanel({
                       <button
                         type="button"
                         onClick={onUpload}
-                        className="inline-flex items-center px-2 py-0.5 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-400 dark:hover:border-slate-500 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-600 dark:focus:ring-purple-400 focus:ring-offset-1"
+                        className="inline-flex items-center px-2 py-0.5 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-400 dark:hover:border-slate-500 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-1"
                       >
                         Upload Files
                       </button>
@@ -538,7 +538,7 @@ export function DocPanel({
                       <button
                         type="button"
                         onClick={onGenerate}
-                        className="inline-flex items-center px-2 py-0.5 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-400 dark:hover:border-slate-500 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-600 dark:focus:ring-purple-400 focus:ring-offset-1"
+                        className="inline-flex items-center px-2 py-0.5 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-400 dark:hover:border-slate-500 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-1"
                       >
                         Generate Docs
                       </button>

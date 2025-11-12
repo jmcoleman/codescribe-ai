@@ -260,7 +260,7 @@ describe('CopyButton', () => {
     it('has focus ring styles', () => {
       render(<CopyButton text="test" />);
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('focus:ring-2', 'focus:ring-purple-600', 'focus:ring-offset-2');
+      expect(button).toHaveClass('focus-visible:ring-2', 'focus-visible:ring-purple-600', 'focus-visible:ring-offset-2');
     });
 
     it('respects reduced motion preference', () => {
@@ -381,7 +381,7 @@ describe('CopyButtonWithText', () => {
   it('has focus ring styles', () => {
     render(<CopyButtonWithText text="test" label="Copy" />);
     const button = screen.getByRole('button');
-    expect(button).toHaveClass('focus:ring-2', 'focus:ring-purple-600', 'focus:ring-offset-2');
+    expect(button).toHaveClass('focus-visible:ring-2', 'focus-visible:ring-purple-600', 'focus-visible:ring-offset-2');
   });
 
   it('triggers haptic feedback on supported devices', async () => {

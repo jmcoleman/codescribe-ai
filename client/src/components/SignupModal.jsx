@@ -369,7 +369,7 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin, subscriptionCont
                     if (emailError) setEmailError('');
                   }}
                   placeholder="you@example.com"
-                  className={`block w-full pl-10 pr-3 py-2.5 border rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-600 dark:focus:ring-purple-400 focus:border-transparent transition-shadow ${
+                  className={`block w-full pl-10 pr-3 py-2.5 border rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus:border-transparent transition-shadow ${
                     emailError ? 'border-red-300 dark:border-red-500 bg-red-50 dark:bg-red-900/20' : 'border-slate-300 dark:border-slate-600'
                   }`}
                   autoComplete="off"
@@ -408,7 +408,7 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin, subscriptionCont
                     if (passwordError) setPasswordError('');
                   }}
                   placeholder="Create a strong password"
-                  className={`block w-full pl-10 pr-11 py-2.5 border rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-600 dark:focus:ring-purple-400 focus:border-transparent transition-shadow ${
+                  className={`block w-full pl-10 pr-11 py-2.5 border rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus:border-transparent transition-shadow ${
                     passwordError ? 'border-red-300 dark:border-red-500 bg-red-50 dark:bg-red-900/20' : 'border-slate-300 dark:border-slate-600'
                   }`}
                   autoComplete="new-password"
@@ -496,7 +496,7 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin, subscriptionCont
                     if (confirmPasswordError) setConfirmPasswordError('');
                   }}
                   placeholder="Confirm your password"
-                  className={`block w-full pl-10 pr-11 py-2.5 border rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-600 dark:focus:ring-purple-400 focus:border-transparent transition-shadow ${
+                  className={`block w-full pl-10 pr-11 py-2.5 border rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus:border-transparent transition-shadow ${
                     confirmPasswordError ? 'border-red-300 dark:border-red-500 bg-red-50 dark:bg-red-900/20' : 'border-slate-300 dark:border-slate-600'
                   }`}
                   autoComplete="new-password"
@@ -536,7 +536,7 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin, subscriptionCont
                     // Clear error when user checks the box
                     if (termsError) setTermsError('');
                   }}
-                  className={`mt-1 w-4 h-4 text-purple-600 border-slate-300 dark:border-slate-600 rounded focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 cursor-pointer ${
+                  className={`mt-1 w-4 h-4 text-purple-600 border-slate-300 dark:border-slate-600 rounded focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 cursor-pointer ${
                     termsError ? 'border-red-300' : ''
                   }`}
                   disabled={isLoading}

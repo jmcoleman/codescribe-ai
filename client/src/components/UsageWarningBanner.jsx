@@ -142,7 +142,7 @@ export function UsageWarningBanner({
             <button
               type="button"
               onClick={handleDismiss}
-              className="flex-shrink-0 p-1 hover:bg-slate-200 rounded-lg transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2"
+              className="flex-shrink-0 p-1 hover:bg-slate-200 rounded-lg transition-all active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500 focus-visible:ring-offset-2"
               aria-label="Dismiss usage warning"
             >
               <X className="w-4 h-4 text-slate-500" aria-hidden="true" />
@@ -170,7 +170,7 @@ export function UsageWarningBanner({
             <button
               type="button"
               onClick={onUpgrade}
-              className="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white text-sm font-semibold rounded-lg transition-all duration-200 shadow-lg shadow-purple-600/20 hover:shadow-purple-600/30 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
+              className="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white text-sm font-semibold rounded-lg transition-all duration-200 shadow-lg shadow-purple-600/20 hover:shadow-purple-600/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 focus-visible:ring-offset-2"
             >
               Upgrade
               <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />

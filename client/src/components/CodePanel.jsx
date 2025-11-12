@@ -29,10 +29,10 @@ export function CodePanel({
   readOnly = false,
   onFileDrop,
   onClear,
-  onExamplesClick,
-  examplesButtonRef
+  onSamplesClick,
+  samplesButtonRef
 }) {
-  const { theme } = useTheme();
+  const { effectiveTheme } = useTheme();
   const [isDragging, setIsDragging] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -119,20 +119,20 @@ export function CodePanel({
         <div className="flex items-center gap-2">
           {/* Desktop: Show all buttons */}
           <div className="hidden md:flex items-center gap-2">
-            {onExamplesClick && (
+            {onSamplesClick && (
               <button
                 type="button"
-                ref={examplesButtonRef}
+                ref={samplesButtonRef}
                 onClick={() => {
-                  // Preload ExamplesModal on click
-                  import('./ExamplesModal').catch(() => {});
-                  onExamplesClick();
+                  // Preload SamplesModal on click
+                  import('./SamplesModal').catch(() => {});
+                  onSamplesClick();
                 }}
                 onMouseEnter={() => {
-                  // Preload ExamplesModal on hover
-                  import('./ExamplesModal').catch(() => {});
+                  // Preload SamplesModal on hover
+                  import('./SamplesModal').catch(() => {});
                 }}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500 rounded-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-purple-600 dark:focus:ring-purple-400 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-900"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500 rounded-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900"
                 aria-label="Load code samples"
                 title="Load code samples"
               >
@@ -168,7 +168,7 @@ export function CodePanel({
                   // Reset clearing state after animation completes
                   setTimeout(() => setIsClearing(false), 500);
                 }}
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500 rounded-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-purple-600 dark:focus:ring-purple-400 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-900 ${isClearing ? 'opacity-75 pointer-events-none' : ''}`}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500 rounded-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900 ${isClearing ? 'opacity-75 pointer-events-none' : ''}`}
                 aria-label="Clear editor"
                 title="Clear editor"
               >
@@ -186,7 +186,7 @@ export function CodePanel({
             <button
               type="button"
               onClick={() => setShowMobileMenu(!showMobileMenu)}
-              className="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-purple-600 dark:focus:ring-purple-400 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-900"
+              className="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900"
               aria-label="More actions"
               aria-expanded={showMobileMenu}
             >
@@ -195,13 +195,13 @@ export function CodePanel({
 
             {showMobileMenu && (
               <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg py-1 z-50">
-                {onExamplesClick && (
+                {onSamplesClick && (
                   <button
                     type="button"
-                    ref={examplesButtonRef}
+                    ref={samplesButtonRef}
                     onClick={() => {
-                      import('./ExamplesModal').catch(() => {});
-                      onExamplesClick();
+                      import('./SamplesModal').catch(() => {});
+                      onSamplesClick();
                       setShowMobileMenu(false);
                     }}
                     className="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
@@ -319,7 +319,7 @@ export function CodePanel({
                 ariaLabel: readOnly ? 'Code editor, read-only' : 'Code editor, type or paste your code here',
                 bracketPairColorization: { enabled: false }, // Disable bracket colorization
               }}
-              theme={theme === 'dark' ? 'codescribe-dark' : 'codescribe-light'}
+              theme={effectiveTheme === 'dark' ? 'codescribe-dark' : 'codescribe-light'}
             />
           </Suspense>
         </div>

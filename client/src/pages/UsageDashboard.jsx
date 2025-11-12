@@ -197,7 +197,7 @@ export function UsageDashboard() {
         {/* Back Button */}
         <button
           onClick={() => navigate(-1)}
-          className="inline-flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors mb-6 group focus:outline-none focus:ring-2 focus:ring-purple-600 dark:focus:ring-purple-400 focus:ring-offset-2 dark:focus:ring-offset-slate-900 rounded-lg px-2 py-1"
+          className="inline-flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors mb-6 group focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900 rounded-lg px-2 py-1"
           aria-label="Go back to previous page"
         >
           <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" aria-hidden="true" />
@@ -216,7 +216,7 @@ export function UsageDashboard() {
               className={`
                 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg
                 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-600 transition-all duration-200
-                focus:outline-none focus:ring-2 focus:ring-purple-600 dark:focus:ring-purple-400 focus:ring-offset-2 dark:focus:ring-offset-slate-900
+                focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900
                 disabled:opacity-50 disabled:cursor-not-allowed
                 ${refreshing ? 'animate-pulse' : ''}
               `}
@@ -259,7 +259,7 @@ export function UsageDashboard() {
               </div>
               <button
                 onClick={() => navigate('/pricing')}
-                className="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white text-sm font-semibold rounded-lg transition-all duration-200 shadow-lg shadow-purple-600/20 hover:shadow-purple-600/30 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
+                className="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white text-sm font-semibold rounded-lg transition-all duration-200 shadow-lg shadow-purple-600/20 hover:shadow-purple-600/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 focus-visible:ring-offset-2"
               >
                 Upgrade
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -450,7 +450,7 @@ function QuickActionCard({ icon, title, description, onClick, disabled = false }
       className={`
         bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4
         transition-all duration-200
-        focus:outline-none focus:ring-2 focus:ring-purple-600 dark:focus:ring-purple-400 focus:ring-offset-2 dark:focus:ring-offset-slate-900
+        focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900
         ${disabled
           ? 'opacity-50 cursor-not-allowed'
           : 'hover:border-purple-300 dark:hover:border-purple-600 hover:shadow-md dark:hover:shadow-slate-900/50 group'

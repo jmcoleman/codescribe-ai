@@ -77,8 +77,10 @@ export function ThemeProvider({ children }) {
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
 
+  const effectiveTheme = getEffectiveTheme();
+
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme, effectiveTheme }}>
       {children}
     </ThemeContext.Provider>
   );

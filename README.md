@@ -761,7 +761,7 @@ See [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) for complete
 
 ### 📊 Testing & Quality
 
-**Comprehensive Test Coverage: 2,385 Tests** (2,335 passing, 50 skipped, 97.9% pass rate)
+**Comprehensive Test Coverage: 2,391 Tests** (2,341 passing, 50 skipped, 97.9% pass rate)
 - **Backend Tests**: 878 tests (857 passing, 21 skipped) - Jest + Supertest
   - Service layer: qualityScorer, claudeClient, codeParser, docGenerator, emailService
   - Authentication: 102 tests (auth middleware, user model, OAuth flows)
@@ -774,7 +774,7 @@ See [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) for complete
   - Mermaid generation tests
   - **Coverage**: 91.83% services statements, 95.81% overall, 88.72% branches
   - **Pass Rate**: 100% (857 passing, 21 skipped, 0 failures)
-- **Frontend Tests**: 1,507 tests (1,478 passing, 29 skipped) - Vitest + React Testing Library
+- **Frontend Tests**: 1,513 tests (1,484 passing, 29 skipped) - Vitest + React Testing Library
   - Component tests with accessibility checks (18/18 components tested)
   - Authentication UI: SignupModal, LoginModal, ForgotPasswordModal, ResetPasswordModal
   - Settings UI: AccountTab, AppearanceTab, PrivacyTab, SubscriptionTab, DangerZoneTab, AnalyticsWrapper

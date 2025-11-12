@@ -7,15 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Removed
+---
 
-- **Session-Based Authentication Code** (JWT-only authentication)
-  - Removed express-session, connect-pg-simple, and passport.session from [server/src/server.js](server/src/server.js)
-  - Removed session fallback logic from requireAuth and optionalAuth in [server/src/middleware/auth.js](server/src/middleware/auth.js)
-  - Removed passport serializeUser/deserializeUser functions from [server/src/config/passport.js](server/src/config/passport.js)
-  - Removed 3 session-related tests from [server/src/middleware/__tests__/auth.test.js](server/src/middleware/__tests__/auth.test.js)
-  - Clarified all authentication uses JWT tokens (both email/password and GitHub OAuth)
-  - Tests: All 858 backend tests pass (97.6% pass rate)
+## [2.7.4] - 2025-11-11
+
+**Status:** ✅ Modal Width Optimization & Terminology Refactoring
+
+**Summary:** Increased Samples modal width for better space utilization, completed comprehensive refactoring from "Example" to "Sample" terminology throughout codebase for UI consistency, updated 48 tests to reflect changes, and fixed focus ring test expectations.
+
+### Changed
+
+- **Samples Modal Width Optimization** ([client/src/components/SamplesModal.jsx](client/src/components/SamplesModal.jsx:176))
+  - Increased modal width from `max-w-4xl` (896px) to `max-w-5xl` (1024px)
+  - Better utilizes screen space for split-view (40/60) layout
+  - Improves code preview readability on larger screens
+
+- **Terminology Refactoring: "Example" → "Sample"** (9 files + 5 test files)
+  - Component: [client/src/components/ExamplesModal.jsx](client/src/components/ExamplesModal.jsx) → [client/src/components/SamplesModal.jsx](client/src/components/SamplesModal.jsx)
+  - Data export: `codeExamples` → `codeSamples` in [client/src/data/examples.js](client/src/data/examples.js)
+  - Component names: `ExampleCard` → `SampleCard`, `ExamplePreview` → `SamplePreview`
+  - State variables: `selectedExample` → `selectedSample`, `showExamplesModal` → `showSamplesModal`
+  - Props: `onExamplesClick` → `onSamplesClick`, `examplesButtonRef` → `samplesButtonRef`
+  - Functions: `handleLoadExample` → `handleLoadSample`, `onLoadExample` → `onLoadSample`
+  - Updated in: [client/src/App.jsx](client/src/App.jsx), [client/src/components/CodePanel.jsx](client/src/components/CodePanel.jsx)
+  - Deleted old ExamplesModal.jsx after migration
+
+### Fixed
+
+- **Test Suite Updates** (48 SamplesModal tests + 42 other tests = 90 tests fixed)
+  - **SamplesModal.test.jsx** (48 tests): Fixed keyboard navigation and focus trap tests to account for new search input in tab order
+    - Updated "should navigate between cards using Tab key" test
+    - Updated "should allow keyboard navigation through entire modal" test
+    - Updated "should trap focus within modal" test
+    - Updated "should trap focus backwards with Shift+Tab" test
+    - Updated "should support both Enter and Space for preview" test (auto-selected card label)
+  - **examples.test.js** (37 tests): Updated all references from `codeExamples` to `codeSamples`
+  - **Focus Ring Tests** (5 tests): Updated from `focus:ring-2` to `focus-visible:ring-2`
+    - [client/src/components/__tests__/CopyButton.test.jsx](client/src/components/__tests__/CopyButton.test.jsx) (2 tests)
+    - [client/src/components/__tests__/DownloadButton.test.jsx](client/src/components/__tests__/DownloadButton.test.jsx) (1 test)
+    - [client/src/components/__tests__/ErrorBanner.test.jsx](client/src/components/__tests__/ErrorBanner.test.jsx) (1 test)
+    - [client/src/components/__tests__/Select.test.jsx](client/src/components/__tests__/Select.test.jsx) (1 test)
+
+### Tests
+
+- **Frontend:** 1,484 passing | 29 skipped (1,513 total)
+- **Backend:** 857 passing | 21 skipped (878 total)
+- **Total:** 2,341 passing | 50 skipped (2,391 total)
+- **Pass Rate:** 97.9%
 
 ---
 

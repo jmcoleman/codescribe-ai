@@ -125,7 +125,7 @@ export const Header = forwardRef(function Header({ onMenuClick, onHelpClick }, r
                 <>
                   {isAuthenticated ? (
                     <Menu as="div" className="relative">
-                      <Menu.Button className="flex items-center gap-2 px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-purple-600 dark:focus:ring-purple-400 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-950">
+                      <Menu.Button className="flex items-center gap-2 px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950">
                         <div className="flex items-center gap-2">
                           <User className="w-5 h-5 text-slate-600 dark:text-slate-400" aria-hidden="true" />
                           <div className="flex flex-col items-start">
@@ -273,7 +273,7 @@ export const Header = forwardRef(function Header({ onMenuClick, onHelpClick }, r
               type="button"
               data-testid="mobile-menu-btn"
               onClick={onMenuClick}
-              className="md:hidden p-2 hover:bg-slate-100 dark:hover:bg-slate-800 hover:scale-[1.05] rounded-lg transition-all duration-200 motion-reduce:transition-none active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-purple-600 dark:focus:ring-purple-400 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-950"
+              className="md:hidden p-2 hover:bg-slate-100 dark:hover:bg-slate-800 hover:scale-[1.05] rounded-lg transition-all duration-200 motion-reduce:transition-none active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950"
               aria-label="Open menu"
             >
               <MenuIcon className="w-6 h-6 text-slate-600 dark:text-slate-400" aria-hidden="true" />

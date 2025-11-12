@@ -130,7 +130,7 @@ export function HelpModal({ isOpen, onClose }) {
             <button
               type="button"
               onClick={() => setActiveTab('quickstart')}
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-purple-600 ${
+              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-purple-600 ${
                 activeTab === 'quickstart'
                   ? 'border-purple-600 text-purple-600 dark:text-purple-400'
                   : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600'
@@ -146,7 +146,7 @@ export function HelpModal({ isOpen, onClose }) {
             <button
               type="button"
               onClick={() => setActiveTab('quality')}
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-purple-600 ${
+              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-purple-600 ${
                 activeTab === 'quality'
                   ? 'border-purple-600 text-purple-600 dark:text-purple-400'
                   : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600'
@@ -162,7 +162,7 @@ export function HelpModal({ isOpen, onClose }) {
             <button
               type="button"
               onClick={() => setActiveTab('faq')}
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-purple-600 ${
+              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-purple-600 ${
                 activeTab === 'faq'
                   ? 'border-purple-600 text-purple-600 dark:text-purple-400'
                   : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600'
@@ -297,7 +297,7 @@ export function HelpModal({ isOpen, onClose }) {
                       <button
                         type="button"
                         onClick={() => toggleFAQ(index)}
-                        className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-purple-600 dark:focus:ring-purple-400"
+                        className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400"
                         aria-expanded={isExpanded}
                         aria-controls={`faq-answer-${index}`}
                       >
@@ -339,7 +339,7 @@ export function HelpModal({ isOpen, onClose }) {
           <button
             type="button"
             onClick={handleClose}
-            className="w-full px-4 py-3 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-700 dark:hover:bg-purple-800 dark:active:bg-purple-900 text-white rounded-lg font-medium shadow-lg shadow-purple-600/20 dark:shadow-purple-900/30 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-600 dark:focus:ring-purple-400 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
+            className="w-full px-4 py-3 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-700 dark:hover:bg-purple-800 dark:active:bg-purple-900 text-white rounded-lg font-medium shadow-lg shadow-purple-600/20 dark:shadow-purple-900/30 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900"
           >
             Got it, let's start!
           </button>

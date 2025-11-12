@@ -362,9 +362,9 @@ describe('Select', () => {
       const button = screen.getByRole('button');
 
       expect(button).toHaveClass('focus:outline-none');
-      expect(button).toHaveClass('focus:ring-2');
-      expect(button).toHaveClass('focus:ring-purple-600');
-      expect(button).toHaveClass('focus:ring-offset-2');
+      expect(button).toHaveClass('focus-visible:ring-2');
+      expect(button).toHaveClass('focus-visible:ring-purple-600');
+      expect(button).toHaveClass('focus-visible:ring-offset-2');
     });
 
     it('dropdown has correct positioning classes', async () => {
