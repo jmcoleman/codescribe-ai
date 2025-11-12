@@ -9,6 +9,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.7.5] - 2025-11-12
+
+**Status:** ✅ UX Refinements & Documentation
+
+**Summary:** Fixed toast border colors for better visual consistency (cyan → slate), improved back button UX across multiple pages, enhanced Contact Sales messaging for Team/Enterprise tiers, added comprehensive dark mode and Google OAuth implementation documentation, and removed outdated recovery planning doc.
+
+### Fixed
+
+- **Toast System Border Consistency** ([client/src/components/toast/CustomToast.jsx](client/src/components/toast/CustomToast.jsx), [client/src/utils/toast.jsx](client/src/utils/toast.jsx))
+  - Changed border color from `border-cyan-300` to `border-slate-300` for all toast types (success, error, warning, info)
+  - Improved visual consistency with overall design system
+  - Applied to CustomToast, CompactToast, AvatarToast, and ExpandableToast components
+
+- **Back Button Layout & Spacing** (6 pages)
+  - Fixed duplicate container divs causing inconsistent spacing
+  - Added `text-sm` size for better hierarchy
+  - Added consistent bottom margin (`mb-3` or `mb-4`)
+  - Improved responsive padding across breakpoints
+  - Updated: [client/src/components/PricingPage.jsx](client/src/components/PricingPage.jsx), [client/src/pages/PrivacyPolicy.jsx](client/src/pages/PrivacyPolicy.jsx), [client/src/pages/TermsOfService.jsx](client/src/pages/TermsOfService.jsx), [client/src/pages/Settings.jsx](client/src/pages/Settings.jsx), [client/src/pages/UsageDashboard.jsx](client/src/pages/UsageDashboard.jsx), [client/src/pages/AdminUsage.jsx](client/src/pages/AdminUsage.jsx)
+
+### Changed
+
+- **Contact Sales UX** ([client/src/components/SignupModal.jsx](client/src/components/SignupModal.jsx:327-342))
+  - Enhanced subscription context messaging for Team/Enterprise tiers
+  - Displays "Contact Sales - {Tier} Plan" header
+  - Shows "Create an account to connect with our sales team and discuss your needs" description
+  - Differentiates from Pro/Premium subscription flow
+
+### Added
+
+- **Dark Mode Implementation Documentation** ([docs/design/theming/DARK-MODE-IMPLEMENTATION.md](docs/design/theming/DARK-MODE-IMPLEMENTATION.md))
+  - Comprehensive 482-line reference for dark mode system shipped in v2.7.0
+  - Complete color system (surfaces, brand colors, text, accents, semantic colors)
+  - Implementation architecture (ThemeContext, ThemeToggle, Tailwind config)
+  - Component coverage (38 components documented)
+  - Monaco Editor, Prism, and Mermaid theming
+  - Test coverage (106 tests) and accessibility compliance (WCAG AAA)
+  - Component conversion patterns with light → dark mappings
+
+- **Google OAuth Implementation Documentation** ([docs/planning/GOOGLE-OAUTH-IMPLEMENTATION.md](docs/planning/GOOGLE-OAUTH-IMPLEMENTATION.md))
+  - 1700-line comprehensive guide for future Google OAuth integration
+  - Architecture, security patterns, and implementation details
+
+### Removed
+
+- **Outdated Recovery Planning Doc** ([docs/planning/RECOVERY-PLAN.md](docs/planning/RECOVERY-PLAN.md))
+  - Removed obsolete authentication recovery planning document from v2.0.0 development cycle
+
+### Tests
+
+- **Frontend:** 1,484 passing | 29 skipped (1,513 total)
+- **Backend:** 857 passing | 21 skipped (878 total)
+- **Total:** 2,341 passing | 50 skipped (2,391 total)
+- **Pass Rate:** 97.91%
+
+---
+
 ## [2.7.4] - 2025-11-11
 
 **Status:** ✅ Modal Width Optimization & Terminology Refactoring
