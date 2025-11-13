@@ -46,7 +46,8 @@ function greet(name) {
     };
 
     const mockDocumentation = '# Documentation\n\nThis is great documentation!';
-    const attribution = `\n\n\n\n---\n\n*Generated with [CodeScribe AI](https://codescribeai.com) - AI-powered code documentation*`;
+    // Free tier attribution (default)
+    const attribution = `\n\n\n\n---\n\n*🟣 Generated with [CodeScribe AI](https://codescribeai.com) • **Free Tier***\n\n*Upgrade to [Pro](https://codescribeai.com/pricing) to remove this watermark and unlock advanced features*`;
     const mockDocumentationWithAttribution = mockDocumentation + attribution;
 
     const mockQualityScore = {
@@ -465,7 +466,7 @@ export function add(a, b) {
       };
 
       const mockDoc = '# Add Function\n\nAdds two numbers.';
-      const mockDocWithAttribution = mockDoc + `\n\n\n\n---\n\n*Generated with [CodeScribe AI](https://codescribeai.com) - AI-powered code documentation*`;
+      const mockDocWithAttribution = mockDoc + `\n\n\n\n---\n\n*🟣 Generated with [CodeScribe AI](https://codescribeai.com) • **Free Tier***\n\n*Upgrade to [Pro](https://codescribeai.com/pricing) to remove this watermark and unlock advanced features*`;
       const mockScore = { score: 90, grade: 'A' };
 
       parseCode.mockResolvedValue(mockAnalysis);
@@ -564,7 +565,7 @@ export function add(a, b) {
       });
 
       const simpleDoc = '# Simple Script';
-      const simpleDocWithAttribution = simpleDoc + `\n\n\n\n---\n\n*Generated with [CodeScribe AI](https://codescribeai.com) - AI-powered code documentation*`;
+      const simpleDocWithAttribution = simpleDoc + `\n\n\n\n---\n\n*🟣 Generated with [CodeScribe AI](https://codescribeai.com) • **Free Tier***\n\n*Upgrade to [Pro](https://codescribeai.com/pricing) to remove this watermark and unlock advanced features*`;
       claudeClient.generate.mockResolvedValue(simpleDoc);
       calculateQualityScore.mockReturnValue({ score: 50, grade: 'F' });
 
