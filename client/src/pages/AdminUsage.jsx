@@ -426,12 +426,12 @@ export default function AdminUsage() {
               <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
                 {userTypeFilter === 'anonymous' ? 'Top IPs (Last 7 Days)' :
                  userTypeFilter === 'authenticated' ? 'Top Users (This Period)' :
-                 'Top Users (This Period)'}
+                 'Top Users (All Types)'}
               </h2>
               <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
                 {userTypeFilter === 'anonymous' ? 'Most active anonymous users (last 7 days)' :
                  userTypeFilter === 'authenticated' ? 'Highest usage in current billing period' :
-                 'Highest usage in current billing period'}
+                 'Sorted by total usage (anonymous: last 7 days, authenticated: lifetime)'}
               </p>
             </div>
             <div className="overflow-x-auto">
@@ -462,10 +462,10 @@ export default function AdminUsage() {
                     ) : (
                       <>
                         <th className="px-6 py-3 text-right text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                          Current Usage
+                          Recent Activity
                         </th>
                         <th className="px-6 py-3 text-right text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                          Total / Days
+                          Total Usage
                         </th>
                       </>
                     )}
@@ -474,75 +474,70 @@ export default function AdminUsage() {
                 <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
                   {userTypeFilter === 'all' ? (
                     // Show both anonymous and authenticated when "all" is selected
-                    <>
-                      {stats.topIPs.length === 0 && stats.topUsers.length === 0 ? (
+                    (() => {
+                      // Merge and sort both types by usage
+                      const mergedUsers = [
+                        ...stats.topIPs.map(ip => ({
+                          type: 'anonymous',
+                          identifier: ip.ipAddress,
+                          currentPeriod: ip.totalGenerations, // Last 7 days total
+                          allTime: ip.totalGenerations, // We don't have lifetime for IPs
+                          label: ip.ipAddress,
+                          sublabel: 'Anonymous',
+                          clickable: true,
+                          onClick: () => fetchIPDetails(ip.ipAddress)
+                        })),
+                        ...stats.topUsers.map(user => ({
+                          type: 'authenticated',
+                          identifier: user.userId,
+                          currentPeriod: user.thisPeriod, // Current month
+                          allTime: user.allTime, // Lifetime
+                          label: user.email,
+                          sublabel: user.tier,
+                          clickable: false
+                        }))
+                      ].sort((a, b) => b.allTime - a.allTime); // Sort by all-time usage (highest first)
+
+                      return mergedUsers.length === 0 ? (
                         <tr>
                           <td colSpan="3" className="px-6 py-8 text-center text-slate-600 dark:text-slate-400">
                             No data available
                           </td>
                         </tr>
                       ) : (
-                        <>
-                          {/* Anonymous IPs */}
-                          {stats.topIPs.map((ip, index) => (
-                            <tr
-                              key={`ip-${ip.ipAddress}`}
-                              className="hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors cursor-pointer"
-                              onClick={() => fetchIPDetails(ip.ipAddress)}
-                            >
-                              <td className="px-6 py-4">
-                                <div className="flex items-center gap-3">
-                                  <span className="text-sm font-bold text-purple-600 dark:text-purple-400 w-8 flex-shrink-0">
-                                    #{index + 1}
-                                  </span>
-                                  <div>
-                                    <div className="text-sm font-mono text-slate-900 dark:text-slate-100">{ip.ipAddress}</div>
-                                    <div className="text-xs text-slate-500 dark:text-slate-400">Anonymous</div>
+                        mergedUsers.map((user, index) => (
+                          <tr
+                            key={`${user.type}-${user.identifier}`}
+                            className={`hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors ${user.clickable ? 'cursor-pointer' : ''}`}
+                            onClick={user.clickable ? user.onClick : undefined}
+                          >
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-3">
+                                <span className="text-sm font-bold text-purple-600 dark:text-purple-400 w-8 flex-shrink-0">
+                                  #{index + 1}
+                                </span>
+                                <div>
+                                  <div className={`text-sm text-slate-900 dark:text-slate-100 ${user.type === 'anonymous' ? 'font-mono' : ''}`}>
+                                    {user.label}
                                   </div>
+                                  <div className="text-xs text-slate-500 dark:text-slate-400 capitalize">{user.sublabel}</div>
                                 </div>
-                              </td>
-                              <td className="px-6 py-4 text-right">
-                                <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                                  {ip.totalGenerations}
-                                </span>
-                              </td>
-                              <td className="px-6 py-4 text-right">
-                                <span className="text-sm text-slate-600 dark:text-slate-400">{ip.daysActive}</span>
-                              </td>
-                            </tr>
-                          ))}
-                          {/* Authenticated Users */}
-                          {stats.topUsers.map((user, index) => (
-                            <tr
-                              key={`user-${user.userId}`}
-                              className="hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-                            >
-                              <td className="px-6 py-4">
-                                <div className="flex items-center gap-3">
-                                  <span className="text-sm font-bold text-purple-600 dark:text-purple-400 w-8 flex-shrink-0">
-                                    #{stats.topIPs.length + index + 1}
-                                  </span>
-                                  <div>
-                                    <div className="text-sm text-slate-900 dark:text-slate-100">{user.email}</div>
-                                    <div className="text-xs text-slate-500 dark:text-slate-400 capitalize">{user.tier}</div>
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 text-right">
-                                <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                                  {user.thisPeriod}
-                                </span>
-                              </td>
-                              <td className="px-6 py-4 text-right">
-                                <span className="text-sm font-semibold text-purple-600 dark:text-purple-400">
-                                  {user.allTime}
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
-                        </>
-                      )}
-                    </>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 text-right">
+                              <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                                {user.currentPeriod.toLocaleString()}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-right">
+                              <span className="text-sm font-semibold text-purple-600 dark:text-purple-400">
+                                {user.allTime.toLocaleString()}
+                              </span>
+                            </td>
+                          </tr>
+                        ))
+                      );
+                    })()
                   ) : userTypeFilter === 'anonymous' ? (
                     // Show only anonymous IPs
                     <>
