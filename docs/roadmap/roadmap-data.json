@@ -67,7 +67,7 @@
     },
     "footerLeft": "<strong>CodeScribe AI</strong> \u00b7 Strategic Roadmap v3.11",
     "footer": "Phase 1 Complete \u00b7 Phase 2 Complete \u00b7 Phase 3 Epic 3.1 Complete (Dark Mode) \u00b7 Launch: Mid-Jan 2026",
-    "lastUpdated": "November 12, 2025 (v2.7.6 - Quality Breakdown Modal Enhancements & Test Coverage)"
+    "lastUpdated": "November 13, 2025"
   },
   "columns": [
     {
@@ -851,6 +851,48 @@
             "Final Results: 2,405 tests (2,351 passed, 54 skipped, 0 failed) - 100% pass rate",
             "Frontend: 1,494 passed | 33 skipped (1,527 total)",
             "Backend: 857 passed | 21 skipped (878 total)",
+            "Coverage: 91.83% backend coverage maintained",
+            "Documentation: Updated CHANGELOG, README, CLAUDE.md, testing docs"
+          ]
+        },
+        {
+          "version": "v2.7.7",
+          "title": "Admin Dashboard Performance Optimization & Test Fixes",
+          "duration": "1 day",
+          "status": "✓ Complete",
+          "completedDate": "Nov 13, 2025",
+          "badge": "Performance & Security",
+          "features": [
+            "Database Migration 017: Total Generations Column",
+            "Added total_generations INTEGER NOT NULL DEFAULT 0 column to users table",
+            "Created index idx_users_total_generations for fast sorting (DESC order)",
+            "Created trigger function update_user_total_generations() to automatically maintain totals",
+            "Trigger handles INSERT/UPDATE/DELETE operations on user_quotas table",
+            "Backfilled historical data from existing user_quotas records",
+            "Performance improvement: O(n×m) query aggregation → O(1) direct lookup",
+            "Admin Dashboard API Updates",
+            "Top Users query: Replaced hardcoded days_active=1 with meaningful data",
+            "Now returns this_period (current monthly_count) and all_time (total_generations)",
+            "Sorts by all_time (lifetime usage) instead of current period",
+            "Removed 7-day activity filter to show ALL users in current billing period",
+            "Admin Dashboard Frontend Updates",
+            "Card title: Changed from 'Last 7 Days' to 'This Period' for authenticated users",
+            "Table headers: This Period | All Time for authenticated view",
+            "Table cells: Display thisPeriod and allTime with purple accent on All Time",
+            "Recent Activity label: 'Last 50 generations across all documentation types'",
+            "Critical Security Fix: CI Database Cleanup Prevention",
+            "Prevented globalTeardown from running in CI environments (security fix)",
+            "CI should NEVER connect to real databases (uses mocks only)",
+            "Added environment check: Skips cleanup if CI=true or GITHUB_ACTIONS=true",
+            "Prevents accidental data deletion from Neon dev/prod databases during CI runs",
+            "Cleanup still runs locally for manual test data maintenance",
+            "Test Suite Updates",
+            "Migration Test Suite: 13 comprehensive tests covering schema, triggers, backfill, performance, idempotency",
+            "Frontend Test Fixes: 3 tests fixed for examples.js docType changes (java-spring-api, ruby-sinatra-api, python-flask-api)",
+            "Final Results: 2,446 tests (2,392 passed, 54 skipped, 0 failed) - 100% pass rate",
+            "Frontend: 1,516 passed | 33 skipped (1,549 total)",
+            "Backend: 876 passed | 21 skipped (897 total)",
+            "Database: 37 migration tests (13 new for migration 017)",
             "Coverage: 91.83% backend coverage maintained",
             "Documentation: Updated CHANGELOG, README, CLAUDE.md, testing docs"
           ]
