@@ -1,90 +1,374 @@
 // Curated code samples for demonstration purposes
 export const codeSamples = [
   {
-    id: 'simple-function',
-    title: 'Simple Utility Function',
-    description: 'A basic JavaScript function that calculates discounted prices. Great for demonstrating JSDoc generation.',
-    language: 'javascript',
-    docType: 'JSDOC',
-    code: `// Calculate the final price after applying a discount
-function calculateDiscount(price, discountPercent) {
-  if (price < 0 || discountPercent < 0 || discountPercent > 100) {
-    throw new Error('Invalid input parameters');
-  }
+    id: 'csharp-api',
+    title: 'C# ASP.NET Core API',
+    description: 'A RESTful API controller built with ASP.NET Core and Entity Framework. Shows C# documentation generation.',
+    language: 'csharp',
+    docType: 'API',
+    code: `using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
-  const discount = (price * discountPercent) / 100;
-  return price - discount;
-}
+namespace BookStore.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class BooksController : ControllerBase
+    {
+        private readonly BookStoreContext _context;
 
-// Calculate total with tax
-function calculateTotal(subtotal, taxRate = 0.08) {
-  const tax = subtotal * taxRate;
-  return subtotal + tax;
-}
+        public BooksController(BookStoreContext context)
+        {
+            _context = context;
+        }
 
-// Format currency for display
-function formatCurrency(amount, currency = 'USD') {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currency
-  }).format(amount);
-}
+        // GET: api/Books
+        // Retrieves all books with optional filtering by author, genre, and availability
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Book>>> GetBooks(
+            [FromQuery] string author = null,
+            [FromQuery] string genre = null,
+            [FromQuery] bool? inStock = null)
+        {
+            var query = _context.Books.AsQueryable();
 
-module.exports = { calculateDiscount, calculateTotal, formatCurrency };`
+            if (!string.IsNullOrEmpty(author))
+            {
+                query = query.Where(b => b.Author.Contains(author));
+            }
+
+            if (!string.IsNullOrEmpty(genre))
+            {
+                query = query.Where(b => b.Genre == genre);
+            }
+
+            if (inStock.HasValue)
+            {
+                query = query.Where(b => b.InStock == inStock.Value);
+            }
+
+            var books = await query
+                .Include(b => b.Reviews)
+                .OrderBy(b => b.Title)
+                .ToListAsync();
+
+            return Ok(new { success = true, data = books, count = books.Count });
+        }
+
+        // GET: api/Books/5
+        // Retrieves a specific book by ID with its reviews
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Book>> GetBook(int id)
+        {
+            var book = await _context.Books
+                .Include(b => b.Reviews)
+                .FirstOrDefaultAsync(b => b.Id == id);
+
+            if (book == null)
+            {
+                return NotFound(new { success = false, error = "Book not found" });
+            }
+
+            return Ok(new { success = true, data = book });
+        }
+
+        // POST: api/Books
+        // Creates a new book in the catalog
+        [HttpPost]
+        public async Task<ActionResult<Book>> CreateBook(Book book)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new { success = false, errors = ModelState });
+            }
+
+            _context.Books.Add(book);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetBook),
+                new { id = book.Id },
+                new { success = true, data = book });
+        }
+
+        // PUT: api/Books/5
+        // Updates an existing book's information
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateBook(int id, Book book)
+        {
+            if (id != book.Id)
+            {
+                return BadRequest(new { success = false, error = "ID mismatch" });
+            }
+
+            _context.Entry(book).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!BookExists(id))
+                {
+                    return NotFound(new { success = false, error = "Book not found" });
+                }
+                throw;
+            }
+
+            return Ok(new { success = true, message = "Book updated successfully" });
+        }
+
+        // DELETE: api/Books/5
+        // Deletes a book from the catalog
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteBook(int id)
+        {
+            var book = await _context.Books.FindAsync(id);
+            if (book == null)
+            {
+                return NotFound(new { success = false, error = "Book not found" });
+            }
+
+            _context.Books.Remove(book);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { success = true, message = "Book deleted successfully" });
+        }
+
+        private bool BookExists(int id)
+        {
+            return _context.Books.Any(e => e.Id == id);
+        }
+    }
+
+    public class Book
+    {
+        public int Id { get; set; }
+        public string Title { get; set; }
+        public string Author { get; set; }
+        public string Genre { get; set; }
+        public decimal Price { get; set; }
+        public bool InStock { get; set; }
+        public DateTime PublishedDate { get; set; }
+        public ICollection<Review> Reviews { get; set; }
+    }
+
+    public class Review
+    {
+        public int Id { get; set; }
+        public int BookId { get; set; }
+        public string ReviewerName { get; set; }
+        public int Rating { get; set; }
+        public string Comment { get; set; }
+    }
+}`
   },
   {
-    id: 'react-component',
-    title: 'React Component',
-    description: 'A reusable React card component with props. Perfect for showing component documentation with prop types.',
-    language: 'javascript',
-    docType: 'JSDOC',
-    code: `import React from 'react';
-import PropTypes from 'prop-types';
+    id: 'java-spring-api',
+    title: 'Java Spring Boot API',
+    description: 'A RESTful API service built with Spring Boot and JPA. Perfect for Java documentation generation.',
+    language: 'java',
+    docType: 'API',
+    code: `package com.example.inventory.controller;
 
-// UserCard component displays user information in a card format
-function UserCard({ name, email, avatar, role, onEdit, onDelete }) {
-  return (
-    <div className="user-card">
-      <div className="user-card__header">
-        <img src={avatar} alt={\`\${name}'s avatar\`} className="user-card__avatar" />
-        <div className="user-card__info">
-          <h3 className="user-card__name">{name}</h3>
-          <span className="user-card__role">{role}</span>
-        </div>
-      </div>
+import com.example.inventory.model.Product;
+import com.example.inventory.repository.ProductRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
-      <div className="user-card__body">
-        <p className="user-card__email">{email}</p>
-      </div>
+import javax.validation.Valid;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
-      <div className="user-card__actions">
-        <button onClick={() => onEdit(name)} className="btn btn--primary">
-          Edit
-        </button>
-        <button onClick={() => onDelete(name)} className="btn btn--danger">
-          Delete
-        </button>
-      </div>
-    </div>
-  );
-}
+/**
+ * REST Controller for managing product inventory.
+ * Provides endpoints for CRUD operations on products.
+ */
+@RestController
+@RequestMapping("/api/products")
+@CrossOrigin(origins = "*")
+public class ProductController {
 
-UserCard.propTypes = {
-  name: PropTypes.string.isRequired,
-  email: PropTypes.string.isRequired,
-  avatar: PropTypes.string.isRequired,
-  role: PropTypes.string,
-  onEdit: PropTypes.func,
-  onDelete: PropTypes.func,
-};
+    @Autowired
+    private ProductRepository productRepository;
 
-UserCard.defaultProps = {
-  role: 'User',
-  onEdit: () => {},
-  onDelete: () => {},
-};
+    /**
+     * Retrieves all products from the inventory.
+     * Supports optional filtering by category and price range.
+     *
+     * @param category Optional filter by product category
+     * @param minPrice Optional minimum price filter
+     * @param maxPrice Optional maximum price filter
+     * @return ResponseEntity containing list of products and success status
+     */
+    @GetMapping
+    public ResponseEntity<Map<String, Object>> getAllProducts(
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) Double minPrice,
+            @RequestParam(required = false) Double maxPrice) {
 
-export default UserCard;`
+        List<Product> products;
+
+        if (category != null && minPrice != null && maxPrice != null) {
+            products = productRepository.findByCategoryAndPriceBetween(
+                category, minPrice, maxPrice);
+        } else if (category != null) {
+            products = productRepository.findByCategory(category);
+        } else if (minPrice != null && maxPrice != null) {
+            products = productRepository.findByPriceBetween(minPrice, maxPrice);
+        } else {
+            products = productRepository.findAll();
+        }
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", products);
+        response.put("count", products.size());
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Retrieves a single product by its ID.
+     *
+     * @param id The unique identifier of the product
+     * @return ResponseEntity with product data or 404 if not found
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<Map<String, Object>> getProductById(@PathVariable Long id) {
+        Optional<Product> product = productRepository.findById(id);
+
+        Map<String, Object> response = new HashMap<>();
+
+        if (product.isPresent()) {
+            response.put("success", true);
+            response.put("data", product.get());
+            return ResponseEntity.ok(response);
+        } else {
+            response.put("success", false);
+            response.put("error", "Product not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+    }
+
+    /**
+     * Creates a new product in the inventory.
+     *
+     * @param product The product object to create (validated)
+     * @return ResponseEntity with created product and 201 status
+     */
+    @PostMapping
+    public ResponseEntity<Map<String, Object>> createProduct(
+            @Valid @RequestBody Product product) {
+
+        Product savedProduct = productRepository.save(product);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", savedProduct);
+        response.put("message", "Product created successfully");
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    /**
+     * Updates an existing product's information.
+     *
+     * @param id The ID of the product to update
+     * @param productDetails The updated product information
+     * @return ResponseEntity with updated product or 404 if not found
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<Map<String, Object>> updateProduct(
+            @PathVariable Long id,
+            @Valid @RequestBody Product productDetails) {
+
+        Optional<Product> productOptional = productRepository.findById(id);
+        Map<String, Object> response = new HashMap<>();
+
+        if (productOptional.isPresent()) {
+            Product product = productOptional.get();
+            product.setName(productDetails.getName());
+            product.setDescription(productDetails.getDescription());
+            product.setPrice(productDetails.getPrice());
+            product.setQuantity(productDetails.getQuantity());
+            product.setCategory(productDetails.getCategory());
+
+            Product updatedProduct = productRepository.save(product);
+
+            response.put("success", true);
+            response.put("data", updatedProduct);
+            response.put("message", "Product updated successfully");
+
+            return ResponseEntity.ok(response);
+        } else {
+            response.put("success", false);
+            response.put("error", "Product not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+    }
+
+    /**
+     * Deletes a product from the inventory.
+     *
+     * @param id The ID of the product to delete
+     * @return ResponseEntity with success message or 404 if not found
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Map<String, Object>> deleteProduct(@PathVariable Long id) {
+        Map<String, Object> response = new HashMap<>();
+
+        if (productRepository.existsById(id)) {
+            productRepository.deleteById(id);
+            response.put("success", true);
+            response.put("message", "Product deleted successfully");
+            return ResponseEntity.ok(response);
+        } else {
+            response.put("success", false);
+            response.put("error", "Product not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+    }
+
+    /**
+     * Updates the quantity of a product in stock.
+     *
+     * @param id The ID of the product
+     * @param quantity The new quantity value
+     * @return ResponseEntity with updated product or error
+     */
+    @PatchMapping("/{id}/quantity")
+    public ResponseEntity<Map<String, Object>> updateQuantity(
+            @PathVariable Long id,
+            @RequestParam Integer quantity) {
+
+        Optional<Product> productOptional = productRepository.findById(id);
+        Map<String, Object> response = new HashMap<>();
+
+        if (productOptional.isPresent()) {
+            Product product = productOptional.get();
+            product.setQuantity(quantity);
+            Product updatedProduct = productRepository.save(product);
+
+            response.put("success", true);
+            response.put("data", updatedProduct);
+            response.put("message", "Quantity updated");
+
+            return ResponseEntity.ok(response);
+        } else {
+            response.put("success", false);
+            response.put("error", "Product not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+    }
+}`
   },
   {
     id: 'express-api',
@@ -289,139 +573,199 @@ class DataProcessor {
 module.exports = DataProcessor;`
   },
   {
-    id: 'typescript-class',
-    title: 'TypeScript Service Class',
-    description: 'A TypeScript service class with interfaces and type annotations. Shows how AI handles TypeScript documentation.',
-    language: 'javascript',
-    docType: 'README',
-    code: `// Authentication service for user management
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: 'admin' | 'user' | 'guest';
-  createdAt: Date;
-}
+    id: 'ruby-sinatra-api',
+    title: 'Ruby Sinatra API',
+    description: 'A lightweight REST API built with Ruby Sinatra. Perfect example of Ruby documentation generation.',
+    language: 'ruby',
+    docType: 'API',
+    code: `require 'sinatra'
+require 'sinatra/json'
+require 'json'
+require 'securerandom'
 
-interface LoginCredentials {
-  email: string;
-  password: string;
-}
+# Configure Sinatra
+set :port, 4567
+set :bind, '0.0.0.0'
 
-interface AuthToken {
-  token: string;
-  expiresAt: Date;
-  refreshToken: string;
-}
+# In-memory database (replace with real DB in production)
+$movies = []
+$next_id = 1
 
-class AuthService {
-  private tokenCache: Map<string, AuthToken>;
-  private readonly tokenExpiry: number = 3600000; // 1 hour in ms
+# Movie model representation
+class Movie
+  attr_accessor :id, :title, :director, :year, :genre, :rating
 
-  constructor() {
-    this.tokenCache = new Map();
-  }
+  def initialize(title:, director:, year:, genre:, rating: nil)
+    @id = $next_id
+    $next_id += 1
+    @title = title
+    @director = director
+    @year = year
+    @genre = genre
+    @rating = rating
+  end
 
-  // Authenticate user with email and password
-  async login(credentials: LoginCredentials): Promise<AuthToken> {
-    const { email, password } = credentials;
-
-    // Validate credentials format
-    if (!this.isValidEmail(email)) {
-      throw new Error('Invalid email format');
+  def to_h
+    {
+      id: @id,
+      title: @title,
+      director: @director,
+      year: @year,
+      genre: @genre,
+      rating: @rating
     }
+  end
+end
 
-    if (password.length < 8) {
-      throw new Error('Password must be at least 8 characters');
-    }
+# Seed some initial data
+$movies << Movie.new(title: 'The Shawshank Redemption', director: 'Frank Darabont', year: 1994, genre: 'Drama', rating: 9.3)
+$movies << Movie.new(title: 'The Godfather', director: 'Francis Ford Coppola', year: 1972, genre: 'Crime', rating: 9.2)
+$movies << Movie.new(title: 'Pulp Fiction', director: 'Quentin Tarantino', year: 1994, genre: 'Crime', rating: 8.9)
 
-    // Authenticate with backend
-    const user = await this.authenticateUser(email, password);
+# GET /api/movies - Retrieve all movies
+# Supports filtering by genre and year
+get '/api/movies' do
+  content_type :json
 
-    // Generate tokens
-    const token = this.generateToken(user);
-    const refreshToken = this.generateRefreshToken(user);
-    const expiresAt = new Date(Date.now() + this.tokenExpiry);
+  genre = params['genre']
+  year = params['year']&.to_i
 
-    const authToken: AuthToken = {
-      token,
-      expiresAt,
-      refreshToken
-    };
+  filtered_movies = $movies
 
-    // Cache the token
-    this.tokenCache.set(user.id, authToken);
+  # Apply filters if provided
+  filtered_movies = filtered_movies.select { |m| m.genre == genre } if genre
+  filtered_movies = filtered_movies.select { |m| m.year == year } if year
 
-    return authToken;
-  }
+  json({
+    success: true,
+    data: filtered_movies.map(&:to_h),
+    count: filtered_movies.length
+  })
+end
 
-  // Verify if a token is valid and not expired
-  async verifyToken(token: string): Promise<User | null> {
-    try {
-      const decoded = this.decodeToken(token);
+# GET /api/movies/:id - Retrieve a specific movie
+get '/api/movies/:id' do
+  content_type :json
+  id = params['id'].to_i
 
-      // Check if token is expired
-      if (decoded.expiresAt < new Date()) {
-        return null;
-      }
+  movie = $movies.find { |m| m.id == id }
 
-      // Fetch user from cache or database
-      const user = await this.getUserById(decoded.userId);
-      return user;
-    } catch (error) {
-      return null;
-    }
-  }
+  if movie
+    json({ success: true, data: movie.to_h })
+  else
+    status 404
+    json({ success: false, error: 'Movie not found' })
+  end
+end
 
-  // Refresh an expired token using refresh token
-  async refreshToken(refreshToken: string): Promise<AuthToken> {
-    const decoded = this.decodeToken(refreshToken);
-    const user = await this.getUserById(decoded.userId);
+# POST /api/movies - Create a new movie
+post '/api/movies' do
+  content_type :json
 
-    if (!user) {
-      throw new Error('Invalid refresh token');
-    }
+  begin
+    data = JSON.parse(request.body.read)
 
-    return this.login({ email: user.email, password: '' });
-  }
+    # Validate required fields
+    unless data['title'] && data['director'] && data['year'] && data['genre']
+      status 400
+      return json({ success: false, error: 'Missing required fields: title, director, year, genre' })
+    end
 
-  // Logout user and invalidate tokens
-  async logout(userId: string): Promise<void> {
-    this.tokenCache.delete(userId);
-  }
+    # Create new movie
+    movie = Movie.new(
+      title: data['title'],
+      director: data['director'],
+      year: data['year'].to_i,
+      genre: data['genre'],
+      rating: data['rating']&.to_f
+    )
 
-  private async authenticateUser(email: string, password: string): Promise<User> {
-    // Implementation would verify against database
-    throw new Error('Not implemented');
-  }
+    $movies << movie
 
-  private generateToken(user: User): string {
-    // Implementation would use JWT or similar
-    return 'token_' + user.id;
-  }
+    status 201
+    json({ success: true, data: movie.to_h, message: 'Movie created successfully' })
+  rescue JSON::ParserError
+    status 400
+    json({ success: false, error: 'Invalid JSON' })
+  end
+end
 
-  private generateRefreshToken(user: User): string {
-    // Implementation would use JWT or similar
-    return 'refresh_' + user.id;
-  }
+# PUT /api/movies/:id - Update an existing movie
+put '/api/movies/:id' do
+  content_type :json
+  id = params['id'].to_i
 
-  private decodeToken(token: string): any {
-    // Implementation would decode JWT
-    return { userId: '123', expiresAt: new Date() };
-  }
+  movie = $movies.find { |m| m.id == id }
 
-  private async getUserById(userId: string): Promise<User | null> {
-    // Implementation would fetch from database
-    return null;
-  }
+  unless movie
+    status 404
+    return json({ success: false, error: 'Movie not found' })
+  end
 
-  private isValidEmail(email: string): boolean {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  }
-}
+  begin
+    data = JSON.parse(request.body.read)
 
-export default AuthService;`
+    # Update fields if provided
+    movie.title = data['title'] if data['title']
+    movie.director = data['director'] if data['director']
+    movie.year = data['year'].to_i if data['year']
+    movie.genre = data['genre'] if data['genre']
+    movie.rating = data['rating'].to_f if data['rating']
+
+    json({ success: true, data: movie.to_h, message: 'Movie updated successfully' })
+  rescue JSON::ParserError
+    status 400
+    json({ success: false, error: 'Invalid JSON' })
+  end
+end
+
+# DELETE /api/movies/:id - Delete a movie
+delete '/api/movies/:id' do
+  content_type :json
+  id = params['id'].to_i
+
+  movie = $movies.find { |m| m.id == id }
+
+  if movie
+    $movies.delete(movie)
+    json({ success: true, message: 'Movie deleted successfully' })
+  else
+    status 404
+    json({ success: false, error: 'Movie not found' })
+  end
+end
+
+# GET /api/movies/search - Search movies by title
+get '/api/movies/search' do
+  content_type :json
+
+  query = params['q']&.downcase
+
+  unless query
+    status 400
+    return json({ success: false, error: 'Query parameter "q" is required' })
+  end
+
+  results = $movies.select { |m| m.title.downcase.include?(query) }
+
+  json({
+    success: true,
+    data: results.map(&:to_h),
+    count: results.length
+  })
+end
+
+# Error handlers
+not_found do
+  content_type :json
+  json({ success: false, error: 'Endpoint not found' })
+end
+
+error do
+  content_type :json
+  status 500
+  json({ success: false, error: 'Internal server error' })
+end`
   },
   {
     id: 'python-flask-api',
@@ -819,5 +1163,51 @@ module.exports = {
   NotificationService,
   ServiceRegistry
 };`
+  },
+  {
+    id: 'poorly-documented',
+    title: 'Poorly Documented Utility',
+    description: 'An example of poorly documented code with minimal comments and unclear structure. Shows how AI handles low-quality input.',
+    language: 'javascript',
+    docType: 'README',
+    code: `function calc(a,b,c){
+if(!a)return 0
+let x=a*b
+if(c){x=x/c}
+return Math.round(x*100)/100
+}
+
+const proc=async(data)=>{
+const res=[]
+for(let i=0;i<data.length;i++){
+let item=data[i]
+if(item.type=='A'){
+res.push({val:calc(item.x,item.y,item.z),status:'ok'})
+}else{
+res.push({val:item.x+item.y,status:'pending'})
+}
+}
+return res
+}
+
+class H{
+constructor(opts){
+this.cfg=opts||{}
+this.data=[]
+}
+add(item){this.data.push(item)}
+get(){return this.data}
+clear(){this.data=[]}
+process(){
+return proc(this.data).then(r=>{
+this.results=r
+return r
+})
+}
+}
+
+const x={init:function(c){this.config=c;this.handler=new H(c);},run:async function(d){await this.handler.add(d);return this.handler.process()}}
+
+module.exports=x`
   }
 ];

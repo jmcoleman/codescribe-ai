@@ -135,7 +135,8 @@ function greet(name) {
       expect(calculateQualityScore).toHaveBeenCalledWith(
         mockDocumentationWithAttribution,
         mockAnalysis,
-        'README'
+        'README',
+        sampleCode
       );
     });
 

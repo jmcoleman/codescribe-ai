@@ -1,6 +1,9 @@
-export function calculateQualityScore(documentation, codeAnalysis, docType = 'README') {
+export function calculateQualityScore(documentation, codeAnalysis, docType = 'README', inputCode = '') {
   let score = 0;
   const breakdown = {};
+
+  // Assess input code quality (shows "before" state for comparison)
+  const inputCodeHealth = inputCode ? assessInputCodeQuality(inputCode, codeAnalysis) : null;
 
   // 1. Overview/Description (20 points)
   // Check for explicit overview section OR description after title
@@ -152,12 +155,18 @@ export function calculateQualityScore(documentation, codeAnalysis, docType = 'RE
   // Calculate grade
   const grade = getGrade(score);
 
+  // Calculate improvement delta if we have input code health
+  const improvement = inputCodeHealth ? score - inputCodeHealth.score : null;
+
   return {
     score,
     grade,
     breakdown,
     summary: generateSummary(score, breakdown),
-    docType
+    docType,
+    // New: Input code health score for before/after comparison
+    inputCodeHealth,
+    improvement
   };
 }
 
@@ -279,4 +288,252 @@ function getTopSuggestion(breakdown) {
     .sort((a, b) => (b.points || 0) - (a.points || 0));
 
   return suggestions[0]?.suggestion || 'Documentation looks good!';
+}
+
+/**
+ * Assess input code quality to show "before" state
+ * This demonstrates the value of CodeScribe AI by showing the improvement
+ *
+ * @param {string} inputCode - The raw input code
+ * @param {object} codeAnalysis - Parsed code structure
+ * @returns {object} Input code health score and breakdown
+ */
+function assessInputCodeQuality(inputCode, codeAnalysis) {
+  let score = 0;
+  const breakdown = {};
+
+  // 1. Comments (20 points)
+  const commentLines = countComments(inputCode);
+  const codeLines = inputCode.split('\n').filter(line => line.trim().length > 0).length;
+  const commentRatio = codeLines > 0 ? commentLines / codeLines : 0;
+
+  let commentPoints = 0;
+  if (commentRatio >= 0.15) {
+    commentPoints = 20; // 15%+ comments is excellent
+  } else if (commentRatio >= 0.08) {
+    commentPoints = 15; // 8-15% is good
+  } else if (commentRatio >= 0.03) {
+    commentPoints = 8; // 3-8% is minimal
+  }
+
+  score += commentPoints;
+  breakdown.comments = {
+    present: commentLines > 0,
+    count: commentLines,
+    ratio: Math.round(commentRatio * 100),
+    points: commentPoints,
+    maxPoints: 20,
+    status: commentPoints >= 15 ? 'complete' : commentPoints > 0 ? 'partial' : 'missing'
+  };
+
+  // 2. Naming Quality (20 points)
+  const namingScore = assessNamingQuality(inputCode, codeAnalysis);
+  score += namingScore.points;
+  breakdown.naming = namingScore;
+
+  // 3. Existing Documentation (25 points)
+  const docScore = assessExistingDocs(inputCode);
+  score += docScore.points;
+  breakdown.existingDocs = docScore;
+
+  // 4. Code Structure (35 points)
+  const structureScore = assessCodeStructure(inputCode);
+  score += structureScore.points;
+  breakdown.codeStructure = structureScore;
+
+  const grade = getGrade(score);
+
+  return {
+    score,
+    grade,
+    breakdown,
+    summary: `Input code quality: ${grade} (${score}/100)`
+  };
+}
+
+/**
+ * Count comment lines in code
+ */
+function countComments(code) {
+  const singleLineComments = (code.match(/\/\/.+$/gm) || []).length;
+  const multiLineComments = (code.match(/\/\*[\s\S]*?\*\//g) || []).length;
+  const pythonComments = (code.match(/#.+$/gm) || []).length;
+  const docStrings = (code.match(/""".+?"""/gs) || []).length + (code.match(/'''.+?'''/gs) || []).length;
+
+  return singleLineComments + multiLineComments + pythonComments + docStrings;
+}
+
+/**
+ * Assess naming quality based on identifier length and descriptiveness
+ */
+function assessNamingQuality(code, analysis) {
+  const identifiers = [];
+
+  // Extract function names
+  if (analysis.functions) {
+    analysis.functions.forEach(fn => {
+      if (fn.name && fn.name !== 'anonymous') {
+        identifiers.push(fn.name);
+      }
+    });
+  }
+
+  // Extract class names
+  if (analysis.classes) {
+    analysis.classes.forEach(cls => {
+      if (cls.name) {
+        identifiers.push(cls.name);
+      }
+    });
+  }
+
+  // Also check for short variable names in code (single letters, abbreviations)
+  const shortNames = code.match(/\b[a-z]\b|\b[a-z]{2}\b/gi) || [];
+
+  let points = 20;
+  const issues = [];
+
+  // Penalize single-letter identifiers (except common ones like i, j, x, y in loops)
+  const singleLetterNames = identifiers.filter(name => name.length === 1).length;
+  if (singleLetterNames > 2) {
+    points -= 8;
+    issues.push('Too many single-letter names');
+  }
+
+  // Penalize very short names (2-3 chars) that aren't common abbreviations
+  const shortIdentifiers = identifiers.filter(name =>
+    name.length <= 3 && !['id', 'key', 'url', 'api', 'db'].includes(name.toLowerCase())
+  ).length;
+
+  if (shortIdentifiers > identifiers.length * 0.3) {
+    points -= 7;
+    issues.push('Many cryptic abbreviations');
+  }
+
+  // Reward descriptive names (8+ characters)
+  const descriptiveNames = identifiers.filter(name => name.length >= 8).length;
+  const descriptiveRatio = identifiers.length > 0 ? descriptiveNames / identifiers.length : 0;
+
+  if (descriptiveRatio < 0.3) {
+    points -= 5;
+    issues.push('Few descriptive names');
+  }
+
+  points = Math.max(0, points);
+
+  return {
+    points,
+    maxPoints: 20,
+    identifiers: identifiers.length,
+    descriptiveRatio: Math.round(descriptiveRatio * 100),
+    issues,
+    status: points >= 15 ? 'complete' : points >= 8 ? 'partial' : 'missing'
+  };
+}
+
+/**
+ * Assess existing documentation (JSDoc, docstrings, etc.)
+ */
+function assessExistingDocs(code) {
+  let points = 0;
+  const features = [];
+
+  // Check for JSDoc comments
+  const jsDocBlocks = (code.match(/\/\*\*[\s\S]*?\*\//g) || []).length;
+  if (jsDocBlocks > 0) {
+    points += 10;
+    features.push(`${jsDocBlocks} JSDoc blocks`);
+  }
+
+  // Check for Python docstrings
+  const docstrings = (code.match(/""".+?"""/gs) || []).length + (code.match(/'''.+?'''/gs) || []).length;
+  if (docstrings > 0) {
+    points += 10;
+    features.push(`${docstrings} docstrings`);
+  }
+
+  // Check for @param, @returns tags
+  const paramTags = (code.match(/@param/g) || []).length;
+  const returnTags = (code.match(/@returns?/g) || []).length;
+  if (paramTags + returnTags >= 3) {
+    points += 10;
+    features.push('Parameter documentation');
+  } else if (paramTags + returnTags > 0) {
+    points += 5;
+    features.push('Some parameter docs');
+  }
+
+  // Check for TODO/FIXME comments (shows thoughtfulness)
+  const todoComments = (code.match(/\/\/\s*(TODO|FIXME|NOTE)/gi) || []).length;
+  if (todoComments > 0) {
+    points += 5;
+    features.push('Code annotations');
+  }
+
+  return {
+    points: Math.min(points, 25),
+    maxPoints: 25,
+    features,
+    status: points >= 20 ? 'complete' : points >= 10 ? 'partial' : 'missing'
+  };
+}
+
+/**
+ * Assess code structure and formatting
+ */
+function assessCodeStructure(code) {
+  let points = 35;
+  const issues = [];
+
+  // Check indentation consistency
+  const lines = code.split('\n');
+  const indentedLines = lines.filter(line => line.match(/^\s+/));
+  const hasConsistentIndent = indentedLines.length > lines.length * 0.3;
+
+  if (!hasConsistentIndent) {
+    points -= 10;
+    issues.push('Inconsistent indentation');
+  }
+
+  // Check for proper spacing around operators
+  const noSpaceAroundOperators = (code.match(/[a-zA-Z0-9][=+\-*/%][a-zA-Z0-9]/g) || []).length;
+  if (noSpaceAroundOperators > 5) {
+    points -= 8;
+    issues.push('Poor spacing around operators');
+  }
+
+  // Check for single-line functions/classes (code smell)
+  const singleLineFunctions = (code.match(/function\s+\w+\([^)]*\)\{[^}]+\}/g) || []).length;
+  if (singleLineFunctions > 2) {
+    points -= 7;
+    issues.push('Functions crammed on single lines');
+  }
+
+  // Check for proper blank line usage
+  const consecutiveBlankLines = (code.match(/\n\s*\n\s*\n/g) || []).length;
+  const hasBlankLines = code.includes('\n\n');
+
+  if (!hasBlankLines) {
+    points -= 5;
+    issues.push('No blank lines between sections');
+  } else if (consecutiveBlankLines > 3) {
+    points -= 3;
+    issues.push('Too many consecutive blank lines');
+  }
+
+  // Check for line length (>120 chars is hard to read)
+  const longLines = lines.filter(line => line.length > 120).length;
+  if (longLines > lines.length * 0.1) {
+    points -= 5;
+    issues.push('Many overly long lines');
+  }
+
+  points = Math.max(0, points);
+
+  return {
+    points,
+    maxPoints: 35,
+    issues,
+    status: points >= 28 ? 'complete' : points >= 18 ? 'partial' : 'missing'
+  };
 }

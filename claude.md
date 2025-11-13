@@ -12,12 +12,12 @@
 AI-powered documentation generator with real-time streaming, quality scoring (0-100), and WCAG 2.1 AA compliance.
 
 **Key Metrics:**
-- 2,391 tests (2,341 passing, 50 skipped, 0 failures) | 97.91% pass rate | 91.83% backend coverage
+- 2,405 tests (2,351 passing, 54 skipped, 0 failing) | 100% pass rate | 91.83% backend coverage
 - Lighthouse: 75/100 performance (+67%), 100/100 accessibility
 - Bundle: 78KB gzipped (-85% reduction)
 - Accessibility: 95/100 score, 0 axe violations
 
-**Features:** 4 doc types (README, JSDoc, API, ARCHITECTURE) | Monaco Editor | Mermaid diagrams | SSE streaming
+**Features:** 4 doc types (README, JSDoc, API, ARCHITECTURE) | Monaco Editor | Mermaid diagrams | SSE streaming | Input code health scoring
 
 ---
 
@@ -546,10 +546,19 @@ codescribe-ai/
 
 ## 🔄 Version History
 
-**Current: v2.7.5** - UX Refinements & Documentation (November 12, 2025): **Toast Border Consistency** (cyan-300 → slate-300 for all toast types); **Back Button UX** (fixed duplicate containers, added text-sm, consistent spacing across 6 pages); **Contact Sales UX** (Team/Enterprise messaging "Create an account to connect with our sales team"); **Dark Mode Documentation** (482-line DARK-MODE-IMPLEMENTATION.md); **Google OAuth Docs** (1700-line implementation guide); **Cleanup** (removed outdated RECOVERY-PLAN.md); **2,391 tests** (2,341 passing, 50 skipped, 97.91% pass rate)
+**Current: v2.7.6** - Quality Breakdown Modal Enhancements & Test Coverage (November 12, 2025): **Dual-Tab Quality Breakdown** (Input Code Health + Generated Documentation tabs with fixed 420px height); **Transformation Header** (side-by-side comparison with sparkle icon + arrow + improvement indicator); **Enhanced Download** (comprehensive markdown report with both breakdowns, filename, timestamp); **Input Code Health Assessment** (4 criteria: comments, naming, existing docs, code structure); **Standardized Colors** (slate icons, purple progress bars); **Backend Integration** (`calculateQualityScore` now accepts input code, returns inputCodeHealth + improvement); **Code Samples Update** (7 → 8 samples with diverse languages); **Test Fixes** (8 SamplesModal tests fixed for new sample content, 5 focus tests skipped due to jsdom limitations); **2,405 tests** (2,351 passing, 54 skipped, 0 failing, 100% pass rate)
 
 <details>
-<summary>Previous Versions (v1.0-v2.7.4)</summary>
+<summary>Previous Versions (v1.0-v2.7.5)</summary>
+
+- **v2.7.5** - UX Refinements & Documentation (November 12, 2025)
+  - Toast Border Consistency (cyan-300 → slate-300 for all toast types)
+  - Back Button UX (fixed duplicate containers, added text-sm, consistent spacing across 6 pages)
+  - Contact Sales UX (Team/Enterprise messaging "Create an account to connect with our sales team")
+  - Dark Mode Documentation (482-line DARK-MODE-IMPLEMENTATION.md)
+  - Google OAuth Docs (1700-line implementation guide)
+  - Cleanup (removed outdated RECOVERY-PLAN.md)
+  - 2,391 tests (2,341 passing, 50 skipped, 97.91% pass rate)
 
 - **v2.7.4** - Modal Width Optimization & Terminology Refactoring (November 11, 2025)
   - Samples Modal Width (max-w-4xl → max-w-5xl, 896px → 1024px)

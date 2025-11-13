@@ -267,7 +267,7 @@ export function DocPanel({
                 <span className="text-xs font-semibold text-purple-700 dark:text-purple-400">
                   {qualityScore.score}
                 </span>
-                <span className={`text-xs font-bold ${getGradeColor(qualityScore.grade)}`}>
+                <span className={`text-xs font-semibold ${getGradeColor(qualityScore.grade)}`}>
                   {qualityScore.grade}
                 </span>
               </button>
@@ -288,7 +288,7 @@ export function DocPanel({
                 <span className="text-xs font-semibold text-purple-700 dark:text-purple-400">
                   {qualityScore.score}/100
                 </span>
-                <span className={`text-sm font-bold ${getGradeColor(qualityScore.grade)}`}>
+                <span className={`text-xs font-semibold ${getGradeColor(qualityScore.grade)}`}>
                   {qualityScore.grade} {getGradeLabel(qualityScore.grade)}
                 </span>
               </button>

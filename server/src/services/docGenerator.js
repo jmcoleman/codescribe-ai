@@ -45,8 +45,8 @@ export class DocGeneratorService {
     const attribution = `\n\n\n\n---\n\n*Generated with [CodeScribe AI](https://codescribeai.com) - AI-powered code documentation*`;
     const documentationWithAttribution = documentation + attribution;
 
-    // Step 5: Calculate quality score
-    const qualityScore = calculateQualityScore(documentationWithAttribution, analysis, docType);
+    // Step 5: Calculate quality score (includes input code health assessment)
+    const qualityScore = calculateQualityScore(documentationWithAttribution, analysis, docType, code);
 
     return {
       documentation: documentationWithAttribution,

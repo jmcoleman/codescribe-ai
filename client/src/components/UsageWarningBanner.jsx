@@ -108,7 +108,7 @@ export function UsageWarningBanner({
     <div
       className={`
         relative overflow-hidden
-        bg-slate-50 border border-slate-200 border-l-4 border-l-yellow-500 rounded-lg shadow-sm
+        bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 border-l-4 border-l-yellow-500 dark:border-l-yellow-400 rounded-lg shadow-sm
         ${isExiting ? 'animate-fade-out' : 'animate-slide-in-fade'}
         motion-reduce:animate-none
       `}
@@ -120,19 +120,19 @@ export function UsageWarningBanner({
       <div className="flex items-start gap-4 p-4">
         {/* Icon */}
         <div className="flex-shrink-0">
-          <AlertCircle className="w-6 h-6 text-yellow-600" aria-hidden="true" />
+          <AlertCircle className="w-6 h-6 text-yellow-600 dark:text-yellow-400" aria-hidden="true" />
         </div>
 
         {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-4 mb-2">
             <div>
-              <h3 className="text-sm font-semibold text-slate-900 mb-1">
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-1">
                 Usage Alert
               </h3>
-              <p className="text-sm text-slate-700 leading-relaxed">
+              <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
                 You've used <strong className="font-semibold">{usedCount} of {usage.limit}</strong> documents this month.{' '}
-                <span className="text-slate-600 font-medium">
+                <span className="text-slate-600 dark:text-slate-400 font-medium">
                   {usage.remaining} remaining
                 </span>
               </p>
@@ -142,27 +142,27 @@ export function UsageWarningBanner({
             <button
               type="button"
               onClick={handleDismiss}
-              className="flex-shrink-0 p-1 hover:bg-slate-200 rounded-lg transition-all active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500 focus-visible:ring-offset-2"
+              className="flex-shrink-0 p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-all active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500 dark:focus-visible:ring-yellow-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-800"
               aria-label="Dismiss usage warning"
             >
-              <X className="w-4 h-4 text-slate-500" aria-hidden="true" />
+              <X className="w-4 h-4 text-slate-500 dark:text-slate-400" aria-hidden="true" />
             </button>
           </div>
 
           {/* Stats */}
-          <div className="flex items-center gap-4 text-xs text-slate-600 mb-3">
+          <div className="flex items-center gap-4 text-xs text-slate-600 dark:text-slate-400 mb-3">
             <span>
               Quota resets {formatResetDate(usage.resetDate)}
             </span>
           </div>
 
           {/* CTA Section */}
-          <div className="flex items-center gap-3 pt-2 border-t border-slate-200">
+          <div className="flex items-center gap-3 pt-2 border-t border-slate-200 dark:border-slate-700">
             <div className="flex-1">
-              <p className="text-xs text-slate-700 mb-1">
+              <p className="text-xs text-slate-700 dark:text-slate-300 mb-1">
                 <strong className="font-semibold">Need more?</strong> Get {Math.floor(nextTier[usage.period || 'monthly'] / usage.limit)}x more with {nextTier.name} ({nextTier[usage.period || 'monthly']} docs/month)
               </p>
-              <p className="text-xs text-slate-600">
+              <p className="text-xs text-slate-600 dark:text-slate-400">
                 Just ${nextTier.price}/month
               </p>
             </div>

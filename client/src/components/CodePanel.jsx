@@ -110,9 +110,9 @@ export function CodePanel({
           {isClearing && 'Editor cleared'}
         </div>
         {/* Left: Filename + Language badge */}
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-slate-600 dark:text-slate-400">{filename}</span>
-          <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium text-cyan-800 dark:text-cyan-300 bg-cyan-50 dark:bg-cyan-400/15 border border-cyan-200 dark:border-cyan-400/30 rounded-full uppercase">{language}</span>
+        <div className="flex items-center gap-2 min-w-0 flex-1 mr-2">
+          <span className="text-sm text-slate-600 dark:text-slate-400 truncate" title={filename}>{filename}</span>
+          <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium text-cyan-800 dark:text-cyan-300 bg-cyan-50 dark:bg-cyan-400/15 border border-cyan-200 dark:border-cyan-400/30 rounded-full uppercase flex-shrink-0">{language}</span>
         </div>
 
         {/* Right: Desktop buttons + Mobile menu */}

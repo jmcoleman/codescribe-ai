@@ -16,7 +16,7 @@ import { trackCodeInput, trackFileUpload, trackExampleUsage, trackInteraction } 
 import { createTestDataLoader, exposeTestDataLoader, createSkeletonTestHelper, exposeSkeletonTestHelper } from './utils/testData';
 import { exposeUsageSimulator } from './utils/usageTestData';
 import { useAuth } from './contexts/AuthContext';
-import { DEFAULT_CODE } from './constants/defaultCode';
+import { DEFAULT_CODE, EXAMPLE_CODES } from './constants/defaultCode';
 
 // Lazy load heavy components that aren't needed on initial render
 const DocPanel = lazy(() => import('./components/DocPanel').then(m => ({ default: m.DocPanel })));
@@ -337,9 +337,12 @@ function App() {
     setShowQualityModal(false); // Close modal when starting new generation
     setShowConfirmationModal(false); // Close confirmation modal if open
     try {
-      // Check if code matches the default code (for prompt caching optimization)
+      // Check if code matches the default code or any example (for prompt caching optimization)
+      // When cache hits, users benefit from 90% cost reduction!
       const isDefaultCode = code === DEFAULT_CODE;
-      await generate(code, docType, 'javascript', isDefaultCode);
+      const isExampleCode = EXAMPLE_CODES.has(code);
+      const shouldCache = isDefaultCode || isExampleCode;
+      await generate(code, docType, 'javascript', shouldCache);
       // Success toast will be shown after generation completes
     } catch (err) {
       // Error handling is done in useDocGeneration hook
@@ -886,6 +889,7 @@ function App() {
           <QualityScoreModal
             qualityScore={qualityScore}
             onClose={() => setShowQualityModal(false)}
+            filename={filename}
           />
         </Suspense>
       )}

@@ -7,8 +7,8 @@ describe('Code Examples Data', () => {
       expect(Array.isArray(codeSamples)).toBe(true);
     });
 
-    it('should have exactly 7 examples', () => {
-      expect(codeSamples).toHaveLength(7);
+    it('should have exactly 8 examples', () => {
+      expect(codeSamples).toHaveLength(8);
     });
 
     it('should have all required properties for each example', () => {
@@ -63,25 +63,19 @@ describe('Code Examples Data', () => {
       });
     });
 
-    it('should have JSDOC examples (not JSDoc)', () => {
-      const jsdocExamples = codeSamples.filter(ex => ex.docType === 'JSDOC');
-      expect(jsdocExamples.length).toBeGreaterThan(0);
-
-      // Ensure no mixed-case JSDoc
+    it('should not use mixed-case docTypes', () => {
+      // Ensure no mixed-case docTypes (should be uppercase)
       codeSamples.forEach(example => {
         expect(example.docType).not.toBe('JSDoc');
         expect(example.docType).not.toBe('jsdoc');
+        expect(example.docType).not.toBe('Api');
+        expect(example.docType).not.toBe('Readme');
       });
     });
 
     it('should have examples for multiple docTypes', () => {
       const docTypes = [...new Set(codeSamples.map(ex => ex.docType))];
       expect(docTypes.length).toBeGreaterThan(1);
-    });
-
-    it('should have at least 2 JSDOC examples', () => {
-      const jsdocExamples = codeSamples.filter(ex => ex.docType === 'JSDOC');
-      expect(jsdocExamples.length).toBeGreaterThanOrEqual(2);
     });
 
     it('should have at least 1 API example', () => {
@@ -202,18 +196,18 @@ describe('Code Examples Data', () => {
   });
 
   describe('Specific Examples', () => {
-    it('should have "simple-function" example', () => {
-      const example = codeSamples.find(ex => ex.id === 'simple-function');
+    it('should have "csharp-api" example', () => {
+      const example = codeSamples.find(ex => ex.id === 'csharp-api');
       expect(example).toBeDefined();
-      expect(example.title).toBe('Simple Utility Function');
-      expect(example.docType).toBe('JSDOC');
+      expect(example.title).toBe('C# ASP.NET Core API');
+      expect(example.docType).toBe('API');
     });
 
-    it('should have "react-component" example', () => {
-      const example = codeSamples.find(ex => ex.id === 'react-component');
+    it('should have "java-spring-api" example', () => {
+      const example = codeSamples.find(ex => ex.id === 'java-spring-api');
       expect(example).toBeDefined();
-      expect(example.title).toBe('React Component');
-      expect(example.docType).toBe('JSDOC');
+      expect(example.title).toBe('Java Spring Boot API');
+      expect(example.docType).toBe('API');
     });
 
     it('should have "express-api" example', () => {
@@ -230,11 +224,11 @@ describe('Code Examples Data', () => {
       expect(example.docType).toBe('README');
     });
 
-    it('should have "typescript-class" example', () => {
-      const example = codeSamples.find(ex => ex.id === 'typescript-class');
+    it('should have "ruby-sinatra-api" example', () => {
+      const example = codeSamples.find(ex => ex.id === 'ruby-sinatra-api');
       expect(example).toBeDefined();
-      expect(example.title).toBe('TypeScript Service Class');
-      expect(example.docType).toBe('README');
+      expect(example.title).toBe('Ruby Sinatra API');
+      expect(example.docType).toBe('API');
     });
 
     it('should have "python-flask-api" example', () => {
@@ -251,6 +245,13 @@ describe('Code Examples Data', () => {
       expect(example.title).toBe('Microservices Architecture');
       expect(example.language).toBe('javascript');
       expect(example.docType).toBe('ARCHITECTURE');
+    });
+
+    it('should have "poorly-documented" example', () => {
+      const example = codeSamples.find(ex => ex.id === 'poorly-documented');
+      expect(example).toBeDefined();
+      expect(example.title).toBe('Poorly Documented Utility');
+      expect(example.docType).toBe('README');
     });
   });
 

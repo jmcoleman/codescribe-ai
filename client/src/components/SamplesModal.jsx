@@ -2,6 +2,25 @@ import { X, Code2, Search } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 import { codeSamples } from '../data/examples';
 
+// Format language names for display (e.g., "csharp" -> "C#", "javascript" -> "JavaScript")
+function formatLanguageName(language) {
+  const languageMap = {
+    'javascript': 'JavaScript',
+    'typescript': 'TypeScript',
+    'python': 'Python',
+    'java': 'Java',
+    'csharp': 'C#',
+    'cpp': 'C++',
+    'c': 'C',
+    'go': 'Go',
+    'rust': 'Rust',
+    'ruby': 'Ruby',
+    'php': 'PHP'
+  };
+
+  return languageMap[language.toLowerCase()] || language.toUpperCase();
+}
+
 export function SamplesModal({ isOpen, onClose, onLoadSample, currentCode }) {
   const [selectedSample, setSelectedSample] = useState(null);
   const [allowClickOutside, setAllowClickOutside] = useState(false);
@@ -40,19 +59,18 @@ export function SamplesModal({ isOpen, onClose, onLoadSample, currentCode }) {
     }
   }, [isOpen, currentCode]);
 
-  // Focus management: auto-focus the selected sample card when modal opens
+  // Focus management: auto-focus the search input when modal opens
   useEffect(() => {
-    if (isOpen && codeSamples.length > 0) {
-      // Focus the selected sample if one exists, otherwise focus the first card
-      const cardToFocus = selectedSample
-        ? cardRefs.current[selectedSample.id]
-        : cardRefs.current[codeSamples[0].id];
-
-      if (cardToFocus) {
-        cardToFocus.focus();
-      }
+    if (isOpen) {
+      // Small delay to ensure modal is fully rendered before focusing
+      const timer = setTimeout(() => {
+        if (searchInputRef.current) {
+          searchInputRef.current.focus();
+        }
+      }, 100);
+      return () => clearTimeout(timer);
     }
-  }, [isOpen, selectedSample]);
+  }, [isOpen]);
 
   // Focus trap: keep focus within modal
   useEffect(() => {
@@ -305,21 +323,17 @@ const SampleCard = React.forwardRef(({ sample, isSelected, onPreview, onLoad }, 
       aria-pressed={isSelected}
       aria-label={`${isSelected ? 'Press Enter to load' : 'Preview'} ${sample.title} sample`}
     >
-      {/* Header Row: Title + Language/Selected Badge */}
+      {/* Header Row: Title + Selected Badge */}
       <div className="flex items-start justify-between gap-2 mb-1.5">
         <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 leading-tight flex-1">
           {sample.title}
         </h3>
 
-        {isSelected ? (
+        {isSelected && (
           <div className="flex items-center gap-1 text-purple-600 dark:text-purple-400 text-xs font-semibold shrink-0">
             <div className="w-1.5 h-1.5 bg-purple-600 dark:bg-purple-400 rounded-full animate-pulse" />
             Selected
           </div>
-        ) : (
-          <span className="text-xs px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded font-medium shrink-0">
-            {sample.language}
-          </span>
         )}
       </div>
 
@@ -328,8 +342,11 @@ const SampleCard = React.forwardRef(({ sample, isSelected, onPreview, onLoad }, 
         {sample.description}
       </p>
 
-      {/* Doc Type Tag */}
-      <div>
+      {/* Metadata Tags - Language + Doc Type */}
+      <div className="flex items-center gap-2">
+        <span className="inline-block text-xs px-2 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded font-medium">
+          {formatLanguageName(sample.language)}
+        </span>
         <span className="inline-block text-xs px-2 py-0.5 bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 rounded font-bold uppercase tracking-wide">
           {sample.docType}
         </span>
