@@ -12,7 +12,7 @@
 AI-powered documentation generator with real-time streaming, quality scoring (0-100), and WCAG 2.1 AA compliance.
 
 **Key Metrics:**
-- 2,446 tests (2,392 passing, 54 skipped, 0 failing) | 100% pass rate | 91.83% backend coverage
+- 2,460 tests (2,406 passing, 54 skipped, 0 failing) | 100% pass rate | 96.71% middleware coverage
 - Lighthouse: 75/100 performance (+67%), 100/100 accessibility
 - Bundle: 78KB gzipped (-85% reduction)
 - Accessibility: 95/100 score, 0 axe violations
@@ -297,7 +297,9 @@ codescribe-ai/
 - Admin dashboard performance optimization (O(1) lifetime usage lookups)
 - Database trigger to auto-maintain total_generations column
 - "This Period" + "All Time" columns replace useless "days" column
-- 2,446 tests (2,392 passing, 54 skipped, 100% pass rate)
+- Middleware test coverage fix (96.71% statements, 93.49% branches - CI passing ✅)
+- 14 new rateLimitBypass tests (100% coverage)
+- 2,460 tests (2,406 passing, 54 skipped, 100% pass rate)
 
 <details>
 <summary>Recent Releases (v2.7.0-v2.7.6) & Milestones</summary>
