@@ -126,6 +126,7 @@ router.get('/usage-stats', requireAuth, requireAdmin, async (req, res) => {
     };
 
     // 3. Get top users by usage (current billing period)
+    // Sorted by THIS PERIOD usage (monthly_count), not lifetime
     // Note: Shows all users in current period with:
     //   - This Period: monthly_count for current billing period
     //   - All Time: total_generations maintained by database trigger (users only)
@@ -156,7 +157,7 @@ router.get('/usage-stats', requireAuth, requireAdmin, async (req, res) => {
           AND u.email NOT LIKE 'test-%'
           AND u.email NOT LIKE '%@example.com'
           AND uq.period_start_date = DATE_TRUNC('month', CURRENT_DATE)
-        ORDER BY all_time DESC
+        ORDER BY this_period DESC
         LIMIT 10
       `
     ]);

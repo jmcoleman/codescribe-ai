@@ -431,7 +431,7 @@ export default function AdminUsage() {
               <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
                 {userTypeFilter === 'anonymous' ? 'Most active anonymous users in current billing period' :
                  userTypeFilter === 'authenticated' ? 'Highest usage in current billing period' :
-                 'Sorted by total usage (anonymous: current month, authenticated: lifetime)'}
+                 'Sorted by current period usage (highest activity this month)'}
               </p>
             </div>
             <div className="overflow-x-auto">
@@ -496,7 +496,7 @@ export default function AdminUsage() {
                           sublabel: user.tier,
                           clickable: false
                         }))
-                      ].sort((a, b) => b.allTime - a.allTime); // Sort by all-time usage (highest first)
+                      ].sort((a, b) => b.currentPeriod - a.currentPeriod); // Sort by current period usage (highest first)
 
                       return mergedUsers.length === 0 ? (
                         <tr>
