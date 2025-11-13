@@ -175,6 +175,9 @@ export function DocPanel({
   // Track mermaid diagram counter to ensure unique IDs
   const mermaidCounterRef = useRef(0);
 
+  // Ref for auto-scroll behavior during generation
+  const contentRef = useRef(null);
+
   // Close mobile menu when clicking outside
   useEffect(() => {
     function handleClickOutside(event) {
@@ -209,6 +212,22 @@ export function DocPanel({
   useEffect(() => {
     setStorageItem(STORAGE_KEYS.REPORT_EXPANDED, isExpanded.toString());
   }, [isExpanded]);
+
+  // Auto-scroll during generation when user is near bottom
+  useEffect(() => {
+    if (!isGenerating || !contentRef.current) return;
+
+    const element = contentRef.current;
+    const threshold = 100; // pixels from bottom
+
+    // Check if user is near bottom before auto-scrolling
+    const isNearBottom =
+      element.scrollHeight - element.scrollTop - element.clientHeight < threshold;
+
+    if (isNearBottom) {
+      element.scrollTop = element.scrollHeight;
+    }
+  }, [documentation, isGenerating]);
 
   const handleToggle = () => {
     setIsExpanded(!isExpanded);
@@ -389,7 +408,7 @@ export function DocPanel({
       </div>
 
       {/* Body - Documentation Content */}
-      <div className="flex-1 overflow-y-auto px-4 py-3 bg-white dark:bg-slate-900">
+      <div ref={contentRef} className="flex-1 overflow-y-auto px-4 py-3 bg-white dark:bg-slate-900">
         {isGenerating && !documentation ? (
           <DocPanelGeneratingSkeleton />
         ) : documentation ? (

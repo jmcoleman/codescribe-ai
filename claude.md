@@ -297,6 +297,7 @@ codescribe-ai/
 - Admin dashboard performance optimization (O(1) lifetime usage lookups)
 - Database trigger to auto-maintain total_generations column
 - "This Period" + "All Time" columns replace useless "days" column
+- Smart auto-scroll in doc panel during streaming generation (real-time feedback)
 - Middleware test coverage fix (96.71% statements, 93.49% branches - CI passing ✅)
 - 14 new rateLimitBypass tests (100% coverage)
 - 2,460 tests (2,406 passing, 54 skipped, 100% pass rate)

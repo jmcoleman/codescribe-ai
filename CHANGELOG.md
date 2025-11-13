@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Status:** ✅ Admin Dashboard Performance Optimization & Test Fixes
 
-**Summary:** Major performance optimization for admin dashboard with denormalized `total_generations` column maintained by database triggers for O(1) lifetime usage lookups. Replaced useless "days" column with "This Period" and "All Time" columns showing current billing period and lifetime totals. Updated Recent Activity description and fixed frontend test suite compatibility with examples data changes.
+**Summary:** Major performance optimization for admin dashboard with denormalized `total_generations` column maintained by database triggers for O(1) lifetime usage lookups. Replaced useless "days" column with "This Period" and "All Time" columns showing current billing period and lifetime totals. Enhanced documentation panel with smart auto-scroll during streaming generation for better real-time feedback. Updated Recent Activity description and fixed frontend test suite compatibility with examples data changes.
 
 ### Added
 
@@ -62,6 +62,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - All view: "Current Usage" | "Total / Days" (mixed)
   - **Table cells** (lines 522-531, 599-608): Display `thisPeriod` and `allTime` with purple accent on All Time
   - **Recent Activity label** (lines 633-635): Changed to "Last 50 generations across all documentation types"
+
+- **Documentation Panel UX** ([client/src/components/DocPanel.jsx:179-230](client/src/components/DocPanel.jsx))
+  - Added smart auto-scroll during streaming generation
+  - Automatically scrolls viewport to bottom as new content arrives (only when user is already at/near bottom)
+  - Respects user intent: doesn't interrupt if they scroll up to read earlier sections
+  - Standard UX pattern matching ChatGPT, Claude web, VS Code terminal
+  - Provides real-time visual feedback for multi-page documentation generation
 
 ### Fixed
 
