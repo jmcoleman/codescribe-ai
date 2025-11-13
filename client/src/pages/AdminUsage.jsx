@@ -424,14 +424,14 @@ export default function AdminUsage() {
           <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
             <div className="p-6 border-b border-slate-200 dark:border-slate-700">
               <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                {userTypeFilter === 'anonymous' ? 'Top IPs (Last 7 Days)' :
+                {userTypeFilter === 'anonymous' ? 'Top IPs (This Period)' :
                  userTypeFilter === 'authenticated' ? 'Top Users (This Period)' :
                  'Top Users (All Types)'}
               </h2>
               <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                {userTypeFilter === 'anonymous' ? 'Most active anonymous users (last 7 days)' :
+                {userTypeFilter === 'anonymous' ? 'Most active anonymous users in current billing period' :
                  userTypeFilter === 'authenticated' ? 'Highest usage in current billing period' :
-                 'Sorted by total usage (anonymous: last 7 days, authenticated: lifetime)'}
+                 'Sorted by total usage (anonymous: current month, authenticated: lifetime)'}
               </p>
             </div>
             <div className="overflow-x-auto">
@@ -453,10 +453,10 @@ export default function AdminUsage() {
                     ) : userTypeFilter === 'anonymous' ? (
                       <>
                         <th className="px-6 py-3 text-right text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                          Generations
+                          This Period
                         </th>
                         <th className="px-6 py-3 text-right text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                          Days
+                          Total Usage
                         </th>
                       </>
                     ) : (
@@ -480,8 +480,8 @@ export default function AdminUsage() {
                         ...stats.topIPs.map(ip => ({
                           type: 'anonymous',
                           identifier: ip.ipAddress,
-                          currentPeriod: ip.totalGenerations, // Last 7 days total
-                          allTime: ip.totalGenerations, // We don't have lifetime for IPs
+                          currentPeriod: ip.thisPeriod, // Current month total
+                          allTime: ip.totalGenerations, // Same as thisPeriod (no lifetime tracking for IPs)
                           label: ip.ipAddress,
                           sublabel: 'Anonymous',
                           clickable: true,
@@ -564,11 +564,13 @@ export default function AdminUsage() {
                             </td>
                             <td className="px-6 py-4 text-right">
                               <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                                {ip.totalGenerations}
+                                {ip.thisPeriod.toLocaleString()}
                               </span>
                             </td>
                             <td className="px-6 py-4 text-right">
-                              <span className="text-sm text-slate-600 dark:text-slate-400">{ip.daysActive}</span>
+                              <span className="text-sm font-semibold text-purple-600 dark:text-purple-400">
+                                {ip.totalGenerations.toLocaleString()}
+                              </span>
                             </td>
                           </tr>
                         ))

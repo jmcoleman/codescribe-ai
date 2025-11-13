@@ -128,18 +128,18 @@ router.get('/usage-stats', requireAuth, requireAdmin, async (req, res) => {
     // 3. Get top users by usage (current billing period)
     // Note: Shows all users in current period with:
     //   - This Period: monthly_count for current billing period
-    //   - All Time: total_generations maintained by database trigger
+    //   - All Time: total_generations maintained by database trigger (users only)
+    //   - Anonymous IPs: monthly_count for current period (no lifetime tracking)
     const [topIPs, topUsers] = await Promise.all([
       sql`
         SELECT
           ip_address,
-          SUM(daily_count) as total_generations,
-          MAX(last_reset_date) as last_activity,
-          COUNT(*) as days_active
+          monthly_count as this_period,
+          monthly_count as total_generations,
+          last_reset_date as last_activity
         FROM anonymous_quotas
-        WHERE last_reset_date >= NOW() - INTERVAL '7 days'
-        GROUP BY ip_address
-        ORDER BY total_generations DESC
+        WHERE period_start_date = DATE_TRUNC('month', CURRENT_DATE)
+        ORDER BY monthly_count DESC
         LIMIT 10
       `,
       sql`
@@ -230,9 +230,9 @@ router.get('/usage-stats', requireAuth, requireAdmin, async (req, res) => {
       },
       topIPs: topIPs.rows.map(row => ({
         ipAddress: row.ip_address,
+        thisPeriod: parseInt(row.this_period),
         totalGenerations: parseInt(row.total_generations),
-        lastActivity: row.last_activity,
-        daysActive: parseInt(row.days_active)
+        lastActivity: row.last_activity
       })),
       topUsers: topUsers.rows.map(row => ({
         userId: row.user_id,
