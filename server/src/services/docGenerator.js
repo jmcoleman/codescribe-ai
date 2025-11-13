@@ -15,7 +15,8 @@ export class DocGeneratorService {
       language = 'javascript',
       streaming = false,
       onChunk = null,
-      isDefaultCode = false
+      isDefaultCode = false,
+      userTier = 'free'
     } = options;
 
     // Step 1: Parse code to understand structure
@@ -41,8 +42,8 @@ export class DocGeneratorService {
       documentation = await claudeClient.generate(userMessage, claudeOptions);
     }
 
-    // Step 4: Add attribution footer (works for both cached and non-cached responses)
-    const attribution = `\n\n\n\n---\n\n*Generated with [CodeScribe AI](https://codescribeai.com) - AI-powered code documentation*`;
+    // Step 4: Add tier-based attribution footer (works for both cached and non-cached responses)
+    const attribution = this.buildAttribution(userTier);
     const documentationWithAttribution = documentation + attribution;
 
     // Step 5: Calculate quality score (includes input code health assessment)
@@ -61,6 +62,27 @@ export class DocGeneratorService {
         cacheUserMessage: isDefaultCode
       }
     };
+  }
+
+  /**
+   * Build tier-based attribution footer
+   * @param {string} tier - User tier (free, pro, team, enterprise)
+   * @returns {string} Attribution footer text
+   */
+  buildAttribution(tier) {
+    const attributions = {
+      free: `\n\n\n\n---\n\n*🟣 Generated with [CodeScribe AI](https://codescribeai.com) • **Free Tier***\n\n*Upgrade to [Pro](https://codescribeai.com/pricing) to remove this watermark and unlock advanced features*`,
+
+      pro: `\n\n\n\n---\n\n*Generated with [CodeScribe AI](https://codescribeai.com) - AI-powered code documentation*`,
+
+      team: `\n\n\n\n---\n\n*Generated with [CodeScribe AI](https://codescribeai.com)*`,
+
+      enterprise: '' // No attribution for enterprise
+    };
+
+    // Use hasOwnProperty to check if tier exists (not just if value is truthy)
+    // This allows empty string for enterprise tier
+    return attributions.hasOwnProperty(tier) ? attributions[tier] : attributions.free;
   }
 
   /**

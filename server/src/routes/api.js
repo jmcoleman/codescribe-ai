@@ -44,7 +44,8 @@ router.post('/generate', apiLimiter, generationLimiter, optionalAuth, checkUsage
       docType: docType || 'README',
       language: language || 'javascript',
       streaming: false,
-      isDefaultCode: isDefaultCode === true // Cache user message if this is default/example code
+      isDefaultCode: isDefaultCode === true, // Cache user message if this is default/example code
+      userTier: req.user?.tier || 'free' // Pass user tier for attribution
     });
 
     // Track usage after successful generation
@@ -94,11 +95,14 @@ router.post('/generate-stream', apiLimiter, generationLimiter, optionalAuth, che
 
     res.write(`data: ${JSON.stringify({ type: 'connected' })}\n\n`);
 
+    const userTier = req.user?.tier || 'free';
+
     const result = await docGenerator.generateDocumentation(code, {
       docType: docType || 'README',
       language: language || 'javascript',
       streaming: true,
       isDefaultCode: isDefaultCode === true, // Cache user message if this is default/example code
+      userTier, // Pass user tier for attribution
       onChunk: (chunk) => {
         res.write(`data: ${JSON.stringify({
           type: 'chunk',
@@ -107,8 +111,8 @@ router.post('/generate-stream', apiLimiter, generationLimiter, optionalAuth, che
       }
     });
 
-    // Send attribution footer as final chunk
-    const attribution = `\n\n\n\n---\n\n*Generated with [CodeScribe AI](https://codescribeai.com) - AI-powered code documentation*`;
+    // Send tier-based attribution footer as final chunk
+    const attribution = docGenerator.buildAttribution(userTier);
     res.write(`data: ${JSON.stringify({
       type: 'chunk',
       content: attribution
