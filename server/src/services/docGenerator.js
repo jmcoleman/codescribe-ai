@@ -90,22 +90,42 @@ Complexity: ${analysis.complexity || 'Unknown'}
 
 ${baseContext}
 
-Requirements:
-1. Project Overview: Clear description of what the code does
-2. Features: List key capabilities (bullet points)
-3. Installation: Setup instructions if applicable
-4. Usage: Practical examples showing how to use the code
-5. API Documentation: Document all exported functions/classes with:
-   - Purpose
-   - Parameters (with types)
-   - Return values
-   - Example usage
-6. Code Examples: Include at least 2 working examples
+CRITICAL REQUIREMENTS - You MUST include ALL of these sections:
+
+1. **Project Overview**: Clear description of what the code does and its purpose
+2. **Features**: List key capabilities (bullet points) based on what you see in the code
+3. **Installation/Setup** (REQUIRED - DO NOT SKIP): Always provide setup instructions
+   - For JavaScript/Node.js: npm/yarn installation, dependencies
+   - For Python: pip install, virtual environment setup
+   - For Java: Maven/Gradle dependencies, build commands
+   - For C#: NuGet packages, .NET SDK version
+   - For Ruby: gem install, bundle commands
+   - For Go: go get commands, module setup
+   - Include how to run/use the code
+4. **Usage**: Practical examples showing how to use the code (minimum 2 examples)
+5. **API Documentation**: Document ALL exported functions/classes with:
+   - You detected ${analysis.functions.length} function(s) and ${analysis.classes.length} class(es)
+   - Document EVERY public function/method
+   - Purpose and description
+   - Parameters (with types and descriptions)
+   - Return values (with type and description)
+   - Example usage for each function
+6. **Code Examples**: Include at least 2 working examples showing real-world usage
 
 Code to document:
 \`\`\`${language}
 ${code}
 \`\`\`
+
+QUALITY SCORING GUIDANCE:
+Your documentation will be scored on 5 criteria (100 points total):
+- Overview/Description (20 points): Clear project description
+- Installation/Setup (15 points): Complete setup instructions - ALWAYS INCLUDE THIS
+- Usage Examples (20 points): At least 2-3 code examples with explanations
+- API Documentation (25 points): ALL ${analysis.functions.length} function(s) documented - missing any = lower score
+- Structure/Formatting (20 points): Proper headers, code blocks, lists
+
+To achieve a high score (90+), you MUST include all sections above with complete coverage of all functions/classes.
 
 IMPORTANT MARKDOWN FORMATTING RULES:
 - Use proper markdown lists with a blank line before the list
@@ -189,22 +209,54 @@ Return the COMPLETE code with JSDoc comments added. Maintain all original code e
 
 ${baseContext}
 
-Requirements:
-1. Endpoint/Function Overview: High-level description
-2. For each public function/endpoint:
-   - Name and signature
-   - Purpose
-   - Parameters: Name, type, required/optional, description
-   - Return value: Type and description
-   - Error responses: Possible errors and codes
-   - Example request/response
-3. Authentication: Requirements if any
-4. Rate limiting: Mention if applicable
+CRITICAL REQUIREMENTS - You MUST include ALL of these sections:
+
+1. **Overview Section**: Brief description of what this API does and its purpose
+
+2. **Installation/Setup Section**: ALWAYS include setup instructions, even for code snippets
+   - For Java/Spring Boot: Maven/Gradle dependencies, application.properties, database setup
+   - For Node.js/Express: npm install commands, environment variables, database connection
+   - For Python/Flask/Django: pip install, virtual environment, configuration
+   - For Ruby/Sinatra/Rails: gem install, bundle, database migrations
+   - For C#/ASP.NET: NuGet packages, appsettings.json, database context
+   - Include how to run the application (e.g., mvn spring-boot:run, npm start, flask run)
+
+3. **Complete Endpoint Documentation**: Document EVERY endpoint/function found in the code
+   - You detected ${analysis.functions.length} function(s) and ${analysis.classes.length} class(es)
+   - MUST document ALL of them - no exceptions
+   - For each endpoint/function:
+     * HTTP method and route (if applicable)
+     * Purpose and description
+     * Request parameters (query params, path params, body)
+     * Request body schema (with example JSON)
+     * Response format (with example JSON)
+     * Status codes (200, 201, 400, 404, 500, etc.)
+     * Error responses with examples
+     * Authentication/authorization requirements
+
+4. **Usage Examples**: Include at least 2-3 complete request/response examples using:
+   - curl commands
+   - Or code examples in the same language
+   - Show both success and error scenarios
+
+5. **Authentication & Security**: Document any auth requirements, API keys, JWT, etc.
 
 Code to document:
 \`\`\`${language}
 ${code}
 \`\`\`
+
+IMPORTANT: Even if this is just a code snippet, provide realistic setup instructions based on the framework/language patterns you detect. For example, if you see @RestController and @RequestMapping, provide Spring Boot setup instructions.
+
+QUALITY SCORING GUIDANCE:
+Your documentation will be scored on 5 criteria (100 points total):
+- Overview/Description (20 points): Clear project description
+- Installation/Setup (15 points): Complete setup instructions - DO NOT SKIP THIS
+- Usage Examples (20 points): At least 2-3 code examples with explanations
+- API Documentation (25 points): ALL functions/endpoints documented - missing any = lower score
+- Structure/Formatting (20 points): Proper headers, code blocks, lists
+
+To achieve a high score (90+), you MUST include all sections above with complete coverage.
 
 IMPORTANT MARKDOWN FORMATTING RULES:
 - Use proper markdown lists with a blank line before the list

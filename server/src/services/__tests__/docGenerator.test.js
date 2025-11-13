@@ -326,11 +326,13 @@ function greet(name) {
       );
 
       expect(prompt).toContain('API documentation');
-      expect(prompt).toContain('Endpoint/Function Overview');
-      expect(prompt).toContain('Parameters');
-      expect(prompt).toContain('Return value');
+      expect(prompt).toContain('Overview Section');
+      expect(prompt).toContain('Installation/Setup Section');
+      expect(prompt).toContain('Request parameters');
+      expect(prompt).toContain('Response format');
       expect(prompt).toContain('Error responses');
-      expect(prompt).toContain('Example request/response');
+      expect(prompt).toContain('Usage Examples');
+      expect(prompt).toContain('QUALITY SCORING GUIDANCE');
       expect(prompt).toContain(sampleCode);
     });
 

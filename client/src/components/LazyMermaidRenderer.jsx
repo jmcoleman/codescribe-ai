@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import mermaid from 'mermaid';
+import { useTheme } from '../contexts/ThemeContext';
 
-// Initialize mermaid with configuration (only loaded when this component is loaded)
-mermaid.initialize({
+// Light theme configuration
+const LIGHT_THEME_CONFIG = {
   startOnLoad: false,
   theme: 'default',
   securityLevel: 'loose',
@@ -22,13 +23,43 @@ mermaid.initialize({
     fontFamily: 'Inter, system-ui, sans-serif',
     fontSize: '14px'
   }
-});
+};
+
+// Dark theme configuration
+const DARK_THEME_CONFIG = {
+  startOnLoad: false,
+  theme: 'dark',
+  securityLevel: 'loose',
+  fontFamily: 'Inter, system-ui, sans-serif',
+  themeVariables: {
+    primaryColor: '#7c3aed', // purple-600
+    primaryTextColor: '#e2e8f0', // slate-200 - lighter text for dark mode
+    primaryBorderColor: '#a78bfa', // purple-400 - lighter, more visible borders
+    lineColor: '#94a3b8', // slate-400 - lighter lines for visibility
+    secondaryColor: '#312e81', // indigo-900
+    tertiaryColor: '#1e293b', // slate-800
+    background: '#0f172a', // slate-900
+    mainBkg: '#1e293b', // slate-800
+    secondBkg: '#334155', // slate-700
+    borderColor: '#64748b', // slate-500 - lighter borders for better definition
+    arrowheadColor: '#94a3b8', // slate-400
+    fontFamily: 'Inter, system-ui, sans-serif',
+    fontSize: '14px',
+    // Additional dark mode specific variables
+    darkMode: true,
+    textColor: '#e2e8f0', // slate-200
+    edgeLabelBackground: '#1e293b', // slate-800
+    clusterBkg: '#1e293b', // slate-800
+    clusterBorder: '#a78bfa' // purple-400
+  }
+};
 
 /**
  * LazyMermaidRenderer - Renders Mermaid diagrams (lazy loaded)
  * This component is dynamically imported to reduce initial bundle size
  */
 export function LazyMermaidRenderer({ chart, id, onError, onSuccess }) {
+  const { effectiveTheme } = useTheme();
   const [svg, setSvg] = useState('');
   const [error, setError] = useState(null);
 
@@ -44,6 +75,10 @@ export function LazyMermaidRenderer({ chart, id, onError, onSuccess }) {
       const cleanChart = chart.trim();
 
       try {
+        // Re-initialize Mermaid with the appropriate theme
+        const themeConfig = effectiveTheme === 'dark' ? DARK_THEME_CONFIG : LIGHT_THEME_CONFIG;
+        mermaid.initialize(themeConfig);
+
         // Generate unique ID for this render with more entropy
         const uniqueId = `mermaid-${id}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
@@ -114,12 +149,12 @@ export function LazyMermaidRenderer({ chart, id, onError, onSuccess }) {
     return () => {
       cancelled = true;
     };
-  }, [chart, id, onError, onSuccess]);
+  }, [chart, id, effectiveTheme, onError, onSuccess]);
 
   if (error) {
     return (
-      <div className="my-6 p-4 bg-red-50 border border-red-200 rounded-lg min-h-[300px] flex items-center justify-center">
-        <p className="text-sm text-red-800">
+      <div className="my-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg min-h-[300px] flex items-center justify-center">
+        <p className="text-sm text-red-800 dark:text-red-300">
           <strong>Error rendering diagram:</strong> {error}
         </p>
       </div>
@@ -129,10 +164,10 @@ export function LazyMermaidRenderer({ chart, id, onError, onSuccess }) {
   // Show loading state while rendering
   if (!svg) {
     return (
-      <div className="not-prose my-6 p-4 bg-slate-50 border border-slate-200 rounded-lg min-h-[300px] flex items-center justify-center">
+      <div className="not-prose my-6 p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg min-h-[300px] flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-2"></div>
-          <p className="text-sm text-slate-600">Rendering diagram...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 dark:border-purple-400 mx-auto mb-2"></div>
+          <p className="text-sm text-slate-600 dark:text-slate-400">Rendering diagram...</p>
         </div>
       </div>
     );

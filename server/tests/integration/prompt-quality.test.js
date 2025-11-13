@@ -377,15 +377,16 @@ describe('Prompt Quality Integration Tests', () => {
         'javascript'
       );
 
-      // Verify API-specific requirements
+      // Verify API-specific requirements (updated to match improved prompt)
       expect(prompt).toContain('API documentation');
-      expect(prompt).toContain('Endpoint/Function Overview');
-      expect(prompt).toContain('Parameters');
-      expect(prompt).toContain('Return value');
+      expect(prompt).toContain('Overview Section');
+      expect(prompt).toContain('Installation/Setup Section');
+      expect(prompt).toContain('Request parameters');
+      expect(prompt).toContain('Response format');
       expect(prompt).toContain('Error responses');
-      expect(prompt).toContain('Example request/response');
+      expect(prompt).toContain('Usage Examples');
       expect(prompt).toContain('Authentication');
-      expect(prompt).toContain('Rate limiting');
+      expect(prompt).toContain('QUALITY SCORING GUIDANCE');
 
       console.log('\n=== API PROMPT ===');
       console.log('Analysis:', JSON.stringify(analysis, null, 2));
@@ -625,8 +626,9 @@ describe('Prompt Quality Integration Tests', () => {
         'javascript'
       );
 
-      // API docs should include example requests/responses
-      expect(prompt).toContain('Example request/response');
+      // API docs should include example requests/responses and usage examples
+      expect(prompt).toContain('Usage Examples');
+      expect(prompt).toContain('curl commands');
       expect(prompt).toContain('javascript');
 
       console.log('\n=== API SYNTAX HIGHLIGHTING ===');

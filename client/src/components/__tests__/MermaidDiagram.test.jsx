@@ -9,6 +9,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MermaidDiagram } from '../MermaidDiagram';
+import { ThemeProvider } from '../../contexts/ThemeContext';
 import mermaid from 'mermaid';
 
 // Mock mermaid library
@@ -22,8 +23,19 @@ vi.mock('mermaid', () => ({
 describe('MermaidDiagram', () => {
   const mockSvg = '<svg xmlns="http://www.w3.org/2000/svg"><g><text>Test Diagram</text></g></svg>';
 
+  // Helper to render with ThemeProvider
+  const renderWithTheme = (component) => {
+    return render(
+      <ThemeProvider>
+        {component}
+      </ThemeProvider>
+    );
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.clear();
+    document.documentElement.classList.remove('dark');
     // Default successful render
     mermaid.render.mockResolvedValue({ svg: mockSvg });
   });
@@ -31,7 +43,7 @@ describe('MermaidDiagram', () => {
   describe('Initial Render - Show Button', () => {
     it('should render show diagram button initially', () => {
       const chart = 'flowchart TD\n    A --> B';
-      render(<MermaidDiagram chart={chart} id="test-1" />);
+      renderWithTheme(<MermaidDiagram chart={chart} id="test-1" />);
 
       expect(screen.getByText('Diagram Available')).toBeInTheDocument();
       expect(screen.getByText('Click to render visualization')).toBeInTheDocument();
@@ -40,7 +52,7 @@ describe('MermaidDiagram', () => {
 
     it('should display diagram icon in show button state', () => {
       const chart = 'flowchart TD\n    A --> B';
-      render(<MermaidDiagram chart={chart} id="test-2" />);
+      renderWithTheme(<MermaidDiagram chart={chart} id="test-2" />);
 
       // Check for SVG icon (bar chart icon)
       const icon = screen.getByRole('button', { name: /show/i }).parentElement.querySelector('svg');
@@ -49,14 +61,14 @@ describe('MermaidDiagram', () => {
 
     it('should not render diagram until show button is clicked', () => {
       const chart = 'flowchart TD\n    A --> B';
-      render(<MermaidDiagram chart={chart} id="test-3" />);
+      renderWithTheme(<MermaidDiagram chart={chart} id="test-3" />);
 
       expect(mermaid.render).not.toHaveBeenCalled();
     });
 
     it('should have accessible show button', () => {
       const chart = 'flowchart TD\n    A --> B';
-      render(<MermaidDiagram chart={chart} id="test-4" />);
+      renderWithTheme(<MermaidDiagram chart={chart} id="test-4" />);
 
       const button = screen.getByRole('button', { name: /show/i });
       expect(button).toHaveAccessibleName();
@@ -74,7 +86,7 @@ describe('MermaidDiagram', () => {
         () => new Promise((resolve) => setTimeout(() => resolve({ svg: mockSvg }), 100))
       );
 
-      render(<MermaidDiagram chart={chart} id="test-5" />);
+      renderWithTheme(<MermaidDiagram chart={chart} id="test-5" />);
 
       const button = screen.getByRole('button', { name: /show/i });
       await user.click(button);
@@ -89,7 +101,7 @@ describe('MermaidDiagram', () => {
       const user = userEvent.setup();
       const chart = 'flowchart TD\n    A --> B';
 
-      render(<MermaidDiagram chart={chart} id="test-6" />);
+      renderWithTheme(<MermaidDiagram chart={chart} id="test-6" />);
 
       const button = screen.getByRole('button', { name: /show/i });
       await user.click(button);
@@ -103,7 +115,7 @@ describe('MermaidDiagram', () => {
       const user = userEvent.setup();
       const chart = 'flowchart TD\n    A --> B';
 
-      render(<MermaidDiagram chart={chart} id="unique-test" />);
+      renderWithTheme(<MermaidDiagram chart={chart} id="unique-test" />);
 
       const button = screen.getByRole('button', { name: /show/i });
       await user.click(button);
@@ -121,7 +133,7 @@ describe('MermaidDiagram', () => {
       const user = userEvent.setup();
       const chart = 'flowchart TD\n    A[Start] --> B[End]';
 
-      render(<MermaidDiagram chart={chart} id="test-7" />);
+      renderWithTheme(<MermaidDiagram chart={chart} id="test-7" />);
 
       const button = screen.getByRole('button', { name: /^show$/i });
       await user.click(button);
@@ -139,7 +151,7 @@ describe('MermaidDiagram', () => {
     A[Input] --> B[Process]
     B --> C[Output]`;
 
-      render(<MermaidDiagram chart={flowchart} id="flowchart-1" />);
+      renderWithTheme(<MermaidDiagram chart={flowchart} id="flowchart-1" />);
 
       const button = screen.getByRole('button', { name: /^show$/i });
       await user.click(button);
@@ -160,7 +172,7 @@ describe('MermaidDiagram', () => {
     A->>B: Request
     B-->>A: Response`;
 
-      render(<MermaidDiagram chart={sequence} id="sequence-1" />);
+      renderWithTheme(<MermaidDiagram chart={sequence} id="sequence-1" />);
 
       const button = screen.getByRole('button', { name: /^show$/i });
       await user.click(button);
@@ -179,7 +191,7 @@ describe('MermaidDiagram', () => {
       const chart2 = 'flowchart TD\n    X --> Y';
 
       // First diagram instance
-      const { unmount } = render(<MermaidDiagram chart={chart1} id="diagram-1" />);
+      const { unmount } = renderWithTheme(<MermaidDiagram chart={chart1} id="diagram-1" />);
 
       const button1 = screen.getByRole('button', { name: /^show$/i });
       await user.click(button1);
@@ -192,7 +204,7 @@ describe('MermaidDiagram', () => {
       unmount();
 
       // Render second diagram (fresh render, not rerender)
-      render(<MermaidDiagram chart={chart2} id="diagram-2" />);
+      renderWithTheme(<MermaidDiagram chart={chart2} id="diagram-2" />);
 
       const button2 = screen.getByRole('button', { name: /^show$/i });
       await user.click(button2);
@@ -217,7 +229,7 @@ describe('MermaidDiagram', () => {
 
       mermaid.render.mockRejectedValue(new Error('Syntax error in diagram'));
 
-      render(<MermaidDiagram chart={chart} id="error-1" />);
+      renderWithTheme(<MermaidDiagram chart={chart} id="error-1" />);
 
       const button = screen.getByRole('button', { name: /show/i });
       await user.click(button);
@@ -234,7 +246,7 @@ describe('MermaidDiagram', () => {
 
       mermaid.render.mockRejectedValue(new Error('Parse error'));
 
-      render(<MermaidDiagram chart={chart} id="error-2" />);
+      renderWithTheme(<MermaidDiagram chart={chart} id="error-2" />);
 
       const button = screen.getByRole('button', { name: /show/i });
       await user.click(button);
@@ -251,7 +263,7 @@ describe('MermaidDiagram', () => {
     it('should handle empty chart gracefully', async () => {
       const user = userEvent.setup();
 
-      render(<MermaidDiagram chart="" id="empty-1" />);
+      renderWithTheme(<MermaidDiagram chart="" id="empty-1" />);
 
       const button = screen.getByRole('button', { name: /show/i });
       await user.click(button);
@@ -265,7 +277,7 @@ describe('MermaidDiagram', () => {
     it('should handle null chart gracefully', async () => {
       const user = userEvent.setup();
 
-      render(<MermaidDiagram chart={null} id="null-1" />);
+      renderWithTheme(<MermaidDiagram chart={null} id="null-1" />);
 
       const button = screen.getByRole('button', { name: /show/i });
       await user.click(button);
@@ -281,7 +293,7 @@ describe('MermaidDiagram', () => {
 
       mermaid.render.mockRejectedValue(new Error());
 
-      render(<MermaidDiagram chart={chart} id="error-3" />);
+      renderWithTheme(<MermaidDiagram chart={chart} id="error-3" />);
 
       const button = screen.getByRole('button', { name: /show/i });
       await user.click(button);
@@ -308,7 +320,7 @@ describe('MermaidDiagram', () => {
 
       mermaid.render.mockResolvedValue({ svg: svgWithError });
 
-      render(<MermaidDiagram chart={chart} id="sanitize-1" />);
+      renderWithTheme(<MermaidDiagram chart={chart} id="sanitize-1" />);
 
       const button = screen.getByRole('button', { name: /show/i });
       await user.click(button);
@@ -334,7 +346,7 @@ describe('MermaidDiagram', () => {
 
       mermaid.render.mockResolvedValue({ svg: svgWithBomb });
 
-      render(<MermaidDiagram chart={chart} id="sanitize-2" />);
+      renderWithTheme(<MermaidDiagram chart={chart} id="sanitize-2" />);
 
       const button = screen.getByRole('button', { name: /show/i });
       await user.click(button);
@@ -352,7 +364,7 @@ describe('MermaidDiagram', () => {
       const user = userEvent.setup();
       const chart = 'flowchart TD\n    A --> B';
 
-      const { unmount } = render(<MermaidDiagram chart={chart} id="lifecycle-1" />);
+      const { unmount } = renderWithTheme(<MermaidDiagram chart={chart} id="lifecycle-1" />);
 
       const button = screen.getByRole('button', { name: /show/i });
       await user.click(button);
@@ -369,7 +381,7 @@ describe('MermaidDiagram', () => {
       const chart1 = 'flowchart TD\n    A --> B';
       const chart2 = 'flowchart TD\n    X --> Y';
 
-      const { rerender } = render(<MermaidDiagram chart={chart1} id="update-1" />);
+      const { rerender } = renderWithTheme(<MermaidDiagram chart={chart1} id="update-1" />);
 
       const button = screen.getByRole('button', { name: /show/i });
       await user.click(button);
@@ -379,7 +391,7 @@ describe('MermaidDiagram', () => {
       });
 
       // Change chart
-      rerender(<MermaidDiagram chart={chart2} id="update-1" />);
+      rerender(<ThemeProvider><MermaidDiagram chart={chart2} id="update-1" /></ThemeProvider>);
 
       await waitFor(() => {
         expect(mermaid.render).toHaveBeenCalledTimes(2);
@@ -394,7 +406,7 @@ describe('MermaidDiagram', () => {
       const user = userEvent.setup();
       const chart = 'flowchart TD\n    A --> B';
 
-      const { rerender } = render(<MermaidDiagram chart={chart} id="stable-1" />);
+      const { rerender } = renderWithTheme(<MermaidDiagram chart={chart} id="stable-1" />);
 
       const button = screen.getByRole('button', { name: /show/i });
       await user.click(button);
@@ -404,7 +416,7 @@ describe('MermaidDiagram', () => {
       });
 
       // Re-render with same props
-      rerender(<MermaidDiagram chart={chart} id="stable-1" />);
+      rerender(<ThemeProvider><MermaidDiagram chart={chart} id="stable-1" /></ThemeProvider>);
 
       // Should not trigger new render
       await waitFor(() => {
@@ -416,7 +428,7 @@ describe('MermaidDiagram', () => {
   describe('Accessibility', () => {
     it('should have accessible button in initial state', () => {
       const chart = 'flowchart TD\n    A --> B';
-      render(<MermaidDiagram chart={chart} id="a11y-1" />);
+      renderWithTheme(<MermaidDiagram chart={chart} id="a11y-1" />);
 
       const button = screen.getByRole('button', { name: /show/i });
       expect(button).toBeVisible();
@@ -427,7 +439,7 @@ describe('MermaidDiagram', () => {
       const user = userEvent.setup();
       const chart = 'flowchart TD\n    A --> B';
 
-      render(<MermaidDiagram chart={chart} id="a11y-2" />);
+      renderWithTheme(<MermaidDiagram chart={chart} id="a11y-2" />);
 
       const button = screen.getByRole('button', { name: /show/i });
       button.focus();
@@ -444,7 +456,7 @@ describe('MermaidDiagram', () => {
 
     it('should have proper ARIA labels', () => {
       const chart = 'flowchart TD\n    A --> B';
-      render(<MermaidDiagram chart={chart} id="a11y-3" />);
+      renderWithTheme(<MermaidDiagram chart={chart} id="a11y-3" />);
 
       // Button should have accessible text
       expect(screen.getByText('Diagram Available')).toBeInTheDocument();
@@ -457,7 +469,7 @@ describe('MermaidDiagram', () => {
       const user = userEvent.setup();
       const chartWithWhitespace = '  \n  flowchart TD\n    A --> B  \n  ';
 
-      render(<MermaidDiagram chart={chartWithWhitespace} id="perf-1" />);
+      renderWithTheme(<MermaidDiagram chart={chartWithWhitespace} id="perf-1" />);
 
       const button = screen.getByRole('button', { name: /show/i });
       await user.click(button);
@@ -473,13 +485,13 @@ describe('MermaidDiagram', () => {
     it('should use memoization for component', () => {
       const chart = 'flowchart TD\n    A --> B';
 
-      const { rerender } = render(<MermaidDiagram chart={chart} id="memo-1" />);
+      const { rerender } = renderWithTheme(<MermaidDiagram chart={chart} id="memo-1" />);
 
       // Get initial instance
       const initialButton = screen.getByRole('button', { name: /show/i });
 
       // Re-render with same props
-      rerender(<MermaidDiagram chart={chart} id="memo-1" />);
+      rerender(<ThemeProvider><MermaidDiagram chart={chart} id="memo-1" /></ThemeProvider>);
 
       // Should be the same button instance (memoized)
       const afterButton = screen.getByRole('button', { name: /show/i });
@@ -495,7 +507,7 @@ describe('MermaidDiagram', () => {
       const user = userEvent.setup();
       const chart = 'flowchart TD\n    A --> B';
 
-      render(<MermaidDiagram chart={chart} id="log-1" />);
+      renderWithTheme(<MermaidDiagram chart={chart} id="log-1" />);
 
       const button = screen.getByRole('button', { name: /show/i });
       await user.click(button);
@@ -514,7 +526,7 @@ describe('MermaidDiagram', () => {
 
       mermaid.render.mockRejectedValue(new Error('Test error'));
 
-      render(<MermaidDiagram chart={chart} id="log-2" />);
+      renderWithTheme(<MermaidDiagram chart={chart} id="log-2" />);
 
       const button = screen.getByRole('button', { name: /show/i });
       await user.click(button);

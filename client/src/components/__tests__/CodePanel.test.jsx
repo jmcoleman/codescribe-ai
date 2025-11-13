@@ -48,9 +48,19 @@ describe('CodePanel', () => {
       expect(screen.getByText(/javascript/i)).toBeInTheDocument();
     });
 
-    it('displays language badge uppercase', () => {
+    it('displays language badge with friendly names', () => {
       render(<CodePanel {...defaultProps} language="typescript" />);
       expect(screen.getByText(/typescript/i)).toBeInTheDocument();
+    });
+
+    it('displays C# for csharp language', () => {
+      render(<CodePanel {...defaultProps} language="csharp" />);
+      expect(screen.getByText('C#')).toBeInTheDocument();
+    });
+
+    it('displays C++ for cpp language', () => {
+      render(<CodePanel {...defaultProps} language="cpp" />);
+      expect(screen.getByText('C++')).toBeInTheDocument();
     });
 
     it('renders Monaco editor via Suspense', async () => {
