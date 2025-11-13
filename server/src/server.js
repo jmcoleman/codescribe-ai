@@ -102,6 +102,90 @@ if (ENABLE_AUTH) {
   console.log('ℹ Authentication features disabled (ENABLE_AUTH=false)');
 }
 
+// API root endpoint - provides API metadata and documentation
+app.get('/api', (req, res) => {
+  res.json({
+    name: 'CodeScribe AI API',
+    version: '2.7.7',
+    status: 'operational',
+    description: 'AI-powered code documentation generator',
+    documentation: 'https://github.com/jmcoleman/codescribe-ai/blob/main/docs/api/API-Reference.md',
+    endpoints: {
+      health: {
+        path: '/api/health',
+        method: 'GET',
+        description: 'Health check endpoint'
+      },
+      generate: {
+        path: '/api/generate',
+        method: 'POST',
+        description: 'Generate documentation (non-streaming)',
+        authentication: false
+      },
+      generateStream: {
+        path: '/api/generate-stream',
+        method: 'POST',
+        description: 'Generate documentation (streaming SSE)',
+        authentication: false
+      },
+      upload: {
+        path: '/api/upload',
+        method: 'POST',
+        description: 'Upload code file for documentation',
+        authentication: false
+      },
+      ...(ENABLE_AUTH && {
+        auth: {
+          path: '/api/auth/*',
+          methods: ['POST', 'GET'],
+          description: 'Authentication endpoints (signup, login, OAuth)',
+          authentication: 'none'
+        },
+        payments: {
+          path: '/api/payments/*',
+          methods: ['GET', 'POST'],
+          description: 'Subscription and payment management',
+          authentication: 'required'
+        },
+        contact: {
+          path: '/api/contact/*',
+          methods: ['POST'],
+          description: 'Contact sales and support',
+          authentication: 'required'
+        },
+        legal: {
+          path: '/api/legal/*',
+          methods: ['GET', 'POST'],
+          description: 'Legal documents and acceptance (GET /versions is public)',
+          authentication: 'mixed'
+        },
+        admin: {
+          path: '/api/admin/*',
+          methods: ['GET'],
+          description: 'Admin dashboard and analytics',
+          authentication: 'admin-only'
+        }
+      })
+    },
+    features: {
+      authentication: ENABLE_AUTH,
+      streaming: true,
+      rateLimiting: true,
+      fileUpload: true,
+      supportedLanguages: [
+        'javascript', 'typescript', 'python', 'java', 'csharp',
+        'cpp', 'go', 'rust', 'ruby', 'php', 'swift', 'kotlin',
+        'scala', 'r', 'dart', 'shell', 'sql', 'html', 'css'
+      ]
+    },
+    links: {
+      website: 'https://codescribeai.com',
+      github: 'https://github.com/jmcoleman/codescribe-ai',
+      roadmap: 'https://jmcoleman.github.io/codescribe-ai/docs/roadmap/'
+    }
+  });
+});
+
 // Mount routes
 if (ENABLE_AUTH && authRoutes) {
   app.use('/api/auth', authRoutes);
