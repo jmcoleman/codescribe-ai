@@ -396,4 +396,426 @@ Instructions.
       expect(result).toBeValidQualityScore();
     });
   });
+
+  describe('assessInputCodeQuality (via calculateQualityScore 4th parameter)', () => {
+    it('should assess input code with excellent comments (15%+)', () => {
+      const inputCode = `/**
+ * Calculates the sum of two numbers
+ * @param {number} a - First number
+ * @param {number} b - Second number
+ * @returns {number} Sum of a and b
+ */
+function add(a, b) {
+  // Return the sum
+  return a + b;
+}
+
+/**
+ * Subtracts b from a
+ * @param {number} a - First number
+ * @param {number} b - Number to subtract
+ * @returns {number} Difference
+ */
+function subtract(a, b) {
+  // Return the difference
+  return a - b;
+}`;
+
+      const documentation = '# Math Library\n\nBasic math operations.';
+      const codeAnalysis = { functions: [{ name: 'add' }, { name: 'subtract' }] };
+
+      const result = calculateQualityScore(documentation, codeAnalysis, 'README', inputCode);
+
+      expect(result.inputCodeHealth).toBeDefined();
+      expect(result.inputCodeHealth.score).toBeGreaterThanOrEqual(80);
+      expect(result.inputCodeHealth.breakdown.comments.points).toBe(20);
+      expect(result.inputCodeHealth.breakdown.comments.status).toBe('complete');
+    });
+
+    it('should assess input code with good comments (8-15%)', () => {
+      const inputCode = `// Add two numbers
+function add(a, b) {
+  return a + b;
+}
+
+// Subtract two numbers
+function subtract(a, b) {
+  return a - b;
+}
+
+// Multiply two numbers
+function multiply(a, b) {
+  return a * b;
+}
+
+function divide(a, b) {
+  return a / b;
+}
+
+function modulo(a, b) {
+  return a % b;
+}
+
+function power(a, b) {
+  return Math.pow(a, b);
+}`;
+
+      const documentation = '# Math Library';
+      const codeAnalysis = { functions: [] };
+
+      const result = calculateQualityScore(documentation, codeAnalysis, 'README', inputCode);
+
+      expect(result.inputCodeHealth).toBeDefined();
+      expect(result.inputCodeHealth.breakdown.comments.ratio).toBeGreaterThanOrEqual(8);
+      expect(result.inputCodeHealth.breakdown.comments.ratio).toBeLessThan(15);
+      expect(result.inputCodeHealth.breakdown.comments.points).toBe(15);
+      expect(result.inputCodeHealth.breakdown.comments.status).toBe('complete'); // >= 15 points is 'complete'
+    });
+
+    it('should assess input code with minimal comments (3-8%)', () => {
+      const inputCode = `function add(a, b) {
+  return a + b;
+}
+
+// Subtract
+function subtract(a, b) {
+  return a - b;
+}
+
+function multiply(a, b) {
+  return a * b;
+}
+
+function divide(a, b) {
+  return a / b;
+}`;
+
+      const documentation = '# Math Library';
+      const codeAnalysis = { functions: [] };
+
+      const result = calculateQualityScore(documentation, codeAnalysis, 'README', inputCode);
+
+      expect(result.inputCodeHealth).toBeDefined();
+      expect(result.inputCodeHealth.breakdown.comments.points).toBe(8);
+      expect(result.inputCodeHealth.breakdown.comments.status).toBe('partial');
+    });
+
+    it('should assess input code with no comments', () => {
+      const inputCode = `function add(a, b) {
+  return a + b;
+}
+
+function subtract(a, b) {
+  return a - b;
+}`;
+
+      const documentation = '# Math Library';
+      const codeAnalysis = { functions: [] };
+
+      const result = calculateQualityScore(documentation, codeAnalysis, 'README', inputCode);
+
+      expect(result.inputCodeHealth).toBeDefined();
+      expect(result.inputCodeHealth.breakdown.comments.points).toBe(0);
+      expect(result.inputCodeHealth.breakdown.comments.status).toBe('missing');
+    });
+
+    it('should assess descriptive naming quality', () => {
+      const inputCode = `function calculateUserAverageScore(userScores, totalUsers) {
+  const sumOfScores = userScores.reduce((accumulator, scoreValue) => accumulator + scoreValue, 0);
+  const averageScore = sumOfScores / totalUsers;
+  return averageScore;
+}
+
+function validateEmailAddress(emailString) {
+  const emailPattern = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
+  return emailPattern.test(emailString);
+}`;
+
+      const documentation = '# User Utils';
+      const codeAnalysis = { functions: [{ name: 'calculateUserAverageScore' }, { name: 'validateEmailAddress' }] };
+
+      const result = calculateQualityScore(documentation, codeAnalysis, 'README', inputCode);
+
+      expect(result.inputCodeHealth).toBeDefined();
+      expect(result.inputCodeHealth.breakdown.naming.points).toBeGreaterThanOrEqual(15);
+      expect(result.inputCodeHealth.breakdown.naming.status).toMatch(/complete|partial/);
+    });
+
+    it('should detect cryptic naming', () => {
+      const inputCode = `function calc(x, y) {
+  const s = x + y;
+  const a = s / 2;
+  return a;
+}
+
+function proc(d, f) {
+  const r = /test/;
+  return r.test(d);
+}`;
+
+      const documentation = '# Utils';
+      const codeAnalysis = { functions: [{ name: 'calc' }, { name: 'proc' }] };
+
+      const result = calculateQualityScore(documentation, codeAnalysis, 'README', inputCode);
+
+      expect(result.inputCodeHealth).toBeDefined();
+      expect(result.inputCodeHealth.breakdown.naming.points).toBeLessThan(20);
+      expect(result.inputCodeHealth.breakdown.naming.issues.length).toBeGreaterThan(0);
+    });
+
+    it('should detect JSDoc documentation', () => {
+      const inputCode = `/**
+ * Adds two numbers
+ * @param {number} a - First number
+ * @param {number} b - Second number
+ * @returns {number} Sum
+ */
+function add(a, b) {
+  return a + b;
+}`;
+
+      const documentation = '# Math';
+      const codeAnalysis = { functions: [] };
+
+      const result = calculateQualityScore(documentation, codeAnalysis, 'README', inputCode);
+
+      expect(result.inputCodeHealth).toBeDefined();
+      expect(result.inputCodeHealth.breakdown.existingDocs.points).toBe(20); // 10 for JSDoc + 10 for @param/@returns
+      expect(result.inputCodeHealth.breakdown.existingDocs.status).toBe('complete');
+    });
+
+    it('should detect Python docstrings', () => {
+      const inputCode = `def add(a, b):
+    """
+    Add two numbers together.
+
+    Args:
+        a: First number
+        b: Second number
+
+    Returns:
+        Sum of a and b
+    """
+    return a + b`;
+
+      const documentation = '# Math';
+      const codeAnalysis = { functions: [] };
+
+      const result = calculateQualityScore(documentation, codeAnalysis, 'README', inputCode);
+
+      expect(result.inputCodeHealth).toBeDefined();
+      expect(result.inputCodeHealth.breakdown.existingDocs.points).toBe(10); // 10 for docstrings (no @param tags)
+      expect(result.inputCodeHealth.breakdown.existingDocs.status).toBe('partial');
+    });
+
+    it('should detect minimal existing docs', () => {
+      const inputCode = `// @param a - number
+// @param b - number
+function add(a, b) {
+  return a + b;
+}`;
+
+      const documentation = '# Math';
+      const codeAnalysis = { functions: [] };
+
+      const result = calculateQualityScore(documentation, codeAnalysis, 'README', inputCode);
+
+      expect(result.inputCodeHealth).toBeDefined();
+      expect(result.inputCodeHealth.breakdown.existingDocs.points).toBe(5); // 5 for some parameter docs (< 3 total)
+      expect(result.inputCodeHealth.breakdown.existingDocs.status).toBe('missing');
+    });
+
+    it('should detect no existing documentation', () => {
+      const inputCode = `function add(a, b) {
+  return a + b;
+}`;
+
+      const documentation = '# Math';
+      const codeAnalysis = { functions: [] };
+
+      const result = calculateQualityScore(documentation, codeAnalysis, 'README', inputCode);
+
+      expect(result.inputCodeHealth).toBeDefined();
+      expect(result.inputCodeHealth.breakdown.existingDocs.points).toBe(0);
+      expect(result.inputCodeHealth.breakdown.existingDocs.status).toBe('missing');
+    });
+
+    it('should assess well-structured code', () => {
+      const inputCode = `function calculateSum(numbers) {
+  if (!Array.isArray(numbers)) {
+    throw new Error('Input must be an array');
+  }
+
+  const sum = numbers.reduce((acc, num) => {
+    return acc + num;
+  }, 0);
+
+  return sum;
+}`;
+
+      const documentation = '# Utils';
+      const codeAnalysis = { functions: [] };
+
+      const result = calculateQualityScore(documentation, codeAnalysis, 'README', inputCode);
+
+      expect(result.inputCodeHealth).toBeDefined();
+      expect(result.inputCodeHealth.breakdown.codeStructure.points).toBeGreaterThanOrEqual(28);
+      expect(result.inputCodeHealth.breakdown.codeStructure.status).toBe('complete');
+    });
+
+    it('should detect poor indentation', () => {
+      const inputCode = `function add(a, b) {
+return a + b;
+}
+
+function subtract(a, b) {
+        return a - b;
+}`;
+
+      const documentation = '# Math';
+      const codeAnalysis = { functions: [] };
+
+      const result = calculateQualityScore(documentation, codeAnalysis, 'README', inputCode);
+
+      expect(result.inputCodeHealth).toBeDefined();
+      expect(result.inputCodeHealth.breakdown.codeStructure.issues).toContain('Inconsistent indentation');
+    });
+
+    it('should detect excessive blank lines', () => {
+      const inputCode = `function add(a, b) {
+  return a + b;
+}
+
+
+
+function subtract(a, b) {
+  return a - b;
+}`;
+
+      const documentation = '# Math';
+      const codeAnalysis = { functions: [] };
+
+      const result = calculateQualityScore(documentation, codeAnalysis, 'README', inputCode);
+
+      expect(result.inputCodeHealth).toBeDefined();
+      expect(result.inputCodeHealth.breakdown.codeStructure.points).toBeLessThan(35);
+      expect(result.inputCodeHealth.breakdown.codeStructure.issues.length).toBeGreaterThan(0);
+    });
+
+    it('should detect overly long lines', () => {
+      const inputCode = `function processUserDataAndCalculateMetrics(userData, configurationOptions, processingParameters, validationRules) {
+  const result = performComplexCalculationWithMultipleParametersAndNestedConditions(userData, configurationOptions, processingParameters, validationRules);
+  return result;
+}`;
+
+      const documentation = '# Utils';
+      const codeAnalysis = { functions: [] };
+
+      const result = calculateQualityScore(documentation, codeAnalysis, 'README', inputCode);
+
+      expect(result.inputCodeHealth).toBeDefined();
+      expect(result.inputCodeHealth.breakdown.codeStructure.points).toBeLessThan(35);
+      expect(result.inputCodeHealth.breakdown.codeStructure.issues.length).toBeGreaterThan(0);
+    });
+
+    it('should calculate improvement delta', () => {
+      const inputCode = `function add(a, b) {
+  return a + b;
+}`;
+
+      const documentation = `# Math Library
+
+## Overview
+Complete math library with addition.
+
+## Installation
+\`\`\`bash
+npm install math-lib
+\`\`\`
+
+## Usage
+\`\`\`javascript
+add(2, 3); // returns 5
+\`\`\`
+
+## API
+
+### add(a, b)
+Adds two numbers and returns the sum.
+
+## License
+MIT`;
+
+      const codeAnalysis = { functions: [{ name: 'add' }] };
+
+      const result = calculateQualityScore(documentation, codeAnalysis, 'README', inputCode);
+
+      expect(result.inputCodeHealth).toBeDefined();
+      expect(result.improvement).toBeDefined();
+      expect(result.improvement).toBeGreaterThan(0);
+      expect(result.improvement).toBe(result.score - result.inputCodeHealth.score);
+    });
+
+    it('should return null inputCodeHealth when no inputCode provided', () => {
+      const documentation = '# Title\n\nContent.';
+      const codeAnalysis = { functions: [] };
+
+      const result = calculateQualityScore(documentation, codeAnalysis, 'README');
+
+      expect(result.inputCodeHealth).toBeNull();
+      expect(result.improvement).toBeFalsy(); // null or undefined
+    });
+
+    it('should handle empty inputCode string', () => {
+      const documentation = '# Title\n\nContent.';
+      const codeAnalysis = { functions: [] };
+
+      const result = calculateQualityScore(documentation, codeAnalysis, 'README', '');
+
+      expect(result.inputCodeHealth).toBeNull();
+      expect(result.improvement).toBeFalsy(); // null or undefined
+    });
+
+    it('should include all 4 criteria in breakdown', () => {
+      const inputCode = 'function test() { return 1; }';
+      const documentation = '# Test';
+      const codeAnalysis = { functions: [] };
+
+      const result = calculateQualityScore(documentation, codeAnalysis, 'README', inputCode);
+
+      expect(result.inputCodeHealth.breakdown).toBeDefined();
+      expect(result.inputCodeHealth.breakdown.comments).toBeDefined();
+      expect(result.inputCodeHealth.breakdown.naming).toBeDefined();
+      expect(result.inputCodeHealth.breakdown.existingDocs).toBeDefined();
+      expect(result.inputCodeHealth.breakdown.codeStructure).toBeDefined();
+
+      // Verify structure
+      expect(result.inputCodeHealth.breakdown.comments.points).toBeDefined();
+      expect(result.inputCodeHealth.breakdown.comments.maxPoints).toBe(20);
+      expect(result.inputCodeHealth.breakdown.naming.maxPoints).toBe(20);
+      expect(result.inputCodeHealth.breakdown.existingDocs.maxPoints).toBe(25);
+      expect(result.inputCodeHealth.breakdown.codeStructure.maxPoints).toBe(35);
+    });
+
+    it('should calculate grade based on input code score', () => {
+      const excellentCode = `/**
+ * Well documented function
+ * @param {number} value - Input value
+ * @returns {number} Processed value
+ */
+function processValue(value) {
+  const processedResult = value * 2;
+  return processedResult;
+}`;
+
+      const documentation = '# Test';
+      const codeAnalysis = { functions: [] };
+
+      const result = calculateQualityScore(documentation, codeAnalysis, 'README', excellentCode);
+
+      expect(result.inputCodeHealth.grade).toBeDefined();
+      expect(['A', 'B', 'C', 'D', 'F']).toContain(result.inputCodeHealth.grade);
+      expect(typeof result.inputCodeHealth.grade).toBe('string');
+    });
+  });
 });

@@ -67,14 +67,17 @@
 ---
 
 ## 🧰 7. Recording Sequence (Storyboard Summary)
-1. **Intro (0:00–0:05)** – Logo + tagline  
-2. **Samples Library (0:10–0:20)** – Load built-in sample  
-3. **Generate Docs (0:20–0:35)** – Real-time streaming  
-4. **Quality Score (0:35–0:45)** – 90+/A Grade highlight  
-5. **Mermaid Diagram (0:45–0:55)** – Visual flowchart zoom  
-6. **Multi-Language Carousel (0:55–1:05)** – Fast cuts (JS, Python, Go…)  
-7. **Dark Mode Toggle (1:05–1:10)** – Accessibility moment  
-8. **Outro (1:25–1:30)** – Logo + “Try it free at CodeScribeAI.com”
+1. **Intro (0:00–0:05)** – Logo + tagline
+2. **Samples Library (0:10–0:20)** – Load built-in sample
+3. **Generate Docs (0:20–0:35)** – Real-time streaming
+4. **Quality Breakdown (0:35–0:50)** – Dual-tab quality assessment
+   - Show Input Code Health tab (F grade: minimal comments, poor structure)
+   - Switch to Generated Documentation tab (A grade: comprehensive, well-structured)
+   - Highlight transformation header showing 60-point improvement from messy code to professional docs
+5. **Mermaid Diagram (0:50–1:00)** – Visual flowchart zoom
+6. **Multi-Language Carousel (1:00–1:10)** – Fast cuts (JS, Python, Go…)
+7. **Dark Mode Toggle (1:10–1:15)** – Accessibility moment
+8. **Outro (1:25–1:30)** – Logo + "Try it free at CodeScribeAI.com"
 
 ---
 
@@ -102,17 +105,17 @@
 **0:20–0:35 – Generation**
 > “With one click, CodeScribe AI analyzes your code and begins generating documentation in real time.”
 
-**0:35–0:45 – Quality Scoring**
-> “Every document is scored for quality — overview, installation, usage, API, and structure — so you can improve your documentation over time.”
+**0:35–0:50 – Quality Breakdown (Dual Assessment)**
+> "Here's the unique part: CodeScribe assesses both your *input code quality* and the *documentation it generates*. Even if your code has minimal comments and poor structure — an F grade — CodeScribe produces A-grade professional documentation. The breakdown shows exactly what makes great docs, teaching you documentation best practices."
 
-**0:45–0:55 – Mermaid Diagram**
-> “Mermaid diagrams bring your code to life visually, mapping its architecture automatically.”
+**0:50–1:00 – Mermaid Diagram**
+> "Mermaid diagrams bring your code to life visually, mapping its architecture automatically."
 
-**0:55–1:05 – Multi-Language Capability**
-> “It works across ten programming languages, sixteen file extensions, and four documentation types — all in one tool.”
+**1:00–1:10 – Multi-Language Capability**
+> "It works across ten programming languages, sixteen file extensions, and four documentation types — all in one tool."
 
-**1:05–1:15 – Accessibility / Dark Mode**
-> “Fast, accessible, and beautiful — fully WCAG AA compliant with privacy-first architecture.”
+**1:10–1:15 – Accessibility / Dark Mode**
+> "Fast, accessible, and beautiful — fully WCAG AA compliant with privacy-first architecture."
 
 **1:15–1:25 – Technical Excellence**
 > “Backed by more than six hundred automated tests and ninety-five percent coverage, it’s production-ready and built for trust.”

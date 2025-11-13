@@ -420,6 +420,9 @@ describe('SamplesModal', () => {
       const user = userEvent.setup();
       render(<SamplesModal {...defaultProps} />);
 
+      // Wait for auto-focus to complete (100ms delay in component)
+      await new Promise(resolve => setTimeout(resolve, 150));
+
       // Start from close button
       const closeButton = screen.getByLabelText('Close samples modal');
       closeButton.focus();
