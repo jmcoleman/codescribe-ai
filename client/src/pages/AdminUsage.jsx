@@ -425,13 +425,13 @@ export default function AdminUsage() {
             <div className="p-6 border-b border-slate-200 dark:border-slate-700">
               <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
                 {userTypeFilter === 'anonymous' ? 'Top IPs (Last 7 Days)' :
-                 userTypeFilter === 'authenticated' ? 'Top Users (Last 7 Days)' :
-                 'Top Users (Last 7 Days)'}
+                 userTypeFilter === 'authenticated' ? 'Top Users (This Period)' :
+                 'Top Users (This Period)'}
               </h2>
               <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                {userTypeFilter === 'anonymous' ? 'Most active anonymous users' :
-                 userTypeFilter === 'authenticated' ? 'Most active authenticated users' :
-                 'Most active users across all types'}
+                {userTypeFilter === 'anonymous' ? 'Most active anonymous users (last 7 days)' :
+                 userTypeFilter === 'authenticated' ? 'Highest usage in current billing period' :
+                 'Highest usage in current billing period'}
               </p>
             </div>
             <div className="overflow-x-auto">

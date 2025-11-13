@@ -37,13 +37,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **Admin Dashboard API** ([server/src/routes/admin.js:144-244](server/src/routes/admin.js))
+- **Admin Dashboard API** ([server/src/routes/admin.js:128-161](server/src/routes/admin.js))
   - **Top Users query**: Replaced hardcoded `days_active = 1` with meaningful data
   - Now returns `this_period` (current monthly_count) and `all_time` (total_generations)
   - Sorts by `all_time` (lifetime usage) instead of current period
-  - Updated comment to reflect new column names
+  - **Removed 7-day activity filter**: Now shows ALL users in current billing period (not just those active in last 7 days)
+  - Updated comment to reflect "current billing period" scope
 
 - **Admin Dashboard Frontend** ([client/src/pages/AdminUsage.jsx](client/src/pages/AdminUsage.jsx))
+  - **Card title** (lines 426-435): Changed authenticated view from "Last 7 Days" to "This Period" to match current billing period scope
   - **Table headers** (lines 444-471):
     - Authenticated view: "This Period" | "All Time"
     - Anonymous view: "Generations" | "Days" (unchanged)

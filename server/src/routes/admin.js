@@ -125,8 +125,8 @@ router.get('/usage-stats', requireAuth, requireAdmin, async (req, res) => {
       authenticatedGenerations: parseInt(last24HoursAuthenticated.rows[0]?.generations || 0)
     };
 
-    // 3. Get top users by usage (last 7 days active, showing this period + all time)
-    // Note: Shows users active in last 7 days with:
+    // 3. Get top users by usage (current billing period)
+    // Note: Shows all users in current period with:
     //   - This Period: monthly_count for current billing period
     //   - All Time: total_generations maintained by database trigger
     const [topIPs, topUsers] = await Promise.all([
@@ -152,8 +152,7 @@ router.get('/usage-stats', requireAuth, requireAdmin, async (req, res) => {
           uq.updated_at as last_activity
         FROM user_quotas uq
         JOIN users u ON uq.user_id = u.id
-        WHERE uq.updated_at >= NOW() - INTERVAL '7 days'
-          AND u.deleted_at IS NULL
+        WHERE u.deleted_at IS NULL
           AND u.email NOT LIKE 'test-%'
           AND u.email NOT LIKE '%@example.com'
           AND uq.period_start_date = DATE_TRUNC('month', CURRENT_DATE)
