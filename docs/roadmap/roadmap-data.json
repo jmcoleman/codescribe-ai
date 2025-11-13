@@ -1010,6 +1010,27 @@
           ]
         },
         {
+          "version": "Epic 4.5",
+          "title": "CSS/HTML Documentation Support",
+          "duration": "3-4 days",
+          "status": "Planned",
+          "badge": "Depends on Epic 4.2",
+          "features": [
+            "CSS file support (.css, .scss, .sass, .less)",
+            "HTML file support (.html, .htm)",
+            "CSS-specific parser (selectors, custom properties, media queries, keyframes)",
+            "HTML-specific parser (structure, components, forms, accessibility features)",
+            "Design system documentation (color tokens, typography, spacing scales)",
+            "Component library documentation (variants, states, usage patterns)",
+            "Template hierarchy documentation (page structure, component composition)",
+            "CSS/HTML-specific quality scoring criteria",
+            "Accessibility audit integration (ARIA attributes, semantic HTML)",
+            "Browser compatibility detection for CSS features",
+            "Documentation optimized for multi-file projects (design systems, component libraries)",
+            "Requires Epic 4.2 (multi-file support) for meaningful context"
+          ]
+        },
+        {
           "version": "Epic 5.1",
           "title": "CLI Tool",
           "duration": "5-7 days",
