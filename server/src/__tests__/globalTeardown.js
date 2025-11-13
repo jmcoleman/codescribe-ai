@@ -2,6 +2,9 @@
  * Global Test Teardown
  * Runs once after all test suites complete
  * Cleans up any remaining test data from the database
+ *
+ * IMPORTANT: Only runs locally, NOT in CI
+ * CI uses mocked database connections and should never touch real data
  */
 
 import dotenv from 'dotenv';
@@ -11,6 +14,14 @@ import { cleanupAllTestData } from './helpers/cleanup.js';
 dotenv.config();
 
 export default async function globalTeardown() {
+  // Skip cleanup in CI - tests use mocks, not real database
+  const isCI = process.env.CI === 'true' || process.env.GITHUB_ACTIONS === 'true';
+
+  if (isCI) {
+    console.log('\n🧹 Skipping test cleanup in CI (tests use mocks)\n');
+    return;
+  }
+
   console.log('\n🧹 Running global test cleanup...');
 
   try {

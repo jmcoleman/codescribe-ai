@@ -55,6 +55,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Critical: CI Database Cleanup Prevention** ([server/src/__tests__/globalTeardown.js](server/src/__tests__/globalTeardown.js))
+  - **Security fix**: Prevented `globalTeardown` from running in CI environments
+  - CI should NEVER connect to real databases (uses mocks only)
+  - Added environment check: Skips cleanup if `CI=true` or `GITHUB_ACTIONS=true`
+  - Prevents accidental data deletion from Neon dev/prod databases during CI runs
+  - Cleanup still runs locally for manual test data maintenance
+
 - **Frontend Test Compatibility** ([client/src/data/__tests__/examples.test.js](client/src/data/__tests__/examples.test.js))
   - Fixed 3 failing tests due to examples.js docType changes (v2.7.6)
   - Updated `java-spring-api` test: `docType` 'API' → 'JSDOC'
