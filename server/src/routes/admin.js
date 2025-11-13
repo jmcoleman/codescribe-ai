@@ -125,7 +125,10 @@ router.get('/usage-stats', requireAuth, requireAdmin, async (req, res) => {
       authenticatedGenerations: parseInt(last24HoursAuthenticated.rows[0]?.generations || 0)
     };
 
-    // 3. Get top users by usage (last 7 days) - both anonymous and authenticated
+    // 3. Get top users by usage (last 7 days active, showing this period + all time)
+    // Note: Shows users active in last 7 days with:
+    //   - This Period: monthly_count for current billing period
+    //   - All Time: total_generations maintained by database trigger
     const [topIPs, topUsers] = await Promise.all([
       sql`
         SELECT
@@ -144,15 +147,17 @@ router.get('/usage-stats', requireAuth, requireAdmin, async (req, res) => {
           uq.user_id,
           u.email,
           u.tier,
-          SUM(uq.daily_count) as total_generations,
-          MAX(uq.updated_at) as last_activity,
-          COUNT(*) as days_active
+          uq.monthly_count as this_period,
+          u.total_generations as all_time,
+          uq.updated_at as last_activity
         FROM user_quotas uq
         JOIN users u ON uq.user_id = u.id
         WHERE uq.updated_at >= NOW() - INTERVAL '7 days'
           AND u.deleted_at IS NULL
-        GROUP BY uq.user_id, u.email, u.tier
-        ORDER BY total_generations DESC
+          AND u.email NOT LIKE 'test-%'
+          AND u.email NOT LIKE '%@example.com'
+          AND uq.period_start_date = DATE_TRUNC('month', CURRENT_DATE)
+        ORDER BY all_time DESC
         LIMIT 10
       `
     ]);
@@ -186,6 +191,8 @@ router.get('/usage-stats', requireAuth, requireAdmin, async (req, res) => {
         LEFT JOIN user_quotas uq ON u.id = uq.user_id
           AND uq.period_start_date = DATE_TRUNC('month', CURRENT_DATE)
         WHERE u.deleted_at IS NULL
+          AND u.email NOT LIKE 'test-%'
+          AND u.email NOT LIKE '%@example.com'
         ORDER BY COALESCE(uq.updated_at, u.created_at) DESC
         LIMIT 50
       `
@@ -232,9 +239,9 @@ router.get('/usage-stats', requireAuth, requireAdmin, async (req, res) => {
         userId: row.user_id,
         email: row.email,
         tier: row.tier,
-        totalGenerations: parseInt(row.total_generations),
-        lastActivity: row.last_activity,
-        daysActive: parseInt(row.days_active)
+        thisPeriod: parseInt(row.this_period),
+        allTime: parseInt(row.all_time),
+        lastActivity: row.last_activity
       })),
       recentAnonymous: recentAnonymous.rows.map(row => ({
         ipAddress: row.ip_address,

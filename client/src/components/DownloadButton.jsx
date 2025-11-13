@@ -10,14 +10,15 @@ import { toastError } from '../utils/toast';
  * - Accessible with ARIA labels
  * - Reduced motion support
  * - Haptic feedback (if available)
- * - Timestamped filenames
+ * - Timestamped filenames (when filename not provided)
  *
  * Note: Unlike CopyButton, download buttons should NOT show checkmark
  * animations. Downloads are fire-and-forget actions where the toast
  * notification provides sufficient user feedback.
  *
  * @param {string} content - Content to download
- * @param {string} docType - Document type (README, API, JSDOC, ARCHITECTURE)
+ * @param {string} filename - Optional: specific filename to use (e.g., 'code.js'). If provided, used as-is without timestamp
+ * @param {string} docType - Document type (README, API, JSDOC, ARCHITECTURE) - only used if filename not provided
  * @param {string} className - Additional CSS classes
  * @param {string} size - Button size: 'sm' | 'md' | 'lg'
  * @param {string} variant - Button variant: 'ghost' | 'outline' | 'solid'
@@ -26,6 +27,7 @@ import { toastError } from '../utils/toast';
  */
 export function DownloadButton({
   content,
+  filename = null,
   docType = 'documentation',
   className = '',
   size = 'md',
@@ -41,12 +43,22 @@ export function DownloadButton({
         return;
       }
 
-      // Create timestamp in format: YYYY-MM-DD-HHMMSS
-      const now = new Date();
-      const date = now.toISOString().split('T')[0]; // YYYY-MM-DD
-      const time = now.toTimeString().split(' ')[0].replace(/:/g, ''); // HHMMSS
-      const timestamp = `${date}-${time}`;
-      const filename = `${docType}-${timestamp}.md`;
+      // Use provided filename or generate one with timestamp
+      let downloadFilename;
+      if (filename) {
+        // Use the provided filename as-is
+        downloadFilename = filename;
+      } else {
+        // Generate filename with timestamp: docType-YYYYMMDDHHMMSS.md
+        const now = new Date();
+        const timestamp = now.getFullYear() +
+          String(now.getMonth() + 1).padStart(2, '0') +
+          String(now.getDate()).padStart(2, '0') +
+          String(now.getHours()).padStart(2, '0') +
+          String(now.getMinutes()).padStart(2, '0') +
+          String(now.getSeconds()).padStart(2, '0');
+        downloadFilename = `${docType}-${timestamp}.md`;
+      }
 
       // Create blob with markdown content
       const blob = new Blob([content], { type: 'text/markdown' });
@@ -55,7 +67,7 @@ export function DownloadButton({
       // Create temporary link and trigger download
       const link = document.createElement('a');
       link.href = url;
-      link.download = filename;
+      link.download = downloadFilename;
       document.body.appendChild(link);
       link.click();
 

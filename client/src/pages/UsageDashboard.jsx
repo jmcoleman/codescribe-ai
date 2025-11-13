@@ -39,7 +39,7 @@ import { PageLayout } from '../components/PageLayout.jsx';
 export function UsageDashboard() {
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();
-  const { usage, isLoading, refetch, getUsageForPeriod } = useUsageTracking();
+  const { usage, isLoading, refetch, getUsageForPeriod, shouldShowWarnings } = useUsageTracking();
   const [refreshing, setRefreshing] = useState(false);
 
   // Redirect if not authenticated (wait for auth to load first)
@@ -238,8 +238,41 @@ export function UsageDashboard() {
           </div>
         </div>
 
-        {/* Upgrade prompt (show if usage > 60% or at limit) */}
-        {nextTierPath && (monthlyUsage?.percentage >= 60 || dailyUsage?.percentage >= 60) && (
+        {/* Admin/Support/Super Admin Unlimited Access Banner */}
+        {!shouldShowWarnings && (
+          <div className="bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 border-2 border-purple-300 dark:border-purple-600 rounded-lg p-6 mb-6">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 bg-purple-600 dark:bg-purple-500 p-3 rounded-lg">
+                <Sparkles className="w-6 h-6 text-white" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">
+                  Unlimited Access
+                </h3>
+                <p className="text-sm text-slate-700 dark:text-slate-300 mb-3">
+                  Your account has unlimited generation privileges. You can create as many documentation files as needed without any usage limits or warnings.
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+                    <div className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full" />
+                    <span>Unlimited daily generations</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+                    <div className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full" />
+                    <span>Unlimited monthly generations</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+                    <div className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full" />
+                    <span>Priority rate limits</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Upgrade prompt (show if usage > 60% or at limit) - ONLY for regular users */}
+        {shouldShowWarnings && nextTierPath && (monthlyUsage?.percentage >= 60 || dailyUsage?.percentage >= 60) && (
           <div className="bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 border border-purple-200 dark:border-purple-700 rounded-lg p-4 mb-6">
             <div className="flex items-center gap-3">
               <div className="flex-shrink-0 bg-purple-600 dark:bg-purple-500 p-2 rounded-lg">

@@ -1,6 +1,7 @@
 import { X, Code2, Search } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 import { codeSamples } from '../data/examples';
+import { sanitizeFilename } from '../utils/fileValidation';
 
 // Format language names for display (e.g., "csharp" -> "C#", "javascript" -> "JavaScript")
 function formatLanguageName(language) {
@@ -370,7 +371,9 @@ function SamplePreview({ sample, onLoad, loadButtonRef }) {
       'go': '.go',
       'rust': '.rs'
     };
-    return `${baseName}${extensions[sample.language] || '.txt'}`;
+    const filename = `${baseName}${extensions[sample.language] || '.txt'}`;
+    // Sanitize for cross-platform filesystem compatibility
+    return sanitizeFilename(filename);
   };
 
   return (
@@ -388,7 +391,7 @@ function SamplePreview({ sample, onLoad, loadButtonRef }) {
                 {sample.docType}
               </span>
               <span className="px-2 py-0.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs font-medium">
-                {sample.language}
+                {formatLanguageName(sample.language)}
               </span>
             </div>
             <div className="flex items-center justify-between gap-3">

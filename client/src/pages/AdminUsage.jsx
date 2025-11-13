@@ -439,14 +439,36 @@ export default function AdminUsage() {
                 <thead className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                      {userTypeFilter === 'authenticated' ? 'User' : userTypeFilter === 'anonymous' ? 'IP Address' : 'User'}
+                      {userTypeFilter === 'authenticated' ? 'User' : userTypeFilter === 'anonymous' ? 'IP Address' : 'User / IP'}
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                      Generations
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                      Days
-                    </th>
+                    {userTypeFilter === 'authenticated' ? (
+                      <>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                          This Period
+                        </th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                          All Time
+                        </th>
+                      </>
+                    ) : userTypeFilter === 'anonymous' ? (
+                      <>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                          Generations
+                        </th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                          Days
+                        </th>
+                      </>
+                    ) : (
+                      <>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                          Current Usage
+                        </th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                          Total / Days
+                        </th>
+                      </>
+                    )}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
@@ -508,11 +530,13 @@ export default function AdminUsage() {
                               </td>
                               <td className="px-6 py-4 text-right">
                                 <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                                  {user.totalGenerations}
+                                  {user.thisPeriod}
                                 </span>
                               </td>
                               <td className="px-6 py-4 text-right">
-                                <span className="text-sm text-slate-600 dark:text-slate-400">{user.daysActive}</span>
+                                <span className="text-sm font-semibold text-purple-600 dark:text-purple-400">
+                                  {user.allTime}
+                                </span>
                               </td>
                             </tr>
                           ))}
@@ -583,11 +607,13 @@ export default function AdminUsage() {
                             </td>
                             <td className="px-6 py-4 text-right">
                               <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                                {user.totalGenerations}
+                                {user.thisPeriod}
                               </span>
                             </td>
                             <td className="px-6 py-4 text-right">
-                              <span className="text-sm text-slate-600 dark:text-slate-400">{user.daysActive}</span>
+                              <span className="text-sm font-semibold text-purple-600 dark:text-purple-400">
+                                {user.allTime}
+                              </span>
                             </td>
                           </tr>
                         ))
@@ -604,9 +630,9 @@ export default function AdminUsage() {
             <div className="p-6 border-b border-slate-200 dark:border-slate-700">
               <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Recent Activity</h2>
               <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                {userTypeFilter === 'anonymous' ? 'Last 50 anonymous sessions' :
-                 userTypeFilter === 'authenticated' ? 'Last 50 authenticated sessions' :
-                 'Last 50 sessions across all types'}
+                {userTypeFilter === 'anonymous' ? 'Last 50 generations (anonymous users)' :
+                 userTypeFilter === 'authenticated' ? 'Last 50 generations (authenticated users)' :
+                 'Last 50 generations across all documentation types'}
               </p>
             </div>
             <div className="overflow-x-auto max-h-[400px] overflow-y-auto">

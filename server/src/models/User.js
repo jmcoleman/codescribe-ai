@@ -16,6 +16,7 @@ const SALT_ROUNDS = 10;
  * - password_hash: VARCHAR(255) (nullable for OAuth users)
  * - github_id: VARCHAR(255) UNIQUE (nullable for local users)
  * - tier: VARCHAR(50) DEFAULT 'free' (free, pro, enterprise)
+ * - role: VARCHAR(50) DEFAULT 'user' (user, support, admin, super_admin)
  * - email_verified: BOOLEAN DEFAULT FALSE
  * - verification_token: VARCHAR(255) (nullable)
  * - verification_token_expires: TIMESTAMP (nullable)
@@ -163,7 +164,7 @@ class User {
   static async findById(id) {
     try {
       const result = await sql`
-        SELECT id, email, first_name, last_name, github_id, tier, stripe_customer_id, customer_created_via, email_verified,
+        SELECT id, email, first_name, last_name, github_id, tier, role, stripe_customer_id, customer_created_via, email_verified,
                terms_accepted_at, terms_version_accepted, privacy_accepted_at, privacy_version_accepted, analytics_enabled,
                deletion_scheduled_at, deleted_at, created_at
         FROM users
@@ -208,7 +209,7 @@ class User {
    */
   static async findByEmail(email) {
     const result = await sql`
-      SELECT id, email, first_name, last_name, password_hash, github_id, tier, stripe_customer_id, customer_created_via,
+      SELECT id, email, first_name, last_name, password_hash, github_id, tier, role, stripe_customer_id, customer_created_via,
              email_verified, terms_accepted_at, terms_version_accepted, privacy_accepted_at, privacy_version_accepted,
              deletion_scheduled_at, deleted_at, created_at
       FROM users
@@ -903,6 +904,93 @@ class User {
       WHERE id = ${id}
       RETURNING id, email, analytics_enabled
     `;
+
+    return result.rows[0];
+  }
+
+  /**
+   * Check if user can bypass rate limits based on role
+   * Admin, support, and super_admin roles bypass rate limiting
+   * @param {Object} user - User object with role field
+   * @returns {boolean} True if user can bypass rate limits
+   */
+  static canBypassRateLimits(user) {
+    if (!user || !user.role) return false;
+    return ['admin', 'support', 'super_admin'].includes(user.role);
+  }
+
+  /**
+   * Get audit log for a user
+   * Retrieves history of all tracked field changes
+   * @param {number} userId - User ID
+   * @param {Object} options - Query options
+   * @param {string} options.field_name - Filter by specific field (optional)
+   * @param {number} options.limit - Limit number of results (default: 100)
+   * @returns {Promise<Array>} Array of audit log entries
+   */
+  static async getAuditLog(userId, options = {}) {
+    const { field_name, limit = 100 } = options;
+
+    let query;
+    if (field_name) {
+      query = sql`
+        SELECT id, user_id, user_email, changed_by_id, field_name,
+               old_value, new_value, change_type, reason, changed_at, metadata
+        FROM user_audit_log
+        WHERE user_id = ${userId}
+          AND field_name = ${field_name}
+        ORDER BY changed_at DESC
+        LIMIT ${limit}
+      `;
+    } else {
+      query = sql`
+        SELECT id, user_id, user_email, changed_by_id, field_name,
+               old_value, new_value, change_type, reason, changed_at, metadata
+        FROM user_audit_log
+        WHERE user_id = ${userId}
+        ORDER BY changed_at DESC
+        LIMIT ${limit}
+      `;
+    }
+
+    const result = await query;
+    return result.rows;
+  }
+
+  /**
+   * Get role change history for a user
+   * Convenience method for retrieving only role changes
+   * @param {number} userId - User ID
+   * @returns {Promise<Array>} Array of role change entries
+   */
+  static async getRoleHistory(userId) {
+    return await User.getAuditLog(userId, { field_name: 'role', limit: 50 });
+  }
+
+  /**
+   * Update user role (admin operation)
+   * Note: Audit logging is automatic via database trigger
+   * @param {number} id - User ID
+   * @param {string} role - New role ('user', 'support', 'admin', 'super_admin')
+   * @returns {Promise<Object>} Updated user object
+   */
+  static async updateRole(id, role) {
+    const validRoles = ['user', 'support', 'admin', 'super_admin'];
+    if (!validRoles.includes(role)) {
+      throw new Error(`Invalid role: ${role}. Must be one of: ${validRoles.join(', ')}`);
+    }
+
+    const result = await sql`
+      UPDATE users
+      SET role = ${role},
+          updated_at = NOW()
+      WHERE id = ${id}
+      RETURNING id, email, first_name, last_name, role
+    `;
+
+    if (result.rows.length === 0) {
+      throw new Error('User not found');
+    }
 
     return result.rows[0];
   }

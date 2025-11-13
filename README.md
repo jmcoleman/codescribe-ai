@@ -791,7 +791,7 @@ See [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) for complete
   - Cross-browser validation (Chromium, Firefox, WebKit, Chrome, Edge)
   - File upload + generate workflows
   - **Pass Rate**: 100% (10/10 tests passing)
-- **Overall Pass Rate**: 100% passing (2,341/2,341 tests passing, 50 intentionally skipped, 0 failures)
+- **Overall Pass Rate**: 100% passing (2,392/2,392 tests passing, 54 intentionally skipped, 0 failures)
 
 **Running Tests:**
 ```bash

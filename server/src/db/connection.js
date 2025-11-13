@@ -45,17 +45,6 @@ async function initializeDatabase() {
     await sql`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_users_github_id ON users(github_id)`;
 
-    // Create sessions table for express-session with connect-pg-simple
-    await sql`
-      CREATE TABLE IF NOT EXISTS session (
-        sid VARCHAR NOT NULL COLLATE "default" PRIMARY KEY,
-        sess JSON NOT NULL,
-        expire TIMESTAMP(6) NOT NULL
-      )
-    `;
-
-    await sql`CREATE INDEX IF NOT EXISTS idx_session_expire ON session(expire)`;
-
     // Create usage tracking table
     await sql`
       CREATE TABLE IF NOT EXISTS usage (
@@ -78,26 +67,8 @@ async function initializeDatabase() {
   }
 }
 
-/**
- * Clean up expired sessions (run periodically)
- * @returns {Promise<number>} Number of sessions deleted
- */
-async function cleanupSessions() {
-  try {
-    const result = await sql`
-      DELETE FROM session
-      WHERE expire < NOW()
-    `;
-    return result.rowCount;
-  } catch (error) {
-    console.error('❌ Session cleanup failed:', error.message);
-    return 0;
-  }
-}
-
 export {
   sql,
   testConnection,
-  initializeDatabase,
-  cleanupSessions
+  initializeDatabase
 };

@@ -45,6 +45,7 @@ describe('UsageDashboard', () => {
     isLoading: false,
     error: null,
     refetch: vi.fn(),
+    shouldShowWarnings: true,
     getUsageForPeriod: vi.fn((period) => ({
       percentage: period === 'daily' ? 50 : 50,
       remaining: period === 'daily' ? 5 : 25,

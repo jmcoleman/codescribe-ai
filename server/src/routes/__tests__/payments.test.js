@@ -66,7 +66,8 @@ describeOrSkip('Payment Routes', () => {
   });
 
   afterAll(async () => {
-    // Clean up test users
+    // Clean up test users (audit logs first due to foreign key constraint)
+    await sql`DELETE FROM user_audit_log WHERE user_email LIKE 'test-payment-%'`;
     await sql`DELETE FROM users WHERE email LIKE 'test-payment-%'`;
   });
 
@@ -318,7 +319,8 @@ describeOrSkip('Payment Routes', () => {
           })
         );
 
-        // Cleanup
+        // Cleanup (audit logs first due to foreign key constraint)
+        await sql`DELETE FROM user_audit_log WHERE user_id = ${userWithName.id}`;
         await sql`DELETE FROM users WHERE id = ${userWithName.id}`;
       });
 
@@ -368,7 +370,8 @@ describeOrSkip('Payment Routes', () => {
           })
         );
 
-        // Cleanup
+        // Cleanup (audit logs first due to foreign key constraint)
+        await sql`DELETE FROM user_audit_log WHERE user_id = ${userNoFirstName.id}`;
         await sql`DELETE FROM users WHERE id = ${userNoFirstName.id}`;
       });
 
@@ -418,7 +421,8 @@ describeOrSkip('Payment Routes', () => {
           })
         );
 
-        // Cleanup
+        // Cleanup (audit logs first due to foreign key constraint)
+        await sql`DELETE FROM user_audit_log WHERE user_id = ${userNoLastName.id}`;
         await sql`DELETE FROM users WHERE id = ${userNoLastName.id}`;
       });
 
@@ -469,7 +473,8 @@ describeOrSkip('Payment Routes', () => {
           })
         );
 
-        // Cleanup
+        // Cleanup (audit logs first due to foreign key constraint)
+        await sql`DELETE FROM user_audit_log WHERE user_id = ${userMultiPart.id}`;
         await sql`DELETE FROM users WHERE id = ${userMultiPart.id}`;
       });
 
@@ -529,7 +534,8 @@ describeOrSkip('Payment Routes', () => {
           })
         );
 
-        // Cleanup
+        // Cleanup (audit logs first due to foreign key constraint)
+        await sql`DELETE FROM user_audit_log WHERE user_id = ${userLongName.id}`;
         await sql`DELETE FROM users WHERE id = ${userLongName.id}`;
       });
     });

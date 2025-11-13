@@ -69,6 +69,9 @@ module.exports = {
   // Setup files
   setupFilesAfterEnv: ['<rootDir>/tests/helpers/setup.js'],
 
+  // Global teardown (runs once after all tests complete)
+  globalTeardown: '<rootDir>/src/__tests__/globalTeardown.js',
+
   // Module path aliases
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',

@@ -171,7 +171,7 @@ namespace BookStore.Controllers
     title: 'Java Spring Boot API',
     description: 'A RESTful API service built with Spring Boot and JPA. Perfect for Java documentation generation.',
     language: 'java',
-    docType: 'API',
+    docType: 'JSDOC',
     code: `package com.example.inventory.controller;
 
 import com.example.inventory.model.Product;
@@ -577,7 +577,7 @@ module.exports = DataProcessor;`
     title: 'Ruby Sinatra API',
     description: 'A lightweight REST API built with Ruby Sinatra. Perfect example of Ruby documentation generation.',
     language: 'ruby',
-    docType: 'API',
+    docType: 'JSDOC',
     code: `require 'sinatra'
 require 'sinatra/json'
 require 'json'
@@ -772,7 +772,7 @@ end`
     title: 'Python Flask API',
     description: 'A Flask REST API with database models and authentication. Perfect example of Python documentation generation.',
     language: 'python',
-    docType: 'API',
+    docType: 'ARCHITECTURE',
     code: `from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash

@@ -1581,6 +1581,35 @@
           transform: rotate(360deg);
         }
       }
+    </style><style>
+      @keyframes slideIn {
+        from {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+      @keyframes slideOut {
+        from {
+          transform: translateX(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+      }
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
     </style></head>
 <body data-new-gr-c-s-check-loaded="14.1259.0" data-gr-ext-installed="">
   <div class="page">
@@ -1666,7 +1695,7 @@ Press D to toggle dark mode"></div>
             <div class="column-title">Future Expansion</div>
             <div class="column-timeline">Phases 4-6: Advanced Features &amp; Enterprise</div>
           </div>
-          <div class="column-body"><div class="phase-card"><div class="phase-header"><div class="phase-title">OpenAPI/Swagger Generation</div><div class="phase-version">Epic 4.3</div></div><ul class="feature-list"><li>New OPENAPI doc type</li><li>YAML output (OpenAPI 3.0 specification)</li><li>Parse API routes (Express, Flask, FastAPI)</li><li>Quality scoring for API specs</li><li>Schema definitions and examples</li><li>Security and authentication docs</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Custom Templates &amp; Export Formats</div><div class="phase-version">Epic 4.4</div></div><ul class="feature-list"><li>User-defined documentation templates</li><li>Template library (community templates)</li><li>Export to markdown, HTML, PDF</li><li>Template variables and placeholders</li><li>Template preview and validation</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">CLI Tool</div><div class="phase-version">Epic 5.1</div></div><ul class="feature-list"><li>Command-line interface with Commander.js</li><li>Two modes: Cloud (default) and Local (--local flag)</li><li>Cloud mode: OAuth login flow (opens browser, saves JWT token)</li><li>Cloud mode: Offline-capable JWT authentication (passport-jwt)</li><li>Local mode: User provides own Claude API key (bypasses platform)</li><li>Local mode: No usage tracking, full privacy</li><li>File path support (single file or directory)</li><li>Batch processing with glob patterns</li><li>Configuration file support (.codescriberc)</li><li>Cross-platform support (Windows, macOS, Linux)</li><li>npm package publication</li><li>CI/CD integration (GitHub Actions, GitLab CI, Jenkins)</li></ul><div class="metric-badge">CI/CD Automation</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">MCP Server</div><div class="phase-version">Epic 5.2</div></div><ul class="feature-list"><li>Model Context Protocol server implementation</li><li>Works in Claude Desktop, Claude Code, Cursor, Zed out of the box</li><li>Two modes: Cloud (default) and Local (--local flag)</li><li>Cloud mode: OAuth/JWT authentication with platform</li><li>Local mode: User provides own Claude API key (full privacy)</li><li>MCP tools: generate_docs, analyze_code, score_quality</li><li>Support for file paths, directories, and GitHub URLs</li><li>Natural language interface ('document this repo')</li><li>Shared auth system with web app and CLI</li><li>Most exciting for current AI-native developer audience</li></ul><div class="metric-badge">Claude-Native Integration</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">VS Code Extension</div><div class="phase-version">Epic 5.3</div></div><ul class="feature-list"><li>Right-click 'Generate Documentation' menu</li><li>Two implementation options: native extension OR MCP integration via Cline</li><li>OAuth login flow in IDE (same as web/CLI/MCP)</li><li>JWT token storage in VS Code SecretStorage</li><li>Inline documentation preview (WebView)</li><li>Quality score in status bar</li><li>Suggestions in problems panel</li><li>Extension settings (API key, doc type, mode selection)</li><li>VS Code Marketplace publication</li><li>Note: Cursor has native MCP support (Epic 5.2 covers Cursor)</li></ul><div class="metric-badge">VS Code Specific</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">SSO &amp; Advanced Authentication</div><div class="phase-version">Epic 6.1</div></div><ul class="feature-list"><li>SAML 2.0 integration (passport-saml strategy)</li><li>OAuth 2.0 providers (Okta, Auth0, Azure AD)</li><li>Just-In-Time (JIT) user provisioning</li><li>Role-based access control (RBAC) enhancement</li><li>Multi-factor authentication (MFA)</li></ul><div class="metric-badge">passport-saml</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Audit Logs &amp; Compliance</div><div class="phase-version">Epic 6.2</div></div><ul class="feature-list"><li>Comprehensive audit logging</li><li>Log export (CSV, JSON formats)</li><li>GDPR compliance tools</li><li>SOC 2 Type II preparation</li><li>Retention policies and data lifecycle</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">On-Premise Deployment</div><div class="phase-version">Epic 6.3</div></div><ul class="feature-list"><li>Docker containerization with Passport.js</li><li>Kubernetes deployment manifests</li><li>Self-hosted authentication (no external dependencies)</li><li>Customer-controlled user data (PostgreSQL)</li><li>Air-gapped environment support</li><li>License key validation system</li><li>Automatic updates (opt-in)</li></ul><div class="metric-badge">Self-Hosted Auth</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Testing Infrastructure Improvements</div><div class="phase-version">Epic 6.4</div></div><ul class="feature-list"><li>Playwright E2E tests for GitHub OAuth (replace 21 skipped integration tests)</li><li>Contract testing for GitHub API integration</li><li>Production OAuth monitoring and alerting</li><li>Manual regression test checklist documentation</li><li>E2E tests for critical user flows (signup, login, generate docs)</li><li>Visual regression testing with Percy or Chromatic</li><li>Performance testing with Lighthouse CI</li><li>Test coverage reporting improvements</li></ul><div class="metric-badge">E2E + Integration</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Optional Enhancements</div><div class="phase-version">Backlog</div></div><ul class="feature-list"><li>Support ticket ID tracking system (database table + email display)</li><li>Calendly integration for Enterprise/Team sales</li><li>Gmail 'Send As' setup for sales@codescribeai.com replies</li><li>Documentation history and saved projects</li><li>GitHub repository integration</li><li>Multi-language support (i18n for UI)</li><li>Advanced Mermaid diagram auto-generation</li><li>Changelog generation from git history</li><li>Team collaboration features</li><li>Advanced analytics and monitoring</li></ul></div></div>
+          <div class="column-body"><div class="phase-card"><div class="phase-header"><div class="phase-title">OpenAPI/Swagger Generation</div><div class="phase-version">Epic 4.3</div></div><ul class="feature-list"><li>New OPENAPI doc type</li><li>YAML output (OpenAPI 3.0 specification)</li><li>Parse API routes (Express, Flask, FastAPI)</li><li>Quality scoring for API specs</li><li>Schema definitions and examples</li><li>Security and authentication docs</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Custom Templates &amp; Export Formats</div><div class="phase-version">Epic 4.4</div></div><ul class="feature-list"><li>User-defined documentation templates</li><li>Template library (community templates)</li><li>Export to markdown, HTML, PDF</li><li>Template variables and placeholders</li><li>Template preview and validation</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">CSS/HTML Documentation Support</div><div class="phase-version">Epic 4.5</div></div><ul class="feature-list"><li>CSS file support (.css, .scss, .sass, .less)</li><li>HTML file support (.html, .htm)</li><li>CSS-specific parser (selectors, custom properties, media queries, keyframes)</li><li>HTML-specific parser (structure, components, forms, accessibility features)</li><li>Design system documentation (color tokens, typography, spacing scales)</li><li>Component library documentation (variants, states, usage patterns)</li><li>Template hierarchy documentation (page structure, component composition)</li><li>CSS/HTML-specific quality scoring criteria</li><li>Accessibility audit integration (ARIA attributes, semantic HTML)</li><li>Browser compatibility detection for CSS features</li><li>Documentation optimized for multi-file projects (design systems, component libraries)</li><li>Requires Epic 4.2 (multi-file support) for meaningful context</li></ul><div class="metric-badge">Depends on Epic 4.2</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">CLI Tool</div><div class="phase-version">Epic 5.1</div></div><ul class="feature-list"><li>Command-line interface with Commander.js</li><li>Two modes: Cloud (default) and Local (--local flag)</li><li>Cloud mode: OAuth login flow (opens browser, saves JWT token)</li><li>Cloud mode: Offline-capable JWT authentication (passport-jwt)</li><li>Local mode: User provides own Claude API key (bypasses platform)</li><li>Local mode: No usage tracking, full privacy</li><li>File path support (single file or directory)</li><li>Batch processing with glob patterns</li><li>Configuration file support (.codescriberc)</li><li>Cross-platform support (Windows, macOS, Linux)</li><li>npm package publication</li><li>CI/CD integration (GitHub Actions, GitLab CI, Jenkins)</li></ul><div class="metric-badge">CI/CD Automation</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">MCP Server</div><div class="phase-version">Epic 5.2</div></div><ul class="feature-list"><li>Model Context Protocol server implementation</li><li>Works in Claude Desktop, Claude Code, Cursor, Zed out of the box</li><li>Two modes: Cloud (default) and Local (--local flag)</li><li>Cloud mode: OAuth/JWT authentication with platform</li><li>Local mode: User provides own Claude API key (full privacy)</li><li>MCP tools: generate_docs, analyze_code, score_quality</li><li>Support for file paths, directories, and GitHub URLs</li><li>Natural language interface ('document this repo')</li><li>Shared auth system with web app and CLI</li><li>Most exciting for current AI-native developer audience</li></ul><div class="metric-badge">Claude-Native Integration</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">VS Code Extension</div><div class="phase-version">Epic 5.3</div></div><ul class="feature-list"><li>Right-click 'Generate Documentation' menu</li><li>Two implementation options: native extension OR MCP integration via Cline</li><li>OAuth login flow in IDE (same as web/CLI/MCP)</li><li>JWT token storage in VS Code SecretStorage</li><li>Inline documentation preview (WebView)</li><li>Quality score in status bar</li><li>Suggestions in problems panel</li><li>Extension settings (API key, doc type, mode selection)</li><li>VS Code Marketplace publication</li><li>Note: Cursor has native MCP support (Epic 5.2 covers Cursor)</li></ul><div class="metric-badge">VS Code Specific</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">SSO &amp; Advanced Authentication</div><div class="phase-version">Epic 6.1</div></div><ul class="feature-list"><li>SAML 2.0 integration (passport-saml strategy)</li><li>OAuth 2.0 providers (Okta, Auth0, Azure AD)</li><li>Just-In-Time (JIT) user provisioning</li><li>Role-based access control (RBAC) enhancement</li><li>Multi-factor authentication (MFA)</li></ul><div class="metric-badge">passport-saml</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Audit Logs &amp; Compliance</div><div class="phase-version">Epic 6.2</div></div><ul class="feature-list"><li>Comprehensive audit logging</li><li>Log export (CSV, JSON formats)</li><li>GDPR compliance tools</li><li>SOC 2 Type II preparation</li><li>Retention policies and data lifecycle</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">On-Premise Deployment</div><div class="phase-version">Epic 6.3</div></div><ul class="feature-list"><li>Docker containerization with Passport.js</li><li>Kubernetes deployment manifests</li><li>Self-hosted authentication (no external dependencies)</li><li>Customer-controlled user data (PostgreSQL)</li><li>Air-gapped environment support</li><li>License key validation system</li><li>Automatic updates (opt-in)</li></ul><div class="metric-badge">Self-Hosted Auth</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Testing Infrastructure Improvements</div><div class="phase-version">Epic 6.4</div></div><ul class="feature-list"><li>Playwright E2E tests for GitHub OAuth (replace 21 skipped integration tests)</li><li>Contract testing for GitHub API integration</li><li>Production OAuth monitoring and alerting</li><li>Manual regression test checklist documentation</li><li>E2E tests for critical user flows (signup, login, generate docs)</li><li>Visual regression testing with Percy or Chromatic</li><li>Performance testing with Lighthouse CI</li><li>Test coverage reporting improvements</li></ul><div class="metric-badge">E2E + Integration</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Optional Enhancements</div><div class="phase-version">Backlog</div></div><ul class="feature-list"><li>Support ticket ID tracking system (database table + email display)</li><li>Calendly integration for Enterprise/Team sales</li><li>Gmail 'Send As' setup for sales@codescribeai.com replies</li><li>Documentation history and saved projects</li><li>GitHub repository integration</li><li>Multi-language support (i18n for UI)</li><li>Advanced Mermaid diagram auto-generation</li><li>Changelog generation from git history</li><li>Team collaboration features</li><li>Advanced analytics and monitoring</li></ul></div></div>
         </div>
       </div>
     </div>
@@ -2698,6 +2727,27 @@ Press D to toggle dark mode"></div>
           ]
         },
         {
+          "version": "Epic 4.5",
+          "title": "CSS/HTML Documentation Support",
+          "duration": "3-4 days",
+          "status": "Planned",
+          "badge": "Depends on Epic 4.2",
+          "features": [
+            "CSS file support (.css, .scss, .sass, .less)",
+            "HTML file support (.html, .htm)",
+            "CSS-specific parser (selectors, custom properties, media queries, keyframes)",
+            "HTML-specific parser (structure, components, forms, accessibility features)",
+            "Design system documentation (color tokens, typography, spacing scales)",
+            "Component library documentation (variants, states, usage patterns)",
+            "Template hierarchy documentation (page structure, component composition)",
+            "CSS/HTML-specific quality scoring criteria",
+            "Accessibility audit integration (ARIA attributes, semantic HTML)",
+            "Browser compatibility detection for CSS features",
+            "Documentation optimized for multi-file projects (design systems, component libraries)",
+            "Requires Epic 4.2 (multi-file support) for meaningful context"
+          ]
+        },
+        {
           "version": "Epic 5.1",
           "title": "CLI Tool",
           "duration": "5-7 days",
@@ -3334,6 +3384,44 @@ Press D to toggle dark mode"></div>
 	// ]]>
 </script>
 <grammarly-desktop-integration data-grammarly-shadow-root="true"></grammarly-desktop-integration><!-- Code injected by live-server -->
+<script>
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					var parent = elem.parentElement || head;
+					parent.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					parent.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
+</script>
+<!-- Code injected by live-server -->
 <script>
 	// <![CDATA[  <-- For SVG support
 	if ('WebSocket' in window) {

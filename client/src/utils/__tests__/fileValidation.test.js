@@ -6,6 +6,7 @@ import {
   validateFileMimeType,
   validateFile,
   getValidationErrorMessage,
+  sanitizeFilename,
   MAX_FILE_SIZE,
   ALLOWED_EXTENSIONS
 } from '../fileValidation';
@@ -206,6 +207,140 @@ describe('fileValidation', () => {
       expect(message).toContain('•');
       expect(message).toContain('File is too large');
       expect(message).toContain('Invalid file type');
+    });
+  });
+
+  describe('sanitizeFilename', () => {
+    describe('Basic Sanitization', () => {
+      it('should remove filesystem-unsafe characters (/ \\ : * ? " < > |)', () => {
+        expect(sanitizeFilename('file/name.js')).toBe('file_name.js');
+        expect(sanitizeFilename('file\\name.js')).toBe('file_name.js');
+        expect(sanitizeFilename('file:name.js')).toBe('file_name.js');
+        expect(sanitizeFilename('file*name.js')).toBe('file_name.js');
+        expect(sanitizeFilename('file?name.js')).toBe('file_name.js');
+        expect(sanitizeFilename('file"name.js')).toBe('file_name.js');
+        expect(sanitizeFilename('file<name.js')).toBe('file_name.js');
+        expect(sanitizeFilename('file>name.js')).toBe('file_name.js');
+        expect(sanitizeFilename('file|name.js')).toBe('file_name.js');
+      });
+
+      it('should handle multiple unsafe characters', () => {
+        // Multiple consecutive unsafe characters are collapsed to single underscore
+        expect(sanitizeFilename('file:/\\*?.js')).toBe('file_.js');
+        expect(sanitizeFilename('my:file*name?.txt')).toBe('my_file_name_.txt');
+      });
+
+      it('should collapse multiple consecutive underscores', () => {
+        expect(sanitizeFilename('file://name.js')).toBe('file_name.js');
+        expect(sanitizeFilename('file***name.js')).toBe('file_name.js');
+        expect(sanitizeFilename('file::||name.js')).toBe('file_name.js');
+      });
+
+      it('should preserve file extensions', () => {
+        expect(sanitizeFilename('code:file.js')).toBe('code_file.js');
+        expect(sanitizeFilename('my*code.cpp')).toBe('my_code.cpp');
+        expect(sanitizeFilename('test?file.py')).toBe('test_file.py');
+      });
+    });
+
+    describe('Whitespace Handling', () => {
+      it('should trim leading and trailing whitespace', () => {
+        expect(sanitizeFilename('  file.js  ')).toBe('file.js');
+        expect(sanitizeFilename('   code.py   ')).toBe('code.py');
+      });
+
+      it('should trim leading and trailing dots', () => {
+        expect(sanitizeFilename('..file.js')).toBe('file.js');
+        expect(sanitizeFilename('file.js..')).toBe('file.js');
+        // '...code...py' is parsed as name='...code..' and extension='.py'
+        // Leading/trailing dots are trimmed from name → 'code'
+        expect(sanitizeFilename('...code...py')).toBe('code.py');
+      });
+
+      it('should preserve internal spaces', () => {
+        expect(sanitizeFilename('my file.js')).toBe('my file.js');
+        expect(sanitizeFilename('code sample.py')).toBe('code sample.py');
+      });
+    });
+
+    describe('Edge Cases', () => {
+      it('should handle empty or null filenames', () => {
+        expect(sanitizeFilename('')).toBe('unnamed.txt');
+        expect(sanitizeFilename(null)).toBe('unnamed.txt');
+        expect(sanitizeFilename(undefined)).toBe('unnamed.txt');
+      });
+
+      it('should handle filenames with no extension', () => {
+        expect(sanitizeFilename('file')).toBe('file');
+        expect(sanitizeFilename('my:code')).toBe('my_code');
+      });
+
+      it('should handle filenames that become empty after sanitization', () => {
+        expect(sanitizeFilename('***')).toBe('unnamed');
+        expect(sanitizeFilename(':::')).toBe('unnamed');
+        expect(sanitizeFilename('<<<')).toBe('unnamed');
+        expect(sanitizeFilename('   ')).toBe('unnamed.txt');
+      });
+
+      it('should handle control characters (ASCII 0-31)', () => {
+        expect(sanitizeFilename('file\x00name.js')).toBe('filename.js');
+        expect(sanitizeFilename('file\x1Fname.js')).toBe('filename.js');
+        expect(sanitizeFilename('code\ttab.js')).toBe('codetab.js');
+      });
+
+      it('should handle multiple dots in filename', () => {
+        expect(sanitizeFilename('my.code.file.js')).toBe('my.code.file.js');
+        expect(sanitizeFilename('test.backup.py')).toBe('test.backup.py');
+      });
+
+      it('should handle filename with extension only', () => {
+        // Files starting with dot are treated as having no name, extension is preserved
+        expect(sanitizeFilename('.js')).toBe('unnamed.js');
+        expect(sanitizeFilename('.gitignore')).toBe('unnamed.gitignore');
+      });
+    });
+
+    describe('Real-world Scenarios', () => {
+      it('should sanitize Windows-style paths', () => {
+        // Consecutive backslashes are collapsed to single underscore
+        expect(sanitizeFilename('C:\\Users\\file.js')).toBe('C_Users_file.js');
+        expect(sanitizeFilename('D:\\code\\test.py')).toBe('D_code_test.py');
+      });
+
+      it('should sanitize Unix-style paths', () => {
+        expect(sanitizeFilename('/home/user/file.js')).toBe('_home_user_file.js');
+        expect(sanitizeFilename('/var/log/test.txt')).toBe('_var_log_test.txt');
+      });
+
+      it('should handle sample titles with special characters', () => {
+        expect(sanitizeFilename('calculator:-api.js')).toBe('calculator_-api.js');
+        expect(sanitizeFilename('user-auth:service.py')).toBe('user-auth_service.py');
+        expect(sanitizeFilename('file*upload?.cpp')).toBe('file_upload_.cpp');
+      });
+
+      it('should preserve common filename patterns', () => {
+        expect(sanitizeFilename('code.test.js')).toBe('code.test.js');
+        expect(sanitizeFilename('my-component.tsx')).toBe('my-component.tsx');
+        expect(sanitizeFilename('api_service.py')).toBe('api_service.py');
+      });
+    });
+
+    describe('Extension Preservation', () => {
+      it('should correctly identify and preserve extensions', () => {
+        expect(sanitizeFilename('test.js')).toBe('test.js');
+        expect(sanitizeFilename('code.cpp')).toBe('code.cpp');
+        expect(sanitizeFilename('api.py')).toBe('api.py');
+      });
+
+      it('should handle multiple extensions correctly', () => {
+        expect(sanitizeFilename('file.test.js')).toBe('file.test.js');
+        expect(sanitizeFilename('code.backup.cpp')).toBe('code.backup.cpp');
+      });
+
+      it('should handle unusual but valid extensions', () => {
+        expect(sanitizeFilename('file.min.js')).toBe('file.min.js');
+        expect(sanitizeFilename('code.d.ts')).toBe('code.d.ts');
+      });
     });
   });
 });

@@ -9,6 +9,72 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.7.7] - 2025-11-13
+
+**Status:** ✅ Admin Dashboard Performance Optimization & Test Fixes
+
+**Summary:** Major performance optimization for admin dashboard with denormalized `total_generations` column maintained by database triggers for O(1) lifetime usage lookups. Replaced useless "days" column with "This Period" and "All Time" columns showing current billing period and lifetime totals. Updated Recent Activity description and fixed frontend test suite compatibility with examples data changes.
+
+### Added
+
+- **Database Migration 017** ([server/src/db/migrations/017-add-total-generations-column.sql](server/src/db/migrations/017-add-total-generations-column.sql))
+  - Added `total_generations INTEGER NOT NULL DEFAULT 0` column to users table
+  - Created index `idx_users_total_generations` for fast sorting (DESC order)
+  - Created trigger function `update_user_total_generations()` to automatically maintain totals
+  - Trigger handles INSERT/UPDATE/DELETE operations on `user_quotas` table
+  - Backfills existing data from historical user_quotas records
+  - Includes comprehensive verification queries and logging
+
+- **Migration Test Suite** ([server/src/db/__tests__/migrations-017-total-generations.test.js](server/src/db/__tests__/migrations-017-total-generations.test.js))
+  - 13 comprehensive test cases covering:
+    - Schema validation (column properties, index creation)
+    - Trigger validation (function exists, configured for all operations)
+    - Trigger behavior (INSERT increments, UPDATE adjusts by difference, DELETE decrements)
+    - Backfill verification (correctly calculates from historical data)
+    - Performance testing (efficient queries with index)
+    - Idempotency (safe to run multiple times)
+    - Admin dashboard integration (validates query pattern)
+
+### Changed
+
+- **Admin Dashboard API** ([server/src/routes/admin.js:144-244](server/src/routes/admin.js))
+  - **Top Users query**: Replaced hardcoded `days_active = 1` with meaningful data
+  - Now returns `this_period` (current monthly_count) and `all_time` (total_generations)
+  - Sorts by `all_time` (lifetime usage) instead of current period
+  - Updated comment to reflect new column names
+
+- **Admin Dashboard Frontend** ([client/src/pages/AdminUsage.jsx](client/src/pages/AdminUsage.jsx))
+  - **Table headers** (lines 444-471):
+    - Authenticated view: "This Period" | "All Time"
+    - Anonymous view: "Generations" | "Days" (unchanged)
+    - All view: "Current Usage" | "Total / Days" (mixed)
+  - **Table cells** (lines 522-531, 599-608): Display `thisPeriod` and `allTime` with purple accent on All Time
+  - **Recent Activity label** (lines 633-635): Changed to "Last 50 generations across all documentation types"
+
+### Fixed
+
+- **Frontend Test Compatibility** ([client/src/data/__tests__/examples.test.js](client/src/data/__tests__/examples.test.js))
+  - Fixed 3 failing tests due to examples.js docType changes (v2.7.6)
+  - Updated `java-spring-api` test: `docType` 'API' → 'JSDOC'
+  - Updated `ruby-sinatra-api` test: `docType` 'API' → 'JSDOC'
+  - Updated `python-flask-api` test: `docType` 'API' → 'ARCHITECTURE'
+
+### Performance
+
+- **Before**: O(n×m) - Query aggregates SUM across all user_quotas records
+- **After**: O(1) - Direct lookup of denormalized `total_generations` column
+- For a user with 24 months of history:
+  - Before: Scans 24 rows, performs SUM aggregation
+  - After: Reads 1 column value
+
+### Test Results
+
+- **Backend**: 876 passed, 21 skipped (897 total)
+- **Frontend**: 1,516 passed, 33 skipped (1,549 total)
+- **Total**: 2,392 passed, 54 skipped (2,446 total)
+
+---
+
 ## [2.7.6] - 2025-11-12
 
 **Status:** ✅ Quality Breakdown Modal Enhancements & Test Coverage

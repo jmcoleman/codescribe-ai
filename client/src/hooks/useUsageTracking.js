@@ -8,11 +8,15 @@ import { useAuth } from '../contexts/AuthContext.jsx';
  * Fetches usage data from /api/user/usage endpoint and provides
  * helpers for checking thresholds (80%, 100%) and quota status.
  *
- * Usage:
- *   const { usage, isLoading, error, refetch, checkThreshold } = useUsageTracking();
+ * Role-based suppression: Admin/support/super_admin users have
+ * shouldShowWarnings=false, which suppresses all usage warnings
+ * and allows unlimited generation.
  *
- *   if (checkThreshold(80)) {
- *     // Show 80% warning banner
+ * Usage:
+ *   const { usage, isLoading, error, refetch, checkThreshold, shouldShowWarnings } = useUsageTracking();
+ *
+ *   if (shouldShowWarnings && checkThreshold(80)) {
+ *     // Show 80% warning banner (only for regular users)
  *   }
  *
  * @returns {Object} Usage tracking state and helpers
@@ -52,7 +56,7 @@ export function useUsageTracking() {
       const data = await response.json();
 
       // Transform backend response format to component-friendly format
-      // Backend format: { tier, daily: { used, limit, remaining }, monthly: { ... }, resetTimes: { ... } }
+      // Backend format: { tier, daily: { used, limit, remaining }, monthly: { ... }, resetTimes: { ... }, shouldShowWarnings }
       const transformed = {
         // Current usage
         daily: data.daily?.used || 0,
@@ -81,6 +85,10 @@ export function useUsageTracking() {
         // Tier info
         tier: data.tier || 'free',
         allowed: true, // User can generate if endpoint returns successfully
+
+        // Role-based warnings suppression
+        // false for admin/support/super_admin, true for regular users
+        shouldShowWarnings: data.shouldShowWarnings !== false, // Default to true if not provided
       };
 
       setUsage(transformed);
@@ -99,10 +107,13 @@ export function useUsageTracking() {
    *
    * @param {number} threshold - Percentage threshold (e.g., 80, 100)
    * @param {'daily'|'monthly'} period - Which period to check
-   * @returns {boolean} True if threshold reached
+   * @returns {boolean} True if threshold reached AND user should see warnings
    */
   const checkThreshold = useCallback((threshold, period = 'monthly') => {
     if (!usage) return false;
+
+    // Don't show warnings if user has bypass role (admin/support/super_admin)
+    if (!usage.shouldShowWarnings) return false;
 
     // Don't show warnings if endpoint not implemented (limits = 0)
     if (usage.dailyLimit === 0 && usage.monthlyLimit === 0) return false;
@@ -126,6 +137,9 @@ export function useUsageTracking() {
     // 2. API error occurred
     // 3. User is not authenticated
     if (!usage) return true;
+
+    // Admin/support/super_admin users can always generate (bypasses limits)
+    if (!usage.shouldShowWarnings) return true;
 
     // IMPORTANT: If limits are 0, assume endpoint not implemented yet
     // Real tier limits should never be 0 (minimum is 1)
@@ -172,5 +186,6 @@ export function useUsageTracking() {
     checkThreshold,
     canGenerate,
     getUsageForPeriod,
+    shouldShowWarnings: usage?.shouldShowWarnings !== false, // Expose for direct component access
   };
 }

@@ -2,36 +2,37 @@
 
 **Project:** CodeScribe AI - Intelligent Code Documentation Generator
 **Testing Status:** ✅ Comprehensive Coverage Across 3 Frameworks
-**Last Updated:** November 12, 2025 (v2.7.5)
+**Last Updated:** November 13, 2025 (v2.7.7)
 
 ---
 
 ## 📊 Quick Stats
 
-- **Total Tests:** 2,391 tests (2,341 passing, 50 skipped, 0 failures)
-  - **Frontend:** 1,513 tests | 29 skipped (Vitest + React Testing Library)
+- **Total Tests:** 2,446 tests (2,392 passing, 54 skipped, 0 failures)
+  - **Frontend:** 1,549 tests | 33 skipped (Vitest + React Testing Library)
     - Component Tests: All components with dark mode variants tested (including SamplesModal)
     - Dark Mode Tests: 106 tests (ThemeContext with auto mode, ThemeToggle, all components, integration)
     - Integration Tests: Auth, OAuth, password reset, upload, error handling, usage tracking, legal pages
     - UI Tests: Toast system, modals, forms, storage helpers, pricing page, focus trap
     - Contact Modals: ContactSalesModal (25 tests), ContactSupportModal (12 tests - getToken Promise fix)
-    - **Pass Rate:** 98.1% (1,484 passing, 29 skipped, 0 failures)
-  - **Backend:** 878 tests | 21 skipped (Jest + Supertest)
+    - **Pass Rate:** 97.9% (1,516 passing, 33 skipped, 0 failures)
+  - **Backend:** 897 tests | 21 skipped (Jest + Supertest)
     - Unit Tests: Services, models, utilities, middleware (emailService, requireTermsAcceptance, tierGate)
     - Integration Tests: Prompt quality, API contracts, authentication, tier system, contact sales/support, legal endpoints
     - Security Tests: Password hashing, JWT validation, OAuth flows, usage quotas, email rate limiting
     - Email Tests: 73 tests (contact route 45, emailService 28 - templates, attachments, rate limits)
     - Usage Tests: 29 tests (all passing)
-    - **Pass Rate:** 100% (857 passing, 21 skipped, 0 failures)
-  - **Database:** 24 migration tests (Docker sandbox + Neon dev validation)
+    - **Pass Rate:** 100% (876 passing, 21 skipped, 0 failures)
+  - **Database:** 37 migration tests (Docker sandbox + Neon dev validation)
     - Migration-010: 14 tests (terms/privacy acceptance tracking)
     - Migration-011: 10 tests (analytics_enabled column + index)
+    - Migration-017: 13 tests (total_generations column with triggers)
   - **E2E:** 10 tests (Playwright - file upload flow)
-- **Pass Rate:** 97.91% (2,341/2,391 total tests passing, 50 skipped, 0 failures) ✅
+- **Pass Rate:** 97.79% (2,392/2,446 total tests passing, 54 skipped, 0 failures) ✅
 - **Backend Coverage:** 91.83% statements (services), 95.81% overall, 79.41% branches (services)
 - **Test Execution Time:** Frontend ~19.8s, Backend ~7.1s, Database ~0.3s, E2E ~45s
 - **Coverage Target:** 90% ✅ EXCEEDED (91.83% services statements, 79.41% services branches)
-- **Recent Updates:** Toast border consistency (cyan→slate), back button UX improvements (6 pages), Contact Sales messaging for Team/Enterprise, dark mode documentation added (482 lines) (Nov 12, 2025 - v2.7.5)
+- **Recent Updates:** Admin dashboard performance optimization (O(1) lifetime lookups), database trigger for total_generations auto-maintenance, "This Period" + "All Time" columns, 3 test fixes for examples.js docType changes (Nov 13, 2025 - v2.7.7)
 
 ---
 

@@ -7,7 +7,6 @@
 
 import request from 'supertest';
 import express from 'express';
-import session from 'express-session';
 import passport from 'passport';
 
 // Mock dependencies BEFORE importing routes
@@ -16,8 +15,7 @@ jest.mock('../../src/config/stripe.js');
 jest.mock('../../src/db/connection.js', () => ({
   sql: jest.fn(),
   testConnection: jest.fn().mockResolvedValue(true),
-  initializeDatabase: jest.fn().mockResolvedValue(undefined),
-  cleanupSessions: jest.fn().mockResolvedValue(0)
+  initializeDatabase: jest.fn().mockResolvedValue(undefined)
 }));
 
 // Now import routes and models
@@ -31,26 +29,14 @@ describe('Auth Routes Integration Tests', () => {
   beforeAll(() => {
     // Set up test environment
     process.env.JWT_SECRET = 'test-jwt-secret-key-for-testing';
-    process.env.SESSION_SECRET = 'test-session-secret-key';
     process.env.CLIENT_URL = 'http://localhost:5173';
 
     // Create Express app with auth routes
     app = express();
     app.use(express.json());
 
-    // Add session middleware (required for Passport)
-    app.use(
-      session({
-        secret: process.env.SESSION_SECRET,
-        resave: false,
-        saveUninitialized: false,
-        cookie: { secure: false }
-      })
-    );
-
-    // Initialize Passport
+    // Initialize Passport (JWT-only, no sessions)
     app.use(passport.initialize());
-    app.use(passport.session());
 
     // Mount auth routes
     app.use('/api/auth', authRoutes);

@@ -175,3 +175,71 @@ export function getValidationErrorMessage(validation) {
 
   return `File validation failed:\n${validation.errors.map(err => `• ${err}`).join('\n')}`;
 }
+
+/**
+ * Sanitize filename for cross-platform filesystem compatibility
+ * Removes/replaces characters that are invalid on Windows, macOS, or Linux
+ *
+ * @param {string} filename - Original filename (may include extension)
+ * @returns {string} Sanitized filename safe for all filesystems
+ *
+ * @example
+ * sanitizeFilename('my:file*.js') // Returns: 'my_file_.js'
+ * sanitizeFilename('code<>file.txt') // Returns: 'code__file.txt'
+ * sanitizeFilename('  spaces.js  ') // Returns: 'spaces.js'
+ */
+export function sanitizeFilename(filename) {
+  if (!filename) {
+    return 'unnamed.txt';
+  }
+
+  // Trim leading/trailing whitespace first
+  filename = filename.trim();
+
+  if (!filename) {
+    return 'unnamed.txt';
+  }
+
+  // Separate filename and extension
+  const lastDotIndex = filename.lastIndexOf('.');
+  let name = filename;
+  let extension = '';
+
+  // Handle files starting with a dot (like .gitignore, .js)
+  if (lastDotIndex > 0) {
+    name = filename.substring(0, lastDotIndex);
+    extension = filename.substring(lastDotIndex); // Includes the dot
+  } else if (lastDotIndex === 0 && filename.length > 1) {
+    // File starts with dot (like .gitignore) - treat everything after dot as extension
+    name = '';
+    extension = filename;
+  }
+
+  // Replace filesystem-unsafe characters with underscore
+  // Invalid characters: / \ : * ? " < > |
+  name = name.replace(/[/\\:*?"<>|]/g, '_');
+
+  // Remove control characters (ASCII 0-31)
+  name = name.replace(/[\x00-\x1F]/g, '');
+
+  // Trim leading/trailing whitespace and dots from name only
+  name = name.trim().replace(/^\.+|\.+$/g, '');
+
+  // Replace multiple consecutive underscores with single underscore
+  name = name.replace(/_+/g, '_');
+
+  // Trim trailing whitespace and dots from extension
+  extension = extension.trimEnd().replace(/\.+$/g, '');
+  // Ensure extension starts with a dot if it exists
+  if (extension && !extension.startsWith('.')) {
+    extension = '.' + extension;
+  }
+
+  // If name is empty or only underscores after sanitization, use default
+  if (!name || name === '_') {
+    name = 'unnamed';
+  }
+
+  // Reconstruct filename with extension
+  return name + extension;
+}

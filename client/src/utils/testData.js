@@ -129,7 +129,64 @@ export const TEST_QUALITY_SCORE = {
   summary: {
     strengths: ['overview', 'apiDocs', 'structure'],
     improvements: ['installation', 'examples']
-  }
+  },
+  inputCodeHealth: {
+    score: 45,
+    grade: 'F',
+    breakdown: {
+      comments: {
+        points: 5,
+        maxPoints: 20,
+        issues: [
+          'Only 2 out of 10 functions have comments',
+          'No file-level documentation found',
+          'Complex logic lacks inline explanations'
+        ],
+        features: [
+          'Found JSDoc comment on hello() function',
+          'Found inline comment explaining regex pattern'
+        ]
+      },
+      naming: {
+        points: 15,
+        maxPoints: 20,
+        issues: [
+          'Variable "x" uses single-letter name',
+          'Function "doStuff" is too vague'
+        ],
+        features: [
+          'Most function names are descriptive',
+          'Constants use UPPER_CASE convention',
+          'Classes follow PascalCase naming'
+        ]
+      },
+      existingDocs: {
+        points: 0,
+        maxPoints: 20,
+        issues: [
+          'No README.md file found',
+          'No API documentation detected',
+          'No usage examples in comments'
+        ],
+        features: []
+      },
+      codeStructure: {
+        points: 25,
+        maxPoints: 40,
+        issues: [
+          'Inconsistent indentation (tabs mixed with spaces)',
+          'Missing semicolons in 12 locations',
+          'Long functions detected (avg 45 lines)'
+        ],
+        features: [
+          'Consistent use of ES6 arrow functions',
+          'Proper module exports/imports',
+          'Logical file organization'
+        ]
+      }
+    }
+  },
+  improvement: 40
 };
 
 /**

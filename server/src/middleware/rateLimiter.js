@@ -1,4 +1,15 @@
 import rateLimit from 'express-rate-limit';
+import User from '../models/User.js';
+
+/**
+ * Check if request should skip rate limiting
+ * Admin, support, and super_admin users bypass rate limits
+ * @param {Object} req - Express request object
+ * @returns {boolean} True if request should skip rate limiting
+ */
+const shouldSkipRateLimit = (req) => {
+  return req.user && User.canBypassRateLimits(req.user);
+};
 
 // Primary rate limiter: 10 requests per minute
 export const apiLimiter = rateLimit({
@@ -11,6 +22,7 @@ export const apiLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: true,
+  skip: shouldSkipRateLimit,
   handler: (req, res) => {
     res.status(429).json({
       error: 'Rate limit exceeded',
@@ -31,6 +43,7 @@ export const generationLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: true,
+  skip: shouldSkipRateLimit,
   handler: (req, res) => {
     res.status(429).json({
       error: 'Hourly limit exceeded',

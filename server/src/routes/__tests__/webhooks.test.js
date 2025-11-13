@@ -45,7 +45,8 @@ describeOrSkip('Webhook Handler', () => {
   });
 
   afterAll(async () => {
-    // Clean up
+    // Clean up (audit logs before users due to foreign key constraint)
+    await sql`DELETE FROM user_audit_log WHERE user_email LIKE 'test-webhook-%'`;
     await sql`DELETE FROM subscriptions WHERE user_id IN (SELECT id FROM users WHERE email LIKE 'test-webhook-%')`;
     await sql`DELETE FROM users WHERE email LIKE 'test-webhook-%'`;
   });

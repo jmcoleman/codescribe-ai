@@ -72,6 +72,7 @@ describe('useUsageTracking', () => {
         monthlyResetDate: '2025-11-01T00:00:00Z',
         tier: 'free',
         allowed: true,
+        shouldShowWarnings: true,
       });
     });
 

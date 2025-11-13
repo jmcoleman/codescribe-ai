@@ -300,6 +300,9 @@ router.get('/user/usage', optionalAuth, async (req, res) => {
 
     const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
 
+    // Check if user has a role that bypasses rate limits and usage warnings
+    const shouldShowWarnings = !req.user || !User.canBypassRateLimits(req.user);
+
     const response = {
       tier,
       daily: {
@@ -315,7 +318,8 @@ router.get('/user/usage', optionalAuth, async (req, res) => {
       resetTimes: {
         daily: tomorrow.toISOString(),
         monthly: nextMonth.toISOString()
-      }
+      },
+      shouldShowWarnings // false for admin/support/super_admin, true for regular users
     };
 
     console.log('[Usage] Sending response:', response);

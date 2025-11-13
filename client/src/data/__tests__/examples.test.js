@@ -207,7 +207,7 @@ describe('Code Examples Data', () => {
       const example = codeSamples.find(ex => ex.id === 'java-spring-api');
       expect(example).toBeDefined();
       expect(example.title).toBe('Java Spring Boot API');
-      expect(example.docType).toBe('API');
+      expect(example.docType).toBe('JSDOC');
     });
 
     it('should have "express-api" example', () => {
@@ -228,7 +228,7 @@ describe('Code Examples Data', () => {
       const example = codeSamples.find(ex => ex.id === 'ruby-sinatra-api');
       expect(example).toBeDefined();
       expect(example.title).toBe('Ruby Sinatra API');
-      expect(example.docType).toBe('API');
+      expect(example.docType).toBe('JSDOC');
     });
 
     it('should have "python-flask-api" example', () => {
@@ -236,7 +236,7 @@ describe('Code Examples Data', () => {
       expect(example).toBeDefined();
       expect(example.title).toBe('Python Flask API');
       expect(example.language).toBe('python');
-      expect(example.docType).toBe('API');
+      expect(example.docType).toBe('ARCHITECTURE');
     });
 
     it('should have "microservices-architecture" example', () => {

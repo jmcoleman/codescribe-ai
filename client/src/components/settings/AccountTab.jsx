@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Mail, Lock, User, Save, Check, AlertCircle, Download } from 'lucide-react';
 import { toastCompact } from '../../utils/toast';
+import { RoleBadge } from '../RoleBadge';
 
 export function AccountTab() {
   const { user, updateProfile } = useAuth();
@@ -173,6 +174,16 @@ export function AccountTab() {
                 className="w-full pl-10 pr-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus-visible:ring-2 focus-visible:ring-purple-600 focus:border-transparent disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:text-slate-600 dark:disabled:text-slate-400 disabled:cursor-not-allowed bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
                 placeholder="your.email@example.com"
               />
+            </div>
+          </div>
+
+          {/* Account Role */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              Account Role
+            </label>
+            <div className="flex items-center">
+              <RoleBadge role={user?.role} size="md" />
             </div>
           </div>
 

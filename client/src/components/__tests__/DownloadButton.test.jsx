@@ -91,8 +91,8 @@ describe('DownloadButton', () => {
       const button = screen.getByTestId('download-btn');
       await user.click(button);
 
-      // Verify filename format: docType-YYYY-MM-DD-HHMMSS.md
-      expect(capturedLink.download).toMatch(/^API-\d{4}-\d{2}-\d{2}-\d{6}\.md$/);
+      // Verify filename format: docType-YYYYMMDDHHMMSS.md (no hyphens in timestamp)
+      expect(capturedLink.download).toMatch(/^API-\d{14}\.md$/);
 
       appendChildSpy.mockRestore();
     });
@@ -114,7 +114,7 @@ describe('DownloadButton', () => {
       const button = screen.getByTestId('download-btn');
       await user.click(button);
 
-      expect(capturedLink.download).toMatch(/^documentation-\d{4}-\d{2}-\d{2}-\d{6}\.md$/);
+      expect(capturedLink.download).toMatch(/^documentation-\d{14}\.md$/);
 
       appendChildSpy.mockRestore();
     });

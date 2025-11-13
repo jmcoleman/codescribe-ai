@@ -7,7 +7,6 @@
 
 import request from 'supertest';
 import express from 'express';
-import session from 'express-session';
 import passport from 'passport';
 
 // Mock dependencies BEFORE importing routes
@@ -16,8 +15,7 @@ jest.mock('../../src/config/stripe.js');
 jest.mock('../../src/db/connection.js', () => ({
   sql: jest.fn(),
   testConnection: jest.fn().mockResolvedValue(true),
-  initializeDatabase: jest.fn().mockResolvedValue(undefined),
-  cleanupSessions: jest.fn().mockResolvedValue(0)
+  initializeDatabase: jest.fn().mockResolvedValue(undefined)
 }));
 
 // Mock passport-github2 strategy
@@ -99,7 +97,6 @@ describe.skip('GitHub OAuth Integration Tests', () => {
   beforeAll(() => {
     // Set up test environment with GitHub OAuth enabled
     process.env.JWT_SECRET = 'test-jwt-secret-key-for-testing';
-    process.env.SESSION_SECRET = 'test-session-secret-key';
     process.env.CLIENT_URL = 'http://localhost:5173';
     process.env.GITHUB_CLIENT_ID = 'test-github-client-id';
     process.env.GITHUB_CLIENT_SECRET = 'test-github-client-secret';
@@ -114,19 +111,8 @@ describe.skip('GitHub OAuth Integration Tests', () => {
     app = express();
     app.use(express.json());
 
-    // Add session middleware
-    app.use(
-      session({
-        secret: process.env.SESSION_SECRET,
-        resave: false,
-        saveUninitialized: false,
-        cookie: { secure: false }
-      })
-    );
-
-    // Initialize Passport
+    // Initialize Passport (JWT-only, no sessions)
     app.use(passport.initialize());
-    app.use(passport.session());
 
     // Mount auth routes
     app.use('/api/auth', authRoutes);

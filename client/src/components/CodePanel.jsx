@@ -4,6 +4,7 @@ import { CopyButton } from './CopyButton';
 import { DownloadButton } from './DownloadButton';
 import { useTheme } from '../contexts/ThemeContext';
 import { getLanguageDisplayName } from '../constants/languages';
+import { sanitizeFilename } from '../utils/fileValidation';
 
 // Lazy load Monaco Editor to reduce initial bundle size
 const LazyMonacoEditor = lazy(() =>
@@ -144,7 +145,7 @@ export function CodePanel({
             {code && (
               <DownloadButton
                 content={code}
-                docType={`code-${language || 'txt'}`}
+                filename={sanitizeFilename(filename)}
                 size="md"
                 variant="outline"
                 ariaLabel="Export code"
@@ -220,16 +221,8 @@ export function CodePanel({
                       const url = URL.createObjectURL(blob);
                       const a = document.createElement('a');
                       a.href = url;
-                      // Use filename with proper extension based on language
-                      const extension = language === 'javascript' ? 'js' :
-                                       language === 'typescript' ? 'ts' :
-                                       language === 'python' ? 'py' :
-                                       language === 'java' ? 'java' :
-                                       language === 'cpp' ? 'cpp' :
-                                       language === 'go' ? 'go' :
-                                       language === 'rust' ? 'rs' :
-                                       'txt';
-                      a.download = `code-${language || 'txt'}.${extension}`;
+                      // Use the actual filename shown in the header (sanitized)
+                      a.download = sanitizeFilename(filename);
                       a.click();
                       URL.revokeObjectURL(url);
                       setShowMobileMenu(false);
