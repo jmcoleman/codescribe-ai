@@ -1697,6 +1697,35 @@
           transform: rotate(360deg);
         }
       }
+    </style><style>
+      @keyframes slideIn {
+        from {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+      @keyframes slideOut {
+        from {
+          transform: translateX(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+      }
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
     </style></head>
 <body data-new-gr-c-s-check-loaded="14.1259.0" data-gr-ext-installed="">
   <div class="page">
@@ -1752,7 +1781,7 @@ Press D to toggle dark mode"></div>
             <div class="column-title">Completed</div>
             <div class="column-timeline">Phase 1: Core Capabilities</div>
           </div>
-          <div class="column-body"><div class="phase-card"><div class="phase-header"><div class="phase-title">Web Application (MVP)</div><div class="phase-version">v1.0.0</div></div><ul class="feature-list"><li>4 documentation types (README, JSDoc, API, ARCHITECTURE)</li><li>Monaco Editor with syntax highlighting (24+ languages)</li><li>Real-time streaming with SSE</li><li>Quality scoring system (0-100 scale, 5 criteria)</li><li>File upload &amp; drag-and-drop</li><li>Copy-to-clipboard &amp; download</li><li>Responsive design (mobile, tablet, desktop)</li><li>660+ tests (100% passing)</li><li>95.81% backend code coverage</li><li>Mermaid diagram support</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">WCAG AA Compliance</div><div class="phase-version">v1.2.0</div></div><ul class="feature-list"><li>WCAG 2.1 AA compliance (95/100 score)</li><li>Lighthouse accessibility: 100/100</li><li>0 automated accessibility violations</li><li>Full keyboard navigation</li><li>Screen reader compatibility (NVDA, VoiceOver)</li><li>AAA color contrast (18.2:1 ratio)</li><li>Focus traps in modals</li><li>Skip navigation link</li></ul><div class="metric-badge">660+ Tests · 100% Passing</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Performance &amp; Infrastructure</div><div class="phase-version">v1.2.0</div></div><ul class="feature-list"><li>Vercel deployment with custom domain</li><li>GitHub Actions CI/CD pipeline</li><li>Test-gated deployments</li><li>Bundle optimization (78KB gzipped)</li><li>Lazy loading (Monaco, Mermaid, DocPanel)</li><li>Lighthouse performance: 75/100 (+67%)</li><li>95.81% backend code coverage</li><li>Cross-browser testing (Chrome, Firefox, Safari, Edge)</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Security &amp; Quality</div><div class="phase-version">v1.2.0</div></div><ul class="feature-list"><li>Environment variable sanitization</li><li>API key protection (server-side only)</li><li>Rate limiting (10/min, 100/hour per IP)</li><li>Input validation and sanitization</li><li>File upload security checks</li><li>HSTS headers for security</li><li>CORS configuration</li><li>Comprehensive error handling</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Bug Fixes</div><div class="phase-version">v1.2.1</div></div><ul class="feature-list"><li>DocPanel footer alignment (pixel-perfect match with CodePanel)</li><li>Download button UX fix (removed checkmark animation)</li><li>Sign-in button hidden (ENABLE_AUTH feature flag)</li><li>Examples modal preview persistence and focus alignment</li><li>Visual regression testing (Chrome, Firefox, Safari)</li><li>Mobile testing (iOS, Android)</li><li>Cross-browser compatibility verification</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Maintenance Release</div><div class="phase-version">v1.2.2</div></div><ul class="feature-list"><li>Mobile clipboard fallback (non-secure contexts)</li><li>Download button UX simplification (removed checkmark)</li><li>Enhanced mobile accessibility (focus indicators)</li><li>Test coverage for edge cases (58 error handling tests)</li><li>Cross-browser test plan with mobile file upload docs</li><li>GitHub import feature flag (hidden until v2.0)</li><li>16 files updated, 260+ net lines added</li><li>All 660+ tests passing (46 ControlBar tests + 6 skipped)</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Authentication &amp; Database (Epic 2.1)</div><div class="phase-version">v2.0.0</div></div><ul class="feature-list"><li>Passport.js authentication (local, GitHub OAuth, JWT)</li><li>Email/password login with bcrypt hashing</li><li>Complete password reset flow with email verification</li><li>Neon Postgres database via Vercel Marketplace</li><li>User schema with auth fields (reset tokens, GitHub ID, tier)</li><li>Resend email service with branded templates</li><li>Account linking (OAuth users can add password)</li><li>Password visibility toggles (eye/eyeOff icons)</li><li>100 tests fixed/added (1,347 total, 97.5% pass rate)</li><li>Backend coverage: ALL CI thresholds met (86.84% models, 65.41% routes)</li><li>GitHub Actions CI passing</li><li>Production deployment (October 26, 2025)</li></ul><div class="metric-badge">Phase 2 Started</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Tier System &amp; Feature Flags (Epic 2.2)</div><div class="phase-version">v2.1.0-v2.2.0</div></div><ul class="feature-list"><li>Backend: Protect /api/generate and /api/generate-stream with requireAuth</li><li>Backend: Usage schema (user_id, daily_count, monthly_count, daily_reset, monthly_reset)</li><li>Backend: Usage tracking with incrementUsage() after each generation</li><li>Backend: Daily/monthly reset logic with lazy reset (serverless-friendly)</li><li>Frontend: Include JWT bearer token in API requests (Authorization: Bearer &lt;token&gt;)</li><li>Frontend: Usage warning banner (80% threshold with dynamic multipliers)</li><li>Frontend: Usage limit modal (100% threshold - blocks further usage)</li><li>Frontend: useUsageTracking hook for fetching usage data</li><li>Frontend: Error handling priority system (Usage Limit &gt; API &gt; Network &gt; Validation)</li><li>3-tier system: Free (10 docs), Starter (50 docs $12), Pro (200 docs $29)</li><li>Open Core model: All 4 doc types in Free tier (adoption engine)</li><li>Deferred to Epic 2.5: Usage dashboard UI with progress bars and charts</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">UX Enhancements &amp; File Upload (Epic 2.3)</div><div class="phase-version">v2.3.0</div></div><ul class="feature-list"><li>Drag-and-drop file upload with visual purple overlay</li><li>Clear button for code editor (reset code/filename/language)</li><li>Dynamic filename display in Monaco editor header</li><li>Mobile menu logout button for authenticated users</li><li>Upgrade to Claude Sonnet 4.5 (claude-sonnet-4-5-20250929)</li><li>Page width expansion for better space utilization</li><li>15 new tests (drag-drop, clear button, logout)</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Payment Integration &amp; Test Infrastructure (Epic 2.4)</div><div class="phase-version">v2.4.0</div></div><ul class="feature-list"><li>Stripe SDK integration with test mode</li><li>Subscription management (create, update, cancel via webhooks)</li><li>Upgrade/downgrade flows with hybrid proration (documented in SUBSCRIPTION-MANAGEMENT.md)</li><li>Webhook handling (6 events: checkout completed, subscription created/updated/deleted, invoice paid/failed)</li><li>Pricing page UI (4 tiers with monthly/annual toggle)</li><li>Stripe Customer Portal integration for account management</li><li>Test mode validation with Stripe CLI - all flows working</li><li>Database schema: subscriptions table, stripe_customer_id column, name fields (Migration 008)</li><li>Subscription model with 9 methods (create, findByUserId, update, cancel, etc.)</li><li>Bidirectional name sync between app and Stripe</li><li>Customer origin tracking (app, stripe_dashboard, api, migration)</li><li>41 backend tests fixed (email verification, name sync, origin tracking, webhooks)</li><li>15 frontend tests fixed (file upload with MemoryRouter)</li><li>Pricing page added to mobile menu</li><li>Interactive roadmap enhancements (D hotkey for dark mode)</li><li>1,662 tests (1,625 passing, 36 skipped, 1 failing) - 97.8% pass rate</li><li>Note: Custom receipts deferred to Epic 2.7 (production launch)</li></ul><div class="metric-badge">Test Mode</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Email Rate Limiting &amp; UI Improvements</div><div class="phase-version">v2.4.1</div></div><ul class="feature-list"><li>Email rate limiting system (5-min cooldown, 10/day verification, 3/hour + 10/day password resets)</li><li>Email service mocking for dev/test (MOCK_EMAILS env var, prevents quota waste)</li><li>Enhanced production logging (detailed email logs with URLs, IDs, timestamps)</li><li>UnverifiedEmailBanner redesign (brand gradient, compact layout, indigo button)</li><li>ConfirmationModal alignment fix (title/close button)</li><li>95 tests fixed (27 emailService, 28 auth-password-reset, 27 email-verification, 13 integration)</li><li>1,662 tests (1,626 passing, 36 skipped, 0 failures) - 97.8% pass rate</li><li>EMAIL-RATE-LIMITING.md documentation</li><li>Removed npm run migrate from vercel.json</li></ul><div class="metric-badge">Production Fix</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Livemode Detection &amp; Prompt Caching</div><div class="phase-version">v2.4.2</div></div><ul class="feature-list"><li>Migration 009: livemode column to subscriptions table (test vs production detection)</li><li>Prevent tier upgrades from Stripe test mode subscriptions (only livemode=true upgrades tiers)</li><li>1-hour prompt caching with auto-refresh (extended from 5 minutes)</li><li>Expected savings: $100-400/month in production (90% cost reduction on cached prompts)</li><li>Quasi-indefinite caching with steady traffic (1+ user/hour keeps cache warm)</li><li>64 frontend tests fixed (AuthProvider wrapper for VerifyEmail and UnverifiedEmailBanner)</li><li>2 backend tests fixed (livemode flag in webhook mocks)</li><li>Coverage thresholds updated for livemode changes (unified 90% for services)</li><li>1,657 tests (1,657 passing, 39 skipped) - 97.7% pass rate</li><li>Enhanced documentation (SUBSCRIPTION-FLOWS.md, SUBSCRIPTION-MANAGEMENT.md, PROMPT-CACHING-GUIDE.md)</li></ul><div class="metric-badge">Cost Optimization</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Payment Routes &amp; Email Verification Fixes</div><div class="phase-version">v2.4.3</div></div><ul class="feature-list"><li>Added payment and webhook routes to api/index.js (Vercel serverless function)</li><li>Fixed 404 errors on /api/payments/create-checkout-session in production</li><li>Added refreshUser() method to AuthContext to update user state after verification</li><li>Fixed banner persistence issue (banner now disappears immediately after verification)</li><li>Fixed UnverifiedEmailBanner, VerificationRequiredModal, VerifyEmail to use centralized API_URL config</li><li>Eliminated 'undefined' API URLs in production (/undefined/api/...)</li><li>Updated DEPLOYMENT-CHECKLIST.md with 30+ missing environment variables</li><li>Added comprehensive Stripe environment variable documentation (12 variables)</li><li>Moved prompt-caching-manual.js from server/tests/ to server/scripts/</li><li>1,662 tests (1,626 passing, 36 skipped, 0 failing) - 97.8% pass rate</li></ul><div class="metric-badge">Production Fix</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Contact Sales Feature &amp; Critical Email Bug Fixes</div><div class="phase-version">v2.4.4</div></div><ul class="feature-list"><li>Contact Sales Feature: Server-side email via Resend for Enterprise/Team tiers</li><li>ContactSalesModal component with loading/success/error states</li><li>Smart name collection: optional first/last name fields (shown only if user lacks name)</li><li>Progressive data collection strategy (name collected at point of contact, not signup)</li><li>Backend name resolution priority: database → form input → empty fallback</li><li>POST /api/contact/sales endpoint (requires authentication)</li><li>Email forwarding setup for sales@codescribeai.com via Namecheap</li><li>EMAIL-FORWARDING-SETUP.md documentation (263 lines)</li><li>CRITICAL: Fixed email verification token timezone bug (tokens expiring in 4 hours instead of 24)</li><li>Added .toISOString() to User.js:378 for proper PostgreSQL timezone handling</li><li>Fixed Contact Sales modal not auto-opening after authentication</li><li>Fixed VerifyEmail and AuthCallback tier-aware routing (prevents Stripe checkout for enterprise/team)</li><li>Complete subscription flow documented with visual Mermaid diagram in SUBSCRIPTION-FLOWS.md</li><li>Payment UX: Removed forced 5-second auto-redirect on PaymentSuccess</li><li>Added 'Manage Subscription' button (opens Stripe billing portal)</li><li>ContactSalesModal UX: Removed auto-close, added explicit Close button</li><li>CLAUDE.md: Added Modal &amp; Email Confirmation UX guidelines</li><li>Roadmap: Added Calendly integration and Gmail 'Send As' to backlog</li><li>Complete test coverage: ContactSalesModal (25 tests), PricingPage (6 new), contact.test.js (backend), VerifyEmail (8 new)</li><li>1,734 tests (1,695 passing, 39 skipped, 0 failing) - 97.8% pass rate</li></ul><div class="metric-badge">Critical Fix + Feature</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Refined Light Theme v2.0 &amp; UX Improvements</div><div class="phase-version">v2.4.5</div></div><ul class="feature-list"><li>Refined Light Theme v2.0: Custom Monaco Editor theme (purple keywords, green strings, cyan numbers, slate text)</li><li>Custom Prism syntax highlighting in DocPanel matching Monaco theme</li><li>Uniform code block backgrounds (slate-50) with proper borders</li><li>Disabled bracket pair colorization for cleaner appearance</li><li>Enhanced font rendering (antialiasing, optimizeLegibility)</li><li>Removed global Tailwind code styles causing unwanted backgrounds</li><li>All token types explicitly set to background: 'none' for clean rendering</li><li>Mermaid Diagram Enhancements: Darkened borders (purple-600, slate-400) for better definition</li><li>Pricing Page Large Display: Constrained card width, better gap spacing, subtle purple shadows</li><li>Refined scaling (lg:scale-[1.02]) and enhanced button shadows</li><li>Fixed Contact Sales modal intent cleanup (prevents unwanted auto-open)</li><li>Fixed code block background highlighting</li><li>Fixed Monaco editor background artifacts</li><li>USER-ROLES-SYSTEM.md planning document (309 lines)</li><li>1,786 tests (1,747 passing, 39 skipped) - 97.82% pass rate</li></ul><div class="metric-badge">Visual Polish</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Billing Period Persistence &amp; Help Modal UX</div><div class="phase-version">v2.4.6</div></div><ul class="feature-list"><li>Help Modal Tabbed Interface: 3-tab organization (Quick Start, Quality Scores, FAQs)</li><li>FAQ accordion UI with smooth animations and improved content discoverability</li><li>Refined light theme consistency for HelpModal (white backgrounds, slate borders)</li><li>Billing Period Persistence: Monthly/annual selection persists via sessionStorage</li><li>Seamless user experience across page refreshes with subscription intent storage</li><li>Help Button UX Improvements: Desktop text 'Help' button, mobile only in hamburger menu</li><li>Cleaner mobile navigation (removed redundant header icon)</li><li>Contact Sales Character Limit: 750 chars with live counter and validation</li><li>Stripe API Alignment: Updated 'yearly' to 'annual' for backend consistency</li><li>Fixed 4 PricingPage test failures (billing period terminology)</li><li>Viewport Optimization: Increased modal max-height by 60px for better content visibility</li><li>STORAGE-CONVENTIONS.md: sessionStorage patterns documentation</li><li>Complete test coverage: 9 files updated with test fixes</li><li>1,785 tests (1,746 passing, 39 skipped, 0 failing) - 97.82% pass rate</li></ul><div class="metric-badge">UX Improvements</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Epic 2.5: Legal Compliance - Phase 1-2</div><div class="phase-version">v2.5.0</div></div><ul class="feature-list"><li>Terms of Service page (TermsOfService.jsx with /terms route)</li><li>Privacy Policy page (PrivacyPolicy.jsx with /privacy route)</li><li>Footer component with Terms/Privacy links (appears on all pages)</li><li>TermsAcceptanceModal with smart acceptance detection</li><li>Version-based re-acceptance system (tracks terms_version_accepted, privacy_version_accepted)</li><li>Contact Support Modal for legal questions and support inquiries</li><li>Backend legal routes (/api/legal/status, /api/legal/accept)</li><li>Database migration 010: terms/privacy acceptance tracking (4 new columns)</li><li>User model methods: acceptTerms(), acceptPrivacy(), getLegalStatus()</li><li>Legal version constants system (server/src/constants/legalVersions.js)</li><li>Email service: sendSupportInquiry() for contact support flow</li><li>Contact routes: POST /api/contact/support with authentication</li><li>Full test coverage: Footer, TermsAcceptanceModal, ContactSupportModal, legal routes</li><li>AuthContext integration: checkLegalStatus(), acceptLegalDocuments()</li><li>Smart acceptance flow: GitHub OAuth users bypass terms, email signup requires acceptance</li><li>Dev Guide updates: Development workflow, Stripe webhook setup</li><li>1,955 tests (1,283 frontend, 672 backend, 97.8% pass rate)</li><li>+134 new tests across 9 new test files</li><li>Documentation updates (CHANGELOG, README, CLAUDE.md, testing docs)</li></ul><div class="metric-badge">Phase 1-2 Complete</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Epic 2.5: Legal Compliance - Phase 3</div><div class="phase-version">v2.5.1</div></div><ul class="feature-list"><li>Settings Page: 4-tab navigation (Account | Privacy | Subscription | Danger Zone)</li><li>AccountTab: Profile display, email/password change forms with validation</li><li>PrivacyTab: Analytics opt-out toggle (stored in database preferences)</li><li>SubscriptionTab: Usage stats, billing info, Stripe Customer Portal integration</li><li>DangerZoneTab: Account deletion with confirmation modal</li><li>AnalyticsWrapper: Conditional Vercel Analytics loading based on user preference</li><li>Backend API: 5 new endpoints (profile, email, password, preferences)</li><li>Database migration 011: analytics_enabled column + index</li><li>Cache Control: Strict headers on user-specific endpoints (no 304 responses)</li><li>Attribution Footer: CodeScribe AI branding on all generated documentation</li><li>Mobile-responsive layout with proper tab keyboard navigation</li><li>Settings integration tests: 26 new tests</li><li>SETTINGS-UX-PATTERNS.md documentation</li><li>2,015 tests (1,283 frontend, 732 backend, 98.91% pass rate)</li><li>+60 tests (26 settings, 10 migration-011, 24 emailService improvements)</li><li>Documentation updates (CHANGELOG, README, CLAUDE.md, TODO.md, testing docs)</li></ul><div class="metric-badge">Phase 3 Complete</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Epic 2.5 Complete: User Data Rights &amp; Restoration</div><div class="phase-version">v2.5.2</div></div><ul class="feature-list"><li>Permanent Deletion Cron Job: Daily job at 2:00 AM UTC (9 PM EST) for 30-day expired accounts</li><li>Cron Endpoint: POST /api/cron/permanent-deletions with Bearer token auth</li><li>Tombstone Pattern: Preserves user_id/stripe_customer_id, NULLs PII (email, name, password, github_id)</li><li>Automatic Account Restoration: Email/password signup restores scheduled-deletion accounts</li><li>GitHub OAuth Restoration: GitHub sign-in restores scheduled-deletion accounts</li><li>Email Notifications: sendAccountDeletionEmail, sendAccountRestoredEmail via Resend</li><li>Data Retention: 7-year financial record retention, aggregate-then-delete usage analytics</li><li>GDPR/CCPA Compliance: Article 17 (Right to Erasure) + Article 17(3)(b) (Legal Obligation)</li><li>Database Migration 012: soft delete columns (deletion_scheduled_at, deleted_at, deletion_reason)</li><li>Database Migration 013: subscription retention (prevents CASCADE deletion)</li><li>Database Migration 014: usage analytics aggregation table</li><li>Settings ESC Handler: Fixed modal cancel behavior (checks for open modals before navigating)</li><li>Comprehensive Testing: 96+ tests (64 deletion/restoration, 32 cron/migrations)</li><li>2,225 tests (1,370 frontend, 855 backend, 100% pass rate)</li><li>Documentation: USER-DELETION-COMPLIANCE.md (1,500+ lines, industry research)</li></ul><div class="metric-badge">Epic 2.5 Complete</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Email System Overhaul &amp; Test Suite Coverage</div><div class="phase-version">v2.5.3</div></div><ul class="feature-list"><li>Email Templating System: 7 branded templates (password reset, verification, support, sales, deletion)</li><li>Support Request Attachments: File upload support (5 files max, 10MB each, 7 allowed types)</li><li>Email Template Architecture: Base template system with consistent branding across all emails</li><li>Enhanced Contact Support: File attachments, 6 subject categories, tier-based priority (1-5)</li><li>Email Priority Filtering: X-Priority headers for inbox sorting (Enterprise=1, Pro=2, Starter=3, Free=5)</li><li>SLA Documentation: Tier-based response times (Enterprise 4hrs, Pro 24hrs, Starter 48hrs, Free 5 days)</li><li>ContactSupportModal Redesign: Attachment UI, drag-and-drop, file validation, loading states</li><li>Email Configuration: Comprehensive .env.example with 24 variables (Resend, Stripe, OAuth)</li><li>Security: SECURITY-GIT-SECRETS.md documentation (143 lines) for API key protection</li><li>.gitignore Updates: Ignore .env backup files (*.env.backup, .env.local.backup)</li><li>Backend: Fixed contact.test.js User model mocking (45/45 tests passing)</li><li>Backend: Added 19 emailService tests for branch coverage (+3.28% to 79.41%)</li><li>Backend: Rate limit tests for password reset and verification emails (4 new tests)</li><li>Backend: Support email attachment tests (3 new tests covering 0, 1, and 3+ files)</li><li>Backend: Utility function tests for emailService (12 tests: mocking, client, caching)</li><li>Backend: All coverage thresholds met (79.41% branches exceeds 79% requirement)</li><li>Frontend: Fixed ContactSalesModal tests (25/25 passing, 11 tests updated)</li><li>Frontend: Fixed ContactSupportModal tests (12/12 passing, 7 tests rewritten)</li><li>Frontend: Updated success messages, loading states, form submissions to match implementation</li><li>Frontend: Fixed unauthenticated vs authenticated user flows</li><li>Documentation: EMAIL-TEMPLATING-GUIDE.md (1,407 lines), EMAIL-PRIORITY-FILTERING.md (668 lines)</li><li>Documentation: COMMUNITY-SUPPORT-STRATEGY.md (457 lines), EMAIL-CONFIGURATION.md (278 lines)</li><li>Test Pattern Documentation: Pattern 11 (ES Modules) in TEST-PATTERNS-GUIDE.md</li><li>CI/CD: GitHub Actions passing for both backend and frontend</li><li>Final Results: 2,209 passing tests (856 backend, 1,353 frontend), 100% pass rate</li><li>Coverage: Backend 79.41% branches, Frontend 44/44 test files passing</li><li>Zero test failures, all thresholds met, production-ready</li></ul><div class="metric-badge">Production Ready</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Epic 2.6: UI Integration &amp; Usage Dashboard</div><div class="phase-version">v2.6.0</div></div><ul class="feature-list"><li>Modern Usage Dashboard Page: Industry best practices from Stripe, Vercel, Linear, and Notion</li><li>Side-by-side daily and monthly usage cards with real-time data</li><li>Smart color-coded status indicators: Green (0-59%) → Yellow (60-79%) → Orange (80-99%) → Red (100%)</li><li>Animated progress bars with percentage labels and ARIA attributes</li><li>Reset countdowns with relative ('in 5 days') and absolute dates</li><li>Contextual upgrade prompts (shown when usage &gt; 60%)</li><li>Quick action cards (Pricing, Settings, Documentation)</li><li>Loading skeletons for better perceived performance</li><li>Unlimited tier support with infinity symbols for enterprise users</li><li>Fully accessible (WCAG 2.1 AA compliant)</li><li>Mobile-responsive layout with card stacking</li><li>Enhanced Header: User profile dropdown with tier badge display</li><li>Tier badge shows paid tier (Starter, Pro, Team, Enterprise) with Sparkles icon</li><li>User info header in dropdown with email and current plan</li><li>Mobile Menu: Usage Dashboard and Settings links for authenticated users</li><li>Routing: Added /usage route in React Router</li><li>Usage Dashboard Test Suite: 28 tests, 100% passing</li><li>Test coverage: Authentication, loading states, tier badges, usage cards, progress bars, accessibility</li><li>UI Improvements: RefreshCw icon added to refresh button, upgrade banner repositioned to top, condensed to single-line layout, tier badge made compact</li><li>Authentication Fix: Added credentials: 'include' to useUsageTracking.js for session cookie transmission</li><li>SQL Period Matching: Changed from range (&lt;=) to exact match (=) for period_start_date</li><li>Migration Fix: Added GREATEST() for last_reset_date in ON CONFLICT to preserve daily counts after anonymous-to-authenticated migration</li><li>Final Results: 2,278 tests (2,237 passing, 41 skipped), 100% pass rate</li><li>Frontend: 1,401 tests (1,381 passing, 20 skipped) - +28 new tests</li><li>Backend: 877 tests (856 passing, 21 skipped)</li><li>Phase 2: Payments Infrastructure now 100% complete</li></ul><div class="metric-badge">Phase 2 Complete</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Epic 3.1: Dark Mode Complete</div><div class="phase-version">v2.7.0</div></div><ul class="feature-list"><li>Theme System: ThemeContext with React Context API for global theme state</li><li>ThemeToggle component with smooth Sun/Moon icon transitions</li><li>Theme persistence via localStorage (codescribeai:settings:theme)</li><li>System preference detection via window.matchMedia('(prefers-color-scheme: dark)')</li><li>Auto-sync with system theme changes when no manual preference set</li><li>Defensive error handling for browser APIs (localStorage, matchMedia)</li><li>Dark Mode Styling: Comprehensive Tailwind dark: variants across all components</li><li>Custom Monaco Editor dark theme (Neon Cyberpunk): purple keywords, green strings, cyan numbers</li><li>Custom Prism syntax highlighting matching Monaco theme</li><li>Mermaid diagram dark theme with enhanced borders and hierarchy</li><li>Gradient backgrounds with opacity adjustments for dark mode</li><li>Consistent color system: slate backgrounds, purple accents, semantic colors</li><li>Component Updates: 13 components with dark mode variants</li><li>Header/MobileMenu: Theme toggle in desktop header and mobile menu</li><li>Footer, DocPanel, Button: Dark mode styling with proper contrast</li><li>All modals: Dark mode styling with semantic colors</li><li>Usage dashboard: Dark mode progress bars and status indicators</li><li>Forms: Dark input fields, selects, and validation states</li><li>106 New Dark Mode Tests (100% passing)</li><li>ThemeContext state management tests (8 tests)</li><li>ThemeToggle component tests (10 tests)</li><li>Integration tests (9 tests) - Full app dark mode switching</li><li>Monaco Editor theme tests (6 tests)</li><li>Mermaid diagram theming tests (14 tests)</li><li>All UI components with dark mode variants tested</li><li>Critical Test Infrastructure Fixes</li><li>ContactSupportModal CI fix: getToken() mock returned Promise.resolve() (was blocking CI)</li><li>DocPanel accessibility test: Removed button count assertion (mobile/desktop variants)</li><li>UsageLimitModal test: Updated text assertion to match component</li><li>ThemeContext error handling: try/catch for localStorage, matchMedia checks</li><li>Test Helpers: renderWithTheme() utility, global matchMedia mock, localStorage mock</li><li>Final Results: 2,343 passed | 43 skipped (2,386 total) - 100% pass rate</li><li>Frontend: 1,486 passed | 22 skipped (1,508 total) - 98.5% pass rate</li><li>Backend: 857 passed | 21 skipped (878 total) - 100% pass rate</li><li>Coverage: 91.83% backend coverage maintained</li></ul><div class="metric-badge">100% CI Pass Rate</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">ErrorBoundary Dark Mode &amp; Production Bug Fix</div><div class="phase-version">v2.7.1</div></div><ul class="feature-list"><li>ErrorBoundary Dark Mode Implementation</li><li>Theme detection via getThemePreference() from localStorage and system preferences</li><li>Manual dark class application to document.documentElement (ErrorBoundary wraps ThemeProvider)</li><li>Full dark mode styling with dark: variants for all colors</li><li>Icon border in dark mode: border-2 border-transparent dark:border-red-800/50</li><li>Improved error message readability: dark:bg-red-950/30 dark:text-red-200</li><li>Better contrast for stack traces: dark:bg-slate-800/50</li><li>Modal width increased from max-w-2xl to max-w-4xl for long stack traces</li><li>ErrorBoundary Horizontal Scrolling Fix</li><li>Removed CSS Grid animation (was interfering with overflow behavior)</li><li>Applied overflow-x-auto directly to &lt;pre&gt; elements</li><li>All code blocks (Error Message, Stack Trace, Component Stack) now scroll horizontally</li><li>Simplified details/summary styling with arrow rotation animation only</li><li>Production Bug Fix: AdminUsage Icon Import</li><li>Fixed missing AlertCircle icon import from lucide-react in AdminUsage.jsx</li><li>Error state now properly displays with AlertCircle icon</li><li>Was causing ErrorBoundary to trigger in production when admin stats failed to load</li><li>Manual Testing Route for ErrorBoundary</li><li>/test-error route for ErrorBoundary testing in all environments</li><li>ErrorTest.jsx component to intentionally trigger errors</li><li>Route documented in main.jsx with inline comments</li><li>Component documented with comprehensive JSDoc</li><li>Manual Testing Route section added to ERROR-HANDLING-TESTS.md</li><li>Documentation Updates</li><li>ERROR-HANDLING-TESTS.md updated to v1.1 with Manual Testing Route section</li><li>Updated last updated date to November 9, 2025</li><li>Test Results: 2,343 passed | 43 skipped (2,386 total) - 100% pass rate</li><li>Frontend: 1,486 passed | 22 skipped (1,508 total) - 98.5% pass rate</li><li>Backend: 857 passed | 21 skipped (878 total) - 100% pass rate</li><li>Coverage: 91.83% backend coverage maintained</li></ul><div class="metric-badge">Bug Fix</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Mobile UX Fixes &amp; Appearance Settings Tab</div><div class="phase-version">v2.7.2</div></div><ul class="feature-list"><li>Mobile File Upload Error Logging</li><li>Enhanced error logging with explicit URL construction (API_URL)</li><li>Improved diagnostic information for connection failures</li><li>Better error messages showing attempted URLs</li><li>Mobile Code Editor Viewport Fix</li><li>Changed from fixed h-[600px] to responsive min-h-[600px] h-[70vh]</li><li>Prevents editor collapse when mobile browser hides address bar</li><li>Adapts to different mobile screen sizes and orientations</li><li>Appearance Settings Tab</li><li>New dedicated Appearance tab in Settings (2nd position)</li><li>Light/Dark/Auto theme options with card-based UI</li><li>Sun/Moon/Monitor icons for each theme mode</li><li>Auto theme mode follows system preferences</li><li>Theme System Enhancement</li><li>ThemeContext now supports 'auto', 'light', 'dark' modes</li><li>Default theme changed from 'light' to 'auto'</li><li>getEffectiveTheme() resolves 'auto' to actual theme</li><li>System preference detection via matchMedia API</li><li>Auto-refresh when system preferences change</li><li>Theme Controls Relocated</li><li>Removed ThemeToggle from desktop Header</li><li>Removed theme toggle from mobile menu header</li><li>Centralized theme controls in Settings → Appearance</li><li>Follows industry UX patterns (Discord, GitHub, Slack)</li><li>Test Suite Maintenance</li><li>Fixed 7 ThemeContext tests for 'auto' default behavior</li><li>Skipped 3 Header ThemeToggle integration tests (feature moved)</li><li>Added comprehensive TODO comments explaining skipped tests</li><li>Maintained 100% pass rate on non-skipped tests</li><li>Test Results: 2,339 passed | 50 skipped (2,389 total) - 97.9% pass rate</li><li>Frontend: 1,479 passed | 29 skipped (1,508 total) - 98.1% pass rate</li><li>Backend: 860 passed | 21 skipped (881 total) - 100% pass rate</li><li>Coverage: 91.83% backend coverage maintained</li><li>Documentation: Updated CHANGELOG, README, CLAUDE.md, testing docs</li></ul><div class="metric-badge">Mobile UX</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">UX Polish &amp; Terminology Consistency</div><div class="phase-version">v2.7.3</div></div><ul class="feature-list"><li>Toast Notification Fix</li><li>Added prevGeneratingRef to track previous isGenerating state</li><li>Toast only shows when generation actually completes (not on page load)</li><li>Prevents false 'documentation ready' notifications from localStorage data</li><li>Button Terminology Updates</li><li>Changed 'Download' to 'Export' across all download buttons</li><li>Shorter terminology better fits mobile UI constraints</li><li>Updated DownloadButton, CodePanel, DocPanel components</li><li>Examples → Samples Terminology</li><li>Changed 'Examples' to 'Samples' for more accurate representation</li><li>Updated button labels, modal title, placeholder text</li><li>Modal: 'Code Samples', 'Select a code sample to preview', 'Load Sample'</li><li>Updated CodePanel, ExamplesModal, App.jsx toast notifications</li><li>User Display Name Improvement</li><li>Added getDisplayName() function in Header component</li><li>Shows first name only (industry standard: Gmail, Slack, Discord, GitHub)</li><li>Fallback to email username when first/last name not provided</li><li>Dark Mode Skeleton Visibility Fix</li><li>Added dark:bg-slate-700 to skeleton bars</li><li>Added dark:bg-purple-900/30 to purple glow</li><li>Added dark:text-slate-200 and dark:text-slate-400 to status text</li><li>'Generating documentation...' text now readable in dark mode</li><li>DocPanel Top Spacing Alignment</li><li>Reduced padding from py-4 to py-3</li><li>Added [&amp;&gt;*:first-child]:mt-0 to remove first child top margin</li><li>Documentation content now aligns with code panel</li><li>Skeleton Loader Test Helper</li><li>New loadSkeleton() console function for manual QA testing</li><li>Toggles skeleton UI without triggering API calls</li><li>Added testSkeletonMode state for isolated testing</li><li>Exposed to window object for easy browser console access</li><li>Test Suite Updates</li><li>Fixed 22 tests for terminology changes</li><li>CodePanel.test.jsx: 'examples' → 'samples'</li><li>ExamplesModal.test.jsx: Multiple pattern replacements</li><li>DownloadButton.test.jsx: 'Download' → 'Export'</li><li>DocPanel.test.jsx: 'Download doc' → 'Export doc'</li><li>Test Results: 2,335 passed | 50 skipped (2,385 total) - 97.9% pass rate</li><li>Frontend: 1,478 passed | 29 skipped (1,507 total) - 98.1% pass rate</li><li>Backend: 857 passed | 21 skipped (878 total) - 100% pass rate</li><li>Coverage: 91.83% backend coverage maintained</li><li>Documentation: Updated CHANGELOG, README, CLAUDE.md, testing docs</li></ul><div class="metric-badge">UX Polish</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Modal Width Optimization &amp; Terminology Refactoring</div><div class="phase-version">v2.7.4</div></div><ul class="feature-list"><li>Samples Modal Width Optimization</li><li>Increased modal width from max-w-4xl (896px) to max-w-5xl (1024px)</li><li>Better utilizes screen space for split-view (40/60) layout</li><li>Improves code preview readability on larger screens</li><li>Terminology Refactoring: Example → Sample</li><li>Renamed ExamplesModal.jsx to SamplesModal.jsx</li><li>Updated data export: codeExamples → codeSamples in examples.js</li><li>Renamed components: ExampleCard → SampleCard, ExamplePreview → SamplePreview</li><li>Updated state variables: selectedExample → selectedSample, showExamplesModal → showSamplesModal</li><li>Updated props: onExamplesClick → onSamplesClick, examplesButtonRef → samplesButtonRef</li><li>Updated functions: handleLoadExample → handleLoadSample, onLoadExample → onLoadSample</li><li>Refactored 9 files total: App.jsx, CodePanel.jsx, SamplesModal.jsx, examples.js, + tests</li><li>Test Suite Updates (90 tests fixed)</li><li>SamplesModal.test.jsx: 48 tests updated for keyboard navigation and focus trap</li><li>Fixed 'should navigate between cards using Tab key' test</li><li>Fixed 'should allow keyboard navigation through entire modal' test</li><li>Fixed 'should trap focus within modal' test (wraps to close button)</li><li>Fixed 'should trap focus backwards with Shift+Tab' test</li><li>Fixed 'should support both Enter and Space for preview' (auto-selected card label)</li><li>examples.test.js: 37 tests updated from codeExamples to codeSamples</li><li>Focus Ring Tests: 5 tests updated from focus:ring-2 to focus-visible:ring-2</li><li>Updated CopyButton.test.jsx (2 tests), DownloadButton.test.jsx (1 test)</li><li>Updated ErrorBanner.test.jsx (1 test), Select.test.jsx (1 test)</li><li>Test Results: 2,341 passed | 50 skipped (2,391 total) - 97.9% pass rate</li><li>Frontend: 1,484 passed | 29 skipped (1,513 total) - 98.1% pass rate</li><li>Backend: 857 passed | 21 skipped (878 total) - 100% pass rate</li><li>Coverage: 91.83% backend coverage maintained</li><li>Documentation: Updated CHANGELOG, README, CLAUDE.md, testing docs</li></ul><div class="metric-badge">UX &amp; Code Quality</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">UX Refinements &amp; Documentation</div><div class="phase-version">v2.7.5</div></div><ul class="feature-list"><li>Toast System Border Consistency</li><li>Changed border color from border-cyan-300 to border-slate-300 for all toast types</li><li>Improved visual consistency with overall design system</li><li>Applied to CustomToast, CompactToast, AvatarToast, and ExpandableToast components</li><li>Back Button Layout &amp; Spacing</li><li>Fixed duplicate container divs causing inconsistent spacing</li><li>Added text-sm size for better hierarchy</li><li>Added consistent bottom margin (mb-3 or mb-4)</li><li>Applied to 6 pages: Pricing, LoginModal, SignupModal, VerifyEmail, Usage, Settings</li><li>Contact Sales UX Enhancement</li><li>Team/Enterprise messaging: 'Create an account to connect with our sales team'</li><li>Clearer value proposition for high-value tiers</li><li>Improved call-to-action messaging</li><li>Documentation Additions</li><li>DARK-MODE-IMPLEMENTATION.md: 482-line comprehensive dark mode guide</li><li>Covers ThemeContext, component styling, Monaco/Prism themes, Mermaid diagrams</li><li>GOOGLE-OAUTH-IMPLEMENTATION.md: 1700-line implementation guide</li><li>Complete OAuth 2.0 setup, GitHub OAuth comparison, troubleshooting</li><li>Documentation Cleanup</li><li>Removed outdated RECOVERY-PLAN.md (emergency deployment guide no longer needed)</li><li>Test Results: 2,391 tests (2,341 passed, 50 skipped, 0 failed) - 97.91% pass rate</li><li>Frontend: 1,484 passed | 29 skipped (1,513 total)</li><li>Backend: 857 passed | 21 skipped (878 total)</li><li>Coverage: 91.83% backend coverage maintained</li></ul><div class="metric-badge">UX Polish</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Quality Breakdown Modal Enhancements &amp; Test Coverage</div><div class="phase-version">v2.7.6</div></div><ul class="feature-list"><li>Dual-Tab Quality Breakdown Modal</li><li>Input Code Health Tab: Shows 'before' state with 4 criteria (Comments, Naming, Existing Docs, Code Structure)</li><li>Generated Documentation Tab: Shows 'after' state with 5 criteria (Overview, Installation, Usage, API Docs, Structure)</li><li>Fixed height (420px) content area prevents modal jumping between tabs</li><li>Smooth tab transitions with purple accent for active tab</li><li>Transformation Header</li><li>Side-by-side score comparison (Input Code → AI Enhancement → Generated Docs)</li><li>Sparkles icon + arrow indicator for visual transformation flow</li><li>Green improvement indicator (+X points) when showing positive change</li><li>Grid layout (grid-cols-3) with max-w-3xl for optimal spacing</li><li>Enhanced Download Functionality</li><li>Downloads comprehensive quality report in proper markdown format</li><li>Includes both Input Code Health and Generated Documentation breakdowns</li><li>Source filename and doc type included for traceability</li><li>Generation timestamp for version control</li><li>Filename format: quality-report-{filename}-{docType}-YYYYMMDDHHMMSS.md</li><li>Input Code Health Assessment Backend</li><li>New assessInputCodeQuality() function analyzes original code</li><li>4 scoring criteria (20pts + 20pts + 25pts + 35pts = 100pts total)</li><li>Comments ratio analysis (15%+ excellent, 8-15% good, 3-8% minimal)</li><li>Naming quality assessment (descriptive vs cryptic identifiers)</li><li>Existing documentation detection (JSDoc, docstrings, @param tags)</li><li>Code structure evaluation (indentation, spacing, line length)</li><li>Returns improvement delta (Generated Score - Input Score)</li><li>Standardized Color Scheme</li><li>All criteria icons: Changed to slate (text-slate-600 dark:text-slate-400)</li><li>All progress bars: Changed to purple (bg-purple-500 dark:bg-purple-400)</li><li>Removed color variation by status for cleaner UI</li><li>Code Samples Data Structure Update</li><li>Updated from 7 to 8 code samples</li><li>New samples: C# ASP.NET Core API, Java Spring Boot API, Ruby Sinatra API, Poorly Documented Utility</li><li>Doc type distribution: 5 API, 2 README, 1 ARCHITECTURE (no JSDOC samples)</li><li>Test Suite Complete Overhaul (120+ tests updated)</li><li>QualityScore.test.jsx: 60 passing, 1 skipped (61 total) - Added filename prop, inputCodeHealth, improvement to all tests</li><li>examples.test.js: 8 tests updated from 7 to 8 samples, removed JSDOC validations</li><li>SamplesModal.test.jsx: 8 tests fixed (3 code content checks, 5 focus tests skipped)</li><li>docGenerator.test.js: Updated calculateQualityScore call to include 4th parameter (input code)</li><li>Final Results: 2,405 tests (2,351 passed, 54 skipped, 0 failed) - 100% pass rate</li><li>Frontend: 1,494 passed | 33 skipped (1,527 total)</li><li>Backend: 857 passed | 21 skipped (878 total)</li><li>Coverage: 91.83% backend coverage maintained</li><li>Documentation: Updated CHANGELOG, README, CLAUDE.md, testing docs</li></ul><div class="metric-badge">Feature Enhancement</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Admin Dashboard Performance Optimization &amp; Test Fixes</div><div class="phase-version">v2.7.7</div></div><ul class="feature-list"><li>Database Migration 017: Total Generations Column</li><li>Added total_generations INTEGER NOT NULL DEFAULT 0 column to users table</li><li>Created index idx_users_total_generations for fast sorting (DESC order)</li><li>Created trigger function update_user_total_generations() to automatically maintain totals</li><li>Trigger handles INSERT/UPDATE/DELETE operations on user_quotas table</li><li>Backfilled historical data from existing user_quotas records</li><li>Performance improvement: O(n×m) query aggregation → O(1) direct lookup</li><li>Admin Dashboard API Updates</li><li>Top Users query: Replaced hardcoded days_active=1 with meaningful data</li><li>Now returns this_period (current monthly_count) and all_time (total_generations)</li><li>Sorts by all_time (lifetime usage) instead of current period</li><li>Removed 7-day activity filter to show ALL users in current billing period</li><li>Admin Dashboard Frontend Updates</li><li>Card title: Changed from 'Last 7 Days' to 'This Period' for authenticated users</li><li>Table headers: This Period | All Time for authenticated view</li><li>Table cells: Display thisPeriod and allTime with purple accent on All Time</li><li>Recent Activity label: 'Last 50 generations across all documentation types'</li><li>Critical Security Fix: CI Database Cleanup Prevention</li><li>Prevented globalTeardown from running in CI environments (security fix)</li><li>CI should NEVER connect to real databases (uses mocks only)</li><li>Added environment check: Skips cleanup if CI=true or GITHUB_ACTIONS=true</li><li>Prevents accidental data deletion from Neon dev/prod databases during CI runs</li><li>Cleanup still runs locally for manual test data maintenance</li><li>Test Suite Updates</li><li>Migration Test Suite: 13 comprehensive tests covering schema, triggers, backfill, performance, idempotency</li><li>Frontend Test Fixes: 3 tests fixed for examples.js docType changes (java-spring-api, ruby-sinatra-api, python-flask-api)</li><li>Final Results: 2,446 tests (2,392 passed, 54 skipped, 0 failed) - 100% pass rate</li><li>Frontend: 1,516 passed | 33 skipped (1,549 total)</li><li>Backend: 876 passed | 21 skipped (897 total)</li><li>Database: 37 migration tests (13 new for migration 017)</li><li>Coverage: 91.83% backend coverage maintained</li><li>Documentation: Updated CHANGELOG, README, CLAUDE.md, testing docs</li></ul><div class="metric-badge">Performance &amp; Security</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Multi-Provider LLM Architecture</div><div class="phase-version">v2.7.8</div></div><ul class="feature-list"><li>Multi-Provider LLM Support</li><li>Unified LLM service supporting Claude (Anthropic) and OpenAI</li><li>Config-driven provider switching via LLM_PROVIDER environment variable</li><li>Simplified architecture using switch-based routing (~650 lines)</li><li>No code changes required to switch providers - just update .env and restart</li><li>Provider Adapters</li><li>Claude provider adapter (server/src/services/llm/providers/claude.js)</li><li>OpenAI provider adapter (server/src/services/llm/providers/openai.js)</li><li>Shared utilities: retry with exponential backoff, error standardization, token estimation</li><li>Consistent interface across all providers (generate, streaming, metadata)</li><li>Configuration System</li><li>Centralized LLM config (server/src/config/llm.config.js)</li><li>Provider-specific settings (API keys, models, capabilities)</li><li>Generic overrides via LLM_API_KEY and LLM_MODEL</li><li>Priority fallback: provider-specific → generic → defaults</li><li>Provider Capabilities</li><li>Claude: Sonnet 4.5 (default), 200K context, prompt caching (90% savings), streaming</li><li>OpenAI: GPT-4 Turbo, 128K context, streaming (no prompt caching)</li><li>Temperature/TopP handling: Claude API constraint (can't use both)</li><li>API Response Enhancements</li><li>Added provider metadata to all responses (provider, model, tokens, latency)</li><li>Token tracking: inputTokens, outputTokens, cacheReadTokens, cacheWriteTokens</li><li>Cache status: wasCached boolean for prompt caching visibility</li><li>Latency monitoring: latencyMs for performance tracking</li><li>Documentation Updates</li><li>Updated README.md: Added LLM Provider Configuration section with examples</li><li>Updated CLAUDE.md: Added multi-provider capabilities comparison table</li><li>Updated ARCHITECTURE.md: Updated service layer, diagrams, and tech stack</li><li>Created comprehensive architecture documentation (4 new docs)</li><li>Updated .env.example: Added Claude/OpenAI configuration with all options</li><li>Test Compatibility</li><li>All 860+ existing tests pass with zero changes required</li><li>Backward compatible: Existing code works without modifications</li><li>ES module compliance: All new code uses import/export syntax</li><li>Implementation Details: MULTI-PROVIDER-SIMPLIFIED-ARCHITECTURE.md</li></ul><div class="metric-badge">Architecture</div></div></div>
+          <div class="column-body"><div class="phase-card"><div class="phase-header"><div class="phase-title">Web Application (MVP)</div><div class="phase-version">v1.0.0</div></div><ul class="feature-list"><li>4 documentation types (README, JSDoc, API, ARCHITECTURE)</li><li>Monaco Editor with syntax highlighting (24+ languages)</li><li>Real-time streaming with SSE</li><li>Quality scoring system (0-100 scale, 5 criteria)</li><li>File upload &amp; drag-and-drop</li><li>Copy-to-clipboard &amp; download</li><li>Responsive design (mobile, tablet, desktop)</li><li>Mermaid diagram support</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">WCAG AA Compliance</div><div class="phase-version">v1.2.0</div></div><ul class="feature-list"><li>WCAG 2.1 AA compliance</li><li>Full keyboard navigation</li><li>Screen reader compatibility (NVDA, VoiceOver)</li><li>High contrast colors (18.2:1 ratio)</li><li>Focus indicators in modals</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Performance &amp; Infrastructure</div><div class="phase-version">v1.2.0</div></div><ul class="feature-list"><li>Production deployment with custom domain</li><li>Fast page load times with optimized bundle size</li><li>Lazy loading for better performance</li><li>Cross-browser compatibility (Chrome, Firefox, Safari, Edge)</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Security &amp; Quality</div><div class="phase-version">v1.2.0</div></div><ul class="feature-list"><li>Secure API key handling</li><li>Rate limiting to prevent abuse</li><li>Input validation and sanitization</li><li>File upload security checks</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">UX Refinements</div><div class="phase-version">v1.2.1</div></div><ul class="feature-list"><li>Improved panel layout consistency</li><li>Refined download button behavior</li><li>Enhanced modal focus management</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Mobile Enhancements</div><div class="phase-version">v1.2.2</div></div><ul class="feature-list"><li>Improved mobile clipboard support</li><li>Enhanced mobile accessibility</li><li>Better mobile file upload experience</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Authentication &amp; Database (Epic 2.1)</div><div class="phase-version">v2.0.0</div></div><ul class="feature-list"><li>Email/password login and signup</li><li>GitHub OAuth integration for one-click signup</li><li>Complete password reset flow with email verification</li><li>Account linking (OAuth users can add password)</li><li>Password visibility toggles</li></ul><div class="metric-badge">Phase 2 Started</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Tier System &amp; Usage Limits (Epic 2.2)</div><div class="phase-version">v2.1.0-v2.2.0</div></div><ul class="feature-list"><li>3-tier subscription system: Free (10 docs/month), Starter (50 docs), Pro (200 docs)</li><li>Usage warning banner at 80% of monthly limit</li><li>Usage limit modal to prevent over-usage</li><li>Daily and monthly usage tracking</li><li>All 4 documentation types available in Free tier</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">UX Enhancements &amp; File Upload (Epic 2.3)</div><div class="phase-version">v2.3.0</div></div><ul class="feature-list"><li>Drag-and-drop file upload with visual overlay</li><li>Clear button to reset code editor</li><li>Dynamic filename display in editor header</li><li>Mobile menu logout button</li><li>Wider page layout for better space utilization</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Payment Integration (Epic 2.4)</div><div class="phase-version">v2.4.0</div></div><ul class="feature-list"><li>Stripe integration for subscription payments</li><li>Upgrade/downgrade flows with prorated billing</li><li>Pricing page with 4 tiers and monthly/annual toggle</li><li>Stripe Customer Portal for managing subscriptions</li><li>Automated subscription lifecycle management</li></ul><div class="metric-badge">Test Mode</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Email Rate Limiting &amp; UI Polish</div><div class="phase-version">v2.4.1</div></div><ul class="feature-list"><li>Email rate limiting to prevent abuse</li><li>Redesigned unverified email banner</li><li>Improved modal layouts and alignment</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Subscription Safety &amp; Cost Optimization</div><div class="phase-version">v2.4.2</div></div><ul class="feature-list"><li>Test vs production subscription detection</li><li>AI prompt caching for faster responses and lower costs</li><li>Automatic cache refresh for consistent performance</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Payment &amp; Verification Fixes</div><div class="phase-version">v2.4.3</div></div><ul class="feature-list"><li>Fixed payment checkout flow in production</li><li>Email verification banner now disappears immediately after verification</li><li>Improved user state refresh after email verification</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Contact Sales &amp; Email Fixes</div><div class="phase-version">v2.4.4</div></div><ul class="feature-list"><li>Contact Sales modal for Enterprise and Team inquiries</li><li>Smart name collection (only asks if not already provided)</li><li>Fixed critical email verification token bug</li><li>Manage Subscription button on payment success page</li><li>Improved subscription flow with tier-aware routing</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Refined Light Theme</div><div class="phase-version">v2.4.5</div></div><ul class="feature-list"><li>Custom Monaco Editor color theme with purple, green, and cyan accents</li><li>Matching syntax highlighting in documentation panel</li><li>Enhanced Mermaid diagram borders for better visibility</li><li>Improved pricing page layout on large displays</li><li>Cleaner code block rendering</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Help Modal &amp; Billing UX</div><div class="phase-version">v2.4.6</div></div><ul class="feature-list"><li>Tabbed Help Modal (Quick Start, Quality Scores, FAQs)</li><li>FAQ accordion with smooth animations</li><li>Billing period selection persists across page refreshes</li><li>Character limit and counter for Contact Sales form</li><li>Improved mobile navigation layout</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Legal Compliance - Phase 1-2</div><div class="phase-version">v2.5.0</div></div><ul class="feature-list"><li>Terms of Service and Privacy Policy pages</li><li>Footer with legal links on all pages</li><li>Terms acceptance modal with version tracking</li><li>Contact Support modal for inquiries</li><li>Smart acceptance flow (OAuth users bypass, email signup requires acceptance)</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Settings Page &amp; Privacy Controls</div><div class="phase-version">v2.5.1</div></div><ul class="feature-list"><li>Settings page with 4 tabs (Account, Privacy, Subscription, Danger Zone)</li><li>Email and password change functionality</li><li>Analytics opt-out toggle for privacy control</li><li>Subscription usage stats and billing information</li><li>Account deletion with confirmation modal</li><li>Attribution footer on all generated documentation</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">User Data Rights &amp; Restoration</div><div class="phase-version">v2.5.2</div></div><ul class="feature-list"><li>30-day account deletion grace period</li><li>Automatic account restoration on re-signup</li><li>Email notifications for deletion and restoration</li><li>GDPR/CCPA compliant data handling</li><li>7-year financial record retention</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Email System Overhaul</div><div class="phase-version">v2.5.3</div></div><ul class="feature-list"><li>7 branded email templates for all user communications</li><li>Support request attachments (up to 5 files, 10MB each)</li><li>6 subject categories for support inquiries</li><li>Tier-based email priority and SLA response times</li><li>Enhanced Contact Support modal with file upload</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Usage Dashboard &amp; Profile</div><div class="phase-version">v2.6.0</div></div><ul class="feature-list"><li>Modern usage dashboard with daily and monthly tracking</li><li>Color-coded status indicators (green, yellow, orange, red)</li><li>Animated progress bars with percentages</li><li>Reset countdowns showing time until limit refresh</li><li>User profile dropdown with tier badge</li><li>Contextual upgrade prompts when approaching limits</li><li>Quick action cards for common tasks</li></ul><div class="metric-badge">Phase 2 Complete</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Dark Mode Complete</div><div class="phase-version">v2.7.0</div></div><ul class="feature-list"><li>Full dark mode across all pages and components</li><li>System preference detection and auto-sync</li><li>Theme persistence between sessions</li><li>Custom dark Monaco Editor theme (Neon Cyberpunk)</li><li>Dark Mermaid diagrams with enhanced borders</li><li>Smooth theme transitions</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Error Handling Improvements</div><div class="phase-version">v2.7.1</div></div><ul class="feature-list"><li>ErrorBoundary dark mode support</li><li>Horizontal scrolling for long error messages</li><li>Wider error modal for better readability</li><li>Fixed admin dashboard error display</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Appearance Settings &amp; Mobile UX</div><div class="phase-version">v2.7.2</div></div><ul class="feature-list"><li>Appearance settings tab with Light/Dark/Auto theme options</li><li>Auto theme mode follows system preferences</li><li>Responsive mobile code editor that adapts to screen size</li><li>Improved mobile error logging</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">UX Polish &amp; Terminology</div><div class="phase-version">v2.7.3</div></div><ul class="feature-list"><li>Fixed toast notifications to only show on actual completion</li><li>Changed 'Download' to 'Export' for clarity</li><li>Renamed 'Examples' to 'Samples' for accuracy</li><li>User display shows first name only</li><li>Improved dark mode skeleton visibility</li><li>Better content alignment between panels</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Samples Modal Optimization</div><div class="phase-version">v2.7.4</div></div><ul class="feature-list"><li>Wider Samples modal for better code preview</li><li>Improved keyboard navigation in modal</li><li>Better focus management</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Visual Consistency &amp; UX Polish</div><div class="phase-version">v2.7.5</div></div><ul class="feature-list"><li>Consistent toast notification borders</li><li>Improved back button layout and spacing across pages</li><li>Enhanced Contact Sales messaging for enterprise tiers</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Quality Breakdown Modal Enhancements</div><div class="phase-version">v2.7.6</div></div><ul class="feature-list"><li>Dual-tab quality breakdown showing before and after analysis</li><li>Input Code Health tab analyzes original code quality (comments, naming, structure, existing docs)</li><li>Generated Documentation tab shows AI-enhanced documentation quality</li><li>Side-by-side score comparison with improvement indicator</li><li>Enhanced download includes comprehensive quality report in markdown format</li><li>8 new code samples (C#, Java Spring Boot, Ruby Sinatra, and more)</li></ul><div class="metric-badge">Feature Enhancement</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Admin Dashboard Performance Optimization</div><div class="phase-version">v2.7.7</div></div><ul class="feature-list"><li>Admin dashboard shows 'This Period' and 'All Time' usage statistics</li><li>Significantly faster dashboard loading with optimized database queries</li><li>Top users sorted by lifetime usage for better insights</li><li>Recent activity displays last 50 generations across all doc types</li></ul><div class="metric-badge">Performance</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Multi-Provider LLM Architecture</div><div class="phase-version">v2.7.8</div></div><ul class="feature-list"><li>Support for multiple AI providers (Claude and OpenAI)</li><li>Easy provider switching via configuration (no code changes needed)</li><li>Claude Sonnet 4.5 as default provider with 200K context window</li><li>OpenAI GPT-4 Turbo as alternative provider with 128K context</li><li>Automatic prompt caching for cost optimization (90% savings with Claude)</li><li>Provider metadata in responses (model used, token counts, latency)</li></ul><div class="metric-badge">Architecture</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Epic 4.1: GitHub Repository Integration</div><div class="phase-version">v2.7.9</div></div><ul class="feature-list"><li>Import code from GitHub repositories via URL</li><li>Tree-based file browser with folder expansion/collapse</li><li>Branch switching dropdown to explore different branches</li><li>File preview with syntax highlighting</li><li>Support for public repositories (no GitHub account required)</li><li>Auto-scroll to selected files for easy navigation</li><li>Mobile-responsive design with proper scrolling</li></ul><div class="metric-badge">Developer Adoption</div></div></div>
         </div>
 
         <!-- NOW Column -->
@@ -1762,7 +1791,7 @@ Press D to toggle dark mode"></div>
             <div class="column-title">Active</div>
             <div class="column-timeline">Phase 3: UX Enhancements &amp; Developer Tools</div>
           </div>
-          <div class="column-body"><div class="phase-card"><div class="phase-header"><div class="phase-title">Advanced File Handling</div><div class="phase-version">Epic 3.3</div></div><ul class="feature-list"><li>Multi-file upload support (select multiple files at once)</li><li>Batch processing (up to 10 files)</li><li>File preview before generation</li><li>File history and version tracking (30 days)</li><li>Progress indicators for batch operations</li><li>Error handling per file (don't fail entire batch)</li><li>Note: Basic drag-and-drop implemented in Phase 2 Epic 2.4</li><li>Required before Epic 4.1 and Epic 4.2</li></ul><div class="metric-badge">Infrastructure First</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">GitHub Integration</div><div class="phase-version">Epic 4.1</div></div><ul class="feature-list"><li>GitHub OAuth app for repository access</li><li>Repository browser (list user's repos, search)</li><li>Branch and path selection</li><li>File tree navigation</li><li>Import files directly from GitHub (single file or multiple)</li><li>Support for private repositories</li><li>Repository URL input (paste repo link)</li><li>Rate limiting and API quota management</li><li>Required before Epic 4.2 (primary source for multi-file docs)</li></ul><div class="metric-badge">Developer Adoption</div></div></div>
+          <div class="column-body"><div class="phase-card"><div class="phase-header"><div class="phase-title">Advanced File Handling</div><div class="phase-version">Epic 3.3</div></div><ul class="feature-list"><li>Multi-file upload support (select multiple files at once)</li><li>Batch processing (up to 10 files)</li><li>File preview before generation</li><li>File history and version tracking (30 days)</li><li>Progress indicators for batch operations</li><li>Error handling per file (don't fail entire batch)</li><li>Note: Basic drag-and-drop implemented in Phase 2 Epic 2.4</li><li>Note: Epic 4.1 (GitHub integration) completed first - provides single-file import from GitHub</li><li>Required before Epic 4.2</li></ul><div class="metric-badge">Infrastructure First</div></div></div>
         </div>
 
         <!-- NEXT Column -->
@@ -1790,7 +1819,7 @@ Press D to toggle dark mode"></div>
     <footer>
       <div class="footer-content">
         <div class="footer-left"><strong>CodeScribe AI</strong> · Strategic Roadmap v3.12</div>
-        <div class="footer-center">Phase 1 Complete · Phase 2 Complete · Phase 3 Epic 3.1 Complete (Dark Mode) · Launch: Mid-Jan 2026</div>
+        <div class="footer-center">Phase 1 Complete · Phase 2 Complete · Phase 3 Epic 3.1 Complete (Dark Mode) · Epic 4.1 Complete (GitHub Integration) · Launch: Mid-Jan 2026</div>
         <div class="footer-right">Last Updated: November 14, 2025</div>
       </div>
     </footer>
@@ -1870,7 +1899,7 @@ Press D to toggle dark mode"></div>
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
     "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.12",
-    "footer": "Phase 1 Complete · Phase 2 Complete · Phase 3 Epic 3.1 Complete (Dark Mode) · Launch: Mid-Jan 2026",
+    "footer": "Phase 1 Complete · Phase 2 Complete · Phase 3 Epic 3.1 Complete (Dark Mode) · Epic 4.1 Complete (GitHub Integration) · Launch: Mid-Jan 2026",
     "lastUpdated": "November 14, 2025"
   },
   "columns": [
@@ -1893,8 +1922,6 @@ Press D to toggle dark mode"></div>
             "File upload & drag-and-drop",
             "Copy-to-clipboard & download",
             "Responsive design (mobile, tablet, desktop)",
-            "660+ tests (100% passing)",
-            "95.81% backend code coverage",
             "Mermaid diagram support"
           ]
         },
@@ -1903,16 +1930,12 @@ Press D to toggle dark mode"></div>
           "title": "WCAG AA Compliance",
           "duration": "2 days",
           "status": "✓ Complete",
-          "badge": "660+ Tests · 100% Passing",
           "features": [
-            "WCAG 2.1 AA compliance (95/100 score)",
-            "Lighthouse accessibility: 100/100",
-            "0 automated accessibility violations",
+            "WCAG 2.1 AA compliance",
             "Full keyboard navigation",
             "Screen reader compatibility (NVDA, VoiceOver)",
-            "AAA color contrast (18.2:1 ratio)",
-            "Focus traps in modals",
-            "Skip navigation link"
+            "High contrast colors (18.2:1 ratio)",
+            "Focus indicators in modals"
           ]
         },
         {
@@ -1921,14 +1944,10 @@ Press D to toggle dark mode"></div>
           "duration": "3 days",
           "status": "✓ Complete",
           "features": [
-            "Vercel deployment with custom domain",
-            "GitHub Actions CI/CD pipeline",
-            "Test-gated deployments",
-            "Bundle optimization (78KB gzipped)",
-            "Lazy loading (Monaco, Mermaid, DocPanel)",
-            "Lighthouse performance: 75/100 (+67%)",
-            "95.81% backend code coverage",
-            "Cross-browser testing (Chrome, Firefox, Safari, Edge)"
+            "Production deployment with custom domain",
+            "Fast page load times with optimized bundle size",
+            "Lazy loading for better performance",
+            "Cross-browser compatibility (Chrome, Firefox, Safari, Edge)"
           ]
         },
         {
@@ -1937,45 +1956,32 @@ Press D to toggle dark mode"></div>
           "duration": "2 days",
           "status": "✓ Complete",
           "features": [
-            "Environment variable sanitization",
-            "API key protection (server-side only)",
-            "Rate limiting (10/min, 100/hour per IP)",
+            "Secure API key handling",
+            "Rate limiting to prevent abuse",
             "Input validation and sanitization",
-            "File upload security checks",
-            "HSTS headers for security",
-            "CORS configuration",
-            "Comprehensive error handling"
+            "File upload security checks"
           ]
         },
         {
           "version": "v1.2.1",
-          "title": "Bug Fixes",
+          "title": "UX Refinements",
           "duration": "0.5 days",
           "status": "✓ Complete",
           "features": [
-            "DocPanel footer alignment (pixel-perfect match with CodePanel)",
-            "Download button UX fix (removed checkmark animation)",
-            "Sign-in button hidden (ENABLE_AUTH feature flag)",
-            "Examples modal preview persistence and focus alignment",
-            "Visual regression testing (Chrome, Firefox, Safari)",
-            "Mobile testing (iOS, Android)",
-            "Cross-browser compatibility verification"
+            "Improved panel layout consistency",
+            "Refined download button behavior",
+            "Enhanced modal focus management"
           ]
         },
         {
           "version": "v1.2.2",
-          "title": "Maintenance Release",
+          "title": "Mobile Enhancements",
           "duration": "1 day",
           "status": "✓ Complete",
           "features": [
-            "Mobile clipboard fallback (non-secure contexts)",
-            "Download button UX simplification (removed checkmark)",
-            "Enhanced mobile accessibility (focus indicators)",
-            "Test coverage for edge cases (58 error handling tests)",
-            "Cross-browser test plan with mobile file upload docs",
-            "GitHub import feature flag (hidden until v2.0)",
-            "16 files updated, 260+ net lines added",
-            "All 660+ tests passing (46 ControlBar tests + 6 skipped)"
+            "Improved mobile clipboard support",
+            "Enhanced mobile accessibility",
+            "Better mobile file upload experience"
           ]
         },
         {
@@ -1985,39 +1991,25 @@ Press D to toggle dark mode"></div>
           "status": "✓ Complete",
           "badge": "Phase 2 Started",
           "features": [
-            "Passport.js authentication (local, GitHub OAuth, JWT)",
-            "Email/password login with bcrypt hashing",
+            "Email/password login and signup",
+            "GitHub OAuth integration for one-click signup",
             "Complete password reset flow with email verification",
-            "Neon Postgres database via Vercel Marketplace",
-            "User schema with auth fields (reset tokens, GitHub ID, tier)",
-            "Resend email service with branded templates",
             "Account linking (OAuth users can add password)",
-            "Password visibility toggles (eye/eyeOff icons)",
-            "100 tests fixed/added (1,347 total, 97.5% pass rate)",
-            "Backend coverage: ALL CI thresholds met (86.84% models, 65.41% routes)",
-            "GitHub Actions CI passing",
-            "Production deployment (October 26, 2025)"
+            "Password visibility toggles"
           ]
         },
         {
           "version": "v2.1.0-v2.2.0",
-          "title": "Tier System & Feature Flags (Epic 2.2)",
+          "title": "Tier System & Usage Limits (Epic 2.2)",
           "duration": "3 days",
           "status": "✓ Complete",
           "completedDate": "Oct 27-29, 2025",
           "features": [
-            "Backend: Protect /api/generate and /api/generate-stream with requireAuth",
-            "Backend: Usage schema (user_id, daily_count, monthly_count, daily_reset, monthly_reset)",
-            "Backend: Usage tracking with incrementUsage() after each generation",
-            "Backend: Daily/monthly reset logic with lazy reset (serverless-friendly)",
-            "Frontend: Include JWT bearer token in API requests (Authorization: Bearer <token>)",
-            "Frontend: Usage warning banner (80% threshold with dynamic multipliers)",
-            "Frontend: Usage limit modal (100% threshold - blocks further usage)",
-            "Frontend: useUsageTracking hook for fetching usage data",
-            "Frontend: Error handling priority system (Usage Limit > API > Network > Validation)",
-            "3-tier system: Free (10 docs), Starter (50 docs $12), Pro (200 docs $29)",
-            "Open Core model: All 4 doc types in Free tier (adoption engine)",
-            "Deferred to Epic 2.5: Usage dashboard UI with progress bars and charts"
+            "3-tier subscription system: Free (10 docs/month), Starter (50 docs), Pro (200 docs)",
+            "Usage warning banner at 80% of monthly limit",
+            "Usage limit modal to prevent over-usage",
+            "Daily and monthly usage tracking",
+            "All 4 documentation types available in Free tier"
           ]
         },
         {
@@ -2027,678 +2019,288 @@ Press D to toggle dark mode"></div>
           "status": "✓ Complete",
           "completedDate": "Oct 29, 2025",
           "features": [
-            "Drag-and-drop file upload with visual purple overlay",
-            "Clear button for code editor (reset code/filename/language)",
-            "Dynamic filename display in Monaco editor header",
-            "Mobile menu logout button for authenticated users",
-            "Upgrade to Claude Sonnet 4.5 (claude-sonnet-4-5-20250929)",
-            "Page width expansion for better space utilization",
-            "15 new tests (drag-drop, clear button, logout)"
+            "Drag-and-drop file upload with visual overlay",
+            "Clear button to reset code editor",
+            "Dynamic filename display in editor header",
+            "Mobile menu logout button",
+            "Wider page layout for better space utilization"
           ]
         },
         {
           "version": "v2.4.0",
-          "title": "Payment Integration & Test Infrastructure (Epic 2.4)",
+          "title": "Payment Integration (Epic 2.4)",
           "duration": "3 days",
           "status": "✓ Complete",
           "completedDate": "Oct 31, 2025",
           "badge": "Test Mode",
           "features": [
-            "Stripe SDK integration with test mode",
-            "Subscription management (create, update, cancel via webhooks)",
-            "Upgrade/downgrade flows with hybrid proration (documented in SUBSCRIPTION-MANAGEMENT.md)",
-            "Webhook handling (6 events: checkout completed, subscription created/updated/deleted, invoice paid/failed)",
-            "Pricing page UI (4 tiers with monthly/annual toggle)",
-            "Stripe Customer Portal integration for account management",
-            "Test mode validation with Stripe CLI - all flows working",
-            "Database schema: subscriptions table, stripe_customer_id column, name fields (Migration 008)",
-            "Subscription model with 9 methods (create, findByUserId, update, cancel, etc.)",
-            "Bidirectional name sync between app and Stripe",
-            "Customer origin tracking (app, stripe_dashboard, api, migration)",
-            "41 backend tests fixed (email verification, name sync, origin tracking, webhooks)",
-            "15 frontend tests fixed (file upload with MemoryRouter)",
-            "Pricing page added to mobile menu",
-            "Interactive roadmap enhancements (D hotkey for dark mode)",
-            "1,662 tests (1,625 passing, 36 skipped, 1 failing) - 97.8% pass rate",
-            "Note: Custom receipts deferred to Epic 2.7 (production launch)"
+            "Stripe integration for subscription payments",
+            "Upgrade/downgrade flows with prorated billing",
+            "Pricing page with 4 tiers and monthly/annual toggle",
+            "Stripe Customer Portal for managing subscriptions",
+            "Automated subscription lifecycle management"
           ]
         },
         {
           "version": "v2.4.1",
-          "title": "Email Rate Limiting & UI Improvements",
+          "title": "Email Rate Limiting & UI Polish",
           "duration": "1 day",
           "status": "✓ Complete",
           "completedDate": "Oct 31, 2025",
-          "badge": "Production Fix",
           "features": [
-            "Email rate limiting system (5-min cooldown, 10/day verification, 3/hour + 10/day password resets)",
-            "Email service mocking for dev/test (MOCK_EMAILS env var, prevents quota waste)",
-            "Enhanced production logging (detailed email logs with URLs, IDs, timestamps)",
-            "UnverifiedEmailBanner redesign (brand gradient, compact layout, indigo button)",
-            "ConfirmationModal alignment fix (title/close button)",
-            "95 tests fixed (27 emailService, 28 auth-password-reset, 27 email-verification, 13 integration)",
-            "1,662 tests (1,626 passing, 36 skipped, 0 failures) - 97.8% pass rate",
-            "EMAIL-RATE-LIMITING.md documentation",
-            "Removed npm run migrate from vercel.json"
+            "Email rate limiting to prevent abuse",
+            "Redesigned unverified email banner",
+            "Improved modal layouts and alignment"
           ]
         },
         {
           "version": "v2.4.2",
-          "title": "Livemode Detection & Prompt Caching",
+          "title": "Subscription Safety & Cost Optimization",
           "duration": "1 day",
           "status": "✓ Complete",
           "completedDate": "Oct 31, 2025",
-          "badge": "Cost Optimization",
           "features": [
-            "Migration 009: livemode column to subscriptions table (test vs production detection)",
-            "Prevent tier upgrades from Stripe test mode subscriptions (only livemode=true upgrades tiers)",
-            "1-hour prompt caching with auto-refresh (extended from 5 minutes)",
-            "Expected savings: $100-400/month in production (90% cost reduction on cached prompts)",
-            "Quasi-indefinite caching with steady traffic (1+ user/hour keeps cache warm)",
-            "64 frontend tests fixed (AuthProvider wrapper for VerifyEmail and UnverifiedEmailBanner)",
-            "2 backend tests fixed (livemode flag in webhook mocks)",
-            "Coverage thresholds updated for livemode changes (unified 90% for services)",
-            "1,657 tests (1,657 passing, 39 skipped) - 97.7% pass rate",
-            "Enhanced documentation (SUBSCRIPTION-FLOWS.md, SUBSCRIPTION-MANAGEMENT.md, PROMPT-CACHING-GUIDE.md)"
+            "Test vs production subscription detection",
+            "AI prompt caching for faster responses and lower costs",
+            "Automatic cache refresh for consistent performance"
           ]
         },
         {
           "version": "v2.4.3",
-          "title": "Payment Routes & Email Verification Fixes",
+          "title": "Payment & Verification Fixes",
           "duration": "1 day",
           "status": "✓ Complete",
           "completedDate": "Nov 1, 2025",
-          "badge": "Production Fix",
           "features": [
-            "Added payment and webhook routes to api/index.js (Vercel serverless function)",
-            "Fixed 404 errors on /api/payments/create-checkout-session in production",
-            "Added refreshUser() method to AuthContext to update user state after verification",
-            "Fixed banner persistence issue (banner now disappears immediately after verification)",
-            "Fixed UnverifiedEmailBanner, VerificationRequiredModal, VerifyEmail to use centralized API_URL config",
-            "Eliminated 'undefined' API URLs in production (/undefined/api/...)",
-            "Updated DEPLOYMENT-CHECKLIST.md with 30+ missing environment variables",
-            "Added comprehensive Stripe environment variable documentation (12 variables)",
-            "Moved prompt-caching-manual.js from server/tests/ to server/scripts/",
-            "1,662 tests (1,626 passing, 36 skipped, 0 failing) - 97.8% pass rate"
+            "Fixed payment checkout flow in production",
+            "Email verification banner now disappears immediately after verification",
+            "Improved user state refresh after email verification"
           ]
         },
         {
           "version": "v2.4.4",
-          "title": "Contact Sales Feature & Critical Email Bug Fixes",
+          "title": "Contact Sales & Email Fixes",
           "duration": "1 day",
           "status": "✓ Complete",
           "completedDate": "Nov 2, 2025",
-          "badge": "Critical Fix + Feature",
           "features": [
-            "Contact Sales Feature: Server-side email via Resend for Enterprise/Team tiers",
-            "ContactSalesModal component with loading/success/error states",
-            "Smart name collection: optional first/last name fields (shown only if user lacks name)",
-            "Progressive data collection strategy (name collected at point of contact, not signup)",
-            "Backend name resolution priority: database → form input → empty fallback",
-            "POST /api/contact/sales endpoint (requires authentication)",
-            "Email forwarding setup for sales@codescribeai.com via Namecheap",
-            "EMAIL-FORWARDING-SETUP.md documentation (263 lines)",
-            "CRITICAL: Fixed email verification token timezone bug (tokens expiring in 4 hours instead of 24)",
-            "Added .toISOString() to User.js:378 for proper PostgreSQL timezone handling",
-            "Fixed Contact Sales modal not auto-opening after authentication",
-            "Fixed VerifyEmail and AuthCallback tier-aware routing (prevents Stripe checkout for enterprise/team)",
-            "Complete subscription flow documented with visual Mermaid diagram in SUBSCRIPTION-FLOWS.md",
-            "Payment UX: Removed forced 5-second auto-redirect on PaymentSuccess",
-            "Added 'Manage Subscription' button (opens Stripe billing portal)",
-            "ContactSalesModal UX: Removed auto-close, added explicit Close button",
-            "CLAUDE.md: Added Modal & Email Confirmation UX guidelines",
-            "Roadmap: Added Calendly integration and Gmail 'Send As' to backlog",
-            "Complete test coverage: ContactSalesModal (25 tests), PricingPage (6 new), contact.test.js (backend), VerifyEmail (8 new)",
-            "1,734 tests (1,695 passing, 39 skipped, 0 failing) - 97.8% pass rate"
+            "Contact Sales modal for Enterprise and Team inquiries",
+            "Smart name collection (only asks if not already provided)",
+            "Fixed critical email verification token bug",
+            "Manage Subscription button on payment success page",
+            "Improved subscription flow with tier-aware routing"
           ]
         },
         {
           "version": "v2.4.5",
-          "title": "Refined Light Theme v2.0 & UX Improvements",
+          "title": "Refined Light Theme",
           "duration": "1 day",
           "status": "✓ Complete",
           "completedDate": "Nov 2, 2025",
-          "badge": "Visual Polish",
           "features": [
-            "Refined Light Theme v2.0: Custom Monaco Editor theme (purple keywords, green strings, cyan numbers, slate text)",
-            "Custom Prism syntax highlighting in DocPanel matching Monaco theme",
-            "Uniform code block backgrounds (slate-50) with proper borders",
-            "Disabled bracket pair colorization for cleaner appearance",
-            "Enhanced font rendering (antialiasing, optimizeLegibility)",
-            "Removed global Tailwind code styles causing unwanted backgrounds",
-            "All token types explicitly set to background: 'none' for clean rendering",
-            "Mermaid Diagram Enhancements: Darkened borders (purple-600, slate-400) for better definition",
-            "Pricing Page Large Display: Constrained card width, better gap spacing, subtle purple shadows",
-            "Refined scaling (lg:scale-[1.02]) and enhanced button shadows",
-            "Fixed Contact Sales modal intent cleanup (prevents unwanted auto-open)",
-            "Fixed code block background highlighting",
-            "Fixed Monaco editor background artifacts",
-            "USER-ROLES-SYSTEM.md planning document (309 lines)",
-            "1,786 tests (1,747 passing, 39 skipped) - 97.82% pass rate"
+            "Custom Monaco Editor color theme with purple, green, and cyan accents",
+            "Matching syntax highlighting in documentation panel",
+            "Enhanced Mermaid diagram borders for better visibility",
+            "Improved pricing page layout on large displays",
+            "Cleaner code block rendering"
           ]
         },
         {
           "version": "v2.4.6",
-          "title": "Billing Period Persistence & Help Modal UX",
+          "title": "Help Modal & Billing UX",
           "duration": "1 day",
           "status": "✓ Complete",
           "completedDate": "Nov 2, 2025",
-          "badge": "UX Improvements",
           "features": [
-            "Help Modal Tabbed Interface: 3-tab organization (Quick Start, Quality Scores, FAQs)",
-            "FAQ accordion UI with smooth animations and improved content discoverability",
-            "Refined light theme consistency for HelpModal (white backgrounds, slate borders)",
-            "Billing Period Persistence: Monthly/annual selection persists via sessionStorage",
-            "Seamless user experience across page refreshes with subscription intent storage",
-            "Help Button UX Improvements: Desktop text 'Help' button, mobile only in hamburger menu",
-            "Cleaner mobile navigation (removed redundant header icon)",
-            "Contact Sales Character Limit: 750 chars with live counter and validation",
-            "Stripe API Alignment: Updated 'yearly' to 'annual' for backend consistency",
-            "Fixed 4 PricingPage test failures (billing period terminology)",
-            "Viewport Optimization: Increased modal max-height by 60px for better content visibility",
-            "STORAGE-CONVENTIONS.md: sessionStorage patterns documentation",
-            "Complete test coverage: 9 files updated with test fixes",
-            "1,785 tests (1,746 passing, 39 skipped, 0 failing) - 97.82% pass rate"
+            "Tabbed Help Modal (Quick Start, Quality Scores, FAQs)",
+            "FAQ accordion with smooth animations",
+            "Billing period selection persists across page refreshes",
+            "Character limit and counter for Contact Sales form",
+            "Improved mobile navigation layout"
           ]
         },
         {
           "version": "v2.5.0",
-          "title": "Epic 2.5: Legal Compliance - Phase 1-2",
+          "title": "Legal Compliance - Phase 1-2",
           "duration": "2 days",
           "status": "✓ Complete",
           "completedDate": "Nov 3, 2025",
-          "badge": "Phase 1-2 Complete",
           "features": [
-            "Terms of Service page (TermsOfService.jsx with /terms route)",
-            "Privacy Policy page (PrivacyPolicy.jsx with /privacy route)",
-            "Footer component with Terms/Privacy links (appears on all pages)",
-            "TermsAcceptanceModal with smart acceptance detection",
-            "Version-based re-acceptance system (tracks terms_version_accepted, privacy_version_accepted)",
-            "Contact Support Modal for legal questions and support inquiries",
-            "Backend legal routes (/api/legal/status, /api/legal/accept)",
-            "Database migration 010: terms/privacy acceptance tracking (4 new columns)",
-            "User model methods: acceptTerms(), acceptPrivacy(), getLegalStatus()",
-            "Legal version constants system (server/src/constants/legalVersions.js)",
-            "Email service: sendSupportInquiry() for contact support flow",
-            "Contact routes: POST /api/contact/support with authentication",
-            "Full test coverage: Footer, TermsAcceptanceModal, ContactSupportModal, legal routes",
-            "AuthContext integration: checkLegalStatus(), acceptLegalDocuments()",
-            "Smart acceptance flow: GitHub OAuth users bypass terms, email signup requires acceptance",
-            "Dev Guide updates: Development workflow, Stripe webhook setup",
-            "1,955 tests (1,283 frontend, 672 backend, 97.8% pass rate)",
-            "+134 new tests across 9 new test files",
-            "Documentation updates (CHANGELOG, README, CLAUDE.md, testing docs)"
+            "Terms of Service and Privacy Policy pages",
+            "Footer with legal links on all pages",
+            "Terms acceptance modal with version tracking",
+            "Contact Support modal for inquiries",
+            "Smart acceptance flow (OAuth users bypass, email signup requires acceptance)"
           ]
         },
         {
           "version": "v2.5.1",
-          "title": "Epic 2.5: Legal Compliance - Phase 3",
+          "title": "Settings Page & Privacy Controls",
           "duration": "1 day",
           "status": "✓ Complete",
           "completedDate": "Nov 4, 2025",
-          "badge": "Phase 3 Complete",
           "features": [
-            "Settings Page: 4-tab navigation (Account | Privacy | Subscription | Danger Zone)",
-            "AccountTab: Profile display, email/password change forms with validation",
-            "PrivacyTab: Analytics opt-out toggle (stored in database preferences)",
-            "SubscriptionTab: Usage stats, billing info, Stripe Customer Portal integration",
-            "DangerZoneTab: Account deletion with confirmation modal",
-            "AnalyticsWrapper: Conditional Vercel Analytics loading based on user preference",
-            "Backend API: 5 new endpoints (profile, email, password, preferences)",
-            "Database migration 011: analytics_enabled column + index",
-            "Cache Control: Strict headers on user-specific endpoints (no 304 responses)",
-            "Attribution Footer: CodeScribe AI branding on all generated documentation",
-            "Mobile-responsive layout with proper tab keyboard navigation",
-            "Settings integration tests: 26 new tests",
-            "SETTINGS-UX-PATTERNS.md documentation",
-            "2,015 tests (1,283 frontend, 732 backend, 98.91% pass rate)",
-            "+60 tests (26 settings, 10 migration-011, 24 emailService improvements)",
-            "Documentation updates (CHANGELOG, README, CLAUDE.md, TODO.md, testing docs)"
+            "Settings page with 4 tabs (Account, Privacy, Subscription, Danger Zone)",
+            "Email and password change functionality",
+            "Analytics opt-out toggle for privacy control",
+            "Subscription usage stats and billing information",
+            "Account deletion with confirmation modal",
+            "Attribution footer on all generated documentation"
           ]
         },
         {
           "version": "v2.5.2",
-          "title": "Epic 2.5 Complete: User Data Rights & Restoration",
+          "title": "User Data Rights & Restoration",
           "duration": "2.5 days",
           "status": "✓ Complete",
           "completedDate": "Nov 4, 2025",
-          "badge": "Epic 2.5 Complete",
           "features": [
-            "Permanent Deletion Cron Job: Daily job at 2:00 AM UTC (9 PM EST) for 30-day expired accounts",
-            "Cron Endpoint: POST /api/cron/permanent-deletions with Bearer token auth",
-            "Tombstone Pattern: Preserves user_id/stripe_customer_id, NULLs PII (email, name, password, github_id)",
-            "Automatic Account Restoration: Email/password signup restores scheduled-deletion accounts",
-            "GitHub OAuth Restoration: GitHub sign-in restores scheduled-deletion accounts",
-            "Email Notifications: sendAccountDeletionEmail, sendAccountRestoredEmail via Resend",
-            "Data Retention: 7-year financial record retention, aggregate-then-delete usage analytics",
-            "GDPR/CCPA Compliance: Article 17 (Right to Erasure) + Article 17(3)(b) (Legal Obligation)",
-            "Database Migration 012: soft delete columns (deletion_scheduled_at, deleted_at, deletion_reason)",
-            "Database Migration 013: subscription retention (prevents CASCADE deletion)",
-            "Database Migration 014: usage analytics aggregation table",
-            "Settings ESC Handler: Fixed modal cancel behavior (checks for open modals before navigating)",
-            "Comprehensive Testing: 96+ tests (64 deletion/restoration, 32 cron/migrations)",
-            "2,225 tests (1,370 frontend, 855 backend, 100% pass rate)",
-            "Documentation: USER-DELETION-COMPLIANCE.md (1,500+ lines, industry research)"
+            "30-day account deletion grace period",
+            "Automatic account restoration on re-signup",
+            "Email notifications for deletion and restoration",
+            "GDPR/CCPA compliant data handling",
+            "7-year financial record retention"
           ]
         },
         {
           "version": "v2.5.3",
-          "title": "Email System Overhaul & Test Suite Coverage",
+          "title": "Email System Overhaul",
           "duration": "2 days",
           "status": "✓ Complete",
           "completedDate": "Nov 6, 2025",
-          "badge": "Production Ready",
           "features": [
-            "Email Templating System: 7 branded templates (password reset, verification, support, sales, deletion)",
-            "Support Request Attachments: File upload support (5 files max, 10MB each, 7 allowed types)",
-            "Email Template Architecture: Base template system with consistent branding across all emails",
-            "Enhanced Contact Support: File attachments, 6 subject categories, tier-based priority (1-5)",
-            "Email Priority Filtering: X-Priority headers for inbox sorting (Enterprise=1, Pro=2, Starter=3, Free=5)",
-            "SLA Documentation: Tier-based response times (Enterprise 4hrs, Pro 24hrs, Starter 48hrs, Free 5 days)",
-            "ContactSupportModal Redesign: Attachment UI, drag-and-drop, file validation, loading states",
-            "Email Configuration: Comprehensive .env.example with 24 variables (Resend, Stripe, OAuth)",
-            "Security: SECURITY-GIT-SECRETS.md documentation (143 lines) for API key protection",
-            ".gitignore Updates: Ignore .env backup files (*.env.backup, .env.local.backup)",
-            "Backend: Fixed contact.test.js User model mocking (45/45 tests passing)",
-            "Backend: Added 19 emailService tests for branch coverage (+3.28% to 79.41%)",
-            "Backend: Rate limit tests for password reset and verification emails (4 new tests)",
-            "Backend: Support email attachment tests (3 new tests covering 0, 1, and 3+ files)",
-            "Backend: Utility function tests for emailService (12 tests: mocking, client, caching)",
-            "Backend: All coverage thresholds met (79.41% branches exceeds 79% requirement)",
-            "Frontend: Fixed ContactSalesModal tests (25/25 passing, 11 tests updated)",
-            "Frontend: Fixed ContactSupportModal tests (12/12 passing, 7 tests rewritten)",
-            "Frontend: Updated success messages, loading states, form submissions to match implementation",
-            "Frontend: Fixed unauthenticated vs authenticated user flows",
-            "Documentation: EMAIL-TEMPLATING-GUIDE.md (1,407 lines), EMAIL-PRIORITY-FILTERING.md (668 lines)",
-            "Documentation: COMMUNITY-SUPPORT-STRATEGY.md (457 lines), EMAIL-CONFIGURATION.md (278 lines)",
-            "Test Pattern Documentation: Pattern 11 (ES Modules) in TEST-PATTERNS-GUIDE.md",
-            "CI/CD: GitHub Actions passing for both backend and frontend",
-            "Final Results: 2,209 passing tests (856 backend, 1,353 frontend), 100% pass rate",
-            "Coverage: Backend 79.41% branches, Frontend 44/44 test files passing",
-            "Zero test failures, all thresholds met, production-ready"
+            "7 branded email templates for all user communications",
+            "Support request attachments (up to 5 files, 10MB each)",
+            "6 subject categories for support inquiries",
+            "Tier-based email priority and SLA response times",
+            "Enhanced Contact Support modal with file upload"
           ]
         },
         {
           "version": "v2.6.0",
-          "title": "Epic 2.6: UI Integration & Usage Dashboard",
+          "title": "Usage Dashboard & Profile",
           "duration": "2 days",
           "status": "✓ Complete",
           "completedDate": "Nov 7, 2025",
           "badge": "Phase 2 Complete",
           "features": [
-            "Modern Usage Dashboard Page: Industry best practices from Stripe, Vercel, Linear, and Notion",
-            "Side-by-side daily and monthly usage cards with real-time data",
-            "Smart color-coded status indicators: Green (0-59%) → Yellow (60-79%) → Orange (80-99%) → Red (100%)",
-            "Animated progress bars with percentage labels and ARIA attributes",
-            "Reset countdowns with relative ('in 5 days') and absolute dates",
-            "Contextual upgrade prompts (shown when usage > 60%)",
-            "Quick action cards (Pricing, Settings, Documentation)",
-            "Loading skeletons for better perceived performance",
-            "Unlimited tier support with infinity symbols for enterprise users",
-            "Fully accessible (WCAG 2.1 AA compliant)",
-            "Mobile-responsive layout with card stacking",
-            "Enhanced Header: User profile dropdown with tier badge display",
-            "Tier badge shows paid tier (Starter, Pro, Team, Enterprise) with Sparkles icon",
-            "User info header in dropdown with email and current plan",
-            "Mobile Menu: Usage Dashboard and Settings links for authenticated users",
-            "Routing: Added /usage route in React Router",
-            "Usage Dashboard Test Suite: 28 tests, 100% passing",
-            "Test coverage: Authentication, loading states, tier badges, usage cards, progress bars, accessibility",
-            "UI Improvements: RefreshCw icon added to refresh button, upgrade banner repositioned to top, condensed to single-line layout, tier badge made compact",
-            "Authentication Fix: Added credentials: 'include' to useUsageTracking.js for session cookie transmission",
-            "SQL Period Matching: Changed from range (<=) to exact match (=) for period_start_date",
-            "Migration Fix: Added GREATEST() for last_reset_date in ON CONFLICT to preserve daily counts after anonymous-to-authenticated migration",
-            "Final Results: 2,278 tests (2,237 passing, 41 skipped), 100% pass rate",
-            "Frontend: 1,401 tests (1,381 passing, 20 skipped) - +28 new tests",
-            "Backend: 877 tests (856 passing, 21 skipped)",
-            "Phase 2: Payments Infrastructure now 100% complete"
+            "Modern usage dashboard with daily and monthly tracking",
+            "Color-coded status indicators (green, yellow, orange, red)",
+            "Animated progress bars with percentages",
+            "Reset countdowns showing time until limit refresh",
+            "User profile dropdown with tier badge",
+            "Contextual upgrade prompts when approaching limits",
+            "Quick action cards for common tasks"
           ]
         },
         {
           "version": "v2.7.0",
-          "title": "Epic 3.1: Dark Mode Complete",
+          "title": "Dark Mode Complete",
           "duration": "2 days",
           "status": "✓ Complete",
           "completedDate": "Nov 8, 2025",
-          "badge": "100% CI Pass Rate",
           "features": [
-            "Theme System: ThemeContext with React Context API for global theme state",
-            "ThemeToggle component with smooth Sun/Moon icon transitions",
-            "Theme persistence via localStorage (codescribeai:settings:theme)",
-            "System preference detection via window.matchMedia('(prefers-color-scheme: dark)')",
-            "Auto-sync with system theme changes when no manual preference set",
-            "Defensive error handling for browser APIs (localStorage, matchMedia)",
-            "Dark Mode Styling: Comprehensive Tailwind dark: variants across all components",
-            "Custom Monaco Editor dark theme (Neon Cyberpunk): purple keywords, green strings, cyan numbers",
-            "Custom Prism syntax highlighting matching Monaco theme",
-            "Mermaid diagram dark theme with enhanced borders and hierarchy",
-            "Gradient backgrounds with opacity adjustments for dark mode",
-            "Consistent color system: slate backgrounds, purple accents, semantic colors",
-            "Component Updates: 13 components with dark mode variants",
-            "Header/MobileMenu: Theme toggle in desktop header and mobile menu",
-            "Footer, DocPanel, Button: Dark mode styling with proper contrast",
-            "All modals: Dark mode styling with semantic colors",
-            "Usage dashboard: Dark mode progress bars and status indicators",
-            "Forms: Dark input fields, selects, and validation states",
-            "106 New Dark Mode Tests (100% passing)",
-            "ThemeContext state management tests (8 tests)",
-            "ThemeToggle component tests (10 tests)",
-            "Integration tests (9 tests) - Full app dark mode switching",
-            "Monaco Editor theme tests (6 tests)",
-            "Mermaid diagram theming tests (14 tests)",
-            "All UI components with dark mode variants tested",
-            "Critical Test Infrastructure Fixes",
-            "ContactSupportModal CI fix: getToken() mock returned Promise.resolve() (was blocking CI)",
-            "DocPanel accessibility test: Removed button count assertion (mobile/desktop variants)",
-            "UsageLimitModal test: Updated text assertion to match component",
-            "ThemeContext error handling: try/catch for localStorage, matchMedia checks",
-            "Test Helpers: renderWithTheme() utility, global matchMedia mock, localStorage mock",
-            "Final Results: 2,343 passed | 43 skipped (2,386 total) - 100% pass rate",
-            "Frontend: 1,486 passed | 22 skipped (1,508 total) - 98.5% pass rate",
-            "Backend: 857 passed | 21 skipped (878 total) - 100% pass rate",
-            "Coverage: 91.83% backend coverage maintained"
+            "Full dark mode across all pages and components",
+            "System preference detection and auto-sync",
+            "Theme persistence between sessions",
+            "Custom dark Monaco Editor theme (Neon Cyberpunk)",
+            "Dark Mermaid diagrams with enhanced borders",
+            "Smooth theme transitions"
           ]
         },
         {
           "version": "v2.7.1",
-          "title": "ErrorBoundary Dark Mode & Production Bug Fix",
+          "title": "Error Handling Improvements",
           "duration": "1 day",
           "status": "✓ Complete",
           "completedDate": "Nov 9, 2025",
-          "badge": "Bug Fix",
           "features": [
-            "ErrorBoundary Dark Mode Implementation",
-            "Theme detection via getThemePreference() from localStorage and system preferences",
-            "Manual dark class application to document.documentElement (ErrorBoundary wraps ThemeProvider)",
-            "Full dark mode styling with dark: variants for all colors",
-            "Icon border in dark mode: border-2 border-transparent dark:border-red-800/50",
-            "Improved error message readability: dark:bg-red-950/30 dark:text-red-200",
-            "Better contrast for stack traces: dark:bg-slate-800/50",
-            "Modal width increased from max-w-2xl to max-w-4xl for long stack traces",
-            "ErrorBoundary Horizontal Scrolling Fix",
-            "Removed CSS Grid animation (was interfering with overflow behavior)",
-            "Applied overflow-x-auto directly to <pre> elements",
-            "All code blocks (Error Message, Stack Trace, Component Stack) now scroll horizontally",
-            "Simplified details/summary styling with arrow rotation animation only",
-            "Production Bug Fix: AdminUsage Icon Import",
-            "Fixed missing AlertCircle icon import from lucide-react in AdminUsage.jsx",
-            "Error state now properly displays with AlertCircle icon",
-            "Was causing ErrorBoundary to trigger in production when admin stats failed to load",
-            "Manual Testing Route for ErrorBoundary",
-            "/test-error route for ErrorBoundary testing in all environments",
-            "ErrorTest.jsx component to intentionally trigger errors",
-            "Route documented in main.jsx with inline comments",
-            "Component documented with comprehensive JSDoc",
-            "Manual Testing Route section added to ERROR-HANDLING-TESTS.md",
-            "Documentation Updates",
-            "ERROR-HANDLING-TESTS.md updated to v1.1 with Manual Testing Route section",
-            "Updated last updated date to November 9, 2025",
-            "Test Results: 2,343 passed | 43 skipped (2,386 total) - 100% pass rate",
-            "Frontend: 1,486 passed | 22 skipped (1,508 total) - 98.5% pass rate",
-            "Backend: 857 passed | 21 skipped (878 total) - 100% pass rate",
-            "Coverage: 91.83% backend coverage maintained"
+            "ErrorBoundary dark mode support",
+            "Horizontal scrolling for long error messages",
+            "Wider error modal for better readability",
+            "Fixed admin dashboard error display"
           ]
         },
         {
           "version": "v2.7.2",
-          "title": "Mobile UX Fixes & Appearance Settings Tab",
+          "title": "Appearance Settings & Mobile UX",
           "duration": "1 day",
           "status": "✓ Complete",
           "completedDate": "Nov 11, 2025",
-          "badge": "Mobile UX",
           "features": [
-            "Mobile File Upload Error Logging",
-            "Enhanced error logging with explicit URL construction (API_URL)",
-            "Improved diagnostic information for connection failures",
-            "Better error messages showing attempted URLs",
-            "Mobile Code Editor Viewport Fix",
-            "Changed from fixed h-[600px] to responsive min-h-[600px] h-[70vh]",
-            "Prevents editor collapse when mobile browser hides address bar",
-            "Adapts to different mobile screen sizes and orientations",
-            "Appearance Settings Tab",
-            "New dedicated Appearance tab in Settings (2nd position)",
-            "Light/Dark/Auto theme options with card-based UI",
-            "Sun/Moon/Monitor icons for each theme mode",
+            "Appearance settings tab with Light/Dark/Auto theme options",
             "Auto theme mode follows system preferences",
-            "Theme System Enhancement",
-            "ThemeContext now supports 'auto', 'light', 'dark' modes",
-            "Default theme changed from 'light' to 'auto'",
-            "getEffectiveTheme() resolves 'auto' to actual theme",
-            "System preference detection via matchMedia API",
-            "Auto-refresh when system preferences change",
-            "Theme Controls Relocated",
-            "Removed ThemeToggle from desktop Header",
-            "Removed theme toggle from mobile menu header",
-            "Centralized theme controls in Settings → Appearance",
-            "Follows industry UX patterns (Discord, GitHub, Slack)",
-            "Test Suite Maintenance",
-            "Fixed 7 ThemeContext tests for 'auto' default behavior",
-            "Skipped 3 Header ThemeToggle integration tests (feature moved)",
-            "Added comprehensive TODO comments explaining skipped tests",
-            "Maintained 100% pass rate on non-skipped tests",
-            "Test Results: 2,339 passed | 50 skipped (2,389 total) - 97.9% pass rate",
-            "Frontend: 1,479 passed | 29 skipped (1,508 total) - 98.1% pass rate",
-            "Backend: 860 passed | 21 skipped (881 total) - 100% pass rate",
-            "Coverage: 91.83% backend coverage maintained",
-            "Documentation: Updated CHANGELOG, README, CLAUDE.md, testing docs"
+            "Responsive mobile code editor that adapts to screen size",
+            "Improved mobile error logging"
           ]
         },
         {
           "version": "v2.7.3",
-          "title": "UX Polish & Terminology Consistency",
+          "title": "UX Polish & Terminology",
           "duration": "0.5 days",
           "status": "✓ Complete",
           "completedDate": "Nov 11, 2025",
-          "badge": "UX Polish",
           "features": [
-            "Toast Notification Fix",
-            "Added prevGeneratingRef to track previous isGenerating state",
-            "Toast only shows when generation actually completes (not on page load)",
-            "Prevents false 'documentation ready' notifications from localStorage data",
-            "Button Terminology Updates",
-            "Changed 'Download' to 'Export' across all download buttons",
-            "Shorter terminology better fits mobile UI constraints",
-            "Updated DownloadButton, CodePanel, DocPanel components",
-            "Examples → Samples Terminology",
-            "Changed 'Examples' to 'Samples' for more accurate representation",
-            "Updated button labels, modal title, placeholder text",
-            "Modal: 'Code Samples', 'Select a code sample to preview', 'Load Sample'",
-            "Updated CodePanel, ExamplesModal, App.jsx toast notifications",
-            "User Display Name Improvement",
-            "Added getDisplayName() function in Header component",
-            "Shows first name only (industry standard: Gmail, Slack, Discord, GitHub)",
-            "Fallback to email username when first/last name not provided",
-            "Dark Mode Skeleton Visibility Fix",
-            "Added dark:bg-slate-700 to skeleton bars",
-            "Added dark:bg-purple-900/30 to purple glow",
-            "Added dark:text-slate-200 and dark:text-slate-400 to status text",
-            "'Generating documentation...' text now readable in dark mode",
-            "DocPanel Top Spacing Alignment",
-            "Reduced padding from py-4 to py-3",
-            "Added [&>*:first-child]:mt-0 to remove first child top margin",
-            "Documentation content now aligns with code panel",
-            "Skeleton Loader Test Helper",
-            "New loadSkeleton() console function for manual QA testing",
-            "Toggles skeleton UI without triggering API calls",
-            "Added testSkeletonMode state for isolated testing",
-            "Exposed to window object for easy browser console access",
-            "Test Suite Updates",
-            "Fixed 22 tests for terminology changes",
-            "CodePanel.test.jsx: 'examples' → 'samples'",
-            "ExamplesModal.test.jsx: Multiple pattern replacements",
-            "DownloadButton.test.jsx: 'Download' → 'Export'",
-            "DocPanel.test.jsx: 'Download doc' → 'Export doc'",
-            "Test Results: 2,335 passed | 50 skipped (2,385 total) - 97.9% pass rate",
-            "Frontend: 1,478 passed | 29 skipped (1,507 total) - 98.1% pass rate",
-            "Backend: 857 passed | 21 skipped (878 total) - 100% pass rate",
-            "Coverage: 91.83% backend coverage maintained",
-            "Documentation: Updated CHANGELOG, README, CLAUDE.md, testing docs"
+            "Fixed toast notifications to only show on actual completion",
+            "Changed 'Download' to 'Export' for clarity",
+            "Renamed 'Examples' to 'Samples' for accuracy",
+            "User display shows first name only",
+            "Improved dark mode skeleton visibility",
+            "Better content alignment between panels"
           ]
         },
         {
           "version": "v2.7.4",
-          "title": "Modal Width Optimization & Terminology Refactoring",
+          "title": "Samples Modal Optimization",
           "duration": "0.5 days",
           "status": "✓ Complete",
           "completedDate": "Nov 11, 2025",
-          "badge": "UX & Code Quality",
           "features": [
-            "Samples Modal Width Optimization",
-            "Increased modal width from max-w-4xl (896px) to max-w-5xl (1024px)",
-            "Better utilizes screen space for split-view (40/60) layout",
-            "Improves code preview readability on larger screens",
-            "Terminology Refactoring: Example → Sample",
-            "Renamed ExamplesModal.jsx to SamplesModal.jsx",
-            "Updated data export: codeExamples → codeSamples in examples.js",
-            "Renamed components: ExampleCard → SampleCard, ExamplePreview → SamplePreview",
-            "Updated state variables: selectedExample → selectedSample, showExamplesModal → showSamplesModal",
-            "Updated props: onExamplesClick → onSamplesClick, examplesButtonRef → samplesButtonRef",
-            "Updated functions: handleLoadExample → handleLoadSample, onLoadExample → onLoadSample",
-            "Refactored 9 files total: App.jsx, CodePanel.jsx, SamplesModal.jsx, examples.js, + tests",
-            "Test Suite Updates (90 tests fixed)",
-            "SamplesModal.test.jsx: 48 tests updated for keyboard navigation and focus trap",
-            "Fixed 'should navigate between cards using Tab key' test",
-            "Fixed 'should allow keyboard navigation through entire modal' test",
-            "Fixed 'should trap focus within modal' test (wraps to close button)",
-            "Fixed 'should trap focus backwards with Shift+Tab' test",
-            "Fixed 'should support both Enter and Space for preview' (auto-selected card label)",
-            "examples.test.js: 37 tests updated from codeExamples to codeSamples",
-            "Focus Ring Tests: 5 tests updated from focus:ring-2 to focus-visible:ring-2",
-            "Updated CopyButton.test.jsx (2 tests), DownloadButton.test.jsx (1 test)",
-            "Updated ErrorBanner.test.jsx (1 test), Select.test.jsx (1 test)",
-            "Test Results: 2,341 passed | 50 skipped (2,391 total) - 97.9% pass rate",
-            "Frontend: 1,484 passed | 29 skipped (1,513 total) - 98.1% pass rate",
-            "Backend: 857 passed | 21 skipped (878 total) - 100% pass rate",
-            "Coverage: 91.83% backend coverage maintained",
-            "Documentation: Updated CHANGELOG, README, CLAUDE.md, testing docs"
+            "Wider Samples modal for better code preview",
+            "Improved keyboard navigation in modal",
+            "Better focus management"
           ]
         },
         {
           "version": "v2.7.5",
-          "title": "UX Refinements & Documentation",
+          "title": "Visual Consistency & UX Polish",
           "duration": "0.5 days",
           "status": "✓ Complete",
           "completedDate": "Nov 12, 2025",
-          "badge": "UX Polish",
           "features": [
-            "Toast System Border Consistency",
-            "Changed border color from border-cyan-300 to border-slate-300 for all toast types",
-            "Improved visual consistency with overall design system",
-            "Applied to CustomToast, CompactToast, AvatarToast, and ExpandableToast components",
-            "Back Button Layout & Spacing",
-            "Fixed duplicate container divs causing inconsistent spacing",
-            "Added text-sm size for better hierarchy",
-            "Added consistent bottom margin (mb-3 or mb-4)",
-            "Applied to 6 pages: Pricing, LoginModal, SignupModal, VerifyEmail, Usage, Settings",
-            "Contact Sales UX Enhancement",
-            "Team/Enterprise messaging: 'Create an account to connect with our sales team'",
-            "Clearer value proposition for high-value tiers",
-            "Improved call-to-action messaging",
-            "Documentation Additions",
-            "DARK-MODE-IMPLEMENTATION.md: 482-line comprehensive dark mode guide",
-            "Covers ThemeContext, component styling, Monaco/Prism themes, Mermaid diagrams",
-            "GOOGLE-OAUTH-IMPLEMENTATION.md: 1700-line implementation guide",
-            "Complete OAuth 2.0 setup, GitHub OAuth comparison, troubleshooting",
-            "Documentation Cleanup",
-            "Removed outdated RECOVERY-PLAN.md (emergency deployment guide no longer needed)",
-            "Test Results: 2,391 tests (2,341 passed, 50 skipped, 0 failed) - 97.91% pass rate",
-            "Frontend: 1,484 passed | 29 skipped (1,513 total)",
-            "Backend: 857 passed | 21 skipped (878 total)",
-            "Coverage: 91.83% backend coverage maintained"
+            "Consistent toast notification borders",
+            "Improved back button layout and spacing across pages",
+            "Enhanced Contact Sales messaging for enterprise tiers"
           ]
         },
         {
           "version": "v2.7.6",
-          "title": "Quality Breakdown Modal Enhancements & Test Coverage",
+          "title": "Quality Breakdown Modal Enhancements",
           "duration": "1 day",
           "status": "✓ Complete",
           "completedDate": "Nov 12, 2025",
           "badge": "Feature Enhancement",
           "features": [
-            "Dual-Tab Quality Breakdown Modal",
-            "Input Code Health Tab: Shows 'before' state with 4 criteria (Comments, Naming, Existing Docs, Code Structure)",
-            "Generated Documentation Tab: Shows 'after' state with 5 criteria (Overview, Installation, Usage, API Docs, Structure)",
-            "Fixed height (420px) content area prevents modal jumping between tabs",
-            "Smooth tab transitions with purple accent for active tab",
-            "Transformation Header",
-            "Side-by-side score comparison (Input Code → AI Enhancement → Generated Docs)",
-            "Sparkles icon + arrow indicator for visual transformation flow",
-            "Green improvement indicator (+X points) when showing positive change",
-            "Grid layout (grid-cols-3) with max-w-3xl for optimal spacing",
-            "Enhanced Download Functionality",
-            "Downloads comprehensive quality report in proper markdown format",
-            "Includes both Input Code Health and Generated Documentation breakdowns",
-            "Source filename and doc type included for traceability",
-            "Generation timestamp for version control",
-            "Filename format: quality-report-{filename}-{docType}-YYYYMMDDHHMMSS.md",
-            "Input Code Health Assessment Backend",
-            "New assessInputCodeQuality() function analyzes original code",
-            "4 scoring criteria (20pts + 20pts + 25pts + 35pts = 100pts total)",
-            "Comments ratio analysis (15%+ excellent, 8-15% good, 3-8% minimal)",
-            "Naming quality assessment (descriptive vs cryptic identifiers)",
-            "Existing documentation detection (JSDoc, docstrings, @param tags)",
-            "Code structure evaluation (indentation, spacing, line length)",
-            "Returns improvement delta (Generated Score - Input Score)",
-            "Standardized Color Scheme",
-            "All criteria icons: Changed to slate (text-slate-600 dark:text-slate-400)",
-            "All progress bars: Changed to purple (bg-purple-500 dark:bg-purple-400)",
-            "Removed color variation by status for cleaner UI",
-            "Code Samples Data Structure Update",
-            "Updated from 7 to 8 code samples",
-            "New samples: C# ASP.NET Core API, Java Spring Boot API, Ruby Sinatra API, Poorly Documented Utility",
-            "Doc type distribution: 5 API, 2 README, 1 ARCHITECTURE (no JSDOC samples)",
-            "Test Suite Complete Overhaul (120+ tests updated)",
-            "QualityScore.test.jsx: 60 passing, 1 skipped (61 total) - Added filename prop, inputCodeHealth, improvement to all tests",
-            "examples.test.js: 8 tests updated from 7 to 8 samples, removed JSDOC validations",
-            "SamplesModal.test.jsx: 8 tests fixed (3 code content checks, 5 focus tests skipped)",
-            "docGenerator.test.js: Updated calculateQualityScore call to include 4th parameter (input code)",
-            "Final Results: 2,405 tests (2,351 passed, 54 skipped, 0 failed) - 100% pass rate",
-            "Frontend: 1,494 passed | 33 skipped (1,527 total)",
-            "Backend: 857 passed | 21 skipped (878 total)",
-            "Coverage: 91.83% backend coverage maintained",
-            "Documentation: Updated CHANGELOG, README, CLAUDE.md, testing docs"
+            "Dual-tab quality breakdown showing before and after analysis",
+            "Input Code Health tab analyzes original code quality (comments, naming, structure, existing docs)",
+            "Generated Documentation tab shows AI-enhanced documentation quality",
+            "Side-by-side score comparison with improvement indicator",
+            "Enhanced download includes comprehensive quality report in markdown format",
+            "8 new code samples (C#, Java Spring Boot, Ruby Sinatra, and more)"
           ]
         },
         {
           "version": "v2.7.7",
-          "title": "Admin Dashboard Performance Optimization & Test Fixes",
+          "title": "Admin Dashboard Performance Optimization",
           "duration": "1 day",
           "status": "✓ Complete",
           "completedDate": "Nov 13, 2025",
-          "badge": "Performance & Security",
+          "badge": "Performance",
           "features": [
-            "Database Migration 017: Total Generations Column",
-            "Added total_generations INTEGER NOT NULL DEFAULT 0 column to users table",
-            "Created index idx_users_total_generations for fast sorting (DESC order)",
-            "Created trigger function update_user_total_generations() to automatically maintain totals",
-            "Trigger handles INSERT/UPDATE/DELETE operations on user_quotas table",
-            "Backfilled historical data from existing user_quotas records",
-            "Performance improvement: O(n×m) query aggregation → O(1) direct lookup",
-            "Admin Dashboard API Updates",
-            "Top Users query: Replaced hardcoded days_active=1 with meaningful data",
-            "Now returns this_period (current monthly_count) and all_time (total_generations)",
-            "Sorts by all_time (lifetime usage) instead of current period",
-            "Removed 7-day activity filter to show ALL users in current billing period",
-            "Admin Dashboard Frontend Updates",
-            "Card title: Changed from 'Last 7 Days' to 'This Period' for authenticated users",
-            "Table headers: This Period | All Time for authenticated view",
-            "Table cells: Display thisPeriod and allTime with purple accent on All Time",
-            "Recent Activity label: 'Last 50 generations across all documentation types'",
-            "Critical Security Fix: CI Database Cleanup Prevention",
-            "Prevented globalTeardown from running in CI environments (security fix)",
-            "CI should NEVER connect to real databases (uses mocks only)",
-            "Added environment check: Skips cleanup if CI=true or GITHUB_ACTIONS=true",
-            "Prevents accidental data deletion from Neon dev/prod databases during CI runs",
-            "Cleanup still runs locally for manual test data maintenance",
-            "Test Suite Updates",
-            "Migration Test Suite: 13 comprehensive tests covering schema, triggers, backfill, performance, idempotency",
-            "Frontend Test Fixes: 3 tests fixed for examples.js docType changes (java-spring-api, ruby-sinatra-api, python-flask-api)",
-            "Final Results: 2,446 tests (2,392 passed, 54 skipped, 0 failed) - 100% pass rate",
-            "Frontend: 1,516 passed | 33 skipped (1,549 total)",
-            "Backend: 876 passed | 21 skipped (897 total)",
-            "Database: 37 migration tests (13 new for migration 017)",
-            "Coverage: 91.83% backend coverage maintained",
-            "Documentation: Updated CHANGELOG, README, CLAUDE.md, testing docs"
+            "Admin dashboard shows 'This Period' and 'All Time' usage statistics",
+            "Significantly faster dashboard loading with optimized database queries",
+            "Top users sorted by lifetime usage for better insights",
+            "Recent activity displays last 50 generations across all doc types"
           ]
         },
         {
@@ -2709,41 +2311,29 @@ Press D to toggle dark mode"></div>
           "completedDate": "Nov 14, 2025",
           "badge": "Architecture",
           "features": [
-            "Multi-Provider LLM Support",
-            "Unified LLM service supporting Claude (Anthropic) and OpenAI",
-            "Config-driven provider switching via LLM_PROVIDER environment variable",
-            "Simplified architecture using switch-based routing (~650 lines)",
-            "No code changes required to switch providers - just update .env and restart",
-            "Provider Adapters",
-            "Claude provider adapter (server/src/services/llm/providers/claude.js)",
-            "OpenAI provider adapter (server/src/services/llm/providers/openai.js)",
-            "Shared utilities: retry with exponential backoff, error standardization, token estimation",
-            "Consistent interface across all providers (generate, streaming, metadata)",
-            "Configuration System",
-            "Centralized LLM config (server/src/config/llm.config.js)",
-            "Provider-specific settings (API keys, models, capabilities)",
-            "Generic overrides via LLM_API_KEY and LLM_MODEL",
-            "Priority fallback: provider-specific → generic → defaults",
-            "Provider Capabilities",
-            "Claude: Sonnet 4.5 (default), 200K context, prompt caching (90% savings), streaming",
-            "OpenAI: GPT-4 Turbo, 128K context, streaming (no prompt caching)",
-            "Temperature/TopP handling: Claude API constraint (can't use both)",
-            "API Response Enhancements",
-            "Added provider metadata to all responses (provider, model, tokens, latency)",
-            "Token tracking: inputTokens, outputTokens, cacheReadTokens, cacheWriteTokens",
-            "Cache status: wasCached boolean for prompt caching visibility",
-            "Latency monitoring: latencyMs for performance tracking",
-            "Documentation Updates",
-            "Updated README.md: Added LLM Provider Configuration section with examples",
-            "Updated CLAUDE.md: Added multi-provider capabilities comparison table",
-            "Updated ARCHITECTURE.md: Updated service layer, diagrams, and tech stack",
-            "Created comprehensive architecture documentation (4 new docs)",
-            "Updated .env.example: Added Claude/OpenAI configuration with all options",
-            "Test Compatibility",
-            "All 860+ existing tests pass with zero changes required",
-            "Backward compatible: Existing code works without modifications",
-            "ES module compliance: All new code uses import/export syntax",
-            "Implementation Details: MULTI-PROVIDER-SIMPLIFIED-ARCHITECTURE.md"
+            "Support for multiple AI providers (Claude and OpenAI)",
+            "Easy provider switching via configuration (no code changes needed)",
+            "Claude Sonnet 4.5 as default provider with 200K context window",
+            "OpenAI GPT-4 Turbo as alternative provider with 128K context",
+            "Automatic prompt caching for cost optimization (90% savings with Claude)",
+            "Provider metadata in responses (model used, token counts, latency)"
+          ]
+        },
+        {
+          "version": "v2.7.9",
+          "title": "Epic 4.1: GitHub Repository Integration",
+          "duration": "1 day",
+          "status": "✓ Complete",
+          "completedDate": "Nov 14, 2025",
+          "badge": "Developer Adoption",
+          "features": [
+            "Import code from GitHub repositories via URL",
+            "Tree-based file browser with folder expansion/collapse",
+            "Branch switching dropdown to explore different branches",
+            "File preview with syntax highlighting",
+            "Support for public repositories (no GitHub account required)",
+            "Auto-scroll to selected files for easy navigation",
+            "Mobile-responsive design with proper scrolling"
           ]
         }
       ]
@@ -2758,7 +2348,7 @@ Press D to toggle dark mode"></div>
           "version": "Epic 3.3",
           "title": "Advanced File Handling",
           "duration": "2-3 days",
-          "status": "In Progress",
+          "status": "Planned",
           "badge": "Infrastructure First",
           "features": [
             "Multi-file upload support (select multiple files at once)",
@@ -2768,25 +2358,8 @@ Press D to toggle dark mode"></div>
             "Progress indicators for batch operations",
             "Error handling per file (don't fail entire batch)",
             "Note: Basic drag-and-drop implemented in Phase 2 Epic 2.4",
-            "Required before Epic 4.1 and Epic 4.2"
-          ]
-        },
-        {
-          "version": "Epic 4.1",
-          "title": "GitHub Integration",
-          "duration": "3-4 days",
-          "status": "Planned",
-          "badge": "Developer Adoption",
-          "features": [
-            "GitHub OAuth app for repository access",
-            "Repository browser (list user's repos, search)",
-            "Branch and path selection",
-            "File tree navigation",
-            "Import files directly from GitHub (single file or multiple)",
-            "Support for private repositories",
-            "Repository URL input (paste repo link)",
-            "Rate limiting and API quota management",
-            "Required before Epic 4.2 (primary source for multi-file docs)"
+            "Note: Epic 4.1 (GitHub integration) completed first - provides single-file import from GitHub",
+            "Required before Epic 4.2"
           ]
         }
       ]
@@ -3558,6 +3131,44 @@ Press D to toggle dark mode"></div>
 	// ]]>
 </script>
 <grammarly-desktop-integration data-grammarly-shadow-root="true"></grammarly-desktop-integration><!-- Code injected by live-server -->
+<script>
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					var parent = elem.parentElement || head;
+					parent.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					parent.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
+</script>
+<!-- Code injected by live-server -->
 <script>
 	// <![CDATA[  <-- For SVG support
 	if ('WebSocket' in window) {
