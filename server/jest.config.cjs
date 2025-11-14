@@ -17,6 +17,8 @@ module.exports = {
     '!src/db/connection.js', // Database connection, tested via integration
     '!src/middleware/errorHandler.js', // Error handler middleware, used but not yet tested
     '!src/middleware/rateLimiter.js', // Rate limiting middleware, used but not yet tested
+    '!src/services/githubService.js', // GitHub API integration, tested via API routes
+    '!src/services/llm/providers/*.js', // LLM provider SDK wrappers, tested via llmService integration
   ],
 
   // Coverage thresholds (fail if below)
