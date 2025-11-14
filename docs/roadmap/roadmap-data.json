@@ -65,9 +65,9 @@
       "text": "codescribeai.com",
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
-    "footerLeft": "<strong>CodeScribe AI</strong> \u00b7 Strategic Roadmap v3.11",
+    "footerLeft": "<strong>CodeScribe AI</strong> \u00b7 Strategic Roadmap v3.12",
     "footer": "Phase 1 Complete \u00b7 Phase 2 Complete \u00b7 Phase 3 Epic 3.1 Complete (Dark Mode) \u00b7 Launch: Mid-Jan 2026",
-    "lastUpdated": "November 13, 2025"
+    "lastUpdated": "November 14, 2025"
   },
   "columns": [
     {
@@ -895,6 +895,51 @@
             "Database: 37 migration tests (13 new for migration 017)",
             "Coverage: 91.83% backend coverage maintained",
             "Documentation: Updated CHANGELOG, README, CLAUDE.md, testing docs"
+          ]
+        },
+        {
+          "version": "v2.7.8",
+          "title": "Multi-Provider LLM Architecture",
+          "duration": "1 day",
+          "status": "✓ Complete",
+          "completedDate": "Nov 14, 2025",
+          "badge": "Architecture",
+          "features": [
+            "Multi-Provider LLM Support",
+            "Unified LLM service supporting Claude (Anthropic) and OpenAI",
+            "Config-driven provider switching via LLM_PROVIDER environment variable",
+            "Simplified architecture using switch-based routing (~650 lines)",
+            "No code changes required to switch providers - just update .env and restart",
+            "Provider Adapters",
+            "Claude provider adapter (server/src/services/llm/providers/claude.js)",
+            "OpenAI provider adapter (server/src/services/llm/providers/openai.js)",
+            "Shared utilities: retry with exponential backoff, error standardization, token estimation",
+            "Consistent interface across all providers (generate, streaming, metadata)",
+            "Configuration System",
+            "Centralized LLM config (server/src/config/llm.config.js)",
+            "Provider-specific settings (API keys, models, capabilities)",
+            "Generic overrides via LLM_API_KEY and LLM_MODEL",
+            "Priority fallback: provider-specific → generic → defaults",
+            "Provider Capabilities",
+            "Claude: Sonnet 4.5 (default), 200K context, prompt caching (90% savings), streaming",
+            "OpenAI: GPT-4 Turbo, 128K context, streaming (no prompt caching)",
+            "Temperature/TopP handling: Claude API constraint (can't use both)",
+            "API Response Enhancements",
+            "Added provider metadata to all responses (provider, model, tokens, latency)",
+            "Token tracking: inputTokens, outputTokens, cacheReadTokens, cacheWriteTokens",
+            "Cache status: wasCached boolean for prompt caching visibility",
+            "Latency monitoring: latencyMs for performance tracking",
+            "Documentation Updates",
+            "Updated README.md: Added LLM Provider Configuration section with examples",
+            "Updated CLAUDE.md: Added multi-provider capabilities comparison table",
+            "Updated ARCHITECTURE.md: Updated service layer, diagrams, and tech stack",
+            "Created comprehensive architecture documentation (4 new docs)",
+            "Updated .env.example: Added Claude/OpenAI configuration with all options",
+            "Test Compatibility",
+            "All 860+ existing tests pass with zero changes required",
+            "Backward compatible: Existing code works without modifications",
+            "ES module compliance: All new code uses import/export syntax",
+            "Implementation Details: MULTI-PROVIDER-SIMPLIFIED-ARCHITECTURE.md"
           ]
         }
       ]
