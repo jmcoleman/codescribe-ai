@@ -39,10 +39,29 @@ This document contains **all environment variables** needed for CodeScribe AI ac
 # CORE APPLICATION
 # ============================================================================
 
+# LLM Provider Selection (v2.7.8+)
+# Value: "claude" or "openai"
+# Used for: Selecting which AI provider to use for documentation generation
+# ⚠️ REQUIRED: Must be set to either "claude" or "openai"
+LLM_PROVIDER=claude
+
 # Claude AI API Key
 # Where to get: https://console.anthropic.com/settings/keys
-# Used for: AI-powered documentation generation
+# Used for: AI-powered documentation generation (if LLM_PROVIDER=claude)
+# ⚠️ REQUIRED if LLM_PROVIDER=claude
 CLAUDE_API_KEY=sk-ant-api03-YOUR_PRODUCTION_KEY_HERE
+
+# OpenAI API Key (v2.7.8+)
+# Where to get: https://platform.openai.com/api-keys
+# Used for: AI-powered documentation generation (if LLM_PROVIDER=openai)
+# ⚠️ REQUIRED if LLM_PROVIDER=openai, otherwise not needed
+# OPENAI_API_KEY=sk-YOUR_OPENAI_KEY_HERE
+
+# OpenAI Model Selection (v2.7.8+)
+# Value: gpt-4-turbo-preview, gpt-4, gpt-3.5-turbo, etc.
+# Default: gpt-4-turbo-preview
+# ⚠️ OPTIONAL: Only used if LLM_PROVIDER=openai
+# LLM_MODEL=gpt-4-turbo-preview
 
 # Node Environment
 # Value: Always "production" for production environment
@@ -146,6 +165,21 @@ ALLOWED_ORIGINS=https://codescribeai.com,https://www.codescribeai.com
 # Client URL (for frontend references)
 # Value: Your primary domain
 CLIENT_URL=https://codescribeai.com
+
+
+# ============================================================================
+# GITHUB INTEGRATION (v2.7.8+)
+# ============================================================================
+
+# GitHub Personal Access Token (for GitHub file loader)
+# Where to get: https://github.com/settings/tokens → "Generate new token (classic)"
+# Scopes needed: None (leave all unchecked for public repos)
+# Used for: Loading files from GitHub repositories (increases rate limit)
+# ⚠️ OPTIONAL but HIGHLY RECOMMENDED
+# Without token: 60 requests/hour (shared across all users)
+# With token: 5,000 requests/hour (shared across all users)
+# See: docs/architecture/GITHUB-API-SCALING.md for details
+GITHUB_TOKEN=ghp_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 
 # ============================================================================
@@ -317,12 +351,16 @@ RATE_LIMIT_HOURLY_MAX=1000
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `CLAUDE_API_KEY` | ✅ Yes | None | Anthropic Claude API key for AI generation |
+| `LLM_PROVIDER` | ✅ Yes (v2.7.8+) | None | LLM provider: `claude` or `openai` |
+| `CLAUDE_API_KEY` | ✅ Yes (if provider=claude) | None | Anthropic Claude API key for AI generation |
+| `OPENAI_API_KEY` | ✅ Yes (if provider=openai) | None | OpenAI API key for AI generation |
+| `LLM_MODEL` | ⚠️ Optional (if provider=openai) | gpt-4-turbo-preview | OpenAI model selection |
 | `NODE_ENV` | ✅ Yes | None | Environment: `production`, `development`, `test` |
 | `PORT` | ⚠️ Optional | 3000 | Server port (Vercel sets automatically) |
 
 **Where to get:**
 - CLAUDE_API_KEY: [console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys)
+- OPENAI_API_KEY: [platform.openai.com/api-keys](https://platform.openai.com/api-keys)
 
 ---
 
@@ -389,6 +427,28 @@ RATE_LIMIT_HOURLY_MAX=1000
 - `MOCK_EMAILS=false`: Always send real emails via Resend
 - Not set (default): Mock in dev/test, real in production
 - **Example:** `MOCK_EMAILS=false` in `server/.env` to test real email delivery in development
+
+---
+
+### GitHub Integration Variables (v2.7.8+)
+
+| Variable | Required | Environment-Specific | Description |
+|----------|----------|---------------------|-------------|
+| `GITHUB_TOKEN` | ⚠️ Optional (recommended) | No (same across envs) | GitHub Personal Access Token for API requests |
+
+**Where to get:**
+- GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)
+- Click "Generate new token (classic)"
+- **Scopes:** Leave all unchecked (public repos only)
+- **Expiration:** Choose "No expiration" or "1 year"
+
+**Purpose:**
+- Increases GitHub API rate limit from 60/hour to 5,000/hour (shared across all users)
+- Required for GitHub file loader feature
+- Without token: Users may hit rate limits quickly
+
+**Related documentation:**
+- [GITHUB-API-SCALING.md](../architecture/GITHUB-API-SCALING.md) - Scaling strategies
 
 ---
 
@@ -544,7 +604,10 @@ npm run db:test
 
 | Variable | Prod | Preview | Dev | Source |
 |----------|------|---------|-----|--------|
+| `LLM_PROVIDER` | claude | claude | claude | Manual (v2.7.8+) |
 | `CLAUDE_API_KEY` | ✅ | ✅ | ✅ | Anthropic Console |
+| `OPENAI_API_KEY` | ⚠️ | ⚠️ | ⚠️ | OpenAI (v2.7.8+, optional) |
+| `LLM_MODEL` | ⚠️ | ⚠️ | ⚠️ | Manual (v2.7.8+, optional) |
 | `NODE_ENV` | production | development | development | Manual |
 | `POSTGRES_URL` | ✅ | ✅ | ✅ | Neon (auto) |
 | `POSTGRES_PRISMA_URL` | ✅ | ✅ | ✅ | Neon (auto) |
@@ -552,6 +615,7 @@ npm run db:test
 | `GITHUB_CLIENT_ID` | ✅ | ✅ | ✅ | GitHub OAuth App |
 | `GITHUB_CLIENT_SECRET` | ✅ | ✅ | ✅ | GitHub OAuth App |
 | `GITHUB_CALLBACK_URL` | codescribeai.com | (dynamic) | localhost:3000 | Manual |
+| `GITHUB_TOKEN` | ✅ | ✅ | ✅ | GitHub PAT (v2.7.8+, optional) |
 | `RESEND_API_KEY` | ✅ | ✅ | ✅ | Resend Dashboard |
 | `EMAIL_FROM` | noreply@ | preview@ | dev@ | Manual |
 | `SESSION_SECRET` | unique | unique | unique | `openssl rand -base64 32` |
@@ -576,6 +640,6 @@ npm run db:test
 
 ---
 
-**Last Updated:** November 4, 2025
-**Version:** 1.1
+**Last Updated:** November 14, 2025 (v2.7.8 - Multi-provider LLM + GitHub Integration)
+**Version:** 1.2
 **Maintained By:** CodeScribe AI Team

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, lazy, Suspense } from 'react';
 import { Toaster } from 'react-hot-toast';
+import { useTheme } from './contexts/ThemeContext';
 import { Header } from './components/Header';
 import { MobileMenu } from './components/MobileMenu';
 import { ControlBar } from './components/ControlBar';
@@ -26,6 +27,7 @@ const HelpModal = lazy(() => import('./components/HelpModal').then(m => ({ defau
 const ConfirmationModal = lazy(() => import('./components/ConfirmationModal').then(m => ({ default: m.ConfirmationModal })));
 const TermsAcceptanceModal = lazy(() => import('./components/TermsAcceptanceModal').then(m => ({ default: m.default })));
 const ContactSupportModal = lazy(() => import('./components/ContactSupportModal').then(m => ({ default: m.ContactSupportModal })));
+const GitHubLoadModal = lazy(() => import('./components/GitHubLoader').then(m => ({ default: m.GitHubLoadModal })));
 
 // Loading fallback for modals - full screen to prevent layout shift
 function ModalLoadingFallback() {
@@ -53,6 +55,7 @@ import { STORAGE_KEYS, getStorageItem, setStorageItem } from './constants/storag
 
 function App() {
   const { getToken, user, checkLegalStatus, acceptLegalDocuments } = useAuth();
+  const { effectiveTheme } = useTheme();
 
   // Load persisted state from localStorage on mount, fallback to defaults
   const [code, setCode] = useState(() => getStorageItem(STORAGE_KEYS.EDITOR_CODE, DEFAULT_CODE));
@@ -68,6 +71,7 @@ function App() {
   const [showUsageWarning, setShowUsageWarning] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showSupportModal, setShowSupportModal] = useState(false);
+  const [showGithubModal, setShowGithubModal] = useState(false);
   const [legalStatus, setLegalStatus] = useState(null);
   const [largeCodeStats, setLargeCodeStats] = useState(null);
   const [uploadError, setUploadError] = useState(null);
@@ -236,7 +240,7 @@ function App() {
 
   // Prevent body scroll and layout shift when any modal opens
   useEffect(() => {
-    const isAnyModalOpen = showQualityModal || showSamplesModal || showHelpModal || showConfirmationModal || showUsageLimitModal || showTermsModal || showSupportModal;
+    const isAnyModalOpen = showQualityModal || showSamplesModal || showHelpModal || showConfirmationModal || showUsageLimitModal || showTermsModal || showSupportModal || showGithubModal;
 
     if (isAnyModalOpen) {
       // Calculate scrollbar width BEFORE hiding overflow
@@ -660,7 +664,35 @@ function App() {
   };
 
   const handleGithubImport = () => {
-    // TODO: Implement GitHub import
+    setShowGithubModal(true);
+  };
+
+  const handleGithubFileLoad = ({ code: fileCode, language: fileLang, filename: fileName, metadata }) => {
+    // Set the code from GitHub file
+    setCode(fileCode);
+
+    // Detect and set language
+    if (fileLang) {
+      setLanguage(fileLang);
+    }
+
+    // Set filename
+    if (fileName) {
+      setFilename(fileName);
+    }
+
+    // Track analytics
+    trackInteraction('github_file_loaded', {
+      owner: metadata?.owner,
+      repo: metadata?.repo,
+      path: metadata?.path,
+      language: fileLang
+    });
+
+    // Clear any previous documentation
+    reset();
+    setStorageItem(STORAGE_KEYS.EDITOR_DOCUMENTATION, '');
+    setStorageItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE, '');
   };
 
   const handleLoadSample = (sample) => {
@@ -755,13 +787,42 @@ function App() {
         Skip to main content
       </a>
 
-      {/* Toast Notifications Container - Uses default styling from toast.jsx */}
+      {/* Toast Notifications Container - Theme-aware styling */}
       <Toaster
         position="top-right"
         reverseOrder={false}
         gutter={8}
         containerClassName=""
         containerStyle={{}}
+        toastOptions={{
+          // Theme-aware default styling
+          style: {
+            background: effectiveTheme === 'dark' ? 'rgb(30 41 59)' : 'rgb(255 255 255)', // slate-800 : white
+            color: effectiveTheme === 'dark' ? 'rgb(248 250 252)' : 'rgb(15 23 42)', // slate-50 : slate-900
+            border: effectiveTheme === 'dark' ? '1px solid rgb(51 65 85)' : '1px solid rgb(203 213 225)', // slate-700 : slate-300
+          },
+          // Success toasts
+          success: {
+            iconTheme: {
+              primary: effectiveTheme === 'dark' ? '#4ADE80' : '#16A34A', // green-400 : green-600
+              secondary: effectiveTheme === 'dark' ? 'rgb(30 41 59)' : '#FFFFFF',
+            },
+          },
+          // Error toasts
+          error: {
+            iconTheme: {
+              primary: effectiveTheme === 'dark' ? '#F87171' : '#DC2626', // red-400 : red-600
+              secondary: effectiveTheme === 'dark' ? 'rgb(30 41 59)' : '#FFFFFF',
+            },
+          },
+          // Loading toasts
+          loading: {
+            iconTheme: {
+              primary: effectiveTheme === 'dark' ? '#C084FC' : '#9333EA', // purple-400 : purple-600
+              secondary: effectiveTheme === 'dark' ? 'rgb(30 41 59)' : '#FFFFFF',
+            },
+          },
+        }}
       />
 
       {/* Hidden file input */}
@@ -938,44 +999,44 @@ function App() {
             cancelLabel="Cancel"
             message={
               <div className="space-y-4">
-                <p className="text-sm leading-relaxed text-slate-700">
-                  You're about to generate documentation for a <strong className="font-semibold text-slate-900">large code file</strong>. This may take longer and consume more API resources.
+                <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+                  You're about to generate documentation for a <strong className="font-semibold text-slate-900 dark:text-white">large code file</strong>. This may take longer and consume more API resources.
                 </p>
 
                 {/* Visual separator */}
-                <div className="h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
+                <div className="h-px bg-gradient-to-r from-transparent via-slate-200 dark:via-slate-700 to-transparent" />
 
                 {/* Stats box with purple accent */}
-                <div className="bg-white border-l-4 border-purple-500 border border-slate-200 rounded-lg p-4 shadow-sm space-y-3">
+                <div className="bg-white dark:bg-slate-800 border-l-4 border-purple-500 dark:border-purple-400 border border-slate-200 dark:border-slate-700 rounded-lg p-4 shadow-sm space-y-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-slate-700">Lines of code</span>
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Lines of code</span>
                     <div className="flex items-baseline gap-1.5">
-                      <span className="text-2xl font-bold text-purple-900">{largeCodeStats.lines.toLocaleString()}</span>
-                      <span className="text-xs text-slate-500 font-medium">lines</span>
+                      <span className="text-2xl font-bold text-purple-900 dark:text-purple-300">{largeCodeStats.lines.toLocaleString()}</span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">lines</span>
                     </div>
                   </div>
-                  <div className="h-px bg-slate-100" />
+                  <div className="h-px bg-slate-100 dark:bg-slate-700" />
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-slate-700">File size</span>
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">File size</span>
                     <div className="flex items-baseline gap-1.5">
-                      <span className="text-2xl font-bold text-indigo-900">{largeCodeStats.sizeInKB}</span>
-                      <span className="text-xs text-slate-500 font-medium">KB</span>
+                      <span className="text-2xl font-bold text-indigo-900 dark:text-indigo-300">{largeCodeStats.sizeInKB}</span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">KB</span>
                     </div>
                   </div>
-                  <div className="h-px bg-slate-100" />
+                  <div className="h-px bg-slate-100 dark:bg-slate-700" />
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-slate-700">Characters</span>
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Characters</span>
                     <div className="flex items-baseline gap-1.5">
-                      <span className="text-2xl font-bold text-purple-900">{largeCodeStats.charCount.toLocaleString()}</span>
-                      <span className="text-xs text-slate-500 font-medium">chars</span>
+                      <span className="text-2xl font-bold text-purple-900 dark:text-purple-300">{largeCodeStats.charCount.toLocaleString()}</span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">chars</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Tip box */}
-                <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
-                  <p className="text-xs leading-relaxed text-slate-600">
-                    <span className="font-semibold text-slate-700">💡 Tip:</span> Breaking your code into smaller modules improves documentation quality and generation speed.
+                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3 border border-slate-200 dark:border-slate-700">
+                  <p className="text-xs leading-relaxed text-slate-600 dark:text-slate-400">
+                    <span className="font-semibold text-slate-700 dark:text-slate-300">💡 Tip:</span> Breaking your code into smaller modules improves documentation quality and generation speed.
                   </p>
                 </div>
               </div>
@@ -1022,6 +1083,17 @@ function App() {
               sessionStorage.setItem('pendingSupportModal', 'true');
               headerRef.current?.openLoginModal();
             }}
+          />
+        </Suspense>
+      )}
+
+      {/* GitHub Load Modal */}
+      {showGithubModal && (
+        <Suspense fallback={<ModalLoadingFallback />}>
+          <GitHubLoadModal
+            isOpen={showGithubModal}
+            onClose={() => setShowGithubModal(false)}
+            onFileLoad={handleGithubFileLoad}
           />
         </Suspense>
       )}

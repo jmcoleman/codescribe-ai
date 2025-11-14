@@ -21,8 +21,8 @@ describe('ControlBar Component', () => {
 
       expect(screen.getByRole('button', { name: /upload files/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /generate docs/i })).toBeInTheDocument();
-      // GitHub import button hidden by feature flag
-      expect(screen.queryByRole('button', { name: /import from github/i })).not.toBeInTheDocument();
+      // GitHub import button now visible (v2.7.8+)
+      expect(screen.getByRole('button', { name: /import from github/i })).toBeInTheDocument();
     });
 
     it('should render doc type selector', () => {
@@ -137,11 +137,11 @@ describe('ControlBar Component', () => {
       expect(screen.getByText('GitHub')).toHaveClass('sm:hidden');
     });
 
-    it('should not render GitHub import button when feature is disabled', () => {
+    it('should render GitHub import button', () => {
       render(<ControlBar {...defaultProps} />);
 
-      const githubButton = screen.queryByRole('button', { name: /import from github/i });
-      expect(githubButton).not.toBeInTheDocument();
+      const githubButton = screen.getByRole('button', { name: /import from github/i });
+      expect(githubButton).toBeInTheDocument();
     });
   });
 
@@ -317,7 +317,9 @@ describe('ControlBar Component', () => {
       render(<ControlBar {...defaultProps} />);
 
       const generateButton = screen.getByRole('button', { name: /generate docs/i });
-      expect(generateButton).toHaveClass('bg-purple-600', 'hover:bg-purple-700');
+      expect(generateButton).toHaveClass('bg-purple-600');
+      // Verify hover class with enabled pseudo-class
+      expect(generateButton.className).toContain('hover:enabled:bg-purple-700');
     });
 
     it('should display sparkles icon when not generating', () => {
@@ -444,8 +446,8 @@ describe('ControlBar Component', () => {
 
       expect(screen.getByRole('button', { name: /upload files/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /generate docs/i })).toBeInTheDocument();
-      // GitHub button hidden by feature flag
-      expect(screen.queryByRole('button', { name: /import from github/i })).not.toBeInTheDocument();
+      // GitHub button now visible (v2.7.8+)
+      expect(screen.getByRole('button', { name: /import from github/i })).toBeInTheDocument();
     });
 
     it('should indicate disabled state through aria', () => {

@@ -39,7 +39,7 @@ describe('Button', () => {
       render(<Button variant="primary">Primary</Button>);
       const button = screen.getByRole('button');
       expect(button).toHaveClass('bg-purple-600');
-      expect(button).toHaveClass('hover:bg-purple-700');
+      expect(button.className).toContain('hover:enabled:bg-purple-700');
       expect(button).toHaveClass('text-white');
     });
 
@@ -90,34 +90,34 @@ describe('Button', () => {
     it('primary variant has hover scale effect classes', () => {
       render(<Button variant="primary">Hover me</Button>);
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('hover:scale-[1.02]');
+      expect(button.className).toContain('hover:enabled:scale-[1.02]');
     });
 
     it('primary variant has active scale effect classes', () => {
       render(<Button variant="primary">Click me</Button>);
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('active:scale-[0.98]');
+      expect(button.className).toContain('active:enabled:scale-[0.98]');
       // Primary variant no longer has brightness effect, only scale
     });
 
     it('secondary variant has hover and active scale effects', () => {
       render(<Button variant="secondary">Secondary</Button>);
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('hover:scale-[1.02]');
-      expect(button).toHaveClass('active:scale-[0.98]');
+      expect(button.className).toContain('hover:enabled:scale-[1.02]');
+      expect(button.className).toContain('active:enabled:scale-[0.98]');
     });
 
     it('icon variant has larger hover scale effect', () => {
       render(<Button variant="icon" icon={Download} />);
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('hover:scale-[1.05]');
-      expect(button).toHaveClass('active:scale-[0.98]');
+      expect(button.className).toContain('hover:enabled:scale-[1.05]');
+      expect(button.className).toContain('active:enabled:scale-[0.98]');
     });
 
     it('dark variant has hover shadow and scale effects', () => {
       render(<Button variant="dark">Dark</Button>);
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('hover:scale-[1.02]');
+      expect(button.className).toContain('hover:enabled:scale-[1.02]');
       expect(button).toHaveClass('shadow-lg');
     });
 
@@ -140,11 +140,11 @@ describe('Button', () => {
       expect(screen.getByRole('button')).toBeDisabled();
     });
 
-    it('applies disabled opacity class', () => {
+    it('applies disabled cursor and background classes', () => {
       render(<Button disabled>Disabled</Button>);
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('disabled:opacity-50');
       expect(button).toHaveClass('disabled:cursor-not-allowed');
+      expect(button.className).toContain('disabled:bg-slate-300');
     });
 
     it('is not clickable when disabled', async () => {
@@ -278,7 +278,7 @@ describe('IconButton', () => {
   it('applies icon variant hover scale', () => {
     render(<IconButton icon={Download} aria-label="Download" />);
     const button = screen.getByRole('button');
-    expect(button).toHaveClass('hover:scale-[1.05]');
+    expect(button.className).toContain('hover:enabled:scale-[1.05]');
   });
 
   it('forwards props to Button component', () => {

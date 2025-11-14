@@ -162,7 +162,7 @@ export function ErrorBanner({ error, retryAfter, onDismiss }) {
 
   return (
     <div
-      className={`bg-red-50 border border-red-200 border-l-4 border-l-red-500 rounded-lg shadow-sm mb-6 ${
+      className={`bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 border-l-4 border-l-red-500 dark:border-l-red-400 rounded-lg shadow-sm mb-6 ${
         isExiting ? 'animate-fade-out' : 'animate-slide-in-fade'
       } motion-reduce:animate-none`}
       role="alert"
@@ -171,16 +171,16 @@ export function ErrorBanner({ error, retryAfter, onDismiss }) {
       <div className="flex items-start gap-4 p-4">
         {/* Error Icon */}
         <div className="flex-shrink-0 mt-0.5">
-          <AlertCircle className="h-6 w-6 text-red-600" aria-hidden="true" />
+          <AlertCircle className="h-6 w-6 text-red-600 dark:text-red-400" aria-hidden="true" />
         </div>
 
         {/* Error Content */}
         <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-semibold text-slate-900 mb-1">
+          <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-1">
             {errorHeading}
           </h3>
           {isMultiLine ? (
-            <div className="text-sm text-slate-700 space-y-1.5 leading-relaxed">
+            <div className="text-sm text-slate-700 dark:text-slate-300 space-y-1.5 leading-relaxed">
               {errorLines.map((line, index) => (
                 <p key={index} className={line.trim() ? '' : 'hidden'}>
                   {line}
@@ -188,14 +188,14 @@ export function ErrorBanner({ error, retryAfter, onDismiss }) {
               ))}
             </div>
           ) : (
-            <p className="text-sm text-slate-700 leading-relaxed">
+            <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
               {errorMessage}
             </p>
           )}
           {retryAfter && (
-            <div className="mt-3 pt-3 border-t border-red-200">
-              <p className="text-xs font-medium text-slate-700 flex items-center gap-2">
-                <span className="inline-block w-1.5 h-1.5 bg-red-600 rounded-full animate-pulse" aria-hidden="true"></span>
+            <div className="mt-3 pt-3 border-t border-red-200 dark:border-red-800">
+              <p className="text-xs font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                <span className="inline-block w-1.5 h-1.5 bg-red-600 dark:bg-red-400 rounded-full animate-pulse" aria-hidden="true"></span>
                 Please wait {retryAfter} seconds before trying again.
               </p>
             </div>
@@ -206,7 +206,7 @@ export function ErrorBanner({ error, retryAfter, onDismiss }) {
         <button
           type="button"
           onClick={handleDismiss}
-          className="flex-shrink-0 text-red-400 hover:text-red-600 hover:bg-red-100 rounded-md p-1.5 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2 motion-reduce:transition-none"
+          className="flex-shrink-0 text-red-400 dark:text-red-500 hover:text-red-600 dark:hover:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-md p-1.5 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-600 dark:focus-visible:ring-red-400 focus-visible:ring-offset-2 motion-reduce:transition-none"
           aria-label="Dismiss error"
         >
           <X className="h-4 w-4" aria-hidden="true" />
@@ -235,8 +235,8 @@ export function ErrorBanner({ error, retryAfter, onDismiss }) {
             id="error-technical-details"
             role="region"
             aria-label="Error technical details"
-            className={`overflow-hidden transition-all duration-300 ease-in-out ${
-              isDetailsExpanded ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'
+            className={`transition-all duration-300 ease-in-out ${
+              isDetailsExpanded ? 'max-h-[800px] opacity-100 overflow-y-auto' : 'max-h-0 opacity-0 overflow-hidden'
             }`}
           >
             <div className="px-4 pb-4 pt-1 space-y-4">

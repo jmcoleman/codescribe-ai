@@ -40,9 +40,10 @@ export function CodePanel({
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const mobileMenuRef = useRef(null);
 
-  // Count lines and characters
+  // Count lines, characters, and calculate file size
   const lines = code.split('\n').length;
   const chars = code.length;
+  const bytes = new Blob([code]).size;
 
   // Click-outside detection for mobile menu
   useEffect(() => {
@@ -111,10 +112,9 @@ export function CodePanel({
         <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
           {isClearing && 'Editor cleared'}
         </div>
-        {/* Left: Filename + Language badge */}
+        {/* Left: Filename */}
         <div className="flex items-center gap-2 min-w-0 flex-1 mr-2">
           <span className="text-sm text-slate-600 dark:text-slate-400 truncate" title={filename}>{filename}</span>
-          <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium text-cyan-800 dark:text-cyan-300 bg-cyan-50 dark:bg-cyan-400/15 border border-cyan-200 dark:border-cyan-400/30 rounded-full flex-shrink-0">{getLanguageDisplayName(language)}</span>
         </div>
 
         {/* Right: Desktop buttons + Mobile menu */}
@@ -321,9 +321,15 @@ export function CodePanel({
 
       {/* Footer */}
       <div className="flex items-center justify-between px-4 py-2 bg-slate-50 dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 transition-colors">
-        <span className="text-xs text-slate-600 dark:text-slate-400">
-          {lines} lines • {chars} chars
-        </span>
+        <div className="flex items-center gap-3 text-xs text-slate-600 dark:text-slate-400">
+          <span>{lines} lines</span>
+          <span>•</span>
+          <span>{chars} chars</span>
+          <span>•</span>
+          <span>{formatBytes(bytes)}</span>
+          <span>•</span>
+          <span className="capitalize">{getLanguageDisplayName(language)}</span>
+        </div>
         <div className="flex items-center gap-1.5 text-xs">
           <Zap className="w-3 h-3 text-cyan-600 dark:text-cyan-400" aria-hidden="true" />
           <span className="text-cyan-600 dark:text-cyan-400 font-medium">Ready to analyze</span>
@@ -342,4 +348,12 @@ export function CodePanel({
       )}
     </div>
   );
+}
+
+function formatBytes(bytes) {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return Math.round(bytes / Math.pow(k, i) * 10) / 10 + ' ' + sizes[i];
 }

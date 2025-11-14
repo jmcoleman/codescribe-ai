@@ -2,7 +2,7 @@
 
 **Master Guide for Complete Vercel Deployment**
 
-**Last Updated:** October 27, 2025
+**Last Updated:** November 14, 2025 (v2.7.8 - Multi-provider LLM + GitHub Integration)
 **Status:** Production Ready
 **Estimated Time:** 45-60 minutes (first-time setup)
 
@@ -266,9 +266,14 @@ See [VERCEL-ENVIRONMENT-VARIABLES.md](./VERCEL-ENVIRONMENT-VARIABLES.md) for the
 **Add these for Production environment:**
 
 ```bash
-# Core App
-CLAUDE_API_KEY=sk-ant-api03-xxx
+# Core App (v2.7.8+)
+LLM_PROVIDER=claude                                      # NEW: Required
+CLAUDE_API_KEY=sk-ant-api03-xxx                         # Required if LLM_PROVIDER=claude
 NODE_ENV=production
+
+# Optional: OpenAI (only if using OpenAI instead of Claude)
+# OPENAI_API_KEY=sk-xxx                                 # Required if LLM_PROVIDER=openai
+# LLM_MODEL=gpt-4-turbo-preview                         # Optional, OpenAI model selection
 
 # Database (auto-added by Neon integration)
 POSTGRES_URL=xxx (from Neon)
@@ -279,6 +284,9 @@ POSTGRES_URL_NON_POOLING=xxx (from Neon)
 GITHUB_CLIENT_ID=xxx (from Step 4)
 GITHUB_CLIENT_SECRET=xxx (from Step 4)
 GITHUB_CALLBACK_URL=https://codescribeai.com/api/auth/github/callback
+
+# GitHub Integration (v2.7.8+)
+GITHUB_TOKEN=ghp_xxx                                     # NEW: Optional (recommended for GitHub file loader)
 
 # Email (Resend)
 RESEND_API_KEY=re_xxx (from Step 5)
@@ -530,6 +538,6 @@ For detailed troubleshooting, see individual setup guides linked above.
 
 ---
 
-**Last Updated:** October 27, 2025
-**Version:** 1.0
+**Last Updated:** November 14, 2025 (v2.7.8 - Multi-provider LLM + GitHub Integration)
+**Version:** 1.1
 **Maintained By:** CodeScribe AI Team

@@ -2,8 +2,8 @@ import { Upload, Github, Sparkles } from 'lucide-react';
 import { Button } from './Button';
 import { Select } from './Select';
 
-// Feature flag: GitHub import not yet implemented (planned for v2.0)
-const ENABLE_GITHUB_IMPORT = false;
+// Feature flag: GitHub import enabled (v2.8.0+)
+const ENABLE_GITHUB_IMPORT = true;
 
 export function ControlBar({
   docType,

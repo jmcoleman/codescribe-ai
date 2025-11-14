@@ -99,5 +99,5 @@ module.exports = {
   transform: {
     '^.+\\.js$': 'babel-jest',
   },
-  transformIgnorePatterns: ['node_modules/(?!(acorn|resend)/)'],
+  transformIgnorePatterns: ['node_modules/(?!(acorn|resend|@octokit|universal-user-agent|before-after-hook|deprecation)/)'],
 };

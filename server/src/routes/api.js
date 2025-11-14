@@ -9,6 +9,7 @@ import User from '../models/User.js';
 import emailService from '../services/emailService.js';
 import { TIER_FEATURES, TIER_PRICING } from '../config/tiers.js';
 import { requireAuth, optionalAuth } from '../middleware/auth.js';
+import githubService from '../services/githubService.js';
 
 const router = express.Router();
 
@@ -579,6 +580,254 @@ router.post('/user/restore-account', async (req, res) => {
     });
   }
 });
+
+// ============================================================================
+// GitHub Integration Endpoints
+// ============================================================================
+
+/**
+ * Parse GitHub URL
+ * POST /api/github/parse-url
+ * Body: { url: string }
+ * Returns: Parsed URL components or error
+ */
+router.post('/github/parse-url', apiLimiter, (req, res) => {
+  try {
+    const { url } = req.body;
+
+    if (!url || typeof url !== 'string') {
+      return res.status(400).json({
+        error: 'Invalid request',
+        message: 'URL is required and must be a string'
+      });
+    }
+
+    const parsed = githubService.parseGitHubUrl(url);
+
+    if (!parsed) {
+      return res.status(400).json({
+        error: 'Invalid GitHub URL',
+        message: 'Please provide a valid GitHub URL or owner/repo format',
+        examples: [
+          'github.com/facebook/react/blob/main/README.md',
+          'facebook/react',
+          'https://github.com/vercel/next.js'
+        ]
+      });
+    }
+
+    res.json({
+      success: true,
+      ...parsed
+    });
+  } catch (error) {
+    console.error('[GitHub] Parse URL error:', error);
+    res.status(500).json({
+      error: 'Failed to parse URL',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * Fetch file from GitHub
+ * POST /api/github/file
+ * Body: { owner: string, repo: string, path: string, ref?: string }
+ * Returns: File content and metadata
+ */
+router.post('/github/file', apiLimiter, async (req, res) => {
+  try {
+    const { owner, repo, path, ref } = req.body;
+
+    // Validation
+    if (!owner || !repo || !path) {
+      return res.status(400).json({
+        error: 'Invalid request',
+        message: 'owner, repo, and path are required'
+      });
+    }
+
+    if (typeof owner !== 'string' || typeof repo !== 'string' || typeof path !== 'string') {
+      return res.status(400).json({
+        error: 'Invalid request',
+        message: 'owner, repo, and path must be strings'
+      });
+    }
+
+    const fileData = await githubService.fetchFile(owner, repo, path, ref);
+
+    res.json({
+      success: true,
+      file: fileData
+    });
+  } catch (error) {
+    console.error('[GitHub] Fetch file error:', error);
+
+    // Handle different error types
+    if (error.message.includes('not found')) {
+      return res.status(404).json({
+        error: 'Not found',
+        message: error.message
+      });
+    }
+
+    if (error.message.includes('rate limit')) {
+      return res.status(429).json({
+        error: 'Rate limit exceeded',
+        message: error.message
+      });
+    }
+
+    if (error.message.includes('too large')) {
+      return res.status(413).json({
+        error: 'File too large',
+        message: error.message
+      });
+    }
+
+    if (error.message.includes('forbidden') || error.message.includes('private')) {
+      return res.status(403).json({
+        error: 'Access forbidden',
+        message: error.message
+      });
+    }
+
+    res.status(500).json({
+      error: 'Failed to fetch file',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * Fetch repository tree
+ * POST /api/github/tree
+ * Body: { owner: string, repo: string, ref?: string }
+ * Returns: Repository tree structure
+ */
+router.post('/github/tree', apiLimiter, async (req, res) => {
+  try {
+    const { owner, repo, ref } = req.body;
+
+    // Validation
+    if (!owner || !repo) {
+      return res.status(400).json({
+        error: 'Invalid request',
+        message: 'owner and repo are required'
+      });
+    }
+
+    if (typeof owner !== 'string' || typeof repo !== 'string') {
+      return res.status(400).json({
+        error: 'Invalid request',
+        message: 'owner and repo must be strings'
+      });
+    }
+
+    const treeData = await githubService.fetchTree(owner, repo, ref);
+
+    res.json({
+      success: true,
+      repository: treeData
+    });
+  } catch (error) {
+    console.error('[GitHub] Fetch tree error:', error);
+
+    // Handle different error types
+    if (error.message.includes('not found')) {
+      return res.status(404).json({
+        error: 'Not found',
+        message: error.message
+      });
+    }
+
+    if (error.message.includes('rate limit')) {
+      return res.status(429).json({
+        error: 'Rate limit exceeded',
+        message: error.message
+      });
+    }
+
+    if (error.message.includes('forbidden') || error.message.includes('private')) {
+      return res.status(403).json({
+        error: 'Access forbidden',
+        message: error.message
+      });
+    }
+
+    res.status(500).json({
+      error: 'Failed to fetch repository tree',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * Fetch repository branches
+ * POST /api/github/branches
+ * Body: { owner: string, repo: string }
+ * Returns: List of branches
+ */
+router.post('/github/branches', apiLimiter, async (req, res) => {
+  try {
+    const { owner, repo } = req.body;
+
+    // Validation
+    if (!owner || !repo) {
+      return res.status(400).json({
+        error: 'Invalid request',
+        message: 'owner and repo are required'
+      });
+    }
+
+    if (typeof owner !== 'string' || typeof repo !== 'string') {
+      return res.status(400).json({
+        error: 'Invalid request',
+        message: 'owner and repo must be strings'
+      });
+    }
+
+    const branches = await githubService.fetchBranches(owner, repo);
+
+    res.json({
+      success: true,
+      branches
+    });
+  } catch (error) {
+    console.error('[GitHub] Fetch branches error:', error);
+
+    // Handle different error types
+    if (error.message.includes('not found')) {
+      return res.status(404).json({
+        error: 'Not found',
+        message: error.message
+      });
+    }
+
+    if (error.message.includes('rate limit')) {
+      return res.status(429).json({
+        error: 'Rate limit exceeded',
+        message: error.message
+      });
+    }
+
+    if (error.message.includes('forbidden') || error.message.includes('private')) {
+      return res.status(403).json({
+        error: 'Access forbidden',
+        message: error.message
+      });
+    }
+
+    res.status(500).json({
+      error: 'Failed to fetch branches',
+      message: error.message
+    });
+  }
+});
+
+// ============================================================================
+// Health Check
+// ============================================================================
 
 router.get('/health', (req, res) => {
   res.json({

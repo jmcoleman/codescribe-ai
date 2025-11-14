@@ -2,38 +2,40 @@
 
 **Project:** CodeScribe AI - Intelligent Code Documentation Generator
 **Testing Status:** ✅ Comprehensive Coverage Across 3 Frameworks
-**Last Updated:** November 13, 2025 (v2.7.7)
+**Last Updated:** November 14, 2025 (v2.7.9)
 
 ---
 
 ## 📊 Quick Stats
 
-- **Total Tests:** 2,460 tests (2,406 passing, 54 skipped, 0 failures)
+- **Total Tests:** 2,529 tests (2,475 passing, 54 skipped, 0 failures)
   - **Frontend:** 1,549 tests | 33 skipped (Vitest + React Testing Library)
     - Component Tests: All components with dark mode variants tested (including SamplesModal)
+    - GitHub Loader: FileTree, TreeNode, GitHubLoadModal integration tests
     - Dark Mode Tests: 106 tests (ThemeContext with auto mode, ThemeToggle, all components, integration)
     - Integration Tests: Auth, OAuth, password reset, upload, error handling, usage tracking, legal pages
     - UI Tests: Toast system, modals, forms, storage helpers, pricing page, focus trap
     - Contact Modals: ContactSalesModal (25 tests), ContactSupportModal (12 tests - getToken Promise fix)
     - **Pass Rate:** 97.9% (1,516 passing, 33 skipped, 0 failures)
-  - **Backend:** 911 tests | 21 skipped (Jest + Supertest)
-    - Unit Tests: Services, models, utilities, middleware (emailService, requireTermsAcceptance, tierGate, rateLimitBypass)
+  - **Backend:** 980 tests | 21 skipped (Jest + Supertest)
+    - Unit Tests: Services, models, utilities, middleware (emailService, requireTermsAcceptance, tierGate, rateLimitBypass, githubService)
+    - LLM Provider Tests: 69 tests (llmService, config, utils, adapters for Claude/OpenAI)
     - Integration Tests: Prompt quality, API contracts, authentication, tier system, contact sales/support, legal endpoints
     - Security Tests: Password hashing, JWT validation, OAuth flows, usage quotas, email rate limiting
     - Email Tests: 73 tests (contact route 45, emailService 28 - templates, attachments, rate limits)
     - Usage Tests: 29 tests (all passing)
     - Middleware Tests: 14 rateLimitBypass tests (100% coverage - admin/support/super_admin bypass roles)
-    - **Pass Rate:** 100% (890 passing, 21 skipped, 0 failures)
+    - **Pass Rate:** 100% (959 passing, 21 skipped, 0 failures)
   - **Database:** 37 migration tests (Docker sandbox + Neon dev validation)
     - Migration-010: 14 tests (terms/privacy acceptance tracking)
     - Migration-011: 10 tests (analytics_enabled column + index)
     - Migration-017: 13 tests (total_generations column with triggers)
   - **E2E:** 10 tests (Playwright - file upload flow)
-- **Pass Rate:** 97.81% (2,406/2,460 total tests passing, 54 skipped, 0 failures) ✅
-- **Backend Coverage:** 96.71% middleware coverage (CI passing), 92.34% services statements, 79.33% models
+- **Pass Rate:** 97.9% (2,475/2,529 total tests passing, 54 skipped, 0 failures) ✅
+- **Backend Coverage:** 82.38% statements, 70.11% branches, 82.54% lines, 85%+ functions (CI passing)
 - **Test Execution Time:** Frontend ~19.8s, Backend ~7.1s, Database ~0.3s, E2E ~45s
 - **Coverage Target:** 90% ✅ EXCEEDED (96.71% middleware statements, 93.49% middleware branches)
-- **Recent Updates:** Middleware test coverage fix (14 rateLimitBypass tests, 100% coverage), admin dashboard performance optimization, database trigger for total_generations, "This Period" + "All Time" columns (Nov 13, 2025 - v2.7.7)
+- **Recent Updates:** GitHub repository integration tests (FileTree, TreeNode, GitHubLoadModal), LLM provider tests (69 new), updated ControlBar tests for GitHub button, Jest ESM transformation for @octokit (Nov 14, 2025 - v2.7.9)
 
 ---
 

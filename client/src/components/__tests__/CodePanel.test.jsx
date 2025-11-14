@@ -92,20 +92,24 @@ describe('CodePanel', () => {
 
     it('displays character count correctly', () => {
       render(<CodePanel {...defaultProps} code="12345" />);
-      expect(screen.getByText(/1 lines • 5 chars/i)).toBeInTheDocument();
+      expect(screen.getByText('1 lines')).toBeInTheDocument();
+      expect(screen.getByText('5 chars')).toBeInTheDocument();
     });
 
     it('updates statistics when code changes', () => {
       const { rerender } = render(<CodePanel {...defaultProps} code="short" />);
-      expect(screen.getByText(/1 lines • 5 chars/i)).toBeInTheDocument();
+      expect(screen.getByText('1 lines')).toBeInTheDocument();
+      expect(screen.getByText('5 chars')).toBeInTheDocument();
 
       rerender(<CodePanel {...defaultProps} code="much longer code" />);
-      expect(screen.getByText(/1 lines • 16 chars/i)).toBeInTheDocument();
+      expect(screen.getByText('1 lines')).toBeInTheDocument();
+      expect(screen.getByText('16 chars')).toBeInTheDocument();
     });
 
     it('handles empty code', () => {
       render(<CodePanel {...defaultProps} code="" />);
-      expect(screen.getByText(/1 lines • 0 chars/i)).toBeInTheDocument();
+      expect(screen.getByText('1 lines')).toBeInTheDocument();
+      expect(screen.getByText('0 chars')).toBeInTheDocument();
     });
   });
 
@@ -272,7 +276,8 @@ describe('CodePanel', () => {
     it('handles very long code', () => {
       const longCode = 'x'.repeat(100000);
       render(<CodePanel {...defaultProps} code={longCode} />);
-      expect(screen.getByText(/1 lines • 100000 chars/i)).toBeInTheDocument();
+      expect(screen.getByText('1 lines')).toBeInTheDocument();
+      expect(screen.getByText('100000 chars')).toBeInTheDocument();
     });
 
     it('handles code with special characters', async () => {

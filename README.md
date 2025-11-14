@@ -795,9 +795,10 @@ See [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) for complete
 
 ### 📊 Testing & Quality
 
-**Comprehensive Test Coverage: 2,391 Tests** (2,341 passing, 50 skipped, 97.91% pass rate)
-- **Backend Tests**: 878 tests (857 passing, 21 skipped, 0 failures) - Jest + Supertest
-  - Service layer: qualityScorer, claudeClient, codeParser, docGenerator, emailService
+**Comprehensive Test Coverage: 2,529 Tests** (2,475 passing, 54 skipped, 97.9% pass rate)
+- **Backend Tests**: 980 tests (959 passing, 21 skipped, 0 failures) - Jest + Supertest
+  - Service layer: qualityScorer, claudeClient, codeParser, docGenerator, emailService, githubService
+  - LLM provider tests: 69 tests (llmService, config, utils, adapters)
   - Authentication: 102 tests (auth middleware, user model, OAuth flows)
   - Settings: 26 integration tests (profile, email, password, preferences)
   - Database migrations: 50 tests (naming, checksums, ordering, migration 011)
@@ -806,10 +807,11 @@ See [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) for complete
   - User deletion & restoration: 64 tests (GitHub OAuth restoration, email/password restoration)
   - Integration: file upload, quality scoring, prompt quality, settings API
   - Mermaid generation tests
-  - **Coverage**: 91.83% services statements, 95.81% overall, 88.72% branches
-  - **Pass Rate**: 100% (857 passing, 21 skipped, 0 failures)
-- **Frontend Tests**: 1,513 tests (1,484 passing, 29 skipped, 0 failures) - Vitest + React Testing Library
+  - **Coverage**: 82.38% statements, 70.11% branches, 82.54% lines, 85%+ functions
+  - **Pass Rate**: 100% (959 passing, 21 skipped, 0 failures)
+- **Frontend Tests**: 1,549 tests (1,516 passing, 33 skipped, 0 failures) - Vitest + React Testing Library
   - Component tests with accessibility checks (18/18 components tested)
+  - GitHub Loader: FileTree, TreeNode, GitHubLoadModal integration
   - Authentication UI: SignupModal, LoginModal, ForgotPasswordModal, ResetPasswordModal
   - Settings UI: AccountTab, AppearanceTab, PrivacyTab, SubscriptionTab, DangerZoneTab, AnalyticsWrapper
   - Contact & Support Modals: ContactSalesModal (25 tests), ContactSupportModal (12 tests)
@@ -820,12 +822,12 @@ See [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) for complete
   - Mermaid diagram rendering tests
   - Toast notification system tests (33 tests)
   - **Coverage**: 100% critical user paths
-  - **Pass Rate**: 100% (1,484 passing, 29 skipped, 0 failures)
+  - **Pass Rate**: 97.9% (1,516 passing, 33 skipped, 0 failures)
 - **E2E Tests**: 10 tests across 5 browsers (Playwright)
   - Cross-browser validation (Chromium, Firefox, WebKit, Chrome, Edge)
   - File upload + generate workflows
   - **Pass Rate**: 100% (10/10 tests passing)
-- **Overall Pass Rate**: 100% passing (2,406/2,406 tests passing, 54 intentionally skipped, 0 failures)
+- **Overall Pass Rate**: 97.9% passing (2,475/2,529 tests passing, 54 intentionally skipped, 0 failures)
 
 **Running Tests:**
 ```bash
@@ -865,9 +867,9 @@ npm run test:e2e:headed       # With browser UI (for debugging)
 
 ## Development Status
 
-**Current Phase:** Phase 2 - Dark Mode & UI Enhancements (Epic 2.7 ✅ COMPLETE)
+**Current Phase:** Phase 2 - GitHub Integration (Epic 4.1 ✅ COMPLETE)
 **Production Status:** 🚀 **LIVE** at [codescribeai.com](https://codescribeai.com)
-**Last Updated:** November 9, 2025 (v2.7.1)
+**Last Updated:** November 14, 2025 (v2.7.9)
 
 ### Phase Summary
 
@@ -888,6 +890,13 @@ npm run test:e2e:headed       # With browser UI (for debugging)
   - ThemeContext with localStorage and system preference detection
   - 106 dark mode tests + critical ErrorBoundary fixes
   - 2,385 tests (2,335 passing, 50 skipped, 100% pass rate)
+- **Phase 2 - Epic 4.1 (Nov 14, 2025):** ✅ GitHub Repository Integration (v2.7.9)
+  - GitHub repository file loader with tree browsing and preview
+  - Branch switching dropdown in file tree header
+  - Smart folder/file navigation with auto-scroll
+  - Public repository support via GitHub API
+  - Multi-provider LLM architecture (Claude + OpenAI)
+  - 2,529 tests (2,475 passing, 54 skipped, 97.9% pass rate)
 - **Phase 2 - Next Epic:** 📋 Epic 2.8 - Subscription Management UI (Customer Portal, upgrade/downgrade flows)
 
 ### ✅ Phase 1.0 & 1.5 Complete (Oct 11-19, 2025)
@@ -902,9 +911,9 @@ npm run test:e2e:headed       # With browser UI (for debugging)
 - Production deployment with CI/CD (GitHub Actions)
 
 **Quality Metrics:**
-- **2,385 tests** (1,507 frontend, 878 backend) - 100% pass rate
-- **Backend coverage:** 91.83% overall (857 passing, 21 skipped)
-- **Frontend coverage:** 100% critical paths (1,478 passing, 29 skipped)
+- **2,529 tests** (1,549 frontend, 980 backend) - 97.9% pass rate
+- **Backend coverage:** 82.38% statements, 70.11% branches (959 passing, 21 skipped)
+- **Frontend coverage:** 100% critical paths (1,516 passing, 33 skipped)
 - **Database:** 14 migration tests (Docker sandbox + Neon dev validation)
 
 ### ✅ Phase 2 - Epic 2.6 Complete (Nov 5-7, 2025)
@@ -965,6 +974,46 @@ npm run test:e2e:headed       # With browser UI (for debugging)
 - 106 new dark mode tests (ThemeContext, ThemeToggle, components, integration)
 - 3 critical test fixes (ContactSupportModal, DocPanel, UsageLimitModal)
 - Updated documentation (CHANGELOG, ERROR-HANDLING-TESTS.md, ROADMAP)
+
+### ✅ Phase 2 - Epic 4.1 Complete (Nov 14, 2025)
+
+**GitHub Repository Integration (v2.7.9):**
+- **GitHub File Loader**
+  - Load public GitHub repositories via URL
+  - Tree-based file browser with folder expansion
+  - File preview with syntax highlighting
+  - Branch switching dropdown (matches GitHub UX)
+  - Auto-scroll to selected files in tree
+  - Smart error handling (404, rate limits, network errors)
+
+- **Multi-Provider LLM Architecture (v2.7.8)**
+  - Config-driven provider switching (Claude, OpenAI)
+  - Simplified adapter-based architecture (~650 lines)
+  - Provider metadata in API responses
+  - Environment-based provider selection
+  - 69 LLM service tests (100% backward compatible)
+
+**Technical Implementation:**
+- 4 new GitHubLoader components (Modal, FileTree, TreeNode, FilePreview)
+- 2 GitHub service files (backend + frontend)
+- 4 new API routes (tree, branches, file, raw file)
+- Headless UI Listbox for branch dropdown
+- Parallel fetching for branches + tree
+- Jest ESM transformation for @octokit packages
+
+**Testing & Quality:**
+- **2,529 tests** (2,475 passing, 54 skipped) - 97.9% pass rate
+- 69 LLM service tests (llmService, adapters, config, utils)
+- Updated ControlBar tests for GitHub button visibility
+- Backend: 82.38% statements, 70.11% branches
+- Frontend: 100% critical paths
+- All existing tests pass (100% backward compatible)
+
+**Documentation & Deployment:**
+- Created GITHUB-API-SCALING.md scaling guide
+- Updated Vercel deployment guides with new env vars
+- GITHUB_TOKEN setup for production (5000/hr rate limit)
+- LLM_PROVIDER configuration documentation
 
 ### 🚀 Future Development
 

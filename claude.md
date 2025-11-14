@@ -41,6 +41,7 @@ AI-powered documentation generator with real-time streaming, quality scoring (0-
 | [SUBSCRIPTION-FLOWS.md](docs/architecture/SUBSCRIPTION-FLOWS.md) | Subscription flows ⭐ | Unauthenticated users, email/OAuth signup, billing periods, sessionStorage intent |
 | [SUBSCRIPTION-MANAGEMENT.md](docs/architecture/SUBSCRIPTION-MANAGEMENT.md) | Subscription management ⭐ | Hybrid proration (upgrade/downgrade), testing guide, webhooks |
 | [PROMPT-CACHING-GUIDE.md](docs/architecture/PROMPT-CACHING-GUIDE.md) | Cost optimization ⭐ | Caching strategy, adding examples, savings analysis ($50-300/mo) |
+| [GITHUB-API-SCALING.md](docs/architecture/GITHUB-API-SCALING.md) | GitHub API scaling ⭐ | Rate limits (60/5000/hr), server token vs per-user, caching strategy, scaling path |
 | [05-Dev-Guide.md](docs/planning/mvp/05-Dev-Guide.md) | Implementation patterns | Complete service code, best practices, deployment |
 | [API-Reference.md](docs/api/API-Reference.md) | API specs | 4 endpoints, request/response formats, error codes |
 
@@ -126,6 +127,7 @@ AI-powered documentation generator with real-time streaming, quality scoring (0-
 | Subscriptions/Payments | SUBSCRIPTION-MANAGEMENT.md (upgrade/downgrade flows, proration, webhooks) |
 | Performance | OPTIMIZATION-GUIDE.md |
 | Cost Optimization | PROMPT-CACHING-GUIDE.md (caching strategy, adding examples, savings) |
+| GitHub API / Scaling | GITHUB-API-SCALING.md (rate limits, server token vs per-user, caching, scaling path) |
 | Testing | Testing README, COMPONENT-TEST-COVERAGE.md, TEST-PATTERNS-GUIDE.md, SKIPPED-TESTS.md |
 | Test Fixes/Patterns | TEST-PATTERNS-GUIDE.md (10 patterns, 6 insights, frontend + backend) |
 | Skipped Tests | SKIPPED-TESTS.md (36 tests documented, quarterly review schedule) |
@@ -356,24 +358,28 @@ codescribe-ai/
 
 ## 🔄 Version History
 
-**Current: v2.7.8** (November 14, 2025)
-- Multi-provider LLM architecture (Claude + OpenAI support)
-- Config-driven provider switching via LLM_PROVIDER environment variable
-- Simplified architecture using switch-based routing (~650 lines)
-- Provider adapters: claude.js, openai.js with shared utilities
-- Provider metadata in API responses (provider, model, tokens, latency, caching)
-- Updated README, CLAUDE.md, ARCHITECTURE.md with multi-provider docs
-- Created 4 new architecture documentation files
-- Comprehensive test suite: 69 new tests for LLM service (llmService, utils, config)
-- All 860+ existing tests pass without changes (100% backward compatible)
-- 2,529 tests (2,475 passing, 54 skipped, 100% pass rate)
-- Coverage: statements 82.38%, branches 70.11%, lines 82.54%, functions 85%+
-- Adjusted thresholds for SDK wrappers (thin adapters best tested via integration tests)
+**Current: v2.7.9** (November 14, 2025)
+- GitHub repository integration (public repos via GitHub API)
+- File loader modal with tree-based browsing and file preview
+- Branch switching dropdown in file tree header (Headless UI Listbox)
+- Smart folder/file navigation with auto-scroll to selected files
+- 4 new GitHubLoader components (Modal, FileTree, TreeNode, FilePreview)
+- 2 GitHub service files (backend + frontend) with @octokit/rest integration
+- 4 new API routes (tree, branches, file, raw file) with error handling
+- Parallel fetching for branches + tree for better performance
+- Updated deployment guides with GITHUB_TOKEN configuration
+- Created GITHUB-API-SCALING.md for production scaling strategy
+- Jest ESM transformation for @octokit packages
+- Updated ControlBar tests for GitHub button visibility
+- 2,529 tests (2,475 passing, 54 skipped, 97.9% pass rate)
+- Backend: 82.38% statements, 70.11% branches
+- Frontend: 100% critical paths (1,516 passing, 33 skipped)
 
 <details>
-<summary>Recent Releases (v2.7.0-v2.7.7) & Milestones</summary>
+<summary>Recent Releases (v2.7.0-v2.7.8) & Milestones</summary>
 
 **v2.7.x Series (Nov 2025):**
+- v2.7.8: Multi-provider LLM architecture (Claude + OpenAI support, config-driven switching, 69 new tests)
 - v2.7.7: Admin dashboard performance optimization (O(1) lifetime usage), smart auto-scroll, middleware coverage fix
 - v2.7.6: Dual-tab quality breakdown, transformation header, enhanced markdown export
 - v2.7.5: UX refinements, dark mode docs, Google OAuth docs
@@ -393,7 +399,7 @@ codescribe-ai/
 - **v1.21** (Oct 19): Production deployment, codescribe-ai.vercel.app
 
 Full history: [CHANGELOG.md](CHANGELOG.md)
-Last updated: November 13, 2025
+Last updated: November 14, 2025
 </details>
 
 ---
