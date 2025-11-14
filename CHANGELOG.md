@@ -144,10 +144,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Test Results
 
 - **Frontend**: 1,516 passed | 33 skipped (1,549 total)
-- **Backend**: 890 passed | 21 skipped (911 total)
-- **Total**: 2,406 passed | 54 skipped (2,460 total)
+- **Backend**: 959 passed | 21 skipped (980 total)
+- **Total**: 2,475 passed | 54 skipped (2,529 total)
 - **Pass Rate**: 100% (0 failures)
-- **Coverage**: 91.83% backend, 96.71% middleware
+- **Coverage**: Meets all thresholds (statements 90%, branches 79%, lines 90%, functions 85%)
 
 ---
 
