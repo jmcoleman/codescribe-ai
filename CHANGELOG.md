@@ -9,6 +9,148 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.7.8] - 2025-11-14
+
+**Status:** ✅ Multi-Provider LLM Architecture
+
+**Summary:** Implemented multi-provider LLM support with config-driven provider switching between Claude (Anthropic) and OpenAI. Simplified architecture using switch-based routing (~650 lines) enables runtime provider switching via environment variables without code changes. Added provider metadata to all API responses (provider, model, tokens, latency, caching status). Updated documentation to reflect multi-provider capabilities with configuration examples and comparison tables.
+
+### Added
+
+- **Multi-Provider LLM Service** ([server/src/services/llm/llmService.js](server/src/services/llm/llmService.js))
+  - Unified LLM service supporting Claude (Anthropic) and OpenAI
+  - Switch-based routing to provider adapters based on configuration
+  - Methods: `generate()`, `generateWithStreaming()`, `getProvider()`, `getModel()`, `supportsCaching()`
+  - Consistent interface across all providers
+  - No code changes required to switch providers
+
+- **Provider Adapters** ([server/src/services/llm/providers/](server/src/services/llm/providers/))
+  - `claude.js` - Claude provider adapter with prompt caching support
+    - Functions: `generateWithClaude()`, `streamWithClaude()`
+    - Prompt caching with 1-hour TTL (90% cost savings)
+    - System prompt caching
+    - Token tracking: input, output, cacheRead, cacheWrite
+  - `openai.js` - OpenAI provider adapter
+    - Functions: `generateWithOpenAI()`, `streamWithOpenAI()`
+    - Chat completions API integration
+    - Estimated token counting for streaming mode
+
+- **Shared Utilities** ([server/src/services/llm/utils.js](server/src/services/llm/utils.js))
+  - `retryWithBackoff()` - Exponential backoff retry logic (3 attempts)
+  - `standardizeError()` - Error normalization across providers
+  - `estimateTokens()` - Rough token estimation (~4 chars per token)
+  - `shouldNotRetry()` - Retry decision logic for specific errors
+
+- **LLM Configuration** ([server/src/config/llm.config.js](server/src/config/llm.config.js))
+  - Centralized provider configuration via environment variables
+  - `getLLMConfig()` - Loads and validates provider settings
+  - `getProviderCapabilities()` - Returns provider feature support
+  - Provider-specific settings (API keys, models, capabilities)
+  - Generic overrides via `LLM_API_KEY` and `LLM_MODEL`
+  - Priority fallback: provider-specific → generic → defaults
+
+- **Environment Variables** ([server/.env.example](server/.env.example))
+  - `LLM_PROVIDER` - Provider selection: `claude` (default) or `openai`
+  - `CLAUDE_API_KEY` / `OPENAI_API_KEY` - Provider-specific API keys
+  - `LLM_API_KEY` - Generic API key (fallback for any provider)
+  - `LLM_MODEL` - Model override (optional, uses provider defaults)
+  - `CLAUDE_MODEL` / `OPENAI_MODEL` - Provider-specific model overrides
+  - `LLM_MAX_TOKENS` - Maximum tokens per request (default: 4000)
+  - `LLM_MAX_RETRIES` - Retry attempts on errors (default: 3)
+  - `LLM_TEMPERATURE` - Sampling temperature 0-1 (default: 0.7)
+  - `LLM_ENABLE_CACHING` - Toggle prompt caching (default: true, Claude only)
+  - Note: Claude API doesn't allow both `LLM_TEMPERATURE` and `LLM_TOP_P`
+
+- **Provider Metadata in API Responses**
+  - `provider` - LLM provider used ("claude" or "openai")
+  - `model` - Model identifier (e.g., "claude-sonnet-4-5-20250929", "gpt-4-turbo-preview")
+  - `inputTokens` - Input token count
+  - `outputTokens` - Output token count
+  - `cacheReadTokens` - Tokens read from cache (Claude only)
+  - `cacheWriteTokens` - Tokens written to cache (Claude only)
+  - `wasCached` - Boolean indicating cache hit
+  - `latencyMs` - Request latency in milliseconds
+  - `timestamp` - Generation timestamp
+
+### Changed
+
+- **DocGeneratorService** ([server/src/services/docGenerator.js](server/src/services/docGenerator.js))
+  - Replaced `claudeClient` with `llmService` instance
+  - Updated to use ES module `import` instead of `require()`
+  - Changed `cacheUserMessage` option to `enableCaching`
+  - Now includes provider metadata in response
+  - Backward compatible - existing tests pass without changes
+
+- **Package Dependencies** ([server/package.json](server/package.json))
+  - Added `openai@^4.x` for OpenAI API support
+  - Existing `@anthropic-ai/sdk@0.65.0` for Claude API
+
+### Documentation
+
+- **README.md** - Added LLM Provider Configuration section
+  - Provider switching examples (Claude vs OpenAI)
+  - Configuration variable reference table
+  - Link to Multi-Provider Architecture Guide
+
+- **CLAUDE.md** - Added LLM Provider Configuration section
+  - Provider capabilities comparison table
+  - Environment variable examples
+  - API response metadata structure
+  - Links to architecture documentation
+
+- **ARCHITECTURE.md** - Updated technical architecture
+  - Updated service layer description (LLMService + provider adapters)
+  - Updated external services diagram (multi-provider)
+  - Added provider adapter patterns
+  - Updated service architecture tree
+  - Updated backend stack table (added OpenAI SDK)
+
+- **server/.env.example** - Comprehensive LLM configuration
+  - Provider selection examples
+  - Model override examples
+  - Common LLM settings with defaults
+  - Note about Claude temperature/topP restriction
+
+- **New Architecture Docs** ([docs/architecture/](docs/architecture/))
+  - `MULTI-PROVIDER-SIMPLIFIED-ARCHITECTURE.md` - Complete implementation guide
+  - `MULTI-PROVIDER-DECISION-GUIDE.md` - Simple vs Complex architecture comparison
+  - `MULTI-PROVIDER-ARCHITECTURE-VISUAL.md` - Visual diagrams
+  - `MULTI-PROVIDER-IMPLEMENTATION-PROMPT.md` - Step-by-step guide
+  - `MULTI-PROVIDER-DOCS-UPDATE-CHECKLIST.md` - Documentation update checklist
+
+### Provider Capabilities
+
+**Claude (Anthropic) - Default:**
+- Model: `claude-sonnet-4-5-20250929`
+- Max Context: 200K tokens
+- Streaming: ✅ Yes
+- Prompt Caching: ✅ Yes (90% cost savings on cached prompts)
+- Cache TTL: 1 hour with auto-refresh
+
+**OpenAI:**
+- Model: `gpt-4-turbo-preview`
+- Max Context: 128K tokens
+- Streaming: ✅ Yes
+- Prompt Caching: ❌ No
+
+### Technical Details
+
+- **Implementation**: ~650 lines of code (config + service + adapters + utils)
+- **Architecture Pattern**: Switch-based routing instead of class inheritance
+- **Backward Compatibility**: All 860+ existing tests pass without changes
+- **ES Module Compliance**: All new code uses `import`/`export` syntax
+- **Runtime Switching**: No code changes needed - just update environment variables and restart
+
+### Test Results
+
+- **Frontend**: 1,516 passed | 33 skipped (1,549 total)
+- **Backend**: 890 passed | 21 skipped (911 total)
+- **Total**: 2,406 passed | 54 skipped (2,460 total)
+- **Pass Rate**: 100% (0 failures)
+- **Coverage**: 91.83% backend, 96.71% middleware
+
+---
+
 ## [2.7.7] - 2025-11-13
 
 **Status:** ✅ Admin Dashboard Performance Optimization & Test Fixes

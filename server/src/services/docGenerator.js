@@ -1,8 +1,13 @@
-import claudeClient from './claudeClient.js';
 import { parseCode } from './codeParser.js';
 import { calculateQualityScore } from './qualityScorer.js';
+import LLMService from './llm/llmService.js';
 
 export class DocGeneratorService {
+  constructor() {
+    // Initialize LLM service (uses config from environment)
+    this.llmService = new LLMService();
+  }
+
   /**
    * Generate documentation for provided code
    * @param {string} code - Source code to document
@@ -25,22 +30,24 @@ export class DocGeneratorService {
     // Step 2: Build system prompt (cacheable) and user message
     const { systemPrompt, userMessage } = this.buildPromptWithCaching(code, analysis, docType, language);
 
-    // Step 3: Generate documentation using Claude with caching
-    let documentation;
-    const claudeOptions = {
+    // Step 3: Generate documentation using LLM service with caching
+    const llmOptions = {
       systemPrompt,
-      cacheUserMessage: isDefaultCode // Cache user message if it's default/example code
+      enableCaching: isDefaultCode // Cache user message if it's default/example code
     };
 
+    let result;
     if (streaming && onChunk) {
-      documentation = await claudeClient.generateWithStreaming(
+      result = await this.llmService.generateWithStreaming(
         userMessage,
         onChunk,
-        claudeOptions
+        llmOptions
       );
     } else {
-      documentation = await claudeClient.generate(userMessage, claudeOptions);
+      result = await this.llmService.generate(userMessage, llmOptions);
     }
+
+    const documentation = result.text;
 
     // Step 4: Add tier-based attribution footer (works for both cached and non-cached responses)
     const attribution = this.buildAttribution(userTier);
@@ -54,12 +61,12 @@ export class DocGeneratorService {
       qualityScore,
       analysis,
       metadata: {
+        ...result.metadata,  // Include LLM provider metadata (provider, model, tokens, etc.)
         language,
         docType,
         generatedAt: new Date().toISOString(),
         codeLength: code.length,
-        cacheEnabled: true,
-        cacheUserMessage: isDefaultCode
+        cacheEnabled: isDefaultCode
       }
     };
   }

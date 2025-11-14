@@ -3,20 +3,31 @@
  */
 
 import { DocGeneratorService } from '../docGenerator.js';
-import claudeClient from '../claudeClient.js';
+import LLMService from '../llm/llmService.js';
 import { parseCode } from '../codeParser.js';
 import { calculateQualityScore } from '../qualityScorer.js';
 
 // Mock dependencies
-jest.mock('../claudeClient.js');
+jest.mock('../llm/llmService.js');
 jest.mock('../codeParser.js');
 jest.mock('../qualityScorer.js');
 
 describe('DocGeneratorService', () => {
   let docGenerator;
+  let mockLlmService;
 
   beforeEach(() => {
     jest.clearAllMocks();
+
+    // Create mock llmService instance
+    mockLlmService = {
+      generate: jest.fn(),
+      generateWithStreaming: jest.fn()
+    };
+
+    // Mock the LLMService constructor to return our mock
+    LLMService.mockImplementation(() => mockLlmService);
+
     docGenerator = new DocGeneratorService();
   });
 
@@ -68,8 +79,8 @@ function greet(name) {
 
     beforeEach(() => {
       parseCode.mockResolvedValue(mockAnalysis);
-      claudeClient.generate.mockResolvedValue(mockDocumentation);
-      claudeClient.generateWithStreaming.mockResolvedValue(mockDocumentation);
+      mockLlmService.generate.mockResolvedValue({ text: mockDocumentation, metadata: { provider: 'claude', model: 'test-model' } });
+      mockLlmService.generateWithStreaming.mockResolvedValue({ text: mockDocumentation, metadata: { provider: 'claude', model: 'test-model' } });
       calculateQualityScore.mockReturnValue(mockQualityScore);
     });
 
@@ -120,12 +131,12 @@ function greet(name) {
     it('should call Claude API for generation', async () => {
       await docGenerator.generateDocumentation(sampleCode);
 
-      expect(claudeClient.generate).toHaveBeenCalledTimes(1);
-      expect(claudeClient.generate).toHaveBeenCalledWith(
+      expect(mockLlmService.generate).toHaveBeenCalledTimes(1);
+      expect(mockLlmService.generate).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({
           systemPrompt: expect.any(String),
-          cacheUserMessage: false
+          enableCaching: false
         })
       );
     });
@@ -149,15 +160,15 @@ function greet(name) {
         onChunk,
       });
 
-      expect(claudeClient.generateWithStreaming).toHaveBeenCalledWith(
+      expect(mockLlmService.generateWithStreaming).toHaveBeenCalledWith(
         expect.any(String),
         onChunk,
         expect.objectContaining({
           systemPrompt: expect.any(String),
-          cacheUserMessage: false
+          enableCaching: false
         })
       );
-      expect(claudeClient.generate).not.toHaveBeenCalled();
+      expect(mockLlmService.generate).not.toHaveBeenCalled();
     });
 
     it('should not use streaming if onChunk is not provided', async () => {
@@ -165,8 +176,8 @@ function greet(name) {
         streaming: true,
       });
 
-      expect(claudeClient.generate).toHaveBeenCalled();
-      expect(claudeClient.generateWithStreaming).not.toHaveBeenCalled();
+      expect(mockLlmService.generate).toHaveBeenCalled();
+      expect(mockLlmService.generateWithStreaming).not.toHaveBeenCalled();
     });
 
     it('should generate JSDOC documentation', async () => {
@@ -176,7 +187,7 @@ function greet(name) {
 
       expect(result.documentation).toBe(mockDocumentationWithAttribution);
       expect(result.metadata.docType).toBe('JSDOC');
-      const callArgs = claudeClient.generate.mock.calls[0];
+      const callArgs = mockLlmService.generate.mock.calls[0];
       expect(callArgs[1].systemPrompt).toContain('JSDoc');
     });
 
@@ -187,7 +198,7 @@ function greet(name) {
 
       expect(result.documentation).toBe(mockDocumentationWithAttribution);
       expect(result.metadata.docType).toBe('API');
-      const callArgs = claudeClient.generate.mock.calls[0];
+      const callArgs = mockLlmService.generate.mock.calls[0];
       expect(callArgs[1].systemPrompt).toContain('API documentation');
     });
 
@@ -198,7 +209,7 @@ function greet(name) {
 
       expect(result.documentation).toBe(mockDocumentationWithAttribution);
       expect(result.metadata.docType).toBe('ARCHITECTURE');
-      const callArgs = claudeClient.generate.mock.calls[0];
+      const callArgs = mockLlmService.generate.mock.calls[0];
       expect(callArgs[1].systemPrompt).toContain('architectural');
     });
 
@@ -208,7 +219,7 @@ function greet(name) {
       });
 
       expect(result.documentation).toBe(mockDocumentationWithAttribution);
-      const callArgs = claudeClient.generate.mock.calls[0];
+      const callArgs = mockLlmService.generate.mock.calls[0];
       expect(callArgs[1].systemPrompt).toContain('README.md');
     });
 
@@ -253,7 +264,7 @@ function greet(name) {
 
     it('should propagate Claude API errors', async () => {
       const apiError = new Error('API request failed');
-      claudeClient.generate.mockRejectedValue(apiError);
+      mockLlmService.generate.mockRejectedValue(apiError);
 
       await expect(
         docGenerator.generateDocumentation(sampleCode)
@@ -470,14 +481,14 @@ export function add(a, b) {
       const mockScore = { score: 90, grade: 'A' };
 
       parseCode.mockResolvedValue(mockAnalysis);
-      claudeClient.generate.mockResolvedValue(mockDoc);
+      mockLlmService.generate.mockResolvedValue({ text: mockDoc, metadata: { provider: 'claude', model: 'test-model' } });
       calculateQualityScore.mockReturnValue(mockScore);
 
       const result = await docGenerator.generateDocumentation(sampleCode);
 
       // Verify call order
       expect(parseCode).toHaveBeenCalled();
-      expect(claudeClient.generate).toHaveBeenCalled();
+      expect(mockLlmService.generate).toHaveBeenCalled();
       expect(calculateQualityScore).toHaveBeenCalled();
 
       // Verify result structure
@@ -506,12 +517,12 @@ export function add(a, b) {
       });
 
       // Mock streaming generation
-      claudeClient.generateWithStreaming.mockImplementation(
+      mockLlmService.generateWithStreaming.mockImplementation(
         async (prompt, callback) => {
           for (const chunk of chunks) {
             callback(chunk);
           }
-          return fullDoc;
+          return { text: fullDoc, metadata: { provider: 'claude', model: 'test-model' } };
         }
       );
 
@@ -545,7 +556,7 @@ export function add(a, b) {
         complexity: 'complex',
       });
 
-      claudeClient.generate.mockResolvedValue('# Large Project\n\nDocs');
+      mockLlmService.generate.mockResolvedValue({ text: '# Large Project\n\nDocs', metadata: { provider: 'claude', model: 'test-model' } });
       calculateQualityScore.mockReturnValue({ score: 70, grade: 'C' });
 
       const result = await docGenerator.generateDocumentation(largeCode);
@@ -566,7 +577,7 @@ export function add(a, b) {
 
       const simpleDoc = '# Simple Script';
       const simpleDocWithAttribution = simpleDoc + `\n\n\n\n---\n\n*🟣 Generated with [CodeScribe AI](https://codescribeai.com) • **Free Tier***\n\n*Upgrade to [Pro](https://codescribeai.com/pricing) to remove this watermark and unlock advanced features*`;
-      claudeClient.generate.mockResolvedValue(simpleDoc);
+      mockLlmService.generate.mockResolvedValue({ text: simpleDoc, metadata: { provider: 'claude', model: 'test-model' } });
       calculateQualityScore.mockReturnValue({ score: 50, grade: 'F' });
 
       const result = await docGenerator.generateDocumentation(simpleCode);
@@ -583,7 +594,7 @@ export function add(a, b) {
       });
 
       const onChunk = jest.fn();
-      claudeClient.generateWithStreaming.mockResolvedValue('# Docs');
+      mockLlmService.generateWithStreaming.mockResolvedValue({ text: '# Docs', metadata: { provider: 'claude', model: 'test-model' } });
       calculateQualityScore.mockReturnValue({ score: 80 });
 
       const result = await docGenerator.generateDocumentation('code', {
@@ -596,7 +607,7 @@ export function add(a, b) {
       expect(parseCode).toHaveBeenCalledWith('code', 'typescript');
       expect(result.metadata.docType).toBe('API');
       expect(result.metadata.language).toBe('typescript');
-      expect(claudeClient.generateWithStreaming).toHaveBeenCalled();
+      expect(mockLlmService.generateWithStreaming).toHaveBeenCalled();
     });
   });
 });

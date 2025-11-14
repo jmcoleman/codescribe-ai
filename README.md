@@ -236,9 +236,43 @@ For the basic setup without authentication, you only need these minimal environm
 
 **Server variables** (`server/.env`):
 
+#### LLM Provider Configuration (Claude or OpenAI)
+
+CodeScribe AI supports multiple LLM providers. Configure your preferred provider:
+
+**Option 1: Claude (Default)**
+```bash
+# Required
+CLAUDE_API_KEY=sk-ant-your-key-here
+
+# Optional (to explicitly set provider)
+LLM_PROVIDER=claude
+```
+
+**Option 2: OpenAI**
+```bash
+# Required
+OPENAI_API_KEY=sk-your-key-here
+LLM_PROVIDER=openai
+LLM_MODEL=gpt-4-turbo-preview
+```
+
+**Provider Configuration Variables:**
+- `LLM_PROVIDER` - Choose provider: `claude` (default) or `openai`
+- `LLM_API_KEY` - Generic API key (or use provider-specific keys)
+- `LLM_MODEL` - Override default model (optional)
+- `LLM_MAX_TOKENS` - Max tokens per request (default: 4000)
+- `LLM_TEMPERATURE` - Sampling temperature 0-1 (default: 0.7)
+
+For full configuration options, see [Multi-Provider Architecture Guide](docs/architecture/MULTI-PROVIDER-SIMPLIFIED-ARCHITECTURE.md).
+
+**Other Server Variables:**
+
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `CLAUDE_API_KEY` | ✅ Yes | - | Your Anthropic Claude API key ([Get one here](https://console.anthropic.com/)) |
+| `CLAUDE_API_KEY` | ✅ Yes (if using Claude) | - | Your Anthropic Claude API key ([Get one here](https://console.anthropic.com/)) |
+| `OPENAI_API_KEY` | ✅ Yes (if using OpenAI) | - | Your OpenAI API key |
+| `LLM_PROVIDER` | No | `claude` | LLM provider: `claude` or `openai` |
 | `PORT` | No | `3000` | Server port number |
 | `NODE_ENV` | No | `development` | Environment mode (`development` or `production`) |
 

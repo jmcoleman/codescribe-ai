@@ -6,20 +6,31 @@
  */
 
 import { DocGeneratorService } from '../docGenerator.js';
-import claudeClient from '../claudeClient.js';
+import LLMService from '../llm/llmService.js';
 import { parseCode } from '../codeParser.js';
 import { calculateQualityScore } from '../qualityScorer.js';
 
 // Mock dependencies
-jest.mock('../claudeClient.js');
+jest.mock('../llm/llmService.js');
 jest.mock('../codeParser.js');
 jest.mock('../qualityScorer.js');
 
 describe('DocGeneratorService - Mermaid Diagram Support', () => {
   let docGenerator;
+  let mockLlmService;
 
   beforeEach(() => {
     jest.clearAllMocks();
+
+    // Create mock llmService instance
+    mockLlmService = {
+      generate: jest.fn(),
+      generateWithStreaming: jest.fn()
+    };
+
+    // Mock the LLMService constructor to return our mock
+    LLMService.mockImplementation(() => mockLlmService);
+
     docGenerator = new DocGeneratorService();
   });
 
@@ -193,7 +204,7 @@ flowchart TD
 
 This is a simple data processor.`;
 
-      claudeClient.generate.mockResolvedValue(docWithMermaid);
+      mockLlmService.generate.mockResolvedValue({ text: docWithMermaid, metadata: { provider: 'claude', model: 'test-model' } });
 
       const result = await docGenerator.generateDocumentation('function test() {}', {
         docType: 'README',
@@ -222,7 +233,7 @@ sequenceDiagram
 
 API endpoint documentation.`;
 
-      claudeClient.generate.mockResolvedValue(docWithSequence);
+      mockLlmService.generate.mockResolvedValue({ text: docWithSequence, metadata: { provider: 'claude', model: 'test-model' } });
 
       const result = await docGenerator.generateDocumentation('function test() {}', {
         docType: 'API',
@@ -254,7 +265,7 @@ flowchart LR
 
 Complete system documentation.`;
 
-      claudeClient.generate.mockResolvedValue(docWithMultipleDiagrams);
+      mockLlmService.generate.mockResolvedValue({ text: docWithMultipleDiagrams, metadata: { provider: 'claude', model: 'test-model' } });
 
       const result = await docGenerator.generateDocumentation('function test() {}', {
         docType: 'ARCHITECTURE',
@@ -275,7 +286,7 @@ A basic function that does something.
 const result = test();
 \`\`\``;
 
-      claudeClient.generate.mockResolvedValue(docWithoutMermaid);
+      mockLlmService.generate.mockResolvedValue({ text: docWithoutMermaid, metadata: { provider: 'claude', model: 'test-model' } });
 
       const result = await docGenerator.generateDocumentation('function test() {}', {
         docType: 'README',
@@ -297,11 +308,11 @@ const result = test();
 
       const fullDoc = chunks.join('');
 
-      claudeClient.generateWithStreaming.mockImplementation(async (prompt, callback) => {
+      mockLlmService.generateWithStreaming.mockImplementation(async (prompt, callback) => {
         for (const chunk of chunks) {
           callback(chunk);
         }
-        return fullDoc;
+        return { text: fullDoc, metadata: { provider: 'claude', model: 'test-model' } };
       });
 
       const onChunk = jest.fn();
@@ -384,7 +395,7 @@ flowchart TD
 
 Rest of docs.`;
 
-      claudeClient.generate.mockResolvedValue(incompleteDoc);
+      mockLlmService.generate.mockResolvedValue({ text: incompleteDoc, metadata: { provider: 'claude', model: 'test-model' } });
 
       const result = await docGenerator.generateDocumentation('function test() {}');
 
@@ -402,7 +413,7 @@ flowchart TD
 
 Text.`;
 
-      claudeClient.generate.mockResolvedValue(docWithError);
+      mockLlmService.generate.mockResolvedValue({ text: docWithError, metadata: { provider: 'claude', model: 'test-model' } });
 
       const result = await docGenerator.generateDocumentation('function test() {}');
 
@@ -418,7 +429,7 @@ flowchart TD
     B --> C
 \`\`\``;
 
-      claudeClient.generate.mockResolvedValue(onlyMermaid);
+      mockLlmService.generate.mockResolvedValue({ text: onlyMermaid, metadata: { provider: 'claude', model: 'test-model' } });
 
       const result = await docGenerator.generateDocumentation('function test() {}');
 
@@ -439,7 +450,7 @@ ${connections}
 
 System documentation.`;
 
-      claudeClient.generate.mockResolvedValue(largeDoc);
+      mockLlmService.generate.mockResolvedValue({ text: largeDoc, metadata: { provider: 'claude', model: 'test-model' } });
 
       const result = await docGenerator.generateDocumentation('function test() {}', {
         docType: 'ARCHITECTURE',

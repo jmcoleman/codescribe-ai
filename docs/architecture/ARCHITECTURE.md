@@ -91,9 +91,9 @@ CodeScribe AI is a **stateless, real-time documentation generation platform** th
 │  │  ┌─────▼──────────────────────────────────────────────┐  │   │
 │  │  │          Service Layer (Singleton Pattern)         │  │   │
 │  │  │  ┌─────────────┐  ┌─────────────┐  ┌────────────┐  │  │   │
-│  │  │  │   Claude    │  │    Code     │  │  Quality   │  │  │   │
-│  │  │  │   Client    │  │   Parser    │  │  Scorer    │  │  │   │
-│  │  │  │  (Retry)    │  │   (Acorn)   │  │ (5 Criteria│  │  │   │
+│  │  │  │     LLM     │  │    Code     │  │  Quality   │  │  │   │
+│  │  │  │   Service   │  │   Parser    │  │  Scorer    │  │  │   │
+│  │  │  │(Multi-Prov.)│  │   (Acorn)   │  │ (5 Criteria│  │  │   │
 │  │  │  └──────┬──────┘  └──────┬──────┘  └──────┬─────┘  │  │   │
 │  │  │         │                │                │        │  │   │
 │  │  │  ┌──────▼────────────────▼────────────────▼─────┐  │  │   │
@@ -110,12 +110,20 @@ CodeScribe AI is a **stateless, real-time documentation generation platform** th
 ┌───────────────────────────────▼─────────────────────────────────┐
 │                       EXTERNAL SERVICES                         │
 │  ┌──────────────────────────────────────────────────────────┐   │
-│  │   Anthropic Claude API (Sonnet 4.5)                      │   │
-│  │   Model: claude-sonnet-4-20250514                        │   │
-│  │   - Streaming with message.create({ stream: true })      │   │
-│  │   - 200K token context window                            │   │
-│  │   - Max tokens: 4000                                     │   │
-│  │   - Retry with exponential backoff (3 attempts)          │   │
+│  │   LLM Provider APIs (Multi-Provider Support)             │   │
+│  │                                                           │   │
+│  │   Claude (Anthropic) - Default                           │   │
+│  │   - Model: claude-sonnet-4-5-20250929                    │   │
+│  │   - Streaming: message.create({ stream: true })          │   │
+│  │   - Context: 200K tokens                                 │   │
+│  │   - Prompt Caching: 90% cost savings                     │   │
+│  │                                                           │   │
+│  │   OpenAI (Optional)                                      │   │
+│  │   - Model: gpt-4-turbo-preview                           │   │
+│  │   - Streaming: chat.completions.create({ stream: true }) │   │
+│  │   - Context: 128K tokens                                 │   │
+│  │                                                           │   │
+│  │   Common: Max tokens 4000, Retry w/ backoff (3 attempts) │   │
 │  └──────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -138,14 +146,24 @@ CodeScribe AI is a **stateless, real-time documentation generation platform** th
 - **Responsible for**: Request handling, validation, rate limiting, streaming, error responses
 
 **3. Service Layer**
-- **ClaudeClient**: API wrapper with retry logic (3 attempts, exponential backoff)
+- **LLMService**: Multi-provider service (Claude, OpenAI) with unified interface
+  - Switch-based routing to provider adapters
+  - Retry logic with exponential backoff (3 attempts)
+  - Streaming support for all providers
+  - Provider metadata in responses (tokens, latency, caching)
+- **Provider Adapters**:
+  - `providers/claude.js` - Claude API wrapper with prompt caching
+  - `providers/openai.js` - OpenAI API wrapper
+  - Shared utilities: retry, error standardization, token estimation
 - **CodeParser**: Acorn-based AST analysis with fallback regex parsing
 - **QualityScorer**: 5-criteria algorithm (Overview, Installation, Examples, API Docs, Structure)
 - **DocGeneratorService**: Orchestrates parsing → prompting → generation → scoring
 
 **4. External Services**
-- **Anthropic Claude API**: Sonnet 4.5 model for AI text generation
-- **Vercel**: Hosting and CDN (planned for production deployment)
+- **LLM Provider APIs**: Multi-provider support for AI text generation
+  - **Claude (Anthropic)**: Sonnet 4.5 model (default) with prompt caching
+  - **OpenAI**: GPT-4 Turbo model (optional)
+- **Vercel**: Hosting and CDN for production deployment
 
 ---
 
@@ -183,6 +201,7 @@ CodeScribe AI is a **stateless, real-time documentation generation platform** th
 | npm | 11.6.0 | Package manager | Workspaces for monorepo |
 | Express | 5.1.0 | Web framework | Middleware-driven architecture |
 | @anthropic-ai/sdk | 0.65.0 | Claude API | Streaming support via async iterators |
+| openai | 4.x | OpenAI API | Chat completions with streaming |
 | Acorn | 8.15.0 | AST parser | JavaScript/TypeScript parsing |
 | Multer | 2.0.2 | File upload | Memory storage, 500KB limit |
 | express-rate-limit | 8.1.0 | Rate limiting | 2 limiters: per-minute + hourly |
@@ -190,9 +209,11 @@ CodeScribe AI is a **stateless, real-time documentation generation platform** th
 | dotenv | 17.2.3 | Environment variables | Secure API key management |
 
 **Service Architecture:**
-- **Singleton Pattern**: Single instance of each service (ClaudeClient, DocGeneratorService)
+- **Singleton Pattern**: Single instance of each service (LLMService, DocGeneratorService)
 - **Strategy Pattern**: Different prompts per doc type (README, JSDoc, API, ARCHITECTURE)
-- **Decorator Pattern**: Retry logic wraps Claude API calls
+- **Switch-Based Routing**: Provider selection via configuration (Claude, OpenAI)
+- **Decorator Pattern**: Retry logic wraps LLM API calls
+- **Provider Adapters**: Unified interface for multiple LLM providers
 
 ### Infrastructure
 
@@ -295,11 +316,28 @@ server/src/
 │       ├── POST /api/upload (Multer)
 │       └── GET /api/health
 └── services/
-    ├── claudeClient.js
-    │   ├── ClaudeClient class
-    │   ├── generate() → single completion
-    │   ├── generateWithStreaming() → async iterator
-    │   └── sleep() → exponential backoff
+    ├── llm/
+    │   ├── llmService.js
+    │   │   ├── LLMService class
+    │   │   ├── generate() → unified generation
+    │   │   ├── generateWithStreaming() → streaming
+    │   │   ├── getProvider() → current provider
+    │   │   └── supportsCaching() → capability check
+    │   ├── providers/
+    │   │   ├── claude.js
+    │   │   │   ├── generateWithClaude() → non-streaming
+    │   │   │   └── streamWithClaude() → streaming
+    │   │   └── openai.js
+    │   │       ├── generateWithOpenAI() → non-streaming
+    │   │       └── streamWithOpenAI() → streaming
+    │   ├── utils.js
+    │   │   ├── retryWithBackoff() → exponential backoff
+    │   │   ├── standardizeError() → error handling
+    │   │   └── estimateTokens() → token estimation
+    │   └── config/
+    │       └── llm.config.js
+    │           ├── getLLMConfig() → provider configuration
+    │           └── getProviderCapabilities() → capabilities
     ├── docGenerator.js
     │   ├── DocGeneratorService class
     │   ├── generateDocumentation() → main flow
@@ -319,9 +357,11 @@ server/src/
 ```
 
 **Service Patterns:**
-- **Singleton**: `export default new ClaudeClient()` - single instance
+- **Singleton**: `export default LLMService` - single instance per service
 - **Strategy**: `buildPrompt()` selects prompt based on docType
-- **Retry Decorator**: `generate()` wraps API calls with retry logic (3 attempts)
+- **Switch-Based Routing**: `generate()` routes to provider adapter based on config
+- **Provider Adapter**: Each provider wrapped in consistent interface
+- **Retry Decorator**: `retryWithBackoff()` wraps LLM API calls with retry logic (3 attempts)
 - **Template Method**: `generateDocumentation()` defines algorithm skeleton
 - **AST Visitor**: `walkAST()` walks tree, extracts structure
 
@@ -389,8 +429,9 @@ User Action: Click "Generate Docs"
 │  └──────────┬───────────────────────┘  │
 │             │                          │
 │  ┌──────────▼───────────────────────┐  │
-│  │ 3. claudeClient.generate         │  │
+│  │ 3. llmService.generate           │  │
 │  │    WithStreaming(prompt, onChunk)│  │
+│  │    → Route to provider adapter   │  │
 │  │    → Create stream with SDK      │  │
 │  │    → Iterate events              │  │
 │  │    → Call onChunk() per delta    │  │
@@ -1066,8 +1107,15 @@ codescribe-ai/
 │   │   ├── middleware/
 │   │   │   ├── rateLimiter.js
 │   │   │   └── errorHandler.js
+│   │   ├── config/
+│   │   │   └── llm.config.js  # LLM provider configuration
 │   │   └── services/
-│   │       ├── claudeClient.js
+│   │       ├── llm/
+│   │       │   ├── llmService.js      # Multi-provider LLM service
+│   │       │   ├── providers/
+│   │       │   │   ├── claude.js      # Claude provider adapter
+│   │       │   │   └── openai.js      # OpenAI provider adapter
+│   │       │   └── utils.js           # Retry, error handling, tokens
 │   │       ├── docGenerator.js
 │   │       ├── codeParser.js
 │   │       ├── qualityScorer.js

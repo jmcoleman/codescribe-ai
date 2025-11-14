@@ -218,12 +218,75 @@ npm run test:db:teardown        # Stop Docker test database
 npm run versions                # Comprehensive version report
 
 # Environment
-# server/.env: CLAUDE_API_KEY, PORT, NODE_ENV, POSTGRES_URL
+# server/.env: LLM_PROVIDER, CLAUDE_API_KEY or OPENAI_API_KEY, PORT, NODE_ENV, POSTGRES_URL
 # client/.env: VITE_API_URL
 
 # Testing
 cd client && npm test -- --run  # Run frontend tests (get counts)
 cd server && npm test           # Run backend tests (get counts)
+```
+
+---
+
+## 🔧 LLM Provider Configuration
+
+CodeScribe AI now supports multiple LLM providers with easy switching.
+
+### Current Implementation
+- **Architecture**: Simplified config-driven approach
+- **Supported Providers**: Claude (Anthropic), OpenAI
+- **Default Provider**: Claude Sonnet 4.5
+- **Implementation**: ~650 lines of code
+
+### Switching Providers
+
+**Environment Variables** (`server/.env`):
+```bash
+# Use Claude (default)
+LLM_PROVIDER=claude
+CLAUDE_API_KEY=sk-ant-...
+
+# Use OpenAI
+LLM_PROVIDER=openai
+OPENAI_API_KEY=sk-...
+LLM_MODEL=gpt-4-turbo-preview
+```
+
+**No code changes required** - just update environment variables and restart server.
+
+### Provider Capabilities
+
+| Feature | Claude | OpenAI |
+|---------|--------|--------|
+| Streaming | ✅ Yes | ✅ Yes |
+| Prompt Caching | ✅ Yes (90% savings) | ❌ No |
+| Max Context | 200K tokens | 128K tokens |
+| Default Model | claude-sonnet-4-5-20250929 | gpt-4-turbo-preview |
+
+### Documentation
+- **Architecture Guide**: [MULTI-PROVIDER-SIMPLIFIED-ARCHITECTURE.md](docs/architecture/MULTI-PROVIDER-SIMPLIFIED-ARCHITECTURE.md)
+- **Decision Guide**: [MULTI-PROVIDER-DECISION-GUIDE.md](docs/architecture/MULTI-PROVIDER-DECISION-GUIDE.md)
+- **Visual Guide**: [MULTI-PROVIDER-ARCHITECTURE-VISUAL.md](docs/architecture/MULTI-PROVIDER-ARCHITECTURE-VISUAL.md)
+
+### API Response Changes
+
+Responses now include provider metadata:
+
+```json
+{
+  "documentation": "...",
+  "qualityScore": 85,
+  "metadata": {
+    "provider": "claude",          // NEW: Provider used
+    "model": "claude-sonnet-4...", // NEW: Model used
+    "inputTokens": 500,            // NEW: Token counts
+    "outputTokens": 1000,
+    "wasCached": true,             // NEW: Cache status
+    "latencyMs": 1250,
+    "language": "javascript",
+    "docType": "README"
+  }
+}
 ```
 
 ---
@@ -293,19 +356,22 @@ codescribe-ai/
 
 ## 🔄 Version History
 
-**Current: v2.7.7** (November 13, 2025)
-- Admin dashboard performance optimization (O(1) lifetime usage lookups)
-- Database trigger to auto-maintain total_generations column
-- "This Period" + "All Time" columns replace useless "days" column
-- Smart auto-scroll in doc panel during streaming generation (real-time feedback)
-- Middleware test coverage fix (96.71% statements, 93.49% branches - CI passing ✅)
-- 14 new rateLimitBypass tests (100% coverage)
+**Current: v2.7.8** (November 14, 2025)
+- Multi-provider LLM architecture (Claude + OpenAI support)
+- Config-driven provider switching via LLM_PROVIDER environment variable
+- Simplified architecture using switch-based routing (~650 lines)
+- Provider adapters: claude.js, openai.js with shared utilities
+- Provider metadata in API responses (provider, model, tokens, latency, caching)
+- Updated README, CLAUDE.md, ARCHITECTURE.md with multi-provider docs
+- Created 4 new architecture documentation files
+- All 860+ existing tests pass without changes (100% backward compatible)
 - 2,460 tests (2,406 passing, 54 skipped, 100% pass rate)
 
 <details>
-<summary>Recent Releases (v2.7.0-v2.7.6) & Milestones</summary>
+<summary>Recent Releases (v2.7.0-v2.7.7) & Milestones</summary>
 
 **v2.7.x Series (Nov 2025):**
+- v2.7.7: Admin dashboard performance optimization (O(1) lifetime usage), smart auto-scroll, middleware coverage fix
 - v2.7.6: Dual-tab quality breakdown, transformation header, enhanced markdown export
 - v2.7.5: UX refinements, dark mode docs, Google OAuth docs
 - v2.7.4: Samples modal optimization, terminology refactoring
