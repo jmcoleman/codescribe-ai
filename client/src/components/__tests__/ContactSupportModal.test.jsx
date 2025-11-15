@@ -118,9 +118,19 @@ describe('ContactSupportModal', () => {
 
       renderWithAuth(<ContactSupportModal isOpen={true} onClose={mockOnClose} />, { user: authUser });
 
-      await user.type(screen.getByLabelText(/Message/i), 'Test message');
-      await user.click(screen.getByRole('button', { name: /Send Message/i }));
+      const messageInput = screen.getByLabelText(/Message/i);
+      const submitButton = screen.getByRole('button', { name: /Send Message/i });
 
+      await user.type(messageInput, 'Test message');
+
+      // Ensure the form is ready before clicking
+      await waitFor(() => {
+        expect(submitButton).not.toBeDisabled();
+      });
+
+      await user.click(submitButton);
+
+      // Wait for fetch to be called with increased timeout for CI environments
       await waitFor(() => {
         expect(global.fetch).toHaveBeenCalledWith(
           'http://localhost:3000/api/contact/support',
@@ -132,7 +142,7 @@ describe('ContactSupportModal', () => {
             body: expect.any(FormData),
           })
         );
-      });
+      }, { timeout: 5000 });
     });
 
     it('should show success message after successful submission', async () => {

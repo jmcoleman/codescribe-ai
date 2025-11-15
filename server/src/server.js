@@ -106,7 +106,7 @@ if (ENABLE_AUTH) {
 app.get('/api', (req, res) => {
   res.json({
     name: 'CodeScribe AI API',
-    version: '2.7.7',
+    version: '2.7.10',
     status: 'operational',
     description: 'AI-powered code documentation generator',
     documentation: 'https://github.com/jmcoleman/codescribe-ai/blob/main/docs/api/API-Reference.md',
