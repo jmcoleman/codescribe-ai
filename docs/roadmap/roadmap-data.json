@@ -502,6 +502,23 @@
             "Auto-scroll to selected files for easy navigation",
             "Mobile-responsive design with proper scrolling"
           ]
+        },
+        {
+          "version": "v2.7.10",
+          "title": "Mermaid Diagram Improvements & UX Refinements",
+          "duration": "0.5 days",
+          "status": "✓ Complete",
+          "completedDate": "Nov 14, 2025",
+          "badge": "UX Polish",
+          "features": [
+            "Mermaid diagrams auto-show when generation completes (no manual button clicks)",
+            "Entity-relationship diagram theming with brand colors (indigo-600, purple-600)",
+            "Amber warning colors for diagram errors (improved UX vs red)",
+            "Quality modal default tab set to 'Criteria Breakdown' for immediate insights",
+            "Added Cancel buttons to Samples and Quality modals for consistency",
+            "Improved attribution footer spacing for better visual balance",
+            "Auto-scroll to visible area during generation for better UX"
+          ]
         }
       ]
     },
