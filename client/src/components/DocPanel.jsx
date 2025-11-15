@@ -214,20 +214,42 @@ export function DocPanel({
   }, [isExpanded]);
 
   // Auto-scroll during generation when user is near bottom
+  // Uses requestAnimationFrame to handle dynamic content height changes (e.g., Mermaid diagrams)
   useEffect(() => {
     if (!isGenerating || !contentRef.current) return;
 
-    const element = contentRef.current;
-    const threshold = 100; // pixels from bottom
+    let frameId;
+    let lastScrollHeight = 0;
 
-    // Check if user is near bottom before auto-scrolling
-    const isNearBottom =
-      element.scrollHeight - element.scrollTop - element.clientHeight < threshold;
+    const checkAndScroll = () => {
+      const element = contentRef.current;
+      if (!element) return;
 
-    if (isNearBottom) {
-      element.scrollTop = element.scrollHeight;
-    }
-  }, [documentation, isGenerating]);
+      const threshold = 100; // pixels from bottom
+      const currentScrollHeight = element.scrollHeight;
+
+      // Check if user is near bottom before auto-scrolling
+      const isNearBottom =
+        element.scrollHeight - element.scrollTop - element.clientHeight < threshold;
+
+      // Scroll if near bottom OR if content height changed (e.g., Mermaid diagram rendered)
+      if (isNearBottom || currentScrollHeight !== lastScrollHeight) {
+        element.scrollTop = element.scrollHeight;
+        lastScrollHeight = currentScrollHeight;
+      }
+
+      // Continue checking while generating
+      frameId = requestAnimationFrame(checkAndScroll);
+    };
+
+    frameId = requestAnimationFrame(checkAndScroll);
+
+    return () => {
+      if (frameId) {
+        cancelAnimationFrame(frameId);
+      }
+    };
+  }, [isGenerating]);
 
   const handleToggle = () => {
     setIsExpanded(!isExpanded);
@@ -467,6 +489,7 @@ export function DocPanel({
                       <MermaidDiagram
                         chart={codeContent}
                         id={diagramId}
+                        autoShow={!isGenerating}
                       />
                     );
                   }

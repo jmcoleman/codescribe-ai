@@ -68,7 +68,7 @@ describe('rateLimitBypass Middleware', () => {
       expect(next).toHaveBeenCalledTimes(1);
     });
 
-    it('should log bypass in development mode', () => {
+    it.skip('should log bypass in development mode (REMOVED: debug logging cleaned up)', () => {
       // Setup
       const originalEnv = process.env.NODE_ENV;
       process.env.NODE_ENV = 'development';
@@ -90,7 +90,7 @@ describe('rateLimitBypass Middleware', () => {
       process.env.NODE_ENV = originalEnv;
     });
 
-    it('should NOT log bypass in production mode', () => {
+    it.skip('should NOT log bypass in production mode (REMOVED: debug logging cleaned up)', () => {
       // Setup
       const originalEnv = process.env.NODE_ENV;
       process.env.NODE_ENV = 'production';

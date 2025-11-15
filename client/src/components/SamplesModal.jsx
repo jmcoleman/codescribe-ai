@@ -192,7 +192,7 @@ export function SamplesModal({ isOpen, onClose, onLoadSample, currentCode }) {
       <div
         ref={modalRef}
         onClick={(e) => e.stopPropagation()}
-        className="modal-container max-w-5xl w-full max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200"
+        className="modal-container max-w-5xl xl:max-w-6xl 2xl:max-w-7xl w-full max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200"
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
@@ -204,7 +204,7 @@ export function SamplesModal({ isOpen, onClose, onLoadSample, currentCode }) {
             type="button"
             ref={closeButtonRef}
             onClick={onClose}
-            className="icon-btn interactive-scale-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950"
+            className="icon-btn interactive-scale-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-800"
             aria-label="Close samples modal"
           >
             <X className="w-5 h-5 text-slate-600 dark:text-slate-400" />
@@ -214,7 +214,7 @@ export function SamplesModal({ isOpen, onClose, onLoadSample, currentCode }) {
         {/* Body */}
         <div className="grid grid-cols-1 md:grid-cols-[40%_60%] h-[calc(90vh-120px)]">
           {/* Left: Sample List */}
-          <div className="border-r border-slate-200 dark:border-slate-700 overflow-y-auto bg-white dark:bg-slate-900">
+          <div className="border-r border-slate-200 dark:border-slate-700 overflow-y-auto bg-white dark:bg-slate-800">
             <div className="p-6">
               {/* Search Input */}
               <div className="mb-4">
@@ -259,9 +259,9 @@ export function SamplesModal({ isOpen, onClose, onLoadSample, currentCode }) {
           </div>
 
           {/* Right: Preview */}
-          <div className="overflow-y-auto bg-slate-50 dark:bg-slate-900">
+          <div className="overflow-y-auto bg-slate-100 dark:bg-slate-800">
             {selectedSample ? (
-              <SamplePreview sample={selectedSample} onLoad={() => handleLoadSample(selectedSample)} loadButtonRef={loadButtonRef} />
+              <SamplePreview sample={selectedSample} onLoad={() => handleLoadSample(selectedSample)} onClose={onClose} loadButtonRef={loadButtonRef} />
             ) : (
               <div className="flex items-center justify-center h-full p-8 text-center">
                 <div className="max-w-xs">
@@ -311,7 +311,7 @@ const SampleCard = React.forwardRef(({ sample, isSelected, onPreview, onLoad }, 
   return (
     <div
       ref={ref}
-      className={`group relative p-3 rounded-lg border-2 transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950 ${
+      className={`group relative p-3 rounded-lg border-2 transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-800 ${
         isSelected
           ? 'border-purple-500 dark:border-purple-400 bg-purple-50 dark:bg-purple-950/20 shadow-lg shadow-purple-500/10 dark:shadow-purple-500/20'
           : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-purple-300 dark:hover:border-purple-500 hover:bg-purple-50/30 dark:hover:bg-purple-950/10 hover:shadow-md'
@@ -358,7 +358,7 @@ const SampleCard = React.forwardRef(({ sample, isSelected, onPreview, onLoad }, 
 
 SampleCard.displayName = 'SampleCard';
 
-function SamplePreview({ sample, onLoad, loadButtonRef }) {
+function SamplePreview({ sample, onLoad, onClose, loadButtonRef }) {
   // Generate actual filename based on sample title and language
   const getFilename = () => {
     const baseName = sample.title.toLowerCase().replace(/\s+/g, '-');
@@ -379,10 +379,10 @@ function SamplePreview({ sample, onLoad, loadButtonRef }) {
   return (
     <div className="flex flex-col h-full">
       {/* Code Preview */}
-      <div className="flex-1 overflow-y-auto bg-slate-100 dark:bg-slate-900">
+      <div className="flex-1 overflow-y-auto bg-slate-100 dark:bg-slate-800">
         <div className="h-full flex flex-col">
           {/* Enhanced Header with Title and Badges */}
-          <div className="px-4 py-3 border-b border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-900">
+          <div className="px-4 py-3 border-b border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800">
             <div className="flex items-center gap-2 mb-2">
               <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-200 flex-1">
                 {sample.title}
@@ -401,22 +401,31 @@ function SamplePreview({ sample, onLoad, loadButtonRef }) {
               <span className="text-xs text-slate-500 dark:text-slate-500 font-medium">Preview</span>
             </div>
           </div>
-          <pre className="flex-1 text-sm font-mono text-slate-900 dark:text-slate-200 leading-relaxed p-4 bg-slate-50 dark:bg-slate-950 overflow-x-auto">
+          <pre className="flex-1 text-sm font-mono text-slate-900 dark:text-slate-200 leading-relaxed p-4 bg-white dark:bg-slate-900 overflow-x-auto">
             <code>{sample.code}</code>
           </pre>
         </div>
       </div>
 
-      {/* Action Button */}
-      <div className="p-6 border-t border-slate-200 dark:border-slate-700 bg-gradient-to-b from-purple-50 to-slate-50 dark:from-purple-950/20 dark:to-slate-900">
-        <button
-          ref={loadButtonRef}
-          type="button"
-          onClick={onLoad}
-          className="btn-primary w-full transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] text-base font-bold shadow-xl shadow-purple-600/20 dark:shadow-purple-900/40"
-        >
-          Load Sample
-        </button>
+      {/* Action Buttons */}
+      <div className="p-6 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+        <div className="flex gap-3 justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-900 dark:text-slate-100 rounded-lg font-bold transition-colors shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-800"
+          >
+            Cancel
+          </button>
+          <button
+            ref={loadButtonRef}
+            type="button"
+            onClick={onLoad}
+            className="btn-primary transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] font-bold shadow-xl shadow-purple-600/20 dark:shadow-purple-900/40"
+          >
+            Load Sample
+          </button>
+        </div>
       </div>
     </div>
   );

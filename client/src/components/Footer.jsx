@@ -11,7 +11,7 @@ export default function Footer({ onSupportClick }) {
 
   return (
     <footer className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-t border-slate-200 dark:border-slate-700 mt-auto transition-colors">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 sm:py-2.5">
+      <div className="max-w-7xl xl:max-w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-2 sm:py-2.5">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4">
           {/* Copyright */}
           <div className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm">

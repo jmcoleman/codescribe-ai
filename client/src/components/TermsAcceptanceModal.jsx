@@ -64,7 +64,7 @@ export default function TermsAcceptanceModal({
 
       {/* Modal */}
       <div className="relative min-h-screen flex items-center justify-center p-4">
-        <div ref={modalRef} className="modal-container w-full max-w-2xl p-6 sm:p-8 max-h-[90vh] overflow-y-auto">
+        <div ref={modalRef} className="modal-container w-full max-w-2xl xl:max-w-3xl 2xl:max-w-4xl p-6 sm:p-8 max-h-[90vh] overflow-y-auto">
           {/* Header */}
           <div className="flex items-start justify-between mb-6">
             <div className="flex items-center gap-3">

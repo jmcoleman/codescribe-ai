@@ -1,8 +1,8 @@
 # Skipped Tests Reference
 
 **Purpose:** Central reference for all intentionally skipped tests in the codebase
-**Last Updated:** November 11, 2025 (v2.7.2)
-**Total Skipped:** 29 frontend tests + 21 backend integration tests = **50 total**
+**Last Updated:** November 14, 2025 (v2.7.10)
+**Total Skipped:** 33 frontend tests + 23 backend tests = **56 total**
 
 **Note:** Backend database tests (21 tests in `/src/db/__tests__/`) are **excluded** via `jest.config.cjs`, not "skipped" with `.skip()`. They run separately in Docker sandbox before deployment and are NOT counted in this document's skip tracking.
 
@@ -12,22 +12,24 @@
 
 | Category | Location | Count | Impact | Reason |
 |----------|----------|-------|--------|--------|
-| **Frontend Tests** | | **29** | | |
+| **Frontend Tests** | | **33** | | |
 | GitHub Import Feature | ControlBar | 6 | ✅ None | Feature not implemented (Phase 3) |
+| Focus Management Tests | SamplesModal | 4 | ✅ None | jsdom limitations |
 | Timing-Dependent Tests | CopyButton | 4 | ✅ None | Prevent flaky CI/CD |
 | React 18 Batching Tests | ContactSalesModal, ContactSupportModal | 4 | ✅ None | Loading/success state race conditions |
 | Header ThemeToggle Tests | DarkModeIntegration | 3 | ✅ None | Feature moved to Settings → Appearance (v2.7.2) |
 | Email Verification Tests | UnverifiedEmailBanner | 3 | ✅ None | Email rate limiting timing issues |
 | Focus Management Edge Cases | LoginModal | 2 | ✅ None | jsdom limitations |
-| Debug Logging Tests | MermaidDiagram | 2 | ✅ None | Development only |
+| Debug Logging Tests | MermaidDiagram | 2 | ✅ None | Development only (console logging removed) |
 | CI Environment Tests | ContactSupportModal, ContactSalesModal | 2 | ✅ None | Text matching fails in CI only |
 | Focus Trap Edge Cases | useFocusTrap | 1 | ✅ None | jsdom limitations |
 | Focus Restoration | QualityScore | 1 | ✅ None | jsdom limitations |
 | Restore Account Tests | RestoreAccount | 1 | ✅ None | Email rate limiting timing issues |
-| **Backend Tests** | | **21** | | |
+| **Backend Tests** | | **23** | | |
 | GitHub OAuth Integration | tests/integration | 21 | ✅ None | Complex Passport.js mocking (feature works in production) |
+| Debug Logging Tests | rateLimitBypass | 2 | ✅ None | Console logging removed in cleanup (v2.7.10) |
 
-**Total Skipped:** 50 tests (29 frontend, 21 backend)
+**Total Skipped:** 56 tests (33 frontend, 23 backend)
 
 **Deployment Impact:** ✅ **NONE** - All skipped tests are intentional and documented
 
@@ -534,6 +536,57 @@ Feature tested extensively in production:
 
 ### Production Impact
 ✅ **NONE** - OAuth works perfectly in production, tested with 100+ real users
+
+---
+
+## 🟡 Backend: Debug Logging Tests (2 tests)
+
+### Status: ✅ **DEBUG LOGGING REMOVED**
+
+### File
+`server/src/middleware/__tests__/rateLimitBypass.test.js`
+
+### Skipped Tests
+1. **Line 71:** `should log bypass in development mode (REMOVED: debug logging cleaned up)`
+   - Tests console.log output in development environment
+   - Feature: Debug logging for rate limit bypass events
+
+2. **Line 93:** `should NOT log bypass in production mode (REMOVED: debug logging cleaned up)`
+   - Tests that console.log is not called in production
+   - Feature: Production logging suppression
+
+### Why Skipped
+Debug console logging was **intentionally removed** from the `rateLimitBypass` middleware during code cleanup (v2.7.10):
+- Console logging clutters production logs
+- Rate limit bypass behavior is not a critical event that needs logging
+- Middleware still functions correctly (bypass logic tested in 12 other passing tests)
+- Production systems should use structured logging, not console.log
+
+### Coverage
+Rate limit bypass functionality is **fully tested** through 12 passing tests:
+- ✅ Line 28-41: Admin role bypass verification
+- ✅ Line 43-55: Super_admin role bypass verification
+- ✅ Line 57-69: Support role bypass verification
+- ✅ Line 115-128: Regular user pass-through
+- ✅ Line 130-148: No logging for regular users
+- ✅ Line 152-162: Null user handling
+- ✅ Line 164-173: Undefined user handling
+- ✅ Line 177-189: Missing role property handling
+- ✅ Line 191-203: Null role handling
+- ✅ Line 205-218: Return value verification
+- ✅ Line 222-243: Middleware chain integration
+- ✅ Line 245-261: Error handling non-interference
+
+**Test Coverage:** 100% of middleware functionality (14 tests total, 12 passing, 2 skipped)
+
+### When to Revisit
+Consider unskipping if:
+1. Debug logging is re-added to middleware
+2. Structured logging system is implemented (Winston, Pino)
+3. Logging becomes a production requirement for audit trails
+
+### Production Impact
+✅ **NONE** - Rate limit bypass works correctly for admin/super_admin/support roles without console logging
 
 ### Related Documentation
 - [AUTHENTICATION-SYSTEM.md](../authentication/AUTHENTICATION-SYSTEM.md) - OAuth implementation details

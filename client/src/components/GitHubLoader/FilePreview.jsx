@@ -114,7 +114,7 @@ export function FilePreview({ file, loading, repository }) {
       {/* File Content */}
       <div className="flex-1 overflow-y-auto">
         {fileSupport.isBinary ? (
-          <div className="h-full flex items-center justify-center p-8 bg-slate-50 dark:bg-slate-950">
+          <div className="h-full flex items-center justify-center p-8 bg-white dark:bg-slate-900">
             <div className="text-center max-w-md">
               <FileCode className="w-16 h-16 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
@@ -126,11 +126,11 @@ export function FilePreview({ file, loading, repository }) {
             </div>
           </div>
         ) : (
-          <div className="bg-slate-50 dark:bg-slate-950 h-full">
+          <div className="bg-white dark:bg-slate-900 h-full">
             <pre className="p-4 text-xs font-mono leading-relaxed">
               <code className="text-slate-800 dark:text-slate-200">
                 {previewLines.map((line, index) => (
-                  <div key={index} className="hover:bg-slate-100 dark:hover:bg-slate-900 -mx-4 px-4">
+                  <div key={index} className="hover:bg-slate-100 dark:hover:bg-slate-800 -mx-4 px-4">
                     <span className="inline-block w-12 text-right pr-4 text-slate-400 dark:text-slate-600 select-none">
                       {index + 1}
                     </span>
@@ -140,9 +140,9 @@ export function FilePreview({ file, loading, repository }) {
               </code>
             </pre>
             {hasMore && (
-              <div className="bg-slate-50/50 dark:bg-slate-900/50 border-t border-slate-200 dark:border-slate-700 px-4 py-1.5 text-center">
+              <div className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 px-4 py-1.5 text-center">
                 <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">
-                  ⋯ {lines.length - 50} more lines
+                  ... {lines.length - 50} more lines
                 </p>
               </div>
             )}

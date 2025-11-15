@@ -290,7 +290,7 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad }) {
     >
       <div
         ref={modalRef}
-        className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-[90vw] h-[90vh] max-w-[1400px] flex flex-col"
+        className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-[90vw] lg:w-[92vw] xl:w-[94vw] 2xl:w-[95vw] h-[90vh] max-w-[1400px] xl:max-w-[1600px] 2xl:max-w-[1800px] flex flex-col"
         role="dialog"
         aria-modal="true"
         aria-labelledby="github-modal-title"
@@ -300,7 +300,7 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad }) {
           <div className="flex items-center gap-3">
             <Github className="w-6 h-6 text-slate-700 dark:text-slate-300" />
             <h2 id="github-modal-title" className="text-2xl font-bold text-slate-900 dark:text-white">
-              Load from GitHub
+              Import from GitHub
             </h2>
           </div>
           <button
@@ -422,10 +422,10 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad }) {
               <div className="max-w-md text-center">
                 <Github className="w-16 h-16 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
-                  Enter a GitHub URL or repository
+                  Import Code from GitHub
                 </h3>
                 <p className="text-slate-600 dark:text-slate-400 text-sm mb-3">
-                  Paste any GitHub file or repository URL to get started
+                  Enter a repository or file URL to browse and select code
                 </p>
                 <div className="text-left bg-slate-50 dark:bg-slate-800 rounded-lg p-4 text-sm">
                   <p className="font-medium text-slate-700 dark:text-slate-300 mb-2">Examples:</p>
@@ -449,7 +449,7 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad }) {
           const canLoad = filePreview && !isFileTooLarge && !isUnsupported;
 
           return (
-            <div className={`p-6 border-t border-slate-200 dark:border-slate-700 flex items-center ${canLoad ? 'justify-between' : 'justify-end'}`}>
+            <div className="p-6 border-t border-slate-200 dark:border-slate-700 flex items-center justify-end gap-3">
               {canLoad && (
                 <Button
                   variant="secondary"

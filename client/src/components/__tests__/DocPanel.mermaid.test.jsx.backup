@@ -231,7 +231,8 @@ flowchart TD
   });
 
   describe('Diagram Types', () => {
-    it('should auto-render flowchart diagrams', async () => {
+    it('should render flowchart diagrams', async () => {
+      const user = userEvent.setup();
       const flowchart = `\`\`\`mermaid
 flowchart TD
     Start[Start Process] --> Process[Process Data]
@@ -246,7 +247,9 @@ flowchart TD
         />
       );
 
-      // Diagram should auto-render
+      const showButton = screen.getByRole('button', { name: /^show$/i });
+      await user.click(showButton);
+
       await waitFor(() => {
         expect(mermaid.render).toHaveBeenCalledWith(
           expect.any(String),
@@ -255,7 +258,8 @@ flowchart TD
       });
     });
 
-    it('should auto-render sequence diagrams', async () => {
+    it('should render sequence diagrams', async () => {
+      const user = userEvent.setup();
       const sequence = `\`\`\`mermaid
 sequenceDiagram
     participant Client
@@ -275,7 +279,9 @@ sequenceDiagram
         />
       );
 
-      // Diagram should auto-render
+      const showButton = screen.getByRole('button', { name: /^show$/i });
+      await user.click(showButton);
+
       await waitFor(() => {
         expect(mermaid.render).toHaveBeenCalledWith(
           expect.any(String),
@@ -284,7 +290,8 @@ sequenceDiagram
       });
     });
 
-    it('should auto-render complex architecture diagrams', async () => {
+    it('should render complex architecture diagrams', async () => {
+      const user = userEvent.setup();
       const architecture = `\`\`\`mermaid
 flowchart TD
     Client[Client Layer] --> Gateway[API Gateway]
@@ -302,7 +309,9 @@ flowchart TD
         />
       );
 
-      // Diagram should auto-render
+      const showButton = screen.getByRole('button', { name: /^show$/i });
+      await user.click(showButton);
+
       await waitFor(() => {
         const chartContent = mermaid.render.mock.calls[0][1];
         expect(chartContent).toContain('Client[Client Layer]');
@@ -312,7 +321,7 @@ flowchart TD
   });
 
   describe('Mixed Content', () => {
-    it('should render documentation with text and auto-shown Mermaid diagram', async () => {
+    it('should render documentation with text and Mermaid diagram', () => {
       const mixedDoc = `# Architecture Documentation
 
 This is a comprehensive overview of our system architecture.
@@ -349,13 +358,11 @@ This architecture provides scalability and maintainability.`;
       expect(screen.getByText(/comprehensive overview/i)).toBeInTheDocument();
       expect(screen.getByText(/System Components/i)).toBeInTheDocument();
 
-      // Diagram should auto-render
-      await waitFor(() => {
-        expect(mermaid.render).toHaveBeenCalled();
-      });
+      // Should show diagram button
+      expect(screen.getByText('Diagram Available')).toBeInTheDocument();
     });
 
-    it('should render code blocks alongside auto-shown Mermaid diagrams', async () => {
+    it('should render code blocks alongside Mermaid diagrams', () => {
       const mixedDoc = `# API Documentation
 
 Example usage:
@@ -384,10 +391,8 @@ sequenceDiagram
       expect(screen.getByText(/API Documentation/i)).toBeInTheDocument();
       expect(screen.getByText(/Example usage/i)).toBeInTheDocument();
 
-      // Mermaid diagram should auto-render
-      await waitFor(() => {
-        expect(mermaid.render).toHaveBeenCalled();
-      });
+      // Should show Mermaid diagram button
+      expect(screen.getByText('Diagram Available')).toBeInTheDocument();
     });
   });
 
@@ -429,7 +434,7 @@ flowchart TD
       expect(screen.queryByRole('button', { name: /^show$/i })).not.toBeInTheDocument();
     });
 
-    it('should auto-show diagram after streaming completes', async () => {
+    it('should show "Show" button after streaming completes', () => {
       const completeDiagram = `\`\`\`mermaid
 flowchart TD
     A[Start] --> B[End]
@@ -444,8 +449,8 @@ flowchart TD
         />
       );
 
-      // During generation - placeholder shown, no render
-      expect(screen.queryByText(/Rendering diagram/i)).not.toBeInTheDocument();
+      // During generation - no show button
+      expect(screen.queryByRole('button', { name: /^show$/i })).not.toBeInTheDocument();
 
       // After generation completes
       rerender(
@@ -457,16 +462,15 @@ flowchart TD
         />
       );
 
-      // Diagram should auto-render
-      await waitFor(() => {
-        expect(mermaid.render).toHaveBeenCalled();
-      });
+      // Should now show "Show" button
+      expect(screen.getByRole('button', { name: /^show$/i })).toBeInTheDocument();
     });
   });
 
   describe('Error Handling', () => {
-    it('should handle invalid Mermaid syntax gracefully on auto-render', async () => {
-      // Use valid-looking syntax that will auto-render but fail
+    it('should handle invalid Mermaid syntax gracefully', async () => {
+      const user = userEvent.setup();
+      // Use valid-looking syntax that will trigger show button but fail render
       const invalidDiagram = `\`\`\`mermaid
 flowchart TD
     A[Start] --> B[End]
@@ -484,13 +488,16 @@ flowchart TD
         />
       );
 
-      // Diagram should auto-render and show error
+      const showButton = screen.getByRole('button', { name: /^show$/i });
+      await user.click(showButton);
+
       await waitFor(() => {
-        expect(screen.getByText(/Diagram Rendering Error/i)).toBeInTheDocument();
+        expect(screen.getByText(/Error rendering diagram/i)).toBeInTheDocument();
       });
     });
 
-    it('should continue rendering other content when diagram auto-render fails', async () => {
+    it('should continue rendering other content when diagram fails', async () => {
+      const user = userEvent.setup();
       // Use valid-looking Mermaid syntax
       const docWithError = `# Documentation
 
@@ -518,9 +525,11 @@ Some text after.`;
       expect(screen.getByText(/Some text before/i)).toBeInTheDocument();
       expect(screen.getByText(/Some text after/i)).toBeInTheDocument();
 
-      // Diagram should auto-render and show error
+      const showButton = screen.getByRole('button', { name: /^show$/i });
+      await user.click(showButton);
+
       await waitFor(() => {
-        expect(screen.getByText(/Diagram Rendering Error/i)).toBeInTheDocument();
+        expect(screen.getByText(/Error rendering diagram/i)).toBeInTheDocument();
       });
     });
   });
@@ -546,7 +555,10 @@ flowchart TD
         />
       );
 
-      // First diagram should auto-render with ID 1
+      // First diagram should get ID 1
+      const button1 = screen.getByRole('button', { name: /^show$/i });
+      await userEvent.setup().click(button1);
+
       await waitFor(() => {
         const id1 = mermaid.render.mock.calls[0][0];
         expect(id1).toContain('diagram-1');
@@ -562,7 +574,10 @@ flowchart TD
         />
       );
 
-      // Counter should reset, new diagram should also auto-render with ID 1
+      // Counter should reset, new diagram should also get ID 1
+      const button2 = screen.getByRole('button', { name: /^show$/i });
+      await userEvent.setup().click(button2);
+
       await waitFor(() => {
         // Second call should also start at diagram-1 (counter was reset)
         const id2 = mermaid.render.mock.calls[1][0];
@@ -572,7 +587,7 @@ flowchart TD
   });
 
   describe('Quality Score with Diagrams', () => {
-    it('should display quality score alongside auto-shown diagram', async () => {
+    it('should display quality score alongside diagram', () => {
       const docWithDiagram = `\`\`\`mermaid
 flowchart TD
     A --> B
@@ -591,10 +606,8 @@ flowchart TD
       // Grade is announced in aria-label for screen readers
       expect(screen.getByLabelText(/Quality score: B 85\/100/i)).toBeInTheDocument();
 
-      // Diagram should auto-render
-      await waitFor(() => {
-        expect(mermaid.render).toHaveBeenCalled();
-      });
+      // Should show diagram button
+      expect(screen.getByText('Diagram Available')).toBeInTheDocument();
     });
 
     it('should allow viewing quality breakdown with diagrams', async () => {
@@ -622,7 +635,7 @@ flowchart TD
   });
 
   describe('Accessibility', () => {
-    it('should have accessible diagram rendering', async () => {
+    it('should have accessible diagram show button', () => {
       const docWithDiagram = `\`\`\`mermaid
 flowchart TD
     A --> B
@@ -636,10 +649,9 @@ flowchart TD
         />
       );
 
-      // Diagram should auto-render accessibly
-      await waitFor(() => {
-        expect(mermaid.render).toHaveBeenCalled();
-      });
+      const showButton = screen.getByRole('button', { name: /^show$/i });
+      expect(showButton).toBeVisible();
+      expect(showButton).toBeEnabled();
     });
 
     it('should maintain readable text alongside diagrams', () => {

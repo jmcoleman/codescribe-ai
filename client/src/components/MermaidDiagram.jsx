@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState, memo } from 'react';
+import { lazy, Suspense, useState, useEffect, memo } from 'react';
 
 // Lazy load the Mermaid renderer to reduce initial bundle size
 const LazyMermaidRenderer = lazy(() =>
@@ -23,9 +23,17 @@ function MermaidLoadingFallback() {
  * @param {Object} props
  * @param {string} props.chart - Mermaid diagram syntax
  * @param {string} props.id - Unique identifier for this diagram
+ * @param {boolean} props.autoShow - If true, automatically show diagram (default: false)
  */
-export const MermaidDiagram = memo(function MermaidDiagram({ chart, id }) {
-  const [showDiagram, setShowDiagram] = useState(false);
+export const MermaidDiagram = memo(function MermaidDiagram({ chart, id, autoShow = false }) {
+  const [showDiagram, setShowDiagram] = useState(autoShow);
+
+  // Auto-show diagram when autoShow prop changes to true
+  useEffect(() => {
+    if (autoShow) {
+      setShowDiagram(true);
+    }
+  }, [autoShow]);
 
   // Show button to load diagram
   if (!showDiagram) {

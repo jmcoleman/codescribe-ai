@@ -2,6 +2,54 @@ import { parseCode } from './codeParser.js';
 import { calculateQualityScore } from './qualityScorer.js';
 import LLMService from './llm/llmService.js';
 
+/**
+ * Fix Mermaid diagram syntax by adding quotes around labels with special characters
+ * @param {string} mermaidCode - The Mermaid diagram code
+ * @returns {string} Fixed Mermaid code
+ */
+function fixMermaidSyntax(mermaidCode) {
+  const lines = mermaidCode.split('\n');
+  const fixedLines = lines.map(line => {
+    // Skip the diagram type line (flowchart, graph, etc.)
+    if (line.trim().match(/^(flowchart|graph|sequenceDiagram|classDiagram|stateDiagram|erDiagram|gantt|pie|journey)/)) {
+      return line;
+    }
+
+    // Match node definitions like: NodeId[Label] or NodeId --> OtherNode[Label]
+    // This regex finds labels in square brackets that aren't already quoted
+    return line.replace(/\[([^\]"]+)\]/g, (match, label) => {
+      // If label already has quotes, leave it alone
+      if (label.startsWith('"') && label.endsWith('"')) {
+        return match;
+      }
+
+      // Check if label has special characters that need quoting
+      // Common special chars in API paths and labels: / : - ( ) { } < > = + & | ! @ # $ % ^
+      if (/[/:(){}[\]<>=+&|!@#$%^-]/.test(label)) {
+        return `["${label}"]`;
+      }
+
+      return match;
+    });
+  });
+
+  return fixedLines.join('\n');
+}
+
+/**
+ * Process documentation to fix Mermaid diagram syntax
+ * Finds all Mermaid code blocks and applies fixes
+ * @param {string} documentation - The generated documentation
+ * @returns {string} Documentation with fixed Mermaid diagrams
+ */
+function fixMermaidDiagrams(documentation) {
+  // Match Mermaid code blocks: ```mermaid ... ```
+  return documentation.replace(/```mermaid\n([\s\S]*?)```/g, (match, mermaidCode) => {
+    const fixedCode = fixMermaidSyntax(mermaidCode);
+    return `\`\`\`mermaid\n${fixedCode}\`\`\``;
+  });
+}
+
 export class DocGeneratorService {
   constructor() {
     // Initialize LLM service (uses config from environment)
@@ -47,13 +95,17 @@ export class DocGeneratorService {
       result = await this.llmService.generate(userMessage, llmOptions);
     }
 
-    const documentation = result.text;
+    let documentation = result.text;
 
-    // Step 4: Add tier-based attribution footer (works for both cached and non-cached responses)
+    // Step 4: Fix Mermaid diagram syntax (add quotes to labels with special characters)
+    documentation = fixMermaidDiagrams(documentation);
+
+    // Step 5: Add tier-based attribution footer (works for both cached and non-cached responses)
     const attribution = this.buildAttribution(userTier);
-    const documentationWithAttribution = documentation + attribution;
+    // Trim trailing whitespace to avoid extra blank lines before attribution
+    const documentationWithAttribution = documentation.trimEnd() + attribution;
 
-    // Step 5: Calculate quality score (includes input code health assessment)
+    // Step 6: Calculate quality score (includes input code health assessment)
     const qualityScore = calculateQualityScore(documentationWithAttribution, analysis, docType, code);
 
     return {

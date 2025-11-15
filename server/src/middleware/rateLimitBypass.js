@@ -26,11 +26,6 @@ import User from '../models/User.js';
 export const rateLimitBypass = (req, res, next) => {
   // Check if user is authenticated and has a bypass role
   if (req.user && User.canBypassRateLimits(req.user)) {
-    // Log bypass for monitoring (development only)
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[RateLimitBypass] User ${req.user.id} (${req.user.role}) bypassing rate limit`);
-    }
-
     // Skip rate limiting - immediately call next middleware
     return next();
   }

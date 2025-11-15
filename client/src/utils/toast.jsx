@@ -39,7 +39,7 @@ const DEFAULT_OPTIONS = {
     fontWeight: '400', // font-normal
     padding: '1rem', // 16px - matches CustomToast p-4
     maxWidth: '28rem', // 448px - matches CustomToast max-w-md
-    border: '1px solid rgb(203 213 225)', // slate-300 - neutral border for better app cohesion
+    border: '1px solid rgb(226 232 240)', // slate-200 - matches panel borders
     boxShadow: '0 20px 50px rgba(0, 0, 0, 0.12), 0 8px 20px rgba(0, 0, 0, 0.08)', // matches CustomToast
     backdropFilter: 'blur(8px)', // matches CustomToast backdrop-blur-sm
     display: 'flex', // Enable flexbox
@@ -53,7 +53,7 @@ const DEFAULT_OPTIONS = {
       secondary: '#FFFFFF', // white background for icon
     },
     style: {
-      border: '1px solid rgb(203 213 225)', // slate-300 - neutral border for better app cohesion
+      border: '1px solid rgb(226 232 240)', // slate-200 - matches panel borders
       boxShadow: '0 20px 50px rgba(0, 0, 0, 0.12), 0 8px 20px rgba(0, 0, 0, 0.08)', // consistent shadow
       fontSize: '0.875rem', // text-sm - CONSISTENT
       fontWeight: '400', // font-normal - CONSISTENT
@@ -66,7 +66,7 @@ const DEFAULT_OPTIONS = {
       secondary: '#FFFFFF', // white background for icon
     },
     style: {
-      border: '1px solid rgb(203 213 225)', // slate-300 - neutral border for better app cohesion
+      border: '1px solid rgb(226 232 240)', // slate-200 - matches panel borders
       boxShadow: '0 20px 50px rgba(0, 0, 0, 0.12), 0 8px 20px rgba(0, 0, 0, 0.08)', // consistent shadow
       fontSize: '0.875rem', // text-sm - CONSISTENT
       fontWeight: '400', // font-normal - CONSISTENT
@@ -78,7 +78,7 @@ const DEFAULT_OPTIONS = {
       secondary: '#FFFFFF', // white background for icon
     },
     style: {
-      border: '1px solid rgb(203 213 225)', // slate-300 - neutral border for better app cohesion
+      border: '1px solid rgb(226 232 240)', // slate-200 - matches panel borders
       boxShadow: '0 20px 50px rgba(0, 0, 0, 0.12), 0 8px 20px rgba(0, 0, 0, 0.08)', // consistent shadow
       fontSize: '0.875rem', // text-sm - CONSISTENT
       fontWeight: '400', // font-normal - CONSISTENT
@@ -531,7 +531,7 @@ export const toastBatch = (title, total, completed = 0, failed = 0) => {
 export const toastShortcut = (shortcut, action) => {
   return toast.custom(
     () => (
-      <div className="flex items-center gap-3 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 px-5 py-3.5 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.12),0_8px_20px_rgba(0,0,0,0.08)] border border-slate-300 dark:border-slate-700 backdrop-blur-sm">
+      <div className="flex items-center gap-3 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 px-5 py-3.5 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.12),0_8px_20px_rgba(0,0,0,0.08)] border border-slate-200 dark:border-slate-700 backdrop-blur-sm">
         <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/30 dark:to-indigo-900/30 rounded-lg flex items-center justify-center ring-1 ring-white/50 shadow-sm">
           <span className="text-base">⌨️</span>
         </div>

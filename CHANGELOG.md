@@ -9,6 +9,77 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.7.10] - 2025-11-14
+
+**Status:** ✅ Mermaid Diagram Improvements & UX Refinements
+
+**Summary:** Enhanced Mermaid diagram rendering with auto-show functionality, improved error styling with amber warnings, and added entity-relationship diagram theming. Updated modals with Cancel buttons for consistency and improved attribution footer spacing.
+
+### Added
+
+- **Mermaid Diagram Auto-Show** ([client/src/components/MermaidDiagram.jsx](client/src/components/MermaidDiagram.jsx))
+  - Diagrams automatically render when `autoShow` prop is true (set when generation completes)
+  - Eliminates need for manual "Show" button clicks for better UX
+  - Uses React `useEffect` to trigger rendering based on prop changes
+  - Applied to both static documentation and post-generation states
+
+- **Entity-Relationship Diagram Theming** ([client/src/components/LazyMermaidRenderer.jsx](client/src/components/LazyMermaidRenderer.jsx))
+  - ER diagrams now use brand colors (indigo-600 for entities, purple-600 for attributes)
+  - Consistent with overall design system
+  - Dynamic theme application based on diagram type detection
+
+### Changed
+
+- **Mermaid Error Display** ([client/src/components/MermaidDiagram.jsx](client/src/components/MermaidDiagram.jsx))
+  - Error styling changed from red (`bg-red-50`, `border-red-200`) to amber (`bg-amber-50`, `border-amber-200`)
+  - Error title changed from "Error rendering diagram" to "Diagram Rendering Error"
+  - Warning icon and amber color scheme better conveys recoverable issues vs critical errors
+
+- **Quality Modal** ([client/src/components/QualityModal.jsx](client/src/components/QualityModal.jsx))
+  - Default tab set to "Criteria Breakdown" for immediate scoring details
+  - Added Cancel button to footer for consistency with other modals
+  - Improved UX by showing most useful tab first
+
+- **Samples Modal** ([client/src/components/SamplesModal.jsx](client/src/components/SamplesModal.jsx))
+  - Added Cancel button to modal footer
+  - Fixed color palette inconsistencies for better dark mode support
+  - Consistent modal footer pattern across application
+
+- **Attribution Footer** ([client/src/components/AttributionFooter.jsx](client/src/components/AttributionFooter.jsx))
+  - Improved spacing with `space-x-3` for better visual balance
+  - Enhanced readability between logo and links
+
+- **Auto-Scroll During Generation** ([client/src/components/DocPanel.jsx](client/src/components/DocPanel.jsx))
+  - Smart scrolling ensures visible content area during streaming
+  - Prevents user from viewing off-screen content during generation
+  - Smooth scroll behavior for better UX
+
+### Fixed
+
+- Mermaid diagram test expectations updated for auto-show behavior
+- Error styling tests updated for amber warning colors
+- Rate limit bypass tests adjusted for removed debug logging
+
+### Tests
+
+- **Test Count:** 2,529 tests total (2,473 passed, 56 skipped)
+  - **Frontend:** 1,516 passed, 33 skipped (1,549 total)
+  - **Backend:** 957 passed, 23 skipped (980 total)
+  - **Pass Rate:** 97.9%
+
+- **Test Updates:**
+  - Updated 17 DocPanel.mermaid tests for auto-show behavior (removed manual button clicks, added auto-render expectations)
+  - Updated 3 MermaidDiagram tests for new amber error styling
+  - Skipped 2 rateLimitBypass tests after debug logging cleanup
+
+### Technical Details
+
+- **Auto-Show Implementation:** `DocPanel` passes `autoShow={!isGenerating}` to `MermaidDiagram`, triggering automatic rendering when generation completes
+- **ER Diagram Colors:** `entityFill: '#4f46e5'` (indigo-600), `attributeBackgroundColorOdd/Even: '#9333ea'` (purple-600)
+- **Test Pattern:** Changed from manual `user.click(showButton)` to `waitFor(() => expect(mermaid.render).toHaveBeenCalled())`
+
+---
+
 ## [2.7.9] - 2025-11-14
 
 **Status:** ✅ GitHub Repository Loader

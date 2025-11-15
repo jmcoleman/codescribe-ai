@@ -235,12 +235,12 @@ describe('MermaidDiagram', () => {
       await user.click(button);
 
       await waitFor(() => {
-        expect(screen.getByText(/Error rendering diagram/i)).toBeInTheDocument();
+        expect(screen.getByText(/Diagram Rendering Error/i)).toBeInTheDocument();
         expect(screen.getByText(/Syntax error in diagram/i)).toBeInTheDocument();
       });
     });
 
-    it('should display error with red background', async () => {
+    it('should display error with amber warning background', async () => {
       const user = userEvent.setup();
       const chart = 'invalid';
 
@@ -252,11 +252,11 @@ describe('MermaidDiagram', () => {
       await user.click(button);
 
       await waitFor(() => {
-        const errorText = screen.getByText(/Error rendering diagram/i);
-        const errorDiv = errorText.closest('.bg-red-50');
+        const errorText = screen.getByText(/Diagram Rendering Error/i);
+        const errorDiv = errorText.closest('.bg-amber-50');
         expect(errorDiv).toBeInTheDocument();
-        expect(errorDiv).toHaveClass('bg-red-50');
-        expect(errorDiv).toHaveClass('border-red-200');
+        expect(errorDiv).toHaveClass('bg-amber-50');
+        expect(errorDiv).toHaveClass('border-amber-200');
       });
     });
 
@@ -299,7 +299,7 @@ describe('MermaidDiagram', () => {
       await user.click(button);
 
       await waitFor(() => {
-        expect(screen.getByText(/Error rendering diagram/i)).toBeInTheDocument();
+        expect(screen.getByText(/Diagram Rendering Error/i)).toBeInTheDocument();
       });
     });
   });

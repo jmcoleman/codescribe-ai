@@ -493,7 +493,7 @@ For a complete navigation guide with descriptions of all documentation, see **[D
 
 **Development & Testing:**
 - **[Dev Guide](docs/planning/mvp/05-Dev-Guide.md)** - Implementation guide with code examples
-- **[Testing Hub](docs/testing/README.md)** - 2,391 tests (2,341 passing, 50 skipped), coverage reports, test patterns
+- **[Testing Hub](docs/testing/README.md)** - 2,529 tests (2,473 passing, 56 skipped), coverage reports, test patterns
 - **[Test Fixes Guide](docs/testing/TEST-PATTERNS-GUIDE.md)** - Testing patterns & best practices
 
 **Design & UX:**
@@ -827,7 +827,7 @@ See [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) for complete
   - Cross-browser validation (Chromium, Firefox, WebKit, Chrome, Edge)
   - File upload + generate workflows
   - **Pass Rate**: 100% (10/10 tests passing)
-- **Overall Pass Rate**: 97.9% passing (2,475/2,529 tests passing, 54 intentionally skipped, 0 failures)
+- **Overall Pass Rate**: 97.8% passing (2,473/2,529 tests passing, 56 intentionally skipped, 0 failures)
 
 **Running Tests:**
 ```bash
@@ -869,7 +869,7 @@ npm run test:e2e:headed       # With browser UI (for debugging)
 
 **Current Phase:** Phase 2 - GitHub Integration (Epic 4.1 ✅ COMPLETE)
 **Production Status:** 🚀 **LIVE** at [codescribeai.com](https://codescribeai.com)
-**Last Updated:** November 14, 2025 (v2.7.9)
+**Last Updated:** November 14, 2025 (v2.7.10)
 
 ### Phase Summary
 
@@ -897,6 +897,14 @@ npm run test:e2e:headed       # With browser UI (for debugging)
   - Public repository support via GitHub API
   - Multi-provider LLM architecture (Claude + OpenAI)
   - 2,529 tests (2,475 passing, 54 skipped, 97.9% pass rate)
+- **Phase 2 - UX Refinements (Nov 14, 2025):** ✅ Mermaid Diagram Improvements (v2.7.10)
+  - Auto-show Mermaid diagrams when generation completes (no manual button clicks)
+  - ER diagram theming with brand colors (indigo-600, purple-600)
+  - Amber warning colors for diagram errors (better UX than red)
+  - Quality modal default tab to "Criteria Breakdown"
+  - Modal consistency updates (Cancel buttons in Samples, Quality modals)
+  - Attribution footer spacing improvements
+  - 2,529 tests (2,473 passing, 56 skipped, 97.8% pass rate)
 - **Phase 2 - Next Epic:** 📋 Epic 2.8 - Subscription Management UI (Customer Portal, upgrade/downgrade flows)
 
 ### ✅ Phase 1.0 & 1.5 Complete (Oct 11-19, 2025)
@@ -911,8 +919,8 @@ npm run test:e2e:headed       # With browser UI (for debugging)
 - Production deployment with CI/CD (GitHub Actions)
 
 **Quality Metrics:**
-- **2,529 tests** (1,549 frontend, 980 backend) - 97.9% pass rate
-- **Backend coverage:** 82.38% statements, 70.11% branches (959 passing, 21 skipped)
+- **2,529 tests** (1,549 frontend, 980 backend) - 97.8% pass rate
+- **Backend coverage:** 82.38% statements, 70.11% branches (957 passing, 23 skipped)
 - **Frontend coverage:** 100% critical paths (1,516 passing, 33 skipped)
 - **Database:** 14 migration tests (Docker sandbox + Neon dev validation)
 

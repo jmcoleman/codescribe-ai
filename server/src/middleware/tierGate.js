@@ -12,6 +12,7 @@ import {
   checkUsageLimits,
 } from '../config/tiers.js';
 import Usage from '../models/Usage.js';
+import User from '../models/User.js';
 
 /**
  * Middleware: Require specific feature access
@@ -64,6 +65,11 @@ export const requireFeature = (featureName) => {
  */
 export const checkUsage = () => {
   return async (req, res, next) => {
+    // Admin users bypass usage limits
+    if (req.user && User.canBypassRateLimits(req.user)) {
+      return next();
+    }
+
     const userTier = req.user?.tier || 'free';
     const userId = req.user?.id;
     const userIdentifier = userId || `ip:${req.ip}`; // Track by user ID or IP

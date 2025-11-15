@@ -6,7 +6,7 @@ export function QualityScoreModal({ qualityScore, onClose, filename = 'code.js' 
   const closeButtonRef = useRef(null);
   const previousFocusRef = useRef(null);
   const [allowClickOutside, setAllowClickOutside] = useState(false);
-  const [activeTab, setActiveTab] = useState('input'); // 'input' or 'output' - start with input to match left-to-right flow
+  const [activeTab, setActiveTab] = useState('output'); // 'input' or 'output' - default to generated doc as primary focus
 
   // Delay enabling click-outside to prevent immediate close on modal open
   useEffect(() => {
@@ -172,7 +172,7 @@ export function QualityScoreModal({ qualityScore, onClose, filename = 'code.js' 
       onClick={handleBackdropClick}
     >
       <div
-        className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-200"
+        className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl max-w-2xl xl:max-w-3xl 2xl:max-w-4xl w-full max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-200"
         role="dialog"
         aria-modal="true"
         aria-labelledby="quality-modal-title"
@@ -287,18 +287,25 @@ export function QualityScoreModal({ qualityScore, onClose, filename = 'code.js' 
           ) : null}
         </div>
 
-        {/* Footer - Copy & Download Buttons */}
+        {/* Footer - Close, Copy & Download Buttons */}
         <div className="px-6 py-3 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 flex-shrink-0">
-          <div className="flex gap-3">
+          <div className="flex gap-3 justify-end">
+            <button
+              type="button"
+              onClick={onClose}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-900 dark:text-slate-100 rounded-lg font-medium text-sm transition-colors shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-800"
+            >
+              Cancel
+            </button>
             <CopyButtonWithText
               text={generateQualityReportText()}
               label="Copy Report"
-              className="shadow-sm flex-1 justify-center"
+              className="shadow-sm"
             />
             <button
               type="button"
               onClick={handleDownload}
-              className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 text-white rounded-lg font-medium text-sm transition-colors shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-800"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 text-white rounded-lg font-medium text-sm transition-colors shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-800"
             >
               <Download className="w-4 h-4" aria-hidden="true" />
               <span>Download</span>

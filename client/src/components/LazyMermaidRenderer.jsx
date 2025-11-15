@@ -18,6 +18,10 @@ const LIGHT_THEME_CONFIG = {
     background: '#ffffff',
     mainBkg: '#ffffff',
     secondBkg: '#f8fafc',
+    altBackground: '#f8fafc', // slate-50 - subtle alternating row background for ER diagrams
+    // ER diagram specific - alternating row colors
+    attributeBackgroundColorOdd: '#ffffff', // white for odd rows
+    attributeBackgroundColorEven: '#f8fafc', // slate-50 for even rows
     borderColor: '#94a3b8', // slate-400 - darker borders for better definition
     arrowheadColor: '#64748b',
     fontFamily: 'Inter, system-ui, sans-serif',
@@ -41,6 +45,10 @@ const DARK_THEME_CONFIG = {
     background: '#0f172a', // slate-900
     mainBkg: '#1e293b', // slate-800
     secondBkg: '#334155', // slate-700
+    altBackground: '#1e293b', // slate-800 - subtle alternating row background for ER diagrams
+    // ER diagram specific - alternating row colors
+    attributeBackgroundColorOdd: '#1e293b', // slate-800 for odd rows
+    attributeBackgroundColorEven: '#334155', // slate-700 for even rows
     borderColor: '#64748b', // slate-500 - lighter borders for better definition
     arrowheadColor: '#94a3b8', // slate-400
     fontFamily: 'Inter, system-ui, sans-serif',
@@ -62,6 +70,7 @@ export function LazyMermaidRenderer({ chart, id, onError, onSuccess }) {
   const { effectiveTheme } = useTheme();
   const [svg, setSvg] = useState('');
   const [error, setError] = useState(null);
+  const [showCode, setShowCode] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -84,6 +93,13 @@ export function LazyMermaidRenderer({ chart, id, onError, onSuccess }) {
 
         // Render the diagram
         const { svg } = await mermaid.render(uniqueId, cleanChart);
+
+        // Clean up any DOM elements that Mermaid created
+        // Mermaid sometimes creates temporary elements in the document
+        const mermaidElement = document.getElementById(uniqueId);
+        if (mermaidElement) {
+          mermaidElement.remove();
+        }
 
         // If component unmounted during render, don't update state
         if (cancelled) {
@@ -126,6 +142,28 @@ export function LazyMermaidRenderer({ chart, id, onError, onSuccess }) {
           }
         });
 
+        // Fix ER diagram row colors - remove alternating backgrounds, use same color for all rows
+        const evenRowPaths = doc.querySelectorAll('.row-rect-even path[fill]');
+        const oddRowPaths = doc.querySelectorAll('.row-rect-odd path[fill]');
+
+        // Use same background color for all rows - white in light mode, dark in dark mode
+        const rowColor = effectiveTheme === 'dark' ? '#1e293b' : '#ffffff'; // slate-800 : white
+
+        evenRowPaths.forEach(path => {
+          const currentFill = path.getAttribute('fill');
+          // Only replace if it's not "none" and looks like a color (not a gradient/pattern)
+          if (currentFill && currentFill !== 'none' && !currentFill.startsWith('url(')) {
+            path.setAttribute('fill', rowColor);
+          }
+        });
+
+        oddRowPaths.forEach(path => {
+          const currentFill = path.getAttribute('fill');
+          if (currentFill && currentFill !== 'none' && !currentFill.startsWith('url(')) {
+            path.setAttribute('fill', rowColor);
+          }
+        });
+
         // Serialize back to string
         const cleanSvg = new XMLSerializer().serializeToString(doc);
 
@@ -153,10 +191,42 @@ export function LazyMermaidRenderer({ chart, id, onError, onSuccess }) {
 
   if (error) {
     return (
-      <div className="my-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg min-h-[300px] flex items-center justify-center">
-        <p className="text-sm text-red-800 dark:text-red-300">
-          <strong>Error rendering diagram:</strong> {error}
-        </p>
+      <div className="not-prose my-6 border border-amber-200 dark:border-amber-800 rounded-lg bg-amber-50 dark:bg-amber-900/20">
+        <div className="p-4">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 w-9 h-9 bg-amber-100 dark:bg-amber-800/30 rounded-lg flex items-center justify-center">
+              <svg className="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <h4 className="text-sm font-semibold text-amber-900 dark:text-amber-300 mb-1">
+                Diagram Rendering Error
+              </h4>
+              <p className="text-sm text-amber-800 dark:text-amber-400">
+                Unable to render this diagram. The diagram syntax may be invalid or incomplete.
+              </p>
+              {error && (
+                <p className="text-xs text-amber-700 dark:text-amber-500 mt-2 font-mono">
+                  {error}
+                </p>
+              )}
+              <button
+                onClick={() => setShowCode(!showCode)}
+                className="mt-3 text-xs font-medium text-amber-700 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-300 underline underline-offset-2"
+              >
+                {showCode ? 'Hide' : 'Show'} diagram code
+              </button>
+            </div>
+          </div>
+        </div>
+        {showCode && (
+          <div className="border-t border-amber-200 dark:border-amber-800 p-4 bg-amber-100/50 dark:bg-amber-900/10">
+            <pre className="text-xs text-amber-900 dark:text-amber-300 font-mono overflow-x-auto">
+              <code>{chart}</code>
+            </pre>
+          </div>
+        )}
       </div>
     );
   }

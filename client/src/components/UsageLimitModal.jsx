@@ -172,7 +172,7 @@ export function UsageLimitModal({
     >
       <div
         ref={modalRef}
-        className="modal-container max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        className="modal-container max-w-2xl xl:max-w-3xl 2xl:max-w-4xl w-full max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

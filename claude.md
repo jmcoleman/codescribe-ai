@@ -12,7 +12,7 @@
 AI-powered documentation generator with real-time streaming, quality scoring (0-100), and WCAG 2.1 AA compliance.
 
 **Key Metrics:**
-- 2,460 tests (2,406 passing, 54 skipped, 0 failing) | 100% pass rate | 96.71% middleware coverage
+- 2,529 tests (2,473 passing, 56 skipped, 0 failing) | 97.8% pass rate | 96.71% middleware coverage
 - Lighthouse: 75/100 performance (+67%), 100/100 accessibility
 - Bundle: 78KB gzipped (-85% reduction)
 - Accessibility: 95/100 score, 0 axe violations
@@ -358,27 +358,25 @@ codescribe-ai/
 
 ## 🔄 Version History
 
-**Current: v2.7.9** (November 14, 2025)
-- GitHub repository integration (public repos via GitHub API)
-- File loader modal with tree-based browsing and file preview
-- Branch switching dropdown in file tree header (Headless UI Listbox)
-- Smart folder/file navigation with auto-scroll to selected files
-- 4 new GitHubLoader components (Modal, FileTree, TreeNode, FilePreview)
-- 2 GitHub service files (backend + frontend) with @octokit/rest integration
-- 4 new API routes (tree, branches, file, raw file) with error handling
-- Parallel fetching for branches + tree for better performance
-- Updated deployment guides with GITHUB_TOKEN configuration
-- Created GITHUB-API-SCALING.md for production scaling strategy
-- Jest ESM transformation for @octokit packages
-- Updated ControlBar tests for GitHub button visibility
-- 2,529 tests (2,475 passing, 54 skipped, 97.9% pass rate)
-- Backend: 82.38% statements, 70.11% branches
+**Current: v2.7.10** (November 14, 2025)
+- Mermaid diagram auto-show functionality (eliminates manual Show button clicks)
+- Entity-relationship diagram theming with brand colors (indigo-600, purple-600)
+- Amber warning colors for diagram errors (improved UX vs red)
+- Quality modal default tab set to "Criteria Breakdown"
+- Modal consistency improvements (Cancel buttons in Samples, Quality modals)
+- Attribution footer spacing enhancements
+- Auto-scroll to visible area during generation
+- Updated 17 DocPanel.mermaid tests for auto-show behavior
+- Updated 3 MermaidDiagram tests for amber error styling
+- 2,529 tests (2,473 passing, 56 skipped, 97.8% pass rate)
+- Backend: 82.38% statements, 70.11% branches (957 passing, 23 skipped)
 - Frontend: 100% critical paths (1,516 passing, 33 skipped)
 
 <details>
-<summary>Recent Releases (v2.7.0-v2.7.8) & Milestones</summary>
+<summary>Recent Releases (v2.7.0-v2.7.9) & Milestones</summary>
 
 **v2.7.x Series (Nov 2025):**
+- v2.7.9: GitHub repository integration (public repos, tree browsing, branch switching, @octokit/rest, 4 API routes)
 - v2.7.8: Multi-provider LLM architecture (Claude + OpenAI support, config-driven switching, 69 new tests)
 - v2.7.7: Admin dashboard performance optimization (O(1) lifetime usage), smart auto-scroll, middleware coverage fix
 - v2.7.6: Dual-tab quality breakdown, transformation header, enhanced markdown export

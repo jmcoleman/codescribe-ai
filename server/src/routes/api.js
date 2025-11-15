@@ -3,6 +3,7 @@ import multer from 'multer';
 import path from 'path';
 import docGenerator from '../services/docGenerator.js';
 import { apiLimiter, generationLimiter } from '../middleware/rateLimiter.js';
+import { rateLimitBypass } from '../middleware/rateLimitBypass.js';
 import { checkUsage, incrementUsage } from '../middleware/tierGate.js';
 import Usage from '../models/Usage.js';
 import User from '../models/User.js';
@@ -23,7 +24,7 @@ function formatBytes(bytes) {
 }
 
 // Line 17 - add before route handler
-router.post('/generate', apiLimiter, generationLimiter, optionalAuth, checkUsage(), async (req, res) => {
+router.post('/generate', optionalAuth, rateLimitBypass, apiLimiter, generationLimiter, checkUsage(), async (req, res) => {
   try {
     const { code, docType, language, isDefaultCode } = req.body;
 
@@ -53,7 +54,6 @@ router.post('/generate', apiLimiter, generationLimiter, optionalAuth, checkUsage
     const userIdentifier = req.user?.id || `ip:${req.ip || req.socket?.remoteAddress || 'unknown'}`;
     try {
       await incrementUsage(userIdentifier);
-      console.log(`[Usage] Incremented usage for ${req.user?.id ? `user ${req.user.id}` : `IP ${userIdentifier}`}`);
     } catch (usageError) {
       // Don't fail the request if usage tracking fails - just log it
       console.error('[Usage] Failed to increment usage:', usageError);
@@ -70,7 +70,7 @@ router.post('/generate', apiLimiter, generationLimiter, optionalAuth, checkUsage
 });
 
 // Line 51 - add before route handler
-router.post('/generate-stream', apiLimiter, generationLimiter, optionalAuth, checkUsage(), async (req, res) => {
+router.post('/generate-stream', optionalAuth, rateLimitBypass, apiLimiter, generationLimiter, checkUsage(), async (req, res) => {
   try {
     const { code, docType, language, isDefaultCode } = req.body;
 
@@ -123,7 +123,6 @@ router.post('/generate-stream', apiLimiter, generationLimiter, optionalAuth, che
     const userIdentifier = req.user?.id || `ip:${req.ip || req.socket?.remoteAddress || 'unknown'}`;
     try {
       await incrementUsage(userIdentifier);
-      console.log(`[Usage] Incremented usage for ${req.user?.id ? `user ${req.user.id}` : `IP ${userIdentifier}`} (stream)`);
     } catch (usageError) {
       // Don't fail the request if usage tracking fails - just log it
       console.error('[Usage] Failed to increment usage:', usageError);
@@ -269,26 +268,15 @@ router.get('/user/usage', optionalAuth, async (req, res) => {
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
 
-    console.log('[Usage] Request received:', {
-      hasUser: !!req.user,
-      userId: req.user?.id,
-      userTier: req.user?.tier,
-      ip: req.ip || req.socket?.remoteAddress
-    });
-
     // Support both authenticated users and anonymous users
     const userIdentifier = req.user?.id || `ip:${req.ip || req.socket?.remoteAddress || 'unknown'}`;
     const tier = req.user?.tier || 'free';
 
-    console.log('[Usage] Identifier and tier:', { userIdentifier, tier });
-
     // Get usage from database
     const usage = await Usage.getUserUsage(userIdentifier);
-    console.log('[Usage] Usage retrieved:', usage);
 
     // Get tier limits
     const tierConfig = TIER_FEATURES[tier];
-    console.log('[Usage] Tier config:', { tier, dailyLimit: tierConfig?.dailyGenerations, monthlyLimit: tierConfig?.monthlyGenerations });
 
     if (!tierConfig) {
       throw new Error(`Invalid tier: ${tier}`);
@@ -327,7 +315,6 @@ router.get('/user/usage', optionalAuth, async (req, res) => {
       shouldShowWarnings // false for admin/support/super_admin, true for regular users
     };
 
-    console.log('[Usage] Sending response:', response);
     res.json(response);
   } catch (error) {
     console.error('[Usage] Failed to get user usage:', {
