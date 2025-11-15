@@ -1,10 +1,11 @@
-import { Menu as MenuIcon, LogOut, User, FileText, Shield, ChevronDown, Settings, BarChart3, Sparkles } from 'lucide-react';
+import { Menu as MenuIcon, LogOut, User, FileText, Shield, ChevronDown, Settings, BarChart3, Sparkles, SlidersHorizontal } from 'lucide-react';
 import { useState, lazy, Suspense, forwardRef, useImperativeHandle } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Menu } from '@headlessui/react';
 import { Button } from './Button';
 import { Logo } from './Logo';
 import { useAuth } from '../contexts/AuthContext';
+import { AppearanceModal } from './AppearanceModal';
 
 // Lazy load auth modals
 const LoginModal = lazy(() => import('./LoginModal').then(m => ({ default: m.LoginModal })));
@@ -20,6 +21,7 @@ export const Header = forwardRef(function Header({ onMenuClick, onHelpClick }, r
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showSignupModal, setShowSignupModal] = useState(false);
   const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
+  const [showAppearanceModal, setShowAppearanceModal] = useState(false);
 
   // List of admin emails (must match server-side list)
   const ADMIN_EMAILS = [
@@ -120,6 +122,18 @@ export const Header = forwardRef(function Header({ onMenuClick, onHelpClick }, r
               >
                 Help
               </Button>
+
+              {/* Appearance Settings - Desktop (icon only, unauthenticated users) */}
+              {!isAuthenticated && (
+                <button
+                  onClick={() => setShowAppearanceModal(true)}
+                  className="p-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950"
+                  aria-label="Appearance settings"
+                  title="Appearance"
+                >
+                  <SlidersHorizontal className="w-5 h-5" aria-hidden="true" />
+                </button>
+              )}
 
               {ENABLE_AUTH && (
                 <>
@@ -311,6 +325,12 @@ export const Header = forwardRef(function Header({ onMenuClick, onHelpClick }, r
           )}
         </Suspense>
       )}
+
+      {/* Appearance Modal - for unauthenticated users */}
+      <AppearanceModal
+        isOpen={showAppearanceModal}
+        onClose={() => setShowAppearanceModal(false)}
+      />
     </header>
   );
 });

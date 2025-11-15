@@ -883,7 +883,7 @@ const LLMError = require('../base/LLMError')
 
 /**
  * OpenAI provider implementation.
- * Supports GPT-4, GPT-3.5, and compatible models.
+ * Supports GPT-5.1, GPT-4, GPT-3.5, and compatible models.
  */
 class OpenAIProvider extends BaseLLMProvider {
   constructor(config) {
@@ -903,7 +903,7 @@ class OpenAIProvider extends BaseLLMProvider {
       vision: true,   // GPT-4 Vision
       maxContextWindow: this._getContextWindow(),
       supportedModels: [
-        'gpt-4-turbo-preview',
+        'gpt-5.1',
         'gpt-4-1106-preview',
         'gpt-4',
         'gpt-3.5-turbo-16k',
@@ -914,6 +914,7 @@ class OpenAIProvider extends BaseLLMProvider {
 
   _getContextWindow() {
     const model = this.config.model
+    if (model.includes('gpt-5.1')) return 128000
     if (model.includes('gpt-4-turbo')) return 128000
     if (model.includes('gpt-4')) return 8192
     if (model.includes('16k')) return 16384
@@ -1239,7 +1240,7 @@ const claudeProvider = llmFactory.create({
 const openaiProvider = llmFactory.create({
   provider: 'openai',
   apiKey: process.env.OPENAI_API_KEY,
-  model: 'gpt-4-turbo-preview'
+  model: 'gpt-5.1'
 })
 
 // Use provider (same interface for all)
@@ -1275,7 +1276,7 @@ AZURE_OPENAI_API_KEY=...                  # Azure-specific
 # Model configuration
 LLM_MODEL=claude-sonnet-4-5-20250929      # Generic model name
 CLAUDE_MODEL=claude-sonnet-4-5-20250929   # Claude-specific (backward compat)
-OPENAI_MODEL=gpt-4-turbo-preview          # OpenAI-specific
+OPENAI_MODEL=gpt-5.1          # OpenAI-specific
 
 # Request parameters
 LLM_MAX_TOKENS=4000                       # Max tokens per request
@@ -1368,7 +1369,7 @@ class LLMConfig {
       return process.env.LLM_MODEL || process.env.CLAUDE_MODEL || 'claude-sonnet-4-5-20250929'
     }
     if (provider === 'openai') {
-      return process.env.LLM_MODEL || process.env.OPENAI_MODEL || 'gpt-4-turbo-preview'
+      return process.env.LLM_MODEL || process.env.OPENAI_MODEL || 'gpt-5.1'
     }
     if (provider === 'azure-openai') {
       return process.env.LLM_MODEL || process.env.AZURE_OPENAI_DEPLOYMENT
@@ -1782,7 +1783,7 @@ LLM_PROVIDER=openai LLM_API_KEY=$OPENAI_API_KEY npm test
 curl -X POST http://localhost:3000/api/generate \
   -H "Content-Type: application/json" \
   -H "X-LLM-Provider: openai" \
-  -H "X-LLM-Model: gpt-4-turbo-preview" \
+  -H "X-LLM-Model: gpt-5.1" \
   -d '{"code": "console.log(\"Hello\")", "docType": "README"}'
 ```
 
@@ -2078,7 +2079,7 @@ describe('Provider Switching Integration', () => {
     const openaiProvider = llmFactory.create({
       provider: 'openai',
       apiKey: process.env.OPENAI_API_KEY,
-      model: 'gpt-4-turbo-preview'
+      model: 'gpt-5.1'
     })
 
     const docGenerator = new DocGeneratorService(openaiProvider)
@@ -2104,7 +2105,7 @@ describe('Provider Switching Integration', () => {
     const openaiProvider = llmFactory.create({
       provider: 'openai',
       apiKey: process.env.OPENAI_API_KEY,
-      model: 'gpt-4-turbo-preview'
+      model: 'gpt-5.1'
     })
     docGenerator.llmProvider = openaiProvider
 

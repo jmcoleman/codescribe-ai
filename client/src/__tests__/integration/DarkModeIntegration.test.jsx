@@ -35,6 +35,9 @@ describe('Dark Mode Integration', () => {
     it('persists theme across component remounts', async () => {
       const user = userEvent.setup();
 
+      // Explicitly set light mode to start
+      localStorage.setItem('codescribeai:settings:theme', 'light');
+
       // Render and toggle to dark
       const { unmount } = renderWithProviders(<ThemeToggle />);
 
@@ -49,13 +52,16 @@ describe('Dark Mode Integration', () => {
 
       renderWithProviders(<ThemeToggle />);
 
-      // Should still be dark
-      expect(screen.getByRole('button', { name: /switch to light mode/i })).toBeInTheDocument();
+      // Should still be dark (shows "switch to auto mode")
+      expect(screen.getByRole('button', { name: /switch to auto mode/i })).toBeInTheDocument();
       expect(document.documentElement.classList.contains('dark')).toBe(true);
     });
 
     it('persists theme across different components', async () => {
       const user = userEvent.setup();
+
+      // Explicitly set light mode to start
+      localStorage.setItem('codescribeai:settings:theme', 'light');
 
       // Render Header with ThemeToggle in it
       renderWithProviders(
@@ -186,6 +192,9 @@ describe('Dark Mode Integration', () => {
     it('maintains theme consistency across rapid toggles', async () => {
       const user = userEvent.setup();
 
+      // Explicitly set light mode to start
+      localStorage.setItem('codescribeai:settings:theme', 'light');
+
       renderWithProviders(
         <>
           <Header />
@@ -195,13 +204,19 @@ describe('Dark Mode Integration', () => {
 
       const toggleButtons = screen.getAllByRole('button', { name: /switch to dark mode/i });
 
-      // Rapid toggles
+      // Rapid toggles (3-state cycle: light -> dark -> auto -> light)
       await user.click(toggleButtons[0]); // -> dark
       expect(document.documentElement.classList.contains('dark')).toBe(true);
+      expect(localStorage.getItem('codescribeai:settings:theme')).toBe('dark');
 
-      const darkButtons = screen.getAllByRole('button', { name: /switch to light mode/i });
-      await user.click(darkButtons[0]); // -> light
+      const darkButtons = screen.getAllByRole('button', { name: /switch to auto mode/i });
+      await user.click(darkButtons[0]); // -> auto
+      expect(localStorage.getItem('codescribeai:settings:theme')).toBe('auto');
+
+      const autoButtons = screen.getAllByRole('button', { name: /switch to light mode/i });
+      await user.click(autoButtons[0]); // -> light
       expect(document.documentElement.classList.contains('dark')).toBe(false);
+      expect(localStorage.getItem('codescribeai:settings:theme')).toBe('light');
 
       const lightButtons = screen.getAllByRole('button', { name: /switch to dark mode/i });
       await user.click(lightButtons[0]); // -> dark
@@ -227,13 +242,14 @@ describe('Dark Mode Integration', () => {
     it('manual preference overrides system preference', async () => {
       const user = userEvent.setup();
 
+      // Explicitly set light mode to start
+      localStorage.setItem('codescribeai:settings:theme', 'light');
+
       renderWithProviders(<ThemeToggle />);
 
-      // Set manual preference to dark
-      const button = screen.getByRole('button');
-      if (button.getAttribute('aria-label').includes('dark mode')) {
-        await user.click(button);
-      }
+      // Set manual preference to dark by clicking the button
+      const button = screen.getByRole('button', { name: /switch to dark mode/i });
+      await user.click(button);
 
       // Verify manual preference is stored
       expect(localStorage.getItem('codescribeai:settings:theme')).toBe('dark');
@@ -254,8 +270,11 @@ describe('Dark Mode Integration', () => {
       expect(button.className).toContain('dark:focus-visible:ring-offset-slate-950');
     });
 
-    it('maintains accessible aria-labels in both modes', async () => {
+    it('maintains accessible aria-labels in all 3 modes', async () => {
       const user = userEvent.setup();
+
+      // Explicitly set light mode to start
+      localStorage.setItem('codescribeai:settings:theme', 'light');
 
       renderWithProviders(<ThemeToggle />);
 
@@ -267,6 +286,13 @@ describe('Dark Mode Integration', () => {
       await user.click(button);
 
       // Dark mode
+      button = screen.getByRole('button', { name: /switch to auto mode/i });
+      expect(button).toHaveAccessibleName(/switch to auto mode/i);
+
+      // Toggle to auto
+      await user.click(button);
+
+      // Auto mode
       button = screen.getByRole('button', { name: /switch to light mode/i });
       expect(button).toHaveAccessibleName(/switch to light mode/i);
     });
@@ -307,7 +333,7 @@ describe('Dark Mode Integration', () => {
       // Verify storage key follows codescribeai:type:category:key pattern
       const storageKey = 'codescribeai:settings:theme';
       expect(localStorage.getItem(storageKey)).toBeDefined();
-      expect(localStorage.getItem(storageKey)).toMatch(/^(light|dark)$/);
+      expect(localStorage.getItem(storageKey)).toMatch(/^(light|dark|auto)$/);
     });
 
     it('does not create duplicate theme storage keys', async () => {
@@ -338,6 +364,9 @@ describe('Dark Mode Integration', () => {
     it('theme toggle responds immediately', async () => {
       const user = userEvent.setup();
 
+      // Explicitly set light mode to start
+      localStorage.setItem('codescribeai:settings:theme', 'light');
+
       renderWithProviders(<ThemeToggle />);
 
       const button = screen.getByRole('button', { name: /switch to dark mode/i });
@@ -358,6 +387,9 @@ describe('Dark Mode Integration', () => {
     it('does not cause unnecessary re-renders', async () => {
       const user = userEvent.setup();
 
+      // Explicitly set light mode to start
+      localStorage.setItem('codescribeai:settings:theme', 'light');
+
       renderWithProviders(
         <>
           <Header />
@@ -374,8 +406,8 @@ describe('Dark Mode Integration', () => {
       // All components should still be present and functional
       expect(screen.getByRole('banner')).toBeInTheDocument();
       expect(screen.getByRole('contentinfo')).toBeInTheDocument();
-      // Should now have dark mode buttons (multiple)
-      expect(screen.getAllByRole('button', { name: /switch to light mode/i }).length).toBeGreaterThan(0);
+      // Should now have auto mode buttons (multiple)
+      expect(screen.getAllByRole('button', { name: /switch to auto mode/i }).length).toBeGreaterThan(0);
     });
   });
 });

@@ -9,6 +9,90 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.7.11] - 2025-11-15
+
+**Status:** ✅ UX Refinements & Multi-File Design
+
+**Summary:** Enhanced theme selection with appearance modal for unauthenticated users, improved empty states, added design documentation for upcoming multi-file support, and refined modal transitions.
+
+### Added
+
+- **Appearance Modal** ([client/src/components/AppearanceModal.jsx](client/src/components/AppearanceModal.jsx))
+  - GitHub-style theme selection modal for unauthenticated users
+  - Three theme options: Light, Dark, Auto (match system)
+  - Accessible via settings icon in header (desktop only)
+  - Checkmark indicates active theme
+  - Follows design system with purple accents
+
+- **Multi-File Sidebar Design** ([docs/components/MULTI-FILE-SIDEBAR-UX.md](docs/components/MULTI-FILE-SIDEBAR-UX.md))
+  - Comprehensive design documentation for upcoming multi-file support
+  - Collapsible sidebar with 4 interaction modes (expanded, collapsed, hover overlay, hidden)
+  - File management with status tracking (uploaded, generating, generated, error)
+  - Bulk operations (Generate All, Download All as ZIP, Clear All)
+  - Split panel integration with react-resizable-panels
+  - Complete accessibility specifications and implementation phases
+  - 5-week implementation roadmap (v2.8.0 target)
+
+- **Doc Type Label** ([client/src/components/ControlBar.jsx](client/src/components/ControlBar.jsx:59))
+  - Added visible "Doc Type:" label to documentation type dropdown
+  - Proper htmlFor/id association for accessibility
+
+### Changed
+
+- **Theme Toggle** ([client/src/components/ThemeToggle.jsx](client/src/components/ThemeToggle.jsx))
+  - Updated to 3-state cycling: Light → Dark → Auto → Light
+  - Displays Monitor icon for Auto mode
+  - Smooth icon transitions with rotation and scale animations
+
+- **Theme Context** ([client/src/contexts/ThemeContext.jsx](client/src/contexts/ThemeContext.jsx))
+  - Added `cycleTheme` function for 3-way theme toggle
+  - Maintains backward compatibility with existing `toggleTheme`
+
+- **Header** ([client/src/components/Header.jsx](client/src/components/Header.jsx))
+  - Added appearance settings button for unauthenticated users (desktop only)
+  - Uses SlidersHorizontal icon for settings
+  - Removed theme toggle from footer (moved to appearance modal)
+
+- **HelpModal** ([client/src/components/HelpModal.jsx](client/src/components/HelpModal.jsx))
+  - Removed Quick Start tab (deduplicated from DocPanel empty state)
+  - Default tab set to "Quality Scores"
+  - Added smooth height transitions (200ms ease-in-out) when switching tabs
+  - Updated modal title from "Help & Quick Start" to "Help"
+  - Changed footer button from "Got it, let's start!" to "Got it!"
+
+- **DocPanel Empty State** ([client/src/components/DocPanel.jsx](client/src/components/DocPanel.jsx))
+  - Enhanced Quick Start section with improved verbiage
+  - Added Sparkles icon with subtle purple accent
+  - Made "Upload Files" and "Import from GitHub" clickable buttons
+  - Applied muted slate styling (professional dev tool aesthetic)
+  - Responsive sizing: max-w-md (base), xl:max-w-lg (XL), 2xl:max-w-xl (2XL)
+  - Updated helper text to reference "Samples" button in code panel header
+  - Purple step numbers for visual guidance
+
+### Fixed
+
+- **Mermaid Error Suppression** ([client/src/components/LazyMermaidRenderer.jsx](client/src/components/LazyMermaidRenderer.jsx:91))
+  - Added `suppressErrors: true` to Mermaid configuration
+  - Prevents error bomb icons from appearing in DOM for malformed diagrams
+  - Works alongside existing SVG cleanup for comprehensive error handling
+
+### Tests
+
+- **Frontend:** 1520 passed | 33 skipped (1553 total) across 51 test files
+- **Backend:** 957 passed | 23 skipped (980 total) across 35 test suites
+- **Total:** 2477 passed | 56 skipped (2533 total)
+- **Pass Rate:** 97.8%
+
+### Documentation
+
+- Created comprehensive multi-file sidebar UX design document
+- Includes layout architecture, sidebar behavior modes, file management specs
+- Visual mockups, accessibility guidelines, and implementation phases
+- Integration plan with split panel (react-resizable-panels)
+- 5-week implementation roadmap targeting v2.8.0
+
+---
+
 ## [2.7.10] - 2025-11-14
 
 **Status:** ✅ Mermaid Diagram Improvements & UX Refinements
@@ -245,7 +329,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Provider Metadata in API Responses**
   - `provider` - LLM provider used ("claude" or "openai")
-  - `model` - Model identifier (e.g., "claude-sonnet-4-5-20250929", "gpt-4-turbo-preview")
+  - `model` - Model identifier (e.g., "claude-sonnet-4-5-20250929", "gpt-5.1")
   - `inputTokens` - Input token count
   - `outputTokens` - Output token count
   - `cacheReadTokens` - Tokens read from cache (Claude only)
@@ -310,7 +394,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Cache TTL: 1 hour with auto-refresh
 
 **OpenAI:**
-- Model: `gpt-4-turbo-preview`
+- Model: `gpt-5.1`
 - Max Context: 128K tokens
 - Streaming: ✅ Yes
 - Prompt Caching: ❌ No

@@ -1,8 +1,8 @@
-import { X, Sparkles, FileText, Star, ChevronDown } from 'lucide-react';
+import { X, FileText, Star, ChevronDown } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 export function HelpModal({ isOpen, onClose }) {
-  const [activeTab, setActiveTab] = useState('quickstart'); // 'quickstart', 'quality', 'faq'
+  const [activeTab, setActiveTab] = useState('quality'); // 'quality', 'faq'
   const [expandedFAQ, setExpandedFAQ] = useState(null);
   const modalRef = useRef(null);
   const closeButtonRef = useRef(null);
@@ -111,7 +111,7 @@ export function HelpModal({ isOpen, onClose }) {
         {/* Header */}
         <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 px-6 py-4 flex items-center justify-between rounded-t-xl">
           <h2 id="help-modal-title" className="text-xl font-semibold text-slate-900 dark:text-slate-100">
-            Help & Quick Start
+            Help
           </h2>
           <button
             type="button"
@@ -127,22 +127,6 @@ export function HelpModal({ isOpen, onClose }) {
         {/* Tabs */}
         <div className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
           <div className="flex px-6">
-            <button
-              type="button"
-              onClick={() => setActiveTab('quickstart')}
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-purple-600 ${
-                activeTab === 'quickstart'
-                  ? 'border-purple-600 text-purple-600 dark:text-purple-400'
-                  : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600'
-              }`}
-              aria-selected={activeTab === 'quickstart'}
-              role="tab"
-            >
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4" />
-                Quick Start
-              </div>
-            </button>
             <button
               type="button"
               onClick={() => setActiveTab('quality')}
@@ -179,51 +163,7 @@ export function HelpModal({ isOpen, onClose }) {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto px-6 py-6 bg-white dark:bg-slate-900" id="help-modal-description" role="tabpanel">
-          {/* Quick Start Tab */}
-          {activeTab === 'quickstart' && (
-            <section>
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
-                Quick Start Guide
-              </h3>
-              <ol className="space-y-3">
-                <li className="flex gap-3">
-                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 flex items-center justify-center text-sm font-semibold border border-transparent dark:border-purple-500/50">
-                    1
-                  </span>
-                  <div>
-                    <p className="text-slate-900 dark:text-slate-100 font-medium">Paste or upload your code</p>
-                    <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                      Use the left panel to paste code directly, or click "Upload Files" to select a file from your computer.
-                    </p>
-                  </div>
-                </li>
-                <li className="flex gap-3">
-                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 flex items-center justify-center text-sm font-semibold border border-transparent dark:border-purple-500/50">
-                    2
-                  </span>
-                  <div>
-                    <p className="text-slate-900 dark:text-slate-100 font-medium">Select documentation type</p>
-                    <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                      Choose README.md for project documentation, JSDoc for inline comments, API for endpoint documentation, or Architecture for system design overviews.
-                    </p>
-                  </div>
-                </li>
-                <li className="flex gap-3">
-                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 flex items-center justify-center text-sm font-semibold border border-transparent dark:border-purple-500/50">
-                    3
-                  </span>
-                  <div>
-                    <p className="text-slate-900 dark:text-slate-100 font-medium">Generate and review</p>
-                    <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                      Click "Generate Docs" and watch your documentation stream in real-time. Review the quality score to see what's working well and what could be improved.
-                    </p>
-                  </div>
-                </li>
-              </ol>
-            </section>
-          )}
-
+        <div className="flex-1 overflow-y-auto px-6 py-6 bg-white dark:bg-slate-900 transition-all duration-200 ease-in-out" id="help-modal-description" role="tabpanel">
           {/* Quality Score Tab */}
           {activeTab === 'quality' && (
             <section>
@@ -341,7 +281,7 @@ export function HelpModal({ isOpen, onClose }) {
             onClick={handleClose}
             className="w-full px-4 py-3 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-700 dark:hover:bg-purple-800 dark:active:bg-purple-900 text-white rounded-lg font-medium shadow-lg shadow-purple-600/20 dark:shadow-purple-900/30 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900"
           >
-            Got it, let's start!
+            Got it!
           </button>
         </div>
       </div>

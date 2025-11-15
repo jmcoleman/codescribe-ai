@@ -128,7 +128,7 @@ const config = {
 
   openai: {
     apiKey: process.env.OPENAI_API_KEY || process.env.LLM_API_KEY,
-    model: process.env.OPENAI_MODEL || 'gpt-4-turbo-preview',
+    model: process.env.OPENAI_MODEL || 'gpt-5.1',
     supportsCaching: false,
     supportsStreaming: true
   },

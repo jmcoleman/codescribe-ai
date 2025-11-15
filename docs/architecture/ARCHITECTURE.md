@@ -119,7 +119,7 @@ CodeScribe AI is a **stateless, real-time documentation generation platform** th
 │  │   - Prompt Caching: 90% cost savings                     │   │
 │  │                                                           │   │
 │  │   OpenAI (Optional)                                      │   │
-│  │   - Model: gpt-4-turbo-preview                           │   │
+│  │   - Model: gpt-5.1                                         │   │
 │  │   - Streaming: chat.completions.create({ stream: true }) │   │
 │  │   - Context: 128K tokens                                 │   │
 │  │                                                           │   │
@@ -162,7 +162,7 @@ CodeScribe AI is a **stateless, real-time documentation generation platform** th
 **4. External Services**
 - **LLM Provider APIs**: Multi-provider support for AI text generation
   - **Claude (Anthropic)**: Sonnet 4.5 model (default) with prompt caching
-  - **OpenAI**: GPT-4 Turbo model (optional)
+  - **OpenAI**: GPT-5.1 model (optional)
 - **Vercel**: Hosting and CDN for production deployment
 
 ---

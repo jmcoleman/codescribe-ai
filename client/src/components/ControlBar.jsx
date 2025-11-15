@@ -55,12 +55,18 @@ export function ControlBar({
           <div className="hidden sm:block w-px h-6 bg-slate-300 dark:bg-slate-600" />
 
           {/* Doc Type Select */}
-          <Select
-            options={docTypes}
-            value={docType}
-            onChange={onDocTypeChange}
-            ariaLabel="Select documentation type"
-          />
+          <div className="flex items-center gap-2">
+            <label htmlFor="doc-type-select" className="text-sm font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
+              Doc Type:
+            </label>
+            <Select
+              id="doc-type-select"
+              options={docTypes}
+              value={docType}
+              onChange={onDocTypeChange}
+              ariaLabel="Select documentation type"
+            />
+          </div>
         </div>
 
         {/* Right: Generate Button */}

@@ -1,15 +1,15 @@
 # CodeScribe AI - API Reference
 
 **Project:** CodeScribe AI Portfolio Application
-**API Version:** 2.0.0
+**API Version:** 2.7.10
 **Base URL (Dev):** `http://localhost:3000/api`
 **Base URL (Prod):** `https://codescribeai.com/api`
-**Last Updated:** October 26, 2025
+**Last Updated:** November 14, 2025
 
-**Status:** ✅ Production-ready with authentication & database
-- 1,347+ tests (97.5% pass rate, 95.81% backend coverage)
+**Status:** ✅ Production with Multi-Provider LLM & GitHub Integration
+- 2,529 tests (2,473 passing, 56 skipped, 97.8% pass rate)
 - 10 E2E tests across 5 browsers (100% pass rate)
-- Authentication, database, rate limiting, and streaming fully implemented
+- JWT authentication, database, rate limiting, streaming, payments, and GitHub integration fully implemented
 
 ---
 
@@ -20,12 +20,14 @@ This document describes the REST API endpoints for the CodeScribe AI application
 **Technology Stack:**
 - **Runtime:** Node.js 20+
 - **Framework:** Express 5
-- **AI Provider:** Anthropic Claude API (Sonnet 4.5: `claude-sonnet-4-20250514`)
+- **AI Providers:** Multi-provider support (Claude Sonnet 4.5: `claude-sonnet-4-5-20250929` [default], OpenAI GPT-5.1)
 - **Code Parser:** Acorn (JavaScript AST parsing)
 - **Streaming:** Server-Sent Events (SSE) with chunked responses
-- **Rate Limiting:** express-rate-limit (10 requests/min per IP)
-- **File Upload:** Multer with validation (16 supported file types)
-- **Testing:** Jest + Supertest (133+ tests, 95.81% coverage)
+- **Rate Limiting:** express-rate-limit (admin/support/super_admin bypass)
+- **File Upload:** Multer with validation (50+ supported file types)
+- **Payments:** Stripe with webhooks and subscription management
+- **Email:** Resend service (branded transactional emails)
+- **Testing:** Jest + Vitest (2,529 tests, 97.8% pass rate)
 
 ---
 
@@ -43,51 +45,63 @@ External APIs (Claude API)
 
 **Design Principles:**
 - RESTful conventions
-- Stateless (no sessions)
+- JWT-only authentication (stateless, no sessions)
 - JSON request/response
 - Streaming support (SSE)
+- Tier-based feature access
 - Detailed error responses
 
 ---
 
 ## 🔐 Authentication
 
-**Current (v2.0.0):** JWT + Session-based Authentication
+**Current (v2.7.10):** JWT-Only Authentication (Stateless)
 - User registration via email/password or GitHub OAuth
-- JWT tokens for API authentication
-- Session cookies for web application
+- JWT tokens for all authentication (web + API)
+- No session cookies - fully stateless
 - Password reset via email (Resend service)
+- Tier-based usage limits (Free, Starter, Pro, Premium, Enterprise, Team)
 
-**Authentication Methods:**
+**Authentication Method:**
 
-1. **Bearer Token (Recommended for API/CLI):**
+**Bearer Token (All Requests):**
 ```javascript
 headers: {
   'Authorization': 'Bearer YOUR_JWT_TOKEN'
 }
 ```
 
-2. **Session Cookie (Web Application):**
-```javascript
-// Automatically handled by browser after login
-// Session persists via connect-pg-simple + Neon Postgres
-```
+**Token Storage:**
+- **Web Application:** localStorage (`token` key)
+- **API/CLI:** Pass token in Authorization header
+- **Token Lifespan:** 7 days (configurable via JWT_EXPIRES_IN)
 
 **Protected Endpoints:**
-- `/api/auth/logout` - Requires authentication
-- `/api/auth/me` - Requires authentication
-- Future: `/api/generate` and `/api/generate-stream` will support tier-based limits
+All endpoints under these prefixes require authentication:
+- `/api/auth/logout` - Logout current user
+- `/api/auth/me` - Get current user profile
+- `/api/payments/*` - Subscription and billing management
+- `/api/contact/*` - Contact sales/support
+- `/api/legal/accept` - Accept terms/privacy policy
+- `/api/user/*` - User data, usage, tier features
+- `/api/admin/*` - Admin dashboard (requires admin role)
 
 **Public Endpoints:**
 - `/api/auth/signup` - User registration
-- `/api/auth/login` - User login
-- `/api/auth/github` - GitHub OAuth
+- `/api/auth/login` - User login (returns JWT)
+- `/api/auth/github` - GitHub OAuth flow
+- `/api/auth/github/callback` - OAuth callback
 - `/api/auth/forgot-password` - Password reset request
-- `/api/auth/reset-password` - Password reset
-- `/api/generate`, `/api/generate-stream` - Currently public (Phase 2.2: will enforce tier limits)
+- `/api/auth/reset-password` - Password reset with token
+- `/api/auth/verify-email/:token` - Email verification
+- `/api/generate` - Generate documentation (tier limits apply)
+- `/api/generate-stream` - Stream documentation (tier limits apply)
 - `/api/upload` - File upload
 - `/api/health` - Health check
+- `/api/tiers` - Get tier definitions
+- `/api/legal/versions` - Legal document versions
 - `/api/migrate/status` - Migration status
+- `/api/github/*` - GitHub repository integration
 
 ---
 
@@ -1693,23 +1707,32 @@ app.use(cors(corsOptions));
 - [x] ✅ Cross-browser E2E validation (5 browsers, 100% pass rate)
 - [x] ✅ Deployed to production (codescribeai.com)
 
-**Phase 2 (Authentication & Database):**
+**Phase 2 (Authentication & Payments - Complete):**
 - [x] ✅ Neon Postgres database configured
 - [x] ✅ User authentication (email/password + GitHub OAuth)
 - [x] ✅ Password reset with email (Resend service)
-- [x] ✅ JWT + session-based auth
+- [x] ✅ JWT-only authentication (stateless, no sessions)
 - [x] ✅ Database migrations system
-- [x] ✅ 1,503 tests (97.6% pass rate)
-- [x] ✅ All authentication endpoints documented
-- [x] ✅ Epic 2.2: Tier system & feature flags (complete - v2.1.0-v2.2.0)
-- [x] ✅ Epic 2.3: UX enhancements & file upload (complete - v2.3.0)
-- [ ] Epic 2.4: Payment integration (Stripe)
-- [ ] Epic 2.5: UI integration
+- [x] ✅ Epic 2.2: Tier system & feature flags (v2.1.0-v2.2.0)
+- [x] ✅ Epic 2.3: UX enhancements & file upload (v2.3.0)
+- [x] ✅ Epic 2.4: Payment integration - Stripe (v2.4.0-v2.4.6)
+- [x] ✅ Epic 2.5: Legal compliance & email system (v2.5.0-v2.5.3)
+- [x] ✅ Epic 2.6: Usage dashboard & profile (v2.6.0)
+- [x] ✅ Epic 3.1: Dark mode complete (v2.7.0-v2.7.2)
+- [x] ✅ Epic 3.2: Quality breakdown dual-tab modal (v2.7.6)
+- [x] ✅ Epic 3.3: Multi-provider LLM architecture (v2.7.8)
+- [x] ✅ Epic 4.1: GitHub repository integration (v2.7.9)
+
+**Phase 3 (Developer Adoption):**
+- [ ] Epic 3.3: Advanced file handling (multi-file upload)
+- [ ] Epic 4.2: Multi-file project documentation
+- [ ] Epic 5.1: CLI tool
+- [ ] Epic 5.2: MCP server (Claude Desktop integration)
 
 ---
 
-**API Documentation Version:** 2.3.0
-**Last Updated:** October 29, 2025
+**API Documentation Version:** 2.7.10
+**Last Updated:** November 14, 2025
 **Status:** ✅ Production (https://codescribeai.com)
-**Test Coverage:** 1,347+ tests (97.5% pass rate), 95.81% backend statement coverage, 88.72% branch coverage
-**Phase 2:** Authentication & Database Complete (Epic 2.1)
+**Test Coverage:** 2,529 tests (97.8% pass rate), 82.38% backend statement coverage, 70.11% branch coverage
+**Current Phase:** Phase 2 Complete - GitHub Integration Live (v2.7.9), Mermaid Improvements (v2.7.10)

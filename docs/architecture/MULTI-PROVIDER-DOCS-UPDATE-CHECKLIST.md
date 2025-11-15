@@ -47,7 +47,7 @@ LLM_PROVIDER=claude
 # Required
 OPENAI_API_KEY=sk-your-key-here
 LLM_PROVIDER=openai
-LLM_MODEL=gpt-4-turbo-preview
+LLM_MODEL=gpt-5.1
 ```
 
 **Provider Configuration**:
@@ -95,7 +95,7 @@ CLAUDE_API_KEY=sk-ant-...
 # Use OpenAI
 LLM_PROVIDER=openai
 OPENAI_API_KEY=sk-...
-LLM_MODEL=gpt-4-turbo-preview
+LLM_MODEL=gpt-5.1
 ```
 
 **No code changes required** - just update environment variables and restart server.
@@ -107,7 +107,7 @@ LLM_MODEL=gpt-4-turbo-preview
 | Streaming | ✅ Yes | ✅ Yes |
 | Prompt Caching | ✅ Yes (90% savings) | ❌ No |
 | Max Context | 200K tokens | 128K tokens |
-| Default Model | claude-sonnet-4-5-20250929 | gpt-4-turbo-preview |
+| Default Model | claude-sonnet-4-5-20250929 | gpt-5.1 |
 
 ### Documentation
 - **Architecture Guide**: [MULTI-PROVIDER-SIMPLIFIED-ARCHITECTURE.md](docs/architecture/MULTI-PROVIDER-SIMPLIFIED-ARCHITECTURE.md)
@@ -162,7 +162,7 @@ LLM_PROVIDER=claude  # Optional, claude is default
 ```bash
 OPENAI_API_KEY=sk-your-openai-key
 LLM_PROVIDER=openai
-LLM_MODEL=gpt-4-turbo-preview  # Optional
+LLM_MODEL=gpt-5.1  # Optional
 ```
 
 **Advanced Settings** (optional):

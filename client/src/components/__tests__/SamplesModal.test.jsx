@@ -148,8 +148,9 @@ describe('SamplesModal', () => {
       const firstExample = codeSamples[0];
       const card = screen.getByText(firstExample.title).closest('div[class*="cursor-pointer"]');
 
-      // Click to select, then press Enter to load
+      // Click to select, then press Enter on the card to load
       await user.click(card);
+      card.focus(); // Ensure card has focus
       await user.keyboard('{Enter}');
 
       expect(mockOnClose).toHaveBeenCalledTimes(1);

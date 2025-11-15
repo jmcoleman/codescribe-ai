@@ -599,7 +599,7 @@ constructor() {
 # Test with OpenAI
 LLM_PROVIDER=openai \
 LLM_API_KEY=$OPENAI_API_KEY \
-LLM_MODEL=gpt-4-turbo-preview \
+LLM_MODEL=gpt-5.1 \
 npm test
 ```
 
@@ -642,7 +642,7 @@ describe('Provider Switching', () => {
     const provider = llmFactory.create({
       provider: 'openai',
       apiKey: process.env.OPENAI_API_KEY,
-      model: 'gpt-4-turbo-preview'
+      model: 'gpt-5.1'
     })
 
     const docGenerator = new DocGeneratorService(provider)
@@ -665,7 +665,7 @@ curl -X POST http://localhost:3000/api/generate \
 curl -X POST http://localhost:3000/api/generate \
   -H "Content-Type: application/json" \
   -H "X-LLM-Provider: openai" \
-  -H "X-LLM-Model: gpt-4-turbo-preview" \
+  -H "X-LLM-Model: gpt-5.1" \
   -d '{"code": "function add(a,b) { return a+b }", "docType": "README"}'
 ```
 
@@ -692,7 +692,7 @@ Set environment variables in `server/.env`:
 ```bash
 LLM_PROVIDER=anthropic  # or 'openai', 'azure-openai'
 LLM_API_KEY=your-api-key
-LLM_MODEL=claude-sonnet-4-5-20250929  # or 'gpt-4-turbo-preview'
+LLM_MODEL=claude-sonnet-4-5-20250929  # or 'gpt-5.1'
 ```
 
 ### Switching Providers
@@ -782,7 +782,7 @@ npm run dev
 ```bash
 LLM_PROVIDER=openai \
 LLM_API_KEY=$OPENAI_API_KEY \
-LLM_MODEL=gpt-4-turbo-preview \
+LLM_MODEL=gpt-5.1 \
 npm run dev
 # Generate docs → Should use OpenAI
 ```

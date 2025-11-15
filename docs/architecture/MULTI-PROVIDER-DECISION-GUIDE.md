@@ -82,7 +82,7 @@ Total: ~1,100 lines (+ 1,500 test lines)
 // 1. Add to config (config/llm.config.js)
 openai: {
   apiKey: process.env.OPENAI_API_KEY,
-  model: 'gpt-4-turbo-preview',
+  model: 'gpt-5.1',
   supportsCaching: false
 }
 

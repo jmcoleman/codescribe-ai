@@ -58,10 +58,10 @@ CLAUDE_API_KEY=sk-ant-api03-YOUR_PRODUCTION_KEY_HERE
 # OPENAI_API_KEY=sk-YOUR_OPENAI_KEY_HERE
 
 # OpenAI Model Selection (v2.7.8+)
-# Value: gpt-4-turbo-preview, gpt-4, gpt-3.5-turbo, etc.
-# Default: gpt-4-turbo-preview
+# Value: gpt-5.1, gpt-4, gpt-3.5-turbo, etc.
+# Default: gpt-5.1
 # ⚠️ OPTIONAL: Only used if LLM_PROVIDER=openai
-# LLM_MODEL=gpt-4-turbo-preview
+# LLM_MODEL=gpt-5.1
 
 # Node Environment
 # Value: Always "production" for production environment
@@ -354,7 +354,7 @@ RATE_LIMIT_HOURLY_MAX=1000
 | `LLM_PROVIDER` | ✅ Yes (v2.7.8+) | None | LLM provider: `claude` or `openai` |
 | `CLAUDE_API_KEY` | ✅ Yes (if provider=claude) | None | Anthropic Claude API key for AI generation |
 | `OPENAI_API_KEY` | ✅ Yes (if provider=openai) | None | OpenAI API key for AI generation |
-| `LLM_MODEL` | ⚠️ Optional (if provider=openai) | gpt-4-turbo-preview | OpenAI model selection |
+| `LLM_MODEL` | ⚠️ Optional (if provider=openai) | gpt-5.1 | OpenAI model selection |
 | `NODE_ENV` | ✅ Yes | None | Environment: `production`, `development`, `test` |
 | `PORT` | ⚠️ Optional | 3000 | Server port (Vercel sets automatically) |
 

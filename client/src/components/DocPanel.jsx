@@ -153,6 +153,7 @@ export function DocPanel({
   isGenerating = false,
   onViewBreakdown,
   onUpload,
+  onGithubImport,
   onGenerate,
   onReset
 }) {
@@ -538,6 +539,9 @@ export function DocPanel({
             className="flex flex-col items-center justify-center h-full text-center px-6 bg-white dark:bg-slate-900"
             role="status"
           >
+            <div className="mb-4 p-3 rounded-full bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800/50">
+              <Sparkles className="w-6 h-6 text-purple-500 dark:text-purple-400" aria-hidden="true" />
+            </div>
             <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-3">
               Ready to Generate Documentation
             </h3>
@@ -546,55 +550,79 @@ export function DocPanel({
             </p>
 
             {/* Quick Start Steps */}
-            <div className="bg-purple-50 dark:bg-purple-400/15 border border-purple-200 dark:border-purple-400/30 rounded-lg p-5 max-w-md text-left shadow-lg transition-colors">
+            <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg p-5 w-full max-w-md xl:max-w-lg 2xl:max-w-xl text-left shadow-sm transition-colors">
               <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-3 text-center">
                 Quick Start
               </h4>
-              <ol className="space-y-2.5 text-xs text-slate-700 dark:text-slate-300">
+              <ol className="space-y-3 text-xs text-slate-600 dark:text-slate-400">
                 <li className="flex gap-2">
                   <span className="flex-shrink-0 w-5 h-5 rounded-full bg-purple-600 dark:bg-purple-400 text-white dark:text-slate-950 flex items-center justify-center text-xs font-bold">1</span>
-                  <span>
-                    Paste your code or click{' '}
-                    {onUpload ? (
-                      <button
-                        type="button"
-                        onClick={onUpload}
-                        className="inline-flex items-center px-2 py-0.5 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-400 dark:hover:border-slate-500 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-1"
-                      >
-                        Upload Files
-                      </button>
-                    ) : (
-                      <strong>Upload Files</strong>
-                    )}
-                  </span>
+                  <div>
+                    <p className="font-medium text-slate-900 dark:text-slate-100 mb-1">Add your code</p>
+                    <p className="text-xs leading-relaxed">
+                      Paste code directly in the left panel, click{' '}
+                      {onUpload ? (
+                        <button
+                          type="button"
+                          onClick={onUpload}
+                          className="inline-flex items-center px-2 py-0.5 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-400 dark:hover:border-slate-500 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-1"
+                        >
+                          Upload Files
+                        </button>
+                      ) : (
+                        <strong>Upload Files</strong>
+                      )}
+                      {' '}to select from your computer, or{' '}
+                      {onGithubImport ? (
+                        <button
+                          type="button"
+                          onClick={onGithubImport}
+                          className="inline-flex items-center px-2 py-0.5 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-400 dark:hover:border-slate-500 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-1"
+                        >
+                          Import from GitHub
+                        </button>
+                      ) : (
+                        <strong>Import from GitHub</strong>
+                      )}
+                      .
+                    </p>
+                  </div>
                 </li>
                 <li className="flex gap-2">
                   <span className="flex-shrink-0 w-5 h-5 rounded-full bg-purple-600 dark:bg-purple-400 text-white dark:text-slate-950 flex items-center justify-center text-xs font-bold">2</span>
-                  <span>Select documentation type (README, JSDoc, API, or ARCHITECTURE)</span>
+                  <div>
+                    <p className="font-medium text-slate-900 dark:text-slate-100 mb-1">Select documentation type</p>
+                    <p className="text-xs leading-relaxed">
+                      Choose README for project documentation, JSDoc for inline comments, API for endpoint documentation, or Architecture for system design overviews.
+                    </p>
+                  </div>
                 </li>
                 <li className="flex gap-2">
                   <span className="flex-shrink-0 w-5 h-5 rounded-full bg-purple-600 dark:bg-purple-400 text-white dark:text-slate-950 flex items-center justify-center text-xs font-bold">3</span>
-                  <span>
-                    Click{' '}
-                    {onGenerate ? (
-                      <button
-                        type="button"
-                        onClick={onGenerate}
-                        className="inline-flex items-center px-2 py-0.5 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-400 dark:hover:border-slate-500 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-1"
-                      >
-                        Generate Docs
-                      </button>
-                    ) : (
-                      <strong>Generate Docs</strong>
-                    )}
-                    {' '}to get production-ready documentation instantly
-                  </span>
+                  <div>
+                    <p className="font-medium text-slate-900 dark:text-slate-100 mb-1">Generate and review</p>
+                    <p className="text-xs leading-relaxed">
+                      Click{' '}
+                      {onGenerate ? (
+                        <button
+                          type="button"
+                          onClick={onGenerate}
+                          className="inline-flex items-center px-2 py-0.5 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-400 dark:hover:border-slate-500 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-1"
+                        >
+                          Generate Docs
+                        </button>
+                      ) : (
+                        <strong>Generate Docs</strong>
+                      )}
+                      {' '}and watch your documentation stream in real-time. Review the quality score to see what's working well and what could be improved.
+                    </p>
+                  </div>
                 </li>
               </ol>
             </div>
 
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-6">
-              Not sure where to start? Try the <strong>Examples</strong> button above or click the <strong>?</strong> icon for help.
+              Not sure where to start? Try the <strong>Samples</strong> button in the code panel header.
             </p>
           </div>
         )}

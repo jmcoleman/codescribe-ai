@@ -251,7 +251,7 @@ CLAUDE_API_KEY=sk-ant-...
 # Use OpenAI
 LLM_PROVIDER=openai
 OPENAI_API_KEY=sk-...
-LLM_MODEL=gpt-4-turbo-preview
+LLM_MODEL=gpt-5.1
 ```
 
 **No code changes required** - just update environment variables and restart server.
@@ -263,7 +263,7 @@ LLM_MODEL=gpt-4-turbo-preview
 | Streaming | ✅ Yes | ✅ Yes |
 | Prompt Caching | ✅ Yes (90% savings) | ❌ No |
 | Max Context | 200K tokens | 128K tokens |
-| Default Model | claude-sonnet-4-5-20250929 | gpt-4-turbo-preview |
+| Default Model | claude-sonnet-4-5-20250929 | gpt-5.1 |
 
 ### Documentation
 - **Architecture Guide**: [MULTI-PROVIDER-SIMPLIFIED-ARCHITECTURE.md](docs/architecture/MULTI-PROVIDER-SIMPLIFIED-ARCHITECTURE.md)
@@ -358,24 +358,24 @@ codescribe-ai/
 
 ## 🔄 Version History
 
-**Current: v2.7.10** (November 14, 2025)
-- Mermaid diagram auto-show functionality (eliminates manual Show button clicks)
-- Entity-relationship diagram theming with brand colors (indigo-600, purple-600)
-- Amber warning colors for diagram errors (improved UX vs red)
-- Quality modal default tab set to "Criteria Breakdown"
-- Modal consistency improvements (Cancel buttons in Samples, Quality modals)
-- Attribution footer spacing enhancements
-- Auto-scroll to visible area during generation
-- Updated 17 DocPanel.mermaid tests for auto-show behavior
-- Updated 3 MermaidDiagram tests for amber error styling
-- 2,529 tests (2,473 passing, 56 skipped, 97.8% pass rate)
+**Current: v2.7.11** (November 15, 2025)
+- Appearance modal for unauthenticated users (GitHub-style theme switcher)
+- 3-state theme cycling: Light → Dark → Auto → Light (Monitor icon for Auto mode)
+- Enhanced DocPanel empty state with clickable GitHub import button
+- Smooth HelpModal tab transitions (200ms) following design system
+- Mermaid error suppression (suppressErrors: true prevents bomb icons in DOM)
+- Multi-file sidebar UX design document (comprehensive 5-week roadmap for v2.8.0)
+- Doc Type label added to dropdown for accessibility
+- Removed Quick Start tab from HelpModal (deduplicated from DocPanel)
+- 2,477 tests (2,421 passing, 56 skipped, 97.8% pass rate)
 - Backend: 82.38% statements, 70.11% branches (957 passing, 23 skipped)
-- Frontend: 100% critical paths (1,516 passing, 33 skipped)
+- Frontend: 100% critical paths (1,520 passing, 33 skipped)
 
 <details>
-<summary>Recent Releases (v2.7.0-v2.7.9) & Milestones</summary>
+<summary>Recent Releases (v2.7.0-v2.7.10) & Milestones</summary>
 
 **v2.7.x Series (Nov 2025):**
+- v2.7.10: Mermaid diagram auto-show, ER diagram theming, amber error colors, modal consistency improvements
 - v2.7.9: GitHub repository integration (public repos, tree browsing, branch switching, @octokit/rest, 4 API routes)
 - v2.7.8: Multi-provider LLM architecture (Claude + OpenAI support, config-driven switching, 69 new tests)
 - v2.7.7: Admin dashboard performance optimization (O(1) lifetime usage), smart auto-scroll, middleware coverage fix
@@ -397,7 +397,7 @@ codescribe-ai/
 - **v1.21** (Oct 19): Production deployment, codescribe-ai.vercel.app
 
 Full history: [CHANGELOG.md](CHANGELOG.md)
-Last updated: November 14, 2025
+Last updated: November 15, 2025
 </details>
 
 ---

@@ -2,21 +2,21 @@
 
 **Project:** CodeScribe AI - Intelligent Code Documentation Generator
 **Testing Status:** ✅ Comprehensive Coverage Across 3 Frameworks
-**Last Updated:** November 14, 2025 (v2.7.10)
+**Last Updated:** November 15, 2025 (v2.7.11)
 
 ---
 
 ## 📊 Quick Stats
 
-- **Total Tests:** 2,529 tests (2,473 passing, 56 skipped, 0 failures)
-  - **Frontend:** 1,549 tests | 33 skipped (Vitest + React Testing Library)
-    - Component Tests: All components with dark mode variants tested (including SamplesModal)
+- **Total Tests:** 2,533 tests (2,477 passing, 56 skipped, 0 failures)
+  - **Frontend:** 1,553 tests | 33 skipped (Vitest + React Testing Library)
+    - Component Tests: All components with dark mode variants tested (including AppearanceModal, SamplesModal)
     - GitHub Loader: FileTree, TreeNode, GitHubLoadModal integration tests
-    - Dark Mode Tests: 106 tests (ThemeContext with auto mode, ThemeToggle, all components, integration)
+    - Dark Mode Tests: 106+ tests (ThemeContext with 3-state cycling, ThemeToggle, all components, integration)
     - Integration Tests: Auth, OAuth, password reset, upload, error handling, usage tracking, legal pages
     - UI Tests: Toast system, modals, forms, storage helpers, pricing page, focus trap
     - Contact Modals: ContactSalesModal (25 tests), ContactSupportModal (12 tests - getToken Promise fix)
-    - **Pass Rate:** 97.9% (1,516 passing, 33 skipped, 0 failures)
+    - **Pass Rate:** 97.9% (1,520 passing, 33 skipped, 0 failures)
   - **Backend:** 980 tests | 23 skipped (Jest + Supertest)
     - Unit Tests: Services, models, utilities, middleware (emailService, requireTermsAcceptance, tierGate, rateLimitBypass, githubService)
     - LLM Provider Tests: 69 tests (llmService, config, utils, adapters for Claude/OpenAI)
@@ -31,11 +31,11 @@
     - Migration-011: 10 tests (analytics_enabled column + index)
     - Migration-017: 13 tests (total_generations column with triggers)
   - **E2E:** 10 tests (Playwright - file upload flow)
-- **Pass Rate:** 97.8% (2,473/2,529 total tests passing, 56 skipped, 0 failures) ✅
+- **Pass Rate:** 97.8% (2,477/2,533 total tests passing, 56 skipped, 0 failures) ✅
 - **Backend Coverage:** 82.38% statements, 70.11% branches, 82.54% lines, 85%+ functions (CI passing)
-- **Test Execution Time:** Frontend ~19.8s, Backend ~7.1s, Database ~0.3s, E2E ~45s
+- **Test Execution Time:** Frontend ~29.4s, Backend ~14.2s, Database ~0.3s, E2E ~45s
 - **Coverage Target:** 90% ✅ EXCEEDED (96.71% middleware statements, 93.49% middleware branches)
-- **Recent Updates:** Mermaid diagram auto-show tests (17 DocPanel.mermaid tests updated, 3 MermaidDiagram error styling tests), rateLimitBypass debug logging tests (2 skipped), test pattern updates for auto-rendering behavior (Nov 14, 2025 - v2.7.10)
+- **Recent Updates:** Theme toggle tests updated for 3-state cycling (Light→Dark→Auto), DarkMode integration tests updated for default 'auto' theme, AppearanceModal component added (Nov 15, 2025 - v2.7.11)
 
 ---
 

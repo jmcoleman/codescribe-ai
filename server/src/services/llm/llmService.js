@@ -112,7 +112,7 @@ class LLMService {
 
   /**
    * Get current model identifier
-   * @returns {string} Model name (e.g., 'claude-sonnet-4-5-20250929', 'gpt-4-turbo-preview')
+   * @returns {string} Model name (e.g., 'claude-sonnet-4-5-20250929', 'gpt-5.1')
    */
   getModel() {
     return this.config.model

@@ -71,7 +71,7 @@ describe('LLM Configuration', () => {
 
       expect(config.provider).toBe('openai');
       expect(config.apiKey).toBe('sk-test-key');
-      expect(config.model).toBe('gpt-4-turbo-preview');
+      expect(config.model).toBe('gpt-5.1');
       expect(config.supportsCaching).toBe(false);
       expect(config.supportsStreaming).toBe(true);
     });

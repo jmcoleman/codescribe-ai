@@ -47,7 +47,7 @@ describe('LLMService', () => {
       getLLMConfig.mockReturnValue({
         provider: 'openai',
         apiKey: 'test-openai-key',
-        model: 'gpt-4-turbo-preview',
+        model: 'gpt-5.1',
         maxTokens: 4000,
         temperature: 0.7,
         supportsCaching: false,
@@ -57,7 +57,7 @@ describe('LLMService', () => {
       const service = new LLMService();
 
       expect(service.getProvider()).toBe('openai');
-      expect(service.getModel()).toBe('gpt-4-turbo-preview');
+      expect(service.getModel()).toBe('gpt-5.1');
       expect(service.supportsCaching()).toBe(false);
     });
 
@@ -132,7 +132,7 @@ describe('LLMService', () => {
       getLLMConfig.mockReturnValue({
         provider: 'openai',
         apiKey: 'test-openai-key',
-        model: 'gpt-4-turbo-preview',
+        model: 'gpt-5.1',
         maxTokens: 4000,
         temperature: 0.7,
         supportsCaching: false,
@@ -143,7 +143,7 @@ describe('LLMService', () => {
         text: 'Generated documentation',
         metadata: {
           provider: 'openai',
-          model: 'gpt-4-turbo-preview',
+          model: 'gpt-5.1',
           tokens: { input: 100, output: 50 }
         }
       };
@@ -162,7 +162,7 @@ describe('LLMService', () => {
         }),
         expect.objectContaining({
           provider: 'openai',
-          model: 'gpt-4-turbo-preview',
+          model: 'gpt-5.1',
           maxTokens: 4000,
           temperature: 0.7
         })
@@ -265,7 +265,7 @@ describe('LLMService', () => {
       getLLMConfig.mockReturnValue({
         provider: 'openai',
         apiKey: 'test-key',
-        model: 'gpt-4-turbo-preview',
+        model: 'gpt-5.1',
         maxTokens: 4000,
         temperature: 0.7,
         supportsCaching: false,
@@ -371,7 +371,7 @@ describe('LLMService', () => {
       getLLMConfig.mockReturnValue({
         provider: 'openai',
         apiKey: 'test-key',
-        model: 'gpt-4-turbo-preview',
+        model: 'gpt-5.1',
         maxTokens: 4000,
         temperature: 0.7,
         supportsCaching: false,

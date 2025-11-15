@@ -254,7 +254,7 @@ LLM_PROVIDER=claude
 # Required
 OPENAI_API_KEY=sk-your-key-here
 LLM_PROVIDER=openai
-LLM_MODEL=gpt-4-turbo-preview
+LLM_MODEL=gpt-5.1
 ```
 
 **Provider Configuration Variables:**
@@ -867,9 +867,9 @@ npm run test:e2e:headed       # With browser UI (for debugging)
 
 ## Development Status
 
-**Current Phase:** Phase 2 - GitHub Integration (Epic 4.1 ✅ COMPLETE)
+**Current Phase:** Phase 2 - UX Refinements & Design Planning
 **Production Status:** 🚀 **LIVE** at [codescribeai.com](https://codescribeai.com)
-**Last Updated:** November 14, 2025 (v2.7.10)
+**Last Updated:** November 15, 2025 (v2.7.11)
 
 ### Phase Summary
 
@@ -902,9 +902,15 @@ npm run test:e2e:headed       # With browser UI (for debugging)
   - ER diagram theming with brand colors (indigo-600, purple-600)
   - Amber warning colors for diagram errors (better UX than red)
   - Quality modal default tab to "Criteria Breakdown"
-  - Modal consistency updates (Cancel buttons in Samples, Quality modals)
-  - Attribution footer spacing improvements
-  - 2,529 tests (2,473 passing, 56 skipped, 97.8% pass rate)
+- **Phase 2 - UX Polish (Nov 15, 2025):** ✅ Theme Selection & Multi-File Design (v2.7.11)
+  - Appearance modal for unauthenticated users (GitHub-style theme switcher)
+  - 3-state theme cycling (Light → Dark → Auto → Light)
+  - Enhanced DocPanel empty state with clickable GitHub import button
+  - Smooth HelpModal tab transitions (200ms) following design system
+  - Mermaid error suppression (suppressErrors: true prevents bomb icons)
+  - Multi-file sidebar UX design document (comprehensive 5-week roadmap for v2.8.0)
+  - Doc Type label added to dropdown for accessibility
+  - 2,477 tests (2,421 passing, 56 skipped, 97.8% pass rate)
 - **Phase 2 - Next Epic:** 📋 Epic 2.8 - Subscription Management UI (Customer Portal, upgrade/downgrade flows)
 
 ### ✅ Phase 1.0 & 1.5 Complete (Oct 11-19, 2025)

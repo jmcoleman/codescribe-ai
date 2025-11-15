@@ -84,9 +84,12 @@ export function LazyMermaidRenderer({ chart, id, onError, onSuccess }) {
       const cleanChart = chart.trim();
 
       try {
-        // Re-initialize Mermaid with the appropriate theme
+        // Re-initialize Mermaid with the appropriate theme and suppress errors
         const themeConfig = effectiveTheme === 'dark' ? DARK_THEME_CONFIG : LIGHT_THEME_CONFIG;
-        mermaid.initialize(themeConfig);
+        mermaid.initialize({
+          ...themeConfig,
+          suppressErrors: true, // Suppress error rendering in DOM
+        });
 
         // Generate unique ID for this render with more entropy
         const uniqueId = `mermaid-${id}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;

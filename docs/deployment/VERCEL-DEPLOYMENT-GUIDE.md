@@ -273,7 +273,7 @@ NODE_ENV=production
 
 # Optional: OpenAI (only if using OpenAI instead of Claude)
 # OPENAI_API_KEY=sk-xxx                                 # Required if LLM_PROVIDER=openai
-# LLM_MODEL=gpt-4-turbo-preview                         # Optional, OpenAI model selection
+# LLM_MODEL=gpt-5.1                                     # Optional, OpenAI model selection
 
 # Database (auto-added by Neon integration)
 POSTGRES_URL=xxx (from Neon)

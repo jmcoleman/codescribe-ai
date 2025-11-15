@@ -77,10 +77,18 @@ export function ThemeProvider({ children }) {
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
 
+  const cycleTheme = () => {
+    setTheme((prev) => {
+      if (prev === 'light') return 'dark';
+      if (prev === 'dark') return 'auto';
+      return 'light'; // auto -> light
+    });
+  };
+
   const effectiveTheme = getEffectiveTheme();
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme, effectiveTheme }}>
+    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme, cycleTheme, effectiveTheme }}>
       {children}
     </ThemeContext.Provider>
   );

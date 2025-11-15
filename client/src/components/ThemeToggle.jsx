@@ -1,13 +1,19 @@
-import { Moon, Sun } from 'lucide-react';
+import { Moon, Sun, Monitor } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 
 export function ThemeToggle() {
-  const { effectiveTheme, toggleTheme } = useTheme();
-  const isDark = effectiveTheme === 'dark';
+  const { theme, cycleTheme } = useTheme();
+
+  // Get next theme for aria-label
+  const getNextTheme = () => {
+    if (theme === 'light') return 'dark';
+    if (theme === 'dark') return 'auto';
+    return 'light';
+  };
 
   return (
     <button
-      onClick={toggleTheme}
+      onClick={cycleTheme}
       className="
         relative p-2 rounded-lg
         bg-slate-100 dark:bg-slate-800
@@ -21,26 +27,38 @@ export function ThemeToggle() {
         focus-visible:ring-offset-white
         dark:focus-visible:ring-offset-slate-950
       "
-      aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+      aria-label={`Switch to ${getNextTheme()} mode`}
       type="button"
     >
-      {/* Sun icon (shows in dark mode) */}
+      {/* Sun icon (light mode) */}
       <Sun
         className={`
-          w-5 h-5 text-amber-400
+          w-5 h-5
           transition-all duration-300 ease-in-out
-          ${isDark ? 'rotate-0 scale-100 opacity-100' : 'rotate-90 scale-0 opacity-0'}
+          ${theme === 'light' ? 'rotate-0 scale-100 opacity-100' : 'rotate-90 scale-0 opacity-0'}
           absolute inset-0 m-auto
         `}
         aria-hidden="true"
       />
 
-      {/* Moon icon (shows in light mode) */}
+      {/* Moon icon (dark mode) */}
       <Moon
         className={`
           w-5 h-5
           transition-all duration-300 ease-in-out
-          ${isDark ? 'rotate-90 scale-0 opacity-0' : 'rotate-0 scale-100 opacity-100'}
+          ${theme === 'dark' ? 'rotate-0 scale-100 opacity-100' : 'rotate-90 scale-0 opacity-0'}
+          absolute inset-0 m-auto
+        `}
+        aria-hidden="true"
+      />
+
+      {/* Monitor icon (auto mode) */}
+      <Monitor
+        className={`
+          w-5 h-5
+          transition-all duration-300 ease-in-out
+          ${theme === 'auto' ? 'rotate-0 scale-100 opacity-100' : 'rotate-90 scale-0 opacity-0'}
+          absolute inset-0 m-auto
         `}
         aria-hidden="true"
       />

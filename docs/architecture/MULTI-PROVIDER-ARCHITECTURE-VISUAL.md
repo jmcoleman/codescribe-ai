@@ -70,7 +70,7 @@
 - ❌ Model name hardcoded (line 8 of claudeClient.js)
 - ❌ No provider abstraction
 - ❌ Hard to test (can't mock provider easily)
-- ❌ Can't leverage other models (GPT-4, Gemini, etc.)
+- ❌ Can't leverage other models (GPT-5.1, Gemini, etc.)
 
 ---
 
@@ -81,7 +81,7 @@
 │                         CLIENT REQUEST                           │
 │                    POST /api/generate                            │
 │         Optional: X-LLM-Provider: openai                         │
-│                   X-LLM-Model: gpt-4-turbo-preview               │
+│                   X-LLM-Model: gpt-5.1               │
 └────────────────────────────┬────────────────────────────────────┘
                              │
                              ▼
@@ -298,7 +298,7 @@ console.log(result.metadata)  // { provider, model, tokens, latency, ... }
 ```
 POST /api/generate
 X-LLM-Provider: openai
-X-LLM-Model: gpt-4-turbo-preview
+X-LLM-Model: gpt-5.1
 
                      ↓
 
@@ -653,7 +653,7 @@ LLM_MODEL=claude-sonnet-4-5-20250929
 # Use OpenAI
 LLM_PROVIDER=openai
 LLM_API_KEY=$OPENAI_API_KEY
-LLM_MODEL=gpt-4-turbo-preview
+LLM_MODEL=gpt-5.1
 
 # Use Azure OpenAI
 LLM_PROVIDER=azure-openai
@@ -667,7 +667,7 @@ AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com
 curl -X POST http://localhost:3000/api/generate \
   -H "Content-Type: application/json" \
   -H "X-LLM-Provider: openai" \
-  -H "X-LLM-Model: gpt-4-turbo-preview" \
+  -H "X-LLM-Model: gpt-5.1" \
   -d '{"code": "...", "docType": "README"}'
 ```
 
@@ -676,7 +676,7 @@ curl -X POST http://localhost:3000/api/generate \
 | Provider | Streaming | Caching | Vision | Max Context | Cost (input) | Cost (output) |
 |----------|-----------|---------|--------|-------------|--------------|---------------|
 | **Claude Sonnet 4.5** | ✅ Yes | ✅ Yes | ✅ Yes | 200K tokens | $0.003/1K | $0.015/1K |
-| **OpenAI GPT-4 Turbo** | ✅ Yes | ❌ No | ✅ Yes | 128K tokens | $0.01/1K | $0.03/1K |
+| **OpenAI GPT-5.1** | ✅ Yes | ❌ No | ✅ Yes | 128K tokens | $0.01/1K | $0.03/1K |
 | **Azure OpenAI** | ✅ Yes | ❌ No | ✅ Yes | 128K tokens | $0.01/1K | $0.03/1K |
 | **AWS Bedrock (Claude)** | ✅ Yes | ⚠️ Partial | ✅ Yes | 200K tokens | $0.003/1K | $0.015/1K |
 

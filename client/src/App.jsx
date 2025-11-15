@@ -929,6 +929,7 @@ function App() {
                 });
               }}
               onUpload={handleUpload}
+              onGithubImport={handleGithubImport}
               onGenerate={handleGenerate}
               onReset={() => {
                 // Clear documentation and quality score from state
