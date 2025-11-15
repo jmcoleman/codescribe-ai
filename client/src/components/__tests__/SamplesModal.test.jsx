@@ -398,12 +398,12 @@ describe('SamplesModal', () => {
       const firstCard = screen.getByLabelText(`Preview ${codeSamples[0].title} sample`);
       const secondCard = screen.getByLabelText(`Preview ${codeSamples[1].title} sample`);
 
+      // Focus the first card directly to test navigation between cards
       firstCard.focus();
       expect(document.activeElement).toBe(firstCard);
 
-      // Tab goes from card to next card in list (cards are the focusable elements in the list)
+      // Tab should move to the second card
       await user.tab();
-
       expect(document.activeElement).toBe(secondCard);
     });
 
