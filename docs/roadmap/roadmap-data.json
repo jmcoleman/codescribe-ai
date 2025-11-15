@@ -67,7 +67,7 @@
     },
     "footerLeft": "<strong>CodeScribe AI</strong> \u00b7 Strategic Roadmap v3.12",
     "footer": "Phase 1 Complete \u00b7 Phase 2 Complete \u00b7 Phase 3 Epic 3.1 Complete (Dark Mode) \u00b7 Epic 4.1 Complete (GitHub Integration) \u00b7 Launch: Mid-Jan 2026",
-    "lastUpdated": "November 14, 2025"
+    "lastUpdated": "November 15, 2025"
   },
   "columns": [
     {
@@ -518,6 +518,25 @@
             "Added Cancel buttons to Samples and Quality modals for consistency",
             "Improved attribution footer spacing for better visual balance",
             "Auto-scroll to visible area during generation for better UX"
+          ]
+        },
+        {
+          "version": "v2.7.11",
+          "title": "Theme Selection & Multi-File Design",
+          "duration": "1 day",
+          "status": "✓ Complete",
+          "completedDate": "Nov 15, 2025",
+          "badge": "UX & Planning",
+          "features": [
+            "Appearance modal for unauthenticated users (GitHub-style theme switcher)",
+            "3-state theme cycling: Light → Dark → Auto → Light (Monitor icon for Auto mode)",
+            "Enhanced DocPanel empty state with clickable GitHub import button",
+            "Smooth HelpModal tab transitions (200ms) following design system",
+            "Mermaid error suppression (suppressErrors: true prevents bomb icons)",
+            "Multi-file sidebar UX design document (comprehensive 5-week roadmap for v2.8.0)",
+            "Doc Type label added to dropdown for accessibility",
+            "Removed Quick Start tab from HelpModal (deduplicated from DocPanel)",
+            "2,477 tests (2,421 passing, 56 skipped, 97.8% pass rate)"
           ]
         }
       ]
