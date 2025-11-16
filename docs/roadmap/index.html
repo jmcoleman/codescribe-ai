@@ -1784,6 +1784,35 @@
           transform: rotate(360deg);
         }
       }
+    </style><style>
+      @keyframes slideIn {
+        from {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+      @keyframes slideOut {
+        from {
+          transform: translateX(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+      }
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
     </style></head>
 <body data-new-gr-c-s-check-loaded="14.1259.0" data-gr-ext-installed="">
   <div class="page">
@@ -1839,7 +1868,7 @@ Press D to toggle dark mode"></div>
             <div class="column-title">Completed</div>
             <div class="column-timeline">Phase 1: Core Capabilities</div>
           </div>
-          <div class="column-body"><div class="phase-card"><div class="phase-header"><div class="phase-title">Web Application (MVP)</div><div class="phase-version">v1.0.0</div></div><ul class="feature-list"><li>4 documentation types (README, JSDoc, API, ARCHITECTURE)</li><li>Monaco Editor with syntax highlighting (24+ languages)</li><li>Real-time streaming with SSE</li><li>Quality scoring system (0-100 scale, 5 criteria)</li><li>File upload &amp; drag-and-drop</li><li>Copy-to-clipboard &amp; download</li><li>Responsive design (mobile, tablet, desktop)</li><li>Mermaid diagram support</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">WCAG AA Compliance</div><div class="phase-version">v1.2.0</div></div><ul class="feature-list"><li>WCAG 2.1 AA compliance</li><li>Full keyboard navigation</li><li>Screen reader compatibility (NVDA, VoiceOver)</li><li>High contrast colors (18.2:1 ratio)</li><li>Focus indicators in modals</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Performance &amp; Infrastructure</div><div class="phase-version">v1.2.0</div></div><ul class="feature-list"><li>Production deployment with custom domain</li><li>Fast page load times with optimized bundle size</li><li>Lazy loading for better performance</li><li>Cross-browser compatibility (Chrome, Firefox, Safari, Edge)</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Security &amp; Quality</div><div class="phase-version">v1.2.0</div></div><ul class="feature-list"><li>Secure API key handling</li><li>Rate limiting to prevent abuse</li><li>Input validation and sanitization</li><li>File upload security checks</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">UX Refinements</div><div class="phase-version">v1.2.1</div></div><ul class="feature-list"><li>Improved panel layout consistency</li><li>Refined download button behavior</li><li>Enhanced modal focus management</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Mobile Enhancements</div><div class="phase-version">v1.2.2</div></div><ul class="feature-list"><li>Improved mobile clipboard support</li><li>Enhanced mobile accessibility</li><li>Better mobile file upload experience</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Authentication &amp; Database (Epic 2.1)</div><div class="phase-version">v2.0.0</div></div><ul class="feature-list"><li>Email/password login and signup</li><li>GitHub OAuth integration for one-click signup</li><li>Complete password reset flow with email verification</li><li>Account linking (OAuth users can add password)</li><li>Password visibility toggles</li></ul><div class="metric-badge">Phase 2 Started</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Tier System &amp; Usage Limits (Epic 2.2)</div><div class="phase-version">v2.1.0-v2.2.0</div></div><ul class="feature-list"><li>3-tier subscription system: Free (10 docs/month), Starter (50 docs), Pro (200 docs)</li><li>Usage warning banner at 80% of monthly limit</li><li>Usage limit modal to prevent over-usage</li><li>Daily and monthly usage tracking</li><li>All 4 documentation types available in Free tier</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">UX Enhancements &amp; File Upload (Epic 2.3)</div><div class="phase-version">v2.3.0</div></div><ul class="feature-list"><li>Drag-and-drop file upload with visual overlay</li><li>Clear button to reset code editor</li><li>Dynamic filename display in editor header</li><li>Mobile menu logout button</li><li>Wider page layout for better space utilization</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Payment Integration (Epic 2.4)</div><div class="phase-version">v2.4.0</div></div><ul class="feature-list"><li>Stripe integration for subscription payments</li><li>Upgrade/downgrade flows with prorated billing</li><li>Pricing page with 4 tiers and monthly/annual toggle</li><li>Stripe Customer Portal for managing subscriptions</li><li>Automated subscription lifecycle management</li></ul><div class="metric-badge">Test Mode</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Email Rate Limiting &amp; UI Polish</div><div class="phase-version">v2.4.1</div></div><ul class="feature-list"><li>Email rate limiting to prevent abuse</li><li>Redesigned unverified email banner</li><li>Improved modal layouts and alignment</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Subscription Safety &amp; Cost Optimization</div><div class="phase-version">v2.4.2</div></div><ul class="feature-list"><li>Test vs production subscription detection</li><li>AI prompt caching for faster responses and lower costs</li><li>Automatic cache refresh for consistent performance</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Payment &amp; Verification Fixes</div><div class="phase-version">v2.4.3</div></div><ul class="feature-list"><li>Fixed payment checkout flow in production</li><li>Email verification banner now disappears immediately after verification</li><li>Improved user state refresh after email verification</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Contact Sales &amp; Email Fixes</div><div class="phase-version">v2.4.4</div></div><ul class="feature-list"><li>Contact Sales modal for Enterprise and Team inquiries</li><li>Smart name collection (only asks if not already provided)</li><li>Fixed critical email verification token bug</li><li>Manage Subscription button on payment success page</li><li>Improved subscription flow with tier-aware routing</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Refined Light Theme</div><div class="phase-version">v2.4.5</div></div><ul class="feature-list"><li>Custom Monaco Editor color theme with purple, green, and cyan accents</li><li>Matching syntax highlighting in documentation panel</li><li>Enhanced Mermaid diagram borders for better visibility</li><li>Improved pricing page layout on large displays</li><li>Cleaner code block rendering</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Help Modal &amp; Billing UX</div><div class="phase-version">v2.4.6</div></div><ul class="feature-list"><li>Tabbed Help Modal (Quick Start, Quality Scores, FAQs)</li><li>FAQ accordion with smooth animations</li><li>Billing period selection persists across page refreshes</li><li>Character limit and counter for Contact Sales form</li><li>Improved mobile navigation layout</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Legal Compliance - Phase 1-2</div><div class="phase-version">v2.5.0</div></div><ul class="feature-list"><li>Terms of Service and Privacy Policy pages</li><li>Footer with legal links on all pages</li><li>Terms acceptance modal with version tracking</li><li>Contact Support modal for inquiries</li><li>Smart acceptance flow (OAuth users bypass, email signup requires acceptance)</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Settings Page &amp; Privacy Controls</div><div class="phase-version">v2.5.1</div></div><ul class="feature-list"><li>Settings page with 4 tabs (Account, Privacy, Subscription, Danger Zone)</li><li>Email and password change functionality</li><li>Analytics opt-out toggle for privacy control</li><li>Subscription usage stats and billing information</li><li>Account deletion with confirmation modal</li><li>Attribution footer on all generated documentation</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">User Data Rights &amp; Restoration</div><div class="phase-version">v2.5.2</div></div><ul class="feature-list"><li>30-day account deletion grace period</li><li>Automatic account restoration on re-signup</li><li>Email notifications for deletion and restoration</li><li>GDPR/CCPA compliant data handling</li><li>7-year financial record retention</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Email System Overhaul</div><div class="phase-version">v2.5.3</div></div><ul class="feature-list"><li>7 branded email templates for all user communications</li><li>Support request attachments (up to 5 files, 10MB each)</li><li>6 subject categories for support inquiries</li><li>Tier-based email priority and SLA response times</li><li>Enhanced Contact Support modal with file upload</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Usage Dashboard &amp; Profile</div><div class="phase-version">v2.6.0</div></div><ul class="feature-list"><li>Modern usage dashboard with daily and monthly tracking</li><li>Color-coded status indicators (green, yellow, orange, red)</li><li>Animated progress bars with percentages</li><li>Reset countdowns showing time until limit refresh</li><li>User profile dropdown with tier badge</li><li>Contextual upgrade prompts when approaching limits</li><li>Quick action cards for common tasks</li></ul><div class="metric-badge">Phase 2 Complete</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Dark Mode Complete</div><div class="phase-version">v2.7.0</div></div><ul class="feature-list"><li>Full dark mode across all pages and components</li><li>System preference detection and auto-sync</li><li>Theme persistence between sessions</li><li>Custom dark Monaco Editor theme (Neon Cyberpunk)</li><li>Dark Mermaid diagrams with enhanced borders</li><li>Smooth theme transitions</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Error Handling Improvements</div><div class="phase-version">v2.7.1</div></div><ul class="feature-list"><li>ErrorBoundary dark mode support</li><li>Horizontal scrolling for long error messages</li><li>Wider error modal for better readability</li><li>Fixed admin dashboard error display</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Appearance Settings &amp; Mobile UX</div><div class="phase-version">v2.7.2</div></div><ul class="feature-list"><li>Appearance settings tab with Light/Dark/Auto theme options</li><li>Auto theme mode follows system preferences</li><li>Responsive mobile code editor that adapts to screen size</li><li>Improved mobile error logging</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">UX Polish &amp; Terminology</div><div class="phase-version">v2.7.3</div></div><ul class="feature-list"><li>Fixed toast notifications to only show on actual completion</li><li>Changed 'Download' to 'Export' for clarity</li><li>Renamed 'Examples' to 'Samples' for accuracy</li><li>User display shows first name only</li><li>Improved dark mode skeleton visibility</li><li>Better content alignment between panels</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Samples Modal Optimization</div><div class="phase-version">v2.7.4</div></div><ul class="feature-list"><li>Wider Samples modal for better code preview</li><li>Improved keyboard navigation in modal</li><li>Better focus management</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Visual Consistency &amp; UX Polish</div><div class="phase-version">v2.7.5</div></div><ul class="feature-list"><li>Consistent toast notification borders</li><li>Improved back button layout and spacing across pages</li><li>Enhanced Contact Sales messaging for enterprise tiers</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Quality Breakdown Modal Enhancements</div><div class="phase-version">v2.7.6</div></div><ul class="feature-list"><li>Dual-tab quality breakdown showing before and after analysis</li><li>Input Code Health tab analyzes original code quality (comments, naming, structure, existing docs)</li><li>Generated Documentation tab shows AI-enhanced documentation quality</li><li>Side-by-side score comparison with improvement indicator</li><li>Enhanced download includes comprehensive quality report in markdown format</li><li>8 new code samples (C#, Java Spring Boot, Ruby Sinatra, and more)</li></ul><div class="metric-badge">Feature Enhancement</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Admin Dashboard Performance Optimization</div><div class="phase-version">v2.7.7</div></div><ul class="feature-list"><li>Admin dashboard shows 'This Period' and 'All Time' usage statistics</li><li>Significantly faster dashboard loading with optimized database queries</li><li>Top users sorted by lifetime usage for better insights</li><li>Recent activity displays last 50 generations across all doc types</li></ul><div class="metric-badge">Performance</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Multi-Provider LLM Architecture</div><div class="phase-version">v2.7.8</div></div><ul class="feature-list"><li>Support for multiple AI providers (Claude and OpenAI)</li><li>Easy provider switching via configuration (no code changes needed)</li><li>Claude Sonnet 4.5 as default provider with 200K context window</li><li>OpenAI GPT-4 Turbo as alternative provider with 128K context</li><li>Automatic prompt caching for cost optimization (90% savings with Claude)</li><li>Provider metadata in responses (model used, token counts, latency)</li></ul><div class="metric-badge">Architecture</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Epic 4.1: GitHub Repository Integration</div><div class="phase-version">v2.7.9</div></div><ul class="feature-list"><li>Import code from GitHub repositories via URL</li><li>Tree-based file browser with folder expansion/collapse</li><li>Branch switching dropdown to explore different branches</li><li>File preview with syntax highlighting</li><li>Support for public repositories (no GitHub account required)</li><li>Auto-scroll to selected files for easy navigation</li><li>Mobile-responsive design with proper scrolling</li></ul><div class="metric-badge">Developer Adoption</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Mermaid Diagram Improvements &amp; UX Refinements</div><div class="phase-version">v2.7.10</div></div><ul class="feature-list"><li>Mermaid diagrams auto-show when generation completes (no manual button clicks)</li><li>Entity-relationship diagram theming with brand colors (indigo-600, purple-600)</li><li>Amber warning colors for diagram errors (improved UX vs red)</li><li>Quality modal default tab set to 'Criteria Breakdown' for immediate insights</li><li>Added Cancel buttons to Samples and Quality modals for consistency</li><li>Improved attribution footer spacing for better visual balance</li><li>Auto-scroll to visible area during generation for better UX</li></ul><div class="metric-badge">UX Polish</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Theme Selection &amp; Multi-File Design</div><div class="phase-version">v2.7.11</div></div><ul class="feature-list"><li>Appearance modal for unauthenticated users (GitHub-style theme switcher)</li><li>3-state theme cycling: Light → Dark → Auto → Light (Monitor icon for Auto mode)</li><li>Enhanced DocPanel empty state with clickable GitHub import button</li><li>Smooth HelpModal tab transitions (200ms) following design system</li><li>Mermaid error suppression (suppressErrors: true prevents bomb icons)</li><li>Multi-file sidebar UX design document (comprehensive 5-week roadmap for v2.8.0)</li><li>Doc Type label added to dropdown for accessibility</li><li>Removed Quick Start tab from HelpModal (deduplicated from DocPanel)</li><li>2,477 tests (2,421 passing, 56 skipped, 97.8% pass rate)</li></ul><div class="metric-badge">UX &amp; Planning</div></div></div>
+          <div class="column-body"><div class="phase-card"><div class="phase-header"><div class="phase-title">Web Application (MVP)</div><div class="phase-version">v1.0.0</div></div><ul class="feature-list"><li>4 documentation types (README, JSDoc, API, ARCHITECTURE)</li><li>Monaco Editor with syntax highlighting (24+ languages)</li><li>Real-time streaming with SSE</li><li>Quality scoring system (0-100 scale, 5 criteria)</li><li>File upload &amp; drag-and-drop</li><li>Copy-to-clipboard &amp; download</li><li>Responsive design (mobile, tablet, desktop)</li><li>Mermaid diagram support</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">WCAG AA Compliance</div><div class="phase-version">v1.2.0</div></div><ul class="feature-list"><li>WCAG 2.1 AA compliance</li><li>Full keyboard navigation</li><li>Screen reader compatibility (NVDA, VoiceOver)</li><li>High contrast colors (18.2:1 ratio)</li><li>Focus indicators in modals</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Performance &amp; Infrastructure</div><div class="phase-version">v1.2.0</div></div><ul class="feature-list"><li>Production deployment with custom domain</li><li>Fast page load times with optimized bundle size</li><li>Lazy loading for better performance</li><li>Cross-browser compatibility (Chrome, Firefox, Safari, Edge)</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Security &amp; Quality</div><div class="phase-version">v1.2.0</div></div><ul class="feature-list"><li>Secure API key handling</li><li>Rate limiting to prevent abuse</li><li>Input validation and sanitization</li><li>File upload security checks</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">UX Refinements</div><div class="phase-version">v1.2.1</div></div><ul class="feature-list"><li>Improved panel layout consistency</li><li>Refined download button behavior</li><li>Enhanced modal focus management</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Mobile Enhancements</div><div class="phase-version">v1.2.2</div></div><ul class="feature-list"><li>Improved mobile clipboard support</li><li>Enhanced mobile accessibility</li><li>Better mobile file upload experience</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Authentication &amp; Database (Epic 2.1)</div><div class="phase-version">v2.0.0</div></div><ul class="feature-list"><li>Email/password login and signup</li><li>GitHub OAuth integration for one-click signup</li><li>Complete password reset flow with email verification</li><li>Account linking (OAuth users can add password)</li><li>Password visibility toggles</li></ul><div class="metric-badge">Phase 2 Started</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Tier System &amp; Usage Limits (Epic 2.2)</div><div class="phase-version">v2.1.0-v2.2.0</div></div><ul class="feature-list"><li>3-tier subscription system: Free (10 docs/month), Starter (50 docs), Pro (200 docs)</li><li>Usage warning banner at 80% of monthly limit</li><li>Usage limit modal to prevent over-usage</li><li>Daily and monthly usage tracking</li><li>All 4 documentation types available in Free tier</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">UX Enhancements &amp; File Upload (Epic 2.3)</div><div class="phase-version">v2.3.0</div></div><ul class="feature-list"><li>Drag-and-drop file upload with visual overlay</li><li>Clear button to reset code editor</li><li>Dynamic filename display in editor header</li><li>Mobile menu logout button</li><li>Wider page layout for better space utilization</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Payment Integration (Epic 2.4)</div><div class="phase-version">v2.4.0</div></div><ul class="feature-list"><li>Stripe integration for subscription payments</li><li>Upgrade/downgrade flows with prorated billing</li><li>Pricing page with 4 tiers and monthly/annual toggle</li><li>Stripe Customer Portal for managing subscriptions</li><li>Automated subscription lifecycle management</li></ul><div class="metric-badge">Test Mode</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Email Rate Limiting &amp; UI Polish</div><div class="phase-version">v2.4.1</div></div><ul class="feature-list"><li>Email rate limiting to prevent abuse</li><li>Redesigned unverified email banner</li><li>Improved modal layouts and alignment</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Subscription Safety &amp; Cost Optimization</div><div class="phase-version">v2.4.2</div></div><ul class="feature-list"><li>Test vs production subscription detection</li><li>AI prompt caching for faster responses and lower costs</li><li>Automatic cache refresh for consistent performance</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Payment &amp; Verification Fixes</div><div class="phase-version">v2.4.3</div></div><ul class="feature-list"><li>Fixed payment checkout flow in production</li><li>Email verification banner now disappears immediately after verification</li><li>Improved user state refresh after email verification</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Contact Sales &amp; Email Fixes</div><div class="phase-version">v2.4.4</div></div><ul class="feature-list"><li>Contact Sales modal for Enterprise and Team inquiries</li><li>Smart name collection (only asks if not already provided)</li><li>Fixed critical email verification token bug</li><li>Manage Subscription button on payment success page</li><li>Improved subscription flow with tier-aware routing</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Refined Light Theme</div><div class="phase-version">v2.4.5</div></div><ul class="feature-list"><li>Custom Monaco Editor color theme with purple, green, and cyan accents</li><li>Matching syntax highlighting in documentation panel</li><li>Enhanced Mermaid diagram borders for better visibility</li><li>Improved pricing page layout on large displays</li><li>Cleaner code block rendering</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Help Modal &amp; Billing UX</div><div class="phase-version">v2.4.6</div></div><ul class="feature-list"><li>Tabbed Help Modal (Quick Start, Quality Scores, FAQs)</li><li>FAQ accordion with smooth animations</li><li>Billing period selection persists across page refreshes</li><li>Character limit and counter for Contact Sales form</li><li>Improved mobile navigation layout</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Legal Compliance - Phase 1-2</div><div class="phase-version">v2.5.0</div></div><ul class="feature-list"><li>Terms of Service and Privacy Policy pages</li><li>Footer with legal links on all pages</li><li>Terms acceptance modal with version tracking</li><li>Contact Support modal for inquiries</li><li>Smart acceptance flow (OAuth users bypass, email signup requires acceptance)</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Settings Page &amp; Privacy Controls</div><div class="phase-version">v2.5.1</div></div><ul class="feature-list"><li>Settings page with 4 tabs (Account, Privacy, Subscription, Danger Zone)</li><li>Email and password change functionality</li><li>Analytics opt-out toggle for privacy control</li><li>Subscription usage stats and billing information</li><li>Account deletion with confirmation modal</li><li>Attribution footer on all generated documentation</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">User Data Rights &amp; Restoration</div><div class="phase-version">v2.5.2</div></div><ul class="feature-list"><li>30-day account deletion grace period</li><li>Automatic account restoration on re-signup</li><li>Email notifications for deletion and restoration</li><li>GDPR/CCPA compliant data handling</li><li>7-year financial record retention</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Email System Overhaul</div><div class="phase-version">v2.5.3</div></div><ul class="feature-list"><li>7 branded email templates for all user communications</li><li>Support request attachments (up to 5 files, 10MB each)</li><li>6 subject categories for support inquiries</li><li>Tier-based email priority and SLA response times</li><li>Enhanced Contact Support modal with file upload</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Usage Dashboard &amp; Profile</div><div class="phase-version">v2.6.0</div></div><ul class="feature-list"><li>Modern usage dashboard with daily and monthly tracking</li><li>Color-coded status indicators (green, yellow, orange, red)</li><li>Animated progress bars with percentages</li><li>Reset countdowns showing time until limit refresh</li><li>User profile dropdown with tier badge</li><li>Contextual upgrade prompts when approaching limits</li><li>Quick action cards for common tasks</li></ul><div class="metric-badge">Phase 2 Complete</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Dark Mode Complete</div><div class="phase-version">v2.7.0</div></div><ul class="feature-list"><li>Full dark mode across all pages and components</li><li>System preference detection and auto-sync</li><li>Theme persistence between sessions</li><li>Custom dark Monaco Editor theme (Neon Cyberpunk)</li><li>Dark Mermaid diagrams with enhanced borders</li><li>Smooth theme transitions</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Error Handling Improvements</div><div class="phase-version">v2.7.1</div></div><ul class="feature-list"><li>ErrorBoundary dark mode support</li><li>Horizontal scrolling for long error messages</li><li>Wider error modal for better readability</li><li>Fixed admin dashboard error display</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Appearance Settings &amp; Mobile UX</div><div class="phase-version">v2.7.2</div></div><ul class="feature-list"><li>Appearance settings tab with Light/Dark/Auto theme options</li><li>Auto theme mode follows system preferences</li><li>Responsive mobile code editor that adapts to screen size</li><li>Improved mobile error logging</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">UX Polish &amp; Terminology</div><div class="phase-version">v2.7.3</div></div><ul class="feature-list"><li>Fixed toast notifications to only show on actual completion</li><li>Changed 'Download' to 'Export' for clarity</li><li>Renamed 'Examples' to 'Samples' for accuracy</li><li>User display shows first name only</li><li>Improved dark mode skeleton visibility</li><li>Better content alignment between panels</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Samples Modal Optimization</div><div class="phase-version">v2.7.4</div></div><ul class="feature-list"><li>Wider Samples modal for better code preview</li><li>Improved keyboard navigation in modal</li><li>Better focus management</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Visual Consistency &amp; UX Polish</div><div class="phase-version">v2.7.5</div></div><ul class="feature-list"><li>Consistent toast notification borders</li><li>Improved back button layout and spacing across pages</li><li>Enhanced Contact Sales messaging for enterprise tiers</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Quality Breakdown Modal Enhancements</div><div class="phase-version">v2.7.6</div></div><ul class="feature-list"><li>Dual-tab quality breakdown showing before and after analysis</li><li>Input Code Health tab analyzes original code quality (comments, naming, structure, existing docs)</li><li>Generated Documentation tab shows AI-enhanced documentation quality</li><li>Side-by-side score comparison with improvement indicator</li><li>Enhanced download includes comprehensive quality report in markdown format</li><li>8 new code samples (C#, Java Spring Boot, Ruby Sinatra, and more)</li></ul><div class="metric-badge">Feature Enhancement</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Admin Dashboard Performance Optimization</div><div class="phase-version">v2.7.7</div></div><ul class="feature-list"><li>Admin dashboard shows 'This Period' and 'All Time' usage statistics</li><li>Significantly faster dashboard loading with optimized database queries</li><li>Top users sorted by lifetime usage for better insights</li><li>Recent activity displays last 50 generations across all doc types</li></ul><div class="metric-badge">Performance</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Multi-Provider LLM Architecture</div><div class="phase-version">v2.7.8</div></div><ul class="feature-list"><li>Support for multiple AI providers (Claude and OpenAI)</li><li>Easy provider switching via configuration (no code changes needed)</li><li>Claude Sonnet 4.5 as default provider with 200K context window</li><li>OpenAI GPT-4 Turbo as alternative provider with 128K context</li><li>Automatic prompt caching for cost optimization (90% savings with Claude)</li><li>Provider metadata in responses (model used, token counts, latency)</li></ul><div class="metric-badge">Architecture</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Epic 4.1: GitHub Repository Integration</div><div class="phase-version">v2.7.9</div></div><ul class="feature-list"><li>Import code from GitHub repositories via URL</li><li>Tree-based file browser with folder expansion/collapse</li><li>Branch switching dropdown to explore different branches</li><li>File preview with syntax highlighting</li><li>Support for public repositories (no GitHub account required)</li><li>Auto-scroll to selected files for easy navigation</li><li>Mobile-responsive design with proper scrolling</li></ul><div class="metric-badge">Developer Adoption</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Mermaid Diagram Improvements &amp; UX Refinements</div><div class="phase-version">v2.7.10</div></div><ul class="feature-list"><li>Mermaid diagrams auto-show when generation completes (no manual button clicks)</li><li>Entity-relationship diagram theming with brand colors (indigo-600, purple-600)</li><li>Amber warning colors for diagram errors (improved UX vs red)</li><li>Quality modal default tab set to 'Criteria Breakdown' for immediate insights</li><li>Added Cancel buttons to Samples and Quality modals for consistency</li><li>Improved attribution footer spacing for better visual balance</li><li>Auto-scroll to visible area during generation for better UX</li></ul><div class="metric-badge">UX Polish</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Theme Selection &amp; Multi-File Design</div><div class="phase-version">v2.7.11</div></div><ul class="feature-list"><li>Appearance modal for unauthenticated users</li><li>3-state theme cycling (Light/Dark/Auto with system detection)</li><li>Enhanced DocPanel empty state with GitHub import</li><li>Multi-file sidebar design document for v2.8.0</li></ul><div class="metric-badge">UX &amp; Planning</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Workspace Flexibility &amp; Performance (Epic 3.2)</div><div class="phase-version">v2.8.0</div></div><ul class="feature-list"><li>Resizable panels with VS Code-style draggable divider</li><li>Panel constraints (30% min, 70% max)</li><li>Panel size persistence (localStorage)</li><li>Keyboard accessible panel controls</li><li>Arrow key navigation in AppearanceModal</li><li>ESC key navigation on Pricing/Privacy/Terms pages</li><li>Skip-to-content enhancement with auto-focus</li><li>Mermaid diagram flashing eliminated (6-layer memoization)</li><li>Responsive overflow fixes for pricing page scrolling</li></ul><div class="metric-badge">UX &amp; Optimization</div></div></div>
         </div>
 
         <!-- NOW Column -->
@@ -1847,9 +1876,9 @@ Press D to toggle dark mode"></div>
           <div class="column-header">
             <div class="column-label">Now</div>
             <div class="column-title">Active</div>
-            <div class="column-timeline">Phase 3: UX Enhancements &amp; Developer Tools</div>
+            <div class="column-timeline">Phase 3: Multi-File Implementation (v2.9.0)</div>
           </div>
-          <div class="column-body"><div class="phase-card"><div class="phase-header"><div class="phase-title">Advanced File Handling</div><div class="phase-version">Epic 3.3</div></div><ul class="feature-list"><li>Multi-file upload support (select multiple files at once)</li><li>Batch processing (up to 10 files)</li><li>File preview before generation</li><li>File history and version tracking (30 days)</li><li>Progress indicators for batch operations</li><li>Error handling per file (don't fail entire batch)</li><li>Note: Basic drag-and-drop implemented in Phase 2 Epic 2.4</li><li>Note: Epic 4.1 (GitHub integration) completed first - provides single-file import from GitHub</li><li>Required before Epic 4.2</li></ul><div class="metric-badge">Infrastructure First</div></div></div>
+          <div class="column-body"><div class="phase-card"><div class="phase-header"><div class="phase-title">Multi-File Sidebar &amp; Integration</div><div class="phase-version">Phase 1</div></div><ul class="feature-list"><li>✓ Day 1: Custom hooks and document persistence (completed)</li><li>Day 2: Sidebar components (FileList, FileItem, FileActions)</li><li>Day 3: App.jsx integration with multi-file state</li><li>Day 4: Layout integration and keyboard shortcuts (Cmd+B)</li><li>Day 5: Integration testing and accessibility audit</li><li>Note: Database setup (Phase 0) completed</li><li>Note: Split panel (Phase 4) completed in v2.8.0</li></ul><div class="metric-badge">v2.9.0</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Bulk Operations &amp; History UI</div><div class="phase-version">Phase 2</div></div><ul class="feature-list"><li>Select all and delete multiple documents</li><li>Documentation history timeline view</li><li>Search and filter saved documents</li><li>Bulk export operations</li><li>Progress indicators for batch operations</li></ul><div class="metric-badge">Optional</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Backend Optimization</div><div class="phase-version">Phase 3</div></div><ul class="feature-list"><li>Pagination for large document lists</li><li>Advanced filtering (by language, date, quality score)</li><li>Search indexing for faster queries</li><li>Performance monitoring and optimization</li></ul><div class="metric-badge">Optional</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Advanced Workspace Features</div><div class="phase-version">Phase 5</div></div><ul class="feature-list"><li>Full-width layout option (remove max-width)</li><li>Layout presets (50/50, 70/30, 30/70)</li><li>Sidebar collapse/expand animations</li><li>Custom panel size presets</li><li>Workspace state persistence across sessions</li></ul><div class="metric-badge">Optional</div></div></div>
         </div>
 
         <!-- NEXT Column -->
@@ -1857,9 +1886,9 @@ Press D to toggle dark mode"></div>
           <div class="column-header">
             <div class="column-label">Next</div>
             <div class="column-title">Planned Features</div>
-            <div class="column-timeline">Phase 3-4: Developer Adoption Engine</div>
+            <div class="column-timeline">Phase 4: Developer Adoption Engine</div>
           </div>
-          <div class="column-body"><div class="phase-card"><div class="phase-header"><div class="phase-title">Production Launch (Post-LLC)</div><div class="phase-version">Epic 2.7</div></div><ul class="feature-list"><li>Replace test Stripe keys with live keys</li><li>Update webhook endpoints to production URLs</li><li>Verify Stripe business account (requires LLC EIN + bank account)</li><li>Test live checkout flow with real payment</li><li>Custom branded email receipt templates (override Stripe defaults)</li><li>Invoice PDF customization with CodeScribe AI branding</li><li>Store Stripe receipt URLs only (no PII in database)</li><li>Display Stripe-hosted receipts via API links</li><li>Monitor first live transactions</li><li>Deploy AFTER Georgia LLC formation (Jan 2-3) and Stripe business verification (Jan 11-13)</li></ul><div class="metric-badge">Jan 14+ 2026</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Enhanced Subscription UI</div><div class="phase-version">Epic 2.8</div></div><ul class="feature-list"><li>Enhanced subscription management UI components</li><li>SubscriptionCard component with tier details and usage stats</li><li>PlanChangeModal with visual comparison of tier features</li><li>CancellationModal with retention flow (feedback form, downgrade offer)</li><li>Subscription history view (past invoices, payment methods)</li><li>Email notifications for subscription lifecycle events</li><li>In-app notifications for billing issues and renewals</li><li>Note: Core upgrade/downgrade flows completed in Epic 2.4</li></ul><div class="metric-badge">Optional UX</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Multi-File Project Documentation</div><div class="phase-version">Epic 4.2</div></div><ul class="feature-list"><li>Accept multiple files from GitHub, upload, or .zip</li><li>Project-wide architecture analysis</li><li>Cross-file references and dependency mapping</li><li>Pattern detection (MVC, microservices, monorepo)</li><li>Comprehensive project README generation</li><li>Project-level quality scoring</li><li>Requires Epic 3.3 (file handling) and Epic 4.1 (GitHub source)</li></ul><div class="metric-badge">Depends on Epic 3.3 + 4.1</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Layout &amp; Workspace Flexibility</div><div class="phase-version">Epic 3.2</div></div><ul class="feature-list"><li>Full-width layout option (remove max-width)</li><li>Resizable panels with draggable divider</li><li>Panel constraints (30% min, 70% max)</li><li>Panel size persistence (localStorage)</li><li>Layout presets (50/50, 70/30, 30/70)</li><li>Keyboard accessible panel controls</li><li>Natural follow-up to Epic 4.2 for improved workspace UX</li></ul><div class="metric-badge">UX for Large Projects</div></div></div>
+          <div class="column-body"><div class="phase-card"><div class="phase-header"><div class="phase-title">Multi-File Project Documentation</div><div class="phase-version">Epic 4.2</div></div><ul class="feature-list"><li>Accept multiple files from GitHub, upload, or .zip</li><li>Project-wide architecture analysis</li><li>Cross-file references and dependency mapping</li><li>Pattern detection (MVC, microservices, monorepo)</li><li>Comprehensive project README generation</li><li>Project-level quality scoring</li><li>Requires Phase 1 (multi-file sidebar) to be completed first</li></ul><div class="metric-badge">After Phase 1</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Production Launch (Post-LLC)</div><div class="phase-version">Epic 2.7</div></div><ul class="feature-list"><li>Replace test Stripe keys with live keys</li><li>Update webhook endpoints to production URLs</li><li>Verify Stripe business account (requires LLC EIN + bank account)</li><li>Test live checkout flow with real payment</li><li>Custom branded email receipt templates (override Stripe defaults)</li><li>Invoice PDF customization with CodeScribe AI branding</li><li>Store Stripe receipt URLs only (no PII in database)</li><li>Display Stripe-hosted receipts via API links</li><li>Monitor first live transactions</li><li>Deploy AFTER Georgia LLC formation (Jan 2-3) and Stripe business verification (Jan 11-13)</li></ul><div class="metric-badge">Jan 14+ 2026</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Enhanced Subscription UI</div><div class="phase-version">Epic 2.8</div></div><ul class="feature-list"><li>Enhanced subscription management UI components</li><li>SubscriptionCard component with tier details and usage stats</li><li>PlanChangeModal with visual comparison of tier features</li><li>CancellationModal with retention flow (feedback form, downgrade offer)</li><li>Subscription history view (past invoices, payment methods)</li><li>Email notifications for subscription lifecycle events</li><li>In-app notifications for billing issues and renewals</li><li>Note: Core upgrade/downgrade flows completed in Epic 2.4</li></ul><div class="metric-badge">Optional UX</div></div></div>
         </div>
 
         <!-- LATER Column -->
@@ -1876,9 +1905,9 @@ Press D to toggle dark mode"></div>
 
     <footer>
       <div class="footer-content">
-        <div class="footer-left"><strong>CodeScribe AI</strong> · Strategic Roadmap v3.12</div>
-        <div class="footer-center">Phase 1 Complete · Phase 2 Complete · Phase 3 Epic 3.1 Complete (Dark Mode) · Epic 4.1 Complete (GitHub Integration) · Launch: Mid-Jan 2026</div>
-        <div class="footer-right">Last Updated: November 15, 2025</div>
+        <div class="footer-left"><strong>CodeScribe AI</strong> · Strategic Roadmap v3.14</div>
+        <div class="footer-center">Phase 1 Complete · Phase 2 Complete · Epic 3.1 Complete (Dark Mode) · Epic 3.2 Complete (Workspace) · Epic 4.1 Complete (GitHub) · Multi-File Phase 0 &amp; Phase 1 Day 1 Complete · Launch: Mid-Jan 2026</div>
+        <div class="footer-right">Last Updated: November 16, 2025</div>
       </div>
     </footer>
   </div>
@@ -1956,9 +1985,9 @@ Press D to toggle dark mode"></div>
       "text": "codescribeai.com",
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
-    "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.12",
-    "footer": "Phase 1 Complete · Phase 2 Complete · Phase 3 Epic 3.1 Complete (Dark Mode) · Epic 4.1 Complete (GitHub Integration) · Launch: Mid-Jan 2026",
-    "lastUpdated": "November 15, 2025"
+    "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.14",
+    "footer": "Phase 1 Complete · Phase 2 Complete · Epic 3.1 Complete (Dark Mode) · Epic 3.2 Complete (Workspace) · Epic 4.1 Complete (GitHub) · Multi-File Phase 0 & Phase 1 Day 1 Complete · Launch: Mid-Jan 2026",
+    "lastUpdated": "November 16, 2025"
   },
   "columns": [
     {
@@ -2419,15 +2448,29 @@ Press D to toggle dark mode"></div>
           "completedDate": "Nov 15, 2025",
           "badge": "UX & Planning",
           "features": [
-            "Appearance modal for unauthenticated users (GitHub-style theme switcher)",
-            "3-state theme cycling: Light → Dark → Auto → Light (Monitor icon for Auto mode)",
-            "Enhanced DocPanel empty state with clickable GitHub import button",
-            "Smooth HelpModal tab transitions (200ms) following design system",
-            "Mermaid error suppression (suppressErrors: true prevents bomb icons)",
-            "Multi-file sidebar UX design document (comprehensive 5-week roadmap for v2.8.0)",
-            "Doc Type label added to dropdown for accessibility",
-            "Removed Quick Start tab from HelpModal (deduplicated from DocPanel)",
-            "2,477 tests (2,421 passing, 56 skipped, 97.8% pass rate)"
+            "Appearance modal for unauthenticated users",
+            "3-state theme cycling (Light/Dark/Auto with system detection)",
+            "Enhanced DocPanel empty state with GitHub import",
+            "Multi-file sidebar design document for v2.8.0"
+          ]
+        },
+        {
+          "version": "v2.8.0",
+          "title": "Workspace Flexibility & Performance (Epic 3.2)",
+          "duration": "2 days",
+          "status": "✓ Complete",
+          "completedDate": "Nov 16, 2025",
+          "badge": "UX & Optimization",
+          "features": [
+            "Resizable panels with VS Code-style draggable divider",
+            "Panel constraints (30% min, 70% max)",
+            "Panel size persistence (localStorage)",
+            "Keyboard accessible panel controls",
+            "Arrow key navigation in AppearanceModal",
+            "ESC key navigation on Pricing/Privacy/Terms pages",
+            "Skip-to-content enhancement with auto-focus",
+            "Mermaid diagram flashing eliminated (6-layer memoization)",
+            "Responsive overflow fixes for pricing page scrolling"
           ]
         }
       ]
@@ -2436,24 +2479,63 @@ Press D to toggle dark mode"></div>
       "id": "now",
       "label": "Now",
       "title": "Active",
-      "subtitle": "Phase 3: UX Enhancements & Developer Tools",
+      "subtitle": "Phase 3: Multi-File Implementation (v2.9.0)",
       "phases": [
         {
-          "version": "Epic 3.3",
-          "title": "Advanced File Handling",
+          "version": "Phase 1",
+          "title": "Multi-File Sidebar & Integration",
+          "duration": "4 days remaining",
+          "status": "In Progress",
+          "badge": "v2.9.0",
+          "features": [
+            "✓ Day 1: Custom hooks and document persistence (completed)",
+            "Day 2: Sidebar components (FileList, FileItem, FileActions)",
+            "Day 3: App.jsx integration with multi-file state",
+            "Day 4: Layout integration and keyboard shortcuts (Cmd+B)",
+            "Day 5: Integration testing and accessibility audit",
+            "Note: Database setup (Phase 0) completed",
+            "Note: Split panel (Phase 4) completed in v2.8.0"
+          ]
+        },
+        {
+          "version": "Phase 2",
+          "title": "Bulk Operations & History UI",
+          "duration": "3-4 days",
+          "status": "Planned",
+          "badge": "Optional",
+          "features": [
+            "Select all and delete multiple documents",
+            "Documentation history timeline view",
+            "Search and filter saved documents",
+            "Bulk export operations",
+            "Progress indicators for batch operations"
+          ]
+        },
+        {
+          "version": "Phase 3",
+          "title": "Backend Optimization",
           "duration": "2-3 days",
           "status": "Planned",
-          "badge": "Infrastructure First",
+          "badge": "Optional",
           "features": [
-            "Multi-file upload support (select multiple files at once)",
-            "Batch processing (up to 10 files)",
-            "File preview before generation",
-            "File history and version tracking (30 days)",
-            "Progress indicators for batch operations",
-            "Error handling per file (don't fail entire batch)",
-            "Note: Basic drag-and-drop implemented in Phase 2 Epic 2.4",
-            "Note: Epic 4.1 (GitHub integration) completed first - provides single-file import from GitHub",
-            "Required before Epic 4.2"
+            "Pagination for large document lists",
+            "Advanced filtering (by language, date, quality score)",
+            "Search indexing for faster queries",
+            "Performance monitoring and optimization"
+          ]
+        },
+        {
+          "version": "Phase 5",
+          "title": "Advanced Workspace Features",
+          "duration": "2-3 days",
+          "status": "Planned",
+          "badge": "Optional",
+          "features": [
+            "Full-width layout option (remove max-width)",
+            "Layout presets (50/50, 70/30, 30/70)",
+            "Sidebar collapse/expand animations",
+            "Custom panel size presets",
+            "Workspace state persistence across sessions"
           ]
         }
       ]
@@ -2462,8 +2544,24 @@ Press D to toggle dark mode"></div>
       "id": "next",
       "label": "Next",
       "title": "Planned Features",
-      "subtitle": "Phase 3-4: Developer Adoption Engine",
+      "subtitle": "Phase 4: Developer Adoption Engine",
       "phases": [
+        {
+          "version": "Epic 4.2",
+          "title": "Multi-File Project Documentation",
+          "duration": "4-5 days",
+          "status": "Planned",
+          "badge": "After Phase 1",
+          "features": [
+            "Accept multiple files from GitHub, upload, or .zip",
+            "Project-wide architecture analysis",
+            "Cross-file references and dependency mapping",
+            "Pattern detection (MVC, microservices, monorepo)",
+            "Comprehensive project README generation",
+            "Project-level quality scoring",
+            "Requires Phase 1 (multi-file sidebar) to be completed first"
+          ]
+        },
         {
           "version": "Epic 2.7",
           "title": "Production Launch (Post-LLC)",
@@ -2498,38 +2596,6 @@ Press D to toggle dark mode"></div>
             "Email notifications for subscription lifecycle events",
             "In-app notifications for billing issues and renewals",
             "Note: Core upgrade/downgrade flows completed in Epic 2.4"
-          ]
-        },
-        {
-          "version": "Epic 4.2",
-          "title": "Multi-File Project Documentation",
-          "duration": "4-5 days",
-          "status": "Planned",
-          "badge": "Depends on Epic 3.3 + 4.1",
-          "features": [
-            "Accept multiple files from GitHub, upload, or .zip",
-            "Project-wide architecture analysis",
-            "Cross-file references and dependency mapping",
-            "Pattern detection (MVC, microservices, monorepo)",
-            "Comprehensive project README generation",
-            "Project-level quality scoring",
-            "Requires Epic 3.3 (file handling) and Epic 4.1 (GitHub source)"
-          ]
-        },
-        {
-          "version": "Epic 3.2",
-          "title": "Layout & Workspace Flexibility",
-          "duration": "2-3 days",
-          "status": "Planned",
-          "badge": "UX for Large Projects",
-          "features": [
-            "Full-width layout option (remove max-width)",
-            "Resizable panels with draggable divider",
-            "Panel constraints (30% min, 70% max)",
-            "Panel size persistence (localStorage)",
-            "Layout presets (50/50, 70/30, 30/70)",
-            "Keyboard accessible panel controls",
-            "Natural follow-up to Epic 4.2 for improved workspace UX"
           ]
         }
       ]
@@ -3225,6 +3291,44 @@ Press D to toggle dark mode"></div>
 	// ]]>
 </script>
 <grammarly-desktop-integration data-grammarly-shadow-root="true"></grammarly-desktop-integration><!-- Code injected by live-server -->
+<script>
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					var parent = elem.parentElement || head;
+					parent.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					parent.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
+</script>
+<!-- Code injected by live-server -->
 <script>
 	// <![CDATA[  <-- For SVG support
 	if ('WebSocket' in window) {
