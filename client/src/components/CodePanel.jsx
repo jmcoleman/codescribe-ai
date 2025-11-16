@@ -99,7 +99,7 @@ export function CodePanel({
   return (
     <div
       data-testid="code-panel"
-      className="flex flex-col h-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm overflow-hidden relative transition-colors"
+      className="@container flex flex-col h-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm overflow-hidden relative transition-colors"
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
       onDragOver={handleDragOver}
@@ -139,7 +139,7 @@ export function CodePanel({
                 title="Load code samples"
               >
                 <BookOpen className="w-3.5 h-3.5" aria-hidden="true" />
-                <span>Samples</span>
+                <span className="@[400px]:inline hidden">Samples</span>
               </button>
             )}
             {code && (
@@ -150,6 +150,7 @@ export function CodePanel({
                 variant="outline"
                 ariaLabel="Export code"
                 showLabel={true}
+                labelClassName="@[400px]:inline hidden"
               />
             )}
             {code && (
@@ -159,6 +160,7 @@ export function CodePanel({
                 variant="outline"
                 ariaLabel="Copy code to clipboard"
                 showLabel={true}
+                labelClassName="@[400px]:inline hidden"
               />
             )}
             {code && !readOnly && onClear && (
@@ -178,7 +180,7 @@ export function CodePanel({
                   className={`w-3.5 h-3.5 ${isClearing ? 'animate-spin-once' : ''}`}
                   aria-hidden="true"
                 />
-                <span>Clear</span>
+                <span className="@[400px]:inline hidden">Clear</span>
               </button>
             )}
           </div>

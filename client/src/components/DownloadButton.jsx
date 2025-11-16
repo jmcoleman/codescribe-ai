@@ -33,7 +33,8 @@ export function DownloadButton({
   size = 'md',
   variant = 'ghost',
   ariaLabel = 'Export',
-  showLabel = false
+  showLabel = false,
+  labelClassName = ''
 }) {
 
   const handleDownload = () => {
@@ -141,7 +142,7 @@ export function DownloadButton({
 
       {/* Optional text label */}
       {showLabel && (
-        <span className={textSizes[size]}>Export</span>
+        <span className={`${textSizes[size]} ${labelClassName}`}>Export</span>
       )}
     </button>
   );

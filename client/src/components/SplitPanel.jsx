@@ -95,20 +95,22 @@ export function SplitPanel({ leftPanel, rightPanel }) {
 
   // Desktop/Tablet: Resizable horizontal split
   return (
-    <div className="flex-1 min-h-0">
+    <div className="flex-1 min-h-0 flex flex-col">
       <PanelGroup
         direction="horizontal"
         onLayout={handleResize}
-        className="flex-1 h-full"
+        className="flex-1"
       >
         {/* Left Panel - Code */}
         <Panel
           defaultSize={savedSizes.left}
           minSize={MIN_PANEL_SIZE}
           maxSize={MAX_PANEL_SIZE}
-          className="h-full min-w-0 overflow-hidden"
+          className="flex"
         >
-          {leftPanel}
+          <div className="flex-1 min-h-0">
+            {leftPanel}
+          </div>
         </Panel>
 
         {/* Resize Handle */}
@@ -123,9 +125,11 @@ export function SplitPanel({ leftPanel, rightPanel }) {
           defaultSize={savedSizes.right}
           minSize={MIN_PANEL_SIZE}
           maxSize={MAX_PANEL_SIZE}
-          className="h-full min-w-0 overflow-hidden"
+          className="flex"
         >
-          {rightPanel}
+          <div className="flex-1 min-h-0">
+            {rightPanel}
+          </div>
         </Panel>
       </PanelGroup>
     </div>

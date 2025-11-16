@@ -265,7 +265,7 @@ export function DocPanel({
 
 
   return (
-    <div data-testid="doc-panel" className="flex flex-col h-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm overflow-hidden transition-colors">
+    <div data-testid="doc-panel" className="@container flex flex-col h-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm overflow-hidden transition-colors">
       {/* Live Region for Screen Reader Announcements */}
       <div
         role="status"
@@ -348,6 +348,7 @@ export function DocPanel({
                   variant="outline"
                   ariaLabel="Export documentation"
                   showLabel={true}
+                  labelClassName="@[400px]:inline hidden"
                 />
                 <CopyButton
                   text={documentation}
@@ -355,6 +356,7 @@ export function DocPanel({
                   variant="outline"
                   ariaLabel="Copy documentation"
                   showLabel={true}
+                  labelClassName="@[400px]:inline hidden"
                 />
                 <button
                   type="button"
@@ -364,7 +366,7 @@ export function DocPanel({
                   title="Clear documentation"
                 >
                   <RefreshCw className="w-4 h-4" aria-hidden="true" />
-                  <span>Clear</span>
+                  <span className="@[400px]:inline hidden">Clear</span>
                 </button>
               </div>
 
