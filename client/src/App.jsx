@@ -795,7 +795,7 @@ function App() {
       {/* Skip to Main Content Link - for keyboard navigation */}
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only bg-purple-600 text-white rounded-md focus:absolute focus:top-4 focus:left-4 focus:z-50 hover:bg-purple-700 transition-colors"
+        className="sr-only focus:not-sr-only bg-purple-600 text-white px-4 py-2 rounded-md focus:absolute focus:top-4 focus:left-4 focus:z-50 hover:bg-purple-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2"
       >
         Skip to main content
       </a>
