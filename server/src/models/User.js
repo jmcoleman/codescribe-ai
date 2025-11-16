@@ -895,15 +895,36 @@ class User {
    * @returns {Promise<Object>} Updated user object
    */
   static async updatePreferences(id, preferences) {
-    const { analytics_enabled } = preferences;
+    const { analytics_enabled, save_docs_preference, docs_consent_shown_at } = preferences;
 
-    const result = await sql`
+    // Build dynamic SET clause based on provided preferences
+    const setClauses = ['updated_at = NOW()'];
+    const values = [];
+
+    if (analytics_enabled !== undefined) {
+      setClauses.push(`analytics_enabled = $${values.length + 1}`);
+      values.push(analytics_enabled);
+    }
+
+    if (save_docs_preference !== undefined) {
+      setClauses.push(`save_docs_preference = $${values.length + 1}`);
+      values.push(save_docs_preference);
+    }
+
+    if (docs_consent_shown_at !== undefined) {
+      setClauses.push(`docs_consent_shown_at = $${values.length + 1}`);
+      values.push(docs_consent_shown_at);
+    }
+
+    // Add user ID for WHERE clause
+    values.push(id);
+
+    const result = await sql.query(`
       UPDATE users
-      SET analytics_enabled = ${analytics_enabled},
-          updated_at = NOW()
-      WHERE id = ${id}
-      RETURNING id, email, analytics_enabled
-    `;
+      SET ${setClauses.join(', ')}
+      WHERE id = $${values.length}
+      RETURNING id, email, analytics_enabled, save_docs_preference, docs_consent_shown_at
+    `, values);
 
     return result.rows[0];
   }

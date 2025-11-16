@@ -29,7 +29,8 @@ export function CopyButton({
   size = 'md',
   variant = 'ghost',
   ariaLabel = 'Copy to clipboard',
-  showLabel = false
+  showLabel = false,
+  labelClassName = ''
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -168,7 +169,7 @@ export function CopyButton({
 
       {/* Optional text label */}
       {showLabel && (
-        <span className={textSizes[size]}>
+        <span className={`${textSizes[size]} ${labelClassName}`}>
           {copied ? 'Copied' : 'Copy'}
         </span>
       )}

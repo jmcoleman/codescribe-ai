@@ -12,7 +12,8 @@
       "Bash(sed:*)",
       "Bash(find:*)",
       "Bash(/Users/jcoleman-mbp/Developer/projects/codescribe-ai/client/src/components/__tests__/SamplesModal.test.jsx)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(npm run test:db:*)"
     ],
     "deny": [],
     "ask": []

@@ -6,6 +6,12 @@ import { useTheme } from '../contexts/ThemeContext';
 import { getLanguageDisplayName } from '../constants/languages';
 import { sanitizeFilename } from '../utils/fileValidation';
 
+// Get scrollbar width from CSS variable
+const getScrollbarWidth = () => {
+  const width = getComputedStyle(document.documentElement).getPropertyValue('--scrollbar-width').trim();
+  return parseInt(width) || 8; // fallback to 8px
+};
+
 // Lazy load Monaco Editor to reduce initial bundle size
 const LazyMonacoEditor = lazy(() =>
   import('./LazyMonacoEditor').then(module => ({ default: module.LazyMonacoEditor }))
@@ -99,7 +105,7 @@ export function CodePanel({
   return (
     <div
       data-testid="code-panel"
-      className="flex flex-col h-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm overflow-hidden relative transition-colors"
+      className="@container flex flex-col h-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm overflow-hidden relative transition-colors"
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
       onDragOver={handleDragOver}
@@ -119,8 +125,8 @@ export function CodePanel({
 
         {/* Right: Desktop buttons + Mobile menu */}
         <div className="flex items-center gap-2">
-          {/* Desktop: Show all buttons */}
-          <div className="hidden md:flex items-center gap-2">
+          {/* Desktop: Show all buttons when container is wide enough */}
+          <div className="@[600px]:flex hidden items-center gap-2">
             {onSamplesClick && (
               <button
                 type="button"
@@ -183,38 +189,49 @@ export function CodePanel({
             )}
           </div>
 
-          {/* Mobile: Overflow menu */}
-          <div className="md:hidden relative" ref={mobileMenuRef}>
+          {/* Mobile/Narrow: Overflow menu - show when buttons are hidden */}
+          <div className="@[600px]:hidden relative" ref={mobileMenuRef}>
             <button
               type="button"
               onClick={() => setShowMobileMenu(!showMobileMenu)}
               className="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900"
               aria-label="More actions"
               aria-expanded={showMobileMenu}
+              aria-haspopup="menu"
             >
               <MoreVertical className="w-4 h-4" aria-hidden="true" />
             </button>
 
             {showMobileMenu && (
-              <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg py-1 z-50">
+              <div
+                role="menu"
+                aria-label="Code panel actions"
+                className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg py-1 z-50"
+              >
                 {onSamplesClick && (
                   <button
                     type="button"
+                    role="menuitem"
                     ref={samplesButtonRef}
                     onClick={() => {
                       import('./SamplesModal').catch(() => {});
                       onSamplesClick();
                       setShowMobileMenu(false);
                     }}
-                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-inset"
+                    aria-label="Load code samples"
                   >
                     <BookOpen className="w-4 h-4" aria-hidden="true" />
                     <span>Samples</span>
                   </button>
                 )}
+                {onSamplesClick && code && (
+                  <div className="border-t border-slate-200 dark:border-slate-700 my-1" role="separator" />
+                )}
                 {code && (
                   <button
                     type="button"
+                    role="menuitem"
                     onClick={() => {
                       // Create a blob and download
                       const blob = new Blob([code], { type: 'text/plain' });
@@ -227,7 +244,8 @@ export function CodePanel({
                       URL.revokeObjectURL(url);
                       setShowMobileMenu(false);
                     }}
-                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-inset"
+                    aria-label="Export code"
                   >
                     <Download className="w-4 h-4" aria-hidden="true" />
                     <span>Export</span>
@@ -236,6 +254,7 @@ export function CodePanel({
                 {code && (
                   <button
                     type="button"
+                    role="menuitem"
                     onClick={async () => {
                       try {
                         if (navigator.clipboard && window.isSecureContext) {
@@ -255,7 +274,8 @@ export function CodePanel({
                         console.error('Failed to copy:', err);
                       }
                     }}
-                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-inset"
+                    aria-label="Copy code to clipboard"
                   >
                     <Copy className="w-4 h-4" aria-hidden="true" />
                     <span>Copy</span>
@@ -264,13 +284,15 @@ export function CodePanel({
                 {code && !readOnly && onClear && (
                   <button
                     type="button"
+                    role="menuitem"
                     onClick={() => {
                       setIsClearing(true);
                       onClear();
                       setTimeout(() => setIsClearing(false), 500);
                       setShowMobileMenu(false);
                     }}
-                    className={`w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors ${isClearing ? 'opacity-75 pointer-events-none' : ''}`}
+                    className={`w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-inset ${isClearing ? 'opacity-75 pointer-events-none' : ''}`}
+                    aria-label="Clear editor"
                   >
                     <RefreshCw
                       className={`w-4 h-4 ${isClearing ? 'animate-spin-once' : ''}`}
@@ -312,6 +334,13 @@ export function CodePanel({
                 padding: { top: 24, bottom: 16 },
                 ariaLabel: readOnly ? 'Code editor, read-only' : 'Code editor, type or paste your code here',
                 bracketPairColorization: { enabled: false }, // Disable bracket colorization
+                scrollbar: {
+                  vertical: 'visible',
+                  horizontal: 'visible',
+                  useShadows: false,
+                  verticalScrollbarSize: getScrollbarWidth(),
+                  horizontalScrollbarSize: getScrollbarWidth(),
+                },
               }}
               theme={effectiveTheme === 'dark' ? 'codescribe-dark' : 'codescribe-light'}
             />
@@ -323,16 +352,16 @@ export function CodePanel({
       <div className="flex items-center justify-between px-4 py-2 bg-slate-50 dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 transition-colors">
         <div className="flex items-center gap-3 text-xs text-slate-600 dark:text-slate-400">
           <span>{lines} lines</span>
-          <span>•</span>
-          <span>{chars} chars</span>
-          <span>•</span>
-          <span>{formatBytes(bytes)}</span>
+          <span className="@[400px]:inline hidden">•</span>
+          <span className="@[400px]:inline hidden">{chars} chars</span>
+          <span className="@[500px]:inline hidden">•</span>
+          <span className="@[500px]:inline hidden">{formatBytes(bytes)}</span>
           <span>•</span>
           <span className="capitalize">{getLanguageDisplayName(language)}</span>
         </div>
-        <div className="flex items-center gap-1.5 text-xs">
+        <div className="flex items-center gap-1.5 text-xs px-2 py-1">
           <Zap className="w-3 h-3 text-cyan-600 dark:text-cyan-400" aria-hidden="true" />
-          <span className="text-cyan-600 dark:text-cyan-400 font-medium">Ready to analyze</span>
+          <span className="@[450px]:inline hidden text-cyan-600 dark:text-cyan-400 font-medium">Ready to analyze</span>
         </div>
       </div>
 

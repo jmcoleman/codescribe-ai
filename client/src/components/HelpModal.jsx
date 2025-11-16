@@ -136,10 +136,11 @@ export function HelpModal({ isOpen, onClose }) {
                   : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600'
               }`}
               aria-selected={activeTab === 'quality'}
+              aria-controls="help-modal-description"
               role="tab"
             >
               <div className="flex items-center gap-2">
-                <Star className="w-4 h-4" />
+                <Star className="w-4 h-4" aria-hidden="true" />
                 Quality Scores
               </div>
             </button>
@@ -152,10 +153,11 @@ export function HelpModal({ isOpen, onClose }) {
                   : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600'
               }`}
               aria-selected={activeTab === 'faq'}
+              aria-controls="help-modal-description"
               role="tab"
             >
               <div className="flex items-center gap-2">
-                <FileText className="w-4 h-4" />
+                <FileText className="w-4 h-4" aria-hidden="true" />
                 FAQs
               </div>
             </button>

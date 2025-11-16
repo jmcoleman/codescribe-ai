@@ -1,5 +1,5 @@
 import { Sparkles, CheckCircle, AlertCircle, ChevronDown, ChevronUp, MoreVertical, Download, Copy, RefreshCw } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, memo, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -147,7 +147,7 @@ const codescribeDarkTheme = {
 
 import { STORAGE_KEYS, getStorageItem, setStorageItem } from '../constants/storage';
 
-export function DocPanel({
+export const DocPanel = memo(function DocPanel({
   documentation,
   qualityScore = null,
   isGenerating = false,
@@ -263,9 +263,91 @@ export function DocPanel({
     }
   };
 
+  // Memoize ReactMarkdown components to prevent unnecessary re-renders
+  const markdownComponents = useMemo(() => ({
+    pre({ node, children, ...props }) {
+      // Styled pre wrapper that matches our theme
+      return (
+        <pre
+          className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg overflow-x-auto p-4 my-4 transition-colors"
+          {...props}
+        >
+          {children}
+        </pre>
+      );
+    },
+    code({ node, inline, className, children, ...props }) {
+      const match = /language-(\w+)/.exec(className || '');
+      const language = match ? match[1] : '';
+      const codeContent = String(children).replace(/\n$/, '');
+
+      // Handle mermaid diagrams
+      if (!inline && language === 'mermaid') {
+        // Detect incomplete/partial diagrams (common during streaming)
+        const looksIncomplete = !codeContent.includes('-->') &&
+                               !codeContent.includes('->') &&
+                               !codeContent.includes('---') &&
+                               codeContent.split('\n').length < 3;
+
+        // Show placeholder if still generating OR diagram looks incomplete
+        if (isGenerating || looksIncomplete) {
+          return (
+            <div className="my-6 p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg min-h-[300px] flex items-center justify-center transition-colors">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 dark:border-purple-400 mx-auto mb-2"></div>
+                <p className="text-sm text-slate-600 dark:text-slate-400">
+                  {isGenerating
+                    ? 'Diagram will render when generation completes...'
+                    : 'Completing diagram...'}
+                </p>
+              </div>
+            </div>
+          );
+        }
+
+        // Generate stable, unique ID based on content hash to prevent re-renders
+        // Use a simple hash of the content for stability
+        const hash = codeContent.split('').reduce((acc, char) => {
+          return ((acc << 5) - acc) + char.charCodeAt(0);
+        }, 0);
+        const diagramId = `diagram-${Math.abs(hash)}`;
+
+        // Render complete diagram only when ready
+        return (
+          <MermaidDiagram
+            chart={codeContent}
+            id={diagramId}
+            autoShow={!isGenerating}
+          />
+        );
+      }
+
+      // Handle other code blocks
+      return !inline && match ? (
+        <SyntaxHighlighter
+          style={effectiveTheme === 'dark' ? codescribeDarkTheme : codescribeLightTheme}
+          language={language}
+          PreTag="div"
+          customStyle={{
+            margin: '1.5rem 0',
+            borderRadius: '0.5rem',
+            fontSize: '13px',
+            lineHeight: '1.6',
+          }}
+          {...props}
+        >
+          {codeContent}
+        </SyntaxHighlighter>
+      ) : (
+        <code className="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-cyan-300 px-1 py-0.5 rounded text-[13px] font-mono" {...props}>
+          {children}
+        </code>
+      );
+    }
+  }), [isGenerating, effectiveTheme]);
 
   return (
-    <div data-testid="doc-panel" className="flex flex-col h-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm overflow-hidden transition-colors">
+    <div data-testid="doc-panel" className="@container flex flex-col h-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm overflow-hidden transition-colors">
       {/* Live Region for Screen Reader Announcements */}
       <div
         role="status"
@@ -282,65 +364,48 @@ export function DocPanel({
       {/* Header */}
       <div className="flex items-center justify-between px-4 h-12 bg-purple-50 dark:bg-purple-400/15 border-b border-purple-200 dark:border-slate-700 transition-colors">
         {/* Left: Icon + Title */}
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400" aria-hidden="true" />
-          <h2 className="text-sm text-slate-600 dark:text-slate-300">
+        <div className="flex items-center gap-2 min-w-0">
+          <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400 flex-shrink-0" aria-hidden="true" />
+          <h2 className="text-sm text-slate-600 dark:text-slate-300 @[500px]:inline hidden">
             Generated Documentation
+          </h2>
+          <h2 className="text-sm text-slate-600 dark:text-slate-300 @[500px]:hidden truncate">
+            Docs
           </h2>
         </div>
 
         {/* Right: Quality Score + Action Buttons */}
-        <div className="flex items-center gap-2">
-          {/* Quality Score - Always visible */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Quality Score - Responsive based on container width */}
           {qualityScore && (
-            <>
-              {/* Mobile: Condensed Score */}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  onViewBreakdown();
-                }}
-                className="sm:hidden flex items-center gap-1.5 px-2 py-1 bg-white dark:bg-slate-800 border border-purple-200 dark:border-purple-400/30 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-400/15 transition-colors"
-                aria-label={`Quality score: ${qualityScore.grade} ${qualityScore.score}/100`}
-                title="View breakdown"
-              >
-                <span className="text-xs font-semibold text-purple-700 dark:text-purple-400">
-                  {qualityScore.score}
-                </span>
-                <span className={`text-xs font-semibold ${getGradeColor(qualityScore.grade)}`}>
-                  {qualityScore.grade}
-                </span>
-              </button>
-
-              {/* Desktop: Full Score */}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  onViewBreakdown();
-                }}
-                className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-800 border border-purple-200 dark:border-purple-400/30 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-400/15 hover:scale-[1.02] hover:shadow-sm transition-all duration-200 motion-reduce:transition-none active:scale-[0.98]"
-                aria-label="View quality score breakdown"
-                title="View breakdown"
-              >
-                <span className="text-xs text-slate-600 dark:text-slate-400">Quality:</span>
-                <span className="text-xs font-semibold text-purple-700 dark:text-purple-400">
-                  {qualityScore.score}/100
-                </span>
-                <span className={`text-xs font-semibold ${getGradeColor(qualityScore.grade)}`}>
-                  {qualityScore.grade} {getGradeLabel(qualityScore.grade)}
-                </span>
-              </button>
-            </>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                onViewBreakdown();
+              }}
+              className="flex items-center gap-1.5 @[600px]:gap-2 px-2.5 py-1.5 bg-white dark:bg-slate-800 border border-purple-200 dark:border-purple-400/30 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-400/15 hover:scale-[1.02] hover:shadow-sm transition-all duration-200 motion-reduce:transition-none active:scale-[0.98]"
+              aria-label={`Quality score: ${qualityScore.grade} ${qualityScore.score}/100`}
+              title="View breakdown"
+            >
+              {/* "Quality:" label - always visible */}
+              <span className="text-xs text-slate-600 dark:text-slate-400">Quality:</span>
+              {/* Score - always visible, add "/100" when wide */}
+              <span className="text-xs font-semibold text-purple-700 dark:text-purple-400">
+                {qualityScore.score}<span className="@[600px]:inline hidden">/100</span>
+              </span>
+              {/* Grade - always visible, add label when wide */}
+              <span className={`text-xs font-semibold ${getGradeColor(qualityScore.grade)}`}>
+                {qualityScore.grade}<span className="@[600px]:inline hidden"> {getGradeLabel(qualityScore.grade)}</span>
+              </span>
+            </button>
           )}
 
           {/* Desktop: Download, Copy, and Clear Buttons */}
           {documentation && (
             <>
-              <div className="hidden md:flex items-center gap-2">
+              <div className="@[700px]:flex hidden items-center gap-2">
                 <DownloadButton
                   content={documentation}
                   docType={qualityScore?.docType || 'documentation'}
@@ -359,32 +424,38 @@ export function DocPanel({
                 <button
                   type="button"
                   onClick={onReset}
-                  className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-400 dark:hover:border-slate-500 active:scale-95 transition-all duration-200"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500 rounded-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900"
                   aria-label="Clear documentation"
                   title="Clear documentation"
                 >
-                  <RefreshCw className="w-4 h-4" aria-hidden="true" />
+                  <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
                   <span>Clear</span>
                 </button>
               </div>
 
-              {/* Mobile: Overflow Menu */}
-              <div className="md:hidden relative" ref={mobileMenuRef}>
+              {/* Mobile: Overflow Menu - show when buttons are hidden */}
+              <div className="@[700px]:hidden relative" ref={mobileMenuRef}>
                 <button
                   type="button"
                   onClick={() => setShowMobileMenu(!showMobileMenu)}
-                  className="p-2 hover:bg-purple-50 dark:hover:bg-purple-400/15 rounded-lg transition-colors"
+                  className="p-2 hover:bg-purple-50 dark:hover:bg-purple-400/15 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-2"
                   aria-label="More actions"
                   aria-expanded={showMobileMenu}
+                  aria-haspopup="menu"
                 >
-                  <MoreVertical className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                  <MoreVertical className="w-4 h-4 text-slate-600 dark:text-slate-400" aria-hidden="true" />
                 </button>
 
                 {/* Dropdown Menu */}
                 {showMobileMenu && (
-                  <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg overflow-hidden z-50">
+                  <div
+                    role="menu"
+                    aria-label="Documentation actions"
+                    className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg overflow-hidden z-50"
+                  >
                     <button
                       type="button"
+                      role="menuitem"
                       onClick={() => {
                         const blob = new Blob([documentation], { type: 'text/markdown' });
                         const url = URL.createObjectURL(blob);
@@ -395,31 +466,36 @@ export function DocPanel({
                         URL.revokeObjectURL(url);
                         setShowMobileMenu(false);
                       }}
-                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-left"
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-inset"
+                      aria-label="Export documentation"
                     >
-                      <Download className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                      <Download className="w-4 h-4 text-slate-600 dark:text-slate-400" aria-hidden="true" />
                       <span className="text-sm text-slate-700 dark:text-slate-200">Export</span>
                     </button>
                     <button
                       type="button"
+                      role="menuitem"
                       onClick={() => {
                         navigator.clipboard.writeText(documentation);
                         setShowMobileMenu(false);
                       }}
-                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-left"
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-inset"
+                      aria-label="Copy documentation to clipboard"
                     >
-                      <Copy className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                      <Copy className="w-4 h-4 text-slate-600 dark:text-slate-400" aria-hidden="true" />
                       <span className="text-sm text-slate-700 dark:text-slate-200">Copy</span>
                     </button>
                     <button
                       type="button"
+                      role="menuitem"
                       onClick={() => {
                         onReset();
                         setShowMobileMenu(false);
                       }}
-                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-left"
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-inset"
+                      aria-label="Clear documentation"
                     >
-                      <RefreshCw className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                      <RefreshCw className="w-4 h-4 text-slate-600 dark:text-slate-400" aria-hidden="true" />
                       <span className="text-sm text-slate-700 dark:text-slate-200">Clear</span>
                     </button>
                   </div>
@@ -431,105 +507,14 @@ export function DocPanel({
       </div>
 
       {/* Body - Documentation Content */}
-      <div ref={contentRef} className="flex-1 overflow-y-auto px-4 py-3 bg-white dark:bg-slate-900">
+      <div ref={contentRef} className="flex-1 min-h-0 overflow-y-auto px-4 py-3 bg-white dark:bg-slate-900">
         {isGenerating && !documentation ? (
           <DocPanelGeneratingSkeleton />
         ) : documentation ? (
           <div className="prose prose-slate dark:prose-invert max-w-none [&>*:first-child]:mt-0">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
-              components={{
-                pre({ node, children, ...props }) {
-                  // Styled pre wrapper that matches our theme
-                  return (
-                    <pre
-                      className="my-6 rounded-lg overflow-auto border dark:border-slate-700 border-slate-200 bg-slate-50 dark:bg-slate-800"
-                      style={{
-                        backgroundColor: effectiveTheme === 'dark' ? '#1E293B' : '#F8FAFC',
-                      }}
-                      {...props}
-                    >
-                      {children}
-                    </pre>
-                  );
-                },
-                code({ node, inline, className, children, ...props }) {
-                  const match = /language-(\w+)/.exec(className || '');
-                  const language = match ? match[1] : '';
-                  const codeContent = String(children).replace(/\n$/, '');
-
-                  // Handle mermaid diagrams
-                  if (!inline && language === 'mermaid') {
-                    // Detect incomplete/partial diagrams (common during streaming)
-                    const looksIncomplete = !codeContent.includes('-->') &&
-                                           !codeContent.includes('->') &&
-                                           !codeContent.includes('---') &&
-                                           codeContent.split('\n').length < 3;
-
-                    // Show placeholder if still generating OR diagram looks incomplete
-                    if (isGenerating || looksIncomplete) {
-                      return (
-                        <div className="my-6 p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg min-h-[300px] flex items-center justify-center transition-colors">
-                          <div className="text-center">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 dark:border-purple-400 mx-auto mb-2"></div>
-                            <p className="text-sm text-slate-600 dark:text-slate-400">
-                              {isGenerating
-                                ? 'Diagram will render when generation completes...'
-                                : 'Completing diagram...'}
-                            </p>
-                          </div>
-                        </div>
-                      );
-                    }
-
-                    // Generate stable, unique ID for this diagram
-                    const diagramId = `diagram-${++mermaidCounterRef.current}`;
-
-                    // Render complete diagram only when ready
-                    return (
-                      <MermaidDiagram
-                        chart={codeContent}
-                        id={diagramId}
-                        autoShow={!isGenerating}
-                      />
-                    );
-                  }
-
-                  // Handle other code blocks
-                  return !inline && match ? (
-                    <SyntaxHighlighter
-                      style={effectiveTheme === 'dark' ? codescribeDarkTheme : codescribeLightTheme}
-                      language={match[1]}
-                      PreTag="div"
-                      wrapLines={false}
-                      customStyle={{
-                        fontSize: '13px',
-                        lineHeight: '1.5',
-                        margin: 0,
-                        padding: '1rem',
-                        backgroundColor: 'transparent',
-                        border: 'none',
-                        fontFamily: 'JetBrains Mono, Menlo, Monaco, Consolas, monospace',
-                      }}
-                      codeTagProps={{
-                        style: {
-                          fontSize: '13px',
-                          fontFamily: 'JetBrains Mono, Menlo, Monaco, Consolas, monospace',
-                          backgroundColor: 'transparent',
-                          padding: 0,
-                        }
-                      }}
-                      {...props}
-                    >
-                      {String(children).replace(/\n$/, '')}
-                    </SyntaxHighlighter>
-                  ) : (
-                    <code className="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-cyan-300 px-1 py-0.5 rounded text-[13px] font-mono" {...props}>
-                      {children}
-                    </code>
-                  );
-                }
-              }}
+              components={markdownComponents}
             >
               {documentation}
             </ReactMarkdown>
@@ -633,20 +618,35 @@ export function DocPanel({
         <div>
             {/* Quick Stats */}
             <div className="flex items-center justify-between px-4 py-2 bg-slate-50 dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 transition-colors">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-1.5 text-xs">
-                  <CheckCircle className="w-3 h-3 text-green-600 dark:text-green-400" aria-hidden="true" />
-                  <span className="text-slate-600 dark:text-slate-400">
-                    {qualityScore.summary.strengths.length} criteria met
-                  </span>
-                </div>
-                {qualityScore.summary.improvements.length > 0 && (
+              <div className="flex items-center gap-3">
+                {/* Primary: Areas to improve (always visible, actionable) */}
+                {qualityScore.summary.improvements.length > 0 ? (
                   <div className="flex items-center gap-1.5 text-xs">
                     <AlertCircle className="w-3 h-3 text-yellow-600 dark:text-amber-400" aria-hidden="true" />
                     <span className="text-slate-600 dark:text-slate-400">
-                      {qualityScore.summary.improvements.length} areas to improve
+                      {qualityScore.summary.improvements.length} to improve
                     </span>
                   </div>
+                ) : (
+                  /* No improvements needed - show success message */
+                  <div className="flex items-center gap-1.5 text-xs">
+                    <CheckCircle className="w-3 h-3 text-green-600 dark:text-green-400" aria-hidden="true" />
+                    <span className="text-slate-600 dark:text-slate-400">
+                      All criteria met
+                    </span>
+                  </div>
+                )}
+                {/* Secondary: Criteria met (hide on narrow panels) */}
+                {qualityScore.summary.improvements.length > 0 && (
+                  <>
+                    <span className="@[400px]:inline hidden text-slate-400 dark:text-slate-600">•</span>
+                    <div className="@[400px]:flex hidden items-center gap-1.5 text-xs">
+                      <CheckCircle className="w-3 h-3 text-green-600 dark:text-green-400" aria-hidden="true" />
+                      <span className="text-slate-600 dark:text-slate-400">
+                        {qualityScore.summary.strengths.length} met
+                      </span>
+                    </div>
+                  </>
                 )}
               </div>
 
@@ -658,9 +658,9 @@ export function DocPanel({
               aria-expanded={isExpanded}
               aria-controls="quality-report-details"
               aria-label={isExpanded ? "Hide details" : "Show details"}
-              className="flex items-center gap-1 text-xs text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-400/15 transition-colors duration-200 motion-reduce:transition-none focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 rounded px-2 active:bg-purple-100 dark:active:bg-purple-400/20"
+              className="flex items-center gap-1 text-xs text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-400/15 transition-colors duration-200 motion-reduce:transition-none focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900 rounded px-2 py-1 active:bg-purple-100 dark:active:bg-purple-400/20"
             >
-              <span className="font-medium">{isExpanded ? "Hide details" : "Show details"}</span>
+              <span className="@[450px]:inline hidden font-medium">{isExpanded ? "Hide details" : "Show details"}</span>
               {isExpanded ? (
                 <ChevronUp className="w-3 h-3" aria-hidden="true" />
               ) : (
@@ -739,7 +739,7 @@ export function DocPanel({
       )}
     </div>
   );
-}
+});
 
 // Helper functions
 function getGradeColor(grade) {

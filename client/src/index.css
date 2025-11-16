@@ -4,10 +4,15 @@
 @tailwind components;
 @tailwind utilities;
 
-/* CSS Variables for Code Blocks */
+/* CSS Variables */
 :root {
+  /* Code Blocks */
   --code-bg: #F8FAFC;
   --code-border: #E2E8F0;
+
+  /* Scrollbar Dimensions - Single source of truth for all scrollbars */
+  --scrollbar-width: 8px;
+  --scrollbar-height: 8px;
 }
 
 .dark {
@@ -61,8 +66,8 @@ body {
 @layer base {
   /* Apply to all elements with overflow scrolling */
   *::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: var(--scrollbar-width);
+    height: var(--scrollbar-height);
   }
 
   *::-webkit-scrollbar-track {
@@ -86,8 +91,8 @@ body {
 /* Custom Scrollbar utility class (for explicit usage if needed) */
 @layer utilities {
   .scrollbar-custom::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: var(--scrollbar-width);
+    height: var(--scrollbar-height);
   }
 
   .scrollbar-custom::-webkit-scrollbar-track {
@@ -385,4 +390,118 @@ details summary::before {
 
 details[open] summary::before {
   transform: rotate(90deg);
+}
+
+/* Split Panel Resize Handle */
+.split-panel-handle {
+  position: relative;
+  width: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: col-resize;
+  transition: background-color 200ms ease;
+  background-color: transparent;
+}
+
+.split-panel-handle:hover,
+.split-panel-handle[data-resize-handle-state="hover"] {
+  background-color: rgb(226 232 240 / 0.5); /* slate-200 with opacity */
+}
+
+.dark .split-panel-handle:hover,
+.dark .split-panel-handle[data-resize-handle-state="hover"] {
+  background-color: rgb(51 65 85 / 0.5); /* slate-700 with opacity */
+}
+
+.split-panel-handle[data-resize-handle-state="drag"] {
+  background-color: rgb(147 51 234); /* purple-600 */
+}
+
+.dark .split-panel-handle[data-resize-handle-state="drag"] {
+  background-color: rgb(168 85 247); /* purple-500 */
+}
+
+/* Handle inner container */
+.split-panel-handle-inner {
+  width: 4px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  background-color: rgb(203 213 225); /* slate-300 */
+  transition: all 200ms ease;
+}
+
+.dark .split-panel-handle-inner {
+  background-color: rgb(71 85 105); /* slate-600 */
+}
+
+.split-panel-handle:hover .split-panel-handle-inner,
+.split-panel-handle[data-resize-handle-state="hover"] .split-panel-handle-inner {
+  background-color: rgb(148 163 184); /* slate-400 */
+  height: 60px;
+}
+
+.dark .split-panel-handle:hover .split-panel-handle-inner,
+.dark .split-panel-handle[data-resize-handle-state="hover"] .split-panel-handle-inner {
+  background-color: rgb(100 116 139); /* slate-500 */
+}
+
+.split-panel-handle[data-resize-handle-state="drag"] .split-panel-handle-inner {
+  background-color: rgb(147 51 234); /* purple-600 */
+  height: 80px;
+  box-shadow: 0 0 0 2px rgb(147 51 234 / 0.2);
+}
+
+.dark .split-panel-handle[data-resize-handle-state="drag"] .split-panel-handle-inner {
+  background-color: rgb(168 85 247); /* purple-500 */
+  box-shadow: 0 0 0 2px rgb(168 85 247 / 0.2);
+}
+
+/* Handle icon (3 dots) */
+.split-panel-handle-icon {
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background-color: currentColor;
+  opacity: 0.5;
+  position: relative;
+}
+
+.split-panel-handle-icon::before,
+.split-panel-handle-icon::after {
+  content: '';
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background-color: currentColor;
+  left: 0;
+}
+
+.split-panel-handle-icon::before {
+  top: -6px;
+}
+
+.split-panel-handle-icon::after {
+  bottom: -6px;
+}
+
+/* Focus styles for accessibility */
+.split-panel-handle:focus-visible {
+  outline: 2px solid rgb(147 51 234); /* purple-600 */
+  outline-offset: 2px;
+}
+
+.dark .split-panel-handle:focus-visible {
+  outline-color: rgb(168 85 247); /* purple-500 */
+}
+
+/* Mobile: Remove handle on small screens */
+@media (max-width: 1023px) {
+  .split-panel-handle {
+    display: none;
+  }
 }

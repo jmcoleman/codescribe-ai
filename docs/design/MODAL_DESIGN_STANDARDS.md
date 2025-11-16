@@ -152,6 +152,80 @@ useEffect(() => {
 - ✅ **Shift+Tab** → Reverse cycle (trapped)
 - ✅ **Enter/Space** → Activate focused button
 
+### **Why Focus Traps + `aria-modal="true"` Are Sufficient:**
+
+**DO NOT apply `inert` or `aria-hidden` to background content.** Here's why:
+
+✅ **Best Practice:** Focus trap + `aria-modal="true"`
+- Modern screen readers respect `aria-modal="true"` and treat background as inert
+- Focus trap prevents keyboard navigation to background
+- Backdrop clicks still work (important UX pattern)
+- No browser compatibility issues
+- Simpler architecture (modals stay with their parent components)
+
+❌ **Anti-Pattern:** Applying `inert` to background
+- Creates timing issues (button that opened modal gets focus, then becomes inert)
+- Breaks backdrop click functionality
+- Browser support inconsistent (Safari < 15.5 needs polyfill)
+- Adds architectural complexity (modals must move outside parent)
+- Major sites (GitHub, Stripe, Google) don't use this pattern
+
+**Reference:** WCAG 2.1 AA compliance is achieved through:
+1. `aria-modal="true"` (tells assistive tech the dialog is modal)
+2. Focus trap (prevents keyboard escape)
+3. Proper ARIA labels (`aria-labelledby`, `aria-label`)
+
+---
+
+## 🖱️ Backdrop Click Behavior
+
+### **UX Pattern by Modal Type:**
+
+| Modal Type | Backdrop Click | Confirmation | Rationale |
+|------------|---------------|--------------|-----------|
+| **Read-only** (Help, Samples, Quality Score) | ✅ Close | None | Low risk, no data loss |
+| **Simple forms** (Appearance, theme picker) | ✅ Close | None | Trivial changes, easy to redo |
+| **Forms with input** (Login, Signup, Contact) | ⚠️ Conditional | "Discard changes?" if dirty | Prevents accidental data loss |
+| **Critical actions** (Delete, Payment) | ❌ No backdrop close | Explicit button only | Too risky for accidents |
+
+### **Implementation Pattern:**
+
+```jsx
+// For forms with state
+const [isDirty, setIsDirty] = useState(false);
+
+const handleBackdropClick = (e) => {
+  // Only close if clicking the backdrop itself, not modal content
+  if (e.target === e.currentTarget) {
+    if (isDirty) {
+      if (window.confirm('Discard unsaved changes?')) {
+        onClose();
+      }
+    } else {
+      onClose();
+    }
+  }
+};
+
+// Backdrop with conditional close
+<div
+  className="fixed inset-0 bg-black/50..."
+  onClick={handleBackdropClick}
+>
+  {/* Modal content */}
+</div>
+```
+
+### **Critical UX Principle:**
+
+> **Users expect backdrop clicks to close modals.** This is the industry-standard pattern. Breaking this expectation (by making background non-interactive with `inert`) creates frustration and confusion.
+
+**Examples from major products:**
+- GitHub: Backdrop click closes PR review modals
+- Gmail: Backdrop click closes compose window (with draft save)
+- Stripe: Backdrop click closes payment modals (with confirmation)
+- Slack: Backdrop click closes channel creation modal
+
 ---
 
 ## 📏 Modal Sizing Standards
@@ -455,6 +529,13 @@ export function ExampleModal({ isOpen, onClose }) {
 ---
 
 ## 🔄 Version History
+
+- **v1.1** (2025-11-16) - Added accessibility best practices and backdrop click patterns
+  - Documented why `inert` attribute should NOT be used on background content
+  - Explained focus trap + `aria-modal="true"` pattern as industry best practice
+  - Added backdrop click behavior patterns by modal type
+  - Included conditional close logic for forms with unsaved state
+  - Referenced major products (GitHub, Gmail, Stripe, Slack) for UX validation
 
 - **v1.0** (2025-01-14) - Initial modal design standards document
   - Established header styling (no icons, text-lg titles, px-6 py-4 padding)

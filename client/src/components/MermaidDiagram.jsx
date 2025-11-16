@@ -77,4 +77,8 @@ export const MermaidDiagram = memo(function MermaidDiagram({ chart, id, autoShow
       <LazyMermaidRenderer chart={chart} id={id} />
     </Suspense>
   );
+}, (prevProps, nextProps) => {
+  // Custom comparison: only re-render if chart or id changes
+  // Ignore autoShow changes to prevent unnecessary re-renders
+  return prevProps.chart === nextProps.chart && prevProps.id === nextProps.id;
 });

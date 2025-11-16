@@ -451,7 +451,13 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin, subscriptionCont
               {/* Password Strength Indicator */}
               {password && (
                 <div className="mt-3 space-y-2">
-                  <div className="flex gap-1">
+                  <div className="flex gap-1" role="status" aria-live="polite">
+                    <span className="sr-only">
+                      Password strength: {
+                        passwordStrength <= 2 ? 'Weak' :
+                        passwordStrength === 3 ? 'Medium' : 'Strong'
+                      }
+                    </span>
                     {[1, 2, 3, 4].map((level) => (
                       <div
                         key={level}
@@ -464,6 +470,7 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin, subscriptionCont
                               : 'bg-green-500'
                             : 'bg-slate-200'
                         }`}
+                        aria-hidden="true"
                       />
                     ))}
                   </div>

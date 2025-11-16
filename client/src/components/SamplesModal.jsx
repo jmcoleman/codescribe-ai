@@ -218,9 +218,11 @@ export function SamplesModal({ isOpen, onClose, onLoadSample, currentCode }) {
             <div className="p-6">
               {/* Search Input */}
               <div className="mb-4">
+                <label htmlFor="samples-search" className="sr-only">Search code samples</label>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" aria-hidden="true" />
                   <input
+                    id="samples-search"
                     ref={searchInputRef}
                     type="text"
                     value={searchQuery}
@@ -263,11 +265,11 @@ export function SamplesModal({ isOpen, onClose, onLoadSample, currentCode }) {
             {selectedSample ? (
               <SamplePreview sample={selectedSample} onLoad={() => handleLoadSample(selectedSample)} onClose={onClose} loadButtonRef={loadButtonRef} />
             ) : (
-              <div className="flex items-center justify-center h-full p-8 text-center">
+              <div className="flex items-center justify-center h-full p-8 text-center" role="status" aria-label="No sample selected">
                 <div className="max-w-xs">
                   <div className="relative mb-6">
-                    <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-indigo-400 rounded-full blur-2xl opacity-20 dark:opacity-10" />
-                    <Code2 className="relative w-16 h-16 text-slate-400 dark:text-slate-500 mx-auto" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-indigo-400 rounded-full blur-2xl opacity-20 dark:opacity-10" aria-hidden="true" />
+                    <Code2 className="relative w-16 h-16 text-slate-400 dark:text-slate-500 mx-auto" aria-hidden="true" />
                   </div>
                   <h3 className="text-base font-semibold text-slate-700 dark:text-slate-300 mb-2">
                     Choose a sample to preview

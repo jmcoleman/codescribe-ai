@@ -371,7 +371,7 @@ function CriteriaItem({ name, criteria }) {
         aria-valuenow={points}
         aria-valuemin={0}
         aria-valuemax={maxPoints}
-        aria-label={`${name} score: {points} out of ${maxPoints} points`}
+        aria-label={`${name} score: ${points} out of ${maxPoints} points`}
       >
         <div
           className="h-full transition-all duration-300 ease-out bg-purple-500 dark:bg-purple-400"

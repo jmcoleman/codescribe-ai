@@ -1,10 +1,11 @@
-import { useState, useRef, useEffect, lazy, Suspense } from 'react';
+import { useState, useRef, useEffect, useCallback, lazy, Suspense } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { useTheme } from './contexts/ThemeContext';
 import { Header } from './components/Header';
 import { MobileMenu } from './components/MobileMenu';
 import { ControlBar } from './components/ControlBar';
 import { CodePanel } from './components/CodePanel';
+import { SplitPanel } from './components/SplitPanel';
 import Footer from './components/Footer';
 import { useDocGeneration } from './hooks/useDocGeneration';
 import { useUsageTracking } from './hooks/useUsageTracking';
@@ -33,7 +34,13 @@ const GitHubLoadModal = lazy(() => import('./components/GitHubLoader').then(m =>
 function ModalLoadingFallback() {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+      <div
+        className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"
+        role="status"
+        aria-label="Loading modal"
+      >
+        <span className="sr-only">Loading...</span>
+      </div>
     </div>
   );
 }
@@ -42,7 +49,13 @@ function ModalLoadingFallback() {
 function LoadingFallback() {
   return (
     <div className="flex items-center justify-center p-8">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+      <div
+        className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"
+        role="status"
+        aria-label="Loading"
+      >
+        <span className="sr-only">Loading...</span>
+      </div>
     </div>
   );
 }
@@ -777,12 +790,44 @@ function App() {
 
   // Error toasts removed - errors are displayed via ErrorBanner component instead
 
+  // Memoize DocPanel callbacks to prevent unnecessary re-renders
+  const handleViewBreakdown = useCallback(() => {
+    setShowQualityModal(true);
+    trackInteraction('view_quality_breakdown', {
+      score: qualityScore?.score,
+      grade: qualityScore?.grade,
+    });
+  }, [qualityScore]);
+
+  const handleReset = useCallback(() => {
+    // Clear documentation and quality score from state
+    reset();
+    // Clear from localStorage (set to empty string so persistence effect doesn't re-add)
+    setStorageItem(STORAGE_KEYS.EDITOR_DOCUMENTATION, '');
+    setStorageItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE, '');
+  }, [reset]);
+
   return (
     <div className="h-screen bg-slate-50 dark:bg-slate-950 flex flex-col overflow-hidden transition-colors">
       {/* Skip to Main Content Link - for keyboard navigation */}
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only bg-purple-600 text-white rounded-md focus:absolute focus:top-4 focus:left-4 focus:z-50 hover:bg-purple-700 transition-colors"
+        onClick={(e) => {
+          e.preventDefault();
+          const mainContent = document.getElementById('main-content');
+          if (mainContent) {
+            // Find first focusable element in main content
+            const focusable = mainContent.querySelector(
+              'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+            );
+            if (focusable) {
+              focusable.focus();
+            } else {
+              mainContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }
+        }}
+        className="absolute left-[-9999px] focus:left-4 focus:top-4 z-[9999] bg-purple-600 dark:bg-purple-700 text-white px-4 py-2 rounded-md hover:bg-purple-700 dark:hover:bg-purple-600 transition-all focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-950"
       >
         Skip to main content
       </a>
@@ -795,6 +840,11 @@ function App() {
         containerClassName=""
         containerStyle={{}}
         toastOptions={{
+          // Accessibility - prevent toast container from being focusable
+          ariaProps: {
+            role: 'status',
+            'aria-live': 'polite',
+          },
           // Theme-aware default styling
           style: {
             background: effectiveTheme === 'dark' ? 'rgb(30 41 59)' : 'rgb(255 255 255)', // slate-800 : white
@@ -855,25 +905,29 @@ function App() {
       />
 
       {/* Main Content */}
-      <main id="main-content" className="flex-1 w-full px-4 sm:px-6 lg:px-8 py-6 overflow-auto flex flex-col">
+      <main id="main-content" className="flex-1 w-full px-4 sm:px-6 lg:px-8 py-6 flex flex-col overflow-auto lg:overflow-hidden lg:min-h-0">
         {/* Priority Banner Section - Show only most critical message */}
         {/* Priority Order: 1) Email Verification (handled above), 2) Claude API Error, 3) Upload Error, 4) Generation Error, 5) Usage Warning */}
         {error ? (
           // Priority 1: Claude API rate limit or generation errors (blocking)
-          <ErrorBanner
-            error={error}
-            retryAfter={retryAfter}
-            onDismiss={clearError}
-          />
+          <div role="region" aria-label="Error notification">
+            <ErrorBanner
+              error={error}
+              retryAfter={retryAfter}
+              onDismiss={clearError}
+            />
+          </div>
         ) : uploadError ? (
           // Priority 2: Upload errors
-          <ErrorBanner
-            error={uploadError}
-            onDismiss={() => setUploadError(null)}
-          />
+          <div role="region" aria-label="Upload error notification">
+            <ErrorBanner
+              error={uploadError}
+              onDismiss={() => setUploadError(null)}
+            />
+          </div>
         ) : showUsageWarning && (mockUsage || usage) ? (
           // Priority 3: Usage warning (80%+ usage, non-blocking)
-          <div className="mb-6">
+          <div className="mb-6" role="region" aria-label="Usage warning">
             <UsageWarningBanner
               usage={mockUsage || getUsageForPeriod('monthly')}
               currentTier={mockUsage?.tier || usage?.tier}
@@ -899,48 +953,35 @@ function App() {
         />
 
         {/* Split View: Code + Documentation */}
-        <div className="mt-6 flex-1 flex flex-col lg:grid lg:grid-cols-2 gap-4 lg:gap-6 min-h-0">
-          {/* Left: Code Panel */}
-          <div className="min-h-[600px] h-[70vh] lg:h-full lg:min-w-0 lg:overflow-hidden">
-            <CodePanel
-              code={code}
-              onChange={setCode}
-              filename={filename}
-              language={language}
-              onFileDrop={handleFileDrop}
-              onClear={handleClear}
-              onSamplesClick={() => setShowSamplesModal(true)}
-              samplesButtonRef={samplesButtonRef}
-            />
-          </div>
-
-          {/* Right: Documentation Panel */}
-          <div className="min-h-[600px] h-[70vh] lg:h-full lg:min-w-0 lg:overflow-hidden">
-            <Suspense fallback={<LoadingFallback />}>
-              <DocPanel
-              documentation={documentation}
-              qualityScore={qualityScore}
-              isGenerating={isGenerating || testSkeletonMode}
-              onViewBreakdown={() => {
-                setShowQualityModal(true);
-                trackInteraction('view_quality_breakdown', {
-                  score: qualityScore?.score,
-                  grade: qualityScore?.grade,
-                });
-              }}
-              onUpload={handleUpload}
-              onGithubImport={handleGithubImport}
-              onGenerate={handleGenerate}
-              onReset={() => {
-                // Clear documentation and quality score from state
-                reset();
-                // Clear from localStorage (set to empty string so persistence effect doesn't re-add)
-                setStorageItem(STORAGE_KEYS.EDITOR_DOCUMENTATION, '');
-                setStorageItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE, '');
-              }}
-            />
-          </Suspense>
-          </div>
+        <div className="mt-6 flex-1 min-h-0">
+          <SplitPanel
+            leftPanel={
+              <CodePanel
+                code={code}
+                onChange={setCode}
+                filename={filename}
+                language={language}
+                onFileDrop={handleFileDrop}
+                onClear={handleClear}
+                onSamplesClick={() => setShowSamplesModal(true)}
+                samplesButtonRef={samplesButtonRef}
+              />
+            }
+            rightPanel={
+              <Suspense fallback={<LoadingFallback />}>
+                <DocPanel
+                  documentation={documentation}
+                  qualityScore={qualityScore}
+                  isGenerating={isGenerating || testSkeletonMode}
+                  onViewBreakdown={handleViewBreakdown}
+                  onUpload={handleUpload}
+                  onGithubImport={handleGithubImport}
+                  onGenerate={handleGenerate}
+                  onReset={handleReset}
+                />
+              </Suspense>
+            }
+          />
         </div>
 
       </main>
