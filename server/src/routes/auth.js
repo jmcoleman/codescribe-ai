@@ -599,24 +599,45 @@ router.delete('/account', requireAuth, async (req, res) => {
 // ============================================================================
 router.patch('/preferences', requireAuth, async (req, res) => {
   try {
-    const { analytics_enabled } = req.body;
+    const { analytics_enabled, save_docs_preference, docs_consent_shown_at } = req.body;
     const userId = req.user.id;
 
-    // Validate input
-    if (typeof analytics_enabled !== 'boolean') {
-      return res.status(400).json({
-        success: false,
-        error: 'analytics_enabled must be a boolean'
-      });
+    const updates = {};
+
+    // Validate analytics_enabled if provided
+    if (analytics_enabled !== undefined) {
+      if (typeof analytics_enabled !== 'boolean') {
+        return res.status(400).json({
+          success: false,
+          error: 'analytics_enabled must be a boolean'
+        });
+      }
+      updates.analytics_enabled = analytics_enabled;
+    }
+
+    // Validate save_docs_preference if provided
+    if (save_docs_preference !== undefined) {
+      if (!['always', 'never', 'ask'].includes(save_docs_preference)) {
+        return res.status(400).json({
+          success: false,
+          error: 'save_docs_preference must be one of: always, never, ask'
+        });
+      }
+      updates.save_docs_preference = save_docs_preference;
+    }
+
+    // Validate docs_consent_shown_at if provided
+    if (docs_consent_shown_at !== undefined) {
+      updates.docs_consent_shown_at = docs_consent_shown_at;
     }
 
     // Update preferences in database
-    await User.updatePreferences(userId, { analytics_enabled });
+    await User.updatePreferences(userId, updates);
 
     res.json({
       success: true,
       message: 'Preferences updated successfully',
-      preferences: { analytics_enabled }
+      preferences: updates
     });
   } catch (error) {
     console.error('Update preferences error:', error);

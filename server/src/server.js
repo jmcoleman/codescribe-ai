@@ -10,6 +10,7 @@ import contactRoutes from './routes/contact.js';
 import legalRoutes from './routes/legal.js';
 import cronRoutes from './routes/cron.js';
 import adminRoutes from './routes/admin.js';
+import documentsRoutes from './routes/documents.js';
 import errorHandler from './middleware/errorHandler.js';
 import { initializeDatabase, testConnection } from './db/connection.js';
 import authRoutesModule from './routes/auth.js';
@@ -111,6 +112,7 @@ if (ENABLE_AUTH) {
   app.use('/api/contact', contactRoutes);
   app.use('/api/legal', legalRoutes);
   app.use('/api/admin', adminRoutes); // Admin routes (requires auth + admin email)
+  app.use('/api/documents', documentsRoutes); // Document persistence routes
 }
 app.use('/api/cron', cronRoutes);
 app.use('/api/migrate', migrateRoutes);
