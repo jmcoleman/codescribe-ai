@@ -75,6 +75,18 @@ export function PricingPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, user]); // Only trigger when auth state changes
 
+  // ESC key to navigate back (same as Back button)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        navigate(-1);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [navigate]);
+
   const handleSubscribe = async (tier, billingPeriod = 'monthly') => {
     // Free tier - just needs authentication, no payment
     if (tier === 'free') {

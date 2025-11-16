@@ -229,8 +229,8 @@ export const LazyMermaidRenderer = memo(function LazyMermaidRenderer({ chart, id
 
 ### ✅ The Solution
 
-**File:** `App.jsx` + `index.css`
-**Change:** Make overflow behavior **responsive**
+**File:** `App.jsx`
+**Change:** Make overflow behavior **responsive** on the main element only
 
 #### App.jsx - Main Content Area
 
@@ -242,19 +242,24 @@ export const LazyMermaidRenderer = memo(function LazyMermaidRenderer({ chart, id
 <main className="... overflow-auto lg:overflow-hidden lg:min-h-0">
 ```
 
-#### index.css - HTML/Body
+### 🎯 Why This Works
 
+**Desktop (≥1024px):**
+- `overflow-hidden` on main element → Content contained in flexbox
+- Scrolling happens **inside** panels (CodePanel, DocPanel)
+- **No global overflow restriction** on html/body (allows other pages like Pricing to scroll)
+
+**Mobile/Tablet (<1024px):**
+- `overflow: auto` on main → **Natural scrolling** for stacked panels
+- Panels stack vertically, need page scroll to see all content
+
+**Key Insight:** Apply overflow restrictions **only to the specific element** that needs it (main), not globally to html/body. This prevents breaking scrolling on other pages that use different layouts (e.g., PricingPage with PageLayout).
+
+### ⚠️ Anti-Pattern: Global Overflow Restriction
+
+**Don't do this:**
 ```css
-/* Before (no overflow control) */
-html, body {
-  min-width: 320px !important;
-}
-
-/* After (overflow-hidden on desktop only) */
-html, body {
-  min-width: 320px !important;
-}
-
+/* ❌ BAD - Breaks scrolling on all pages */
 @media (min-width: 1024px) {
   html, body {
     overflow: hidden;
@@ -263,18 +268,7 @@ html, body {
 }
 ```
 
-### 🎯 Why This Works
-
-**Desktop (≥1024px):**
-- `overflow: hidden` on html/body → **No page-level scrollbar**
-- `overflow-hidden` on main → Content contained in flexbox
-- Scrolling happens **inside** panels (CodePanel, DocPanel)
-
-**Mobile/Tablet (<1024px):**
-- `overflow: auto` on main → **Natural scrolling** for stacked panels
-- Panels stack vertically, need page scroll to see all content
-
-**Key Insight:** Different screen sizes need **different overflow strategies**. Desktop uses flexbox containment; mobile uses natural document flow.
+**Why it's bad:** Global `overflow: hidden` on html/body affects **all pages** in the app, including secondary pages (pricing, legal, etc.) that need normal scrolling behavior. Only apply overflow restrictions to the specific containers that need them.
 
 ---
 
