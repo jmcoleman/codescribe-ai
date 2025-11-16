@@ -1,8 +1,8 @@
 # CodeScribe AI - Product Roadmap
 
-**Last Updated:** November 12, 2025
-**Current Phase:** Phase 3 - ✅ **Epic 3.1 COMPLETE** (Dark Mode) | 🟡 **Epic 3.3 IN PROGRESS** (Advanced File Handling)
-**Current Release:** v2.7.6 (Quality Breakdown Modal Enhancements & Test Coverage)
+**Last Updated:** November 16, 2025
+**Current Phase:** Phase 3 - ✅ **Epic 3.2 COMPLETE** (Workspace Flexibility) | 🟡 **Multi-File Phase 1 IN PROGRESS** (Multi-File Sidebar)
+**Current Release:** v2.8.0 (Workspace Flexibility & Performance Improvements)
 **Production URL:** [https://codescribeai.com](https://codescribeai.com)
 
 ---
@@ -1320,10 +1320,10 @@ ALTER TABLE subscriptions ADD COLUMN stripe_receipt_url VARCHAR(500);
 ## 🎨 Phase 3: UX Enhancements (IN PROGRESS)
 
 **Timeline:** November 8 - TBD
-**Status:** 🔄 **IN PROGRESS** - Epic 3.1 Complete (v2.7.6), Epic 3.3 Active
-**Current Release:** v2.7.6 (Quality Breakdown Modal Enhancements & Test Coverage)
-**Target Release:** v3.x.x series
-**Strategic Goal:** Transform user experience with customization, flexibility, and advanced file handling capabilities
+**Status:** 🔄 **IN PROGRESS** - Epic 3.2 Complete (v2.8.0), Multi-File Phase 1 Active
+**Current Release:** v2.8.0 (Workspace Flexibility & Performance Improvements)
+**Target Release:** v2.9.0 (Multi-File Implementation)
+**Strategic Goal:** Transform user experience with customization, flexibility, and multi-file project documentation capabilities
 
 ### 📅 Phase 3 Timeline
 
@@ -1335,12 +1335,21 @@ ALTER TABLE subscriptions ADD COLUMN stripe_receipt_url VARCHAR(500);
 - ✅ Nov 11: v2.7.4 (Modal Width Optimization & Terminology Refactoring)
 - ✅ Nov 12: v2.7.5 (UX Refinements & Documentation)
 - ✅ Nov 12: v2.7.6 (Quality Breakdown Modal Enhancements & Test Coverage)
+- ✅ Nov 13: v2.7.7 (Admin Dashboard Performance Optimization)
+- ✅ Nov 14: v2.7.8 (Multi-Provider LLM Architecture)
+- ✅ Nov 14: v2.7.9 (Epic 4.1: GitHub Repository Integration)
+- ✅ Nov 14: v2.7.10 (Mermaid Diagram Improvements & UX Refinements)
+- ✅ Nov 15: v2.7.11 (Theme Selection & Multi-File Design)
+- ✅ Nov 16: v2.8.0 (Epic 3.2: Workspace Flexibility & Performance)
+- ✅ Multi-File Phase 0 (Database Setup) - COMPLETE
+- ✅ Multi-File Phase 1 Day 1 (Custom Hooks) - COMPLETE
+- ✅ Multi-File Phase 4 (Split Panel) - COMPLETE in v2.8.0
 
 **In Progress:**
-- 🟡 Nov 8+: Epic 3.3 (Advanced File Handling) - IN PROGRESS
+- 🟡 Nov 16+: Multi-File Phase 1 Days 2-5 (Sidebar & Integration) - IN PROGRESS
 
 **Planned:**
-- 📋 Epic 3.2 (Layout & Workspace Flexibility)
+- 📋 Multi-File Phases 2-5 (Optional Advanced Features)
 
 ### 📦 Epics
 
@@ -1654,31 +1663,75 @@ ALTER TABLE subscriptions ADD COLUMN stripe_receipt_url VARCHAR(500);
 - [Testing README](../../testing/README.md) - Updated test statistics
 - [roadmap-data.json](roadmap-data.json) - Interactive roadmap updated
 
-#### Epic 3.3: Advanced File Handling (2-3 days) - 🟡 IN PROGRESS
-**Status:** 🟡 In Progress | Started November 8, 2025
-**Priority:** Infrastructure First - Required before Epic 4.1 and Epic 4.2
+#### Epic 3.2: Layout & Workspace Flexibility (2 days) - ✅ COMPLETE
+**Status:** ✅ Complete | Released November 16, 2025 (v2.8.0)
+**Priority:** Foundation for multi-file UX
 
-**Planned Features:**
-- Multi-file upload support (select multiple files at once)
-- Batch processing (up to 10 files at once)
-- File preview before generation
-- File history and version tracking (30 days)
-- Progress indicators for batch operations
-- Error handling per file (don't fail entire batch)
-- Note: Basic drag-and-drop implemented in Phase 2 Epic 2.4
+**Completed Features:**
+- ✅ Resizable panels with VS Code-style draggable divider (`react-resizable-panels`)
+- ✅ Panel constraints (30% min, 70% max for each panel)
+- ✅ Panel size persistence (localStorage)
+- ✅ Keyboard accessible panel controls
+- ✅ Arrow key navigation in AppearanceModal
+- ✅ ESC key navigation on Pricing/Privacy/Terms pages
+- ✅ Skip-to-content enhancement with auto-focus
+- ✅ Mermaid diagram flashing eliminated (6-layer memoization)
+- ✅ Responsive overflow fixes for pricing page scrolling
 
-#### Epic 3.2: Layout & Workspace Flexibility (2-3 days) - 📋 PLANNED
-**Status:** 📋 Planned | Natural follow-up to Epic 4.2 for improved workspace UX
+**Test Results:**
+- Frontend: 1,583 passed | 33 skipped (1,616 total) - 97.9% pass rate
+- Backend: 957 passed | 23 skipped (980 total) - 100% pass rate
+- Total: 2,540 passed | 56 skipped (2,596 total) - **97.8% pass rate**
 
-**Planned Features:**
-- Full-width layout option (remove `max-width` constraints)
-- Resizable panels with draggable divider (`react-resizable-panels`)
-- Panel constraints (30% min, 70% max for each panel)
-- Panel size persistence (localStorage)
-- "Reset to Default" button (50/50 split)
-- Keyboard accessibility (arrow keys to resize)
-- Layout presets (50/50, 70/30, 30/70)
-- Mobile responsive (panels stack vertically, no resizing)
+**Documentation:**
+- [REACT-OPTIMIZATION-LESSONS.md](../../performance/REACT-OPTIMIZATION-LESSONS.md) - 6-layer memoization strategy
+- [CHANGELOG.md v2.8.0](../../CHANGELOG.md) - Complete release notes
+
+#### Multi-File Implementation (Follows MULTI-FILE-IMPLEMENTATION-PLAN-V2.md)
+
+**Phase 0: Database Setup (1 day) - ✅ COMPLETE**
+**Status:** ✅ Complete | Completed November 2025
+**Priority:** Foundation for multi-file persistence
+
+**Completed:**
+- ✅ `generated_documents` table created in PostgreSQL
+- ✅ User consent preferences added (`save_docs_preference`: always/never/ask)
+- ✅ Document service implemented (save/load/delete operations)
+- ✅ API routes created (`/api/documents`)
+- ✅ Privacy-first architecture: code NEVER stored, only generated docs
+- ✅ Soft delete with 30-day recovery window
+- ✅ Migration tested in Docker sandbox
+
+**Phase 1: Multi-File Infrastructure (5 days) - 🟡 IN PROGRESS**
+**Status:** 🟡 In Progress | Started November 16, 2025
+**Target Release:** v2.9.0
+**Priority:** Core multi-file feature
+
+**Completed (Day 1):**
+- ✅ `useMultiFileState` hook (files array, active file, operations)
+- ✅ `useDocumentPersistence` hook (database sync)
+- ✅ `SaveDocsConsentModal` component (privacy choices)
+
+**In Progress (Days 2-5):**
+- 🟡 Day 2: Sidebar components (FileList, FileItem, FileActions)
+- 📋 Day 3: App.jsx integration with multi-file state
+- 📋 Day 4: Layout integration and keyboard shortcuts (Cmd+B)
+- 📋 Day 5: Integration testing and accessibility audit
+
+**Features:**
+- Collapsible file tree sidebar with file selection
+- Load recent documents on page load
+- Cross-device sync for authenticated users
+- Documentation history with search and recovery
+- Per-file status tracking (uploading/generating/generated/loaded)
+
+**Phase 4: Split Panel - ✅ COMPLETE (implemented in v2.8.0)**
+**Note:** We completed Phase 4 (split panel) before finishing Phase 1 to establish the core layout first
+
+**Phases 2-5: Advanced Features (Optional) - 📋 PLANNED**
+- Phase 2: Bulk operations UI (select all, delete multiple)
+- Phase 3: Backend optimization (pagination, search, filters)
+- Phase 5: Advanced workspace features (full-width, layout presets)
 
 ### Technical Highlights
 

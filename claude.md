@@ -358,23 +358,22 @@ codescribe-ai/
 
 ## 🔄 Version History
 
-**Current: v2.7.11** (November 15, 2025)
-- Appearance modal for unauthenticated users (GitHub-style theme switcher)
-- 3-state theme cycling: Light → Dark → Auto → Light (Monitor icon for Auto mode)
-- Enhanced DocPanel empty state with clickable GitHub import button
-- Smooth HelpModal tab transitions (200ms) following design system
-- Mermaid error suppression (suppressErrors: true prevents bomb icons in DOM)
-- Multi-file sidebar UX design document (comprehensive 5-week roadmap for v2.8.0)
-- Doc Type label added to dropdown for accessibility
-- Removed Quick Start tab from HelpModal (deduplicated from DocPanel)
-- 2,477 tests (2,421 passing, 56 skipped, 97.8% pass rate)
+**Current: v2.8.0** (November 16, 2025)
+- Arrow key navigation in AppearanceModal (Up/Down with smart entry)
+- ESC key navigation on Pricing/Privacy/Terms pages (consistent back navigation)
+- Skip-to-content enhancement (auto-focus first interactive element)
+- Mermaid diagram flashing eliminated (6-layer memoization strategy)
+- Responsive overflow fixes (removed global overflow: hidden, pricing page scrolls correctly)
+- React optimization documentation (comprehensive memoization & overflow lessons)
+- 2,596 tests (2,540 passing, 56 skipped, 97.8% pass rate)
 - Backend: 82.38% statements, 70.11% branches (957 passing, 23 skipped)
-- Frontend: 100% critical paths (1,520 passing, 33 skipped)
+- Frontend: 100% critical paths (1,583 passing, 33 skipped)
 
 <details>
-<summary>Recent Releases (v2.7.0-v2.7.10) & Milestones</summary>
+<summary>Recent Releases (v2.7.0-v2.7.11) & Milestones</summary>
 
 **v2.7.x Series (Nov 2025):**
+- v2.7.11: Appearance modal, 3-state theme cycling, DocPanel empty state, multi-file sidebar design doc
 - v2.7.10: Mermaid diagram auto-show, ER diagram theming, amber error colors, modal consistency improvements
 - v2.7.9: GitHub repository integration (public repos, tree browsing, branch switching, @octokit/rest, 4 API routes)
 - v2.7.8: Multi-provider LLM architecture (Claude + OpenAI support, config-driven switching, 69 new tests)
