@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, memo } from 'react';
 import mermaid from 'mermaid';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -66,7 +66,7 @@ const DARK_THEME_CONFIG = {
  * LazyMermaidRenderer - Renders Mermaid diagrams (lazy loaded)
  * This component is dynamically imported to reduce initial bundle size
  */
-export function LazyMermaidRenderer({ chart, id, onError, onSuccess }) {
+export const LazyMermaidRenderer = memo(function LazyMermaidRenderer({ chart, id, onError, onSuccess }) {
   const { effectiveTheme } = useTheme();
   const [svg, setSvg] = useState('');
   const [error, setError] = useState(null);
@@ -261,4 +261,4 @@ export function LazyMermaidRenderer({ chart, id, onError, onSuccess }) {
       />
     </div>
   );
-}
+});

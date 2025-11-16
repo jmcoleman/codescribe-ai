@@ -26,6 +26,15 @@ body {
   min-width: 320px !important;
 }
 
+/* Desktop only: Prevent page scrolling (mobile needs natural scrolling) */
+@media (min-width: 1024px) {
+  html,
+  body {
+    overflow: hidden;
+    height: 100%;
+  }
+}
+
 /* Global Focus Styles - Purple (Primary Brand Color) for Keyboard Navigation */
 @layer base {
   /* Remove default browser focus styles */

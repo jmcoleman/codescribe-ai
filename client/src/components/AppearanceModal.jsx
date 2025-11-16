@@ -28,7 +28,7 @@ export function AppearanceModal({ isOpen, onClose }) {
     return () => document.removeEventListener('keydown', handleEscape);
   }, [isOpen, onClose]);
 
-  // Focus trap
+  // Focus trap and arrow key navigation
   useEffect(() => {
     if (!isOpen || !modalRef.current) return;
 
@@ -39,24 +39,56 @@ export function AppearanceModal({ isOpen, onClose }) {
     const firstElement = focusableElements[0];
     const lastElement = focusableElements[focusableElements.length - 1];
 
-    const handleTab = (e) => {
-      if (e.key !== 'Tab') return;
+    // Get radio buttons (theme options)
+    const radioButtons = modal.querySelectorAll('[role="radio"]');
 
-      if (e.shiftKey) {
-        if (document.activeElement === firstElement) {
-          e.preventDefault();
-          lastElement.focus();
+    const handleKeyDown = (e) => {
+      // Tab key - focus trap
+      if (e.key === 'Tab') {
+        if (e.shiftKey) {
+          if (document.activeElement === firstElement) {
+            e.preventDefault();
+            lastElement.focus();
+          }
+        } else {
+          if (document.activeElement === lastElement) {
+            e.preventDefault();
+            firstElement.focus();
+          }
         }
-      } else {
-        if (document.activeElement === lastElement) {
-          e.preventDefault();
-          firstElement.focus();
+        return;
+      }
+
+      // Arrow keys - navigate theme options
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+
+        const currentIndex = Array.from(radioButtons).findIndex(
+          btn => btn === document.activeElement
+        );
+
+        // If focus is NOT on a radio button, Down Arrow moves to first option
+        if (currentIndex === -1) {
+          if (e.key === 'ArrowDown' && radioButtons.length > 0) {
+            radioButtons[0].focus();
+          }
+          return;
         }
+
+        // Navigate between radio buttons
+        let nextIndex;
+        if (e.key === 'ArrowDown') {
+          nextIndex = currentIndex + 1 >= radioButtons.length ? 0 : currentIndex + 1;
+        } else {
+          nextIndex = currentIndex - 1 < 0 ? radioButtons.length - 1 : currentIndex - 1;
+        }
+
+        radioButtons[nextIndex].focus();
       }
     };
 
-    modal.addEventListener('keydown', handleTab);
-    return () => modal.removeEventListener('keydown', handleTab);
+    modal.addEventListener('keydown', handleKeyDown);
+    return () => modal.removeEventListener('keydown', handleKeyDown);
   }, [isOpen]);
 
   if (!isOpen) return null;

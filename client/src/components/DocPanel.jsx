@@ -1,5 +1,5 @@
 import { Sparkles, CheckCircle, AlertCircle, ChevronDown, ChevronUp, MoreVertical, Download, Copy, RefreshCw } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, memo, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -147,7 +147,7 @@ const codescribeDarkTheme = {
 
 import { STORAGE_KEYS, getStorageItem, setStorageItem } from '../constants/storage';
 
-export function DocPanel({
+export const DocPanel = memo(function DocPanel({
   documentation,
   qualityScore = null,
   isGenerating = false,
@@ -263,6 +263,88 @@ export function DocPanel({
     }
   };
 
+  // Memoize ReactMarkdown components to prevent unnecessary re-renders
+  const markdownComponents = useMemo(() => ({
+    pre({ node, children, ...props }) {
+      // Styled pre wrapper that matches our theme
+      return (
+        <pre
+          className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg overflow-x-auto p-4 my-4 transition-colors"
+          {...props}
+        >
+          {children}
+        </pre>
+      );
+    },
+    code({ node, inline, className, children, ...props }) {
+      const match = /language-(\w+)/.exec(className || '');
+      const language = match ? match[1] : '';
+      const codeContent = String(children).replace(/\n$/, '');
+
+      // Handle mermaid diagrams
+      if (!inline && language === 'mermaid') {
+        // Detect incomplete/partial diagrams (common during streaming)
+        const looksIncomplete = !codeContent.includes('-->') &&
+                               !codeContent.includes('->') &&
+                               !codeContent.includes('---') &&
+                               codeContent.split('\n').length < 3;
+
+        // Show placeholder if still generating OR diagram looks incomplete
+        if (isGenerating || looksIncomplete) {
+          return (
+            <div className="my-6 p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg min-h-[300px] flex items-center justify-center transition-colors">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 dark:border-purple-400 mx-auto mb-2"></div>
+                <p className="text-sm text-slate-600 dark:text-slate-400">
+                  {isGenerating
+                    ? 'Diagram will render when generation completes...'
+                    : 'Completing diagram...'}
+                </p>
+              </div>
+            </div>
+          );
+        }
+
+        // Generate stable, unique ID based on content hash to prevent re-renders
+        // Use a simple hash of the content for stability
+        const hash = codeContent.split('').reduce((acc, char) => {
+          return ((acc << 5) - acc) + char.charCodeAt(0);
+        }, 0);
+        const diagramId = `diagram-${Math.abs(hash)}`;
+
+        // Render complete diagram only when ready
+        return (
+          <MermaidDiagram
+            chart={codeContent}
+            id={diagramId}
+            autoShow={!isGenerating}
+          />
+        );
+      }
+
+      // Handle other code blocks
+      return !inline && match ? (
+        <SyntaxHighlighter
+          style={effectiveTheme === 'dark' ? codescribeDarkTheme : codescribeLightTheme}
+          language={language}
+          PreTag="div"
+          customStyle={{
+            margin: '1.5rem 0',
+            borderRadius: '0.5rem',
+            fontSize: '13px',
+            lineHeight: '1.6',
+          }}
+          {...props}
+        >
+          {codeContent}
+        </SyntaxHighlighter>
+      ) : (
+        <code className="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-cyan-300 px-1 py-0.5 rounded text-[13px] font-mono" {...props}>
+          {children}
+        </code>
+      );
+    }
+  }), [isGenerating, effectiveTheme]);
 
   return (
     <div data-testid="doc-panel" className="@container flex flex-col h-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm overflow-hidden transition-colors">
@@ -432,98 +514,7 @@ export function DocPanel({
           <div className="prose prose-slate dark:prose-invert max-w-none [&>*:first-child]:mt-0">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
-              components={{
-                pre({ node, children, ...props }) {
-                  // Styled pre wrapper that matches our theme
-                  return (
-                    <pre
-                      className="my-6 rounded-lg overflow-auto border dark:border-slate-700 border-slate-200 bg-slate-50 dark:bg-slate-800"
-                      style={{
-                        backgroundColor: effectiveTheme === 'dark' ? '#1E293B' : '#F8FAFC',
-                      }}
-                      {...props}
-                    >
-                      {children}
-                    </pre>
-                  );
-                },
-                code({ node, inline, className, children, ...props }) {
-                  const match = /language-(\w+)/.exec(className || '');
-                  const language = match ? match[1] : '';
-                  const codeContent = String(children).replace(/\n$/, '');
-
-                  // Handle mermaid diagrams
-                  if (!inline && language === 'mermaid') {
-                    // Detect incomplete/partial diagrams (common during streaming)
-                    const looksIncomplete = !codeContent.includes('-->') &&
-                                           !codeContent.includes('->') &&
-                                           !codeContent.includes('---') &&
-                                           codeContent.split('\n').length < 3;
-
-                    // Show placeholder if still generating OR diagram looks incomplete
-                    if (isGenerating || looksIncomplete) {
-                      return (
-                        <div className="my-6 p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg min-h-[300px] flex items-center justify-center transition-colors">
-                          <div className="text-center">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 dark:border-purple-400 mx-auto mb-2"></div>
-                            <p className="text-sm text-slate-600 dark:text-slate-400">
-                              {isGenerating
-                                ? 'Diagram will render when generation completes...'
-                                : 'Completing diagram...'}
-                            </p>
-                          </div>
-                        </div>
-                      );
-                    }
-
-                    // Generate stable, unique ID for this diagram
-                    const diagramId = `diagram-${++mermaidCounterRef.current}`;
-
-                    // Render complete diagram only when ready
-                    return (
-                      <MermaidDiagram
-                        chart={codeContent}
-                        id={diagramId}
-                        autoShow={!isGenerating}
-                      />
-                    );
-                  }
-
-                  // Handle other code blocks
-                  return !inline && match ? (
-                    <SyntaxHighlighter
-                      style={effectiveTheme === 'dark' ? codescribeDarkTheme : codescribeLightTheme}
-                      language={match[1]}
-                      PreTag="div"
-                      wrapLines={false}
-                      customStyle={{
-                        fontSize: '13px',
-                        lineHeight: '1.5',
-                        margin: 0,
-                        padding: '1rem',
-                        backgroundColor: 'transparent',
-                        border: 'none',
-                        fontFamily: 'JetBrains Mono, Menlo, Monaco, Consolas, monospace',
-                      }}
-                      codeTagProps={{
-                        style: {
-                          fontSize: '13px',
-                          fontFamily: 'JetBrains Mono, Menlo, Monaco, Consolas, monospace',
-                          backgroundColor: 'transparent',
-                          padding: 0,
-                        }
-                      }}
-                      {...props}
-                    >
-                      {String(children).replace(/\n$/, '')}
-                    </SyntaxHighlighter>
-                  ) : (
-                    <code className="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-cyan-300 px-1 py-0.5 rounded text-[13px] font-mono" {...props}>
-                      {children}
-                    </code>
-                  );
-                }
-              }}
+              components={markdownComponents}
             >
               {documentation}
             </ReactMarkdown>
@@ -748,7 +739,7 @@ export function DocPanel({
       )}
     </div>
   );
-}
+});
 
 // Helper functions
 function getGradeColor(grade) {

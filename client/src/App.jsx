@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, lazy, Suspense } from 'react';
+import { useState, useRef, useEffect, useCallback, lazy, Suspense } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { useTheme } from './contexts/ThemeContext';
 import { Header } from './components/Header';
@@ -790,12 +790,44 @@ function App() {
 
   // Error toasts removed - errors are displayed via ErrorBanner component instead
 
+  // Memoize DocPanel callbacks to prevent unnecessary re-renders
+  const handleViewBreakdown = useCallback(() => {
+    setShowQualityModal(true);
+    trackInteraction('view_quality_breakdown', {
+      score: qualityScore?.score,
+      grade: qualityScore?.grade,
+    });
+  }, [qualityScore]);
+
+  const handleReset = useCallback(() => {
+    // Clear documentation and quality score from state
+    reset();
+    // Clear from localStorage (set to empty string so persistence effect doesn't re-add)
+    setStorageItem(STORAGE_KEYS.EDITOR_DOCUMENTATION, '');
+    setStorageItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE, '');
+  }, [reset]);
+
   return (
     <div className="h-screen bg-slate-50 dark:bg-slate-950 flex flex-col overflow-hidden transition-colors">
       {/* Skip to Main Content Link - for keyboard navigation */}
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only bg-purple-600 text-white px-4 py-2 rounded-md focus:absolute focus:top-4 focus:left-4 focus:z-50 hover:bg-purple-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2"
+        onClick={(e) => {
+          e.preventDefault();
+          const mainContent = document.getElementById('main-content');
+          if (mainContent) {
+            // Find first focusable element in main content
+            const focusable = mainContent.querySelector(
+              'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+            );
+            if (focusable) {
+              focusable.focus();
+            } else {
+              mainContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }
+        }}
+        className="absolute left-[-9999px] focus:left-4 focus:top-4 z-[9999] bg-purple-600 dark:bg-purple-700 text-white px-4 py-2 rounded-md hover:bg-purple-700 dark:hover:bg-purple-600 transition-all focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-950"
       >
         Skip to main content
       </a>
@@ -808,6 +840,11 @@ function App() {
         containerClassName=""
         containerStyle={{}}
         toastOptions={{
+          // Accessibility - prevent toast container from being focusable
+          ariaProps: {
+            role: 'status',
+            'aria-live': 'polite',
+          },
           // Theme-aware default styling
           style: {
             background: effectiveTheme === 'dark' ? 'rgb(30 41 59)' : 'rgb(255 255 255)', // slate-800 : white
@@ -936,23 +973,11 @@ function App() {
                   documentation={documentation}
                   qualityScore={qualityScore}
                   isGenerating={isGenerating || testSkeletonMode}
-                  onViewBreakdown={() => {
-                    setShowQualityModal(true);
-                    trackInteraction('view_quality_breakdown', {
-                      score: qualityScore?.score,
-                      grade: qualityScore?.grade,
-                    });
-                  }}
+                  onViewBreakdown={handleViewBreakdown}
                   onUpload={handleUpload}
                   onGithubImport={handleGithubImport}
                   onGenerate={handleGenerate}
-                  onReset={() => {
-                    // Clear documentation and quality score from state
-                    reset();
-                    // Clear from localStorage (set to empty string so persistence effect doesn't re-add)
-                    setStorageItem(STORAGE_KEYS.EDITOR_DOCUMENTATION, '');
-                    setStorageItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE, '');
-                  }}
+                  onReset={handleReset}
                 />
               </Suspense>
             }
