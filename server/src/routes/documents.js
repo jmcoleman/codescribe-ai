@@ -232,14 +232,14 @@ router.post('/:id/restore', requireAuth, async (req, res, next) => {
 });
 
 // ============================================================================
-// DELETE /api/documents/session/:sessionId - Delete Ephemeral Documents
+// DELETE /api/documents/ephemeral - Delete Ephemeral Documents (on logout)
 // ============================================================================
-router.delete('/session/:sessionId', async (req, res, next) => {
+router.delete('/ephemeral', requireAuth, async (req, res, next) => {
   try {
-    const { sessionId } = req.params;
+    const userId = req.user.id;
 
-    // Note: No requireAuth middleware - ephemeral docs can be deleted without auth
-    const deletedCount = await documentService.deleteEphemeralDocuments(sessionId);
+    // Delete all ephemeral documents for the authenticated user
+    const deletedCount = await documentService.deleteEphemeralDocuments(userId);
 
     res.json({
       success: true,

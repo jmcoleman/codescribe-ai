@@ -41,8 +41,7 @@ class DocumentService {
       outputTokens = null,
       wasCached = false,
       latencyMs = null,
-      isEphemeral = false,
-      sessionId = null
+      isEphemeral = false
     } = docData;
 
     // Validation
@@ -61,13 +60,13 @@ class DocumentService {
           documentation, quality_score, doc_type,
           origin, github_repo, github_path, github_sha, github_branch,
           provider, model, input_tokens, output_tokens,
-          was_cached, latency_ms, is_ephemeral, session_id
+          was_cached, latency_ms, is_ephemeral
         ) VALUES (
           ${userId}, ${filename}, ${language}, ${fileSize},
           ${documentation}, ${JSON.stringify(qualityScore)}, ${docType},
           ${origin}, ${githubRepo}, ${githubPath}, ${githubSha}, ${githubBranch},
           ${provider}, ${model}, ${inputTokens}, ${outputTokens},
-          ${wasCached}, ${latencyMs}, ${isEphemeral}, ${sessionId}
+          ${wasCached}, ${latencyMs}, ${isEphemeral}
         )
         RETURNING id, generated_at
       `;
@@ -268,19 +267,19 @@ class DocumentService {
   }
 
   /**
-   * Delete ephemeral documents for a session (on logout)
-   * @param {string} sessionId - Session identifier
+   * Delete ephemeral documents for a user (on logout)
+   * @param {number} userId - User ID
    * @returns {Promise<number>} Number of documents deleted
    */
-  async deleteEphemeralDocuments(sessionId) {
-    if (!sessionId) {
-      throw new Error('Session ID is required');
+  async deleteEphemeralDocuments(userId) {
+    if (!userId) {
+      throw new Error('User ID is required');
     }
 
     try {
       const result = await sql`
         DELETE FROM generated_documents
-        WHERE session_id = ${sessionId}
+        WHERE user_id = ${userId}
           AND is_ephemeral = TRUE
       `;
 

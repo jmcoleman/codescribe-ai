@@ -135,7 +135,6 @@ describe('Migration 018: Create generated_documents table', () => {
       expect(columns).toContain('was_cached');
       expect(columns).toContain('latency_ms');
       expect(columns).toContain('is_ephemeral');
-      expect(columns).toContain('session_id');
       expect(columns).toContain('deleted_at');
       expect(columns).toContain('created_at');
       expect(columns).toContain('updated_at');
@@ -154,7 +153,7 @@ describe('Migration 018: Create generated_documents table', () => {
       expect(indexes).toContain('generated_documents_pkey'); // Primary key
       expect(indexes).toContain('idx_generated_docs_user_generated_at');
       expect(indexes).toContain('idx_generated_docs_user_filename');
-      expect(indexes).toContain('idx_generated_docs_session_ephemeral');
+      expect(indexes).toContain('idx_generated_docs_user_ephemeral');
       expect(indexes).toContain('idx_generated_docs_github_repo');
       expect(indexes).toContain('idx_generated_docs_deleted_at');
     });

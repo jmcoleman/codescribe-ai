@@ -55,9 +55,8 @@ CREATE TABLE IF NOT EXISTS generated_documents (
   was_cached BOOLEAN DEFAULT FALSE,
   latency_ms INTEGER,
 
-  -- Session management
-  is_ephemeral BOOLEAN DEFAULT FALSE, -- Delete on logout if true (for "Don't Save" choice)
-  session_id VARCHAR(255),            -- Session identifier for ephemeral docs
+  -- Ephemeral flag (for authenticated users with save_docs_preference='never')
+  is_ephemeral BOOLEAN DEFAULT FALSE, -- Delete on logout if true
 
   -- Soft delete (30-day recovery window)
   deleted_at TIMESTAMPTZ,
@@ -68,10 +67,10 @@ CREATE TABLE IF NOT EXISTS generated_documents (
 );
 
 -- Add comments for documentation
-COMMENT ON TABLE generated_documents IS 'Stores generated documentation (our output) with user consent. User code is NEVER stored.';
+COMMENT ON TABLE generated_documents IS 'Stores generated documentation (our output) with user consent. User code is NEVER stored. Auth required.';
 COMMENT ON COLUMN generated_documents.documentation IS 'Generated documentation text (markdown format)';
 COMMENT ON COLUMN generated_documents.quality_score IS 'Quality score object: { score: number, grade: string, breakdown: {...} }';
-COMMENT ON COLUMN generated_documents.is_ephemeral IS 'If true, delete on logout (user chose "Don''t Save")';
+COMMENT ON COLUMN generated_documents.is_ephemeral IS 'If true, delete on logout (user preference: save_docs_preference=never or one-time choice)';
 COMMENT ON COLUMN generated_documents.deleted_at IS 'Soft delete timestamp - allows 30-day recovery window';
 
 -- Indexes for performance
@@ -83,8 +82,8 @@ CREATE INDEX idx_generated_docs_user_filename
   ON generated_documents(user_id, filename)
   WHERE deleted_at IS NULL;
 
-CREATE INDEX idx_generated_docs_session_ephemeral
-  ON generated_documents(session_id)
+CREATE INDEX idx_generated_docs_user_ephemeral
+  ON generated_documents(user_id)
   WHERE is_ephemeral = TRUE AND deleted_at IS NULL;
 
 CREATE INDEX idx_generated_docs_github_repo
