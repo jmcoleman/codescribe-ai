@@ -4,7 +4,12 @@
 **Feature:** Multi-File Documentation with Collapsible Sidebar
 **Version:** v2.7.11 (Design Phase)
 **Status:** 📋 Design Document
-**Last Updated:** November 15, 2025
+**Last Updated:** November 15, 2025 (Revised)
+**Revision Notes:**
+- Changed localStorage strategy to metadata-only (privacy compliance)
+- Clarified streaming behavior for single-file vs. bulk operations
+- Reordered phases: P1 → P4 → P2 → P3 → P5 (split panel earlier for demo value)
+- Compressed timeline to 2-3 weeks for v2.8.0 (P1 + P4)
 
 ---
 
@@ -35,15 +40,57 @@ Current CodeScribe AI supports single-file documentation. For larger projects wi
 - Lose context when switching files
 - Cannot see project structure
 
-### Solution
+### Current Persistence Behavior (Single-File)
+
+**Where is code/docs stored currently?**
+
+In `App.jsx` (lines 61-64, 136-150, 276-304), we use **localStorage for everything**:
+
+```javascript
+// CURRENT STATE (v2.7.11)
+const [code, setCode] = useState(() =>
+  getStorageItem(STORAGE_KEYS.EDITOR_CODE, DEFAULT_CODE)
+);
+const [documentation, setDocumentation] = useState(() =>
+  getStorageItem(STORAGE_KEYS.EDITOR_DOCUMENTATION)
+);
+
+// Persisted on every change
+useEffect(() => {
+  setStorageItem(STORAGE_KEYS.EDITOR_CODE, code);
+}, [code]);
+```
+
+**Storage keys** (from `client/src/constants/storage.js`):
+- `EDITOR_CODE` - Full code content (persists across refreshes) ✅
+- `EDITOR_DOCUMENTATION` - Full generated docs (persists) ✅
+- `EDITOR_QUALITY_SCORE` - Quality score object (persists) ✅
+- `EDITOR_FILENAME`, `EDITOR_LANGUAGE`, `EDITOR_DOC_TYPE` - Metadata (persists) ✅
+
+**This violates our "Code in memory only" principle** but was accepted for MVP UX convenience.
+
+---
+
+### Solution (Multi-File Strategy)
+
+**For v2.8.0, we will maintain current behavior for single-file mode:**
+- ✅ Keep localStorage persistence for single-file (backward compatible)
+- ❌ Do NOT persist code/docs for multi-file mode (privacy-first)
+
+**Why the hybrid approach?**
+1. **Single-file users (90% of traffic)** expect persistence - breaking this would be bad UX regression
+2. **Multi-file users** are power users who understand ephemeral state (like VS Code unsaved tabs)
+3. **Privacy concern is lower** for single-file (user intentionally pasted code, one file at a time)
+4. **Privacy concern is higher** for multi-file (batch uploads, possibly entire repos)
 
 **Multi-file workspace with collapsible sidebar** that provides:
 - File tree/list navigation
 - Batch upload and generation
-- Per-file status tracking
+- Per-file status tracking (metadata only in localStorage)
 - Project-level organization
 - Persistent sidebar state
 - Split panel view for active file
+- **Ephemeral code/docs** (refresh clears content, not metadata)
 
 ---
 
@@ -523,39 +570,99 @@ const generatedCount = files.filter(f => f.status === 'generated').length;
 const totalCount = files.length;
 ```
 
-### localStorage Schema
+### Storage Strategy (Privacy-First)
 
+**⚠️ IMPORTANT: Code privacy compliance**
+
+Following our core principle "Code in memory only" (CLAUDE.md), we use a **hybrid storage approach**:
+
+#### localStorage (Metadata Only)
 ```javascript
-// Sidebar state
+// ✅ ALLOWED: Sidebar state (UI preferences)
 localStorage.setItem('codescribe:sidebar', JSON.stringify({
   isExpanded: true,
   isPinned: true,
   width: 280
 }));
 
-// Project files (for session persistence)
+// ✅ ALLOWED: File metadata (no content!)
 localStorage.setItem('codescribe:project:files', JSON.stringify([
   {
     id: 'file-1',
     name: 'auth.js',
-    content: '...',
-    // ... rest of file data
+    language: 'javascript',
+    size: 2100,
+    timestamp: Date.now(),
+    status: 'generated', // uploaded | generating | generated | error
+    // ❌ NO content property
+    // ❌ NO documentation property
   }
 ]));
 
-// Active file
+// ✅ ALLOWED: Active file ID
 localStorage.setItem('codescribe:project:activeFileId', 'file-1');
 
-// Split panel sizes (per project)
+// ✅ ALLOWED: Split panel sizes
 localStorage.setItem('codescribe:split-panel:project-123', JSON.stringify({
   leftPanelSize: 45,
   rightPanelSize: 55
 }));
 ```
 
-### API Changes
+#### React State (Ephemeral Content)
+```javascript
+// ✅ File content stored in React state ONLY (in-memory)
+const [files, setFiles] = useState([
+  {
+    id: 'file-1',
+    name: 'auth.js',
+    language: 'javascript',
+    content: '...code here...',           // ← EPHEMERAL (state only)
+    documentation: '...generated docs...', // ← EPHEMERAL (state only)
+    qualityScore: { score: 92, grade: 'A' }, // ← EPHEMERAL (state only)
+    status: 'generated',
+    size: 2100,
+    timestamp: Date.now(),
+    error: null
+  }
+]);
+```
 
-**New Endpoint: Bulk Generation**
+**Result:** Page refresh clears all code/docs (consistent with current single-file behavior). Users must re-upload files after refresh.
+
+### API Changes & Streaming Behavior
+
+#### Single-File Analysis (Current + P1/P4)
+**Uses existing `/api/generate-stream` endpoint**
+
+```
+POST /api/generate-stream
+Content-Type: application/json
+
+Request:
+{
+  "code": "...",
+  "docType": "README",
+  "language": "javascript",
+  "useCache": true
+}
+
+Response (SSE Stream):
+data: {"chunk":"# Auth Module\n"}
+data: {"chunk":"This module handles..."}
+data: {"complete":true,"qualityScore":{...}}
+```
+
+**User Experience:**
+- ✅ **Live streaming** - User sees documentation being written in real-time
+- ✅ **Same as current behavior** - No changes to existing UX
+- ✅ **Works in split panel** - Left: code, Right: streaming docs
+
+---
+
+#### Bulk Generation (P2/P3)
+**New endpoint: `/api/generate-bulk`**
+
 ```
 POST /api/generate-bulk
 Content-Type: application/json
@@ -579,13 +686,29 @@ Request:
   "docType": "README"
 }
 
-Response (SSE Stream):
+Response (SSE Stream for Summary README Only):
 data: {"type":"progress","fileId":"file-1","status":"generating"}
 data: {"type":"complete","fileId":"file-1","documentation":"...","qualityScore":{...}}
 data: {"type":"progress","fileId":"file-2","status":"generating"}
 data: {"type":"complete","fileId":"file-2","documentation":"...","qualityScore":{...}}
-data: {"type":"done","summary":{"total":2,"successful":2,"failed":0}}
+data: {"type":"summary_streaming","chunk":"# Project Overview\n"}
+data: {"type":"summary_streaming","chunk":"This project contains..."}
+data: {"type":"done","summary":{"total":2,"successful":2,"failed":0,"summaryDoc":"..."}}
 ```
+
+**User Experience:**
+- ❌ **No streaming for individual files** - Would be overwhelming UX
+- ✅ **Progress indicators only** - "Generating file 3 of 10..."
+- ✅ **Streaming for summary README** - Live-generated project overview
+- ✅ **Batch completion toast** - "10 files documented successfully"
+
+**Summary README Content (Streamed):**
+- Project name and file count
+- Language breakdown (e.g., "5 JavaScript, 3 Python, 2 TypeScript")
+- Average quality score across all files
+- File-by-file quality breakdown
+- Links to individual documentation files
+- Generation timestamp and metadata
 
 ---
 
@@ -828,47 +951,139 @@ Following [COLOR-REFERENCE.md](../design/theming/COLOR-REFERENCE.md):
 
 ---
 
-## Implementation Phases
+## Implementation Phases (Revised Order)
 
-### Phase 1: Foundation (Week 1)
-- [ ] Create Sidebar component structure
-- [ ] Implement collapse/expand with animation
-- [ ] Add localStorage persistence
-- [ ] Basic file list rendering
-- [ ] File selection (single file at a time)
-- [ ] Integration with existing CodePanel/DocPanel
+**⚡ Goal:** Get to impressive split panel demo ASAP, then add bulk features
 
-### Phase 2: Multi-File Support (Week 2)
-- [ ] Multi-file state management
-- [ ] File upload (multiple selection)
-- [ ] File status tracking
-- [ ] Per-file actions menu
+**Target:** v2.8.0 ships with P1 + P4 (multi-file infrastructure + split panel)
+
+---
+
+### Phase 1: Multi-File Infrastructure (Week 1) 🎯
+**Goal:** Users can upload multiple files and switch between them
+
+- [ ] Multi-file state management (React state for content, localStorage for metadata)
+- [ ] File upload (multiple selection via `<input multiple>`)
+- [ ] Sidebar component structure (collapsible, pinned state)
+- [ ] Basic file list rendering with status icons
+- [ ] File selection/switching (updates active file)
+- [ ] Active file highlighting (purple accent)
+- [ ] Per-file actions menu (⋮ dropdown)
 - [ ] Remove file with confirmation
-- [ ] Active file highlighting
+- [ ] Privacy-first storage (metadata-only in localStorage)
 
-### Phase 3: Bulk Operations (Week 3)
-- [ ] Generate All button
+**Demo Value:** ✅ Users can upload 3-5 files, switch between them, see file list
+
+**Deliverables:**
+- `Sidebar/` component folder
+- File state management in App.jsx
+- Storage utilities (metadata persistence)
+- Basic file list UI
+
+---
+
+### Phase 4: Split Panel View (Week 2) 🎯🎯🎯
+**Goal:** Premium side-by-side UX with live streaming
+
+- [ ] Integrate `react-resizable-panels`
+- [ ] Horizontal split: Code (left) | Docs (right)
+- [ ] Resizable handle with styling (50/50 default, 30-70% constraints)
+- [ ] Per-project size persistence (`localStorage`)
+- [ ] Live SSE streaming in right panel (existing `/api/generate-stream`)
+- [ ] Keyboard shortcuts (Cmd+B toggle sidebar, drag to resize)
+- [ ] Mobile responsive stacking (vertical on < 768px)
+- [ ] Empty state in doc panel (with Generate CTA)
+
+**Demo Value:** ✅✅✅ **PORTFOLIO HIGHLIGHT** - Visual transformation, professional UX
+
+**Deliverables:**
+- `SplitPanel/` wrapper component
+- Resize handle component
+- Updated `CodePanel` and `DocPanel` integration
+- Mobile responsive layout
+
+**Why This Is Early:**
+- Split panel is the **"wow factor"** for demos/interviews
+- Shows off single-file experience (still the primary use case)
+- Infrastructure from P1 makes this straightforward
+- Bulk operations (P2-P3) are secondary convenience features
+
+---
+
+### Phase 2: Bulk Actions UI (Week 3-4)
+**Goal:** Convenience features for power users
+
+- [ ] "Generate All" button in sidebar footer
 - [ ] Progress modal with real-time updates
-- [ ] Sequential generation with SSE
-- [ ] Error handling per file
-- [ ] Download All as ZIP
-- [ ] Clear All with confirmation
+- [ ] Per-file progress indicators (⏳ generating, ✓ done, ❌ error)
+- [ ] Cancel/Background buttons in progress modal
+- [ ] Batch completion summary
+- [ ] "Clear All" with confirmation modal
+- [ ] "Download All" as ZIP (client-side JSZip)
 
-### Phase 4: Split Panel Integration (Week 4)
-- [ ] Integrate react-resizable-panels
-- [ ] Per-project size persistence
-- [ ] Resize handle styling
-- [ ] Keyboard shortcuts
-- [ ] Mobile responsive stacking
+**Demo Value:** ✅ Productivity feature for multi-file workflows
 
-### Phase 5: Polish & Testing (Week 5)
-- [ ] Keyboard navigation
-- [ ] Screen reader testing
-- [ ] Mobile bottom sheet
-- [ ] Hover overlay mode
-- [ ] Performance optimization (virtualization for 50+ files)
-- [ ] E2E tests
-- [ ] Documentation
+**Deliverables:**
+- `ProgressModal.jsx` component
+- `BulkActions.jsx` component
+- Client-side ZIP generation
+
+---
+
+### Phase 3: Parallel Processing Backend (Week 4-5)
+**Goal:** Performance optimization for bulk generation
+
+- [ ] New endpoint: `POST /api/generate-bulk`
+- [ ] Sequential file generation (reuse existing `/api/generate` internally)
+- [ ] SSE stream for progress updates (per-file status)
+- [ ] Summary README generation (project-level overview)
+- [ ] SSE stream for summary README (live streaming)
+- [ ] Error handling per file (don't fail entire batch)
+- [ ] Usage quota checks (prevent over-limit bulk requests)
+
+**Demo Value:** ✅ Scalability for larger projects
+
+**Deliverables:**
+- `bulkGenerator.js` service (backend)
+- `/api/generate-bulk` route
+- Summary README prompt template
+- Bulk quota enforcement
+
+---
+
+### Phase 5: Polish & Testing (Week 5-6)
+**Goal:** Production-ready, accessible, tested
+
+- [ ] Keyboard navigation (arrow keys, shortcuts)
+- [ ] Screen reader testing (NVDA, VoiceOver)
+- [ ] Mobile bottom sheet (file list modal)
+- [ ] Hover overlay mode (collapsed sidebar → hover → overlay)
+- [ ] Performance optimization (React.memo, virtualized list for 50+ files)
+- [ ] E2E tests (Playwright: upload, switch, generate, bulk)
+- [ ] Component tests (Vitest: sidebar, file list, split panel)
+- [ ] Documentation (this file + API docs)
+
+**Demo Value:** ✅ Enterprise-grade polish
+
+**Deliverables:**
+- Full test coverage
+- Accessibility audit
+- Performance benchmarks
+- User documentation
+
+---
+
+### Revised Timeline Summary
+
+| Phase | Duration | Target Version | Demo Impact |
+|-------|----------|----------------|-------------|
+| **P1: Infrastructure** | Week 1 | v2.8.0-alpha | ✅ Multi-file basics |
+| **P4: Split Panel** | Week 2 | **v2.8.0** | ✅✅✅ Portfolio highlight |
+| **P2: Bulk UI** | Week 3-4 | v2.9.0-alpha | ✅ Power user features |
+| **P3: Backend** | Week 4-5 | v2.9.0 | ✅ Scalability |
+| **P5: Polish** | Week 5-6 | v2.9.0 | ✅ Production ready |
+
+**Fast Track for v2.8.0:** P1 + P4 = 2 weeks to shippable split panel experience
 
 ---
 
@@ -938,7 +1153,34 @@ Following [COLOR-REFERENCE.md](../design/theming/COLOR-REFERENCE.md):
 
 ---
 
-**Document Status:** ✅ Design Complete, Ready for Implementation
-**Next Steps:** Begin Phase 1 implementation (Sidebar foundation)
-**Timeline:** 5 weeks for complete feature (Phases 1-5)
-**Version Target:** v2.8.0 (Full multi-file support)
+**Document Status:** ✅ Design Complete (Revised), Ready for Implementation
+**Next Steps:** Begin Phase 1 implementation (Multi-file infrastructure)
+**Timeline:**
+- **v2.8.0** (2 weeks): P1 + P4 (Infrastructure + Split Panel) 🎯
+- **v2.9.0** (4-6 weeks): P2 + P3 + P5 (Bulk operations + Polish)
+**Priority:** Split panel demo value over bulk features
+
+---
+
+## Summary of Key Decisions
+
+### 1. **Privacy-First Storage** ✅
+- **Single-file mode**: Keep localStorage persistence (backward compatible)
+- **Multi-file mode**: Metadata-only in localStorage, content in React state (ephemeral)
+- **Rationale**: Hybrid approach balances UX convenience with privacy principles
+
+### 2. **Streaming Behavior** ✅
+- **Single-file**: Live SSE streaming (same as current)
+- **Bulk generation**: Progress indicators only, streaming for summary README
+- **Rationale**: Streaming 10+ files simultaneously = overwhelming UX
+
+### 3. **Phase Reordering** ✅
+- **New order**: P1 → P4 → P2 → P3 → P5 (was P1 → P2 → P3 → P4 → P5)
+- **Rationale**: Split panel is portfolio highlight, should ship in v2.8.0
+- **Benefit**: 2-week path to impressive demo vs. 5-week wait
+
+### 4. **Current Code Persistence** ✅
+- **Where it lives**: `localStorage` via `STORAGE_KEYS.EDITOR_CODE` (App.jsx:61-150)
+- **This violates**: "Code in memory only" principle
+- **Why it exists**: MVP UX convenience (users expect refreshed page to keep work)
+- **Multi-file change**: Only metadata persists, code is ephemeral
