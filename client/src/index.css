@@ -390,7 +390,7 @@ details[open] summary::before {
 /* Split Panel Resize Handle */
 .split-panel-handle {
   position: relative;
-  width: 12px;
+  width: 4px;
   display: flex;
   align-items: center;
   justify-content: center;

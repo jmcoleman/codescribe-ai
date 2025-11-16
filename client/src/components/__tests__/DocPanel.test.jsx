@@ -251,9 +251,13 @@ x = 1
         />
       );
 
-      expect(screen.getByText('Quality:')).toBeInTheDocument();
-      expect(screen.getByText('85/100')).toBeInTheDocument();
-      expect(screen.getByText(/B \(Good\)/)).toBeInTheDocument();
+      // Quality score button with aria-label
+      const qualityButton = screen.getByRole('button', { name: /Quality score.*B.*85/i });
+      expect(qualityButton).toBeInTheDocument();
+
+      // Check that score and grade are present (may be in separate spans due to responsive design)
+      expect(screen.getByText('85')).toBeInTheDocument();
+      expect(screen.getByText('B')).toBeInTheDocument();
     });
 
     it('should not display quality score when null', () => {
@@ -278,8 +282,14 @@ x = 1
         />
       );
 
-      const gradeElement = screen.getByText(/A \(Excellent\)/);
-      expect(gradeElement).toHaveClass('text-green-600');
+      // Grade letter may be in a span with the label, find by content
+      const qualityButton = screen.getByRole('button', { name: /Quality score.*A.*95/i });
+      expect(qualityButton).toBeInTheDocument();
+
+      // Check that grade has correct color class
+      const gradeSpans = screen.getAllByText(/A/);
+      const gradeElement = gradeSpans.find(el => el.classList.contains('text-green-600'));
+      expect(gradeElement).toBeDefined();
     });
 
     it('should render correct grade color for B grade', () => {
@@ -291,8 +301,10 @@ x = 1
         />
       );
 
-      const gradeElement = screen.getByText(/B \(Good\)/);
-      expect(gradeElement).toHaveClass('text-blue-600');
+      // Check that grade has correct color class
+      const gradeSpans = screen.getAllByText(/B/);
+      const gradeElement = gradeSpans.find(el => el.classList.contains('text-blue-600'));
+      expect(gradeElement).toBeDefined();
     });
 
     it('should render correct grade color for C grade', () => {
@@ -305,8 +317,9 @@ x = 1
         />
       );
 
-      const gradeElement = screen.getByText(/C \(Fair\)/);
-      expect(gradeElement).toHaveClass('text-yellow-600');
+      const gradeSpans = screen.getAllByText(/C/);
+      const gradeElement = gradeSpans.find(el => el.classList.contains('text-yellow-600'));
+      expect(gradeElement).toBeDefined();
     });
 
     it('should render correct grade color for D grade', () => {
@@ -319,8 +332,9 @@ x = 1
         />
       );
 
-      const gradeElement = screen.getByText(/D \(Poor\)/);
-      expect(gradeElement).toHaveClass('text-red-600');
+      const gradeSpans = screen.getAllByText(/D/);
+      const gradeElement = gradeSpans.find(el => el.classList.contains('text-red-600'));
+      expect(gradeElement).toBeDefined();
     });
 
     it('should render correct grade color for F grade', () => {
@@ -333,8 +347,9 @@ x = 1
         />
       );
 
-      const gradeElement = screen.getByText(/F \(Failing\)/);
-      expect(gradeElement).toHaveClass('text-red-600');
+      const gradeSpans = screen.getAllByText(/F/);
+      const gradeElement = gradeSpans.find(el => el.classList.contains('text-red-600'));
+      expect(gradeElement).toBeDefined();
     });
 
     it('should call onViewBreakdown when quality badge clicked', async () => {
@@ -350,7 +365,7 @@ x = 1
         />
       );
 
-      const button = screen.getByRole('button', { name: /View quality score breakdown/i });
+      const button = screen.getByRole('button', { name: /Quality score/i });
       await user.click(button);
 
       expect(onViewBreakdown).toHaveBeenCalledTimes(1);
@@ -615,7 +630,7 @@ Retrieve all users.
       expect(copyButton).toBeEnabled();
 
       // Quality score button
-      const qualityButton = screen.getByRole('button', { name: /View quality score breakdown/i });
+      const qualityButton = screen.getByRole('button', { name: /Quality score/i });
       expect(qualityButton).toBeInTheDocument();
       expect(qualityButton).toBeEnabled();
 

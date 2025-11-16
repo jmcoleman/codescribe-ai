@@ -586,8 +586,9 @@ flowchart TD
         />
       );
 
-      // Should show quality score
-      expect(screen.getByText(/85\/100/)).toBeInTheDocument();
+      // Should show quality score (split across spans due to responsive design)
+      expect(screen.getByText('85')).toBeInTheDocument();
+      expect(screen.getByText('B')).toBeInTheDocument();
       // Grade is announced in aria-label for screen readers
       expect(screen.getByLabelText(/Quality score: B 85\/100/i)).toBeInTheDocument();
 
@@ -614,7 +615,7 @@ flowchart TD
         />
       );
 
-      const qualityButton = screen.getByRole('button', { name: /view quality score breakdown/i });
+      const qualityButton = screen.getByRole('button', { name: /Quality score/i });
       await user.click(qualityButton);
 
       expect(onViewBreakdown).toHaveBeenCalledTimes(1);

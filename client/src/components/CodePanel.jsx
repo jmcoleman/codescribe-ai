@@ -119,8 +119,8 @@ export function CodePanel({
 
         {/* Right: Desktop buttons + Mobile menu */}
         <div className="flex items-center gap-2">
-          {/* Desktop: Show all buttons */}
-          <div className="hidden md:flex items-center gap-2">
+          {/* Desktop: Show all buttons when container is wide enough */}
+          <div className="@[600px]:flex hidden items-center gap-2">
             {onSamplesClick && (
               <button
                 type="button"
@@ -139,7 +139,7 @@ export function CodePanel({
                 title="Load code samples"
               >
                 <BookOpen className="w-3.5 h-3.5" aria-hidden="true" />
-                <span className="@[400px]:inline hidden">Samples</span>
+                <span>Samples</span>
               </button>
             )}
             {code && (
@@ -150,7 +150,6 @@ export function CodePanel({
                 variant="outline"
                 ariaLabel="Export code"
                 showLabel={true}
-                labelClassName="@[400px]:inline hidden"
               />
             )}
             {code && (
@@ -160,7 +159,6 @@ export function CodePanel({
                 variant="outline"
                 ariaLabel="Copy code to clipboard"
                 showLabel={true}
-                labelClassName="@[400px]:inline hidden"
               />
             )}
             {code && !readOnly && onClear && (
@@ -180,13 +178,13 @@ export function CodePanel({
                   className={`w-3.5 h-3.5 ${isClearing ? 'animate-spin-once' : ''}`}
                   aria-hidden="true"
                 />
-                <span className="@[400px]:inline hidden">Clear</span>
+                <span>Clear</span>
               </button>
             )}
           </div>
 
-          {/* Mobile: Overflow menu */}
-          <div className="md:hidden relative" ref={mobileMenuRef}>
+          {/* Mobile/Narrow: Overflow menu - show when buttons are hidden */}
+          <div className="@[600px]:hidden relative" ref={mobileMenuRef}>
             <button
               type="button"
               onClick={() => setShowMobileMenu(!showMobileMenu)}
@@ -213,6 +211,9 @@ export function CodePanel({
                     <BookOpen className="w-4 h-4" aria-hidden="true" />
                     <span>Samples</span>
                   </button>
+                )}
+                {onSamplesClick && code && (
+                  <div className="border-t border-slate-200 dark:border-slate-700 my-1" role="separator" />
                 )}
                 {code && (
                   <button

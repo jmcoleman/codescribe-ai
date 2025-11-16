@@ -282,65 +282,48 @@ export function DocPanel({
       {/* Header */}
       <div className="flex items-center justify-between px-4 h-12 bg-purple-50 dark:bg-purple-400/15 border-b border-purple-200 dark:border-slate-700 transition-colors">
         {/* Left: Icon + Title */}
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400" aria-hidden="true" />
-          <h2 className="text-sm text-slate-600 dark:text-slate-300">
+        <div className="flex items-center gap-2 min-w-0">
+          <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400 flex-shrink-0" aria-hidden="true" />
+          <h2 className="text-sm text-slate-600 dark:text-slate-300 @[500px]:inline hidden">
             Generated Documentation
+          </h2>
+          <h2 className="text-sm text-slate-600 dark:text-slate-300 @[500px]:hidden truncate">
+            Docs
           </h2>
         </div>
 
         {/* Right: Quality Score + Action Buttons */}
-        <div className="flex items-center gap-2">
-          {/* Quality Score - Always visible */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Quality Score - Responsive based on container width */}
           {qualityScore && (
-            <>
-              {/* Mobile: Condensed Score */}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  onViewBreakdown();
-                }}
-                className="sm:hidden flex items-center gap-1.5 px-2 py-1 bg-white dark:bg-slate-800 border border-purple-200 dark:border-purple-400/30 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-400/15 transition-colors"
-                aria-label={`Quality score: ${qualityScore.grade} ${qualityScore.score}/100`}
-                title="View breakdown"
-              >
-                <span className="text-xs font-semibold text-purple-700 dark:text-purple-400">
-                  {qualityScore.score}
-                </span>
-                <span className={`text-xs font-semibold ${getGradeColor(qualityScore.grade)}`}>
-                  {qualityScore.grade}
-                </span>
-              </button>
-
-              {/* Desktop: Full Score */}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  onViewBreakdown();
-                }}
-                className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-800 border border-purple-200 dark:border-purple-400/30 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-400/15 hover:scale-[1.02] hover:shadow-sm transition-all duration-200 motion-reduce:transition-none active:scale-[0.98]"
-                aria-label="View quality score breakdown"
-                title="View breakdown"
-              >
-                <span className="text-xs text-slate-600 dark:text-slate-400">Quality:</span>
-                <span className="text-xs font-semibold text-purple-700 dark:text-purple-400">
-                  {qualityScore.score}/100
-                </span>
-                <span className={`text-xs font-semibold ${getGradeColor(qualityScore.grade)}`}>
-                  {qualityScore.grade} {getGradeLabel(qualityScore.grade)}
-                </span>
-              </button>
-            </>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                onViewBreakdown();
+              }}
+              className="flex items-center gap-1.5 @[600px]:gap-2 px-2 @[600px]:px-3 py-1 @[600px]:py-1.5 bg-white dark:bg-slate-800 border border-purple-200 dark:border-purple-400/30 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-400/15 hover:scale-[1.02] hover:shadow-sm transition-all duration-200 motion-reduce:transition-none active:scale-[0.98]"
+              aria-label={`Quality score: ${qualityScore.grade} ${qualityScore.score}/100`}
+              title="View breakdown"
+            >
+              {/* "Quality:" label - always visible */}
+              <span className="text-xs text-slate-600 dark:text-slate-400">Quality:</span>
+              {/* Score - always visible, add "/100" when wide */}
+              <span className="text-xs font-semibold text-purple-700 dark:text-purple-400">
+                {qualityScore.score}<span className="@[600px]:inline hidden">/100</span>
+              </span>
+              {/* Grade - always visible, add label when wide */}
+              <span className={`text-xs font-semibold ${getGradeColor(qualityScore.grade)}`}>
+                {qualityScore.grade}<span className="@[600px]:inline hidden"> {getGradeLabel(qualityScore.grade)}</span>
+              </span>
+            </button>
           )}
 
           {/* Desktop: Download, Copy, and Clear Buttons */}
           {documentation && (
             <>
-              <div className="hidden md:flex items-center gap-2">
+              <div className="@[700px]:flex hidden items-center gap-2">
                 <DownloadButton
                   content={documentation}
                   docType={qualityScore?.docType || 'documentation'}
@@ -348,7 +331,6 @@ export function DocPanel({
                   variant="outline"
                   ariaLabel="Export documentation"
                   showLabel={true}
-                  labelClassName="@[400px]:inline hidden"
                 />
                 <CopyButton
                   text={documentation}
@@ -356,7 +338,6 @@ export function DocPanel({
                   variant="outline"
                   ariaLabel="Copy documentation"
                   showLabel={true}
-                  labelClassName="@[400px]:inline hidden"
                 />
                 <button
                   type="button"
@@ -366,12 +347,12 @@ export function DocPanel({
                   title="Clear documentation"
                 >
                   <RefreshCw className="w-4 h-4" aria-hidden="true" />
-                  <span className="@[400px]:inline hidden">Clear</span>
+                  <span>Clear</span>
                 </button>
               </div>
 
-              {/* Mobile: Overflow Menu */}
-              <div className="md:hidden relative" ref={mobileMenuRef}>
+              {/* Mobile: Overflow Menu - show when buttons are hidden */}
+              <div className="@[700px]:hidden relative" ref={mobileMenuRef}>
                 <button
                   type="button"
                   onClick={() => setShowMobileMenu(!showMobileMenu)}
