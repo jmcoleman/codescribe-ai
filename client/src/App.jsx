@@ -5,6 +5,7 @@ import { Header } from './components/Header';
 import { MobileMenu } from './components/MobileMenu';
 import { ControlBar } from './components/ControlBar';
 import { CodePanel } from './components/CodePanel';
+import { SplitPanel } from './components/SplitPanel';
 import Footer from './components/Footer';
 import { useDocGeneration } from './hooks/useDocGeneration';
 import { useUsageTracking } from './hooks/useUsageTracking';
@@ -899,48 +900,47 @@ function App() {
         />
 
         {/* Split View: Code + Documentation */}
-        <div className="mt-6 flex-1 flex flex-col lg:grid lg:grid-cols-2 gap-4 lg:gap-6 min-h-0">
-          {/* Left: Code Panel */}
-          <div className="min-h-[600px] h-[70vh] lg:h-full lg:min-w-0 lg:overflow-hidden">
-            <CodePanel
-              code={code}
-              onChange={setCode}
-              filename={filename}
-              language={language}
-              onFileDrop={handleFileDrop}
-              onClear={handleClear}
-              onSamplesClick={() => setShowSamplesModal(true)}
-              samplesButtonRef={samplesButtonRef}
-            />
-          </div>
-
-          {/* Right: Documentation Panel */}
-          <div className="min-h-[600px] h-[70vh] lg:h-full lg:min-w-0 lg:overflow-hidden">
-            <Suspense fallback={<LoadingFallback />}>
-              <DocPanel
-              documentation={documentation}
-              qualityScore={qualityScore}
-              isGenerating={isGenerating || testSkeletonMode}
-              onViewBreakdown={() => {
-                setShowQualityModal(true);
-                trackInteraction('view_quality_breakdown', {
-                  score: qualityScore?.score,
-                  grade: qualityScore?.grade,
-                });
-              }}
-              onUpload={handleUpload}
-              onGithubImport={handleGithubImport}
-              onGenerate={handleGenerate}
-              onReset={() => {
-                // Clear documentation and quality score from state
-                reset();
-                // Clear from localStorage (set to empty string so persistence effect doesn't re-add)
-                setStorageItem(STORAGE_KEYS.EDITOR_DOCUMENTATION, '');
-                setStorageItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE, '');
-              }}
-            />
-          </Suspense>
-          </div>
+        <div className="mt-6 flex-1 min-h-0">
+          <SplitPanel
+            leftPanel={
+              <CodePanel
+                code={code}
+                onChange={setCode}
+                filename={filename}
+                language={language}
+                onFileDrop={handleFileDrop}
+                onClear={handleClear}
+                onSamplesClick={() => setShowSamplesModal(true)}
+                samplesButtonRef={samplesButtonRef}
+              />
+            }
+            rightPanel={
+              <Suspense fallback={<LoadingFallback />}>
+                <DocPanel
+                  documentation={documentation}
+                  qualityScore={qualityScore}
+                  isGenerating={isGenerating || testSkeletonMode}
+                  onViewBreakdown={() => {
+                    setShowQualityModal(true);
+                    trackInteraction('view_quality_breakdown', {
+                      score: qualityScore?.score,
+                      grade: qualityScore?.grade,
+                    });
+                  }}
+                  onUpload={handleUpload}
+                  onGithubImport={handleGithubImport}
+                  onGenerate={handleGenerate}
+                  onReset={() => {
+                    // Clear documentation and quality score from state
+                    reset();
+                    // Clear from localStorage (set to empty string so persistence effect doesn't re-add)
+                    setStorageItem(STORAGE_KEYS.EDITOR_DOCUMENTATION, '');
+                    setStorageItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE, '');
+                  }}
+                />
+              </Suspense>
+            }
+          />
         </div>
 
       </main>

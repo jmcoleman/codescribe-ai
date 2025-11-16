@@ -4,12 +4,14 @@
 **Feature:** Multi-File Documentation with Collapsible Sidebar
 **Version:** v2.7.11 (Design Phase)
 **Status:** 📋 Design Document
-**Last Updated:** November 15, 2025 (Revised)
+**Last Updated:** November 15, 2025 (Revised v2 - Database Storage)
 **Revision Notes:**
-- Changed localStorage strategy to metadata-only (privacy compliance)
+- **NEW:** Database storage for generated docs (privacy-compliant, user consent)
+- Changed from localStorage to three-tier storage (DB → React State → localStorage)
 - Clarified streaming behavior for single-file vs. bulk operations
 - Reordered phases: P1 → P4 → P2 → P3 → P5 (split panel earlier for demo value)
 - Compressed timeline to 2-3 weeks for v2.8.0 (P1 + P4)
+- Added database schema, API endpoints, consent flows
 
 ---
 
@@ -570,67 +572,249 @@ const generatedCount = files.filter(f => f.status === 'generated').length;
 const totalCount = files.length;
 ```
 
-### Storage Strategy (Privacy-First)
+### Storage Strategy (Privacy-First with Database Persistence)
 
 **⚠️ IMPORTANT: Code privacy compliance**
 
-Following our core principle "Code in memory only" (CLAUDE.md), we use a **hybrid storage approach**:
+Following our core principle "Code in memory only" (CLAUDE.md), we use a **three-tier storage approach**:
 
-#### localStorage (Metadata Only)
+#### Tier 1: Database (Generated Content Only - Authenticated Users)
+
+**What we store:**
+- ✅ **Generated documentation** (our output, not user's code)
+- ✅ **Quality scores** (our analysis)
+- ✅ **File metadata** (filename, language, size, timestamps)
+- ✅ **Provenance** (GitHub repo, commit SHA, origin)
+- ✅ **LLM metadata** (provider, model, tokens, caching)
+- ❌ **NEVER user's code** (ephemeral, in-memory only)
+
+**Database schema:**
+```sql
+CREATE TABLE generated_documents (
+  id UUID PRIMARY KEY,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+
+  -- File metadata
+  filename VARCHAR(255) NOT NULL,
+  language VARCHAR(50) NOT NULL,
+  file_size_bytes INTEGER NOT NULL,
+
+  -- Generated content (OUR output)
+  documentation TEXT NOT NULL,
+  quality_score JSONB NOT NULL,
+  doc_type VARCHAR(50) NOT NULL,
+
+  -- Provenance
+  generated_at TIMESTAMP DEFAULT NOW(),
+  origin VARCHAR(50) NOT NULL,  -- 'upload' | 'github' | 'paste'
+  github_repo VARCHAR(255),
+  github_path VARCHAR(500),
+  github_sha VARCHAR(40),
+
+  -- LLM metadata
+  provider VARCHAR(50),
+  model VARCHAR(100),
+  input_tokens INTEGER,
+  output_tokens INTEGER,
+  was_cached BOOLEAN,
+
+  -- Session management
+  is_ephemeral BOOLEAN DEFAULT FALSE,  -- Delete on logout
+
+  -- Soft delete
+  deleted_at TIMESTAMP
+);
+```
+
+**User consent:**
+- First generation shows opt-in modal: "Save documentation to your account?"
+- Preference stored in `users.save_docs_preference` ('always', 'never', 'ask')
+- Per-document override: `is_ephemeral` flag for one-time generations
+
+#### Tier 2: React State (In-Memory Session)
+
 ```javascript
-// ✅ ALLOWED: Sidebar state (UI preferences)
+// Session-only state (cleared on refresh)
+const [files, setFiles] = useState([
+  {
+    id: 'file-1',
+    name: 'auth.js',
+    language: 'javascript',
+    content: '...code here...',           // ← EPHEMERAL (never persisted)
+    documentation: '...generated docs...', // ← Saved to DB if user opted in
+    qualityScore: { score: 92, grade: 'A' }, // ← Saved to DB if user opted in
+    documentId: 'doc-uuid-123',           // ← Link to DB record
+    status: 'generated',
+    size: 2100,
+    error: null
+  }
+]);
+```
+
+#### Tier 3: localStorage (UI Preferences Only)
+
+```javascript
+// ✅ Sidebar state
 localStorage.setItem('codescribe:sidebar', JSON.stringify({
   isExpanded: true,
   isPinned: true,
   width: 280
 }));
 
-// ✅ ALLOWED: File metadata (no content!)
-localStorage.setItem('codescribe:project:files', JSON.stringify([
-  {
-    id: 'file-1',
-    name: 'auth.js',
-    language: 'javascript',
-    size: 2100,
-    timestamp: Date.now(),
-    status: 'generated', // uploaded | generating | generated | error
-    // ❌ NO content property
-    // ❌ NO documentation property
-  }
-]));
-
-// ✅ ALLOWED: Active file ID
-localStorage.setItem('codescribe:project:activeFileId', 'file-1');
-
-// ✅ ALLOWED: Split panel sizes
-localStorage.setItem('codescribe:split-panel:project-123', JSON.stringify({
+// ✅ Split panel sizes
+localStorage.setItem('codescribe:split-panel', JSON.stringify({
   leftPanelSize: 45,
   rightPanelSize: 55
 }));
+
+// ❌ NO file content
+// ❌ NO documentation
+// ❌ NO code
 ```
 
-#### React State (Ephemeral Content)
-```javascript
-// ✅ File content stored in React state ONLY (in-memory)
-const [files, setFiles] = useState([
-  {
-    id: 'file-1',
-    name: 'auth.js',
-    language: 'javascript',
-    content: '...code here...',           // ← EPHEMERAL (state only)
-    documentation: '...generated docs...', // ← EPHEMERAL (state only)
-    qualityScore: { score: 92, grade: 'A' }, // ← EPHEMERAL (state only)
-    status: 'generated',
-    size: 2100,
-    timestamp: Date.now(),
-    error: null
+**Result:**
+- **Authenticated users:** Documentation persists across sessions (from DB), code does not
+- **Unauthenticated users:** Everything ephemeral (in-memory only)
+- **Page refresh:** Code clears, docs reload from DB for authenticated users
+
+### API Endpoints
+
+#### New Database Endpoints
+
+**1. Save Generated Document**
+```
+POST /api/documents
+Authorization: Bearer <token>
+
+Request:
+{
+  "filename": "auth.js",
+  "language": "javascript",
+  "fileSize": 2100,
+  "documentation": "# Auth Module\n...",
+  "qualityScore": { "score": 92, "grade": "A", ... },
+  "docType": "README",
+  "origin": "upload",
+  "githubRepo": "acme/project",  // Optional
+  "githubPath": "src/auth.js",   // Optional
+  "githubSha": "abc123",         // Optional
+  "provider": "claude",
+  "model": "claude-sonnet-4-5-20250929",
+  "inputTokens": 500,
+  "outputTokens": 1000,
+  "wasCached": true,
+  "latencyMs": 1250,
+  "isEphemeral": false
+}
+
+Response:
+{
+  "success": true,
+  "documentId": "doc-uuid-123",
+  "savedAt": "2025-11-15T10:30:00Z"
+}
+```
+
+**2. Get User's Documents (History)**
+```
+GET /api/documents?limit=50&offset=0&sort=generated_at:desc
+Authorization: Bearer <token>
+
+Response:
+{
+  "documents": [
+    {
+      "id": "doc-uuid-123",
+      "filename": "auth.js",
+      "language": "javascript",
+      "documentation": "# Auth Module\n...",
+      "qualityScore": { "score": 92, "grade": "A" },
+      "docType": "README",
+      "generatedAt": "2025-11-15T10:30:00Z",
+      "origin": "upload"
+    },
+    ...
+  ],
+  "total": 120,
+  "hasMore": true
+}
+```
+
+**3. Get Single Document**
+```
+GET /api/documents/:documentId
+Authorization: Bearer <token>
+
+Response:
+{
+  "id": "doc-uuid-123",
+  "filename": "auth.js",
+  "language": "javascript",
+  "fileSize": 2100,
+  "documentation": "# Auth Module\n...",
+  "qualityScore": { "score": 92, "grade": "A", ... },
+  "docType": "README",
+  "generatedAt": "2025-11-15T10:30:00Z",
+  "origin": "upload",
+  "githubRepo": "acme/project",
+  "provider": "claude",
+  "model": "claude-sonnet-4-5-20250929",
+  "inputTokens": 500,
+  "outputTokens": 1000
+}
+```
+
+**4. Delete Document**
+```
+DELETE /api/documents/:documentId
+Authorization: Bearer <token>
+
+Response:
+{
+  "success": true,
+  "deletedAt": "2025-11-15T10:35:00Z"
+}
+```
+
+**5. Bulk Delete**
+```
+DELETE /api/documents
+Authorization: Bearer <token>
+
+Request:
+{
+  "documentIds": ["doc-uuid-1", "doc-uuid-2", ...]
+}
+
+Response:
+{
+  "success": true,
+  "deletedCount": 15
+}
+```
+
+**6. Update User Preferences**
+```
+PATCH /api/user/preferences
+Authorization: Bearer <token>
+
+Request:
+{
+  "saveDocsPreference": "always"  // 'always' | 'never' | 'ask'
+}
+
+Response:
+{
+  "success": true,
+  "preferences": {
+    "saveDocsPreference": "always"
   }
-]);
+}
 ```
 
-**Result:** Page refresh clears all code/docs (consistent with current single-file behavior). Users must re-upload files after refresh.
+---
 
-### API Changes & Streaming Behavior
+### Streaming & Generation Behavior
 
 #### Single-File Analysis (Current + P1/P4)
 **Uses existing `/api/generate-stream` endpoint**
