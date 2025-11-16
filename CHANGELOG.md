@@ -9,6 +9,75 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.8.0] - 2025-11-16
+
+**Status:** ✅ Accessibility & Performance Improvements
+
+**Summary:** Enhanced keyboard navigation with arrow keys and ESC handlers, eliminated Mermaid diagram flashing through comprehensive memoization, fixed responsive overflow issues, and improved skip-to-content accessibility.
+
+### Added
+
+- **Arrow Key Navigation** ([client/src/components/AppearanceModal.jsx](client/src/components/AppearanceModal.jsx:184-216))
+  - Up/Down arrow keys navigate between theme options
+  - Smart entry: Down arrow from close button jumps to first theme option
+  - Circular navigation (wraps from last to first option)
+  - Enhances keyboard accessibility
+
+- **ESC Key Navigation** ([client/src/pages/PrivacyPolicy.jsx](client/src/pages/PrivacyPolicy.jsx:19-29), [client/src/components/PricingPage.jsx](client/src/components/PricingPage.jsx:78-88))
+  - Added ESC key handler to PrivacyPolicy and PricingPage
+  - Consistent with existing TermsOfService behavior
+  - ESC navigates back (same as Back button)
+  - Standard keyboard navigation pattern
+
+- **Skip-to-Content Enhancement** ([client/src/App.jsx](client/src/App.jsx:813-833))
+  - Added JavaScript to find and focus first interactive element in main content
+  - Improved focus management on activation
+  - Better accessibility for keyboard-only users
+
+### Fixed
+
+- **Mermaid Diagram Flashing** ([docs/performance/REACT-OPTIMIZATION-LESSONS.md](docs/performance/REACT-OPTIMIZATION-LESSONS.md))
+  - Eliminated diagram flashing when typing in Monaco editor
+  - Implemented 6-layer memoization strategy:
+    1. Wrapped DocPanel in `React.memo`
+    2. Memoized callbacks with `useCallback` (handleViewBreakdown, handleReset)
+    3. **KEY FIX**: Memoized ReactMarkdown components object with `useMemo`
+    4. Added custom memo comparator to MermaidDiagram (ignore autoShow changes)
+    5. Wrapped LazyMermaidRenderer in `memo`
+    6. Changed to content-based diagram IDs (deterministic hashing)
+  - Root cause: ReactMarkdown components object being recreated on every render
+  - Impact: Smooth, professional UX with zero re-renders when documentation unchanged
+
+- **Responsive Overflow Issues** ([client/src/index.css](client/src/index.css:23-27))
+  - Removed global `overflow: hidden` on html/body (was breaking PricingPage scrolling)
+  - Applied overflow control only to main element: `overflow-auto lg:overflow-hidden`
+  - Pricing page and legal pages now scroll correctly
+  - Main app page scrolling still works as expected
+  - Documented anti-pattern in REACT-OPTIMIZATION-LESSONS.md
+
+- **Test Timeout** ([client/src/components/__tests__/ContactSupportModal.test.jsx](client/src/components/__tests__/ContactSupportModal.test.jsx:105))
+  - Fixed flaky test timing out in full suite (passed in isolation)
+  - Increased test timeout from 5000ms to 10000ms
+  - Accounts for test suite overhead
+
+### Documentation
+
+- **React Optimization Lessons** ([docs/performance/REACT-OPTIMIZATION-LESSONS.md](docs/performance/REACT-OPTIMIZATION-LESSONS.md))
+  - Comprehensive documentation of Mermaid flashing fixes
+  - 6-layer memoization strategy breakdown
+  - Overflow issue solutions with anti-pattern warnings
+  - Interview talking points and problem-solving process
+  - Before/after code examples and explanations
+
+### Testing
+
+- **Frontend:** 1583 tests passing, 33 skipped (1616 total)
+- **Backend:** 957 tests passing, 23 skipped (980 total)
+- **Total:** 2540 tests passing, 56 skipped (2596 total)
+- **Pass Rate:** 97.8%
+
+---
+
 ## [2.7.11] - 2025-11-15
 
 **Status:** ✅ UX Refinements & Multi-File Design
