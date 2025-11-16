@@ -65,9 +65,9 @@
       "text": "codescribeai.com",
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
-    "footerLeft": "<strong>CodeScribe AI</strong> \u00b7 Strategic Roadmap v3.12",
-    "footer": "Phase 1 Complete \u00b7 Phase 2 Complete \u00b7 Phase 3 Epic 3.1 Complete (Dark Mode) \u00b7 Epic 4.1 Complete (GitHub Integration) \u00b7 Launch: Mid-Jan 2026",
-    "lastUpdated": "November 15, 2025"
+    "footerLeft": "<strong>CodeScribe AI</strong> \u00b7 Strategic Roadmap v3.13",
+    "footer": "Phase 1 Complete \u00b7 Phase 2 Complete \u00b7 Phase 3 Epic 3.1 Complete (Dark Mode) \u00b7 Epic 3.2 Complete (Workspace) \u00b7 Epic 4.1 Complete (GitHub) \u00b7 Launch: Mid-Jan 2026",
+    "lastUpdated": "November 16, 2025"
   },
   "columns": [
     {
@@ -528,15 +528,29 @@
           "completedDate": "Nov 15, 2025",
           "badge": "UX & Planning",
           "features": [
-            "Appearance modal for unauthenticated users (GitHub-style theme switcher)",
-            "3-state theme cycling: Light → Dark → Auto → Light (Monitor icon for Auto mode)",
-            "Enhanced DocPanel empty state with clickable GitHub import button",
-            "Smooth HelpModal tab transitions (200ms) following design system",
-            "Mermaid error suppression (suppressErrors: true prevents bomb icons)",
-            "Multi-file sidebar UX design document (comprehensive 5-week roadmap for v2.8.0)",
-            "Doc Type label added to dropdown for accessibility",
-            "Removed Quick Start tab from HelpModal (deduplicated from DocPanel)",
-            "2,477 tests (2,421 passing, 56 skipped, 97.8% pass rate)"
+            "Appearance modal for unauthenticated users",
+            "3-state theme cycling (Light/Dark/Auto with system detection)",
+            "Enhanced DocPanel empty state with GitHub import",
+            "Multi-file sidebar design document for v2.8.0"
+          ]
+        },
+        {
+          "version": "v2.8.0",
+          "title": "Workspace Flexibility & Performance (Epic 3.2)",
+          "duration": "2 days",
+          "status": "✓ Complete",
+          "completedDate": "Nov 16, 2025",
+          "badge": "UX & Optimization",
+          "features": [
+            "Resizable panels with VS Code-style draggable divider",
+            "Panel constraints (30% min, 70% max)",
+            "Panel size persistence (localStorage)",
+            "Keyboard accessible panel controls",
+            "Arrow key navigation in AppearanceModal",
+            "ESC key navigation on Pricing/Privacy/Terms pages",
+            "Skip-to-content enhancement with auto-focus",
+            "Mermaid diagram flashing eliminated (6-layer memoization)",
+            "Responsive overflow fixes for pricing page scrolling"
           ]
         }
       ]
@@ -547,6 +561,21 @@
       "title": "Active",
       "subtitle": "Phase 3: UX Enhancements & Developer Tools",
       "phases": [
+        {
+          "version": "Epic 4.2",
+          "title": "Multi-File Project Documentation",
+          "duration": "4-5 days",
+          "status": "Planned",
+          "badge": "Depends on Epic 3.3",
+          "features": [
+            "Accept multiple files from GitHub, upload, or .zip",
+            "Project-wide architecture analysis",
+            "Cross-file references and dependency mapping",
+            "Pattern detection (MVC, microservices, monorepo)",
+            "Comprehensive project README generation",
+            "Project-level quality scoring"
+          ]
+        },
         {
           "version": "Epic 3.3",
           "title": "Advanced File Handling",
@@ -561,8 +590,23 @@
             "Progress indicators for batch operations",
             "Error handling per file (don't fail entire batch)",
             "Note: Basic drag-and-drop implemented in Phase 2 Epic 2.4",
-            "Note: Epic 4.1 (GitHub integration) completed first - provides single-file import from GitHub",
+            "Note: Epic 4.1 (GitHub integration) completed - provides single-file import",
             "Required before Epic 4.2"
+          ]
+        },
+        {
+          "version": "Epic 3.4",
+          "title": "Advanced Workspace Features",
+          "duration": "2-3 days",
+          "status": "Planned",
+          "badge": "Multi-File UX",
+          "features": [
+            "Collapsible file tree sidebar for multi-file navigation",
+            "Full-width layout option (remove max-width constraint)",
+            "Layout presets (50/50, 70/30, 30/70 split ratios)",
+            "Sidebar collapse/expand with keyboard shortcuts",
+            "File selection and multi-file management",
+            "Requires Epic 3.3 (file handling) for full functionality"
           ]
         }
       ]
@@ -607,38 +651,6 @@
             "Email notifications for subscription lifecycle events",
             "In-app notifications for billing issues and renewals",
             "Note: Core upgrade/downgrade flows completed in Epic 2.4"
-          ]
-        },
-        {
-          "version": "Epic 4.2",
-          "title": "Multi-File Project Documentation",
-          "duration": "4-5 days",
-          "status": "Planned",
-          "badge": "Depends on Epic 3.3 + 4.1",
-          "features": [
-            "Accept multiple files from GitHub, upload, or .zip",
-            "Project-wide architecture analysis",
-            "Cross-file references and dependency mapping",
-            "Pattern detection (MVC, microservices, monorepo)",
-            "Comprehensive project README generation",
-            "Project-level quality scoring",
-            "Requires Epic 3.3 (file handling) and Epic 4.1 (GitHub source)"
-          ]
-        },
-        {
-          "version": "Epic 3.2",
-          "title": "Layout & Workspace Flexibility",
-          "duration": "2-3 days",
-          "status": "Planned",
-          "badge": "UX for Large Projects",
-          "features": [
-            "Full-width layout option (remove max-width)",
-            "Resizable panels with draggable divider",
-            "Panel constraints (30% min, 70% max)",
-            "Panel size persistence (localStorage)",
-            "Layout presets (50/50, 70/30, 30/70)",
-            "Keyboard accessible panel controls",
-            "Natural follow-up to Epic 4.2 for improved workspace UX"
           ]
         }
       ]
