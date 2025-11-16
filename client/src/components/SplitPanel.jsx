@@ -79,7 +79,7 @@ export function SplitPanel({ leftPanel, rightPanel }) {
   // Mobile: Stack vertically (no resizing)
   if (isMobile) {
     return (
-      <div className="flex-1 flex flex-col gap-4 min-h-0">
+      <div className="flex flex-col gap-4">
         {/* Code Panel - Top */}
         <div className="min-h-[600px] h-[70vh]">
           {leftPanel}
@@ -95,7 +95,7 @@ export function SplitPanel({ leftPanel, rightPanel }) {
 
   // Desktop/Tablet: Resizable horizontal split
   return (
-    <div className="flex-1 min-h-0 flex flex-col">
+    <div className="flex-1 min-h-0 flex flex-col h-full">
       <PanelGroup
         direction="horizontal"
         onLayout={handleResize}

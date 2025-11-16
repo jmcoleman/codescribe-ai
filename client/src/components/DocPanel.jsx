@@ -303,7 +303,7 @@ export function DocPanel({
                 e.preventDefault();
                 onViewBreakdown();
               }}
-              className="flex items-center gap-1.5 @[600px]:gap-2 px-2 @[600px]:px-3 py-1 @[600px]:py-1.5 bg-white dark:bg-slate-800 border border-purple-200 dark:border-purple-400/30 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-400/15 hover:scale-[1.02] hover:shadow-sm transition-all duration-200 motion-reduce:transition-none active:scale-[0.98]"
+              className="flex items-center gap-1.5 @[600px]:gap-2 px-2.5 py-1.5 bg-white dark:bg-slate-800 border border-purple-200 dark:border-purple-400/30 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-400/15 hover:scale-[1.02] hover:shadow-sm transition-all duration-200 motion-reduce:transition-none active:scale-[0.98]"
               aria-label={`Quality score: ${qualityScore.grade} ${qualityScore.score}/100`}
               title="View breakdown"
             >
@@ -342,11 +342,11 @@ export function DocPanel({
                 <button
                   type="button"
                   onClick={onReset}
-                  className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-400 dark:hover:border-slate-500 active:scale-95 transition-all duration-200"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500 rounded-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900"
                   aria-label="Clear documentation"
                   title="Clear documentation"
                 >
-                  <RefreshCw className="w-4 h-4" aria-hidden="true" />
+                  <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
                   <span>Clear</span>
                 </button>
               </div>
@@ -356,18 +356,24 @@ export function DocPanel({
                 <button
                   type="button"
                   onClick={() => setShowMobileMenu(!showMobileMenu)}
-                  className="p-2 hover:bg-purple-50 dark:hover:bg-purple-400/15 rounded-lg transition-colors"
+                  className="p-2 hover:bg-purple-50 dark:hover:bg-purple-400/15 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-2"
                   aria-label="More actions"
                   aria-expanded={showMobileMenu}
+                  aria-haspopup="menu"
                 >
-                  <MoreVertical className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                  <MoreVertical className="w-4 h-4 text-slate-600 dark:text-slate-400" aria-hidden="true" />
                 </button>
 
                 {/* Dropdown Menu */}
                 {showMobileMenu && (
-                  <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg overflow-hidden z-50">
+                  <div
+                    role="menu"
+                    aria-label="Documentation actions"
+                    className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg overflow-hidden z-50"
+                  >
                     <button
                       type="button"
+                      role="menuitem"
                       onClick={() => {
                         const blob = new Blob([documentation], { type: 'text/markdown' });
                         const url = URL.createObjectURL(blob);
@@ -378,31 +384,36 @@ export function DocPanel({
                         URL.revokeObjectURL(url);
                         setShowMobileMenu(false);
                       }}
-                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-left"
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-inset"
+                      aria-label="Export documentation"
                     >
-                      <Download className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                      <Download className="w-4 h-4 text-slate-600 dark:text-slate-400" aria-hidden="true" />
                       <span className="text-sm text-slate-700 dark:text-slate-200">Export</span>
                     </button>
                     <button
                       type="button"
+                      role="menuitem"
                       onClick={() => {
                         navigator.clipboard.writeText(documentation);
                         setShowMobileMenu(false);
                       }}
-                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-left"
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-inset"
+                      aria-label="Copy documentation to clipboard"
                     >
-                      <Copy className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                      <Copy className="w-4 h-4 text-slate-600 dark:text-slate-400" aria-hidden="true" />
                       <span className="text-sm text-slate-700 dark:text-slate-200">Copy</span>
                     </button>
                     <button
                       type="button"
+                      role="menuitem"
                       onClick={() => {
                         onReset();
                         setShowMobileMenu(false);
                       }}
-                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-left"
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-inset"
+                      aria-label="Clear documentation"
                     >
-                      <RefreshCw className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                      <RefreshCw className="w-4 h-4 text-slate-600 dark:text-slate-400" aria-hidden="true" />
                       <span className="text-sm text-slate-700 dark:text-slate-200">Clear</span>
                     </button>
                   </div>
@@ -414,7 +425,7 @@ export function DocPanel({
       </div>
 
       {/* Body - Documentation Content */}
-      <div ref={contentRef} className="flex-1 overflow-y-auto px-4 py-3 bg-white dark:bg-slate-900">
+      <div ref={contentRef} className="flex-1 min-h-0 overflow-y-auto px-4 py-3 bg-white dark:bg-slate-900">
         {isGenerating && !documentation ? (
           <DocPanelGeneratingSkeleton />
         ) : documentation ? (
@@ -616,20 +627,35 @@ export function DocPanel({
         <div>
             {/* Quick Stats */}
             <div className="flex items-center justify-between px-4 py-2 bg-slate-50 dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 transition-colors">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-1.5 text-xs">
-                  <CheckCircle className="w-3 h-3 text-green-600 dark:text-green-400" aria-hidden="true" />
-                  <span className="text-slate-600 dark:text-slate-400">
-                    {qualityScore.summary.strengths.length} criteria met
-                  </span>
-                </div>
-                {qualityScore.summary.improvements.length > 0 && (
+              <div className="flex items-center gap-3">
+                {/* Primary: Areas to improve (always visible, actionable) */}
+                {qualityScore.summary.improvements.length > 0 ? (
                   <div className="flex items-center gap-1.5 text-xs">
                     <AlertCircle className="w-3 h-3 text-yellow-600 dark:text-amber-400" aria-hidden="true" />
                     <span className="text-slate-600 dark:text-slate-400">
-                      {qualityScore.summary.improvements.length} areas to improve
+                      {qualityScore.summary.improvements.length} to improve
                     </span>
                   </div>
+                ) : (
+                  /* No improvements needed - show success message */
+                  <div className="flex items-center gap-1.5 text-xs">
+                    <CheckCircle className="w-3 h-3 text-green-600 dark:text-green-400" aria-hidden="true" />
+                    <span className="text-slate-600 dark:text-slate-400">
+                      All criteria met
+                    </span>
+                  </div>
+                )}
+                {/* Secondary: Criteria met (hide on narrow panels) */}
+                {qualityScore.summary.improvements.length > 0 && (
+                  <>
+                    <span className="@[400px]:inline hidden text-slate-400 dark:text-slate-600">•</span>
+                    <div className="@[400px]:flex hidden items-center gap-1.5 text-xs">
+                      <CheckCircle className="w-3 h-3 text-green-600 dark:text-green-400" aria-hidden="true" />
+                      <span className="text-slate-600 dark:text-slate-400">
+                        {qualityScore.summary.strengths.length} met
+                      </span>
+                    </div>
+                  </>
                 )}
               </div>
 
@@ -641,9 +667,9 @@ export function DocPanel({
               aria-expanded={isExpanded}
               aria-controls="quality-report-details"
               aria-label={isExpanded ? "Hide details" : "Show details"}
-              className="flex items-center gap-1 text-xs text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-400/15 transition-colors duration-200 motion-reduce:transition-none focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 rounded px-2 active:bg-purple-100 dark:active:bg-purple-400/20"
+              className="flex items-center gap-1 text-xs text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-400/15 transition-colors duration-200 motion-reduce:transition-none focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900 rounded px-2 py-1 active:bg-purple-100 dark:active:bg-purple-400/20"
             >
-              <span className="font-medium">{isExpanded ? "Hide details" : "Show details"}</span>
+              <span className="@[450px]:inline hidden font-medium">{isExpanded ? "Hide details" : "Show details"}</span>
               {isExpanded ? (
                 <ChevronUp className="w-3 h-3" aria-hidden="true" />
               ) : (

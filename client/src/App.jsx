@@ -34,7 +34,13 @@ const GitHubLoadModal = lazy(() => import('./components/GitHubLoader').then(m =>
 function ModalLoadingFallback() {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+      <div
+        className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"
+        role="status"
+        aria-label="Loading modal"
+      >
+        <span className="sr-only">Loading...</span>
+      </div>
     </div>
   );
 }
@@ -43,7 +49,13 @@ function ModalLoadingFallback() {
 function LoadingFallback() {
   return (
     <div className="flex items-center justify-center p-8">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+      <div
+        className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"
+        role="status"
+        aria-label="Loading"
+      >
+        <span className="sr-only">Loading...</span>
+      </div>
     </div>
   );
 }
@@ -856,25 +868,29 @@ function App() {
       />
 
       {/* Main Content */}
-      <main id="main-content" className="flex-1 w-full px-4 sm:px-6 lg:px-8 py-6 overflow-auto flex flex-col">
+      <main id="main-content" className="flex-1 w-full px-4 sm:px-6 lg:px-8 py-6 flex flex-col overflow-auto lg:overflow-hidden lg:min-h-0">
         {/* Priority Banner Section - Show only most critical message */}
         {/* Priority Order: 1) Email Verification (handled above), 2) Claude API Error, 3) Upload Error, 4) Generation Error, 5) Usage Warning */}
         {error ? (
           // Priority 1: Claude API rate limit or generation errors (blocking)
-          <ErrorBanner
-            error={error}
-            retryAfter={retryAfter}
-            onDismiss={clearError}
-          />
+          <div role="region" aria-label="Error notification">
+            <ErrorBanner
+              error={error}
+              retryAfter={retryAfter}
+              onDismiss={clearError}
+            />
+          </div>
         ) : uploadError ? (
           // Priority 2: Upload errors
-          <ErrorBanner
-            error={uploadError}
-            onDismiss={() => setUploadError(null)}
-          />
+          <div role="region" aria-label="Upload error notification">
+            <ErrorBanner
+              error={uploadError}
+              onDismiss={() => setUploadError(null)}
+            />
+          </div>
         ) : showUsageWarning && (mockUsage || usage) ? (
           // Priority 3: Usage warning (80%+ usage, non-blocking)
-          <div className="mb-6">
+          <div className="mb-6" role="region" aria-label="Usage warning">
             <UsageWarningBanner
               usage={mockUsage || getUsageForPeriod('monthly')}
               currentTier={mockUsage?.tier || usage?.tier}

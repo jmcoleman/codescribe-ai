@@ -83,7 +83,7 @@ export const Header = forwardRef(function Header({ onMenuClick, onHelpClick }, r
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14 sm:h-16">
           {/* Left: Logo + Title */}
-          <Link to="/" className="flex items-center gap-2 sm:gap-3 group">
+          <Link to="/" className="flex items-center gap-2 sm:gap-3 group" aria-label="CodeScribe AI home">
             {/* Logo */}
             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 dark:bg-purple-950/20 flex items-center justify-center shadow-purple dark:shadow-purple-dark p-1 transition-transform group-hover:scale-105 dark:border dark:border-purple-900/50">
               <Logo className="w-full h-full" aria-hidden="true" />

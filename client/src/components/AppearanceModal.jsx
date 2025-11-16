@@ -1,8 +1,63 @@
+import { useEffect, useRef } from 'react';
 import { X, Sun, Moon, Monitor, Check } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 
 export function AppearanceModal({ isOpen, onClose }) {
   const { theme, setTheme } = useTheme();
+  const modalRef = useRef(null);
+  const closeButtonRef = useRef(null);
+
+  // Focus close button when modal opens
+  useEffect(() => {
+    if (isOpen && closeButtonRef.current) {
+      closeButtonRef.current.focus();
+    }
+  }, [isOpen]);
+
+  // Handle Escape key
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isOpen, onClose]);
+
+  // Focus trap
+  useEffect(() => {
+    if (!isOpen || !modalRef.current) return;
+
+    const modal = modalRef.current;
+    const focusableElements = modal.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+
+    const handleTab = (e) => {
+      if (e.key !== 'Tab') return;
+
+      if (e.shiftKey) {
+        if (document.activeElement === firstElement) {
+          e.preventDefault();
+          lastElement.focus();
+        }
+      } else {
+        if (document.activeElement === lastElement) {
+          e.preventDefault();
+          firstElement.focus();
+        }
+      }
+    };
+
+    modal.addEventListener('keydown', handleTab);
+    return () => modal.removeEventListener('keydown', handleTab);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -23,33 +78,43 @@ export function AppearanceModal({ isOpen, onClose }) {
       <div
         className="fixed inset-0 bg-slate-900/20 dark:bg-slate-900/40 backdrop-blur-sm"
         onClick={onClose}
+        aria-hidden="true"
       />
 
       {/* Modal */}
-      <div className="relative bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 w-64 transition-colors">
+      <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="appearance-modal-title"
+        className="relative bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 w-64 transition-colors"
+      >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-700">
-          <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+          <h3 id="appearance-modal-title" className="text-sm font-semibold text-slate-900 dark:text-slate-100">
             Appearance
           </h3>
           <button
+            ref={closeButtonRef}
             onClick={onClose}
-            className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-colors focus-visible:ring-2 focus-visible:ring-purple-500"
+            className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2"
             aria-label="Close appearance settings"
           >
-            <X className="w-4 h-4" />
+            <X className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
 
         {/* Theme Options */}
-        <div className="p-2">
+        <div className="p-2" role="radiogroup" aria-label="Theme selection">
           {themeOptions.map(({ value, label, icon: Icon, description }) => (
             <button
               key={value}
               onClick={() => handleThemeSelect(value)}
+              role="radio"
+              aria-checked={theme === value}
               className={`
                 w-full flex items-center gap-3 px-3 py-2 rounded-md text-left
-                transition-colors
+                transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-inset
                 ${
                   theme === value
                     ? 'bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300'
@@ -57,7 +122,7 @@ export function AppearanceModal({ isOpen, onClose }) {
                 }
               `}
             >
-              <Icon className="w-4 h-4 flex-shrink-0" />
+              <Icon className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium">{label}</div>
                 {description && (
@@ -67,7 +132,7 @@ export function AppearanceModal({ isOpen, onClose }) {
                 )}
               </div>
               {theme === value && (
-                <Check className="w-4 h-4 flex-shrink-0 text-purple-600 dark:text-purple-400" />
+                <Check className="w-4 h-4 flex-shrink-0 text-purple-600 dark:text-purple-400" aria-hidden="true" />
               )}
             </button>
           ))}

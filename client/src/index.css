@@ -4,10 +4,15 @@
 @tailwind components;
 @tailwind utilities;
 
-/* CSS Variables for Code Blocks */
+/* CSS Variables */
 :root {
+  /* Code Blocks */
   --code-bg: #F8FAFC;
   --code-border: #E2E8F0;
+
+  /* Scrollbar Dimensions - Single source of truth for all scrollbars */
+  --scrollbar-width: 8px;
+  --scrollbar-height: 8px;
 }
 
 .dark {
@@ -61,8 +66,8 @@ body {
 @layer base {
   /* Apply to all elements with overflow scrolling */
   *::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: var(--scrollbar-width);
+    height: var(--scrollbar-height);
   }
 
   *::-webkit-scrollbar-track {
@@ -86,8 +91,8 @@ body {
 /* Custom Scrollbar utility class (for explicit usage if needed) */
 @layer utilities {
   .scrollbar-custom::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: var(--scrollbar-width);
+    height: var(--scrollbar-height);
   }
 
   .scrollbar-custom::-webkit-scrollbar-track {

@@ -380,7 +380,7 @@ x = 1
         />
       );
 
-      expect(screen.getByText('2 criteria met')).toBeInTheDocument();
+      expect(screen.getByText('2 met')).toBeInTheDocument();
     });
 
     it('should show improvements count in footer', () => {
@@ -392,7 +392,7 @@ x = 1
         />
       );
 
-      expect(screen.getByText('3 areas to improve')).toBeInTheDocument();
+      expect(screen.getByText('3 to improve')).toBeInTheDocument();
     });
 
     it('should not show improvements section when no improvements needed', () => {
@@ -413,7 +413,7 @@ x = 1
       );
 
       expect(screen.queryByText(/areas to improve/i)).not.toBeInTheDocument();
-      expect(screen.getByText('5 criteria met')).toBeInTheDocument();
+      expect(screen.getByText('All criteria met')).toBeInTheDocument();
     });
   });
 

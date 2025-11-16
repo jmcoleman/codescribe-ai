@@ -486,7 +486,9 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup, onSwitchToForgot
           >
             {isGithubLoading ? (
               <>
-                <div className="w-5 h-5 border-2 border-slate-300 dark:border-slate-600 border-t-slate-700 rounded-full animate-spin" aria-hidden="true" />
+                <div className="w-5 h-5 border-2 border-slate-300 dark:border-slate-600 border-t-slate-700 rounded-full animate-spin" role="status" aria-label="Connecting to GitHub">
+                  <span className="sr-only">Connecting to GitHub...</span>
+                </div>
                 <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Connecting to GitHub...</span>
               </>
             ) : (

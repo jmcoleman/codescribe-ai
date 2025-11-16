@@ -45,6 +45,7 @@ export function ControlBar({
               icon={Github}
               onClick={onGithubImport}
               disabled={disabled}
+              aria-label="Import from GitHub"
             >
               <span className="hidden sm:inline">Import from GitHub</span>
               <span className="sm:hidden">GitHub</span>

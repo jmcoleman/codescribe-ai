@@ -602,6 +602,14 @@ router.patch('/preferences', requireAuth, async (req, res) => {
     const { analytics_enabled, save_docs_preference, docs_consent_shown_at } = req.body;
     const userId = req.user.id;
 
+    // Require at least one field to be present
+    if (analytics_enabled === undefined && save_docs_preference === undefined && docs_consent_shown_at === undefined) {
+      return res.status(400).json({
+        success: false,
+        error: 'At least one preference field (analytics_enabled, save_docs_preference, docs_consent_shown_at) must be provided. analytics_enabled must be a boolean.'
+      });
+    }
+
     const updates = {};
 
     // Validate analytics_enabled if provided
