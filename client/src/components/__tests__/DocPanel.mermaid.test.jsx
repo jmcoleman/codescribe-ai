@@ -222,11 +222,12 @@ flowchart TD
         expect(mermaid.render).toHaveBeenCalledTimes(2);
       });
 
-      // Verify unique IDs
+      // Verify unique IDs (content-hash based)
       const id1 = mermaid.render.mock.calls[0][0];
       const id2 = mermaid.render.mock.calls[1][0];
-      expect(id1).toContain('diagram-1');
-      expect(id2).toContain('diagram-2');
+      expect(id1).toContain('diagram-');
+      expect(id2).toContain('diagram-');
+      expect(id1).not.toBe(id2); // Different content = different hash IDs
     });
   });
 
@@ -525,8 +526,8 @@ Some text after.`;
     });
   });
 
-  describe('Counter Reset', () => {
-    it('should reset diagram counter when documentation changes', async () => {
+  describe('Content-Based IDs', () => {
+    it('should generate different IDs for different diagram content', async () => {
       const doc1 = `\`\`\`mermaid
 flowchart TD
     A --> B
@@ -546,13 +547,15 @@ flowchart TD
         />
       );
 
-      // First diagram should auto-render with ID 1
+      // First diagram should auto-render with content-hash ID
       await waitFor(() => {
         const id1 = mermaid.render.mock.calls[0][0];
-        expect(id1).toContain('diagram-1');
+        expect(id1).toContain('diagram-');
       });
 
-      // Change documentation (new generation)
+      const id1 = mermaid.render.mock.calls[0][0];
+
+      // Change documentation (different content)
       rerender(
         <DocPanel
           documentation={doc2}
@@ -562,12 +565,14 @@ flowchart TD
         />
       );
 
-      // Counter should reset, new diagram should also auto-render with ID 1
+      // Different content should produce different hash-based ID
       await waitFor(() => {
-        // Second call should also start at diagram-1 (counter was reset)
-        const id2 = mermaid.render.mock.calls[1][0];
-        expect(id2).toContain('diagram-1');
+        expect(mermaid.render).toHaveBeenCalledTimes(2);
       });
+
+      const id2 = mermaid.render.mock.calls[1][0];
+      expect(id2).toContain('diagram-');
+      expect(id2).not.toBe(id1); // Different content = different hash
     });
   });
 
