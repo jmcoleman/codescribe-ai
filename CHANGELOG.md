@@ -36,6 +36,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **ESC Key Navigation** ([client/src/pages/UsageDashboard.jsx](client/src/pages/UsageDashboard.jsx:19-29), [client/src/pages/AdminUsage.jsx](client/src/pages/AdminUsage.jsx:19-29))
+  - Added ESC key handler to UsageDashboard and AdminUsage pages
+  - Consistent with existing behavior on other pages
+  - ESC navigates back (same as Back button)
+
+- **Settings Page UI Bugs** ([client/src/components/settings/](client/src/components/settings/))
+  - Fixed duplicate arrows in AccountTab and DangerZoneTab collapsibles
+  - Root cause: Global CSS `::before` pseudo-element adding extra arrow
+  - Solution: Added `before:content-none` class to override global styles
+  - Fixed legal links styling in PrivacyTab (removed breadcrumb-style ChevronRight icons)
+
+- **Privacy Wording Clarity** ([client/src/components/settings/PrivacyTab.jsx](client/src/components/settings/PrivacyTab.jsx:15-20))
+  - Updated wording to clarify: "never stores your **input code**"
+  - Explicitly states we do store generated documentation for history
+  - More transparent about what data is retained vs processed
+
 - **Markdown Formatting** ([server/src/services/docGenerator.js](server/src/services/docGenerator.js:133))
   - Fixed attribution watermark formatting (removed nested bold inside italics)
   - Changed `**Free Tier**` to plain `Free Tier` to prevent markdown rendering issues

@@ -1,6 +1,14 @@
 export default function errorHandler(err, req, res, next) {
   console.error('Error:', err);
 
+  // Handle null/undefined errors
+  if (!err) {
+    return res.status(500).json({
+      error: 'Internal server error',
+      message: 'An unexpected error occurred'
+    });
+  }
+
   // Multer errors (file upload)
   if (err.code === 'LIMIT_FILE_SIZE') {
     return res.status(413).json({
