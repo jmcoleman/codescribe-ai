@@ -552,6 +552,26 @@
             "Mermaid diagram flashing eliminated (6-layer memoization)",
             "Responsive overflow fixes for pricing page scrolling"
           ]
+        },
+        {
+          "version": "v2.8.1",
+          "title": "Language Expansion & Bug Fixes",
+          "duration": "0.5 days",
+          "status": "✓ Complete",
+          "completedDate": "Nov 16, 2025",
+          "badge": "Language Support",
+          "features": [
+            "Google Apps Script (.gs) support added as 16th language",
+            "406-line production-ready Apps Script sample (triggers, SpreadsheetApp, MailApp)",
+            "Updated language count: 15→16, file extensions: 23→24",
+            "Fixed ESC key navigation in UsageDashboard and AdminUsage pages",
+            "Fixed duplicate arrows in Settings collapsibles (removed ::before pseudo-element)",
+            "Fixed privacy wording to clarify input code vs generated documentation storage",
+            "Fixed legal links styling (removed breadcrumb-style ChevronRight icons)",
+            "Fixed attribution watermark markdown formatting (removed nested bold)",
+            "Updated sample count from 8 to 13 examples",
+            "Added language validation tests for Kotlin, Swift, Dart, Shell, Apps Script"
+          ]
         }
       ]
     },
