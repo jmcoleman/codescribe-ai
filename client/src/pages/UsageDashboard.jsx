@@ -49,6 +49,18 @@ export function UsageDashboard() {
     }
   }, [user, authLoading, navigate]);
 
+  // ESC key to navigate back (power user feature)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        navigate(-1);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [navigate]);
+
   // Handle manual refresh
   const handleRefresh = async () => {
     setRefreshing(true);

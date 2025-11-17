@@ -12,6 +12,7 @@ import cronRoutes from './routes/cron.js';
 import adminRoutes from './routes/admin.js';
 import documentsRoutes from './routes/documents.js';
 import errorHandler from './middleware/errorHandler.js';
+import securityHeaders from './middleware/securityHeaders.js';
 import { initializeDatabase, testConnection } from './db/connection.js';
 import authRoutesModule from './routes/auth.js';
 import './config/passport.js'; // Initialize passport strategies
@@ -22,6 +23,10 @@ const app = express();
 // Allows Express to trust X-Forwarded-* headers from Vercel's proxy
 // This is necessary for express-rate-limit to identify real client IPs
 app.set('trust proxy', 1);
+
+// Apply security headers to all responses (OWASP best practices)
+// Must be early in middleware chain to affect all responses
+app.use(securityHeaders);
 
 // Feature flag for authentication
 const ENABLE_AUTH = process.env.ENABLE_AUTH === 'true';

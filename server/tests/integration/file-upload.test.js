@@ -93,6 +93,11 @@ describe('File Upload Validation', () => {
       '.rs',                          // Rust
       '.rb',                          // Ruby
       '.php',                         // PHP
+      '.kt', '.kts',                  // Kotlin
+      '.swift',                       // Swift
+      '.dart',                        // Dart
+      '.sh', '.bash', '.zsh',        // Shell scripts
+      '.gs',                          // Google Apps Script
       '.txt'                          // Plain text
     ];
 
@@ -112,6 +117,14 @@ describe('File Upload Validation', () => {
         'main.rs',
         'script.rb',
         'index.php',
+        'MainActivity.kt',     // Kotlin
+        'script.kts',          // Kotlin script
+        'ViewController.swift', // Swift
+        'main.dart',           // Dart
+        'backup.sh',           // Shell
+        'deploy.bash',         // Bash
+        'setup.zsh',           // Zsh
+        'Code.gs',             // Google Apps Script
         'readme.txt'
       ];
 

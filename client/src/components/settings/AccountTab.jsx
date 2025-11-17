@@ -363,7 +363,7 @@ export function AccountTab() {
 
           {/* Collapsible Details */}
           <details className="mb-4 group">
-            <summary className="text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer hover:text-slate-900 dark:hover:text-slate-200 transition-colors list-none flex items-center gap-2">
+            <summary className="text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer hover:text-slate-900 dark:hover:text-slate-200 transition-colors flex items-center gap-2 list-none [&::-webkit-details-marker]:hidden [&::marker]:hidden before:content-none">
               <svg
                 className="w-4 h-4 transition-transform group-open:rotate-90"
                 fill="none"

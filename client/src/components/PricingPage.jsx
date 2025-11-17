@@ -207,7 +207,7 @@ export function PricingPage() {
       features: [
         '10 docs/month',
         '3 docs/day',
-        'All 10 languages',
+        'All 16 languages',
         '4 doc types',
         'Quality scoring',
         'Community support'
@@ -229,7 +229,7 @@ export function PricingPage() {
       features: [
         '50 docs/month',
         '10 docs/day',
-        'All 10 languages',
+        'All 16 languages',
         '4 doc types',
         'Priority support',
         'Email support'
@@ -294,7 +294,12 @@ export function PricingPage() {
     { name: 'Go', extensions: '.go', emoji: '🐹' },
     { name: 'Rust', extensions: '.rs', emoji: '🦀' },
     { name: 'Ruby', extensions: '.rb', emoji: '💎' },
-    { name: 'PHP', extensions: '.php', emoji: '🐘' }
+    { name: 'PHP', extensions: '.php', emoji: '🐘' },
+    { name: 'Kotlin', extensions: '.kt, .kts', emoji: '🟣' },
+    { name: 'Swift', extensions: '.swift', emoji: '🍎' },
+    { name: 'Dart', extensions: '.dart', emoji: '🎯' },
+    { name: 'Shell', extensions: '.sh, .bash, .zsh', emoji: '💻' },
+    { name: 'Apps Script', extensions: '.gs', emoji: '📊' }
   ];
 
   return (
@@ -441,7 +446,7 @@ export function PricingPage() {
         {/* Feature highlights & coming soon note */}
         <div className="text-center mb-2 sm:mb-3 space-y-0.5 sm:space-y-1">
           <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
-            All tiers include: <span className="font-semibold">All 10 languages</span> • <span className="font-semibold">4 doc types</span> • <span className="font-semibold">Real-time streaming</span> • <span className="font-semibold">Quality scoring</span>
+            All tiers include: <span className="font-semibold">All 16 languages</span> • <span className="font-semibold">4 doc types</span> • <span className="font-semibold">Real-time streaming</span> • <span className="font-semibold">Quality scoring</span>
           </p>
           <p className="text-xs text-slate-500 dark:text-slate-500">
             * Features marked with an asterisk are coming soon
@@ -473,7 +478,7 @@ export function PricingPage() {
               Full Language Support
             </h2>
             <p className="text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
-              Generate professional documentation for <strong>10 programming languages</strong> with a single click.
+              Generate professional documentation for <strong>15+ programming languages</strong> with a single click.
               All tiers include complete language support.
             </p>
           </div>
@@ -495,11 +500,11 @@ export function PricingPage() {
 
           <div className="grid sm:grid-cols-3 gap-6 pt-8 border-t border-purple-200 dark:border-purple-800">
             <div className="text-center">
-              <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-2">10</div>
+              <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-2">16</div>
               <div className="text-sm text-slate-600 dark:text-slate-400">Programming Languages</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-2">16</div>
+              <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-2">24</div>
               <div className="text-sm text-slate-600 dark:text-slate-400">File Extensions</div>
             </div>
             <div className="text-center">

@@ -109,6 +109,18 @@ export default function AdminUsage() {
     fetchStats();
   }, []);
 
+  // ESC key to navigate back (power user feature)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        navigate(-1);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [navigate]);
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleString('en-US', {
       month: 'short',

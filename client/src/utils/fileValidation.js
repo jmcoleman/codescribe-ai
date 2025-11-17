@@ -9,7 +9,9 @@ export const MAX_FILE_SIZE = 500 * 1024; // 500KB
 export const ALLOWED_EXTENSIONS = [
   '.js', '.jsx', '.ts', '.tsx', '.py',
   '.java', '.cpp', '.c', '.h', '.hpp',
-  '.cs', '.go', '.rs', '.rb', '.php', '.txt'
+  '.cs', '.go', '.rs', '.rb', '.php',
+  '.kt', '.kts', '.swift', '.dart',
+  '.sh', '.bash', '.zsh', '.gs', '.txt'
 ];
 
 // Allowed MIME types (for additional validation)
@@ -26,6 +28,11 @@ export const ALLOWED_MIME_TYPES = [
   'text/x-rust',
   'text/x-ruby',
   'text/x-php',
+  'text/x-kotlin',
+  'text/x-swift',
+  'text/x-dart',
+  'text/x-shellscript',
+  'application/x-sh',
   'text/plain',
   'application/octet-stream', // Some systems use this for code files
 ];

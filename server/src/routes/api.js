@@ -247,6 +247,11 @@ const upload = multer({
       '.rs',                          // Rust
       '.rb',                          // Ruby
       '.php',                         // PHP
+      '.kt', '.kts',                  // Kotlin
+      '.swift',                       // Swift
+      '.dart',                        // Dart
+      '.sh', '.bash', '.zsh',        // Shell scripts
+      '.gs',                          // Google Apps Script
       '.txt'                          // Plain text
     ];
     const ext = path.extname(file.originalname).toLowerCase();

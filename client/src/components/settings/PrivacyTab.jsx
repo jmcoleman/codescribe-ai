@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Shield, ChevronRight } from 'lucide-react';
+import { Shield } from 'lucide-react';
 import { toastCompact } from '../../utils/toast';
 import { useAuth } from '../../contexts/AuthContext';
 import { STORAGE_KEYS, getStorageItem } from '../../constants/storage';
@@ -115,10 +115,13 @@ export function PrivacyTab() {
           Your Code is Private
         </h2>
         <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-6 border border-slate-200 dark:border-slate-700">
+          <p className="text-sm text-slate-700 dark:text-slate-300 mb-3">
+            CodeScribe AI <strong>never stores your input code</strong>. All documentation generation happens in real-time,
+            and your code is processed in memory only.
+          </p>
           <p className="text-sm text-slate-700 dark:text-slate-300">
-            CodeScribe AI <strong>never stores your code</strong>. All documentation generation happens in real-time,
-            and your code is processed in memory only. We respect your privacy and the confidentiality
-            of your work.
+            We do store the <strong>generated documentation</strong> to provide access to your documentation history.
+            You can export or delete this data at any time from your account settings.
           </p>
         </div>
       </div>
@@ -128,21 +131,22 @@ export function PrivacyTab() {
         <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
           Legal Documents
         </h3>
-        <div className="flex flex-wrap gap-4">
-          <Link
-            to="/privacy"
-            className="flex items-center gap-1.5 text-sm text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 transition-colors"
-          >
-            <ChevronRight className="w-4 h-4" aria-hidden="true" />
-            <span>Privacy Policy</span>
-          </Link>
-          <Link
-            to="/terms"
-            className="flex items-center gap-1.5 text-sm text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 transition-colors"
-          >
-            <ChevronRight className="w-4 h-4" aria-hidden="true" />
-            <span>Terms of Service</span>
-          </Link>
+        <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-6 border border-slate-200 dark:border-slate-700">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
+            <Link
+              to="/privacy"
+              className="text-sm font-medium text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 transition-colors underline decoration-purple-600/30 hover:decoration-purple-600/60 dark:decoration-purple-400/30 dark:hover:decoration-purple-400/60 underline-offset-2"
+            >
+              Privacy Policy
+            </Link>
+            <span className="hidden sm:inline text-slate-300 dark:text-slate-600" aria-hidden="true">•</span>
+            <Link
+              to="/terms"
+              className="text-sm font-medium text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 transition-colors underline decoration-purple-600/30 hover:decoration-purple-600/60 dark:decoration-purple-400/30 dark:hover:decoration-purple-400/60 underline-offset-2"
+            >
+              Terms of Service
+            </Link>
+          </div>
         </div>
       </div>
     </div>

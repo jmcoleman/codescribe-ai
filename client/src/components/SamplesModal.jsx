@@ -16,7 +16,14 @@ function formatLanguageName(language) {
     'go': 'Go',
     'rust': 'Rust',
     'ruby': 'Ruby',
-    'php': 'PHP'
+    'php': 'PHP',
+    'kotlin': 'Kotlin',
+    'swift': 'Swift',
+    'dart': 'Dart',
+    'sh': 'Shell',
+    'bash': 'Bash',
+    'zsh': 'Zsh',
+    'gs': 'Apps Script'
   };
 
   return languageMap[language.toLowerCase()] || language.toUpperCase();

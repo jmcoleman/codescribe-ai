@@ -130,7 +130,7 @@ export class DocGeneratorService {
    */
   buildAttribution(tier) {
     const attributions = {
-      free: `\n\n---\n*🟣 Generated with [CodeScribe AI](https://codescribeai.com) • **Free Tier***\n*Upgrade to [Pro](https://codescribeai.com/pricing) to remove this watermark and unlock advanced features*`,
+      free: `\n\n---\n*🟣 Generated with [CodeScribe AI](https://codescribeai.com) • Free Tier*  \n*Upgrade to [Pro](https://codescribeai.com/pricing) to remove this watermark and unlock advanced features*`,
 
       pro: `\n\n---\n*Generated with [CodeScribe AI](https://codescribeai.com) - AI-powered code documentation*`,
 

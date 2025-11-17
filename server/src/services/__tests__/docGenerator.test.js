@@ -58,7 +58,7 @@ function greet(name) {
 
     const mockDocumentation = '# Documentation\n\nThis is great documentation!';
     // Free tier attribution (default)
-    const attribution = `\n\n---\n*🟣 Generated with [CodeScribe AI](https://codescribeai.com) • **Free Tier***\n*Upgrade to [Pro](https://codescribeai.com/pricing) to remove this watermark and unlock advanced features*`;
+    const attribution = `\n\n---\n*🟣 Generated with [CodeScribe AI](https://codescribeai.com) • Free Tier*  \n*Upgrade to [Pro](https://codescribeai.com/pricing) to remove this watermark and unlock advanced features*`;
     const mockDocumentationWithAttribution = mockDocumentation + attribution;
 
     const mockQualityScore = {
@@ -477,7 +477,7 @@ export function add(a, b) {
       };
 
       const mockDoc = '# Add Function\n\nAdds two numbers.';
-      const mockDocWithAttribution = mockDoc + `\n\n---\n*🟣 Generated with [CodeScribe AI](https://codescribeai.com) • **Free Tier***\n*Upgrade to [Pro](https://codescribeai.com/pricing) to remove this watermark and unlock advanced features*`;
+      const mockDocWithAttribution = mockDoc + `\n\n---\n*🟣 Generated with [CodeScribe AI](https://codescribeai.com) • Free Tier*  \n*Upgrade to [Pro](https://codescribeai.com/pricing) to remove this watermark and unlock advanced features*`;
       const mockScore = { score: 90, grade: 'A' };
 
       parseCode.mockResolvedValue(mockAnalysis);
@@ -576,7 +576,7 @@ export function add(a, b) {
       });
 
       const simpleDoc = '# Simple Script';
-      const simpleDocWithAttribution = simpleDoc + `\n\n---\n*🟣 Generated with [CodeScribe AI](https://codescribeai.com) • **Free Tier***\n*Upgrade to [Pro](https://codescribeai.com/pricing) to remove this watermark and unlock advanced features*`;
+      const simpleDocWithAttribution = simpleDoc + `\n\n---\n*🟣 Generated with [CodeScribe AI](https://codescribeai.com) • Free Tier*  \n*Upgrade to [Pro](https://codescribeai.com/pricing) to remove this watermark and unlock advanced features*`;
       mockLlmService.generate.mockResolvedValue({ text: simpleDoc, metadata: { provider: 'claude', model: 'test-model' } });
       calculateQualityScore.mockReturnValue({ score: 50, grade: 'F' });
 

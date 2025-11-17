@@ -9,6 +9,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.8.1] - 2025-11-16
+
+**Status:** ✅ Language Expansion & Bug Fixes
+
+**Summary:** Added Google Apps Script support with comprehensive sample file, bringing total language support to 16 languages with 24 file extensions. Fixed markdown formatting in attribution watermark.
+
+### Added
+
+- **Google Apps Script Support** ([client/src/data/examples.js](client/src/data/examples.js:1987-2389))
+  - Added `.gs` file extension support
+  - 406-line production-ready Apps Script sample showcasing:
+    - Time-driven triggers (daily/weekly automation)
+    - SpreadsheetApp API for Google Sheets manipulation
+    - MailApp API for email notifications
+    - Data validation and batch processing
+    - Error handling and logging
+    - Custom menu creation
+  - Complete integration across frontend/backend validation
+  - Updated language count: 15→16, file extensions: 23→24
+
+- **Sample File Updates** ([client/src/data/__tests__/examples.test.js](client/src/data/__tests__/examples.test.js:10-11))
+  - Updated sample count from 8 to 13 examples
+  - Added validations for new languages: Kotlin, Swift, Dart, Shell, Google Apps Script
+  - Updated SamplesModal and HelpModal to include Apps Script
+
+### Fixed
+
+- **Markdown Formatting** ([server/src/services/docGenerator.js](server/src/services/docGenerator.js:133))
+  - Fixed attribution watermark formatting (removed nested bold inside italics)
+  - Changed `**Free Tier**` to plain `Free Tier` to prevent markdown rendering issues
+  - Updated all related tests to match new format
+
+### Changed
+
+- **Language Support** ([README.md](README.md:86-104))
+  - Updated README language table with Google Apps Script
+  - Updated Pricing page with Apps Script card (📊 emoji)
+  - Updated all language count references throughout documentation
+
+### Testing
+
+- **Frontend**: 1,584 passed | 33 skipped (1,617 total) across 54 test files
+- **Backend**: 957 passed | 23 skipped (980 total) across 35 test suites
+- **Total**: 2,541 passed | 56 skipped (2,597 total)
+
+---
+
 ## [2.8.0] - 2025-11-16
 
 **Status:** ✅ Accessibility & Performance Improvements

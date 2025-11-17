@@ -83,7 +83,7 @@ codescribe-ai/
 
 ### 🌐 Supported Languages
 
-Generate professional documentation for **10 programming languages** with **16 file extensions**:
+Generate professional documentation for **16 programming languages** with **24 file extensions**:
 
 | Language | Extensions | Use Cases |
 |----------|-----------|-----------|
@@ -97,6 +97,11 @@ Generate professional documentation for **10 programming languages** with **16 f
 | 🦀 **Rust** | `.rs` | High-performance systems, WebAssembly |
 | 💎 **Ruby** | `.rb` | Rails, automation, scripting |
 | 🐘 **PHP** | `.php` | WordPress, Laravel, legacy web apps |
+| 🟣 **Kotlin** | `.kt`, `.kts` | Android (modern), Spring Boot, multiplatform |
+| 🍎 **Swift** | `.swift` | iOS, macOS, SwiftUI, server-side |
+| 🎯 **Dart** | `.dart` | Flutter, web, cross-platform mobile |
+| 💻 **Shell** | `.sh`, `.bash`, `.zsh` | DevOps, automation, CI/CD scripts |
+| 📊 **Apps Script** | `.gs` | Google Workspace automation, Sheets, Docs, Gmail |
 
 **Plus:** `.txt` for plain text documentation
 
@@ -107,7 +112,7 @@ All documentation types (README, JSDoc, API docs, Architecture) work with every 
 - **Real-Time Streaming**: Watch documentation generate character-by-character using Server-Sent Events
 - **Quality Scoring**: Get actionable feedback on documentation completeness (0-100 scale with letter grades)
 - **Code Analysis**: AST-based parsing extracts functions, classes, and exports automatically
-- **Monaco Editor**: Professional in-browser code editing with syntax highlighting for all 10 languages
+- **Monaco Editor**: Professional in-browser code editing with syntax highlighting for all 16 languages
 - **File Upload**: Drag & drop or browse to upload code files with full MIME type support
 
 ### 🎨 Advanced UX Features
@@ -421,7 +426,7 @@ VITE_STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_publishable_key
 
 1. **Paste or Upload Code**
    - Paste code directly into the Monaco editor, or
-   - Click "Upload File" to load code from a file (supports .js, .ts, .py, .java, .cpp, .go, .rs, .php, .rb, and more)
+   - Click "Upload File" to load code from a file (supports 24 file extensions across 16 languages including JavaScript, TypeScript, Python, Java, C/C++, Go, Rust, PHP, Ruby, Kotlin, Swift, Dart, Shell scripts, Google Apps Script, and more)
 
 2. **Select Documentation Type**
    - Choose from: README, JSDoc, API, or ARCHITECTURE documentation
@@ -752,7 +757,7 @@ Currently enrolled in Product Faculty's AI certification, exploring how to evolv
 **Code Analysis Engine**
 - AST-based parsing using Acorn
 - Extracts functions, classes, imports, exports
-- Supports JavaScript, TypeScript, Python, Java, C++, Go, Rust, PHP, Ruby
+- Supports 15+ languages: JavaScript, TypeScript, Python, Java, C++, C#, Go, Rust, PHP, Ruby, Kotlin, Swift, Dart, Shell scripts
 - Provides context to AI for better documentation
 
 **Real-Time Streaming**

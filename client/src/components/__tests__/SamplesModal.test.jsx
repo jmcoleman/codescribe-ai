@@ -625,11 +625,11 @@ describe('SamplesModal', () => {
   });
 
   describe('Example Count', () => {
-    it('should render all 8 examples', () => {
+    it('should render all 13 examples', () => {
       render(<SamplesModal {...defaultProps} />);
 
       const sampleCards = screen.getAllByLabelText(/Preview .* sample/);
-      expect(sampleCards).toHaveLength(8);
+      expect(sampleCards).toHaveLength(13);
     });
 
     it('should have correct sample titles', () => {

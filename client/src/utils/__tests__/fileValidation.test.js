@@ -42,6 +42,26 @@ describe('fileValidation', () => {
       });
     });
 
+    it('should accept newly added language extensions (v2.8.1)', () => {
+      // Kotlin
+      expect(validateFileExtension('MainActivity.kt').valid).toBe(true);
+      expect(validateFileExtension('script.kts').valid).toBe(true);
+
+      // Swift
+      expect(validateFileExtension('ViewController.swift').valid).toBe(true);
+
+      // Dart
+      expect(validateFileExtension('main.dart').valid).toBe(true);
+
+      // Shell scripts
+      expect(validateFileExtension('backup.sh').valid).toBe(true);
+      expect(validateFileExtension('deploy.bash').valid).toBe(true);
+      expect(validateFileExtension('setup.zsh').valid).toBe(true);
+
+      // Google Apps Script
+      expect(validateFileExtension('Code.gs').valid).toBe(true);
+    });
+
     it('should reject invalid extensions', () => {
       const result = validateFileExtension('test.exe');
       expect(result.valid).toBe(false);

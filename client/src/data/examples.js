@@ -1209,5 +1209,1182 @@ return r
 const x={init:function(c){this.config=c;this.handler=new H(c);},run:async function(d){await this.handler.add(d);return this.handler.process()}}
 
 module.exports=x`
+  },
+  {
+    id: 'kotlin-api',
+    title: 'Kotlin Spring Boot REST API',
+    description: 'A RESTful API controller built with Kotlin and Spring Boot. Shows Kotlin documentation generation with data classes and coroutines.',
+    language: 'kotlin',
+    docType: 'API',
+    code: `package com.example.tasks.controller
+
+import com.example.tasks.model.Task
+import com.example.tasks.service.TaskService
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.*
+import javax.validation.Valid
+
+/**
+ * REST controller for managing tasks
+ * Provides CRUD operations with filtering and pagination support
+ */
+@RestController
+@RequestMapping("/api/tasks")
+class TaskController(private val taskService: TaskService) {
+
+    /**
+     * Get all tasks with optional filtering
+     * @param status Filter by task status (pending, in_progress, completed)
+     * @param priority Filter by priority (low, medium, high)
+     * @param assignee Filter by assignee username
+     * @return List of tasks matching the filter criteria
+     */
+    @GetMapping
+    fun getAllTasks(
+        @RequestParam(required = false) status: String?,
+        @RequestParam(required = false) priority: String?,
+        @RequestParam(required = false) assignee: String?
+    ): ResponseEntity<ApiResponse<List<Task>>> {
+        val tasks = taskService.findAll(status, priority, assignee)
+        return ResponseEntity.ok(
+            ApiResponse(
+                success = true,
+                data = tasks,
+                count = tasks.size
+            )
+        )
+    }
+
+    /**
+     * Get a task by ID
+     * @param id Task identifier
+     * @return Task details if found
+     */
+    @GetMapping("/{id}")
+    fun getTaskById(@PathVariable id: Long): ResponseEntity<ApiResponse<Task>> {
+        val task = taskService.findById(id)
+        return task?.let {
+            ResponseEntity.ok(ApiResponse(success = true, data = it))
+        } ?: ResponseEntity.status(HttpStatus.NOT_FOUND)
+            .body(ApiResponse(success = false, error = "Task not found"))
+    }
+
+    /**
+     * Create a new task
+     * @param task Task data from request body
+     * @return Created task with generated ID
+     */
+    @PostMapping
+    fun createTask(@Valid @RequestBody task: Task): ResponseEntity<ApiResponse<Task>> {
+        val created = taskService.create(task)
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(ApiResponse(success = true, data = created))
+    }
+
+    /**
+     * Update an existing task
+     * @param id Task identifier
+     * @param task Updated task data
+     * @return Updated task details
+     */
+    @PutMapping("/{id}")
+    fun updateTask(
+        @PathVariable id: Long,
+        @Valid @RequestBody task: Task
+    ): ResponseEntity<ApiResponse<Task>> {
+        return try {
+            val updated = taskService.update(id, task)
+            ResponseEntity.ok(ApiResponse(success = true, data = updated))
+        } catch (e: NoSuchElementException) {
+            ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse(success = false, error = e.message))
+        }
+    }
+
+    /**
+     * Delete a task
+     * @param id Task identifier
+     * @return Success confirmation
+     */
+    @DeleteMapping("/{id}")
+    fun deleteTask(@PathVariable id: Long): ResponseEntity<ApiResponse<Unit>> {
+        return try {
+            taskService.delete(id)
+            ResponseEntity.ok(ApiResponse(success = true, message = "Task deleted"))
+        } catch (e: NoSuchElementException) {
+            ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse(success = false, error = "Task not found"))
+        }
+    }
+}
+
+/**
+ * Standard API response wrapper
+ */
+data class ApiResponse<T>(
+    val success: Boolean,
+    val data: T? = null,
+    val error: String? = null,
+    val message: String? = null,
+    val count: Int? = null
+)`
+  },
+  {
+    id: 'swift-viewmodel',
+    title: 'Swift SwiftUI ViewModel',
+    description: 'A SwiftUI ViewModel with async/await and Combine. Shows Swift documentation generation with modern concurrency.',
+    language: 'swift',
+    docType: 'JSDOC',
+    code: `import Foundation
+import Combine
+
+/// ViewModel for managing the weather forecast display
+/// Handles data fetching, state management, and error handling
+@MainActor
+class WeatherViewModel: ObservableObject {
+
+    // MARK: - Published Properties
+
+    /// Current weather forecast data
+    @Published var forecast: WeatherForecast?
+
+    /// Loading state indicator
+    @Published var isLoading: Bool = false
+
+    /// Error message to display to user
+    @Published var errorMessage: String?
+
+    // MARK: - Private Properties
+
+    private let weatherService: WeatherService
+    private var cancellables = Set<AnyCancellable>()
+
+    // MARK: - Initialization
+
+    /// Initialize the ViewModel with a weather service
+    /// - Parameter weatherService: Service for fetching weather data
+    init(weatherService: WeatherService = WeatherService()) {
+        self.weatherService = weatherService
+    }
+
+    // MARK: - Public Methods
+
+    /// Fetch weather forecast for a given location
+    /// - Parameter location: City name or coordinates
+    func fetchWeather(for location: String) async {
+        isLoading = true
+        errorMessage = nil
+
+        do {
+            let data = try await weatherService.getWeather(location: location)
+            forecast = data
+        } catch {
+            errorMessage = handleError(error)
+        }
+
+        isLoading = false
+    }
+
+    /// Refresh the current weather forecast
+    func refresh() async {
+        guard let currentLocation = forecast?.location else { return }
+        await fetchWeather(for: currentLocation)
+    }
+
+    /// Clear all weather data
+    func clearForecast() {
+        forecast = nil
+        errorMessage = nil
+    }
+
+    // MARK: - Private Methods
+
+    /// Convert error to user-friendly message
+    /// - Parameter error: The error that occurred
+    /// - Returns: User-friendly error message
+    private func handleError(_ error: Error) -> String {
+        switch error {
+        case let networkError as URLError:
+            return "Network error: \\(networkError.localizedDescription)"
+        case let apiError as WeatherAPIError:
+            return apiError.message
+        default:
+            return "An unexpected error occurred"
+        }
+    }
+}
+
+// MARK: - Supporting Types
+
+/// Weather forecast data model
+struct WeatherForecast: Codable, Identifiable {
+    let id: UUID
+    let location: String
+    let temperature: Double
+    let condition: String
+    let humidity: Int
+    let windSpeed: Double
+    let forecast: [DailyForecast]
+
+    /// Temperature in Celsius
+    var temperatureCelsius: Double {
+        (temperature - 32) * 5 / 9
+    }
+}
+
+/// Daily forecast entry
+struct DailyForecast: Codable, Identifiable {
+    let id: UUID
+    let date: Date
+    let high: Double
+    let low: Double
+    let condition: String
+}
+
+/// Weather API specific errors
+enum WeatherAPIError: Error {
+    case invalidLocation
+    case serviceUnavailable
+    case rateLimitExceeded
+
+    var message: String {
+        switch self {
+        case .invalidLocation:
+            return "Invalid location. Please check and try again."
+        case .serviceUnavailable:
+            return "Weather service is currently unavailable."
+        case .rateLimitExceeded:
+            return "Too many requests. Please wait a moment."
+        }
+    }
+}`
+  },
+  {
+    id: 'dart-bloc',
+    title: 'Dart Flutter BLoC Pattern',
+    description: 'A Flutter BLoC for state management with streams. Shows Dart documentation generation with reactive programming.',
+    language: 'dart',
+    docType: 'JSDOC',
+    code: `import 'dart:async';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:equatable/equatable.dart';
+
+/// Events that can be dispatched to the Shopping Cart BLoC
+abstract class CartEvent extends Equatable {
+  const CartEvent();
+
+  @override
+  List<Object?> get props => [];
+}
+
+/// Add an item to the cart
+class AddToCart extends CartEvent {
+  final Product product;
+  final int quantity;
+
+  const AddToCart({required this.product, this.quantity = 1});
+
+  @override
+  List<Object?> get props => [product, quantity];
+}
+
+/// Remove an item from the cart
+class RemoveFromCart extends CartEvent {
+  final String productId;
+
+  const RemoveFromCart({required this.productId});
+
+  @override
+  List<Object?> get props => [productId];
+}
+
+/// Update item quantity in the cart
+class UpdateQuantity extends CartEvent {
+  final String productId;
+  final int quantity;
+
+  const UpdateQuantity({required this.productId, required this.quantity});
+
+  @override
+  List<Object?> get props => [productId, quantity];
+}
+
+/// Clear all items from the cart
+class ClearCart extends CartEvent {
+  const ClearCart();
+}
+
+/// Apply a discount code to the cart
+class ApplyDiscount extends CartEvent {
+  final String code;
+
+  const ApplyDiscount({required this.code});
+
+  @override
+  List<Object?> get props => [code];
+}
+
+/// States that the Shopping Cart can be in
+abstract class CartState extends Equatable {
+  const CartState();
+
+  @override
+  List<Object?> get props => [];
+}
+
+/// Initial empty cart state
+class CartEmpty extends CartState {
+  const CartEmpty();
+}
+
+/// Cart is being updated (loading state)
+class CartLoading extends CartState {
+  const CartLoading();
+}
+
+/// Cart has items and is ready for display
+class CartLoaded extends CartState {
+  final List<CartItem> items;
+  final double subtotal;
+  final double tax;
+  final double discount;
+  final double total;
+
+  const CartLoaded({
+    required this.items,
+    required this.subtotal,
+    required this.tax,
+    required this.discount,
+    required this.total,
+  });
+
+  @override
+  List<Object?> get props => [items, subtotal, tax, discount, total];
+
+  /// Create a copy of this state with updated values
+  CartLoaded copyWith({
+    List<CartItem>? items,
+    double? subtotal,
+    double? tax,
+    double? discount,
+    double? total,
+  }) {
+    return CartLoaded(
+      items: items ?? this.items,
+      subtotal: subtotal ?? this.subtotal,
+      tax: tax ?? this.tax,
+      discount: discount ?? this.discount,
+      total: total ?? this.total,
+    );
+  }
+}
+
+/// Error state when cart operations fail
+class CartError extends CartState {
+  final String message;
+
+  const CartError({required this.message});
+
+  @override
+  List<Object?> get props => [message];
+}
+
+/// Business logic component for managing shopping cart
+/// Handles cart operations and calculates totals
+class CartBloc extends Bloc<CartEvent, CartState> {
+  final CartRepository _repository;
+  static const double taxRate = 0.08; // 8% tax rate
+
+  CartBloc({required CartRepository repository})
+      : _repository = repository,
+        super(const CartEmpty()) {
+    on<AddToCart>(_onAddToCart);
+    on<RemoveFromCart>(_onRemoveFromCart);
+    on<UpdateQuantity>(_onUpdateQuantity);
+    on<ClearCart>(_onClearCart);
+    on<ApplyDiscount>(_onApplyDiscount);
+  }
+
+  /// Handle adding an item to the cart
+  Future<void> _onAddToCart(AddToCart event, Emitter<CartState> emit) async {
+    try {
+      emit(const CartLoading());
+
+      final items = await _repository.addItem(event.product, event.quantity);
+      final totals = _calculateTotals(items);
+
+      emit(CartLoaded(
+        items: items,
+        subtotal: totals['subtotal']!,
+        tax: totals['tax']!,
+        discount: 0.0,
+        total: totals['total']!,
+      ));
+    } catch (e) {
+      emit(CartError(message: 'Failed to add item: \${e.toString()}'));
+    }
+  }
+
+  /// Handle removing an item from the cart
+  Future<void> _onRemoveFromCart(
+      RemoveFromCart event, Emitter<CartState> emit) async {
+    try {
+      emit(const CartLoading());
+
+      final items = await _repository.removeItem(event.productId);
+
+      if (items.isEmpty) {
+        emit(const CartEmpty());
+      } else {
+        final totals = _calculateTotals(items);
+        emit(CartLoaded(
+          items: items,
+          subtotal: totals['subtotal']!,
+          tax: totals['tax']!,
+          discount: 0.0,
+          total: totals['total']!,
+        ));
+      }
+    } catch (e) {
+      emit(CartError(message: 'Failed to remove item: \${e.toString()}'));
+    }
+  }
+
+  /// Calculate subtotal, tax, and total for cart items
+  Map<String, double> _calculateTotals(List<CartItem> items) {
+    final subtotal = items.fold<double>(
+      0.0,
+      (sum, item) => sum + (item.product.price * item.quantity),
+    );
+    final tax = subtotal * taxRate;
+    final total = subtotal + tax;
+
+    return {
+      'subtotal': subtotal,
+      'tax': tax,
+      'total': total,
+    };
+  }
+
+  /// Handle updating item quantity
+  Future<void> _onUpdateQuantity(
+      UpdateQuantity event, Emitter<CartState> emit) async {
+    if (event.quantity <= 0) {
+      add(RemoveFromCart(productId: event.productId));
+      return;
+    }
+
+    try {
+      emit(const CartLoading());
+
+      final items = await _repository.updateQuantity(
+        event.productId,
+        event.quantity,
+      );
+      final totals = _calculateTotals(items);
+
+      emit(CartLoaded(
+        items: items,
+        subtotal: totals['subtotal']!,
+        tax: totals['tax']!,
+        discount: 0.0,
+        total: totals['total']!,
+      ));
+    } catch (e) {
+      emit(CartError(message: 'Failed to update quantity: \${e.toString()}'));
+    }
+  }
+
+  /// Handle clearing the cart
+  Future<void> _onClearCart(ClearCart event, Emitter<CartState> emit) async {
+    try {
+      emit(const CartLoading());
+      await _repository.clearCart();
+      emit(const CartEmpty());
+    } catch (e) {
+      emit(CartError(message: 'Failed to clear cart: \${e.toString()}'));
+    }
+  }
+
+  /// Handle applying a discount code
+  Future<void> _onApplyDiscount(
+      ApplyDiscount event, Emitter<CartState> emit) async {
+    if (state is! CartLoaded) return;
+
+    try {
+      final currentState = state as CartLoaded;
+      final discount = await _repository.validateDiscount(event.code);
+
+      final discountAmount = currentState.subtotal * (discount / 100);
+      final newTotal = currentState.subtotal + currentState.tax - discountAmount;
+
+      emit(currentState.copyWith(
+        discount: discountAmount,
+        total: newTotal,
+      ));
+    } catch (e) {
+      emit(CartError(message: 'Invalid discount code'));
+    }
+  }
+}
+
+/// Cart item model
+class CartItem {
+  final Product product;
+  final int quantity;
+
+  CartItem({required this.product, required this.quantity});
+}
+
+/// Product model
+class Product {
+  final String id;
+  final String name;
+  final double price;
+
+  Product({required this.id, required this.name, required this.price});
+}
+
+/// Repository interface for cart operations
+abstract class CartRepository {
+  Future<List<CartItem>> addItem(Product product, int quantity);
+  Future<List<CartItem>> removeItem(String productId);
+  Future<List<CartItem>> updateQuantity(String productId, int quantity);
+  Future<void> clearCart();
+  Future<double> validateDiscount(String code);
+}`
+  },
+  {
+    id: 'shell-backup',
+    title: 'Shell Backup Script',
+    description: 'A robust backup script with logging, error handling, and retention. Shows Shell script documentation generation.',
+    language: 'sh',
+    docType: 'README',
+    code: `#!/bin/bash
+
+# =============================================================================
+# Automated Backup Script with Rotation
+# =============================================================================
+# Description: Creates compressed backups of specified directories with
+#              automatic rotation, logging, and error handling.
+# Author: DevOps Team
+# Version: 2.1.0
+# =============================================================================
+
+# Exit on error, undefined variables, and pipe failures
+set -euo pipefail
+
+# =============================================================================
+# Configuration
+# =============================================================================
+
+# Backup source directories (space-separated)
+SOURCE_DIRS=(
+  "/var/www/html"
+  "/etc/nginx"
+  "/home/app/data"
+)
+
+# Backup destination directory
+BACKUP_DIR="/backup/daily"
+
+# Number of days to retain backups
+RETENTION_DAYS=7
+
+# Log file location
+LOG_FILE="/var/log/backup.log"
+
+# Compression level (1-9, where 9 is maximum compression)
+COMPRESSION_LEVEL=6
+
+# =============================================================================
+# Functions
+# =============================================================================
+
+# Log message with timestamp
+# Arguments:
+#   $1 - Log level (INFO, WARN, ERROR)
+#   $2 - Message to log
+log() {
+  local level="\${1:-INFO}"
+  local message="\${2:-No message provided}"
+  local timestamp
+  timestamp=\$(date "+%Y-%m-%d %H:%M:%S")
+  echo "[\${timestamp}] [\${level}] \${message}" | tee -a "\${LOG_FILE}"
+}
+
+# Check if a command exists
+# Arguments:
+#   $1 - Command name to check
+# Returns:
+#   0 if command exists, 1 otherwise
+command_exists() {
+  command -v "\$1" &> /dev/null
+}
+
+# Create backup directory if it doesn't exist
+# Globals:
+#   BACKUP_DIR - Destination directory for backups
+ensure_backup_directory() {
+  if [[ ! -d "\${BACKUP_DIR}" ]]; then
+    log "INFO" "Creating backup directory: \${BACKUP_DIR}"
+    mkdir -p "\${BACKUP_DIR}"
+  fi
+}
+
+# Validate required tools are installed
+# Exits script if required tools are missing
+validate_dependencies() {
+  local missing_deps=()
+
+  for cmd in tar gzip date find; do
+    if ! command_exists "\${cmd}"; then
+      missing_deps+=("\${cmd}")
+    fi
+  done
+
+  if [[ \${#missing_deps[@]} -gt 0 ]]; then
+    log "ERROR" "Missing required dependencies: \${missing_deps[*]}"
+    exit 1
+  fi
+}
+
+# Create a compressed backup of a directory
+# Arguments:
+#   $1 - Source directory to backup
+# Returns:
+#   0 on success, 1 on failure
+backup_directory() {
+  local source_dir="\$1"
+  local dir_name
+  local backup_file
+  local timestamp
+
+  # Validate source directory exists
+  if [[ ! -d "\${source_dir}" ]]; then
+    log "WARN" "Source directory does not exist: \${source_dir}"
+    return 1
+  fi
+
+  # Generate backup filename
+  dir_name=\$(basename "\${source_dir}")
+  timestamp=\$(date "+%Y%m%d_%H%M%S")
+  backup_file="\${BACKUP_DIR}/\${dir_name}_\${timestamp}.tar.gz"
+
+  log "INFO" "Starting backup of \${source_dir}"
+
+  # Create compressed backup
+  if tar -czf "\${backup_file}" \\
+      --exclude='*.log' \\
+      --exclude='*.tmp' \\
+      --exclude='.cache' \\
+      -C "\$(dirname "\${source_dir}")" \\
+      "\$(basename "\${source_dir}")" \\
+      2>&1 | tee -a "\${LOG_FILE}"; then
+
+    local backup_size
+    backup_size=\$(du -h "\${backup_file}" | cut -f1)
+    log "INFO" "Backup completed: \${backup_file} (Size: \${backup_size})"
+    return 0
+  else
+    log "ERROR" "Failed to create backup of \${source_dir}"
+    return 1
+  fi
+}
+
+# Remove old backups based on retention policy
+# Globals:
+#   BACKUP_DIR - Directory containing backups
+#   RETENTION_DAYS - Number of days to retain backups
+rotate_backups() {
+  log "INFO" "Rotating backups (keeping last \${RETENTION_DAYS} days)"
+
+  local deleted_count=0
+
+  while IFS= read -r -d '' file; do
+    log "INFO" "Removing old backup: \${file}"
+    rm -f "\${file}"
+    ((deleted_count++))
+  done < <(find "\${BACKUP_DIR}" -name "*.tar.gz" -type f -mtime +"\${RETENTION_DAYS}" -print0)
+
+  if [[ \${deleted_count} -gt 0 ]]; then
+    log "INFO" "Removed \${deleted_count} old backup(s)"
+  else
+    log "INFO" "No old backups to remove"
+  fi
+}
+
+# Calculate and display backup statistics
+# Globals:
+#   BACKUP_DIR - Directory containing backups
+show_backup_stats() {
+  log "INFO" "Backup statistics:"
+
+  local total_backups
+  local total_size
+  local oldest_backup
+  local newest_backup
+
+  total_backups=\$(find "\${BACKUP_DIR}" -name "*.tar.gz" -type f | wc -l)
+  total_size=\$(du -sh "\${BACKUP_DIR}" | cut -f1)
+  oldest_backup=\$(find "\${BACKUP_DIR}" -name "*.tar.gz" -type f -printf '%T+ %p\\n' | sort | head -1 | cut -d' ' -f2-)
+  newest_backup=\$(find "\${BACKUP_DIR}" -name "*.tar.gz" -type f -printf '%T+ %p\\n' | sort | tail -1 | cut -d' ' -f2-)
+
+  log "INFO" "  Total backups: \${total_backups}"
+  log "INFO" "  Total size: \${total_size}"
+  [[ -n "\${oldest_backup}" ]] && log "INFO" "  Oldest: \${oldest_backup}"
+  [[ -n "\${newest_backup}" ]] && log "INFO" "  Newest: \${newest_backup}"
+}
+
+# =============================================================================
+# Main Script
+# =============================================================================
+
+main() {
+  log "INFO" "=== Backup script started ==="
+
+  # Validate dependencies
+  validate_dependencies
+
+  # Ensure backup directory exists
+  ensure_backup_directory
+
+  # Track backup success/failure
+  local success_count=0
+  local failure_count=0
+
+  # Backup each source directory
+  for dir in "\${SOURCE_DIRS[@]}"; do
+    if backup_directory "\${dir}"; then
+      ((success_count++))
+    else
+      ((failure_count++))
+    fi
+  done
+
+  # Rotate old backups
+  rotate_backups
+
+  # Show statistics
+  show_backup_stats
+
+  # Summary
+  log "INFO" "=== Backup script completed ==="
+  log "INFO" "Successful backups: \${success_count}"
+  log "INFO" "Failed backups: \${failure_count}"
+
+  # Exit with error if any backups failed
+  if [[ \${failure_count} -gt 0 ]]; then
+    exit 1
+  fi
+}
+
+# Run main function
+main "\$@"`
+  },
+  {
+    id: 'apps-script-sheet-manager',
+    title: 'Google Apps Script - Sheet Manager',
+    description: 'A Google Apps Script for automating Google Sheets tasks. Demonstrates time-driven triggers, Gmail integration, and spreadsheet manipulation.',
+    language: 'gs',
+    docType: 'README',
+    code: `/**
+ * Sheet Manager - Automated Google Sheets Data Processing
+ *
+ * This Apps Script automates daily data processing tasks including:
+ * - Importing data from external sources
+ * - Validating and cleaning data
+ * - Generating summary reports
+ * - Sending email notifications
+ *
+ * Installation:
+ * 1. Open your Google Sheet
+ * 2. Extensions > Apps Script
+ * 3. Paste this code and save
+ * 4. Run setupTriggers() to schedule automatic execution
+ */
+
+// ============================================================================
+// Configuration
+// ============================================================================
+
+const CONFIG = {
+  // Sheet names
+  SHEETS: {
+    RAW_DATA: 'Raw Data',
+    PROCESSED: 'Processed Data',
+    SUMMARY: 'Summary Report',
+    CONFIG: 'Configuration'
+  },
+
+  // Email settings
+  EMAIL: {
+    RECIPIENTS: 'team@example.com',
+    SUBJECT_PREFIX: '[Sheet Manager]',
+    SEND_SUMMARY: true
+  },
+
+  // Data validation rules
+  VALIDATION: {
+    MIN_ROWS: 1,
+    MAX_ROWS: 10000,
+    REQUIRED_COLUMNS: ['Date', 'Amount', 'Category']
+  },
+
+  // Processing settings
+  PROCESSING: {
+    BATCH_SIZE: 100,
+    TIMEZONE: 'America/New_York'
+  }
+};
+
+// ============================================================================
+// Trigger Setup
+// ============================================================================
+
+/**
+ * Sets up time-driven triggers for automated execution
+ * Run this function once to schedule daily processing
+ */
+function setupTriggers() {
+  // Delete existing triggers to avoid duplicates
+  const triggers = ScriptApp.getProjectTriggers();
+  triggers.forEach(trigger => ScriptApp.deleteTrigger(trigger));
+
+  // Daily processing at 6 AM
+  ScriptApp.newTrigger('processDailyData')
+    .timeBased()
+    .atHour(6)
+    .everyDays(1)
+    .create();
+
+  // Weekly summary on Monday at 9 AM
+  ScriptApp.newTrigger('generateWeeklySummary')
+    .timeBased()
+    .onWeekDay(ScriptApp.WeekDay.MONDAY)
+    .atHour(9)
+    .create();
+
+  Logger.log('Triggers set up successfully');
+  SpreadsheetApp.getUi().alert('Triggers configured! Daily processing will run at 6 AM.');
+}
+
+// ============================================================================
+// Main Processing Functions
+// ============================================================================
+
+/**
+ * Main daily data processing function
+ * Triggered automatically at 6 AM daily
+ */
+function processDailyData() {
+  const startTime = new Date();
+
+  try {
+    Logger.log('Starting daily data processing...');
+
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const rawSheet = ss.getSheetByName(CONFIG.SHEETS.RAW_DATA);
+    const processedSheet = ss.getSheetByName(CONFIG.SHEETS.PROCESSED);
+
+    if (!rawSheet || !processedSheet) {
+      throw new Error('Required sheets not found');
+    }
+
+    // Step 1: Validate raw data
+    const validationResults = validateData(rawSheet);
+    if (!validationResults.valid) {
+      sendErrorEmail('Data validation failed', validationResults.errors);
+      return;
+    }
+
+    // Step 2: Process data
+    const processedData = processRawData(rawSheet);
+
+    // Step 3: Write processed data
+    writeProcessedData(processedSheet, processedData);
+
+    // Step 4: Update summary
+    updateSummarySheet(ss, processedData);
+
+    // Step 5: Send success email
+    const duration = (new Date() - startTime) / 1000;
+    sendSuccessEmail(processedData.length, duration);
+
+    Logger.log(\`Processing completed successfully. Processed \${processedData.length} rows in \${duration}s\`);
+
+  } catch (error) {
+    Logger.log('Error in processDailyData: ' + error.toString());
+    sendErrorEmail('Processing failed', [error.toString()]);
+    throw error;
+  }
+}
+
+/**
+ * Validates raw data against configured rules
+ * @param {Sheet} sheet - The raw data sheet
+ * @returns {Object} Validation results with valid flag and errors array
+ */
+function validateData(sheet) {
+  const data = sheet.getDataRange().getValues();
+  const errors = [];
+
+  // Check minimum rows
+  if (data.length < CONFIG.VALIDATION.MIN_ROWS + 1) {
+    errors.push(\`Insufficient data: \${data.length - 1} rows (minimum: \${CONFIG.VALIDATION.MIN_ROWS})\`);
+  }
+
+  // Check maximum rows
+  if (data.length > CONFIG.VALIDATION.MAX_ROWS + 1) {
+    errors.push(\`Too much data: \${data.length - 1} rows (maximum: \${CONFIG.VALIDATION.MAX_ROWS})\`);
+  }
+
+  // Check required columns
+  const headers = data[0];
+  const missingColumns = CONFIG.VALIDATION.REQUIRED_COLUMNS.filter(
+    col => !headers.includes(col)
+  );
+
+  if (missingColumns.length > 0) {
+    errors.push('Missing required columns: ' + missingColumns.join(', '));
+  }
+
+  // Check for empty required fields
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    CONFIG.VALIDATION.REQUIRED_COLUMNS.forEach((col, index) => {
+      if (!row[headers.indexOf(col)] || row[headers.indexOf(col)] === '') {
+        errors.push(\`Row \${i + 1}: Missing value for \${col}\`);
+      }
+    });
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors: errors
+  };
+}
+
+/**
+ * Processes raw data and returns cleaned/transformed data
+ * @param {Sheet} rawSheet - The raw data sheet
+ * @returns {Array} Processed data rows
+ */
+function processRawData(rawSheet) {
+  const data = rawSheet.getDataRange().getValues();
+  const headers = data[0];
+  const processedData = [];
+
+  // Process in batches for better performance
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+
+    // Skip empty rows
+    if (row.every(cell => !cell || cell === '')) {
+      continue;
+    }
+
+    // Transform data
+    const processedRow = {
+      date: formatDate(row[headers.indexOf('Date')]),
+      amount: parseFloat(row[headers.indexOf('Amount')]) || 0,
+      category: cleanString(row[headers.indexOf('Category')]),
+      timestamp: new Date(),
+      processedBy: Session.getActiveUser().getEmail()
+    };
+
+    processedData.push(processedRow);
+  }
+
+  return processedData;
+}
+
+/**
+ * Writes processed data to the processed data sheet
+ * @param {Sheet} sheet - The processed data sheet
+ * @param {Array} data - Processed data to write
+ */
+function writeProcessedData(sheet, data) {
+  // Clear existing data (keep headers)
+  const lastRow = sheet.getLastRow();
+  if (lastRow > 1) {
+    sheet.getRange(2, 1, lastRow - 1, sheet.getLastColumn()).clear();
+  }
+
+  // Write headers if needed
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(['Date', 'Amount', 'Category', 'Processed At', 'Processed By']);
+    sheet.getRange(1, 1, 1, 5).setFontWeight('bold').setBackground('#4285f4').setFontColor('white');
+  }
+
+  // Write data
+  if (data.length > 0) {
+    const values = data.map(row => [
+      row.date,
+      row.amount,
+      row.category,
+      row.timestamp,
+      row.processedBy
+    ]);
+
+    sheet.getRange(2, 1, values.length, 5).setValues(values);
+
+    // Format amount column as currency
+    sheet.getRange(2, 2, values.length, 1).setNumberFormat('$#,##0.00');
+  }
+}
+
+/**
+ * Updates the summary sheet with aggregated statistics
+ * @param {Spreadsheet} ss - The active spreadsheet
+ * @param {Array} data - Processed data
+ */
+function updateSummarySheet(ss, data) {
+  const summarySheet = ss.getSheetByName(CONFIG.SHEETS.SUMMARY);
+  if (!summarySheet) return;
+
+  summarySheet.clear();
+
+  // Calculate statistics
+  const totalAmount = data.reduce((sum, row) => sum + row.amount, 0);
+  const avgAmount = totalAmount / data.length;
+
+  // Category breakdown
+  const categoryStats = {};
+  data.forEach(row => {
+    if (!categoryStats[row.category]) {
+      categoryStats[row.category] = { count: 0, total: 0 };
+    }
+    categoryStats[row.category].count++;
+    categoryStats[row.category].total += row.amount;
+  });
+
+  // Write summary
+  summarySheet.appendRow(['Daily Summary Report', '', Utilities.formatDate(new Date(), CONFIG.PROCESSING.TIMEZONE, 'yyyy-MM-dd')]);
+  summarySheet.appendRow([]);
+  summarySheet.appendRow(['Metric', 'Value']);
+  summarySheet.appendRow(['Total Records', data.length]);
+  summarySheet.appendRow(['Total Amount', totalAmount]);
+  summarySheet.appendRow(['Average Amount', avgAmount]);
+  summarySheet.appendRow([]);
+  summarySheet.appendRow(['Category Breakdown']);
+  summarySheet.appendRow(['Category', 'Count', 'Total Amount']);
+
+  Object.entries(categoryStats).forEach(([category, stats]) => {
+    summarySheet.appendRow([category, stats.count, stats.total]);
+  });
+
+  // Format
+  summarySheet.getRange(1, 1, 1, 3).setFontWeight('bold').setFontSize(14);
+  summarySheet.getRange(3, 1, 1, 2).setFontWeight('bold').setBackground('#f3f3f3');
+  summarySheet.getRange(8, 1, 1, 3).setFontWeight('bold').setBackground('#f3f3f3');
+  summarySheet.autoResizeColumns(1, 3);
+}
+
+// ============================================================================
+// Email Functions
+// ============================================================================
+
+/**
+ * Sends success notification email
+ * @param {number} recordCount - Number of records processed
+ * @param {number} duration - Processing duration in seconds
+ */
+function sendSuccessEmail(recordCount, duration) {
+  if (!CONFIG.EMAIL.SEND_SUMMARY) return;
+
+  const subject = \`\${CONFIG.EMAIL.SUBJECT_PREFIX} Daily Processing Complete\`;
+  const body = \`
+Daily data processing completed successfully!
+
+Summary:
+- Records processed: \${recordCount}
+- Processing time: \${duration.toFixed(2)} seconds
+- Completed at: \${new Date().toLocaleString()}
+
+View the summary report in your Google Sheet.
+  \`.trim();
+
+  MailApp.sendEmail({
+    to: CONFIG.EMAIL.RECIPIENTS,
+    subject: subject,
+    body: body
+  });
+}
+
+/**
+ * Sends error notification email
+ * @param {string} errorType - Type of error that occurred
+ * @param {Array} errors - Array of error messages
+ */
+function sendErrorEmail(errorType, errors) {
+  const subject = \`\${CONFIG.EMAIL.SUBJECT_PREFIX} Error - \${errorType}\`;
+  const body = \`
+Data processing encountered errors:
+
+Error Type: \${errorType}
+Time: \${new Date().toLocaleString()}
+
+Errors:
+\${errors.map((err, i) => \`\${i + 1}. \${err}\`).join('\\n')}
+
+Please review the data and try again.
+  \`.trim();
+
+  MailApp.sendEmail({
+    to: CONFIG.EMAIL.RECIPIENTS,
+    subject: subject,
+    body: body
+  });
+}
+
+// ============================================================================
+// Utility Functions
+// ============================================================================
+
+/**
+ * Formats a date value consistently
+ * @param {Date|string} date - Date to format
+ * @returns {string} Formatted date string
+ */
+function formatDate(date) {
+  if (!(date instanceof Date)) {
+    date = new Date(date);
+  }
+  return Utilities.formatDate(date, CONFIG.PROCESSING.TIMEZONE, 'yyyy-MM-dd');
+}
+
+/**
+ * Cleans and normalizes string values
+ * @param {string} str - String to clean
+ * @returns {string} Cleaned string
+ */
+function cleanString(str) {
+  if (!str) return '';
+  return str.toString().trim().replace(/\\s+/g, ' ');
+}
+
+/**
+ * Generates weekly summary (triggered on Mondays)
+ */
+function generateWeeklySummary() {
+  Logger.log('Generating weekly summary...');
+  // Implementation for weekly summary
+  // This would aggregate the past week's data and send a comprehensive report
+}
+
+/**
+ * Custom menu for manual operations
+ * Runs automatically when spreadsheet opens
+ */
+function onOpen() {
+  const ui = SpreadsheetApp.getUi();
+  ui.createMenu('Sheet Manager')
+    .addItem('Process Data Now', 'processDailyData')
+    .addItem('Setup Triggers', 'setupTriggers')
+    .addItem('Generate Summary', 'updateSummarySheet')
+    .addToUi();
+}`
   }
 ];

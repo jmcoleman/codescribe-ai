@@ -148,7 +148,7 @@ Types: BUG, ENHANCEMENT, FEATURE, TECH-DEBT, SECURITY
 **Priority 1 (Q1 2026):**
 - [ ] **[SECURITY]** DOMPurify for Mermaid SVG sanitization (2-3 days)
 - [ ] **[SECURITY]** Content Security Policy (CSP) headers (1-2 days)
-- [ ] **[SECURITY]** Security headers (X-Frame-Options, X-Content-Type, etc.) (1 day)
+- [x] **[SECURITY]** ~~Security headers (X-Frame-Options, X-Content-Type, etc.)~~ ✅ Completed v2.8.1 (Nov 16, 2025)
 - [ ] **[SECURITY]** Subresource Integrity (SRI) for external scripts (1 day)
 
 **Priority 2 (Q2 2026):**
@@ -160,7 +160,7 @@ Types: BUG, ENHANCEMENT, FEATURE, TECH-DEBT, SECURITY
 **Reference:** See `private/SECURITY-AUDIT-OCT-2025.md` for full audit report
 
 #### Design System
-- [ ] **[ENHANCEMENT]** Update brand-color-palette.html for dark mode colors
+- [x] **[ENHANCEMENT]** ~~Update brand-color-palette.html for dark mode colors~~ (Superseded by brand-palette-unified.html - already includes both themes)
 
 ---
 

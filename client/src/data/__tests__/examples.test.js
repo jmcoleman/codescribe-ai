@@ -7,8 +7,8 @@ describe('Code Examples Data', () => {
       expect(Array.isArray(codeSamples)).toBe(true);
     });
 
-    it('should have exactly 8 examples', () => {
-      expect(codeSamples).toHaveLength(8);
+    it('should have exactly 13 examples', () => {
+      expect(codeSamples).toHaveLength(13);
     });
 
     it('should have all required properties for each example', () => {
@@ -91,7 +91,7 @@ describe('Code Examples Data', () => {
 
   describe('Language Validation', () => {
     // Valid languages that CodeScribe AI supports
-    const validLanguages = ['javascript', 'typescript', 'python', 'java', 'go', 'rust', 'ruby', 'php', 'c', 'cpp', 'csharp'];
+    const validLanguages = ['javascript', 'typescript', 'python', 'java', 'go', 'rust', 'ruby', 'php', 'c', 'cpp', 'csharp', 'kotlin', 'swift', 'dart', 'sh', 'gs'];
 
     it('should only use valid supported languages', () => {
       codeSamples.forEach(example => {

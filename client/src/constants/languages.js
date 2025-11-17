@@ -18,6 +18,13 @@ export const LANGUAGE_DISPLAY_NAMES = {
   rust: 'Rust',
   ruby: 'Ruby',
   php: 'PHP',
+  kotlin: 'Kotlin',
+  swift: 'Swift',
+  dart: 'Dart',
+  sh: 'Shell',
+  bash: 'Bash',
+  zsh: 'Zsh',
+  gs: 'Google Apps Script',
 };
 
 /**
