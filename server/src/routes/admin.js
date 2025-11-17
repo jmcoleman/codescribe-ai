@@ -7,8 +7,15 @@
 
 import express from 'express';
 import { sql } from '@vercel/postgres';
+import jwt from 'jsonwebtoken';
 import { requireAuth } from '../middleware/auth.js';
 import User from '../models/User.js';
+import {
+  validateOverrideRequest,
+  createOverridePayload,
+  hasActiveOverride,
+  getOverrideDetails
+} from '../utils/tierOverride.js';
 
 const router = express.Router();
 
@@ -358,6 +365,255 @@ router.get('/usage-stats/ip/:ipAddress', requireAuth, requireAdmin, async (req, 
       success: false,
       error: 'Internal server error',
       message: `Failed to fetch IP usage statistics: ${error.message}`
+    });
+  }
+});
+
+/**
+ * POST /api/admin/tier-override
+ * Apply tier override to current admin/support user
+ *
+ * Body:
+ * - targetTier: string (free, starter, pro, team, enterprise)
+ * - reason: string (min 10 characters)
+ * - hoursValid: number (optional, default 4)
+ *
+ * Security: Only admin/support/super_admin roles
+ */
+router.post('/tier-override', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { targetTier, reason, hoursValid = 4 } = req.body;
+
+    // Validate request
+    validateOverrideRequest(req.user, targetTier, reason);
+
+    // Create override payload
+    const overridePayload = createOverridePayload(targetTier, reason, hoursValid);
+
+    // Generate new JWT with override fields
+    const tokenPayload = {
+      id: req.user.id,
+      email: req.user.email,
+      tier: req.user.tier,
+      role: req.user.role,
+      ...overridePayload
+    };
+
+    const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, {
+      expiresIn: '7d'
+    });
+
+    // Log to audit trail
+    await sql`
+      INSERT INTO user_audit_log (
+        user_id,
+        field_name,
+        old_value,
+        new_value,
+        changed_by
+      ) VALUES (
+        ${req.user.id},
+        'tier_override',
+        ${req.user.tier},
+        ${JSON.stringify({
+          targetTier,
+          reason: overridePayload.overrideReason,
+          expiresAt: overridePayload.overrideExpiry
+        })},
+        ${req.user.id}
+      )
+    `;
+
+    res.json({
+      success: true,
+      message: `Tier override applied: ${targetTier} for ${hoursValid} hours`,
+      data: {
+        token,
+        override: {
+          tier: targetTier,
+          expiresAt: overridePayload.overrideExpiry,
+          reason: overridePayload.overrideReason
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Error applying tier override:', error);
+
+    // Return validation errors with appropriate status
+    if (error.message.includes('Only admin/support') || error.message.includes('Invalid tier') || error.message.includes('reason')) {
+      return res.status(400).json({
+        success: false,
+        error: 'Bad request',
+        message: error.message
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      message: 'Failed to apply tier override'
+    });
+  }
+});
+
+/**
+ * POST /api/admin/tier-override/clear
+ * Clear active tier override and return to real tier
+ *
+ * Security: Only admin/support/super_admin roles
+ */
+router.post('/tier-override/clear', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    // Check if user has active override
+    if (!hasActiveOverride(req.user)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Bad request',
+        message: 'No active tier override to clear'
+      });
+    }
+
+    // Generate new JWT without override fields
+    const tokenPayload = {
+      id: req.user.id,
+      email: req.user.email,
+      tier: req.user.tier,
+      role: req.user.role
+    };
+
+    const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, {
+      expiresIn: '7d'
+    });
+
+    // Log to audit trail
+    await sql`
+      INSERT INTO user_audit_log (
+        user_id,
+        field_name,
+        old_value,
+        new_value,
+        changed_by
+      ) VALUES (
+        ${req.user.id},
+        'tier_override',
+        ${JSON.stringify({
+          tier: req.user.tierOverride,
+          expiresAt: req.user.overrideExpiry
+        })},
+        ${req.user.tier},
+        ${req.user.id}
+      )
+    `;
+
+    res.json({
+      success: true,
+      message: 'Tier override cleared successfully',
+      data: {
+        token,
+        tier: req.user.tier
+      }
+    });
+
+  } catch (error) {
+    console.error('Error clearing tier override:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      message: 'Failed to clear tier override'
+    });
+  }
+});
+
+/**
+ * GET /api/admin/tier-override/status
+ * Get current tier override status
+ *
+ * Security: Only admin/support/super_admin roles
+ */
+router.get('/tier-override/status', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const overrideDetails = getOverrideDetails(req.user);
+
+    if (!overrideDetails) {
+      return res.json({
+        success: true,
+        data: {
+          active: false,
+          realTier: req.user.tier,
+          effectiveTier: req.user.tier
+        }
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        active: true,
+        realTier: req.user.tier,
+        effectiveTier: overrideDetails.tier,
+        override: overrideDetails
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching tier override status:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      message: 'Failed to fetch tier override status'
+    });
+  }
+});
+
+/**
+ * GET /api/admin/tier-override/audit
+ * Get tier override audit log for current user
+ *
+ * Returns last 50 tier override events
+ *
+ * Security: Only admin/support/super_admin roles
+ */
+router.get('/tier-override/audit', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const auditLog = await sql`
+      SELECT
+        id,
+        field_name,
+        old_value,
+        new_value,
+        changed_at,
+        changed_by
+      FROM user_audit_log
+      WHERE user_id = ${req.user.id}
+        AND field_name = 'tier_override'
+      ORDER BY changed_at DESC
+      LIMIT 50
+    `;
+
+    const formattedLog = auditLog.rows.map(entry => ({
+      id: entry.id,
+      timestamp: entry.changed_at,
+      action: entry.new_value === entry.old_value ? 'cleared' : 'applied',
+      oldValue: entry.old_value,
+      newValue: entry.new_value,
+      changedBy: entry.changed_by
+    }));
+
+    res.json({
+      success: true,
+      data: {
+        entries: formattedLog,
+        count: formattedLog.length
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching tier override audit log:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      message: 'Failed to fetch tier override audit log'
     });
   }
 });

@@ -28,7 +28,7 @@ const requireAuth = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     // Token is valid, fetch full user data including tier
-    const user = await User.findById(decoded.sub);
+    const user = await User.findById(decoded.sub || decoded.id);
 
     if (!user) {
       return res.status(401).json({
@@ -37,7 +37,18 @@ const requireAuth = async (req, res, next) => {
       });
     }
 
-    req.user = user;
+    // Merge database user with JWT override fields (if present)
+    // This preserves tier override data which is session-based (not in DB)
+    req.user = {
+      ...user,
+      // Include tier override fields from JWT if they exist
+      ...(decoded.tierOverride && {
+        tierOverride: decoded.tierOverride,
+        overrideExpiry: decoded.overrideExpiry,
+        overrideReason: decoded.overrideReason,
+        overrideAppliedAt: decoded.overrideAppliedAt
+      })
+    };
     return next();
   } catch (error) {
     // JWT verification failed or database error
@@ -94,18 +105,19 @@ const optionalAuth = async (req, res, next) => {
 /**
  * Require specific tier or higher
  * Must be used AFTER requireAuth
+ * Supports tier override system for admin/support roles
  *
- * @param {string} requiredTier - Minimum tier required (free, pro, team, enterprise)
+ * @param {string} requiredTier - Minimum tier required (free, starter, pro, team, enterprise)
  */
 const requireTier = (requiredTier) => {
-  const tierHierarchy = ['free', 'pro', 'team', 'enterprise'];
+  const tierHierarchy = ['free', 'starter', 'pro', 'team', 'enterprise'];
   const requiredIndex = tierHierarchy.indexOf(requiredTier);
 
   if (requiredIndex === -1) {
     throw new Error(`Invalid tier: ${requiredTier}`);
   }
 
-  return (req, res, next) => {
+  return async (req, res, next) => {
     if (!req.user || !req.user.tier) {
       return res.status(401).json({
         success: false,
@@ -113,13 +125,18 @@ const requireTier = (requiredTier) => {
       });
     }
 
-    const userTierIndex = tierHierarchy.indexOf(req.user.tier);
+    // Import getEffectiveTier to support tier overrides
+    const { getEffectiveTier } = await import('../utils/tierOverride.js');
+    const effectiveTier = getEffectiveTier(req.user);
+
+    const userTierIndex = tierHierarchy.indexOf(effectiveTier);
 
     if (userTierIndex < requiredIndex) {
       return res.status(403).json({
         success: false,
         error: `This feature requires ${requiredTier} tier or higher`,
         currentTier: req.user.tier,
+        effectiveTier: effectiveTier,
         requiredTier
       });
     }
