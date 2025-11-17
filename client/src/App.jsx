@@ -4,11 +4,16 @@ import { useTheme } from './contexts/ThemeContext';
 import { Header } from './components/Header';
 import { MobileMenu } from './components/MobileMenu';
 import { ControlBar } from './components/ControlBar';
+import { Sidebar } from './components/Sidebar';
+import { TierOverrideBanner } from './components/TierOverrideBanner';
 import { CodePanel } from './components/CodePanel';
 import { SplitPanel } from './components/SplitPanel';
 import Footer from './components/Footer';
 import { useDocGeneration } from './hooks/useDocGeneration';
 import { useUsageTracking } from './hooks/useUsageTracking';
+import { useMultiFileState } from './hooks/useMultiFileState';
+import { useDocumentPersistence } from './hooks/useDocumentPersistence';
+import { useTierOverride } from './hooks/useTierOverride';
 import { ErrorBanner } from './components/ErrorBanner';
 import { UsageWarningBanner } from './components/UsageWarningBanner';
 import { UsageLimitModal } from './components/UsageLimitModal';
@@ -18,6 +23,7 @@ import { trackCodeInput, trackFileUpload, trackExampleUsage, trackInteraction } 
 import { createTestDataLoader, exposeTestDataLoader, createSkeletonTestHelper, exposeSkeletonTestHelper } from './utils/testData';
 import { exposeUsageSimulator } from './utils/usageTestData';
 import { useAuth } from './contexts/AuthContext';
+import { hasFeature } from './utils/tierFeatures';
 import { DEFAULT_CODE, EXAMPLE_CODES } from './constants/defaultCode';
 
 // Lazy load heavy components that aren't needed on initial render
@@ -100,6 +106,15 @@ function App() {
   // Usage tracking
   const { usage, refetch: refetchUsage, checkThreshold, canGenerate, getUsageForPeriod } = useUsageTracking();
   const [mockUsage, setMockUsage] = useState(null);
+
+  // Multi-file state (Phase 3: Multi-file integration)
+  const multiFileState = useMultiFileState();
+  const documentPersistence = useDocumentPersistence();
+  const { override, clearOverride } = useTierOverride();
+
+  // Feature detection: Check if user can use batch processing (Pro+ tier)
+  const canUseBatchProcessing = hasFeature(user, 'batchProcessing');
+  const isMultiFileMode = canUseBatchProcessing && multiFileState.hasFiles;
 
   // Check legal acceptance status on mount for authenticated users
   useEffect(() => {
@@ -897,6 +912,18 @@ function App() {
       {/* Email Verification Banner - Shows at top for unverified users */}
       <UnverifiedEmailBanner user={user} />
 
+      {/* Tier Override Banner - Shows for admin/support with active override */}
+      {override && override.active && (
+        <TierOverrideBanner
+          override={override}
+          onClear={async () => {
+            await clearOverride();
+            // Reload to apply tier changes
+            window.location.reload();
+          }}
+        />
+      )}
+
       {/* Mobile Menu */}
       <MobileMenu
         isOpen={showMobileMenu}
@@ -904,8 +931,24 @@ function App() {
         onHelpClick={() => setShowHelpModal(true)}
       />
 
-      {/* Main Content */}
-      <main id="main-content" className="flex-1 w-full px-4 sm:px-6 lg:px-8 py-6 flex flex-col overflow-auto lg:overflow-hidden lg:min-h-0">
+      {/* Main Content - with optional Sidebar for Pro+ users */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Sidebar - Only visible for Pro+ users (batch processing feature) */}
+        {canUseBatchProcessing && (
+          <Sidebar
+            files={multiFileState.files}
+            activeFileId={multiFileState.activeFileId}
+            onSelectFile={multiFileState.setActiveFile}
+            onRemoveFile={multiFileState.removeFile}
+            onGenerateAll={() => {
+              // TODO: Implement bulk generation in next phase
+              console.log('[App] Generate all files requested');
+            }}
+            onClearAll={multiFileState.clearFiles}
+          />
+        )}
+
+        <main id="main-content" className="flex-1 w-full px-4 sm:px-6 lg:px-8 py-6 flex flex-col overflow-auto lg:overflow-hidden lg:min-h-0">
         {/* Priority Banner Section - Show only most critical message */}
         {/* Priority Order: 1) Email Verification (handled above), 2) Claude API Error, 3) Upload Error, 4) Generation Error, 5) Usage Warning */}
         {error ? (
@@ -984,7 +1027,8 @@ function App() {
           />
         </div>
 
-      </main>
+        </main>
+      </div>
 
       {/* Quality Score Modal */}
       {showQualityModal && qualityScore && (
