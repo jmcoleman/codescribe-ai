@@ -387,40 +387,31 @@ router.post('/tier-override', requireAuth, requireAdmin, async (req, res) => {
     // Validate request
     validateOverrideRequest(req.user, targetTier, reason);
 
-    // Create override payload
-    const overridePayload = createOverridePayload(targetTier, reason, hoursValid);
-
-    // Generate new JWT with override fields
-    const tokenPayload = {
-      id: req.user.id,
-      email: req.user.email,
-      tier: req.user.tier,
-      role: req.user.role,
-      ...overridePayload
-    };
-
-    const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, {
-      expiresIn: '7d'
-    });
+    // Apply override to database
+    const updatedUser = await User.applyTierOverride(req.user.id, targetTier, reason, hoursValid);
 
     // Log to audit trail
     await sql`
       INSERT INTO user_audit_log (
         user_id,
+        user_email,
+        changed_by_id,
         field_name,
         old_value,
         new_value,
-        changed_by
+        reason
       ) VALUES (
+        ${req.user.id},
+        ${req.user.email},
         ${req.user.id},
         'tier_override',
         ${req.user.tier},
         ${JSON.stringify({
           targetTier,
-          reason: overridePayload.overrideReason,
-          expiresAt: overridePayload.overrideExpiry
+          reason: reason.trim(),
+          expiresAt: updatedUser.override_expires_at
         })},
-        ${req.user.id}
+        ${reason.trim()}
       )
     `;
 
@@ -428,11 +419,11 @@ router.post('/tier-override', requireAuth, requireAdmin, async (req, res) => {
       success: true,
       message: `Tier override applied: ${targetTier} for ${hoursValid} hours`,
       data: {
-        token,
         override: {
-          tier: targetTier,
-          expiresAt: overridePayload.overrideExpiry,
-          reason: overridePayload.overrideReason
+          tier: updatedUser.viewing_as_tier,
+          expiresAt: updatedUser.override_expires_at,
+          reason: updatedUser.override_reason,
+          appliedAt: updatedUser.override_applied_at
         }
       }
     });
@@ -465,8 +456,16 @@ router.post('/tier-override', requireAuth, requireAdmin, async (req, res) => {
  */
 router.post('/tier-override/clear', requireAuth, requireAdmin, async (req, res) => {
   try {
+    console.log('[Clear Override] req.user:', {
+      id: req.user.id,
+      viewing_as_tier: req.user.viewing_as_tier,
+      override_expires_at: req.user.override_expires_at,
+      hasActiveOverride: hasActiveOverride(req.user)
+    });
+
     // Check if user has active override
     if (!hasActiveOverride(req.user)) {
+      console.log('[Clear Override] No active override - returning 400');
       return res.status(400).json({
         success: false,
         error: 'Bad request',
@@ -474,35 +473,33 @@ router.post('/tier-override/clear', requireAuth, requireAdmin, async (req, res) 
       });
     }
 
-    // Generate new JWT without override fields
-    const tokenPayload = {
-      id: req.user.id,
-      email: req.user.email,
-      tier: req.user.tier,
-      role: req.user.role
+    // Store old values for audit log
+    const oldOverride = {
+      tier: req.user.viewing_as_tier,
+      expiresAt: req.user.override_expires_at
     };
 
-    const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, {
-      expiresIn: '7d'
-    });
+    // Clear override in database
+    const updatedUser = await User.clearTierOverride(req.user.id);
 
     // Log to audit trail
     await sql`
       INSERT INTO user_audit_log (
         user_id,
+        user_email,
+        changed_by_id,
         field_name,
         old_value,
         new_value,
-        changed_by
+        reason
       ) VALUES (
         ${req.user.id},
-        'tier_override',
-        ${JSON.stringify({
-          tier: req.user.tierOverride,
-          expiresAt: req.user.overrideExpiry
-        })},
+        ${req.user.email},
+        ${req.user.id},
+        'tier_override_cleared',
+        ${JSON.stringify(oldOverride)},
         ${req.user.tier},
-        ${req.user.id}
+        'Tier override cleared by admin'
       )
     `;
 
@@ -510,8 +507,7 @@ router.post('/tier-override/clear', requireAuth, requireAdmin, async (req, res) 
       success: true,
       message: 'Tier override cleared successfully',
       data: {
-        token,
-        tier: req.user.tier
+        tier: updatedUser.tier
       }
     });
 

@@ -295,6 +295,20 @@ export function AuthProvider({ children }) {
   };
 
   /**
+   * Update token and refresh user state
+   * Used when a new JWT is received (e.g., after tier override)
+   */
+  const updateToken = async (newToken) => {
+    try {
+      console.log('[AuthContext] updateToken called');
+      // Token should already be in localStorage, just refresh user from /me endpoint
+      await refreshUser();
+    } catch (err) {
+      console.error('[AuthContext] Error updating token:', err);
+    }
+  };
+
+  /**
    * Update user profile
    */
   const updateProfile = async (updates) => {
@@ -423,6 +437,7 @@ export function AuthProvider({ children }) {
     resetPassword,
     getToken,
     refreshUser,
+    updateToken,
     updateProfile,
     clearError,
     acceptLegalDocuments,

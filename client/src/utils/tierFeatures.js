@@ -53,20 +53,20 @@ export function getEffectiveTier(user) {
     return user.tier || 'free';
   }
 
-  // Check if override exists
-  if (!user.tierOverride || !user.overrideExpiry) {
+  // Check if override exists (database fields)
+  if (!user.viewing_as_tier || !user.override_expires_at) {
     return user.tier || 'free';
   }
 
   // Check if override has expired
   const now = new Date();
-  const expiry = new Date(user.overrideExpiry);
+  const expiry = new Date(user.override_expires_at);
 
   if (now > expiry) {
     return user.tier || 'free';
   }
 
-  return user.tierOverride;
+  return user.viewing_as_tier;
 }
 
 /**
@@ -100,12 +100,12 @@ export function getTierFeatures(user) {
  * @returns {boolean} - Whether user has active override
  */
 export function hasActiveOverride(user) {
-  if (!user || !user.tierOverride || !user.overrideExpiry) {
+  if (!user || !user.viewing_as_tier || !user.override_expires_at) {
     return false;
   }
 
   const now = new Date();
-  const expiry = new Date(user.overrideExpiry);
+  const expiry = new Date(user.override_expires_at);
 
   return now < expiry;
 }

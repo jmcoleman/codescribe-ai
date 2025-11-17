@@ -27,7 +27,7 @@ const requireAuth = async (req, res, next) => {
     // Verify token synchronously
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Token is valid, fetch full user data including tier
+    // Token is valid, fetch full user data including tier and override fields
     const user = await User.findById(decoded.sub || decoded.id);
 
     if (!user) {
@@ -37,18 +37,9 @@ const requireAuth = async (req, res, next) => {
       });
     }
 
-    // Merge database user with JWT override fields (if present)
-    // This preserves tier override data which is session-based (not in DB)
-    req.user = {
-      ...user,
-      // Include tier override fields from JWT if they exist
-      ...(decoded.tierOverride && {
-        tierOverride: decoded.tierOverride,
-        overrideExpiry: decoded.overrideExpiry,
-        overrideReason: decoded.overrideReason,
-        overrideAppliedAt: decoded.overrideAppliedAt
-      })
-    };
+    // User object from database already includes override fields
+    req.user = user;
+
     return next();
   } catch (error) {
     // JWT verification failed or database error
@@ -291,6 +282,7 @@ const requireVerifiedEmail = async (req, res, next) => {
 /**
  * Sanitize user object for client response
  * Removes sensitive fields like password_hash
+ * Adds has_password boolean for frontend logic
  *
  * @param {object} user - User object from database
  * @returns {object} Safe user object
@@ -299,6 +291,10 @@ function sanitizeUser(user) {
   if (!user) return null;
 
   const { password_hash, ...safeUser } = user;
+
+  // Add has_password field (true if password_hash exists and is not null)
+  safeUser.has_password = Boolean(password_hash);
+
   return safeUser;
 }
 

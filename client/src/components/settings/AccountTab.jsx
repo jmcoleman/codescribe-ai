@@ -3,12 +3,18 @@ import { useAuth } from '../../contexts/AuthContext';
 import { Mail, Lock, User, Save, Check, AlertCircle, Download } from 'lucide-react';
 import { toastCompact } from '../../utils/toast';
 import { RoleBadge } from '../RoleBadge';
+import { TierOverridePanel } from '../TierOverridePanel';
+import { useTierOverride } from '../../hooks/useTierOverride';
+import { STORAGE_KEYS, getStorageItem } from '../../constants/storage';
 
 export function AccountTab() {
   const { user, updateProfile } = useAuth();
+  const { override, applyOverride, clearOverride } = useTierOverride();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   // Profile form state
   const [firstName, setFirstName] = useState(user?.first_name || '');
@@ -23,6 +29,16 @@ export function AccountTab() {
   // Error states
   const [profileError, setProfileError] = useState('');
   const [passwordError, setPasswordError] = useState('');
+
+  // Password strength indicators
+  const passwordChecks = {
+    length: newPassword.length >= 8,
+    hasUpper: /[A-Z]/.test(newPassword),
+    hasLower: /[a-z]/.test(newPassword),
+    hasNumber: /[0-9]/.test(newPassword),
+  };
+
+  const passwordStrength = Object.values(passwordChecks).filter(Boolean).length;
 
   const handleSaveProfile = async (e) => {
     e.preventDefault();
@@ -69,6 +85,51 @@ export function AccountTab() {
     setProfileError('');
   };
 
+  const handleDataExport = async () => {
+    setIsExporting(true);
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      const token = getStorageItem(STORAGE_KEYS.AUTH_TOKEN);
+
+      const response = await fetch(`${API_URL}/api/user/data-export`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to export data');
+      }
+
+      // Get filename from header or use default
+      const contentDisposition = response.headers.get('Content-Disposition');
+      let filename = 'codescribe-ai-data-export.json';
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+        if (filenameMatch) filename = filenameMatch[1];
+      }
+
+      // Download the file
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toastCompact('Data export downloaded successfully', 'success');
+    } catch (error) {
+      toastCompact(error.message || 'Failed to export data', 'error');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const handleChangePassword = async (e) => {
     e.preventDefault();
     setPasswordError('');
@@ -89,8 +150,40 @@ export function AccountTab() {
       return;
     }
 
+    setIsChangingPassword(true);
+
     try {
-      // TODO: Implement password change API call
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      const token = getStorageItem(STORAGE_KEYS.AUTH_TOKEN);
+
+      if (!token) {
+        throw new Error('No authentication token found. Please log in again.');
+      }
+
+      const response = await fetch(`${API_URL}/api/auth/password`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          currentPassword,
+          newPassword
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Log for debugging
+        console.error('Password change failed:', {
+          status: response.status,
+          error: data.error,
+          details: data
+        });
+        throw new Error(data.error || 'Failed to change password');
+      }
+
       toastCompact('Password changed successfully', 'success');
       setShowPasswordForm(false);
       setCurrentPassword('');
@@ -98,6 +191,8 @@ export function AccountTab() {
       setConfirmPassword('');
     } catch (error) {
       setPasswordError(error.message || 'Failed to change password');
+    } finally {
+      setIsChangingPassword(false);
     }
   };
 
@@ -105,20 +200,15 @@ export function AccountTab() {
     <div className="space-y-6">
       {/* Profile Information */}
       <div>
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-              <User className="w-5 h-5" aria-hidden="true" />
-              Profile Information
-            </h2>
-            <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">
-              Update your personal information
-            </p>
-          </div>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+            <User className="w-5 h-5" aria-hidden="true" />
+            Profile Information
+          </h2>
           {!isEditing && (
             <button
               onClick={() => setIsEditing(true)}
-              className="px-4 py-2 text-sm font-medium text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 focus-visible:ring-offset-2 rounded"
+              className="px-4 py-2 text-sm font-medium text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 transition-colors"
             >
               Edit
             </button>
@@ -137,7 +227,7 @@ export function AccountTab() {
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
               disabled={!isEditing}
-              className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus-visible:ring-2 focus-visible:ring-purple-600 focus:border-transparent disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:text-slate-600 dark:disabled:text-slate-400 disabled:cursor-not-allowed bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+              className="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
               placeholder="Enter your first name"
             />
           </div>
@@ -153,7 +243,7 @@ export function AccountTab() {
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
               disabled={!isEditing}
-              className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus-visible:ring-2 focus-visible:ring-purple-600 focus:border-transparent disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:text-slate-600 dark:disabled:text-slate-400 disabled:cursor-not-allowed bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+              className="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
               placeholder="Enter your last name"
             />
           </div>
@@ -171,7 +261,7 @@ export function AccountTab() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={!isEditing}
-                className="w-full pl-10 pr-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus-visible:ring-2 focus-visible:ring-purple-600 focus:border-transparent disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:text-slate-600 dark:disabled:text-slate-400 disabled:cursor-not-allowed bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+                className="w-full pl-10 pr-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                 placeholder="your.email@example.com"
               />
             </div>
@@ -203,19 +293,19 @@ export function AccountTab() {
                 : 'max-h-0 opacity-0'
             }`}
           >
-            <div className="flex gap-3">
+            <div className="flex justify-end gap-3">
               <button
                 type="button"
                 onClick={cancelEdit}
                 disabled={isSaving}
-                className="flex-1 py-2.5 px-4 bg-slate-100 text-slate-900 rounded-lg font-medium hover:bg-slate-200 active:bg-slate-300 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600 dark:active:bg-slate-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-600 focus-visible:ring-offset-2"
+                className="px-4 py-2.5 bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg font-medium hover:bg-slate-200 active:bg-slate-300 dark:hover:bg-slate-600 dark:active:bg-slate-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isSaving}
-                className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white rounded-lg font-semibold shadow-lg shadow-purple-600/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 focus-visible:ring-offset-2"
+                className="flex items-center gap-2 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white rounded-lg font-semibold shadow-lg shadow-purple-600/20 dark:shadow-purple-900/30 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSaving ? (
                   <>
@@ -235,22 +325,17 @@ export function AccountTab() {
       </div>
 
       {/* Password Section */}
-      {user?.auth_method === 'email' && (
+      {user?.has_password && (
         <div className="pt-8 border-t border-slate-200 dark:border-slate-700">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                <Lock className="w-5 h-5" aria-hidden="true" />
-                Password
-              </h2>
-              <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">
-                Change your password
-              </p>
-            </div>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+              <Lock className="w-5 h-5" aria-hidden="true" />
+              Password
+            </h2>
             {!showPasswordForm && (
               <button
                 onClick={() => setShowPasswordForm(true)}
-                className="px-4 py-2 text-sm font-medium text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 focus-visible:ring-offset-2 rounded"
+                className="px-4 py-2 text-sm font-medium text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 transition-colors"
               >
                 Change Password
               </button>
@@ -259,6 +344,14 @@ export function AccountTab() {
 
           {showPasswordForm && (
             <form onSubmit={handleChangePassword} className="space-y-4">
+              {/* Error Message */}
+              {passwordError && (
+                <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-600 dark:text-red-400">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
+                  <span>{passwordError}</span>
+                </div>
+              )}
+
               {/* Current Password */}
               <div>
                 <label htmlFor="currentPassword" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
@@ -268,8 +361,11 @@ export function AccountTab() {
                   type="password"
                   id="currentPassword"
                   value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus-visible:ring-2 focus-visible:ring-purple-600 focus:border-transparent bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+                  onChange={(e) => {
+                    setCurrentPassword(e.target.value);
+                    if (passwordError) setPasswordError('');
+                  }}
+                  className="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   placeholder="Enter current password"
                 />
               </div>
@@ -283,10 +379,56 @@ export function AccountTab() {
                   type="password"
                   id="newPassword"
                   value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus-visible:ring-2 focus-visible:ring-purple-600 focus:border-transparent bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+                  onChange={(e) => {
+                    setNewPassword(e.target.value);
+                    if (passwordError) setPasswordError('');
+                  }}
+                  className="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   placeholder="Enter new password (min. 8 characters)"
                 />
+
+                {/* Password Strength Indicator */}
+                {newPassword && (
+                  <div className="mt-3 space-y-2">
+                    <div className="flex gap-1" role="status" aria-live="polite">
+                      <span className="sr-only">
+                        Password strength: {
+                          passwordStrength <= 2 ? 'Weak' :
+                          passwordStrength === 3 ? 'Medium' : 'Strong'
+                        }
+                      </span>
+                      {[1, 2, 3, 4].map((level) => (
+                        <div
+                          key={level}
+                          className={`h-1 flex-1 rounded-full transition-colors ${
+                            level <= passwordStrength
+                              ? passwordStrength <= 2
+                                ? 'bg-red-500'
+                                : passwordStrength === 3
+                                ? 'bg-yellow-500'
+                                : 'bg-green-500'
+                              : 'bg-slate-200 dark:bg-slate-700'
+                          }`}
+                          aria-hidden="true"
+                        />
+                      ))}
+                    </div>
+                    <div className="space-y-1">
+                      <PasswordCheck met={passwordChecks.length}>
+                        At least 8 characters
+                      </PasswordCheck>
+                      <PasswordCheck met={passwordChecks.hasUpper}>
+                        One uppercase letter
+                      </PasswordCheck>
+                      <PasswordCheck met={passwordChecks.hasLower}>
+                        One lowercase letter
+                      </PasswordCheck>
+                      <PasswordCheck met={passwordChecks.hasNumber}>
+                        One number
+                      </PasswordCheck>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Confirm Password */}
@@ -298,29 +440,17 @@ export function AccountTab() {
                   type="password"
                   id="confirmPassword"
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus-visible:ring-2 focus-visible:ring-purple-600 focus:border-transparent bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                    if (passwordError) setPasswordError('');
+                  }}
+                  className="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   placeholder="Confirm new password"
                 />
               </div>
 
-              {/* Error Message */}
-              {passwordError && (
-                <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-600 dark:text-red-400">
-                  <AlertCircle className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
-                  <span>{passwordError}</span>
-                </div>
-              )}
-
               {/* Action Buttons */}
-              <div className="flex gap-3">
-                <button
-                  type="submit"
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white rounded-lg font-semibold shadow-lg shadow-purple-600/20 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 focus-visible:ring-offset-2"
-                >
-                  <Check className="w-5 h-5" aria-hidden="true" />
-                  <span>Update Password</span>
-                </button>
+              <div className="flex justify-end gap-3">
                 <button
                   type="button"
                   onClick={() => {
@@ -330,110 +460,117 @@ export function AccountTab() {
                     setConfirmPassword('');
                     setPasswordError('');
                   }}
-                  className="flex-1 py-2.5 px-4 bg-slate-100 text-slate-900 rounded-lg font-medium hover:bg-slate-200 active:bg-slate-300 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600 dark:active:bg-slate-500 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-600 focus-visible:ring-offset-2"
+                  disabled={isChangingPassword}
+                  className="px-4 py-2.5 bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg font-medium hover:bg-slate-200 active:bg-slate-300 dark:hover:bg-slate-600 dark:active:bg-slate-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isChangingPassword}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white rounded-lg font-semibold shadow-lg shadow-purple-600/20 dark:shadow-purple-900/30 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isChangingPassword ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>Updating...</span>
+                    </>
+                  ) : (
+                    <span>Update Password</span>
+                  )}
                 </button>
               </div>
             </form>
           )}
+        </div>
+      )}
 
-          {user?.auth_method === 'github' && !showPasswordForm && (
-            <p className="text-sm text-slate-700 dark:text-slate-300">
-              You signed in with GitHub. Password management is handled through your GitHub account.
-            </p>
-          )}
+      {/* Tier Override Panel (Admin/Support Only) */}
+      {(user?.role === 'admin' || user?.role === 'support' || user?.role === 'super_admin') && (
+        <div className="pt-8 border-t border-slate-200 dark:border-slate-700">
+          <TierOverridePanel
+            currentTier={user?.tier}
+            override={override}
+            onApply={applyOverride}
+            onClear={clearOverride}
+          />
         </div>
       )}
 
       {/* Data Export Section (GDPR/CCPA) */}
-      <div>
-        <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-6 border border-slate-200 dark:border-slate-700">
-          <div className="flex items-start gap-3 mb-4">
-            <Download className="w-5 h-5 text-purple-600 dark:text-purple-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
-            <div className="flex-1">
-              <h2 className="text-base font-semibold text-slate-900 dark:text-white mb-1">
-                Export Your Data
-              </h2>
-              <p className="text-sm text-slate-600 dark:text-slate-400">
-                Download all your account data in JSON format (GDPR/CCPA compliance)
-              </p>
-            </div>
-          </div>
-
-          {/* Collapsible Details */}
-          <details className="mb-4 group">
-            <summary className="text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer hover:text-slate-900 dark:hover:text-slate-200 transition-colors flex items-center gap-2 list-none [&::-webkit-details-marker]:hidden [&::marker]:hidden before:content-none">
-              <svg
-                className="w-4 h-4 transition-transform group-open:rotate-90"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-              What's included in the export
-            </summary>
-            <ul className="list-disc list-inside space-y-1.5 mt-3 ml-6 text-sm text-slate-600 dark:text-slate-400">
-              <li>Profile information (name, email, tier)</li>
-              <li>Account settings and preferences</li>
-              <li>Usage history and statistics</li>
-              <li>Subscription and billing information</li>
-            </ul>
-          </details>
-
-          <button
-            onClick={async () => {
-              try {
-                const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-                const token = localStorage.getItem('token');
-
-                const response = await fetch(`${API_URL}/api/user/data-export`, {
-                  method: 'GET',
-                  headers: {
-                    'Authorization': `Bearer ${token}`
-                  }
-                });
-
-                if (!response.ok) {
-                  const data = await response.json();
-                  throw new Error(data.error || 'Failed to export data');
-                }
-
-                // Get the filename from Content-Disposition header or use default
-                const contentDisposition = response.headers.get('Content-Disposition');
-                let filename = 'codescribe-ai-data-export.json';
-                if (contentDisposition) {
-                  const filenameMatch = contentDisposition.match(/filename="(.+)"/);
-                  if (filenameMatch) {
-                    filename = filenameMatch[1];
-                  }
-                }
-
-                // Download the file
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
-
-                toastCompact('Data export downloaded successfully', 'success');
-              } catch (error) {
-                toastCompact(error.message || 'Failed to export data', 'error');
-              }
-            }}
-            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white rounded-lg font-semibold shadow-lg shadow-purple-600/20 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 focus-visible:ring-offset-2"
-          >
+      <div className="pt-8 border-t border-slate-200 dark:border-slate-700">
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2 mb-2">
             <Download className="w-5 h-5" aria-hidden="true" />
-            <span>Download My Data</span>
+            Export Your Data
+          </h2>
+          <p className="text-sm text-slate-700 dark:text-slate-300">
+            Download all your account data in JSON format (GDPR/CCPA compliance).
+          </p>
+        </div>
+
+        {/* Collapsible Details */}
+        <details className="mb-4 group">
+          <summary className="text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer hover:text-slate-900 dark:hover:text-slate-200 transition-colors flex items-center gap-2 list-none [&::-webkit-details-marker]:hidden [&::marker]:hidden before:content-none">
+            <svg
+              className="w-4 h-4 transition-transform group-open:rotate-90"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+            What's included
+          </summary>
+          <ul className="list-disc list-inside space-y-1 mt-3 ml-6 text-sm text-slate-600 dark:text-slate-400">
+            <li>Profile information (name, email, tier)</li>
+            <li>Account settings and preferences</li>
+            <li>Usage history and statistics</li>
+            <li>Subscription and billing information</li>
+          </ul>
+        </details>
+
+        <div className="flex justify-end">
+          <button
+            onClick={handleDataExport}
+            disabled={isExporting}
+            className="flex items-center gap-2 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white rounded-lg font-semibold shadow-lg shadow-purple-600/20 dark:shadow-purple-900/30 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isExporting ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <span>Downloading...</span>
+              </>
+            ) : (
+              <>
+                <Download className="w-5 h-5" aria-hidden="true" />
+                <span>Download Data</span>
+              </>
+            )}
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Password requirement check component
+ */
+function PasswordCheck({ met, children }) {
+  return (
+    <div className="flex items-center gap-2 text-xs">
+      <div
+        className={`flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center ${
+          met ? 'bg-green-100 dark:bg-green-900/30' : 'bg-slate-100 dark:bg-slate-800'
+        }`}
+      >
+        {met && <Check className="w-3 h-3 text-green-600 dark:text-green-400" aria-hidden="true" />}
+      </div>
+      <span className={met ? 'text-green-700 dark:text-green-400' : 'text-slate-500 dark:text-slate-400'}>
+        {children}
+      </span>
     </div>
   );
 }

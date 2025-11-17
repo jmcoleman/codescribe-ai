@@ -2,8 +2,8 @@
 
 **Project:** CodeScribe AI
 **Feature:** Admin/Support Tier Override for Testing
-**Version:** v2.8.0
-**Status:** 🚧 In Development
+**Version:** v2.8.1
+**Status:** ✅ Production
 **Created:** November 17, 2025
 **Last Updated:** November 17, 2025
 
@@ -21,7 +21,7 @@
 8. [UI Components](#ui-components)
 9. [API Endpoints](#api-endpoints)
 10. [Testing Strategy](#testing-strategy)
-11. [Rollout Plan](#rollout-plan)
+11. [Migration History](#migration-history)
 
 ---
 
@@ -34,7 +34,7 @@ The Tier Override System allows admin, support, and super_admin users to tempora
 - **Sales Demos**: Sales team can demonstrate Pro/Team features to prospects
 - **Development**: Engineers can test tier-specific logic without modifying code
 
-**Key Principle:** Override is **session-based and temporary** - it never modifies the user's actual tier in the database, ensuring billing integrity.
+**Key Principle:** Override is **database-based and temporary** - it never modifies the user's actual billing tier, ensuring billing integrity.
 
 ---
 
@@ -77,18 +77,18 @@ The Tier Override System allows admin, support, and super_admin users to tempora
 ### Functional Requirements
 
 1. **FR-1**: Admin/support can override their own tier temporarily
-2. **FR-2**: Override expires automatically after 4 hours
+2. **FR-2**: Override expires automatically after 4 hours (default, configurable)
 3. **FR-3**: All overrides are logged with reason, timestamp, and who applied it
 4. **FR-4**: Visual indicator shows when override is active
 5. **FR-5**: Override can be cleared manually at any time
 6. **FR-6**: Override only affects feature access, not billing or database tier
-7. **FR-7**: Override persists across page refreshes (stored in JWT/session)
+7. **FR-7**: Override persists across page refreshes (stored in database)
 
 ### Non-Functional Requirements
 
 1. **NFR-1 Security**: Only admin/support/super_admin roles can apply overrides
 2. **NFR-2 Auditability**: Complete audit trail for compliance
-3. **NFR-3 Performance**: No additional database queries per request
+3. **NFR-3 Performance**: Minimal overhead (read from database like any other field)
 4. **NFR-4 UX**: Clear visual feedback prevents confusion
 5. **NFR-5 Safety**: Cannot affect billing or actual subscription status
 
@@ -100,7 +100,7 @@ The Tier Override System allows admin, support, and super_admin users to tempora
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                     Admin Tier Override Flow                     │
+│              Database-Based Tier Override Flow                   │
 └─────────────────────────────────────────────────────────────────┘
 
 1. APPLY OVERRIDE
@@ -110,8 +110,9 @@ The Tier Override System allows admin, support, and super_admin users to tempora
          │ POST /api/admin/            │                         │
          │   tier-override              │                         │
          │ {                            │                         │
-         │   tierOverride: "pro",       │                         │
-         │   reason: "Testing #1234"    │                         │
+         │   targetTier: "pro",         │                         │
+         │   reason: "Testing #1234",   │                         │
+         │   hoursValid: 4              │                         │
          │ }                            │                         │
          ├──────────────────────────────>                         │
          │                              │                         │
@@ -119,26 +120,30 @@ The Tier Override System allows admin, support, and super_admin users to tempora
          │                        │ Verify:   │                  │
          │                        │ - Role OK │                  │
          │                        │ - Tier OK │                  │
+         │                        │ - Reason  │                  │
          │                        └─────┬─────┘                  │
+         │                              │                         │
+         │                              │ UPDATE users            │
+         │                              │ SET viewing_as_tier     │
+         │                              │   = 'pro',              │
+         │                              │ override_expires_at     │
+         │                              │   = NOW() + 4 hours,    │
+         │                              │ override_reason = ...   │
+         │                              ├────────────────────────>│
          │                              │                         │
          │                              │ INSERT audit_log        │
          │                              ├────────────────────────>│
          │                              │                         │
-         │                              │ Generate new JWT        │
-         │                        ┌─────▼─────┐                  │
-         │                        │ JWT:      │                  │
-         │                        │  tier: free│                 │
-         │                        │  tierOver-│                  │
-         │                        │   ride: pro│                 │
-         │                        │  expiry: +4h│                │
-         │                        └─────┬─────┘                  │
          │ Response:                    │                         │
-         │ { token, expiry }            │                         │
+         │ { override details }         │                         │
          │<─────────────────────────────┤                         │
          │                              │                         │
     ┌────▼────┐                         │                         │
-    │ Store   │                         │                         │
-    │ new JWT │                         │                         │
+    │ Refresh │                         │                         │
+    │ user    │                         │                         │
+    │ from    │                         │                         │
+    │ /api/   │                         │                         │
+    │ auth/me │                         │                         │
     └────┬────┘                         │                         │
          │                              │                         │
 
@@ -151,31 +156,28 @@ The Tier Override System allows admin, support, and super_admin users to tempora
          ├──────────────────────────────>                         │
          │                              │                         │
          │                        ┌─────▼─────┐                  │
-         │                        │ Extract:  │                  │
-         │                        │  tier: free│                 │
-         │                        │  override:│                  │
-         │                        │    pro    │                  │
+         │                        │ Verify JWT│                  │
+         │                        │ Extract ID│                  │
          │                        └─────┬─────┘                  │
          │                              │                         │
-         │                              │ getEffectiveTier()      │
+         │                              │ User.findById(id)       │
+         │                              │ SELECT ...,             │
+         │                              │   viewing_as_tier,      │
+         │                              │   override_expires_at   │
          │                              ├────────────────────────>│
          │                              │                         │
          │                              │        ┌────────────────▼───┐
+         │                              │        │ getEffectiveTier() │
          │                              │        │ Check expiry:      │
          │                              │        │  if expired:       │
          │                              │        │    return tier     │
          │                              │        │  else:             │
-         │                              │        │    return override │
+         │                              │        │    return viewing_ │
+         │                              │        │      as_tier       │
          │                              │        └────────────────┬───┘
          │                              │                         │
          │                              │<────────────────────────┤
          │                              │  effectiveTier: "pro"   │
-         │                              │                         │
-         │                              │ hasFeature(pro,         │
-         │                              │   "batchProcessing")    │
-         │                              ├────────────────────────>│
-         │                              │<────────────────────────┤
-         │                              │  true                   │
          │                              │                         │
          │ Response: { documents }      │                         │
          │<─────────────────────────────┤                         │
@@ -189,14 +191,19 @@ The Tier Override System allows admin, support, and super_admin users to tempora
          │   tier-override/clear        │                         │
          ├──────────────────────────────>                         │
          │                              │                         │
+         │                              │ UPDATE users            │
+         │                              │ SET viewing_as_tier     │
+         │                              │   = NULL,               │
+         │                              │ override_expires_at     │
+         │                              │   = NULL,               │
+         │                              │ override_reason = NULL  │
+         │                              ├────────────────────────>│
+         │                              │                         │
          │                              │ INSERT audit_log        │
          │                              │ (cleared override)      │
          │                              ├────────────────────────>│
          │                              │                         │
-         │                              │ Generate JWT            │
-         │                              │ (no override)           │
-         │                              │                         │
-         │ Response: { token }          │                         │
+         │ Response: { success }        │                         │
          │<─────────────────────────────┤                         │
          │                              │                         │
 ```
@@ -208,29 +215,31 @@ The Tier Override System allows admin, support, and super_admin users to tempora
 Admin clicks "Override to Pro"
   → POST /api/admin/tier-override
     → Verify role (admin/support/super_admin)
-      → Log to user_audit_log table
-        → Generate new JWT with tierOverride + expiry
-          → Return new token to frontend
-            → Frontend stores token
-              → Visual banner appears
+      → User.applyTierOverride(userId, targetTier, reason, hoursValid)
+        → UPDATE users SET viewing_as_tier, override_expires_at, override_reason
+          → Log to user_audit_log table
+            → Return override details
+              → Frontend refreshes user from /api/auth/me
+                → Visual banner appears
 ```
 
 **2. Feature Access Check:**
 ```
 User requests Pro feature (e.g., multi-file upload)
-  → Backend extracts JWT
-    → getEffectiveTier(user)
-      → Check if override exists and not expired
-        → Use override tier OR real tier
-          → hasFeature(effectiveTier, feature)
-            → Allow or deny access
+  → Backend extracts JWT, calls User.findById()
+    → Database returns user with viewing_as_tier, override_expires_at
+      → getEffectiveTier(user)
+        → Check if viewing_as_tier exists and override_expires_at > NOW()
+          → Use override tier OR real tier
+            → hasFeature(effectiveTier, feature)
+              → Allow or deny access
 ```
 
 **3. Override Expiry:**
 ```
 Override is 4 hours old
-  → getEffectiveTier() checks expiry timestamp
-    → If expired: return real tier
+  → getEffectiveTier() checks override_expires_at
+    → If NOW() > override_expires_at: return real tier
       → Feature access reverts to actual tier
         → Visual banner auto-hides
 ```
@@ -239,143 +248,219 @@ Override is 4 hours old
 
 ## Implementation Details
 
-### Backend
+### Database Schema
 
-#### 1. JWT Schema Extension
+#### Migration 020: Tier Override Columns
 
-```javascript
-// Current JWT payload
-{
-  id: 123,
-  email: "user@example.com",
-  tier: "free",
-  role: "user"
-}
+**File:** `server/src/db/migrations/020-add-tier-override-columns.sql`
 
-// NEW: JWT with override
-{
-  id: 123,
-  email: "support@codescribe.com",
-  tier: "free",                  // Real tier (unchanged)
-  role: "support",               // User role
-  tierOverride: "pro",           // Override tier
-  overrideExpiry: "2025-11-17T19:00:00Z", // 4 hours from now
-  overrideReason: "Testing multi-file bug #1234",
-  overrideAppliedAt: "2025-11-17T15:00:00Z"
-}
+```sql
+-- Add tier override columns to users table
+ALTER TABLE users
+ADD COLUMN IF NOT EXISTS viewing_as_tier VARCHAR(50) DEFAULT NULL
+CHECK (viewing_as_tier IN ('free', 'starter', 'pro', 'team', 'enterprise') OR viewing_as_tier IS NULL);
+
+ALTER TABLE users
+ADD COLUMN IF NOT EXISTS override_expires_at TIMESTAMPTZ DEFAULT NULL;
+
+ALTER TABLE users
+ADD COLUMN IF NOT EXISTS override_reason TEXT DEFAULT NULL;
+
+ALTER TABLE users
+ADD COLUMN IF NOT EXISTS override_applied_at TIMESTAMPTZ DEFAULT NULL;
+
+-- Index for finding users with active overrides (admin dashboard, cleanup)
+CREATE INDEX IF NOT EXISTS idx_users_override_expiry
+ON users(override_expires_at)
+WHERE override_expires_at IS NOT NULL;
+
+-- Comments
+COMMENT ON COLUMN users.viewing_as_tier IS 'Temporary tier override for admin/support testing. NULL means no override active.';
+COMMENT ON COLUMN users.override_expires_at IS 'When the tier override expires. NULL means no override active.';
+COMMENT ON COLUMN users.override_reason IS 'Why the override was applied (required for audit compliance).';
+COMMENT ON COLUMN users.override_applied_at IS 'When the override was applied (for audit trail).';
 ```
 
-#### 2. Helper Functions
+**Benefits:**
+- Simple: Just read from database like any other field
+- Persistent: Survives page refreshes, browser closes
+- Queryable: Can find all users with active overrides
+- No sync issues: Single source of truth
+
+### Backend
+
+#### 1. User Model Methods
+
+**File:** `server/src/models/User.js`
 
 ```javascript
-// server/src/utils/tierOverride.js
-
 /**
- * Get effective tier (considering override if present and valid)
+ * Apply tier override for admin/support testing
  */
-export const getEffectiveTier = (user) => {
-  // Only admin/support/super_admin can have overrides
-  if (!['admin', 'support', 'super_admin'].includes(user.role)) {
-    return user.tier;
-  }
-
-  // Check if override exists
-  if (!user.tierOverride || !user.overrideExpiry) {
-    return user.tier;
-  }
-
-  // Check if override has expired
-  const now = new Date();
-  const expiry = new Date(user.overrideExpiry);
-  if (now > expiry) {
-    console.log(`[TierOverride] Override expired for user ${user.id}`);
-    return user.tier; // Expired, use real tier
-  }
-
-  console.log(`[TierOverride] Using override tier "${user.tierOverride}" for user ${user.id}`);
-  return user.tierOverride;
-};
-
-/**
- * Check if user has feature (considering override)
- */
-export const hasFeatureWithOverride = (user, feature) => {
-  const effectiveTier = getEffectiveTier(user);
-  return hasFeature(effectiveTier, feature);
-};
-
-/**
- * Validate override request
- */
-export const validateOverrideRequest = (user, targetTier, reason) => {
-  // Role check
-  if (!['admin', 'support', 'super_admin'].includes(user.role)) {
-    throw new Error('Only admin/support roles can apply tier overrides');
-  }
-
-  // Tier check
+static async applyTierOverride(userId, targetTier, reason, hoursValid = 4) {
   const validTiers = ['free', 'starter', 'pro', 'team', 'enterprise'];
   if (!validTiers.includes(targetTier)) {
     throw new Error(`Invalid tier: ${targetTier}`);
   }
 
-  // Reason required
   if (!reason || reason.trim().length < 10) {
-    throw new Error('Override reason must be at least 10 characters');
+    throw new Error('Reason must be at least 10 characters');
   }
 
-  return true;
-};
+  const expiresAt = new Date();
+  expiresAt.setHours(expiresAt.getHours() + hoursValid);
+
+  const result = await sql`
+    UPDATE users
+    SET viewing_as_tier = ${targetTier},
+        override_expires_at = ${expiresAt.toISOString()},
+        override_reason = ${reason.trim()},
+        override_applied_at = NOW(),
+        updated_at = NOW()
+    WHERE id = ${userId}
+    RETURNING id, email, tier, role, viewing_as_tier,
+              override_expires_at, override_reason, override_applied_at
+  `;
+
+  return result.rows[0];
+}
+
+/**
+ * Clear tier override for a user
+ */
+static async clearTierOverride(userId) {
+  const result = await sql`
+    UPDATE users
+    SET viewing_as_tier = NULL,
+        override_expires_at = NULL,
+        override_reason = NULL,
+        override_applied_at = NULL,
+        updated_at = NOW()
+    WHERE id = ${userId}
+    RETURNING id, email, tier, role
+  `;
+
+  return result.rows[0];
+}
+
+/**
+ * Check if user has an active tier override
+ */
+static async getActiveTierOverride(userId) {
+  const result = await sql`
+    SELECT viewing_as_tier, override_expires_at, override_reason, override_applied_at
+    FROM users
+    WHERE id = ${userId}
+      AND viewing_as_tier IS NOT NULL
+      AND override_expires_at > NOW()
+  `;
+
+  if (result.rows.length === 0) return null;
+
+  const override = result.rows[0];
+  // Calculate remaining time...
+  return { tier, expiresAt, reason, appliedAt, remainingTime };
+}
 ```
 
-#### 3. Middleware Enhancement
+#### 2. Helper Functions
+
+**File:** `server/src/utils/tierOverride.js`
 
 ```javascript
-// server/src/middleware/auth.js
+/**
+ * Get effective tier (considering override if present and valid)
+ *
+ * @param {Object} user - User object from database
+ * @param {string} user.tier - Real tier from database (billing tier)
+ * @param {string} user.viewing_as_tier - Override tier (if applied)
+ * @param {string} user.override_expires_at - Override expiry timestamp
+ * @returns {string} - Effective tier to use for feature checks
+ */
+export const getEffectiveTier = (user) => {
+  if (!user) return 'free';
 
-// BEFORE
-export const requireAuth = (req, res, next) => {
-  const user = req.user; // From JWT
-  if (!user) {
-    return res.status(401).json({ error: 'Unauthorized' });
+  // Only admin/support/super_admin can have overrides
+  if (!['admin', 'support', 'super_admin'].includes(user.role)) {
+    return user.tier || 'free';
   }
-  next();
+
+  // Check if override exists in database
+  if (!user.viewing_as_tier || !user.override_expires_at) {
+    return user.tier || 'free';
+  }
+
+  // Check if override has expired
+  const now = new Date();
+  const expiry = new Date(user.override_expires_at);
+
+  if (now > expiry) {
+    console.log(`[TierOverride] Override expired for user ${user.id}`);
+    return user.tier || 'free';
+  }
+
+  console.log(`[TierOverride] Using override tier "${user.viewing_as_tier}"`);
+  return user.viewing_as_tier;
 };
 
-// AFTER (no changes needed - JWT already has override data)
-// getEffectiveTier() is called in feature checks, not middleware
+/**
+ * Check if user has active override
+ */
+export const hasActiveOverride = (user) => {
+  if (!user || !user.viewing_as_tier || !user.override_expires_at) {
+    return false;
+  }
+
+  const now = new Date();
+  const expiry = new Date(user.override_expires_at);
+  return now < expiry;
+};
+
+/**
+ * Get override details (for logging/display)
+ */
+export const getOverrideDetails = (user) => {
+  if (!hasActiveOverride(user)) return null;
+
+  const now = new Date();
+  const expiry = new Date(user.override_expires_at);
+  const remainingMs = expiry.getTime() - now.getTime();
+
+  const hours = Math.floor(remainingMs / (1000 * 60 * 60));
+  const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+
+  return {
+    tier: user.viewing_as_tier,
+    reason: user.override_reason,
+    appliedAt: user.override_applied_at,
+    expiresAt: user.override_expires_at,
+    remainingTime: { hours, minutes, totalMs: remainingMs }
+  };
+};
 ```
 
-#### 4. Database Audit Log
+#### 3. Database Audit Log
 
-Uses existing `user_audit_log` table from migration 015:
+Uses existing `user_audit_log` table:
 
 ```sql
 -- Override applied
 INSERT INTO user_audit_log (
   user_id,
   user_email,
-  changed_by_id,  -- Self-applied (same user)
+  changed_by_id,
   field_name,
   old_value,
   new_value,
-  change_type,
-  reason,
-  metadata
+  reason
 ) VALUES (
   123,
   'support@codescribe.com',
   123,
   'tier_override',
-  NULL,
-  'pro',
-  'update',
-  'Testing multi-file bug #1234',
-  jsonb_build_object(
-    'override_expiry', '2025-11-17T19:00:00Z',
-    'ip_address', req.ip,
-    'user_agent', req.headers['user-agent']
-  )
+  'free',
+  '{"targetTier":"pro","reason":"Testing multi-file bug #1234","expiresAt":"2025-11-17T19:00:00Z"}',
+  'Testing multi-file bug #1234'
 );
 
 -- Override cleared
@@ -386,144 +471,77 @@ INSERT INTO user_audit_log (
   field_name,
   old_value,
   new_value,
-  change_type,
-  reason,
-  metadata
+  reason
 ) VALUES (
   123,
   'support@codescribe.com',
   123,
-  'tier_override',
-  'pro',
-  NULL,
-  'update',
-  'Override cleared by user',
-  jsonb_build_object(
-    'cleared_at', NOW(),
-    'ip_address', req.ip
-  )
+  'tier_override_cleared',
+  '{"tier":"pro","expiresAt":"2025-11-17T19:00:00Z"}',
+  'free',
+  'Tier override cleared by admin'
 );
 ```
 
 ### Frontend
 
-#### 1. Helper Functions
+#### 1. React Hook
+
+**File:** `client/src/hooks/useTierOverride.js`
 
 ```javascript
-// client/src/utils/tierOverride.js
-
 /**
- * Get effective tier from user object
+ * Parse override from current user (database fields)
  */
-export const getEffectiveTier = (user) => {
-  if (!user) return 'free';
-
-  // Only admin/support/super_admin can have overrides
-  if (!['admin', 'support', 'super_admin'].includes(user.role)) {
-    return user.tier || 'free';
+const parseOverrideFromUser = useCallback(() => {
+  if (!user || !user.viewing_as_tier) {
+    return null;
   }
 
-  // Check if override exists and is not expired
-  if (user.tierOverride && user.overrideExpiry) {
-    const now = Date.now();
-    const expiry = new Date(user.overrideExpiry).getTime();
-    if (now < expiry) {
-      return user.tierOverride;
-    }
+  const now = new Date();
+  const expiry = new Date(user.override_expires_at);
+
+  // Check if expired
+  if (now > expiry) {
+    return null;
   }
 
-  return user.tier || 'free';
-};
+  const remainingMs = expiry.getTime() - now.getTime();
+  const hours = Math.floor(remainingMs / (1000 * 60 * 60));
+  const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
 
-/**
- * Check if user has feature (considering override)
- */
-export const hasFeatureWithOverride = (user, feature) => {
-  const effectiveTier = getEffectiveTier(user);
-  return hasFeature(effectiveTier, feature);
-};
-
-/**
- * Check if override is active
- */
-export const hasActiveOverride = (user) => {
-  if (!user || !user.tierOverride) return false;
-
-  const now = Date.now();
-  const expiry = new Date(user.overrideExpiry).getTime();
-  return now < expiry;
-};
-
-/**
- * Get time remaining for override
- */
-export const getOverrideTimeRemaining = (user) => {
-  if (!hasActiveOverride(user)) return null;
-
-  const now = Date.now();
-  const expiry = new Date(user.overrideExpiry).getTime();
-  const remaining = expiry - now;
-
-  const hours = Math.floor(remaining / (1000 * 60 * 60));
-  const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
-
-  return { hours, minutes, total: remaining };
-};
-```
-
-#### 2. Context Enhancement
-
-```javascript
-// client/src/contexts/AuthContext.jsx
-
-const AuthContext = createContext();
-
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-
-  // ... existing auth logic ...
-
-  // NEW: Apply tier override
-  const applyTierOverride = async (targetTier, reason) => {
-    const response = await api.post('/admin/tier-override', {
-      tierOverride: targetTier,
-      reason
-    });
-
-    // Update user with new token
-    const newToken = response.data.token;
-    localStorage.setItem('token', newToken);
-
-    // Refresh user data (includes override in JWT)
-    await refreshUser();
-
-    return response.data;
+  return {
+    active: true,
+    tier: user.viewing_as_tier,
+    reason: user.override_reason,
+    expiresAt: user.override_expires_at,
+    appliedAt: user.override_applied_at,
+    remainingTime: { hours, minutes, totalMs: remainingMs }
   };
+}, [user]);
 
-  // NEW: Clear tier override
-  const clearTierOverride = async () => {
-    const response = await api.post('/admin/tier-override/clear');
+/**
+ * Apply tier override
+ */
+const applyOverride = async ({ targetTier, reason, hoursValid = 4 }) => {
+  const response = await fetch(`${API_URL}/api/admin/tier-override`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ targetTier, reason, hoursValid })
+  });
 
-    // Update user with new token
-    const newToken = response.data.token;
-    localStorage.setItem('token', newToken);
+  const data = await response.json();
 
-    // Refresh user data (override removed from JWT)
-    await refreshUser();
+  // Refresh user from /api/auth/me to get updated override fields
+  if (updateToken) {
+    await updateToken();
+  }
 
-    return response.data;
-  };
-
-  return (
-    <AuthContext.Provider value={{
-      user,
-      // ... existing methods ...
-      applyTierOverride,
-      clearTierOverride,
-    }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  setOverride({ active: true, ...data.data.override });
+  return data;
 };
 ```
 
@@ -550,8 +568,8 @@ if (!['admin', 'support', 'super_admin'].includes(user.role)) {
 **Threat**: Override accidentally affects billing or subscription status.
 
 **Mitigation**:
-- Override stored only in JWT (never in `users.tier` column)
-- Billing queries use `users.tier` directly (ignore JWT override)
+- Override stored in `viewing_as_tier` column (separate from `tier`)
+- Billing queries use `users.tier` directly (ignore override)
 - Stripe webhooks update `users.tier` (unaffected by overrides)
 
 **Result**: Billing completely isolated from override system.
@@ -562,7 +580,7 @@ if (!['admin', 'support', 'super_admin'].includes(user.role)) {
 
 **Mitigation**:
 - Every override logged to `user_audit_log`
-- Includes: who, when, why, which tier, IP address
+- Includes: who, when, why, which tier
 - Immutable audit log (append-only)
 
 **Result**: Complete forensic trail for security audits.
@@ -572,22 +590,11 @@ if (!['admin', 'support', 'super_admin'].includes(user.role)) {
 **Threat**: Forgotten override gives permanent free access.
 
 **Mitigation**:
-- 4-hour expiry hardcoded in backend
+- Expiry stored in `override_expires_at`
 - `getEffectiveTier()` checks expiry on every request
 - Expired overrides automatically ignored
 
-**Result**: Maximum 4-hour window, then reverts to real tier.
-
-### 5. Visual Indicator
-
-**Threat**: User forgets override is active, makes incorrect support decisions.
-
-**Mitigation**:
-- Prominent banner at top of screen
-- Shows tier, expiry time, reason
-- Cannot be dismissed (only cleared via API)
-
-**Result**: Always aware when testing with override.
+**Result**: Maximum window (default 4 hours), then reverts to real tier.
 
 ---
 
@@ -599,26 +606,23 @@ All override events are logged to `user_audit_log` table:
 
 | Event | Field Name | Old Value | New Value | Reason |
 |-------|-----------|-----------|-----------|--------|
-| Override Applied | `tier_override` | `NULL` | `pro` | "Testing multi-file bug #1234" |
-| Override Cleared | `tier_override` | `pro` | `NULL` | "Testing complete" |
-| Override Expired | `tier_override` | `pro` | `NULL` | "Auto-expired after 4 hours" |
+| Override Applied | `tier_override` | `free` | `{"targetTier":"pro",...}` | "Testing multi-file bug #1234" |
+| Override Cleared | `tier_override_cleared` | `{"tier":"pro",...}` | `free` | "Testing complete" |
 
 ### Audit Log Query Examples
 
 ```sql
--- Get all overrides applied today
+-- Get all active overrides
 SELECT
-  user_email,
-  new_value as override_tier,
-  reason,
-  metadata->>'override_expiry' as expires_at,
-  changed_at
-FROM user_audit_log
-WHERE field_name = 'tier_override'
-  AND change_type = 'update'
-  AND new_value IS NOT NULL
-  AND DATE(changed_at) = CURRENT_DATE
-ORDER BY changed_at DESC;
+  u.id,
+  u.email,
+  u.viewing_as_tier,
+  u.override_expires_at,
+  u.override_reason
+FROM users u
+WHERE u.viewing_as_tier IS NOT NULL
+  AND u.override_expires_at > NOW()
+ORDER BY u.override_expires_at ASC;
 
 -- Get override history for specific user
 SELECT
@@ -626,11 +630,10 @@ SELECT
   old_value,
   new_value,
   reason,
-  changed_at,
-  metadata
+  changed_at
 FROM user_audit_log
 WHERE user_id = 123
-  AND field_name = 'tier_override'
+  AND field_name IN ('tier_override', 'tier_override_cleared')
 ORDER BY changed_at DESC;
 
 -- Count overrides by user (detect abuse)
@@ -641,10 +644,15 @@ SELECT
   MAX(changed_at) as last_override
 FROM user_audit_log
 WHERE field_name = 'tier_override'
-  AND new_value IS NOT NULL
   AND changed_at > NOW() - INTERVAL '30 days'
 GROUP BY user_email
 ORDER BY override_count DESC;
+
+-- Find expired overrides that need cleanup
+SELECT id, email, viewing_as_tier, override_expires_at
+FROM users
+WHERE viewing_as_tier IS NOT NULL
+  AND override_expires_at <= NOW();
 ```
 
 ---
@@ -660,123 +668,28 @@ ORDER BY override_count DESC;
 **Design**:
 ```jsx
 // Shows at top of page when override active
-<div className="bg-amber-500 dark:bg-amber-600 text-white px-4 py-2 flex items-center justify-between">
+<div className="bg-amber-500 dark:bg-amber-600 text-white px-4 py-2">
   <div className="flex items-center gap-3">
     <AlertTriangle className="w-5 h-5" />
-    <span className="font-medium">
-      TIER OVERRIDE ACTIVE: Testing as "{user.tierOverride}" tier
-    </span>
-    <span className="text-amber-100">
-      Expires in {timeRemaining}
-    </span>
+    <span>Viewing As: {user.viewing_as_tier}</span>
+    <span>• Expires in {timeRemaining}</span>
   </div>
-  <div className="flex items-center gap-3">
-    <span className="text-sm text-amber-100">
-      Reason: {user.overrideReason}
-    </span>
-    <button
-      onClick={clearOverride}
-      className="text-white hover:text-amber-100 underline text-sm"
-    >
-      Clear Override
-    </button>
-  </div>
+  <button onClick={clearOverride}>Clear Override</button>
 </div>
 ```
 
-**Accessibility**:
-- `role="alert"` for screen reader announcement
-- High contrast colors (WCAG AA)
-- Keyboard accessible clear button
-
-### 2. TierOverridePanel (Admin Dashboard)
+### 2. TierOverridePanel (Settings)
 
 **Purpose**: Apply/clear tier overrides.
 
-**Location**: `client/src/components/Admin/TierOverridePanel.jsx`
+**Location**: `client/src/components/TierOverridePanel.jsx`
 
-**Design**:
-```jsx
-<div className="bg-white dark:bg-slate-800 rounded-lg p-6 border">
-  <h3 className="text-lg font-semibold mb-4">
-    Tier Override (Testing Only)
-  </h3>
-
-  {/* Current Status */}
-  <div className="mb-4 p-3 bg-slate-50 dark:bg-slate-900 rounded">
-    <div className="text-sm text-slate-600 dark:text-slate-400">
-      Current Tier: <strong>{user.tier}</strong>
-    </div>
-    {hasActiveOverride(user) && (
-      <div className="text-sm text-amber-600 dark:text-amber-400 mt-1">
-        Override Active: <strong>{user.tierOverride}</strong>
-        (Expires in {timeRemaining})
-      </div>
-    )}
-  </div>
-
-  {/* Override Form */}
-  <form onSubmit={handleApplyOverride}>
-    <div className="mb-4">
-      <label className="block text-sm font-medium mb-2">
-        Override Tier
-      </label>
-      <select
-        value={selectedTier}
-        onChange={(e) => setSelectedTier(e.target.value)}
-        className="w-full px-3 py-2 border rounded"
-      >
-        <option value="">-- Select Tier --</option>
-        <option value="free">Free</option>
-        <option value="starter">Starter</option>
-        <option value="pro">Pro</option>
-        <option value="team">Team</option>
-        <option value="enterprise">Enterprise</option>
-      </select>
-    </div>
-
-    <div className="mb-4">
-      <label className="block text-sm font-medium mb-2">
-        Reason (required, min 10 chars)
-      </label>
-      <input
-        type="text"
-        value={reason}
-        onChange={(e) => setReason(e.target.value)}
-        placeholder="e.g., Testing multi-file bug #1234"
-        className="w-full px-3 py-2 border rounded"
-        minLength={10}
-        required
-      />
-    </div>
-
-    <div className="flex gap-3">
-      <button
-        type="submit"
-        disabled={!selectedTier || reason.length < 10}
-        className="btn-primary"
-      >
-        Apply Override (4 hours)
-      </button>
-
-      {hasActiveOverride(user) && (
-        <button
-          type="button"
-          onClick={handleClearOverride}
-          className="btn-secondary"
-        >
-          Clear Override
-        </button>
-      )}
-    </div>
-  </form>
-
-  {/* Warning */}
-  <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded text-sm text-yellow-800 dark:text-yellow-200">
-    ⚠️ Override expires after 4 hours. Does not affect billing or subscription status.
-  </div>
-</div>
-```
+**Features**:
+- Select target tier (Free, Starter, Pro, Team, Enterprise)
+- Required reason field (min 10 characters, shows character counter)
+- Configurable expiry (default 4 hours)
+- Shows current override status
+- Clear override button when active
 
 ---
 
@@ -791,8 +704,9 @@ Apply a tier override.
 **Request**:
 ```json
 {
-  "tierOverride": "pro",
-  "reason": "Testing multi-file bug #1234"
+  "targetTier": "pro",
+  "reason": "Testing multi-file bug #1234",
+  "hoursValid": 4
 }
 ```
 
@@ -800,10 +714,15 @@ Apply a tier override.
 ```json
 {
   "success": true,
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "expiry": "2025-11-17T19:00:00Z",
-  "effectiveTier": "pro",
-  "message": "Tier override applied successfully"
+  "message": "Tier override applied: pro for 4 hours",
+  "data": {
+    "override": {
+      "tier": "pro",
+      "expiresAt": "2025-11-17T19:00:00Z",
+      "reason": "Testing multi-file bug #1234",
+      "appliedAt": "2025-11-17T15:00:00Z"
+    }
+  }
 }
 ```
 
@@ -824,45 +743,51 @@ Clear active tier override.
 ```json
 {
   "success": true,
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "effectiveTier": "free",
-  "message": "Tier override cleared successfully"
+  "message": "Tier override cleared successfully",
+  "data": {
+    "tier": "free"
+  }
 }
 ```
 
 **Errors**:
 - `403`: Insufficient permissions
-- `404`: No active override to clear
+- `400`: No active override to clear
 - `500`: Server error
 
-### GET /api/admin/tier-override/audit
+### GET /api/admin/tier-override/status
 
-Get audit log of tier overrides (admin only).
+Get current tier override status.
 
-**Authentication**: Required (admin/super_admin only)
+**Authentication**: Required (admin/support/super_admin only)
 
-**Query Parameters**:
-- `userId` (optional): Filter by user ID
-- `limit` (optional, default 50): Number of records
-- `offset` (optional, default 0): Pagination offset
-
-**Response**:
+**Response** (with active override):
 ```json
 {
-  "overrides": [
-    {
-      "userId": 123,
-      "userEmail": "support@codescribe.com",
-      "override": "pro",
+  "success": true,
+  "data": {
+    "active": true,
+    "realTier": "free",
+    "effectiveTier": "pro",
+    "override": {
+      "tier": "pro",
+      "expiresAt": "2025-11-17T19:00:00Z",
       "reason": "Testing multi-file bug #1234",
-      "appliedAt": "2025-11-17T15:00:00Z",
-      "expiry": "2025-11-17T19:00:00Z",
-      "clearedAt": null,
-      "ipAddress": "192.168.1.1"
+      "appliedAt": "2025-11-17T15:00:00Z"
     }
-  ],
-  "total": 1,
-  "hasMore": false
+  }
+}
+```
+
+**Response** (no override):
+```json
+{
+  "success": true,
+  "data": {
+    "active": false,
+    "realTier": "free",
+    "effectiveTier": "free"
+  }
 }
 ```
 
@@ -870,240 +795,78 @@ Get audit log of tier overrides (admin only).
 
 ## Testing Strategy
 
-### Unit Tests
-
-**Backend** (`server/src/utils/__tests__/tierOverride.test.js`):
-```javascript
-describe('getEffectiveTier', () => {
-  it('should return real tier if no override', () => {
-    const user = { tier: 'free', role: 'support' };
-    expect(getEffectiveTier(user)).toBe('free');
-  });
-
-  it('should return override if valid and not expired', () => {
-    const user = {
-      tier: 'free',
-      role: 'support',
-      tierOverride: 'pro',
-      overrideExpiry: new Date(Date.now() + 3600000).toISOString()
-    };
-    expect(getEffectiveTier(user)).toBe('pro');
-  });
-
-  it('should return real tier if override expired', () => {
-    const user = {
-      tier: 'free',
-      role: 'support',
-      tierOverride: 'pro',
-      overrideExpiry: new Date(Date.now() - 1000).toISOString()
-    };
-    expect(getEffectiveTier(user)).toBe('free');
-  });
-
-  it('should ignore override for non-admin users', () => {
-    const user = {
-      tier: 'free',
-      role: 'user',
-      tierOverride: 'pro',
-      overrideExpiry: new Date(Date.now() + 3600000).toISOString()
-    };
-    expect(getEffectiveTier(user)).toBe('free');
-  });
-});
-```
-
-**Frontend** (`client/src/utils/__tests__/tierOverride.test.js`):
-```javascript
-describe('hasActiveOverride', () => {
-  it('should return true if override not expired', () => {
-    const user = {
-      tierOverride: 'pro',
-      overrideExpiry: new Date(Date.now() + 3600000).toISOString()
-    };
-    expect(hasActiveOverride(user)).toBe(true);
-  });
-
-  it('should return false if expired', () => {
-    const user = {
-      tierOverride: 'pro',
-      overrideExpiry: new Date(Date.now() - 1000).toISOString()
-    };
-    expect(hasActiveOverride(user)).toBe(false);
-  });
-});
-```
-
-### Integration Tests
-
-**API Tests** (`server/src/routes/__tests__/admin.tierOverride.test.js`):
-```javascript
-describe('POST /api/admin/tier-override', () => {
-  it('should apply override for admin user', async () => {
-    const response = await request(app)
-      .post('/api/admin/tier-override')
-      .set('Authorization', `Bearer ${adminToken}`)
-      .send({
-        tierOverride: 'pro',
-        reason: 'Testing multi-file feature'
-      });
-
-    expect(response.status).toBe(200);
-    expect(response.body.effectiveTier).toBe('pro');
-    expect(response.body.token).toBeDefined();
-  });
-
-  it('should reject override for non-admin user', async () => {
-    const response = await request(app)
-      .post('/api/admin/tier-override')
-      .set('Authorization', `Bearer ${userToken}`)
-      .send({
-        tierOverride: 'pro',
-        reason: 'Testing'
-      });
-
-    expect(response.status).toBe(403);
-  });
-
-  it('should log override to audit table', async () => {
-    await request(app)
-      .post('/api/admin/tier-override')
-      .set('Authorization', `Bearer ${adminToken}`)
-      .send({
-        tierOverride: 'pro',
-        reason: 'Testing multi-file feature'
-      });
-
-    const auditLog = await sql`
-      SELECT * FROM user_audit_log
-      WHERE user_id = ${adminUser.id}
-        AND field_name = 'tier_override'
-      ORDER BY changed_at DESC
-      LIMIT 1
-    `;
-
-    expect(auditLog.rows[0].new_value).toBe('pro');
-    expect(auditLog.rows[0].reason).toBe('Testing multi-file feature');
-  });
-});
-```
-
 ### Manual Testing Checklist
 
 **Functional Tests:**
-- [ ] Admin can apply override
-- [ ] Support can apply override
-- [ ] Regular user cannot apply override
-- [ ] Override expires after 4 hours
-- [ ] Override can be cleared manually
-- [ ] Banner shows when override active
-- [ ] Banner hides when override cleared/expired
-- [ ] Feature access changes based on override
-- [ ] Billing queries ignore override
+- [x] Admin can apply override
+- [x] Support can apply override
+- [x] Regular user cannot apply override
+- [x] Override persists across page refreshes
+- [x] Override can be cleared manually
+- [x] Banner shows when override active
+- [x] Banner hides when override cleared
+- [x] Feature access changes based on override
+- [x] Billing queries ignore override
+- [ ] Override expires after configured hours (requires 4+ hour wait)
 
 **Security Tests:**
-- [ ] Non-admin gets 403 when applying override
-- [ ] Invalid tier rejected
-- [ ] Reason < 10 chars rejected
-- [ ] Expired override ignored by getEffectiveTier()
-- [ ] Override does not affect `users.tier` in database
-- [ ] Audit log captures all override events
+- [x] Non-admin gets 403 when applying override
+- [x] Invalid tier rejected
+- [x] Reason < 10 chars rejected
+- [x] Expired override ignored by getEffectiveTier()
+- [x] Override does not affect `users.tier` in database
+- [x] Audit log captures all override events
 
 **UX Tests:**
-- [ ] Banner is visible and clear
-- [ ] Time remaining updates correctly
-- [ ] Clear button works
-- [ ] Admin panel shows current override status
-- [ ] Form validation shows helpful errors
+- [x] Banner is visible and clear
+- [x] Time remaining updates correctly
+- [x] Clear button works
+- [x] Settings panel shows current override status
+- [x] Form validation shows helpful errors
+- [x] Character counter for reason field
 
 ---
 
-## Rollout Plan
+## Migration History
 
-### Phase 1: Backend Foundation (Week 1)
+### v2.8.0 → v2.8.1: JWT to Database Migration
 
-**Tasks:**
-1. Create `tierOverride.js` utility functions
-2. Add `/api/admin/tier-override` endpoints
-3. Extend JWT payload to include override fields
-4. Add audit logging for overrides
-5. Write backend unit tests
-6. Write API integration tests
+**Date:** November 17, 2025
 
-**Success Criteria:**
-- All tests passing
-- API endpoints functional
-- Audit logs working
+**Reason:** The JWT-based approach had multiple sync points where it could fail. Switching to database provides a single source of truth.
 
-### Phase 2: Frontend Integration (Week 1)
+**Changes:**
+1. Added database columns: `viewing_as_tier`, `override_expires_at`, `override_reason`, `override_applied_at`
+2. Updated `User.findById()` to include override fields
+3. Added `User.applyTierOverride()`, `User.clearTierOverride()`, `User.getActiveTierOverride()`
+4. Updated `getEffectiveTier()` to read from database fields
+5. Removed JWT override logic from middleware
+6. Updated frontend hook to use database field names
+7. API endpoints no longer return tokens
 
-**Tasks:**
-1. Create `TierOverrideBanner.jsx` component
-2. Create `TierOverridePanel.jsx` component
-3. Add `applyTierOverride` / `clearTierOverride` to AuthContext
-4. Create frontend utility functions
-5. Write component tests
-6. Update App.jsx to show banner when override active
-
-**Success Criteria:**
-- Banner shows/hides correctly
-- Admin panel functional
-- Override persists across page refreshes
-
-### Phase 3: Multi-File Integration (Week 1-2)
-
-**Tasks:**
-1. Use `getEffectiveTier()` for multi-file feature gating
-2. Show upgrade prompt for Free/Starter users
-3. Test multi-file with each tier override
-4. Document multi-file + tier override behavior
-
-**Success Criteria:**
-- Multi-file only available to Pro+ (or override)
-- Free/Starter see upgrade prompt
-- Override allows testing multi-file
-
-### Phase 4: Documentation & Training (Week 2)
-
-**Tasks:**
-1. Document tier override in admin guide
-2. Create training video for support team
-3. Add override instructions to onboarding
-4. Create audit log query examples
-
-**Success Criteria:**
-- Support team trained
-- Documentation complete
-- Audit queries documented
+**Benefits:**
+- ✅ Simpler: Just read/write database
+- ✅ No sync issues: Single source of truth
+- ✅ Easier debugging: Can query database directly
+- ✅ Persistent: Survives browser close, JWT refresh
+- ✅ Queryable: Can find all active overrides for admin dashboard
 
 ---
 
-## Future Enhancements
+## Related Documents
 
-### Phase 5: Advanced Features (Future)
-
-**Potential additions:**
-1. **Override History Dashboard**: UI to view past overrides
-2. **Override Templates**: Save common testing scenarios
-3. **Scheduled Expiry**: Custom expiry times (1hr, 8hr, 24hr)
-4. **Feature-Specific Overrides**: Override individual features, not entire tier
-5. **Team Overrides**: Admin can apply override to other users (for testing)
-6. **Slack Notifications**: Alert team when overrides applied/cleared
+- [TIER-ARCHITECTURE.md](./TIER-ARCHITECTURE.md) - Tier feature configuration
+- [SUBSCRIPTION-MANAGEMENT.md](./SUBSCRIPTION-MANAGEMENT.md) - Subscription and billing
+- [Database Migration Guide](../database/DB-MIGRATION-MANAGEMENT.MD) - Migration workflow
 
 ---
 
-## Appendix
-
-### Related Documents
-
-- [TIER-CONFIG.md](../server/src/config/tiers.js) - Tier feature configuration
-- [MULTI-FILE-IMPLEMENTATION-PLAN-V2.md](./MULTI-FILE-IMPLEMENTATION-PLAN-V2.md) - Multi-file feature spec
-- [AUTHENTICATION.md](../authentication/AUTHENTICATION.md) - JWT and auth system
-
-### Changelog
+## Changelog
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
-| 1.0 | 2025-11-17 | Claude Code | Initial design document |
+| 1.0 | 2025-11-17 | Claude Code | Initial design document (JWT-based) |
+| 2.0 | 2025-11-17 | Claude Code | Migrated to database-based approach |
 
 ---
 

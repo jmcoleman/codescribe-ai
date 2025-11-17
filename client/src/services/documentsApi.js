@@ -7,7 +7,7 @@
  * All endpoints require authentication.
  */
 
-import api from './api';
+import { API_URL } from '../config/api.js';
 
 /**
  * Save a generated document to the database
@@ -27,34 +27,48 @@ import api from './api';
  * @returns {Promise<Object>} - { documentId, savedAt }
  */
 export async function saveDocument(docData) {
-  const response = await api.post('/documents', {
-    filename: docData.filename,
-    language: docData.language,
-    fileSize: docData.fileSize,
-    documentation: docData.documentation,
-    qualityScore: docData.qualityScore,
-    docType: docData.docType,
-    origin: docData.origin || 'upload',
+  const token = localStorage.getItem('token');
 
-    // GitHub metadata (optional)
-    githubRepo: docData.github?.repo || null,
-    githubPath: docData.github?.path || null,
-    githubSha: docData.github?.sha || null,
-    githubBranch: docData.github?.branch || null,
+  const response = await fetch(`${API_URL}/api/documents`, {
+    method: 'POST',
+    headers: {
+      'Authorization': token ? `Bearer ${token}` : '',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      filename: docData.filename,
+      language: docData.language,
+      fileSize: docData.fileSize,
+      documentation: docData.documentation,
+      qualityScore: docData.qualityScore,
+      docType: docData.docType,
+      origin: docData.origin || 'upload',
 
-    // LLM metadata
-    provider: docData.provider,
-    model: docData.model,
-    inputTokens: docData.llm?.inputTokens || null,
-    outputTokens: docData.llm?.outputTokens || null,
-    wasCached: docData.llm?.wasCached || false,
-    latencyMs: docData.llm?.latencyMs || null,
+      // GitHub metadata (optional)
+      githubRepo: docData.github?.repo || null,
+      githubPath: docData.github?.path || null,
+      githubSha: docData.github?.sha || null,
+      githubBranch: docData.github?.branch || null,
 
-    // Ephemeral flag
-    isEphemeral: docData.isEphemeral || false
+      // LLM metadata
+      provider: docData.provider,
+      model: docData.model,
+      inputTokens: docData.llm?.inputTokens || null,
+      outputTokens: docData.llm?.outputTokens || null,
+      wasCached: docData.llm?.wasCached || false,
+      latencyMs: docData.llm?.latencyMs || null,
+
+      // Ephemeral flag
+      isEphemeral: docData.isEphemeral || false
+    })
   });
 
-  return response.data;
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to save document');
+  }
+
+  return response.json();
 }
 
 /**
@@ -66,14 +80,26 @@ export async function saveDocument(docData) {
  * @returns {Promise<Object>} - { documents, total, hasMore }
  */
 export async function getUserDocuments(options = {}) {
+  const token = localStorage.getItem('token');
   const params = new URLSearchParams({
     limit: options.limit || 50,
     offset: options.offset || 0,
     sort: options.sort || 'generated_at:desc'
   });
 
-  const response = await api.get(`/documents?${params.toString()}`);
-  return response.data;
+  const response = await fetch(`${API_URL}/api/documents?${params.toString()}`, {
+    headers: {
+      'Authorization': token ? `Bearer ${token}` : '',
+      'Content-Type': 'application/json'
+    }
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to fetch documents');
+  }
+
+  return response.json();
 }
 
 /**
@@ -82,8 +108,21 @@ export async function getUserDocuments(options = {}) {
  * @returns {Promise<Object>} - Document object
  */
 export async function getDocument(documentId) {
-  const response = await api.get(`/documents/${documentId}`);
-  return response.data;
+  const token = localStorage.getItem('token');
+
+  const response = await fetch(`${API_URL}/api/documents/${documentId}`, {
+    headers: {
+      'Authorization': token ? `Bearer ${token}` : '',
+      'Content-Type': 'application/json'
+    }
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to fetch document');
+  }
+
+  return response.json();
 }
 
 /**
@@ -92,8 +131,22 @@ export async function getDocument(documentId) {
  * @returns {Promise<Object>} - { success, deletedAt }
  */
 export async function deleteDocument(documentId) {
-  const response = await api.delete(`/documents/${documentId}`);
-  return response.data;
+  const token = localStorage.getItem('token');
+
+  const response = await fetch(`${API_URL}/api/documents/${documentId}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': token ? `Bearer ${token}` : '',
+      'Content-Type': 'application/json'
+    }
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to delete document');
+  }
+
+  return response.json();
 }
 
 /**
@@ -102,10 +155,23 @@ export async function deleteDocument(documentId) {
  * @returns {Promise<Object>} - { success, deletedCount }
  */
 export async function bulkDeleteDocuments(documentIds) {
-  const response = await api.delete('/documents', {
-    data: { documentIds }
+  const token = localStorage.getItem('token');
+
+  const response = await fetch(`${API_URL}/api/documents`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': token ? `Bearer ${token}` : '',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ documentIds })
   });
-  return response.data;
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to delete documents');
+  }
+
+  return response.json();
 }
 
 /**
@@ -114,8 +180,22 @@ export async function bulkDeleteDocuments(documentIds) {
  * @returns {Promise<Object>} - { success, restoredAt }
  */
 export async function restoreDocument(documentId) {
-  const response = await api.post(`/documents/${documentId}/restore`);
-  return response.data;
+  const token = localStorage.getItem('token');
+
+  const response = await fetch(`${API_URL}/api/documents/${documentId}/restore`, {
+    method: 'POST',
+    headers: {
+      'Authorization': token ? `Bearer ${token}` : '',
+      'Content-Type': 'application/json'
+    }
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to restore document');
+  }
+
+  return response.json();
 }
 
 /**
@@ -123,8 +203,22 @@ export async function restoreDocument(documentId) {
  * @returns {Promise<Object>} - { success, deletedCount }
  */
 export async function deleteEphemeralDocuments() {
-  const response = await api.delete('/documents/ephemeral');
-  return response.data;
+  const token = localStorage.getItem('token');
+
+  const response = await fetch(`${API_URL}/api/documents/ephemeral`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': token ? `Bearer ${token}` : '',
+      'Content-Type': 'application/json'
+    }
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to delete ephemeral documents');
+  }
+
+  return response.json();
 }
 
 /**
@@ -132,8 +226,21 @@ export async function deleteEphemeralDocuments() {
  * @returns {Promise<Object>} - { totalDocuments, avgQualityScore, etc. }
  */
 export async function getUserStats() {
-  const response = await api.get('/documents/stats');
-  return response.data;
+  const token = localStorage.getItem('token');
+
+  const response = await fetch(`${API_URL}/api/documents/stats`, {
+    headers: {
+      'Authorization': token ? `Bearer ${token}` : '',
+      'Content-Type': 'application/json'
+    }
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to fetch user stats');
+  }
+
+  return response.json();
 }
 
 export default {

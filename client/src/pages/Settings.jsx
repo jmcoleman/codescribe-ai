@@ -30,6 +30,13 @@ export default function Settings() {
     setSearchParams({ tab: tabId });
   };
 
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
+
   // ESC key to navigate home (power user feature)
   // Only if no modals are open (modals handle their own ESC)
   useEffect(() => {
@@ -47,9 +54,8 @@ export default function Settings() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [navigate]);
 
-  // Redirect if not authenticated
+  // Don't render if not authenticated
   if (!user) {
-    navigate('/');
     return null;
   }
 

@@ -83,35 +83,32 @@ export function DangerZoneTab() {
 
   return (
     <div className="space-y-6">
-      {/* Compact Privacy Info Banner */}
-      <div className="bg-blue-50 dark:bg-cyan-950/20 border border-blue-200 dark:border-cyan-400/30 rounded-lg p-4">
-        <p className="text-sm text-blue-800 dark:text-cyan-200 flex items-start gap-2">
-          <Shield className="w-4 h-4 flex-shrink-0 dark:text-cyan-400" aria-hidden="true" />
+      {/* Privacy Reminder */}
+      <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4">
+        <p className="text-sm text-slate-700 dark:text-slate-300 flex items-start gap-2">
+          <Shield className="w-4 h-4 flex-shrink-0 mt-0.5" aria-hidden="true" />
           <span>
-            Deleting your account removes only account data. Your code is never stored on our servers.
+            Your code is never stored on our servers. Deleting your account only removes account data and generated documentation.
           </span>
         </p>
       </div>
 
-      {/* Delete Account Card - Button Visible */}
-      <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-6 border border-slate-200 dark:border-slate-700">
-        <div className="flex items-start gap-3 mb-5">
+      {/* Delete Account Section */}
+      <div>
+        <div className="flex items-start gap-3 mb-4">
           <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
           <div className="flex-1">
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
               Delete Account
             </h2>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
-              This action is permanent and cannot be undone.
-            </p>
-            <p className="text-xs text-slate-600 dark:text-slate-400">
-              You have 30 days to restore your account before permanent deletion.
+            <p className="text-sm text-slate-700 dark:text-slate-300">
+              Permanently delete your account and all associated data. You have 30 days to restore your account before it's permanently deleted.
             </p>
           </div>
         </div>
 
         {/* Collapsible Details */}
-        <details className="mb-6 group">
+        <details className="mb-4 group">
           <summary className="text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer hover:text-slate-900 dark:hover:text-slate-200 transition-colors flex items-center gap-2 list-none [&::-webkit-details-marker]:hidden [&::marker]:hidden before:content-none">
             <svg
               className="w-4 h-4 transition-transform group-open:rotate-90"
@@ -126,31 +123,34 @@ export function DangerZoneTab() {
           </summary>
           <div className="mt-3 ml-6 space-y-3 text-sm">
             <div>
-              <p className="font-medium text-slate-700 dark:text-slate-300 mb-1.5">Personal information removed:</p>
+              <p className="font-medium text-slate-700 dark:text-slate-300 mb-1.5">Data removed:</p>
               <ul className="list-disc list-inside space-y-1 text-slate-600 dark:text-slate-400">
                 <li>Email address and name</li>
                 <li>Password and authentication data</li>
                 <li>Account preferences and settings</li>
+                <li>Generated documentation history</li>
               </ul>
             </div>
             <div>
-              <p className="font-medium text-slate-700 dark:text-slate-300 mb-1.5">Records retained (legal requirement):</p>
+              <p className="font-medium text-slate-700 dark:text-slate-300 mb-1.5">Data retained (legal compliance):</p>
               <ul className="list-disc list-inside space-y-1 text-slate-600 dark:text-slate-400">
-                <li>Subscription and billing history (financial/tax compliance)</li>
-                <li>Aggregated usage statistics (anonymized)</li>
+                <li>Billing history (tax/financial records)</li>
+                <li>Anonymized usage statistics</li>
               </ul>
             </div>
           </div>
         </details>
 
-        {/* Button VISIBLE without scrolling */}
-        <button
-          onClick={() => setShowDeleteConfirmation(true)}
-          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-red-600 hover:bg-red-700 active:bg-red-800 dark:bg-red-700 dark:hover:bg-red-800 dark:active:bg-red-900 text-white rounded-lg font-semibold shadow-lg shadow-red-600/20 dark:shadow-red-900/30 transition-all duration-200"
-        >
-          <Trash2 className="w-5 h-5" aria-hidden="true" />
-          <span>Delete My Account</span>
-        </button>
+        {/* Delete Button */}
+        <div className="flex justify-end">
+          <button
+            onClick={() => setShowDeleteConfirmation(true)}
+            className="flex items-center gap-2 py-2.5 px-4 bg-red-600 hover:bg-red-700 active:bg-red-800 dark:bg-red-700 dark:hover:bg-red-800 dark:active:bg-red-900 text-white rounded-lg font-semibold shadow-lg shadow-red-600/20 dark:shadow-red-900/30 transition-all duration-200"
+          >
+            <Trash2 className="w-5 h-5" aria-hidden="true" />
+            <span>Delete My Account</span>
+          </button>
+        </div>
       </div>
 
       {/* Confirmation Modal */}

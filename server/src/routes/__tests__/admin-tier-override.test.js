@@ -1,43 +1,31 @@
 /**
  * Tests for Admin Tier Override API Endpoints
  *
- * Tests all 4 tier override endpoints:
+ * Tests tier override endpoints (database-based):
  * - POST /api/admin/tier-override (apply override)
  * - POST /api/admin/tier-override/clear (clear override)
  * - GET /api/admin/tier-override/status (check status)
- * - GET /api/admin/tier-override/audit (view audit log)
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { sql } from '@vercel/postgres';
-import jwt from 'jsonwebtoken';
 
 // Mock dependencies
-vi.mock('@vercel/postgres', () => ({
-  sql: vi.fn()
-}));
-
-vi.mock('jsonwebtoken', () => ({
-  default: {
-    sign: vi.fn(),
-    verify: vi.fn()
-  }
+jest.mock('@vercel/postgres', () => ({
+  sql: jest.fn()
 }));
 
 describe('Admin Tier Override API Endpoints', () => {
   let mockRequest;
   let mockResponse;
-  let requireAuth;
-  let requireAdmin;
-  let router;
 
   beforeEach(async () => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
 
     // Mock response object
     mockResponse = {
-      json: vi.fn().mockReturnThis(),
-      status: vi.fn().mockReturnThis()
+      json: jest.fn().mockReturnThis(),
+      status: jest.fn().mockReturnThis()
     };
 
     // Mock request object
@@ -51,30 +39,21 @@ describe('Admin Tier Override API Endpoints', () => {
       body: {},
       params: {}
     };
-
-    // Mock JWT sign
-    jwt.sign.mockReturnValue('mock-jwt-token');
   });
 
   describe('POST /api/admin/tier-override', () => {
-    it('should apply tier override successfully', async () => {
+    it('should validate override request', async () => {
       mockRequest.body = {
         targetTier: 'pro',
         reason: 'Testing pro tier features for customer support',
         hoursValid: 4
       };
 
-      // Mock SQL query for audit log
-      sql.mockResolvedValue({ rows: [] });
+      const { validateOverrideRequest } = await import('../../utils/tierOverride.js');
 
-      const { validateOverrideRequest, createOverridePayload } = await import('../../utils/tierOverride.js');
-
-      const payload = createOverridePayload('pro', mockRequest.body.reason, 4);
-
-      expect(payload).toHaveProperty('tierOverride', 'pro');
-      expect(payload).toHaveProperty('overrideReason');
-      expect(payload).toHaveProperty('overrideExpiry');
-      expect(payload).toHaveProperty('overrideAppliedAt');
+      expect(() => {
+        validateOverrideRequest(mockRequest.user, 'pro', mockRequest.body.reason);
+      }).not.toThrow();
     });
 
     it('should reject override request from non-admin user', async () => {
@@ -117,26 +96,6 @@ describe('Admin Tier Override API Endpoints', () => {
       }).toThrow('Override reason must be at least 10 characters');
     });
 
-    it('should create JWT with override fields', async () => {
-      mockRequest.body = {
-        targetTier: 'enterprise',
-        reason: 'Testing enterprise features for sales demo',
-        hoursValid: 2
-      };
-
-      const { createOverridePayload } = await import('../../utils/tierOverride.js');
-      const payload = createOverridePayload('enterprise', mockRequest.body.reason, 2);
-
-      expect(payload.tierOverride).toBe('enterprise');
-      expect(payload.overrideReason).toBe('Testing enterprise features for sales demo');
-
-      // Verify expiry is approximately 2 hours from now
-      const expiry = new Date(payload.overrideExpiry);
-      const now = new Date();
-      const diffHours = (expiry.getTime() - now.getTime()) / (1000 * 60 * 60);
-      expect(diffHours).toBeCloseTo(2, 1);
-    });
-
     it('should log override to audit trail', async () => {
       mockRequest.body = {
         targetTier: 'pro',
@@ -146,10 +105,11 @@ describe('Admin Tier Override API Endpoints', () => {
 
       sql.mockResolvedValue({ rows: [] });
 
-      // Verify SQL was called (would be called in actual route handler)
-      // This validates the structure of the audit log query
+      // Verify SQL audit log structure
       const mockAuditData = {
         user_id: mockRequest.user.id,
+        user_email: mockRequest.user.email,
+        changed_by_id: mockRequest.user.id,
         field_name: 'tier_override',
         old_value: mockRequest.user.tier,
         new_value: JSON.stringify({
@@ -157,44 +117,32 @@ describe('Admin Tier Override API Endpoints', () => {
           reason: 'Testing pro tier features',
           expiresAt: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString()
         }),
-        changed_by: mockRequest.user.id
+        reason: 'Testing pro tier features'
       };
 
       expect(mockAuditData.field_name).toBe('tier_override');
       expect(mockAuditData.user_id).toBe(1);
+      expect(mockAuditData.changed_by_id).toBe(1);
     });
   });
 
   describe('POST /api/admin/tier-override/clear', () => {
-    it('should clear active override', async () => {
+    it('should detect active override', async () => {
       mockRequest.user = {
         id: 1,
         email: 'admin@test.com',
         tier: 'free',
         role: 'admin',
-        tierOverride: 'pro',
-        overrideExpiry: new Date(Date.now() + 3600000).toISOString()
+        viewing_as_tier: 'pro',
+        override_expires_at: new Date(Date.now() + 3600000).toISOString()
       };
 
       const { hasActiveOverride } = await import('../../utils/tierOverride.js');
 
       expect(hasActiveOverride(mockRequest.user)).toBe(true);
-
-      sql.mockResolvedValue({ rows: [] });
-
-      // After clearing, JWT should not have override fields
-      const tokenPayload = {
-        id: mockRequest.user.id,
-        email: mockRequest.user.email,
-        tier: mockRequest.user.tier,
-        role: mockRequest.user.role
-      };
-
-      expect(tokenPayload).not.toHaveProperty('tierOverride');
-      expect(tokenPayload).not.toHaveProperty('overrideExpiry');
     });
 
-    it('should reject clear when no active override', async () => {
+    it('should detect no active override', async () => {
       mockRequest.user = {
         id: 1,
         email: 'admin@test.com',
@@ -213,24 +161,26 @@ describe('Admin Tier Override API Endpoints', () => {
         email: 'admin@test.com',
         tier: 'free',
         role: 'admin',
-        tierOverride: 'pro',
-        overrideExpiry: new Date(Date.now() + 3600000).toISOString()
+        viewing_as_tier: 'pro',
+        override_expires_at: new Date(Date.now() + 3600000).toISOString()
       };
 
       sql.mockResolvedValue({ rows: [] });
 
       const mockAuditData = {
         user_id: mockRequest.user.id,
-        field_name: 'tier_override',
+        user_email: mockRequest.user.email,
+        changed_by_id: mockRequest.user.id,
+        field_name: 'tier_override_cleared',
         old_value: JSON.stringify({
-          tier: mockRequest.user.tierOverride,
-          expiresAt: mockRequest.user.overrideExpiry
+          tier: mockRequest.user.viewing_as_tier,
+          expiresAt: mockRequest.user.override_expires_at
         }),
         new_value: mockRequest.user.tier,
-        changed_by: mockRequest.user.id
+        reason: 'Tier override cleared by admin'
       };
 
-      expect(mockAuditData.field_name).toBe('tier_override');
+      expect(mockAuditData.field_name).toBe('tier_override_cleared');
     });
   });
 
@@ -266,10 +216,10 @@ describe('Admin Tier Override API Endpoints', () => {
         id: 1,
         tier: 'free',
         role: 'admin',
-        tierOverride: 'enterprise',
-        overrideExpiry: expiryTime.toISOString(),
-        overrideReason: 'Testing enterprise features',
-        overrideAppliedAt: new Date().toISOString()
+        viewing_as_tier: 'enterprise',
+        override_expires_at: expiryTime.toISOString(),
+        override_reason: 'Testing enterprise features',
+        override_applied_at: new Date().toISOString()
       };
 
       const { getOverrideDetails } = await import('../../utils/tierOverride.js');
@@ -287,10 +237,10 @@ describe('Admin Tier Override API Endpoints', () => {
         id: 1,
         tier: 'free',
         role: 'admin',
-        tierOverride: 'pro',
-        overrideExpiry: expiryTime.toISOString(),
-        overrideReason: 'Testing',
-        overrideAppliedAt: new Date().toISOString()
+        viewing_as_tier: 'pro',
+        override_expires_at: expiryTime.toISOString(),
+        override_reason: 'Testing',
+        override_applied_at: new Date().toISOString()
       };
 
       const { getOverrideDetails } = await import('../../utils/tierOverride.js');
@@ -302,26 +252,32 @@ describe('Admin Tier Override API Endpoints', () => {
     });
   });
 
-  describe('GET /api/admin/tier-override/audit', () => {
-    it('should return audit log entries', async () => {
+  describe('Audit Log Queries', () => {
+    it('should query audit log entries', async () => {
       mockRequest.user = { id: 1, role: 'admin' };
 
       const mockAuditRows = [
         {
           id: 1,
+          user_id: 1,
+          user_email: 'admin@test.com',
+          changed_by_id: 1,
           field_name: 'tier_override',
           old_value: 'free',
           new_value: JSON.stringify({ targetTier: 'pro', reason: 'Testing', expiresAt: new Date().toISOString() }),
           changed_at: new Date(),
-          changed_by: 1
+          reason: 'Testing'
         },
         {
           id: 2,
-          field_name: 'tier_override',
+          user_id: 1,
+          user_email: 'admin@test.com',
+          changed_by_id: 1,
+          field_name: 'tier_override_cleared',
           old_value: JSON.stringify({ tier: 'pro', expiresAt: new Date().toISOString() }),
           new_value: 'free',
           changed_at: new Date(),
-          changed_by: 1
+          reason: 'Tier override cleared by admin'
         }
       ];
 
@@ -329,11 +285,13 @@ describe('Admin Tier Override API Endpoints', () => {
 
       const formattedLog = mockAuditRows.map(entry => ({
         id: entry.id,
+        userId: entry.user_id,
         timestamp: entry.changed_at,
-        action: entry.new_value === entry.old_value ? 'cleared' : 'applied',
+        action: entry.field_name === 'tier_override_cleared' ? 'cleared' : 'applied',
         oldValue: entry.old_value,
         newValue: entry.new_value,
-        changedBy: entry.changed_by
+        reason: entry.reason,
+        changedBy: entry.changed_by_id
       }));
 
       expect(formattedLog).toHaveLength(2);
@@ -341,25 +299,7 @@ describe('Admin Tier Override API Endpoints', () => {
       expect(formattedLog[1].action).toBe('cleared');
     });
 
-    it('should limit results to 50 entries', async () => {
-      mockRequest.user = { id: 1, role: 'admin' };
-
-      // Mock would be called with LIMIT 50
-      const mockRows = Array(50).fill(null).map((_, i) => ({
-        id: i + 1,
-        field_name: 'tier_override',
-        old_value: 'free',
-        new_value: JSON.stringify({ targetTier: 'pro' }),
-        changed_at: new Date(),
-        changed_by: 1
-      }));
-
-      sql.mockResolvedValue({ rows: mockRows });
-
-      expect(mockRows.length).toBe(50);
-    });
-
-    it('should filter by field_name = tier_override', async () => {
+    it('should filter by field_name for tier overrides', async () => {
       mockRequest.user = { id: 1, role: 'admin' };
 
       const mockRows = [
@@ -369,14 +309,24 @@ describe('Admin Tier Override API Endpoints', () => {
           old_value: 'free',
           new_value: JSON.stringify({ targetTier: 'pro' }),
           changed_at: new Date(),
-          changed_by: 1
+          changed_by_id: 1
+        },
+        {
+          id: 2,
+          field_name: 'tier_override_cleared',
+          old_value: JSON.stringify({ tier: 'pro' }),
+          new_value: 'free',
+          changed_at: new Date(),
+          changed_by_id: 1
         }
       ];
 
       sql.mockResolvedValue({ rows: mockRows });
 
-      // Verify all rows have tier_override field_name
-      expect(mockRows.every(row => row.field_name === 'tier_override')).toBe(true);
+      // Verify all rows are tier override related
+      expect(mockRows.every(row =>
+        row.field_name === 'tier_override' || row.field_name === 'tier_override_cleared'
+      )).toBe(true);
     });
 
     it('should order by changed_at DESC', async () => {
@@ -387,26 +337,17 @@ describe('Admin Tier Override API Endpoints', () => {
         {
           id: 3,
           field_name: 'tier_override',
-          old_value: 'free',
-          new_value: 'free',
           changed_at: new Date(now.getTime() - 3600000), // 1 hour ago
-          changed_by: 1
         },
         {
           id: 2,
           field_name: 'tier_override',
-          old_value: 'free',
-          new_value: 'pro',
           changed_at: new Date(now.getTime() - 7200000), // 2 hours ago
-          changed_by: 1
         },
         {
           id: 1,
           field_name: 'tier_override',
-          old_value: 'free',
-          new_value: 'pro',
           changed_at: new Date(now.getTime() - 10800000), // 3 hours ago
-          changed_by: 1
         }
       ];
 

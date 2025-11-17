@@ -14,20 +14,22 @@
  */
 
 import { useState } from 'react';
-import { Shield, AlertTriangle, Clock, FileText } from 'lucide-react';
+import { Shield, AlertCircle } from 'lucide-react';
+import { Select } from './Select';
+import { toastCompact } from '../utils/toast';
 
 const TIER_OPTIONS = [
-  { value: 'free', label: 'Free', description: 'Single file, basic features' },
-  { value: 'starter', label: 'Starter', description: '10 files/month' },
-  { value: 'pro', label: 'Pro', description: '100 files/month, batch processing' },
-  { value: 'team', label: 'Team', description: '500 files/month, collaboration' },
-  { value: 'enterprise', label: 'Enterprise', description: 'Unlimited, custom features' }
+  { value: 'free', label: 'Free' },
+  { value: 'starter', label: 'Starter' },
+  { value: 'pro', label: 'Pro' },
+  { value: 'team', label: 'Team' },
+  { value: 'enterprise', label: 'Enterprise' }
 ];
 
 const DURATION_OPTIONS = [
   { value: 1, label: '1 hour' },
   { value: 2, label: '2 hours' },
-  { value: 4, label: '4 hours (default)' },
+  { value: 4, label: '4 hours' },
   { value: 8, label: '8 hours' }
 ];
 
@@ -55,6 +57,9 @@ export function TierOverridePanel({ currentTier, override, onApply, onClear }) {
         hoursValid: duration
       });
 
+      // Show success toast
+      toastCompact(`Now viewing as ${selectedTier.charAt(0).toUpperCase() + selectedTier.slice(1)} for ${duration}h`, 'success');
+
       // Reset form on success
       setReason('');
     } catch (err) {
@@ -80,124 +85,77 @@ export function TierOverridePanel({ currentTier, override, onApply, onClear }) {
   const hasActiveOverride = override && override.active;
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+    <div>
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-        <div className="flex items-center gap-2">
-          <Shield className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+      <div className={`flex items-start gap-3 ${hasActiveOverride ? 'mb-6' : 'mb-4'}`}>
+        <Shield className="w-5 h-5 text-purple-600 dark:text-purple-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
+        <div className="flex-1">
+          <h2 className="text-base font-semibold text-slate-900 dark:text-white mb-1">
             Tier Override
           </h2>
+          {hasActiveOverride && (
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+              <span className="font-medium">Viewing As:</span>{' '}
+              <span className="font-medium text-amber-600 dark:text-amber-400 capitalize">{override.tier}</span>
+              {' '}(expires in {override.remainingTime?.hours}h {override.remainingTime?.minutes}m)
+            </p>
+          )}
         </div>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-          Test features as different tier levels (admin/support only)
-        </p>
+        {hasActiveOverride && (
+          <button
+            onClick={handleClear}
+            disabled={isSubmitting}
+            className="text-sm font-medium text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 transition-colors disabled:opacity-50"
+          >
+            Clear
+          </button>
+        )}
       </div>
 
-      {/* Current Status */}
-      <div className="px-6 py-4 bg-gray-50 dark:bg-gray-900/50">
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Real Tier</p>
-            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 capitalize">
-              {currentTier}
-            </p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Effective Tier</p>
-            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 capitalize">
-              {hasActiveOverride ? override.tier : currentTier}
-              {hasActiveOverride && (
-                <span className="ml-2 text-amber-600 dark:text-amber-400">(Override)</span>
-              )}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Active Override Warning */}
-      {hasActiveOverride && (
-        <div className="px-6 py-3 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800">
-          <div className="flex items-start gap-2">
-            <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm text-amber-900 dark:text-amber-100">
-                Override expires in {override.remainingTime?.hours}h {override.remainingTime?.minutes}m
-              </p>
-              {override.reason && (
-                <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
-                  {override.reason}
-                </p>
-              )}
-            </div>
-            <button
-              onClick={handleClear}
-              disabled={isSubmitting}
-              className="text-sm font-medium text-amber-700 dark:text-amber-300 hover:text-amber-900 dark:hover:text-amber-100 disabled:opacity-50"
-            >
-              Clear
-            </button>
-          </div>
+      {/* Error Display */}
+      {error && (
+        <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-600 dark:text-red-400 mb-4">
+          <AlertCircle className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
+          <span>{error}</span>
         </div>
       )}
 
-      {/* Apply Override Form */}
-      <div className="px-6 py-4 space-y-4">
-        {/* Tier Selection */}
-        <div>
-          <label
-            htmlFor="tier-select"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-          >
-            Select Tier
-          </label>
-          <select
-            id="tier-select"
+      {/* Compact Form */}
+      <div className="space-y-3">
+        {/* Tier & Duration in one row */}
+        <div className="grid grid-cols-2 gap-3">
+          <Select
+            label="Tier"
+            options={TIER_OPTIONS}
             value={selectedTier}
-            onChange={(e) => setSelectedTier(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-          >
-            {TIER_OPTIONS.map((tier) => (
-              <option key={tier.value} value={tier.value}>
-                {tier.label} - {tier.description}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Duration */}
-        <div>
-          <label
-            htmlFor="duration-select"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-          >
-            <Clock className="w-4 h-4 inline mr-1" />
-            Duration
-          </label>
-          <select
-            id="duration-select"
+            onChange={setSelectedTier}
+            ariaLabel="Select tier to override"
+          />
+          <Select
+            label="Duration"
+            options={DURATION_OPTIONS}
             value={duration}
-            onChange={(e) => setDuration(Number(e.target.value))}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-          >
-            {DURATION_OPTIONS.map((dur) => (
-              <option key={dur.value} value={dur.value}>
-                {dur.label}
-              </option>
-            ))}
-          </select>
+            onChange={setDuration}
+            ariaLabel="Select override duration"
+          />
         </div>
 
         {/* Reason */}
         <div>
-          <label
-            htmlFor="reason-input"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-          >
-            <FileText className="w-4 h-4 inline mr-1" />
-            Reason (min 10 characters)
-          </label>
-          <textarea
+          <div className="flex items-center justify-between mb-1">
+            <label htmlFor="reason-input" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+              Reason
+            </label>
+            <span className={`text-xs ${
+              reason.trim().length >= 10
+                ? 'text-green-600 dark:text-green-400'
+                : 'text-slate-500 dark:text-slate-400'
+            }`}>
+              {reason.trim().length}/10 min
+            </span>
+          </div>
+          <input
+            type="text"
             id="reason-input"
             value={reason}
             onChange={(e) => {
@@ -206,38 +164,31 @@ export function TierOverridePanel({ currentTier, override, onApply, onClear }) {
                 setError(null);
               }
             }}
-            rows={3}
-            placeholder="e.g., Testing Pro tier multi-file feature for customer support ticket #1234"
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+            placeholder="Testing multi-file feature..."
+            className="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
           />
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            {reason.trim().length} / 10 characters minimum
+          <p className="mt-1 text-xs text-left text-slate-600 dark:text-slate-400">
+            Briefly describe why you need to view as this tier (logged for security audit)
           </p>
         </div>
 
-        {/* Error Display */}
-        {error && (
-          <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-            <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
-          </div>
-        )}
-
         {/* Apply Button */}
-        <button
-          onClick={handleApply}
-          disabled={isSubmitting || reason.trim().length < 10}
-          className="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:cursor-not-allowed"
-        >
-          {isSubmitting ? 'Applying...' : 'Apply Override'}
-        </button>
-      </div>
-
-      {/* Footer Note */}
-      <div className="px-6 py-3 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-700 rounded-b-lg">
-        <p className="text-xs text-gray-600 dark:text-gray-400">
-          ⚠️ Override is session-based (4 hours max). All actions are logged to audit trail.
-          Your real tier and billing remain unchanged.
-        </p>
+        <div className="flex justify-end">
+          <button
+            onClick={handleApply}
+            disabled={isSubmitting || reason.trim().length < 10}
+            className="flex items-center gap-2 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white rounded-lg font-semibold shadow-lg shadow-purple-600/20 dark:shadow-purple-900/30 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSubmitting ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <span>Applying...</span>
+              </>
+            ) : (
+              'Apply Override'
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );

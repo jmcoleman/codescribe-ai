@@ -13,6 +13,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { API_URL } from '../config/api';
+import { STORAGE_KEYS, getStorageItem, setStorageItem } from '../constants/storage';
 
 export function useTierOverride() {
   const { user, updateToken } = useAuth();
@@ -23,14 +25,14 @@ export function useTierOverride() {
   // Check if user can use tier override
   const canUseOverride = user && ['admin', 'support', 'super_admin'].includes(user.role);
 
-  // Parse override from current JWT
+  // Parse override from current user (database fields)
   const parseOverrideFromUser = useCallback(() => {
-    if (!user || !user.tierOverride) {
+    if (!user || !user.viewing_as_tier) {
       return null;
     }
 
     const now = new Date();
-    const expiry = new Date(user.overrideExpiry);
+    const expiry = new Date(user.override_expires_at);
 
     // Check if expired
     if (now > expiry) {
@@ -43,10 +45,10 @@ export function useTierOverride() {
 
     return {
       active: true,
-      tier: user.tierOverride,
-      reason: user.overrideReason,
-      expiresAt: user.overrideExpiry,
-      appliedAt: user.overrideAppliedAt,
+      tier: user.viewing_as_tier,
+      reason: user.override_reason,
+      expiresAt: user.override_expires_at,
+      appliedAt: user.override_applied_at,
       remainingTime: {
         hours,
         minutes,
@@ -75,8 +77,8 @@ export function useTierOverride() {
     setError(null);
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/admin/tier-override/status', {
+      const token = getStorageItem(STORAGE_KEYS.AUTH_TOKEN);
+      const response = await fetch(`${API_URL}/api/admin/tier-override/status`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -111,8 +113,11 @@ export function useTierOverride() {
     setError(null);
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/admin/tier-override', {
+      const token = getStorageItem(STORAGE_KEYS.AUTH_TOKEN);
+      console.log('[useTierOverride] Applying override:', { targetTier, reason, hoursValid });
+      console.log('[useTierOverride] Token exists:', !!token);
+
+      const response = await fetch(`${API_URL}/api/admin/tier-override`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -125,19 +130,21 @@ export function useTierOverride() {
         })
       });
 
+      console.log('[useTierOverride] Response status:', response.status);
+
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('[useTierOverride] Error response:', errorData);
         throw new Error(errorData.message || 'Failed to apply tier override');
       }
 
       const data = await response.json();
+      console.log('[useTierOverride] Success response:', data);
 
-      // Update token in localStorage and auth context
-      if (data.data.token) {
-        localStorage.setItem('token', data.data.token);
-        if (updateToken) {
-          await updateToken(data.data.token);
-        }
+      // Refresh user from /api/auth/me to get updated override fields
+      if (updateToken) {
+        await updateToken();
+        console.log('[useTierOverride] User refreshed from /api/auth/me');
       }
 
       // Update override state
@@ -146,6 +153,7 @@ export function useTierOverride() {
         ...data.data.override
       });
 
+      console.log('[useTierOverride] Override applied successfully');
       return data;
     } catch (err) {
       setError(err.message);
@@ -165,31 +173,37 @@ export function useTierOverride() {
     setError(null);
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/admin/tier-override/clear', {
+      const token = getStorageItem(STORAGE_KEYS.AUTH_TOKEN);
+      console.log('[useTierOverride] Clearing override, token exists:', !!token);
+      console.log('[useTierOverride] Current user state:', user);
+
+      const response = await fetch(`${API_URL}/api/admin/tier-override/clear`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
 
+      console.log('[useTierOverride] Clear response status:', response.status);
+
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('[useTierOverride] Clear error response:', errorData);
         throw new Error(errorData.message || 'Failed to clear tier override');
       }
 
       const data = await response.json();
+      console.log('[useTierOverride] Clear success response:', data);
 
-      // Update token in localStorage and auth context
-      if (data.data.token) {
-        localStorage.setItem('token', data.data.token);
-        if (updateToken) {
-          await updateToken(data.data.token);
-        }
+      // Refresh user from /api/auth/me to get updated state (override cleared)
+      if (updateToken) {
+        await updateToken();
+        console.log('[useTierOverride] User refreshed from /api/auth/me after clear');
       }
 
       // Clear override state
       setOverride(null);
+      console.log('[useTierOverride] Override cleared successfully');
 
       return data;
     } catch (err) {
@@ -198,7 +212,7 @@ export function useTierOverride() {
     } finally {
       setIsLoading(false);
     }
-  }, [canUseOverride, updateToken]);
+  }, [canUseOverride, updateToken, user]);
 
   return {
     override,

@@ -1,19 +1,17 @@
 /**
  * Tests for Tier Override Utilities
  *
- * Tests the core utility functions for tier override system:
- * - getEffectiveTier (real vs override tier)
+ * Tests the core utility functions for tier override system (database-based):
+ * - getEffectiveTier (real vs override tier from database)
  * - validateOverrideRequest (role, tier, reason validation)
- * - createOverridePayload (JWT payload generation)
  * - hasActiveOverride (expiry checking)
  * - getOverrideDetails (remaining time calculation)
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import {
   getEffectiveTier,
   validateOverrideRequest,
-  createOverridePayload,
   hasActiveOverride,
   getOverrideDetails,
   hasFeatureWithOverride,
@@ -22,7 +20,7 @@ import {
 
 describe('tierOverride utilities', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   describe('getEffectiveTier', () => {
@@ -40,8 +38,8 @@ describe('tierOverride utilities', () => {
         id: 1,
         tier: 'free',
         role: 'user',
-        tierOverride: 'pro',
-        overrideExpiry: new Date(Date.now() + 3600000).toISOString()
+        viewing_as_tier: 'pro',
+        override_expires_at: new Date(Date.now() + 3600000).toISOString()
       };
       expect(getEffectiveTier(user)).toBe('free');
     });
@@ -51,8 +49,8 @@ describe('tierOverride utilities', () => {
         id: 1,
         tier: 'free',
         role: 'admin',
-        tierOverride: 'enterprise',
-        overrideExpiry: new Date(Date.now() + 3600000).toISOString()
+        viewing_as_tier: 'enterprise',
+        override_expires_at: new Date(Date.now() + 3600000).toISOString()
       };
       expect(getEffectiveTier(user)).toBe('enterprise');
     });
@@ -62,8 +60,8 @@ describe('tierOverride utilities', () => {
         id: 1,
         tier: 'starter',
         role: 'support',
-        tierOverride: 'pro',
-        overrideExpiry: new Date(Date.now() + 3600000).toISOString()
+        viewing_as_tier: 'pro',
+        override_expires_at: new Date(Date.now() + 3600000).toISOString()
       };
       expect(getEffectiveTier(user)).toBe('pro');
     });
@@ -73,8 +71,8 @@ describe('tierOverride utilities', () => {
         id: 1,
         tier: 'free',
         role: 'super_admin',
-        tierOverride: 'team',
-        overrideExpiry: new Date(Date.now() + 3600000).toISOString()
+        viewing_as_tier: 'team',
+        override_expires_at: new Date(Date.now() + 3600000).toISOString()
       };
       expect(getEffectiveTier(user)).toBe('team');
     });
@@ -84,8 +82,8 @@ describe('tierOverride utilities', () => {
         id: 1,
         tier: 'pro',
         role: 'admin',
-        tierOverride: 'enterprise',
-        overrideExpiry: new Date(Date.now() - 3600000).toISOString() // 1 hour ago
+        viewing_as_tier: 'enterprise',
+        override_expires_at: new Date(Date.now() - 3600000).toISOString() // 1 hour ago
       };
       expect(getEffectiveTier(user)).toBe('pro');
     });
@@ -95,8 +93,8 @@ describe('tierOverride utilities', () => {
         id: 1,
         tier: 'pro',
         role: 'admin',
-        tierOverride: 'enterprise'
-        // overrideExpiry missing
+        viewing_as_tier: 'enterprise'
+        // override_expires_at missing
       };
       expect(getEffectiveTier(user)).toBe('pro');
     });
@@ -176,58 +174,6 @@ describe('tierOverride utilities', () => {
     });
   });
 
-  describe('createOverridePayload', () => {
-    it('should create payload with default 4 hour expiry', () => {
-      const now = Date.now();
-      const payload = createOverridePayload('pro', 'Testing pro features');
-
-      expect(payload).toHaveProperty('tierOverride', 'pro');
-      expect(payload).toHaveProperty('overrideReason', 'Testing pro features');
-      expect(payload).toHaveProperty('overrideExpiry');
-      expect(payload).toHaveProperty('overrideAppliedAt');
-
-      const expiry = new Date(payload.overrideExpiry);
-      const applied = new Date(payload.overrideAppliedAt);
-      const expectedExpiry = new Date(applied.getTime() + 4 * 60 * 60 * 1000);
-
-      expect(expiry.getTime()).toBeCloseTo(expectedExpiry.getTime(), -3); // Within seconds
-    });
-
-    it('should create payload with custom 1 hour expiry', () => {
-      const payload = createOverridePayload('enterprise', 'Testing enterprise', 1);
-
-      const expiry = new Date(payload.overrideExpiry);
-      const applied = new Date(payload.overrideAppliedAt);
-      const expectedExpiry = new Date(applied.getTime() + 1 * 60 * 60 * 1000);
-
-      expect(expiry.getTime()).toBeCloseTo(expectedExpiry.getTime(), -3);
-    });
-
-    it('should create payload with custom 8 hour expiry', () => {
-      const payload = createOverridePayload('team', 'Testing team features', 8);
-
-      const expiry = new Date(payload.overrideExpiry);
-      const applied = new Date(payload.overrideAppliedAt);
-      const expectedExpiry = new Date(applied.getTime() + 8 * 60 * 60 * 1000);
-
-      expect(expiry.getTime()).toBeCloseTo(expectedExpiry.getTime(), -3);
-    });
-
-    it('should trim reason text', () => {
-      const payload = createOverridePayload('pro', '  Testing with spaces  ');
-      expect(payload.overrideReason).toBe('Testing with spaces');
-    });
-
-    it('should return ISO date strings', () => {
-      const payload = createOverridePayload('pro', 'Testing');
-
-      expect(typeof payload.overrideExpiry).toBe('string');
-      expect(typeof payload.overrideAppliedAt).toBe('string');
-      expect(new Date(payload.overrideExpiry).toISOString()).toBe(payload.overrideExpiry);
-      expect(new Date(payload.overrideAppliedAt).toISOString()).toBe(payload.overrideAppliedAt);
-    });
-  });
-
   describe('hasActiveOverride', () => {
     it('should return false when user is null', () => {
       expect(hasActiveOverride(null)).toBe(false);
@@ -243,8 +189,8 @@ describe('tierOverride utilities', () => {
         id: 1,
         tier: 'free',
         role: 'admin',
-        tierOverride: 'pro',
-        overrideExpiry: new Date(Date.now() - 3600000).toISOString()
+        viewing_as_tier: 'pro',
+        override_expires_at: new Date(Date.now() - 3600000).toISOString()
       };
       expect(hasActiveOverride(user)).toBe(false);
     });
@@ -254,8 +200,8 @@ describe('tierOverride utilities', () => {
         id: 1,
         tier: 'free',
         role: 'admin',
-        tierOverride: 'pro',
-        overrideExpiry: new Date(Date.now() + 3600000).toISOString()
+        viewing_as_tier: 'pro',
+        override_expires_at: new Date(Date.now() + 3600000).toISOString()
       };
       expect(hasActiveOverride(user)).toBe(true);
     });
@@ -265,8 +211,8 @@ describe('tierOverride utilities', () => {
         id: 1,
         tier: 'free',
         role: 'admin',
-        tierOverride: 'enterprise',
-        overrideExpiry: new Date(Date.now() + 10000).toISOString() // 10 seconds from now
+        viewing_as_tier: 'enterprise',
+        override_expires_at: new Date(Date.now() + 10000).toISOString() // 10 seconds from now
       };
       expect(hasActiveOverride(user)).toBe(true);
     });
@@ -283,22 +229,23 @@ describe('tierOverride utilities', () => {
         id: 1,
         tier: 'free',
         role: 'admin',
-        tierOverride: 'pro',
-        overrideExpiry: new Date(Date.now() - 3600000).toISOString()
+        viewing_as_tier: 'pro',
+        override_expires_at: new Date(Date.now() - 3600000).toISOString()
       };
       expect(getOverrideDetails(user)).toBeNull();
     });
 
     it('should return override details with remaining time', () => {
       const expiryTime = new Date(Date.now() + 2.5 * 60 * 60 * 1000); // 2.5 hours from now
+      const appliedTime = new Date();
       const user = {
         id: 1,
         tier: 'free',
         role: 'admin',
-        tierOverride: 'pro',
-        overrideExpiry: expiryTime.toISOString(),
-        overrideReason: 'Testing pro features',
-        overrideAppliedAt: new Date().toISOString()
+        viewing_as_tier: 'pro',
+        override_expires_at: expiryTime.toISOString(),
+        override_reason: 'Testing pro features',
+        override_applied_at: appliedTime.toISOString()
       };
 
       const details = getOverrideDetails(user);
@@ -318,10 +265,10 @@ describe('tierOverride utilities', () => {
         id: 1,
         tier: 'free',
         role: 'admin',
-        tierOverride: 'pro',
-        overrideExpiry: expiryTime.toISOString(),
-        overrideReason: 'Testing',
-        overrideAppliedAt: new Date().toISOString()
+        viewing_as_tier: 'pro',
+        override_expires_at: expiryTime.toISOString(),
+        override_reason: 'Testing',
+        override_applied_at: new Date().toISOString()
       };
 
       const details = getOverrideDetails(user);
@@ -337,10 +284,10 @@ describe('tierOverride utilities', () => {
         id: 1,
         tier: 'free',
         role: 'admin',
-        tierOverride: 'pro',
-        overrideExpiry: expiryTime.toISOString(),
-        overrideReason: 'Testing',
-        overrideAppliedAt: new Date().toISOString()
+        viewing_as_tier: 'pro',
+        override_expires_at: expiryTime.toISOString(),
+        override_reason: 'Testing',
+        override_applied_at: new Date().toISOString()
       };
 
       const details = getOverrideDetails(user);
@@ -357,8 +304,8 @@ describe('tierOverride utilities', () => {
         id: 1,
         tier: 'free',
         role: 'admin',
-        tierOverride: 'pro',
-        overrideExpiry: new Date(Date.now() + 3600000).toISOString()
+        viewing_as_tier: 'pro',
+        override_expires_at: new Date(Date.now() + 3600000).toISOString()
       };
 
       // Pro tier has batchProcessing
@@ -370,8 +317,8 @@ describe('tierOverride utilities', () => {
         id: 1,
         tier: 'free',
         role: 'admin',
-        tierOverride: 'starter',
-        overrideExpiry: new Date(Date.now() + 3600000).toISOString()
+        viewing_as_tier: 'starter',
+        override_expires_at: new Date(Date.now() + 3600000).toISOString()
       };
 
       // Starter tier does not have batchProcessing
@@ -385,8 +332,8 @@ describe('tierOverride utilities', () => {
         id: 1,
         tier: 'free',
         role: 'admin',
-        tierOverride: 'pro',
-        overrideExpiry: new Date(Date.now() + 3600000).toISOString()
+        viewing_as_tier: 'pro',
+        override_expires_at: new Date(Date.now() + 3600000).toISOString()
       };
 
       const features = getEffectiveTierFeatures(user);

@@ -2,28 +2,17 @@
  * Tests for Auth Middleware with Tier Override Support
  *
  * Tests the updated requireAuth and requireTier middleware
- * to ensure tier overrides are properly handled:
- * - JWT override fields are preserved in req.user
+ * to ensure tier overrides from database are properly handled:
+ * - Database override fields are included in req.user
  * - requireTier uses effective tier (considering overrides)
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import jwt from 'jsonwebtoken';
+import User from '../../models/User.js';
 
 // Mock User model
-const mockUser = {
-  findById: vi.fn()
-};
-
-vi.mock('../../models/User.js', () => ({
-  default: mockUser
-}));
-
-vi.mock('jsonwebtoken', () => ({
-  default: {
-    verify: vi.fn()
-  }
-}));
+jest.mock('../../models/User.js');
 
 describe('Auth Middleware - Tier Override Support', () => {
   let requireAuth;
@@ -33,7 +22,10 @@ describe('Auth Middleware - Tier Override Support', () => {
   let mockNext;
 
   beforeEach(async () => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
+
+    // Setup JWT spy
+    jest.spyOn(jwt, 'verify');
 
     // Import middleware (after mocks are set up)
     const authModule = await import('../auth.js');
@@ -50,99 +42,95 @@ describe('Auth Middleware - Tier Override Support', () => {
 
     // Mock response
     mockResponse = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis()
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn().mockReturnThis()
     };
 
     // Mock next
-    mockNext = vi.fn();
+    mockNext = jest.fn();
 
     // Mock environment
     process.env.JWT_SECRET = 'test-secret';
   });
 
-  describe('requireAuth with tier override fields', () => {
-    it('should preserve override fields from JWT in req.user', async () => {
+  describe('requireAuth with database tier override fields', () => {
+    it('should include override fields from database in req.user', async () => {
       const decodedToken = {
         sub: 1,
-        id: 1,
-        tierOverride: 'enterprise',
-        overrideExpiry: new Date(Date.now() + 3600000).toISOString(),
-        overrideReason: 'Testing enterprise features',
-        overrideAppliedAt: new Date().toISOString()
+        id: 1
       };
 
       const dbUser = {
         id: 1,
         email: 'admin@test.com',
         tier: 'free',
-        role: 'admin'
+        role: 'admin',
+        viewing_as_tier: 'enterprise',
+        override_expires_at: new Date(Date.now() + 3600000).toISOString(),
+        override_reason: 'Testing enterprise features',
+        override_applied_at: new Date().toISOString()
       };
 
       jwt.verify.mockReturnValue(decodedToken);
-      mockUser.findById.mockResolvedValue(dbUser);
+      User.findById.mockResolvedValue(dbUser);
 
       await requireAuth(mockRequest, mockResponse, mockNext);
 
       expect(mockNext).toHaveBeenCalled();
       expect(mockRequest.user).toBeDefined();
-      expect(mockRequest.user.tierOverride).toBe('enterprise');
-      expect(mockRequest.user.overrideExpiry).toBe(decodedToken.overrideExpiry);
-      expect(mockRequest.user.overrideReason).toBe('Testing enterprise features');
-      expect(mockRequest.user.overrideAppliedAt).toBe(decodedToken.overrideAppliedAt);
+      expect(mockRequest.user.viewing_as_tier).toBe('enterprise');
+      expect(mockRequest.user.override_expires_at).toBe(dbUser.override_expires_at);
+      expect(mockRequest.user.override_reason).toBe('Testing enterprise features');
+      expect(mockRequest.user.override_applied_at).toBe(dbUser.override_applied_at);
     });
 
     it('should work with JWT using sub field', async () => {
       const decodedToken = {
-        sub: 1,
-        tierOverride: 'pro',
-        overrideExpiry: new Date(Date.now() + 3600000).toISOString(),
-        overrideReason: 'Testing',
-        overrideAppliedAt: new Date().toISOString()
+        sub: 1
       };
 
       const dbUser = {
         id: 1,
         email: 'admin@test.com',
         tier: 'free',
-        role: 'admin'
+        role: 'admin',
+        viewing_as_tier: 'pro',
+        override_expires_at: new Date(Date.now() + 3600000).toISOString()
       };
 
       jwt.verify.mockReturnValue(decodedToken);
-      mockUser.findById.mockResolvedValue(dbUser);
+      User.findById.mockResolvedValue(dbUser);
 
       await requireAuth(mockRequest, mockResponse, mockNext);
 
-      expect(mockUser.findById).toHaveBeenCalledWith(1);
-      expect(mockRequest.user.tierOverride).toBe('pro');
+      expect(User.findById).toHaveBeenCalledWith(1);
+      expect(mockRequest.user.viewing_as_tier).toBe('pro');
     });
 
     it('should work with JWT using id field', async () => {
       const decodedToken = {
-        id: 1,
-        tierOverride: 'pro',
-        overrideExpiry: new Date(Date.now() + 3600000).toISOString(),
-        overrideReason: 'Testing',
-        overrideAppliedAt: new Date().toISOString()
+        id: 1
       };
 
       const dbUser = {
         id: 1,
         email: 'admin@test.com',
         tier: 'free',
-        role: 'admin'
+        role: 'admin',
+        viewing_as_tier: 'pro',
+        override_expires_at: new Date(Date.now() + 3600000).toISOString()
       };
 
       jwt.verify.mockReturnValue(decodedToken);
-      mockUser.findById.mockResolvedValue(dbUser);
+      User.findById.mockResolvedValue(dbUser);
 
       await requireAuth(mockRequest, mockResponse, mockNext);
 
-      expect(mockUser.findById).toHaveBeenCalledWith(1);
-      expect(mockRequest.user.tierOverride).toBe('pro');
+      expect(User.findById).toHaveBeenCalledWith(1);
+      expect(mockRequest.user.viewing_as_tier).toBe('pro');
     });
 
-    it('should not add override fields when not present in JWT', async () => {
+    it('should not have override fields when not present in database', async () => {
       const decodedToken = {
         sub: 1
       };
@@ -155,22 +143,18 @@ describe('Auth Middleware - Tier Override Support', () => {
       };
 
       jwt.verify.mockReturnValue(decodedToken);
-      mockUser.findById.mockResolvedValue(dbUser);
+      User.findById.mockResolvedValue(dbUser);
 
       await requireAuth(mockRequest, mockResponse, mockNext);
 
       expect(mockNext).toHaveBeenCalled();
-      expect(mockRequest.user.tierOverride).toBeUndefined();
-      expect(mockRequest.user.overrideExpiry).toBeUndefined();
+      expect(mockRequest.user.viewing_as_tier).toBeUndefined();
+      expect(mockRequest.user.override_expires_at).toBeUndefined();
     });
 
-    it('should merge database user with override fields', async () => {
+    it('should include all database fields in req.user', async () => {
       const decodedToken = {
-        sub: 1,
-        tierOverride: 'team',
-        overrideExpiry: new Date(Date.now() + 3600000).toISOString(),
-        overrideReason: 'Testing team features',
-        overrideAppliedAt: new Date().toISOString()
+        sub: 1
       };
 
       const dbUser = {
@@ -178,26 +162,28 @@ describe('Auth Middleware - Tier Override Support', () => {
         email: 'support@test.com',
         tier: 'free',
         role: 'support',
+        viewing_as_tier: 'team',
+        override_expires_at: new Date(Date.now() + 3600000).toISOString(),
+        override_reason: 'Testing team features',
+        override_applied_at: new Date().toISOString(),
         created_at: new Date(),
         email_verified: true
       };
 
       jwt.verify.mockReturnValue(decodedToken);
-      mockUser.findById.mockResolvedValue(dbUser);
+      User.findById.mockResolvedValue(dbUser);
 
       await requireAuth(mockRequest, mockResponse, mockNext);
 
-      // Database fields preserved
+      // All database fields preserved
       expect(mockRequest.user.id).toBe(1);
       expect(mockRequest.user.email).toBe('support@test.com');
       expect(mockRequest.user.tier).toBe('free');
       expect(mockRequest.user.role).toBe('support');
       expect(mockRequest.user.email_verified).toBe(true);
-
-      // Override fields added
-      expect(mockRequest.user.tierOverride).toBe('team');
-      expect(mockRequest.user.overrideExpiry).toBe(decodedToken.overrideExpiry);
-      expect(mockRequest.user.overrideReason).toBe('Testing team features');
+      expect(mockRequest.user.viewing_as_tier).toBe('team');
+      expect(mockRequest.user.override_expires_at).toBe(dbUser.override_expires_at);
+      expect(mockRequest.user.override_reason).toBe('Testing team features');
     });
   });
 
@@ -207,8 +193,8 @@ describe('Auth Middleware - Tier Override Support', () => {
         id: 1,
         tier: 'free',
         role: 'admin',
-        tierOverride: 'pro',
-        overrideExpiry: new Date(Date.now() + 3600000).toISOString()
+        viewing_as_tier: 'pro',
+        override_expires_at: new Date(Date.now() + 3600000).toISOString()
       };
 
       const middleware = requireTier('pro');
@@ -223,8 +209,8 @@ describe('Auth Middleware - Tier Override Support', () => {
         id: 1,
         tier: 'free',
         role: 'admin',
-        tierOverride: 'starter',
-        overrideExpiry: new Date(Date.now() + 3600000).toISOString()
+        viewing_as_tier: 'starter',
+        override_expires_at: new Date(Date.now() + 3600000).toISOString()
       };
 
       const middleware = requireTier('pro');
@@ -245,8 +231,8 @@ describe('Auth Middleware - Tier Override Support', () => {
         id: 1,
         tier: 'pro',
         role: 'admin',
-        tierOverride: 'free',
-        overrideExpiry: new Date(Date.now() - 3600000).toISOString() // Expired
+        viewing_as_tier: 'free',
+        override_expires_at: new Date(Date.now() - 3600000).toISOString() // Expired
       };
 
       const middleware = requireTier('pro');
@@ -262,8 +248,8 @@ describe('Auth Middleware - Tier Override Support', () => {
         id: 1,
         tier: 'free',
         role: 'user',
-        tierOverride: 'pro', // Should be ignored
-        overrideExpiry: new Date(Date.now() + 3600000).toISOString()
+        viewing_as_tier: 'pro', // Should be ignored
+        override_expires_at: new Date(Date.now() + 3600000).toISOString()
       };
 
       const middleware = requireTier('pro');
@@ -279,8 +265,8 @@ describe('Auth Middleware - Tier Override Support', () => {
         id: 1,
         tier: 'free',
         role: 'admin',
-        tierOverride: 'starter',
-        overrideExpiry: new Date(Date.now() + 3600000).toISOString()
+        viewing_as_tier: 'starter',
+        override_expires_at: new Date(Date.now() + 3600000).toISOString()
       };
 
       const middleware = requireTier('pro');
@@ -299,14 +285,14 @@ describe('Auth Middleware - Tier Override Support', () => {
       const tiers = ['free', 'starter', 'pro', 'team', 'enterprise'];
 
       for (const tier of tiers) {
-        vi.clearAllMocks();
+        jest.clearAllMocks();
 
         mockRequest.user = {
           id: 1,
           tier: 'free',
           role: 'admin',
-          tierOverride: tier,
-          overrideExpiry: new Date(Date.now() + 3600000).toISOString()
+          viewing_as_tier: tier,
+          override_expires_at: new Date(Date.now() + 3600000).toISOString()
         };
 
         const middleware = requireTier(tier);
@@ -322,14 +308,14 @@ describe('Auth Middleware - Tier Override Support', () => {
         id: 1,
         tier: 'free',
         role: 'admin',
-        tierOverride: 'enterprise',
-        overrideExpiry: new Date(Date.now() + 3600000).toISOString()
+        viewing_as_tier: 'enterprise',
+        override_expires_at: new Date(Date.now() + 3600000).toISOString()
       };
 
       const tiers = ['free', 'starter', 'pro', 'team', 'enterprise'];
 
       for (const requiredTier of tiers) {
-        vi.clearAllMocks();
+        jest.clearAllMocks();
 
         const middleware = requireTier(requiredTier);
         await middleware(mockRequest, mockResponse, mockNext);
@@ -344,8 +330,8 @@ describe('Auth Middleware - Tier Override Support', () => {
         id: 1,
         tier: 'pro',
         role: 'admin',
-        tierOverride: 'free',
-        overrideExpiry: new Date(Date.now() + 3600000).toISOString()
+        viewing_as_tier: 'free',
+        override_expires_at: new Date(Date.now() + 3600000).toISOString()
       };
 
       const middleware = requireTier('pro');
@@ -390,15 +376,16 @@ describe('Auth Middleware - Tier Override Support', () => {
         id: 1,
         tier: 'free',
         role: 'admin',
-        tierOverride: 'pro',
-        overrideExpiry: 'invalid-date'
+        viewing_as_tier: 'pro',
+        override_expires_at: 'invalid-date'
       };
 
       const middleware = requireTier('pro');
       await middleware(mockRequest, mockResponse, mockNext);
 
-      // Should handle gracefully, possibly falling back to real tier
-      // Exact behavior depends on getEffectiveTier implementation
+      // getEffectiveTier should handle gracefully, falling back to real tier
+      // Since malformed date will be treated as invalid, should use real tier (free)
+      expect(mockResponse.status).toHaveBeenCalledWith(403);
     });
   });
 });

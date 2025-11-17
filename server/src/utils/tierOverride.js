@@ -5,7 +5,7 @@
  * Allows privileged users to temporarily test features as different tiers.
  *
  * Key Principles:
- * - Override is session-based (JWT) and time-limited (4 hours)
+ * - Override is stored in database (viewing_as_tier column) and time-limited (default 4 hours)
  * - Never modifies user.tier in database (billing integrity)
  * - All overrides logged to user_audit_log for compliance
  * - Only admin/support/super_admin roles can apply overrides
@@ -18,11 +18,11 @@ import { getTierFeatures, hasFeature } from '../config/tiers.js';
 /**
  * Get effective tier (considering override if present and valid)
  *
- * @param {Object} user - User object from JWT
- * @param {string} user.tier - Real tier from database
+ * @param {Object} user - User object from database
+ * @param {string} user.tier - Real tier from database (billing tier)
  * @param {string} user.role - User role (user, support, admin, super_admin)
- * @param {string} [user.tierOverride] - Override tier (if applied)
- * @param {string} [user.overrideExpiry] - Override expiry timestamp
+ * @param {string} [user.viewing_as_tier] - Override tier (if applied)
+ * @param {string} [user.override_expires_at] - Override expiry timestamp
  * @returns {string} - Effective tier to use for feature checks
  */
 export const getEffectiveTier = (user) => {
@@ -33,22 +33,28 @@ export const getEffectiveTier = (user) => {
     return user.tier || 'free';
   }
 
-  // Check if override exists
-  if (!user.tierOverride || !user.overrideExpiry) {
+  // Check if override exists in database
+  if (!user.viewing_as_tier || !user.override_expires_at) {
     return user.tier || 'free';
   }
 
   // Check if override has expired
   const now = new Date();
-  const expiry = new Date(user.overrideExpiry);
+  const expiry = new Date(user.override_expires_at);
+
+  // Handle invalid date
+  if (isNaN(expiry.getTime())) {
+    console.log(`[TierOverride] Invalid expiry date for user ${user.id}, ignoring override`);
+    return user.tier || 'free';
+  }
 
   if (now > expiry) {
     console.log(`[TierOverride] Override expired for user ${user.id} (expired at ${expiry.toISOString()})`);
     return user.tier || 'free';
   }
 
-  console.log(`[TierOverride] Using override tier "${user.tierOverride}" for user ${user.id} (expires at ${expiry.toISOString()})`);
-  return user.tierOverride;
+  console.log(`[TierOverride] Using override tier "${user.viewing_as_tier}" for user ${user.id} (expires at ${expiry.toISOString()})`);
+  return user.viewing_as_tier;
 };
 
 /**
@@ -119,16 +125,16 @@ export const createOverridePayload = (targetTier, reason, hoursValid = 4) => {
 /**
  * Check if user has an active override
  *
- * @param {Object} user - User object from JWT
+ * @param {Object} user - User object from database
  * @returns {boolean} - Whether user has active override
  */
 export const hasActiveOverride = (user) => {
-  if (!user || !user.tierOverride || !user.overrideExpiry) {
+  if (!user || !user.viewing_as_tier || !user.override_expires_at) {
     return false;
   }
 
   const now = new Date();
-  const expiry = new Date(user.overrideExpiry);
+  const expiry = new Date(user.override_expires_at);
 
   return now < expiry;
 };
@@ -136,7 +142,7 @@ export const hasActiveOverride = (user) => {
 /**
  * Get override details (for logging/display)
  *
- * @param {Object} user - User object from JWT
+ * @param {Object} user - User object from database
  * @returns {Object|null} - Override details or null if no active override
  */
 export const getOverrideDetails = (user) => {
@@ -145,17 +151,17 @@ export const getOverrideDetails = (user) => {
   }
 
   const now = new Date();
-  const expiry = new Date(user.overrideExpiry);
+  const expiry = new Date(user.override_expires_at);
   const remainingMs = expiry.getTime() - now.getTime();
 
   const hours = Math.floor(remainingMs / (1000 * 60 * 60));
   const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
 
   return {
-    tier: user.tierOverride,
-    reason: user.overrideReason,
-    appliedAt: user.overrideAppliedAt,
-    expiresAt: user.overrideExpiry,
+    tier: user.viewing_as_tier,
+    reason: user.override_reason,
+    appliedAt: user.override_applied_at,
+    expiresAt: user.override_expires_at,
     remainingTime: {
       hours,
       minutes,

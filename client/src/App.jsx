@@ -374,7 +374,7 @@ function App() {
       const isDefaultCode = code === DEFAULT_CODE;
       const isExampleCode = EXAMPLE_CODES.has(code);
       const shouldCache = isDefaultCode || isExampleCode;
-      await generate(code, docType, 'javascript', shouldCache);
+      await generate(code, docType, language, shouldCache);
       // Success toast will be shown after generation completes
     } catch (err) {
       // Error handling is done in useDocGeneration hook
