@@ -2,7 +2,7 @@
 
 **Last Updated:** November 16, 2025
 **Current Phase:** Phase 3 - ✅ **Epic 3.2 COMPLETE** (Workspace Flexibility) | 🟡 **Multi-File Phase 1 IN PROGRESS** (Multi-File Sidebar)
-**Current Release:** v2.8.0 (Workspace Flexibility & Performance Improvements)
+**Current Release:** v2.8.1 (Language Expansion, Middleware Tests & Bug Fixes)
 **Production URL:** [https://codescribeai.com](https://codescribeai.com)
 
 ---
@@ -1320,8 +1320,8 @@ ALTER TABLE subscriptions ADD COLUMN stripe_receipt_url VARCHAR(500);
 ## 🎨 Phase 3: UX Enhancements (IN PROGRESS)
 
 **Timeline:** November 8 - TBD
-**Status:** 🔄 **IN PROGRESS** - Epic 3.2 Complete (v2.8.0), Multi-File Phase 1 Active
-**Current Release:** v2.8.0 (Workspace Flexibility & Performance Improvements)
+**Status:** 🔄 **IN PROGRESS** - Epic 3.2 Complete (v2.8.1), Multi-File Phase 1 Active
+**Current Release:** v2.8.1 (Language Expansion, Middleware Tests & Bug Fixes)
 **Target Release:** v2.9.0 (Multi-File Implementation)
 **Strategic Goal:** Transform user experience with customization, flexibility, and multi-file project documentation capabilities
 
@@ -1341,6 +1341,7 @@ ALTER TABLE subscriptions ADD COLUMN stripe_receipt_url VARCHAR(500);
 - ✅ Nov 14: v2.7.10 (Mermaid Diagram Improvements & UX Refinements)
 - ✅ Nov 15: v2.7.11 (Theme Selection & Multi-File Design)
 - ✅ Nov 16: v2.8.0 (Epic 3.2: Workspace Flexibility & Performance)
+- ✅ Nov 16: v2.8.1 (Language Expansion, Middleware Tests & Bug Fixes)
 - ✅ Multi-File Phase 0 (Database Setup) - COMPLETE
 - ✅ Multi-File Phase 1 Day 1 (Custom Hooks) - COMPLETE
 - ✅ Multi-File Phase 4 (Split Panel) - COMPLETE in v2.8.0
