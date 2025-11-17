@@ -154,6 +154,27 @@ router.get('/:id', requireAuth, async (req, res, next) => {
 });
 
 // ============================================================================
+// DELETE /api/documents/ephemeral - Delete Ephemeral Documents (on logout)
+// NOTE: Must come BEFORE /:id route to avoid matching "ephemeral" as an ID
+// ============================================================================
+router.delete('/ephemeral', requireAuth, async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+
+    // Delete all ephemeral documents for the authenticated user
+    const deletedCount = await documentService.deleteEphemeralDocuments(userId);
+
+    res.json({
+      success: true,
+      deletedCount
+    });
+  } catch (error) {
+    console.error('[Documents API] Error deleting ephemeral documents:', error);
+    next(error);
+  }
+});
+
+// ============================================================================
 // DELETE /api/documents/:id - Soft Delete Single Document
 // ============================================================================
 router.delete('/:id', requireAuth, async (req, res, next) => {
@@ -227,26 +248,6 @@ router.post('/:id/restore', requireAuth, async (req, res, next) => {
     });
   } catch (error) {
     console.error('[Documents API] Error restoring document:', error);
-    next(error);
-  }
-});
-
-// ============================================================================
-// DELETE /api/documents/ephemeral - Delete Ephemeral Documents (on logout)
-// ============================================================================
-router.delete('/ephemeral', requireAuth, async (req, res, next) => {
-  try {
-    const userId = req.user.id;
-
-    // Delete all ephemeral documents for the authenticated user
-    const deletedCount = await documentService.deleteEphemeralDocuments(userId);
-
-    res.json({
-      success: true,
-      deletedCount
-    });
-  } catch (error) {
-    console.error('[Documents API] Error deleting ephemeral documents:', error);
     next(error);
   }
 });

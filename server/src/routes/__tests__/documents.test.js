@@ -25,25 +25,16 @@ jest.mock('../../middleware/auth.js', () => ({
   validateBody: jest.fn(() => (req, res, next) => next())
 }));
 
-jest.mock('../../services/documentService.js', () => ({
-  default: {
-    saveDocument: jest.fn(),
-    getUserDocuments: jest.fn(),
-    getDocument: jest.fn(),
-    deleteDocument: jest.fn(),
-    bulkDeleteDocuments: jest.fn(),
-    restoreDocument: jest.fn(),
-    deleteEphemeralDocuments: jest.fn(),
-    getUserStats: jest.fn()
-  }
-}));
+// Mock the documentService module completely
+jest.mock('../../services/documentService.js');
 
 // Now import routes and mocked modules
 import documentsRouter from '../documents.js';
 import { requireAuth } from '../../middleware/auth.js';
 import documentService from '../../services/documentService.js';
 
-// Get references to the mocked functions
+// documentService is now automatically mocked by Jest
+// Cast to any to access mock methods (TypeScript pattern that works in JS)
 const mockSaveDocument = documentService.saveDocument;
 const mockGetUserDocuments = documentService.getUserDocuments;
 const mockGetDocument = documentService.getDocument;
