@@ -43,8 +43,15 @@ import documentsRouter from '../documents.js';
 import { requireAuth } from '../../middleware/auth.js';
 import documentService from '../../services/documentService.js';
 
-// Get mocked version (the mock is automatically applied by Jest)
-const mockedDocumentService = documentService;
+// Get references to the mocked functions
+const mockSaveDocument = documentService.saveDocument;
+const mockGetUserDocuments = documentService.getUserDocuments;
+const mockGetDocument = documentService.getDocument;
+const mockDeleteDocument = documentService.deleteDocument;
+const mockBulkDeleteDocuments = documentService.bulkDeleteDocuments;
+const mockRestoreDocument = documentService.restoreDocument;
+const mockDeleteEphemeralDocuments = documentService.deleteEphemeralDocuments;
+const mockGetUserStats = documentService.getUserStats;
 
 describe('Documents Routes', () => {
   let app;
@@ -73,14 +80,14 @@ describe('Documents Routes', () => {
     });
 
     // Set default mock implementations for document service
-    mockedDocumentService.saveDocument.mockResolvedValue({ documentId: 'doc-123', savedAt: new Date().toISOString() });
-    mockedDocumentService.getUserDocuments.mockResolvedValue({ documents: [], total: 0, hasMore: false });
-    mockedDocumentService.getDocument.mockResolvedValue(null);
-    mockedDocumentService.deleteDocument.mockResolvedValue(null);
-    mockedDocumentService.bulkDeleteDocuments.mockResolvedValue(0);
-    mockedDocumentService.restoreDocument.mockResolvedValue(null);
-    mockedDocumentService.deleteEphemeralDocuments.mockResolvedValue(0);
-    mockedDocumentService.getUserStats.mockResolvedValue({});
+    mockSaveDocument.mockResolvedValue({ documentId: 'doc-123', savedAt: new Date().toISOString() });
+    mockGetUserDocuments.mockResolvedValue({ documents: [], total: 0, hasMore: false });
+    mockGetDocument.mockResolvedValue(null);
+    mockDeleteDocument.mockResolvedValue(null);
+    mockBulkDeleteDocuments.mockResolvedValue(0);
+    mockRestoreDocument.mockResolvedValue(null);
+    mockDeleteEphemeralDocuments.mockResolvedValue(0);
+    mockGetUserStats.mockResolvedValue({});
   });
 
   describe('POST /api/documents', () => {
@@ -90,7 +97,7 @@ describe('Documents Routes', () => {
         savedAt: '2025-11-15T12:00:00Z'
       };
 
-      mockedDocumentService.saveDocument.mockResolvedValue(mockResult);
+      mockSaveDocument.mockResolvedValue(mockResult);
 
       const docData = {
         filename: 'test.js',
@@ -110,7 +117,7 @@ describe('Documents Routes', () => {
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
       expect(response.body.documentId).toBe('doc-123-uuid');
-      expect(mockedDocumentService.saveDocument).toHaveBeenCalledWith(42, expect.objectContaining({
+      expect(mockSaveDocument).toHaveBeenCalledWith(42, expect.objectContaining({
         filename: 'test.js',
         language: 'javascript'
       }));
@@ -122,7 +129,7 @@ describe('Documents Routes', () => {
         savedAt: '2025-11-15T13:00:00Z'
       };
 
-      mockedDocumentService.saveDocument.mockResolvedValue(mockResult);
+      mockSaveDocument.mockResolvedValue(mockResult);
 
       const docData = {
         filename: 'auth.js',
@@ -145,7 +152,7 @@ describe('Documents Routes', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.documentId).toBe('doc-456-uuid');
-      expect(mockedDocumentService.saveDocument).toHaveBeenCalledWith(42, expect.objectContaining({
+      expect(mockSaveDocument).toHaveBeenCalledWith(42, expect.objectContaining({
         githubRepo: 'acme-corp/project',
         githubPath: 'src/auth.js'
       }));
@@ -169,7 +176,7 @@ describe('Documents Routes', () => {
     });
 
     it('should handle service errors', async () => {
-      mockedDocumentService.saveDocument.mockRejectedValue(new Error('Database error'));
+      mockSaveDocument.mockRejectedValue(new Error('Database error'));
 
       const response = await request(app)
         .post('/api/documents')
@@ -209,7 +216,7 @@ describe('Documents Routes', () => {
         hasMore: false
       };
 
-      mockedDocumentService.getUserDocuments.mockResolvedValue(mockResult);
+      mockGetUserDocuments.mockResolvedValue(mockResult);
 
       const response = await request(app)
         .get('/api/documents');
@@ -218,7 +225,7 @@ describe('Documents Routes', () => {
       expect(response.body.documents).toHaveLength(2);
       expect(response.body.total).toBe(2);
       expect(response.body.hasMore).toBe(false);
-      expect(mockedDocumentService.getUserDocuments).toHaveBeenCalledWith(42, {
+      expect(mockGetUserDocuments).toHaveBeenCalledWith(42, {
         limit: 50,
         offset: 0,
         sort: 'generated_at:desc',
@@ -233,13 +240,13 @@ describe('Documents Routes', () => {
         hasMore: true
       };
 
-      mockedDocumentService.getUserDocuments.mockResolvedValue(mockResult);
+      mockGetUserDocuments.mockResolvedValue(mockResult);
 
       const response = await request(app)
         .get('/api/documents?limit=10&offset=20&sort=filename:asc');
 
       expect(response.status).toBe(200);
-      expect(mockedDocumentService.getUserDocuments).toHaveBeenCalledWith(42, {
+      expect(mockGetUserDocuments).toHaveBeenCalledWith(42, {
         limit: 10,
         offset: 20,
         sort: 'filename:asc',
@@ -248,7 +255,7 @@ describe('Documents Routes', () => {
     });
 
     it('should support includeDeleted flag', async () => {
-      mockedDocumentService.getUserDocuments.mockResolvedValue({
+      mockGetUserDocuments.mockResolvedValue({
         documents: [],
         total: 0,
         hasMore: false
@@ -257,7 +264,7 @@ describe('Documents Routes', () => {
       await request(app)
         .get('/api/documents?includeDeleted=true');
 
-      expect(mockedDocumentService.getUserDocuments).toHaveBeenCalledWith(42, {
+      expect(mockGetUserDocuments).toHaveBeenCalledWith(42, {
         limit: 50,
         offset: 0,
         sort: 'generated_at:desc',
@@ -284,7 +291,7 @@ describe('Documents Routes', () => {
         last_generation: '2025-11-15T16:00:00Z'
       };
 
-      mockedDocumentService.getUserStats.mockResolvedValue(mockStats);
+      mockGetUserStats.mockResolvedValue(mockStats);
 
       const response = await request(app)
         .get('/api/documents/stats');
@@ -292,7 +299,7 @@ describe('Documents Routes', () => {
       expect(response.status).toBe(200);
       expect(response.body.total_documents).toBe('25');
       expect(response.body.avg_quality_score).toBe('87.5');
-      expect(mockedDocumentService.getUserStats).toHaveBeenCalledWith(42);
+      expect(mockGetUserStats).toHaveBeenCalledWith(42);
     });
 
     it('should require authentication', async () => {
@@ -311,7 +318,7 @@ describe('Documents Routes', () => {
         user_id: 42
       };
 
-      mockedDocumentService.getDocument.mockResolvedValue(mockDocument);
+      mockGetDocument.mockResolvedValue(mockDocument);
 
       const response = await request(app)
         .get('/api/documents/doc-123');
@@ -319,11 +326,11 @@ describe('Documents Routes', () => {
       expect(response.status).toBe(200);
       expect(response.body.id).toBe('doc-123');
       expect(response.body.filename).toBe('test.js');
-      expect(mockedDocumentService.getDocument).toHaveBeenCalledWith(42, 'doc-123');
+      expect(mockGetDocument).toHaveBeenCalledWith(42, 'doc-123');
     });
 
     it('should return 404 if document not found', async () => {
-      mockedDocumentService.getDocument.mockResolvedValue(null);
+      mockGetDocument.mockResolvedValue(null);
 
       const response = await request(app)
         .get('/api/documents/doc-nonexistent');
@@ -333,7 +340,7 @@ describe('Documents Routes', () => {
     });
 
     it('should require authentication', async () => {
-      mockedDocumentService.getDocument.mockResolvedValue({ id: 'doc-123' });
+      mockGetDocument.mockResolvedValue({ id: 'doc-123' });
 
       await request(app).get('/api/documents/doc-123');
 
@@ -347,7 +354,7 @@ describe('Documents Routes', () => {
         deleted_at: '2025-11-15T14:00:00Z'
       };
 
-      mockedDocumentService.deleteDocument.mockResolvedValue(mockResult);
+      mockDeleteDocument.mockResolvedValue(mockResult);
 
       const response = await request(app)
         .delete('/api/documents/doc-123');
@@ -355,11 +362,11 @@ describe('Documents Routes', () => {
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
       expect(response.body.deletedAt).toBe('2025-11-15T14:00:00Z');
-      expect(mockedDocumentService.deleteDocument).toHaveBeenCalledWith(42, 'doc-123');
+      expect(mockDeleteDocument).toHaveBeenCalledWith(42, 'doc-123');
     });
 
     it('should return 404 if document not found', async () => {
-      mockedDocumentService.deleteDocument.mockResolvedValue(null);
+      mockDeleteDocument.mockResolvedValue(null);
 
       const response = await request(app)
         .delete('/api/documents/doc-nonexistent');
@@ -377,7 +384,7 @@ describe('Documents Routes', () => {
 
   describe('DELETE /api/documents', () => {
     it('should bulk delete documents', async () => {
-      mockedDocumentService.bulkDeleteDocuments.mockResolvedValue(3);
+      mockBulkDeleteDocuments.mockResolvedValue(3);
 
       const response = await request(app)
         .delete('/api/documents')
@@ -386,7 +393,7 @@ describe('Documents Routes', () => {
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
       expect(response.body.deletedCount).toBe(3);
-      expect(mockedDocumentService.bulkDeleteDocuments).toHaveBeenCalledWith(42, ['doc-1', 'doc-2', 'doc-3']);
+      expect(mockBulkDeleteDocuments).toHaveBeenCalledWith(42, ['doc-1', 'doc-2', 'doc-3']);
     });
 
     it('should return 400 if documentIds is not an array', async () => {
@@ -422,7 +429,7 @@ describe('Documents Routes', () => {
         restored_at: '2025-11-15T15:00:00Z'
       };
 
-      mockedDocumentService.restoreDocument.mockResolvedValue(mockResult);
+      mockRestoreDocument.mockResolvedValue(mockResult);
 
       const response = await request(app)
         .post('/api/documents/doc-123/restore');
@@ -430,11 +437,11 @@ describe('Documents Routes', () => {
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
       expect(response.body.restoredAt).toBe('2025-11-15T15:00:00Z');
-      expect(mockedDocumentService.restoreDocument).toHaveBeenCalledWith(42, 'doc-123');
+      expect(mockRestoreDocument).toHaveBeenCalledWith(42, 'doc-123');
     });
 
     it('should return 404 if document not found or restoration window expired', async () => {
-      mockedDocumentService.restoreDocument.mockResolvedValue(null);
+      mockRestoreDocument.mockResolvedValue(null);
 
       const response = await request(app)
         .post('/api/documents/doc-expired/restore');
@@ -452,7 +459,7 @@ describe('Documents Routes', () => {
 
   describe('DELETE /api/documents/ephemeral', () => {
     it('should delete all ephemeral documents for the user', async () => {
-      mockedDocumentService.deleteEphemeralDocuments.mockResolvedValue(5);
+      mockDeleteEphemeralDocuments.mockResolvedValue(5);
 
       const response = await request(app)
         .delete('/api/documents/ephemeral');
@@ -460,11 +467,11 @@ describe('Documents Routes', () => {
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
       expect(response.body.deletedCount).toBe(5);
-      expect(mockedDocumentService.deleteEphemeralDocuments).toHaveBeenCalledWith(42);
+      expect(mockDeleteEphemeralDocuments).toHaveBeenCalledWith(42);
     });
 
     it('should return 0 if no ephemeral documents exist', async () => {
-      mockedDocumentService.deleteEphemeralDocuments.mockResolvedValue(0);
+      mockDeleteEphemeralDocuments.mockResolvedValue(0);
 
       const response = await request(app)
         .delete('/api/documents/ephemeral');
