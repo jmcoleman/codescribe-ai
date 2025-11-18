@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
-import { X, AlertCircle, Github, Loader2, File, Clock, ChevronDown, ChevronRight } from 'lucide-react';
+import { X, AlertCircle, Github, Loader2, File, Clock, ChevronDown, ChevronRight, Sparkles, Zap, ExternalLink } from 'lucide-react';
 import { SmartInput } from './SmartInput';
 import { FileTree } from './FileTree';
 import { FilePreview } from './FilePreview';
@@ -12,9 +12,12 @@ import { Button } from '../Button';
 import { ErrorBanner } from '../ErrorBanner';
 import * as githubService from '../../services/githubService';
 import { isFileSupported } from '../../services/githubService';
-import { toastSuccess } from '../../utils/toast';
+import { toastSuccess, toastInfo, toastWarning } from '../../utils/toast';
+import { useAuth } from '../../contexts/AuthContext';
+import { hasFeature, getEffectiveTier } from '../../utils/tierFeatures';
+import { GITHUB_BATCH_LIMITS } from '../../constants/github';
 
-export function GitHubLoadModal({ isOpen, onClose, onFileLoad }) {
+export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, workspaceFiles = [] }) {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -28,8 +31,19 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad }) {
   const [expandedPaths, setExpandedPaths] = useState(new Set());
   const [recentFilesExpanded, setRecentFilesExpanded] = useState(false);
 
+  // Multi-select state (always enabled for Pro+, disabled for Free/Starter)
+  const [selectedFiles, setSelectedFiles] = useState(new Set());
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+  const [showProHint, setShowProHint] = useState(true); // Dismissable Pro feature hint
+
   const modalRef = useRef(null);
   const smartInputRef = useRef(null);
+
+  // Tier features
+  const { user } = useAuth();
+  const effectiveTier = getEffectiveTier(user);
+  const canUseBatchProcessing = hasFeature(user, 'batchProcessing');
+  const maxFiles = GITHUB_BATCH_LIMITS[effectiveTier] || 1;
 
   // Load recent files on mount
   useEffect(() => {
@@ -281,6 +295,53 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad }) {
     return null;
   };
 
+  // Multi-select handlers
+  const handleToggleFileSelection = (filePath) => {
+    const newSelected = new Set(selectedFiles);
+    if (newSelected.has(filePath)) {
+      newSelected.delete(filePath);
+    } else {
+      if (newSelected.size >= maxFiles) {
+        toastWarning(`Maximum ${maxFiles} files for ${effectiveTier} tier`);
+        return;
+      }
+      newSelected.add(filePath);
+    }
+    setSelectedFiles(newSelected);
+  };
+
+  const handleSelectAllFiles = () => {
+    const allFiles = getAllSupportedFiles(repository.tree);
+    const filePaths = allFiles.slice(0, maxFiles).map(f => f.path);
+    setSelectedFiles(new Set(filePaths));
+
+    if (allFiles.length > maxFiles) {
+      toastInfo(`Selected first ${maxFiles} of ${allFiles.length} files (tier limit)`);
+    }
+  };
+
+  const handleDeselectAllFiles = () => {
+    setSelectedFiles(new Set());
+  };
+
+  const getAllSupportedFiles = (tree) => {
+    const files = [];
+    const traverse = (items) => {
+      items.forEach(item => {
+        if (item.type === 'blob') {
+          const fileSupport = isFileSupported(item.name);
+          if (fileSupport.isSupported) {
+            files.push(item);
+          }
+        } else if (item.children) {
+          traverse(item.children);
+        }
+      });
+    };
+    traverse(tree);
+    return files;
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -295,32 +356,32 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad }) {
         aria-modal="true"
         aria-labelledby="github-modal-title"
       >
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700">
-          <div className="flex items-center gap-3">
-            <Github className="w-6 h-6 text-slate-700 dark:text-slate-300" />
-            <h2 id="github-modal-title" className="text-2xl font-bold text-slate-900 dark:text-white">
+        {/* Header - Compact */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-700">
+          <div className="flex items-center gap-2">
+            <Github className="w-5 h-5 text-slate-700 dark:text-slate-300" />
+            <h2 id="github-modal-title" className="text-lg font-semibold text-slate-900 dark:text-white">
               Import from GitHub
             </h2>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             aria-label="Close modal"
           >
-            <X className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+            <X className="w-4 h-4 text-slate-600 dark:text-slate-400" />
           </button>
         </div>
 
-        {/* Error Banner - Appears at top for immediate visibility */}
+        {/* Error Banner - Compact */}
         {error && !repository && !loading && (
-          <div className="px-6 pt-4 pb-2">
+          <div className="px-4 pt-3 pb-1">
             <ErrorBanner error={error} onDismiss={() => setError(null)} />
           </div>
         )}
 
-        {/* Input Section */}
-        <div className={`${error && !repository && !loading ? 'px-6 pb-6 pt-0' : 'p-6'} border-b border-slate-200 dark:border-slate-700`}>
+        {/* Input Section - Compact, hide recent files when repository is loaded */}
+        <div className={`${error && !repository && !loading ? 'px-4 pb-4 pt-0' : 'px-4 py-3'} border-b border-slate-200 dark:border-slate-700`}>
           <SmartInput
             ref={smartInputRef}
             value={input}
@@ -329,13 +390,13 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad }) {
             loading={loading}
           />
 
-          {/* Recent Files */}
-          {recentFiles.length > 0 && (
-            <div className="mt-4">
+          {/* Recent Files - Only show when no repository is loaded */}
+          {!repository && recentFiles.length > 0 && (
+            <div className="mt-3">
               <button
                 type="button"
                 onClick={() => setRecentFilesExpanded(!recentFilesExpanded)}
-                className="flex items-center gap-1.5 mb-2 w-full hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md px-1 py-1 -mx-1 transition-colors"
+                className="flex items-center gap-1.5 mb-1.5 w-full hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md px-1 py-1 -mx-1 transition-colors"
                 aria-expanded={recentFilesExpanded}
                 aria-controls="recent-files-list"
               >
@@ -345,8 +406,8 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad }) {
                   <ChevronRight className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                 )}
                 <Clock className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
-                <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Recent Files ({recentFiles.length})
+                <p className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                  Recent ({recentFiles.length})
                 </p>
               </button>
               {recentFilesExpanded && (
@@ -356,9 +417,9 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad }) {
                       key={index}
                       onClick={() => handleRecentFileClick(recent)}
                       disabled={loading}
-                      className="group flex items-center gap-2 px-2 py-1.5 text-sm text-left rounded-md hover:enabled:bg-slate-100 dark:hover:enabled:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="group flex items-center gap-2 px-2 py-1 text-sm text-left rounded-md hover:enabled:bg-slate-100 dark:hover:enabled:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
-                      <File className="w-4 h-4 flex-shrink-0 text-slate-400 dark:text-slate-500 group-hover:enabled:text-slate-600 dark:group-hover:enabled:text-slate-300 transition-colors" />
+                      <File className="w-3.5 h-3.5 flex-shrink-0 text-slate-400 dark:text-slate-500 group-hover:enabled:text-slate-600 dark:group-hover:enabled:text-slate-300 transition-colors" />
                       <div className="flex-1 min-w-0 flex items-baseline gap-1.5">
                         <span className="text-slate-500 dark:text-slate-400 text-xs truncate">
                           {recent.owner}/{recent.repo}/
@@ -388,6 +449,37 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad }) {
             <div className="h-full flex">
               {/* File Tree */}
               <div className="w-2/5 border-r border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col">
+                {/* Pro Feature Hint for Free/Starter users */}
+                {!canUseBatchProcessing && showProHint && (
+                  <div className="px-3 py-2 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 border-b border-purple-200 dark:border-purple-800">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <Zap className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 flex-shrink-0" />
+                        <p className="text-xs font-medium text-purple-900 dark:text-purple-100 truncate">
+                          Import multiple files with Pro
+                        </p>
+                        <a
+                          href="/pricing"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-shrink-0 flex items-center gap-0.5 text-xs font-semibold text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-200 hover:underline"
+                        >
+                          <span>Upgrade</span>
+                          <ExternalLink className="w-2.5 h-2.5" />
+                        </a>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowProHint(false)}
+                        className="flex-shrink-0 text-purple-500 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-200 transition-colors"
+                        aria-label="Dismiss"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 <FileTree
                   tree={repository.tree}
                   onFileSelect={handleFileSelect}
@@ -397,6 +489,10 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad }) {
                   onToggleFolder={toggleFolder}
                   branches={branches}
                   onBranchChange={handleBranchChange}
+                  multiSelectMode={canUseBatchProcessing}
+                  selectedFiles={selectedFiles}
+                  onToggleFileSelection={canUseBatchProcessing ? handleToggleFileSelection : undefined}
+                  onClearSelection={handleDeselectAllFiles}
                 />
               </div>
 
@@ -441,42 +537,58 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad }) {
         </div>
 
         {/* Footer */}
-        {(() => {
-          const MAX_FILE_SIZE = 100 * 1024; // 100KB
-          const isFileTooLarge = filePreview?.size > MAX_FILE_SIZE;
-          const fileSupport = filePreview ? isFileSupported(filePreview.name) : null;
-          const isUnsupported = fileSupport && !fileSupport.isSupported;
-          const canLoad = filePreview && !isFileTooLarge && !isUnsupported;
+        {repository ? (
+          <div className="px-6 py-3 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-end gap-3">
+            {canUseBatchProcessing && selectedFiles.size > 0 ? (
+              <Button
+                variant="primary"
+                onClick={() => {
+                  // TODO: Implement batch import
+                  toastInfo('Batch import coming soon!');
+                }}
+                title={`Import ${selectedFiles.size} file${selectedFiles.size !== 1 ? 's' : ''}`}
+              >
+                Import {selectedFiles.size} File{selectedFiles.size !== 1 ? 's' : ''}
+              </Button>
+            ) : (
+              <>
+                {(() => {
+                  const MAX_FILE_SIZE = 100 * 1024; // 100KB
+                  const isFileTooLarge = filePreview?.size > MAX_FILE_SIZE;
+                  const fileSupport = filePreview ? isFileSupported(filePreview.name) : null;
+                  const isUnsupported = fileSupport && !fileSupport.isSupported;
+                  const canLoad = filePreview && !isFileTooLarge && !isUnsupported;
 
-          return (
-            <div className="p-6 border-t border-slate-200 dark:border-slate-700 flex items-center justify-end gap-3">
-              {canLoad && (
-                <Button
-                  variant="secondary"
-                  onClick={onClose}
-                >
-                  Cancel
-                </Button>
-              )}
-              {canLoad ? (
-                <Button
-                  variant="primary"
-                  onClick={handleLoadFile}
-                  title="Load this file into the editor"
-                >
-                  Load File
-                </Button>
-              ) : (
-                <Button
-                  variant="secondary"
-                  onClick={onClose}
-                >
-                  Cancel
-                </Button>
-              )}
-            </div>
-          );
-        })()}
+                  return canLoad ? (
+                    <Button
+                      variant="primary"
+                      onClick={handleLoadFile}
+                      title="Load this file into the editor"
+                    >
+                      Load File
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="secondary"
+                      onClick={onClose}
+                    >
+                      Close
+                    </Button>
+                  );
+                })()}
+              </>
+            )}
+          </div>
+        ) : (
+          <div className="px-6 py-3 border-t border-slate-200 dark:border-slate-700 flex items-center justify-end">
+            <Button
+              variant="secondary"
+              onClick={onClose}
+            >
+              Close
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
