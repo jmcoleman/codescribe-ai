@@ -1,4 +1,4 @@
-import { Upload, Github, Sparkles } from 'lucide-react';
+import { Upload, Github, Sparkles, Menu } from 'lucide-react';
 import { Button } from './Button';
 import { Select } from './Select';
 
@@ -11,6 +11,8 @@ export function ControlBar({
   onGenerate,
   onUpload,
   onGithubImport,
+  onMenuClick,
+  showMenuButton = false,
   isGenerating = false,
   isUploading = false,
   generateDisabled = false,
@@ -24,11 +26,22 @@ export function ControlBar({
   ];
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm p-4 transition-colors">
+    <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 p-4 transition-colors">
       <h2 className="sr-only">Documentation Controls</h2>
       <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
         {/* Left: Actions */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+          {/* Mobile Menu Button (only visible on mobile when showMenuButton is true) */}
+          {showMenuButton && (
+            <button
+              type="button"
+              onClick={onMenuClick}
+              className="lg:hidden p-2 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors self-start"
+              aria-label="Open file menu"
+            >
+              <Menu className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+            </button>
+          )}
           <Button
             variant="secondary"
             icon={Upload}
@@ -36,7 +49,7 @@ export function ControlBar({
             disabled={disabled || isUploading}
             loading={isUploading}
           >
-            {isUploading ? 'Uploading...' : 'Upload Files'}
+            {isUploading ? 'Uploading...' : 'Upload File'}
           </Button>
 
           {ENABLE_GITHUB_IMPORT && (

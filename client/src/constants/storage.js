@@ -22,6 +22,7 @@ export const STORAGE_KEYS = {
   // UI State (localStorage - user preferences)
   REPORT_EXPANDED: 'codescribeai:local:ui:report-expanded',
   SPLIT_PANEL_SIZES: 'codescribeai:local:ui:split-panel-sizes',
+  SIDEBAR_MODE: 'codescribeai:local:ui:sidebar-mode',
   THEME_PREFERENCE: 'codescribeai:local:ui:theme-preference',
 
   // Editor State (localStorage - persists code/docs across refreshes)

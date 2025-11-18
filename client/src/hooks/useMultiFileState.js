@@ -36,6 +36,7 @@ import { v4 as uuidv4 } from 'uuid';
 export function useMultiFileState() {
   const [files, setFiles] = useState([]);
   const [activeFileId, setActiveFileId] = useState(null);
+  const [selectedFileIds, setSelectedFileIds] = useState([]);
 
   /**
    * Add a new file to the list
@@ -175,11 +176,66 @@ export function useMultiFileState() {
     }
   }, [files]);
 
+  /**
+   * Toggle file selection
+   * @param {string} fileId - File ID to toggle
+   */
+  const toggleFileSelection = useCallback((fileId) => {
+    setSelectedFileIds(prev => {
+      if (prev.includes(fileId)) {
+        return prev.filter(id => id !== fileId);
+      } else {
+        return [...prev, fileId];
+      }
+    });
+  }, []);
+
+  /**
+   * Select all files
+   */
+  const selectAllFiles = useCallback(() => {
+    setSelectedFileIds(files.map(f => f.id));
+  }, [files]);
+
+  /**
+   * Deselect all files
+   */
+  const deselectAllFiles = useCallback(() => {
+    setSelectedFileIds([]);
+  }, []);
+
+  /**
+   * Select multiple files by IDs
+   * @param {Array<string>} fileIds - Array of file IDs to select
+   */
+  const selectFiles = useCallback((fileIds) => {
+    setSelectedFileIds(fileIds);
+  }, []);
+
+  /**
+   * Check if a file is selected
+   * @param {string} fileId - File ID to check
+   * @returns {boolean}
+   */
+  const isFileSelected = useCallback((fileId) => {
+    return selectedFileIds.includes(fileId);
+  }, [selectedFileIds]);
+
+  /**
+   * Get selected files
+   * @returns {Array} Array of selected file objects
+   */
+  const getSelectedFiles = useCallback(() => {
+    return files.filter(f => selectedFileIds.includes(f.id));
+  }, [files, selectedFileIds]);
+
   return {
     // State
     files,
     activeFileId,
     activeFile: getActiveFile(),
+    selectedFileIds,
+    selectedFiles: getSelectedFiles(),
 
     // Operations
     addFile,
@@ -190,8 +246,18 @@ export function useMultiFileState() {
     setActiveFile,
     getFileById,
 
+    // Selection operations
+    toggleFileSelection,
+    selectAllFiles,
+    deselectAllFiles,
+    selectFiles,
+    isFileSelected,
+    getSelectedFiles,
+
     // Computed
     fileCount: files.length,
-    hasFiles: files.length > 0
+    hasFiles: files.length > 0,
+    selectedCount: selectedFileIds.length,
+    hasSelection: selectedFileIds.length > 0
   };
 }

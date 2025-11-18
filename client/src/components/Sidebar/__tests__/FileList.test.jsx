@@ -51,9 +51,15 @@ describe('FileList', () => {
   ];
 
   const mockOnSelectFile = vi.fn();
+  const mockOnToggleFileSelection = vi.fn();
+  const mockOnSelectAllFiles = vi.fn();
+  const mockOnDeselectAllFiles = vi.fn();
   const mockOnRemoveFile = vi.fn();
-  const mockOnGenerateAll = vi.fn();
-  const mockOnClearAll = vi.fn();
+  const mockOnAddFile = vi.fn();
+  const mockOnGenerateFile = vi.fn();
+  const mockOnGenerateSelected = vi.fn();
+  const mockOnDeleteSelected = vi.fn();
+  const mockOnToggleSidebar = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -65,31 +71,48 @@ describe('FileList', () => {
         <FileList
           files={[]}
           activeFileId={null}
+          selectedFileIds={[]}
+          selectedCount={0}
           onSelectFile={mockOnSelectFile}
+          onToggleFileSelection={mockOnToggleFileSelection}
+          onSelectAllFiles={mockOnSelectAllFiles}
+          onDeselectAllFiles={mockOnDeselectAllFiles}
           onRemoveFile={mockOnRemoveFile}
-          onGenerateAll={mockOnGenerateAll}
-          onClearAll={mockOnClearAll}
+          onAddFile={mockOnAddFile}
+          onGenerateFile={mockOnGenerateFile}
+          onGenerateSelected={mockOnGenerateSelected}
+          onDeleteSelected={mockOnDeleteSelected}
+          onToggleSidebar={mockOnToggleSidebar}
         />
       );
 
-      expect(screen.getByText('No files uploaded yet')).toBeInTheDocument();
-      expect(screen.getByText('Upload files to get started')).toBeInTheDocument();
+      expect(screen.getByText('No files yet')).toBeInTheDocument();
+      expect(screen.getByText(/Click the \+ button above to add files/i)).toBeInTheDocument();
     });
 
-    it('should NOT show bulk actions when no files', () => {
+    it('should NOT show selection controls when no files', () => {
       render(
         <FileList
           files={[]}
           activeFileId={null}
+          selectedFileIds={[]}
+          selectedCount={0}
           onSelectFile={mockOnSelectFile}
+          onToggleFileSelection={mockOnToggleFileSelection}
+          onSelectAllFiles={mockOnSelectAllFiles}
+          onDeselectAllFiles={mockOnDeselectAllFiles}
           onRemoveFile={mockOnRemoveFile}
-          onGenerateAll={mockOnGenerateAll}
-          onClearAll={mockOnClearAll}
+          onAddFile={mockOnAddFile}
+          onGenerateFile={mockOnGenerateFile}
+          onGenerateSelected={mockOnGenerateSelected}
+          onDeleteSelected={mockOnDeleteSelected}
+          onToggleSidebar={mockOnToggleSidebar}
         />
       );
 
-      expect(screen.queryByRole('button', { name: /Generate All/i })).not.toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: /Clear All/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Select All/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Generate/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Delete/i })).not.toBeInTheDocument();
     });
   });
 

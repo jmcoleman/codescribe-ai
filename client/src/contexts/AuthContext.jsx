@@ -8,6 +8,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { API_URL } from '../config/api';
 import { STORAGE_KEYS, getStorageItem, setStorageItem, removeStorageItem } from '../constants/storage';
+import { clearWorkspaceLocalStorage } from '../hooks/useWorkspacePersistence';
 
 const AuthContext = createContext(null);
 
@@ -186,6 +187,10 @@ export function AuthProvider({ children }) {
     } finally {
       // Always clear local state and token
       removeStorageItem(STORAGE_KEYS.AUTH_TOKEN);
+
+      // Clear workspace file content from localStorage
+      clearWorkspaceLocalStorage();
+
       setUser(null);
       setError(null);
     }

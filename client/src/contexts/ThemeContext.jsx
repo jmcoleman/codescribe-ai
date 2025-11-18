@@ -9,7 +9,23 @@ export function ThemeProvider({ children }) {
   const [theme, setThemeInternal] = useState(() => {
     // Priority: localStorage > default to 'auto'
     // User account preference will override this after auth loads
-    const stored = getStorageItem(STORAGE_KEYS.THEME_PREFERENCE);
+
+    // Check new storage key first
+    let stored = getStorageItem(STORAGE_KEYS.THEME_PREFERENCE);
+
+    // Migration: Check old key if new key doesn't exist
+    if (!stored) {
+      const oldKey = 'codescribeai:settings:theme';
+      const oldStored = localStorage.getItem(oldKey);
+      if (oldStored && ['light', 'dark', 'auto'].includes(oldStored)) {
+        // Migrate to new key
+        setStorageItem(STORAGE_KEYS.THEME_PREFERENCE, oldStored);
+        localStorage.removeItem(oldKey);
+        stored = oldStored;
+        console.log('[ThemeContext] Migrated theme preference from old key to new key:', oldStored);
+      }
+    }
+
     if (stored && ['light', 'dark', 'auto'].includes(stored)) {
       return stored;
     }
@@ -33,11 +49,25 @@ export function ThemeProvider({ children }) {
     return theme;
   });
 
+  // Ensure theme is persisted to localStorage on mount
+  useEffect(() => {
+    // Only save if not already in localStorage
+    const existing = getStorageItem(STORAGE_KEYS.THEME_PREFERENCE);
+    if (!existing && theme) {
+      setStorageItem(STORAGE_KEYS.THEME_PREFERENCE, theme);
+      console.log('[ThemeContext] Saved initial theme to localStorage:', theme);
+    }
+  }, []); // Run once on mount
+
   // Load theme from user account on login
   useEffect(() => {
     if (user && user.theme_preference && ['light', 'dark', 'auto'].includes(user.theme_preference)) {
       console.log('[ThemeContext] Loading theme from user account:', user.theme_preference);
       setThemeInternal(user.theme_preference);
+
+      // CRITICAL: Sync database preference to localStorage to prevent flash on next reload
+      setStorageItem(STORAGE_KEYS.THEME_PREFERENCE, user.theme_preference);
+      console.log('[ThemeContext] Synced database theme to localStorage:', user.theme_preference);
     } else if (user) {
       console.log('[ThemeContext] User logged in but no theme_preference found in user object:', user);
     }

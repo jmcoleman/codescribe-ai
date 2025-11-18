@@ -20,11 +20,12 @@ import { FileActions } from './FileActions';
  * @param {Function} props.onSelect - Called when file is clicked
  * @param {Function} props.onRemove - Called when remove action is clicked
  */
-export function FileItem({ file, isActive, onSelect, onRemove }) {
+export function FileItem({ file, isActive, isSelected, onSelect, onToggleSelection, onRemove, onGenerate }) {
   const {
     filename,
     language,
     fileSize,
+    content,
     documentation,
     qualityScore,
     isGenerating,
@@ -36,6 +37,7 @@ export function FileItem({ file, isActive, onSelect, onRemove }) {
   const hasDocumentation = Boolean(documentation);
   const hasError = Boolean(error);
   const isSavedToDb = Boolean(documentId);
+  const hasContent = Boolean(content && content.length > 0);
 
   // Status icon
   const StatusIcon = () => {
@@ -72,19 +74,19 @@ export function FileItem({ file, isActive, onSelect, onRemove }) {
 
   return (
     <div
-      onClick={onSelect}
+      onClick={hasContent ? onSelect : undefined}
       className={`
         group
         relative
-        p-3 rounded-lg
-        border
-        cursor-pointer
+        p-3
+        border-b border-slate-200 dark:border-slate-700
+        ${hasContent ? 'cursor-pointer' : 'cursor-default opacity-60'}
         transition-all duration-150
         ${isActive
-          ? 'bg-purple-50 dark:bg-purple-900/20 border-purple-300 dark:border-purple-700 shadow-sm'
-          : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-purple-200 dark:hover:border-purple-800 hover:shadow-sm'
+          ? 'bg-purple-50 dark:bg-purple-900/20'
+          : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800'
         }
-        focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900
+        focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-inset
       `}
       role="button"
       tabIndex={0}
@@ -98,11 +100,26 @@ export function FileItem({ file, isActive, onSelect, onRemove }) {
     >
       {/* Active indicator */}
       {isActive && (
-        <div className="absolute left-0 top-0 bottom-0 w-1 bg-purple-600 dark:bg-purple-500 rounded-l-lg" />
+        <div className="absolute left-0 top-0 bottom-0 w-1 bg-purple-600 dark:bg-purple-500" />
       )}
 
       {/* File info */}
       <div className="flex items-start gap-3">
+        {/* Checkbox */}
+        <div className="flex-shrink-0 mt-0.5">
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={(e) => {
+              e.stopPropagation();
+              onToggleSelection();
+            }}
+            onClick={(e) => e.stopPropagation()}
+            className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-purple-600 focus:ring-purple-500 focus:ring-offset-0 cursor-pointer"
+            aria-label={`Select ${filename}`}
+          />
+        </div>
+
         {/* Status icon */}
         <div className="flex-shrink-0 mt-0.5">
           <StatusIcon />
@@ -117,6 +134,14 @@ export function FileItem({ file, isActive, onSelect, onRemove }) {
             </span>
             {isActive && (
               <Star className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 flex-shrink-0" fill="currentColor" />
+            )}
+            {!hasContent && (
+              <span
+                className="px-1.5 py-0.5 text-[10px] font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded flex-shrink-0"
+                title="Code content not available. Re-upload this file to edit or generate docs."
+              >
+                No Code
+              </span>
             )}
           </div>
 
@@ -159,6 +184,7 @@ export function FileItem({ file, isActive, onSelect, onRemove }) {
           <FileActions
             file={file}
             onRemove={onRemove}
+            onGenerate={onGenerate}
           />
         </div>
       </div>

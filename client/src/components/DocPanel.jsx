@@ -347,7 +347,7 @@ export const DocPanel = memo(function DocPanel({
   }), [isGenerating, effectiveTheme]);
 
   return (
-    <div data-testid="doc-panel" className="@container flex flex-col h-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm overflow-hidden transition-colors">
+    <div data-testid="doc-panel" className="@container flex flex-col h-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 overflow-hidden transition-colors">
       {/* Live Region for Screen Reader Announcements */}
       <div
         role="status"
@@ -521,7 +521,7 @@ export const DocPanel = memo(function DocPanel({
           </div>
         ) : (
           <div
-            className="flex flex-col items-center justify-center h-full text-center px-6 bg-white dark:bg-slate-900"
+            className="flex flex-col items-center justify-center min-h-full text-center px-6 py-8 bg-white dark:bg-slate-900"
             role="status"
           >
             <div className="mb-4 p-3 rounded-full bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800/50">

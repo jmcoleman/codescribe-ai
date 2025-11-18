@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { MoreVertical, Trash2, Download, History, RotateCw } from 'lucide-react';
+import { MoreVertical, Trash2, Download, History, RotateCw, Sparkles } from 'lucide-react';
 
 /**
  * FileActions Component
@@ -8,20 +8,23 @@ import { MoreVertical, Trash2, Download, History, RotateCw } from 'lucide-react'
  * NEW: Adds "View in History" action if file has documentId (saved to database).
  *
  * Actions:
- * - View in History (NEW) - View document in usage dashboard (if documentId exists)
+ * - Generate Docs (NEW) - Generate documentation for this file (if not generated)
+ * - View in History - View document in usage dashboard (if documentId exists)
  * - Regenerate - Re-generate documentation
  * - Download Docs - Download .md file
- * - Remove from List - Remove file (with confirmation)
+ * - Delete - Remove file from list
  *
  * @param {Object} props
  * @param {Object} props.file - File object
  * @param {Function} props.onRemove - Called when remove is clicked
+ * @param {Function} props.onGenerate - Called when generate is clicked
  */
-export function FileActions({ file, onRemove }) {
+export function FileActions({ file, onRemove, onGenerate }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  const { documentId, documentation, filename } = file;
+  const { documentId, documentation, filename, content } = file;
+  const hasContent = Boolean(content && content.length > 0);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -51,6 +54,13 @@ export function FileActions({ file, onRemove }) {
     return () => document.removeEventListener('keydown', handleEscape);
   }, [isOpen]);
 
+  const handleGenerate = () => {
+    if (onGenerate) {
+      onGenerate();
+    }
+    setIsOpen(false);
+  };
+
   const handleViewHistory = () => {
     if (documentId) {
       // Navigate to usage dashboard with document highlighted
@@ -60,8 +70,9 @@ export function FileActions({ file, onRemove }) {
   };
 
   const handleRegenerate = () => {
-    // TODO: Implement regenerate logic
-    console.log('Regenerate:', filename);
+    if (onGenerate) {
+      onGenerate();
+    }
     setIsOpen(false);
   };
 
@@ -111,7 +122,20 @@ export function FileActions({ file, onRemove }) {
           role="menu"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* View in History (NEW - only if documentId exists) */}
+          {/* Generate Docs - only if not yet generated AND has content */}
+          {!documentation && hasContent && (
+            <button
+              type="button"
+              onClick={handleGenerate}
+              className="w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2"
+              role="menuitem"
+            >
+              <Sparkles className="w-4 h-4" />
+              Generate Docs
+            </button>
+          )}
+
+          {/* View in History - only if documentId exists */}
           {documentId && (
             <button
               type="button"
@@ -124,7 +148,7 @@ export function FileActions({ file, onRemove }) {
             </button>
           )}
 
-          {/* Regenerate */}
+          {/* Regenerate - only if already generated */}
           {documentation && (
             <button
               type="button"
@@ -155,15 +179,15 @@ export function FileActions({ file, onRemove }) {
             <div className="border-t border-slate-200 dark:border-slate-700 my-1" />
           )}
 
-          {/* Remove */}
+          {/* Delete */}
           <button
             type="button"
             onClick={handleRemove}
-            className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
+            className="w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2"
             role="menuitem"
           >
             <Trash2 className="w-4 h-4" />
-            Remove from List
+            Delete
           </button>
         </div>
       )}

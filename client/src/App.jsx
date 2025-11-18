@@ -11,7 +11,7 @@ import { SplitPanel } from './components/SplitPanel';
 import Footer from './components/Footer';
 import { useDocGeneration } from './hooks/useDocGeneration';
 import { useUsageTracking } from './hooks/useUsageTracking';
-import { useMultiFileState } from './hooks/useMultiFileState';
+import { useWorkspacePersistence } from './hooks/useWorkspacePersistence';
 import { useDocumentPersistence } from './hooks/useDocumentPersistence';
 import { useTierOverride } from './hooks/useTierOverride';
 import { ErrorBanner } from './components/ErrorBanner';
@@ -20,6 +20,8 @@ import { UsageLimitModal } from './components/UsageLimitModal';
 import UnverifiedEmailBanner from './components/UnverifiedEmailBanner';
 import { validateFile, getValidationErrorMessage } from './utils/fileValidation';
 import { trackCodeInput, trackFileUpload, trackExampleUsage, trackInteraction } from './utils/analytics';
+import { toastCompact } from './utils/toastWithHistory';
+import { toastDocGenerated } from './utils/toast';
 import { createTestDataLoader, exposeTestDataLoader, createSkeletonTestHelper, exposeSkeletonTestHelper } from './utils/testData';
 import { exposeUsageSimulator } from './utils/usageTestData';
 import { useAuth } from './contexts/AuthContext';
@@ -65,10 +67,7 @@ function LoadingFallback() {
     </div>
   );
 }
-import {
-  toastDocGenerated,
-  toastCompact,
-} from './utils/toast';
+
 import { API_URL } from './config/api.js';
 import { STORAGE_KEYS, getStorageItem, setStorageItem } from './constants/storage';
 
@@ -96,7 +95,9 @@ function App() {
   const [uploadError, setUploadError] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [testSkeletonMode, setTestSkeletonMode] = useState(false);
-  const fileInputRef = useRef(null);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const fileInputRef = useRef(null); // For single-file uploads (Command Bar)
+  const multiFileInputRef = useRef(null); // For multi-file uploads (Sidebar)
   const samplesButtonRef = useRef(null);
   const headerRef = useRef(null);
 
@@ -108,7 +109,7 @@ function App() {
   const [mockUsage, setMockUsage] = useState(null);
 
   // Multi-file state (Phase 3: Multi-file integration)
-  const multiFileState = useMultiFileState();
+  const multiFileState = useWorkspacePersistence();
   const documentPersistence = useDocumentPersistence();
   const { override, clearOverride } = useTierOverride();
 
@@ -176,6 +177,16 @@ function App() {
   useEffect(() => {
     setStorageItem(STORAGE_KEYS.EDITOR_DOC_TYPE, docType);
   }, [docType]);
+
+  // Sync active file to CodePanel when selection changes
+  useEffect(() => {
+    const activeFile = multiFileState.activeFile;
+    if (activeFile && activeFile.content) {
+      setCode(activeFile.content);
+      setFilename(activeFile.filename);
+      setLanguage(activeFile.language);
+    }
+  }, [multiFileState.activeFile]);
 
   // Handle legal document acceptance
   const handleAcceptLegalDocuments = async (acceptance) => {
@@ -385,9 +396,18 @@ function App() {
   const handleUpload = () => {
     // Clear any previous upload errors
     setUploadError(null);
-    // Trigger the hidden file input
+    // Trigger the hidden file input (single-file mode)
     if (fileInputRef.current) {
       fileInputRef.current.click();
+    }
+  };
+
+  const handleMultiFileUpload = () => {
+    // Clear any previous upload errors
+    setUploadError(null);
+    // Trigger the hidden multi-file input (sidebar mode)
+    if (multiFileInputRef.current) {
+      multiFileInputRef.current.click();
     }
   };
 
@@ -526,10 +546,8 @@ function App() {
       const data = await response.json();
 
       if (data.success && data.file) {
-        // Set the code from the uploaded file
+        // Set the uploaded file content in the editor
         setCode(data.file.content);
-
-        // Set the filename
         setFilename(data.file.name);
 
         // Detect language from file extension
@@ -674,13 +692,71 @@ function App() {
     }
   };
 
-  // Wrapper for file input change event
+  // Wrapper for file input change event (single-file mode)
   const handleFileChange = async (event) => {
-    // Currently only process the first file
-    // TODO: Future enhancement - support multiple file uploads
     const file = event.target.files?.[0];
     await processFileUpload(file);
     // Reset the file input so the same file can be selected again
+    if (event.target) {
+      event.target.value = '';
+    }
+  };
+
+  // Handler for multi-file input change (sidebar mode)
+  const handleMultiFileChange = async (event) => {
+    const fileList = event.target.files;
+    if (!fileList || fileList.length === 0) return;
+
+    // Process all files and add to sidebar
+    for (let i = 0; i < fileList.length; i++) {
+      const file = fileList[i];
+
+      // Check if file with same name already exists
+      const existingFile = multiFileState.files.find(f => f.filename === file.name);
+      if (existingFile) {
+        console.log('[App] File already exists, skipping:', file.name);
+        toastCompact(`File already exists: ${file.name}`, 'warning');
+        continue; // Skip this file
+      }
+
+      // Add file directly to sidebar without uploading to server yet
+      // The actual upload will happen when "Generate All" is clicked
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target.result;
+        const extension = file.name.split('.').pop()?.toLowerCase() || 'js';
+        const languageMap = {
+          'js': 'javascript',
+          'jsx': 'javascript',
+          'ts': 'typescript',
+          'tsx': 'typescript',
+          'py': 'python',
+          'java': 'java',
+          'cpp': 'cpp',
+          'c': 'c',
+          'h': 'c',
+          'hpp': 'cpp',
+          'cs': 'csharp',
+          'go': 'go',
+          'rs': 'rust',
+          'rb': 'ruby',
+          'php': 'php',
+        };
+        const detectedLanguage = languageMap[extension] || 'javascript';
+
+        multiFileState.addFile({
+          filename: file.name,
+          language: detectedLanguage,
+          content: content,
+          docType,
+          origin: 'upload',
+          fileSize: file.size
+        });
+      };
+      reader.readAsText(file);
+    }
+
+    // Reset the file input so the same files can be selected again
     if (event.target) {
       event.target.value = '';
     }
@@ -890,7 +966,7 @@ function App() {
         }}
       />
 
-      {/* Hidden file input */}
+      {/* Hidden file input (single-file mode) */}
       <input
         ref={fileInputRef}
         type="file"
@@ -900,6 +976,19 @@ function App() {
         onChange={handleFileChange}
         className="hidden"
         aria-label="Upload code file"
+      />
+
+      {/* Hidden file input (multi-file mode for sidebar) */}
+      <input
+        ref={multiFileInputRef}
+        type="file"
+        id="multi-file-upload-input"
+        name="multi-file-upload"
+        accept=".js,.jsx,.ts,.tsx,.py,.java,.cpp,.c,.h,.hpp,.cs,.go,.rs,.rb,.php,.txt,text/javascript,text/x-javascript,application/javascript,text/x-typescript,text/typescript,text/x-python,text/x-java-source,text/x-c,text/x-c++,text/x-csharp,text/x-go,text/x-rust,text/x-ruby,text/x-php,text/plain"
+        multiple
+        onChange={handleMultiFileChange}
+        className="hidden"
+        aria-label="Upload multiple code files"
       />
 
       {/* Header */}
@@ -932,23 +1021,41 @@ function App() {
       />
 
       {/* Main Content - with optional Sidebar for Pro+ users */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden relative">
         {/* Sidebar - Only visible for Pro+ users (batch processing feature) */}
         {canUseBatchProcessing && (
           <Sidebar
             files={multiFileState.files}
             activeFileId={multiFileState.activeFileId}
+            selectedFileIds={multiFileState.selectedFileIds}
+            selectedCount={multiFileState.selectedCount}
+            mobileOpen={mobileSidebarOpen}
+            onMobileClose={() => setMobileSidebarOpen(false)}
             onSelectFile={multiFileState.setActiveFile}
+            onToggleFileSelection={multiFileState.toggleFileSelection}
+            onSelectAllFiles={multiFileState.selectAllFiles}
+            onDeselectAllFiles={multiFileState.deselectAllFiles}
             onRemoveFile={multiFileState.removeFile}
-            onGenerateAll={() => {
-              // TODO: Implement bulk generation in next phase
-              console.log('[App] Generate all files requested');
+            onAddFile={handleMultiFileUpload}
+            onGenerateFile={(fileId) => {
+              // TODO: Implement single file generation
+              console.log('[App] Generate file requested:', fileId);
             }}
-            onClearAll={multiFileState.clearFiles}
+            onGenerateSelected={() => {
+              // TODO: Implement bulk generation
+              console.log('[App] Generate selected files requested:', multiFileState.selectedFileIds);
+            }}
+            onDeleteSelected={() => {
+              // Delete all selected files
+              multiFileState.selectedFileIds.forEach(fileId => {
+                multiFileState.removeFile(fileId);
+              });
+              multiFileState.deselectAllFiles();
+            }}
           />
         )}
 
-        <main id="main-content" className="flex-1 w-full px-4 sm:px-6 lg:px-8 py-6 flex flex-col overflow-auto lg:overflow-hidden lg:min-h-0">
+        <main id="main-content" className="flex-1 w-full flex flex-col overflow-auto lg:overflow-hidden lg:min-h-0">
         {/* Priority Banner Section - Show only most critical message */}
         {/* Priority Order: 1) Email Verification (handled above), 2) Claude API Error, 3) Upload Error, 4) Generation Error, 5) Usage Warning */}
         {error ? (
@@ -990,13 +1097,15 @@ function App() {
           onGenerate={handleGenerate}
           onUpload={handleUpload}
           onGithubImport={handleGithubImport}
+          onMenuClick={() => setMobileSidebarOpen(true)}
+          showMenuButton={canUseBatchProcessing && multiFileState.files.length > 0}
           isGenerating={isGenerating}
           isUploading={isUploading}
           generateDisabled={!code.trim()}
         />
 
         {/* Split View: Code + Documentation */}
-        <div className="mt-6 flex-1 min-h-0">
+        <div className="flex-1 min-h-0">
           <SplitPanel
             leftPanel={
               <CodePanel

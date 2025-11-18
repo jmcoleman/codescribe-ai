@@ -20,6 +20,33 @@
     <meta name="twitter:description" content="AI-powered documentation generator with real-time streaming and quality scoring." />
     <meta name="twitter:image" content="https://codescribeai.com/linkedin-thumbnail.svg" />
     <title>CodeScribe AI - Intelligent Code Documentation Generator</title>
+
+    <!-- Prevent dark mode flash by applying theme before render -->
+    <script>
+      (function() {
+        try {
+          // Read theme preference from localStorage
+          // Check new key first, fall back to old key for migration
+          let stored = localStorage.getItem('codescribeai:local:ui:theme-preference');
+          if (!stored) {
+            stored = localStorage.getItem('codescribeai:settings:theme');
+          }
+          let theme = stored && ['light', 'dark', 'auto'].includes(stored) ? stored : 'auto';
+
+          // Resolve 'auto' to system preference
+          if (theme === 'auto') {
+            theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          }
+
+          // Apply dark class immediately if needed
+          if (theme === 'dark') {
+            document.documentElement.classList.add('dark');
+          }
+        } catch (e) {
+          // Silent fail - localStorage might not be available
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
