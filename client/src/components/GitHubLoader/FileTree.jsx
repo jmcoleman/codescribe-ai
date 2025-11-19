@@ -21,7 +21,9 @@ export function FileTree({
   multiSelectMode = false,
   selectedFiles = new Set(),
   onToggleFileSelection,
-  onClearSelection
+  onClearSelection,
+  // Focus control
+  searchInputRef
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const selectedFileRef = useRef(null);
@@ -160,6 +162,7 @@ export function FileTree({
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
           <input
+            ref={searchInputRef}
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -170,18 +173,20 @@ export function FileTree({
       </div>
 
       {/* Selection Status Bar (multi-select mode only) */}
-      {multiSelectMode && selectedFiles.size > 0 && (
+      {multiSelectMode && (
         <div className="px-3 py-1.5 border-b border-slate-200 dark:border-slate-700 bg-purple-50 dark:bg-purple-900/20 flex items-center justify-between">
           <span className="text-xs font-medium text-purple-700 dark:text-purple-300">
             {selectedFiles.size} file{selectedFiles.size !== 1 ? 's' : ''} selected
           </span>
-          <button
-            type="button"
-            onClick={onClearSelection}
-            className="text-xs font-medium text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors"
-          >
-            Clear
-          </button>
+          {selectedFiles.size > 0 && (
+            <button
+              type="button"
+              onClick={onClearSelection}
+              className="text-xs font-medium text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors"
+            >
+              Clear
+            </button>
+          )}
         </div>
       )}
 

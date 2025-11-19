@@ -4,20 +4,23 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
-import { X, AlertCircle, Github, Loader2, File, Clock, ChevronDown, ChevronRight, Sparkles, Zap, ExternalLink } from 'lucide-react';
+import { X, AlertCircle, Github, Loader2, File, Clock, ChevronDown, ChevronRight, Sparkles, Zap, ExternalLink, FolderGit2 } from 'lucide-react';
 import { SmartInput } from './SmartInput';
 import { FileTree } from './FileTree';
 import { FilePreview } from './FilePreview';
+import { ImportProgress } from './ImportProgress';
+import { ImportErrorList } from './ImportErrorList';
 import { Button } from '../Button';
 import { ErrorBanner } from '../ErrorBanner';
 import * as githubService from '../../services/githubService';
 import { isFileSupported } from '../../services/githubService';
-import { toastSuccess, toastInfo, toastWarning } from '../../utils/toast';
+import { toastSuccess, toastInfo, toastWarning, toastError } from '../../utils/toast';
 import { useAuth } from '../../contexts/AuthContext';
 import { hasFeature, getEffectiveTier } from '../../utils/tierFeatures';
 import { GITHUB_BATCH_LIMITS } from '../../constants/github';
+import { STORAGE_KEYS, getWorkspaceKey } from '../../constants/storage';
 
-export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, workspaceFiles = [] }) {
+export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, defaultDocType = 'README' }) {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -36,8 +39,24 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, work
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   const [showProHint, setShowProHint] = useState(true); // Dismissable Pro feature hint
 
+  // Batch import state
+  const [importing, setImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState({
+    total: 0,
+    completed: 0,
+    failed: 0,
+    currentFile: '',
+    isComplete: false
+  });
+  const [importErrors, setImportErrors] = useState([]);
+  const [showErrorList, setShowErrorList] = useState(false);
+  const [duplicateWarning, setDuplicateWarning] = useState(null);
+  const [batchImportError, setBatchImportError] = useState(null); // For 403/feature gate errors
+  const [workspaceFiles, setWorkspaceFiles] = useState([]);
+
   const modalRef = useRef(null);
   const smartInputRef = useRef(null);
+  const fileTreeSearchRef = useRef(null);
 
   // Tier features
   const { user } = useAuth();
@@ -45,12 +64,57 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, work
   const canUseBatchProcessing = hasFeature(user, 'batchProcessing');
   const maxFiles = GITHUB_BATCH_LIMITS[effectiveTier] || 1;
 
-  // Load recent files on mount
+  // Debug tier features
+  useEffect(() => {
+    if (isOpen && user) {
+      console.log('[GitHubLoadModal] Tier Debug:', {
+        userTier: user.tier,
+        viewingAsTier: user.viewing_as_tier,
+        overrideExpires: user.override_expires_at,
+        effectiveTier,
+        canUseBatchProcessing,
+        maxFiles
+      });
+    }
+  }, [isOpen, user, effectiveTier, canUseBatchProcessing, maxFiles]);
+
+  // Load recent files and workspace files on mount
   useEffect(() => {
     if (isOpen) {
-      setRecentFiles(githubService.getRecentFiles());
+      console.log('[GitHubLoadModal] Loading recent files for user:', user?.id);
+      setRecentFiles(githubService.getRecentFiles(user?.id));
+
+      // Fetch workspace files if user has batch processing
+      if (canUseBatchProcessing) {
+        const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+        fetch(`${import.meta.env.VITE_API_URL}/api/workspace`, {
+          method: 'GET',
+          headers: {
+            'Authorization': token ? `Bearer ${token}` : '',
+            'Content-Type': 'application/json'
+          }
+        })
+          .then(res => {
+            if (!res.ok) {
+              throw new Error(`HTTP ${res.status}`);
+            }
+            return res.json();
+          })
+          .then(data => {
+            if (data.success) {
+              setWorkspaceFiles(data.files || []);
+            } else {
+              setWorkspaceFiles([]);
+            }
+          })
+          .catch(err => {
+            // Silently fail - duplicate detection will be disabled
+            console.warn('[GitHubLoadModal] Could not fetch workspace files:', err.message);
+            setWorkspaceFiles([]);
+          });
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, canUseBatchProcessing]);
 
   // Auto-focus input when modal opens
   useEffect(() => {
@@ -62,6 +126,17 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, work
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
+
+  // Focus file tree search after repository is loaded
+  useEffect(() => {
+    if (repository && fileTreeSearchRef.current && !loading) {
+      // Small delay to ensure UI updates complete
+      const timer = setTimeout(() => {
+        fileTreeSearchRef.current?.focus();
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [repository, loading]);
 
   // Handle escape key
   useEffect(() => {
@@ -85,6 +160,13 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, work
       document.body.style.overflow = '';
     };
   }, [isOpen]);
+
+  // Handle import completion
+  useEffect(() => {
+    if (importing && importProgress.isComplete) {
+      handleImportComplete();
+    }
+  }, [importing, importProgress.isComplete]);
 
   // Toggle folder expansion
   const toggleFolder = (path) => {
@@ -238,13 +320,14 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, work
     });
 
     // Add to recent files
+    console.log('[GitHubLoadModal] Adding recent file for user:', user?.id);
     githubService.addRecentFile({
       owner: repository.owner,
       repo: repository.repo,
       path: filePreview.path,
       name: filePreview.name,
       language: filePreview.language
-    });
+    }, user?.id);
 
     // Show success toast
     toastSuccess(`Loaded ${filePreview.name} from ${repository.owner}/${repository.repo}`);
@@ -308,6 +391,11 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, work
       newSelected.add(filePath);
     }
     setSelectedFiles(newSelected);
+
+    // Clear duplicate warning when selection changes
+    if (duplicateWarning) {
+      setDuplicateWarning(null);
+    }
   };
 
   const handleSelectAllFiles = () => {
@@ -322,6 +410,7 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, work
 
   const handleDeselectAllFiles = () => {
     setSelectedFiles(new Set());
+    setDuplicateWarning(null);
   };
 
   const getAllSupportedFiles = (tree) => {
@@ -342,19 +431,325 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, work
     return files;
   };
 
+  // Batch import handler
+  const handleBatchImport = async (filePaths = null) => {
+    // Clear any previous warnings
+    setDuplicateWarning(null);
+
+    // Ensure we have an array of paths
+    let pathsToImport;
+    if (filePaths) {
+      pathsToImport = Array.isArray(filePaths) ? filePaths : [filePaths];
+    } else {
+      pathsToImport = Array.from(selectedFiles);
+    }
+
+    if (!pathsToImport || pathsToImport.length === 0) {
+      toastWarning('No files selected');
+      return;
+    }
+
+    // Filter out duplicates (files already in workspace from this repo)
+    const repoName = `${repository.owner}/${repository.repo}`;
+    const existingRepoFiles = workspaceFiles
+      .filter(f => f.github_repo === repoName)
+      .map(f => f.github_path);
+
+    const duplicates = [];
+    const filteredPaths = pathsToImport.filter(path => {
+      if (typeof path !== 'string') {
+        return false;
+      }
+      const isDuplicate = existingRepoFiles.includes(path);
+      if (isDuplicate) {
+        duplicates.push(path);
+      }
+      return !isDuplicate;
+    });
+
+    if (filteredPaths.length === 0) {
+      setDuplicateWarning({
+        type: 'all',
+        count: pathsToImport.length,
+        files: duplicates
+      });
+      return;
+    }
+
+    if (filteredPaths.length < pathsToImport.length) {
+      const skipped = pathsToImport.length - filteredPaths.length;
+      setDuplicateWarning({
+        type: 'partial',
+        skipped,
+        importing: filteredPaths.length,
+        files: duplicates
+      });
+    }
+
+    // Initialize progress
+    setImporting(true);
+    setImportProgress({
+      total: filteredPaths.length,
+      completed: 0,
+      failed: 0,
+      currentFile: '',
+      isComplete: false
+    });
+    setImportErrors([]);
+
+    try {
+      // Call batch endpoint
+      const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/github/files-batch`, {
+        method: 'POST',
+        headers: {
+          'Authorization': token ? `Bearer ${token}` : '',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          owner: repository.owner,
+          repo: repository.repo,
+          paths: filteredPaths,
+          branch: repository.branch
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+
+        // Handle 403 feature gate errors specially (show in banner, not toast)
+        if (response.status === 403) {
+          setBatchImportError({
+            message: errorData.message || 'Feature not available',
+            currentTier: errorData.currentTier || effectiveTier,
+            effectiveTier: errorData.effectiveTier || effectiveTier,
+            recommendedTier: errorData.recommendedTier || 'pro'
+          });
+          setImporting(false);
+          setImportProgress({
+            total: 0,
+            completed: 0,
+            failed: 0,
+            currentFile: '',
+            isComplete: false
+          });
+          return;
+        }
+
+        throw new Error(errorData.message || 'Batch import failed');
+      }
+
+      const batchResult = await response.json();
+
+      // Process results and add to workspace
+      const errors = [];
+      let successCount = 0;
+
+      // Load workspace contents once at the start (user-scoped)
+      const workspaceKey = getWorkspaceKey(user.id);
+      let workspaceContents = {};
+      if (workspaceKey) {
+        try {
+          const stored = localStorage.getItem(workspaceKey);
+          workspaceContents = stored ? JSON.parse(stored) : {};
+        } catch (error) {
+          console.error('[GitHubLoadModal] Failed to load workspace contents:', error);
+          workspaceContents = {};
+        }
+      }
+
+      for (let i = 0; i < batchResult.results.length; i++) {
+        const result = batchResult.results[i];
+
+        setImportProgress(prev => ({
+          ...prev,
+          completed: i + 1,
+          currentFile: result.path
+        }));
+
+        if (result.success) {
+          // Add to workspace
+          try {
+            const workspaceResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/workspace`, {
+              method: 'POST',
+              headers: {
+                'Authorization': token ? `Bearer ${token}` : '',
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                filename: result.data.name,
+                language: result.data.language,
+                fileSizeBytes: result.data.size,
+                docType: defaultDocType, // Use doc type from ControlBar
+                origin: 'github',
+                github: {
+                  repo: `${repository.owner}/${repository.repo}`,
+                  path: result.data.path,
+                  sha: result.data.sha,
+                  branch: repository.branch
+                }
+              })
+            });
+
+            if (workspaceResponse.ok) {
+              const workspaceData = await workspaceResponse.json();
+
+              // Add code content to localStorage object (privacy: content never goes to DB)
+              if (workspaceData.success && workspaceData.file && result.data.content) {
+                workspaceContents[workspaceData.file.id] = result.data.content;
+              }
+
+              successCount++;
+            } else {
+              const errorData = await workspaceResponse.json();
+              errors.push({
+                path: result.path,
+                error: errorData.error || 'Failed to add to workspace'
+              });
+            }
+          } catch (err) {
+            errors.push({
+              path: result.path,
+              error: err.message
+            });
+          }
+        } else {
+          errors.push({
+            path: result.path,
+            error: result.error
+          });
+        }
+      }
+
+      // Save all workspace contents at once (user-scoped)
+      if (workspaceKey) {
+        try {
+          localStorage.setItem(workspaceKey, JSON.stringify(workspaceContents));
+        } catch (error) {
+          console.error('[GitHubLoadModal] Failed to save workspace contents:', error);
+          if (error.name === 'QuotaExceededError') {
+            console.warn('[GitHubLoadModal] localStorage quota exceeded');
+          }
+        }
+      }
+
+      // Update progress to complete
+      setImportProgress(prev => ({
+        ...prev,
+        failed: errors.length,
+        isComplete: true,
+        currentFile: ''
+      }));
+
+      setImportErrors(errors);
+
+      // Show results
+      if (successCount > 0) {
+        toastSuccess(`Successfully imported ${successCount} file${successCount !== 1 ? 's' : ''}`);
+
+        // Add repository to recent files (for batch imports, track the repo not individual files)
+        console.log('[GitHubLoadModal] Adding repo to recent:', `${repository.owner}/${repository.repo}`);
+        githubService.addRecentFile({
+          owner: repository.owner,
+          repo: repository.repo,
+          path: '', // Empty path indicates this is a repo-level entry
+          name: `${repository.owner}/${repository.repo}`, // Show full repo name
+          language: 'repository', // Special marker for repo entries
+          isRepo: true, // Flag to indicate this is a repo, not a file
+          fileCount: successCount // Track how many files were imported
+        }, user?.id);
+
+        // Notify parent to refresh workspace
+        if (onFilesLoad) {
+          onFilesLoad();
+        }
+      }
+
+      if (errors.length > 0) {
+        toastError(`${errors.length} file${errors.length !== 1 ? 's' : ''} failed to import`);
+      }
+
+      // Clear selection
+      setSelectedFiles(new Set());
+
+    } catch (err) {
+      console.error('Batch import error:', err);
+      // Don't show toast for network/API errors - these should be handled by banner
+      setBatchImportError({
+        message: err.message || 'Batch import failed',
+        currentTier: effectiveTier,
+        effectiveTier: effectiveTier
+      });
+      setImporting(false);
+      setImportProgress({
+        total: 0,
+        completed: 0,
+        failed: 0,
+        currentFile: '',
+        isComplete: false
+      });
+    }
+  };
+
+  // Handle import completion
+  const handleImportComplete = () => {
+    setImporting(false);
+
+    // If there were errors, show error list
+    if (importErrors.length > 0) {
+      setShowErrorList(true);
+    } else {
+      // Otherwise close modal
+      onClose();
+    }
+  };
+
+  // Retry failed imports
+  const handleRetryImport = (paths) => {
+    setShowErrorList(false);
+    handleBatchImport(paths);
+  };
+
   if (!isOpen) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-    >
+    <>
+      {/* Import Progress Modal */}
+      {importing && (
+        <ImportProgress
+          total={importProgress.total}
+          completed={importProgress.completed}
+          failed={importProgress.failed}
+          currentFile={importProgress.currentFile}
+          isComplete={importProgress.isComplete}
+        />
+      )}
+
+      {/* Import Error List Modal */}
+      {showErrorList && (
+        <ImportErrorList
+          errors={importErrors}
+          onRetry={handleRetryImport}
+          onClose={() => {
+            setShowErrorList(false);
+            onClose();
+          }}
+        />
+      )}
+
+      {/* Main Modal */}
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 cursor-default"
+        onClick={(e) => e.target === e.currentTarget && onClose()}
+        style={{ cursor: 'default' }}
+      >
       <div
         ref={modalRef}
-        className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-[90vw] lg:w-[92vw] xl:w-[94vw] 2xl:w-[95vw] h-[90vh] max-w-[1400px] xl:max-w-[1600px] 2xl:max-w-[1800px] flex flex-col"
+        className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-[90vw] lg:w-[92vw] xl:w-[94vw] 2xl:w-[95vw] h-[90vh] max-w-[1400px] xl:max-w-[1600px] 2xl:max-w-[1800px] flex flex-col cursor-default"
         role="dialog"
         aria-modal="true"
         aria-labelledby="github-modal-title"
+        style={{ cursor: 'default' }}
       >
         {/* Header - Compact */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-700">
@@ -407,7 +802,7 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, work
                 )}
                 <Clock className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                 <p className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                  Recent ({recentFiles.length})
+                  Recent Repos ({recentFiles.length})
                 </p>
               </button>
               {recentFilesExpanded && (
@@ -419,14 +814,20 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, work
                       disabled={loading}
                       className="group flex items-center gap-2 px-2 py-1 text-sm text-left rounded-md hover:enabled:bg-slate-100 dark:hover:enabled:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
-                      <File className="w-3.5 h-3.5 flex-shrink-0 text-slate-400 dark:text-slate-500 group-hover:enabled:text-slate-600 dark:group-hover:enabled:text-slate-300 transition-colors" />
-                      <div className="flex-1 min-w-0 flex items-baseline gap-1.5">
-                        <span className="text-slate-500 dark:text-slate-400 text-xs truncate">
-                          {recent.owner}/{recent.repo}/
-                        </span>
+                      {recent.isRepo ? (
+                        <FolderGit2 className="w-3.5 h-3.5 flex-shrink-0 text-purple-500 dark:text-purple-400 group-hover:enabled:text-purple-600 dark:group-hover:enabled:text-purple-300 transition-colors" />
+                      ) : (
+                        <File className="w-3.5 h-3.5 flex-shrink-0 text-slate-400 dark:text-slate-500 group-hover:enabled:text-slate-600 dark:group-hover:enabled:text-slate-300 transition-colors" />
+                      )}
+                      <div className="flex-1 min-w-0 flex items-baseline gap-2">
                         <span className="text-slate-700 dark:text-slate-200 font-medium truncate">
-                          {recent.name}
+                          {recent.owner}/{recent.repo}
                         </span>
+                        {recent.isRepo && recent.fileCount && (
+                          <span className="text-xs text-slate-500 dark:text-slate-400 flex-shrink-0">
+                            ({recent.fileCount} file{recent.fileCount !== 1 ? 's' : ''})
+                          </span>
+                        )}
                       </div>
                     </button>
                   ))}
@@ -493,14 +894,97 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, work
                   selectedFiles={selectedFiles}
                   onToggleFileSelection={canUseBatchProcessing ? handleToggleFileSelection : undefined}
                   onClearSelection={handleDeselectAllFiles}
+                  searchInputRef={fileTreeSearchRef}
                 />
               </div>
 
               {/* File Preview */}
               <div className="flex-1 overflow-hidden flex flex-col">
+                {/* Batch Import Error Banner (403/feature gate errors) */}
+                {batchImportError && (
+                  <div className="p-4 pb-0">
+                    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 border-l-4 border-l-red-500 dark:border-l-red-400 rounded-lg shadow-sm">
+                      <div className="flex items-start gap-4 p-4">
+                        {/* Error Icon */}
+                        <div className="flex-shrink-0 mt-0.5">
+                          <AlertCircle className="h-6 w-6 text-red-600 dark:text-red-400" aria-hidden="true" />
+                        </div>
+
+                        {/* Error Content */}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-1">
+                            {batchImportError.message}
+                          </h3>
+                          {batchImportError.recommendedTier && (
+                            <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                              <a
+                                href="/pricing"
+                                className="text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-1 rounded"
+                              >
+                                Upgrade to <strong className="capitalize">{batchImportError.recommendedTier}</strong>
+                              </a>{' '}
+                              to access batch import.
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Dismiss Button */}
+                        <button
+                          type="button"
+                          onClick={() => setBatchImportError(null)}
+                          className="flex-shrink-0 text-red-400 dark:text-red-500 hover:text-red-600 dark:hover:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-md p-1.5 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-600 dark:focus-visible:ring-red-400 focus-visible:ring-offset-2"
+                          aria-label="Dismiss error"
+                        >
+                          <X className="h-4 w-4" aria-hidden="true" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Duplicate Warning Banner */}
+                {duplicateWarning && (
+                  <div className="p-4 pb-0">
+                    <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 flex items-start gap-3">
+                      <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-amber-900 dark:text-amber-100 mb-2">
+                          {duplicateWarning.type === 'all' ? (
+                            <>
+                              {duplicateWarning.count === 1
+                                ? 'This file is already in your workspace:'
+                                : `All ${duplicateWarning.count} selected files are already in your workspace:`
+                              }
+                            </>
+                          ) : (
+                            <>
+                              {duplicateWarning.skipped} duplicate file{duplicateWarning.skipped !== 1 ? 's' : ''} will be skipped.
+                              {' '}Importing {duplicateWarning.importing} new file{duplicateWarning.importing !== 1 ? 's' : ''}.
+                            </>
+                          )}
+                        </p>
+                        {duplicateWarning.files && duplicateWarning.files.length > 0 && (
+                          <ul className="text-xs text-amber-800 dark:text-amber-200 space-y-0.5 ml-4">
+                            {duplicateWarning.files.map((file, idx) => (
+                              <li key={idx} className="truncate">• {file}</li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => setDuplicateWarning(null)}
+                        className="text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 flex-shrink-0"
+                        aria-label="Dismiss"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {/* Error Banner for file preview errors */}
                 {filePreviewError && (
-                  <div className="p-4">
+                  <div className="p-4 pb-0">
                     <ErrorBanner error={filePreviewError} onDismiss={() => setFilePreviewError(null)} />
                   </div>
                 )}
@@ -539,17 +1023,24 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, work
         {/* Footer */}
         {repository ? (
           <div className="px-6 py-3 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-end gap-3">
-            {canUseBatchProcessing && selectedFiles.size > 0 ? (
-              <Button
-                variant="primary"
-                onClick={() => {
-                  // TODO: Implement batch import
-                  toastInfo('Batch import coming soon!');
-                }}
-                title={`Import ${selectedFiles.size} file${selectedFiles.size !== 1 ? 's' : ''}`}
-              >
-                Import {selectedFiles.size} File{selectedFiles.size !== 1 ? 's' : ''}
-              </Button>
+            {canUseBatchProcessing ? (
+              <>
+                <Button
+                  variant="secondary"
+                  onClick={onClose}
+                  disabled={importing}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={() => handleBatchImport()}
+                  disabled={importing || selectedFiles.size === 0}
+                  title={selectedFiles.size > 0 ? `Import ${selectedFiles.size} file${selectedFiles.size !== 1 ? 's' : ''}` : 'Select files to import'}
+                >
+                  Import {selectedFiles.size > 0 ? `${selectedFiles.size} ` : ''}File{selectedFiles.size !== 1 ? 's' : ''}
+                </Button>
+              </>
             ) : (
               <>
                 {(() => {
@@ -590,6 +1081,7 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, work
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </>
   );
 }

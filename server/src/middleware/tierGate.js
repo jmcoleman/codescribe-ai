@@ -39,7 +39,9 @@ export const requireFeature = (featureName) => {
     }
 
     // Check if feature is available in user's tier
-    if (!hasFeature(userTier, featureName)) {
+    const featureAvailable = hasFeature(userTier, featureName);
+
+    if (!featureAvailable) {
       const upgradePath = getUpgradePath(userTier, featureName);
 
       return res.status(403).json({

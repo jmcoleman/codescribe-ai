@@ -22,24 +22,68 @@ import { useAuth } from '../contexts/AuthContext';
 import { hasFeature } from '../utils/tierFeatures';
 import workspaceApi from '../services/workspaceApi';
 import { useMultiFileState } from './useMultiFileState';
-
-// localStorage key prefix for workspace file content
-// Format: codescribeai:local:workspace:content-{fileId}
-const WORKSPACE_CONTENT_PREFIX = 'codescribeai:local:workspace:content-';
+import { getWorkspaceKey } from '../constants/storage';
 
 /**
- * Clear all workspace file content from localStorage
- * Exported for use in logout/cleanup flows
+ * Get all workspace contents from localStorage for a specific user
+ * @param {number|string} userId - User ID
+ * @returns {Object} Workspace contents { fileId: content, ... }
  */
-export function clearWorkspaceLocalStorage() {
-  const keysToRemove = [];
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (key && key.startsWith(WORKSPACE_CONTENT_PREFIX)) {
-      keysToRemove.push(key);
+function getWorkspaceContents(userId) {
+  if (!userId) return {};
+
+  try {
+    const key = getWorkspaceKey(userId);
+    if (!key) return {};
+
+    const contents = localStorage.getItem(key);
+    return contents ? JSON.parse(contents) : {};
+  } catch (error) {
+    console.error('[useWorkspacePersistence] Failed to parse workspace contents:', error);
+    return {};
+  }
+}
+
+/**
+ * Save all workspace contents to localStorage for a specific user
+ * @param {number|string} userId - User ID
+ * @param {Object} contents - Workspace contents { fileId: content, ... }
+ */
+function saveWorkspaceContents(userId, contents) {
+  if (!userId) {
+    console.warn('[useWorkspacePersistence] Cannot save workspace without userId');
+    return;
+  }
+
+  try {
+    const key = getWorkspaceKey(userId);
+    if (!key) return;
+
+    localStorage.setItem(key, JSON.stringify(contents));
+  } catch (error) {
+    console.error('[useWorkspacePersistence] Failed to save workspace contents:', error);
+    // QuotaExceededError handling
+    if (error.name === 'QuotaExceededError') {
+      console.warn('[useWorkspacePersistence] localStorage quota exceeded. Consider clearing old files.');
     }
   }
-  keysToRemove.forEach(key => localStorage.removeItem(key));
+}
+
+/**
+ * Clear workspace file content from localStorage for a specific user
+ * Exported for use in logout/cleanup flows
+ * @param {number|string} userId - User ID
+ */
+export function clearWorkspaceLocalStorage(userId) {
+  if (!userId) {
+    console.warn('[useWorkspacePersistence] Cannot clear workspace without userId');
+    return;
+  }
+
+  const key = getWorkspaceKey(userId);
+  if (key) {
+    localStorage.removeItem(key);
+  }
 }
 
 export function useWorkspacePersistence() {
@@ -73,6 +117,9 @@ export function useWorkspacePersistence() {
         const result = await workspaceApi.getWorkspace();
 
         if (result.success && result.files.length > 0) {
+          // Load all contents from localStorage once
+          const allContents = getWorkspaceContents(user.id);
+
           // Convert DB files to client file format
           const clientFiles = result.files.map(dbFile => {
             const clientId = dbFile.id; // Use DB ID as client ID for simplicity
@@ -81,9 +128,8 @@ export function useWorkspacePersistence() {
             workspaceIdMap.current.set(dbFile.id, clientId);
             clientIdMap.current.set(clientId, dbFile.id);
 
-            // Load code content from localStorage
-            const contentKey = `${WORKSPACE_CONTENT_PREFIX}${dbFile.id}`;
-            const savedContent = localStorage.getItem(contentKey) || '';
+            // Load code content from localStorage object
+            const savedContent = allContents[dbFile.id] || '';
 
             return {
               id: clientId,
@@ -119,7 +165,7 @@ export function useWorkspacePersistence() {
     };
 
     loadWorkspace();
-  }, [isAuthenticated, hasMultiFileAccess, addFiles]);
+  }, [isAuthenticated, hasMultiFileAccess, addFiles, user]);
 
   /**
    * Enhanced addFile with DB persistence
@@ -146,10 +192,11 @@ export function useWorkspacePersistence() {
           workspaceIdMap.current.set(dbFileId, clientFileId);
           clientIdMap.current.set(clientFileId, dbFileId);
 
-          // Save code content to localStorage
+          // Save code content to localStorage object
           if (fileData.content) {
-            const contentKey = `${WORKSPACE_CONTENT_PREFIX}${dbFileId}`;
-            localStorage.setItem(contentKey, fileData.content);
+            const allContents = getWorkspaceContents(user.id);
+            allContents[dbFileId] = fileData.content;
+            saveWorkspaceContents(user.id, allContents);
           }
         }
       } catch (error) {
@@ -159,7 +206,7 @@ export function useWorkspacePersistence() {
     }
 
     return clientFileId;
-  }, [addFile, isAuthenticated, hasMultiFileAccess]);
+  }, [addFile, isAuthenticated, hasMultiFileAccess, user]);
 
   /**
    * Enhanced addFiles with DB persistence
@@ -171,6 +218,9 @@ export function useWorkspacePersistence() {
     // Sync to DB if authenticated (batch)
     if (isAuthenticated && hasMultiFileAccess && !isSyncing.current) {
       try {
+        // Load current contents once
+        const allContents = getWorkspaceContents(user.id);
+
         // Save each file (could be batched in future)
         await Promise.all(
           filesData.map(async (fileData, index) => {
@@ -190,10 +240,9 @@ export function useWorkspacePersistence() {
                 workspaceIdMap.current.set(dbFileId, clientFileId);
                 clientIdMap.current.set(clientFileId, dbFileId);
 
-                // Save code content to localStorage
+                // Add code content to the object
                 if (fileData.content) {
-                  const contentKey = `${WORKSPACE_CONTENT_PREFIX}${dbFileId}`;
-                  localStorage.setItem(contentKey, fileData.content);
+                  allContents[dbFileId] = fileData.content;
                 }
               }
             } catch (error) {
@@ -202,13 +251,16 @@ export function useWorkspacePersistence() {
             }
           })
         );
+
+        // Save all contents at once
+        saveWorkspaceContents(user.id, allContents);
       } catch (error) {
         console.error('[useWorkspacePersistence] Failed to save files to workspace:', error);
       }
     }
 
     return clientFileIds;
-  }, [addFiles, isAuthenticated, hasMultiFileAccess]);
+  }, [addFiles, isAuthenticated, hasMultiFileAccess, user]);
 
   /**
    * Enhanced removeFile with DB deletion
@@ -224,9 +276,10 @@ export function useWorkspacePersistence() {
         try {
           await workspaceApi.deleteWorkspaceFile(dbFileId);
 
-          // Clean up localStorage content
-          const contentKey = `${WORKSPACE_CONTENT_PREFIX}${dbFileId}`;
-          localStorage.removeItem(contentKey);
+          // Remove from localStorage object
+          const allContents = getWorkspaceContents(user.id);
+          delete allContents[dbFileId];
+          saveWorkspaceContents(user.id, allContents);
 
           // Clean up mappings
           workspaceIdMap.current.delete(dbFileId);
@@ -237,7 +290,7 @@ export function useWorkspacePersistence() {
         }
       }
     }
-  }, [removeFile, isAuthenticated, hasMultiFileAccess]);
+  }, [removeFile, isAuthenticated, hasMultiFileAccess, user]);
 
   /**
    * Enhanced clearFiles with DB clear
@@ -251,15 +304,8 @@ export function useWorkspacePersistence() {
       try {
         await workspaceApi.clearWorkspace();
 
-        // Clear all localStorage content for workspace files
-        const keysToRemove = [];
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key && key.startsWith(WORKSPACE_CONTENT_PREFIX)) {
-            keysToRemove.push(key);
-          }
-        }
-        keysToRemove.forEach(key => localStorage.removeItem(key));
+        // Clear all localStorage content for workspace files (single object)
+        clearWorkspaceLocalStorage(user.id);
 
         // Clear mappings
         workspaceIdMap.current.clear();
@@ -268,7 +314,7 @@ export function useWorkspacePersistence() {
         console.error('[useWorkspacePersistence] Failed to clear workspace:', error);
       }
     }
-  }, [clearFiles, isAuthenticated, hasMultiFileAccess]);
+  }, [clearFiles, isAuthenticated, hasMultiFileAccess, user]);
 
   /**
    * Enhanced updateFile with DB sync (for linking generated docs)
@@ -290,7 +336,68 @@ export function useWorkspacePersistence() {
         }
       }
     }
-  }, [updateFile, isAuthenticated, hasMultiFileAccess]);
+  }, [updateFile, isAuthenticated, hasMultiFileAccess, user]);
+
+  /**
+   * Manually reload workspace from database
+   * Useful when external operations add files to database (e.g., GitHub batch import)
+   */
+  const reloadWorkspace = useCallback(async () => {
+    if (!isAuthenticated || !hasMultiFileAccess || isSyncing.current) {
+      return;
+    }
+
+    try {
+      isSyncing.current = true;
+      const result = await workspaceApi.getWorkspace();
+
+      if (result.success && result.files.length > 0) {
+        // Load all contents from localStorage once
+        const allContents = getWorkspaceContents(user.id);
+
+        // Convert DB files to client file format
+        const clientFiles = result.files.map(dbFile => {
+          const clientId = dbFile.id;
+
+          // Store mapping
+          workspaceIdMap.current.set(dbFile.id, clientId);
+          clientIdMap.current.set(clientId, dbFile.id);
+
+          // Load code content from localStorage object
+          const savedContent = allContents[dbFile.id] || '';
+
+          return {
+            id: clientId,
+            filename: dbFile.filename,
+            language: dbFile.language,
+            content: savedContent,
+            documentation: dbFile.documentation || null,
+            qualityScore: dbFile.quality_score || null,
+            docType: dbFile.doc_type,
+            origin: dbFile.origin,
+            fileSize: dbFile.file_size_bytes,
+            isGenerating: false,
+            error: null,
+            documentId: dbFile.document_id,
+            github: dbFile.github_repo ? {
+              repo: dbFile.github_repo,
+              path: dbFile.github_path,
+              sha: dbFile.github_sha,
+              branch: dbFile.github_branch
+            } : null
+          };
+        });
+
+        // Replace all files with loaded workspace
+        clearFiles();
+        addFiles(clientFiles);
+      }
+    } catch (error) {
+      console.error('[useWorkspacePersistence] Failed to reload workspace:', error);
+    } finally {
+      isSyncing.current = false;
+    }
+  }, [isAuthenticated, hasMultiFileAccess, user, clearFiles, addFiles]);
 
   return {
     ...multiFileState,
@@ -299,6 +406,7 @@ export function useWorkspacePersistence() {
     addFiles: addFilesWithPersistence,
     removeFile: removeFileWithPersistence,
     updateFile: updateFileWithPersistence,
-    clearFiles: clearFilesWithPersistence
+    clearFiles: clearFilesWithPersistence,
+    reloadWorkspace
   };
 }

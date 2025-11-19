@@ -7,31 +7,16 @@ const ThemeContext = createContext();
 export function ThemeProvider({ children }) {
   const { user } = useAuth();
   const [theme, setThemeInternal] = useState(() => {
-    // Priority: localStorage > default to 'auto'
+    // Priority: localStorage > default to 'light'
     // User account preference will override this after auth loads
-
-    // Check new storage key first
-    let stored = getStorageItem(STORAGE_KEYS.THEME_PREFERENCE);
-
-    // Migration: Check old key if new key doesn't exist
-    if (!stored) {
-      const oldKey = 'codescribeai:settings:theme';
-      const oldStored = localStorage.getItem(oldKey);
-      if (oldStored && ['light', 'dark', 'auto'].includes(oldStored)) {
-        // Migrate to new key
-        setStorageItem(STORAGE_KEYS.THEME_PREFERENCE, oldStored);
-        localStorage.removeItem(oldKey);
-        stored = oldStored;
-        console.log('[ThemeContext] Migrated theme preference from old key to new key:', oldStored);
-      }
-    }
+    const stored = getStorageItem(STORAGE_KEYS.THEME_PREFERENCE);
 
     if (stored && ['light', 'dark', 'auto'].includes(stored)) {
       return stored;
     }
 
-    // Default to 'auto' (system preference)
-    return 'auto';
+    // Default to 'light' (consistent with index.html)
+    return 'light';
   });
 
   // Track the effective theme (resolved from 'auto' to 'light' or 'dark')
@@ -167,15 +152,16 @@ export function ThemeProvider({ children }) {
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+    const newTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
   };
 
   const cycleTheme = () => {
-    setTheme((prev) => {
-      if (prev === 'light') return 'dark';
-      if (prev === 'dark') return 'auto';
-      return 'light'; // auto -> light
-    });
+    let newTheme;
+    if (theme === 'light') newTheme = 'dark';
+    else if (theme === 'dark') newTheme = 'auto';
+    else newTheme = 'light'; // auto -> light
+    setTheme(newTheme);
   };
 
   return (

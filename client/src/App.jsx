@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback, lazy, Suspense } from 'react';
 import { Toaster } from 'react-hot-toast';
+import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useTheme } from './contexts/ThemeContext';
 import { Header } from './components/Header';
 import { MobileMenu } from './components/MobileMenu';
@@ -18,7 +19,7 @@ import { ErrorBanner } from './components/ErrorBanner';
 import { UsageWarningBanner } from './components/UsageWarningBanner';
 import { UsageLimitModal } from './components/UsageLimitModal';
 import UnverifiedEmailBanner from './components/UnverifiedEmailBanner';
-import { validateFile, getValidationErrorMessage } from './utils/fileValidation';
+import { validateFile, getValidationErrorMessage, detectLanguageFromFilename } from './utils/fileValidation';
 import { trackCodeInput, trackFileUpload, trackExampleUsage, trackInteraction } from './utils/analytics';
 import { toastCompact } from './utils/toastWithHistory';
 import { toastDocGenerated } from './utils/toast';
@@ -69,7 +70,11 @@ function LoadingFallback() {
 }
 
 import { API_URL } from './config/api.js';
-import { STORAGE_KEYS, getStorageItem, setStorageItem } from './constants/storage';
+import { STORAGE_KEYS, getStorageItem, setStorageItem, getEditorKey } from './constants/storage';
+
+// Default sidebar panel sizes (percentage)
+const DEFAULT_SIDEBAR_SIZE = 20;
+const DEFAULT_MAIN_SIZE = 80;
 
 function App() {
   const { getToken, user, checkLegalStatus, acceptLegalDocuments } = useAuth();
@@ -78,8 +83,9 @@ function App() {
   // Load persisted state from localStorage on mount, fallback to defaults
   const [code, setCode] = useState(() => getStorageItem(STORAGE_KEYS.EDITOR_CODE, DEFAULT_CODE));
   const [docType, setDocType] = useState(() => getStorageItem(STORAGE_KEYS.EDITOR_DOC_TYPE, 'README'));
-  const [language, setLanguage] = useState(() => getStorageItem(STORAGE_KEYS.EDITOR_LANGUAGE, 'javascript'));
   const [filename, setFilename] = useState(() => getStorageItem(STORAGE_KEYS.EDITOR_FILENAME, 'code.js'));
+  // Language is derived from filename, not stored separately
+  const language = detectLanguageFromFilename(filename);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showQualityModal, setShowQualityModal] = useState(false);
   const [showSamplesModal, setShowSamplesModal] = useState(false);
@@ -100,6 +106,34 @@ function App() {
   const multiFileInputRef = useRef(null); // For multi-file uploads (Sidebar)
   const samplesButtonRef = useRef(null);
   const headerRef = useRef(null);
+
+  // Load saved sidebar panel sizes from localStorage
+  const loadSidebarSizes = useCallback(() => {
+    try {
+      const saved = getStorageItem(STORAGE_KEYS.SIDEBAR_WIDTH);
+      if (saved) {
+        const { sidebar, main } = JSON.parse(saved);
+        return { sidebar, main };
+      }
+    } catch (error) {
+      console.error('[App] Error loading sidebar sizes:', error);
+    }
+    return { sidebar: DEFAULT_SIDEBAR_SIZE, main: DEFAULT_MAIN_SIZE };
+  }, []);
+
+  // Save sidebar panel sizes to localStorage
+  const saveSidebarSizes = useCallback((sizes) => {
+    try {
+      if (sizes && sizes.length === 2) {
+        setStorageItem(STORAGE_KEYS.SIDEBAR_WIDTH, JSON.stringify({
+          sidebar: sizes[0],
+          main: sizes[1]
+        }));
+      }
+    } catch (error) {
+      console.error('[App] Error saving sidebar sizes:', error);
+    }
+  }, []);
 
   // Track if we just accepted terms to prevent re-checking immediately after
   const justAcceptedTermsRef = useRef(false);
@@ -152,6 +186,24 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]); // Only run when user changes, not when checkLegalStatus changes
 
+  // Load user-scoped editor content when user logs in
+  useEffect(() => {
+    if (user && user.id) {
+      // Load user's code from user-scoped key
+      const codeKey = getEditorKey(user.id, 'code');
+      if (codeKey) {
+        const savedCode = getStorageItem(codeKey);
+        if (savedCode) {
+          setCode(savedCode);
+        }
+      }
+    } else {
+      // User logged out - load from global key
+      const globalCode = getStorageItem(STORAGE_KEYS.EDITOR_CODE, DEFAULT_CODE);
+      setCode(globalCode);
+    }
+  }, [user?.id]); // Only run when user ID changes (login/logout)
+
   // Reopen support modal after user logs in (if they came from support modal)
   useEffect(() => {
     if (user && sessionStorage.getItem('pendingSupportModal') === 'true') {
@@ -161,14 +213,21 @@ function App() {
     }
   }, [user]);
 
-  // Persist editor state to localStorage whenever it changes
+  // Persist editor code to localStorage whenever it changes (user-scoped for privacy)
   useEffect(() => {
-    setStorageItem(STORAGE_KEYS.EDITOR_CODE, code);
-  }, [code]);
+    if (user && user.id) {
+      // User is logged in - use user-scoped key
+      const key = getEditorKey(user.id, 'code');
+      if (key) {
+        setStorageItem(key, code);
+      }
+    } else {
+      // User not logged in - use global key
+      setStorageItem(STORAGE_KEYS.EDITOR_CODE, code);
+    }
+  }, [code, user]);
 
-  useEffect(() => {
-    setStorageItem(STORAGE_KEYS.EDITOR_LANGUAGE, language);
-  }, [language]);
+  // Language is derived from filename, no need to persist separately
 
   useEffect(() => {
     setStorageItem(STORAGE_KEYS.EDITOR_FILENAME, filename);
@@ -184,7 +243,7 @@ function App() {
     if (activeFile && activeFile.content) {
       setCode(activeFile.content);
       setFilename(activeFile.filename);
-      setLanguage(activeFile.language);
+      // Language will be derived from filename automatically
     }
   }, [multiFileState.activeFile]);
 
@@ -312,35 +371,79 @@ function App() {
     retryAfter
   } = useDocGeneration(refetchUsage);
 
-  // Load persisted documentation and quality score on mount
+  // Load user-scoped documentation and quality score when user logs in
   useEffect(() => {
-    const savedDoc = getStorageItem(STORAGE_KEYS.EDITOR_DOCUMENTATION);
-    const savedScore = getStorageItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE);
+    if (user && user.id) {
+      // User is logged in - load from user-scoped keys
+      const docKey = getEditorKey(user.id, 'doc');
+      const scoreKey = getEditorKey(user.id, 'score');
 
-    if (savedDoc) {
-      setDocumentation(savedDoc);
-    }
-    if (savedScore) {
-      try {
-        setQualityScore(JSON.parse(savedScore));
-      } catch (e) {
-        // Invalid JSON, ignore
+      if (docKey) {
+        const savedDoc = getStorageItem(docKey);
+        if (savedDoc) {
+          setDocumentation(savedDoc);
+        }
+      }
+
+      if (scoreKey) {
+        const savedScore = getStorageItem(scoreKey);
+        if (savedScore) {
+          try {
+            setQualityScore(JSON.parse(savedScore));
+          } catch (e) {
+            // Invalid JSON, ignore
+          }
+        }
+      }
+    } else {
+      // User not logged in - load from global keys
+      const savedDoc = getStorageItem(STORAGE_KEYS.EDITOR_DOCUMENTATION);
+      const savedScore = getStorageItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE);
+
+      if (savedDoc) {
+        setDocumentation(savedDoc);
+      }
+      if (savedScore) {
+        try {
+          setQualityScore(JSON.parse(savedScore));
+        } catch (e) {
+          // Invalid JSON, ignore
+        }
       }
     }
-  }, [setDocumentation, setQualityScore]);
+  }, [user?.id, setDocumentation, setQualityScore]);
 
-  // Persist documentation and quality score to localStorage whenever they change
+  // Persist documentation to localStorage whenever it changes (user-scoped for privacy)
   useEffect(() => {
     if (documentation) {
-      setStorageItem(STORAGE_KEYS.EDITOR_DOCUMENTATION, documentation);
+      if (user && user.id) {
+        // User is logged in - use user-scoped key
+        const key = getEditorKey(user.id, 'doc');
+        if (key) {
+          setStorageItem(key, documentation);
+        }
+      } else {
+        // User not logged in - use global key
+        setStorageItem(STORAGE_KEYS.EDITOR_DOCUMENTATION, documentation);
+      }
     }
-  }, [documentation]);
+  }, [documentation, user]);
 
+  // Persist quality score to localStorage whenever it changes (user-scoped for privacy)
   useEffect(() => {
     if (qualityScore) {
-      setStorageItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE, JSON.stringify(qualityScore));
+      if (user && user.id) {
+        // User is logged in - use user-scoped key
+        const key = getEditorKey(user.id, 'score');
+        if (key) {
+          setStorageItem(key, JSON.stringify(qualityScore));
+        }
+      } else {
+        // User not logged in - use global key
+        setStorageItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE, JSON.stringify(qualityScore));
+      }
     }
-  }, [qualityScore]);
+  }, [qualityScore, user]);
 
   const handleGenerate = async () => {
     if (code.trim()) {
@@ -549,32 +652,14 @@ function App() {
         // Set the uploaded file content in the editor
         setCode(data.file.content);
         setFilename(data.file.name);
+        // Language will be derived from filename automatically
 
-        // Detect language from file extension
-        const extension = data.file.extension.toLowerCase().replace('.', '');
-        const languageMap = {
-          'js': 'javascript',
-          'jsx': 'javascript',
-          'ts': 'typescript',
-          'tsx': 'typescript',
-          'py': 'python',
-          'java': 'java',
-          'cpp': 'cpp',
-          'c': 'c',
-          'h': 'c',
-          'hpp': 'cpp',
-          'cs': 'csharp',
-          'go': 'go',
-          'rs': 'rust',
-          'rb': 'ruby',
-          'php': 'php',
-        };
-        const detectedLanguage = languageMap[extension] || 'javascript';
-        setLanguage(detectedLanguage);
+        // Detect language for analytics tracking
+        const detectedLanguage = detectLanguageFromFilename(data.file.name);
 
         // Track successful file upload
         trackFileUpload({
-          fileType: extension,
+          fileType: data.file.extension.toLowerCase().replace('.', ''),
           fileSize: file.size,
           success: true,
         });
@@ -702,6 +787,52 @@ function App() {
     }
   };
 
+  // Handler for multi-file drag and drop (sidebar mode)
+  const handleMultiFilesDrop = async (droppedFiles) => {
+    if (!droppedFiles || droppedFiles.length === 0) return;
+
+    // Process all files and add to sidebar
+    for (let i = 0; i < droppedFiles.length; i++) {
+      const file = droppedFiles[i];
+
+      // Check if file with same name already exists
+      const existingFile = multiFileState.files.find(f => f.filename === file.name);
+      if (existingFile) {
+        console.log('[App] File already exists, skipping:', file.name);
+        toastCompact(`File already exists: ${file.name}`, 'warning');
+        continue; // Skip this file
+      }
+
+      // Add file directly to sidebar without uploading to server yet
+      // The actual upload will happen when "Generate All" is clicked
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target.result;
+        // Detect language from filename
+        const detectedLanguage = detectLanguageFromFilename(file.name);
+
+        multiFileState.addFile({
+          filename: file.name,
+          content,
+          language: detectedLanguage,
+        });
+
+        console.log('[App] File added to sidebar:', file.name);
+      };
+
+      reader.onerror = () => {
+        console.error('[App] Error reading file:', file.name);
+        toastCompact(`Error reading file: ${file.name}`, 'error');
+      };
+
+      reader.readAsText(file);
+    }
+
+    // Show success toast
+    const count = droppedFiles.length;
+    toastCompact(`${count} file${count > 1 ? 's' : ''} added`, 'success');
+  };
+
   // Handler for multi-file input change (sidebar mode)
   const handleMultiFileChange = async (event) => {
     const fileList = event.target.files;
@@ -724,25 +855,8 @@ function App() {
       const reader = new FileReader();
       reader.onload = (e) => {
         const content = e.target.result;
-        const extension = file.name.split('.').pop()?.toLowerCase() || 'js';
-        const languageMap = {
-          'js': 'javascript',
-          'jsx': 'javascript',
-          'ts': 'typescript',
-          'tsx': 'typescript',
-          'py': 'python',
-          'java': 'java',
-          'cpp': 'cpp',
-          'c': 'c',
-          'h': 'c',
-          'hpp': 'cpp',
-          'cs': 'csharp',
-          'go': 'go',
-          'rs': 'rust',
-          'rb': 'ruby',
-          'php': 'php',
-        };
-        const detectedLanguage = languageMap[extension] || 'javascript';
+        // Detect language from filename
+        const detectedLanguage = detectLanguageFromFilename(file.name);
 
         multiFileState.addFile({
           filename: file.name,
@@ -775,12 +889,7 @@ function App() {
     // Set the code from GitHub file
     setCode(fileCode);
 
-    // Detect and set language
-    if (fileLang) {
-      setLanguage(fileLang);
-    }
-
-    // Set filename
+    // Set filename (language will be derived from filename)
     if (fileName) {
       setFilename(fileName);
     }
@@ -790,21 +899,27 @@ function App() {
       owner: metadata?.owner,
       repo: metadata?.repo,
       path: metadata?.path,
-      language: fileLang
+      language: fileLang || detectLanguageFromFilename(fileName)
     });
 
-    // Clear any previous documentation
+    // Clear any previous documentation (user-scoped)
     reset();
-    setStorageItem(STORAGE_KEYS.EDITOR_DOCUMENTATION, '');
-    setStorageItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE, '');
+    if (user && user.id) {
+      const docKey = getEditorKey(user.id, 'doc');
+      const scoreKey = getEditorKey(user.id, 'score');
+      if (docKey) setStorageItem(docKey, '');
+      if (scoreKey) setStorageItem(scoreKey, '');
+    } else {
+      setStorageItem(STORAGE_KEYS.EDITOR_DOCUMENTATION, '');
+      setStorageItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE, '');
+    }
   };
 
   const handleLoadSample = (sample) => {
     setCode(sample.code);
     setDocType(sample.docType);
-    setLanguage(sample.language);
 
-    // Set filename based on sample title and language
+    // Set filename based on sample title and language (language will be derived from filename)
     const sampleName = (sample.title || sample.docType).toLowerCase().replace(/\s+/g, '-');
     const extensionMap = {
       'javascript': '.js',
@@ -840,10 +955,8 @@ function App() {
   const handleClear = () => {
     // Reset code to default placeholder
     setCode('// Paste your code here or try the example below...\n\n// Example function:\nfunction calculateTotal(items) {\n  return items.reduce((sum, item) => sum + item.price, 0);\n}\n');
-    // Reset filename to default
+    // Reset filename to default (language will be derived automatically as 'javascript')
     setFilename('code.js');
-    // Reset language to default (matches code.js)
-    setLanguage('javascript');
     // Note: Does not clear documentation or quality score (those remain for reference)
   };
 
@@ -1022,40 +1135,77 @@ function App() {
 
       {/* Main Content - with optional Sidebar for Pro+ users */}
       <div className="flex-1 flex overflow-hidden relative">
-        {/* Sidebar - Only visible for Pro+ users (batch processing feature) */}
-        {canUseBatchProcessing && (
-          <Sidebar
-            files={multiFileState.files}
-            activeFileId={multiFileState.activeFileId}
-            selectedFileIds={multiFileState.selectedFileIds}
-            selectedCount={multiFileState.selectedCount}
-            mobileOpen={mobileSidebarOpen}
-            onMobileClose={() => setMobileSidebarOpen(false)}
-            onSelectFile={multiFileState.setActiveFile}
-            onToggleFileSelection={multiFileState.toggleFileSelection}
-            onSelectAllFiles={multiFileState.selectAllFiles}
-            onDeselectAllFiles={multiFileState.deselectAllFiles}
-            onRemoveFile={multiFileState.removeFile}
-            onAddFile={handleMultiFileUpload}
-            onGenerateFile={(fileId) => {
-              // TODO: Implement single file generation
-              console.log('[App] Generate file requested:', fileId);
-            }}
-            onGenerateSelected={() => {
-              // TODO: Implement bulk generation
-              console.log('[App] Generate selected files requested:', multiFileState.selectedFileIds);
-            }}
-            onDeleteSelected={() => {
-              // Delete all selected files
-              multiFileState.selectedFileIds.forEach(fileId => {
-                multiFileState.removeFile(fileId);
-              });
-              multiFileState.deselectAllFiles();
-            }}
-          />
-        )}
+        {canUseBatchProcessing ? (
+          <PanelGroup
+            direction="horizontal"
+            className="flex-1"
+            onLayout={saveSidebarSizes}
+          >
+            {/* Sidebar Panel - Resizable */}
+            <Panel
+              defaultSize={loadSidebarSizes().sidebar}
+              minSize={5}
+              maxSize={50}
+              className="flex"
+              id="sidebar-panel"
+              order={1}
+            >
+              <Sidebar
+                files={multiFileState.files}
+                activeFileId={multiFileState.activeFileId}
+                selectedFileIds={multiFileState.selectedFileIds}
+                selectedCount={multiFileState.selectedCount}
+                docType={docType}
+                onDocTypeChange={setDocType}
+                onGithubImport={handleGithubImport}
+                mobileOpen={mobileSidebarOpen}
+                onMobileClose={() => setMobileSidebarOpen(false)}
+                onSelectFile={multiFileState.setActiveFile}
+                onToggleFileSelection={multiFileState.toggleFileSelection}
+                onSelectAllFiles={multiFileState.selectAllFiles}
+                onDeselectAllFiles={multiFileState.deselectAllFiles}
+                onRemoveFile={multiFileState.removeFile}
+                onAddFile={handleMultiFileUpload}
+                hasCodeInEditor={code.trim().length > 0}
+                onFilesDrop={handleMultiFilesDrop}
+                onGenerateFile={(fileId) => {
+                  // TODO: Implement single file generation
+                  console.log('[App] Generate file requested:', fileId);
+                }}
+                onGenerateSelected={() => {
+                  // Check if any files are selected
+                  const filesWithContent = multiFileState.files.filter(f => f.content && f.content.length > 0);
+                  const selectedFilesWithContent = filesWithContent.filter(f => multiFileState.selectedFileIds.includes(f.id));
 
-        <main id="main-content" className="flex-1 w-full flex flex-col overflow-auto lg:overflow-hidden lg:min-h-0">
+                  if (selectedFilesWithContent.length > 0) {
+                    // TODO: Implement bulk generation for selected files
+                    console.log('[App] Generate selected files requested:', multiFileState.selectedFileIds);
+                  } else {
+                    // No files selected, generate from code editor
+                    handleGenerate();
+                  }
+                }}
+                onDeleteSelected={() => {
+                  // Delete all selected files
+                  multiFileState.selectedFileIds.forEach(fileId => {
+                    multiFileState.removeFile(fileId);
+                  });
+                  multiFileState.deselectAllFiles();
+                }}
+              />
+            </Panel>
+
+            {/* Resize Handle */}
+            <PanelResizeHandle className="split-panel-handle hidden lg:flex">
+              <div className="split-panel-handle-inner">
+                <div className="split-panel-handle-icon" />
+              </div>
+            </PanelResizeHandle>
+
+            {/* Main Content Panel */}
+            <Panel defaultSize={loadSidebarSizes().main} minSize={50} order={2}>
+              <main id="main-content" className="flex-1 w-full h-full flex flex-col overflow-auto lg:overflow-hidden lg:min-h-0">
+
         {/* Priority Banner Section - Show only most critical message */}
         {/* Priority Order: 1) Email Verification (handled above), 2) Claude API Error, 3) Upload Error, 4) Generation Error, 5) Usage Warning */}
         {error ? (
@@ -1090,19 +1240,7 @@ function App() {
           </div>
         ) : null}
 
-        {/* Control Bar */}
-        <ControlBar
-          docType={docType}
-          onDocTypeChange={setDocType}
-          onGenerate={handleGenerate}
-          onUpload={handleUpload}
-          onGithubImport={handleGithubImport}
-          onMenuClick={() => setMobileSidebarOpen(true)}
-          showMenuButton={canUseBatchProcessing && multiFileState.files.length > 0}
-          isGenerating={isGenerating}
-          isUploading={isUploading}
-          generateDisabled={!code.trim()}
-        />
+        {/* Control Bar - Hidden in Pro+ mode (sidebar has these controls) */}
 
         {/* Split View: Code + Documentation */}
         <div className="flex-1 min-h-0">
@@ -1113,7 +1251,7 @@ function App() {
                 onChange={setCode}
                 filename={filename}
                 language={language}
-                onFileDrop={handleFileDrop}
+                onFileDrop={null}  // Disable drag-and-drop in multi-file mode - use sidebar instead
                 onClear={handleClear}
                 onSamplesClick={() => setShowSamplesModal(true)}
                 samplesButtonRef={samplesButtonRef}
@@ -1136,7 +1274,92 @@ function App() {
           />
         </div>
 
-        </main>
+              </main>
+            </Panel>
+          </PanelGroup>
+        ) : (
+          <main id="main-content" className="flex-1 w-full flex flex-col overflow-auto lg:overflow-hidden lg:min-h-0">
+            {/* Priority Banner Section - Show only most critical message */}
+            {/* Priority Order: 1) Email Verification (handled above), 2) Claude API Error, 3) Upload Error, 4) Generation Error, 5) Usage Warning */}
+            {error ? (
+              // Priority 1: Claude API rate limit or generation errors (blocking)
+              <div role="region" aria-label="Error notification">
+                <ErrorBanner
+                  error={error}
+                  retryAfter={retryAfter}
+                  onDismiss={clearError}
+                />
+              </div>
+            ) : uploadError ? (
+              // Priority 2: Upload errors
+              <div role="region" aria-label="Upload error notification">
+                <ErrorBanner
+                  error={uploadError}
+                  onDismiss={() => setUploadError(null)}
+                />
+              </div>
+            ) : showUsageWarning && (mockUsage || usage) ? (
+              // Priority 3: Usage warning (80%+ usage, non-blocking)
+              <div className="mb-6" role="region" aria-label="Usage warning">
+                <UsageWarningBanner
+                  usage={mockUsage || getUsageForPeriod('monthly')}
+                  currentTier={mockUsage?.tier || usage?.tier}
+                  onDismiss={() => {
+                    setShowUsageWarning(false);
+                    setMockUsage(null); // Clear mock when dismissing
+                  }}
+                  onUpgrade={handleUpgradeClick}
+                />
+              </div>
+            ) : null}
+
+            {/* Control Bar */}
+            <ControlBar
+              docType={docType}
+              onDocTypeChange={setDocType}
+              onGenerate={handleGenerate}
+              onUpload={handleUpload}
+              onGithubImport={handleGithubImport}
+              onMenuClick={() => setMobileSidebarOpen(true)}
+              showMenuButton={canUseBatchProcessing && multiFileState.files.length > 0}
+              isGenerating={isGenerating}
+              isUploading={isUploading}
+              generateDisabled={!code.trim()}
+            />
+
+            {/* Split View: Code + Documentation */}
+            <div className="flex-1 min-h-0">
+              <SplitPanel
+                leftPanel={
+                  <CodePanel
+                    code={code}
+                    onChange={setCode}
+                    filename={filename}
+                    language={language}
+                    onFileDrop={handleFileDrop}
+                    onClear={handleClear}
+                    onSamplesClick={() => setShowSamplesModal(true)}
+                    samplesButtonRef={samplesButtonRef}
+                  />
+                }
+                rightPanel={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <DocPanel
+                      documentation={documentation}
+                      qualityScore={qualityScore}
+                      isGenerating={isGenerating || testSkeletonMode}
+                      onViewBreakdown={handleViewBreakdown}
+                      onUpload={handleUpload}
+                      onGithubImport={handleGithubImport}
+                      onGenerate={handleGenerate}
+                      onReset={handleReset}
+                    />
+                  </Suspense>
+                }
+              />
+            </div>
+          </main>
+        )}
       </div>
 
       {/* Quality Score Modal */}
@@ -1289,6 +1512,8 @@ function App() {
             isOpen={showGithubModal}
             onClose={() => setShowGithubModal(false)}
             onFileLoad={handleGithubFileLoad}
+            onFilesLoad={multiFileState.reloadWorkspace}
+            defaultDocType={docType}
           />
         </Suspense>
       )}

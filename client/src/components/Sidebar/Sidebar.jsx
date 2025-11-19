@@ -22,6 +22,9 @@ import { STORAGE_KEYS, getStorageItem, setStorageItem } from '../../constants/st
  * @param {Array} props.selectedFileIds - Array of selected file IDs
  * @param {number} props.selectedCount - Number of selected files
  * @param {boolean} props.mobileOpen - Mobile overlay open state (controlled by parent)
+ * @param {string} props.docType - Current documentation type
+ * @param {Function} props.onDocTypeChange - Called when doc type changes
+ * @param {Function} props.onGithubImport - Called when GitHub import is clicked
  * @param {Function} props.onMobileClose - Called when mobile overlay should close
  * @param {Function} props.onSelectFile - Called when user selects a file
  * @param {Function} props.onToggleFileSelection - Called when checkbox is toggled
@@ -39,6 +42,9 @@ export function Sidebar({
   selectedFileIds = [],
   selectedCount = 0,
   mobileOpen = false,
+  docType,
+  onDocTypeChange,
+  onGithubImport,
   onMobileClose,
   onSelectFile,
   onToggleFileSelection,
@@ -48,7 +54,9 @@ export function Sidebar({
   onRemoveFile,
   onGenerateFile,
   onGenerateSelected,
-  onDeleteSelected
+  onDeleteSelected,
+  hasCodeInEditor = false,
+  onFilesDrop
 }) {
   // Sidebar state: 'expanded', 'collapsed' (desktop only)
   const [sidebarMode, setSidebarMode] = useState(() => {
@@ -155,6 +163,9 @@ export function Sidebar({
             activeFileId={activeFileId}
             selectedFileIds={selectedFileIds}
             selectedCount={selectedCount}
+            docType={docType}
+            onDocTypeChange={onDocTypeChange}
+            onGithubImport={onGithubImport}
             onSelectFile={onSelectFile}
             onToggleFileSelection={onToggleFileSelection}
             onSelectAllFiles={onSelectAllFiles}
@@ -165,6 +176,8 @@ export function Sidebar({
             onGenerateSelected={onGenerateSelected}
             onDeleteSelected={onDeleteSelected}
             onToggleSidebar={onMobileClose}
+            hasCodeInEditor={hasCodeInEditor}
+            onFilesDrop={onFilesDrop}
             isMobile={true}
           />
         </div>
@@ -177,7 +190,7 @@ export function Sidebar({
     <div
       className={`
         sidebar-container
-        ${isCollapsed ? 'w-[60px]' : 'w-[320px]'}
+        ${isCollapsed ? 'w-[60px]' : 'flex-1'}
         h-full
         bg-white dark:bg-slate-900
         border-r border-slate-200 dark:border-slate-700
@@ -213,6 +226,9 @@ export function Sidebar({
             activeFileId={activeFileId}
             selectedFileIds={selectedFileIds}
             selectedCount={selectedCount}
+            docType={docType}
+            onDocTypeChange={onDocTypeChange}
+            onGithubImport={onGithubImport}
             onSelectFile={onSelectFile}
             onToggleFileSelection={onToggleFileSelection}
             onSelectAllFiles={onSelectAllFiles}
@@ -222,6 +238,8 @@ export function Sidebar({
             onGenerateFile={onGenerateFile}
             onGenerateSelected={onGenerateSelected}
             onDeleteSelected={onDeleteSelected}
+            hasCodeInEditor={hasCodeInEditor}
+            onFilesDrop={onFilesDrop}
             onToggleSidebar={toggleSidebar}
             isMobile={false}
           />

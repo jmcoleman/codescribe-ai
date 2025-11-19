@@ -117,13 +117,11 @@ function getProviderCapabilities(providerName = null) {
  * Log current configuration (sanitized - hides API keys)
  */
 function logConfig() {
-  const currentConfig = getLLMConfig()
-  const sanitized = {
-    ...currentConfig,
-    apiKey: `${currentConfig.apiKey.substring(0, 8)}...`
-  }
-
-  console.log('[LLMConfig] Configuration:', JSON.stringify(sanitized, null, 2))
+  // Configuration logging disabled in production
+  // To enable for debugging:
+  // const currentConfig = getLLMConfig()
+  // const sanitized = { ...currentConfig, apiKey: `${currentConfig.apiKey.substring(0, 8)}...` }
+  // console.log('[LLMConfig] Configuration:', JSON.stringify(sanitized, null, 2))
 }
 
 export {

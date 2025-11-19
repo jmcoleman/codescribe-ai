@@ -4,13 +4,13 @@
   "version": "2.8.1",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "lint": "eslint .",
-    "preview": "vite preview",
-    "test": "vitest",
-    "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage"
+    "dev": "vite --config config/vite.config.js",
+    "build": "vite build --config config/vite.config.js",
+    "lint": "eslint . --config config/eslint.config.js",
+    "preview": "vite preview --config config/vite.config.js",
+    "test": "vitest --config config/vitest.config.js",
+    "test:ui": "vitest --ui --config config/vitest.config.js",
+    "test:coverage": "vitest --coverage --config config/vitest.config.js"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.9",

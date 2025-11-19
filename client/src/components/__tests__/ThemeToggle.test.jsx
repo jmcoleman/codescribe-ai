@@ -1,8 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
+import { renderWithTheme as render } from '../../__tests__/utils/renderWithTheme';
 import userEvent from '@testing-library/user-event';
 import { ThemeToggle } from '../ThemeToggle';
-import { ThemeProvider } from '../../contexts/ThemeContext';
+import { STORAGE_KEYS } from '../../constants/storage';
 
 describe('ThemeToggle', () => {
   beforeEach(() => {
@@ -14,9 +15,9 @@ describe('ThemeToggle', () => {
   describe('Rendering', () => {
     it('renders theme toggle button', () => {
       render(
-        <ThemeProvider>
+        
           <ThemeToggle />
-        </ThemeProvider>
+        
       );
 
       const button = screen.getByRole('button', { name: /switch to (light|dark|auto) mode/i });
@@ -25,12 +26,12 @@ describe('ThemeToggle', () => {
 
     it('shows sun icon in light mode', () => {
       // Explicitly set light mode
-      localStorage.setItem('codescribeai:settings:theme', 'light');
+      localStorage.setItem(STORAGE_KEYS.THEME_PREFERENCE, 'light');
 
       render(
-        <ThemeProvider>
+        
           <ThemeToggle />
-        </ThemeProvider>
+        
       );
 
       // Sun icon should be visible (opacity-100, scale-100)
@@ -45,12 +46,12 @@ describe('ThemeToggle', () => {
 
     it('shows moon icon in dark mode', () => {
       // Set dark mode in localStorage
-      localStorage.setItem('codescribeai:settings:theme', 'dark');
+      localStorage.setItem(STORAGE_KEYS.THEME_PREFERENCE, 'dark');
 
       render(
-        <ThemeProvider>
+        
           <ThemeToggle />
-        </ThemeProvider>
+        
       );
 
       // Moon icon should be visible
@@ -65,12 +66,12 @@ describe('ThemeToggle', () => {
 
     it('shows monitor icon in auto mode', () => {
       // Set auto mode in localStorage
-      localStorage.setItem('codescribeai:settings:theme', 'auto');
+      localStorage.setItem(STORAGE_KEYS.THEME_PREFERENCE, 'auto');
 
       render(
-        <ThemeProvider>
+        
           <ThemeToggle />
-        </ThemeProvider>
+        
       );
 
       // Monitor icon should be visible
@@ -87,36 +88,36 @@ describe('ThemeToggle', () => {
   describe('Accessibility', () => {
     it('has correct aria-label in light mode', () => {
       // Explicitly set light mode
-      localStorage.setItem('codescribeai:settings:theme', 'light');
+      localStorage.setItem(STORAGE_KEYS.THEME_PREFERENCE, 'light');
 
       render(
-        <ThemeProvider>
+        
           <ThemeToggle />
-        </ThemeProvider>
+        
       );
 
       expect(screen.getByRole('button', { name: /switch to dark mode/i })).toBeInTheDocument();
     });
 
     it('has correct aria-label in dark mode', () => {
-      localStorage.setItem('codescribeai:settings:theme', 'dark');
+      localStorage.setItem(STORAGE_KEYS.THEME_PREFERENCE, 'dark');
 
       render(
-        <ThemeProvider>
+        
           <ThemeToggle />
-        </ThemeProvider>
+        
       );
 
       expect(screen.getByRole('button', { name: /switch to auto mode/i })).toBeInTheDocument();
     });
 
     it('has correct aria-label in auto mode', () => {
-      localStorage.setItem('codescribeai:settings:theme', 'auto');
+      localStorage.setItem(STORAGE_KEYS.THEME_PREFERENCE, 'auto');
 
       render(
-        <ThemeProvider>
+        
           <ThemeToggle />
-        </ThemeProvider>
+        
       );
 
       expect(screen.getByRole('button', { name: /switch to light mode/i })).toBeInTheDocument();
@@ -124,9 +125,9 @@ describe('ThemeToggle', () => {
 
     it('has type="button" to prevent form submission', () => {
       render(
-        <ThemeProvider>
+        
           <ThemeToggle />
-        </ThemeProvider>
+        
       );
 
       const button = screen.getByRole('button');
@@ -135,9 +136,9 @@ describe('ThemeToggle', () => {
 
     it('icons have aria-hidden="true"', () => {
       render(
-        <ThemeProvider>
+        
           <ThemeToggle />
-        </ThemeProvider>
+        
       );
 
       const button = screen.getByRole('button');
@@ -149,9 +150,9 @@ describe('ThemeToggle', () => {
 
     it('has focus-visible styles', () => {
       render(
-        <ThemeProvider>
+        
           <ThemeToggle />
-        </ThemeProvider>
+        
       );
 
       const button = screen.getByRole('button');
@@ -165,12 +166,12 @@ describe('ThemeToggle', () => {
       const user = userEvent.setup();
 
       // Explicitly set light mode
-      localStorage.setItem('codescribeai:settings:theme', 'light');
+      localStorage.setItem(STORAGE_KEYS.THEME_PREFERENCE, 'light');
 
       render(
-        <ThemeProvider>
+        
           <ThemeToggle />
-        </ThemeProvider>
+        
       );
 
       const button = screen.getByRole('button', { name: /switch to dark mode/i });
@@ -183,17 +184,17 @@ describe('ThemeToggle', () => {
       expect(document.documentElement.classList.contains('dark')).toBe(true);
 
       // localStorage should be updated
-      expect(localStorage.getItem('codescribeai:settings:theme')).toBe('dark');
+      expect(localStorage.getItem(STORAGE_KEYS.THEME_PREFERENCE)).toBe('dark');
     });
 
     it('toggles from dark to auto on click', async () => {
       const user = userEvent.setup();
-      localStorage.setItem('codescribeai:settings:theme', 'dark');
+      localStorage.setItem(STORAGE_KEYS.THEME_PREFERENCE, 'dark');
 
       render(
-        <ThemeProvider>
+        
           <ThemeToggle />
-        </ThemeProvider>
+        
       );
 
       const button = screen.getByRole('button', { name: /switch to auto mode/i });
@@ -203,17 +204,17 @@ describe('ThemeToggle', () => {
       expect(screen.getByRole('button', { name: /switch to light mode/i })).toBeInTheDocument();
 
       // localStorage should be updated to auto
-      expect(localStorage.getItem('codescribeai:settings:theme')).toBe('auto');
+      expect(localStorage.getItem(STORAGE_KEYS.THEME_PREFERENCE)).toBe('auto');
     });
 
     it('toggles from auto to light on click', async () => {
       const user = userEvent.setup();
-      localStorage.setItem('codescribeai:settings:theme', 'auto');
+      localStorage.setItem(STORAGE_KEYS.THEME_PREFERENCE, 'auto');
 
       render(
-        <ThemeProvider>
+        
           <ThemeToggle />
-        </ThemeProvider>
+        
       );
 
       const button = screen.getByRole('button', { name: /switch to light mode/i });
@@ -226,19 +227,19 @@ describe('ThemeToggle', () => {
       expect(document.documentElement.classList.contains('dark')).toBe(false);
 
       // localStorage should be updated
-      expect(localStorage.getItem('codescribeai:settings:theme')).toBe('light');
+      expect(localStorage.getItem(STORAGE_KEYS.THEME_PREFERENCE)).toBe('light');
     });
 
     it('toggles multiple times correctly (full cycle)', async () => {
       const user = userEvent.setup();
 
       // Explicitly set light mode to start
-      localStorage.setItem('codescribeai:settings:theme', 'light');
+      localStorage.setItem(STORAGE_KEYS.THEME_PREFERENCE, 'light');
 
       render(
-        <ThemeProvider>
+        
           <ThemeToggle />
-        </ThemeProvider>
+        
       );
 
       let button = screen.getByRole('button', { name: /switch to dark mode/i });
@@ -246,33 +247,33 @@ describe('ThemeToggle', () => {
       // Click 1: light -> dark
       await user.click(button);
       expect(document.documentElement.classList.contains('dark')).toBe(true);
-      expect(localStorage.getItem('codescribeai:settings:theme')).toBe('dark');
+      expect(localStorage.getItem(STORAGE_KEYS.THEME_PREFERENCE)).toBe('dark');
 
       // Click 2: dark -> auto
       button = screen.getByRole('button', { name: /switch to auto mode/i });
       await user.click(button);
-      expect(localStorage.getItem('codescribeai:settings:theme')).toBe('auto');
+      expect(localStorage.getItem(STORAGE_KEYS.THEME_PREFERENCE)).toBe('auto');
 
       // Click 3: auto -> light
       button = screen.getByRole('button', { name: /switch to light mode/i });
       await user.click(button);
       expect(document.documentElement.classList.contains('dark')).toBe(false);
-      expect(localStorage.getItem('codescribeai:settings:theme')).toBe('light');
+      expect(localStorage.getItem(STORAGE_KEYS.THEME_PREFERENCE)).toBe('light');
 
       // Click 4: light -> dark (cycle continues)
       button = screen.getByRole('button', { name: /switch to dark mode/i });
       await user.click(button);
       expect(document.documentElement.classList.contains('dark')).toBe(true);
-      expect(localStorage.getItem('codescribeai:settings:theme')).toBe('dark');
+      expect(localStorage.getItem(STORAGE_KEYS.THEME_PREFERENCE)).toBe('dark');
     });
   });
 
   describe('Icon Animation', () => {
     it('sun icon has rotation and scale transitions', () => {
       render(
-        <ThemeProvider>
+        
           <ThemeToggle />
-        </ThemeProvider>
+        
       );
 
       const button = screen.getByRole('button');
@@ -286,9 +287,9 @@ describe('ThemeToggle', () => {
 
     it('moon icon has rotation and scale transitions', () => {
       render(
-        <ThemeProvider>
+        
           <ThemeToggle />
-        </ThemeProvider>
+        
       );
 
       const button = screen.getByRole('button');
@@ -303,9 +304,9 @@ describe('ThemeToggle', () => {
 
     it('monitor icon has rotation and scale transitions', () => {
       render(
-        <ThemeProvider>
+        
           <ThemeToggle />
-        </ThemeProvider>
+        
       );
 
       const button = screen.getByRole('button');
@@ -321,12 +322,12 @@ describe('ThemeToggle', () => {
       const user = userEvent.setup();
 
       // Explicitly set light mode to start
-      localStorage.setItem('codescribeai:settings:theme', 'light');
+      localStorage.setItem(STORAGE_KEYS.THEME_PREFERENCE, 'light');
 
       render(
-        <ThemeProvider>
+        
           <ThemeToggle />
-        </ThemeProvider>
+        
       );
 
       const button = screen.getByRole('button');
@@ -391,9 +392,9 @@ describe('ThemeToggle', () => {
   describe('Styling', () => {
     it('has dark mode background styles', () => {
       render(
-        <ThemeProvider>
+        
           <ThemeToggle />
-        </ThemeProvider>
+        
       );
 
       const button = screen.getByRole('button');
@@ -403,9 +404,9 @@ describe('ThemeToggle', () => {
 
     it('has dark mode text styles', () => {
       render(
-        <ThemeProvider>
+        
           <ThemeToggle />
-        </ThemeProvider>
+        
       );
 
       const button = screen.getByRole('button');
@@ -415,9 +416,9 @@ describe('ThemeToggle', () => {
 
     it('has dark mode hover styles', () => {
       render(
-        <ThemeProvider>
+        
           <ThemeToggle />
-        </ThemeProvider>
+        
       );
 
       const button = screen.getByRole('button');
@@ -427,9 +428,9 @@ describe('ThemeToggle', () => {
 
     it('has dark mode border styles', () => {
       render(
-        <ThemeProvider>
+        
           <ThemeToggle />
-        </ThemeProvider>
+        
       );
 
       const button = screen.getByRole('button');

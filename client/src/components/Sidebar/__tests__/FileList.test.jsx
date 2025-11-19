@@ -8,7 +8,7 @@
  * - Progress indicators
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { FileList } from '../FileList';
@@ -60,6 +60,30 @@ describe('FileList', () => {
   const mockOnGenerateSelected = vi.fn();
   const mockOnDeleteSelected = vi.fn();
   const mockOnToggleSidebar = vi.fn();
+  const mockOnDocTypeChange = vi.fn();
+  const mockOnGithubImport = vi.fn();
+  const mockOnFilesDrop = vi.fn();
+
+  const defaultProps = {
+    activeFileId: null,
+    selectedFileIds: [],
+    selectedCount: 0,
+    docType: 'README',
+    hasCodeInEditor: false,
+    onSelectFile: mockOnSelectFile,
+    onToggleFileSelection: mockOnToggleFileSelection,
+    onSelectAllFiles: mockOnSelectAllFiles,
+    onDeselectAllFiles: mockOnDeselectAllFiles,
+    onRemoveFile: mockOnRemoveFile,
+    onAddFile: mockOnAddFile,
+    onGenerateFile: mockOnGenerateFile,
+    onGenerateSelected: mockOnGenerateSelected,
+    onDeleteSelected: mockOnDeleteSelected,
+    onToggleSidebar: mockOnToggleSidebar,
+    onDocTypeChange: mockOnDocTypeChange,
+    onGithubImport: mockOnGithubImport,
+    onFilesDrop: mockOnFilesDrop
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -69,20 +93,8 @@ describe('FileList', () => {
     it('should show empty state when no files', () => {
       render(
         <FileList
+          {...defaultProps}
           files={[]}
-          activeFileId={null}
-          selectedFileIds={[]}
-          selectedCount={0}
-          onSelectFile={mockOnSelectFile}
-          onToggleFileSelection={mockOnToggleFileSelection}
-          onSelectAllFiles={mockOnSelectAllFiles}
-          onDeselectAllFiles={mockOnDeselectAllFiles}
-          onRemoveFile={mockOnRemoveFile}
-          onAddFile={mockOnAddFile}
-          onGenerateFile={mockOnGenerateFile}
-          onGenerateSelected={mockOnGenerateSelected}
-          onDeleteSelected={mockOnDeleteSelected}
-          onToggleSidebar={mockOnToggleSidebar}
         />
       );
 
@@ -93,25 +105,13 @@ describe('FileList', () => {
     it('should NOT show selection controls when no files', () => {
       render(
         <FileList
+          {...defaultProps}
           files={[]}
-          activeFileId={null}
-          selectedFileIds={[]}
-          selectedCount={0}
-          onSelectFile={mockOnSelectFile}
-          onToggleFileSelection={mockOnToggleFileSelection}
-          onSelectAllFiles={mockOnSelectAllFiles}
-          onDeselectAllFiles={mockOnDeselectAllFiles}
-          onRemoveFile={mockOnRemoveFile}
-          onAddFile={mockOnAddFile}
-          onGenerateFile={mockOnGenerateFile}
-          onGenerateSelected={mockOnGenerateSelected}
-          onDeleteSelected={mockOnDeleteSelected}
-          onToggleSidebar={mockOnToggleSidebar}
         />
       );
 
       expect(screen.queryByRole('button', { name: /Select All/i })).not.toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: /Generate/i })).not.toBeInTheDocument();
+      // Generate button is always visible in new API, but should be disabled when no code
       expect(screen.queryByRole('button', { name: /Delete/i })).not.toBeInTheDocument();
     });
   });
@@ -120,12 +120,8 @@ describe('FileList', () => {
     it('should render all files', () => {
       render(
         <FileList
+          {...defaultProps}
           files={mockFiles}
-          activeFileId={null}
-          onSelectFile={mockOnSelectFile}
-          onRemoveFile={mockOnRemoveFile}
-          onGenerateAll={mockOnGenerateAll}
-          onClearAll={mockOnClearAll}
         />
       );
 
@@ -137,12 +133,8 @@ describe('FileList', () => {
     it('should show correct generation progress', () => {
       render(
         <FileList
+          {...defaultProps}
           files={mockFiles}
-          activeFileId={null}
-          onSelectFile={mockOnSelectFile}
-          onRemoveFile={mockOnRemoveFile}
-          onGenerateAll={mockOnGenerateAll}
-          onClearAll={mockOnClearAll}
         />
       );
 
@@ -152,12 +144,8 @@ describe('FileList', () => {
     it('should show "Generating..." indicator when files are generating', () => {
       render(
         <FileList
+          {...defaultProps}
           files={mockFiles}
-          activeFileId={null}
-          onSelectFile={mockOnSelectFile}
-          onRemoveFile={mockOnRemoveFile}
-          onGenerateAll={mockOnGenerateAll}
-          onClearAll={mockOnClearAll}
         />
       );
 
@@ -166,95 +154,79 @@ describe('FileList', () => {
   });
 
   describe('Bulk Actions', () => {
-    it('should show Generate All button when files exist', () => {
+    it('should show Generate button when files exist', () => {
       render(
         <FileList
+          {...defaultProps}
           files={mockFiles}
-          activeFileId={null}
-          onSelectFile={mockOnSelectFile}
-          onRemoveFile={mockOnRemoveFile}
-          onGenerateAll={mockOnGenerateAll}
-          onClearAll={mockOnClearAll}
         />
       );
 
-      expect(screen.getByRole('button', { name: /Generate All/i })).toBeInTheDocument();
+      // New API uses "Generate" not "Generate All" - multiple buttons exist (one per file + bulk action)
+      const generateButtons = screen.getAllByRole('button', { name: /Generate/i });
+      expect(generateButtons.length).toBeGreaterThan(0);
     });
 
-    it('should enable Generate All when some files need generation', () => {
+    it('should disable Generate when no files selected and no code in editor', () => {
       render(
         <FileList
+          {...defaultProps}
           files={mockFiles}
-          activeFileId={null}
-          onSelectFile={mockOnSelectFile}
-          onRemoveFile={mockOnRemoveFile}
-          onGenerateAll={mockOnGenerateAll}
-          onClearAll={mockOnClearAll}
+          selectedCount={0}
+          hasCodeInEditor={false}
         />
       );
 
-      const generateBtn = screen.getByRole('button', { name: /Generate All/i });
-      expect(generateBtn).not.toBeDisabled();
-    });
-
-    it('should disable Generate All when all files are generated or generating', () => {
-      const allGeneratedFiles = mockFiles.map(f => ({
-        ...f,
-        documentation: '# Test',
-        isGenerating: false
-      }));
-
-      render(
-        <FileList
-          files={allGeneratedFiles}
-          activeFileId={null}
-          onSelectFile={mockOnSelectFile}
-          onRemoveFile={mockOnRemoveFile}
-          onGenerateAll={mockOnGenerateAll}
-          onClearAll={mockOnClearAll}
-        />
-      );
-
-      const generateBtn = screen.getByRole('button', { name: /Generate All/i });
+      const generateBtn = screen.getByRole('button', { name: /^Gen/ });
       expect(generateBtn).toBeDisabled();
     });
 
-    it('should call onGenerateAll when Generate All is clicked', async () => {
-      const user = userEvent.setup();
+    it('should enable Generate when code exists in editor', () => {
       render(
         <FileList
+          {...defaultProps}
           files={mockFiles}
-          activeFileId={null}
-          onSelectFile={mockOnSelectFile}
-          onRemoveFile={mockOnRemoveFile}
-          onGenerateAll={mockOnGenerateAll}
-          onClearAll={mockOnClearAll}
+          selectedCount={0}
+          hasCodeInEditor={true}
         />
       );
 
-      const generateBtn = screen.getByRole('button', { name: /Generate All/i });
-      await user.click(generateBtn);
-
-      expect(mockOnGenerateAll).toHaveBeenCalled();
+      const generateBtn = screen.getByRole('button', { name: /^Gen/ });
+      expect(generateBtn).not.toBeDisabled();
     });
 
-    it('should call onClearAll when Clear All is clicked', async () => {
+    it('should call onGenerateSelected when Generate is clicked', async () => {
       const user = userEvent.setup();
       render(
         <FileList
+          {...defaultProps}
           files={mockFiles}
-          activeFileId={null}
-          onSelectFile={mockOnSelectFile}
-          onRemoveFile={mockOnRemoveFile}
-          onGenerateAll={mockOnGenerateAll}
-          onClearAll={mockOnClearAll}
+          hasCodeInEditor={true}
         />
       );
 
-      const clearBtn = screen.getByRole('button', { name: /Clear All/i });
-      await user.click(clearBtn);
+      const generateBtn = screen.getByRole('button', { name: /^Gen/ });
+      await user.click(generateBtn);
 
-      expect(mockOnClearAll).toHaveBeenCalled();
+      expect(mockOnGenerateSelected).toHaveBeenCalled();
+    });
+
+    it('should call onDeleteSelected when Delete is clicked', async () => {
+      const user = userEvent.setup();
+      const filesWithSelection = mockFiles.map(f => ({ ...f, content: 'test code' }));
+      render(
+        <FileList
+          {...defaultProps}
+          files={filesWithSelection}
+          selectedFileIds={['file-1']}
+          selectedCount={1}
+        />
+      );
+
+      const deleteBtn = screen.getByRole('button', { name: /Del/ });
+      await user.click(deleteBtn);
+
+      expect(mockOnDeleteSelected).toHaveBeenCalled();
     });
   });
 
@@ -262,12 +234,9 @@ describe('FileList', () => {
     it('should pass activeFileId to FileItem', () => {
       render(
         <FileList
+          {...defaultProps}
           files={mockFiles}
           activeFileId="file-1"
-          onSelectFile={mockOnSelectFile}
-          onRemoveFile={mockOnRemoveFile}
-          onGenerateAll={mockOnGenerateAll}
-          onClearAll={mockOnClearAll}
         />
       );
 

@@ -456,16 +456,8 @@ router.post('/tier-override', requireAuth, requireAdmin, async (req, res) => {
  */
 router.post('/tier-override/clear', requireAuth, requireAdmin, async (req, res) => {
   try {
-    console.log('[Clear Override] req.user:', {
-      id: req.user.id,
-      viewing_as_tier: req.user.viewing_as_tier,
-      override_expires_at: req.user.override_expires_at,
-      hasActiveOverride: hasActiveOverride(req.user)
-    });
-
     // Check if user has active override
     if (!hasActiveOverride(req.user)) {
-      console.log('[Clear Override] No active override - returning 400');
       return res.status(400).json({
         success: false,
         error: 'Bad request',

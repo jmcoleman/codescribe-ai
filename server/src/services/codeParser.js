@@ -1,4 +1,8 @@
 import * as acorn from 'acorn';
+import jsx from 'acorn-jsx';
+
+// Create a parser with JSX support
+const jsxParser = acorn.Parser.extend(jsx());
 
 /**
  * Parse code and extract structural information
@@ -13,8 +17,8 @@ export async function parseCode(code, language) {
   }
 
   try {
-    // Parse with Acorn (JavaScript parser)
-    const ast = acorn.parse(code, {
+    // Parse with Acorn (JavaScript parser with JSX support)
+    const ast = jsxParser.parse(code, {
       ecmaVersion: 'latest',    // Support latest ES features (ES2024+)
       sourceType: 'module',     // Support import/export
       locations: true,          // Track line numbers

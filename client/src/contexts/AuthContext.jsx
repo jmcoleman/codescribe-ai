@@ -7,7 +7,7 @@
 
 import { createContext, useContext, useState, useEffect } from 'react';
 import { API_URL } from '../config/api';
-import { STORAGE_KEYS, getStorageItem, setStorageItem, removeStorageItem } from '../constants/storage';
+import { STORAGE_KEYS, getStorageItem, setStorageItem, removeStorageItem, clearAppStorage } from '../constants/storage';
 import { clearWorkspaceLocalStorage } from '../hooks/useWorkspacePersistence';
 
 const AuthContext = createContext(null);
@@ -172,6 +172,7 @@ export function AuthProvider({ children }) {
   const logout = async () => {
     try {
       const token = getStorageItem(STORAGE_KEYS.AUTH_TOKEN);
+      const currentUserId = user?.id; // Capture user ID before clearing state
 
       if (token) {
         // Call logout endpoint to invalidate session
@@ -182,14 +183,17 @@ export function AuthProvider({ children }) {
           },
         });
       }
+
+      // Clear user-scoped localStorage data (code, docs, scores, workspace)
+      if (currentUserId) {
+        clearWorkspaceLocalStorage(currentUserId);
+        clearAppStorage(currentUserId);
+      }
     } catch (err) {
       console.error('Logout error:', err);
     } finally {
       // Always clear local state and token
       removeStorageItem(STORAGE_KEYS.AUTH_TOKEN);
-
-      // Clear workspace file content from localStorage
-      clearWorkspaceLocalStorage();
 
       setUser(null);
       setError(null);

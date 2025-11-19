@@ -25,13 +25,9 @@
     <script>
       (function() {
         try {
-          // Read theme preference from localStorage
-          // Check new key first, fall back to old key for migration
-          let stored = localStorage.getItem('codescribeai:local:ui:theme-preference');
-          if (!stored) {
-            stored = localStorage.getItem('codescribeai:settings:theme');
-          }
-          let theme = stored && ['light', 'dark', 'auto'].includes(stored) ? stored : 'auto';
+          // Read theme preference from localStorage (new concise key format)
+          let stored = localStorage.getItem('cs_ui_theme');
+          let theme = stored && ['light', 'dark', 'auto'].includes(stored) ? stored : 'light';
 
           // Resolve 'auto' to system preference
           if (theme === 'auto') {

@@ -682,7 +682,7 @@ export const DocPanel = memo(function DocPanel({
               {/* Document Type */}
               <div className="mb-2 pb-2 border-b border-slate-200 dark:border-slate-700">
                 <span className="text-xs text-slate-600 dark:text-slate-400">
-                  Document Type: <span className="font-medium text-slate-700 dark:text-slate-300">{qualityScore.docType}</span>
+                  Document Type: <span className="font-semibold text-purple-600 dark:text-purple-400">{qualityScore.docType}</span>
                 </span>
               </div>
 

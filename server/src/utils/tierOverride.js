@@ -44,16 +44,13 @@ export const getEffectiveTier = (user) => {
 
   // Handle invalid date
   if (isNaN(expiry.getTime())) {
-    console.log(`[TierOverride] Invalid expiry date for user ${user.id}, ignoring override`);
     return user.tier || 'free';
   }
 
   if (now > expiry) {
-    console.log(`[TierOverride] Override expired for user ${user.id} (expired at ${expiry.toISOString()})`);
     return user.tier || 'free';
   }
 
-  console.log(`[TierOverride] Using override tier "${user.viewing_as_tier}" for user ${user.id} (expires at ${expiry.toISOString()})`);
   return user.viewing_as_tier;
 };
 

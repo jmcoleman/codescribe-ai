@@ -184,6 +184,53 @@ export function getValidationErrorMessage(validation) {
 }
 
 /**
+ * Detect programming language from filename extension
+ * @param {string} filename - Name of the file (e.g., "example.js", "code.py")
+ * @returns {string} Detected language (e.g., "javascript", "python")
+ *
+ * @example
+ * detectLanguageFromFilename('example.js') // Returns: 'javascript'
+ * detectLanguageFromFilename('script.py') // Returns: 'python'
+ * detectLanguageFromFilename('unknown.xyz') // Returns: 'javascript' (default)
+ */
+export function detectLanguageFromFilename(filename) {
+  if (!filename) {
+    return 'javascript'; // Default fallback
+  }
+
+  const extension = filename.split('.').pop()?.toLowerCase() || '';
+
+  const languageMap = {
+    'js': 'javascript',
+    'jsx': 'javascript',
+    'ts': 'typescript',
+    'tsx': 'typescript',
+    'py': 'python',
+    'java': 'java',
+    'cpp': 'cpp',
+    'c': 'c',
+    'h': 'c',
+    'hpp': 'cpp',
+    'cs': 'csharp',
+    'go': 'go',
+    'rs': 'rust',
+    'rb': 'ruby',
+    'php': 'php',
+    'kt': 'kotlin',
+    'kts': 'kotlin',
+    'swift': 'swift',
+    'dart': 'dart',
+    'sh': 'bash',
+    'bash': 'bash',
+    'zsh': 'bash',
+    'gs': 'javascript', // Google Apps Script
+    'txt': 'javascript', // Plain text defaults to javascript
+  };
+
+  return languageMap[extension] || 'javascript'; // Default to javascript if unknown
+}
+
+/**
  * Sanitize filename for cross-platform filesystem compatibility
  * Removes/replaces characters that are invalid on Windows, macOS, or Linux
  *

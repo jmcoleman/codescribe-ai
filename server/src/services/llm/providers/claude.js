@@ -102,16 +102,6 @@ async function generateWithClaude(prompt, options = {}, config) {
       timestamp: new Date()
     }
 
-    // Log cache performance
-    if (metadata.cacheReadTokens > 0 || metadata.cacheWriteTokens > 0) {
-      console.log('[Claude] Cache stats:', {
-        input_tokens: metadata.inputTokens,
-        cache_read: metadata.cacheReadTokens,
-        cache_write: metadata.cacheWriteTokens,
-        cached: metadata.wasCached
-      })
-    }
-
     return { text, metadata }
 
   } catch (error) {
@@ -212,16 +202,6 @@ async function streamWithClaude(prompt, onChunk, options = {}, config) {
       wasCached: (usage?.cache_read_input_tokens || 0) > 0,
       latencyMs: Date.now() - startTime,
       timestamp: new Date()
-    }
-
-    // Log cache performance
-    if (metadata.cacheReadTokens > 0 || metadata.cacheWriteTokens > 0) {
-      console.log('[Claude] Streaming cache stats:', {
-        input_tokens: metadata.inputTokens,
-        cache_read: metadata.cacheReadTokens,
-        cache_write: metadata.cacheWriteTokens,
-        cached: metadata.wasCached
-      })
     }
 
     return { text: fullText, metadata }

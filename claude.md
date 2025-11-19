@@ -84,6 +84,38 @@ AI-powered documentation generator with real-time streaming, quality scoring (0-
 3. **codeParser.js** - AST parsing (Acorn), function/class extraction
 4. **qualityScorer.js** - 5-criteria scoring (0-100 scale)
 
+### Authentication Pattern ⚠️ CRITICAL
+**All authenticated API endpoints use Bearer token authentication, NOT cookies!**
+
+**Backend (Express routes):**
+```javascript
+// ALWAYS add requireAuth middleware first
+router.post('/api/protected-endpoint', requireAuth, apiLimiter, async (req, res) => {
+  // req.user is now available
+});
+```
+
+**Frontend (fetch calls):**
+```javascript
+// ALWAYS use Bearer token from localStorage
+import { STORAGE_KEYS } from '../constants/storage';
+
+const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+const response = await fetch(`${API_URL}/api/protected-endpoint`, {
+  method: 'POST',
+  headers: {
+    'Authorization': token ? `Bearer ${token}` : '',
+    'Content-Type': 'application/json'
+  },
+  // NEVER use credentials: 'include' for authenticated routes
+  body: JSON.stringify(data)
+});
+```
+
+**Common Pitfall:**
+- ❌ Using `credentials: 'include'` (cookie-based) → Results in 401 Unauthorized
+- ✅ Using `Authorization: Bearer ${token}` (token-based) → Works correctly
+
 ### API Endpoints
 - `POST /api/generate` - Standard generation
 - `POST /api/generate-stream` - SSE streaming

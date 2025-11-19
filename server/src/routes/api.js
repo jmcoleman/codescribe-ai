@@ -4,7 +4,7 @@ import path from 'path';
 import docGenerator from '../services/docGenerator.js';
 import { apiLimiter, generationLimiter } from '../middleware/rateLimiter.js';
 import { rateLimitBypass } from '../middleware/rateLimitBypass.js';
-import { checkUsage, incrementUsage } from '../middleware/tierGate.js';
+import { checkUsage, incrementUsage, requireFeature } from '../middleware/tierGate.js';
 import Usage from '../models/Usage.js';
 import User from '../models/User.js';
 import emailService from '../services/emailService.js';
@@ -898,6 +898,161 @@ router.post('/github/branches', apiLimiter, async (req, res) => {
 
     res.status(500).json({
       error: 'Failed to fetch branches',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * Fetch multiple files in batch with parallel processing
+ * POST /api/github/files-batch
+ * Body: { owner: string, repo: string, paths: string[], branch: string }
+ * Returns: Array of file results with success/error status for each
+ *
+ * Features:
+ * - Tier-gated (Pro+ only)
+ * - Respects tier-based batch limits
+ * - Processes files in parallel batches of 5
+ * - Returns partial success (some files may fail)
+ */
+router.post('/github/files-batch', requireAuth, apiLimiter, requireFeature('batchProcessing'), async (req, res) => {
+  try {
+    const { owner, repo, paths, branch = 'main' } = req.body;
+
+    // Validation
+    if (!owner || !repo || !paths) {
+      return res.status(400).json({
+        error: 'Invalid request',
+        message: 'owner, repo, and paths are required'
+      });
+    }
+
+    if (typeof owner !== 'string' || typeof repo !== 'string') {
+      return res.status(400).json({
+        error: 'Invalid request',
+        message: 'owner and repo must be strings'
+      });
+    }
+
+    if (!Array.isArray(paths) || paths.length === 0) {
+      return res.status(400).json({
+        error: 'Invalid request',
+        message: 'paths must be a non-empty array'
+      });
+    }
+
+    if (paths.some(p => typeof p !== 'string')) {
+      return res.status(400).json({
+        error: 'Invalid request',
+        message: 'all paths must be strings'
+      });
+    }
+
+    // Check tier-based batch limit
+    const { getEffectiveTier } = await import('../utils/tierOverride.js');
+    const userTier = getEffectiveTier(req.user);
+
+    const BATCH_LIMITS = {
+      free: 1,
+      starter: 1,
+      pro: 20,
+      team: 50,
+      enterprise: 100
+    };
+
+    const maxFiles = BATCH_LIMITS[userTier] || 1;
+
+    if (paths.length > maxFiles) {
+      return res.status(400).json({
+        error: 'Batch limit exceeded',
+        message: `Your ${userTier} tier allows up to ${maxFiles} files per batch`,
+        currentTier: userTier,
+        maxFiles,
+        requestedFiles: paths.length,
+        upgradePath: '/pricing'
+      });
+    }
+
+    // Process files in parallel batches of 5
+    const PARALLEL_BATCH_SIZE = 5;
+    const results = [];
+
+    for (let i = 0; i < paths.length; i += PARALLEL_BATCH_SIZE) {
+      const batch = paths.slice(i, i + PARALLEL_BATCH_SIZE);
+
+      // Process batch in parallel
+      const batchResults = await Promise.allSettled(
+        batch.map(async (path) => {
+          try {
+            const fileData = await githubService.fetchFile(owner, repo, path, branch);
+            return {
+              success: true,
+              path,
+              data: fileData
+            };
+          } catch (error) {
+            return {
+              success: false,
+              path,
+              error: error.message
+            };
+          }
+        })
+      );
+
+      // Collect results
+      batchResults.forEach(result => {
+        if (result.status === 'fulfilled') {
+          results.push(result.value);
+        } else {
+          results.push({
+            success: false,
+            path: batch[results.length % batch.length],
+            error: result.reason?.message || 'Unknown error'
+          });
+        }
+      });
+    }
+
+    // Count successes and failures
+    const successCount = results.filter(r => r.success).length;
+    const failureCount = results.filter(r => !r.success).length;
+
+    res.json({
+      success: true,
+      total: paths.length,
+      successful: successCount,
+      failed: failureCount,
+      results
+    });
+
+  } catch (error) {
+    console.error('[GitHub] Batch fetch error:', error);
+
+    // Handle different error types
+    if (error.message.includes('not found')) {
+      return res.status(404).json({
+        error: 'Not found',
+        message: error.message
+      });
+    }
+
+    if (error.message.includes('rate limit')) {
+      return res.status(429).json({
+        error: 'Rate limit exceeded',
+        message: error.message
+      });
+    }
+
+    if (error.message.includes('forbidden') || error.message.includes('private')) {
+      return res.status(403).json({
+        error: 'Access forbidden',
+        message: error.message
+      });
+    }
+
+    res.status(500).json({
+      error: 'Failed to fetch files',
       message: error.message
     });
   }
