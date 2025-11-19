@@ -191,14 +191,14 @@ describe('FileActions', () => {
   });
 
   describe('Remove Action', () => {
-    it('should always show "Remove from List"', async () => {
+    it('should always show "Delete"', async () => {
       const user = userEvent.setup();
       const { container } = render(<FileActions file={mockFile} onRemove={mockOnRemove} />);
 
       const menuButton = screen.getByRole('button', { name: /File actions/i });
       await user.click(menuButton);
 
-      expect(screen.getByRole('menuitem', { name: /Remove from List/i })).toBeInTheDocument();
+      expect(screen.getByRole('menuitem', { name: /^Delete$/i })).toBeInTheDocument();
     });
 
     it('should call onRemove when clicked', async () => {
@@ -208,7 +208,7 @@ describe('FileActions', () => {
       const menuButton = screen.getByRole('button', { name: /File actions/i });
       await user.click(menuButton);
 
-      const removeBtn = screen.getByRole('menuitem', { name: /Remove from List/i });
+      const removeBtn = screen.getByRole('menuitem', { name: /^Delete$/i });
       await user.click(removeBtn);
 
       expect(mockOnRemove).toHaveBeenCalled();
