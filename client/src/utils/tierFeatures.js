@@ -62,6 +62,11 @@ export function getEffectiveTier(user) {
   const now = new Date();
   const expiry = new Date(user.override_expires_at);
 
+  // Handle invalid dates
+  if (isNaN(expiry.getTime())) {
+    return user.tier || 'free';
+  }
+
   if (now > expiry) {
     return user.tier || 'free';
   }
@@ -107,6 +112,11 @@ export function hasActiveOverride(user) {
   const now = new Date();
   const expiry = new Date(user.override_expires_at);
 
+  // Handle invalid dates
+  if (isNaN(expiry.getTime())) {
+    return false;
+  }
+
   return now < expiry;
 }
 
@@ -120,11 +130,17 @@ export const TIER_ORDER = ['free', 'starter', 'pro', 'team', 'enterprise'];
  *
  * @param {string} currentTier - User's current tier
  * @param {string} feature - Feature name
- * @returns {string|null} - Recommended tier to upgrade to, or null if feature not available
+ * @returns {string|null} - Recommended tier to upgrade to, or null if already has feature or feature not available
  */
 export function getUpgradeTierForFeature(currentTier, feature) {
   const currentIndex = TIER_ORDER.indexOf(currentTier);
 
+  // Check if current tier already has the feature
+  if (TIER_FEATURES[currentTier] && TIER_FEATURES[currentTier][feature]) {
+    return null;
+  }
+
+  // Find the next tier that has the feature
   for (let i = currentIndex + 1; i < TIER_ORDER.length; i++) {
     const tier = TIER_ORDER[i];
     if (TIER_FEATURES[tier][feature]) {

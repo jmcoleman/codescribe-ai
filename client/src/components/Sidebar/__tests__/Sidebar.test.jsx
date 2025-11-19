@@ -12,6 +12,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Sidebar } from '../Sidebar';
+import { STORAGE_KEYS } from '../../../constants/storage';
 
 describe('Sidebar', () => {
   const mockFiles = [
@@ -20,6 +21,7 @@ describe('Sidebar', () => {
       filename: 'test.js',
       language: 'javascript',
       fileSize: 2048,
+      content: 'console.log("test");',
       documentation: null,
       isGenerating: false
     }
@@ -28,11 +30,24 @@ describe('Sidebar', () => {
   const mockProps = {
     files: mockFiles,
     activeFileId: null,
+    selectedFileIds: [],
+    selectedCount: 0,
+    mobileOpen: false,
+    docType: 'README',
+    onDocTypeChange: vi.fn(),
+    onGithubImport: vi.fn(),
+    onMobileClose: vi.fn(),
     onSelectFile: vi.fn(),
-    onAddFiles: vi.fn(),
+    onToggleFileSelection: vi.fn(),
+    onSelectAllFiles: vi.fn(),
+    onDeselectAllFiles: vi.fn(),
+    onAddFile: vi.fn(),
     onRemoveFile: vi.fn(),
-    onGenerateAll: vi.fn(),
-    onClearAll: vi.fn()
+    onGenerateFile: vi.fn(),
+    onGenerateSelected: vi.fn(),
+    onDeleteSelected: vi.fn(),
+    hasCodeInEditor: false,
+    onFilesDrop: vi.fn()
   };
 
   beforeEach(() => {
@@ -60,11 +75,11 @@ describe('Sidebar', () => {
       expect(screen.getByText('test.js')).toBeInTheDocument();
     });
 
-    it('should have 320px width in expanded mode', () => {
+    it('should have flex-1 width in expanded mode', () => {
       render(<Sidebar {...mockProps} />);
 
       const sidebar = screen.getByText(/Files \(1\)/i).closest('.sidebar-container');
-      expect(sidebar).toHaveClass('w-[320px]');
+      expect(sidebar).toHaveClass('flex-1');
     });
 
     it('should show collapse button in expanded mode', () => {
@@ -103,15 +118,15 @@ describe('Sidebar', () => {
       expect(sidebar).toHaveClass('w-[60px]');
     });
 
-    it('should show file badges in collapsed mode', async () => {
+    it('should not show file list in collapsed mode', async () => {
       const user = userEvent.setup();
       render(<Sidebar {...mockProps} />);
 
       const collapseBtn = screen.getByRole('button', { name: /Collapse sidebar/i });
       await user.click(collapseBtn);
 
-      // Should show file badge with first 2 letters
-      expect(screen.getByText('TE')).toBeInTheDocument(); // "test.js" -> "TE"
+      // Should not show file list in collapsed mode
+      expect(screen.queryByText('test.js')).not.toBeInTheDocument();
     });
 
     it('should expand when expand button is clicked', async () => {
@@ -137,7 +152,7 @@ describe('Sidebar', () => {
       render(<Sidebar {...mockProps} />);
 
       // Default should be expanded
-      expect(localStorage.getItem('sidebar-mode')).toBe('expanded');
+      expect(localStorage.getItem(STORAGE_KEYS.SIDEBAR_MODE)).toBe('expanded');
     });
 
     it('should save collapsed mode to localStorage', async () => {
@@ -147,11 +162,11 @@ describe('Sidebar', () => {
       const collapseBtn = screen.getByRole('button', { name: /Collapse sidebar/i });
       await user.click(collapseBtn);
 
-      expect(localStorage.getItem('sidebar-mode')).toBe('collapsed');
+      expect(localStorage.getItem(STORAGE_KEYS.SIDEBAR_MODE)).toBe('collapsed');
     });
 
     it('should restore mode from localStorage', () => {
-      localStorage.setItem('sidebar-mode', 'collapsed');
+      localStorage.setItem(STORAGE_KEYS.SIDEBAR_MODE, 'collapsed');
 
       render(<Sidebar {...mockProps} />);
 
@@ -247,9 +262,9 @@ describe('Sidebar', () => {
   describe('File Count Display', () => {
     it('should show correct file count', () => {
       const manyFiles = [
-        { id: '1', filename: 'file1.js', language: 'js', fileSize: 100 },
-        { id: '2', filename: 'file2.js', language: 'js', fileSize: 100 },
-        { id: '3', filename: 'file3.js', language: 'js', fileSize: 100 }
+        { id: '1', filename: 'file1.js', language: 'js', fileSize: 100, content: 'code1' },
+        { id: '2', filename: 'file2.js', language: 'js', fileSize: 100, content: 'code2' },
+        { id: '3', filename: 'file3.js', language: 'js', fileSize: 100, content: 'code3' }
       ];
 
       render(<Sidebar {...mockProps} files={manyFiles} />);
@@ -257,13 +272,15 @@ describe('Sidebar', () => {
       expect(screen.getByText(/Files \(3\)/i)).toBeInTheDocument();
     });
 
-    it('should show "+N" badge for more than 5 files in collapsed mode', async () => {
+    it.skip('should show "+N" badge for more than 5 files in collapsed mode', async () => {
+      // Skip: Collapsed mode no longer shows file badges - it only shows toggle button
       const user = userEvent.setup();
       const manyFiles = Array.from({ length: 7 }, (_, i) => ({
         id: `file-${i}`,
         filename: `file${i}.js`,
         language: 'javascript',
-        fileSize: 1024
+        fileSize: 1024,
+        content: `console.log(${i});`
       }));
 
       render(<Sidebar {...mockProps} files={manyFiles} />);
@@ -278,14 +295,14 @@ describe('Sidebar', () => {
   });
 
   describe('Actions', () => {
-    it('should call onAddFiles when add button is clicked', async () => {
+    it('should call onAddFile when add button is clicked', async () => {
       const user = userEvent.setup();
       render(<Sidebar {...mockProps} />);
 
       const addBtn = screen.getByRole('button', { name: /Upload more files/i });
       await user.click(addBtn);
 
-      expect(mockProps.onAddFiles).toHaveBeenCalled();
+      expect(mockProps.onAddFile).toHaveBeenCalled();
     });
   });
 });

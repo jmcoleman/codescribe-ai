@@ -529,7 +529,7 @@ describe('UsageDashboard', () => {
   });
 
   describe('Unlimited Usage (Enterprise)', () => {
-    it('displays infinity symbol for unlimited usage', () => {
+    it('displays unlimited text for unlimited usage', () => {
       useAuth.mockReturnValue({
         user: { ...mockUser, tier: 'enterprise' },
         isAuthenticated: true
@@ -541,6 +541,7 @@ describe('UsageDashboard', () => {
           percentage: 0,
           remaining: 999999,
           limit: 'unlimited',
+          used: 42,
           period,
           resetDate: '2025-12-01T05:00:00.000Z'
         }))
@@ -548,11 +549,11 @@ describe('UsageDashboard', () => {
 
       renderWithRouter(<UsageDashboard />);
 
-      const infinitySymbols = screen.getAllByText('∞');
-      expect(infinitySymbols.length).toBeGreaterThan(0);
+      const unlimitedTexts = screen.getAllByText(/Unlimited • No quota restrictions/i);
+      expect(unlimitedTexts.length).toBeGreaterThan(0);
     });
 
-    it('shows "Unlimited generations" text for enterprise tier', () => {
+    it('shows used count without limit for unlimited tier', () => {
       useAuth.mockReturnValue({
         user: { ...mockUser, tier: 'enterprise' },
         isAuthenticated: true
@@ -564,6 +565,7 @@ describe('UsageDashboard', () => {
           percentage: 0,
           remaining: 999999,
           limit: 999999,
+          used: 42,
           period,
           resetDate: '2025-12-01T05:00:00.000Z'
         }))
@@ -571,7 +573,11 @@ describe('UsageDashboard', () => {
 
       renderWithRouter(<UsageDashboard />);
 
-      const unlimitedTexts = screen.getAllByText('Unlimited generations');
+      // Should show used count (multiple times - daily and monthly)
+      const usedCounts = screen.getAllByText('42');
+      expect(usedCounts.length).toBeGreaterThan(0);
+      // Should show unlimited text
+      const unlimitedTexts = screen.getAllByText(/Unlimited • No quota restrictions/i);
       expect(unlimitedTexts.length).toBeGreaterThan(0);
     });
   });

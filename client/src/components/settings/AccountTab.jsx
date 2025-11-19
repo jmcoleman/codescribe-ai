@@ -54,7 +54,7 @@ export function AccountTab() {
       }
 
       if ((firstName || lastName) && (!firstName.trim() || !lastName.trim())) {
-        setProfileError('Both first and last name are required if providing a name');
+        setProfileError('Both first and last name are required');
         setIsSaving(false);
         return;
       }
@@ -325,7 +325,7 @@ export function AccountTab() {
       </div>
 
       {/* Password Section */}
-      {user?.has_password && (
+      {user?.auth_method === 'email' && (
         <div className="pt-8 border-t border-slate-200 dark:border-slate-700">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
@@ -521,7 +521,7 @@ export function AccountTab() {
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
-            What's included
+            What's included in the export
           </summary>
           <ul className="list-disc list-inside space-y-1 mt-3 ml-6 text-sm text-slate-600 dark:text-slate-400">
             <li>Profile information (name, email, tier)</li>
@@ -545,7 +545,7 @@ export function AccountTab() {
             ) : (
               <>
                 <Download className="w-5 h-5" aria-hidden="true" />
-                <span>Download Data</span>
+                <span>Download My Data</span>
               </>
             )}
           </button>
