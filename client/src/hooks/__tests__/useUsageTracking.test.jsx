@@ -346,6 +346,7 @@ describe('useUsageTracking', () => {
       const monthlyUsage = result.current.getUsageForPeriod('monthly');
 
       expect(monthlyUsage).toEqual({
+        used: 8,
         percentage: 80,
         remaining: 2,
         limit: 10,
@@ -387,6 +388,7 @@ describe('useUsageTracking', () => {
       const dailyUsage = result.current.getUsageForPeriod('daily');
 
       expect(dailyUsage).toEqual({
+        used: 9,
         percentage: 90,
         remaining: 1,
         limit: 10,

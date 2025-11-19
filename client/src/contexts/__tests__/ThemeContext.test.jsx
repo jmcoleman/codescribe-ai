@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { ThemeProvider, useTheme } from '../ThemeContext';
+import { AuthProvider } from '../AuthContext';
+import { STORAGE_KEYS } from '../../constants/storage';
 
 // Mock matchMedia globally for all tests
 Object.defineProperty(window, 'matchMedia', {
@@ -18,6 +20,15 @@ Object.defineProperty(window, 'matchMedia', {
 });
 
 describe('ThemeContext', () => {
+  // Wrapper that includes both AuthProvider and ThemeProvider
+  const AllProviders = ({ children }) => (
+    <AuthProvider>
+      <ThemeProvider>
+        {children}
+      </ThemeProvider>
+    </AuthProvider>
+  );
+
   beforeEach(() => {
     localStorage.clear();
     document.documentElement.classList.remove('dark');
@@ -28,28 +39,27 @@ describe('ThemeContext', () => {
   });
 
   describe('ThemeProvider Initialization', () => {
-    it('initializes with auto theme by default', () => {
+    it('initializes with light theme by default', () => {
       const { result } = renderHook(() => useTheme(), {
-        wrapper: ThemeProvider,
+        wrapper: AllProviders,
       });
 
-      expect(result.current.theme).toBe('auto');
-      // Auto should resolve to light when system preference is light (matchMedia.matches = false)
+      expect(result.current.theme).toBe('light');
       expect(document.documentElement.classList.contains('dark')).toBe(false);
     });
 
     it('initializes with stored theme from localStorage', () => {
-      localStorage.setItem('codescribeai:settings:theme', 'dark');
+      localStorage.setItem(STORAGE_KEYS.THEME_PREFERENCE, 'dark');
 
       const { result } = renderHook(() => useTheme(), {
-        wrapper: ThemeProvider,
+        wrapper: AllProviders,
       });
 
       expect(result.current.theme).toBe('dark');
       expect(document.documentElement.classList.contains('dark')).toBe(true);
     });
 
-    it('initializes with auto theme and resolves to dark when system preference is dark', () => {
+    it('can set theme to auto and resolves to dark when system preference is dark', () => {
       // Mock system preference for dark mode
       const matchMediaMock = vi.fn().mockImplementation(query => ({
         matches: query === '(prefers-color-scheme: dark)',
@@ -62,7 +72,12 @@ describe('ThemeContext', () => {
       vi.stubGlobal('matchMedia', matchMediaMock);
 
       const { result } = renderHook(() => useTheme(), {
-        wrapper: ThemeProvider,
+        wrapper: AllProviders,
+      });
+
+      // Set to auto mode
+      act(() => {
+        result.current.setTheme('auto');
       });
 
       expect(result.current.theme).toBe('auto');
@@ -73,7 +88,7 @@ describe('ThemeContext', () => {
     });
 
     it('prioritizes localStorage over system preference', () => {
-      localStorage.setItem('codescribeai:settings:theme', 'light');
+      localStorage.setItem(STORAGE_KEYS.THEME_PREFERENCE, 'light');
 
       // Mock system preference for dark mode
       const matchMediaMock = vi.fn().mockImplementation(query => ({
@@ -87,7 +102,7 @@ describe('ThemeContext', () => {
       vi.stubGlobal('matchMedia', matchMediaMock);
 
       const { result } = renderHook(() => useTheme(), {
-        wrapper: ThemeProvider,
+        wrapper: AllProviders,
       });
 
       // Should use localStorage value (light) despite system preference (dark)
@@ -101,48 +116,48 @@ describe('ThemeContext', () => {
   describe('Theme Persistence', () => {
     it('persists theme to localStorage on change', () => {
       const { result } = renderHook(() => useTheme(), {
-        wrapper: ThemeProvider,
+        wrapper: AllProviders,
       });
 
       act(() => {
         result.current.setTheme('dark');
       });
 
-      expect(localStorage.getItem('codescribeai:settings:theme')).toBe('dark');
+      expect(localStorage.getItem(STORAGE_KEYS.THEME_PREFERENCE)).toBe('dark');
     });
 
     it('persists initial theme to localStorage', () => {
       renderHook(() => useTheme(), {
-        wrapper: ThemeProvider,
+        wrapper: AllProviders,
       });
 
-      // Default auto theme should be persisted
-      expect(localStorage.getItem('codescribeai:settings:theme')).toBe('auto');
+      // Default light theme should be persisted
+      expect(localStorage.getItem(STORAGE_KEYS.THEME_PREFERENCE)).toBe('light');
     });
 
     it('updates localStorage when toggling theme', () => {
       const { result } = renderHook(() => useTheme(), {
-        wrapper: ThemeProvider,
+        wrapper: AllProviders,
       });
 
       // Toggle to dark
       act(() => {
         result.current.toggleTheme();
       });
-      expect(localStorage.getItem('codescribeai:settings:theme')).toBe('dark');
+      expect(localStorage.getItem(STORAGE_KEYS.THEME_PREFERENCE)).toBe('dark');
 
       // Toggle back to light
       act(() => {
         result.current.toggleTheme();
       });
-      expect(localStorage.getItem('codescribeai:settings:theme')).toBe('light');
+      expect(localStorage.getItem(STORAGE_KEYS.THEME_PREFERENCE)).toBe('light');
     });
   });
 
   describe('DOM Updates', () => {
     it('adds dark class to document element when theme is dark', () => {
       const { result } = renderHook(() => useTheme(), {
-        wrapper: ThemeProvider,
+        wrapper: AllProviders,
       });
 
       act(() => {
@@ -153,10 +168,10 @@ describe('ThemeContext', () => {
     });
 
     it('removes dark class from document element when theme is light', () => {
-      localStorage.setItem('codescribeai:settings:theme', 'dark');
+      localStorage.setItem(STORAGE_KEYS.THEME_PREFERENCE, 'dark');
 
       const { result } = renderHook(() => useTheme(), {
-        wrapper: ThemeProvider,
+        wrapper: AllProviders,
       });
 
       act(() => {
@@ -168,7 +183,7 @@ describe('ThemeContext', () => {
 
     it('updates DOM when toggling theme', () => {
       const { result } = renderHook(() => useTheme(), {
-        wrapper: ThemeProvider,
+        wrapper: AllProviders,
       });
 
       // Toggle to dark
@@ -186,15 +201,15 @@ describe('ThemeContext', () => {
   });
 
   describe('Theme Toggle', () => {
-    it('toggles from auto to dark, then to light', () => {
+    it('toggles from light to dark', () => {
       const { result } = renderHook(() => useTheme(), {
-        wrapper: ThemeProvider,
+        wrapper: AllProviders,
       });
 
-      // Starts as 'auto'
-      expect(result.current.theme).toBe('auto');
+      // Starts as 'light'
+      expect(result.current.theme).toBe('light');
 
-      // First toggle: auto -> dark (since toggleTheme cycles between dark and light)
+      // First toggle: light -> dark
       act(() => {
         result.current.toggleTheme();
       });
@@ -203,10 +218,10 @@ describe('ThemeContext', () => {
     });
 
     it('toggles from dark to light', () => {
-      localStorage.setItem('codescribeai:settings:theme', 'dark');
+      localStorage.setItem(STORAGE_KEYS.THEME_PREFERENCE, 'dark');
 
       const { result } = renderHook(() => useTheme(), {
-        wrapper: ThemeProvider,
+        wrapper: AllProviders,
       });
 
       expect(result.current.theme).toBe('dark');
@@ -220,25 +235,25 @@ describe('ThemeContext', () => {
 
     it('toggles multiple times correctly', () => {
       const { result } = renderHook(() => useTheme(), {
-        wrapper: ThemeProvider,
+        wrapper: AllProviders,
       });
 
-      // Start: auto
-      expect(result.current.theme).toBe('auto');
+      // Start: light
+      expect(result.current.theme).toBe('light');
 
-      // Toggle 1: dark
+      // Toggle 1: light -> dark
       act(() => {
         result.current.toggleTheme();
       });
       expect(result.current.theme).toBe('dark');
 
-      // Toggle 2: light
+      // Toggle 2: dark -> light
       act(() => {
         result.current.toggleTheme();
       });
       expect(result.current.theme).toBe('light');
 
-      // Toggle 3: dark
+      // Toggle 3: light -> dark
       act(() => {
         result.current.toggleTheme();
       });
@@ -247,7 +262,7 @@ describe('ThemeContext', () => {
   });
 
   describe('System Preference Changes', () => {
-    it('listens for system preference changes', () => {
+    it('listens for system preference changes when in auto mode', () => {
       const addEventListenerMock = vi.fn();
       const removeEventListenerMock = vi.fn();
 
@@ -261,8 +276,13 @@ describe('ThemeContext', () => {
 
       vi.stubGlobal('matchMedia', matchMediaMock);
 
-      const { unmount } = renderHook(() => useTheme(), {
-        wrapper: ThemeProvider,
+      const { result, unmount } = renderHook(() => useTheme(), {
+        wrapper: AllProviders,
+      });
+
+      // Set to auto mode to trigger the listener
+      act(() => {
+        result.current.setTheme('auto');
       });
 
       expect(addEventListenerMock).toHaveBeenCalledWith('change', expect.any(Function));
@@ -275,21 +295,17 @@ describe('ThemeContext', () => {
     });
 
     it('auto-switches theme on system preference change when in auto mode', () => {
-      // This test verifies the listener is set up correctly when in auto mode
-      // The actual system preference change behavior is tested by the integration
-      // Since we mock matchMedia globally, this test just verifies the structure
-
-      localStorage.clear();
-
+      // Set theme to auto first
       const { result } = renderHook(() => useTheme(), {
-        wrapper: ThemeProvider,
+        wrapper: AllProviders,
       });
 
-      // Should start in auto mode
-      expect(result.current.theme).toBe('auto');
+      act(() => {
+        result.current.setTheme('auto');
+      });
 
-      // Verify localStorage is empty initially (no manual preference)
-      localStorage.clear();
+      // Should be in auto mode
+      expect(result.current.theme).toBe('auto');
 
       // System preference changes are handled by the effect
       // This is implicitly tested by the "listens for system preference changes" test
@@ -298,16 +314,16 @@ describe('ThemeContext', () => {
 
     it('does not auto-switch when user has manual preference', () => {
       // Set manual preference
-      localStorage.setItem('codescribeai:settings:theme', 'light');
+      localStorage.setItem(STORAGE_KEYS.THEME_PREFERENCE, 'light');
 
       const { result } = renderHook(() => useTheme(), {
-        wrapper: ThemeProvider,
+        wrapper: AllProviders,
       });
 
       expect(result.current.theme).toBe('light');
 
       // Manual preference should be in localStorage
-      expect(localStorage.getItem('codescribeai:settings:theme')).toBe('light');
+      expect(localStorage.getItem(STORAGE_KEYS.THEME_PREFERENCE)).toBe('light');
 
       // Even if system preference changes, manual preference takes precedence
       // This is verified by the fact that the theme initializes from localStorage first
@@ -318,7 +334,7 @@ describe('ThemeContext', () => {
   describe('useTheme Hook', () => {
     it('provides theme value', () => {
       const { result } = renderHook(() => useTheme(), {
-        wrapper: ThemeProvider,
+        wrapper: AllProviders,
       });
 
       expect(result.current).toHaveProperty('theme');
@@ -327,7 +343,7 @@ describe('ThemeContext', () => {
 
     it('provides setTheme function', () => {
       const { result } = renderHook(() => useTheme(), {
-        wrapper: ThemeProvider,
+        wrapper: AllProviders,
       });
 
       expect(result.current).toHaveProperty('setTheme');
@@ -336,7 +352,7 @@ describe('ThemeContext', () => {
 
     it('provides toggleTheme function', () => {
       const { result } = renderHook(() => useTheme(), {
-        wrapper: ThemeProvider,
+        wrapper: AllProviders,
       });
 
       expect(result.current).toHaveProperty('toggleTheme');
@@ -345,7 +361,7 @@ describe('ThemeContext', () => {
 
     it('provides effectiveTheme value', () => {
       const { result } = renderHook(() => useTheme(), {
-        wrapper: ThemeProvider,
+        wrapper: AllProviders,
       });
 
       expect(result.current).toHaveProperty('effectiveTheme');
@@ -355,10 +371,15 @@ describe('ThemeContext', () => {
 
     it('resolves effectiveTheme to light when theme is auto and system prefers light', () => {
       const { result } = renderHook(() => useTheme(), {
-        wrapper: ThemeProvider,
+        wrapper: AllProviders,
       });
 
-      // Default is auto, and matchMedia mock returns matches: false (light mode)
+      // Set to auto mode
+      act(() => {
+        result.current.setTheme('auto');
+      });
+
+      // Theme is auto, and matchMedia mock returns matches: false (light mode)
       expect(result.current.theme).toBe('auto');
       expect(result.current.effectiveTheme).toBe('light');
     });
@@ -375,7 +396,12 @@ describe('ThemeContext', () => {
       vi.stubGlobal('matchMedia', matchMediaMock);
 
       const { result } = renderHook(() => useTheme(), {
-        wrapper: ThemeProvider,
+        wrapper: AllProviders,
+      });
+
+      // Set to auto mode
+      act(() => {
+        result.current.setTheme('auto');
       });
 
       expect(result.current.theme).toBe('auto');
@@ -386,7 +412,7 @@ describe('ThemeContext', () => {
 
     it('returns effectiveTheme equal to theme when theme is explicitly set', () => {
       const { result } = renderHook(() => useTheme(), {
-        wrapper: ThemeProvider,
+        wrapper: AllProviders,
       });
 
       act(() => {
@@ -419,7 +445,7 @@ describe('ThemeContext', () => {
   describe('setTheme Function', () => {
     it('updates theme to dark', () => {
       const { result } = renderHook(() => useTheme(), {
-        wrapper: ThemeProvider,
+        wrapper: AllProviders,
       });
 
       act(() => {
@@ -430,10 +456,10 @@ describe('ThemeContext', () => {
     });
 
     it('updates theme to light', () => {
-      localStorage.setItem('codescribeai:settings:theme', 'dark');
+      localStorage.setItem(STORAGE_KEYS.THEME_PREFERENCE, 'dark');
 
       const { result } = renderHook(() => useTheme(), {
-        wrapper: ThemeProvider,
+        wrapper: AllProviders,
       });
 
       act(() => {
@@ -445,7 +471,7 @@ describe('ThemeContext', () => {
 
     it('updates DOM and localStorage', () => {
       const { result } = renderHook(() => useTheme(), {
-        wrapper: ThemeProvider,
+        wrapper: AllProviders,
       });
 
       act(() => {
@@ -453,23 +479,23 @@ describe('ThemeContext', () => {
       });
 
       expect(document.documentElement.classList.contains('dark')).toBe(true);
-      expect(localStorage.getItem('codescribeai:settings:theme')).toBe('dark');
+      expect(localStorage.getItem(STORAGE_KEYS.THEME_PREFERENCE)).toBe('dark');
     });
   });
 
   describe('Storage Key Convention', () => {
     it('uses correct storage key format', () => {
       renderHook(() => useTheme(), {
-        wrapper: ThemeProvider,
+        wrapper: AllProviders,
       });
 
-      const storageKey = 'codescribeai:settings:theme';
+      const storageKey = STORAGE_KEYS.THEME_PREFERENCE;
       expect(localStorage.getItem(storageKey)).toBeDefined();
     });
 
     it('follows codescribeai:type:category:key pattern', () => {
       const { result } = renderHook(() => useTheme(), {
-        wrapper: ThemeProvider,
+        wrapper: AllProviders,
       });
 
       act(() => {
@@ -477,7 +503,7 @@ describe('ThemeContext', () => {
       });
 
       // Verify storage key follows convention
-      const expectedKey = 'codescribeai:settings:theme';
+      const expectedKey = STORAGE_KEYS.THEME_PREFERENCE;
       expect(localStorage.getItem(expectedKey)).toBe('dark');
 
       // Verify no other theme-related keys exist

@@ -213,10 +213,11 @@ describe('CodePanel', () => {
   });
 
   describe('Styling and Layout', () => {
-    it('has correct border and shadow classes', () => {
+    it('has correct border classes', () => {
       const { container } = render(<CodePanel {...defaultProps} />);
-      const panel = container.querySelector('.border.border-slate-200.rounded-xl.shadow-sm');
+      const panel = container.querySelector('[data-testid="code-panel"]');
       expect(panel).toBeInTheDocument();
+      expect(panel).toHaveClass('border', 'border-slate-200');
     });
 
     it('header has correct background color', () => {
