@@ -29,7 +29,9 @@ import { v4 as uuidv4 } from 'uuid';
  *   fileSize: number,         // Size in bytes
  *   isGenerating: boolean,    // Is currently generating
  *   error: string | null,     // Generation error if any
- *   documentId: string | null // UUID from database (null if not saved)
+ *   documentId: string | null,// UUID from database (null if not saved)
+ *   dateAdded: Date,          // When file was added to workspace
+ *   dateModified: Date        // When file content was last modified
  * }
  */
 
@@ -45,6 +47,7 @@ export function useMultiFileState() {
    */
   const addFile = useCallback((fileData) => {
     const fileId = uuidv4();
+    const now = new Date();
     const newFile = {
       id: fileId,
       filename: fileData.filename || 'untitled.js',
@@ -58,6 +61,8 @@ export function useMultiFileState() {
       isGenerating: false,
       error: null,
       documentId: null,
+      dateAdded: now,
+      dateModified: now,
       ...fileData
     };
 
@@ -75,6 +80,7 @@ export function useMultiFileState() {
    * @returns {Array<string>} - Array of file IDs
    */
   const addFiles = useCallback((filesData) => {
+    const now = new Date();
     const newFiles = filesData.map(fileData => {
       const fileId = uuidv4();
       return {
@@ -90,6 +96,8 @@ export function useMultiFileState() {
         isGenerating: false,
         error: null,
         documentId: null,
+        dateAdded: now,
+        dateModified: now,
         ...fileData
       };
     });
@@ -134,11 +142,18 @@ export function useMultiFileState() {
    * @param {Object} updates - Properties to update
    */
   const updateFile = useCallback((fileId, updates) => {
-    setFiles(prev => prev.map(file =>
-      file.id === fileId
-        ? { ...file, ...updates }
-        : file
-    ));
+    setFiles(prev => prev.map(file => {
+      if (file.id !== fileId) return file;
+
+      // If content is being updated, update dateModified
+      const shouldUpdateTimestamp = updates.content !== undefined && updates.content !== file.content;
+
+      return {
+        ...file,
+        ...updates,
+        ...(shouldUpdateTimestamp ? { dateModified: new Date() } : {})
+      };
+    }));
   }, []);
 
   /**

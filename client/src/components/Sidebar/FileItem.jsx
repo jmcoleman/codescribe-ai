@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from 'react';
 import { FileText, CheckCircle, Loader2, AlertCircle, Edit, Star } from 'lucide-react';
 import { FileActions } from './FileActions';
 
@@ -19,8 +20,9 @@ import { FileActions } from './FileActions';
  * @param {boolean} props.isActive - Is this the active file?
  * @param {Function} props.onSelect - Called when file is clicked
  * @param {Function} props.onRemove - Called when remove action is clicked
+ * @param {Function} props.onViewDetails - Called when view details action is clicked
  */
-export function FileItem({ file, isActive, isSelected, onSelect, onToggleSelection, onRemove, onGenerate }) {
+export function FileItem({ file, isActive, isSelected, onSelect, onToggleSelection, onRemove, onGenerate, onViewDetails }) {
   const {
     filename,
     language,
@@ -30,14 +32,50 @@ export function FileItem({ file, isActive, isSelected, onSelect, onToggleSelecti
     qualityScore,
     isGenerating,
     error,
-    documentId
+    documentId,
+    docType
   } = file;
+
+  const [showTooltip, setShowTooltip] = useState(false);
+  const [isTruncated, setIsTruncated] = useState(false);
+  const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
+  const metadataRef = useRef(null);
 
   // Determine file state
   const hasDocumentation = Boolean(documentation);
   const hasError = Boolean(error);
   const isSavedToDb = Boolean(documentId);
   const hasContent = Boolean(content && content.length > 0);
+
+  // Quality grade badge (defined early for use in useEffect)
+  const qualityGrade = qualityScore?.grade || null;
+
+  // Check if metadata content is truncated
+  useEffect(() => {
+    const checkTruncation = () => {
+      if (metadataRef.current) {
+        const element = metadataRef.current;
+        // Check if parent or any child element is truncated
+        let truncated = element.scrollWidth > element.clientWidth;
+
+        // Also check if any child with 'truncate' class is truncated
+        if (!truncated) {
+          const truncateElements = element.querySelectorAll('.truncate');
+          truncated = Array.from(truncateElements).some(el => el.scrollWidth > el.clientWidth);
+        }
+
+        setIsTruncated(truncated);
+      }
+    };
+
+    // Use RAF to avoid flashing during render
+    const rafId = requestAnimationFrame(checkTruncation);
+    window.addEventListener('resize', checkTruncation);
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener('resize', checkTruncation);
+    };
+  }, [docType, language, fileSize, qualityGrade]);
 
   // Status icon
   const StatusIcon = () => {
@@ -52,9 +90,6 @@ export function FileItem({ file, isActive, isSelected, onSelect, onToggleSelecti
     }
     return <FileText className="w-4 h-4 text-slate-400 dark:text-slate-500" />;
   };
-
-  // Quality grade badge
-  const qualityGrade = qualityScore?.grade || null;
   const qualityColor = {
     'A': 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300',
     'B': 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
@@ -120,20 +155,15 @@ export function FileItem({ file, isActive, isSelected, onSelect, onToggleSelecti
           />
         </div>
 
-        {/* Status icon */}
-        <div className="flex-shrink-0 mt-0.5">
-          <StatusIcon />
-        </div>
-
         {/* File details */}
         <div className="flex-1 min-w-0">
           {/* Filename */}
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">
+            <span className="text-sm text-slate-900 dark:text-slate-100 truncate">
               {filename}
             </span>
             {isActive && (
-              <Star className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 flex-shrink-0" fill="currentColor" />
+              <Star className="w-3 h-3 text-purple-600 dark:text-purple-400 flex-shrink-0" fill="currentColor" />
             )}
             {!hasContent && (
               <span
@@ -146,17 +176,51 @@ export function FileItem({ file, isActive, isSelected, onSelect, onToggleSelecti
           </div>
 
           {/* Metadata */}
-          <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-            <span>{formatSize(fileSize)}</span>
-            <span>•</span>
-            <span className="truncate">{language || 'Unknown'}</span>
-            {qualityGrade && (
-              <>
-                <span>•</span>
-                <span className={`px-1.5 py-0.5 rounded font-medium ${qualityColor}`}>
-                  {qualityGrade} {qualityScore.score}
-                </span>
-              </>
+          <div className="relative">
+            <div
+              ref={metadataRef}
+              className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 min-w-0 overflow-hidden"
+              onMouseEnter={(e) => {
+                if (isTruncated && metadataRef.current) {
+                  const rect = metadataRef.current.getBoundingClientRect();
+                  setTooltipPosition({ top: rect.bottom + 4, left: rect.left });
+                  setShowTooltip(true);
+                }
+              }}
+              onMouseLeave={() => setShowTooltip(false)}
+            >
+              {docType && (
+                <>
+                  <span className="font-semibold text-purple-600 dark:text-purple-400 flex-shrink-0">
+                    {docType}
+                  </span>
+                  <span className="flex-shrink-0">•</span>
+                </>
+              )}
+              {qualityGrade && (
+                <>
+                  <span className={`px-1.5 py-0.5 rounded font-medium flex-shrink-0 ${qualityColor}`}>
+                    {qualityGrade} {qualityScore.score}
+                  </span>
+                  <span className="flex-shrink-0">•</span>
+                </>
+              )}
+              <span className="truncate">{language || 'Unknown'}</span>
+              <span className="flex-shrink-0">•</span>
+              <span className="flex-shrink-0">{formatSize(fileSize)}</span>
+            </div>
+
+            {/* Custom tooltip - using fixed positioning to escape sidebar boundaries */}
+            {showTooltip && (
+              <div
+                className="fixed px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs rounded shadow-lg border border-slate-200 dark:border-slate-700 whitespace-nowrap z-[9999]"
+                style={{
+                  top: `${tooltipPosition.top}px`,
+                  left: `${tooltipPosition.left}px`
+                }}
+              >
+                {docType || 'No doc type'} • {qualityGrade ? `${qualityGrade} ${qualityScore.score}` : 'Not generated'} • {language || 'Unknown'} • {formatSize(fileSize)}
+              </div>
             )}
           </div>
 
@@ -185,6 +249,7 @@ export function FileItem({ file, isActive, isSelected, onSelect, onToggleSelecti
             file={file}
             onRemove={onRemove}
             onGenerate={onGenerate}
+            onViewDetails={onViewDetails}
           />
         </div>
       </div>

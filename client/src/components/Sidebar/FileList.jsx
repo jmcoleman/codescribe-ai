@@ -1,5 +1,9 @@
+import { useState, useEffect } from 'react';
 import { FileItem } from './FileItem';
-import { FileCode, PanelLeftClose, Plus } from 'lucide-react';
+import { FileDetailsPanel } from './FileDetailsPanel';
+import { FileCode, PanelLeftClose, Plus, Github, Upload } from 'lucide-react';
+import { Select } from '../Select';
+import { Button } from '../Button';
 
 /**
  * FileList Component
@@ -13,6 +17,9 @@ import { FileCode, PanelLeftClose, Plus } from 'lucide-react';
  * @param {Array} props.selectedFileIds - Array of selected file IDs
  * @param {number} props.selectedCount - Number of selected files
  * @param {boolean} props.isMobile - Mobile mode (hides toggle button)
+ * @param {string} props.docType - Current documentation type
+ * @param {Function} props.onDocTypeChange - Called when doc type changes
+ * @param {Function} props.onGithubImport - Called when GitHub import is clicked
  * @param {Function} props.onSelectFile - Called when user clicks a file
  * @param {Function} props.onToggleFileSelection - Called when checkbox is toggled
  * @param {Function} props.onSelectAllFiles - Called when Select All is clicked
@@ -30,6 +37,9 @@ export function FileList({
   selectedFileIds = [],
   selectedCount = 0,
   isMobile = false,
+  docType,
+  onDocTypeChange,
+  onGithubImport,
   onSelectFile,
   onToggleFileSelection,
   onSelectAllFiles,
@@ -39,23 +49,101 @@ export function FileList({
   onGenerateFile,
   onGenerateSelected,
   onDeleteSelected,
-  onToggleSidebar
+  onToggleSidebar,
+  hasCodeInEditor = false,
+  onFilesDrop
 }) {
+  const [isDragging, setIsDragging] = useState(false);
+  const [detailsFileId, setDetailsFileId] = useState(null);
+
   const generatedCount = files.filter(f => f.documentation).length;
   const canGenerateAll = files.some(f => !f.documentation && !f.isGenerating);
   const canClearAll = files.length > 0;
+
+  // Keyboard shortcut handler for Cmd/Ctrl+I (View Details)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Cmd/Ctrl+I - Open details for active file
+      if ((e.metaKey || e.ctrlKey) && e.key === 'i') {
+        e.preventDefault();
+        if (activeFileId) {
+          setDetailsFileId(activeFileId);
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [activeFileId]);
+
+  // Drag and drop handlers for multi-file upload
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.currentTarget === e.target) {
+      setIsDragging(false);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    if (!onFilesDrop) return;
+
+    const droppedFiles = e.dataTransfer?.files;
+    if (droppedFiles && droppedFiles.length > 0) {
+      onFilesDrop(Array.from(droppedFiles));
+    }
+  };
 
   // Count only files with content in selection
   const filesWithContent = files.filter(f => f.content && f.content.length > 0);
   const selectedFilesWithContent = filesWithContent.filter(f => selectedFileIds.includes(f.id));
   const selectedCountWithContent = selectedFilesWithContent.length;
 
+  // Doc type options
+  const docTypes = [
+    { value: 'README', label: 'README.md' },
+    { value: 'JSDOC', label: 'JSDoc Comments' },
+    { value: 'API', label: 'API Documentation' },
+    { value: 'ARCHITECTURE', label: 'Architecture Docs' },
+  ];
+
   return (
-    <div className="flex flex-col h-full">
+    <div
+      className="flex flex-col h-full @container relative"
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
+      {/* Drag and Drop Overlay */}
+      {isDragging && (
+        <div className="absolute inset-0 bg-purple-500/10 dark:bg-purple-400/20 backdrop-blur-sm border-2 border-dashed border-purple-500 dark:border-purple-400 rounded-xl flex items-center justify-center z-50">
+          <div className="flex flex-col items-center gap-3 text-purple-600 dark:text-purple-400">
+            <Upload className="w-12 h-12" aria-hidden="true" />
+            <p className="text-lg font-semibold">Drop files to upload</p>
+            <p className="text-sm text-purple-500 dark:text-purple-300">Release to add to your list</p>
+          </div>
+        </div>
+      )}
       {/* Unified Header - Title, Selection, and Actions (desktop only, mobile has its own header) */}
       {!isMobile && (
         <div className="border-b border-slate-200 dark:border-slate-700 px-3 py-2.5 bg-white dark:bg-slate-900">
-          {/* Top row: Toggle, Title, Add button */}
+          {/* Top row: Toggle, Title, GitHub Import, Add button */}
           <div className="flex items-center gap-2 mb-2">
             <button
               type="button"
@@ -71,6 +159,15 @@ export function FileList({
             </h2>
             <button
               type="button"
+              onClick={onGithubImport}
+              className="icon-btn interactive-scale-sm focus-ring-light flex-shrink-0"
+              aria-label="Import from GitHub"
+              title="Import from GitHub"
+            >
+              <Github className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+            </button>
+            <button
+              type="button"
               onClick={onAddFile}
               className="icon-btn interactive-scale-sm focus-ring-light flex-shrink-0"
               aria-label="Upload more files"
@@ -80,9 +177,25 @@ export function FileList({
             </button>
           </div>
 
-        {/* Selection controls and info - only show when files exist */}
-        {files.length > 0 && (
-          <>
+          {/* Second row: Doc Type selector */}
+          <div className="flex items-center gap-2 mb-2">
+            <label htmlFor="sidebar-doc-type-select" className="text-xs font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap flex-shrink-0">
+              Doc Type:
+            </label>
+            <div className="flex-1 min-w-0">
+              <Select
+                id="sidebar-doc-type-select"
+                options={docTypes}
+                value={docType}
+                onChange={onDocTypeChange}
+                ariaLabel="Select documentation type"
+                size="small"
+              />
+            </div>
+          </div>
+
+          {/* Selection controls and info - only show when files exist */}
+          {files.length > 0 && (
             <div className="flex items-center justify-between text-xs mb-2">
               <span className="text-slate-600 dark:text-slate-400">
                 {selectedCount > 0 ? (
@@ -101,28 +214,39 @@ export function FileList({
                 {selectedCount > 0 ? 'Deselect All' : 'Select All'}
               </button>
             </div>
+          )}
 
-            {/* Action buttons - horizontal layout */}
-            <div className="flex gap-1.5">
-              <button
-                type="button"
-                onClick={onGenerateSelected}
-                disabled={selectedCountWithContent === 0}
-                className="flex-1 px-2.5 py-1.5 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-700 dark:hover:bg-purple-800 disabled:bg-slate-300 dark:disabled:bg-slate-700 disabled:text-slate-500 dark:disabled:text-slate-500 text-white rounded text-xs font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-slate-900 transition-colors duration-150 disabled:cursor-not-allowed"
-              >
-                Generate{selectedCountWithContent > 0 ? ` (${selectedCountWithContent})` : ''}
-              </button>
+          {/* Action buttons - ALWAYS visible (for code panel + selected files) */}
+          <div className="flex gap-1">
+            <button
+              type="button"
+              onClick={onGenerateSelected}
+              disabled={selectedCountWithContent === 0 && !hasCodeInEditor}
+              className="flex-1 min-w-0 px-1.5 @[240px]:px-2 @[280px]:px-2.5 py-1.5 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-700 dark:hover:bg-purple-800 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded text-xs font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-slate-900 transition-colors duration-150 truncate"
+              title={selectedCountWithContent > 0 ? `Generate documentation for ${selectedCountWithContent} selected file${selectedCountWithContent !== 1 ? 's' : ''}` : 'Generate documentation for code in editor'}
+            >
+              <span className="hidden @[280px]:inline">Generate</span>
+              <span className="@[280px]:hidden">Gen</span>
+              {selectedCountWithContent > 0 && (
+                <span className="hidden @[320px]:inline"> ({selectedCountWithContent})</span>
+              )}
+            </button>
+            {files.length > 0 && (
               <button
                 type="button"
                 onClick={onDeleteSelected}
                 disabled={selectedCount === 0}
-                className="flex-1 px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-100 rounded text-xs font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:focus-visible:ring-slate-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-slate-900 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 min-w-0 px-1.5 @[240px]:px-2 @[280px]:px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-100 rounded text-xs font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:focus-visible:ring-slate-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-slate-900 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed truncate"
+                title={`Delete ${selectedCount} selected file${selectedCount !== 1 ? 's' : ''}`}
               >
-                Delete{selectedCount > 0 ? ` (${selectedCount})` : ''}
+                <span className="hidden @[280px]:inline">Delete</span>
+                <span className="@[280px]:hidden">Del</span>
+                {selectedCount > 0 && (
+                  <span className="hidden @[320px]:inline"> ({selectedCount})</span>
+                )}
               </button>
-            </div>
-          </>
-        )}
+            )}
+          </div>
         </div>
       )}
 
@@ -148,13 +272,13 @@ export function FileList({
             </button>
           </div>
 
-          {/* Action buttons */}
+          {/* Action buttons - mobile always shows full text */}
           <div className="flex gap-1.5">
             <button
               type="button"
               onClick={onGenerateSelected}
-              disabled={selectedCountWithContent === 0}
-              className="flex-1 px-2.5 py-1.5 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-700 dark:hover:bg-purple-800 disabled:bg-slate-300 dark:disabled:bg-slate-700 disabled:text-slate-500 dark:disabled:text-slate-500 text-white rounded text-xs font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-slate-900 transition-colors duration-150 disabled:cursor-not-allowed"
+              disabled={selectedCountWithContent === 0 && !hasCodeInEditor}
+              className="flex-1 px-2.5 py-1.5 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-700 dark:hover:bg-purple-800 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded text-xs font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-slate-900 transition-colors duration-150"
             >
               Generate{selectedCountWithContent > 0 ? ` (${selectedCountWithContent})` : ''}
             </button>
@@ -203,10 +327,20 @@ export function FileList({
               onToggleSelection={() => onToggleFileSelection(file.id)}
               onRemove={() => onRemoveFile(file.id)}
               onGenerate={() => onGenerateFile(file.id)}
+              onViewDetails={() => setDetailsFileId(file.id)}
             />
           ))
         )}
       </div>
+
+      {/* File Details Panel */}
+      {detailsFileId && (
+        <FileDetailsPanel
+          file={files.find(f => f.id === detailsFileId)}
+          isOpen={true}
+          onClose={() => setDetailsFileId(null)}
+        />
+      )}
     </div>
   );
 }

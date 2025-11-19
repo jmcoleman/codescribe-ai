@@ -1,14 +1,14 @@
 import { useState, useRef, useEffect } from 'react';
-import { MoreVertical, Trash2, Download, History, RotateCw, Sparkles } from 'lucide-react';
+import { MoreVertical, Trash2, Download, History, RotateCw, Sparkles, Info } from 'lucide-react';
 
 /**
  * FileActions Component
  *
  * Dropdown menu with per-file actions.
- * NEW: Adds "View in History" action if file has documentId (saved to database).
  *
  * Actions:
- * - Generate Docs (NEW) - Generate documentation for this file (if not generated)
+ * - View Details (NEW) - View detailed file metadata (keyboard shortcut: Cmd/Ctrl+I)
+ * - Generate Docs - Generate documentation for this file (if not generated)
  * - View in History - View document in usage dashboard (if documentId exists)
  * - Regenerate - Re-generate documentation
  * - Download Docs - Download .md file
@@ -18,8 +18,9 @@ import { MoreVertical, Trash2, Download, History, RotateCw, Sparkles } from 'luc
  * @param {Object} props.file - File object
  * @param {Function} props.onRemove - Called when remove is clicked
  * @param {Function} props.onGenerate - Called when generate is clicked
+ * @param {Function} props.onViewDetails - Called when view details is clicked
  */
-export function FileActions({ file, onRemove, onGenerate }) {
+export function FileActions({ file, onRemove, onGenerate, onViewDetails }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -53,6 +54,13 @@ export function FileActions({ file, onRemove, onGenerate }) {
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
   }, [isOpen]);
+
+  const handleViewDetails = () => {
+    if (onViewDetails) {
+      onViewDetails();
+    }
+    setIsOpen(false);
+  };
 
   const handleGenerate = () => {
     if (onGenerate) {
@@ -122,6 +130,23 @@ export function FileActions({ file, onRemove, onGenerate }) {
           role="menu"
           onClick={(e) => e.stopPropagation()}
         >
+          {/* View Details - always available */}
+          <button
+            type="button"
+            onClick={handleViewDetails}
+            className="w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2 justify-between"
+            role="menuitem"
+          >
+            <span className="flex items-center gap-2">
+              <Info className="w-4 h-4" />
+              View Details
+            </span>
+            <span className="text-xs text-slate-500 dark:text-slate-400">⌘I</span>
+          </button>
+
+          {/* Divider */}
+          <div className="border-t border-slate-200 dark:border-slate-700 my-1" />
+
           {/* Generate Docs - only if not yet generated AND has content */}
           {!documentation && hasContent && (
             <button
