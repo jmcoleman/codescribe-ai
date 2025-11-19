@@ -211,7 +211,7 @@ describe('Admin Tier Override API Endpoints', () => {
     });
 
     it('should return active status with override details', async () => {
-      const expiryTime = new Date(Date.now() + 2 * 60 * 60 * 1000);
+      const expiryTime = new Date(Date.now() + 2.1 * 60 * 60 * 1000); // 2.1 hours to avoid edge case
       mockRequest.user = {
         id: 1,
         tier: 'free',
@@ -228,7 +228,7 @@ describe('Admin Tier Override API Endpoints', () => {
       expect(details).not.toBeNull();
       expect(details.tier).toBe('enterprise');
       expect(details.reason).toBe('Testing enterprise features');
-      expect(details.remainingTime.hours).toBe(2);
+      expect(details.remainingTime.hours).toBe(2); // Math.floor(2.1) = 2
     });
 
     it('should calculate remaining time correctly', async () => {
