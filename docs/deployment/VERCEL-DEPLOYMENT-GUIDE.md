@@ -485,6 +485,100 @@ Congratulations! Your CodeScribe AI application is now:
 
 ---
 
+## 🔄 Manual Preview Deployments
+
+**Deployment Strategy:**
+- ✅ **Main branch:** Auto-deploys via GitHub Actions hook (after tests pass)
+- ✅ **PR branches:** Tests run automatically, but NO auto-deploy
+- ✅ **Manual preview:** You trigger when ready to test
+
+**Why manual previews?** This prevents accidental deployments and gives you full control over when to test in a deployed environment.
+
+### Method 1: Vercel CLI (Recommended - Fastest)
+
+```bash
+# From your project directory
+cd /path/to/codescribe-ai
+
+# Make sure you're on the feature branch
+git checkout feature/your-branch-name
+
+# Deploy to preview
+vercel
+
+# Vercel will:
+# 1. Detect your project (codescribe-ai)
+# 2. Build the current branch
+# 3. Give you a preview URL immediately
+```
+
+**Expected Output:**
+```
+🔍  Inspect: https://vercel.com/your-account/codescribe-ai/...
+✅  Preview: https://codescribe-ai-abc123xyz.vercel.app
+```
+
+**First Time Setup:**
+If this is your first time using the Vercel CLI, you'll be prompted to:
+1. Log in to Vercel
+2. Link to existing project → Yes → `codescribe-ai`
+3. Confirm project settings
+
+### Method 2: Vercel Dashboard (More Control)
+
+1. Go to [vercel.com/dashboard](https://vercel.com/dashboard)
+2. Click your **codescribe-ai** project
+3. Go to **"Deployments"** tab
+4. Click **"Deploy"** button (top right corner)
+5. In the deployment dialog:
+   - **Branch:** Select your feature branch (e.g., `feature/multi-file-db`)
+   - Click **"Deploy"**
+6. Wait 2-3 minutes for build to complete
+7. Get your preview URL from the deployment list
+
+### Testing Your Preview
+
+Once deployed, test your preview environment:
+
+**Functional Testing:**
+- [ ] Upload and generate documentation
+- [ ] Test new features
+- [ ] Verify database connections work
+- [ ] Check environment variables are correct
+
+**Integration Testing:**
+- [ ] OAuth login works
+- [ ] Email sending works (password reset, etc.)
+- [ ] Database queries execute correctly
+- [ ] API endpoints respond as expected
+
+**Performance Testing:**
+- [ ] Page load times acceptable
+- [ ] No console errors
+- [ ] SSE streaming works
+- [ ] File uploads process correctly
+
+### Sharing Preview URLs
+
+Preview URLs are public and can be shared with:
+- Team members for review
+- Stakeholders for feedback
+- Testing on different devices
+
+**Preview URL Format:**
+```
+https://codescribe-ai-[unique-id].vercel.app
+```
+
+### Cleaning Up Previews
+
+Vercel automatically manages preview deployments:
+- Old previews are kept for 30 days
+- You can manually delete from Vercel dashboard
+- No action needed unless you want to clean up early
+
+---
+
 ## 🆘 Troubleshooting
 
 ### Common Issues
