@@ -38,19 +38,19 @@ describe('tierGate Middleware', () => {
   });
 
   describe('requireFeature', () => {
-    it('should allow access if feature is available in user tier', () => {
+    it('should allow access if feature is available in user tier', async () => {
       req.user = { tier: 'pro' };
       tiers.hasFeature.mockReturnValue(true);
 
       const middleware = requireFeature('batchProcessing');
-      middleware(req, res, next);
+      await middleware(req, res, next);
 
       expect(tiers.hasFeature).toHaveBeenCalledWith('pro', 'batchProcessing');
       expect(next).toHaveBeenCalled();
       expect(res.status).not.toHaveBeenCalled();
     });
 
-    it('should deny access if feature is not available in user tier', () => {
+    it('should deny access if feature is not available in user tier', async () => {
       req.user = { tier: 'free' };
       tiers.hasFeature.mockReturnValue(false);
       tiers.getUpgradePath.mockReturnValue({
@@ -60,7 +60,7 @@ describe('tierGate Middleware', () => {
       });
 
       const middleware = requireFeature('batchProcessing');
-      middleware(req, res, next);
+      await middleware(req, res, next);
 
       expect(res.status).toHaveBeenCalledWith(403);
       expect(res.json).toHaveBeenCalledWith({
@@ -68,6 +68,7 @@ describe('tierGate Middleware', () => {
         message: 'Feature "batchProcessing" is not available in your current plan.',
         feature: 'batchProcessing',
         currentTier: 'free',
+        effectiveTier: 'free',
         availableIn: ['pro', 'team'],
         recommendedTier: 'pro',
         pricing: { price: 29, period: 'month' },
@@ -76,11 +77,11 @@ describe('tierGate Middleware', () => {
       expect(next).not.toHaveBeenCalled();
     });
 
-    it('should default to free tier if user not authenticated', () => {
+    it('should default to free tier if user not authenticated', async () => {
       tiers.hasFeature.mockReturnValue(true);
 
       const middleware = requireFeature('basicDocs');
-      middleware(req, res, next);
+      await middleware(req, res, next);
 
       expect(tiers.hasFeature).toHaveBeenCalledWith('free', 'basicDocs');
       expect(next).toHaveBeenCalled();

@@ -24,6 +24,7 @@ jest.mock('../../middleware/auth.js', () => ({
 jest.mock('../../middleware/tierGate.js', () => ({
   checkUsage: () => (req, res, next) => next(),
   incrementUsage: jest.fn(),
+  requireFeature: () => (req, res, next) => next(),
 }));
 jest.mock('../../middleware/rateLimiter.js', () => ({
   apiLimiter: (req, res, next) => next(),
