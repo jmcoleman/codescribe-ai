@@ -214,6 +214,7 @@ describe('Auth Middleware', () => {
         success: false,
         error: 'This feature requires pro tier or higher',
         currentTier: 'free',
+        effectiveTier: 'free',
         requiredTier: 'pro'
       });
       expect(next).not.toHaveBeenCalled();
