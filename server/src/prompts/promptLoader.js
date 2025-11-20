@@ -3,8 +3,12 @@ import { join, resolve } from 'path';
 import { PROMPT_VERSION } from './version.js';
 
 // Get prompts directory path
-// Use relative path from project root to work in both Node.js and Jest
-const promptsDir = resolve(process.cwd(), 'src/prompts');
+// Vercel uses /var/task as cwd, local/test uses project root
+// Check if we're in Vercel serverless environment
+const isVercel = process.cwd().includes('/var/task');
+const promptsDir = isVercel
+  ? resolve(process.cwd(), 'server/src/prompts')  // Vercel: /var/task/server/src/prompts
+  : resolve(process.cwd(), 'src/prompts');        // Local/Test: <project>/src/prompts
 
 /**
  * Load prompt from file
