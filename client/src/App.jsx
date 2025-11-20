@@ -511,6 +511,149 @@ function App() {
     }
   };
 
+  /**
+   * Generate documentation for a single file (non-streaming)
+   * @param {Object} file - File object from multiFileState
+   * @returns {Promise<Object>} - Generated documentation and quality score
+   */
+  const generateSingleFile = async (file) => {
+    const token = await getToken();
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${API_URL}/api/generate`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        code: file.content,
+        docType: docType,
+        language: file.language,
+        isDefaultCode: false
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `Generation failed with status ${response.status}`);
+    }
+
+    return response.json();
+  };
+
+  /**
+   * Handle bulk generation for selected files
+   */
+  const handleGenerateSelected = async () => {
+    const filesWithContent = multiFileState.files.filter(f => f.content && f.content.length > 0);
+    const selectedFilesWithContent = filesWithContent.filter(f => multiFileState.selectedFileIds.includes(f.id));
+
+    if (selectedFilesWithContent.length === 0) {
+      toastCompact.error('No files with content selected');
+      return;
+    }
+
+    // Check usage quota for bulk generation
+    if (!canGenerate()) {
+      setShowUsageLimitModal(true);
+      return;
+    }
+
+    const totalFiles = selectedFilesWithContent.length;
+    let successCount = 0;
+    let failureCount = 0;
+    const errors = [];
+
+    // Show initial progress toast
+    toastCompact.loading(`Generating documentation for ${totalFiles} file${totalFiles > 1 ? 's' : ''}...`, {
+      id: 'bulk-generation'
+    });
+
+    // Process files sequentially
+    for (let i = 0; i < selectedFilesWithContent.length; i++) {
+      const file = selectedFilesWithContent[i];
+      const fileNumber = i + 1;
+
+      try {
+        // Update file state to show it's generating
+        multiFileState.updateFile(file.id, {
+          isGenerating: true,
+          error: null
+        });
+
+        // Update progress toast
+        toastCompact.loading(
+          `Generating ${fileNumber}/${totalFiles}: ${file.filename}`,
+          { id: 'bulk-generation' }
+        );
+
+        // Generate documentation
+        const result = await generateSingleFile(file);
+
+        // Update file with generated documentation
+        multiFileState.updateFile(file.id, {
+          documentation: result.documentation,
+          qualityScore: result.qualityScore,
+          isGenerating: false,
+          error: null,
+          documentId: null // Will be set when saved to DB
+        });
+
+        successCount++;
+
+        // Update usage tracking
+        if (onUsageUpdate) {
+          onUsageUpdate();
+        }
+
+      } catch (error) {
+        console.error(`[App] Failed to generate docs for ${file.filename}:`, error);
+
+        // Update file with error state
+        multiFileState.updateFile(file.id, {
+          isGenerating: false,
+          error: error.message
+        });
+
+        failureCount++;
+        errors.push({ filename: file.filename, error: error.message });
+      }
+    }
+
+    // Clear selection after generation
+    multiFileState.deselectAllFiles();
+
+    // Show final result toast
+    if (failureCount === 0) {
+      toastCompact.success(
+        `Successfully generated documentation for ${successCount} file${successCount > 1 ? 's' : ''}`,
+        { id: 'bulk-generation' }
+      );
+    } else if (successCount > 0) {
+      toastCompact.warning(
+        `Generated ${successCount} of ${totalFiles} files. ${failureCount} failed.`,
+        { id: 'bulk-generation' }
+      );
+      // Show detailed errors
+      errors.forEach(({ filename, error }) => {
+        toastCompact.error(`${filename}: ${error}`, { duration: 5000 });
+      });
+    } else {
+      toastCompact.error(
+        `Failed to generate documentation for all ${totalFiles} files`,
+        { id: 'bulk-generation' }
+      );
+      // Show first error as example
+      if (errors.length > 0) {
+        toastCompact.error(errors[0].error, { duration: 5000 });
+      }
+    }
+  };
+
   const handleUpload = () => {
     // Clear any previous upload errors
     setUploadError(null);
@@ -1184,8 +1327,8 @@ function App() {
                   const selectedFilesWithContent = filesWithContent.filter(f => multiFileState.selectedFileIds.includes(f.id));
 
                   if (selectedFilesWithContent.length > 0) {
-                    // TODO: Implement bulk generation for selected files
-                    console.log('[App] Generate selected files requested:', multiFileState.selectedFileIds);
+                    // Generate documentation for all selected files
+                    handleGenerateSelected();
                   } else {
                     // No files selected, generate from code editor
                     handleGenerate();
