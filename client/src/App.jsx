@@ -304,6 +304,23 @@ function App() {
     setStorageItem(STORAGE_KEYS.EDITOR_DOC_TYPE, docType);
   }, [docType]);
 
+  // Keyboard shortcut: Cmd+B / Ctrl+B to toggle sidebar collapse/expand
+  useEffect(() => {
+    // Only enable keyboard shortcut when multi-file mode is active (Pro+ users)
+    if (!canUseBatchProcessing) return;
+
+    const handleKeyDown = (e) => {
+      // Check for Cmd+B (Mac) or Ctrl+B (Windows/Linux)
+      if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
+        e.preventDefault(); // Prevent browser bookmark dialog
+        handleToggleSidebarCollapse();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [canUseBatchProcessing, handleToggleSidebarCollapse]);
+
   // Sync active file to CodePanel when selection changes
   useEffect(() => {
     const activeFile = multiFileState.activeFile;
@@ -1512,8 +1529,9 @@ function App() {
                 hasCodeInEditor={code.trim().length > 0}
                 onFilesDrop={handleMultiFilesDrop}
                 onGenerateFile={(fileId) => {
-                  // TODO: Implement single file generation
-                  console.log('[App] Generate file requested:', fileId);
+                  // Single file generation not implemented - users should use ControlBar
+                  // Multi-file sidebar is for batch operations only
+                  console.log('[App] Single file generation not supported from sidebar:', fileId);
                 }}
                 onGenerateSelected={() => {
                   // Check if any files are selected

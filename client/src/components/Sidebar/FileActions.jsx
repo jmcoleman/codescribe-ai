@@ -6,12 +6,12 @@ import { MoreVertical, Trash2, Download, History, RotateCw, Sparkles, Info } fro
  *
  * Dropdown menu with per-file actions.
  *
- * Actions:
- * - View Details (NEW) - View detailed file metadata (keyboard shortcut: Cmd/Ctrl+I)
- * - Generate Docs - Generate documentation for this file (if not generated)
- * - View in History - View document in usage dashboard (if documentId exists)
- * - Regenerate - Re-generate documentation
- * - Download Docs - Download .md file
+ * Actions (in order):
+ * - Generate - Generate documentation for this file (if not generated)
+ * - Regenerate - Re-generate documentation (if already generated)
+ * - Download Docs - Download .md file (if docs exist)
+ * - View Details - View detailed file metadata (keyboard shortcut: Cmd/Ctrl+I)
+ * - View History - View document in usage dashboard (if documentId exists)
  * - Delete - Remove file from list
  *
  * @param {Object} props
@@ -130,24 +130,7 @@ export function FileActions({ file, onRemove, onGenerate, onViewDetails }) {
           role="menu"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* View Details - always available */}
-          <button
-            type="button"
-            onClick={handleViewDetails}
-            className="w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2 justify-between transition-colors duration-150"
-            role="menuitem"
-          >
-            <span className="flex items-center gap-2">
-              <Info className="w-4 h-4" />
-              View Details
-            </span>
-            <span className="text-xs text-slate-500 dark:text-slate-400">⌘I</span>
-          </button>
-
-          {/* Divider */}
-          <div className="border-t border-slate-200 dark:border-slate-700 my-1" />
-
-          {/* Generate Docs - only if not yet generated AND has content */}
+          {/* Generate - only if not yet generated AND has content */}
           {!documentation && hasContent && (
             <button
               type="button"
@@ -156,20 +139,7 @@ export function FileActions({ file, onRemove, onGenerate, onViewDetails }) {
               role="menuitem"
             >
               <Sparkles className="w-4 h-4" />
-              Generate Docs
-            </button>
-          )}
-
-          {/* View in History - only if documentId exists */}
-          {documentId && (
-            <button
-              type="button"
-              onClick={handleViewHistory}
-              className="w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2 transition-colors duration-150"
-              role="menuitem"
-            >
-              <History className="w-4 h-4" />
-              View in History
+              Generate
             </button>
           )}
 
@@ -199,10 +169,35 @@ export function FileActions({ file, onRemove, onGenerate, onViewDetails }) {
             </button>
           )}
 
-          {/* Divider */}
-          {(documentId || documentation) && (
-            <div className="border-t border-slate-200 dark:border-slate-700 my-1" />
+          {/* View Details - always available */}
+          <button
+            type="button"
+            onClick={handleViewDetails}
+            className="w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2 justify-between transition-colors duration-150"
+            role="menuitem"
+          >
+            <span className="flex items-center gap-2">
+              <Info className="w-4 h-4" />
+              View Details
+            </span>
+            <span className="text-xs text-slate-500 dark:text-slate-400">⌘I</span>
+          </button>
+
+          {/* View History - only if documentId exists */}
+          {documentId && (
+            <button
+              type="button"
+              onClick={handleViewHistory}
+              className="w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2 transition-colors duration-150"
+              role="menuitem"
+            >
+              <History className="w-4 h-4" />
+              View History
+            </button>
           )}
+
+          {/* Divider before destructive action */}
+          <div className="border-t border-slate-200 dark:border-slate-700 my-1" />
 
           {/* Delete */}
           <button
