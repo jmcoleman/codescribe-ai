@@ -532,9 +532,40 @@ If this is your first time using the Vercel CLI, you'll be prompted to:
 4. Click **"Deploy"** button (top right corner)
 5. In the deployment dialog:
    - **Branch:** Select your feature branch (e.g., `feature/multi-file-db`)
+   - **Production:** Leave UNCHECKED (ensures preview deployment)
    - Click **"Deploy"**
 6. Wait 2-3 minutes for build to complete
 7. Get your preview URL from the deployment list
+
+### Method 3: GitHub Pull Request (Automatic)
+
+**Best for:** Team collaboration and code review
+
+1. **Create or open a Pull Request:**
+   - Go to your GitHub repository
+   - Click **"Pull requests"** → **"New pull request"**
+   - Base: `main`, Compare: your feature branch
+   - Click **"Create pull request"**
+
+2. **Vercel automatically deploys:**
+   - Vercel bot will comment on the PR with preview URL
+   - Look for the "View deployment" link in PR checks
+   - Preview deploys automatically on every push to the PR branch
+
+3. **View the preview:**
+   - Click the preview URL in Vercel's PR comment
+   - Or go to "View deployment" in the PR checks section
+
+**Benefits:**
+- Automatic preview on every push to PR
+- Easy sharing with reviewers
+- Preview URL stays updated as you push changes
+- No manual CLI or dashboard interaction needed
+
+**Note:** If Vercel isn't commenting on PRs, check:
+- Vercel GitHub integration is installed (vercel.com/account/integrations)
+- Repository has correct permissions
+- PR is from a branch in the same repo (not a fork)
 
 ### Testing Your Preview
 
