@@ -674,6 +674,8 @@ router.post('/github/parse-url', apiLimiter, (req, res) => {
   try {
     const { url } = req.body;
 
+    console.log('[GitHub] Parse URL request:', { url, type: typeof url });
+
     if (!url || typeof url !== 'string') {
       return res.status(400).json({
         error: 'Invalid request',
@@ -684,16 +686,20 @@ router.post('/github/parse-url', apiLimiter, (req, res) => {
     const parsed = githubService.parseGitHubUrl(url);
 
     if (!parsed) {
+      console.log('[GitHub] Parse failed for URL:', url);
       return res.status(400).json({
         error: 'Invalid GitHub URL',
-        message: 'Please provide a valid GitHub URL or owner/repo format',
+        message: `Could not parse URL: "${url}". Please provide a valid GitHub URL or owner/repo format`,
         examples: [
           'github.com/facebook/react/blob/main/README.md',
           'facebook/react',
           'https://github.com/vercel/next.js'
-        ]
+        ],
+        received: url
       });
     }
+
+    console.log('[GitHub] Successfully parsed:', parsed);
 
     res.json({
       success: true,
