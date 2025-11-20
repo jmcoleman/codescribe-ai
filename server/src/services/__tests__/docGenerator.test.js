@@ -282,7 +282,7 @@ function greet(name) {
     });
   });
 
-  describe('buildPrompt()', () => {
+  describe('buildPromptWithCaching()', () => {
     const sampleCode = 'function test() {}';
     const mockAnalysis = {
       functions: [{ name: 'test' }],
@@ -292,78 +292,76 @@ function greet(name) {
     };
 
     it('should build README prompt with correct structure', () => {
-      const prompt = docGenerator.buildPrompt(
+      const { systemPrompt, userMessage } = docGenerator.buildPromptWithCaching(
         sampleCode,
         mockAnalysis,
         'README',
         'javascript'
       );
 
-      expect(prompt).toContain('README.md');
-      expect(prompt).toContain('Language: javascript');
-      expect(prompt).toContain('Functions detected: 1');
-      expect(prompt).toContain('Classes detected: 0');
-      expect(prompt).toContain('Exports: test, helper');
-      expect(prompt).toContain('Complexity: simple');
-      expect(prompt).toContain('Project Overview');
-      expect(prompt).toContain('Features');
-      expect(prompt).toContain('Installation');
-      expect(prompt).toContain('Usage');
-      expect(prompt).toContain('API Documentation');
-      expect(prompt).toContain(sampleCode);
+      expect(systemPrompt).toContain('README.md');
+      expect(systemPrompt).toContain('Project Overview');
+      expect(systemPrompt).toContain('Features');
+      expect(systemPrompt).toContain('Installation');
+      expect(systemPrompt).toContain('Usage');
+      expect(systemPrompt).toContain('API Documentation');
+
+      expect(userMessage).toContain('Language: javascript');
+      expect(userMessage).toContain('Functions detected: 1');
+      expect(userMessage).toContain('Classes detected: 0');
+      expect(userMessage).toContain('Exports: test, helper');
+      expect(userMessage).toContain('Complexity: simple');
+      expect(userMessage).toContain(sampleCode);
     });
 
     it('should build JSDOC prompt with correct structure', () => {
-      const prompt = docGenerator.buildPrompt(
+      const { systemPrompt, userMessage } = docGenerator.buildPromptWithCaching(
         sampleCode,
         mockAnalysis,
         'JSDOC',
         'javascript'
       );
 
-      expect(prompt).toContain('JSDoc');
-      expect(prompt).toContain('@param tags');
-      expect(prompt).toContain('@returns tag');
-      expect(prompt).toContain('@throws tag');
-      expect(prompt).toContain('@example tag');
-      expect(prompt).toContain(sampleCode);
+      expect(systemPrompt).toContain('JSDoc');
+      expect(systemPrompt).toContain('@param tags');
+      expect(systemPrompt).toContain('@returns tag');
+      expect(systemPrompt).toContain('@throws tag');
+      expect(systemPrompt).toContain('@example tag');
+      expect(userMessage).toContain(sampleCode);
     });
 
     it('should build API prompt with correct structure', () => {
-      const prompt = docGenerator.buildPrompt(
+      const { systemPrompt, userMessage } = docGenerator.buildPromptWithCaching(
         sampleCode,
         mockAnalysis,
         'API',
         'javascript'
       );
 
-      expect(prompt).toContain('API documentation');
-      expect(prompt).toContain('Overview Section');
-      expect(prompt).toContain('Installation/Setup Section');
-      expect(prompt).toContain('Request parameters');
-      expect(prompt).toContain('Response format');
-      expect(prompt).toContain('Error responses');
-      expect(prompt).toContain('Usage Examples');
-      expect(prompt).toContain('QUALITY SCORING GUIDANCE');
-      expect(prompt).toContain(sampleCode);
+      expect(systemPrompt).toContain('API documentation');
+      expect(systemPrompt).toContain('Endpoint/Function Overview');
+      expect(systemPrompt).toContain('Parameters');
+      expect(systemPrompt).toContain('Return value');
+      expect(systemPrompt).toContain('Error responses');
+      expect(userMessage).toContain(sampleCode);
     });
 
     it('should build ARCHITECTURE prompt with correct structure', () => {
-      const prompt = docGenerator.buildPrompt(
+      const { systemPrompt, userMessage } = docGenerator.buildPromptWithCaching(
         sampleCode,
         mockAnalysis,
         'ARCHITECTURE',
         'javascript'
       );
 
-      expect(prompt).toContain('architectural');
-      expect(prompt).toContain('Architecture Overview');
-      expect(prompt).toContain('Component Breakdown');
-      expect(prompt).toContain('Data Flow');
-      expect(prompt).toContain('Dependencies');
-      expect(prompt).toContain('Design Patterns');
-      expect(prompt).toContain('Scalability');
-      expect(prompt).toContain(sampleCode);
+      expect(systemPrompt).toContain('architect');
+      expect(systemPrompt).toContain('Architecture Overview');
+      expect(systemPrompt).toContain('Component Breakdown');
+      expect(systemPrompt).toContain('Data Flow');
+      expect(systemPrompt).toContain('Dependencies');
+      expect(systemPrompt).toContain('Design Patterns');
+      expect(systemPrompt).toContain('Scalability');
+      expect(userMessage).toContain(sampleCode);
     });
 
     it('should include code analysis in prompt', () => {
@@ -374,18 +372,18 @@ function greet(name) {
         complexity: 'medium',
       };
 
-      const prompt = docGenerator.buildPrompt(
+      const { userMessage } = docGenerator.buildPromptWithCaching(
         sampleCode,
         complexAnalysis,
         'README',
         'typescript'
       );
 
-      expect(prompt).toContain('Language: typescript');
-      expect(prompt).toContain('Functions detected: 3');
-      expect(prompt).toContain('Classes detected: 1');
-      expect(prompt).toContain('fn1, fn2, MyClass');
-      expect(prompt).toContain('Complexity: medium');
+      expect(userMessage).toContain('Language: typescript');
+      expect(userMessage).toContain('Functions detected: 3');
+      expect(userMessage).toContain('Classes detected: 1');
+      expect(userMessage).toContain('fn1, fn2, MyClass');
+      expect(userMessage).toContain('Complexity: medium');
     });
 
     it('should handle no exports', () => {
@@ -396,14 +394,14 @@ function greet(name) {
         complexity: 'simple',
       };
 
-      const prompt = docGenerator.buildPrompt(
+      const { userMessage } = docGenerator.buildPromptWithCaching(
         sampleCode,
         analysisNoExports,
         'README',
         'javascript'
       );
 
-      expect(prompt).toContain('Exports: None');
+      expect(userMessage).toContain('Exports: None');
     });
 
     it('should handle unknown complexity', () => {
@@ -414,50 +412,50 @@ function greet(name) {
         complexity: undefined,
       };
 
-      const prompt = docGenerator.buildPrompt(
+      const { userMessage } = docGenerator.buildPromptWithCaching(
         sampleCode,
         analysisUnknownComplexity,
         'README',
         'javascript'
       );
 
-      expect(prompt).toContain('Complexity: Unknown');
+      expect(userMessage).toContain('Complexity: Unknown');
     });
 
     it('should default to README prompt for unknown docType', () => {
-      const prompt = docGenerator.buildPrompt(
+      const { systemPrompt } = docGenerator.buildPromptWithCaching(
         sampleCode,
         mockAnalysis,
         'UNKNOWN_TYPE',
         'javascript'
       );
 
-      expect(prompt).toContain('README.md');
-      expect(prompt).toContain('Project Overview');
+      expect(systemPrompt).toContain('README.md');
+      expect(systemPrompt).toContain('Project Overview');
     });
 
     it('should properly escape code in prompt', () => {
       const codeWithSpecialChars = 'const str = "Hello \\n World";';
-      const prompt = docGenerator.buildPrompt(
+      const { userMessage } = docGenerator.buildPromptWithCaching(
         codeWithSpecialChars,
         mockAnalysis,
         'README',
         'javascript'
       );
 
-      expect(prompt).toContain(codeWithSpecialChars);
+      expect(userMessage).toContain(codeWithSpecialChars);
     });
 
     it('should include language in code fence', () => {
-      const prompt = docGenerator.buildPrompt(
+      const { userMessage } = docGenerator.buildPromptWithCaching(
         sampleCode,
         mockAnalysis,
         'README',
         'python'
       );
 
-      expect(prompt).toContain('```python');
-      expect(prompt).toContain('Language: python');
+      expect(userMessage).toContain('```python');
+      expect(userMessage).toContain('Language: python');
     });
   });
 

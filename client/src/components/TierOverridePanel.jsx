@@ -13,10 +13,9 @@
  * - Audit log preview
  */
 
-import { useState } from 'react';
-import { Shield, AlertCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Shield, AlertCircle, CheckCircle, X } from 'lucide-react';
 import { Select } from './Select';
-import { toastCompact } from '../utils/toast';
 
 const TIER_OPTIONS = [
   { value: 'free', label: 'Free' },
@@ -39,6 +38,24 @@ export function TierOverridePanel({ currentTier, override, onApply, onClear }) {
   const [duration, setDuration] = useState(4);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const [showSuccessBanner, setShowSuccessBanner] = useState(false);
+  const [isExiting, setIsExiting] = useState(false);
+
+  // Reset exit animation when banner appears
+  useEffect(() => {
+    if (showSuccessBanner) {
+      setIsExiting(false);
+    }
+  }, [showSuccessBanner]);
+
+  const handleDismissBanner = () => {
+    setIsExiting(true);
+    // Wait for exit animation to complete
+    setTimeout(() => {
+      setShowSuccessBanner(false);
+      setIsExiting(false);
+    }, 200); // Match exit animation duration (200ms)
+  };
 
   const handleApply = async () => {
     // Validate reason
@@ -57,8 +74,8 @@ export function TierOverridePanel({ currentTier, override, onApply, onClear }) {
         hoursValid: duration
       });
 
-      // Show success toast
-      toastCompact(`Now viewing as ${selectedTier.charAt(0).toUpperCase() + selectedTier.slice(1)} for ${duration}h`, 'success');
+      // Show success banner
+      setShowSuccessBanner(true);
 
       // Reset form on success
       setReason('');
@@ -72,6 +89,7 @@ export function TierOverridePanel({ currentTier, override, onApply, onClear }) {
   const handleClear = async () => {
     setIsSubmitting(true);
     setError(null);
+    setShowSuccessBanner(false); // Hide success banner when clearing
 
     try {
       await onClear();
@@ -111,6 +129,40 @@ export function TierOverridePanel({ currentTier, override, onApply, onClear }) {
           </button>
         )}
       </div>
+
+      {/* Success Banner - with slide + fade animation */}
+      {showSuccessBanner && hasActiveOverride && (
+        <div
+          className={`
+            flex items-center justify-between gap-3 p-3
+            bg-green-50 dark:bg-green-900/20
+            border-l-4 border-l-green-500 dark:border-l-green-400
+            border border-green-200 dark:border-green-800
+            rounded-lg text-sm text-green-700 dark:text-green-300 mb-4
+            transition-all duration-200
+            ${isExiting
+              ? 'opacity-0 translate-y-[-8px]'
+              : 'opacity-100 translate-y-0 animate-slideDown'
+            }
+          `}
+          role="status"
+          aria-live="polite"
+        >
+          <div className="flex items-center gap-2">
+            <CheckCircle className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
+            <span>
+              Tier override applied successfully. You're now viewing as <span className="font-medium capitalize">{override.tier}</span> for {override.remainingTime?.hours}h {override.remainingTime?.minutes}m.
+            </span>
+          </div>
+          <button
+            onClick={handleDismissBanner}
+            className="p-1 rounded hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors flex-shrink-0"
+            aria-label="Dismiss success message"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       {/* Error Display */}
       {error && (

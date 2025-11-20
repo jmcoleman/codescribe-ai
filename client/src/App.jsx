@@ -102,6 +102,11 @@ function App() {
   const [isUploading, setIsUploading] = useState(false);
   const [testSkeletonMode, setTestSkeletonMode] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    // Load sidebar collapsed state from localStorage
+    const saved = getStorageItem(STORAGE_KEYS.SIDEBAR_MODE);
+    return saved === 'collapsed';
+  });
   const fileInputRef = useRef(null); // For single-file uploads (Command Bar)
   const multiFileInputRef = useRef(null); // For multi-file uploads (Sidebar)
   const samplesButtonRef = useRef(null);
@@ -133,6 +138,16 @@ function App() {
     } catch (error) {
       console.error('[App] Error saving sidebar sizes:', error);
     }
+  }, []);
+
+  // Toggle sidebar collapse state
+  const handleToggleSidebarCollapse = useCallback(() => {
+    setSidebarCollapsed(prev => {
+      const newValue = !prev;
+      // Persist to localStorage
+      setStorageItem(STORAGE_KEYS.SIDEBAR_MODE, newValue ? 'collapsed' : 'expanded');
+      return newValue;
+    });
   }, []);
 
   // Track if we just accepted terms to prevent re-checking immediately after
@@ -1136,25 +1151,16 @@ function App() {
       {/* Main Content - with optional Sidebar for Pro+ users */}
       <div className="flex-1 flex overflow-hidden relative">
         {canUseBatchProcessing ? (
-          <PanelGroup
-            direction="horizontal"
-            className="flex-1"
-            onLayout={saveSidebarSizes}
-          >
-            {/* Sidebar Panel - Resizable */}
-            <Panel
-              defaultSize={loadSidebarSizes().sidebar}
-              minSize={5}
-              maxSize={50}
-              className="flex"
-              id="sidebar-panel"
-              order={1}
-            >
+          <div className="flex-1 flex">
+            {/* Sidebar - Fixed width (not resizable) */}
+            <div className={`${sidebarCollapsed ? 'w-[60px]' : 'w-[320px]'} flex-shrink-0 transition-all duration-250 ease-out`}>
               <Sidebar
                 files={multiFileState.files}
                 activeFileId={multiFileState.activeFileId}
                 selectedFileIds={multiFileState.selectedFileIds}
                 selectedCount={multiFileState.selectedCount}
+                isCollapsed={sidebarCollapsed}
+                onToggleCollapse={handleToggleSidebarCollapse}
                 docType={docType}
                 onDocTypeChange={setDocType}
                 onGithubImport={handleGithubImport}
@@ -1193,17 +1199,10 @@ function App() {
                   multiFileState.deselectAllFiles();
                 }}
               />
-            </Panel>
+            </div>
 
-            {/* Resize Handle */}
-            <PanelResizeHandle className="split-panel-handle hidden lg:flex">
-              <div className="split-panel-handle-inner">
-                <div className="split-panel-handle-icon" />
-              </div>
-            </PanelResizeHandle>
-
-            {/* Main Content Panel */}
-            <Panel defaultSize={loadSidebarSizes().main} minSize={50} order={2}>
+            {/* Main Content - Takes remaining space */}
+            <div className="flex-1 min-w-0">
               <main id="main-content" className="flex-1 w-full h-full flex flex-col overflow-auto lg:overflow-hidden lg:min-h-0">
 
         {/* Priority Banner Section - Show only most critical message */}
@@ -1275,8 +1274,8 @@ function App() {
         </div>
 
               </main>
-            </Panel>
-          </PanelGroup>
+            </div>
+          </div>
         ) : (
           <main id="main-content" className="flex-1 w-full flex flex-col overflow-auto lg:overflow-hidden lg:min-h-0">
             {/* Priority Banner Section - Show only most critical message */}
@@ -1321,7 +1320,7 @@ function App() {
               onUpload={handleUpload}
               onGithubImport={handleGithubImport}
               onMenuClick={() => setMobileSidebarOpen(true)}
-              showMenuButton={canUseBatchProcessing && multiFileState.files.length > 0}
+              showMenuButton={canUseBatchProcessing}
               isGenerating={isGenerating}
               isUploading={isUploading}
               generateDisabled={!code.trim()}

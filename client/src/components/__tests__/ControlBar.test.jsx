@@ -41,8 +41,9 @@ describe('ControlBar Component', () => {
     it('should render with all doc type options', () => {
       render(<ControlBar {...defaultProps} />);
 
-      const expectedOptions = ['README', 'JSDOC', 'API', 'ARCHITECTURE'];
+      const expectedOptions = ['API', 'ARCHITECTURE', 'JSDOC', 'README'];
       // All doc types should be available (verified by clicking the select)
+      // Note: OPENAPI excluded from fallback (uses OpenAI, not Claude)
       expect(expectedOptions.length).toBe(4);
     });
   });
@@ -155,7 +156,7 @@ describe('ControlBar Component', () => {
       const selectButton = screen.getByText('README.md');
       await user.click(selectButton);
 
-      // All options should now be visible
+      // All options should now be visible (Claude-only fallback types)
       await waitFor(() => {
         expect(screen.getByText('JSDoc Comments')).toBeInTheDocument();
         expect(screen.getByText('API Documentation')).toBeInTheDocument();

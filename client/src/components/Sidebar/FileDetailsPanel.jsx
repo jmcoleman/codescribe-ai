@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { X, FileText, Calendar, Info } from 'lucide-react';
 import {
   formatOrigin,
@@ -28,8 +28,31 @@ export function FileDetailsPanel({ file, isOpen, onClose }) {
   const panelRef = useRef(null);
   const closeButtonRef = useRef(null);
   const previousActiveElement = useRef(null);
+  const [isEntering, setIsEntering] = useState(true);
+  const [isExiting, setIsExiting] = useState(false);
 
   if (!file) return null;
+
+  // Handle enter animation
+  useEffect(() => {
+    if (isOpen) {
+      setIsEntering(true);
+      setIsExiting(false);
+      // Remove entering state after animation completes
+      const timer = setTimeout(() => setIsEntering(false), 250); // Match enter duration
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
+
+  // Handle close with exit animation
+  const handleClose = useCallback(() => {
+    setIsExiting(true);
+    // Wait for exit animation before actually closing
+    setTimeout(() => {
+      setIsExiting(false);
+      onClose();
+    }, 200); // Match exit duration
+  }, [onClose]);
 
   // Focus management and keyboard handling
   useEffect(() => {
@@ -67,7 +90,7 @@ export function FileDetailsPanel({ file, isOpen, onClose }) {
       // ESC closes panel
       if (e.key === 'Escape') {
         e.preventDefault();
-        onClose();
+        handleClose();
         return;
       }
 
@@ -106,7 +129,7 @@ export function FileDetailsPanel({ file, isOpen, onClose }) {
         previousActiveElement.current.focus();
       }
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, handleClose]);
 
   if (!isOpen) return null;
 
@@ -156,8 +179,12 @@ export function FileDetailsPanel({ file, isOpen, onClose }) {
     <div className="fixed inset-0 z-50 flex items-start justify-end">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-900/20 dark:bg-slate-900/40 backdrop-blur-sm"
-        onClick={onClose}
+        className={`
+          fixed inset-0 bg-slate-900/20 dark:bg-slate-900/40 backdrop-blur-sm
+          transition-opacity duration-200
+          ${isExiting ? 'opacity-0' : 'opacity-100'}
+        `}
+        onClick={handleClose}
         aria-hidden="true"
       />
 
@@ -167,14 +194,19 @@ export function FileDetailsPanel({ file, isOpen, onClose }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="file-details-title"
-        className="
+        className={`
           relative bg-white dark:bg-slate-800 shadow-xl border-l border-slate-200 dark:border-slate-700
-          transition-all duration-300
           h-full overflow-y-auto
           w-80
           max-md:w-full max-md:h-[60vh] max-md:border-l-0 max-md:border-t
           max-md:mt-auto max-md:rounded-t-xl
-        "
+          ${isEntering
+            ? 'animate-slideInFromRight max-md:animate-slideInFromBottom'
+            : isExiting
+            ? 'animate-fadeOut'
+            : ''
+          }
+        `}
       >
         {/* Header */}
         <div className="sticky top-0 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-4 py-3 flex items-center justify-between z-10">
@@ -186,8 +218,8 @@ export function FileDetailsPanel({ file, isOpen, onClose }) {
           </h2>
           <button
             ref={closeButtonRef}
-            onClick={onClose}
-            className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-800"
+            onClick={handleClose}
+            className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-800"
             aria-label="Close file details"
           >
             <X className="w-4 h-4" aria-hidden="true" />

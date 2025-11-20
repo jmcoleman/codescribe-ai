@@ -22,6 +22,8 @@ import { STORAGE_KEYS, getStorageItem, setStorageItem } from '../../constants/st
  * @param {Array} props.selectedFileIds - Array of selected file IDs
  * @param {number} props.selectedCount - Number of selected files
  * @param {boolean} props.mobileOpen - Mobile overlay open state (controlled by parent)
+ * @param {boolean} props.isCollapsed - Controlled collapse state (desktop only)
+ * @param {Function} props.onToggleCollapse - Called when collapse button is clicked (desktop only)
  * @param {string} props.docType - Current documentation type
  * @param {Function} props.onDocTypeChange - Called when doc type changes
  * @param {Function} props.onGithubImport - Called when GitHub import is clicked
@@ -42,6 +44,8 @@ export function Sidebar({
   selectedFileIds = [],
   selectedCount = 0,
   mobileOpen = false,
+  isCollapsed: isCollapsedProp,
+  onToggleCollapse,
   docType,
   onDocTypeChange,
   onGithubImport,
@@ -59,6 +63,7 @@ export function Sidebar({
   onFilesDrop
 }) {
   // Sidebar state: 'expanded', 'collapsed' (desktop only)
+  // If controlled (isCollapsedProp is defined), use prop, otherwise use local state
   const [sidebarMode, setSidebarMode] = useState(() => {
     // Load from localStorage using proper storage key
     const saved = getStorageItem(STORAGE_KEYS.SIDEBAR_MODE);
@@ -70,10 +75,10 @@ export function Sidebar({
 
   // Persist sidebar mode to localStorage (desktop only)
   useEffect(() => {
-    if (!isMobile) {
+    if (!isMobile && isCollapsedProp === undefined) {
       setStorageItem(STORAGE_KEYS.SIDEBAR_MODE, sidebarMode);
     }
-  }, [sidebarMode, isMobile]);
+  }, [sidebarMode, isMobile, isCollapsedProp]);
 
   // Responsive: Detect mobile/desktop
   useEffect(() => {
@@ -82,7 +87,7 @@ export function Sidebar({
       setIsMobile(mobile);
 
       // Restore desktop mode when resizing back from mobile
-      if (!mobile) {
+      if (!mobile && isCollapsedProp === undefined) {
         const saved = getStorageItem(STORAGE_KEYS.SIDEBAR_MODE);
         if (saved && saved !== 'hidden') {
           setSidebarMode(saved);
@@ -95,7 +100,7 @@ export function Sidebar({
     handleResize(); // Initial check
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [isCollapsedProp]);
 
   // Lock body scroll when mobile overlay is open
   useEffect(() => {
@@ -111,11 +116,20 @@ export function Sidebar({
   }, [isMobile, mobileOpen]);
 
   const toggleSidebar = () => {
-    setSidebarMode(prev => prev === 'expanded' ? 'collapsed' : 'expanded');
+    if (onToggleCollapse) {
+      // Controlled mode - notify parent
+      onToggleCollapse();
+    } else {
+      // Uncontrolled mode - update local state
+      setSidebarMode(prev => prev === 'expanded' ? 'collapsed' : 'expanded');
+    }
   };
 
-  const isCollapsed = sidebarMode === 'collapsed';
-  const isExpanded = sidebarMode === 'expanded';
+  // Use controlled state if provided, otherwise use local state
+  const isCollapsed = isCollapsedProp !== undefined
+    ? isCollapsedProp
+    : sidebarMode === 'collapsed';
+  const isExpanded = !isCollapsed;
 
   // Mobile: Render as overlay
   if (isMobile) {

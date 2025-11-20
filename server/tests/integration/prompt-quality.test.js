@@ -285,7 +285,7 @@ describe('Prompt Quality Integration Tests', () => {
   describe('README Template Quality', () => {
     it('should generate comprehensive README for simple utility functions', async () => {
       const analysis = await parseCode(sampleCodes.simple, 'javascript');
-      const prompt = docGenerator.buildPrompt(
+      const { systemPrompt, userMessage } = docGenerator.buildPromptWithCaching(
         sampleCodes.simple,
         analysis,
         'README',
@@ -293,43 +293,43 @@ describe('Prompt Quality Integration Tests', () => {
       );
 
       // Verify prompt structure
-      expect(prompt).toContain('README.md');
-      expect(prompt).toContain('Functions detected: 3');
-      expect(prompt).toContain('Project Overview');
-      expect(prompt).toContain('Features');
-      expect(prompt).toContain('Installation');
-      expect(prompt).toContain('Usage');
-      expect(prompt).toContain('API Documentation');
+      expect(systemPrompt + userMessage).toContain('README.md');
+      expect(systemPrompt + userMessage).toContain('Functions detected: 3');
+      expect(systemPrompt + userMessage).toContain('Project Overview');
+      expect(systemPrompt + userMessage).toContain('Features');
+      expect(systemPrompt + userMessage).toContain('Installation');
+      expect(systemPrompt + userMessage).toContain('Usage');
+      expect(systemPrompt + userMessage).toContain('API Documentation');
 
       console.log('\n=== README PROMPT (Simple) ===');
       console.log('Analysis:', JSON.stringify(analysis, null, 2));
-      console.log('Prompt length:', prompt.length, 'characters');
-      console.log('Prompt preview:', prompt.substring(0, 500) + '...\n');
+      console.log('Prompt length:', (systemPrompt + userMessage).length, 'characters');
+      console.log('Prompt preview:', (systemPrompt + userMessage).substring(0, 500) + '...\n');
     });
 
     it('should generate comprehensive README for complex class', async () => {
       const analysis = await parseCode(sampleCodes.complex, 'javascript');
-      const prompt = docGenerator.buildPrompt(
+      const { systemPrompt, userMessage } = docGenerator.buildPromptWithCaching(
         sampleCodes.complex,
         analysis,
         'README',
         'javascript'
       );
 
-      expect(prompt).toContain('README.md');
-      expect(prompt).toContain('Classes detected: 1');
+      expect(systemPrompt + userMessage).toContain('README.md');
+      expect(systemPrompt + userMessage).toContain('Classes detected: 1');
       expect(analysis.functions.length).toBeGreaterThan(5);
 
       console.log('\n=== README PROMPT (Complex) ===');
       console.log('Analysis:', JSON.stringify(analysis, null, 2));
-      console.log('Prompt length:', prompt.length, 'characters');
+      console.log('Prompt length:', (systemPrompt + userMessage).length, 'characters');
     });
   });
 
   describe('JSDoc Template Quality', () => {
     it('should generate JSDoc for utility functions', async () => {
       const analysis = await parseCode(sampleCodes.simple, 'javascript');
-      const prompt = docGenerator.buildPrompt(
+      const { systemPrompt, userMessage } = docGenerator.buildPromptWithCaching(
         sampleCodes.simple,
         analysis,
         'JSDOC',
@@ -337,28 +337,28 @@ describe('Prompt Quality Integration Tests', () => {
       );
 
       // Verify JSDOC-specific requirements
-      expect(prompt).toContain('JSDoc');
-      expect(prompt).toContain('@param tags');
-      expect(prompt).toContain('@returns tag');
-      expect(prompt).toContain('@throws tag');
-      expect(prompt).toContain('@example tag');
-      expect(prompt).toContain('COMPLETE code');
-      expect(prompt).toContain('Maintain all original code');
+      expect(systemPrompt + userMessage).toContain('JSDoc');
+      expect(systemPrompt + userMessage).toContain('@param tags');
+      expect(systemPrompt + userMessage).toContain('@returns tag');
+      expect(systemPrompt + userMessage).toContain('@throws tag');
+      expect(systemPrompt + userMessage).toContain('@example tag');
+      expect(systemPrompt + userMessage).toContain('COMPLETE code');
+      expect(systemPrompt + userMessage).toContain('Maintain all original code');
 
       console.log('\n=== JSDOC PROMPT ===');
-      console.log('Prompt preview:', prompt.substring(0, 600) + '...\n');
+      console.log('Prompt preview:', (systemPrompt + userMessage).substring(0, 600) + '...\n');
     });
 
     it('should generate JSDoc for class methods', async () => {
       const analysis = await parseCode(sampleCodes.complex, 'javascript');
-      const prompt = docGenerator.buildPrompt(
+      const { systemPrompt, userMessage } = docGenerator.buildPromptWithCaching(
         sampleCodes.complex,
         analysis,
         'JSDOC',
         'javascript'
       );
 
-      expect(prompt).toContain('JSDoc');
+      expect(systemPrompt + userMessage).toContain('JSDoc');
       expect(analysis.classes.length).toBeGreaterThan(0);
       expect(analysis.classes[0].methods.length).toBeGreaterThan(5);
 
@@ -370,34 +370,33 @@ describe('Prompt Quality Integration Tests', () => {
   describe('API Template Quality', () => {
     it('should generate API documentation for REST endpoints', async () => {
       const analysis = await parseCode(sampleCodes.api, 'javascript');
-      const prompt = docGenerator.buildPrompt(
+      const { systemPrompt, userMessage } = docGenerator.buildPromptWithCaching(
         sampleCodes.api,
         analysis,
         'API',
         'javascript'
       );
 
-      // Verify API-specific requirements (updated to match improved prompt)
-      expect(prompt).toContain('API documentation');
-      expect(prompt).toContain('Overview Section');
-      expect(prompt).toContain('Installation/Setup Section');
-      expect(prompt).toContain('Request parameters');
-      expect(prompt).toContain('Response format');
-      expect(prompt).toContain('Error responses');
-      expect(prompt).toContain('Usage Examples');
-      expect(prompt).toContain('Authentication');
-      expect(prompt).toContain('QUALITY SCORING GUIDANCE');
+      // Verify API-specific requirements (updated to match simplified external prompts)
+      expect(systemPrompt + userMessage).toContain('API documentation');
+      expect(systemPrompt + userMessage).toContain('Endpoint/Function Overview');
+      // Installation/Setup and QUALITY SCORING removed in simplified prompts - focusing on core requirements
+      expect(systemPrompt + userMessage).toContain('Parameters');
+      expect(systemPrompt + userMessage).toContain('Return value');
+      expect(systemPrompt + userMessage).toContain('Error responses');
+      expect(systemPrompt + userMessage).toContain('Usage Examples');
+      expect(systemPrompt + userMessage).toContain('Authentication');
 
       console.log('\n=== API PROMPT ===');
       console.log('Analysis:', JSON.stringify(analysis, null, 2));
-      console.log('Prompt preview:', prompt.substring(0, 600) + '...\n');
+      console.log('Prompt preview:', (systemPrompt + userMessage).substring(0, 600) + '...\n');
     });
   });
 
   describe('ARCHITECTURE Template Quality', () => {
     it('should generate architecture documentation for auth service', async () => {
       const analysis = await parseCode(sampleCodes.complex, 'javascript');
-      const prompt = docGenerator.buildPrompt(
+      const { systemPrompt, userMessage } = docGenerator.buildPromptWithCaching(
         sampleCodes.complex,
         analysis,
         'ARCHITECTURE',
@@ -405,17 +404,17 @@ describe('Prompt Quality Integration Tests', () => {
       );
 
       // Verify ARCHITECTURE-specific requirements
-      expect(prompt).toContain('architectural');
-      expect(prompt).toContain('Architecture Overview');
-      expect(prompt).toContain('Component Breakdown');
-      expect(prompt).toContain('Data Flow');
-      expect(prompt).toContain('Dependencies');
-      expect(prompt).toContain('Design Patterns');
-      expect(prompt).toContain('Scalability');
+      expect(systemPrompt + userMessage).toContain('architectural');
+      expect(systemPrompt + userMessage).toContain('Architecture Overview');
+      expect(systemPrompt + userMessage).toContain('Component Breakdown');
+      expect(systemPrompt + userMessage).toContain('Data Flow');
+      expect(systemPrompt + userMessage).toContain('Dependencies');
+      expect(systemPrompt + userMessage).toContain('Design Patterns');
+      expect(systemPrompt + userMessage).toContain('Scalability');
 
       console.log('\n=== ARCHITECTURE PROMPT ===');
       console.log('Analysis:', JSON.stringify(analysis, null, 2));
-      console.log('Prompt preview:', prompt.substring(0, 600) + '...\n');
+      console.log('Prompt preview:', (systemPrompt + userMessage).substring(0, 600) + '...\n');
     });
   });
 
@@ -478,7 +477,7 @@ describe('Prompt Quality Integration Tests', () => {
       const docTypes = ['README', 'JSDOC', 'API', 'ARCHITECTURE'];
 
       for (const docType of docTypes) {
-        const prompt = docGenerator.buildPrompt(
+        const { systemPrompt, userMessage } = docGenerator.buildPromptWithCaching(
           sampleCodes.complex,
           analysis,
           docType,
@@ -486,11 +485,11 @@ describe('Prompt Quality Integration Tests', () => {
         );
 
         // Verify context is included
-        expect(prompt).toContain('Language: javascript');
-        expect(prompt).toContain('Functions detected:');
-        expect(prompt).toContain('Classes detected:');
-        expect(prompt).toContain('Exports:');
-        expect(prompt).toContain('Complexity:');
+        expect(systemPrompt + userMessage).toContain('Language: javascript');
+        expect(systemPrompt + userMessage).toContain('Functions detected:');
+        expect(systemPrompt + userMessage).toContain('Classes detected:');
+        expect(systemPrompt + userMessage).toContain('Exports:');
+        expect(systemPrompt + userMessage).toContain('Complexity:');
 
         console.log(`\n${docType} prompt includes analysis context: ✓`);
       }
@@ -512,7 +511,7 @@ describe('Prompt Quality Integration Tests', () => {
 
       for (const testCase of testCases) {
         const analysis = await parseCode(testCase.code, 'javascript');
-        const prompt = docGenerator.buildPrompt(
+        const { systemPrompt, userMessage } = docGenerator.buildPromptWithCaching(
           testCase.code,
           analysis,
           testCase.type,
@@ -523,7 +522,7 @@ describe('Prompt Quality Integration Tests', () => {
           name: testCase.name,
           docType: testCase.type,
           codeLength: testCase.code.length,
-          promptLength: prompt.length,
+          promptLength: (systemPrompt + userMessage).length,
           functionsDetected: analysis.functions.length,
           classesDetected: analysis.classes.length,
           exportsDetected: analysis.exports.length,
@@ -562,7 +561,7 @@ describe('Prompt Quality Integration Tests', () => {
   describe('Monaco Editor Syntax Highlighting Requirements', () => {
     it('should instruct Claude to generate code blocks with language identifiers', async () => {
       const analysis = await parseCode(sampleCodes.simple, 'javascript');
-      const prompt = docGenerator.buildPrompt(
+      const { systemPrompt, userMessage } = docGenerator.buildPromptWithCaching(
         sampleCodes.simple,
         analysis,
         'README',
@@ -570,8 +569,8 @@ describe('Prompt Quality Integration Tests', () => {
       );
 
       // Verify prompt instructs proper markdown code block formatting
-      expect(prompt).toContain('```');
-      expect(prompt).toMatch(/```(javascript|js)/);
+      expect(systemPrompt + userMessage).toContain('```');
+      expect(systemPrompt + userMessage).toMatch(/```(javascript|js)/);
 
       console.log('\n=== MONACO SYNTAX HIGHLIGHTING (README) ===');
       console.log('Prompt includes code block instructions: ✓');
@@ -582,7 +581,7 @@ describe('Prompt Quality Integration Tests', () => {
 
       for (const lang of languages) {
         const analysis = await parseCode(sampleCodes.simple, lang);
-        const prompt = docGenerator.buildPrompt(
+        const { systemPrompt, userMessage } = docGenerator.buildPromptWithCaching(
           sampleCodes.simple,
           analysis,
           'README',
@@ -590,7 +589,7 @@ describe('Prompt Quality Integration Tests', () => {
         );
 
         // Each language should be mentioned in the prompt
-        expect(prompt).toContain(`Language: ${lang}`);
+        expect(systemPrompt + userMessage).toContain(`Language: ${lang}`);
 
         console.log(`${lang} syntax highlighting supported: ✓`);
       }
@@ -601,7 +600,7 @@ describe('Prompt Quality Integration Tests', () => {
 
     it('should format JSDoc code blocks for syntax highlighting', async () => {
       const analysis = await parseCode(sampleCodes.simple, 'javascript');
-      const prompt = docGenerator.buildPrompt(
+      const { systemPrompt, userMessage } = docGenerator.buildPromptWithCaching(
         sampleCodes.simple,
         analysis,
         'JSDOC',
@@ -609,9 +608,9 @@ describe('Prompt Quality Integration Tests', () => {
       );
 
       // JSDOC should maintain original code with added comments
-      expect(prompt).toContain('COMPLETE code');
-      expect(prompt).toContain('Maintain all original code');
-      expect(prompt).toContain('@example');
+      expect(systemPrompt + userMessage).toContain('COMPLETE code');
+      expect(systemPrompt + userMessage).toContain('Maintain all original code');
+      expect(systemPrompt + userMessage).toContain('@example');
 
       console.log('\n=== JSDOC SYNTAX HIGHLIGHTING ===');
       console.log('JSDoc code block formatting verified: ✓');
@@ -619,7 +618,7 @@ describe('Prompt Quality Integration Tests', () => {
 
     it('should format API documentation code examples for syntax highlighting', async () => {
       const analysis = await parseCode(sampleCodes.api, 'javascript');
-      const prompt = docGenerator.buildPrompt(
+      const { systemPrompt, userMessage } = docGenerator.buildPromptWithCaching(
         sampleCodes.api,
         analysis,
         'API',
@@ -627,9 +626,9 @@ describe('Prompt Quality Integration Tests', () => {
       );
 
       // API docs should include example requests/responses and usage examples
-      expect(prompt).toContain('Usage Examples');
-      expect(prompt).toContain('curl commands');
-      expect(prompt).toContain('javascript');
+      expect(systemPrompt + userMessage).toContain('Usage Examples');
+      expect(systemPrompt + userMessage).toContain('curl commands');
+      expect(systemPrompt + userMessage).toContain('javascript');
 
       console.log('\n=== API SYNTAX HIGHLIGHTING ===');
       console.log('API code example formatting verified: ✓');
@@ -698,7 +697,7 @@ describe('Prompt Quality Integration Tests', () => {
 
     it('should test syntax highlighting for inline code vs code blocks', async () => {
       const analysis = await parseCode(sampleCodes.simple, 'javascript');
-      const prompt = docGenerator.buildPrompt(
+      const { systemPrompt, userMessage } = docGenerator.buildPromptWithCaching(
         sampleCodes.simple,
         analysis,
         'README',
@@ -809,14 +808,14 @@ const data = { value: 42 };
 `;
 
       const analysis = await parseCode(noExportsCode, 'javascript');
-      const prompt = docGenerator.buildPrompt(
+      const { systemPrompt, userMessage } = docGenerator.buildPromptWithCaching(
         noExportsCode,
         analysis,
         'README',
         'javascript'
       );
 
-      expect(prompt).toContain('Exports: None');
+      expect(systemPrompt + userMessage).toContain('Exports: None');
       console.log('\n=== NO EXPORTS CASE ===');
       console.log('Handles gracefully: ✓');
     });
@@ -838,7 +837,7 @@ export function setupServer() {
 `;
 
       const analysis = await parseCode(manyImportsCode, 'javascript');
-      const prompt = docGenerator.buildPrompt(
+      const { systemPrompt, userMessage } = docGenerator.buildPromptWithCaching(
         manyImportsCode,
         analysis,
         'README',
