@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Clock,
@@ -41,6 +41,7 @@ export function UsageDashboard() {
   const { user, isLoading: authLoading } = useAuth();
   const { usage, isLoading, refetch, getUsageForPeriod, shouldShowWarnings } = useUsageTracking();
   const [refreshing, setRefreshing] = useState(false);
+  const refreshTimeoutRef = useRef(null);
 
   // Redirect if not authenticated (wait for auth to load first)
   useEffect(() => {
@@ -61,11 +62,24 @@ export function UsageDashboard() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [navigate]);
 
+  // Cleanup refresh timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current);
+      }
+    };
+  }, []);
+
   // Handle manual refresh
   const handleRefresh = async () => {
     setRefreshing(true);
     await refetch();
-    setTimeout(() => setRefreshing(false), 500); // Smooth animation
+    // Clear any existing timeout before setting a new one
+    if (refreshTimeoutRef.current) {
+      clearTimeout(refreshTimeoutRef.current);
+    }
+    refreshTimeoutRef.current = setTimeout(() => setRefreshing(false), 500); // Smooth animation
   };
 
   // Get usage data for both periods
