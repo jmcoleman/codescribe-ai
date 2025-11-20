@@ -48,6 +48,7 @@ export function Sidebar({
   onToggleCollapse,
   docType,
   onDocTypeChange,
+  onApplyDocType,
   onGithubImport,
   onMobileClose,
   onSelectFile,
@@ -152,7 +153,7 @@ export function Sidebar({
             bg-white dark:bg-slate-900
             border-r border-slate-200 dark:border-slate-700
             flex flex-col
-            transition-transform duration-300 ease-out
+            transition-transform duration-200 ease-out
             ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}
           `}
         >
@@ -179,6 +180,7 @@ export function Sidebar({
             selectedCount={selectedCount}
             docType={docType}
             onDocTypeChange={onDocTypeChange}
+            onApplyDocType={onApplyDocType}
             onGithubImport={onGithubImport}
             onSelectFile={onSelectFile}
             onToggleFileSelection={onToggleFileSelection}
@@ -204,27 +206,23 @@ export function Sidebar({
     <div
       className={`
         sidebar-container
-        ${isCollapsed ? 'w-[60px]' : 'flex-1'}
+        w-full
         h-full
         bg-white dark:bg-slate-900
         border-r border-slate-200 dark:border-slate-700
         flex flex-col
         relative
-        transition-all duration-250 ease-out
+        transition-all duration-200 ease-out
         motion-reduce:transition-none
       `}
-      style={{
-        transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
-        transitionDuration: '250ms'
-      }}
     >
         {/* Compact Header - Toggle only when collapsed */}
         {isCollapsed && (
-          <div className="flex items-center justify-center p-4 border-b border-slate-200 dark:border-slate-700">
+          <div className="flex items-center justify-center p-3 border-b border-slate-200 dark:border-slate-700">
             <button
               type="button"
               onClick={toggleSidebar}
-              className="icon-btn interactive-scale-sm focus-ring-light"
+              className="p-2 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400"
               aria-label="Expand sidebar"
               title="Expand sidebar"
             >
@@ -242,6 +240,7 @@ export function Sidebar({
             selectedCount={selectedCount}
             docType={docType}
             onDocTypeChange={onDocTypeChange}
+            onApplyDocType={onApplyDocType}
             onGithubImport={onGithubImport}
             onSelectFile={onSelectFile}
             onToggleFileSelection={onToggleFileSelection}

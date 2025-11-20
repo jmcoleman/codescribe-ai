@@ -111,8 +111,10 @@ describe('FileList', () => {
       );
 
       expect(screen.queryByRole('button', { name: /Select All/i })).not.toBeInTheDocument();
-      // Generate button is always visible in new API, but should be disabled when no code
-      expect(screen.queryByRole('button', { name: /Delete/i })).not.toBeInTheDocument();
+      // All action buttons (Apply, Delete, Generate) are always visible but disabled when nothing selected
+      expect(screen.getByRole('button', { name: /Apply/i })).toBeDisabled();
+      expect(screen.getByRole('button', { name: /Delete/i })).toBeDisabled();
+      expect(screen.getByRole('button', { name: /Generate/i })).toBeInTheDocument();
     });
   });
 

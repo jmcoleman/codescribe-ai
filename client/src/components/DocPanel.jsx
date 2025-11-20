@@ -155,7 +155,11 @@ export const DocPanel = memo(function DocPanel({
   onUpload,
   onGithubImport,
   onGenerate,
-  onReset
+  onReset,
+  bulkGenerationProgress = null,
+  bulkGenerationSummary = null,
+  bulkGenerationErrors = [],
+  onDismissBulkErrors
 }) {
   const { effectiveTheme } = useTheme();
 
@@ -172,6 +176,9 @@ export const DocPanel = memo(function DocPanel({
   // Mobile menu state
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const mobileMenuRef = useRef(null);
+
+  // Error details toggle state
+  const [showErrorDetails, setShowErrorDetails] = useState(false);
 
   // Track mermaid diagram counter to ensure unique IDs
   const mermaidCounterRef = useRef(0);
@@ -265,7 +272,7 @@ export const DocPanel = memo(function DocPanel({
 
   // Memoize ReactMarkdown components to prevent unnecessary re-renders
   const markdownComponents = useMemo(() => ({
-    pre({ node, children, ...props }) {
+    pre({ children }) {
       // Just pass through - SyntaxHighlighter handles all styling
       return <>{children}</>;
     },
@@ -515,6 +522,198 @@ export const DocPanel = memo(function DocPanel({
           )}
         </div>
       </div>
+
+      {/* Batch Summary Banner - Shows Progress OR Final Summary */}
+      {(bulkGenerationProgress || bulkGenerationSummary) && (
+        <div className={`mx-4 mt-3 ${
+          bulkGenerationSummary && bulkGenerationSummary.failCount > 0
+            ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/50'
+            : bulkGenerationSummary
+            ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800/50'
+            : 'bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800/50'
+        } border rounded-lg overflow-hidden transition-colors`}>
+          <div className="flex items-start justify-between p-3">
+            <div className="flex items-start gap-2.5 flex-1 min-w-0">
+              {/* Icon based on state */}
+              {bulkGenerationProgress ? (
+                <div className="animate-spin rounded-full h-5 w-5 border-2 border-purple-600 dark:border-purple-400 border-t-transparent flex-shrink-0 mt-0.5" aria-hidden="true" />
+              ) : bulkGenerationSummary && bulkGenerationSummary.failCount > 0 ? (
+                <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
+              ) : (
+                <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
+              )}
+
+              <div className="flex-1 min-w-0">
+                {/* Progress State */}
+                {bulkGenerationProgress && (
+                  <>
+                    <p className="text-sm font-medium text-purple-900 dark:text-purple-100 mb-2">
+                      Generating {bulkGenerationProgress.completed} of {bulkGenerationProgress.total} files... (Batch {bulkGenerationProgress.currentBatch}/{bulkGenerationProgress.totalBatches})
+                    </p>
+                    {/* Progress bar */}
+                    <div className="w-full bg-purple-200 dark:bg-purple-800/50 rounded-full h-2 overflow-hidden">
+                      <div
+                        className="bg-purple-600 dark:bg-purple-400 h-full transition-all duration-300 ease-out"
+                        style={{
+                          width: `${Math.round((bulkGenerationProgress.completed / bulkGenerationProgress.total) * 100)}%`
+                        }}
+                        role="progressbar"
+                        aria-valuenow={bulkGenerationProgress.completed}
+                        aria-valuemin={0}
+                        aria-valuemax={bulkGenerationProgress.total}
+                        aria-label={`Progress: ${bulkGenerationProgress.completed} of ${bulkGenerationProgress.total} files`}
+                      />
+                    </div>
+                  </>
+                )}
+
+                {/* Summary State */}
+                {bulkGenerationSummary && (
+                  <>
+                    <div className="flex items-center gap-2 flex-wrap mb-2">
+                      <p className={`text-sm font-medium ${
+                        bulkGenerationSummary.failCount > 0
+                          ? 'text-amber-900 dark:text-amber-100'
+                          : 'text-green-900 dark:text-green-100'
+                      }`}>
+                        {bulkGenerationSummary.failCount === 0 ? (
+                          <>✓ {bulkGenerationSummary.successCount} {bulkGenerationSummary.successCount === 1 ? 'file' : 'files'}</>
+                        ) : (
+                          <>
+                            {bulkGenerationSummary.successCount > 0 ? (
+                              <>
+                                ⚠ {bulkGenerationSummary.successCount} of {bulkGenerationSummary.totalFiles} files
+                              </>
+                            ) : (
+                              <>❌ 0 of {bulkGenerationSummary.totalFiles} files</>
+                            )}
+                          </>
+                        )}
+                      </p>
+                      {bulkGenerationSummary.successCount > 0 && (
+                        <span className={`text-xs px-2 py-0.5 rounded ${
+                          bulkGenerationSummary.failCount > 0
+                            ? 'bg-amber-200 dark:bg-amber-800/50 text-amber-900 dark:text-amber-100'
+                            : 'bg-green-200 dark:bg-green-800/50 text-green-900 dark:text-green-100'
+                        }`}>
+                          Avg: {bulkGenerationSummary.avgQuality}/100 ({bulkGenerationSummary.avgGrade})
+                        </span>
+                      )}
+                      {bulkGenerationSummary.failCount > 0 && (
+                        <span className="text-xs px-2 py-0.5 rounded bg-red-200 dark:bg-red-800/50 text-red-900 dark:text-red-100">
+                          {bulkGenerationSummary.failCount} failed
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setShowErrorDetails(!showErrorDetails)}
+                        className={`inline-flex items-center gap-1 text-xs ${
+                          bulkGenerationSummary.failCount > 0
+                            ? 'text-amber-700 dark:text-amber-300 hover:text-amber-900 dark:hover:text-amber-100'
+                            : 'text-green-700 dark:text-green-300 hover:text-green-900 dark:hover:text-green-100'
+                        } transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 rounded px-1`}
+                        aria-expanded={showErrorDetails}
+                        aria-label={showErrorDetails ? 'Hide details' : 'Show details'}
+                      >
+                        {showErrorDetails ? (
+                          <>
+                            <span>Hide Details</span>
+                            <ChevronUp className="w-3.5 h-3.5" aria-hidden="true" />
+                          </>
+                        ) : (
+                          <>
+                            <span>Show Details</span>
+                            <ChevronDown className="w-3.5 h-3.5" aria-hidden="true" />
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    {/* Expanded Details */}
+                    {showErrorDetails && (
+                      <div className="space-y-2 mt-3">
+                        {/* Success Section */}
+                        {bulkGenerationSummary.successfulFiles.length > 0 && (
+                          <div>
+                            <h4 className="text-xs font-semibold text-green-900 dark:text-green-100 mb-1.5">
+                              ✓ Success ({bulkGenerationSummary.successfulFiles.length} {bulkGenerationSummary.successfulFiles.length === 1 ? 'file' : 'files'})
+                            </h4>
+                            <div className="space-y-1">
+                              {bulkGenerationSummary.successfulFiles.map((file, index) => (
+                                <div
+                                  key={index}
+                                  className="bg-white dark:bg-slate-800 border border-green-200 dark:border-green-800/50 rounded px-2.5 py-1.5 text-xs flex items-center justify-between transition-colors"
+                                >
+                                  <span className="font-medium text-green-900 dark:text-green-100">{file.name}</span>
+                                  <span className="text-green-700 dark:text-green-300">{file.score}/100 ({file.grade})</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Failed Section */}
+                        {bulkGenerationErrors.length > 0 && (
+                          <div>
+                            <h4 className="text-xs font-semibold text-red-900 dark:text-red-100 mb-1.5">
+                              ❌ Failed ({bulkGenerationErrors.length} {bulkGenerationErrors.length === 1 ? 'file' : 'files'})
+                            </h4>
+                            <div className="space-y-1">
+                              {bulkGenerationErrors.map((error, index) => (
+                                <div
+                                  key={index}
+                                  className="bg-white dark:bg-slate-800 border border-red-200 dark:border-red-800/50 rounded p-2.5 text-xs transition-colors"
+                                >
+                                  <div className="flex items-start gap-2">
+                                    <span className="font-medium text-red-900 dark:text-red-100 flex-shrink-0">
+                                      {error.filename}
+                                    </span>
+                                  </div>
+                                  <p className="mt-1 text-red-800 dark:text-red-200/90 leading-relaxed">
+                                    {error.error}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Dismiss button - only show for summary, not progress */}
+            {bulkGenerationSummary && (
+              <button
+                type="button"
+                onClick={onDismissBulkErrors}
+                className={`flex-shrink-0 ml-2 p-1 rounded transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
+                  bulkGenerationSummary.failCount > 0
+                    ? 'hover:bg-amber-100 dark:hover:bg-amber-800/50 focus-visible:ring-amber-600 dark:focus-visible:ring-amber-400'
+                    : 'hover:bg-green-100 dark:hover:bg-green-800/50 focus-visible:ring-green-600 dark:focus-visible:ring-green-400'
+                }`}
+                aria-label="Dismiss summary banner"
+              >
+                <svg
+                  className={`w-4 h-4 ${
+                    bulkGenerationSummary.failCount > 0
+                      ? 'text-amber-600 dark:text-amber-400'
+                      : 'text-green-600 dark:text-green-400'
+                  }`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  aria-hidden="true"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Body - Documentation Content */}
       <div ref={contentRef} className="flex-1 min-h-0 overflow-y-auto px-4 py-3 bg-white dark:bg-slate-900">

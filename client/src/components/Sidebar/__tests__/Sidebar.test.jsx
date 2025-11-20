@@ -75,11 +75,11 @@ describe('Sidebar', () => {
       expect(screen.getByText('test.js')).toBeInTheDocument();
     });
 
-    it('should have flex-1 width in expanded mode', () => {
+    it('should have w-full width (controlled by parent Panel)', () => {
       render(<Sidebar {...mockProps} />);
 
       const sidebar = screen.getByText(/Files \(1\)/i).closest('.sidebar-container');
-      expect(sidebar).toHaveClass('flex-1');
+      expect(sidebar).toHaveClass('w-full');
     });
 
     it('should show collapse button in expanded mode', () => {
@@ -107,7 +107,7 @@ describe('Sidebar', () => {
       expect(screen.getByRole('button', { name: /Expand sidebar/i })).toBeInTheDocument();
     });
 
-    it('should have 60px width in collapsed mode', async () => {
+    it('should have w-full width in collapsed mode (controlled by parent Panel)', async () => {
       const user = userEvent.setup();
       render(<Sidebar {...mockProps} />);
 
@@ -115,7 +115,7 @@ describe('Sidebar', () => {
       await user.click(collapseBtn);
 
       const sidebar = screen.getByRole('button', { name: /Expand sidebar/i }).closest('.sidebar-container');
-      expect(sidebar).toHaveClass('w-[60px]');
+      expect(sidebar).toHaveClass('w-full');
     });
 
     it('should not show file list in collapsed mode', async () => {

@@ -100,17 +100,35 @@ function App() {
   const [largeCodeStats, setLargeCodeStats] = useState(null);
   const [uploadError, setUploadError] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [bulkGenerationErrors, setBulkGenerationErrors] = useState([]); // Array of {filename, fileId, error}
+  const [bulkGenerationProgress, setBulkGenerationProgress] = useState(null); // { total, completed, currentBatch, totalBatches } or null
+  const [bulkGenerationSummary, setBulkGenerationSummary] = useState(null); // { totalFiles, successCount, failCount, avgQuality, avgGrade, successfulFiles: [{name, score, grade}] }
   const [testSkeletonMode, setTestSkeletonMode] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [isMobileView, setIsMobileView] = useState(() => window.innerWidth < 1024);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     // Load sidebar collapsed state from localStorage
     const saved = getStorageItem(STORAGE_KEYS.SIDEBAR_MODE);
     return saved === 'collapsed';
   });
+  const [expandedSidebarWidth, setExpandedSidebarWidth] = useState(() => {
+    // Load user's preferred expanded width from localStorage
+    try {
+      const saved = getStorageItem(STORAGE_KEYS.SIDEBAR_WIDTH);
+      if (saved) {
+        const { sidebar } = JSON.parse(saved);
+        return sidebar || DEFAULT_SIDEBAR_SIZE;
+      }
+    } catch (error) {
+      console.error('[App] Error loading sidebar width:', error);
+    }
+    return DEFAULT_SIDEBAR_SIZE;
+  });
   const fileInputRef = useRef(null); // For single-file uploads (Command Bar)
   const multiFileInputRef = useRef(null); // For multi-file uploads (Sidebar)
   const samplesButtonRef = useRef(null);
   const headerRef = useRef(null);
+  const sidebarPanelRef = useRef(null); // For programmatically controlling sidebar panel size
 
   // Load saved sidebar panel sizes from localStorage
   const loadSidebarSizes = useCallback(() => {
@@ -146,12 +164,46 @@ function App() {
       const newValue = !prev;
       // Persist to localStorage
       setStorageItem(STORAGE_KEYS.SIDEBAR_MODE, newValue ? 'collapsed' : 'expanded');
+
+      // Control panel size via ref
+      if (sidebarPanelRef.current) {
+        if (newValue) {
+          // Collapsing: resize to minimum (3% ~ 58px - just enough for icon)
+          sidebarPanelRef.current.resize(3);
+        } else {
+          // Expanding: restore saved width
+          sidebarPanelRef.current.resize(expandedSidebarWidth);
+        }
+      }
+
       return newValue;
     });
-  }, []);
+  }, [expandedSidebarWidth]);
+
+  // Handle sidebar resize (when user drags the handle)
+  const handleSidebarResize = useCallback((sizes) => {
+    if (!sidebarCollapsed && sizes && sizes.length >= 2) {
+      const sidebarSize = sizes[0];
+      // Save the expanded width when user resizes (not when collapsed)
+      if (sidebarSize > 10) { // Only save if it's a meaningful size (not collapsed)
+        setExpandedSidebarWidth(sidebarSize);
+        saveSidebarSizes(sidebarSize, sizes[1]);
+      }
+    }
+  }, [sidebarCollapsed, saveSidebarSizes]);
 
   // Track if we just accepted terms to prevent re-checking immediately after
   const justAcceptedTermsRef = useRef(false);
+
+  // Detect mobile/tablet view changes
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobileView(window.innerWidth < 1024);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Usage tracking
   const { usage, refetch: refetchUsage, checkThreshold, canGenerate, getUsageForPeriod } = useUsageTracking();
@@ -513,7 +565,8 @@ function App() {
 
   /**
    * Generate documentation for a single file (non-streaming)
-   * @param {Object} file - File object from multiFileState
+   * Used in multi-file mode where each file has its own docType
+   * @param {Object} file - File object from multiFileState (must have docType property)
    * @returns {Promise<Object>} - Generated documentation and quality score
    */
   const generateSingleFile = async (file) => {
@@ -531,7 +584,7 @@ function App() {
       headers,
       body: JSON.stringify({
         code: file.content,
-        docType: docType,
+        docType: file.docType, // Use file's docType (multi-file mode)
         language: file.language,
         isDefaultCode: false
       })
@@ -547,6 +600,7 @@ function App() {
 
   /**
    * Handle bulk generation for selected files
+   * Processes files in batches of 5 concurrently
    */
   const handleGenerateSelected = async () => {
     const filesWithContent = multiFileState.files.filter(f => f.content && f.content.length > 0);
@@ -564,68 +618,165 @@ function App() {
     }
 
     const totalFiles = selectedFilesWithContent.length;
+    const BATCH_SIZE = 5;
     let successCount = 0;
     let failureCount = 0;
-    const errors = [];
+    const failedFiles = [];
+    const successfulFiles = []; // Track successful files with their quality scores
+
+    // Clear previous summary/errors and initialize progress
+    setBulkGenerationSummary(null);
+    setBulkGenerationErrors([]);
+    setBulkGenerationProgress({
+      total: totalFiles,
+      completed: 0,
+      currentBatch: 1,
+      totalBatches: Math.ceil(totalFiles / BATCH_SIZE)
+    });
 
     // Show initial progress toast
     toastCompact.loading(`Generating documentation for ${totalFiles} file${totalFiles > 1 ? 's' : ''}...`, {
       id: 'bulk-generation'
     });
 
-    // Process files sequentially
-    for (let i = 0; i < selectedFilesWithContent.length; i++) {
-      const file = selectedFilesWithContent[i];
-      const fileNumber = i + 1;
+    // Process files in batches of 5 concurrently
+    for (let i = 0; i < selectedFilesWithContent.length; i += BATCH_SIZE) {
+      const batch = selectedFilesWithContent.slice(i, Math.min(i + BATCH_SIZE, selectedFilesWithContent.length));
+      const batchNumber = Math.floor(i / BATCH_SIZE) + 1;
+      const totalBatches = Math.ceil(selectedFilesWithContent.length / BATCH_SIZE);
 
-      try {
-        // Update file state to show it's generating
+      // Update progress state for banner
+      setBulkGenerationProgress({
+        total: totalFiles,
+        completed: i,
+        currentBatch: batchNumber,
+        totalBatches: totalBatches
+      });
+
+      // Update progress toast for batch
+      toastCompact.loading(
+        `Processing batch ${batchNumber}/${totalBatches} (${Math.min(i + BATCH_SIZE, totalFiles)}/${totalFiles} files)`,
+        { id: 'bulk-generation' }
+      );
+
+      // Mark all files in batch as generating
+      batch.forEach(file => {
         multiFileState.updateFile(file.id, {
           isGenerating: true,
           error: null
         });
+      });
 
-        // Update progress toast
-        toastCompact.loading(
-          `Generating ${fileNumber}/${totalFiles}: ${file.filename}`,
-          { id: 'bulk-generation' }
-        );
+      // Process batch in parallel
+      const batchPromises = batch.map(async (file) => {
+        try {
+          // Generate documentation
+          const result = await generateSingleFile(file);
 
-        // Generate documentation
-        const result = await generateSingleFile(file);
+          // Update file with generated documentation
+          multiFileState.updateFile(file.id, {
+            documentation: result.documentation,
+            qualityScore: result.qualityScore,
+            isGenerating: false,
+            error: null,
+            documentId: null // Will be set when saved to DB
+          });
 
-        // Update file with generated documentation
-        multiFileState.updateFile(file.id, {
-          documentation: result.documentation,
-          qualityScore: result.qualityScore,
-          isGenerating: false,
-          error: null,
-          documentId: null // Will be set when saved to DB
-        });
+          // Update usage tracking
+          if (onUsageUpdate) {
+            onUsageUpdate();
+          }
 
-        successCount++;
+          return {
+            success: true,
+            file,
+            qualityScore: result.qualityScore
+          };
 
-        // Update usage tracking
-        if (onUsageUpdate) {
-          onUsageUpdate();
+        } catch (error) {
+          console.error(`[App] Failed to generate docs for ${file.filename}:`, error);
+
+          // Update file with error state
+          multiFileState.updateFile(file.id, {
+            isGenerating: false,
+            error: error.message
+          });
+
+          return {
+            success: false,
+            file,
+            error: error.message
+          };
         }
+      });
 
-      } catch (error) {
-        console.error(`[App] Failed to generate docs for ${file.filename}:`, error);
+      // Wait for batch to complete
+      const batchResults = await Promise.all(batchPromises);
 
-        // Update file with error state
-        multiFileState.updateFile(file.id, {
-          isGenerating: false,
-          error: error.message
-        });
+      // Count successes and failures for this batch
+      batchResults.forEach(result => {
+        if (result.success) {
+          successCount++;
+          successfulFiles.push({
+            name: result.file.filename,
+            score: result.qualityScore?.score || 0,
+            grade: result.qualityScore?.grade || 'N/A'
+          });
+        } else {
+          failureCount++;
+          failedFiles.push({
+            filename: result.file.filename,
+            fileId: result.file.id,
+            error: result.error
+          });
+        }
+      });
 
-        failureCount++;
-        errors.push({ filename: file.filename, error: error.message });
-      }
+      // Update progress after batch completes
+      const filesCompletedSoFar = Math.min(i + BATCH_SIZE, totalFiles);
+      setBulkGenerationProgress({
+        total: totalFiles,
+        completed: filesCompletedSoFar,
+        currentBatch: batchNumber,
+        totalBatches: totalBatches
+      });
     }
 
     // Clear selection after generation
     multiFileState.deselectAllFiles();
+
+    // Clear progress state
+    setBulkGenerationProgress(null);
+
+    // Calculate average quality score (Option A: Simple average of successes)
+    let avgQuality = 0;
+    let avgGrade = 'N/A';
+    if (successfulFiles.length > 0) {
+      const totalQuality = successfulFiles.reduce((sum, file) => sum + file.score, 0);
+      avgQuality = Math.round(totalQuality / successfulFiles.length);
+
+      // Calculate average grade
+      if (avgQuality >= 90) avgGrade = 'A';
+      else if (avgQuality >= 80) avgGrade = 'B';
+      else if (avgQuality >= 70) avgGrade = 'C';
+      else if (avgQuality >= 60) avgGrade = 'D';
+      else avgGrade = 'F';
+    }
+
+    // Set summary state for banner
+    setBulkGenerationSummary({
+      totalFiles,
+      successCount,
+      failCount: failureCount,
+      avgQuality,
+      avgGrade,
+      successfulFiles
+    });
+
+    // Also set errors for backward compatibility
+    if (failedFiles.length > 0) {
+      setBulkGenerationErrors(failedFiles);
+    }
 
     // Show final result toast
     if (failureCount === 0) {
@@ -635,22 +786,62 @@ function App() {
       );
     } else if (successCount > 0) {
       toastCompact.warning(
-        `Generated ${successCount} of ${totalFiles} files. ${failureCount} failed.`,
+        `Generated ${successCount} of ${totalFiles} files. ${failureCount} failed - see banner above.`,
         { id: 'bulk-generation' }
       );
-      // Show detailed errors
-      errors.forEach(({ filename, error }) => {
-        toastCompact.error(`${filename}: ${error}`, { duration: 5000 });
-      });
     } else {
       toastCompact.error(
-        `Failed to generate documentation for all ${totalFiles} files`,
+        `Failed to generate documentation for all ${totalFiles} files - see banner above.`,
         { id: 'bulk-generation' }
       );
-      // Show first error as example
-      if (errors.length > 0) {
-        toastCompact.error(errors[0].error, { duration: 5000 });
+    }
+  };
+
+  /**
+   * Apply docType to selected files
+   * Clears existing documentation if docType changes on already-generated files
+   * @param {Array} fileIds - Array of file IDs to update
+   * @param {string} newDocType - New doc type to apply
+   */
+  const handleApplyDocType = (fileIds, newDocType) => {
+    if (!fileIds || fileIds.length === 0) {
+      return;
+    }
+
+    let filesWithClearedDocs = 0;
+    let filesUpdated = 0;
+
+    // Update docType for each selected file
+    fileIds.forEach(fileId => {
+      const file = multiFileState.files.find(f => f.id === fileId);
+
+      if (!file) return;
+
+      // If file has documentation and docType is changing, clear the docs
+      if (file.documentation && file.docType !== newDocType) {
+        multiFileState.updateFile(fileId, {
+          docType: newDocType,
+          documentation: null,    // Clear docs - no longer matches docType
+          qualityScore: null      // Clear score
+        });
+        filesWithClearedDocs++;
+      } else {
+        // No docs yet, just update docType
+        multiFileState.updateFile(fileId, { docType: newDocType });
       }
+      filesUpdated++;
+    });
+
+    // Show appropriate toast message
+    if (filesWithClearedDocs > 0) {
+      toastCompact.success(
+        `Applied ${newDocType} to ${filesUpdated} file${filesUpdated !== 1 ? 's' : ''}. ` +
+        `${filesWithClearedDocs} file${filesWithClearedDocs !== 1 ? 's' : ''} cleared - regenerate to update documentation.`
+      );
+    } else {
+      toastCompact.success(
+        `Applied ${newDocType} to ${filesUpdated} file${filesUpdated !== 1 ? 's' : ''}`
+      );
     }
   };
 
@@ -1267,6 +1458,8 @@ function App() {
         ref={headerRef}
         onMenuClick={() => setShowMobileMenu(true)}
         onHelpClick={() => setShowHelpModal(true)}
+        showSidebarMenu={canUseBatchProcessing && isMobileView}
+        onSidebarMenuClick={() => setMobileSidebarOpen(true)}
       />
 
       {/* Email Verification Banner - Shows at top for unverified users */}
@@ -1294,9 +1487,9 @@ function App() {
       {/* Main Content - with optional Sidebar for Pro+ users */}
       <div className="flex-1 flex overflow-hidden relative">
         {canUseBatchProcessing ? (
-          <div className="flex-1 flex">
-            {/* Sidebar - Fixed width (not resizable) */}
-            <div className={`${sidebarCollapsed ? 'w-[60px]' : 'w-[320px]'} flex-shrink-0 transition-all duration-250 ease-out`}>
+          isMobileView ? (
+            // Mobile/Tablet: Sidebar as overlay, no PanelGroup
+            <>
               <Sidebar
                 files={multiFileState.files}
                 activeFileId={multiFileState.activeFileId}
@@ -1306,6 +1499,7 @@ function App() {
                 onToggleCollapse={handleToggleSidebarCollapse}
                 docType={docType}
                 onDocTypeChange={setDocType}
+                onApplyDocType={handleApplyDocType}
                 onGithubImport={handleGithubImport}
                 mobileOpen={mobileSidebarOpen}
                 onMobileClose={() => setMobileSidebarOpen(false)}
@@ -1342,11 +1536,10 @@ function App() {
                   multiFileState.deselectAllFiles();
                 }}
               />
-            </div>
 
-            {/* Main Content - Takes remaining space */}
-            <div className="flex-1 min-w-0">
-              <main id="main-content" className="flex-1 w-full h-full flex flex-col overflow-auto lg:overflow-hidden lg:min-h-0">
+              {/* Main Content - Full width on mobile */}
+              <div className="flex-1 min-w-0">
+                <main id="main-content" className="flex-1 w-full h-full flex flex-col overflow-auto lg:overflow-hidden lg:min-h-0">
 
         {/* Priority Banner Section - Show only most critical message */}
         {/* Priority Order: 1) Email Verification (handled above), 2) Claude API Error, 3) Upload Error, 4) Generation Error, 5) Usage Warning */}
@@ -1410,6 +1603,13 @@ function App() {
                   onGithubImport={handleGithubImport}
                   onGenerate={handleGenerate}
                   onReset={handleReset}
+                  bulkGenerationProgress={bulkGenerationProgress}
+                  bulkGenerationSummary={bulkGenerationSummary}
+                  bulkGenerationErrors={bulkGenerationErrors}
+                  onDismissBulkErrors={() => {
+                    setBulkGenerationErrors([]);
+                    setBulkGenerationSummary(null);
+                  }}
                 />
               </Suspense>
             }
@@ -1417,8 +1617,155 @@ function App() {
         </div>
 
               </main>
-            </div>
-          </div>
+              </div>
+            </>
+          ) : (
+            // Desktop: Sidebar with resizable panels
+            <PanelGroup direction="horizontal" onLayout={handleSidebarResize} className="flex-1">
+              {/* Sidebar Panel - Resizable */}
+              <Panel
+                ref={sidebarPanelRef}
+                defaultSize={sidebarCollapsed ? 3 : expandedSidebarWidth}
+                minSize={3}
+                maxSize={40}
+                collapsible={false}
+              >
+                <Sidebar
+                  files={multiFileState.files}
+                  activeFileId={multiFileState.activeFileId}
+                  selectedFileIds={multiFileState.selectedFileIds}
+                  selectedCount={multiFileState.selectedCount}
+                  isCollapsed={sidebarCollapsed}
+                  onToggleCollapse={handleToggleSidebarCollapse}
+                  docType={docType}
+                  onDocTypeChange={setDocType}
+                  onApplyDocType={handleApplyDocType}
+                  onGithubImport={handleGithubImport}
+                  mobileOpen={mobileSidebarOpen}
+                  onMobileClose={() => setMobileSidebarOpen(false)}
+                  onSelectFile={multiFileState.setActiveFile}
+                  onToggleFileSelection={multiFileState.toggleFileSelection}
+                  onSelectAllFiles={multiFileState.selectAllFiles}
+                  onDeselectAllFiles={multiFileState.deselectAllFiles}
+                  onRemoveFile={multiFileState.removeFile}
+                  onAddFile={handleMultiFileUpload}
+                  hasCodeInEditor={code.trim().length > 0}
+                  onFilesDrop={handleMultiFilesDrop}
+                  onGenerateFile={(fileId) => {
+                    // TODO: Implement single file generation
+                    console.log('[App] Generate file requested:', fileId);
+                  }}
+                  onGenerateSelected={() => {
+                    // Check if any files are selected
+                    const filesWithContent = multiFileState.files.filter(f => f.content && f.content.length > 0);
+                    const selectedFilesWithContent = filesWithContent.filter(f => multiFileState.selectedFileIds.includes(f.id));
+
+                    if (selectedFilesWithContent.length > 0) {
+                      // Generate documentation for all selected files
+                      handleGenerateSelected();
+                    } else {
+                      // No files selected, generate from code editor
+                      handleGenerate();
+                    }
+                  }}
+                  onDeleteSelected={() => {
+                    // Delete all selected files
+                    multiFileState.selectedFileIds.forEach(fileId => {
+                      multiFileState.removeFile(fileId);
+                    });
+                    multiFileState.deselectAllFiles();
+                  }}
+                />
+              </Panel>
+
+              {/* Resize Handle - Hidden when collapsed */}
+              {!sidebarCollapsed && (
+                <PanelResizeHandle className="w-1 bg-slate-200 dark:bg-slate-700 hover:bg-purple-400 dark:hover:bg-purple-600 transition-colors cursor-col-resize" />
+              )}
+
+              {/* Main Content Panel */}
+              <Panel defaultSize={sidebarCollapsed ? 97 : (100 - expandedSidebarWidth)} minSize={30}>
+                <main id="main-content" className="w-full h-full flex flex-col overflow-hidden">
+
+                  {/* Priority Banner Section - Show only most critical message */}
+                  {/* Priority Order: 1) Email Verification (handled above), 2) Claude API Error, 3) Upload Error, 4) Generation Error, 5) Usage Warning */}
+                  {error ? (
+                    // Priority 1: Claude API rate limit or generation errors (blocking)
+                    <div role="region" aria-label="Error notification">
+                      <ErrorBanner
+                        error={error}
+                        retryAfter={retryAfter}
+                        onDismiss={clearError}
+                      />
+                    </div>
+                  ) : uploadError ? (
+                    // Priority 2: Upload errors
+                    <div role="region" aria-label="Upload error notification">
+                      <ErrorBanner
+                        error={uploadError}
+                        onDismiss={() => setUploadError(null)}
+                      />
+                    </div>
+                  ) : showUsageWarning && (mockUsage || usage) ? (
+                    // Priority 3: Usage warning (80%+ usage, non-blocking)
+                    <div className="mb-6" role="region" aria-label="Usage warning">
+                      <UsageWarningBanner
+                        usage={mockUsage || getUsageForPeriod('monthly')}
+                        currentTier={mockUsage?.tier || usage?.tier}
+                        onDismiss={() => {
+                          setShowUsageWarning(false);
+                          setMockUsage(null); // Clear mock when dismissing
+                        }}
+                        onUpgrade={handleUpgradeClick}
+                      />
+                    </div>
+                  ) : null}
+
+                  {/* Control Bar - Hidden in Pro+ mode (sidebar has these controls) */}
+
+                  {/* Split View: Code + Documentation */}
+                  <div className="flex-1 min-h-0">
+                    <SplitPanel
+                      leftPanel={
+                        <CodePanel
+                          code={code}
+                          onChange={setCode}
+                          filename={filename}
+                          language={language}
+                          onFileDrop={null}  // Disable drag-and-drop in multi-file mode - use sidebar instead
+                          onClear={handleClear}
+                          onSamplesClick={() => setShowSamplesModal(true)}
+                          samplesButtonRef={samplesButtonRef}
+                        />
+                      }
+                      rightPanel={
+                        <Suspense fallback={<LoadingFallback />}>
+                          <DocPanel
+                            documentation={documentation}
+                            qualityScore={qualityScore}
+                            isGenerating={isGenerating || testSkeletonMode}
+                            onViewBreakdown={handleViewBreakdown}
+                            onUpload={handleUpload}
+                            onGithubImport={handleGithubImport}
+                            onGenerate={handleGenerate}
+                            onReset={handleReset}
+                            bulkGenerationProgress={bulkGenerationProgress}
+                            bulkGenerationSummary={bulkGenerationSummary}
+                            bulkGenerationErrors={bulkGenerationErrors}
+                            onDismissBulkErrors={() => {
+                              setBulkGenerationErrors([]);
+                              setBulkGenerationSummary(null);
+                            }}
+                          />
+                        </Suspense>
+                      }
+                    />
+                  </div>
+
+                </main>
+              </Panel>
+            </PanelGroup>
+          )
         ) : (
           <main id="main-content" className="flex-1 w-full flex flex-col overflow-auto lg:overflow-hidden lg:min-h-0">
             {/* Priority Banner Section - Show only most critical message */}
@@ -1495,6 +1842,13 @@ function App() {
                       onGithubImport={handleGithubImport}
                       onGenerate={handleGenerate}
                       onReset={handleReset}
+                      bulkGenerationProgress={bulkGenerationProgress}
+                      bulkGenerationSummary={bulkGenerationSummary}
+                      bulkGenerationErrors={bulkGenerationErrors}
+                      onDismissBulkErrors={() => {
+                        setBulkGenerationErrors([]);
+                        setBulkGenerationSummary(null);
+                      }}
                     />
                   </Suspense>
                 }

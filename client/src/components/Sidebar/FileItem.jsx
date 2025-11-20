@@ -162,6 +162,15 @@ export function FileItem({ file, isActive, isSelected, onSelect, onToggleSelecti
             <span className="text-sm text-slate-900 dark:text-slate-100 truncate">
               {filename}
             </span>
+            {/* Status Icon */}
+            <span className="flex-shrink-0" title={
+              isGenerating ? 'Generating documentation...' :
+              hasError ? `Error: ${error}` :
+              hasDocumentation ? 'Documentation generated' :
+              'Ready to generate'
+            }>
+              <StatusIcon />
+            </span>
             {isActive && (
               <Star className="w-3 h-3 text-purple-600 dark:text-purple-400 flex-shrink-0" fill="currentColor" />
             )}

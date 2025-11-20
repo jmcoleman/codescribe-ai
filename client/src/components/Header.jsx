@@ -1,4 +1,4 @@
-import { Menu as MenuIcon, LogOut, User, FileText, Shield, ChevronDown, Settings, BarChart3, Sparkles, SlidersHorizontal } from 'lucide-react';
+import { Menu as MenuIcon, LogOut, User, FileText, Shield, ChevronDown, Settings, BarChart3, Sparkles, SlidersHorizontal, PanelLeft } from 'lucide-react';
 import { useState, lazy, Suspense, forwardRef, useImperativeHandle } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Menu } from '@headlessui/react';
@@ -15,7 +15,7 @@ const ForgotPasswordModal = lazy(() => import('./ForgotPasswordModal').then(m =>
 // Feature flag: Authentication enabled (from environment variable)
 const ENABLE_AUTH = import.meta.env.VITE_ENABLE_AUTH === 'true';
 
-export const Header = forwardRef(function Header({ onMenuClick, onHelpClick }, ref) {
+export const Header = forwardRef(function Header({ onMenuClick, onHelpClick, showSidebarMenu, onSidebarMenuClick }, ref) {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -82,8 +82,21 @@ export const Header = forwardRef(function Header({ onMenuClick, onHelpClick }, r
     <header className="sticky top-0 z-50 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 transition-colors">
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14 sm:h-16">
-          {/* Left: Logo + Title */}
-          <Link to="/" className="flex items-center gap-2 sm:gap-3 group" aria-label="CodeScribe AI home">
+          {/* Left: Sidebar Menu (mobile only) + Logo + Title */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Sidebar Menu Button - Only visible on mobile/tablet when multi-file mode is active */}
+            {showSidebarMenu && (
+              <button
+                type="button"
+                onClick={onSidebarMenuClick}
+                className="lg:hidden p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400"
+                aria-label="Open file sidebar"
+              >
+                <PanelLeft className="w-6 h-6 text-slate-600 dark:text-slate-400" />
+              </button>
+            )}
+
+            <Link to="/" className="flex items-center gap-2 sm:gap-3 group" aria-label="CodeScribe AI home">
             {/* Logo */}
             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 dark:bg-purple-950/20 flex items-center justify-center shadow-purple dark:shadow-purple-dark p-1 transition-transform group-hover:scale-105 dark:border dark:border-purple-900/50">
               <Logo className="w-full h-full" aria-hidden="true" />
@@ -99,6 +112,7 @@ export const Header = forwardRef(function Header({ onMenuClick, onHelpClick }, r
               </p>
             </div>
           </Link>
+          </div>
 
           {/* Right: Navigation */}
           <nav className="flex items-center gap-2">
