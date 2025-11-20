@@ -8,6 +8,7 @@
 import express from 'express';
 import { requireAuth, validateBody } from '../middleware/auth.js';
 import documentService from '../services/documentService.js';
+import { getSupportedDocTypes } from '../prompts/docTypeConfig.js';
 
 const router = express.Router();
 
@@ -23,7 +24,7 @@ router.post(
     fileSize: { required: true, type: 'number', min: 0 },
     documentation: { required: true, type: 'string' },
     qualityScore: { required: true, type: 'object' },
-    docType: { required: true, type: 'string', enum: ['README', 'JSDOC', 'API', 'ARCHITECTURE'] },
+    docType: { required: true, type: 'string', enum: getSupportedDocTypes() },
     provider: { required: true, type: 'string' },
     model: { required: true, type: 'string' }
   }),

@@ -47,7 +47,7 @@ export function Select({ options, value, onChange, placeholder = 'Select...', la
               leaveFrom="opacity-100"
               leaveTo="opacity-0"
             >
-              <Listbox.Options className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-md overflow-hidden z-10 max-h-60 overflow-y-auto focus:outline-none focus:ring-0">
+              <Listbox.Options className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg overflow-hidden z-50 max-h-60 overflow-y-auto focus:outline-none focus:ring-0">
                 {options.map((option) => (
                   <Listbox.Option
                     key={option.value}

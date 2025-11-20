@@ -11,6 +11,7 @@ import emailService from '../services/emailService.js';
 import { TIER_FEATURES, TIER_PRICING } from '../config/tiers.js';
 import { requireAuth, optionalAuth } from '../middleware/auth.js';
 import githubService from '../services/githubService.js';
+import { getDocTypeOptions } from '../prompts/docTypeConfig.js';
 
 const router = express.Router();
 
@@ -1053,6 +1054,28 @@ router.post('/github/files-batch', requireAuth, apiLimiter, requireFeature('batc
 
     res.status(500).json({
       error: 'Failed to fetch files',
+      message: error.message
+    });
+  }
+});
+
+// ============================================================================
+// Doc Types Configuration
+// ============================================================================
+
+router.get('/doc-types', (req, res) => {
+  try {
+    const docTypes = getDocTypeOptions(true); // Only active doc types
+    res.json({
+      success: true,
+      docTypes,
+      count: docTypes.length
+    });
+  } catch (error) {
+    console.error('Error fetching doc types:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch doc types',
       message: error.message
     });
   }

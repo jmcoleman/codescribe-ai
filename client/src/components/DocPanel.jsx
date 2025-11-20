@@ -266,15 +266,8 @@ export const DocPanel = memo(function DocPanel({
   // Memoize ReactMarkdown components to prevent unnecessary re-renders
   const markdownComponents = useMemo(() => ({
     pre({ node, children, ...props }) {
-      // Styled pre wrapper that matches our theme
-      return (
-        <pre
-          className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg overflow-x-auto p-4 my-4 transition-colors"
-          {...props}
-        >
-          {children}
-        </pre>
-      );
+      // Just pass through - SyntaxHighlighter handles all styling
+      return <>{children}</>;
     },
     code({ node, inline, className, children, ...props }) {
       const match = /language-(\w+)/.exec(className || '');
@@ -324,20 +317,37 @@ export const DocPanel = memo(function DocPanel({
 
       // Handle other code blocks
       return !inline && match ? (
-        <SyntaxHighlighter
-          style={effectiveTheme === 'dark' ? codescribeDarkTheme : codescribeLightTheme}
-          language={language}
-          PreTag="div"
-          customStyle={{
-            margin: '1.5rem 0',
-            borderRadius: '0.5rem',
-            fontSize: '13px',
-            lineHeight: '1.6',
-          }}
-          {...props}
-        >
-          {codeContent}
-        </SyntaxHighlighter>
+        <div className="relative group">
+          <SyntaxHighlighter
+            style={effectiveTheme === 'dark' ? codescribeDarkTheme : codescribeLightTheme}
+            language={language}
+            PreTag="div"
+            customStyle={{
+              margin: 0,
+              marginTop: '1.5rem',
+              marginBottom: '1.5rem',
+              padding: '1rem',
+              paddingTop: '1rem',
+              borderRadius: '0.5rem',
+              fontSize: '13px',
+              lineHeight: '1.6',
+              backgroundColor: effectiveTheme === 'dark' ? '#1e293b' : '#f8fafc',
+              border: effectiveTheme === 'dark' ? '1px solid #334155' : '1px solid #e2e8f0',
+            }}
+            {...props}
+          >
+            {codeContent}
+          </SyntaxHighlighter>
+          <div className="absolute top-2 right-3">
+            <CopyButton
+              text={codeContent}
+              size="md"
+              variant="ghost"
+              ariaLabel={`Copy ${language} code`}
+              showLabel={false}
+            />
+          </div>
+        </div>
       ) : (
         <code className="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-cyan-300 px-1 py-0.5 rounded text-[13px] font-mono" {...props}>
           {children}

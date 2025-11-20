@@ -80,7 +80,10 @@ function getLLMConfig() {
     temperature: config.temperature,
     enableCaching: config.enableCaching,
     supportsCaching: providerConfig.supportsCaching,
-    supportsStreaming: providerConfig.supportsStreaming
+    supportsStreaming: providerConfig.supportsStreaming,
+    // Include all provider configs for runtime switching
+    claude: config.claude,
+    openai: config.openai
   }
 
   // Only add topP if explicitly configured (not used by default to avoid conflicts with temperature)

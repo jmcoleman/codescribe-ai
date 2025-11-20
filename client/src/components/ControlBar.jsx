@@ -1,6 +1,8 @@
+import { useState, useEffect } from 'react';
 import { Upload, Github, Sparkles, Menu } from 'lucide-react';
 import { Button } from './Button';
 import { Select } from './Select';
+import { fetchDocTypes } from '../services/api';
 
 // Feature flag: GitHub import enabled (v2.8.0+)
 const ENABLE_GITHUB_IMPORT = true;
@@ -18,12 +20,21 @@ export function ControlBar({
   generateDisabled = false,
   disabled = false
 }) {
-  const docTypes = [
-    { value: 'README', label: 'README.md' },
-    { value: 'JSDOC', label: 'JSDoc Comments' },
+  const [docTypes, setDocTypes] = useState([
     { value: 'API', label: 'API Documentation' },
     { value: 'ARCHITECTURE', label: 'Architecture Docs' },
-  ];
+    { value: 'JSDOC', label: 'JSDoc Comments' },
+    { value: 'README', label: 'README.md' },
+  ]);
+
+  // Fetch doc types from backend on mount
+  useEffect(() => {
+    fetchDocTypes().then(types => {
+      if (types && types.length > 0) {
+        setDocTypes(types);
+      }
+    });
+  }, []);
 
   return (
     <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 p-4 transition-colors">

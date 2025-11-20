@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { FileItem } from './FileItem';
 import { FileDetailsPanel } from './FileDetailsPanel';
-import { FileCode, PanelLeftClose, Plus, Github, Upload } from 'lucide-react';
+import { FileCode, PanelLeftClose, Plus, Github, Upload, Info, X } from 'lucide-react';
 import { Select } from '../Select';
 import { Button } from '../Button';
+import { fetchDocTypes } from '../../services/api';
 
 /**
  * FileList Component
@@ -55,12 +56,17 @@ export function FileList({
 }) {
   const [isDragging, setIsDragging] = useState(false);
   const [detailsFileId, setDetailsFileId] = useState(null);
+  const [showNoCodeBanner, setShowNoCodeBanner] = useState(true);
 
   const generatedCount = files.filter(f => f.documentation).length;
   const canGenerateAll = files.some(f => !f.documentation && !f.isGenerating);
   const canClearAll = files.length > 0;
 
-  // Keyboard shortcut handler for Cmd/Ctrl+I (View Details)
+  // Check if there are files with no code content
+  const filesWithoutCode = files.filter(f => !f.content || f.content.length === 0);
+  const hasFilesWithoutCode = filesWithoutCode.length > 0;
+
+  // Keyboard shortcut handlers
   useEffect(() => {
     const handleKeyDown = (e) => {
       // Cmd/Ctrl+I - Open details for active file
@@ -69,12 +75,38 @@ export function FileList({
         if (activeFileId) {
           setDetailsFileId(activeFileId);
         }
+        return;
+      }
+
+      // Cmd/Ctrl+G - Generate docs for selected files (or active file if none selected)
+      if ((e.metaKey || e.ctrlKey) && e.key === 'g') {
+        e.preventDefault();
+        const filesWithContent = files.filter(f => f.content && f.content.length > 0);
+        const selectedFilesWithContent = filesWithContent.filter(f => selectedFileIds.includes(f.id));
+
+        if (selectedFilesWithContent.length > 0 || hasCodeInEditor) {
+          onGenerateSelected();
+        }
+        return;
+      }
+
+      // Delete or Backspace - Delete selected files
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedCount > 0) {
+        // Only trigger if not typing in an input/textarea
+        const target = e.target;
+        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+          return;
+        }
+
+        e.preventDefault();
+        onDeleteSelected();
+        return;
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [activeFileId]);
+  }, [activeFileId, selectedFileIds, selectedCount, files, hasCodeInEditor, onGenerateSelected, onDeleteSelected]);
 
   // Drag and drop handlers for multi-file upload
   const handleDragEnter = (e) => {
@@ -114,13 +146,22 @@ export function FileList({
   const selectedFilesWithContent = filesWithContent.filter(f => selectedFileIds.includes(f.id));
   const selectedCountWithContent = selectedFilesWithContent.length;
 
-  // Doc type options
-  const docTypes = [
-    { value: 'README', label: 'README.md' },
-    { value: 'JSDOC', label: 'JSDoc Comments' },
+  // Doc type options - fetch from backend
+  const [docTypes, setDocTypes] = useState([
     { value: 'API', label: 'API Documentation' },
     { value: 'ARCHITECTURE', label: 'Architecture Docs' },
-  ];
+    { value: 'JSDOC', label: 'JSDoc Comments' },
+    { value: 'README', label: 'README.md' },
+  ]);
+
+  // Fetch doc types from backend on mount
+  useEffect(() => {
+    fetchDocTypes().then(types => {
+      if (types && types.length > 0) {
+        setDocTypes(types);
+      }
+    });
+  }, []);
 
   return (
     <div
@@ -223,7 +264,7 @@ export function FileList({
               onClick={onGenerateSelected}
               disabled={selectedCountWithContent === 0 && !hasCodeInEditor}
               className="flex-1 min-w-0 px-1.5 @[240px]:px-2 @[280px]:px-2.5 py-1.5 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-700 dark:hover:bg-purple-800 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded text-xs font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-slate-900 transition-colors duration-150 truncate"
-              title={selectedCountWithContent > 0 ? `Generate documentation for ${selectedCountWithContent} selected file${selectedCountWithContent !== 1 ? 's' : ''}` : 'Generate documentation for code in editor'}
+              title={selectedCountWithContent > 0 ? `Generate documentation for ${selectedCountWithContent} selected file${selectedCountWithContent !== 1 ? 's' : ''} (⌘G)` : 'Generate documentation for code in editor (⌘G)'}
             >
               <span className="hidden @[280px]:inline">Generate</span>
               <span className="@[280px]:hidden">Gen</span>
@@ -237,7 +278,7 @@ export function FileList({
                 onClick={onDeleteSelected}
                 disabled={selectedCount === 0}
                 className="flex-1 min-w-0 px-1.5 @[240px]:px-2 @[280px]:px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-100 rounded text-xs font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:focus-visible:ring-slate-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-slate-900 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed truncate"
-                title={`Delete ${selectedCount} selected file${selectedCount !== 1 ? 's' : ''}`}
+                title={`Delete ${selectedCount} selected file${selectedCount !== 1 ? 's' : ''} (⌫)`}
               >
                 <span className="hidden @[280px]:inline">Delete</span>
                 <span className="@[280px]:hidden">Del</span>
@@ -279,6 +320,7 @@ export function FileList({
               onClick={onGenerateSelected}
               disabled={selectedCountWithContent === 0 && !hasCodeInEditor}
               className="flex-1 px-2.5 py-1.5 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-700 dark:hover:bg-purple-800 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded text-xs font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-slate-900 transition-colors duration-150"
+              title={selectedCountWithContent > 0 ? `Generate documentation for ${selectedCountWithContent} selected file${selectedCountWithContent !== 1 ? 's' : ''} (⌘G)` : 'Generate documentation for code in editor (⌘G)'}
             >
               Generate{selectedCountWithContent > 0 ? ` (${selectedCountWithContent})` : ''}
             </button>
@@ -287,6 +329,7 @@ export function FileList({
               onClick={onDeleteSelected}
               disabled={selectedCount === 0}
               className="flex-1 px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-100 rounded text-xs font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:focus-visible:ring-slate-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-slate-900 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+              title={`Delete ${selectedCount} selected file${selectedCount !== 1 ? 's' : ''} (⌫)`}
             >
               Delete{selectedCount > 0 ? ` (${selectedCount})` : ''}
             </button>
@@ -301,6 +344,37 @@ export function FileList({
             <Plus className="w-4 h-4" />
             Add Files
           </button>
+        </div>
+      )}
+
+      {/* No Code Content Banner - Privacy Notice */}
+      {hasFilesWithoutCode && showNoCodeBanner && (
+        <div className="mx-3 my-2 p-3 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-l-blue-500 dark:border-l-blue-400 border border-blue-200 dark:border-blue-800 rounded-lg">
+          <div className="flex items-start gap-2">
+            <Info className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
+                Code not saved for privacy. Re-upload files after closing browser. <button
+                  onClick={() => {
+                    // Select all files first, then delete them
+                    onSelectAllFiles();
+                    // Use setTimeout to ensure selection completes before deletion
+                    setTimeout(() => onDeleteSelected(), 10);
+                  }}
+                  className="font-medium hover:underline"
+                >
+                  Clear workspace
+                </button>
+              </p>
+            </div>
+            <button
+              onClick={() => setShowNoCodeBanner(false)}
+              className="p-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors flex-shrink-0"
+              aria-label="Dismiss notice"
+            >
+              <X className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            </button>
+          </div>
         </div>
       )}
 
