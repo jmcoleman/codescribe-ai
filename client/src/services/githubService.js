@@ -19,8 +19,16 @@ export async function parseGitHubUrl(url) {
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || 'Failed to parse GitHub URL');
+    let errorMessage = 'Failed to parse GitHub URL';
+    try {
+      const error = await response.json();
+      errorMessage = error.message || errorMessage;
+    } catch {
+      // If response is not JSON, try to get text
+      const text = await response.text().catch(() => '');
+      if (text) errorMessage = text;
+    }
+    throw new Error(errorMessage);
   }
 
   return response.json();
@@ -45,8 +53,16 @@ export async function fetchFile(owner, repo, path, ref = null) {
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || 'Failed to fetch file from GitHub');
+    let errorMessage = 'Failed to fetch file from GitHub';
+    try {
+      const error = await response.json();
+      errorMessage = error.message || errorMessage;
+    } catch {
+      // If response is not JSON, try to get text
+      const text = await response.text().catch(() => '');
+      if (text) errorMessage = text;
+    }
+    throw new Error(errorMessage);
   }
 
   const data = await response.json();
@@ -71,8 +87,16 @@ export async function fetchTree(owner, repo, ref = null) {
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || 'Failed to fetch repository tree from GitHub');
+    let errorMessage = 'Failed to fetch repository tree from GitHub';
+    try {
+      const error = await response.json();
+      errorMessage = error.message || errorMessage;
+    } catch {
+      // If response is not JSON, try to get text
+      const text = await response.text().catch(() => '');
+      if (text) errorMessage = text;
+    }
+    throw new Error(errorMessage);
   }
 
   const data = await response.json();
@@ -93,8 +117,16 @@ export async function fetchBranches(owner, repo) {
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || 'Failed to fetch branches from GitHub');
+    let errorMessage = 'Failed to fetch branches from GitHub';
+    try {
+      const error = await response.json();
+      errorMessage = error.message || errorMessage;
+    } catch {
+      // If response is not JSON, try to get text
+      const text = await response.text().catch(() => '');
+      if (text) errorMessage = text;
+    }
+    throw new Error(errorMessage);
   }
 
   const data = await response.json();
