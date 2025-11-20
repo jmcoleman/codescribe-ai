@@ -46,3 +46,32 @@ export async function generateDocumentation(code, docType, language, token = nul
     rateLimitInfo: { remaining, limit, reset }
   };
 }
+
+/**
+ * Fetch available documentation types from the backend
+ * @returns {Promise<Array<{value: string, label: string}>>} Array of doc type options
+ */
+export async function fetchDocTypes() {
+  try {
+    const response = await fetch(`${API_URL}/api/doc-types`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch doc types');
+    }
+
+    const data = await response.json();
+    return data.docTypes || [];
+  } catch (error) {
+    console.error('Error fetching doc types:', error);
+    // Return fallback doc types if API fails (Claude-only types)
+    return [
+      { value: 'API', label: 'API Documentation' },
+      { value: 'ARCHITECTURE', label: 'Architecture Docs' },
+      { value: 'JSDOC', label: 'JSDoc Comments' },
+      { value: 'README', label: 'README.md' }
+    ];
+  }
+}

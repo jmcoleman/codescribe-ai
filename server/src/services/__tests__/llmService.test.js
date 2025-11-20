@@ -12,6 +12,31 @@ jest.mock('../../config/llm.config.js');
 jest.mock('../llm/providers/claude.js');
 jest.mock('../llm/providers/openai.js');
 
+// Helper to create complete config with both providers
+function createMockConfig(defaultProvider = 'claude') {
+  return {
+    provider: defaultProvider,
+    apiKey: defaultProvider === 'claude' ? 'test-claude-key' : 'test-openai-key',
+    model: defaultProvider === 'claude' ? 'claude-sonnet-4-5-20250929' : 'gpt-5.1',
+    maxTokens: 4000,
+    temperature: 0.7,
+    supportsCaching: defaultProvider === 'claude',
+    supportsStreaming: true,
+    claude: {
+      apiKey: 'test-claude-key',
+      model: 'claude-sonnet-4-5-20250929',
+      supportsCaching: true,
+      supportsStreaming: true
+    },
+    openai: {
+      apiKey: 'test-openai-key',
+      model: 'gpt-5.1',
+      supportsCaching: false,
+      supportsStreaming: true
+    }
+  };
+}
+
 describe('LLMService', () => {
   let originalEnv;
 
@@ -26,15 +51,7 @@ describe('LLMService', () => {
 
   describe('Constructor', () => {
     it('should initialize with Claude provider by default', () => {
-      getLLMConfig.mockReturnValue({
-        provider: 'claude',
-        apiKey: 'test-claude-key',
-        model: 'claude-sonnet-4-5-20250929',
-        maxTokens: 4000,
-        temperature: 0.7,
-        supportsCaching: true,
-        supportsStreaming: true
-      });
+      getLLMConfig.mockReturnValue(createMockConfig('claude'));
 
       const service = new LLMService();
 
@@ -44,15 +61,7 @@ describe('LLMService', () => {
     });
 
     it('should initialize with OpenAI provider when configured', () => {
-      getLLMConfig.mockReturnValue({
-        provider: 'openai',
-        apiKey: 'test-openai-key',
-        model: 'gpt-5.1',
-        maxTokens: 4000,
-        temperature: 0.7,
-        supportsCaching: false,
-        supportsStreaming: true
-      });
+      getLLMConfig.mockReturnValue(createMockConfig('openai'));
 
       const service = new LLMService();
 
@@ -62,16 +71,12 @@ describe('LLMService', () => {
     });
 
     it('should throw error for unsupported provider when generating', async () => {
-      getLLMConfig.mockReturnValue({
-        provider: 'unsupported',
-        apiKey: 'test-key',
-        model: 'test-model',
-        maxTokens: 4000,
-        temperature: 0.7
-      });
+      const mockConfig = createMockConfig('claude');
+      mockConfig.provider = 'unsupported';
+      getLLMConfig.mockReturnValue(mockConfig);
 
       const service = new LLMService();
-      await expect(service.generate('test')).rejects.toThrow('Unsupported LLM provider: unsupported');
+      await expect(service.generate('test')).rejects.toThrow('Unknown provider: unsupported');
     });
 
     it('should throw error when no API key provided', () => {
@@ -85,15 +90,7 @@ describe('LLMService', () => {
 
   describe('generate()', () => {
     it('should call Claude provider for generation', async () => {
-      getLLMConfig.mockReturnValue({
-        provider: 'claude',
-        apiKey: 'test-claude-key',
-        model: 'claude-sonnet-4-5-20250929',
-        maxTokens: 4000,
-        temperature: 0.7,
-        supportsCaching: true,
-        supportsStreaming: true
-      });
+      getLLMConfig.mockReturnValue(createMockConfig('claude'));
 
       const mockResponse = {
         text: 'Generated documentation',
@@ -129,15 +126,7 @@ describe('LLMService', () => {
     });
 
     it('should call OpenAI provider for generation', async () => {
-      getLLMConfig.mockReturnValue({
-        provider: 'openai',
-        apiKey: 'test-openai-key',
-        model: 'gpt-5.1',
-        maxTokens: 4000,
-        temperature: 0.7,
-        supportsCaching: false,
-        supportsStreaming: true
-      });
+      getLLMConfig.mockReturnValue(createMockConfig('openai'));
 
       const mockResponse = {
         text: 'Generated documentation',
@@ -171,15 +160,7 @@ describe('LLMService', () => {
     });
 
     it('should pass through options to provider', async () => {
-      getLLMConfig.mockReturnValue({
-        provider: 'claude',
-        apiKey: 'test-key',
-        model: 'claude-sonnet-4-5-20250929',
-        maxTokens: 4000,
-        temperature: 0.7,
-        supportsCaching: true,
-        supportsStreaming: true
-      });
+      getLLMConfig.mockReturnValue(createMockConfig('claude'));
 
       claudeProvider.generateWithClaude.mockResolvedValue({
         text: 'test',
@@ -207,15 +188,7 @@ describe('LLMService', () => {
     });
 
     it('should handle provider errors', async () => {
-      getLLMConfig.mockReturnValue({
-        provider: 'claude',
-        apiKey: 'test-key',
-        model: 'claude-sonnet-4-5-20250929',
-        maxTokens: 4000,
-        temperature: 0.7,
-        supportsCaching: true,
-        supportsStreaming: true
-      });
+      getLLMConfig.mockReturnValue(createMockConfig('claude'));
 
       const error = new Error('API Error');
       claudeProvider.generateWithClaude.mockRejectedValue(error);
@@ -227,15 +200,7 @@ describe('LLMService', () => {
 
   describe('generateWithStreaming()', () => {
     it('should call Claude streaming provider', async () => {
-      getLLMConfig.mockReturnValue({
-        provider: 'claude',
-        apiKey: 'test-key',
-        model: 'claude-sonnet-4-5-20250929',
-        maxTokens: 4000,
-        temperature: 0.7,
-        supportsCaching: true,
-        supportsStreaming: true
-      });
+      getLLMConfig.mockReturnValue(createMockConfig('claude'));
 
       const mockResponse = {
         text: 'Streamed content',
@@ -262,15 +227,7 @@ describe('LLMService', () => {
     });
 
     it('should call OpenAI streaming provider', async () => {
-      getLLMConfig.mockReturnValue({
-        provider: 'openai',
-        apiKey: 'test-key',
-        model: 'gpt-5.1',
-        maxTokens: 4000,
-        temperature: 0.7,
-        supportsCaching: false,
-        supportsStreaming: true
-      });
+      getLLMConfig.mockReturnValue(createMockConfig('openai'));
 
       const mockResponse = {
         text: 'Streamed content',
@@ -297,15 +254,7 @@ describe('LLMService', () => {
     });
 
     it('should handle streaming errors', async () => {
-      getLLMConfig.mockReturnValue({
-        provider: 'claude',
-        apiKey: 'test-key',
-        model: 'claude-sonnet-4-5-20250929',
-        maxTokens: 4000,
-        temperature: 0.7,
-        supportsCaching: true,
-        supportsStreaming: true
-      });
+      getLLMConfig.mockReturnValue(createMockConfig('claude'));
 
       const error = new Error('Streaming Error');
       claudeProvider.streamWithClaude.mockRejectedValue(error);
@@ -319,15 +268,7 @@ describe('LLMService', () => {
 
   describe('getProvider()', () => {
     it('should return current provider name', () => {
-      getLLMConfig.mockReturnValue({
-        provider: 'claude',
-        apiKey: 'test-key',
-        model: 'claude-sonnet-4-5-20250929',
-        maxTokens: 4000,
-        temperature: 0.7,
-        supportsCaching: true,
-        supportsStreaming: true
-      });
+      getLLMConfig.mockReturnValue(createMockConfig('claude'));
 
       const service = new LLMService();
       expect(service.getProvider()).toBe('claude');
@@ -336,15 +277,7 @@ describe('LLMService', () => {
 
   describe('getModel()', () => {
     it('should return current model name', () => {
-      getLLMConfig.mockReturnValue({
-        provider: 'claude',
-        apiKey: 'test-key',
-        model: 'claude-sonnet-4-5-20250929',
-        maxTokens: 4000,
-        temperature: 0.7,
-        supportsCaching: true,
-        supportsStreaming: true
-      });
+      getLLMConfig.mockReturnValue(createMockConfig('claude'));
 
       const service = new LLMService();
       expect(service.getModel()).toBe('claude-sonnet-4-5-20250929');
@@ -353,30 +286,14 @@ describe('LLMService', () => {
 
   describe('supportsCaching()', () => {
     it('should return true for Claude provider', () => {
-      getLLMConfig.mockReturnValue({
-        provider: 'claude',
-        apiKey: 'test-key',
-        model: 'claude-sonnet-4-5-20250929',
-        maxTokens: 4000,
-        temperature: 0.7,
-        supportsCaching: true,
-        supportsStreaming: true
-      });
+      getLLMConfig.mockReturnValue(createMockConfig('claude'));
 
       const service = new LLMService();
       expect(service.supportsCaching()).toBe(true);
     });
 
     it('should return false for OpenAI provider', () => {
-      getLLMConfig.mockReturnValue({
-        provider: 'openai',
-        apiKey: 'test-key',
-        model: 'gpt-5.1',
-        maxTokens: 4000,
-        temperature: 0.7,
-        supportsCaching: false,
-        supportsStreaming: true
-      });
+      getLLMConfig.mockReturnValue(createMockConfig('openai'));
 
       const service = new LLMService();
       expect(service.supportsCaching()).toBe(false);

@@ -4,7 +4,7 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
-  darkMode: 'class', // Use class-based dark mode (for Epic 3.1 toggle)
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
@@ -13,96 +13,96 @@ export default {
           50: '#FAF5FF',
           100: '#F3E8FF',
           200: '#E9D5FF',
-          400: '#C084FC',  // Dark mode primary (AAA: 9.1:1)
-          500: '#A855F7',  // Main brand color (light mode)
-          600: '#9333EA',  // Hover states (light mode)
-          700: '#7C3AED',  // Dark mode gradients
+          400: '#C084FC',
+          500: '#A855F7',
+          600: '#9333EA',
+          700: '#7C3AED',
         },
         // Secondary Indigo (Brand)
         indigo: {
           50: '#EEF2FF',
           100: '#E0E7FF',
           200: '#C7D2FE',
-          400: '#818CF8',  // Dark mode secondary (AAA: 8.7:1)
-          500: '#6366F1',  // Secondary brand color (light mode)
-          600: '#4F46E5',  // Hover states (light mode)
-          700: '#4338CA',  // Dark mode deep accents
+          400: '#818CF8',
+          500: '#6366F1',
+          600: '#4F46E5',
+          700: '#4338CA',
         },
         // Neutral Slate
         slate: {
-          50: '#F8FAFC',   // Page background (light)
-          100: '#F1F5F9',  // Light elements / Primary text (dark)
-          200: '#E2E8F0',  // Borders (light) / Body text (dark)
-          300: '#CBD5E1',  // Secondary text (dark)
-          400: '#94A3B8',  // Muted text (dark)
-          500: '#64748B',  // Subtle text (both modes)
-          600: '#475569',  // Body text (light) / Borders (dark)
-          700: '#334155',  // Hover surfaces (dark)
-          800: '#1E293B',  // Elevated cards (dark)
-          900: '#0F172A',  // Headers (light) / Main surfaces (dark)
-          950: '#020617',  // App background (dark) - NEW
+          50: '#F8FAFC',
+          100: '#F1F5F9',
+          200: '#E2E8F0',
+          300: '#CBD5E1',
+          400: '#94A3B8',
+          500: '#64748B',
+          600: '#475569',
+          700: '#334155',
+          800: '#1E293B',
+          900: '#0F172A',
+          950: '#020617',
         },
         // Semantic: Success (Green)
         green: {
-          50: '#F0FDF4',   // Success backgrounds (light)
-          100: '#DCFCE7',  // Subtle success (light)
-          400: '#4ADE80',  // Dark mode success text (AAA: 10.8:1)
-          500: '#22C55E',  // Dark mode success buttons
-          600: '#16A34A',  // Main success (light mode, WCAG AA)
-          700: '#15803D',  // Success buttons (light mode)
+          50: '#F0FDF4',
+          100: '#DCFCE7',
+          400: '#4ADE80',
+          500: '#22C55E',
+          600: '#16A34A',
+          700: '#15803D',
         },
         // Semantic: Warning (Amber - replaces yellow in dark)
         amber: {
-          400: '#FBBF24',  // Dark mode warning text (AAA: 13.2:1)
-          500: '#F59E0B',  // Dark mode warning buttons
-          600: '#D97706',  // Dark mode warning hover
+          400: '#FBBF24',
+          500: '#F59E0B',
+          600: '#D97706',
         },
         // Semantic: Warning (Yellow - light mode only)
         yellow: {
-          50: '#FEFCE8',   // Warning backgrounds (light)
-          100: '#FEF9C3',  // Subtle warning (light)
-          600: '#CA8A04',  // Main warning (light mode, WCAG AA)
-          700: '#A16207',  // Warning buttons (light mode)
+          50: '#FEFCE8',
+          100: '#FEF9C3',
+          600: '#CA8A04',
+          700: '#A16207',
         },
         // Semantic: Error (Red)
         red: {
-          50: '#FEF2F2',   // Error backgrounds (light)
-          100: '#FEE2E2',  // Subtle error (light)
-          400: '#F87171',  // Dark mode error text (AAA: 8.2:1)
-          500: '#EF4444',  // Dark mode error buttons
-          600: '#DC2626',  // Main error (light mode, WCAG AA)
-          700: '#B91C1C',  // Error buttons (light mode)
+          50: '#FEF2F2',
+          100: '#FEE2E2',
+          400: '#F87171',
+          500: '#EF4444',
+          600: '#DC2626',
+          700: '#B91C1C',
         },
         // Code/Technical Accent (Cyan)
         cyan: {
-          50: '#ECFEFF',   // Code element backgrounds (light)
-          100: '#CFFAFE',  // Light tint
-          200: '#A5F3FC',  // Subtle highlight
-          400: '#22D3EE',  // Dark mode neon highlights (AAA: 11.3:1)
-          500: '#06B6D4',  // Links in code context / Dark mode code links
-          600: '#0891B2',  // Main code accent (light mode, WCAG AAA: 7.8:1)
-          700: '#0E7490',  // Hover states
+          50: '#ECFEFF',
+          100: '#CFFAFE',
+          200: '#A5F3FC',
+          400: '#22D3EE',
+          500: '#06B6D4',
+          600: '#0891B2',
+          700: '#0E7490',
         },
         // Developer Accent: Teal (Dark mode only)
         teal: {
-          500: '#14B8A6',  // Dark mode function names (AAA: 7.9:1)
+          500: '#14B8A6',
         },
         // Developer Accent: Emerald (Dark mode only)
         emerald: {
-          500: '#10B981',  // Dark mode string literals (AAA: 7.2:1)
+          500: '#10B981',
         },
         // Semantic color aliases
         success: {
-          DEFAULT: '#16A34A',  // green-600 (light mode)
-          dark: '#4ADE80',     // green-400 (dark mode)
+          DEFAULT: '#16A34A',
+          dark: '#4ADE80',
         },
         warning: {
-          DEFAULT: '#CA8A04',  // yellow-600 (light mode)
-          dark: '#FBBF24',     // amber-400 (dark mode)
+          DEFAULT: '#CA8A04',
+          dark: '#FBBF24',
         },
         error: {
-          DEFAULT: '#DC2626',  // red-600 (light mode)
-          dark: '#F87171',     // red-400 (dark mode)
+          DEFAULT: '#DC2626',
+          dark: '#F87171',
         },
       },
       fontFamily: {
@@ -118,44 +118,20 @@ export default {
       },
       keyframes: {
         'toast-enter': {
-          '0%': {
-            transform: 'translateX(100%) scale(0.7)',
-            opacity: '0',
-          },
-          '100%': {
-            transform: 'translateX(0) scale(1)',
-            opacity: '1',
-          },
+          '0%': { transform: 'translateX(100%) scale(0.7)', opacity: '0' },
+          '100%': { transform: 'translateX(0) scale(1)', opacity: '1' },
         },
         'toast-leave': {
-          '0%': {
-            transform: 'translateX(0) scale(1)',
-            opacity: '1',
-          },
-          '100%': {
-            transform: 'translateX(100%) scale(0.7)',
-            opacity: '0',
-          },
+          '0%': { transform: 'translateX(0) scale(1)', opacity: '1' },
+          '100%': { transform: 'translateX(100%) scale(0.7)', opacity: '0' },
         },
         'toast-bounce': {
-          '0%, 100%': {
-            transform: 'translateY(-5%)',
-            animationTimingFunction: 'cubic-bezier(0.8, 0, 1, 1)',
-          },
-          '50%': {
-            transform: 'translateY(0)',
-            animationTimingFunction: 'cubic-bezier(0, 0, 0.2, 1)',
-          },
+          '0%, 100%': { transform: 'translateY(-5%)', animationTimingFunction: 'cubic-bezier(0.8, 0, 1, 1)' },
+          '50%': { transform: 'translateY(0)', animationTimingFunction: 'cubic-bezier(0, 0, 0.2, 1)' },
         },
         'slide-in-fade': {
-          '0%': {
-            opacity: '0',
-            transform: 'translateY(-8px)',
-          },
-          '100%': {
-            opacity: '1',
-            transform: 'translateY(0)',
-          },
+          '0%': { opacity: '0', transform: 'translateY(-8px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
         },
         'fade-in': {
           '0%': { opacity: '0' },
@@ -170,28 +146,16 @@ export default {
           '100%': { opacity: '0' },
         },
         'glow-pulse': {
-          '0%, 100%': {
-            boxShadow: '0 0 0 0 rgba(147, 51, 234, 0.4)',
-          },
-          '50%': {
-            boxShadow: '0 0 0 8px rgba(147, 51, 234, 0)',
-          },
+          '0%, 100%': { boxShadow: '0 0 0 0 rgba(147, 51, 234, 0.4)' },
+          '50%': { boxShadow: '0 0 0 8px rgba(147, 51, 234, 0)' },
         },
         'subtle-pulse': {
-          '0%, 100%': {
-            transform: 'scale(1)',
-          },
-          '50%': {
-            transform: 'scale(1.02)',
-          },
+          '0%, 100%': { transform: 'scale(1)' },
+          '50%': { transform: 'scale(1.02)' },
         },
         'spin-once': {
-          '0%': {
-            transform: 'rotate(0deg)',
-          },
-          '100%': {
-            transform: 'rotate(360deg)',
-          },
+          '0%': { transform: 'rotate(0deg)' },
+          '100%': { transform: 'rotate(360deg)' },
         },
       },
       animation: {
@@ -206,52 +170,27 @@ export default {
         'subtle-pulse': 'subtle-pulse 2s ease-in-out infinite',
         'spin-once': 'spin-once 500ms ease-in-out forwards',
       },
-      // Customize Typography plugin with our brand colors
       typography: (theme) => ({
         DEFAULT: {
           css: {
             color: theme('colors.slate.700'),
-            'h1, h2, h3, h4, h5, h6': {
-              color: theme('colors.slate.900'),
-            },
-            'strong': {
-              color: theme('colors.slate.900'),
-            },
-            'a': {
-              color: theme('colors.purple.600'),
-            },
-            'code': {
-              color: theme('colors.slate.700'),
-            },
-            'ul > li::marker': {
-              color: theme('colors.slate.500'),
-            },
-            'ol > li::marker': {
-              color: theme('colors.slate.500'),
-            },
+            'h1, h2, h3, h4, h5, h6': { color: theme('colors.slate.900') },
+            'strong': { color: theme('colors.slate.900') },
+            'a': { color: theme('colors.purple.600') },
+            'code': { color: theme('colors.slate.700') },
+            'ul > li::marker': { color: theme('colors.slate.500') },
+            'ol > li::marker': { color: theme('colors.slate.500') },
           },
         },
         invert: {
           css: {
-            color: theme('colors.slate.300'),  // Body text - consistent readability
-            'h1, h2, h3, h4, h5, h6': {
-              color: theme('colors.slate.300'),  // Headings - same for clean appearance
-            },
-            'strong': {
-              color: theme('colors.slate.100'),
-            },
-            'a': {
-              color: theme('colors.purple.400'),
-            },
-            'code': {
-              color: theme('colors.cyan.300'),
-            },
-            'ul > li::marker': {
-              color: theme('colors.slate.500'),
-            },
-            'ol > li::marker': {
-              color: theme('colors.slate.500'),
-            },
+            color: theme('colors.slate.300'),
+            'h1, h2, h3, h4, h5, h6': { color: theme('colors.slate.300') },
+            'strong': { color: theme('colors.slate.100') },
+            'a': { color: theme('colors.purple.400') },
+            'code': { color: theme('colors.cyan.300') },
+            'ul > li::marker': { color: theme('colors.slate.500') },
+            'ol > li::marker': { color: theme('colors.slate.500') },
           },
         },
       }),

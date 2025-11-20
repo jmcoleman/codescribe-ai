@@ -70,15 +70,15 @@ describe('DangerZoneTab', () => {
     it('should render privacy info banner', () => {
       renderWithRouter();
 
-      expect(screen.getByText(/Your code is never stored/i)).toBeInTheDocument();
-      expect(screen.getByText(/Deleting your account removes only account data/i)).toBeInTheDocument();
+      expect(screen.getByText(/Your code is never stored on our servers/i)).toBeInTheDocument();
+      expect(screen.getByText(/Deleting your account only removes account data and generated documentation/i)).toBeInTheDocument();
     });
 
     it('should render delete account section with warning', () => {
       renderWithRouter();
 
       expect(screen.getByRole('heading', { name: /Delete Account/i })).toBeInTheDocument();
-      expect(screen.getByText(/This action is permanent and cannot be undone/i)).toBeInTheDocument();
+      expect(screen.getByText(/Permanently delete your account and all associated data/i)).toBeInTheDocument();
     });
 
     it('should render collapsible details about what will be deleted', () => {

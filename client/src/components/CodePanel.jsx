@@ -68,6 +68,7 @@ export function CodePanel({
   const handleDragEnter = (e) => {
     e.preventDefault();
     e.stopPropagation();
+    // Only enable drag-and-drop if onFileDrop is provided (disabled in multi-file mode)
     if (!readOnly && onFileDrop) {
       setIsDragging(true);
     }
@@ -96,8 +97,7 @@ export function CodePanel({
 
     const files = e.dataTransfer?.files;
     if (files && files.length > 0) {
-      // Currently only process the first file
-      // TODO: Future enhancement - support multiple file uploads
+      // Process the first file (single-file mode only)
       onFileDrop(files[0]);
     }
   };
@@ -105,7 +105,7 @@ export function CodePanel({
   return (
     <div
       data-testid="code-panel"
-      className="@container flex flex-col h-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm overflow-hidden relative transition-colors"
+      className="@container flex flex-col h-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 overflow-hidden relative transition-colors"
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
       onDragOver={handleDragOver}

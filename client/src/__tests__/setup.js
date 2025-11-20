@@ -1,5 +1,6 @@
 // Test setup file - runs before all tests
 import { vi } from 'vitest';
+import '@testing-library/jest-dom';
 
 // Mock window.matchMedia for all tests
 Object.defineProperty(window, 'matchMedia', {
@@ -15,3 +16,10 @@ Object.defineProperty(window, 'matchMedia', {
     dispatchEvent: vi.fn(),
   })),
 });
+
+// Mock ResizeObserver for react-resizable-panels
+global.ResizeObserver = vi.fn().mockImplementation(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
+}));

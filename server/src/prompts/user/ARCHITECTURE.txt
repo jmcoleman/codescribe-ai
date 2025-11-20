@@ -1,0 +1,8 @@
+Analyze the following {{language}} code and generate an architectural overview.
+
+{{baseContext}}
+
+Code to analyze:
+```{{language}}
+{{code}}
+```

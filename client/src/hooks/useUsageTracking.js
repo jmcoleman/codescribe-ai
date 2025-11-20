@@ -161,6 +161,7 @@ export function useUsageTracking() {
     const isDaily = period === 'daily';
 
     return {
+      used: isDaily ? usage.daily : usage.monthly,
       percentage: isDaily ? usage.dailyPercentage : usage.monthlyPercentage,
       remaining: isDaily ? usage.dailyRemaining : usage.monthlyRemaining,
       limit: isDaily ? usage.dailyLimit : usage.monthlyLimit,

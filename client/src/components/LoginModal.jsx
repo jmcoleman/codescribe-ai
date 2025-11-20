@@ -12,7 +12,7 @@ import { Button } from './Button';
 import { useAuth } from '../contexts/AuthContext';
 import { toastCompact } from '../utils/toast';
 import { trackOAuth } from '../utils/analytics';
-import { STORAGE_KEYS, setSessionItem, getSessionItem, removeSessionItem } from '../constants/storage';
+import { STORAGE_KEYS, getStorageItem, setSessionItem, getSessionItem, removeSessionItem } from '../constants/storage';
 import { API_URL } from '../config/api';
 
 export function LoginModal({ isOpen, onClose, onSwitchToSignup, onSwitchToForgot }) {
@@ -209,7 +209,7 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup, onSwitchToForgot
             const pendingSubscription = JSON.parse(pendingSubscriptionStr);
 
             // Get auth token for checkout
-            const token = result.token || localStorage.getItem('token');
+            const token = result.token || getStorageItem(STORAGE_KEYS.AUTH_TOKEN);
 
             // Create checkout session
             const checkoutResponse = await fetch(`${API_URL}/api/payments/create-checkout-session`, {

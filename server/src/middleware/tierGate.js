@@ -27,20 +27,29 @@ import User from '../models/User.js';
  * @returns {Function} Express middleware
  */
 export const requireFeature = (featureName) => {
-  return (req, res, next) => {
+  return async (req, res, next) => {
     // Get user tier from auth (default to free if not authenticated)
-    // TODO: Replace with actual auth service once implemented
-    const userTier = req.user?.tier || 'free';
+    // Support tier override for admin/support users
+    let userTier = req.user?.tier || 'free';
+
+    // Check for tier override (admin/support debugging)
+    if (req.user) {
+      const { getEffectiveTier } = await import('../utils/tierOverride.js');
+      userTier = getEffectiveTier(req.user);
+    }
 
     // Check if feature is available in user's tier
-    if (!hasFeature(userTier, featureName)) {
+    const featureAvailable = hasFeature(userTier, featureName);
+
+    if (!featureAvailable) {
       const upgradePath = getUpgradePath(userTier, featureName);
 
       return res.status(403).json({
         error: 'Upgrade Required',
         message: `Feature "${featureName}" is not available in your current plan.`,
         feature: featureName,
-        currentTier: userTier,
+        currentTier: req.user?.tier || 'free',
+        effectiveTier: userTier,
         availableIn: upgradePath.availableIn,
         recommendedTier: upgradePath.recommendedUpgrade,
         pricing: upgradePath.pricing,

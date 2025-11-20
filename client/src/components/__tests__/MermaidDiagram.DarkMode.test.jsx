@@ -1,8 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
+import { renderWithTheme as render } from '../../__tests__/utils/renderWithTheme';
 import userEvent from '@testing-library/user-event';
-import { ThemeProvider } from '../../contexts/ThemeContext';
 import { MermaidDiagram } from '../MermaidDiagram';
+import { STORAGE_KEYS } from '../../constants/storage';
 
 /**
  * Tests for Mermaid Diagram dark mode styling
@@ -21,17 +22,9 @@ describe('MermaidDiagram - Dark Mode', () => {
     document.documentElement.classList.remove('dark');
   });
 
-  const renderWithTheme = (component) => {
-    return render(
-      <ThemeProvider>
-        {component}
-      </ThemeProvider>
-    );
-  };
-
   describe('Show Button - Light Mode', () => {
     it('applies light mode styles to container', () => {
-      renderWithTheme(
+      render(
         <MermaidDiagram chart={sampleChart} id="test-1" />
       );
 
@@ -44,7 +37,7 @@ describe('MermaidDiagram - Dark Mode', () => {
     });
 
     it('applies light mode styles to icon background', () => {
-      renderWithTheme(
+      render(
         <MermaidDiagram chart={sampleChart} id="test-1" />
       );
 
@@ -57,7 +50,7 @@ describe('MermaidDiagram - Dark Mode', () => {
     });
 
     it('applies light mode styles to icon', () => {
-      renderWithTheme(
+      render(
         <MermaidDiagram chart={sampleChart} id="test-1" />
       );
 
@@ -70,7 +63,7 @@ describe('MermaidDiagram - Dark Mode', () => {
     });
 
     it('applies light mode styles to text labels', () => {
-      renderWithTheme(
+      render(
         <MermaidDiagram chart={sampleChart} id="test-1" />
       );
 
@@ -84,7 +77,7 @@ describe('MermaidDiagram - Dark Mode', () => {
     });
 
     it('applies light mode styles to Show button', () => {
-      renderWithTheme(
+      render(
         <MermaidDiagram chart={sampleChart} id="test-1" />
       );
 
@@ -99,9 +92,9 @@ describe('MermaidDiagram - Dark Mode', () => {
 
   describe('Show Button - Dark Mode', () => {
     it('applies dark mode styles when dark theme is active', () => {
-      localStorage.setItem('codescribeai:settings:theme', 'dark');
+      localStorage.setItem(STORAGE_KEYS.THEME_PREFERENCE, 'dark');
 
-      renderWithTheme(
+      render(
         <MermaidDiagram chart={sampleChart} id="test-1" />
       );
 
@@ -115,9 +108,9 @@ describe('MermaidDiagram - Dark Mode', () => {
     });
 
     it('show button has dark mode shadow', () => {
-      localStorage.setItem('codescribeai:settings:theme', 'dark');
+      localStorage.setItem(STORAGE_KEYS.THEME_PREFERENCE, 'dark');
 
-      renderWithTheme(
+      render(
         <MermaidDiagram chart={sampleChart} id="test-1" />
       );
 
@@ -128,9 +121,9 @@ describe('MermaidDiagram - Dark Mode', () => {
     });
 
     it('focus ring has dark mode offset', () => {
-      localStorage.setItem('codescribeai:settings:theme', 'dark');
+      localStorage.setItem(STORAGE_KEYS.THEME_PREFERENCE, 'dark');
 
-      renderWithTheme(
+      render(
         <MermaidDiagram chart={sampleChart} id="test-1" />
       );
 
@@ -147,7 +140,7 @@ describe('MermaidDiagram - Dark Mode', () => {
       // This component is lazy loaded, so we need to check the MermaidLoadingFallback
       // implementation in the source code. The test verifies the structure exists.
 
-      renderWithTheme(
+      render(
         <MermaidDiagram chart={sampleChart} id="test-1" />
       );
 
@@ -163,9 +156,9 @@ describe('MermaidDiagram - Dark Mode', () => {
 
   describe('Hover States - Dark Mode', () => {
     it('container has dark mode hover state', () => {
-      localStorage.setItem('codescribeai:settings:theme', 'dark');
+      localStorage.setItem(STORAGE_KEYS.THEME_PREFERENCE, 'dark');
 
-      renderWithTheme(
+      render(
         <MermaidDiagram chart={sampleChart} id="test-1" />
       );
 
@@ -176,9 +169,9 @@ describe('MermaidDiagram - Dark Mode', () => {
     });
 
     it('button has dark mode hover and active states', () => {
-      localStorage.setItem('codescribeai:settings:theme', 'dark');
+      localStorage.setItem(STORAGE_KEYS.THEME_PREFERENCE, 'dark');
 
-      renderWithTheme(
+      render(
         <MermaidDiagram chart={sampleChart} id="test-1" />
       );
 
@@ -198,7 +191,7 @@ describe('MermaidDiagram - Dark Mode', () => {
     it('updates styles when theme changes from light to dark', async () => {
       const user = userEvent.setup();
 
-      const { rerender } = renderWithTheme(
+      const { rerender } = render(
         <>
           <MermaidDiagram chart={sampleChart} id="test-1" />
         </>
@@ -208,13 +201,13 @@ describe('MermaidDiagram - Dark Mode', () => {
       expect(document.documentElement.classList.contains('dark')).toBe(false);
 
       // Set dark mode in localStorage and rerender
-      localStorage.setItem('codescribeai:settings:theme', 'dark');
+      localStorage.setItem(STORAGE_KEYS.THEME_PREFERENCE, 'dark');
       document.documentElement.classList.add('dark');
 
       rerender(
-        <ThemeProvider>
+        
           <MermaidDiagram chart={sampleChart} id="test-1" />
-        </ThemeProvider>
+        
       );
 
       // Should now be in dark mode
@@ -228,9 +221,9 @@ describe('MermaidDiagram - Dark Mode', () => {
 
   describe('Accessibility in Dark Mode', () => {
     it('maintains accessible button text in dark mode', () => {
-      localStorage.setItem('codescribeai:settings:theme', 'dark');
+      localStorage.setItem(STORAGE_KEYS.THEME_PREFERENCE, 'dark');
 
-      renderWithTheme(
+      render(
         <MermaidDiagram chart={sampleChart} id="test-1" />
       );
 
@@ -240,9 +233,9 @@ describe('MermaidDiagram - Dark Mode', () => {
     });
 
     it('maintains visible focus indicators in dark mode', () => {
-      localStorage.setItem('codescribeai:settings:theme', 'dark');
+      localStorage.setItem(STORAGE_KEYS.THEME_PREFERENCE, 'dark');
 
-      renderWithTheme(
+      render(
         <MermaidDiagram chart={sampleChart} id="test-1" />
       );
 
@@ -254,9 +247,9 @@ describe('MermaidDiagram - Dark Mode', () => {
     });
 
     it('descriptive text is readable in dark mode', () => {
-      localStorage.setItem('codescribeai:settings:theme', 'dark');
+      localStorage.setItem(STORAGE_KEYS.THEME_PREFERENCE, 'dark');
 
-      renderWithTheme(
+      render(
         <MermaidDiagram chart={sampleChart} id="test-1" />
       );
 
@@ -272,7 +265,7 @@ describe('MermaidDiagram - Dark Mode', () => {
   describe('Color Consistency', () => {
     it('uses consistent purple accent color in light and dark modes', () => {
       // Light mode
-      const { unmount } = renderWithTheme(
+      const { unmount } = render(
         <MermaidDiagram chart={sampleChart} id="test-1" />
       );
 
@@ -283,9 +276,9 @@ describe('MermaidDiagram - Dark Mode', () => {
       unmount();
 
       // Dark mode
-      localStorage.setItem('codescribeai:settings:theme', 'dark');
+      localStorage.setItem(STORAGE_KEYS.THEME_PREFERENCE, 'dark');
 
-      renderWithTheme(
+      render(
         <MermaidDiagram chart={sampleChart} id="test-2" />
       );
 
@@ -295,9 +288,9 @@ describe('MermaidDiagram - Dark Mode', () => {
     });
 
     it('uses slate color palette consistently', () => {
-      localStorage.setItem('codescribeai:settings:theme', 'dark');
+      localStorage.setItem(STORAGE_KEYS.THEME_PREFERENCE, 'dark');
 
-      renderWithTheme(
+      render(
         <MermaidDiagram chart={sampleChart} id="test-1" />
       );
 
@@ -316,9 +309,9 @@ describe('MermaidDiagram - Dark Mode', () => {
 
   describe('Responsive Behavior', () => {
     it('maintains dark mode styles in responsive layout', () => {
-      localStorage.setItem('codescribeai:settings:theme', 'dark');
+      localStorage.setItem(STORAGE_KEYS.THEME_PREFERENCE, 'dark');
 
-      renderWithTheme(
+      render(
         <MermaidDiagram chart={sampleChart} id="test-1" />
       );
 
@@ -338,7 +331,7 @@ describe('MermaidDiagram - Dark Mode', () => {
 
   describe('Transitions', () => {
     it('has smooth color transitions for dark mode changes', () => {
-      renderWithTheme(
+      render(
         <MermaidDiagram chart={sampleChart} id="test-1" />
       );
 

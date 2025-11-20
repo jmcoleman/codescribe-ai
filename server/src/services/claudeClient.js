@@ -97,18 +97,6 @@ class ClaudeClient {
 
         const response = await this.client.messages.create(requestParams);
 
-        // Log cache performance for monitoring
-        if (response.usage) {
-          const cacheStats = {
-            input_tokens: response.usage.input_tokens || 0,
-            cache_creation_input_tokens: response.usage.cache_creation_input_tokens || 0,
-            cache_read_input_tokens: response.usage.cache_read_input_tokens || 0,
-          };
-          if (cacheStats.cache_creation_input_tokens > 0 || cacheStats.cache_read_input_tokens > 0) {
-            console.log('[ClaudeClient] Cache stats:', cacheStats);
-          }
-        }
-
         return response.content[0].text;
       } catch (error) {
         retries++;
@@ -170,11 +158,6 @@ class ClaudeClient {
       const stream = await this.client.messages.create(requestParams);
 
       let fullText = '';
-      let cacheStats = {
-        input_tokens: 0,
-        cache_creation_input_tokens: 0,
-        cache_read_input_tokens: 0,
-      };
 
       for await (const event of stream) {
         if (event.type === 'content_block_delta' &&
@@ -183,20 +166,6 @@ class ClaudeClient {
           fullText += chunk;
           onChunk(chunk);
         }
-
-        // Capture usage stats from message_start event
-        if (event.type === 'message_start' && event.message?.usage) {
-          cacheStats = {
-            input_tokens: event.message.usage.input_tokens || 0,
-            cache_creation_input_tokens: event.message.usage.cache_creation_input_tokens || 0,
-            cache_read_input_tokens: event.message.usage.cache_read_input_tokens || 0,
-          };
-        }
-      }
-
-      // Log cache performance for monitoring
-      if (cacheStats.cache_creation_input_tokens > 0 || cacheStats.cache_read_input_tokens > 0) {
-        console.log('[ClaudeClient] Streaming cache stats:', cacheStats);
       }
 
       return fullText;

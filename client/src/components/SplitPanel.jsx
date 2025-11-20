@@ -20,8 +20,8 @@
 
 import { useState, useEffect } from 'react';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
+import { STORAGE_KEYS, getStorageItem, setStorageItem } from '../constants/storage';
 
-const STORAGE_KEY = 'splitPanelSizes';
 const DEFAULT_LEFT_SIZE = 50; // 50% of screen
 const DEFAULT_RIGHT_SIZE = 50;
 const MIN_PANEL_SIZE = 20; // 20% minimum
@@ -44,7 +44,7 @@ export function SplitPanel({ leftPanel, rightPanel }) {
   // Load saved panel sizes from localStorage
   const loadPanelSizes = () => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
+      const saved = getStorageItem(STORAGE_KEYS.SPLIT_PANEL_SIZES);
       if (saved) {
         const { left, right } = JSON.parse(saved);
         return { left, right };
@@ -58,7 +58,7 @@ export function SplitPanel({ leftPanel, rightPanel }) {
   // Save panel sizes to localStorage
   const savePanelSizes = (sizes) => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(sizes));
+      setStorageItem(STORAGE_KEYS.SPLIT_PANEL_SIZES, JSON.stringify(sizes));
     } catch (error) {
       console.error('[SplitPanel] Error saving panel sizes:', error);
     }

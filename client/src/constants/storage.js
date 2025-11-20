@@ -1,48 +1,69 @@
 /**
  * Storage Keys - localStorage and sessionStorage
  *
- * Centralized storage key constants using namespaced colon convention.
- * This prevents collisions with other apps and makes debugging easier.
+ * Centralized storage key constants using concise naming convention.
+ * This prevents collisions with other apps and minimizes localStorage space usage.
  *
- * Naming Conventions:
- * - Format: 'codescribeai:storage_type:category:key'
- * - storage_type: 'local' for localStorage, 'session' for sessionStorage
- * - category: Domain area (auth, ui, analytics, etc.)
- * - key: Specific data being stored (kebab-case)
+ * Naming Convention:
+ * - Format: 'cs_{category}_{key}' or 'cs_{category}_{userId}' for user-scoped data
+ * - cs = CodeScribe (app namespace)
+ * - category: Short domain area (auth, ui, ed=editor, ws=workspace, toast, etc.)
+ * - key: Specific data (snake_case)
+ * - userId: User ID for user-scoped data (prevents multi-user conflicts)
  *
  * Storage Type Guidelines:
- * - localStorage: Data that persists across browser sessions (auth tokens, preferences)
- * - sessionStorage: Temporary data that clears on tab/window close (in-flight operations, timing)
+ * - localStorage: Data that persists across browser sessions (auth tokens, preferences, workspace)
+ * - sessionStorage: Temporary data that clears on tab/window close (OAuth flow, banners)
+ *
+ * User-Scoped Keys:
+ * - Workspace data MUST be user-scoped to prevent privacy leaks on shared computers
+ * - Use getWorkspaceKey(userId) helper to generate user-scoped keys
  */
 
 export const STORAGE_KEYS = {
   // Authentication (localStorage - persists across sessions)
-  AUTH_TOKEN: 'codescribeai:local:auth:token',
+  AUTH_TOKEN: 'cs_auth_token',
 
   // UI State (localStorage - user preferences)
-  REPORT_EXPANDED: 'codescribeai:local:ui:report-expanded',
+  REPORT_EXPANDED: 'cs_ui_report_exp',
+  SPLIT_PANEL_SIZES: 'cs_ui_split_sizes',
+  SIDEBAR_MODE: 'cs_ui_sidebar',
+  SIDEBAR_WIDTH: 'cs_ui_sidebar_width',
+  THEME_PREFERENCE: 'cs_ui_theme',
 
   // Editor State (localStorage - persists code/docs across refreshes)
-  EDITOR_CODE: 'codescribeai:local:editor:code',
-  EDITOR_LANGUAGE: 'codescribeai:local:editor:language',
-  EDITOR_FILENAME: 'codescribeai:local:editor:filename',
-  EDITOR_DOC_TYPE: 'codescribeai:local:editor:doc-type',
-  EDITOR_DOCUMENTATION: 'codescribeai:local:editor:documentation',
-  EDITOR_QUALITY_SCORE: 'codescribeai:local:editor:quality-score',
+  // Privacy-sensitive: cs_ed_code, cs_ed_doc, cs_ed_score are user-scoped
+  // Use getEditorKey(userId, 'code'|'doc'|'score') for user-scoped keys
+  EDITOR_CODE: 'cs_ed_code',           // Base key, append _{userId} for user-scoped
+  EDITOR_DOCUMENTATION: 'cs_ed_doc',   // Base key, append _{userId} for user-scoped
+  EDITOR_QUALITY_SCORE: 'cs_ed_score', // Base key, append _{userId} for user-scoped
+
+  // Non-sensitive preferences (global, not user-scoped)
+  // Note: Language is derived from filename, not stored separately
+  EDITOR_FILENAME: 'cs_ed_file',
+  EDITOR_DOC_TYPE: 'cs_ed_doctype',
 
   // Toast History (localStorage - persists for debugging)
-  TOAST_HISTORY: 'codescribeai:local:toast:history',
+  TOAST_HISTORY: 'cs_toast_hist',
+
+  // Workspace (localStorage - user-scoped to prevent privacy leaks)
+  // NOTE: Use getWorkspaceKey(userId) instead of direct access
+  WORKSPACE_CONTENTS: 'cs_ws', // Base key, append _{userId}
+
+  // GitHub (localStorage - user-scoped to prevent privacy leaks)
+  // NOTE: Use getGitHubRecentKey(userId) instead of direct access
+  GITHUB_RECENT_FILES: 'cs_gh_recent', // Base key, append _{userId}
 
   // OAuth Flow (sessionStorage - temporary timing data)
-  OAUTH_START_TIME: 'codescribeai:session:oauth:start-time',
-  OAUTH_CONTEXT: 'codescribeai:session:oauth:context',
+  OAUTH_START_TIME: 'cs_oauth_start',
+  OAUTH_CONTEXT: 'cs_oauth_ctx',
 
   // UI Banners (sessionStorage - dismissed state for current session)
-  EMAIL_VERIFICATION_BANNER_DISMISSED: 'codescribeai:session:ui:email-verification-banner-dismissed',
+  EMAIL_VERIFICATION_BANNER_DISMISSED: 'cs_banner_email',
 
   // Subscription Flow (sessionStorage - temporary subscription intent before verification)
-  PENDING_SUBSCRIPTION: 'codescribeai:session:subscription:pending-intent',
-  BILLING_PERIOD: 'codescribeai:session:subscription:billing-period',
+  PENDING_SUBSCRIPTION: 'cs_sub_pending',
+  BILLING_PERIOD: 'cs_sub_period',
 };
 
 /**
@@ -140,28 +161,115 @@ export const removeSessionItem = (key) => {
 };
 
 /**
+ * Get user-scoped workspace key
+ * @param {number|string} userId - User ID
+ * @returns {string|null} User-scoped workspace key (e.g., 'cs_ws_123')
+ */
+export const getWorkspaceKey = (userId) => {
+  if (!userId) {
+    console.warn('[storage] getWorkspaceKey called without userId');
+    return null;
+  }
+  return `${STORAGE_KEYS.WORKSPACE_CONTENTS}_${userId}`;
+};
+
+/**
+ * Get user-scoped editor key for privacy-sensitive content
+ * @param {number|string} userId - User ID
+ * @param {'code'|'doc'|'score'} type - Type of editor content
+ * @returns {string|null} User-scoped editor key (e.g., 'cs_ed_code_123')
+ */
+export const getEditorKey = (userId, type) => {
+  if (!userId) {
+    console.warn('[storage] getEditorKey called without userId');
+    return null;
+  }
+
+  const baseKeys = {
+    code: STORAGE_KEYS.EDITOR_CODE,
+    doc: STORAGE_KEYS.EDITOR_DOCUMENTATION,
+    score: STORAGE_KEYS.EDITOR_QUALITY_SCORE
+  };
+
+  const baseKey = baseKeys[type];
+  if (!baseKey) {
+    console.warn(`[storage] getEditorKey called with invalid type: ${type}`);
+    return null;
+  }
+
+  return `${baseKey}_${userId}`;
+};
+
+/**
+ * Get user-scoped GitHub recent files key
+ * @param {number|string} userId - User ID
+ * @returns {string|null} User-scoped GitHub recent files key (e.g., 'cs_gh_recent_123')
+ */
+export const getGitHubRecentKey = (userId) => {
+  if (!userId) {
+    console.warn('[storage] getGitHubRecentKey called without userId');
+    return null;
+  }
+  return `${STORAGE_KEYS.GITHUB_RECENT_FILES}_${userId}`;
+};
+
+/**
  * Clear all CodeScribe AI storage items (both localStorage and sessionStorage)
  * Useful for logout or debugging
+ * @param {number|string} userId - Optional user ID to clear user-specific data
  * @returns {Object} Object with counts of cleared items
  */
-export const clearAppStorage = () => {
+export const clearAppStorage = (userId = null) => {
   const result = { localStorage: 0, sessionStorage: 0 };
 
   try {
-    Object.values(STORAGE_KEYS).forEach(key => {
-      // Determine storage type from key prefix
-      if (key.includes(':local:')) {
-        if (localStorage.getItem(key) !== null) {
-          localStorage.removeItem(key);
-          result.localStorage++;
-        }
-      } else if (key.includes(':session:')) {
+    // Clear all standard keys
+    Object.entries(STORAGE_KEYS).forEach(([name, key]) => {
+      // Skip user-scoped base keys (they're handled separately)
+      if (name === 'WORKSPACE_CONTENTS' || name === 'GITHUB_RECENT_FILES') {
+        return;
+      }
+
+      // sessionStorage keys (cs_oauth_, cs_banner_, cs_sub_)
+      if (key.startsWith('cs_oauth_') || key.startsWith('cs_banner_') || key.startsWith('cs_sub_')) {
         if (sessionStorage.getItem(key) !== null) {
           sessionStorage.removeItem(key);
           result.sessionStorage++;
         }
+      } else {
+        // localStorage keys
+        if (localStorage.getItem(key) !== null) {
+          localStorage.removeItem(key);
+          result.localStorage++;
+        }
       }
     });
+
+    // Clear user-scoped data if userId provided
+    if (userId) {
+      // Clear workspace
+      const workspaceKey = getWorkspaceKey(userId);
+      if (workspaceKey && localStorage.getItem(workspaceKey) !== null) {
+        localStorage.removeItem(workspaceKey);
+        result.localStorage++;
+      }
+
+      // Clear editor content (code, doc, score)
+      ['code', 'doc', 'score'].forEach(type => {
+        const editorKey = getEditorKey(userId, type);
+        if (editorKey && localStorage.getItem(editorKey) !== null) {
+          localStorage.removeItem(editorKey);
+          result.localStorage++;
+        }
+      });
+
+      // Clear GitHub recent files
+      const githubRecentKey = getGitHubRecentKey(userId);
+      if (githubRecentKey && localStorage.getItem(githubRecentKey) !== null) {
+        localStorage.removeItem(githubRecentKey);
+        result.localStorage++;
+      }
+    }
   } catch (error) {
     console.warn('Failed to clear app storage:', error);
   }

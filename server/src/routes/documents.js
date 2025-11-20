@@ -8,6 +8,7 @@
 import express from 'express';
 import { requireAuth, validateBody } from '../middleware/auth.js';
 import documentService from '../services/documentService.js';
+import { getSupportedDocTypes } from '../prompts/docTypeConfig.js';
 
 const router = express.Router();
 
@@ -23,7 +24,7 @@ router.post(
     fileSize: { required: true, type: 'number', min: 0 },
     documentation: { required: true, type: 'string' },
     qualityScore: { required: true, type: 'object' },
-    docType: { required: true, type: 'string', enum: ['README', 'JSDOC', 'API', 'ARCHITECTURE'] },
+    docType: { required: true, type: 'string', enum: getSupportedDocTypes() },
     provider: { required: true, type: 'string' },
     model: { required: true, type: 'string' }
   }),
@@ -154,6 +155,27 @@ router.get('/:id', requireAuth, async (req, res, next) => {
 });
 
 // ============================================================================
+// DELETE /api/documents/ephemeral - Delete Ephemeral Documents (on logout)
+// NOTE: Must come BEFORE /:id route to avoid matching "ephemeral" as an ID
+// ============================================================================
+router.delete('/ephemeral', requireAuth, async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+
+    // Delete all ephemeral documents for the authenticated user
+    const deletedCount = await documentService.deleteEphemeralDocuments(userId);
+
+    res.json({
+      success: true,
+      deletedCount
+    });
+  } catch (error) {
+    console.error('[Documents API] Error deleting ephemeral documents:', error);
+    next(error);
+  }
+});
+
+// ============================================================================
 // DELETE /api/documents/:id - Soft Delete Single Document
 // ============================================================================
 router.delete('/:id', requireAuth, async (req, res, next) => {
@@ -227,26 +249,6 @@ router.post('/:id/restore', requireAuth, async (req, res, next) => {
     });
   } catch (error) {
     console.error('[Documents API] Error restoring document:', error);
-    next(error);
-  }
-});
-
-// ============================================================================
-// DELETE /api/documents/ephemeral - Delete Ephemeral Documents (on logout)
-// ============================================================================
-router.delete('/ephemeral', requireAuth, async (req, res, next) => {
-  try {
-    const userId = req.user.id;
-
-    // Delete all ephemeral documents for the authenticated user
-    const deletedCount = await documentService.deleteEphemeralDocuments(userId);
-
-    res.json({
-      success: true,
-      deletedCount
-    });
-  } catch (error) {
-    console.error('[Documents API] Error deleting ephemeral documents:', error);
     next(error);
   }
 });

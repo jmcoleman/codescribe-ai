@@ -2,6 +2,7 @@ import { Component } from 'react';
 import { AlertCircle, RefreshCw, Home } from 'lucide-react';
 import { Button } from './Button';
 import { CopyButton } from './CopyButton';
+import { STORAGE_KEYS } from '../constants/storage';
 
 /**
  * ErrorBoundary Component
@@ -100,7 +101,7 @@ class ErrorBoundary extends Component {
   getThemePreference = () => {
     // Priority: localStorage > system preference > default
     try {
-      const stored = localStorage.getItem('codescribeai:settings:theme');
+      const stored = localStorage.getItem(STORAGE_KEYS.THEME_PREFERENCE);
       if (stored) return stored;
     } catch (e) {
       // localStorage not available

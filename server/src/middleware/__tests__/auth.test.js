@@ -183,47 +183,48 @@ describe('Auth Middleware', () => {
   });
 
   describe('requireTier', () => {
-    it('should allow access if user has exact required tier', () => {
+    it('should allow access if user has exact required tier', async () => {
       req.user = { id: 1, tier: 'pro' };
 
       const middleware = requireTier('pro');
-      middleware(req, res, next);
+      await middleware(req, res, next);
 
       expect(next).toHaveBeenCalled();
       expect(res.status).not.toHaveBeenCalled();
     });
 
-    it('should allow access if user has higher tier', () => {
+    it('should allow access if user has higher tier', async () => {
       req.user = { id: 1, tier: 'enterprise' };
 
       const middleware = requireTier('pro');
-      middleware(req, res, next);
+      await middleware(req, res, next);
 
       expect(next).toHaveBeenCalled();
       expect(res.status).not.toHaveBeenCalled();
     });
 
-    it('should reject access if user has lower tier', () => {
+    it('should reject access if user has lower tier', async () => {
       req.user = { id: 1, tier: 'free' };
 
       const middleware = requireTier('pro');
-      middleware(req, res, next);
+      await middleware(req, res, next);
 
       expect(res.status).toHaveBeenCalledWith(403);
       expect(res.json).toHaveBeenCalledWith({
         success: false,
         error: 'This feature requires pro tier or higher',
         currentTier: 'free',
+        effectiveTier: 'free',
         requiredTier: 'pro'
       });
       expect(next).not.toHaveBeenCalled();
     });
 
-    it('should reject if user is not authenticated', () => {
+    it('should reject if user is not authenticated', async () => {
       req.user = null;
 
       const middleware = requireTier('free');
-      middleware(req, res, next);
+      await middleware(req, res, next);
 
       expect(res.status).toHaveBeenCalledWith(401);
       expect(res.json).toHaveBeenCalledWith({
@@ -237,25 +238,25 @@ describe('Auth Middleware', () => {
       expect(() => requireTier('invalid-tier')).toThrow('Invalid tier: invalid-tier');
     });
 
-    it('should validate tier hierarchy correctly', () => {
+    it('should validate tier hierarchy correctly', async () => {
       const tiers = ['free', 'pro', 'team', 'enterprise'];
 
-      tiers.forEach((userTier, userIndex) => {
-        tiers.forEach((requiredTier, requiredIndex) => {
+      for (const [userIndex, userTier] of tiers.entries()) {
+        for (const [requiredIndex, requiredTier] of tiers.entries()) {
           req.user = { id: 1, tier: userTier };
           next.mockClear();
           res.status.mockClear();
 
           const middleware = requireTier(requiredTier);
-          middleware(req, res, next);
+          await middleware(req, res, next);
 
           if (userIndex >= requiredIndex) {
             expect(next).toHaveBeenCalled();
           } else {
             expect(res.status).toHaveBeenCalledWith(403);
           }
-        });
-      });
+        }
+      }
     });
   });
 

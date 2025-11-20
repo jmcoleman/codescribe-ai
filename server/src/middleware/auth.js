@@ -27,8 +27,8 @@ const requireAuth = async (req, res, next) => {
     // Verify token synchronously
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Token is valid, fetch full user data including tier
-    const user = await User.findById(decoded.sub);
+    // Token is valid, fetch full user data including tier and override fields
+    const user = await User.findById(decoded.sub || decoded.id);
 
     if (!user) {
       return res.status(401).json({
@@ -37,7 +37,9 @@ const requireAuth = async (req, res, next) => {
       });
     }
 
+    // User object from database already includes override fields
     req.user = user;
+
     return next();
   } catch (error) {
     // JWT verification failed or database error
@@ -94,18 +96,19 @@ const optionalAuth = async (req, res, next) => {
 /**
  * Require specific tier or higher
  * Must be used AFTER requireAuth
+ * Supports tier override system for admin/support roles
  *
- * @param {string} requiredTier - Minimum tier required (free, pro, team, enterprise)
+ * @param {string} requiredTier - Minimum tier required (free, starter, pro, team, enterprise)
  */
 const requireTier = (requiredTier) => {
-  const tierHierarchy = ['free', 'pro', 'team', 'enterprise'];
+  const tierHierarchy = ['free', 'starter', 'pro', 'team', 'enterprise'];
   const requiredIndex = tierHierarchy.indexOf(requiredTier);
 
   if (requiredIndex === -1) {
     throw new Error(`Invalid tier: ${requiredTier}`);
   }
 
-  return (req, res, next) => {
+  return async (req, res, next) => {
     if (!req.user || !req.user.tier) {
       return res.status(401).json({
         success: false,
@@ -113,13 +116,18 @@ const requireTier = (requiredTier) => {
       });
     }
 
-    const userTierIndex = tierHierarchy.indexOf(req.user.tier);
+    // Import getEffectiveTier to support tier overrides
+    const { getEffectiveTier } = await import('../utils/tierOverride.js');
+    const effectiveTier = getEffectiveTier(req.user);
+
+    const userTierIndex = tierHierarchy.indexOf(effectiveTier);
 
     if (userTierIndex < requiredIndex) {
       return res.status(403).json({
         success: false,
         error: `This feature requires ${requiredTier} tier or higher`,
         currentTier: req.user.tier,
+        effectiveTier: effectiveTier,
         requiredTier
       });
     }
@@ -274,6 +282,7 @@ const requireVerifiedEmail = async (req, res, next) => {
 /**
  * Sanitize user object for client response
  * Removes sensitive fields like password_hash
+ * Adds has_password boolean for frontend logic
  *
  * @param {object} user - User object from database
  * @returns {object} Safe user object
@@ -282,6 +291,10 @@ function sanitizeUser(user) {
   if (!user) return null;
 
   const { password_hash, ...safeUser } = user;
+
+  // Add has_password field (true if password_hash exists and is not null)
+  safeUser.has_password = Boolean(password_hash);
+
   return safeUser;
 }
 

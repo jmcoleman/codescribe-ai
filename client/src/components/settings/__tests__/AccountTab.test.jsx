@@ -427,6 +427,14 @@ describe('AccountTab', () => {
 
     it('should show success toast on successful password change', async () => {
       const user = userEvent.setup();
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ success: true })
+      });
+
+      localStorage.setItem('cs_auth_token', 'test-token');
+
       renderWithRouter();
 
       await user.click(screen.getByRole('button', { name: /Change Password/i }));
@@ -444,6 +452,14 @@ describe('AccountTab', () => {
 
     it('should close password form and clear fields after successful change', async () => {
       const user = userEvent.setup();
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ success: true })
+      });
+
+      localStorage.setItem('cs_auth_token', 'test-token');
+
       renderWithRouter();
 
       await user.click(screen.getByRole('button', { name: /Change Password/i }));
@@ -510,7 +526,7 @@ describe('AccountTab', () => {
         blob: () => Promise.resolve(mockBlob)
       });
 
-      localStorage.setItem('token', 'test-token');
+      localStorage.setItem('cs_auth_token', 'test-token');
 
       // Render FIRST, before mocking DOM APIs
       renderWithRouter();
@@ -565,7 +581,7 @@ describe('AccountTab', () => {
         blob: () => Promise.resolve(mockBlob)
       });
 
-      localStorage.setItem('token', 'test-token');
+      localStorage.setItem('cs_auth_token', 'test-token');
 
       // Render FIRST, before mocking DOM APIs
       renderWithRouter();
@@ -613,13 +629,24 @@ describe('AccountTab', () => {
         blob: () => Promise.resolve(mockBlob)
       });
 
-      localStorage.setItem('token', 'test-token');
+      localStorage.setItem('cs_auth_token', 'test-token');
 
       // Render FIRST, before mocking DOM APIs
       renderWithRouter();
 
       // NOW mock DOM APIs for file download (after React has finished rendering)
-      document.createElement = vi.fn(() => ({ href: '', download: '', click: vi.fn() }));
+      const mockClick = vi.fn();
+      document.createElement = vi.fn((tag) => {
+        if (tag === 'a') {
+          return {
+            href: '',
+            download: '',
+            click: mockClick,
+          };
+        }
+        // Call original createElement for other elements
+        return originalCreateElement.call(document, tag);
+      });
       document.body.appendChild = vi.fn();
       document.body.removeChild = vi.fn();
       global.URL.createObjectURL = vi.fn(() => 'blob:mock-url');
@@ -640,7 +667,7 @@ describe('AccountTab', () => {
         json: () => Promise.resolve({ error: 'Export failed' })
       });
 
-      localStorage.setItem('token', 'test-token');
+      localStorage.setItem('cs_auth_token', 'test-token');
 
       renderWithRouter();
 
@@ -656,7 +683,7 @@ describe('AccountTab', () => {
 
       mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
-      localStorage.setItem('token', 'test-token');
+      localStorage.setItem('cs_auth_token', 'test-token');
 
       renderWithRouter();
 

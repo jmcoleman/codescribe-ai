@@ -1,0 +1,35 @@
+Generate comprehensive OpenAPI 3.0+ documentation for the following {{language}} API code.
+
+{{baseContext}}
+
+Start your response with the heading "# OpenAPI Specification" followed by a brief description paragraph explaining that this is a machine-readable API specification in OpenAPI 3.0+ format that can be imported into Swagger UI, Postman, or other API tools.
+
+Analyze the code and produce a complete OpenAPI specification that includes:
+
+1. **API Metadata**: Title, description, version, contact info (if available)
+2. **Server Configuration**: Base URLs and environment descriptions
+3. **All Endpoints**: Complete path documentation with:
+   - HTTP methods
+   - Parameters (path, query, header)
+   - Request body schemas
+   - All response codes (success + errors)
+   - Examples for requests and responses
+4. **Schema Definitions**: All data models with:
+   - Property types and formats
+   - Required fields
+   - Validation rules (min, max, pattern, enum)
+   - Descriptions and examples
+5. **Authentication**: Security schemes and requirements
+6. **Error Responses**: Standard error formats for 4xx and 5xx codes
+
+Code to analyze:
+```{{language}}
+{{code}}
+```
+
+Format your output as:
+1. A markdown heading (# title)
+2. A brief 1-2 sentence description of the API
+3. The complete OpenAPI 3.0+ YAML specification in a code block
+
+The YAML specification should be valid and directly importable into Swagger UI or other OpenAPI tools.

@@ -599,14 +599,14 @@ router.delete('/account', requireAuth, async (req, res) => {
 // ============================================================================
 router.patch('/preferences', requireAuth, async (req, res) => {
   try {
-    const { analytics_enabled, save_docs_preference, docs_consent_shown_at } = req.body;
+    const { analytics_enabled, save_docs_preference, docs_consent_shown_at, theme_preference } = req.body;
     const userId = req.user.id;
 
     // Require at least one field to be present
-    if (analytics_enabled === undefined && save_docs_preference === undefined && docs_consent_shown_at === undefined) {
+    if (analytics_enabled === undefined && save_docs_preference === undefined && docs_consent_shown_at === undefined && theme_preference === undefined) {
       return res.status(400).json({
         success: false,
-        error: 'At least one preference field (analytics_enabled, save_docs_preference, docs_consent_shown_at) must be provided. analytics_enabled must be a boolean.'
+        error: 'At least one preference field (analytics_enabled, save_docs_preference, docs_consent_shown_at, theme_preference) must be provided.'
       });
     }
 
@@ -637,6 +637,17 @@ router.patch('/preferences', requireAuth, async (req, res) => {
     // Validate docs_consent_shown_at if provided
     if (docs_consent_shown_at !== undefined) {
       updates.docs_consent_shown_at = docs_consent_shown_at;
+    }
+
+    // Validate theme_preference if provided
+    if (theme_preference !== undefined) {
+      if (!['light', 'dark', 'auto'].includes(theme_preference)) {
+        return res.status(400).json({
+          success: false,
+          error: 'theme_preference must be one of: light, dark, auto'
+        });
+      }
+      updates.theme_preference = theme_preference;
     }
 
     // Update preferences in database

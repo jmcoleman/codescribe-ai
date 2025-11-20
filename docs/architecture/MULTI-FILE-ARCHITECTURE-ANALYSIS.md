@@ -67,11 +67,12 @@ App.jsx (Root)
 #### State Variables (Single-File Mode)
 
 ```javascript
-// Editor state (persisted to localStorage)
+// Editor state (persisted to user-scoped localStorage)
 const [code, setCode] = useState(() => getStorageItem(STORAGE_KEYS.EDITOR_CODE, DEFAULT_CODE));
 const [docType, setDocType] = useState(() => getStorageItem(STORAGE_KEYS.EDITOR_DOC_TYPE, 'README'));
-const [language, setLanguage] = useState(() => getStorageItem(STORAGE_KEYS.EDITOR_LANGUAGE, 'javascript'));
 const [filename, setFilename] = useState(() => getStorageItem(STORAGE_KEYS.EDITOR_FILENAME, 'code.js'));
+// Language is derived from filename, not stored separately
+const language = detectLanguageFromFilename(filename);
 
 // Documentation state (from useDocGeneration hook)
 const {
@@ -112,16 +113,48 @@ useEffect(() => {
   if (savedScore) setQualityScore(JSON.parse(savedScore));
 }, []);
 
-// Save to localStorage on every change
-useEffect(() => { setStorageItem(STORAGE_KEYS.EDITOR_CODE, code); }, [code]);
-useEffect(() => { setStorageItem(STORAGE_KEYS.EDITOR_LANGUAGE, language); }, [language]);
+// Save to user-scoped localStorage on every change
+useEffect(() => {
+  // Code, doc, and score are user-scoped (cs_ed_code_{userId})
+  if (user && user.id) {
+    const key = getEditorKey(user.id, 'code');
+    if (key) setStorageItem(key, code);
+  } else {
+    setStorageItem(STORAGE_KEYS.EDITOR_CODE, code);
+  }
+}, [code, user]);
+
 useEffect(() => { setStorageItem(STORAGE_KEYS.EDITOR_FILENAME, filename); }, [filename]);
 useEffect(() => { setStorageItem(STORAGE_KEYS.EDITOR_DOC_TYPE, docType); }, [docType]);
-useEffect(() => { setStorageItem(STORAGE_KEYS.EDITOR_DOCUMENTATION, documentation); }, [documentation]);
-useEffect(() => { setStorageItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE, JSON.stringify(qualityScore)); }, [qualityScore]);
+
+// Documentation and quality score are also user-scoped
+useEffect(() => {
+  if (documentation) {
+    if (user && user.id) {
+      const key = getEditorKey(user.id, 'doc');
+      if (key) setStorageItem(key, documentation);
+    } else {
+      setStorageItem(STORAGE_KEYS.EDITOR_DOCUMENTATION, documentation);
+    }
+  }
+}, [documentation, user]);
+
+useEffect(() => {
+  if (qualityScore) {
+    if (user && user.id) {
+      const key = getEditorKey(user.id, 'score');
+      if (key) setStorageItem(key, JSON.stringify(qualityScore));
+    } else {
+      setStorageItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE, JSON.stringify(qualityScore));
+    }
+  }
+}, [qualityScore, user]);
 ```
 
-**⚠️ Key Insight:** Every state change triggers localStorage write. With multi-file, we'll need to batch updates.
+**⚠️ Key Insight:**
+- User-scoped keys prevent privacy leaks on shared computers
+- Language is derived from filename (not stored)
+- With multi-file, we'll need to batch updates
 
 #### File Upload Flow (Lines 367-647)
 

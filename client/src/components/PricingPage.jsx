@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
-import { Check, Sparkles, Zap, Building2, Code2, Loader2, ArrowLeft } from 'lucide-react';
+import { Check, Sparkles, Zap, Building2, Code2, Loader2, ArrowLeft, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { API_URL } from '../config/api';
@@ -38,6 +38,15 @@ export function PricingPage() {
   const [showContactSalesModal, setShowContactSalesModal] = useState(false);
   const [contactSalesTier, setContactSalesTier] = useState('enterprise');
   const [pendingSubscription, setPendingSubscription] = useState(null);
+
+  // Check if we can go back (has history)
+  const [canGoBack, setCanGoBack] = useState(true);
+
+  useEffect(() => {
+    // Check if opened in new tab (no opener and no history)
+    const isNewTab = !window.opener && window.history.length <= 1;
+    setCanGoBack(!isNewTab);
+  }, []);
 
   // Initialize billing period from sessionStorage or default to 'monthly'
   const [billingPeriod, setBillingPeriod] = useState(() => {
@@ -253,7 +262,7 @@ export function PricingPage() {
         '40 docs/day',
         'Priority processing',
         'Email (24h response)',
-        'Batch processing*',
+        { text: 'Multi-file GitHub import', badge: 'NEW' },
         'Custom templates*'
       ],
       cta: 'Subscribe',
@@ -305,15 +314,19 @@ export function PricingPage() {
   return (
     <PageLayout showGradient={false} className="bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-950">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 sm:pt-4 pb-2 sm:pb-4">
-        {/* Back Button */}
-        <button
-          onClick={() => navigate(-1)}
-          className="inline-flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 mb-3 transition-colors group"
-          aria-label="Go back"
-        >
-          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" aria-hidden="true" />
-          <span className="font-medium">Back</span>
-        </button>
+        {/* Back Button - Only show if we can actually go back, but preserve space */}
+        <div className="mb-3 h-6">
+          {canGoBack && (
+            <button
+              onClick={() => navigate(-1)}
+              className="inline-flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors group"
+              aria-label="Go back"
+            >
+              <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" aria-hidden="true" />
+              <span className="font-medium">Back</span>
+            </button>
+          )}
+        </div>
 
         <div className="text-center mb-1 sm:mb-2">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 dark:text-slate-100 mb-1">
@@ -410,12 +423,26 @@ export function PricingPage() {
                 </div>
 
                 <ul className="space-y-1.5 sm:space-y-2 mb-2 sm:mb-3 flex-grow">
-                  {tier.features.map((feature, idx) => (
-                    <li key={idx} className="flex items-start gap-2 text-sm">
-                      <Check className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
-                      <span className="text-slate-700 dark:text-slate-300">{feature}</span>
-                    </li>
-                  ))}
+                  {tier.features.map((feature, idx) => {
+                    const isObject = typeof feature === 'object';
+                    const featureText = isObject ? feature.text : feature;
+                    const hasBadge = isObject && feature.badge;
+
+                    return (
+                      <li key={idx} className="flex items-start gap-2 text-sm">
+                        <Check className="w-4 h-4 flex-shrink-0 mt-0.5 text-green-600 dark:text-green-400" />
+                        <span className="text-slate-700 dark:text-slate-300 flex items-center gap-2 flex-wrap">
+                          {featureText}
+                          {hasBadge && (
+                            <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
+                              {feature.badge}
+                              <Sparkles className="w-3 h-3 -translate-y-1" />
+                            </span>
+                          )}
+                        </span>
+                      </li>
+                    );
+                  })}
                 </ul>
 
                 <button

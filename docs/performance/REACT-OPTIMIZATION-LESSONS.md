@@ -1,12 +1,12 @@
 # React Performance Optimization Lessons Learned
 
-**Document Version:** 1.0
-**Date:** November 16, 2025
-**Related Files:** DocPanel.jsx, MermaidDiagram.jsx, LazyMermaidRenderer.jsx, App.jsx, index.css
+**Document Version:** 1.1
+**Date:** November 20, 2025
+**Related Files:** DocPanel.jsx, MermaidDiagram.jsx, LazyMermaidRenderer.jsx, App.jsx, index.css, SplitPanel.jsx
 
 ## Overview
 
-This document captures critical lessons learned while fixing re-rendering and layout issues in CodeScribe AI's documentation panel. These optimizations eliminated visual flashing, improved performance, and demonstrate deep React optimization knowledge.
+This document captures critical lessons learned while fixing re-rendering, layout, and scrolling issues in CodeScribe AI's documentation panel and resizable sidebar implementation. These optimizations eliminated visual flashing, restored scrolling functionality, improved performance, and demonstrate deep React optimization knowledge.
 
 ---
 
@@ -395,6 +395,152 @@ Check DevTools Computed tab for `overflow`, `min-height`, `flex` values.
 
 ---
 
+## Problem 3: Resizable Panels Breaking Scrolling
+
+### 🔴 The Issue
+
+**Symptom:** After implementing resizable sidebar panels using `react-resizable-panels`, the code and documentation panels lost their ability to scroll. Content was static and inaccessible.
+
+**Impact:** Critical UX regression - users couldn't view full content in either panel.
+
+**Root Cause Analysis:**
+
+When adding resizable Panel components from `react-resizable-panels`, an extra wrapper `<div>` was added inside the Panel that broke the flex height constraints needed for scrolling:
+
+```jsx
+// ❌ BROKEN: Extra wrapper div breaks height constraints
+<Panel>
+  <div className="flex-1 min-w-0 relative">  {/* ← Extra wrapper! */}
+    <main className="flex-1 w-full h-full flex flex-col overflow-auto">
+      <div className="flex-1 min-h-0">  {/* ← Critical for scrolling */}
+        <SplitPanel />
+      </div>
+    </main>
+  </div>
+</Panel>
+```
+
+### ✅ The Solution
+
+**Remove the extra wrapper and ensure proper height constraints:**
+
+```jsx
+// ✅ FIXED: Direct nesting with proper flex constraints
+<PanelGroup direction="horizontal" className="flex-1">
+  <Panel>
+    <main className="w-full h-full flex flex-col overflow-hidden">
+      <div className="flex-1 min-h-0">  {/* ← Critical! */}
+        <SplitPanel />
+      </div>
+    </main>
+  </Panel>
+</PanelGroup>
+```
+
+### 🎯 Key Learnings
+
+#### 1. **The `min-h-0` Pattern is Critical for Scrollable Flex Children**
+
+By default, flex children have `min-height: auto`, which prevents them from shrinking below their content size. This breaks scrolling because the container never overflows.
+
+```css
+/* Default behavior (prevents scrolling) */
+.flex-child {
+  min-height: auto;  /* ← Flex child won't shrink below content! */
+}
+
+/* Fixed behavior (enables scrolling) */
+.flex-child {
+  min-height: 0;     /* ← Allows flex child to shrink */
+  overflow: auto;    /* ← Now overflow scrolling works */
+}
+```
+
+**Tailwind:** `min-h-0` class
+
+#### 2. **Height Constraints Must Flow Through Every Level**
+
+For scrolling to work in nested flex layouts, EVERY level in the hierarchy must properly constrain height:
+
+```jsx
+// ✅ Correct hierarchy for scrolling
+<Panel>                           {/* Panel controls width via resize */}
+  <main className="h-full">       {/* 1. Take full panel height */}
+    <div className="flex-1 min-h-0">  {/* 2. CRITICAL: Allow shrinking! */}
+      <SplitPanel>                {/* 3. Handles internal scrolling */}
+        <CodePanel />             {/* Has overflow-y-auto */}
+        <DocPanel />              {/* Has overflow-y-auto */}
+      </SplitPanel>
+    </div>
+  </main>
+</Panel>
+```
+
+#### 3. **Extra Wrappers Can Break Height Constraints**
+
+Adding "just one more div" can break the entire scrolling chain:
+
+```jsx
+// ❌ This seemingly harmless wrapper breaks everything
+<Panel>
+  <div className="flex-1 min-w-0 relative">  {/* ← Extra wrapper */}
+    <main className="h-full">
+      {/* Scrolling is now broken! */}
+    </main>
+  </div>
+</Panel>
+```
+
+**Why?** The extra div doesn't have `h-full`, so `main`'s `h-full` has nothing to reference.
+
+#### 4. **`PanelGroup` Needs `flex-1` to Take Available Space**
+
+```jsx
+// ❌ Without flex-1, PanelGroup may not expand properly
+<PanelGroup direction="horizontal">
+  <Panel />
+</PanelGroup>
+
+// ✅ With flex-1, PanelGroup fills available space
+<PanelGroup direction="horizontal" className="flex-1">
+  <Panel />
+</PanelGroup>
+```
+
+### 📋 Scrolling Checklist for React Layouts
+
+When implementing scrollable content in nested layouts:
+
+1. ✅ Parent has `display: flex` + `flex-direction: column` (or is already a flex container)
+2. ✅ Scrollable child has `flex: 1` (Tailwind: `flex-1`)
+3. ✅ Scrollable child has `min-height: 0` (Tailwind: `min-h-0`) - **MOST CRITICAL!**
+4. ✅ Scrollable child has `overflow: auto` (Tailwind: `overflow-auto`)
+5. ✅ No extra wrapper divs breaking the height constraint chain
+6. ✅ All ancestor elements properly propagate height (h-full where needed)
+
+### 🛠️ Debugging Techniques
+
+1. **Check computed styles** in DevTools:
+   - Look for `min-height: auto` (should be `0` for flex scrolling)
+   - Verify `overflow: visible` vs `overflow: auto/scroll`
+   - Check actual heights vs expected heights
+
+2. **Remove wrappers one at a time** to identify the culprit
+
+3. **Add temporary borders** to visualize layout:
+   ```css
+   * { outline: 1px solid red !important; }
+   ```
+
+### Related Files
+
+- `client/src/App.jsx` (lines 1624-1768) - PanelGroup implementation
+- `client/src/components/SplitPanel.jsx` - Handles code/doc panel scrolling
+- `client/src/components/CodePanel.jsx` - Has `overflow-hidden` wrapper
+- `client/src/components/DocPanel.jsx` - Has `overflow-y-auto` on content area
+
+---
+
 ## Interview Talking Points
 
 ### Technical Depth
@@ -450,5 +596,15 @@ Check DevTools Computed tab for `overflow`, `min-height`, `flex` values.
 
 ---
 
-**Last Updated:** November 16, 2025
+**Last Updated:** November 20, 2025
 **Author:** CodeScribe AI Development Team
+
+## Version History
+
+- **v1.1** (November 20, 2025) - Added Problem 3: Resizable Panels Breaking Scrolling
+  - Documented `min-h-0` pattern for flex scrolling
+  - Added scrolling checklist and debugging techniques
+  - Explained height constraint propagation
+- **v1.0** (November 16, 2025) - Initial documentation
+  - Problem 1: Mermaid diagram flashing (6-layer optimization)
+  - Problem 2: Page scrollbar flicker (responsive overflow)

@@ -22,6 +22,22 @@ function getOpenAIClient(apiKey) {
 }
 
 /**
+ * Determine which max tokens parameter to use based on model
+ * GPT-5+ uses max_completion_tokens, GPT-4 and earlier use max_tokens
+ * @param {string} model - Model identifier
+ * @returns {string} Parameter name to use ('max_completion_tokens' or 'max_tokens')
+ */
+function getMaxTokensParamName(model) {
+  // GPT-5 and later models use max_completion_tokens
+  // Check for gpt-5, gpt-6, etc.
+  if (model.match(/gpt-([5-9]|\d{2,})/i)) {
+    return 'max_completion_tokens';
+  }
+  // GPT-4 and earlier use max_tokens
+  return 'max_tokens';
+}
+
+/**
  * Generate text with OpenAI (non-streaming)
  *
  * @param {string} prompt - User message/prompt
@@ -60,9 +76,12 @@ async function generateWithOpenAI(prompt, options = {}, config) {
       // Build request parameters
       const requestParams = {
         model: config.model,
-        messages,
-        max_tokens: options.maxTokens || config.maxTokens
+        messages
       }
+
+      // Add max tokens parameter (GPT-5+ uses max_completion_tokens, GPT-4 and earlier use max_tokens)
+      const maxTokensParam = getMaxTokensParamName(config.model);
+      requestParams[maxTokensParam] = options.maxTokens || config.maxTokens;
 
       // Add optional parameters
       if (options.temperature !== undefined) {
@@ -142,9 +161,12 @@ async function streamWithOpenAI(prompt, onChunk, options = {}, config) {
       const requestParams = {
         model: config.model,
         messages,
-        max_tokens: options.maxTokens || config.maxTokens,
         stream: true
       }
+
+      // Add max tokens parameter (GPT-5+ uses max_completion_tokens, GPT-4 and earlier use max_tokens)
+      const maxTokensParam = getMaxTokensParamName(config.model);
+      requestParams[maxTokensParam] = options.maxTokens || config.maxTokens;
 
       // Add optional parameters
       if (options.temperature !== undefined) {

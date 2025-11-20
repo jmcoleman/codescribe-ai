@@ -64,10 +64,11 @@ useEffect(() => {
 ```
 
 **Storage keys** (from `client/src/constants/storage.js`):
-- `EDITOR_CODE` - Full code content (persists across refreshes) ✅
-- `EDITOR_DOCUMENTATION` - Full generated docs (persists) ✅
-- `EDITOR_QUALITY_SCORE` - Quality score object (persists) ✅
-- `EDITOR_FILENAME`, `EDITOR_LANGUAGE`, `EDITOR_DOC_TYPE` - Metadata (persists) ✅
+- `cs_ed_code_{userId}` - Full code content (user-scoped, persists across refreshes) ✅
+- `cs_ed_doc_{userId}` - Full generated docs (user-scoped, persists) ✅
+- `cs_ed_score_{userId}` - Quality score object (user-scoped, persists) ✅
+- `cs_ed_file`, `cs_ed_doctype` - Metadata (global, persists) ✅
+- **Language** - Derived from filename, not stored ✨
 
 **This violates our "Code in memory only" principle** but was accepted for MVP UX convenience.
 

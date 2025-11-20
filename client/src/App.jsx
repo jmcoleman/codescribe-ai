@@ -1,23 +1,32 @@
 import { useState, useRef, useEffect, useCallback, lazy, Suspense } from 'react';
 import { Toaster } from 'react-hot-toast';
+import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useTheme } from './contexts/ThemeContext';
 import { Header } from './components/Header';
 import { MobileMenu } from './components/MobileMenu';
 import { ControlBar } from './components/ControlBar';
+import { Sidebar } from './components/Sidebar';
+import { TierOverrideBanner } from './components/TierOverrideBanner';
 import { CodePanel } from './components/CodePanel';
 import { SplitPanel } from './components/SplitPanel';
 import Footer from './components/Footer';
 import { useDocGeneration } from './hooks/useDocGeneration';
 import { useUsageTracking } from './hooks/useUsageTracking';
+import { useWorkspacePersistence } from './hooks/useWorkspacePersistence';
+import { useDocumentPersistence } from './hooks/useDocumentPersistence';
+import { useTierOverride } from './hooks/useTierOverride';
 import { ErrorBanner } from './components/ErrorBanner';
 import { UsageWarningBanner } from './components/UsageWarningBanner';
 import { UsageLimitModal } from './components/UsageLimitModal';
 import UnverifiedEmailBanner from './components/UnverifiedEmailBanner';
-import { validateFile, getValidationErrorMessage } from './utils/fileValidation';
+import { validateFile, getValidationErrorMessage, detectLanguageFromFilename } from './utils/fileValidation';
 import { trackCodeInput, trackFileUpload, trackExampleUsage, trackInteraction } from './utils/analytics';
+import { toastCompact } from './utils/toastWithHistory';
+import { toastDocGenerated } from './utils/toast';
 import { createTestDataLoader, exposeTestDataLoader, createSkeletonTestHelper, exposeSkeletonTestHelper } from './utils/testData';
 import { exposeUsageSimulator } from './utils/usageTestData';
 import { useAuth } from './contexts/AuthContext';
+import { hasFeature } from './utils/tierFeatures';
 import { DEFAULT_CODE, EXAMPLE_CODES } from './constants/defaultCode';
 
 // Lazy load heavy components that aren't needed on initial render
@@ -59,12 +68,13 @@ function LoadingFallback() {
     </div>
   );
 }
-import {
-  toastDocGenerated,
-  toastCompact,
-} from './utils/toast';
+
 import { API_URL } from './config/api.js';
-import { STORAGE_KEYS, getStorageItem, setStorageItem } from './constants/storage';
+import { STORAGE_KEYS, getStorageItem, setStorageItem, getEditorKey } from './constants/storage';
+
+// Default sidebar panel sizes (percentage)
+const DEFAULT_SIDEBAR_SIZE = 20;
+const DEFAULT_MAIN_SIZE = 80;
 
 function App() {
   const { getToken, user, checkLegalStatus, acceptLegalDocuments } = useAuth();
@@ -73,8 +83,9 @@ function App() {
   // Load persisted state from localStorage on mount, fallback to defaults
   const [code, setCode] = useState(() => getStorageItem(STORAGE_KEYS.EDITOR_CODE, DEFAULT_CODE));
   const [docType, setDocType] = useState(() => getStorageItem(STORAGE_KEYS.EDITOR_DOC_TYPE, 'README'));
-  const [language, setLanguage] = useState(() => getStorageItem(STORAGE_KEYS.EDITOR_LANGUAGE, 'javascript'));
   const [filename, setFilename] = useState(() => getStorageItem(STORAGE_KEYS.EDITOR_FILENAME, 'code.js'));
+  // Language is derived from filename, not stored separately
+  const language = detectLanguageFromFilename(filename);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showQualityModal, setShowQualityModal] = useState(false);
   const [showSamplesModal, setShowSamplesModal] = useState(false);
@@ -89,17 +100,123 @@ function App() {
   const [largeCodeStats, setLargeCodeStats] = useState(null);
   const [uploadError, setUploadError] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [bulkGenerationErrors, setBulkGenerationErrors] = useState([]); // Array of {filename, fileId, error}
+  const [bulkGenerationProgress, setBulkGenerationProgress] = useState(null); // { total, completed, currentBatch, totalBatches } or null
+  const [bulkGenerationSummary, setBulkGenerationSummary] = useState(null); // { totalFiles, successCount, failCount, avgQuality, avgGrade, successfulFiles: [{name, score, grade}] }
   const [testSkeletonMode, setTestSkeletonMode] = useState(false);
-  const fileInputRef = useRef(null);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [isMobileView, setIsMobileView] = useState(() => window.innerWidth < 1024);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    // Load sidebar collapsed state from localStorage
+    const saved = getStorageItem(STORAGE_KEYS.SIDEBAR_MODE);
+    return saved === 'collapsed';
+  });
+  const [expandedSidebarWidth, setExpandedSidebarWidth] = useState(() => {
+    // Load user's preferred expanded width from localStorage
+    try {
+      const saved = getStorageItem(STORAGE_KEYS.SIDEBAR_WIDTH);
+      if (saved) {
+        const { sidebar } = JSON.parse(saved);
+        return sidebar || DEFAULT_SIDEBAR_SIZE;
+      }
+    } catch (error) {
+      console.error('[App] Error loading sidebar width:', error);
+    }
+    return DEFAULT_SIDEBAR_SIZE;
+  });
+  const fileInputRef = useRef(null); // For single-file uploads (Command Bar)
+  const multiFileInputRef = useRef(null); // For multi-file uploads (Sidebar)
   const samplesButtonRef = useRef(null);
   const headerRef = useRef(null);
+  const sidebarPanelRef = useRef(null); // For programmatically controlling sidebar panel size
+
+  // Load saved sidebar panel sizes from localStorage
+  const loadSidebarSizes = useCallback(() => {
+    try {
+      const saved = getStorageItem(STORAGE_KEYS.SIDEBAR_WIDTH);
+      if (saved) {
+        const { sidebar, main } = JSON.parse(saved);
+        return { sidebar, main };
+      }
+    } catch (error) {
+      console.error('[App] Error loading sidebar sizes:', error);
+    }
+    return { sidebar: DEFAULT_SIDEBAR_SIZE, main: DEFAULT_MAIN_SIZE };
+  }, []);
+
+  // Save sidebar panel sizes to localStorage
+  const saveSidebarSizes = useCallback((sizes) => {
+    try {
+      if (sizes && sizes.length === 2) {
+        setStorageItem(STORAGE_KEYS.SIDEBAR_WIDTH, JSON.stringify({
+          sidebar: sizes[0],
+          main: sizes[1]
+        }));
+      }
+    } catch (error) {
+      console.error('[App] Error saving sidebar sizes:', error);
+    }
+  }, []);
+
+  // Toggle sidebar collapse state
+  const handleToggleSidebarCollapse = useCallback(() => {
+    setSidebarCollapsed(prev => {
+      const newValue = !prev;
+      // Persist to localStorage
+      setStorageItem(STORAGE_KEYS.SIDEBAR_MODE, newValue ? 'collapsed' : 'expanded');
+
+      // Control panel size via ref
+      if (sidebarPanelRef.current) {
+        if (newValue) {
+          // Collapsing: resize to minimum (3% ~ 58px - just enough for icon)
+          sidebarPanelRef.current.resize(3);
+        } else {
+          // Expanding: restore saved width
+          sidebarPanelRef.current.resize(expandedSidebarWidth);
+        }
+      }
+
+      return newValue;
+    });
+  }, [expandedSidebarWidth]);
+
+  // Handle sidebar resize (when user drags the handle)
+  const handleSidebarResize = useCallback((sizes) => {
+    if (!sidebarCollapsed && sizes && sizes.length >= 2) {
+      const sidebarSize = sizes[0];
+      // Save the expanded width when user resizes (not when collapsed)
+      if (sidebarSize > 10) { // Only save if it's a meaningful size (not collapsed)
+        setExpandedSidebarWidth(sidebarSize);
+        saveSidebarSizes(sidebarSize, sizes[1]);
+      }
+    }
+  }, [sidebarCollapsed, saveSidebarSizes]);
 
   // Track if we just accepted terms to prevent re-checking immediately after
   const justAcceptedTermsRef = useRef(false);
 
+  // Detect mobile/tablet view changes
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobileView(window.innerWidth < 1024);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Usage tracking
   const { usage, refetch: refetchUsage, checkThreshold, canGenerate, getUsageForPeriod } = useUsageTracking();
   const [mockUsage, setMockUsage] = useState(null);
+
+  // Multi-file state (Phase 3: Multi-file integration)
+  const multiFileState = useWorkspacePersistence();
+  const documentPersistence = useDocumentPersistence();
+  const { override, clearOverride } = useTierOverride();
+
+  // Feature detection: Check if user can use batch processing (Pro+ tier)
+  const canUseBatchProcessing = hasFeature(user, 'batchProcessing');
+  const isMultiFileMode = canUseBatchProcessing && multiFileState.hasFiles;
 
   // Check legal acceptance status on mount for authenticated users
   useEffect(() => {
@@ -136,6 +253,24 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]); // Only run when user changes, not when checkLegalStatus changes
 
+  // Load user-scoped editor content when user logs in
+  useEffect(() => {
+    if (user && user.id) {
+      // Load user's code from user-scoped key
+      const codeKey = getEditorKey(user.id, 'code');
+      if (codeKey) {
+        const savedCode = getStorageItem(codeKey);
+        if (savedCode) {
+          setCode(savedCode);
+        }
+      }
+    } else {
+      // User logged out - load from global key
+      const globalCode = getStorageItem(STORAGE_KEYS.EDITOR_CODE, DEFAULT_CODE);
+      setCode(globalCode);
+    }
+  }, [user?.id]); // Only run when user ID changes (login/logout)
+
   // Reopen support modal after user logs in (if they came from support modal)
   useEffect(() => {
     if (user && sessionStorage.getItem('pendingSupportModal') === 'true') {
@@ -145,14 +280,21 @@ function App() {
     }
   }, [user]);
 
-  // Persist editor state to localStorage whenever it changes
+  // Persist editor code to localStorage whenever it changes (user-scoped for privacy)
   useEffect(() => {
-    setStorageItem(STORAGE_KEYS.EDITOR_CODE, code);
-  }, [code]);
+    if (user && user.id) {
+      // User is logged in - use user-scoped key
+      const key = getEditorKey(user.id, 'code');
+      if (key) {
+        setStorageItem(key, code);
+      }
+    } else {
+      // User not logged in - use global key
+      setStorageItem(STORAGE_KEYS.EDITOR_CODE, code);
+    }
+  }, [code, user]);
 
-  useEffect(() => {
-    setStorageItem(STORAGE_KEYS.EDITOR_LANGUAGE, language);
-  }, [language]);
+  // Language is derived from filename, no need to persist separately
 
   useEffect(() => {
     setStorageItem(STORAGE_KEYS.EDITOR_FILENAME, filename);
@@ -161,6 +303,16 @@ function App() {
   useEffect(() => {
     setStorageItem(STORAGE_KEYS.EDITOR_DOC_TYPE, docType);
   }, [docType]);
+
+  // Sync active file to CodePanel when selection changes
+  useEffect(() => {
+    const activeFile = multiFileState.activeFile;
+    if (activeFile && activeFile.content) {
+      setCode(activeFile.content);
+      setFilename(activeFile.filename);
+      // Language will be derived from filename automatically
+    }
+  }, [multiFileState.activeFile]);
 
   // Handle legal document acceptance
   const handleAcceptLegalDocuments = async (acceptance) => {
@@ -286,35 +438,79 @@ function App() {
     retryAfter
   } = useDocGeneration(refetchUsage);
 
-  // Load persisted documentation and quality score on mount
+  // Load user-scoped documentation and quality score when user logs in
   useEffect(() => {
-    const savedDoc = getStorageItem(STORAGE_KEYS.EDITOR_DOCUMENTATION);
-    const savedScore = getStorageItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE);
+    if (user && user.id) {
+      // User is logged in - load from user-scoped keys
+      const docKey = getEditorKey(user.id, 'doc');
+      const scoreKey = getEditorKey(user.id, 'score');
 
-    if (savedDoc) {
-      setDocumentation(savedDoc);
-    }
-    if (savedScore) {
-      try {
-        setQualityScore(JSON.parse(savedScore));
-      } catch (e) {
-        // Invalid JSON, ignore
+      if (docKey) {
+        const savedDoc = getStorageItem(docKey);
+        if (savedDoc) {
+          setDocumentation(savedDoc);
+        }
+      }
+
+      if (scoreKey) {
+        const savedScore = getStorageItem(scoreKey);
+        if (savedScore) {
+          try {
+            setQualityScore(JSON.parse(savedScore));
+          } catch (e) {
+            // Invalid JSON, ignore
+          }
+        }
+      }
+    } else {
+      // User not logged in - load from global keys
+      const savedDoc = getStorageItem(STORAGE_KEYS.EDITOR_DOCUMENTATION);
+      const savedScore = getStorageItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE);
+
+      if (savedDoc) {
+        setDocumentation(savedDoc);
+      }
+      if (savedScore) {
+        try {
+          setQualityScore(JSON.parse(savedScore));
+        } catch (e) {
+          // Invalid JSON, ignore
+        }
       }
     }
-  }, [setDocumentation, setQualityScore]);
+  }, [user?.id, setDocumentation, setQualityScore]);
 
-  // Persist documentation and quality score to localStorage whenever they change
+  // Persist documentation to localStorage whenever it changes (user-scoped for privacy)
   useEffect(() => {
     if (documentation) {
-      setStorageItem(STORAGE_KEYS.EDITOR_DOCUMENTATION, documentation);
+      if (user && user.id) {
+        // User is logged in - use user-scoped key
+        const key = getEditorKey(user.id, 'doc');
+        if (key) {
+          setStorageItem(key, documentation);
+        }
+      } else {
+        // User not logged in - use global key
+        setStorageItem(STORAGE_KEYS.EDITOR_DOCUMENTATION, documentation);
+      }
     }
-  }, [documentation]);
+  }, [documentation, user]);
 
+  // Persist quality score to localStorage whenever it changes (user-scoped for privacy)
   useEffect(() => {
     if (qualityScore) {
-      setStorageItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE, JSON.stringify(qualityScore));
+      if (user && user.id) {
+        // User is logged in - use user-scoped key
+        const key = getEditorKey(user.id, 'score');
+        if (key) {
+          setStorageItem(key, JSON.stringify(qualityScore));
+        }
+      } else {
+        // User not logged in - use global key
+        setStorageItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE, JSON.stringify(qualityScore));
+      }
     }
-  }, [qualityScore]);
+  }, [qualityScore, user]);
 
   const handleGenerate = async () => {
     if (code.trim()) {
@@ -359,7 +555,7 @@ function App() {
       const isDefaultCode = code === DEFAULT_CODE;
       const isExampleCode = EXAMPLE_CODES.has(code);
       const shouldCache = isDefaultCode || isExampleCode;
-      await generate(code, docType, 'javascript', shouldCache);
+      await generate(code, docType, language, shouldCache);
       // Success toast will be shown after generation completes
     } catch (err) {
       // Error handling is done in useDocGeneration hook
@@ -367,12 +563,303 @@ function App() {
     }
   };
 
+  /**
+   * Generate documentation for a single file (non-streaming)
+   * Used in multi-file mode where each file has its own docType
+   * @param {Object} file - File object from multiFileState (must have docType property)
+   * @returns {Promise<Object>} - Generated documentation and quality score
+   */
+  const generateSingleFile = async (file) => {
+    const token = await getToken();
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${API_URL}/api/generate`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        code: file.content,
+        docType: file.docType, // Use file's docType (multi-file mode)
+        language: file.language,
+        isDefaultCode: false
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `Generation failed with status ${response.status}`);
+    }
+
+    return response.json();
+  };
+
+  /**
+   * Handle bulk generation for selected files
+   * Processes files in batches of 5 concurrently
+   */
+  const handleGenerateSelected = async () => {
+    const filesWithContent = multiFileState.files.filter(f => f.content && f.content.length > 0);
+    const selectedFilesWithContent = filesWithContent.filter(f => multiFileState.selectedFileIds.includes(f.id));
+
+    if (selectedFilesWithContent.length === 0) {
+      toastCompact.error('No files with content selected');
+      return;
+    }
+
+    // Check usage quota for bulk generation
+    if (!canGenerate()) {
+      setShowUsageLimitModal(true);
+      return;
+    }
+
+    const totalFiles = selectedFilesWithContent.length;
+    const BATCH_SIZE = 5;
+    let successCount = 0;
+    let failureCount = 0;
+    const failedFiles = [];
+    const successfulFiles = []; // Track successful files with their quality scores
+
+    // Clear previous summary/errors and initialize progress
+    setBulkGenerationSummary(null);
+    setBulkGenerationErrors([]);
+    setBulkGenerationProgress({
+      total: totalFiles,
+      completed: 0,
+      currentBatch: 1,
+      totalBatches: Math.ceil(totalFiles / BATCH_SIZE)
+    });
+
+    // Show initial progress toast
+    toastCompact.loading(`Generating documentation for ${totalFiles} file${totalFiles > 1 ? 's' : ''}...`, {
+      id: 'bulk-generation'
+    });
+
+    // Process files in batches of 5 concurrently
+    for (let i = 0; i < selectedFilesWithContent.length; i += BATCH_SIZE) {
+      const batch = selectedFilesWithContent.slice(i, Math.min(i + BATCH_SIZE, selectedFilesWithContent.length));
+      const batchNumber = Math.floor(i / BATCH_SIZE) + 1;
+      const totalBatches = Math.ceil(selectedFilesWithContent.length / BATCH_SIZE);
+
+      // Update progress state for banner
+      setBulkGenerationProgress({
+        total: totalFiles,
+        completed: i,
+        currentBatch: batchNumber,
+        totalBatches: totalBatches
+      });
+
+      // Update progress toast for batch
+      toastCompact.loading(
+        `Processing batch ${batchNumber}/${totalBatches} (${Math.min(i + BATCH_SIZE, totalFiles)}/${totalFiles} files)`,
+        { id: 'bulk-generation' }
+      );
+
+      // Mark all files in batch as generating
+      batch.forEach(file => {
+        multiFileState.updateFile(file.id, {
+          isGenerating: true,
+          error: null
+        });
+      });
+
+      // Process batch in parallel
+      const batchPromises = batch.map(async (file) => {
+        try {
+          // Generate documentation
+          const result = await generateSingleFile(file);
+
+          // Update file with generated documentation
+          multiFileState.updateFile(file.id, {
+            documentation: result.documentation,
+            qualityScore: result.qualityScore,
+            isGenerating: false,
+            error: null,
+            documentId: null // Will be set when saved to DB
+          });
+
+          // Update usage tracking
+          if (onUsageUpdate) {
+            onUsageUpdate();
+          }
+
+          return {
+            success: true,
+            file,
+            qualityScore: result.qualityScore
+          };
+
+        } catch (error) {
+          console.error(`[App] Failed to generate docs for ${file.filename}:`, error);
+
+          // Update file with error state
+          multiFileState.updateFile(file.id, {
+            isGenerating: false,
+            error: error.message
+          });
+
+          return {
+            success: false,
+            file,
+            error: error.message
+          };
+        }
+      });
+
+      // Wait for batch to complete
+      const batchResults = await Promise.all(batchPromises);
+
+      // Count successes and failures for this batch
+      batchResults.forEach(result => {
+        if (result.success) {
+          successCount++;
+          successfulFiles.push({
+            name: result.file.filename,
+            score: result.qualityScore?.score || 0,
+            grade: result.qualityScore?.grade || 'N/A'
+          });
+        } else {
+          failureCount++;
+          failedFiles.push({
+            filename: result.file.filename,
+            fileId: result.file.id,
+            error: result.error
+          });
+        }
+      });
+
+      // Update progress after batch completes
+      const filesCompletedSoFar = Math.min(i + BATCH_SIZE, totalFiles);
+      setBulkGenerationProgress({
+        total: totalFiles,
+        completed: filesCompletedSoFar,
+        currentBatch: batchNumber,
+        totalBatches: totalBatches
+      });
+    }
+
+    // Clear selection after generation
+    multiFileState.deselectAllFiles();
+
+    // Clear progress state
+    setBulkGenerationProgress(null);
+
+    // Calculate average quality score (Option A: Simple average of successes)
+    let avgQuality = 0;
+    let avgGrade = 'N/A';
+    if (successfulFiles.length > 0) {
+      const totalQuality = successfulFiles.reduce((sum, file) => sum + file.score, 0);
+      avgQuality = Math.round(totalQuality / successfulFiles.length);
+
+      // Calculate average grade
+      if (avgQuality >= 90) avgGrade = 'A';
+      else if (avgQuality >= 80) avgGrade = 'B';
+      else if (avgQuality >= 70) avgGrade = 'C';
+      else if (avgQuality >= 60) avgGrade = 'D';
+      else avgGrade = 'F';
+    }
+
+    // Set summary state for banner
+    setBulkGenerationSummary({
+      totalFiles,
+      successCount,
+      failCount: failureCount,
+      avgQuality,
+      avgGrade,
+      successfulFiles
+    });
+
+    // Also set errors for backward compatibility
+    if (failedFiles.length > 0) {
+      setBulkGenerationErrors(failedFiles);
+    }
+
+    // Show final result toast
+    if (failureCount === 0) {
+      toastCompact.success(
+        `Successfully generated documentation for ${successCount} file${successCount > 1 ? 's' : ''}`,
+        { id: 'bulk-generation' }
+      );
+    } else if (successCount > 0) {
+      toastCompact.warning(
+        `Generated ${successCount} of ${totalFiles} files. ${failureCount} failed - see banner above.`,
+        { id: 'bulk-generation' }
+      );
+    } else {
+      toastCompact.error(
+        `Failed to generate documentation for all ${totalFiles} files - see banner above.`,
+        { id: 'bulk-generation' }
+      );
+    }
+  };
+
+  /**
+   * Apply docType to selected files
+   * Clears existing documentation if docType changes on already-generated files
+   * @param {Array} fileIds - Array of file IDs to update
+   * @param {string} newDocType - New doc type to apply
+   */
+  const handleApplyDocType = (fileIds, newDocType) => {
+    if (!fileIds || fileIds.length === 0) {
+      return;
+    }
+
+    let filesWithClearedDocs = 0;
+    let filesUpdated = 0;
+
+    // Update docType for each selected file
+    fileIds.forEach(fileId => {
+      const file = multiFileState.files.find(f => f.id === fileId);
+
+      if (!file) return;
+
+      // If file has documentation and docType is changing, clear the docs
+      if (file.documentation && file.docType !== newDocType) {
+        multiFileState.updateFile(fileId, {
+          docType: newDocType,
+          documentation: null,    // Clear docs - no longer matches docType
+          qualityScore: null      // Clear score
+        });
+        filesWithClearedDocs++;
+      } else {
+        // No docs yet, just update docType
+        multiFileState.updateFile(fileId, { docType: newDocType });
+      }
+      filesUpdated++;
+    });
+
+    // Show appropriate toast message
+    if (filesWithClearedDocs > 0) {
+      toastCompact.success(
+        `Applied ${newDocType} to ${filesUpdated} file${filesUpdated !== 1 ? 's' : ''}. ` +
+        `${filesWithClearedDocs} file${filesWithClearedDocs !== 1 ? 's' : ''} cleared - regenerate to update documentation.`
+      );
+    } else {
+      toastCompact.success(
+        `Applied ${newDocType} to ${filesUpdated} file${filesUpdated !== 1 ? 's' : ''}`
+      );
+    }
+  };
+
   const handleUpload = () => {
     // Clear any previous upload errors
     setUploadError(null);
-    // Trigger the hidden file input
+    // Trigger the hidden file input (single-file mode)
     if (fileInputRef.current) {
       fileInputRef.current.click();
+    }
+  };
+
+  const handleMultiFileUpload = () => {
+    // Clear any previous upload errors
+    setUploadError(null);
+    // Trigger the hidden multi-file input (sidebar mode)
+    if (multiFileInputRef.current) {
+      multiFileInputRef.current.click();
     }
   };
 
@@ -511,37 +998,17 @@ function App() {
       const data = await response.json();
 
       if (data.success && data.file) {
-        // Set the code from the uploaded file
+        // Set the uploaded file content in the editor
         setCode(data.file.content);
-
-        // Set the filename
         setFilename(data.file.name);
+        // Language will be derived from filename automatically
 
-        // Detect language from file extension
-        const extension = data.file.extension.toLowerCase().replace('.', '');
-        const languageMap = {
-          'js': 'javascript',
-          'jsx': 'javascript',
-          'ts': 'typescript',
-          'tsx': 'typescript',
-          'py': 'python',
-          'java': 'java',
-          'cpp': 'cpp',
-          'c': 'c',
-          'h': 'c',
-          'hpp': 'cpp',
-          'cs': 'csharp',
-          'go': 'go',
-          'rs': 'rust',
-          'rb': 'ruby',
-          'php': 'php',
-        };
-        const detectedLanguage = languageMap[extension] || 'javascript';
-        setLanguage(detectedLanguage);
+        // Detect language for analytics tracking
+        const detectedLanguage = detectLanguageFromFilename(data.file.name);
 
         // Track successful file upload
         trackFileUpload({
-          fileType: extension,
+          fileType: data.file.extension.toLowerCase().replace('.', ''),
           fileSize: file.size,
           success: true,
         });
@@ -659,13 +1126,100 @@ function App() {
     }
   };
 
-  // Wrapper for file input change event
+  // Wrapper for file input change event (single-file mode)
   const handleFileChange = async (event) => {
-    // Currently only process the first file
-    // TODO: Future enhancement - support multiple file uploads
     const file = event.target.files?.[0];
     await processFileUpload(file);
     // Reset the file input so the same file can be selected again
+    if (event.target) {
+      event.target.value = '';
+    }
+  };
+
+  // Handler for multi-file drag and drop (sidebar mode)
+  const handleMultiFilesDrop = async (droppedFiles) => {
+    if (!droppedFiles || droppedFiles.length === 0) return;
+
+    // Process all files and add to sidebar
+    for (let i = 0; i < droppedFiles.length; i++) {
+      const file = droppedFiles[i];
+
+      // Check if file with same name already exists
+      const existingFile = multiFileState.files.find(f => f.filename === file.name);
+      if (existingFile) {
+        console.log('[App] File already exists, skipping:', file.name);
+        toastCompact(`File already exists: ${file.name}`, 'warning');
+        continue; // Skip this file
+      }
+
+      // Add file directly to sidebar without uploading to server yet
+      // The actual upload will happen when "Generate All" is clicked
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target.result;
+        // Detect language from filename
+        const detectedLanguage = detectLanguageFromFilename(file.name);
+
+        multiFileState.addFile({
+          filename: file.name,
+          content,
+          language: detectedLanguage,
+        });
+
+        console.log('[App] File added to sidebar:', file.name);
+      };
+
+      reader.onerror = () => {
+        console.error('[App] Error reading file:', file.name);
+        toastCompact(`Error reading file: ${file.name}`, 'error');
+      };
+
+      reader.readAsText(file);
+    }
+
+    // Show success toast
+    const count = droppedFiles.length;
+    toastCompact(`${count} file${count > 1 ? 's' : ''} added`, 'success');
+  };
+
+  // Handler for multi-file input change (sidebar mode)
+  const handleMultiFileChange = async (event) => {
+    const fileList = event.target.files;
+    if (!fileList || fileList.length === 0) return;
+
+    // Process all files and add to sidebar
+    for (let i = 0; i < fileList.length; i++) {
+      const file = fileList[i];
+
+      // Check if file with same name already exists
+      const existingFile = multiFileState.files.find(f => f.filename === file.name);
+      if (existingFile) {
+        console.log('[App] File already exists, skipping:', file.name);
+        toastCompact(`File already exists: ${file.name}`, 'warning');
+        continue; // Skip this file
+      }
+
+      // Add file directly to sidebar without uploading to server yet
+      // The actual upload will happen when "Generate All" is clicked
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target.result;
+        // Detect language from filename
+        const detectedLanguage = detectLanguageFromFilename(file.name);
+
+        multiFileState.addFile({
+          filename: file.name,
+          language: detectedLanguage,
+          content: content,
+          docType,
+          origin: 'upload',
+          fileSize: file.size
+        });
+      };
+      reader.readAsText(file);
+    }
+
+    // Reset the file input so the same files can be selected again
     if (event.target) {
       event.target.value = '';
     }
@@ -684,12 +1238,7 @@ function App() {
     // Set the code from GitHub file
     setCode(fileCode);
 
-    // Detect and set language
-    if (fileLang) {
-      setLanguage(fileLang);
-    }
-
-    // Set filename
+    // Set filename (language will be derived from filename)
     if (fileName) {
       setFilename(fileName);
     }
@@ -699,21 +1248,27 @@ function App() {
       owner: metadata?.owner,
       repo: metadata?.repo,
       path: metadata?.path,
-      language: fileLang
+      language: fileLang || detectLanguageFromFilename(fileName)
     });
 
-    // Clear any previous documentation
+    // Clear any previous documentation (user-scoped)
     reset();
-    setStorageItem(STORAGE_KEYS.EDITOR_DOCUMENTATION, '');
-    setStorageItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE, '');
+    if (user && user.id) {
+      const docKey = getEditorKey(user.id, 'doc');
+      const scoreKey = getEditorKey(user.id, 'score');
+      if (docKey) setStorageItem(docKey, '');
+      if (scoreKey) setStorageItem(scoreKey, '');
+    } else {
+      setStorageItem(STORAGE_KEYS.EDITOR_DOCUMENTATION, '');
+      setStorageItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE, '');
+    }
   };
 
   const handleLoadSample = (sample) => {
     setCode(sample.code);
     setDocType(sample.docType);
-    setLanguage(sample.language);
 
-    // Set filename based on sample title and language
+    // Set filename based on sample title and language (language will be derived from filename)
     const sampleName = (sample.title || sample.docType).toLowerCase().replace(/\s+/g, '-');
     const extensionMap = {
       'javascript': '.js',
@@ -749,10 +1304,8 @@ function App() {
   const handleClear = () => {
     // Reset code to default placeholder
     setCode('// Paste your code here or try the example below...\n\n// Example function:\nfunction calculateTotal(items) {\n  return items.reduce((sum, item) => sum + item.price, 0);\n}\n');
-    // Reset filename to default
+    // Reset filename to default (language will be derived automatically as 'javascript')
     setFilename('code.js');
-    // Reset language to default (matches code.js)
-    setLanguage('javascript');
     // Note: Does not clear documentation or quality score (those remain for reference)
   };
 
@@ -875,7 +1428,7 @@ function App() {
         }}
       />
 
-      {/* Hidden file input */}
+      {/* Hidden file input (single-file mode) */}
       <input
         ref={fileInputRef}
         type="file"
@@ -887,15 +1440,42 @@ function App() {
         aria-label="Upload code file"
       />
 
+      {/* Hidden file input (multi-file mode for sidebar) */}
+      <input
+        ref={multiFileInputRef}
+        type="file"
+        id="multi-file-upload-input"
+        name="multi-file-upload"
+        accept=".js,.jsx,.ts,.tsx,.py,.java,.cpp,.c,.h,.hpp,.cs,.go,.rs,.rb,.php,.txt,text/javascript,text/x-javascript,application/javascript,text/x-typescript,text/typescript,text/x-python,text/x-java-source,text/x-c,text/x-c++,text/x-csharp,text/x-go,text/x-rust,text/x-ruby,text/x-php,text/plain"
+        multiple
+        onChange={handleMultiFileChange}
+        className="hidden"
+        aria-label="Upload multiple code files"
+      />
+
       {/* Header */}
       <Header
         ref={headerRef}
         onMenuClick={() => setShowMobileMenu(true)}
         onHelpClick={() => setShowHelpModal(true)}
+        showSidebarMenu={canUseBatchProcessing && isMobileView}
+        onSidebarMenuClick={() => setMobileSidebarOpen(true)}
       />
 
       {/* Email Verification Banner - Shows at top for unverified users */}
       <UnverifiedEmailBanner user={user} />
+
+      {/* Tier Override Banner - Shows for admin/support with active override */}
+      {override && override.active && (
+        <TierOverrideBanner
+          override={override}
+          onClear={async () => {
+            await clearOverride();
+            // Reload to apply tier changes
+            window.location.reload();
+          }}
+        />
+      )}
 
       {/* Mobile Menu */}
       <MobileMenu
@@ -904,8 +1484,63 @@ function App() {
         onHelpClick={() => setShowHelpModal(true)}
       />
 
-      {/* Main Content */}
-      <main id="main-content" className="flex-1 w-full px-4 sm:px-6 lg:px-8 py-6 flex flex-col overflow-auto lg:overflow-hidden lg:min-h-0">
+      {/* Main Content - with optional Sidebar for Pro+ users */}
+      <div className="flex-1 flex overflow-hidden relative">
+        {canUseBatchProcessing ? (
+          isMobileView ? (
+            // Mobile/Tablet: Sidebar as overlay, no PanelGroup
+            <>
+              <Sidebar
+                files={multiFileState.files}
+                activeFileId={multiFileState.activeFileId}
+                selectedFileIds={multiFileState.selectedFileIds}
+                selectedCount={multiFileState.selectedCount}
+                isCollapsed={sidebarCollapsed}
+                onToggleCollapse={handleToggleSidebarCollapse}
+                docType={docType}
+                onDocTypeChange={setDocType}
+                onApplyDocType={handleApplyDocType}
+                onGithubImport={handleGithubImport}
+                mobileOpen={mobileSidebarOpen}
+                onMobileClose={() => setMobileSidebarOpen(false)}
+                onSelectFile={multiFileState.setActiveFile}
+                onToggleFileSelection={multiFileState.toggleFileSelection}
+                onSelectAllFiles={multiFileState.selectAllFiles}
+                onDeselectAllFiles={multiFileState.deselectAllFiles}
+                onRemoveFile={multiFileState.removeFile}
+                onAddFile={handleMultiFileUpload}
+                hasCodeInEditor={code.trim().length > 0}
+                onFilesDrop={handleMultiFilesDrop}
+                onGenerateFile={(fileId) => {
+                  // TODO: Implement single file generation
+                  console.log('[App] Generate file requested:', fileId);
+                }}
+                onGenerateSelected={() => {
+                  // Check if any files are selected
+                  const filesWithContent = multiFileState.files.filter(f => f.content && f.content.length > 0);
+                  const selectedFilesWithContent = filesWithContent.filter(f => multiFileState.selectedFileIds.includes(f.id));
+
+                  if (selectedFilesWithContent.length > 0) {
+                    // Generate documentation for all selected files
+                    handleGenerateSelected();
+                  } else {
+                    // No files selected, generate from code editor
+                    handleGenerate();
+                  }
+                }}
+                onDeleteSelected={() => {
+                  // Delete all selected files
+                  multiFileState.selectedFileIds.forEach(fileId => {
+                    multiFileState.removeFile(fileId);
+                  });
+                  multiFileState.deselectAllFiles();
+                }}
+              />
+
+              {/* Main Content - Full width on mobile */}
+              <div className="flex-1 min-w-0">
+                <main id="main-content" className="flex-1 w-full h-full flex flex-col overflow-auto lg:overflow-hidden lg:min-h-0">
+
         {/* Priority Banner Section - Show only most critical message */}
         {/* Priority Order: 1) Email Verification (handled above), 2) Claude API Error, 3) Upload Error, 4) Generation Error, 5) Usage Warning */}
         {error ? (
@@ -940,20 +1575,10 @@ function App() {
           </div>
         ) : null}
 
-        {/* Control Bar */}
-        <ControlBar
-          docType={docType}
-          onDocTypeChange={setDocType}
-          onGenerate={handleGenerate}
-          onUpload={handleUpload}
-          onGithubImport={handleGithubImport}
-          isGenerating={isGenerating}
-          isUploading={isUploading}
-          generateDisabled={!code.trim()}
-        />
+        {/* Control Bar - Hidden in Pro+ mode (sidebar has these controls) */}
 
         {/* Split View: Code + Documentation */}
-        <div className="mt-6 flex-1 min-h-0">
+        <div className="flex-1 min-h-0">
           <SplitPanel
             leftPanel={
               <CodePanel
@@ -961,7 +1586,7 @@ function App() {
                 onChange={setCode}
                 filename={filename}
                 language={language}
-                onFileDrop={handleFileDrop}
+                onFileDrop={null}  // Disable drag-and-drop in multi-file mode - use sidebar instead
                 onClear={handleClear}
                 onSamplesClick={() => setShowSamplesModal(true)}
                 samplesButtonRef={samplesButtonRef}
@@ -978,13 +1603,260 @@ function App() {
                   onGithubImport={handleGithubImport}
                   onGenerate={handleGenerate}
                   onReset={handleReset}
+                  bulkGenerationProgress={bulkGenerationProgress}
+                  bulkGenerationSummary={bulkGenerationSummary}
+                  bulkGenerationErrors={bulkGenerationErrors}
+                  onDismissBulkErrors={() => {
+                    setBulkGenerationErrors([]);
+                    setBulkGenerationSummary(null);
+                  }}
                 />
               </Suspense>
             }
           />
         </div>
 
-      </main>
+              </main>
+              </div>
+            </>
+          ) : (
+            // Desktop: Sidebar with resizable panels
+            <PanelGroup direction="horizontal" onLayout={handleSidebarResize} className="flex-1">
+              {/* Sidebar Panel - Resizable */}
+              <Panel
+                ref={sidebarPanelRef}
+                defaultSize={sidebarCollapsed ? 3 : expandedSidebarWidth}
+                minSize={3}
+                maxSize={40}
+                collapsible={false}
+              >
+                <Sidebar
+                  files={multiFileState.files}
+                  activeFileId={multiFileState.activeFileId}
+                  selectedFileIds={multiFileState.selectedFileIds}
+                  selectedCount={multiFileState.selectedCount}
+                  isCollapsed={sidebarCollapsed}
+                  onToggleCollapse={handleToggleSidebarCollapse}
+                  docType={docType}
+                  onDocTypeChange={setDocType}
+                  onApplyDocType={handleApplyDocType}
+                  onGithubImport={handleGithubImport}
+                  mobileOpen={mobileSidebarOpen}
+                  onMobileClose={() => setMobileSidebarOpen(false)}
+                  onSelectFile={multiFileState.setActiveFile}
+                  onToggleFileSelection={multiFileState.toggleFileSelection}
+                  onSelectAllFiles={multiFileState.selectAllFiles}
+                  onDeselectAllFiles={multiFileState.deselectAllFiles}
+                  onRemoveFile={multiFileState.removeFile}
+                  onAddFile={handleMultiFileUpload}
+                  hasCodeInEditor={code.trim().length > 0}
+                  onFilesDrop={handleMultiFilesDrop}
+                  onGenerateFile={(fileId) => {
+                    // TODO: Implement single file generation
+                    console.log('[App] Generate file requested:', fileId);
+                  }}
+                  onGenerateSelected={() => {
+                    // Check if any files are selected
+                    const filesWithContent = multiFileState.files.filter(f => f.content && f.content.length > 0);
+                    const selectedFilesWithContent = filesWithContent.filter(f => multiFileState.selectedFileIds.includes(f.id));
+
+                    if (selectedFilesWithContent.length > 0) {
+                      // Generate documentation for all selected files
+                      handleGenerateSelected();
+                    } else {
+                      // No files selected, generate from code editor
+                      handleGenerate();
+                    }
+                  }}
+                  onDeleteSelected={() => {
+                    // Delete all selected files
+                    multiFileState.selectedFileIds.forEach(fileId => {
+                      multiFileState.removeFile(fileId);
+                    });
+                    multiFileState.deselectAllFiles();
+                  }}
+                />
+              </Panel>
+
+              {/* Resize Handle - Hidden when collapsed */}
+              {!sidebarCollapsed && (
+                <PanelResizeHandle className="w-1 bg-slate-200 dark:bg-slate-700 hover:bg-purple-400 dark:hover:bg-purple-600 transition-colors cursor-col-resize" />
+              )}
+
+              {/* Main Content Panel */}
+              <Panel defaultSize={sidebarCollapsed ? 97 : (100 - expandedSidebarWidth)} minSize={30}>
+                <main id="main-content" className="w-full h-full flex flex-col overflow-hidden">
+
+                  {/* Priority Banner Section - Show only most critical message */}
+                  {/* Priority Order: 1) Email Verification (handled above), 2) Claude API Error, 3) Upload Error, 4) Generation Error, 5) Usage Warning */}
+                  {error ? (
+                    // Priority 1: Claude API rate limit or generation errors (blocking)
+                    <div role="region" aria-label="Error notification">
+                      <ErrorBanner
+                        error={error}
+                        retryAfter={retryAfter}
+                        onDismiss={clearError}
+                      />
+                    </div>
+                  ) : uploadError ? (
+                    // Priority 2: Upload errors
+                    <div role="region" aria-label="Upload error notification">
+                      <ErrorBanner
+                        error={uploadError}
+                        onDismiss={() => setUploadError(null)}
+                      />
+                    </div>
+                  ) : showUsageWarning && (mockUsage || usage) ? (
+                    // Priority 3: Usage warning (80%+ usage, non-blocking)
+                    <div className="mb-6" role="region" aria-label="Usage warning">
+                      <UsageWarningBanner
+                        usage={mockUsage || getUsageForPeriod('monthly')}
+                        currentTier={mockUsage?.tier || usage?.tier}
+                        onDismiss={() => {
+                          setShowUsageWarning(false);
+                          setMockUsage(null); // Clear mock when dismissing
+                        }}
+                        onUpgrade={handleUpgradeClick}
+                      />
+                    </div>
+                  ) : null}
+
+                  {/* Control Bar - Hidden in Pro+ mode (sidebar has these controls) */}
+
+                  {/* Split View: Code + Documentation */}
+                  <div className="flex-1 min-h-0">
+                    <SplitPanel
+                      leftPanel={
+                        <CodePanel
+                          code={code}
+                          onChange={setCode}
+                          filename={filename}
+                          language={language}
+                          onFileDrop={null}  // Disable drag-and-drop in multi-file mode - use sidebar instead
+                          onClear={handleClear}
+                          onSamplesClick={() => setShowSamplesModal(true)}
+                          samplesButtonRef={samplesButtonRef}
+                        />
+                      }
+                      rightPanel={
+                        <Suspense fallback={<LoadingFallback />}>
+                          <DocPanel
+                            documentation={documentation}
+                            qualityScore={qualityScore}
+                            isGenerating={isGenerating || testSkeletonMode}
+                            onViewBreakdown={handleViewBreakdown}
+                            onUpload={handleUpload}
+                            onGithubImport={handleGithubImport}
+                            onGenerate={handleGenerate}
+                            onReset={handleReset}
+                            bulkGenerationProgress={bulkGenerationProgress}
+                            bulkGenerationSummary={bulkGenerationSummary}
+                            bulkGenerationErrors={bulkGenerationErrors}
+                            onDismissBulkErrors={() => {
+                              setBulkGenerationErrors([]);
+                              setBulkGenerationSummary(null);
+                            }}
+                          />
+                        </Suspense>
+                      }
+                    />
+                  </div>
+
+                </main>
+              </Panel>
+            </PanelGroup>
+          )
+        ) : (
+          <main id="main-content" className="flex-1 w-full flex flex-col overflow-auto lg:overflow-hidden lg:min-h-0">
+            {/* Priority Banner Section - Show only most critical message */}
+            {/* Priority Order: 1) Email Verification (handled above), 2) Claude API Error, 3) Upload Error, 4) Generation Error, 5) Usage Warning */}
+            {error ? (
+              // Priority 1: Claude API rate limit or generation errors (blocking)
+              <div role="region" aria-label="Error notification">
+                <ErrorBanner
+                  error={error}
+                  retryAfter={retryAfter}
+                  onDismiss={clearError}
+                />
+              </div>
+            ) : uploadError ? (
+              // Priority 2: Upload errors
+              <div role="region" aria-label="Upload error notification">
+                <ErrorBanner
+                  error={uploadError}
+                  onDismiss={() => setUploadError(null)}
+                />
+              </div>
+            ) : showUsageWarning && (mockUsage || usage) ? (
+              // Priority 3: Usage warning (80%+ usage, non-blocking)
+              <div className="mb-6" role="region" aria-label="Usage warning">
+                <UsageWarningBanner
+                  usage={mockUsage || getUsageForPeriod('monthly')}
+                  currentTier={mockUsage?.tier || usage?.tier}
+                  onDismiss={() => {
+                    setShowUsageWarning(false);
+                    setMockUsage(null); // Clear mock when dismissing
+                  }}
+                  onUpgrade={handleUpgradeClick}
+                />
+              </div>
+            ) : null}
+
+            {/* Control Bar */}
+            <ControlBar
+              docType={docType}
+              onDocTypeChange={setDocType}
+              onGenerate={handleGenerate}
+              onUpload={handleUpload}
+              onGithubImport={handleGithubImport}
+              onMenuClick={() => setMobileSidebarOpen(true)}
+              showMenuButton={canUseBatchProcessing}
+              isGenerating={isGenerating}
+              isUploading={isUploading}
+              generateDisabled={!code.trim()}
+            />
+
+            {/* Split View: Code + Documentation */}
+            <div className="flex-1 min-h-0">
+              <SplitPanel
+                leftPanel={
+                  <CodePanel
+                    code={code}
+                    onChange={setCode}
+                    filename={filename}
+                    language={language}
+                    onFileDrop={handleFileDrop}
+                    onClear={handleClear}
+                    onSamplesClick={() => setShowSamplesModal(true)}
+                    samplesButtonRef={samplesButtonRef}
+                  />
+                }
+                rightPanel={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <DocPanel
+                      documentation={documentation}
+                      qualityScore={qualityScore}
+                      isGenerating={isGenerating || testSkeletonMode}
+                      onViewBreakdown={handleViewBreakdown}
+                      onUpload={handleUpload}
+                      onGithubImport={handleGithubImport}
+                      onGenerate={handleGenerate}
+                      onReset={handleReset}
+                      bulkGenerationProgress={bulkGenerationProgress}
+                      bulkGenerationSummary={bulkGenerationSummary}
+                      bulkGenerationErrors={bulkGenerationErrors}
+                      onDismissBulkErrors={() => {
+                        setBulkGenerationErrors([]);
+                        setBulkGenerationSummary(null);
+                      }}
+                    />
+                  </Suspense>
+                }
+              />
+            </div>
+          </main>
+        )}
+      </div>
 
       {/* Quality Score Modal */}
       {showQualityModal && qualityScore && (
@@ -1136,6 +2008,8 @@ function App() {
             isOpen={showGithubModal}
             onClose={() => setShowGithubModal(false)}
             onFileLoad={handleGithubFileLoad}
+            onFilesLoad={multiFileState.reloadWorkspace}
+            defaultDocType={docType}
           />
         </Suspense>
       )}

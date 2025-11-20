@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Clock,
@@ -41,6 +41,7 @@ export function UsageDashboard() {
   const { user, isLoading: authLoading } = useAuth();
   const { usage, isLoading, refetch, getUsageForPeriod, shouldShowWarnings } = useUsageTracking();
   const [refreshing, setRefreshing] = useState(false);
+  const refreshTimeoutRef = useRef(null);
 
   // Redirect if not authenticated (wait for auth to load first)
   useEffect(() => {
@@ -61,16 +62,43 @@ export function UsageDashboard() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [navigate]);
 
+  // Cleanup refresh timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current);
+      }
+    };
+  }, []);
+
   // Handle manual refresh
   const handleRefresh = async () => {
     setRefreshing(true);
     await refetch();
-    setTimeout(() => setRefreshing(false), 500); // Smooth animation
+    // Clear any existing timeout before setting a new one
+    if (refreshTimeoutRef.current) {
+      clearTimeout(refreshTimeoutRef.current);
+    }
+    refreshTimeoutRef.current = setTimeout(() => setRefreshing(false), 500); // Smooth animation
   };
 
   // Get usage data for both periods
   const dailyUsage = getUsageForPeriod('daily');
   const monthlyUsage = getUsageForPeriod('monthly');
+
+  // Override limits for unlimited users (admin/support/super_admin)
+  if (!shouldShowWarnings) {
+    if (dailyUsage) {
+      dailyUsage.limit = 'unlimited';
+      dailyUsage.remaining = 'unlimited';
+      dailyUsage.percentage = 0;
+    }
+    if (monthlyUsage) {
+      monthlyUsage.limit = 'unlimited';
+      monthlyUsage.remaining = 'unlimited';
+      monthlyUsage.percentage = 0;
+    }
+  }
 
   // Determine usage status for color coding
   const getUsageStatus = (percentage) => {
@@ -384,7 +412,7 @@ function UsageCard({ title, usage, status, statusColors, icon, formatResetDate, 
   const colors = statusColors[status];
   const isUnlimited = usage.limit === 'unlimited' || usage.limit >= 999999;
   const percentage = isUnlimited ? 0 : usage.percentage;
-  const used = usage.limit - usage.remaining;
+  const used = isUnlimited ? usage.used : (usage.limit - usage.remaining);
 
   return (
     <div className={`
@@ -413,7 +441,7 @@ function UsageCard({ title, usage, status, statusColors, icon, formatResetDate, 
       <div className="mb-4">
         <div className="flex items-baseline gap-2 mb-1">
           <span className="text-4xl font-bold text-slate-900 dark:text-slate-100">
-            {isUnlimited ? '∞' : used.toLocaleString()}
+            {used.toLocaleString()}
           </span>
           {!isUnlimited && (
             <>
@@ -425,7 +453,7 @@ function UsageCard({ title, usage, status, statusColors, icon, formatResetDate, 
           )}
         </div>
         <p className="text-sm text-slate-600 dark:text-slate-400">
-          {isUnlimited ? 'Unlimited generations' : `${usage.remaining.toLocaleString()} remaining`}
+          {isUnlimited ? 'Unlimited • No quota restrictions' : `${usage.remaining.toLocaleString()} remaining`}
         </p>
       </div>
 

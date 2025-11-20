@@ -33,6 +33,8 @@ class LLMService {
    * @param {number} [options.maxTokens] - Override max tokens
    * @param {number} [options.temperature] - Sampling temperature (0-1)
    * @param {number} [options.topP] - Nucleus sampling parameter (0-1)
+   * @param {string} [options.provider] - Override provider ('claude' | 'openai')
+   * @param {string} [options.model] - Override model (e.g., 'gpt-5.1', 'claude-sonnet-4-5-20250929')
    * @returns {Promise<{text: string, metadata: Object}>}
    * @throws {Error} On API errors or invalid configuration
    *
@@ -45,14 +47,18 @@ class LLMService {
    * console.log(result.metadata) // { provider, model, inputTokens, outputTokens, ... }
    */
   async generate(prompt, options = {}) {
-    const { provider } = this.config
+    // Allow per-request provider override, fall back to default config
+    const provider = options.provider || this.config.provider;
+
+    // Build config with overrides
+    const requestConfig = this._buildRequestConfig(provider, options);
 
     switch (provider) {
       case 'claude':
-        return await generateWithClaude(prompt, options, this.config)
+        return await generateWithClaude(prompt, options, requestConfig)
 
       case 'openai':
-        return await generateWithOpenAI(prompt, options, this.config)
+        return await generateWithOpenAI(prompt, options, requestConfig)
 
       default:
         throw new Error(
@@ -63,11 +69,67 @@ class LLMService {
   }
 
   /**
+   * Build request configuration with overrides
+   * @private
+   * @param {string} provider - Provider name
+   * @param {Object} options - Request options that may contain overrides
+   * @returns {Object} Merged configuration
+   */
+  _buildRequestConfig(provider, options) {
+    const baseConfig = { ...this.config };
+
+    // Validate provider exists BEFORE spreading
+    if (!this.config[provider]) {
+      throw new Error(
+        `Unknown provider: ${provider}. Available providers: claude, openai`
+      );
+    }
+
+    const providerConfig = { ...this.config[provider] };
+
+    // Validate API key exists for the requested provider
+    if (!providerConfig.apiKey) {
+      const envVar = provider === 'claude' ? 'CLAUDE_API_KEY' : 'OPENAI_API_KEY';
+      throw new Error(
+        `API key required for ${provider} provider. ` +
+        `Please set ${envVar} in your .env file. ` +
+        `This is needed because the OPENAPI doc type uses OpenAI GPT-5.1.`
+      );
+    }
+
+    // Apply model override if provided
+    if (options.model) {
+      providerConfig.model = options.model;
+    }
+
+    // Apply temperature override if provided
+    if (options.temperature !== undefined) {
+      baseConfig.temperature = options.temperature;
+    }
+
+    // Apply maxTokens override if provided
+    if (options.maxTokens !== undefined) {
+      baseConfig.maxTokens = options.maxTokens;
+    }
+
+    return {
+      ...baseConfig,
+      provider,
+      model: providerConfig.model,  // Override with provider-specific model
+      [provider]: providerConfig,
+      apiKey: providerConfig.apiKey  // Ensure API key is at top level
+    };
+  }
+
+  /**
    * Generate text with real-time streaming
    *
    * @param {string} prompt - User prompt/message
    * @param {Function} onChunk - Callback for each text chunk: (chunk: string) => void
    * @param {Object} options - Generation options (same as generate())
+   * @param {string} [options.provider] - Override provider ('claude' | 'openai')
+   * @param {string} [options.model] - Override model
+   * @param {number} [options.temperature] - Override temperature
    * @returns {Promise<{text: string, metadata: Object}>} - Full text and metadata after streaming completes
    * @throws {Error} On API errors or invalid configuration
    *
@@ -80,19 +142,23 @@ class LLMService {
    * console.log('\nDone! Total tokens:', result.metadata.outputTokens)
    */
   async generateWithStreaming(prompt, onChunk, options = {}) {
-    const { provider } = this.config
+    // Allow per-request provider override, fall back to default config
+    const provider = options.provider || this.config.provider;
 
     // Validate onChunk callback
     if (typeof onChunk !== 'function') {
       throw new Error('onChunk must be a function that receives text chunks')
     }
 
+    // Build config with overrides
+    const requestConfig = this._buildRequestConfig(provider, options);
+
     switch (provider) {
       case 'claude':
-        return await streamWithClaude(prompt, onChunk, options, this.config)
+        return await streamWithClaude(prompt, onChunk, options, requestConfig)
 
       case 'openai':
-        return await streamWithOpenAI(prompt, onChunk, options, this.config)
+        return await streamWithOpenAI(prompt, onChunk, options, requestConfig)
 
       default:
         throw new Error(

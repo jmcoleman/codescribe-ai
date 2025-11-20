@@ -24,9 +24,9 @@ import { ErrorTest } from './components/ErrorTest.jsx'
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ErrorBoundary>
-      <ThemeProvider>
-        <BrowserRouter>
-          <AuthProvider>
+      <BrowserRouter>
+        <AuthProvider>
+          <ThemeProvider>
             <Routes>
               <Route path="/" element={<App />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
@@ -45,9 +45,9 @@ createRoot(document.getElementById('root')).render(
               <Route path="/test-error" element={<ErrorTest />} />
             </Routes>
             <AnalyticsWrapper />
-          </AuthProvider>
-        </BrowserRouter>
-      </ThemeProvider>
+          </ThemeProvider>
+        </AuthProvider>
+      </BrowserRouter>
     </ErrorBoundary>
   </StrictMode>,
 )

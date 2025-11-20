@@ -164,8 +164,9 @@ class User {
   static async findById(id) {
     try {
       const result = await sql`
-        SELECT id, email, first_name, last_name, github_id, tier, role, stripe_customer_id, customer_created_via, email_verified,
-               terms_accepted_at, terms_version_accepted, privacy_accepted_at, privacy_version_accepted, analytics_enabled,
+        SELECT id, email, first_name, last_name, password_hash, github_id, tier, role, stripe_customer_id, customer_created_via, email_verified,
+               terms_accepted_at, terms_version_accepted, privacy_accepted_at, privacy_version_accepted, analytics_enabled, theme_preference,
+               viewing_as_tier, override_expires_at, override_reason, override_applied_at,
                deletion_scheduled_at, deleted_at, created_at
         FROM users
         WHERE id = ${id}
@@ -173,18 +174,6 @@ class User {
       `;
 
       const user = result.rows[0] || null;
-
-      // Log what we found (development only)
-      if (process.env.NODE_ENV === 'development') {
-        if (user) {
-          console.log(`[User.findById] Found user:`, { id: user.id, email: user.email, tier: user.tier, deleted_at: user.deleted_at });
-          if (user.deleted_at) {
-            console.log(`[User.findById] User ${id} is soft-deleted, returning null`);
-          }
-        } else {
-          console.log(`[User.findById] No user found with ID ${id}`);
-        }
-      }
 
       // Filter out soft-deleted users
       if (user && user.deleted_at) {
@@ -210,7 +199,8 @@ class User {
   static async findByEmail(email) {
     const result = await sql`
       SELECT id, email, first_name, last_name, password_hash, github_id, tier, role, stripe_customer_id, customer_created_via,
-             email_verified, terms_accepted_at, terms_version_accepted, privacy_accepted_at, privacy_version_accepted,
+             email_verified, terms_accepted_at, terms_version_accepted, privacy_accepted_at, privacy_version_accepted, analytics_enabled, theme_preference,
+             viewing_as_tier, override_expires_at, override_reason, override_applied_at,
              deletion_scheduled_at, deleted_at, created_at
       FROM users
       WHERE email = ${email}
@@ -840,8 +830,8 @@ class User {
 
     // Get subscription data (if exists)
     const subscriptionsResult = await sql`
-      SELECT subscription_id, status, current_period_start, current_period_end,
-             cancel_at_period_end, canceled_at
+      SELECT stripe_subscription_id, tier, status, current_period_start, current_period_end,
+             cancel_at_period_end, canceled_at, ended_at, created_at, updated_at
       FROM subscriptions
       WHERE user_id = ${id}
       ORDER BY created_at DESC
@@ -892,10 +882,11 @@ class User {
    * @param {number} id - User ID
    * @param {Object} preferences - Preferences to update
    * @param {boolean} preferences.analytics_enabled - Analytics enabled flag
+   * @param {string} preferences.theme_preference - Theme preference (light, dark, auto)
    * @returns {Promise<Object>} Updated user object
    */
   static async updatePreferences(id, preferences) {
-    const { analytics_enabled, save_docs_preference, docs_consent_shown_at } = preferences;
+    const { analytics_enabled, save_docs_preference, docs_consent_shown_at, theme_preference } = preferences;
 
     // Build dynamic SET clause based on provided preferences
     const setClauses = ['updated_at = NOW()'];
@@ -916,6 +907,15 @@ class User {
       values.push(docs_consent_shown_at);
     }
 
+    if (theme_preference !== undefined) {
+      // Validate theme preference
+      if (!['light', 'dark', 'auto'].includes(theme_preference)) {
+        throw new Error('Invalid theme preference. Must be light, dark, or auto.');
+      }
+      setClauses.push(`theme_preference = $${values.length + 1}`);
+      values.push(theme_preference);
+    }
+
     // Add user ID for WHERE clause
     values.push(id);
 
@@ -923,7 +923,7 @@ class User {
       UPDATE users
       SET ${setClauses.join(', ')}
       WHERE id = $${values.length}
-      RETURNING id, email, analytics_enabled, save_docs_preference, docs_consent_shown_at
+      RETURNING id, email, analytics_enabled, save_docs_preference, docs_consent_shown_at, theme_preference
     `, values);
 
     return result.rows[0];
@@ -1014,6 +1014,127 @@ class User {
     }
 
     return result.rows[0];
+  }
+
+  /**
+   * Apply tier override for admin/support testing
+   * Sets viewing_as_tier and expiry timestamp
+   * @param {number} userId - User ID
+   * @param {string} targetTier - Tier to view as ('free', 'starter', 'pro', 'team', 'enterprise')
+   * @param {string} reason - Reason for override (required for audit trail)
+   * @param {number} hoursValid - Hours until override expires (default: 4)
+   * @returns {Promise<Object>} Updated user object with override fields
+   */
+  static async applyTierOverride(userId, targetTier, reason, hoursValid = 4) {
+    const validTiers = ['free', 'starter', 'pro', 'team', 'enterprise'];
+    if (!validTiers.includes(targetTier)) {
+      throw new Error(`Invalid tier: ${targetTier}. Must be one of: ${validTiers.join(', ')}`);
+    }
+
+    if (!reason || reason.trim().length < 10) {
+      throw new Error('Reason must be at least 10 characters for audit compliance');
+    }
+
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + hoursValid);
+
+    const result = await sql`
+      UPDATE users
+      SET viewing_as_tier = ${targetTier},
+          override_expires_at = ${expiresAt.toISOString()},
+          override_reason = ${reason.trim()},
+          override_applied_at = NOW(),
+          updated_at = NOW()
+      WHERE id = ${userId}
+      RETURNING id, email, tier, role, viewing_as_tier, override_expires_at, override_reason, override_applied_at
+    `;
+
+    if (result.rows.length === 0) {
+      throw new Error('User not found');
+    }
+
+    return result.rows[0];
+  }
+
+  /**
+   * Clear tier override for a user
+   * Sets all override fields to NULL
+   * @param {number} userId - User ID
+   * @returns {Promise<Object>} Updated user object
+   */
+  static async clearTierOverride(userId) {
+    const result = await sql`
+      UPDATE users
+      SET viewing_as_tier = NULL,
+          override_expires_at = NULL,
+          override_reason = NULL,
+          override_applied_at = NULL,
+          updated_at = NOW()
+      WHERE id = ${userId}
+      RETURNING id, email, tier, role, viewing_as_tier, override_expires_at, override_reason, override_applied_at
+    `;
+
+    if (result.rows.length === 0) {
+      throw new Error('User not found');
+    }
+
+    return result.rows[0];
+  }
+
+  /**
+   * Check if user has an active tier override
+   * Returns override details if active and not expired
+   * @param {number} userId - User ID
+   * @returns {Promise<Object|null>} Override details or null if no active override
+   */
+  static async getActiveTierOverride(userId) {
+    const result = await sql`
+      SELECT viewing_as_tier, override_expires_at, override_reason, override_applied_at
+      FROM users
+      WHERE id = ${userId}
+        AND viewing_as_tier IS NOT NULL
+        AND override_expires_at > NOW()
+    `;
+
+    if (result.rows.length === 0) {
+      return null;
+    }
+
+    const override = result.rows[0];
+    const now = new Date();
+    const expiry = new Date(override.override_expires_at);
+    const remainingMs = expiry.getTime() - now.getTime();
+    const hours = Math.floor(remainingMs / (1000 * 60 * 60));
+    const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+
+    return {
+      tier: override.viewing_as_tier,
+      expiresAt: override.override_expires_at,
+      reason: override.override_reason,
+      appliedAt: override.override_applied_at,
+      remainingTime: {
+        hours,
+        minutes,
+        totalMs: remainingMs
+      }
+    };
+  }
+
+  /**
+   * Find all users with expired tier overrides
+   * Used by cleanup job to automatically clear expired overrides
+   * @returns {Promise<Array>} Array of user IDs with expired overrides
+   */
+  static async findExpiredTierOverrides() {
+    const result = await sql`
+      SELECT id, email, viewing_as_tier, override_expires_at
+      FROM users
+      WHERE viewing_as_tier IS NOT NULL
+        AND override_expires_at <= NOW()
+      ORDER BY override_expires_at ASC
+    `;
+
+    return result.rows;
   }
 }
 

@@ -80,7 +80,10 @@ function getLLMConfig() {
     temperature: config.temperature,
     enableCaching: config.enableCaching,
     supportsCaching: providerConfig.supportsCaching,
-    supportsStreaming: providerConfig.supportsStreaming
+    supportsStreaming: providerConfig.supportsStreaming,
+    // Include all provider configs for runtime switching
+    claude: config.claude,
+    openai: config.openai
   }
 
   // Only add topP if explicitly configured (not used by default to avoid conflicts with temperature)
@@ -117,13 +120,11 @@ function getProviderCapabilities(providerName = null) {
  * Log current configuration (sanitized - hides API keys)
  */
 function logConfig() {
-  const currentConfig = getLLMConfig()
-  const sanitized = {
-    ...currentConfig,
-    apiKey: `${currentConfig.apiKey.substring(0, 8)}...`
-  }
-
-  console.log('[LLMConfig] Configuration:', JSON.stringify(sanitized, null, 2))
+  // Configuration logging disabled in production
+  // To enable for debugging:
+  // const currentConfig = getLLMConfig()
+  // const sanitized = { ...currentConfig, apiKey: `${currentConfig.apiKey.substring(0, 8)}...` }
+  // console.log('[LLMConfig] Configuration:', JSON.stringify(sanitized, null, 2))
 }
 
 export {

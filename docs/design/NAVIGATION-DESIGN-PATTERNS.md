@@ -237,6 +237,99 @@ For pages with multiple tabs (e.g., Settings page with Account, Privacy, Subscri
 
 ---
 
+## 📱 Mobile Drawer Patterns
+
+### When to Use Bottom Drawers vs Side Drawers
+
+Following iOS, Android, and modern web app conventions (Instagram, Twitter/X, Google Photos, Airbnb, Slack, Notion).
+
+#### ✅ Bottom Drawers (Bottom Sheets)
+
+**Best for: Quick actions and modal selections**
+
+**Use Cases:**
+1. **Quick Action Menus** (3-7 items)
+   - Share sheets (iOS/Android native pattern)
+   - Context menus: "Edit", "Delete", "Share", "Download"
+   - Examples: Instagram three-dot menu, Twitter/X share options, Google Photos
+
+2. **Modal Selections**
+   - Pickers (date, time, dropdowns)
+   - Filters (e-commerce: price range, categories)
+   - Sort options
+   - Examples: Airbnb filters, Amazon sort options
+
+3. **Native Mobile Apps**
+   - iOS Action Sheets (standard iOS pattern)
+   - Android Bottom Sheets (Material Design)
+   - Thumb-friendly on large phones (easier to reach)
+
+**Implementation Pattern:**
+```jsx
+// Example: File action menu (if implemented)
+<BottomSheet isOpen={showActions}>
+  <button onClick={handleEdit}>Edit</button>
+  <button onClick={handleDownload}>Download</button>
+  <button onClick={handleDelete}>Delete</button>
+  <button onClick={handleShare}>Share</button>
+</BottomSheet>
+```
+
+#### ✅ Side Drawers
+
+**Best for: Navigation and content-heavy panels**
+
+**Use Cases:**
+1. **Primary Navigation** (Our hamburger menu)
+   - Many items (Help, Settings, Profile, Admin, etc.)
+   - Hierarchical structure with nested menus
+   - Industry standard: Gmail, Slack, Medium, Reddit mobile
+   - Better for desktop consistency
+
+2. **Content-Heavy Panels** (Our file sidebar)
+   - Lists of items (files, channels, folders, conversations)
+   - Scrollable content (10+ items)
+   - Persistent state (user might keep open while working)
+   - Examples: Notion sidebar, Slack channels, VS Code mobile, Figma
+
+**Implementation Pattern:**
+```jsx
+// Right side drawer: Main navigation
+<SideDrawer position="right" isOpen={showMenu}>
+  <nav>
+    <NavLink to="/help">Help</NavLink>
+    <NavLink to="/settings">Settings</NavLink>
+    <NavLink to="/profile">Profile</NavLink>
+  </nav>
+</SideDrawer>
+
+// Left side drawer: File sidebar
+<SideDrawer position="left" isOpen={showFiles}>
+  <FileList files={files} />
+</SideDrawer>
+```
+
+### CodeScribe AI Implementation
+
+**Current Approach (Correct):**
+- ✅ **Right hamburger → Side drawer** - Multiple navigation items, desktop consistency
+- ✅ **Left PanelLeft → Side drawer** - File list is content-heavy, scrollable, many files
+
+**Future Considerations:**
+- **File actions** - Could use bottom drawer for per-file "Delete", "Download", "Rename"
+- **Quick filters** - Could use bottom drawer for doc type filters or sort options
+
+### Design Guidelines
+
+| Pattern | Content Type | Item Count | Persistence | Examples |
+|---------|--------------|------------|-------------|----------|
+| **Bottom Drawer** | Actions/selections | 3-7 items | Temporary | Share, filter, sort, context menu |
+| **Side Drawer** | Navigation/lists | 5+ items | Semi-persistent | Menu, files, channels, folders |
+
+**Key Principle:** Bottom drawers for **quick actions**, side drawers for **navigation** and **content lists**.
+
+---
+
 ## 🎨 Spacing & Padding Standards
 
 ### Page Container
@@ -376,6 +469,13 @@ gap-3 sm:gap-4        // 12px → 16px
 ---
 
 ## 📝 Version History
+
+- **v1.1** (November 20, 2025) - Mobile drawer patterns
+  - Added bottom drawer vs side drawer guidelines
+  - Documented when to use each pattern
+  - Included industry examples and use cases
+  - Added CodeScribe AI implementation notes
+  - Standardized header icon sizing (24px/w-6)
 
 - **v1.0** (November 7, 2025) - Initial navigation design patterns
   - Mobile-responsive Header/Footer sizing (56px/64px)

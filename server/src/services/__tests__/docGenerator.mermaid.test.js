@@ -52,135 +52,135 @@ describe('DocGeneratorService - Mermaid Diagram Support', () => {
     describe('README prompts', () => {
       it('should include Mermaid diagram instructions in README prompt', () => {
         const code = 'function test() {}';
-        const prompt = docGenerator.buildPrompt(code, mockAnalysis, 'README', 'javascript');
+        const { systemPrompt, userMessage } = docGenerator.buildPromptWithCaching(code, mockAnalysis, 'README', 'javascript');
 
-        expect(prompt).toContain('MERMAID DIAGRAMS:');
-        expect(prompt).toContain('Include Mermaid diagrams');
-        expect(prompt).toContain('```mermaid');
+        expect(systemPrompt + userMessage).toContain('MERMAID DIAGRAMS:');
+        expect(systemPrompt + userMessage).toContain('Include Mermaid diagrams');
+        expect(systemPrompt + userMessage).toContain('```mermaid');
       });
 
       it('should specify flowchart syntax for README', () => {
         const code = 'function test() {}';
-        const prompt = docGenerator.buildPrompt(code, mockAnalysis, 'README', 'javascript');
+        const { systemPrompt, userMessage } = docGenerator.buildPromptWithCaching(code, mockAnalysis, 'README', 'javascript');
 
-        expect(prompt).toContain('flowchart TD');
-        expect(prompt).toContain('flowchart LR');
+        expect(systemPrompt + userMessage).toContain('flowchart TD');
+        expect(systemPrompt + userMessage).toContain('flowchart LR');
       });
 
       it('should provide Mermaid syntax rules in README prompt', () => {
         const code = 'function test() {}';
-        const prompt = docGenerator.buildPrompt(code, mockAnalysis, 'README', 'javascript');
+        const { systemPrompt, userMessage } = docGenerator.buildPromptWithCaching(code, mockAnalysis, 'README', 'javascript');
 
-        expect(prompt).toContain('Mermaid syntax rules');
-        expect(prompt).toContain('CRITICAL - Follow exactly');
-        expect(prompt).toContain('Node IDs:');
-        expect(prompt).toContain('Arrow syntax:');
-        expect(prompt).toContain('Use --> only');
+        expect(systemPrompt + userMessage).toContain('Mermaid syntax rules');
+        expect(systemPrompt + userMessage).toContain('CRITICAL - Follow exactly');
+        expect(systemPrompt + userMessage).toContain('Node IDs:');
+        expect(systemPrompt + userMessage).toContain('Arrow syntax:');
+        expect(systemPrompt + userMessage).toContain('Use --> only');
       });
 
       it('should include correct Mermaid example in README prompt', () => {
         const code = 'function test() {}';
-        const prompt = docGenerator.buildPrompt(code, mockAnalysis, 'README', 'javascript');
+        const { systemPrompt, userMessage } = docGenerator.buildPromptWithCaching(code, mockAnalysis, 'README', 'javascript');
 
-        expect(prompt).toContain('A[User Input] --> B[Process Data]');
-        expect(prompt).toContain('B --> C[Generate Output]');
-        expect(prompt).toContain('C --> D[Return Result]');
+        expect(systemPrompt + userMessage).toContain('A[User Input] --> B[Process Data]');
+        expect(systemPrompt + userMessage).toContain('B --> C[Generate Output]');
+        expect(systemPrompt + userMessage).toContain('C --> D[Return Result]');
       });
 
       it('should warn against incorrect Mermaid syntax in README prompt', () => {
         const code = 'function test() {}';
-        const prompt = docGenerator.buildPrompt(code, mockAnalysis, 'README', 'javascript');
+        const { systemPrompt, userMessage } = docGenerator.buildPromptWithCaching(code, mockAnalysis, 'README', 'javascript');
 
-        expect(prompt).toContain('Examples of WRONG syntax to AVOID');
-        expect(prompt).toContain('Using ==> instead of -->');
-        expect(prompt).toContain('special characters in node IDs');
+        expect(systemPrompt + userMessage).toContain('Examples of WRONG syntax to AVOID');
+        expect(systemPrompt + userMessage).toContain('Using ==> instead of -->');
+        expect(systemPrompt + userMessage).toContain('special characters in node IDs');
       });
     });
 
     describe('API prompts', () => {
       it('should include Mermaid diagram instructions in API prompt', () => {
         const code = 'function test() {}';
-        const prompt = docGenerator.buildPrompt(code, mockAnalysis, 'API', 'javascript');
+        const { systemPrompt, userMessage } = docGenerator.buildPromptWithCaching(code, mockAnalysis, 'API', 'javascript');
 
-        expect(prompt).toContain('MERMAID DIAGRAMS:');
-        expect(prompt).toContain('Include Mermaid sequence diagrams');
-        expect(prompt).toContain('```mermaid');
+        expect(systemPrompt + userMessage).toContain('MERMAID DIAGRAMS:');
+        expect(systemPrompt + userMessage).toContain('Include Mermaid sequence diagrams');
+        expect(systemPrompt + userMessage).toContain('```mermaid');
       });
 
       it('should specify sequence diagram syntax for API', () => {
         const code = 'function test() {}';
-        const prompt = docGenerator.buildPrompt(code, mockAnalysis, 'API', 'javascript');
+        const { systemPrompt, userMessage } = docGenerator.buildPromptWithCaching(code, mockAnalysis, 'API', 'javascript');
 
-        expect(prompt).toContain('sequenceDiagram');
-        expect(prompt).toContain('participant');
+        expect(systemPrompt + userMessage).toContain('sequenceDiagram');
+        expect(systemPrompt + userMessage).toContain('participant');
       });
 
       it('should provide sequence diagram example in API prompt', () => {
         const code = 'function test() {}';
-        const prompt = docGenerator.buildPrompt(code, mockAnalysis, 'API', 'javascript');
+        const { systemPrompt, userMessage } = docGenerator.buildPromptWithCaching(code, mockAnalysis, 'API', 'javascript');
 
-        expect(prompt).toContain('Client->>API:');
-        expect(prompt).toContain('API->>DB:');
-        expect(prompt).toContain('DB-->>API:');
-        expect(prompt).toContain('API-->>Client:');
+        expect(systemPrompt + userMessage).toContain('Client->>API:');
+        expect(systemPrompt + userMessage).toContain('API->>DB:');
+        expect(systemPrompt + userMessage).toContain('DB-->>API:');
+        expect(systemPrompt + userMessage).toContain('API-->>Client:');
       });
 
       it('should explain arrow syntax for sequence diagrams in API prompt', () => {
         const code = 'function test() {}';
-        const prompt = docGenerator.buildPrompt(code, mockAnalysis, 'API', 'javascript');
+        const { systemPrompt, userMessage } = docGenerator.buildPromptWithCaching(code, mockAnalysis, 'API', 'javascript');
 
-        expect(prompt).toContain('->> for requests');
-        expect(prompt).toContain('-->> for responses');
-        expect(prompt).toContain('NO other arrow types');
+        expect(systemPrompt + userMessage).toContain('->> for requests');
+        expect(systemPrompt + userMessage).toContain('-->> for responses');
+        expect(systemPrompt + userMessage).toContain('NO other arrow types');
       });
     });
 
     describe('ARCHITECTURE prompts', () => {
       it('should include Mermaid diagram instructions in ARCHITECTURE prompt', () => {
         const code = 'function test() {}';
-        const prompt = docGenerator.buildPrompt(code, mockAnalysis, 'ARCHITECTURE', 'javascript');
+        const { systemPrompt, userMessage } = docGenerator.buildPromptWithCaching(code, mockAnalysis, 'ARCHITECTURE', 'javascript');
 
-        expect(prompt).toContain('MERMAID DIAGRAMS:');
-        expect(prompt).toContain('ALWAYS include Mermaid diagrams');
-        expect(prompt).toContain('```mermaid');
+        expect(systemPrompt + userMessage).toContain('MERMAID DIAGRAMS:');
+        expect(systemPrompt + userMessage).toContain('ALWAYS include Mermaid diagrams');
+        expect(systemPrompt + userMessage).toContain('```mermaid');
       });
 
       it('should emphasize diagram importance in ARCHITECTURE prompt', () => {
         const code = 'function test() {}';
-        const prompt = docGenerator.buildPrompt(code, mockAnalysis, 'ARCHITECTURE', 'javascript');
+        const { systemPrompt, userMessage } = docGenerator.buildPromptWithCaching(code, mockAnalysis, 'ARCHITECTURE', 'javascript');
 
-        expect(prompt).toContain('ALWAYS include Mermaid diagrams');
-        expect(prompt).toContain('visualize system architecture');
-        expect(prompt).toContain('component relationships');
-        expect(prompt).toContain('data flow');
+        expect(systemPrompt + userMessage).toContain('ALWAYS include Mermaid diagrams');
+        expect(systemPrompt + userMessage).toContain('visualize system architecture');
+        expect(systemPrompt + userMessage).toContain('component relationships');
+        expect(systemPrompt + userMessage).toContain('data flow');
       });
 
       it('should provide architecture-specific Mermaid example', () => {
         const code = 'function test() {}';
-        const prompt = docGenerator.buildPrompt(code, mockAnalysis, 'ARCHITECTURE', 'javascript');
+        const { systemPrompt, userMessage } = docGenerator.buildPromptWithCaching(code, mockAnalysis, 'ARCHITECTURE', 'javascript');
 
-        expect(prompt).toContain('Client[Client Layer] --> API[API Gateway]');
-        expect(prompt).toContain('Auth[Auth Service]');
-        expect(prompt).toContain('DB[(Database)]');
+        expect(systemPrompt + userMessage).toContain('Client[Client Layer] --> API[API Gateway]');
+        expect(systemPrompt + userMessage).toContain('Auth[Auth Service]');
+        expect(systemPrompt + userMessage).toContain('DB[(Database)]');
       });
 
       it('should explain database shape syntax in ARCHITECTURE prompt', () => {
         const code = 'function test() {}';
-        const prompt = docGenerator.buildPrompt(code, mockAnalysis, 'ARCHITECTURE', 'javascript');
+        const { systemPrompt, userMessage } = docGenerator.buildPromptWithCaching(code, mockAnalysis, 'ARCHITECTURE', 'javascript');
 
-        expect(prompt).toContain('Database shape:');
-        expect(prompt).toContain('[(Database Name)]');
+        expect(systemPrompt + userMessage).toContain('Database shape:');
+        expect(systemPrompt + userMessage).toContain('[(Database Name)]');
       });
     });
 
     describe('JSDOC prompts', () => {
       it('should NOT include Mermaid instructions in JSDOC prompt', () => {
         const code = 'function test() {}';
-        const prompt = docGenerator.buildPrompt(code, mockAnalysis, 'JSDOC', 'javascript');
+        const { systemPrompt, userMessage } = docGenerator.buildPromptWithCaching(code, mockAnalysis, 'JSDOC', 'javascript');
 
         // JSDOC is code comments, not markdown, so no Mermaid diagrams expected
-        expect(prompt).not.toContain('MERMAID DIAGRAMS:');
-        expect(prompt).not.toContain('```mermaid');
+        expect(systemPrompt + userMessage).not.toContain('MERMAID DIAGRAMS:');
+        expect(systemPrompt + userMessage).not.toContain('```mermaid');
       });
     });
   });
@@ -338,11 +338,11 @@ const result = test();
       const docTypes = ['README', 'API', 'ARCHITECTURE'];
 
       docTypes.forEach((docType) => {
-        const prompt = docGenerator.buildPrompt('code', mockAnalysis, docType, 'javascript');
+        const { systemPrompt, userMessage } = docGenerator.buildPromptWithCaching('code', mockAnalysis, docType, 'javascript');
 
         if (docType !== 'JSDOC') {
           // README and ARCHITECTURE have "Node IDs:", API has "Participant names:"
-          expect(prompt).toContain('NO special characters');
+          expect(systemPrompt + userMessage).toContain('NO special characters');
         }
       });
     });
@@ -351,19 +351,23 @@ const result = test();
       const docTypes = ['README', 'API', 'ARCHITECTURE'];
 
       docTypes.forEach((docType) => {
-        const prompt = docGenerator.buildPrompt('code', mockAnalysis, docType, 'javascript');
+        const { systemPrompt, userMessage } = docGenerator.buildPromptWithCaching('code', mockAnalysis, docType, 'javascript');
 
         if (docType !== 'JSDOC') {
-          expect(prompt).toContain('AVOID');
-          expect(prompt).toMatch(/==>|other arrow types?/i);
+          expect(systemPrompt + userMessage).toContain('AVOID');
+          expect(systemPrompt + userMessage).toMatch(/==>|other arrow types?/i);
         }
       });
     });
 
     it('should provide correct syntax examples in all prompts', () => {
-      const readmePrompt = docGenerator.buildPrompt('code', mockAnalysis, 'README', 'javascript');
-      const apiPrompt = docGenerator.buildPrompt('code', mockAnalysis, 'API', 'javascript');
-      const archPrompt = docGenerator.buildPrompt('code', mockAnalysis, 'ARCHITECTURE', 'javascript');
+      const readme = docGenerator.buildPromptWithCaching('code', mockAnalysis, 'README', 'javascript');
+      const api = docGenerator.buildPromptWithCaching('code', mockAnalysis, 'API', 'javascript');
+      const arch = docGenerator.buildPromptWithCaching('code', mockAnalysis, 'ARCHITECTURE', 'javascript');
+
+      const readmePrompt = readme.systemPrompt + readme.userMessage;
+      const apiPrompt = api.systemPrompt + api.userMessage;
+      const archPrompt = arch.systemPrompt + arch.userMessage;
 
       // README should have flowchart example
       expect(readmePrompt).toContain('flowchart TD');
@@ -468,35 +472,39 @@ System documentation.`;
     });
 
     it('should include Mermaid instructions for JavaScript', () => {
-      const prompt = docGenerator.buildPrompt('code', mockAnalysis, 'README', 'javascript');
-      expect(prompt).toContain('MERMAID DIAGRAMS:');
+      const { systemPrompt, userMessage } = docGenerator.buildPromptWithCaching('code', mockAnalysis, 'README', 'javascript');
+      expect(systemPrompt + userMessage).toContain('MERMAID DIAGRAMS:');
     });
 
     it('should include Mermaid instructions for TypeScript', () => {
-      const prompt = docGenerator.buildPrompt('code', mockAnalysis, 'README', 'typescript');
-      expect(prompt).toContain('MERMAID DIAGRAMS:');
+      const { systemPrompt, userMessage } = docGenerator.buildPromptWithCaching('code', mockAnalysis, 'README', 'typescript');
+      expect(systemPrompt + userMessage).toContain('MERMAID DIAGRAMS:');
     });
 
     it('should include Mermaid instructions for Python', () => {
-      const prompt = docGenerator.buildPrompt('code', mockAnalysis, 'README', 'python');
-      expect(prompt).toContain('MERMAID DIAGRAMS:');
+      const { systemPrompt, userMessage } = docGenerator.buildPromptWithCaching('code', mockAnalysis, 'README', 'python');
+      expect(systemPrompt + userMessage).toContain('MERMAID DIAGRAMS:');
     });
 
     it('should include Mermaid instructions for all supported languages', () => {
       const languages = ['javascript', 'typescript', 'python', 'java', 'go', 'rust'];
 
       languages.forEach((lang) => {
-        const prompt = docGenerator.buildPrompt('code', mockAnalysis, 'ARCHITECTURE', lang);
-        expect(prompt).toContain('MERMAID DIAGRAMS:');
+        const { systemPrompt, userMessage } = docGenerator.buildPromptWithCaching('code', mockAnalysis, 'ARCHITECTURE', lang);
+        expect(systemPrompt + userMessage).toContain('MERMAID DIAGRAMS:');
       });
     });
   });
 
   describe('Prompt Consistency', () => {
     it('should consistently format Mermaid instructions across doc types', () => {
-      const readmePrompt = docGenerator.buildPrompt('code', mockAnalysis, 'README', 'javascript');
-      const apiPrompt = docGenerator.buildPrompt('code', mockAnalysis, 'API', 'javascript');
-      const archPrompt = docGenerator.buildPrompt('code', mockAnalysis, 'ARCHITECTURE', 'javascript');
+      const readme = docGenerator.buildPromptWithCaching('code', mockAnalysis, 'README', 'javascript');
+      const api = docGenerator.buildPromptWithCaching('code', mockAnalysis, 'API', 'javascript');
+      const arch = docGenerator.buildPromptWithCaching('code', mockAnalysis, 'ARCHITECTURE', 'javascript');
+
+      const readmePrompt = readme.systemPrompt + readme.userMessage;
+      const apiPrompt = api.systemPrompt + api.userMessage;
+      const archPrompt = arch.systemPrompt + arch.userMessage;
 
       // All should have Mermaid section header
       [readmePrompt, apiPrompt, archPrompt].forEach((prompt) => {
@@ -510,9 +518,9 @@ System documentation.`;
       const docTypes = ['README', 'API', 'ARCHITECTURE'];
 
       docTypes.forEach((docType) => {
-        const prompt = docGenerator.buildPrompt('code', mockAnalysis, docType, 'javascript');
-        expect(prompt).toContain('```mermaid');
-        expect(prompt).toMatch(/```mermaid[\s\S]*?```/);
+        const { systemPrompt, userMessage } = docGenerator.buildPromptWithCaching('code', mockAnalysis, docType, 'javascript');
+        expect(systemPrompt + userMessage).toContain('```mermaid');
+        expect(systemPrompt + userMessage).toMatch(/```mermaid[\s\S]*?```/);
       });
     });
   });

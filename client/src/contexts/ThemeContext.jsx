@@ -1,25 +1,26 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { useAuth } from './AuthContext';
+import { STORAGE_KEYS, getStorageItem, setStorageItem } from '../constants/storage';
 
 const ThemeContext = createContext();
 
 export function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState(() => {
-    // Priority: localStorage > default to 'auto'
-    try {
-      const stored = localStorage.getItem('codescribeai:settings:theme');
-      if (stored && ['light', 'dark', 'auto'].includes(stored)) {
-        return stored;
-      }
-    } catch (e) {
-      // localStorage not available
+  const { user } = useAuth();
+  const [theme, setThemeInternal] = useState(() => {
+    // Priority: localStorage > default to 'light'
+    // User account preference will override this after auth loads
+    const stored = getStorageItem(STORAGE_KEYS.THEME_PREFERENCE);
+
+    if (stored && ['light', 'dark', 'auto'].includes(stored)) {
+      return stored;
     }
 
-    // Default to 'auto' (system preference)
-    return 'auto';
+    // Default to 'light' (consistent with index.html)
+    return 'light';
   });
 
-  // Get the effective theme (resolves 'auto' to 'light' or 'dark')
-  const getEffectiveTheme = () => {
+  // Track the effective theme (resolved from 'auto' to 'light' or 'dark')
+  const [effectiveTheme, setEffectiveTheme] = useState(() => {
     if (theme === 'auto') {
       try {
         if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
@@ -31,24 +32,101 @@ export function ThemeProvider({ children }) {
       return 'light';
     }
     return theme;
+  });
+
+  // Ensure theme is persisted to localStorage on mount
+  useEffect(() => {
+    // Only save if not already in localStorage
+    const existing = getStorageItem(STORAGE_KEYS.THEME_PREFERENCE);
+    if (!existing && theme) {
+      setStorageItem(STORAGE_KEYS.THEME_PREFERENCE, theme);
+      console.log('[ThemeContext] Saved initial theme to localStorage:', theme);
+    }
+  }, []); // Run once on mount
+
+  // Load theme from user account on login
+  useEffect(() => {
+    if (user && user.theme_preference && ['light', 'dark', 'auto'].includes(user.theme_preference)) {
+      console.log('[ThemeContext] Loading theme from user account:', user.theme_preference);
+      setThemeInternal(user.theme_preference);
+
+      // CRITICAL: Sync database preference to localStorage to prevent flash on next reload
+      setStorageItem(STORAGE_KEYS.THEME_PREFERENCE, user.theme_preference);
+      console.log('[ThemeContext] Synced database theme to localStorage:', user.theme_preference);
+    } else if (user) {
+      console.log('[ThemeContext] User logged in but no theme_preference found in user object:', user);
+    }
+  }, [user]);
+
+  // Wrapper for setTheme that saves to backend if user is logged in
+  const setTheme = async (newTheme) => {
+    console.log('[ThemeContext] setTheme called with:', newTheme);
+    setThemeInternal(newTheme);
+
+    // Save to localStorage (for non-authenticated users and as backup)
+    const saved = setStorageItem(STORAGE_KEYS.THEME_PREFERENCE, newTheme);
+    if (saved) {
+      console.log('[ThemeContext] Saved to localStorage:', newTheme);
+    } else {
+      console.error('[ThemeContext] Failed to save to localStorage');
+    }
+
+    // Save to backend if user is authenticated
+    if (user && user.id) {
+      try {
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+        const token = getStorageItem(STORAGE_KEYS.AUTH_TOKEN);
+
+        console.log('[ThemeContext] Saving to backend for user:', user.id);
+        const response = await fetch(`${API_URL}/api/auth/preferences`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            theme_preference: newTheme
+          })
+        });
+
+        const data = await response.json();
+        console.log('[ThemeContext] Backend response:', data);
+      } catch (error) {
+        console.error('[ThemeContext] Failed to save theme preference to backend:', error);
+        // Don't throw - the local change still works
+      }
+    } else {
+      console.log('[ThemeContext] Not saving to backend - user not authenticated');
+    }
   };
 
   useEffect(() => {
-    // Update DOM based on effective theme
+    // Update DOM and effective theme state based on current theme
     const root = document.documentElement;
-    const effectiveTheme = getEffectiveTheme();
+    let resolvedTheme = theme;
 
-    if (effectiveTheme === 'dark') {
+    // Resolve 'auto' to actual system preference
+    if (theme === 'auto') {
+      try {
+        const matches = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        resolvedTheme = matches ? 'dark' : 'light';
+        console.log('[ThemeContext] Resolving auto mode:', { matches, resolvedTheme });
+      } catch (e) {
+        console.error('[ThemeContext] Error checking system preference:', e);
+        resolvedTheme = 'light';
+      }
+    }
+
+    console.log('[ThemeContext] Applying theme to DOM:', { theme, resolvedTheme });
+
+    // Update effective theme state
+    setEffectiveTheme(resolvedTheme);
+
+    // Update DOM
+    if (resolvedTheme === 'dark') {
       root.classList.add('dark');
     } else {
       root.classList.remove('dark');
-    }
-
-    // Persist user's choice (including 'auto')
-    try {
-      localStorage.setItem('codescribeai:settings:theme', theme);
-    } catch (e) {
-      // localStorage not available or full
     }
   }, [theme]);
 
@@ -74,18 +152,17 @@ export function ThemeProvider({ children }) {
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+    const newTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
   };
 
   const cycleTheme = () => {
-    setTheme((prev) => {
-      if (prev === 'light') return 'dark';
-      if (prev === 'dark') return 'auto';
-      return 'light'; // auto -> light
-    });
+    let newTheme;
+    if (theme === 'light') newTheme = 'dark';
+    else if (theme === 'dark') newTheme = 'auto';
+    else newTheme = 'light'; // auto -> light
+    setTheme(newTheme);
   };
-
-  const effectiveTheme = getEffectiveTheme();
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme, toggleTheme, cycleTheme, effectiveTheme }}>

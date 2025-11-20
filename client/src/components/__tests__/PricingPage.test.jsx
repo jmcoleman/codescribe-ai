@@ -110,6 +110,13 @@ describe('PricingPage', () => {
     if (!originalLocation) {
       originalLocation = window.location;
     }
+
+    // Mock window.history.length to simulate having navigation history
+    Object.defineProperty(window.history, 'length', {
+      configurable: true,
+      writable: true,
+      value: 2,
+    });
   });
 
   afterEach(() => {
@@ -167,9 +174,11 @@ describe('PricingPage', () => {
     });
 
     it('should render back button', () => {
+      // Back button only shows when there's navigation history
+      // It uses aria-label="Go back" not just "back"
       renderPricingPage();
 
-      const backButton = screen.getByRole('button', { name: /back/i });
+      const backButton = screen.getByRole('button', { name: 'Go back' });
       expect(backButton).toBeInTheDocument();
     });
   });
@@ -663,11 +672,11 @@ describe('PricingPage', () => {
   });
 
   describe('Navigation', () => {
-    it('should navigate to home when back button is clicked', async () => {
+    it('should navigate to home when back button is clicked (Go back)', async () => {
       const user = userEvent.setup();
       renderPricingPage();
 
-      const backButton = screen.getByRole('button', { name: /back/i });
+      const backButton = screen.getByRole('button', { name: 'Go back' });
       await user.click(backButton);
 
       expect(mockNavigate).toHaveBeenCalledWith(-1);
@@ -788,7 +797,7 @@ describe('PricingPage', () => {
     it('should have proper aria-label for back button', () => {
       renderPricingPage();
 
-      const backButton = screen.getByLabelText(/go back/i);
+      const backButton = screen.getByLabelText('Go back');
       expect(backButton).toBeInTheDocument();
     });
 

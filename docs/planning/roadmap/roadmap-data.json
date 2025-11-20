@@ -879,6 +879,10 @@
           "duration": "TBD",
           "status": "Backlog (User Feedback Driven)",
           "features": [
+            "Multiple documentation types per file (e.g., README + API + JSDoc for same file)",
+            "Documentation type switching without regeneration",
+            "File-based documentation library (store multiple doc variants per source file)",
+            "Quick toggle between documentation types in UI",
             "Support ticket ID tracking system (database table + email display)",
             "Calendly integration for Enterprise/Team sales",
             "Gmail 'Send As' setup for sales@codescribeai.com replies",

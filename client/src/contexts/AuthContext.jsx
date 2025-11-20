@@ -7,7 +7,8 @@
 
 import { createContext, useContext, useState, useEffect } from 'react';
 import { API_URL } from '../config/api';
-import { STORAGE_KEYS, getStorageItem, setStorageItem, removeStorageItem } from '../constants/storage';
+import { STORAGE_KEYS, getStorageItem, setStorageItem, removeStorageItem, clearAppStorage } from '../constants/storage';
+import { clearWorkspaceLocalStorage } from '../hooks/useWorkspacePersistence';
 
 const AuthContext = createContext(null);
 
@@ -171,6 +172,7 @@ export function AuthProvider({ children }) {
   const logout = async () => {
     try {
       const token = getStorageItem(STORAGE_KEYS.AUTH_TOKEN);
+      const currentUserId = user?.id; // Capture user ID before clearing state
 
       if (token) {
         // Call logout endpoint to invalidate session
@@ -181,11 +183,18 @@ export function AuthProvider({ children }) {
           },
         });
       }
+
+      // Clear user-scoped localStorage data (code, docs, scores, workspace)
+      if (currentUserId) {
+        clearWorkspaceLocalStorage(currentUserId);
+        clearAppStorage(currentUserId);
+      }
     } catch (err) {
       console.error('Logout error:', err);
     } finally {
       // Always clear local state and token
       removeStorageItem(STORAGE_KEYS.AUTH_TOKEN);
+
       setUser(null);
       setError(null);
     }
@@ -291,6 +300,20 @@ export function AuthProvider({ children }) {
       }
     } catch (err) {
       console.error('Error refreshing user:', err);
+    }
+  };
+
+  /**
+   * Update token and refresh user state
+   * Used when a new JWT is received (e.g., after tier override)
+   */
+  const updateToken = async (newToken) => {
+    try {
+      console.log('[AuthContext] updateToken called');
+      // Token should already be in localStorage, just refresh user from /me endpoint
+      await refreshUser();
+    } catch (err) {
+      console.error('[AuthContext] Error updating token:', err);
     }
   };
 
@@ -423,6 +446,7 @@ export function AuthProvider({ children }) {
     resetPassword,
     getToken,
     refreshUser,
+    updateToken,
     updateProfile,
     clearError,
     acceptLegalDocuments,

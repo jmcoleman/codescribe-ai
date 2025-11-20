@@ -11,6 +11,7 @@ import legalRoutes from './routes/legal.js';
 import cronRoutes from './routes/cron.js';
 import adminRoutes from './routes/admin.js';
 import documentsRoutes from './routes/documents.js';
+import workspaceRoutes from './routes/workspace.js';
 import errorHandler from './middleware/errorHandler.js';
 import securityHeaders from './middleware/securityHeaders.js';
 import { initializeDatabase, testConnection } from './db/connection.js';
@@ -118,6 +119,7 @@ if (ENABLE_AUTH) {
   app.use('/api/legal', legalRoutes);
   app.use('/api/admin', adminRoutes); // Admin routes (requires auth + admin email)
   app.use('/api/documents', documentsRoutes); // Document persistence routes
+  app.use('/api/workspace', workspaceRoutes); // Workspace file management (tier-gated)
 }
 app.use('/api/cron', cronRoutes);
 app.use('/api/migrate', migrateRoutes);

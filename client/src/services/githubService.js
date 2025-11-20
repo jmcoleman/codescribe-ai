@@ -4,6 +4,7 @@
  */
 
 import { API_URL } from '../config/api.js';
+import { getGitHubRecentKey } from '../constants/storage.js';
 
 /**
  * Parse GitHub URL
@@ -18,8 +19,16 @@ export async function parseGitHubUrl(url) {
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || 'Failed to parse GitHub URL');
+    let errorMessage = 'Failed to parse GitHub URL';
+    try {
+      const error = await response.json();
+      errorMessage = error.message || errorMessage;
+    } catch {
+      // If response is not JSON, try to get text
+      const text = await response.text().catch(() => '');
+      if (text) errorMessage = text;
+    }
+    throw new Error(errorMessage);
   }
 
   return response.json();
@@ -44,8 +53,16 @@ export async function fetchFile(owner, repo, path, ref = null) {
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || 'Failed to fetch file from GitHub');
+    let errorMessage = 'Failed to fetch file from GitHub';
+    try {
+      const error = await response.json();
+      errorMessage = error.message || errorMessage;
+    } catch {
+      // If response is not JSON, try to get text
+      const text = await response.text().catch(() => '');
+      if (text) errorMessage = text;
+    }
+    throw new Error(errorMessage);
   }
 
   const data = await response.json();
@@ -70,8 +87,16 @@ export async function fetchTree(owner, repo, ref = null) {
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || 'Failed to fetch repository tree from GitHub');
+    let errorMessage = 'Failed to fetch repository tree from GitHub';
+    try {
+      const error = await response.json();
+      errorMessage = error.message || errorMessage;
+    } catch {
+      // If response is not JSON, try to get text
+      const text = await response.text().catch(() => '');
+      if (text) errorMessage = text;
+    }
+    throw new Error(errorMessage);
   }
 
   const data = await response.json();
@@ -92,8 +117,16 @@ export async function fetchBranches(owner, repo) {
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || 'Failed to fetch branches from GitHub');
+    let errorMessage = 'Failed to fetch branches from GitHub';
+    try {
+      const error = await response.json();
+      errorMessage = error.message || errorMessage;
+    } catch {
+      // If response is not JSON, try to get text
+      const text = await response.text().catch(() => '');
+      if (text) errorMessage = text;
+    }
+    throw new Error(errorMessage);
   }
 
   const data = await response.json();
@@ -122,13 +155,35 @@ export function validateGitHubUrl(input) {
 }
 
 /**
- * Get recent GitHub files from localStorage
+ * Get recent GitHub files from localStorage (user-scoped)
+ * @param {number|string} userId - User ID for scoping (optional, falls back to legacy key)
  * @returns {Array} Recent files
  */
-export function getRecentFiles() {
+export function getRecentFiles(userId = null) {
   try {
-    const recent = localStorage.getItem('github_recent_files');
-    return recent ? JSON.parse(recent) : [];
+    console.log('[getRecentFiles] Called with userId:', userId);
+
+    // Try user-scoped key first
+    if (userId) {
+      const key = getGitHubRecentKey(userId);
+      console.log('[getRecentFiles] User-scoped key:', key);
+      if (key) {
+        const recent = localStorage.getItem(key);
+        console.log('[getRecentFiles] User-scoped data:', recent);
+        if (recent) {
+          const parsed = JSON.parse(recent);
+          console.log('[getRecentFiles] Returning user-scoped files:', parsed);
+          return parsed;
+        }
+      }
+    }
+
+    // Fallback to legacy key for backwards compatibility
+    const legacyRecent = localStorage.getItem('github_recent_files');
+    console.log('[getRecentFiles] Legacy data:', legacyRecent);
+    const result = legacyRecent ? JSON.parse(legacyRecent) : [];
+    console.log('[getRecentFiles] Returning:', result);
+    return result;
   } catch (error) {
     console.error('Failed to get recent files:', error);
     return [];
@@ -136,12 +191,14 @@ export function getRecentFiles() {
 }
 
 /**
- * Add file to recent files list
+ * Add file to recent files list (user-scoped)
  * @param {Object} file - File metadata
+ * @param {number|string} userId - User ID for scoping (optional, falls back to legacy key)
  */
-export function addRecentFile(file) {
+export function addRecentFile(file, userId = null) {
   try {
-    const recent = getRecentFiles();
+    console.log('[addRecentFile] Called with file:', file, 'userId:', userId);
+    const recent = getRecentFiles(userId);
 
     // Remove duplicates
     const filtered = recent.filter(f => f.path !== file.path || f.owner !== file.owner || f.repo !== file.repo);
@@ -158,8 +215,20 @@ export function addRecentFile(file) {
 
     // Keep only last 5
     const limited = filtered.slice(0, 5);
+    console.log('[addRecentFile] Saving limited list:', limited);
 
-    localStorage.setItem('github_recent_files', JSON.stringify(limited));
+    // Save to user-scoped key or fallback to legacy
+    if (userId) {
+      const key = getGitHubRecentKey(userId);
+      console.log('[addRecentFile] Saving to user-scoped key:', key);
+      if (key) {
+        localStorage.setItem(key, JSON.stringify(limited));
+        console.log('[addRecentFile] Saved successfully');
+      }
+    } else {
+      console.log('[addRecentFile] Saving to legacy key');
+      localStorage.setItem('github_recent_files', JSON.stringify(limited));
+    }
   } catch (error) {
     console.error('Failed to save recent file:', error);
   }
@@ -279,9 +348,17 @@ export function isFileSupported(filename) {
 /**
  * Clear recent files
  */
-export function clearRecentFiles() {
+export function clearRecentFiles(userId = null) {
   try {
-    localStorage.removeItem('github_recent_files');
+    if (userId) {
+      const key = getGitHubRecentKey(userId);
+      if (key) {
+        localStorage.removeItem(key);
+      }
+    } else {
+      // Fallback to legacy key
+      localStorage.removeItem('github_recent_files');
+    }
   } catch (error) {
     console.error('Failed to clear recent files:', error);
   }

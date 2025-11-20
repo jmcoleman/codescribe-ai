@@ -1,0 +1,8 @@
+Generate comprehensive API documentation for the following {{language}} code.
+
+{{baseContext}}
+
+Code to document:
+```{{language}}
+{{code}}
+```

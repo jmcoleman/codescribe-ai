@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, within, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from '../../contexts/ThemeContext';
@@ -7,6 +7,7 @@ import { AuthProvider } from '../../contexts/AuthContext';
 import { Header } from '../../components/Header';
 import Footer from '../../components/Footer';
 import { ThemeToggle } from '../../components/ThemeToggle';
+import { STORAGE_KEYS } from '../../constants/storage';
 
 /**
  * Integration tests for dark mode theming
@@ -36,7 +37,7 @@ describe('Dark Mode Integration', () => {
       const user = userEvent.setup();
 
       // Explicitly set light mode to start
-      localStorage.setItem('codescribeai:settings:theme', 'light');
+      localStorage.setItem(STORAGE_KEYS.THEME_PREFERENCE, 'light');
 
       // Render and toggle to dark
       const { unmount } = renderWithProviders(<ThemeToggle />);
@@ -44,8 +45,10 @@ describe('Dark Mode Integration', () => {
       const button = screen.getByRole('button', { name: /switch to dark mode/i });
       await user.click(button);
 
-      expect(localStorage.getItem('codescribeai:settings:theme')).toBe('dark');
-      expect(document.documentElement.classList.contains('dark')).toBe(true);
+      await waitFor(() => {
+        expect(localStorage.getItem(STORAGE_KEYS.THEME_PREFERENCE)).toBe('dark');
+        expect(document.documentElement.classList.contains('dark')).toBe(true);
+      });
 
       // Unmount and remount
       unmount();
@@ -61,7 +64,7 @@ describe('Dark Mode Integration', () => {
       const user = userEvent.setup();
 
       // Explicitly set light mode to start
-      localStorage.setItem('codescribeai:settings:theme', 'light');
+      localStorage.setItem(STORAGE_KEYS.THEME_PREFERENCE, 'light');
 
       // Render Header with ThemeToggle in it
       renderWithProviders(
@@ -75,17 +78,17 @@ describe('Dark Mode Integration', () => {
       const toggleButtons = screen.getAllByRole('button', { name: /switch to dark mode/i });
       await user.click(toggleButtons[0]);
 
-      // Verify theme is persisted
-      expect(localStorage.getItem('codescribeai:settings:theme')).toBe('dark');
-
-      // Verify DOM class
-      expect(document.documentElement.classList.contains('dark')).toBe(true);
+      // Verify theme is persisted (with waitFor for async state update)
+      await waitFor(() => {
+        expect(localStorage.getItem(STORAGE_KEYS.THEME_PREFERENCE)).toBe('dark');
+        expect(document.documentElement.classList.contains('dark')).toBe(true);
+      });
     });
   });
 
   describe('Header Dark Mode Styling', () => {
     it('applies dark mode styles to Header', () => {
-      localStorage.setItem('codescribeai:settings:theme', 'dark');
+      localStorage.setItem(STORAGE_KEYS.THEME_PREFERENCE, 'dark');
 
       renderWithProviders(<Header />);
 
@@ -97,7 +100,7 @@ describe('Dark Mode Integration', () => {
     // TODO: Skipped because ThemeToggle was removed from Header in v2.7.2
     // Theme controls are now in Settings → Appearance tab
     it.skip('ThemeToggle in Header shows correct icon in dark mode', () => {
-      localStorage.setItem('codescribeai:settings:theme', 'dark');
+      localStorage.setItem(STORAGE_KEYS.THEME_PREFERENCE, 'dark');
 
       renderWithProviders(<Header />);
 
@@ -136,7 +139,7 @@ describe('Dark Mode Integration', () => {
 
   describe('Footer Dark Mode Styling', () => {
     it('applies dark mode styles to Footer', () => {
-      localStorage.setItem('codescribeai:settings:theme', 'dark');
+      localStorage.setItem(STORAGE_KEYS.THEME_PREFERENCE, 'dark');
 
       renderWithProviders(<Footer />);
 
@@ -146,7 +149,7 @@ describe('Dark Mode Integration', () => {
     });
 
     it('Footer links have dark mode hover states', () => {
-      localStorage.setItem('codescribeai:settings:theme', 'dark');
+      localStorage.setItem(STORAGE_KEYS.THEME_PREFERENCE, 'dark');
 
       renderWithProviders(<Footer />);
 
@@ -181,7 +184,7 @@ describe('Dark Mode Integration', () => {
       expect(document.documentElement.classList.contains('dark')).toBe(true);
 
       // Verify localStorage
-      expect(localStorage.getItem('codescribeai:settings:theme')).toBe('dark');
+      expect(localStorage.getItem(STORAGE_KEYS.THEME_PREFERENCE)).toBe('dark');
 
       // Find the ThemeToggle in Header and verify it also updated
       const header = screen.getByRole('banner');
@@ -193,7 +196,7 @@ describe('Dark Mode Integration', () => {
       const user = userEvent.setup();
 
       // Explicitly set light mode to start
-      localStorage.setItem('codescribeai:settings:theme', 'light');
+      localStorage.setItem(STORAGE_KEYS.THEME_PREFERENCE, 'light');
 
       renderWithProviders(
         <>
@@ -207,23 +210,23 @@ describe('Dark Mode Integration', () => {
       // Rapid toggles (3-state cycle: light -> dark -> auto -> light)
       await user.click(toggleButtons[0]); // -> dark
       expect(document.documentElement.classList.contains('dark')).toBe(true);
-      expect(localStorage.getItem('codescribeai:settings:theme')).toBe('dark');
+      expect(localStorage.getItem(STORAGE_KEYS.THEME_PREFERENCE)).toBe('dark');
 
       const darkButtons = screen.getAllByRole('button', { name: /switch to auto mode/i });
       await user.click(darkButtons[0]); // -> auto
-      expect(localStorage.getItem('codescribeai:settings:theme')).toBe('auto');
+      expect(localStorage.getItem(STORAGE_KEYS.THEME_PREFERENCE)).toBe('auto');
 
       const autoButtons = screen.getAllByRole('button', { name: /switch to light mode/i });
       await user.click(autoButtons[0]); // -> light
       expect(document.documentElement.classList.contains('dark')).toBe(false);
-      expect(localStorage.getItem('codescribeai:settings:theme')).toBe('light');
+      expect(localStorage.getItem(STORAGE_KEYS.THEME_PREFERENCE)).toBe('light');
 
       const lightButtons = screen.getAllByRole('button', { name: /switch to dark mode/i });
       await user.click(lightButtons[0]); // -> dark
       expect(document.documentElement.classList.contains('dark')).toBe(true);
 
       // Verify final state in localStorage
-      expect(localStorage.getItem('codescribeai:settings:theme')).toBe('dark');
+      expect(localStorage.getItem(STORAGE_KEYS.THEME_PREFERENCE)).toBe('dark');
     });
   });
 
@@ -234,16 +237,16 @@ describe('Dark Mode Integration', () => {
 
       renderWithProviders(<ThemeToggle />);
 
-      // Should initialize with 'auto' theme by default (v2.7.2+)
-      const theme = localStorage.getItem('codescribeai:settings:theme');
-      expect(theme).toBe('auto');
+      // Should initialize with 'light' theme by default (consistent with index.html)
+      const theme = localStorage.getItem(STORAGE_KEYS.THEME_PREFERENCE);
+      expect(theme).toBe('light');
     });
 
     it('manual preference overrides system preference', async () => {
       const user = userEvent.setup();
 
       // Explicitly set light mode to start
-      localStorage.setItem('codescribeai:settings:theme', 'light');
+      localStorage.setItem(STORAGE_KEYS.THEME_PREFERENCE, 'light');
 
       renderWithProviders(<ThemeToggle />);
 
@@ -252,7 +255,7 @@ describe('Dark Mode Integration', () => {
       await user.click(button);
 
       // Verify manual preference is stored
-      expect(localStorage.getItem('codescribeai:settings:theme')).toBe('dark');
+      expect(localStorage.getItem(STORAGE_KEYS.THEME_PREFERENCE)).toBe('dark');
 
       // Even if system preference is light, manual preference should persist
       expect(document.documentElement.classList.contains('dark')).toBe(true);
@@ -261,7 +264,7 @@ describe('Dark Mode Integration', () => {
 
   describe('Accessibility in Dark Mode', () => {
     it('maintains accessible focus indicators in dark mode', () => {
-      localStorage.setItem('codescribeai:settings:theme', 'dark');
+      localStorage.setItem(STORAGE_KEYS.THEME_PREFERENCE, 'dark');
 
       renderWithProviders(<ThemeToggle />);
 
@@ -274,7 +277,7 @@ describe('Dark Mode Integration', () => {
       const user = userEvent.setup();
 
       // Explicitly set light mode to start
-      localStorage.setItem('codescribeai:settings:theme', 'light');
+      localStorage.setItem(STORAGE_KEYS.THEME_PREFERENCE, 'light');
 
       renderWithProviders(<ThemeToggle />);
 
@@ -298,7 +301,7 @@ describe('Dark Mode Integration', () => {
     });
 
     it('Header navigation remains accessible in dark mode', () => {
-      localStorage.setItem('codescribeai:settings:theme', 'dark');
+      localStorage.setItem(STORAGE_KEYS.THEME_PREFERENCE, 'dark');
 
       renderWithProviders(<Header />);
 
@@ -309,7 +312,7 @@ describe('Dark Mode Integration', () => {
     });
 
     it('Footer links remain accessible in dark mode', () => {
-      localStorage.setItem('codescribeai:settings:theme', 'dark');
+      localStorage.setItem(STORAGE_KEYS.THEME_PREFERENCE, 'dark');
 
       renderWithProviders(<Footer />);
 
@@ -331,7 +334,7 @@ describe('Dark Mode Integration', () => {
       await user.click(button);
 
       // Verify storage key follows codescribeai:type:category:key pattern
-      const storageKey = 'codescribeai:settings:theme';
+      const storageKey = STORAGE_KEYS.THEME_PREFERENCE;
       expect(localStorage.getItem(storageKey)).toBeDefined();
       expect(localStorage.getItem(storageKey)).toMatch(/^(light|dark|auto)$/);
     });
@@ -356,7 +359,7 @@ describe('Dark Mode Integration', () => {
       const themeKeys = allKeys.filter(key => key.includes('theme'));
 
       expect(themeKeys).toHaveLength(1);
-      expect(themeKeys[0]).toBe('codescribeai:settings:theme');
+      expect(themeKeys[0]).toBe(STORAGE_KEYS.THEME_PREFERENCE);
     });
   });
 
@@ -365,7 +368,7 @@ describe('Dark Mode Integration', () => {
       const user = userEvent.setup();
 
       // Explicitly set light mode to start
-      localStorage.setItem('codescribeai:settings:theme', 'light');
+      localStorage.setItem(STORAGE_KEYS.THEME_PREFERENCE, 'light');
 
       renderWithProviders(<ThemeToggle />);
 
@@ -388,7 +391,7 @@ describe('Dark Mode Integration', () => {
       const user = userEvent.setup();
 
       // Explicitly set light mode to start
-      localStorage.setItem('codescribeai:settings:theme', 'light');
+      localStorage.setItem(STORAGE_KEYS.THEME_PREFERENCE, 'light');
 
       renderWithProviders(
         <>

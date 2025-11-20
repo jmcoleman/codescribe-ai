@@ -383,7 +383,8 @@ describe('Select', () => {
 
       await user.click(screen.getByRole('button'));
 
-      const dropdown = container.querySelector('.bg-white.border.border-slate-200.rounded-lg.shadow-md');
+      // Updated to match current implementation: shadow-lg, border-slate-200, with dark mode support
+      const dropdown = container.querySelector('.bg-white.border.border-slate-200.rounded-lg.shadow-lg');
       expect(dropdown).toBeInTheDocument();
     });
 
@@ -393,7 +394,8 @@ describe('Select', () => {
 
       await user.click(screen.getByRole('button'));
 
-      const dropdown = container.querySelector('.z-10');
+      // Updated to match current implementation: z-50 for proper layering above other elements
+      const dropdown = container.querySelector('.z-50');
       expect(dropdown).toBeInTheDocument();
     });
   });

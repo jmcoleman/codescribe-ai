@@ -304,7 +304,7 @@ describe('Settings API Integration Tests', () => {
         .send({});
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toContain('boolean');
+      expect(response.body.error).toContain('At least one preference field');
     });
   });
 
