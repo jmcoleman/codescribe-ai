@@ -1654,6 +1654,8 @@ Error: ${file.error}
   const handleMultiFilesDrop = async (droppedFiles) => {
     if (!droppedFiles || droppedFiles.length === 0) return;
 
+    let validFilesCount = 0;
+
     // Process all files and add to sidebar
     for (let i = 0; i < droppedFiles.length; i++) {
       const file = droppedFiles[i];
@@ -1677,6 +1679,9 @@ Error: ${file.error}
         toastCompact(`File already exists: ${file.name}`, 'warning');
         continue; // Skip this file
       }
+
+      // Track valid files
+      validFilesCount++;
 
       // Add file directly to sidebar without uploading to server yet
       // The actual upload will happen when "Generate All" is clicked
@@ -1703,9 +1708,10 @@ Error: ${file.error}
       reader.readAsText(file);
     }
 
-    // Show success toast
-    const count = droppedFiles.length;
-    toastCompact(`${count} file${count > 1 ? 's' : ''} added`, 'success');
+    // Show success toast only if at least one valid file was added
+    if (validFilesCount > 0) {
+      toastCompact(`${validFilesCount} file${validFilesCount > 1 ? 's' : ''} added`, 'success');
+    }
   };
 
   // Handler for multi-file input change (sidebar mode)
@@ -2857,6 +2863,18 @@ Error: ${file.error}
             onFileLoad={handleGithubFileLoad}
             onFilesLoad={multiFileState.reloadWorkspace}
             defaultDocType={docType}
+          />
+        </Suspense>
+      )}
+
+      {/* Unsupported File Type Modal */}
+      {unsupportedFileModal.isOpen && (
+        <Suspense fallback={<ModalLoadingFallback />}>
+          <UnsupportedFileModal
+            isOpen={unsupportedFileModal.isOpen}
+            onClose={() => setUnsupportedFileModal({ isOpen: false, fileName: '', fileExtension: '' })}
+            fileName={unsupportedFileModal.fileName}
+            fileExtension={unsupportedFileModal.fileExtension}
           />
         </Suspense>
       )}
