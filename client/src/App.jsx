@@ -789,6 +789,7 @@ function App() {
                       'Batch processing failed';
 
     let markdown = `# Generated Summary
+
 **Generated:** ${timestamp}
 **Status:** ${statusText}
 
@@ -1933,12 +1934,15 @@ Error: ${file.error}
   const prevGeneratingRef = useRef(isGenerating);
 
   useEffect(() => {
-    // Only show toast if generation just completed (not loaded from storage)
-    if (prevGeneratingRef.current && !isGenerating && documentation && qualityScore) {
+    // Only show toast if:
+    // 1. Generation just completed (not loaded from storage)
+    // 2. NOT in batch generation mode (batch has its own completion toast)
+    const isBatchMode = bulkGenerationProgress !== null;
+    if (prevGeneratingRef.current && !isGenerating && documentation && qualityScore && !isBatchMode) {
       toastDocGenerated(qualityScore.grade, qualityScore.score);
     }
     prevGeneratingRef.current = isGenerating;
-  }, [documentation, qualityScore, isGenerating]);
+  }, [documentation, qualityScore, isGenerating, bulkGenerationProgress]);
 
   // Error toasts removed - errors are displayed via ErrorBanner component instead
 
@@ -1998,6 +2002,7 @@ Error: ${file.error}
   const docPanel = useMemo(() => (
     <Suspense fallback={<LoadingFallback />}>
       <DocPanel
+        key="doc-panel-multi-file-memoized"
         documentation={documentation}
         qualityScore={qualityScore}
         isGenerating={isGenerating || testSkeletonMode}
@@ -2301,7 +2306,7 @@ Error: ${file.error}
             mobileActiveTab === 'code' ? codePanel : docPanel
           ) : (
             // Desktop: Split view (side by side)
-            <SplitPanel leftPanel={codePanel} rightPanel={docPanel} />
+            <SplitPanel layout={layout} leftPanel={codePanel} rightPanel={docPanel} />
           )}
         </div>
 
@@ -2413,93 +2418,50 @@ Error: ${file.error}
 
                   {/* Layout Views: Split | Code Only | Doc Only */}
                   <div className="flex-1 min-h-0 transition-all duration-300">
-                    {layout === 'split' ? (
-                      // Split View: Code + Documentation
-                      <SplitPanel
-                        leftPanel={
-                          <CodePanel
-                            code={code}
-                            onChange={setCode}
-                            filename={filename}
-                            language={language}
-                            onFileDrop={null}  // Disable drag-and-drop in multi-file mode - use sidebar instead
-                            onClear={handleClear}
-                            onSamplesClick={() => setShowSamplesModal(true)}
-                            samplesButtonRef={samplesButtonRef}
-                          />
-                        }
-                        rightPanel={
-                          <Suspense fallback={<LoadingFallback />}>
-                            <DocPanel
-                              documentation={documentation}
-                              qualityScore={qualityScore}
-                              isGenerating={isGenerating || testSkeletonMode}
-                              onViewBreakdown={handleViewBreakdown}
-                              onUpload={handleUpload}
-                              onGithubImport={handleGithubImport}
-                              onGenerate={handleGenerate}
-                              onReset={handleReset}
-                              bulkGenerationProgress={bulkGenerationProgress}
-                              bulkGenerationSummary={bulkGenerationSummary}
-                              bulkGenerationErrors={bulkGenerationErrors}
-                              currentlyGeneratingFile={currentlyGeneratingFile}
-                              throttleCountdown={throttleCountdown}
-                              onDismissBulkErrors={() => {
-                                setBulkGenerationErrors([]);
-                                setBulkGenerationSummary(null);
-                              }}
-                              onSummaryFileClick={handleSummaryFileClick}
-                              onBackToSummary={handleBackToSummary}
-                              onDownloadAllDocs={handleDownloadAllDocs}
-                              batchSummaryMarkdown={batchSummaryMarkdown}
-                              canUseBatchProcessing={canUseBatchProcessing}
-                              onExportFile={handleExportFile}
-                            />
-                          </Suspense>
-                        }
-                      />
-                    ) : layout === 'code' ? (
-                      // Code Only View
-                      <CodePanel
-                        code={code}
-                        onChange={setCode}
-                        filename={filename}
-                        language={language}
-                        onFileDrop={null}
-                        onClear={handleClear}
-                        onSamplesClick={() => setShowSamplesModal(true)}
-                        samplesButtonRef={samplesButtonRef}
-                      />
-                    ) : (
-                      // Doc Only View
-                      <Suspense fallback={<LoadingFallback />}>
-                        <DocPanel
-                          documentation={documentation}
-                          qualityScore={qualityScore}
-                          isGenerating={isGenerating || testSkeletonMode}
-                          onViewBreakdown={handleViewBreakdown}
-                          onUpload={handleUpload}
-                          onGithubImport={handleGithubImport}
-                          onGenerate={handleGenerate}
-                          onReset={handleReset}
-                          bulkGenerationProgress={bulkGenerationProgress}
-                          bulkGenerationSummary={bulkGenerationSummary}
-                          bulkGenerationErrors={bulkGenerationErrors}
-                          currentlyGeneratingFile={currentlyGeneratingFile}
-                          throttleCountdown={throttleCountdown}
-                          onDismissBulkErrors={() => {
-                            setBulkGenerationErrors([]);
-                            setBulkGenerationSummary(null);
-                          }}
-                          onSummaryFileClick={handleSummaryFileClick}
-                          onBackToSummary={handleBackToSummary}
-                          onDownloadAllDocs={handleDownloadAllDocs}
-                          batchSummaryMarkdown={batchSummaryMarkdown}
-                          canUseBatchProcessing={canUseBatchProcessing}
-                          onExportFile={handleExportFile}
+                    <SplitPanel
+                      layout={layout}
+                      leftPanel={
+                        <CodePanel
+                          code={code}
+                          onChange={setCode}
+                          filename={filename}
+                          language={language}
+                          onFileDrop={null}  // Disable drag-and-drop in multi-file mode - use sidebar instead
+                          onClear={handleClear}
+                          onSamplesClick={() => setShowSamplesModal(true)}
+                          samplesButtonRef={samplesButtonRef}
                         />
-                      </Suspense>
-                    )}
+                      }
+                      rightPanel={
+                        <Suspense fallback={<LoadingFallback />}>
+                          <DocPanel
+                            documentation={documentation}
+                            qualityScore={qualityScore}
+                            isGenerating={isGenerating || testSkeletonMode}
+                            onViewBreakdown={handleViewBreakdown}
+                            onUpload={handleUpload}
+                            onGithubImport={handleGithubImport}
+                            onGenerate={handleGenerate}
+                            onReset={handleReset}
+                            bulkGenerationProgress={bulkGenerationProgress}
+                            bulkGenerationSummary={bulkGenerationSummary}
+                            bulkGenerationErrors={bulkGenerationErrors}
+                            currentlyGeneratingFile={currentlyGeneratingFile}
+                            throttleCountdown={throttleCountdown}
+                            onDismissBulkErrors={() => {
+                              setBulkGenerationErrors([]);
+                              setBulkGenerationSummary(null);
+                            }}
+                            onSummaryFileClick={handleSummaryFileClick}
+                            onBackToSummary={handleBackToSummary}
+                            onDownloadAllDocs={handleDownloadAllDocs}
+                            batchSummaryMarkdown={batchSummaryMarkdown}
+                            canUseBatchProcessing={canUseBatchProcessing}
+                            onExportFile={handleExportFile}
+                          />
+                        </Suspense>
+                      }
+                    />
                   </div>
 
                 </main>
@@ -2604,6 +2566,7 @@ Error: ${file.error}
                 ) : (
                   <Suspense fallback={<LoadingFallback />}>
                     <DocPanel
+                      key="doc-panel-single-file"
                       documentation={documentation}
                       qualityScore={qualityScore}
                       isGenerating={isGenerating || testSkeletonMode}
@@ -2633,6 +2596,7 @@ Error: ${file.error}
               ) : (
                 // Desktop: Split view (side by side)
                 <SplitPanel
+                  layout={layout}
                   leftPanel={
                     <CodePanel
                       code={code}
@@ -2648,6 +2612,7 @@ Error: ${file.error}
                   rightPanel={
                     <Suspense fallback={<LoadingFallback />}>
                       <DocPanel
+                        key="doc-panel-single-file"
                         documentation={documentation}
                         qualityScore={qualityScore}
                         isGenerating={isGenerating || testSkeletonMode}

@@ -321,6 +321,22 @@ export const DocPanel = memo(function DocPanel({
     }
   }, [batchSummaryMarkdown]); // Only depend on batch summary changing, not documentation or isGenerating
 
+  // Auto-scroll to top when single file generation completes
+  useEffect(() => {
+    // Only scroll to top if:
+    // 1. Generation just completed (justGenerated flag is set)
+    // 2. NOT a batch summary (batch has its own scroll logic above)
+    // 3. We have documentation to show
+    if (justGenerated && documentation && !batchSummaryMarkdown && contentRef.current) {
+      // Small delay to ensure content is fully rendered
+      setTimeout(() => {
+        if (contentRef.current) {
+          contentRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      }, 150);
+    }
+  }, [justGenerated, documentation, batchSummaryMarkdown]);
+
   const handleToggle = () => {
     setIsExpanded(!isExpanded);
   };
