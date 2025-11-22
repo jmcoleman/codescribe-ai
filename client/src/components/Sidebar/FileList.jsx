@@ -1,10 +1,24 @@
 import { useState, useEffect } from 'react';
 import { FileItem } from './FileItem';
 import { FileDetailsPanel } from './FileDetailsPanel';
-import { FileCode, PanelLeftClose, Plus, Github, Upload, Info, X } from 'lucide-react';
+import { FileCode, PanelLeftClose, Plus, Github, Upload, Info, X, Stamp, Trash2, Sparkles, Loader2 } from 'lucide-react';
 import { Select } from '../Select';
 import { Button } from '../Button';
+import { Tooltip } from '../Tooltip';
+import { ConfirmModal } from '../ConfirmModal';
 import { fetchDocTypes } from '../../services/api';
+
+/**
+ * SparklesPlus - Sparkles icon with + overlay to indicate multiple/batch action
+ */
+function SparklesPlus({ className }) {
+  return (
+    <div className={`relative inline-flex items-center justify-center ${className}`}>
+      <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
+      <span className="absolute -top-0.5 -right-0.5 text-[10px] font-bold leading-none">+</span>
+    </div>
+  );
+}
 
 /**
  * FileList Component
@@ -53,11 +67,21 @@ export function FileList({
   onDeleteSelected,
   onToggleSidebar,
   hasCodeInEditor = false,
-  onFilesDrop
+  onFilesDrop,
+  bulkGenerationProgress = null // { total, completed, currentBatch, totalBatches }
 }) {
   const [isDragging, setIsDragging] = useState(false);
   const [detailsFileId, setDetailsFileId] = useState(null);
   const [showNoCodeBanner, setShowNoCodeBanner] = useState(true);
+  const [applyConfirmModal, setApplyConfirmModal] = useState({
+    isOpen: false,
+    message: '',
+    warning: ''
+  });
+  const [deleteConfirmModal, setDeleteConfirmModal] = useState({
+    isOpen: false,
+    count: 0
+  });
 
   const generatedCount = files.filter(f => f.documentation).length;
   const canGenerateAll = files.some(f => !f.documentation && !f.isGenerating);
@@ -185,41 +209,24 @@ export function FileList({
       {/* Unified Header - Title, Selection, and Actions (desktop only, mobile has its own header) */}
       {!isMobile && (
         <div className="border-b border-slate-200 dark:border-slate-700 px-3 py-2.5 bg-white dark:bg-slate-900">
-          {/* Top row: Toggle, Title, GitHub Import, Add button */}
+          {/* Top row: Toggle and Title */}
           <div className="flex items-center gap-2 mb-2">
-            <button
-              type="button"
-              onClick={onToggleSidebar}
-              className="icon-btn interactive-scale-sm focus-ring-light flex-shrink-0"
-              aria-label="Collapse sidebar"
-              title="Collapse sidebar"
-            >
-              <PanelLeftClose className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-            </button>
+            <Tooltip content="Collapse sidebar">
+              <button
+                type="button"
+                onClick={onToggleSidebar}
+                className="icon-btn interactive-scale-sm focus-ring-light flex-shrink-0"
+                aria-label="Collapse sidebar"
+              >
+                <PanelLeftClose className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+              </button>
+            </Tooltip>
             <h2 className="flex-1 text-sm font-semibold text-slate-900 dark:text-slate-100">
               Files ({files.length})
             </h2>
-            <button
-              type="button"
-              onClick={onGithubImport}
-              className="icon-btn interactive-scale-sm focus-ring-light flex-shrink-0"
-              aria-label="Import from GitHub"
-              title="Import from GitHub"
-            >
-              <Github className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-            </button>
-            <button
-              type="button"
-              onClick={onAddFile}
-              className="icon-btn interactive-scale-sm focus-ring-light flex-shrink-0"
-              aria-label="Upload more files"
-              title="Upload more files"
-            >
-              <Plus className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-            </button>
           </div>
 
-          {/* Second row: Doc Type selector */}
+          {/* Doc Type selector */}
           <div className="flex items-center gap-2 mb-2">
             <label htmlFor="sidebar-doc-type-select" className="text-xs font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap flex-shrink-0">
               Doc Type:
@@ -236,71 +243,105 @@ export function FileList({
             </div>
           </div>
 
-          {/* Action buttons - all on same line, primary action (Generate) on right */}
-          <div className="flex gap-1 mb-2">
-            <button
-              type="button"
-              onClick={() => {
-                if (selectedCount === 0) return;
+          {/* Action buttons - file management (left) and selection actions (right) */}
+          <div className="flex gap-2 justify-between">
+            {/* Left group: File management */}
+            <div className="flex gap-1">
+              <Tooltip content="Import from GitHub">
+                <button
+                  type="button"
+                  onClick={onGithubImport}
+                  className="icon-btn interactive-scale-sm focus-ring-light flex-shrink-0"
+                  aria-label="Import from GitHub"
+                >
+                  <Github className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                </button>
+              </Tooltip>
+              <Tooltip content="Add files">
+                <button
+                  type="button"
+                  onClick={onAddFile}
+                  className="icon-btn interactive-scale-sm focus-ring-light flex-shrink-0"
+                  aria-label="Add files"
+                >
+                  <Plus className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                </button>
+              </Tooltip>
+            </div>
 
-                // Check how many selected files have documentation with different docType
-                const selectedFiles = files.filter(f => selectedFileIds.includes(f.id));
-                const filesWithDifferentDocType = selectedFiles.filter(f =>
-                  f.documentation && f.docType !== docType
-                );
+            {/* Right group: Selection actions */}
+            <div className="flex gap-1">
+              <Tooltip content={selectedCount > 0 ? 'Apply to selection' : 'Select files to apply doc type'}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (selectedCount === 0) return;
 
-                let confirmMessage = `Apply ${docType} to ${selectedCount} selected file${selectedCount !== 1 ? 's' : ''}?`;
+                    // Check if any files have documentation with different docType (will be cleared)
+                    const selectedFiles = files.filter(f => selectedFileIds.includes(f.id));
+                    const filesWithDifferentDocType = selectedFiles.filter(f =>
+                      f.documentation && f.docType !== docType
+                    );
 
-                // Warn if documentation will be cleared
-                if (filesWithDifferentDocType.length > 0) {
-                  confirmMessage += `\n\nWarning: ${filesWithDifferentDocType.length} file${filesWithDifferentDocType.length !== 1 ? 's have' : ' has'} existing documentation that will be cleared. You'll need to regenerate.`;
-                }
+                    if (filesWithDifferentDocType.length > 0) {
+                      // Show confirmation modal when documentation will be cleared
+                      const message = `Apply ${docType} to ${selectedCount} selected file${selectedCount !== 1 ? 's' : ''}?`;
+                      const warning = `${filesWithDifferentDocType.length} file${filesWithDifferentDocType.length !== 1 ? 's have' : ' has'} existing documentation that will be cleared. You'll need to regenerate.`;
 
-                if (window.confirm(confirmMessage)) {
-                  // Call parent handler to update docType for all selected files
-                  if (onApplyDocType) {
-                    onApplyDocType(selectedFileIds, docType);
-                  }
-                }
-              }}
-              disabled={selectedCount === 0}
-              className="flex-1 min-w-0 px-1.5 @[240px]:px-2 @[280px]:px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500 rounded text-xs font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:focus-visible:ring-slate-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-slate-900 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed truncate"
-              title={selectedCount > 0 ? `Apply ${docType} doc type to ${selectedCount} selected file${selectedCount !== 1 ? 's' : ''}. Existing documentation will be cleared.` : 'Select files to apply doc type'}
-            >
-              <span className="hidden @[280px]:inline">Apply</span>
-              <span className="@[280px]:hidden">Apl</span>
-              {selectedCount > 0 && (
-                <span className="hidden @[320px]:inline"> ({selectedCount})</span>
-              )}
-            </button>
+                      setApplyConfirmModal({
+                        isOpen: true,
+                        message,
+                        warning
+                      });
+                    } else {
+                      // No documentation will be cleared, apply directly
+                      if (onApplyDocType) {
+                        onApplyDocType(selectedFileIds, docType);
+                      }
+                    }
+                  }}
+                  disabled={selectedCount === 0}
+                  className="icon-btn interactive-scale-sm focus-ring-light flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-label={selectedCount > 0 ? `Apply ${docType} doc type to ${selectedCount} selected file${selectedCount !== 1 ? 's' : ''}` : 'Select files to apply doc type'}
+                >
+                  <Stamp className="w-4 h-4 text-slate-600 dark:text-slate-400" aria-hidden="true" />
+                </button>
+              </Tooltip>
 
-            <button
-              type="button"
-              onClick={onDeleteSelected}
-              disabled={selectedCount === 0}
-              className="flex-1 min-w-0 px-1.5 @[240px]:px-2 @[280px]:px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-100 rounded text-xs font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:focus-visible:ring-slate-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-slate-900 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed truncate"
-              title={selectedCount > 0 ? `Delete ${selectedCount} selected file${selectedCount !== 1 ? 's' : ''} (⌫)` : 'Select files to delete'}
-            >
-              <span className="hidden @[280px]:inline">Delete</span>
-              <span className="@[280px]:hidden">Del</span>
-              {selectedCount > 0 && (
-                <span className="hidden @[320px]:inline"> ({selectedCount})</span>
-              )}
-            </button>
+              <Tooltip content={selectedCount > 0 ? 'Delete selection (⌫)' : 'Select files to delete'}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (selectedCount === 0) return;
+                    setDeleteConfirmModal({
+                      isOpen: true,
+                      count: selectedCount
+                    });
+                  }}
+                  disabled={selectedCount === 0}
+                  className="icon-btn interactive-scale-sm focus-ring-light flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-label={selectedCount > 0 ? `Delete ${selectedCount} selected file${selectedCount !== 1 ? 's' : ''}` : 'Select files to delete'}
+                >
+                  <Trash2 className="w-4 h-4 text-slate-600 dark:text-slate-400" aria-hidden="true" />
+                </button>
+              </Tooltip>
 
-            <button
-              type="button"
-              onClick={onGenerateSelected}
-              disabled={selectedCountWithContent === 0 && !hasCodeInEditor}
-              className="flex-1 min-w-0 px-1.5 @[240px]:px-2 @[280px]:px-2.5 py-1.5 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-700 dark:hover:bg-purple-800 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded text-xs font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-slate-900 transition-colors duration-150 truncate"
-              title={selectedCountWithContent > 0 ? `Generate documentation for ${selectedCountWithContent} selected file${selectedCountWithContent !== 1 ? 's' : ''} (⌘G)` : 'Generate documentation for code in editor (⌘G)'}
-            >
-              <span className="hidden @[280px]:inline">Generate</span>
-              <span className="@[280px]:hidden">Gen</span>
-              {selectedCountWithContent > 0 && (
-                <span className="hidden @[320px]:inline"> ({selectedCountWithContent})</span>
-              )}
-            </button>
+              <Tooltip content={bulkGenerationProgress ? `Generating ${bulkGenerationProgress.completed}/${bulkGenerationProgress.total}` : "Generate for selection (⌘G)"}>
+                <button
+                  type="button"
+                  onClick={onGenerateSelected}
+                  disabled={selectedCountWithContent === 0 && !hasCodeInEditor || bulkGenerationProgress}
+                  className="icon-btn interactive-scale-sm focus-ring-light flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-label={bulkGenerationProgress ? `Generating ${bulkGenerationProgress.completed} of ${bulkGenerationProgress.total}` : "Generate for selection"}
+                >
+                  {bulkGenerationProgress ? (
+                    <Loader2 className="w-4 h-4 text-purple-600 dark:text-purple-400 animate-spin" aria-hidden="true" />
+                  ) : (
+                    <Sparkles className="w-4 h-4 text-slate-600 dark:text-slate-400" aria-hidden="true" />
+                  )}
+                </button>
+              </Tooltip>
+            </div>
           </div>
         </div>
       )}
@@ -328,57 +369,144 @@ export function FileList({
       )}
 
       {/* Mobile: Action controls (replaces desktop header) */}
-      {isMobile && files.length > 0 && (
+      {isMobile && (
         <div className="border-b border-slate-200 dark:border-slate-700 px-3 py-2.5 bg-white dark:bg-slate-900">
-          <div className="flex items-center justify-between text-xs mb-2">
-            <span className="text-slate-600 dark:text-slate-400">
-              {selectedCount > 0 ? (
-                <span className="font-medium text-purple-600 dark:text-purple-400">
-                  {selectedCount} selected
-                </span>
-              ) : (
-                <span>{generatedCount} / {files.length} generated</span>
-              )}
-            </span>
+          {/* Top row: GitHub Import and Add Files - Always visible */}
+          <div className="flex gap-2 mb-2">
             <button
               type="button"
-              onClick={selectedCount > 0 ? onDeselectAllFiles : onSelectAllFiles}
-              className="text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium"
+              onClick={onGithubImport}
+              className="flex-1 px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-100 rounded text-xs font-medium flex items-center justify-center gap-1.5 border border-slate-200 dark:border-slate-600"
             >
-              {selectedCount > 0 ? 'Deselect All' : 'Select All'}
+              <Github className="w-4 h-4" />
+              Import from GitHub
+            </button>
+            <button
+              type="button"
+              onClick={onAddFile}
+              className="flex-1 px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-100 rounded text-xs font-medium flex items-center justify-center gap-1.5 border border-slate-200 dark:border-slate-600"
+            >
+              <Plus className="w-4 h-4" />
+              Add Files
             </button>
           </div>
 
-          {/* Action buttons - mobile always shows full text */}
+          {/* File management controls - Only show when files exist */}
+          {files.length > 0 && (
+            <>
+              {/* Doc Type selector */}
+              <div className="flex items-center gap-2 mb-2">
+            <label htmlFor="mobile-doc-type-select" className="text-xs font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
+              Doc Type:
+            </label>
+            <div className="flex-1">
+              <Select
+                id="mobile-doc-type-select"
+                options={docTypes}
+                value={docType}
+                onChange={onDocTypeChange}
+                ariaLabel="Select documentation type"
+                size="small"
+              />
+            </div>
+          </div>
+
+          {/* Action buttons - Apply, Delete, Generate */}
           <div className="flex gap-1.5">
             <button
               type="button"
-              onClick={onGenerateSelected}
-              disabled={selectedCountWithContent === 0 && !hasCodeInEditor}
-              className="flex-1 px-2.5 py-1.5 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-700 dark:hover:bg-purple-800 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded text-xs font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-slate-900 transition-colors duration-150"
-              title={selectedCountWithContent > 0 ? `Generate documentation for ${selectedCountWithContent} selected file${selectedCountWithContent !== 1 ? 's' : ''} (⌘G)` : 'Generate documentation for code in editor (⌘G)'}
+              onClick={() => {
+                if (selectedCount === 0) return;
+
+                // Check if any files have documentation with different docType (will be cleared)
+                const selectedFiles = files.filter(f => selectedFileIds.includes(f.id));
+                const filesWithDifferentDocType = selectedFiles.filter(f =>
+                  f.documentation && f.docType !== docType
+                );
+
+                if (filesWithDifferentDocType.length > 0) {
+                  // Show confirmation modal when documentation will be cleared
+                  const message = `Apply ${docType} to ${selectedCount} selected file${selectedCount !== 1 ? 's' : ''}?`;
+                  const warning = `${filesWithDifferentDocType.length} file${filesWithDifferentDocType.length !== 1 ? 's have' : ' has'} existing documentation that will be cleared. You'll need to regenerate.`;
+
+                  setApplyConfirmModal({
+                    isOpen: true,
+                    message,
+                    warning
+                  });
+                } else {
+                  // No documentation will be cleared, apply directly
+                  if (onApplyDocType) {
+                    onApplyDocType(selectedFileIds, docType);
+                  }
+                }
+              }}
+              disabled={selectedCount === 0}
+              className="flex-1 px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-600 rounded text-xs font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:focus-visible:ring-slate-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1"
+              aria-label={selectedCount > 0 ? 'Apply to selection' : 'Select files to apply doc type'}
             >
-              Generate{selectedCountWithContent > 0 ? ` (${selectedCountWithContent})` : ''}
+              <Stamp className="w-3.5 h-3.5" />
+              Apply
             </button>
             <button
               type="button"
-              onClick={onDeleteSelected}
+              onClick={() => {
+                if (selectedCount === 0) return;
+                setDeleteConfirmModal({
+                  isOpen: true,
+                  count: selectedCount
+                });
+              }}
               disabled={selectedCount === 0}
-              className="flex-1 px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-100 rounded text-xs font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:focus-visible:ring-slate-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-slate-900 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
-              title={`Delete ${selectedCount} selected file${selectedCount !== 1 ? 's' : ''} (⌫)`}
+              className="flex-1 px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-600 rounded text-xs font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:focus-visible:ring-slate-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1"
+              aria-label={selectedCount > 0 ? 'Delete selection' : 'Select files to delete'}
             >
-              Delete{selectedCount > 0 ? ` (${selectedCount})` : ''}
+              <Trash2 className="w-3.5 h-3.5" />
+              Delete
+            </button>
+            <button
+              type="button"
+              onClick={onGenerateSelected}
+              disabled={selectedCountWithContent === 0 && !hasCodeInEditor || bulkGenerationProgress}
+              className="flex-1 px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-600 rounded text-xs font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:focus-visible:ring-slate-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1"
+              aria-label={bulkGenerationProgress ? `Generating ${bulkGenerationProgress.completed} of ${bulkGenerationProgress.total}` : "Generate for selection"}
+            >
+              {bulkGenerationProgress ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  {bulkGenerationProgress.completed}/{bulkGenerationProgress.total}
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Generate
+                </>
+              )}
             </button>
           </div>
+            </>
+          )}
+        </div>
+      )}
 
-          {/* Add File button for mobile */}
+      {/* Mobile: Selection controls - Right above file list (consistent with desktop) */}
+      {isMobile && files.length > 0 && (
+        <div className="flex items-center justify-between text-xs px-3 py-2 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+          <span className="text-slate-600 dark:text-slate-400">
+            {selectedCount > 0 ? (
+              <span className="font-medium text-purple-600 dark:text-purple-400">
+                {selectedCount} selected
+              </span>
+            ) : (
+              <span>{generatedCount} / {files.length} generated</span>
+            )}
+          </span>
           <button
             type="button"
-            onClick={onAddFile}
-            className="w-full mt-2 px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-100 rounded text-xs font-medium flex items-center justify-center gap-1.5"
+            onClick={selectedCount > 0 ? onDeselectAllFiles : onSelectAllFiles}
+            className="text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium"
           >
-            <Plus className="w-4 h-4" />
-            Add Files
+            {selectedCount > 0 ? 'Deselect All' : 'Select All'}
           </button>
         </div>
       )}
@@ -392,14 +520,17 @@ export function FileList({
               <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
                 Code not saved for privacy. Re-upload files after closing browser. <button
                   onClick={() => {
-                    // Select all files first, then delete them
+                    // Select all files first
                     onSelectAllFiles();
-                    // Use setTimeout to ensure selection completes before deletion
-                    setTimeout(() => onDeleteSelected(), 10);
+                    // Then show confirmation modal
+                    setDeleteConfirmModal({
+                      isOpen: true,
+                      count: files.length
+                    });
                   }}
                   className="font-medium hover:underline"
                 >
-                  Clear workspace
+                  Delete workspace
                 </button>
               </p>
             </div>
@@ -451,6 +582,40 @@ export function FileList({
           onClose={() => setDetailsFileId(null)}
         />
       )}
+
+      {/* Apply Doc Type Confirmation Modal */}
+      <ConfirmModal
+        isOpen={applyConfirmModal.isOpen}
+        onClose={() => setApplyConfirmModal({ isOpen: false, message: '', warning: '' })}
+        onConfirm={() => {
+          if (onApplyDocType) {
+            onApplyDocType(selectedFileIds, docType);
+          }
+        }}
+        title="Apply Doc Type"
+        message={applyConfirmModal.message}
+        warning={applyConfirmModal.warning}
+        confirmText="Apply"
+        cancelText="Cancel"
+        variant="warning"
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteConfirmModal.isOpen}
+        onClose={() => setDeleteConfirmModal({ isOpen: false, count: 0 })}
+        onConfirm={() => {
+          if (onDeleteSelected) {
+            onDeleteSelected();
+          }
+        }}
+        title="Delete Files"
+        message={`Delete ${deleteConfirmModal.count} selected file${deleteConfirmModal.count !== 1 ? 's' : ''} from workspace?`}
+        warning="Files will be removed from your workspace. Generated documentation is preserved in your history."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+      />
     </div>
   );
 }

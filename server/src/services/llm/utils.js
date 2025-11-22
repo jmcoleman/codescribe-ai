@@ -31,6 +31,22 @@ async function retryWithBackoff(fn, maxRetries = 3, operation = 'LLM request') {
     } catch (error) {
       lastError = error
 
+      // Special handling for rate limits (429)
+      if (error.status === 429 && attempt < maxRetries) {
+        // Read retry-after header (in seconds)
+        const retryAfter = error.headers?.['retry-after']
+          ? parseInt(error.headers['retry-after'], 10)
+          : 60;
+
+        console.log(
+          `[LLM] Rate limit hit (attempt ${attempt + 1}/${maxRetries + 1}), ` +
+          `waiting ${retryAfter}s before retry...`
+        );
+
+        await sleep(retryAfter * 1000);
+        continue; // Skip regular backoff, retry immediately after wait
+      }
+
       // Don't retry on non-retryable errors
       if (shouldNotRetry(error)) {
         throw error

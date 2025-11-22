@@ -1,6 +1,8 @@
-import { useState, useRef, useEffect, useCallback, lazy, Suspense } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
+import { Code2, FileText } from 'lucide-react';
+import JSZip from 'jszip';
 import { useTheme } from './contexts/ThemeContext';
 import { Header } from './components/Header';
 import { MobileMenu } from './components/MobileMenu';
@@ -21,7 +23,7 @@ import { UsageLimitModal } from './components/UsageLimitModal';
 import UnverifiedEmailBanner from './components/UnverifiedEmailBanner';
 import { validateFile, getValidationErrorMessage, detectLanguageFromFilename } from './utils/fileValidation';
 import { trackCodeInput, trackFileUpload, trackExampleUsage, trackInteraction } from './utils/analytics';
-import { toastCompact } from './utils/toastWithHistory';
+import { toastCompact, toastError } from './utils/toastWithHistory';
 import { toastDocGenerated } from './utils/toast';
 import { createTestDataLoader, exposeTestDataLoader, createSkeletonTestHelper, exposeSkeletonTestHelper } from './utils/testData';
 import { exposeUsageSimulator } from './utils/usageTestData';
@@ -38,6 +40,7 @@ const ConfirmationModal = lazy(() => import('./components/ConfirmationModal').th
 const TermsAcceptanceModal = lazy(() => import('./components/TermsAcceptanceModal').then(m => ({ default: m.default })));
 const ContactSupportModal = lazy(() => import('./components/ContactSupportModal').then(m => ({ default: m.ContactSupportModal })));
 const GitHubLoadModal = lazy(() => import('./components/GitHubLoader').then(m => ({ default: m.GitHubLoadModal })));
+const UnsupportedFileModal = lazy(() => import('./components/UnsupportedFileModal').then(m => ({ default: m.UnsupportedFileModal })));
 
 // Loading fallback for modals - full screen to prevent layout shift
 function ModalLoadingFallback() {
@@ -70,14 +73,14 @@ function LoadingFallback() {
 }
 
 import { API_URL } from './config/api.js';
-import { STORAGE_KEYS, getStorageItem, setStorageItem, getEditorKey } from './constants/storage';
+import { STORAGE_KEYS, getStorageItem, setStorageItem, getEditorKey, getSessionItem, setSessionItem, removeSessionItem } from './constants/storage';
 
 // Default sidebar panel sizes (percentage)
 const DEFAULT_SIDEBAR_SIZE = 20;
 const DEFAULT_MAIN_SIZE = 80;
 
 function App() {
-  const { getToken, user, checkLegalStatus, acceptLegalDocuments } = useAuth();
+  const { getToken, user, isAuthenticated, checkLegalStatus, acceptLegalDocuments } = useAuth();
   const { effectiveTheme } = useTheme();
 
   // Load persisted state from localStorage on mount, fallback to defaults
@@ -86,6 +89,10 @@ function App() {
   const [filename, setFilename] = useState(() => getStorageItem(STORAGE_KEYS.EDITOR_FILENAME, 'code.js'));
   // Language is derived from filename, not stored separately
   const language = detectLanguageFromFilename(filename);
+
+  // Layout mode state (Pro+ feature)
+  const [layout, setLayout] = useState(() => getStorageItem(STORAGE_KEYS.LAYOUT_MODE, 'split'));
+
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showQualityModal, setShowQualityModal] = useState(false);
   const [showSamplesModal, setShowSamplesModal] = useState(false);
@@ -96,16 +103,24 @@ function App() {
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showSupportModal, setShowSupportModal] = useState(false);
   const [showGithubModal, setShowGithubModal] = useState(false);
+  const [showRegenerateConfirmModal, setShowRegenerateConfirmModal] = useState(false);
+  const [showGenerateFromEditorModal, setShowGenerateFromEditorModal] = useState(false);
+  const [unsupportedFileModal, setUnsupportedFileModal] = useState({ isOpen: false, fileName: '', fileExtension: '' });
   const [legalStatus, setLegalStatus] = useState(null);
   const [largeCodeStats, setLargeCodeStats] = useState(null);
   const [uploadError, setUploadError] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [bulkGenerationErrors, setBulkGenerationErrors] = useState([]); // Array of {filename, fileId, error}
   const [bulkGenerationProgress, setBulkGenerationProgress] = useState(null); // { total, completed, currentBatch, totalBatches } or null
-  const [bulkGenerationSummary, setBulkGenerationSummary] = useState(null); // { totalFiles, successCount, failCount, avgQuality, avgGrade, successfulFiles: [{name, score, grade}] }
+  const [currentlyGeneratingFile, setCurrentlyGeneratingFile] = useState(null); // { filename, index, total } or null
+  const [throttleCountdown, setThrottleCountdown] = useState(null); // Seconds remaining in throttle delay
+  // Batch generation state - loaded from localStorage only if user has batch processing access
+  const [bulkGenerationSummary, setBulkGenerationSummary] = useState(null);
+  const [batchSummaryMarkdown, setBatchSummaryMarkdown] = useState(null);
   const [testSkeletonMode, setTestSkeletonMode] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [isMobileView, setIsMobileView] = useState(() => window.innerWidth < 1024);
+  const [mobileActiveTab, setMobileActiveTab] = useState('code'); // 'code' or 'doc' (mobile only, not persisted)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     // Load sidebar collapsed state from localStorage
     const saved = getStorageItem(STORAGE_KEYS.SIDEBAR_MODE);
@@ -180,6 +195,13 @@ function App() {
     });
   }, [expandedSidebarWidth]);
 
+  // Handle layout mode change (Pro+ feature)
+  const handleLayoutChange = useCallback((newLayout) => {
+    setLayout(newLayout);
+    // Persist to localStorage
+    setStorageItem(STORAGE_KEYS.LAYOUT_MODE, newLayout);
+  }, []);
+
   // Handle sidebar resize (when user drags the handle)
   const handleSidebarResize = useCallback((sizes) => {
     if (!sidebarCollapsed && sizes && sizes.length >= 2) {
@@ -215,8 +237,31 @@ function App() {
   const { override, clearOverride } = useTierOverride();
 
   // Feature detection: Check if user can use batch processing (Pro+ tier)
+  // This single flag controls: multi-file sidebar, GitHub multi-select, batch summary, summary button
   const canUseBatchProcessing = hasFeature(user, 'batchProcessing');
-  const isMultiFileMode = canUseBatchProcessing && multiFileState.hasFiles;
+
+  // Clear batch-related state when user loses batch processing access (tier downgrade/expiry)
+  useEffect(() => {
+    if (!canUseBatchProcessing) {
+      // Clear batch generation state
+      setBulkGenerationSummary(null);
+      setBulkGenerationProgress(null);
+      setBulkGenerationErrors([]);
+      setCurrentlyGeneratingFile(null);
+      setThrottleCountdown(null);
+      setBatchSummaryMarkdown(null);
+
+      // Reset layout to split view (default)
+      setLayout('split');
+      setStorageItem(STORAGE_KEYS.LAYOUT_MODE, 'split');
+
+      // Clear from sessionStorage
+      removeSessionItem('bulk_generation_summary');
+      removeSessionItem('batch_summary_markdown');
+
+      console.log('[App] Batch processing access lost - cleared batch state and reset to split view');
+    }
+  }, [canUseBatchProcessing]);
 
   // Check legal acceptance status on mount for authenticated users
   useEffect(() => {
@@ -253,6 +298,40 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]); // Only run when user changes, not when checkLegalStatus changes
 
+  // Load batch data from sessionStorage only if user has batch processing access
+  useEffect(() => {
+    if (canUseBatchProcessing) {
+      // Load bulk generation summary
+      try {
+        const saved = getSessionItem('bulk_generation_summary');
+        if (saved) {
+          setBulkGenerationSummary(JSON.parse(saved));
+        }
+      } catch (error) {
+        console.error('[App] Error loading bulk generation summary:', error);
+      }
+
+      // Load batch summary markdown
+      const markdown = getSessionItem('batch_summary_markdown');
+      if (markdown) {
+        setBatchSummaryMarkdown(markdown);
+      }
+    }
+  }, [canUseBatchProcessing]);
+
+  // Persist batch data to sessionStorage (only if user has access and data exists)
+  useEffect(() => {
+    if (canUseBatchProcessing) {
+      // Persist both together since they're tightly coupled
+      if (bulkGenerationSummary) {
+        setSessionItem('bulk_generation_summary', JSON.stringify(bulkGenerationSummary));
+      }
+      if (batchSummaryMarkdown) {
+        setSessionItem('batch_summary_markdown', batchSummaryMarkdown);
+      }
+    }
+  }, [canUseBatchProcessing, bulkGenerationSummary, batchSummaryMarkdown]);
+
   // Load user-scoped editor content when user logs in
   useEffect(() => {
     if (user && user.id) {
@@ -265,9 +344,8 @@ function App() {
         }
       }
     } else {
-      // User logged out - load from global key
-      const globalCode = getStorageItem(STORAGE_KEYS.EDITOR_CODE, DEFAULT_CODE);
-      setCode(globalCode);
+      // User logged out - clear user's code and show default sample
+      setCode(DEFAULT_CODE);
     }
   }, [user?.id]); // Only run when user ID changes (login/logout)
 
@@ -321,15 +399,51 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [canUseBatchProcessing, handleToggleSidebarCollapse]);
 
-  // Sync active file to CodePanel when selection changes
+  // Sync active file to CodePanel and DocPanel when selection changes
+  // Sync active file to code and doc panels when user clicks a file in sidebar
   useEffect(() => {
-    const activeFile = multiFileState.activeFile;
-    if (activeFile && activeFile.content) {
-      setCode(activeFile.content);
-      setFilename(activeFile.filename);
-      // Language will be derived from filename automatically
+    const activeFile = multiFileState.files.find(f => f.id === multiFileState.activeFileId);
+    if (activeFile) {
+      // Sync code to CodePanel
+      if (activeFile.content) {
+        setCode(activeFile.content);
+        setFilename(activeFile.filename);
+        // Language will be derived from filename automatically
+      }
+
+      // Sync documentation to DocPanel (overrides batch summary)
+      if (activeFile.documentation) {
+        setDocumentation(activeFile.documentation);
+        setQualityScore(activeFile.qualityScore || null);
+      } else {
+        // Clear DocPanel if file has no documentation
+        setDocumentation('');
+        setQualityScore(null);
+      }
+    } else if (multiFileState.activeFileId === null) {
+      // No active file - clear both panels (happens when file is deleted or deselected)
+      // UNLESS we're showing a batch summary
+      const isShowingBatchSummary = batchSummaryMarkdown && documentation === batchSummaryMarkdown;
+
+      if (!isShowingBatchSummary) {
+        // Keep default code in CodePanel
+        const defaultCode = DEFAULT_CODE;
+        const defaultFilename = 'code.js';
+        setCode(defaultCode);
+        setFilename(defaultFilename);
+
+        // Clear DocPanel completely
+        setDocumentation('');
+        setQualityScore(null);
+
+        // Also clear batch summary if showing
+        if (batchSummaryMarkdown) {
+          setBatchSummaryMarkdown(null);
+          setBulkGenerationSummary(null);
+        }
+      }
     }
-  }, [multiFileState.activeFile]);
+  }, [multiFileState.activeFileId, multiFileState.files, batchSummaryMarkdown]);
 
   // Handle legal document acceptance
   const handleAcceptLegalDocuments = async (acceptance) => {
@@ -422,7 +536,7 @@ function App() {
 
   // Prevent body scroll and layout shift when any modal opens
   useEffect(() => {
-    const isAnyModalOpen = showQualityModal || showSamplesModal || showHelpModal || showConfirmationModal || showUsageLimitModal || showTermsModal || showSupportModal || showGithubModal;
+    const isAnyModalOpen = showQualityModal || showSamplesModal || showHelpModal || showConfirmationModal || showUsageLimitModal || showTermsModal || showSupportModal || showGithubModal || showRegenerateConfirmModal || showGenerateFromEditorModal || unsupportedFileModal.isOpen;
 
     if (isAnyModalOpen) {
       // Calculate scrollbar width BEFORE hiding overflow
@@ -455,6 +569,15 @@ function App() {
     retryAfter
   } = useDocGeneration(refetchUsage);
 
+  // Clear bulk generation progress when single-file generation completes
+  useEffect(() => {
+    // When isGenerating becomes false AND we have progress for a single file (total: 1)
+    // Clear the progress to hide the spinner on Generate Selected button
+    if (!isGenerating && bulkGenerationProgress && bulkGenerationProgress.total === 1) {
+      setBulkGenerationProgress(null);
+    }
+  }, [isGenerating, bulkGenerationProgress]);
+
   // Load user-scoped documentation and quality score when user logs in
   useEffect(() => {
     if (user && user.id) {
@@ -480,20 +603,9 @@ function App() {
         }
       }
     } else {
-      // User not logged in - load from global keys
-      const savedDoc = getStorageItem(STORAGE_KEYS.EDITOR_DOCUMENTATION);
-      const savedScore = getStorageItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE);
-
-      if (savedDoc) {
-        setDocumentation(savedDoc);
-      }
-      if (savedScore) {
-        try {
-          setQualityScore(JSON.parse(savedScore));
-        } catch (e) {
-          // Invalid JSON, ignore
-        }
-      }
+      // User logged out - clear all documentation and quality score from UI
+      setDocumentation('');
+      setQualityScore(null);
     }
   }, [user?.id, setDocumentation, setQualityScore]);
 
@@ -528,6 +640,13 @@ function App() {
       }
     }
   }, [qualityScore, user]);
+
+  // Auto-switch to Doc tab on mobile when generation starts
+  useEffect(() => {
+    if (isMobileView && isGenerating) {
+      setMobileActiveTab('doc');
+    }
+  }, [isMobileView, isGenerating]);
 
   const handleGenerate = async () => {
     if (code.trim()) {
@@ -616,16 +735,221 @@ function App() {
   };
 
   /**
+   * Format criteria name for markdown display in batch summary
+   * @param {string} key - Criteria key (e.g., 'overview', 'apiDocs')
+   * @param {string} docType - Document type
+   * @returns {string} Formatted criteria name
+   */
+  const formatCriteriaNameForMarkdown = (key, docType = 'README') => {
+    const nameMap = {
+      'README': {
+        overview: 'Overview',
+        installation: 'Installation',
+        examples: 'Usage Examples',
+        apiDocs: 'Function Coverage',
+        structure: 'Structure & Formatting',
+      },
+      'JSDOC': {
+        overview: 'Overview',
+        installation: 'Installation',
+        examples: 'Usage Examples',
+        apiDocs: 'JSDoc Comments',
+        structure: 'Structure & Formatting',
+      },
+      'API': {
+        overview: 'Overview',
+        installation: 'Installation',
+        examples: 'Usage Examples',
+        apiDocs: 'API Endpoints',
+        structure: 'Structure & Formatting',
+      },
+    };
+
+    const names = nameMap[docType] || nameMap['README'];
+    return names[key] || key;
+  };
+
+  /**
+   * Generate a batch summary document in markdown format
+   * @param {Object} summary - Batch generation summary object
+   * @param {Array} failedFiles - Array of failed file objects
+   * @returns {string} Markdown formatted summary
+   */
+  const generateBatchSummaryDocument = (summary, failedFiles = []) => {
+    const timestamp = new Date().toLocaleString('en-US', {
+      dateStyle: 'medium',
+      timeStyle: 'short'
+    });
+
+    const { totalFiles, successCount, failCount, avgQuality, avgGrade, successfulFiles } = summary;
+
+    // Determine overall status
+    const statusText = failCount === 0 ? 'All files processed successfully' :
+                      successCount > 0 ? 'Batch completed with some failures' :
+                      'Batch processing failed';
+
+    let markdown = `# Generated Summary
+**Generated:** ${timestamp}
+**Status:** ${statusText}
+
+## Overall Statistics
+| Metric | Value |
+|--------|-------|
+| **Total Files** | ${totalFiles} |
+| **Successful** | ${successCount} (${Math.round((successCount / totalFiles) * 100)}%) |
+| **Failed** | ${failCount} (${Math.round((failCount / totalFiles) * 100)}%) |`;
+
+    // Add average quality if any files succeeded
+    if (successCount > 0) {
+      markdown += `
+| **Average Quality** | ${avgGrade} (${avgQuality}/100) |`;
+    }
+
+    // Success section
+    if (successfulFiles && successfulFiles.length > 0) {
+      markdown += `
+
+## Successfully Generated (${successfulFiles.length})
+Click any file name to view its documentation. Expand quality details to see strengths and improvements.
+
+`;
+      successfulFiles.forEach(file => {
+        // Format timestamp
+        const timestamp = file.generatedAt ? new Date(file.generatedAt).toLocaleString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true
+        }) : 'N/A';
+
+        // Start file section with clickable filename
+        markdown += `### [${file.name}](#file:${encodeURIComponent(file.name)})\n`;
+        markdown += `**Type:** ${file.docType} | **Score:** **${file.grade}** (${file.score}/100) | **Generated:** ${timestamp} | [Export](#export:${encodeURIComponent(file.name)})\n\n`;
+
+        // Add quality details if available
+        if (file.qualityScore) {
+          markdown += `<details class="quality-compact">\n<summary>📊 Quality Details</summary>\n\n`;
+
+          // Add strengths and improvements if available
+          if (file.qualityScore.summary) {
+            const summary = file.qualityScore.summary;
+
+            if (summary.strengths && summary.strengths.length > 0) {
+              markdown += `**✅ Strengths:** `;
+              const strengthsList = summary.strengths.map(strength => formatCriteriaNameForMarkdown(strength, file.docType));
+              markdown += strengthsList.join(', ') + '\n\n';
+            }
+
+            if (summary.improvements && summary.improvements.length > 0) {
+              markdown += `**💡 Improvements:** `;
+              const improvementsList = summary.improvements.map(improvement => {
+                const criteriaName = formatCriteriaNameForMarkdown(improvement, file.docType);
+                const suggestionText = file.qualityScore.breakdown?.[improvement]?.suggestion || '';
+                return suggestionText ? `${criteriaName} (${suggestionText})` : criteriaName;
+              });
+              markdown += improvementsList.join(', ') + '\n\n';
+            }
+          }
+
+          // Add detailed breakdown if available
+          if (file.qualityScore.breakdown) {
+            const breakdown = file.qualityScore.breakdown;
+            markdown += `**Breakdown:** `;
+            const breakdownList = Object.entries(breakdown).map(([key, value]) => {
+              const criteriaName = formatCriteriaNameForMarkdown(key, file.docType);
+              const emoji = value.points >= value.maxPoints * 0.8 ? '✅' : value.points >= value.maxPoints * 0.6 ? '⚠️' : '❌';
+              return `${emoji} ${criteriaName} ${value.points}/${value.maxPoints}`;
+            });
+            markdown += breakdownList.join(' · ') + '\n';
+          }
+
+          markdown += `\n</details>\n\n`;
+        }
+
+        markdown += `---\n\n`;
+      });
+    }
+
+    // Failed files section
+    if (failedFiles && failedFiles.length > 0) {
+      markdown += `
+
+## Failed Files (${failedFiles.length})
+`;
+      failedFiles.forEach(file => {
+        markdown += `**${file.filename}**
+Error: ${file.error}
+`;
+      });
+    }
+
+    // Next steps
+    markdown += `
+
+## Next Steps`;
+
+    if (successCount > 0) {
+      markdown += `
+- Click any file name above to view its documentation
+- Export files individually using the Export link in the table above
+- Export all files as a ZIP using the "Export All" button in the header`;
+    }
+
+    if (failCount > 0) {
+      markdown += `
+- Review error messages and correct any issues
+- Select failed files and try regenerating`;
+    }
+
+    if (successCount === totalFiles) {
+      markdown += `
+- All files generated successfully - ready for export!`;
+    }
+
+    markdown += `
+
+---
+
+*Generated by CodeScribe AI*
+`;
+
+    return markdown;
+  };
+
+  /**
    * Handle bulk generation for selected files
    * Processes files in batches of 5 concurrently
    */
-  const handleGenerateSelected = async () => {
+  const handleGenerateSelected = async (skipPreviouslyGenerated = false) => {
     const filesWithContent = multiFileState.files.filter(f => f.content && f.content.length > 0);
-    const selectedFilesWithContent = filesWithContent.filter(f => multiFileState.selectedFileIds.includes(f.id));
+    let selectedFilesWithContent = filesWithContent.filter(f => multiFileState.selectedFileIds.includes(f.id));
 
     if (selectedFilesWithContent.length === 0) {
       toastCompact.error('No files with content selected');
       return;
+    }
+
+    // Check if any selected files already have documentation (only if not explicitly choosing to skip)
+    if (!skipPreviouslyGenerated) {
+      const filesWithDocs = selectedFilesWithContent.filter(f => f.documentation);
+      const filesWithoutDocs = selectedFilesWithContent.filter(f => !f.documentation);
+
+      // If there are files with existing documentation, ask user what to do
+      if (filesWithDocs.length > 0 && filesWithoutDocs.length > 0) {
+        // Use AskUserQuestion to get user preference
+        // For now, use window.confirm as a simple solution
+        const regenerateAll = window.confirm(
+          `${filesWithDocs.length} of ${selectedFilesWithContent.length} selected files already have documentation.\n\n` +
+          `Click OK to regenerate all files.\n` +
+          `Click Cancel to only generate new documentation for files without it.`
+        );
+
+        if (!regenerateAll) {
+          // User chose to skip previously generated files
+          selectedFilesWithContent = filesWithoutDocs;
+        }
+      }
     }
 
     // Check usage quota for bulk generation
@@ -635,128 +959,156 @@ function App() {
     }
 
     const totalFiles = selectedFilesWithContent.length;
-    const BATCH_SIZE = 5;
+    const RATE_LIMIT_DELAY = 15000; // 15 seconds between requests to respect Claude API rate limits (8K tokens/min)
     let successCount = 0;
     let failureCount = 0;
     const failedFiles = [];
     const successfulFiles = []; // Track successful files with their quality scores
 
-    // Clear previous summary/errors and initialize progress
+    // Clear previous doc panel content and summaries
+    setDocumentation('');
+    setQualityScore(null);
     setBulkGenerationSummary(null);
     setBulkGenerationErrors([]);
+
+    // Initialize progress
     setBulkGenerationProgress({
       total: totalFiles,
       completed: 0,
       currentBatch: 1,
-      totalBatches: Math.ceil(totalFiles / BATCH_SIZE)
+      totalBatches: 1
     });
 
-    // Show initial progress toast
-    toastCompact.loading(`Generating documentation for ${totalFiles} file${totalFiles > 1 ? 's' : ''}...`, {
-      id: 'bulk-generation'
-    });
+    // Process files sequentially with rate limiting
+    for (let i = 0; i < selectedFilesWithContent.length; i++) {
+      const file = selectedFilesWithContent[i];
 
-    // Process files in batches of 5 concurrently
-    for (let i = 0; i < selectedFilesWithContent.length; i += BATCH_SIZE) {
-      const batch = selectedFilesWithContent.slice(i, Math.min(i + BATCH_SIZE, selectedFilesWithContent.length));
-      const batchNumber = Math.floor(i / BATCH_SIZE) + 1;
-      const totalBatches = Math.ceil(selectedFilesWithContent.length / BATCH_SIZE);
-
-      // Update progress state for banner
+      // Update progress state
       setBulkGenerationProgress({
         total: totalFiles,
         completed: i,
-        currentBatch: batchNumber,
-        totalBatches: totalBatches
+        currentBatch: 1,
+        totalBatches: 1
       });
 
-      // Update progress toast for batch
-      toastCompact.loading(
-        `Processing batch ${batchNumber}/${totalBatches} (${Math.min(i + BATCH_SIZE, totalFiles)}/${totalFiles} files)`,
-        { id: 'bulk-generation' }
-      );
-
-      // Mark all files in batch as generating
-      batch.forEach(file => {
-        multiFileState.updateFile(file.id, {
-          isGenerating: true,
-          error: null
-        });
+      // Mark file as generating
+      multiFileState.updateFile(file.id, {
+        isGenerating: true,
+        error: null
       });
 
-      // Process batch in parallel
-      const batchPromises = batch.map(async (file) => {
-        try {
-          // Generate documentation
-          const result = await generateSingleFile(file);
+      // Show which file is currently being generated
+      setCurrentlyGeneratingFile({
+        filename: file.filename,
+        index: i + 1,
+        total: totalFiles,
+        docType: file.docType
+      });
 
-          // Update file with generated documentation
-          multiFileState.updateFile(file.id, {
-            documentation: result.documentation,
-            qualityScore: result.qualityScore,
-            isGenerating: false,
-            error: null,
-            documentId: null // Will be set when saved to DB
-          });
+      // Clear previous documentation to show fresh streaming
+      setDocumentation('');
+      setQualityScore(null);
 
-          // Update usage tracking
-          if (onUsageUpdate) {
-            onUsageUpdate();
+      try {
+        // Generate documentation with streaming (users see live progress)
+        const result = await generate(file.content, file.docType, file.language, false);
+
+        const generatedAt = new Date();
+
+        // Save document to database (if authenticated)
+        let documentId = null;
+        if (isAuthenticated) {
+          try {
+            const saveResult = await documentPersistence.saveDocument({
+              filename: file.filename,
+              language: file.language,
+              fileSize: file.fileSize,
+              documentation: result.documentation,
+              qualityScore: result.qualityScore,
+              docType: file.docType,
+              origin: file.origin || 'upload',
+              provider: result.metadata?.provider || 'claude',
+              model: result.metadata?.model || 'claude-sonnet-4-5-20250929',
+              github: file.github || null,
+              llm: result.metadata || null
+            }, 'save'); // Explicitly choose to save (bypass preference check)
+
+            if (saveResult) {
+              documentId = saveResult.documentId;
+              console.log(`[App] Saved document to database: ${documentId}`);
+            }
+          } catch (saveError) {
+            console.error('[App] Failed to save document to database:', saveError);
+            // Continue even if save fails - don't block the generation
           }
-
-          return {
-            success: true,
-            file,
-            qualityScore: result.qualityScore
-          };
-
-        } catch (error) {
-          console.error(`[App] Failed to generate docs for ${file.filename}:`, error);
-
-          // Update file with error state
-          multiFileState.updateFile(file.id, {
-            isGenerating: false,
-            error: error.message
-          });
-
-          return {
-            success: false,
-            file,
-            error: error.message
-          };
         }
-      });
 
-      // Wait for batch to complete
-      const batchResults = await Promise.all(batchPromises);
+        // Update file with generated documentation
+        multiFileState.updateFile(file.id, {
+          documentation: result.documentation,
+          qualityScore: result.qualityScore,
+          isGenerating: false,
+          error: null,
+          documentId: documentId, // Set database ID if saved
+          generatedAt // Timestamp of when documentation was generated
+        });
 
-      // Count successes and failures for this batch
-      batchResults.forEach(result => {
-        if (result.success) {
-          successCount++;
-          successfulFiles.push({
-            name: result.file.filename,
-            score: result.qualityScore?.score || 0,
-            grade: result.qualityScore?.grade || 'N/A'
-          });
-        } else {
-          failureCount++;
-          failedFiles.push({
-            filename: result.file.filename,
-            fileId: result.file.id,
-            error: result.error
-          });
-        }
-      });
+        // Update usage tracking
+        refetchUsage();
 
-      // Update progress after batch completes
-      const filesCompletedSoFar = Math.min(i + BATCH_SIZE, totalFiles);
+        // Track successful file
+        successCount++;
+        successfulFiles.push({
+          name: file.filename,
+          score: result.qualityScore?.score || 0,
+          grade: result.qualityScore?.grade || 'N/A',
+          qualityScore: result.qualityScore, // Include full quality score for breakdown
+          docType: file.docType || 'README',
+          generatedAt: generatedAt,
+          fileId: file.id
+        });
+
+      } catch (error) {
+        console.error(`[App] Failed to generate docs for ${file.filename}:`, error);
+
+        // Update file with error state
+        multiFileState.updateFile(file.id, {
+          isGenerating: false,
+          error: error.message
+        });
+
+        // Track failed file
+        failureCount++;
+        failedFiles.push({
+          filename: file.filename,
+          fileId: file.id,
+          error: error.message
+        });
+      }
+
+      // Update progress after each file
       setBulkGenerationProgress({
         total: totalFiles,
-        completed: filesCompletedSoFar,
-        currentBatch: batchNumber,
-        totalBatches: totalBatches
+        completed: i + 1,
+        currentBatch: 1,
+        totalBatches: 1
       });
+
+      // Clear currently generating file indicator
+      setCurrentlyGeneratingFile(null);
+
+      // Throttle between requests (except after last file)
+      if (i < selectedFilesWithContent.length - 1) {
+        console.log(`[App] Throttling for ${RATE_LIMIT_DELAY / 1000}s to respect API rate limits...`);
+
+        // Show countdown during throttle delay
+        const delaySeconds = RATE_LIMIT_DELAY / 1000;
+        for (let remaining = delaySeconds; remaining > 0; remaining--) {
+          setThrottleCountdown(remaining);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+        setThrottleCountdown(null);
+      }
     }
 
     // Clear selection after generation
@@ -781,36 +1133,191 @@ function App() {
     }
 
     // Set summary state for banner
-    setBulkGenerationSummary({
+    const summaryData = {
       totalFiles,
       successCount,
       failCount: failureCount,
       avgQuality,
       avgGrade,
       successfulFiles
-    });
+    };
+    setBulkGenerationSummary(summaryData);
 
     // Also set errors for backward compatibility
     if (failedFiles.length > 0) {
       setBulkGenerationErrors(failedFiles);
     }
 
+    // Clear active file so the sync effect doesn't overwrite the batch summary
+    multiFileState.setActiveFile(null);
+
+    // Generate and display batch summary document in DocPanel
+    const summaryMarkdown = generateBatchSummaryDocument(summaryData, failedFiles);
+    setDocumentation(summaryMarkdown);
+    setBatchSummaryMarkdown(summaryMarkdown); // Store for navigation back from individual files
+
+    // Set a special quality score to indicate this is a batch summary
+    setQualityScore({
+      score: avgQuality,
+      grade: avgGrade,
+      breakdown: null,
+      isBatchSummary: true
+    });
+
     // Show final result toast
     if (failureCount === 0) {
-      toastCompact.success(
+      toastCompact(
         `Successfully generated documentation for ${successCount} file${successCount > 1 ? 's' : ''}`,
+        'success',
         { id: 'bulk-generation' }
       );
     } else if (successCount > 0) {
-      toastCompact.warning(
+      toastCompact(
         `Generated ${successCount} of ${totalFiles} files. ${failureCount} failed - see banner above.`,
+        'warning',
         { id: 'bulk-generation' }
       );
     } else {
-      toastCompact.error(
+      toastCompact(
         `Failed to generate documentation for all ${totalFiles} files - see banner above.`,
+        'error',
         { id: 'bulk-generation' }
       );
+    }
+  };
+
+  /**
+   * Handle clicking on a file link in the batch summary
+   * Finds the file and displays its documentation
+   * @param {string} filename - Name of the file to display
+   */
+  const handleSummaryFileClick = (filename) => {
+    const file = multiFileState.files.find(f => f.filename === filename);
+
+    if (!file) {
+      console.warn('[App] File not found in sidebar:', filename);
+      toastCompact('File not found', 'error');
+      return;
+    }
+
+    if (file.documentation) {
+      // Display the file's documentation
+      setDocumentation(file.documentation);
+      setQualityScore(file.qualityScore);
+      // Set the file as active in sidebar
+      multiFileState.setActiveFile(file.id);
+    } else {
+      console.warn('[App] File has no documentation:', filename);
+      toastCompact('Documentation not available for this file', 'error');
+    }
+  };
+
+  /**
+   * Handle returning to the batch summary from an individual file
+   */
+  const handleBackToSummary = () => {
+    if (batchSummaryMarkdown) {
+      setDocumentation(batchSummaryMarkdown);
+      // Restore the batch summary quality score
+      if (bulkGenerationSummary) {
+        setQualityScore({
+          score: bulkGenerationSummary.avgQuality,
+          grade: bulkGenerationSummary.avgGrade,
+          breakdown: null,
+          isBatchSummary: true
+        });
+      }
+      // Clear active file in sidebar
+      multiFileState.setActiveFile(null);
+    }
+  };
+
+  /**
+   * Export a single file's documentation
+   * @param {string} filename - Name of the file to export
+   */
+  const handleExportFile = (filename) => {
+    const file = multiFileState.files.find(f => f.filename === filename);
+
+    if (!file) {
+      console.warn('[App] File not found:', filename);
+      toastCompact('File not found', 'error');
+      return;
+    }
+
+    if (!file.documentation) {
+      console.warn('[App] File has no documentation:', filename);
+      toastCompact('No documentation available for this file', 'error');
+      return;
+    }
+
+    // Create a blob with the documentation content
+    const blob = new Blob([file.documentation], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+
+    // Create download link
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${file.filename}.md`;
+    document.body.appendChild(link);
+    link.click();
+
+    // Cleanup
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toastCompact(`Downloaded ${file.filename}.md`, 'success');
+  };
+
+  /**
+   * Download all generated documentation as a ZIP file
+   */
+  const handleDownloadAllDocs = async () => {
+    try {
+      // Get all files with documentation
+      const filesWithDocs = multiFileState.files.filter(f => f.documentation);
+
+      if (filesWithDocs.length === 0) {
+        toastCompact('No documentation available to download', 'error');
+        return;
+      }
+
+      // Create a new JSZip instance
+      const zip = new JSZip();
+
+      // Add each file's documentation to the ZIP
+      filesWithDocs.forEach(file => {
+        const filename = `${file.filename}.md`;
+        zip.file(filename, file.documentation);
+      });
+
+      // Also add the batch summary if it exists
+      if (batchSummaryMarkdown) {
+        const timestamp = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+        zip.file(`batch-summary-${timestamp}.md`, batchSummaryMarkdown);
+      }
+
+      // Generate the ZIP file
+      const blob = await zip.generateAsync({ type: 'blob' });
+
+      // Create download link
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const timestamp = new Date().toISOString().slice(0, 10);
+      a.download = `documentation-${timestamp}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      toastCompact(
+        `Downloaded ${filesWithDocs.length} documentation file${filesWithDocs.length > 1 ? 's' : ''}`,
+        'success'
+      );
+    } catch (error) {
+      console.error('Error creating ZIP:', error);
+      toastCompact('Failed to create ZIP file', 'error');
     }
   };
 
@@ -849,17 +1356,7 @@ function App() {
       filesUpdated++;
     });
 
-    // Show appropriate toast message
-    if (filesWithClearedDocs > 0) {
-      toastCompact.success(
-        `Applied ${newDocType} to ${filesUpdated} file${filesUpdated !== 1 ? 's' : ''}. ` +
-        `${filesWithClearedDocs} file${filesWithClearedDocs !== 1 ? 's' : ''} cleared - regenerate to update documentation.`
-      );
-    } else {
-      toastCompact.success(
-        `Applied ${newDocType} to ${filesUpdated} file${filesUpdated !== 1 ? 's' : ''}`
-      );
-    }
+    // No toast notification needed - user can see changes in file list
   };
 
   const handleUpload = () => {
@@ -1161,6 +1658,18 @@ function App() {
     for (let i = 0; i < droppedFiles.length; i++) {
       const file = droppedFiles[i];
 
+      // Validate file type and size
+      const validation = validateFile(file);
+      if (!validation.valid) {
+        console.warn('[App] File validation failed:', file.name, validation);
+        setUnsupportedFileModal({
+          isOpen: true,
+          fileName: file.name,
+          fileExtension: validation.file?.extension || ''
+        });
+        continue; // Skip this file
+      }
+
       // Check if file with same name already exists
       const existingFile = multiFileState.files.find(f => f.filename === file.name);
       if (existingFile) {
@@ -1207,6 +1716,18 @@ function App() {
     // Process all files and add to sidebar
     for (let i = 0; i < fileList.length; i++) {
       const file = fileList[i];
+
+      // Validate file type and size
+      const validation = validateFile(file);
+      if (!validation.valid) {
+        console.warn('[App] File validation failed:', file.name, validation);
+        setUnsupportedFileModal({
+          isOpen: true,
+          fileName: file.name,
+          fileExtension: validation.file?.extension || ''
+        });
+        continue; // Skip this file
+      }
 
       // Check if file with same name already exists
       const existingFile = multiFileState.files.find(f => f.filename === file.name);
@@ -1319,12 +1840,67 @@ function App() {
   };
 
   const handleClear = () => {
+    const defaultCode = '// Paste your code here or try the example below...\n\n// Example function:\nfunction calculateTotal(items) {\n  return items.reduce((sum, item) => sum + item.price, 0);\n}\n';
+    const defaultFilename = 'code.js';
+
     // Reset code to default placeholder
-    setCode('// Paste your code here or try the example below...\n\n// Example function:\nfunction calculateTotal(items) {\n  return items.reduce((sum, item) => sum + item.price, 0);\n}\n');
+    setCode(defaultCode);
     // Reset filename to default (language will be derived automatically as 'javascript')
-    setFilename('code.js');
+    setFilename(defaultFilename);
+
+    // Clear from localStorage (both global and user-scoped keys)
+    // IMPORTANT: Clear BOTH keys because initial state loads from global key on mount
+    setStorageItem(STORAGE_KEYS.EDITOR_CODE, defaultCode); // Always clear global key
+    setStorageItem(STORAGE_KEYS.EDITOR_FILENAME, defaultFilename);
+
+    if (user && user.id) {
+      // User is logged in - also clear user-scoped key
+      const key = getEditorKey(user.id, 'code');
+      if (key) {
+        setStorageItem(key, defaultCode);
+      }
+    }
+
+    // Deselect active file in sidebar (clearing means no file is active in the editor)
+    // This also triggers workspace state to save activeFileId=null to localStorage
+    multiFileState.setActiveFile(null);
+
     // Note: Does not clear documentation or quality score (those remain for reference)
   };
+
+  /**
+   * Remove a single file from workspace (keeps generated document in history)
+   */
+  const handleRemoveFile = useCallback(async (fileId) => {
+    // Remove file from workspace (persistence layer handles workspace_files table)
+    // NOTE: Does NOT delete from generated_documents - keeps doc in user's history
+    multiFileState.removeFile(fileId);
+  }, [multiFileState]);
+
+  /**
+   * Delete selected files from workspace (keeps generated documents in history)
+   * Used by both: (1) Delete button and (2) "Delete workspace" link in info banner
+   */
+  const handleDeleteSelected = useCallback(async () => {
+    const selectedIds = multiFileState.selectedFileIds;
+    if (selectedIds.length === 0) return;
+
+    const isDeletingAll = selectedIds.length === multiFileState.files.length;
+
+    // Remove files from workspace (persistence layer handles workspace_files table)
+    // NOTE: Does NOT delete from generated_documents - keeps docs in user's history
+    multiFileState.removeFiles(selectedIds);
+
+    // If deleting ALL files, also clear batch summary and documentation state
+    if (isDeletingAll) {
+      setBulkGenerationSummary(null);
+      setBatchSummaryMarkdown(null);
+      removeSessionItem('bulk_generation_summary');
+      removeSessionItem('batch_summary_markdown');
+      setDocumentation('');
+      setQualityScore(null);
+    }
+  }, [multiFileState]);
 
   // Expose test data loader to window for console access (development/testing)
   useEffect(() => {
@@ -1372,10 +1948,88 @@ function App() {
   const handleReset = useCallback(() => {
     // Clear documentation and quality score from state
     reset();
-    // Clear from localStorage (set to empty string so persistence effect doesn't re-add)
-    setStorageItem(STORAGE_KEYS.EDITOR_DOCUMENTATION, '');
+
+    // Clear from localStorage (both global and user-scoped keys)
+    // IMPORTANT: Clear BOTH keys because initial state loads from global key on mount
+    setStorageItem(STORAGE_KEYS.EDITOR_DOCUMENTATION, ''); // Always clear global keys
     setStorageItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE, '');
-  }, [reset]);
+
+    if (user && user.id) {
+      // User is logged in - also clear user-scoped keys
+      const docKey = getEditorKey(user.id, 'doc');
+      const scoreKey = getEditorKey(user.id, 'score');
+      if (docKey) setStorageItem(docKey, '');
+      if (scoreKey) setStorageItem(scoreKey, '');
+    }
+
+    // Clear batch summary if that's what's being displayed
+    if (batchSummaryMarkdown && documentation === batchSummaryMarkdown) {
+      setBatchSummaryMarkdown(null);
+      setBulkGenerationSummary(null);
+      removeSessionItem('batch_summary_markdown');
+      removeSessionItem('bulk_generation_summary');
+    }
+
+    // Deselect active file in sidebar (clearing means no file is active in the doc panel)
+    // This also triggers workspace state to save activeFileId=null to localStorage
+    multiFileState.setActiveFile(null);
+  }, [reset, multiFileState, batchSummaryMarkdown, documentation, user]);
+
+  // Memoized panel components to avoid duplication (DRY principle)
+  const codePanel = useMemo(() => (
+    <CodePanel
+      code={code}
+      onChange={setCode}
+      filename={filename}
+      language={language}
+      onFileDrop={null}
+      onClear={handleClear}
+      onSamplesClick={() => setShowSamplesModal(true)}
+      samplesButtonRef={samplesButtonRef}
+    />
+  ), [code, filename, language, samplesButtonRef]);
+
+  const docPanel = useMemo(() => (
+    <Suspense fallback={<LoadingFallback />}>
+      <DocPanel
+        documentation={documentation}
+        qualityScore={qualityScore}
+        isGenerating={isGenerating || testSkeletonMode}
+        onViewBreakdown={handleViewBreakdown}
+        onUpload={handleUpload}
+        onGithubImport={handleGithubImport}
+        onGenerate={handleGenerate}
+        onReset={handleReset}
+        bulkGenerationProgress={bulkGenerationProgress}
+        bulkGenerationSummary={bulkGenerationSummary}
+        bulkGenerationErrors={bulkGenerationErrors}
+        currentlyGeneratingFile={currentlyGeneratingFile}
+        throttleCountdown={throttleCountdown}
+        onDismissBulkErrors={() => {
+          setBulkGenerationErrors([]);
+          setBulkGenerationSummary(null);
+        }}
+        onSummaryFileClick={handleSummaryFileClick}
+        onBackToSummary={handleBackToSummary}
+        onDownloadAllDocs={handleDownloadAllDocs}
+        batchSummaryMarkdown={batchSummaryMarkdown}
+        canUseBatchProcessing={canUseBatchProcessing}
+        onExportFile={handleExportFile}
+      />
+    </Suspense>
+  ), [
+    documentation,
+    qualityScore,
+    isGenerating,
+    testSkeletonMode,
+    bulkGenerationProgress,
+    bulkGenerationSummary,
+    bulkGenerationErrors,
+    currentlyGeneratingFile,
+    throttleCountdown,
+    batchSummaryMarkdown,
+    canUseBatchProcessing
+  ]);
 
   return (
     <div className="h-screen bg-slate-50 dark:bg-slate-950 flex flex-col overflow-hidden transition-colors">
@@ -1404,32 +2058,44 @@ function App() {
 
       {/* Toast Notifications Container - Theme-aware styling */}
       <Toaster
-        position="top-right"
+        position={isMobileView ? 'top-center' : 'top-right'}
         reverseOrder={false}
         gutter={8}
         containerClassName=""
-        containerStyle={{}}
+        containerStyle={{
+          // Safe area insets for mobile devices with notches/home indicators
+          ...(isMobileView && {
+            top: 'env(safe-area-inset-top, 0px)',
+          }),
+        }}
         toastOptions={{
           // Accessibility - prevent toast container from being focusable
           ariaProps: {
             role: 'status',
             'aria-live': 'polite',
           },
+          // Mobile-optimized durations (longer than desktop for distraction)
+          duration: isMobileView ? 5000 : 4000,
           // Theme-aware default styling
           style: {
             background: effectiveTheme === 'dark' ? 'rgb(30 41 59)' : 'rgb(255 255 255)', // slate-800 : white
             color: effectiveTheme === 'dark' ? 'rgb(248 250 252)' : 'rgb(15 23 42)', // slate-50 : slate-900
             border: effectiveTheme === 'dark' ? '1px solid rgb(51 65 85)' : '1px solid rgb(203 213 225)', // slate-700 : slate-300
+            // Mobile-specific: near full-width for better readability
+            maxWidth: isMobileView ? 'calc(100vw - 32px)' : '28rem',
+            width: isMobileView ? 'auto' : undefined,
           },
           // Success toasts
           success: {
+            duration: isMobileView ? 4000 : 3000,
             iconTheme: {
               primary: effectiveTheme === 'dark' ? '#4ADE80' : '#16A34A', // green-400 : green-600
               secondary: effectiveTheme === 'dark' ? 'rgb(30 41 59)' : '#FFFFFF',
             },
           },
-          // Error toasts
+          // Error toasts - longer on mobile since errors need attention
           error: {
+            duration: isMobileView ? 7000 : 5000,
             iconTheme: {
               primary: effectiveTheme === 'dark' ? '#F87171' : '#DC2626', // red-400 : red-600
               secondary: effectiveTheme === 'dark' ? 'rgb(30 41 59)' : '#FFFFFF',
@@ -1477,6 +2143,8 @@ function App() {
         onHelpClick={() => setShowHelpModal(true)}
         showSidebarMenu={canUseBatchProcessing && isMobileView}
         onSidebarMenuClick={() => setMobileSidebarOpen(true)}
+        layout={layout}
+        onLayoutChange={handleLayoutChange}
       />
 
       {/* Email Verification Banner - Shows at top for unverified users */}
@@ -1524,7 +2192,7 @@ function App() {
                 onToggleFileSelection={multiFileState.toggleFileSelection}
                 onSelectAllFiles={multiFileState.selectAllFiles}
                 onDeselectAllFiles={multiFileState.deselectAllFiles}
-                onRemoveFile={multiFileState.removeFile}
+                onRemoveFile={handleRemoveFile}
                 onAddFile={handleMultiFileUpload}
                 hasCodeInEditor={code.trim().length > 0}
                 onFilesDrop={handleMultiFilesDrop}
@@ -1542,17 +2210,12 @@ function App() {
                     // Generate documentation for all selected files
                     handleGenerateSelected();
                   } else {
-                    // No files selected, generate from code editor
-                    handleGenerate();
+                    // No files selected, show confirmation to generate from code editor
+                    setShowGenerateFromEditorModal(true);
                   }
                 }}
-                onDeleteSelected={() => {
-                  // Delete all selected files
-                  multiFileState.selectedFileIds.forEach(fileId => {
-                    multiFileState.removeFile(fileId);
-                  });
-                  multiFileState.deselectAllFiles();
-                }}
+                onDeleteSelected={handleDeleteSelected}
+                bulkGenerationProgress={bulkGenerationProgress}
               />
 
               {/* Main Content - Full width on mobile */}
@@ -1595,43 +2258,45 @@ function App() {
 
         {/* Control Bar - Hidden in Pro+ mode (sidebar has these controls) */}
 
-        {/* Split View: Code + Documentation */}
+        {/* Mobile Tabs - Only visible on mobile (<1024px) */}
+        <div className="lg:hidden border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+          <div className="flex">
+            <button
+              type="button"
+              onClick={() => setMobileActiveTab('code')}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
+                mobileActiveTab === 'code'
+                  ? 'text-purple-600 dark:text-purple-400 border-b-2 border-purple-600 dark:border-purple-400'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
+              }`}
+            >
+              <Code2 className="w-4 h-4" />
+              <span>Code</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileActiveTab('doc')}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
+                mobileActiveTab === 'doc'
+                  ? 'text-purple-600 dark:text-purple-400 border-b-2 border-purple-600 dark:border-purple-400'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
+              }`}
+            >
+              <FileText className="w-4 h-4" />
+              <span>Documentation</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Content Area - Mobile tabs or Desktop split view */}
         <div className="flex-1 min-h-0">
-          <SplitPanel
-            leftPanel={
-              <CodePanel
-                code={code}
-                onChange={setCode}
-                filename={filename}
-                language={language}
-                onFileDrop={null}  // Disable drag-and-drop in multi-file mode - use sidebar instead
-                onClear={handleClear}
-                onSamplesClick={() => setShowSamplesModal(true)}
-                samplesButtonRef={samplesButtonRef}
-              />
-            }
-            rightPanel={
-              <Suspense fallback={<LoadingFallback />}>
-                <DocPanel
-                  documentation={documentation}
-                  qualityScore={qualityScore}
-                  isGenerating={isGenerating || testSkeletonMode}
-                  onViewBreakdown={handleViewBreakdown}
-                  onUpload={handleUpload}
-                  onGithubImport={handleGithubImport}
-                  onGenerate={handleGenerate}
-                  onReset={handleReset}
-                  bulkGenerationProgress={bulkGenerationProgress}
-                  bulkGenerationSummary={bulkGenerationSummary}
-                  bulkGenerationErrors={bulkGenerationErrors}
-                  onDismissBulkErrors={() => {
-                    setBulkGenerationErrors([]);
-                    setBulkGenerationSummary(null);
-                  }}
-                />
-              </Suspense>
-            }
-          />
+          {isMobileView ? (
+            // Mobile: Show only active tab (full screen)
+            mobileActiveTab === 'code' ? codePanel : docPanel
+          ) : (
+            // Desktop: Split view (side by side)
+            <SplitPanel leftPanel={codePanel} rightPanel={docPanel} />
+          )}
         </div>
 
               </main>
@@ -1665,7 +2330,7 @@ function App() {
                   onToggleFileSelection={multiFileState.toggleFileSelection}
                   onSelectAllFiles={multiFileState.selectAllFiles}
                   onDeselectAllFiles={multiFileState.deselectAllFiles}
-                  onRemoveFile={multiFileState.removeFile}
+                  onRemoveFile={handleRemoveFile}
                   onAddFile={handleMultiFileUpload}
                   hasCodeInEditor={code.trim().length > 0}
                   onFilesDrop={handleMultiFilesDrop}
@@ -1682,24 +2347,23 @@ function App() {
                       // Generate documentation for all selected files
                       handleGenerateSelected();
                     } else {
-                      // No files selected, generate from code editor
-                      handleGenerate();
+                      // No files selected, show confirmation to generate from code editor
+                      setShowGenerateFromEditorModal(true);
                     }
                   }}
-                  onDeleteSelected={() => {
-                    // Delete all selected files
-                    multiFileState.selectedFileIds.forEach(fileId => {
-                      multiFileState.removeFile(fileId);
-                    });
-                    multiFileState.deselectAllFiles();
-                  }}
+                  onDeleteSelected={handleDeleteSelected}
+                  bulkGenerationProgress={bulkGenerationProgress}
                 />
               </Panel>
 
-              {/* Resize Handle - Hidden when collapsed */}
-              {!sidebarCollapsed && (
-                <PanelResizeHandle className="w-1 bg-slate-200 dark:bg-slate-700 hover:bg-purple-400 dark:hover:bg-purple-600 transition-colors cursor-col-resize" />
-              )}
+              {/* Resize Handle - Always present but hidden when collapsed */}
+              <PanelResizeHandle
+                className={`w-1 transition-colors ${
+                  sidebarCollapsed
+                    ? 'bg-transparent pointer-events-none'
+                    : 'bg-slate-200 dark:bg-slate-700 hover:bg-purple-400 dark:hover:bg-purple-600 cursor-col-resize'
+                }`}
+              />
 
               {/* Main Content Panel */}
               <Panel defaultSize={sidebarCollapsed ? 97 : (100 - expandedSidebarWidth)} minSize={30}>
@@ -1741,43 +2405,95 @@ function App() {
 
                   {/* Control Bar - Hidden in Pro+ mode (sidebar has these controls) */}
 
-                  {/* Split View: Code + Documentation */}
-                  <div className="flex-1 min-h-0">
-                    <SplitPanel
-                      leftPanel={
-                        <CodePanel
-                          code={code}
-                          onChange={setCode}
-                          filename={filename}
-                          language={language}
-                          onFileDrop={null}  // Disable drag-and-drop in multi-file mode - use sidebar instead
-                          onClear={handleClear}
-                          onSamplesClick={() => setShowSamplesModal(true)}
-                          samplesButtonRef={samplesButtonRef}
-                        />
-                      }
-                      rightPanel={
-                        <Suspense fallback={<LoadingFallback />}>
-                          <DocPanel
-                            documentation={documentation}
-                            qualityScore={qualityScore}
-                            isGenerating={isGenerating || testSkeletonMode}
-                            onViewBreakdown={handleViewBreakdown}
-                            onUpload={handleUpload}
-                            onGithubImport={handleGithubImport}
-                            onGenerate={handleGenerate}
-                            onReset={handleReset}
-                            bulkGenerationProgress={bulkGenerationProgress}
-                            bulkGenerationSummary={bulkGenerationSummary}
-                            bulkGenerationErrors={bulkGenerationErrors}
-                            onDismissBulkErrors={() => {
-                              setBulkGenerationErrors([]);
-                              setBulkGenerationSummary(null);
-                            }}
+                  {/* Layout Views: Split | Code Only | Doc Only */}
+                  <div className="flex-1 min-h-0 transition-all duration-300">
+                    {layout === 'split' ? (
+                      // Split View: Code + Documentation
+                      <SplitPanel
+                        leftPanel={
+                          <CodePanel
+                            code={code}
+                            onChange={setCode}
+                            filename={filename}
+                            language={language}
+                            onFileDrop={null}  // Disable drag-and-drop in multi-file mode - use sidebar instead
+                            onClear={handleClear}
+                            onSamplesClick={() => setShowSamplesModal(true)}
+                            samplesButtonRef={samplesButtonRef}
                           />
-                        </Suspense>
-                      }
-                    />
+                        }
+                        rightPanel={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <DocPanel
+                              documentation={documentation}
+                              qualityScore={qualityScore}
+                              isGenerating={isGenerating || testSkeletonMode}
+                              onViewBreakdown={handleViewBreakdown}
+                              onUpload={handleUpload}
+                              onGithubImport={handleGithubImport}
+                              onGenerate={handleGenerate}
+                              onReset={handleReset}
+                              bulkGenerationProgress={bulkGenerationProgress}
+                              bulkGenerationSummary={bulkGenerationSummary}
+                              bulkGenerationErrors={bulkGenerationErrors}
+                              currentlyGeneratingFile={currentlyGeneratingFile}
+                              throttleCountdown={throttleCountdown}
+                              onDismissBulkErrors={() => {
+                                setBulkGenerationErrors([]);
+                                setBulkGenerationSummary(null);
+                              }}
+                              onSummaryFileClick={handleSummaryFileClick}
+                              onBackToSummary={handleBackToSummary}
+                              onDownloadAllDocs={handleDownloadAllDocs}
+                              batchSummaryMarkdown={batchSummaryMarkdown}
+                              canUseBatchProcessing={canUseBatchProcessing}
+                              onExportFile={handleExportFile}
+                            />
+                          </Suspense>
+                        }
+                      />
+                    ) : layout === 'code' ? (
+                      // Code Only View
+                      <CodePanel
+                        code={code}
+                        onChange={setCode}
+                        filename={filename}
+                        language={language}
+                        onFileDrop={null}
+                        onClear={handleClear}
+                        onSamplesClick={() => setShowSamplesModal(true)}
+                        samplesButtonRef={samplesButtonRef}
+                      />
+                    ) : (
+                      // Doc Only View
+                      <Suspense fallback={<LoadingFallback />}>
+                        <DocPanel
+                          documentation={documentation}
+                          qualityScore={qualityScore}
+                          isGenerating={isGenerating || testSkeletonMode}
+                          onViewBreakdown={handleViewBreakdown}
+                          onUpload={handleUpload}
+                          onGithubImport={handleGithubImport}
+                          onGenerate={handleGenerate}
+                          onReset={handleReset}
+                          bulkGenerationProgress={bulkGenerationProgress}
+                          bulkGenerationSummary={bulkGenerationSummary}
+                          bulkGenerationErrors={bulkGenerationErrors}
+                          currentlyGeneratingFile={currentlyGeneratingFile}
+                          throttleCountdown={throttleCountdown}
+                          onDismissBulkErrors={() => {
+                            setBulkGenerationErrors([]);
+                            setBulkGenerationSummary(null);
+                          }}
+                          onSummaryFileClick={handleSummaryFileClick}
+                          onBackToSummary={handleBackToSummary}
+                          onDownloadAllDocs={handleDownloadAllDocs}
+                          batchSummaryMarkdown={batchSummaryMarkdown}
+                          canUseBatchProcessing={canUseBatchProcessing}
+                          onExportFile={handleExportFile}
+                        />
+                      </Suspense>
+                    )}
                   </div>
 
                 </main>
@@ -1834,10 +2550,41 @@ function App() {
               generateDisabled={!code.trim()}
             />
 
-            {/* Split View: Code + Documentation */}
+            {/* Mobile Tabs - Only visible on mobile (<1024px) */}
+            <div className="lg:hidden border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+              <div className="flex">
+                <button
+                  type="button"
+                  onClick={() => setMobileActiveTab('code')}
+                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
+                    mobileActiveTab === 'code'
+                      ? 'text-purple-600 dark:text-purple-400 border-b-2 border-purple-600 dark:border-purple-400'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
+                  }`}
+                >
+                  <Code2 className="w-4 h-4" />
+                  <span>Code</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMobileActiveTab('doc')}
+                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
+                    mobileActiveTab === 'doc'
+                      ? 'text-purple-600 dark:text-purple-400 border-b-2 border-purple-600 dark:border-purple-400'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
+                  }`}
+                >
+                  <FileText className="w-4 h-4" />
+                  <span>Documentation</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Content Area - Mobile tabs or Desktop split view */}
             <div className="flex-1 min-h-0">
-              <SplitPanel
-                leftPanel={
+              {isMobileView ? (
+                // Mobile: Show only active tab (full screen)
+                mobileActiveTab === 'code' ? (
                   <CodePanel
                     code={code}
                     onChange={setCode}
@@ -1848,8 +2595,7 @@ function App() {
                     onSamplesClick={() => setShowSamplesModal(true)}
                     samplesButtonRef={samplesButtonRef}
                   />
-                }
-                rightPanel={
+                ) : (
                   <Suspense fallback={<LoadingFallback />}>
                     <DocPanel
                       documentation={documentation}
@@ -1863,14 +2609,67 @@ function App() {
                       bulkGenerationProgress={bulkGenerationProgress}
                       bulkGenerationSummary={bulkGenerationSummary}
                       bulkGenerationErrors={bulkGenerationErrors}
+                      currentlyGeneratingFile={currentlyGeneratingFile}
+                      throttleCountdown={throttleCountdown}
                       onDismissBulkErrors={() => {
                         setBulkGenerationErrors([]);
                         setBulkGenerationSummary(null);
                       }}
+                      onSummaryFileClick={handleSummaryFileClick}
+                      onBackToSummary={handleBackToSummary}
+                      onDownloadAllDocs={handleDownloadAllDocs}
+                      batchSummaryMarkdown={batchSummaryMarkdown}
+                      canUseBatchProcessing={canUseBatchProcessing}
+                      onExportFile={handleExportFile}
                     />
                   </Suspense>
-                }
-              />
+                )
+              ) : (
+                // Desktop: Split view (side by side)
+                <SplitPanel
+                  leftPanel={
+                    <CodePanel
+                      code={code}
+                      onChange={setCode}
+                      filename={filename}
+                      language={language}
+                      onFileDrop={handleFileDrop}
+                      onClear={handleClear}
+                      onSamplesClick={() => setShowSamplesModal(true)}
+                      samplesButtonRef={samplesButtonRef}
+                    />
+                  }
+                  rightPanel={
+                    <Suspense fallback={<LoadingFallback />}>
+                      <DocPanel
+                        documentation={documentation}
+                        qualityScore={qualityScore}
+                        isGenerating={isGenerating || testSkeletonMode}
+                        onViewBreakdown={handleViewBreakdown}
+                        onUpload={handleUpload}
+                        onGithubImport={handleGithubImport}
+                        onGenerate={handleGenerate}
+                        onReset={handleReset}
+                        bulkGenerationProgress={bulkGenerationProgress}
+                        bulkGenerationSummary={bulkGenerationSummary}
+                        bulkGenerationErrors={bulkGenerationErrors}
+                        currentlyGeneratingFile={currentlyGeneratingFile}
+                        throttleCountdown={throttleCountdown}
+                        onDismissBulkErrors={() => {
+                          setBulkGenerationErrors([]);
+                          setBulkGenerationSummary(null);
+                        }}
+                        onSummaryFileClick={handleSummaryFileClick}
+                        onBackToSummary={handleBackToSummary}
+                        onDownloadAllDocs={handleDownloadAllDocs}
+                        batchSummaryMarkdown={batchSummaryMarkdown}
+                        canUseBatchProcessing={canUseBatchProcessing}
+                        onExportFile={handleExportFile}
+                      />
+                    </Suspense>
+                  }
+                />
+              )}
             </div>
           </main>
         )}
@@ -1972,6 +2771,36 @@ function App() {
                   </p>
                 </div>
               </div>
+            }
+          />
+        </Suspense>
+      )}
+
+      {/* Confirmation Modal for Generating from Code Editor */}
+      {showGenerateFromEditorModal && (
+        <Suspense fallback={<ModalLoadingFallback />}>
+          <ConfirmationModal
+            isOpen={showGenerateFromEditorModal}
+            onClose={() => setShowGenerateFromEditorModal(false)}
+            onConfirm={() => {
+              setShowGenerateFromEditorModal(false);
+              // Set progress to show spinner on Generate Selected button
+              setBulkGenerationProgress({
+                total: 1,
+                completed: 0,
+                currentBatch: 1,
+                totalBatches: 1
+              });
+              handleGenerate();
+            }}
+            title="No Files Selected"
+            variant="info"
+            confirmLabel="Generate from Editor"
+            cancelLabel="Cancel"
+            message={
+              <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+                No files are currently selected in your workspace. Would you like to generate documentation for the code in your editor instead?
+              </p>
             }
           />
         </Suspense>

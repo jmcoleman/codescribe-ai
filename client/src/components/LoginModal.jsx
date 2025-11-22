@@ -10,7 +10,7 @@ import { useState, useEffect, useRef } from 'react';
 import { flushSync } from 'react-dom';
 import { Button } from './Button';
 import { useAuth } from '../contexts/AuthContext';
-import { toastCompact } from '../utils/toast';
+import { toastWelcomeBack } from '../utils/toastWithHistory';
 import { trackOAuth } from '../utils/analytics';
 import { STORAGE_KEYS, getStorageItem, setSessionItem, getSessionItem, removeSessionItem } from '../constants/storage';
 import { API_URL } from '../config/api';
@@ -199,7 +199,7 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup, onSwitchToForgot
       const result = await login(email.trim(), password);
 
       if (result.success) {
-        toastCompact('Welcome back!', 'success');
+        toastWelcomeBack();
 
         // Check for pending subscription intent (from pricing page)
         const pendingSubscriptionStr = getSessionItem(STORAGE_KEYS.PENDING_SUBSCRIPTION);

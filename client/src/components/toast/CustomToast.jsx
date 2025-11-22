@@ -2,6 +2,13 @@ import React from 'react';
 import { X, CheckCircle2, AlertCircle, Info, AlertTriangle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
+// Waving hand emoji component for welcome toast
+const WavingHand = ({ className }) => (
+  <span className={`${className} text-2xl flex items-center justify-center`} aria-label="waving hand">
+    👋
+  </span>
+);
+
 /**
  * Base custom toast component with rich content support
  *
@@ -61,6 +68,15 @@ export const CustomToast = ({
       borderColor: 'border-slate-200 dark:border-slate-700',
       ringColor: 'focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400',
       shadowColor: 'shadow-indigo-100 dark:shadow-indigo-900/30',
+    },
+    welcome: {
+      icon: WavingHand,
+      iconColor: '', // Not needed for emoji
+      iconBgColor: 'bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30',
+      bgColor: 'bg-white dark:bg-slate-800',
+      borderColor: 'border-slate-200 dark:border-slate-700',
+      ringColor: 'focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400',
+      shadowColor: 'shadow-purple-100 dark:shadow-purple-900/30',
     },
   };
 

@@ -25,6 +25,7 @@ import {
   toastCopied as originalToastCopied,
   toastFileUploaded as originalToastFileUploaded,
   toastDocGenerated as originalToastDocGenerated,
+  toastWelcomeBack as originalToastWelcomeBack,
   toastRateLimited as originalToastRateLimited,
   toastNetworkError as originalToastNetworkError,
   toastCompact as originalToastCompact,
@@ -139,6 +140,15 @@ export const toastDocGenerated = (grade, score) => {
     'Documentation generated',
     id
   );
+  return id;
+};
+
+/**
+ * Welcome back toast with history tracking
+ */
+export const toastWelcomeBack = () => {
+  const id = originalToastWelcomeBack();
+  trackToast('success', 'Welcome back!', null, id);
   return id;
 };
 

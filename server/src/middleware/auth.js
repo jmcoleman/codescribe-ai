@@ -7,6 +7,7 @@
 
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import { getEffectiveTier } from '../utils/tierOverride.js';
 
 /**
  * Require authentication via JWT
@@ -38,7 +39,11 @@ const requireAuth = async (req, res, next) => {
     }
 
     // User object from database already includes override fields
-    req.user = user;
+    // Add effectiveTier for easy access (considers tier overrides)
+    req.user = {
+      ...user,
+      effectiveTier: getEffectiveTier(user)
+    };
 
     return next();
   } catch (error) {
@@ -80,7 +85,11 @@ const optionalAuth = async (req, res, next) => {
       const user = await User.findById(decoded.sub);
 
       if (user) {
-        req.user = user;
+        // Add effectiveTier for easy access (considers tier overrides)
+        req.user = {
+          ...user,
+          effectiveTier: getEffectiveTier(user)
+        };
       }
     }
   } catch (error) {
@@ -116,10 +125,8 @@ const requireTier = (requiredTier) => {
       });
     }
 
-    // Import getEffectiveTier to support tier overrides
-    const { getEffectiveTier } = await import('../utils/tierOverride.js');
-    const effectiveTier = getEffectiveTier(req.user);
-
+    // Use effectiveTier from req.user (set by auth middleware)
+    const effectiveTier = req.user.effectiveTier;
     const userTierIndex = tierHierarchy.indexOf(effectiveTier);
 
     if (userTierIndex < requiredIndex) {
@@ -150,7 +157,7 @@ const validateBody = (schema) => {
       const value = req.body[field];
 
       // Check required fields
-      if (validator.required && (!value || value.trim() === '')) {
+      if (validator.required && (!value || (typeof value === 'string' && value.trim() === ''))) {
         errors[field] = `${field} is required`;
         continue;
       }

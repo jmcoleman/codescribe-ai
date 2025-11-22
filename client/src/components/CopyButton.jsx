@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Copy, Check } from 'lucide-react';
 import { toastError } from '../utils/toast';
+import { Tooltip } from './Tooltip';
 
 /**
  * CopyButton - Enterprise-grade copy-to-clipboard button
@@ -112,32 +113,32 @@ export function CopyButton({
   const iconSize = iconSizes[size];
 
   return (
-    <button
-      type="button"
-      data-testid="copy-btn"
-      onClick={handleCopy}
-      className={`
-        ${showLabel ? 'inline-flex items-center gap-1.5' : ''}
-        ${sizeClasses[size]}
-        ${variantClasses[variant]}
-        ${showLabel ? 'font-medium' : ''}
-        rounded-lg
-        transition-all duration-200
-        hover:scale-[1.02]
-        active:scale-[0.98]
-        focus:outline-none
-        focus-visible:ring-2
-        focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400
-        focus-visible:ring-offset-2
-        focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-800
-        motion-reduce:transition-none
-        ${!showLabel ? 'relative' : ''}
-        ${copied ? 'pointer-events-none' : ''}
-        ${className}
-      `}
-      aria-label={copied ? 'Copied!' : ariaLabel}
-      title={copied ? 'Copied!' : ariaLabel}
-    >
+    <Tooltip content={copied ? 'Copied!' : ariaLabel}>
+      <button
+        type="button"
+        data-testid="copy-btn"
+        onClick={handleCopy}
+        className={`
+          ${showLabel ? 'inline-flex items-center gap-1.5' : ''}
+          ${sizeClasses[size]}
+          ${variantClasses[variant]}
+          ${showLabel ? 'font-medium' : ''}
+          rounded-lg
+          transition-all duration-200
+          hover:scale-[1.02]
+          active:scale-[0.98]
+          focus:outline-none
+          focus-visible:ring-2
+          focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400
+          focus-visible:ring-offset-2
+          focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-800
+          motion-reduce:transition-none
+          ${!showLabel ? 'relative' : ''}
+          ${copied ? 'pointer-events-none' : ''}
+          ${className}
+        `}
+        aria-label={copied ? 'Copied!' : ariaLabel}
+      >
       {/* Screen reader announcement */}
       <span className="sr-only" role="status" aria-live="polite" aria-atomic="true">
         {copied && 'Copied to clipboard'}
@@ -174,6 +175,7 @@ export function CopyButton({
         </span>
       )}
     </button>
+    </Tooltip>
   );
 }
 

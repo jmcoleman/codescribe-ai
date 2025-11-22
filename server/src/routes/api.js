@@ -134,7 +134,7 @@ router.post('/generate', optionalAuth, rateLimitBypass, apiLimiter, generationLi
       language: language || 'javascript',
       streaming: false,
       isDefaultCode: isDefaultCode === true, // Cache user message if this is default/example code
-      userTier: req.user?.tier || 'free' // Pass user tier for attribution
+      userTier: req.user?.effectiveTier || 'free' // Pass effective tier for attribution (includes overrides)
     });
 
     // Track usage after successful generation
@@ -183,14 +183,14 @@ router.post('/generate-stream', optionalAuth, rateLimitBypass, apiLimiter, gener
 
     res.write(`data: ${JSON.stringify({ type: 'connected' })}\n\n`);
 
-    const userTier = req.user?.tier || 'free';
+    const userTier = req.user?.effectiveTier || 'free';
 
     const result = await docGenerator.generateDocumentation(code, {
       docType: docType || 'README',
       language: language || 'javascript',
       streaming: true,
       isDefaultCode: isDefaultCode === true, // Cache user message if this is default/example code
-      userTier, // Pass user tier for attribution
+      userTier, // Pass effective tier for attribution (includes overrides)
       onChunk: (chunk) => {
         res.write(`data: ${JSON.stringify({
           type: 'chunk',
@@ -956,8 +956,7 @@ router.post('/github/files-batch', requireAuth, apiLimiter, requireFeature('batc
     }
 
     // Check tier-based batch limit
-    const { getEffectiveTier } = await import('../utils/tierOverride.js');
-    const userTier = getEffectiveTier(req.user);
+    const userTier = req.user?.effectiveTier || 'free';
 
     const BATCH_LIMITS = {
       free: 1,

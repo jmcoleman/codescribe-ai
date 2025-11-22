@@ -9,7 +9,7 @@ import { MoreVertical, Trash2, Download, History, RotateCw, Sparkles, Info } fro
  * Actions (in order):
  * - Generate - Generate documentation for this file (if not generated)
  * - Regenerate - Re-generate documentation (if already generated)
- * - Download Docs - Download .md file (if docs exist)
+ * - Download - Download .md file (if docs exist)
  * - View Details - View detailed file metadata (keyboard shortcut: Cmd/Ctrl+I)
  * - View History - View document in usage dashboard (if documentId exists)
  * - Delete - Remove file from list
@@ -156,7 +156,7 @@ export function FileActions({ file, onRemove, onGenerate, onViewDetails }) {
             </button>
           )}
 
-          {/* Download Docs */}
+          {/* Download */}
           {documentation && (
             <button
               type="button"
@@ -165,7 +165,7 @@ export function FileActions({ file, onRemove, onGenerate, onViewDetails }) {
               role="menuitem"
             >
               <Download className="w-4 h-4" />
-              Download Docs
+              Download
             </button>
           )}
 

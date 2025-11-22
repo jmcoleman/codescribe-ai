@@ -30,6 +30,7 @@ export const STORAGE_KEYS = {
   SIDEBAR_MODE: 'cs_ui_sidebar',
   SIDEBAR_WIDTH: 'cs_ui_sidebar_width',
   THEME_PREFERENCE: 'cs_ui_theme',
+  LAYOUT_MODE: 'cs_ui_layout', // 'split' | 'code' | 'doc'
 
   // Editor State (localStorage - persists code/docs across refreshes)
   // Privacy-sensitive: cs_ed_code, cs_ed_doc, cs_ed_score are user-scoped

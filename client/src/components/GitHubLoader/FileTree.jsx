@@ -11,6 +11,7 @@ import { isFileSupported } from '../../services/githubService';
 export function FileTree({
   tree,
   onFileSelect,
+  onFileClick, // New: handles clicks with keyboard modifiers (Ctrl/Cmd, Shift)
   selectedFile,
   repository,
   expandedPaths,
@@ -200,6 +201,7 @@ export function FileTree({
           <TreeNode
             items={filteredTree}
             onFileSelect={onFileSelect}
+            onFileClick={onFileClick}
             selectedFile={selectedFile}
             selectedFileRef={selectedFileRef}
             expandedPaths={expandedPaths}
@@ -227,6 +229,7 @@ export function FileTree({
 function TreeNode({
   items,
   onFileSelect,
+  onFileClick, // New: handles clicks with keyboard modifiers
   selectedFile,
   selectedFileRef,
   expandedPaths,
@@ -284,12 +287,17 @@ function TreeNode({
 
               <button
                 ref={isSingleSelected ? selectedFileRef : null}
-                onClick={() => {
+                onClick={(e) => {
                   if (isFolder) {
                     toggleFolder(item.path);
                   } else {
-                    // Always call onFileSelect to show preview (works in both modes)
-                    onFileSelect(item);
+                    // If onFileClick is provided, use it (supports keyboard modifiers)
+                    // Otherwise fall back to onFileSelect
+                    if (onFileClick) {
+                      onFileClick(item, e);
+                    } else {
+                      onFileSelect(item);
+                    }
                   }
                 }}
                 className={`flex-1 flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm transition-colors ${
@@ -336,6 +344,7 @@ function TreeNode({
               <TreeNode
                 items={item.children}
                 onFileSelect={onFileSelect}
+                onFileClick={onFileClick}
                 selectedFile={selectedFile}
                 selectedFileRef={selectedFileRef}
                 expandedPaths={expandedPaths}

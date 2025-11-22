@@ -1,8 +1,9 @@
-import { X, LogOut, FileText, Shield, BarChart3, Settings } from 'lucide-react';
+import { X, LogOut, FileText, Shield, BarChart3, Settings, SlidersHorizontal } from 'lucide-react';
 import { useEffect, useRef, useState, lazy, Suspense } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from './Button';
 import { useAuth } from '../contexts/AuthContext';
+import { AppearanceModal } from './AppearanceModal';
 
 // Lazy load auth modals
 const LoginModal = lazy(() => import('./LoginModal').then(m => ({ default: m.LoginModal })));
@@ -18,9 +19,18 @@ export function MobileMenu({ isOpen, onClose, onHelpClick }) {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showSignupModal, setShowSignupModal] = useState(false);
   const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
+  const [showAppearanceModal, setShowAppearanceModal] = useState(false);
   const closeButtonRef = useRef(null);
   const previousFocusRef = useRef(null);
   const [allowClickOutside, setAllowClickOutside] = useState(false);
+
+  // List of admin emails (must match server-side list)
+  const ADMIN_EMAILS = [
+    'jenni.m.coleman@gmail.com',
+  ];
+
+  // Check if current user is an admin
+  const isAdmin = isAuthenticated && user?.email && ADMIN_EMAILS.includes(user.email);
 
   // Context-aware pricing button label
   const getPricingLabel = () => {
@@ -78,6 +88,11 @@ export function MobileMenu({ isOpen, onClose, onHelpClick }) {
 
   const handlePricingClick = () => {
     navigate('/pricing');
+    onClose();
+  };
+
+  const handleAppearanceClick = () => {
+    setShowAppearanceModal(true);
     onClose();
   };
 
@@ -166,6 +181,16 @@ export function MobileMenu({ isOpen, onClose, onHelpClick }) {
               Help & FAQ
             </MenuItem>
 
+            {/* Appearance - for unauthenticated users only */}
+            {!isAuthenticated && (
+              <MenuItemWithIcon
+                icon={SlidersHorizontal}
+                onClick={handleAppearanceClick}
+              >
+                Appearance
+              </MenuItemWithIcon>
+            )}
+
             {/* Authenticated user links */}
             {ENABLE_AUTH && isAuthenticated && (
               <>
@@ -173,6 +198,14 @@ export function MobileMenu({ isOpen, onClose, onHelpClick }) {
                 <MenuLink to="/usage" icon={BarChart3}>
                   Usage Dashboard
                 </MenuLink>
+
+                {/* Admin Dashboard - Only visible to admins */}
+                {isAdmin && (
+                  <MenuLink to="/admin/usage" icon={Shield}>
+                    Admin Dashboard
+                  </MenuLink>
+                )}
+
                 <MenuLink to="/settings" icon={Settings}>
                   Settings
                 </MenuLink>
@@ -227,6 +260,12 @@ export function MobileMenu({ isOpen, onClose, onHelpClick }) {
         </>
       )}
 
+      {/* Appearance Modal - for unauthenticated users */}
+      <AppearanceModal
+        isOpen={showAppearanceModal}
+        onClose={() => setShowAppearanceModal(false)}
+      />
+
       {/* Auth Modals - Rendered at same level as menu but with higher z-index */}
       {ENABLE_AUTH && (
         <>
@@ -272,6 +311,19 @@ function MenuItem({ children, onClick, onMouseEnter }) {
       onMouseEnter={onMouseEnter}
       className="w-full px-3 py-2 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 hover:translate-x-1 rounded-lg transition-all duration-200 motion-reduce:transition-none active:bg-slate-100 dark:active:bg-slate-700"
     >
+      {children}
+    </button>
+  );
+}
+
+function MenuItemWithIcon({ icon: Icon, children, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex items-center gap-2 w-full px-3 py-2 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 hover:translate-x-1 rounded-lg transition-all duration-200 motion-reduce:transition-none active:bg-slate-100 dark:active:bg-slate-700"
+    >
+      <Icon className="w-4 h-4 text-slate-500 dark:text-slate-400" aria-hidden="true" />
       {children}
     </button>
   );
