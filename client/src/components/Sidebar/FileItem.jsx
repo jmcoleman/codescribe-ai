@@ -80,13 +80,13 @@ export function FileItem({ file, isActive, isSelected, onSelect, onToggleSelecti
   // Status icon
   const StatusIcon = () => {
     if (isGenerating) {
-      return <Loader2 className="w-4 h-4 text-indigo-600 dark:text-indigo-400 animate-spin" />;
+      return <Loader2 className="w-4 h-4 text-slate-400 dark:text-slate-500 animate-spin" />;
     }
     if (hasError) {
-      return <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400" />;
+      return <AlertCircle className="w-4 h-4 text-slate-400 dark:text-slate-500" />;
     }
     if (hasDocumentation) {
-      return <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />;
+      return <CheckCircle className="w-4 h-4 text-slate-400 dark:text-slate-500" />;
     }
     return <FileText className="w-4 h-4 text-slate-400 dark:text-slate-500" />;
   };
@@ -235,17 +235,17 @@ export function FileItem({ file, isActive, isSelected, onSelect, onToggleSelecti
 
           {/* Status text */}
           {isGenerating && (
-            <div className="text-xs text-indigo-600 dark:text-indigo-400 mt-1">
+            <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               Generating...
             </div>
           )}
           {hasError && (
-            <div className="text-xs text-red-600 dark:text-red-400 mt-1 truncate">
+            <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 truncate">
               {error}
             </div>
           )}
           {isSavedToDb && !isGenerating && (
-            <div className="text-xs text-green-600 dark:text-green-400 mt-1 flex items-center gap-1">
+            <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1">
               <CheckCircle className="w-3 h-3" />
               Saved to database
             </div>

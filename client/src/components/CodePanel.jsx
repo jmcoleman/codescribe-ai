@@ -1,7 +1,8 @@
 import { lazy, Suspense, useState, useRef, useEffect } from 'react';
-import { Zap, Loader2, Upload, RefreshCw, BookOpen, MoreVertical, Copy, Download } from 'lucide-react';
+import { Sparkles, Zap, Loader2, Upload, RefreshCw, BookOpen, MoreVertical, Copy, Download } from 'lucide-react';
 import { CopyButton } from './CopyButton';
 import { DownloadButton } from './DownloadButton';
+import { Tooltip } from './Tooltip';
 import { useTheme } from '../contexts/ThemeContext';
 import { getLanguageDisplayName } from '../constants/languages';
 import { sanitizeFilename } from '../utils/fileValidation';
@@ -120,33 +121,37 @@ export function CodePanel({
         </div>
         {/* Left: Filename */}
         <div className="flex items-center gap-2 min-w-0 flex-1 mr-2">
-          <span className="text-sm text-slate-600 dark:text-slate-400 truncate" title={filename}>{filename}</span>
+          <Tooltip content={filename}>
+            <span className="text-sm text-slate-600 dark:text-slate-400 truncate">{filename}</span>
+          </Tooltip>
         </div>
 
         {/* Right: Desktop buttons + Mobile menu */}
         <div className="flex items-center gap-2">
           {/* Desktop: Show all buttons when container is wide enough */}
+          {/* Wide screens: Icon + Label */}
           <div className="@[600px]:flex hidden items-center gap-2">
             {onSamplesClick && (
-              <button
-                type="button"
-                ref={samplesButtonRef}
-                onClick={() => {
-                  // Preload SamplesModal on click
-                  import('./SamplesModal').catch(() => {});
-                  onSamplesClick();
-                }}
-                onMouseEnter={() => {
-                  // Preload SamplesModal on hover
-                  import('./SamplesModal').catch(() => {});
-                }}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500 rounded-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900"
-                aria-label="Load code samples"
-                title="Load code samples"
-              >
-                <BookOpen className="w-3.5 h-3.5" aria-hidden="true" />
-                <span>Samples</span>
-              </button>
+              <Tooltip content="Load sample code">
+                <button
+                  type="button"
+                  ref={samplesButtonRef}
+                  onClick={() => {
+                    // Preload SamplesModal on click
+                    import('./SamplesModal').catch(() => {});
+                    onSamplesClick();
+                  }}
+                  onMouseEnter={() => {
+                    // Preload SamplesModal on hover
+                    import('./SamplesModal').catch(() => {});
+                  }}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500 rounded-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-909"
+                  aria-label="Load sample code"
+                >
+                  <BookOpen className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" />
+                  <span>Samples</span>
+                </button>
+              </Tooltip>
             )}
             {code && (
               <DownloadButton
@@ -163,34 +168,99 @@ export function CodePanel({
                 text={code}
                 size="md"
                 variant="outline"
-                ariaLabel="Copy code to clipboard"
+                ariaLabel="Copy code"
                 showLabel={true}
               />
             )}
             {code && !readOnly && onClear && (
-              <button
-                type="button"
-                onClick={() => {
-                  setIsClearing(true);
-                  onClear();
-                  // Reset clearing state after animation completes
-                  setTimeout(() => setIsClearing(false), 500);
-                }}
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500 rounded-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900 ${isClearing ? 'opacity-75 pointer-events-none' : ''}`}
-                aria-label="Clear editor"
-                title="Clear editor"
-              >
-                <RefreshCw
-                  className={`w-3.5 h-3.5 ${isClearing ? 'animate-spin-once' : ''}`}
-                  aria-hidden="true"
-                />
-                <span>Clear</span>
-              </button>
+              <Tooltip content="Clear code">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsClearing(true);
+                    onClear();
+                    // Reset clearing state after animation completes
+                    setTimeout(() => setIsClearing(false), 500);
+                  }}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500 rounded-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900 ${isClearing ? 'opacity-75 pointer-events-none' : ''}`}
+                  aria-label="Clear code"
+                >
+                  <RefreshCw
+                    className={`w-3.5 h-3.5 flex-shrink-0 ${isClearing ? 'animate-spin-once' : ''}`}
+                    aria-hidden="true"
+                  />
+                  <span>Clear</span>
+                </button>
+              </Tooltip>
+            )}
+          </div>
+
+          {/* Medium screens: Icon only */}
+          <div className="@[450px]:flex @[600px]:hidden hidden items-center gap-2">
+            {onSamplesClick && (
+              <Tooltip content="Load sample code">
+                <button
+                  type="button"
+                  ref={samplesButtonRef}
+                  onClick={() => {
+                    // Preload SamplesModal on click
+                    import('./SamplesModal').catch(() => {});
+                    onSamplesClick();
+                  }}
+                  onMouseEnter={() => {
+                    // Preload SamplesModal on hover
+                    import('./SamplesModal').catch(() => {});
+                  }}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500 rounded-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900"
+                  aria-label="Load sample code"
+                >
+                  <BookOpen className="w-3.5 h-3.5" aria-hidden="true" />
+                </button>
+              </Tooltip>
+            )}
+            {code && (
+              <DownloadButton
+                content={code}
+                filename={sanitizeFilename(filename)}
+                size="md"
+                variant="outline"
+                ariaLabel="Export code"
+                showLabel={false}
+              />
+            )}
+            {code && (
+              <CopyButton
+                text={code}
+                size="md"
+                variant="outline"
+                ariaLabel="Copy code"
+                showLabel={false}
+              />
+            )}
+            {code && !readOnly && onClear && (
+              <Tooltip content="Clear code">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsClearing(true);
+                    onClear();
+                    // Reset clearing state after animation completes
+                    setTimeout(() => setIsClearing(false), 500);
+                  }}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500 rounded-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900 ${isClearing ? 'opacity-75 pointer-events-none' : ''}`}
+                  aria-label="Clear code"
+                >
+                  <RefreshCw
+                    className={`w-3.5 h-3.5 ${isClearing ? 'animate-spin-once' : ''}`}
+                    aria-hidden="true"
+                  />
+                </button>
+              </Tooltip>
             )}
           </div>
 
           {/* Mobile/Narrow: Overflow menu - show when buttons are hidden */}
-          <div className="@[600px]:hidden relative" ref={mobileMenuRef}>
+          <div className="@[450px]:hidden relative" ref={mobileMenuRef}>
             <button
               type="button"
               onClick={() => setShowMobileMenu(!showMobileMenu)}
@@ -219,7 +289,7 @@ export function CodePanel({
                       setShowMobileMenu(false);
                     }}
                     className="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-inset"
-                    aria-label="Load code samples"
+                    aria-label="Load sample code"
                   >
                     <BookOpen className="w-4 h-4" aria-hidden="true" />
                     <span>Samples</span>
@@ -275,7 +345,7 @@ export function CodePanel({
                       }
                     }}
                     className="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-inset"
-                    aria-label="Copy code to clipboard"
+                    aria-label="Copy code"
                   >
                     <Copy className="w-4 h-4" aria-hidden="true" />
                     <span>Copy</span>
@@ -292,13 +362,41 @@ export function CodePanel({
                       setShowMobileMenu(false);
                     }}
                     className={`w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-inset ${isClearing ? 'opacity-75 pointer-events-none' : ''}`}
-                    aria-label="Clear editor"
+                    aria-label="Clear code"
                   >
                     <RefreshCw
                       className={`w-4 h-4 ${isClearing ? 'animate-spin-once' : ''}`}
                       aria-hidden="true"
                     />
                     <span>Clear</span>
+                  </button>
+                )}
+                {(onSamplesClick || code) && canGenerate && onGenerate && (
+                  <div className="border-t border-slate-200 dark:border-slate-700 my-1" role="separator" />
+                )}
+                {canGenerate && onGenerate && (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      onGenerate();
+                      setShowMobileMenu(false);
+                    }}
+                    disabled={isGenerating || !code.trim()}
+                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-inset"
+                    aria-label="Generate from code in editor"
+                  >
+                    {isGenerating ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+                        <span>Generating...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4" aria-hidden="true" />
+                        <span>Generate</span>
+                      </>
+                    )}
                   </button>
                 )}
               </div>

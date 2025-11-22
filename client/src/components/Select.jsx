@@ -2,7 +2,7 @@ import { Fragment } from 'react';
 import { Listbox, Transition } from '@headlessui/react';
 import { ChevronDown, Check } from 'lucide-react';
 
-export function Select({ options, value, onChange, placeholder = 'Select...', label, ariaLabel, size = 'normal' }) {
+export function Select({ options, value, onChange, placeholder = 'Select...', label, ariaLabel, size = 'normal', className = '' }) {
   const selectedOption = options.find(opt => opt.value === value);
   const accessibleLabel = ariaLabel || label;
 
@@ -13,7 +13,7 @@ export function Select({ options, value, onChange, placeholder = 'Select...', la
   };
 
   return (
-    <div className="relative">
+    <div className={`relative ${className}`}>
       <Listbox value={value} onChange={onChange}>
         {({ open }) => (
           <>

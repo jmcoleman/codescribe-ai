@@ -5,15 +5,18 @@
  * Handles adding, removing, updating files, and tracking the active file.
  *
  * Storage Strategy:
- * - Code content: React state only (in-memory, ephemeral)
- * - Generated docs: Database via useDocumentPersistence hook
+ * - Code content: React state + localStorage (persist across navigation)
+ * - Generated docs: React state + localStorage (persist across navigation) + Database (long-term)
  * - UI state: localStorage (sidebar expanded, panel sizes)
  *
  * @returns {Object} Multi-file state and operations
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+
+// sessionStorage key for workspace state (clears on browser close)
+const WORKSPACE_STATE_KEY = 'codescribe_workspace_state';
 
 /**
  * File object structure:
@@ -21,7 +24,7 @@ import { v4 as uuidv4 } from 'uuid';
  *   id: string,              // UUID for client-side tracking
  *   filename: string,         // Original filename
  *   language: string,         // Programming language
- *   content: string,          // Source code (in-memory only)
+ *   content: string,          // Source code (persisted to sessionStorage)
  *   documentation: string,    // Generated docs (cached from DB)
  *   qualityScore: object,     // Quality score (cached from DB)
  *   docType: string,          // README | JSDOC | API | ARCHITECTURE
@@ -36,9 +39,67 @@ import { v4 as uuidv4 } from 'uuid';
  */
 
 export function useMultiFileState() {
-  const [files, setFiles] = useState([]);
-  const [activeFileId, setActiveFileId] = useState(null);
-  const [selectedFileIds, setSelectedFileIds] = useState([]);
+  // Load initial state from sessionStorage (persists across refresh, clears on browser close)
+  const loadInitialState = () => {
+    try {
+      const saved = sessionStorage.getItem(WORKSPACE_STATE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        console.log('[useMultiFileState] Loading workspace from sessionStorage:', {
+          fileCount: parsed.files?.length || 0,
+          activeFileId: parsed.activeFileId,
+          selectedCount: parsed.selectedFileIds?.length || 0
+        });
+        return {
+          files: parsed.files || [],
+          activeFileId: parsed.activeFileId || null,
+          selectedFileIds: parsed.selectedFileIds || []
+        };
+      }
+    } catch (error) {
+      console.error('[useMultiFileState] Error loading workspace from sessionStorage:', error);
+    }
+    console.log('[useMultiFileState] No saved workspace found, starting fresh');
+    return { files: [], activeFileId: null, selectedFileIds: [] };
+  };
+
+  const initialState = loadInitialState();
+  const [files, setFiles] = useState(initialState.files);
+  const [activeFileId, setActiveFileId] = useState(initialState.activeFileId);
+  const [selectedFileIds, setSelectedFileIds] = useState(initialState.selectedFileIds);
+
+  // Clear any old localStorage data on mount (migration cleanup)
+  useEffect(() => {
+    try {
+      localStorage.removeItem(WORKSPACE_STATE_KEY);
+    } catch (error) {
+      // Ignore errors
+    }
+  }, []); // Only run once on mount
+
+  // Save to sessionStorage whenever state changes (persists across refresh, clears on browser close)
+  useEffect(() => {
+    try {
+      const state = {
+        files: files.map(f => ({
+          ...f,
+          // Always persist content to sessionStorage (clears on browser close for privacy)
+          // Don't persist transient state
+          isGenerating: false, // Always reset generating state
+          error: null // Clear errors on reload
+        })),
+        activeFileId,
+        selectedFileIds
+      };
+      sessionStorage.setItem(WORKSPACE_STATE_KEY, JSON.stringify(state));
+      console.log('[useMultiFileState] Saved workspace to sessionStorage:', files.length, 'files');
+    } catch (error) {
+      console.error('[useMultiFileState] Error saving workspace to sessionStorage:', error);
+      if (error.name === 'QuotaExceededError') {
+        console.warn('[useMultiFileState] sessionStorage quota exceeded');
+      }
+    }
+  }, [files, activeFileId, selectedFileIds]);
 
   /**
    * Add a new file to the list
@@ -120,21 +181,77 @@ export function useMultiFileState() {
     setFiles(prev => {
       const filtered = prev.filter(f => f.id !== fileId);
 
-      // If removing active file, select another
-      if (fileId === activeFileId) {
-        const currentIndex = prev.findIndex(f => f.id === fileId);
-        if (filtered.length > 0) {
-          // Select next file, or previous if at end
-          const nextIndex = currentIndex < filtered.length ? currentIndex : currentIndex - 1;
-          setActiveFileId(filtered[nextIndex]?.id || null);
-        } else {
-          setActiveFileId(null);
-        }
+      // Immediately update sessionStorage synchronously to prevent race conditions
+      try {
+        const newActiveFileId = fileId === activeFileId ? null : activeFileId;
+
+        const state = {
+          files: filtered.map(f => ({
+            ...f,
+            isGenerating: false,
+            error: null
+          })),
+          activeFileId: newActiveFileId,
+          selectedFileIds
+        };
+        sessionStorage.setItem(WORKSPACE_STATE_KEY, JSON.stringify(state));
+        console.log('[useMultiFileState] Immediately saved after single file removal:', filtered.length, 'files');
+      } catch (error) {
+        console.error('[useMultiFileState] Error immediately saving to sessionStorage:', error);
       }
 
       return filtered;
     });
-  }, [activeFileId]);
+
+    // If removing active file, clear the panels (don't auto-select another file)
+    if (fileId === activeFileId) {
+      setActiveFileId(null);
+    }
+  }, [activeFileId, selectedFileIds]);
+
+  /**
+   * Remove multiple files from the list (batch delete)
+   * @param {string[]} fileIds - Array of file IDs to remove
+   */
+  const removeFiles = useCallback((fileIds) => {
+    console.log('[useMultiFileState] Removing files:', fileIds.length);
+    const fileIdsSet = new Set(fileIds);
+
+    setFiles(prev => {
+      const filtered = prev.filter(f => !fileIdsSet.has(f.id));
+      console.log('[useMultiFileState] Files after removal:', filtered.length);
+
+      // Immediately update sessionStorage synchronously to prevent race conditions
+      try {
+        const newActiveFileId = activeFileId && fileIdsSet.has(activeFileId) ? null : activeFileId;
+        const newSelectedFileIds = selectedFileIds.filter(id => !fileIdsSet.has(id));
+
+        const state = {
+          files: filtered.map(f => ({
+            ...f,
+            isGenerating: false,
+            error: null
+          })),
+          activeFileId: newActiveFileId,
+          selectedFileIds: newSelectedFileIds
+        };
+        sessionStorage.setItem(WORKSPACE_STATE_KEY, JSON.stringify(state));
+        console.log('[useMultiFileState] Immediately saved to sessionStorage:', filtered.length, 'files');
+      } catch (error) {
+        console.error('[useMultiFileState] Error immediately saving to sessionStorage:', error);
+      }
+
+      return filtered;
+    });
+
+    // If removing active file, clear the panels
+    if (activeFileId && fileIdsSet.has(activeFileId)) {
+      setActiveFileId(null);
+    }
+
+    // Clear selections
+    setSelectedFileIds(prev => prev.filter(id => !fileIdsSet.has(id)));
+  }, [activeFileId, selectedFileIds]);
 
   /**
    * Update a file's properties
@@ -157,11 +274,28 @@ export function useMultiFileState() {
   }, []);
 
   /**
-   * Clear all files
+   * Clear all files and workspace sessionStorage
    */
   const clearFiles = useCallback(() => {
+    // Immediately clear sessionStorage synchronously BEFORE updating state
+    try {
+      sessionStorage.removeItem(WORKSPACE_STATE_KEY);
+      console.log('[useMultiFileState] Immediately cleared sessionStorage');
+    } catch (error) {
+      console.error('[useMultiFileState] Error clearing workspace from sessionStorage:', error);
+    }
+
+    // Also clear any old localStorage entries from before migration to sessionStorage
+    try {
+      localStorage.removeItem(WORKSPACE_STATE_KEY);
+    } catch (error) {
+      console.error('[useMultiFileState] Error clearing old workspace from localStorage:', error);
+    }
+
+    // Now update state
     setFiles([]);
     setActiveFileId(null);
+    setSelectedFileIds([]);
   }, []);
 
   /**
@@ -183,10 +317,11 @@ export function useMultiFileState() {
 
   /**
    * Set active file
-   * @param {string} fileId - File ID to make active
+   * @param {string|null} fileId - File ID to make active, or null to clear
    */
   const setActiveFile = useCallback((fileId) => {
-    if (files.some(f => f.id === fileId)) {
+    // Allow null to clear active file
+    if (fileId === null || files.some(f => f.id === fileId)) {
       setActiveFileId(fileId);
     }
   }, [files]);
@@ -256,6 +391,7 @@ export function useMultiFileState() {
     addFile,
     addFiles,
     removeFile,
+    removeFiles,
     updateFile,
     clearFiles,
     setActiveFile,

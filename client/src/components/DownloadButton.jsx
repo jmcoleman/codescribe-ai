@@ -1,5 +1,6 @@
 import { Download } from 'lucide-react';
 import { toastError } from '../utils/toast';
+import { Tooltip } from './Tooltip';
 
 /**
  * DownloadButton - Enterprise-grade download button
@@ -113,37 +114,38 @@ export function DownloadButton({
   const iconSize = iconSizes[size];
 
   return (
-    <button
-      type="button"
-      data-testid="download-btn"
-      onClick={handleDownload}
-      className={`
-        ${showLabel ? 'inline-flex items-center gap-1.5' : ''}
-        ${sizeClasses[size]}
-        ${variantClasses[variant]}
-        ${showLabel ? 'font-medium' : ''}
-        rounded-lg
-        transition-all duration-200
-        hover:scale-[1.02]
-        active:scale-[0.98]
-        focus:outline-none
-        focus-visible:ring-2
-        focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400
-        focus-visible:ring-offset-2
-        focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-800
-        motion-reduce:transition-none
-        ${className}
-      `}
-      aria-label={ariaLabel}
-      title={ariaLabel}
-    >
-      {/* Static Download Icon - No state transitions */}
-      <Download className={iconSize} aria-hidden="true" />
+    <Tooltip content={ariaLabel}>
+      <button
+        type="button"
+        data-testid="download-btn"
+        onClick={handleDownload}
+        className={`
+          ${showLabel ? 'inline-flex items-center gap-1.5' : ''}
+          ${sizeClasses[size]}
+          ${variantClasses[variant]}
+          ${showLabel ? 'font-medium' : ''}
+          rounded-lg
+          transition-all duration-200
+          hover:scale-[1.02]
+          active:scale-[0.98]
+          focus:outline-none
+          focus-visible:ring-2
+          focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400
+          focus-visible:ring-offset-2
+          focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-800
+          motion-reduce:transition-none
+          ${className}
+        `}
+        aria-label={ariaLabel}
+      >
+        {/* Static Download Icon - No state transitions */}
+        <Download className={iconSize} aria-hidden="true" />
 
-      {/* Optional text label */}
-      {showLabel && (
-        <span className={`${textSizes[size]} ${labelClassName}`}>Export</span>
-      )}
-    </button>
+        {/* Optional text label */}
+        {showLabel && (
+          <span className={`${textSizes[size]} ${labelClassName}`}>Export</span>
+        )}
+      </button>
+    </Tooltip>
   );
 }

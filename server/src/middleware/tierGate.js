@@ -28,15 +28,8 @@ import User from '../models/User.js';
  */
 export const requireFeature = (featureName) => {
   return async (req, res, next) => {
-    // Get user tier from auth (default to free if not authenticated)
-    // Support tier override for admin/support users
-    let userTier = req.user?.tier || 'free';
-
-    // Check for tier override (admin/support debugging)
-    if (req.user) {
-      const { getEffectiveTier } = await import('../utils/tierOverride.js');
-      userTier = getEffectiveTier(req.user);
-    }
+    // Get effective tier from auth (includes tier overrides)
+    const userTier = req.user?.effectiveTier || 'free';
 
     // Check if feature is available in user's tier
     const featureAvailable = hasFeature(userTier, featureName);
@@ -79,7 +72,7 @@ export const checkUsage = () => {
       return next();
     }
 
-    const userTier = req.user?.tier || 'free';
+    const userTier = req.user?.effectiveTier || 'free';
     const userId = req.user?.id;
     const userIdentifier = userId || `ip:${req.ip}`; // Track by user ID or IP
 
@@ -147,7 +140,7 @@ export const requireTier = (minimumTier) => {
   const tierOrder = ['free', 'pro', 'team', 'enterprise'];
 
   return (req, res, next) => {
-    const userTier = req.user?.tier || 'free';
+    const userTier = req.user?.effectiveTier || 'free';
     const userTierIndex = tierOrder.indexOf(userTier);
     const minimumTierIndex = tierOrder.indexOf(minimumTier);
 
@@ -155,7 +148,7 @@ export const requireTier = (minimumTier) => {
       return res.status(403).json({
         error: 'Upgrade Required',
         message: `This endpoint requires ${minimumTier} tier or higher.`,
-        currentTier: userTier,
+        currentTier: req.user?.tier || 'free',
         requiredTier: minimumTier,
         upgradePath: '/pricing',
       });
@@ -175,7 +168,7 @@ export const requireTier = (minimumTier) => {
  */
 export const addTierHeaders = () => {
   return async (req, res, next) => {
-    const userTier = req.user?.tier || 'free';
+    const userTier = req.user?.effectiveTier || 'free';
     const userId = req.user?.id;
     const userIdentifier = userId || `ip:${req.ip}`;
     const usage = await Usage.getUserUsage(userIdentifier);

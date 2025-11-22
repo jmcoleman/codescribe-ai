@@ -61,7 +61,8 @@ export function Sidebar({
   onGenerateSelected,
   onDeleteSelected,
   hasCodeInEditor = false,
-  onFilesDrop
+  onFilesDrop,
+  bulkGenerationProgress = null
 }) {
   // Sidebar state: 'expanded', 'collapsed' (desktop only)
   // If controlled (isCollapsedProp is defined), use prop, otherwise use local state
@@ -179,6 +180,7 @@ export function Sidebar({
             selectedFileIds={selectedFileIds}
             selectedCount={selectedCount}
             docType={docType}
+            bulkGenerationProgress={bulkGenerationProgress}
             onDocTypeChange={onDocTypeChange}
             onApplyDocType={onApplyDocType}
             onGithubImport={onGithubImport}
@@ -239,6 +241,7 @@ export function Sidebar({
             selectedFileIds={selectedFileIds}
             selectedCount={selectedCount}
             docType={docType}
+            bulkGenerationProgress={bulkGenerationProgress}
             onDocTypeChange={onDocTypeChange}
             onApplyDocType={onApplyDocType}
             onGithubImport={onGithubImport}

@@ -29,6 +29,10 @@ export function useDocGeneration(onUsageUpdate) {
     // Track start time for performance metrics
     const startTime = performance.now();
 
+    // Track generated documentation for return value
+    let generatedDoc = '';
+    let generatedScore = null;
+
     try {
       // Get auth token if available
       const token = getToken();
@@ -66,15 +70,25 @@ export function useDocGeneration(onUsageUpdate) {
         });
       }
 
-      // Handle 429 specifically
-      if (response.status === 429) {
-        const errorData = await response.json();
-        setRetryAfter(errorData.retryAfter || 60);
-        throw new Error(errorData.message || 'Rate limit exceeded');
-      }
-
+      // Handle error responses (400, 429, 500, etc.)
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        // Try to parse error response body
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch (e) {
+          // If response body isn't JSON, use generic error
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        // Handle 429 (rate limit) specifically
+        if (response.status === 429) {
+          setRetryAfter(errorData.retryAfter || 60);
+          throw new Error(errorData.message || 'Rate limit exceeded');
+        }
+
+        // For other errors (400, 500, etc.), throw with the backend's message
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
 
       // Read the stream
@@ -93,8 +107,10 @@ export function useDocGeneration(onUsageUpdate) {
             const data = JSON.parse(line.slice(6));
 
             if (data.type === 'chunk') {
+              generatedDoc += data.content; // Track locally for return value
               setDocumentation(prev => prev + data.content);
             } else if (data.type === 'complete') {
+              generatedScore = data.qualityScore; // Track locally for return value
               setQualityScore(data.qualityScore);
               setIsGenerating(false);
 
@@ -134,6 +150,12 @@ export function useDocGeneration(onUsageUpdate) {
           }
         }
       }
+
+      // Return the generated content
+      return {
+        documentation: generatedDoc,
+        qualityScore: generatedScore
+      };
     } catch (err) {
       console.error('Generation error:', err);
 
@@ -249,8 +271,11 @@ export function useDocGeneration(onUsageUpdate) {
         errorMessage,
         context: 'doc_generation',
       });
+
+      // Re-throw the error so batch generation can handle it
+      throw err;
     }
-  }, [onUsageUpdate]);
+  }, [onUsageUpdate, getToken]);
 
   const cancel = useCallback(() => {
     if (eventSourceRef.current) {

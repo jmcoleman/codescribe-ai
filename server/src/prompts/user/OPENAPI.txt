@@ -2,7 +2,7 @@ Generate comprehensive OpenAPI 3.0+ documentation for the following {{language}}
 
 {{baseContext}}
 
-Start your response with the heading "# OpenAPI Specification" followed by a brief description paragraph explaining that this is a machine-readable API specification in OpenAPI 3.0+ format that can be imported into Swagger UI, Postman, or other API tools.
+Start your response with the heading "# OpenAPI Specification" followed by a brief 1-2 sentence description explaining that this is a machine-readable API specification in OpenAPI 3.0+ format that can be imported into Swagger UI, Postman, or other API tools.
 
 Analyze the code and produce a complete OpenAPI specification that includes:
 

@@ -562,3 +562,45 @@ details[open] summary::before {
     transform: none;
   }
 }
+
+/* Details/Summary Styling for Quality Breakdown */
+.prose details {
+  @apply my-4 p-4 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800/50;
+}
+
+/* Compact variant for quality details */
+.prose details.quality-compact {
+  @apply my-2 p-2.5 text-sm;
+}
+
+.prose details summary {
+  @apply cursor-pointer select-none font-medium text-slate-900 dark:text-slate-100 hover:text-purple-600 dark:hover:text-purple-400 transition-colors;
+  list-style: none; /* Remove default marker */
+}
+
+.prose details summary::-webkit-details-marker {
+  display: none; /* Hide default marker in WebKit browsers */
+}
+
+.prose details summary::before {
+  content: '▶';
+  @apply inline-block mr-2 text-slate-400 dark:text-slate-500 transition-transform;
+}
+
+.prose details[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.prose details[open] summary {
+  @apply mb-3 pb-3 border-b border-slate-200 dark:border-slate-700;
+}
+
+/* Compact variant - tighter spacing when expanded */
+.prose details.quality-compact[open] summary {
+  @apply mb-2 pb-2;
+}
+
+/* Tighter paragraph spacing inside compact details */
+.prose details.quality-compact p {
+  @apply my-1;
+}

@@ -284,6 +284,19 @@ export const toastDocGenerated = (grade, score) => {
 };
 
 /**
+ * Welcome back toast for returning users
+ * Uses friendly hand wave icon instead of checkmark
+ *
+ * @returns {string} Toast ID
+ *
+ * @example
+ * toastWelcomeBack();
+ */
+export const toastWelcomeBack = () => {
+  return toastCompact('Welcome back!', 'welcome');
+};
+
+/**
  * Rate limit warning toast
  *
  * @param {number} retryAfter - Seconds until retry is allowed

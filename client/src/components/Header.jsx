@@ -4,8 +4,11 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Menu } from '@headlessui/react';
 import { Button } from './Button';
 import { Logo } from './Logo';
+import { Tooltip } from './Tooltip';
 import { useAuth } from '../contexts/AuthContext';
 import { AppearanceModal } from './AppearanceModal';
+import { LayoutToggle } from './LayoutToggle';
+import { getEffectiveTier } from '../utils/tierFeatures';
 
 // Lazy load auth modals
 const LoginModal = lazy(() => import('./LoginModal').then(m => ({ default: m.LoginModal })));
@@ -15,7 +18,7 @@ const ForgotPasswordModal = lazy(() => import('./ForgotPasswordModal').then(m =>
 // Feature flag: Authentication enabled (from environment variable)
 const ENABLE_AUTH = import.meta.env.VITE_ENABLE_AUTH === 'true';
 
-export const Header = forwardRef(function Header({ onMenuClick, onHelpClick, showSidebarMenu, onSidebarMenuClick }, ref) {
+export const Header = forwardRef(function Header({ onMenuClick, onHelpClick, showSidebarMenu, onSidebarMenuClick, layout, onLayoutChange }, ref) {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -30,6 +33,12 @@ export const Header = forwardRef(function Header({ onMenuClick, onHelpClick, sho
 
   // Check if current user is an admin
   const isAdmin = isAuthenticated && user?.email && ADMIN_EMAILS.includes(user.email);
+
+  // Get effective tier (considering tier override for admins)
+  const effectiveTier = getEffectiveTier(user);
+
+  // Check if user has Pro+ tier (pro, team, or enterprise)
+  const hasProPlusTier = isAuthenticated && ['pro', 'team', 'enterprise'].includes(effectiveTier);
 
   // Context-aware pricing button label
   const getPricingLabel = () => {
@@ -137,16 +146,25 @@ export const Header = forwardRef(function Header({ onMenuClick, onHelpClick, sho
                 Help
               </Button>
 
+              {/* Layout Toggle - Desktop (Pro+ only: pro, team, or enterprise) */}
+              {hasProPlusTier && layout && onLayoutChange && (
+                <LayoutToggle
+                  layout={layout}
+                  onLayoutChange={onLayoutChange}
+                />
+              )}
+
               {/* Appearance Settings - Desktop (icon only, unauthenticated users) */}
               {!isAuthenticated && (
-                <button
-                  onClick={() => setShowAppearanceModal(true)}
-                  className="p-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950"
-                  aria-label="Appearance settings"
-                  title="Appearance"
-                >
-                  <SlidersHorizontal className="w-5 h-5" aria-hidden="true" />
-                </button>
+                <Tooltip content="Appearance">
+                  <button
+                    onClick={() => setShowAppearanceModal(true)}
+                    className="p-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950"
+                    aria-label="Appearance settings"
+                  >
+                    <SlidersHorizontal className="w-5 h-5" aria-hidden="true" />
+                  </button>
+                </Tooltip>
               )}
 
               {ENABLE_AUTH && (

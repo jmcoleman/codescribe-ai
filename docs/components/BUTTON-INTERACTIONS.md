@@ -368,6 +368,247 @@ Achieved:  Icon buttons (40px+), Standard buttons (40px+ height)
 
 ---
 
+## 🎨 Button & Menu Styling Hierarchy
+
+### Design Philosophy
+
+Button and dropdown menu styling should reflect their **purpose and importance** in the UI, creating a clear visual hierarchy that guides user attention.
+
+### Component Categories
+
+#### 1. Call-to-Action Buttons (Prominent)
+
+**Purpose:** Navigate to destinations or trigger important actions
+**Style:** Button-like with backgrounds, borders, and hover effects
+**Prominence:** High - users should easily discover these
+
+**Examples:**
+- Pricing / Upgrade / Subscription button
+- Help button
+- Sign In button
+- Generate Docs button
+- Add Code dropdown button
+
+**Variants:**
+- `primary` - Purple gradient for most important actions
+- `secondary` - Gray background for supporting actions
+- `dark` - Dark/purple for authentication CTAs
+
+**When to Use:**
+- Primary navigation destinations
+- Important workflow actions
+- Features users need to discover
+- Actions that initiate key processes
+
+#### 2. Contextual Dropdowns (Subtle)
+
+**Purpose:** Open menus with multiple related actions
+**Style:** Minimal - no background/border until hover
+**Prominence:** Low - contextual, not primary actions
+
+**Examples:**
+- User account dropdown menu
+- Settings/preferences dropdowns (when purely navigational)
+
+**Styling Pattern:**
+```jsx
+className="flex items-center gap-2 px-3 py-2
+  hover:bg-slate-100 dark:hover:bg-slate-800
+  rounded-lg transition-colors"
+```
+
+**When to Use:**
+- User profile/account menus
+- Nested navigation menus
+- Secondary contextual actions
+- When prominence would be distracting
+
+#### 3. Utility Icons (Minimal)
+
+**Purpose:** Quick access to settings and utilities
+**Style:** Icon-only, transparent, minimal
+**Prominence:** Very low - for power users
+
+**Examples:**
+- Appearance/theme toggle
+- Quick settings access
+- Help tooltips
+
+**Styling Pattern:**
+```jsx
+className="p-2 rounded-lg text-slate-600 dark:text-slate-400
+  hover:bg-slate-100 dark:hover:bg-slate-800
+  transition-colors"
+```
+
+**When to Use:**
+- Settings that don't need discovery
+- Secondary utilities
+- Power user features
+- Icon-only makes sense contextually
+
+---
+
+### Real-World Example: Header Navigation
+
+Our Header component demonstrates this hierarchy perfectly:
+
+```jsx
+{/* Call-to-Action Buttons - Prominent (secondary variant) */}
+<Button variant="secondary" onClick={() => navigate('/pricing')}>
+  {getPricingLabel()}
+</Button>
+
+<Button variant="secondary" onClick={onHelpClick}>
+  Help
+</Button>
+
+{/* Contextual Dropdown - Subtle (no variant) */}
+{isAuthenticated && (
+  <Menu.Button className="flex items-center gap-2 px-3 py-2
+    hover:bg-slate-100 dark:hover:bg-slate-800
+    rounded-lg transition-colors">
+    <User className="w-5 h-5" />
+    <span>{getDisplayName()}</span>
+    <ChevronDown className="w-4 h-4" />
+  </Menu.Button>
+)}
+
+{/* Utility Icon - Minimal (icon-only) */}
+{!isAuthenticated && (
+  <button
+    onClick={() => setShowAppearanceModal(true)}
+    className="p-2 rounded-lg text-slate-600 dark:text-slate-400
+      hover:bg-slate-100 dark:hover:bg-slate-800
+      transition-colors"
+  >
+    <SlidersHorizontal className="w-5 h-5" />
+  </button>
+)}
+
+{/* Primary CTA - Most Prominent (dark variant) */}
+{!isAuthenticated && (
+  <Button variant="dark" onClick={handleSignInClick}>
+    Sign In
+  </Button>
+)}
+```
+
+---
+
+### Real-World Example: ControlBar "Add Code" Dropdown
+
+Initially styled as subtle (contextual), but revised to prominent (CTA) because it's a **primary action** for the workflow:
+
+**❌ Incorrect:** Subtle styling for primary action
+```jsx
+<HeadlessMenu.Button className="px-3 py-2
+  hover:bg-slate-100 dark:hover:bg-slate-800">
+  Add Code
+</HeadlessMenu.Button>
+```
+
+**✅ Correct:** Prominent styling for primary action
+```jsx
+<HeadlessMenu.Button className="px-4 py-2
+  bg-slate-100 dark:bg-slate-800
+  border border-transparent dark:border-slate-600/50
+  hover:bg-slate-200 dark:hover:bg-slate-700
+  hover:scale-[1.02] hover:shadow-sm">
+  Add Code
+</HeadlessMenu.Button>
+```
+
+**Rationale:**
+- "Add Code" is how users **start their workflow** - it's not contextual
+- Should be discoverable like "Pricing" and "Help" buttons
+- Dropdown chevron doesn't make it less important
+- Primary actions need visual weight regardless of being dropdowns
+
+---
+
+### Decision Framework
+
+When choosing styling for a button or dropdown, ask:
+
+1. **Is this a primary action or navigation destination?**
+   → Use prominent button styling (primary/secondary/dark variants)
+
+2. **Is this a contextual menu with multiple related options?**
+   → Use subtle dropdown styling (no background/border)
+
+3. **Is this a utility for power users?**
+   → Use minimal icon-only styling
+
+4. **Does the user need to discover this?**
+   → If yes: Prominent. If no: Subtle or minimal.
+
+---
+
+### Common Patterns
+
+#### Pattern: Action Dropdown Button
+**Use Case:** Dropdown that triggers primary actions (e.g., "Add Code", "Create New", "Export")
+**Styling:** Prominent button with dropdown chevron
+**Variant:** `secondary` or custom with similar prominence
+
+```jsx
+<HeadlessMenu.Button className="inline-flex items-center gap-2 px-4 py-2
+  bg-slate-100 dark:bg-slate-800
+  border border-transparent dark:border-slate-600/50
+  rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700
+  hover:scale-[1.02] hover:shadow-sm
+  transition-all duration-200">
+  <Plus className="w-4 h-4" />
+  <span>Add Code</span>
+  <ChevronDown className="w-4 h-4" />
+</HeadlessMenu.Button>
+```
+
+#### Pattern: Navigation Dropdown
+**Use Case:** User profile, account settings, contextual menus
+**Styling:** Subtle with hover effect
+**Variant:** Custom minimal styling
+
+```jsx
+<Menu.Button className="flex items-center gap-2 px-3 py-2
+  hover:bg-slate-100 dark:hover:bg-slate-800
+  rounded-lg transition-colors">
+  <User className="w-5 h-5" />
+  <span>{userName}</span>
+  <ChevronDown className="w-4 h-4" />
+</Menu.Button>
+```
+
+#### Pattern: Icon Button
+**Use Case:** Settings, utilities, secondary actions
+**Styling:** Icon-only, minimal
+**Variant:** `icon` or custom minimal
+
+```jsx
+<button className="p-2 rounded-lg
+  text-slate-600 dark:text-slate-400
+  hover:bg-slate-100 dark:hover:bg-slate-800
+  transition-colors">
+  <Settings className="w-5 h-5" />
+</button>
+```
+
+---
+
+### Testing Visual Hierarchy
+
+When reviewing a page or component, verify:
+
+- [ ] Primary actions are visually prominent (backgrounds, borders)
+- [ ] Contextual menus are subtle (blend into UI until hover)
+- [ ] Icon utilities are minimal (don't distract from content)
+- [ ] Hierarchy guides attention to most important actions
+- [ ] Dropdown chevrons don't determine prominence (content does)
+- [ ] Consistent styling across similar action types
+
+---
+
 ## 🔗 References
 
 ### Design Systems
