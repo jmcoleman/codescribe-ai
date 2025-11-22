@@ -1290,6 +1290,80 @@ Retrieve all users.
     });
   });
 
+  describe('Auto-scroll Behavior', () => {
+    it('should scroll to top when single file generation completes', async () => {
+      vi.useFakeTimers();
+
+      const { rerender, container } = render(
+        <DocPanel documentation="" qualityScore={null} isGenerating={true} />
+      );
+
+      // Find the content div and mock scrollTo method
+      const mockScrollTo = vi.fn();
+      const contentDiv = container.querySelector('[data-testid="doc-panel"] > div:nth-child(3)');
+      if (contentDiv) {
+        contentDiv.scrollTo = mockScrollTo;
+      }
+
+      // Simulate generation completing with documentation
+      rerender(
+        <DocPanel
+          documentation="# Test Documentation\n\nContent here."
+          qualityScore={{ score: 85, grade: 'B' }}
+          isGenerating={false}
+        />
+      );
+
+      // Fast-forward past the delay (150ms)
+      await vi.advanceTimersByTimeAsync(200);
+
+      // Should have scrolled to top
+      expect(mockScrollTo).toHaveBeenCalledWith({ top: 0, behavior: 'smooth' });
+
+      vi.useRealTimers();
+    });
+
+    it('should NOT scroll to top for batch summaries', async () => {
+      vi.useFakeTimers();
+
+      const batchMarkdown = '# Batch Summary\n\nResults here.';
+
+      const { rerender, container } = render(
+        <DocPanel
+          documentation=""
+          qualityScore={null}
+          isGenerating={true}
+          batchSummaryMarkdown={batchMarkdown}
+        />
+      );
+
+      // Find the content div and mock scrollTo method
+      const mockScrollTo = vi.fn();
+      const contentDiv = container.querySelector('[data-testid="doc-panel"] > div:nth-child(3)');
+      if (contentDiv) {
+        contentDiv.scrollTo = mockScrollTo;
+      }
+
+      // Simulate batch summary being displayed
+      rerender(
+        <DocPanel
+          documentation={batchMarkdown}
+          qualityScore={{ score: 85, grade: 'B', isBatchSummary: true }}
+          isGenerating={false}
+          batchSummaryMarkdown={batchMarkdown}
+        />
+      );
+
+      // Fast-forward past the delay
+      await vi.advanceTimersByTimeAsync(200);
+
+      // Should NOT have called scrollTo for batch summary (batch has its own scroll logic)
+      expect(mockScrollTo).not.toHaveBeenCalled();
+
+      vi.useRealTimers();
+    });
+  });
+
   describe('Edge Cases', () => {
     it('should handle empty string documentation', () => {
       render(<DocPanel documentation="" qualityScore={null} isGenerating={false} />);
