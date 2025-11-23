@@ -91,7 +91,7 @@ describe('Sidebar', () => {
     it('should show add files button in expanded mode', () => {
       render(<Sidebar {...mockProps} />);
 
-      expect(screen.getByRole('button', { name: /Upload more files/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Add files/i })).toBeInTheDocument();
     });
   });
 
@@ -299,7 +299,7 @@ describe('Sidebar', () => {
       const user = userEvent.setup();
       render(<Sidebar {...mockProps} />);
 
-      const addBtn = screen.getByRole('button', { name: /Upload more files/i });
+      const addBtn = screen.getByRole('button', { name: /Add files/i });
       await user.click(addBtn);
 
       expect(mockProps.onAddFile).toHaveBeenCalled();

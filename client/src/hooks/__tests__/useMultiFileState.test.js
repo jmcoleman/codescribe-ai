@@ -16,6 +16,8 @@ describe('useMultiFileState', () => {
   let hook;
 
   beforeEach(() => {
+    // Clear sessionStorage before each test to ensure clean state
+    sessionStorage.clear();
     const { result } = renderHook(() => useMultiFileState());
     hook = result;
   });
@@ -174,7 +176,7 @@ describe('useMultiFileState', () => {
       expect(hook.current.activeFileId).toBeNull();
     });
 
-    it('should select next file when removing active file', () => {
+    it('should clear active file when removing active file', () => {
       let ids;
       act(() => {
         ids = hook.current.addFiles([
@@ -190,11 +192,12 @@ describe('useMultiFileState', () => {
       });
 
       expect(hook.current.files).toHaveLength(2);
-      expect(hook.current.activeFileId).toBe(ids[1]);
-      expect(hook.current.activeFile.filename).toBe('second.js');
+      // Design change: removeFile now clears activeFile instead of auto-selecting next
+      expect(hook.current.activeFileId).toBe(null);
+      expect(hook.current.activeFile).toBe(null);
     });
 
-    it('should select previous file when removing last active file', () => {
+    it('should clear active file when removing last active file', () => {
       let ids;
       act(() => {
         ids = hook.current.addFiles([
@@ -215,8 +218,9 @@ describe('useMultiFileState', () => {
       });
 
       expect(hook.current.files).toHaveLength(2);
-      expect(hook.current.activeFileId).toBe(ids[1]);
-      expect(hook.current.activeFile.filename).toBe('second.js');
+      // Design change: removeFile now clears activeFile instead of auto-selecting previous
+      expect(hook.current.activeFileId).toBe(null);
+      expect(hook.current.activeFile).toBe(null);
     });
 
     it('should not change active file when removing non-active file', () => {

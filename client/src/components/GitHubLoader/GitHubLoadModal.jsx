@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
-import { X, AlertCircle, Github, Loader2, File, Clock, ChevronDown, ChevronRight, Sparkles, Zap, ExternalLink, FolderGit2 } from 'lucide-react';
+import { X, AlertCircle, Github, Loader2, File, Clock, ChevronDown, ChevronRight, Sparkles, Zap, ExternalLink, FolderGit2, FolderTree, Eye } from 'lucide-react';
 import { SmartInput } from './SmartInput';
 import { FileTree } from './FileTree';
 import { FilePreview } from './FilePreview';
@@ -38,6 +38,7 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, defa
   const [selectedFiles, setSelectedFiles] = useState(new Set());
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   const [showProHint, setShowProHint] = useState(true); // Dismissable Pro feature hint
+  const lastSelectedFileRef = useRef(null); // Track last selected file for shift-click range selection
 
   // Batch import state
   const [importing, setImporting] = useState(false);
@@ -53,6 +54,7 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, defa
   const [duplicateWarning, setDuplicateWarning] = useState(null);
   const [batchImportError, setBatchImportError] = useState(null); // For 403/feature gate errors
   const [workspaceFiles, setWorkspaceFiles] = useState([]);
+  const [mobileActiveTab, setMobileActiveTab] = useState('tree'); // 'tree' or 'preview' (mobile only)
 
   const modalRef = useRef(null);
   const smartInputRef = useRef(null);
@@ -391,6 +393,94 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, defa
       newSelected.add(filePath);
     }
     setSelectedFiles(newSelected);
+
+    // Clear duplicate warning when selection changes
+    if (duplicateWarning) {
+      setDuplicateWarning(null);
+    }
+  };
+
+  // Get all files in flat array for range selection
+  const getAllFilesFlat = (tree) => {
+    const files = [];
+    const traverse = (items) => {
+      items.forEach(item => {
+        if (item.type === 'blob') {
+          files.push(item);
+        } else if (item.children) {
+          traverse(item.children);
+        }
+      });
+    };
+    traverse(tree);
+    return files;
+  };
+
+  // Handle file click with keyboard modifiers (Ctrl/Cmd+click, Shift+click)
+  const handleFileClick = (file, event) => {
+    if (!canUseBatchProcessing) {
+      // Single file mode - just preview the file
+      handleFileSelect(file);
+      return;
+    }
+
+    // Multi-select mode with keyboard modifiers
+    const isCtrlOrCmd = event.ctrlKey || event.metaKey;
+    const isShift = event.shiftKey;
+
+    if (isCtrlOrCmd) {
+      // Ctrl/Cmd+click - toggle selection
+      event.preventDefault();
+      const newSelected = new Set(selectedFiles);
+      if (newSelected.has(file.path)) {
+        newSelected.delete(file.path);
+      } else {
+        if (newSelected.size >= maxFiles) {
+          toastWarning(`Maximum ${maxFiles} files for ${effectiveTier} tier`);
+          return;
+        }
+        newSelected.add(file.path);
+      }
+      setSelectedFiles(newSelected);
+      lastSelectedFileRef.current = file.path;
+
+      // Also show preview
+      handleFileSelect(file);
+    } else if (isShift && lastSelectedFileRef.current && repository) {
+      // Shift+click - range selection
+      event.preventDefault();
+      const allFiles = getAllFilesFlat(repository.tree);
+      const lastIndex = allFiles.findIndex(f => f.path === lastSelectedFileRef.current);
+      const currentIndex = allFiles.findIndex(f => f.path === file.path);
+
+      if (lastIndex !== -1 && currentIndex !== -1) {
+        const start = Math.min(lastIndex, currentIndex);
+        const end = Math.max(lastIndex, currentIndex);
+        const newSelected = new Set(selectedFiles);
+
+        // Add all files in range (up to max limit)
+        for (let i = start; i <= end; i++) {
+          const fileInRange = allFiles[i];
+          const fileSupport = isFileSupported(fileInRange.name);
+          if (fileSupport.isSupported) {
+            if (newSelected.size >= maxFiles) {
+              toastWarning(`Maximum ${maxFiles} files for ${effectiveTier} tier`);
+              break;
+            }
+            newSelected.add(fileInRange.path);
+          }
+        }
+
+        setSelectedFiles(newSelected);
+      }
+
+      // Also show preview
+      handleFileSelect(file);
+    } else {
+      // Regular click - just show preview (don't clear selection)
+      handleFileSelect(file);
+      lastSelectedFileRef.current = file.path;
+    }
 
     // Clear duplicate warning when selection changes
     if (duplicateWarning) {
@@ -745,7 +835,7 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, defa
       >
       <div
         ref={modalRef}
-        className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-[90vw] lg:w-[92vw] xl:w-[94vw] 2xl:w-[95vw] h-[90vh] max-w-[1400px] xl:max-w-[1600px] 2xl:max-w-[1800px] flex flex-col cursor-default"
+        className="bg-white dark:bg-slate-900 rounded-none lg:rounded-2xl shadow-2xl w-screen h-screen lg:w-[92vw] xl:w-[94vw] 2xl:w-[95vw] lg:h-[95vh] lg:max-w-[1400px] xl:max-w-[1600px] 2xl:max-w-[1800px] flex flex-col cursor-default"
         role="dialog"
         aria-modal="true"
         aria-labelledby="github-modal-title"
@@ -837,6 +927,38 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, defa
           )}
         </div>
 
+        {/* Mobile Tabs - Only visible on mobile when repository is loaded */}
+        {repository && (
+          <div className="lg:hidden border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+            <div className="flex">
+              <button
+                type="button"
+                onClick={() => setMobileActiveTab('tree')}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
+                  mobileActiveTab === 'tree'
+                    ? 'text-purple-600 dark:text-purple-400 border-b-2 border-purple-600 dark:border-purple-400'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
+                }`}
+              >
+                <FolderTree className="w-4 h-4" />
+                <span>File Tree</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setMobileActiveTab('preview')}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
+                  mobileActiveTab === 'preview'
+                    ? 'text-purple-600 dark:text-purple-400 border-b-2 border-purple-600 dark:border-purple-400'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
+                }`}
+              >
+                <Eye className="w-4 h-4" />
+                <span>Preview</span>
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Content Area */}
         <div className="flex-1 overflow-hidden flex flex-col">
           {loading ? (
@@ -847,9 +969,11 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, defa
               </div>
             </div>
           ) : repository ? (
-            <div className="h-full flex">
-              {/* File Tree */}
-              <div className="w-2/5 border-r border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col">
+            <div className="h-full flex flex-col lg:flex-row">
+              {/* File Tree - Hidden on mobile when preview tab is active */}
+              <div className={`lg:w-2/5 border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col h-full lg:h-full ${
+                mobileActiveTab === 'preview' ? 'hidden lg:flex' : ''
+              }`}>
                 {/* Pro Feature Hint for Free/Starter users */}
                 {!canUseBatchProcessing && showProHint && (
                   <div className="px-3 py-2 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 border-b border-purple-200 dark:border-purple-800">
@@ -884,6 +1008,7 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, defa
                 <FileTree
                   tree={repository.tree}
                   onFileSelect={handleFileSelect}
+                  onFileClick={handleFileClick}
                   selectedFile={selectedFile}
                   repository={repository}
                   expandedPaths={expandedPaths}
@@ -898,8 +1023,10 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, defa
                 />
               </div>
 
-              {/* File Preview */}
-              <div className="flex-1 overflow-hidden flex flex-col">
+              {/* File Preview - Hidden on mobile when tree tab is active */}
+              <div className={`h-full lg:h-full lg:flex-1 overflow-hidden flex flex-col ${
+                mobileActiveTab === 'tree' ? 'hidden lg:flex' : ''
+              }`}>
                 {/* Batch Import Error Banner (403/feature gate errors) */}
                 {batchImportError && (
                   <div className="p-4 pb-0">

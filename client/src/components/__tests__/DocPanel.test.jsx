@@ -619,15 +619,15 @@ Retrieve all users.
       // Note: DOM may contain both mobile and desktop variants (hidden with CSS)
       // So we check for specific buttons by their accessible names instead of counting all buttons
 
-      // Export button
-      const downloadButton = screen.getByRole('button', { name: /Export doc/i });
-      expect(downloadButton).toBeInTheDocument();
-      expect(downloadButton).toBeEnabled();
+      // Export button - multiple due to responsive design
+      const downloadButtons = screen.getAllByRole('button', { name: /Export doc/i });
+      expect(downloadButtons.length).toBeGreaterThan(0);
+      expect(downloadButtons[0]).toBeEnabled();
 
-      // Copy button
-      const copyButton = screen.getByRole('button', { name: /Copy doc/i });
-      expect(copyButton).toBeInTheDocument();
-      expect(copyButton).toBeEnabled();
+      // Copy button - multiple due to responsive design
+      const copyButtons = screen.getAllByRole('button', { name: /Copy doc/i });
+      expect(copyButtons.length).toBeGreaterThan(0);
+      expect(copyButtons[0]).toBeEnabled();
 
       // Quality score button
       const qualityButton = screen.getByRole('button', { name: /Quality score/i });
@@ -1287,6 +1287,80 @@ Retrieve all users.
 
       // Restore original getItem
       Storage.prototype.getItem = originalGetItem;
+    });
+  });
+
+  describe('Auto-scroll Behavior', () => {
+    it('should scroll to top when single file generation completes', async () => {
+      vi.useFakeTimers();
+
+      const { rerender, container } = render(
+        <DocPanel documentation="" qualityScore={null} isGenerating={true} />
+      );
+
+      // Find the content div and mock scrollTo method
+      const mockScrollTo = vi.fn();
+      const contentDiv = container.querySelector('[data-testid="doc-panel"] > div:nth-child(3)');
+      if (contentDiv) {
+        contentDiv.scrollTo = mockScrollTo;
+      }
+
+      // Simulate generation completing with documentation
+      rerender(
+        <DocPanel
+          documentation="# Test Documentation\n\nContent here."
+          qualityScore={{ score: 85, grade: 'B' }}
+          isGenerating={false}
+        />
+      );
+
+      // Fast-forward past the delay (150ms)
+      await vi.advanceTimersByTimeAsync(200);
+
+      // Should have scrolled to top
+      expect(mockScrollTo).toHaveBeenCalledWith({ top: 0, behavior: 'smooth' });
+
+      vi.useRealTimers();
+    });
+
+    it('should NOT scroll to top for batch summaries', async () => {
+      vi.useFakeTimers();
+
+      const batchMarkdown = '# Batch Summary\n\nResults here.';
+
+      const { rerender, container } = render(
+        <DocPanel
+          documentation=""
+          qualityScore={null}
+          isGenerating={true}
+          batchSummaryMarkdown={batchMarkdown}
+        />
+      );
+
+      // Find the content div and mock scrollTo method
+      const mockScrollTo = vi.fn();
+      const contentDiv = container.querySelector('[data-testid="doc-panel"] > div:nth-child(3)');
+      if (contentDiv) {
+        contentDiv.scrollTo = mockScrollTo;
+      }
+
+      // Simulate batch summary being displayed
+      rerender(
+        <DocPanel
+          documentation={batchMarkdown}
+          qualityScore={{ score: 85, grade: 'B', isBatchSummary: true }}
+          isGenerating={false}
+          batchSummaryMarkdown={batchMarkdown}
+        />
+      );
+
+      // Fast-forward past the delay
+      await vi.advanceTimersByTimeAsync(200);
+
+      // Should NOT have called scrollTo for batch summary (batch has its own scroll logic)
+      expect(mockScrollTo).not.toHaveBeenCalled();
+
+      vi.useRealTimers();
     });
   });
 

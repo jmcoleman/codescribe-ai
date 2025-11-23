@@ -18,7 +18,7 @@
  * />
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { STORAGE_KEYS, getStorageItem, setStorageItem } from '../constants/storage';
 
@@ -27,8 +27,10 @@ const DEFAULT_RIGHT_SIZE = 50;
 const MIN_PANEL_SIZE = 20; // 20% minimum
 const MAX_PANEL_SIZE = 80; // 80% maximum
 
-export function SplitPanel({ leftPanel, rightPanel }) {
+export function SplitPanel({ leftPanel, rightPanel, layout = 'split' }) {
   const [isMobile, setIsMobile] = useState(false);
+  const leftPanelRef = useRef(null);
+  const rightPanelRef = useRef(null);
 
   // Detect mobile viewport
   useEffect(() => {
@@ -41,40 +43,49 @@ export function SplitPanel({ leftPanel, rightPanel }) {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Load saved panel sizes from localStorage
-  const loadPanelSizes = () => {
-    try {
-      const saved = getStorageItem(STORAGE_KEYS.SPLIT_PANEL_SIZES);
-      if (saved) {
-        const { left, right } = JSON.parse(saved);
-        return { left, right };
+  // Update panel sizes when layout changes using imperative API
+  useEffect(() => {
+    if (!leftPanelRef.current || !rightPanelRef.current) return;
+
+    if (layout === 'code') {
+      leftPanelRef.current.resize(100);
+      rightPanelRef.current.resize(0);
+    } else if (layout === 'doc') {
+      leftPanelRef.current.resize(0);
+      rightPanelRef.current.resize(100);
+    } else {
+      // Split mode - restore saved sizes
+      try {
+        const saved = getStorageItem(STORAGE_KEYS.SPLIT_PANEL_SIZES);
+        if (saved) {
+          const { left, right } = JSON.parse(saved);
+          leftPanelRef.current.resize(left);
+          rightPanelRef.current.resize(right);
+        } else {
+          leftPanelRef.current.resize(DEFAULT_LEFT_SIZE);
+          rightPanelRef.current.resize(DEFAULT_RIGHT_SIZE);
+        }
+      } catch (error) {
+        leftPanelRef.current.resize(DEFAULT_LEFT_SIZE);
+        rightPanelRef.current.resize(DEFAULT_RIGHT_SIZE);
       }
-    } catch (error) {
-      console.error('[SplitPanel] Error loading panel sizes:', error);
     }
-    return { left: DEFAULT_LEFT_SIZE, right: DEFAULT_RIGHT_SIZE };
-  };
+  }, [layout]);
 
-  // Save panel sizes to localStorage
-  const savePanelSizes = (sizes) => {
-    try {
-      setStorageItem(STORAGE_KEYS.SPLIT_PANEL_SIZES, JSON.stringify(sizes));
-    } catch (error) {
-      console.error('[SplitPanel] Error saving panel sizes:', error);
-    }
-  };
-
-  // Handle panel resize
+  // Handle panel resize (only save in split mode)
   const handleResize = (sizes) => {
-    if (sizes && sizes.length === 2) {
-      savePanelSizes({
-        left: sizes[0],
-        right: sizes[1]
-      });
+    // Only save to localStorage when in split mode
+    if (layout === 'split' && sizes && sizes.length === 2) {
+      try {
+        setStorageItem(STORAGE_KEYS.SPLIT_PANEL_SIZES, JSON.stringify({
+          left: sizes[0],
+          right: sizes[1]
+        }));
+      } catch (error) {
+        console.error('[SplitPanel] Error saving panel sizes:', error);
+      }
     }
   };
-
-  const savedSizes = loadPanelSizes();
 
   // Mobile: Stack vertically (no resizing)
   if (isMobile) {
@@ -93,7 +104,24 @@ export function SplitPanel({ leftPanel, rightPanel }) {
     );
   }
 
+  // Load initial sizes
+  const getInitialSizes = () => {
+    try {
+      const saved = getStorageItem(STORAGE_KEYS.SPLIT_PANEL_SIZES);
+      if (saved) {
+        const { left, right } = JSON.parse(saved);
+        return { left, right };
+      }
+    } catch (error) {
+      console.error('[SplitPanel] Error loading panel sizes:', error);
+    }
+    return { left: DEFAULT_LEFT_SIZE, right: DEFAULT_RIGHT_SIZE };
+  };
+
+  const initialSizes = getInitialSizes();
+
   // Desktop/Tablet: Resizable horizontal split
+  // Using imperative API for controlled sizing
   return (
     <div className="flex-1 min-h-0 flex flex-col h-full">
       <PanelGroup
@@ -103,29 +131,39 @@ export function SplitPanel({ leftPanel, rightPanel }) {
       >
         {/* Left Panel - Code */}
         <Panel
-          defaultSize={savedSizes.left}
-          minSize={MIN_PANEL_SIZE}
-          maxSize={MAX_PANEL_SIZE}
+          ref={leftPanelRef}
+          id="left-panel"
+          order={1}
+          defaultSize={initialSizes.left}
+          minSize={layout === 'split' ? MIN_PANEL_SIZE : 0}
+          maxSize={layout === 'split' ? MAX_PANEL_SIZE : 100}
           className="flex"
+          collapsible={layout !== 'split'}
         >
           <div className="flex-1 min-h-0">
             {leftPanel}
           </div>
         </Panel>
 
-        {/* Resize Handle */}
-        <PanelResizeHandle className="split-panel-handle">
-          <div className="split-panel-handle-inner">
-            <div className="split-panel-handle-icon" />
-          </div>
-        </PanelResizeHandle>
+        {/* Resize Handle - Only show in split mode */}
+        {layout === 'split' && (
+          <PanelResizeHandle className="split-panel-handle">
+            <div className="split-panel-handle-inner">
+              <div className="split-panel-handle-icon" />
+            </div>
+          </PanelResizeHandle>
+        )}
 
         {/* Right Panel - Documentation */}
         <Panel
-          defaultSize={savedSizes.right}
-          minSize={MIN_PANEL_SIZE}
-          maxSize={MAX_PANEL_SIZE}
+          ref={rightPanelRef}
+          id="right-panel"
+          order={2}
+          defaultSize={initialSizes.right}
+          minSize={layout === 'split' ? MIN_PANEL_SIZE : 0}
+          maxSize={layout === 'split' ? MAX_PANEL_SIZE : 100}
           className="flex"
+          collapsible={layout !== 'split'}
         >
           <div className="flex-1 min-h-0">
             {rightPanel}

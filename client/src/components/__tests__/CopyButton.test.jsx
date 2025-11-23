@@ -251,10 +251,10 @@ describe('CopyButton', () => {
       });
     });
 
-    it('has title attribute matching ariaLabel', () => {
+    it('has aria-label matching custom ariaLabel prop', () => {
       render(<CopyButton text="test" ariaLabel="Copy documentation" />);
       const button = screen.getByRole('button');
-      expect(button).toHaveAttribute('title', 'Copy documentation');
+      expect(button).toHaveAttribute('aria-label', 'Copy documentation');
     });
 
     it('has focus ring styles', () => {

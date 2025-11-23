@@ -90,7 +90,7 @@ export function useWorkspacePersistence() {
   const { isAuthenticated, user } = useAuth();
   const hasMultiFileAccess = user && hasFeature(user, 'batchProcessing');
   const multiFileState = useMultiFileState();
-  const { addFile, addFiles, removeFile, updateFile, clearFiles } = multiFileState;
+  const { addFile, addFiles, removeFile, removeFiles, updateFile, clearFiles } = multiFileState;
 
   // Track workspace file ID -> client file ID mapping
   const workspaceIdMap = useRef(new Map()); // workspace DB ID -> client file ID
@@ -293,6 +293,50 @@ export function useWorkspacePersistence() {
   }, [removeFile, isAuthenticated, hasMultiFileAccess, user]);
 
   /**
+   * Enhanced removeFiles (batch) with DB deletion
+   */
+  const removeFilesWithPersistence = useCallback(async (fileIds) => {
+    // Remove from local state first (optimistic update)
+    removeFiles(fileIds);
+
+    // Delete from DB if authenticated
+    if (isAuthenticated && hasMultiFileAccess && !isSyncing.current) {
+      // Get DB file IDs for all files being deleted
+      const dbFileIds = fileIds
+        .map(clientId => clientIdMap.current.get(clientId))
+        .filter(dbId => dbId !== undefined);
+
+      if (dbFileIds.length > 0) {
+        try {
+          // Delete all files from workspace_files table
+          await Promise.all(
+            dbFileIds.map(dbFileId => workspaceApi.deleteWorkspaceFile(dbFileId))
+          );
+
+          // Remove from localStorage object
+          const allContents = getWorkspaceContents(user.id);
+          dbFileIds.forEach(dbFileId => {
+            delete allContents[dbFileId];
+          });
+          saveWorkspaceContents(user.id, allContents);
+
+          // Clean up mappings
+          fileIds.forEach(clientId => {
+            const dbFileId = clientIdMap.current.get(clientId);
+            if (dbFileId) {
+              workspaceIdMap.current.delete(dbFileId);
+              clientIdMap.current.delete(clientId);
+            }
+          });
+        } catch (error) {
+          console.error('[useWorkspacePersistence] Failed to delete files from workspace:', error);
+          // Don't throw - files are already removed from local state
+        }
+      }
+    }
+  }, [removeFiles, isAuthenticated, hasMultiFileAccess, user]);
+
+  /**
    * Enhanced clearFiles with DB clear
    */
   const clearFilesWithPersistence = useCallback(async () => {
@@ -405,6 +449,7 @@ export function useWorkspacePersistence() {
     addFile: addFileWithPersistence,
     addFiles: addFilesWithPersistence,
     removeFile: removeFileWithPersistence,
+    removeFiles: removeFilesWithPersistence,
     updateFile: updateFileWithPersistence,
     clearFiles: clearFilesWithPersistence,
     reloadWorkspace

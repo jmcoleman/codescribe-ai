@@ -1,8 +1,8 @@
 # Toast Notification System - Enterprise Guide
 
 **CodeScribe AI Toast Notification System**
-**Version:** 1.0.0
-**Last Updated:** October 18, 2025
+**Version:** 1.1.0
+**Last Updated:** November 21, 2025
 
 ---
 
@@ -16,9 +16,10 @@
 6. [Advanced Features](#advanced-features)
 7. [Custom Toast Components](#custom-toast-components)
 8. [Best Practices](#best-practices)
-9. [Accessibility](#accessibility)
-10. [Testing](#testing)
-11. [API Reference](#api-reference)
+9. [Mobile UX Best Practices](#mobile-ux-best-practices) ⭐ NEW
+10. [Accessibility](#accessibility)
+11. [Testing](#testing)
+12. [API Reference](#api-reference)
 
 ---
 
@@ -558,6 +559,315 @@ toastWithActions(
   'error'
 );
 ```
+
+---
+
+## Mobile UX Best Practices
+
+**Last Updated:** November 21, 2025
+
+Toast notifications require special consideration for mobile devices due to screen size, touch interactions, and usage patterns.
+
+### Mobile-Specific Challenges
+
+1. **Limited Screen Real Estate**: Mobile screens are smaller, making positioning critical
+2. **Touch Interactions**: Buttons need larger touch targets (44x44px minimum)
+3. **Keyboard Interference**: On-screen keyboards can hide bottom-positioned toasts
+4. **User Distraction**: Mobile users are more easily distracted, requiring longer durations
+5. **Safe Areas**: Modern phones have notches, home indicators, and dynamic islands
+
+### Current Implementation
+
+CodeScribe AI implements responsive toast notifications that adapt to mobile devices:
+
+```javascript
+<Toaster
+  position={isMobileView ? 'top-center' : 'top-right'}
+  containerStyle={{
+    // Safe area insets for devices with notches
+    ...(isMobileView && {
+      top: 'env(safe-area-inset-top, 0px)',
+    }),
+  }}
+  toastOptions={{
+    // Longer durations on mobile
+    duration: isMobileView ? 5000 : 4000,
+
+    style: {
+      // Near full-width on mobile for better readability
+      maxWidth: isMobileView ? 'calc(100vw - 32px)' : '28rem',
+      width: isMobileView ? 'auto' : undefined,
+    },
+
+    success: {
+      duration: isMobileView ? 4000 : 3000,
+    },
+
+    error: {
+      duration: isMobileView ? 7000 : 5000, // Longer for errors
+    },
+  }}
+/>
+```
+
+### Mobile vs Desktop Comparison
+
+| Aspect | Mobile (<1024px) | Desktop (≥1024px) |
+|--------|------------------|-------------------|
+| **Position** | `top-center` | `top-right` |
+| **Width** | `calc(100vw - 32px)` | `28rem (448px)` |
+| **Default Duration** | 5000ms (5s) | 4000ms (4s) |
+| **Success Duration** | 4000ms (4s) | 3000ms (3s) |
+| **Error Duration** | 7000ms (7s) | 5000ms (5s) |
+| **Safe Areas** | Enabled | Not needed |
+
+### Position Strategy
+
+#### Why `top-center` for Mobile?
+
+✅ **Advantages:**
+- Always visible above on-screen keyboard
+- Centered for easy readability
+- Natural eye path (top of screen)
+- Works with all orientations
+
+❌ **Why NOT bottom?**
+- Hidden by on-screen keyboards
+- Conflicts with mobile navigation bars
+- Harder to reach with thumb
+- Obscured by Android gesture bar
+
+#### Industry Patterns
+
+| App | Mobile Toast Position |
+|-----|----------------------|
+| Gmail | Bottom (swipeable) |
+| Slack | Bottom-center |
+| GitHub | Top-center |
+| Twitter | Top-center |
+| **CodeScribe AI** | **Top-center** ⭐ |
+
+**Our Choice:** Top-center balances visibility with ergonomics
+
+### Duration Guidelines
+
+Mobile users are more distracted and may miss quick notifications:
+
+```javascript
+// ✅ Good: Longer durations on mobile
+const MOBILE_DURATIONS = {
+  quick: 4000,      // Copy, save (vs 2000 on desktop)
+  standard: 5000,   // Success messages (vs 4000)
+  important: 7000,  // Errors, warnings (vs 5000)
+  critical: 10000,  // Critical actions (vs 7000)
+};
+
+// ❌ Bad: Same duration everywhere
+const DURATION = 3000; // Too fast for mobile
+```
+
+### Width & Spacing
+
+**Mobile:**
+```css
+max-width: calc(100vw - 32px);  /* 16px margin each side */
+width: auto;                     /* Responsive to content */
+```
+
+**Desktop:**
+```css
+max-width: 28rem;  /* 448px fixed */
+width: undefined;  /* Fixed width */
+```
+
+**Why near full-width on mobile?**
+- Easier to read on small screens
+- Better touch target size
+- Consistent with mobile design patterns
+- More prominent for important notifications
+
+### Safe Area Insets
+
+Modern phones require safe area handling:
+
+```javascript
+containerStyle={{
+  // Respects notches (iPhone X+), Dynamic Island, etc.
+  top: 'env(safe-area-inset-top, 0px)',
+}}
+```
+
+**Devices affected:**
+- iPhone X and newer (notch/Dynamic Island)
+- Android devices with camera cutouts
+- Foldable phones with asymmetric screens
+
+### Touch Target Size
+
+All interactive elements in toasts must meet minimum touch target size:
+
+```javascript
+// ✅ Good: 44x44px minimum (Apple HIG)
+<button className="min-w-[44px] min-h-[44px] p-2">
+  Close
+</button>
+
+// ✅ Good: Even larger for primary actions
+<button className="min-w-[48px] min-h-[48px] px-4 py-2">
+  Retry
+</button>
+
+// ❌ Bad: Too small for touch
+<button className="p-1"> ❌ </button>
+```
+
+**Standards:**
+- **Apple HIG:** 44x44px minimum
+- **Material Design:** 48x48px minimum
+- **WCAG 2.5.5:** 44x44px minimum (Level AAA)
+
+### Mobile-Specific Patterns
+
+#### 1. Tap to Dismiss
+
+All toasts support tap-to-dismiss on mobile:
+
+```javascript
+// Automatically enabled in react-hot-toast
+// User can tap anywhere on toast to dismiss
+```
+
+#### 2. Swipe Gestures (Optional Future Enhancement)
+
+Currently not implemented, but considered for Phase 4:
+
+```javascript
+// Future: Swipe right to dismiss
+// Future: Swipe left for more options
+```
+
+#### 3. Reduced Animation Motion
+
+Respect user preference for reduced motion:
+
+```css
+@media (prefers-reduced-motion: reduce) {
+  .toast-enter {
+    animation: none;
+    transition: opacity 0.2s ease;
+  }
+}
+```
+
+### Mobile Testing Checklist
+
+When implementing or testing toasts on mobile:
+
+- [ ] Test on iPhone (notch + Dynamic Island)
+- [ ] Test on Android (gesture bar)
+- [ ] Test with on-screen keyboard visible
+- [ ] Test in portrait and landscape
+- [ ] Verify touch targets ≥44px
+- [ ] Test with reduced motion enabled
+- [ ] Verify safe area insets work
+- [ ] Check duration feels right (not too fast)
+- [ ] Ensure text is readable at full width
+- [ ] Test tap-to-dismiss works
+
+### Common Mobile Pitfalls
+
+#### ❌ Pitfall 1: Fixed Desktop Positioning
+```javascript
+// Bad: Always top-right
+position="top-right"  // Hidden on mobile
+```
+
+#### ✅ Solution: Responsive Positioning
+```javascript
+position={isMobileView ? 'top-center' : 'top-right'}
+```
+
+---
+
+#### ❌ Pitfall 2: Desktop Durations
+```javascript
+// Bad: Same duration everywhere
+duration: 3000  // Too fast for distracted mobile users
+```
+
+#### ✅ Solution: Platform-Specific Durations
+```javascript
+duration: isMobileView ? 5000 : 3000
+```
+
+---
+
+#### ❌ Pitfall 3: Small Touch Targets
+```javascript
+// Bad: Desktop-sized buttons
+<button className="p-1 text-xs">×</button>
+```
+
+#### ✅ Solution: Large Touch Targets
+```javascript
+<button className="min-w-[44px] min-h-[44px] p-2">
+  <X className="w-5 h-5" />
+</button>
+```
+
+---
+
+#### ❌ Pitfall 4: Ignoring Safe Areas
+```javascript
+// Bad: Fixed top position
+containerStyle={{ top: 0 }}  // Obscured by notch
+```
+
+#### ✅ Solution: Respect Safe Areas
+```javascript
+containerStyle={{
+  top: 'env(safe-area-inset-top, 0px)'
+}}
+```
+
+### Mobile Performance
+
+Toast animations should be performant on mobile devices:
+
+```javascript
+// ✅ Good: GPU-accelerated properties
+transform: translateY(-10px);  // Use transform
+opacity: 0;                     // Use opacity
+
+// ❌ Bad: Layout-triggering properties
+top: -10px;      // Triggers layout
+margin-top: 10px; // Triggers layout
+```
+
+### Responsive Width Example
+
+```javascript
+// Complete responsive width implementation
+style: {
+  // Mobile: near full-width with margins
+  maxWidth: isMobileView ? 'calc(100vw - 32px)' : '28rem',
+  width: isMobileView ? 'auto' : undefined,
+
+  // Mobile: larger padding for touch
+  padding: isMobileView ? '1rem' : '0.75rem',
+
+  // Mobile: larger font for readability
+  fontSize: isMobileView ? '0.9375rem' : '0.875rem', // 15px vs 14px
+}
+```
+
+### Resources
+
+- **Apple Human Interface Guidelines - Notifications**: https://developer.apple.com/design/human-interface-guidelines/notifications
+- **Material Design - Snackbars**: https://m3.material.io/components/snackbar/overview
+- **WCAG 2.5.5 - Target Size**: https://www.w3.org/WAI/WCAG22/Understanding/target-size-enhanced
+- **CSS env() Variables**: https://developer.mozilla.org/en-US/docs/Web/CSS/env
+- **Mobile UX Best Practices**: https://www.nngroup.com/articles/mobile-ux/
 
 ---
 

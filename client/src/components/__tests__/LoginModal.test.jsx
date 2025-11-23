@@ -19,6 +19,16 @@ vi.mock('../../utils/toast', () => ({
   toastCompact: vi.fn(),
 }));
 
+// Mock toastWithHistory for toastWelcomeBack
+vi.mock('../../utils/toastWithHistory', () => ({
+  toastWelcomeBack: vi.fn(),
+}));
+
+// Mock analytics
+vi.mock('../../utils/analytics', () => ({
+  trackOAuth: vi.fn(),
+}));
+
 describe('LoginModal', () => {
   const mockOnClose = vi.fn();
   const mockOnSwitchToSignup = vi.fn();

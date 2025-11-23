@@ -35,10 +35,10 @@ describe('DownloadButton', () => {
       expect(button).toBeInTheDocument();
     });
 
-    it('should have correct title attribute', () => {
+    it('should have correct aria-label attribute', () => {
       render(<DownloadButton content="Test content" ariaLabel="Download file" />);
       const button = screen.getByTestId('download-btn');
-      expect(button).toHaveAttribute('title', 'Download file');
+      expect(button).toHaveAttribute('aria-label', 'Download file');
     });
 
     it('should use default aria-label when not provided', () => {
@@ -184,7 +184,6 @@ describe('DownloadButton', () => {
       // Button should remain enabled with same label
       expect(button).not.toBeDisabled();
       expect(button).toHaveAttribute('aria-label', 'Download documentation');
-      expect(button).toHaveAttribute('title', 'Download documentation');
     });
 
     it('should remain clickable after download (fire-and-forget pattern)', async () => {

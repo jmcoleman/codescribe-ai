@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
-import { Check, Sparkles, Zap, Building2, Code2, Loader2, ArrowLeft, Star } from 'lucide-react';
+import { Check, Sparkles, Zap, Building2, Code2, Loader2, ArrowLeft, Star, DollarSign } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { API_URL } from '../config/api';
@@ -53,6 +53,9 @@ export function PricingPage() {
     const saved = getSessionItem(STORAGE_KEYS.BILLING_PERIOD);
     return saved === 'annual' ? 'annual' : 'monthly';
   });
+
+  // Mobile tab state (not persisted)
+  const [mobileActiveTab, setMobileActiveTab] = useState('prices'); // 'prices' or 'languages'
 
   // Persist billing period to sessionStorage whenever it changes
   useEffect(() => {
@@ -368,8 +371,40 @@ export function PricingPage() {
           </div>
         </div>
 
-        {/* Pricing Tiers */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-2 sm:mb-3 max-w-7xl mx-auto">
+        {/* Mobile Tabs - Only visible on mobile (<1024px) */}
+        <div className="lg:hidden mb-4">
+          <div className="flex border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-t-lg overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setMobileActiveTab('prices')}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
+                mobileActiveTab === 'prices'
+                  ? 'text-purple-600 dark:text-purple-400 border-b-2 border-purple-600 dark:border-purple-400 bg-purple-50/50 dark:bg-purple-950/20'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800'
+              }`}
+            >
+              <DollarSign className="w-4 h-4" />
+              <span>Pricing</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileActiveTab('languages')}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
+                mobileActiveTab === 'languages'
+                  ? 'text-purple-600 dark:text-purple-400 border-b-2 border-purple-600 dark:border-purple-400 bg-purple-50/50 dark:bg-purple-950/20'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Code2 className="w-4 h-4" />
+              <span>Languages</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Pricing Tiers - Hidden on mobile when Languages tab is active */}
+        <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-2 sm:mb-3 max-w-7xl mx-auto ${
+          mobileActiveTab === 'languages' ? 'hidden lg:grid' : ''
+        }`}>
           {tiers.map((tier) => {
             const Icon = tier.icon;
             const isLoading = loading === tier.id;
@@ -470,8 +505,10 @@ export function PricingPage() {
           })}
         </div>
 
-        {/* Feature highlights & coming soon note */}
-        <div className="text-center mb-2 sm:mb-3 space-y-0.5 sm:space-y-1">
+        {/* Feature highlights & coming soon note - Hidden on mobile when Languages tab is active */}
+        <div className={`text-center mb-2 sm:mb-3 space-y-0.5 sm:space-y-1 ${
+          mobileActiveTab === 'languages' ? 'hidden lg:block' : ''
+        }`}>
           <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
             All tiers include: <span className="font-semibold">All 16 languages</span> • <span className="font-semibold">4 doc types</span> • <span className="font-semibold">Real-time streaming</span> • <span className="font-semibold">Quality scoring</span>
           </p>
@@ -480,8 +517,10 @@ export function PricingPage() {
           </p>
         </div>
 
-        {/* Legal disclaimer */}
-        <div className="text-center mb-4 sm:mb-6">
+        {/* Legal disclaimer - Hidden on mobile when Languages tab is active */}
+        <div className={`text-center mb-4 sm:mb-6 ${
+          mobileActiveTab === 'languages' ? 'hidden lg:block' : ''
+        }`}>
           <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
             By subscribing, you agree to our{' '}
             <a href="/terms" className="text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 underline">
@@ -495,8 +534,10 @@ export function PricingPage() {
           </p>
         </div>
 
-        {/* Supported Languages Section */}
-        <div className="bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-950/20 dark:to-indigo-950/10 rounded-3xl p-8 sm:p-12 border border-purple-100 dark:border-purple-900/50">
+        {/* Supported Languages Section - Hidden on mobile when Pricing tab is active */}
+        <div className={`bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-950/20 dark:to-indigo-950/10 rounded-3xl p-8 sm:p-12 border border-purple-100 dark:border-purple-900/50 ${
+          mobileActiveTab === 'prices' ? 'hidden lg:block' : ''
+        }`}>
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-purple-600 dark:bg-purple-700 text-white mb-4">
               <Code2 className="w-8 h-8" />

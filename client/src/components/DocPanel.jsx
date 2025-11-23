@@ -1,10 +1,12 @@
-import { Sparkles, CheckCircle, AlertCircle, ChevronDown, ChevronUp, MoreVertical, Download, Copy, RefreshCw } from 'lucide-react';
+import { Sparkles, CheckCircle, AlertCircle, XCircle, ChevronDown, ChevronUp, MoreVertical, Download, Copy, RefreshCw } from 'lucide-react';
 import { useState, useEffect, useRef, memo, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { CopyButton } from './CopyButton';
 import { DownloadButton } from './DownloadButton';
+import { Tooltip } from './Tooltip';
 import { DocPanelGeneratingSkeleton } from './SkeletonLoader';
 import { MermaidDiagram } from './MermaidDiagram';
 import { useTheme } from '../contexts/ThemeContext';
@@ -159,7 +161,15 @@ export const DocPanel = memo(function DocPanel({
   bulkGenerationProgress = null,
   bulkGenerationSummary = null,
   bulkGenerationErrors = [],
-  onDismissBulkErrors
+  onDismissBulkErrors,
+  onSummaryFileClick,
+  onBackToSummary,
+  onDownloadAllDocs,
+  batchSummaryMarkdown = null,
+  canUseBatchProcessing = false,
+  onExportFile,
+  currentlyGeneratingFile = null,
+  throttleCountdown = null
 }) {
   const { effectiveTheme } = useTheme();
 
@@ -228,23 +238,62 @@ export const DocPanel = memo(function DocPanel({
 
     let frameId;
     let lastScrollHeight = 0;
+    let lastScrollTop = 0;
+    let userHasScrolledUp = false;
+    let isAutoScrolling = false; // Track if we're actively auto-scrolling
 
     const checkAndScroll = () => {
       const element = contentRef.current;
       if (!element) return;
 
-      const threshold = 100; // pixels from bottom
+      const threshold = 200; // pixels from bottom - increased for better UX
       const currentScrollHeight = element.scrollHeight;
+      const currentScrollTop = element.scrollTop;
 
-      // Check if user is near bottom before auto-scrolling
-      const isNearBottom =
-        element.scrollHeight - element.scrollTop - element.clientHeight < threshold;
+      // Check if user is near bottom
+      const distanceFromBottom = element.scrollHeight - element.scrollTop - element.clientHeight;
+      const isNearBottom = distanceFromBottom < threshold;
 
-      // Scroll if near bottom OR if content height changed (e.g., Mermaid diagram rendered)
-      if (isNearBottom || currentScrollHeight !== lastScrollHeight) {
-        element.scrollTop = element.scrollHeight;
-        lastScrollHeight = currentScrollHeight;
+      // Detect if content grew (e.g., Mermaid diagram rendering)
+      const contentGrew = currentScrollHeight > lastScrollHeight;
+      const contentGrowth = currentScrollHeight - lastScrollHeight;
+
+      // Detect if user manually scrolled (scroll position changed without content growing)
+      const scrollChanged = Math.abs(currentScrollTop - lastScrollTop) > 1;
+
+      if (scrollChanged && !contentGrew) {
+        // User manually scrolled (not auto-scroll from content growth)
+        if (currentScrollTop < lastScrollTop) {
+          // Scrolled up - stop auto-scrolling
+          userHasScrolledUp = true;
+          isAutoScrolling = false;
+        } else if (isNearBottom) {
+          // Scrolled down to near bottom - resume auto-scrolling
+          userHasScrolledUp = false;
+          isAutoScrolling = true;
+        }
       }
+
+      // Auto-scroll if:
+      // 1. Already auto-scrolling and content grew (maintain auto-scroll through Mermaid renders) OR
+      // 2. User is near bottom OR
+      // 3. Content is very short (starting fresh) AND user hasn't scrolled up
+      const shouldAutoScroll =
+        (isAutoScrolling && contentGrew) ||
+        isNearBottom ||
+        (element.scrollHeight < 500 && !userHasScrolledUp);
+
+      if (shouldAutoScroll) {
+        element.scrollTop = element.scrollHeight;
+        lastScrollTop = element.scrollHeight;
+        userHasScrolledUp = false;
+        isAutoScrolling = true; // Mark as actively auto-scrolling
+      } else {
+        lastScrollTop = currentScrollTop;
+      }
+
+      // Always track height for next comparison
+      lastScrollHeight = currentScrollHeight;
 
       // Continue checking while generating
       frameId = requestAnimationFrame(checkAndScroll);
@@ -258,6 +307,35 @@ export const DocPanel = memo(function DocPanel({
       }
     };
   }, [isGenerating]);
+
+  // Auto-scroll to top when batch summary is displayed (but not during active generation)
+  // Only trigger when batchSummaryMarkdown changes, not on every documentation update
+  useEffect(() => {
+    if (!isGenerating && batchSummaryMarkdown && documentation === batchSummaryMarkdown && contentRef.current) {
+      // Small delay to ensure content is rendered
+      setTimeout(() => {
+        if (contentRef.current) {
+          contentRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      }, 100);
+    }
+  }, [batchSummaryMarkdown]); // Only depend on batch summary changing, not documentation or isGenerating
+
+  // Auto-scroll to top when single file generation completes
+  useEffect(() => {
+    // Only scroll to top if:
+    // 1. Generation just completed (justGenerated flag is set)
+    // 2. NOT a batch summary (batch has its own scroll logic above)
+    // 3. We have documentation to show
+    if (justGenerated && documentation && !batchSummaryMarkdown && contentRef.current) {
+      // Small delay to ensure content is fully rendered
+      setTimeout(() => {
+        if (contentRef.current) {
+          contentRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      }, 150);
+    }
+  }, [justGenerated, documentation, batchSummaryMarkdown]);
 
   const handleToggle = () => {
     setIsExpanded(!isExpanded);
@@ -275,6 +353,19 @@ export const DocPanel = memo(function DocPanel({
     pre({ children }) {
       // Just pass through - SyntaxHighlighter handles all styling
       return <>{children}</>;
+    },
+    a({ node, href, children, ...props }) {
+      // Custom rendering for export links to use Download icon
+      if (href && href.startsWith('#export:')) {
+        return (
+          <a href={href} className="inline-flex items-center gap-1 text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors no-underline hover:underline" {...props}>
+            <Download className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" />
+            <span>Export</span>
+          </a>
+        );
+      }
+      // Default link rendering for other links
+      return <a href={href} {...props}>{children}</a>;
     },
     code({ node, inline, className, children, ...props }) {
       const match = /language-(\w+)/.exec(className || '');
@@ -384,48 +475,87 @@ export const DocPanel = memo(function DocPanel({
         <div className="flex items-center gap-2 min-w-0">
           <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400 flex-shrink-0" aria-hidden="true" />
           <h2 className="text-sm text-slate-600 dark:text-slate-300 @[500px]:inline hidden">
-            Generated Documentation
+            Generated Docs
           </h2>
           <h2 className="text-sm text-slate-600 dark:text-slate-300 @[500px]:hidden truncate">
-            Docs
+            Generated Docs
           </h2>
         </div>
 
         {/* Right: Quality Score + Action Buttons */}
         <div className="flex items-center gap-2 flex-shrink-0">
-          {/* Quality Score - Responsive based on container width */}
+          {/* Quality Score or Batch Summary Badge */}
           {qualityScore && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                onViewBreakdown();
-              }}
-              className="flex items-center gap-1.5 @[600px]:gap-2 px-2.5 py-1.5 bg-white dark:bg-slate-800 border border-purple-200 dark:border-purple-400/30 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-400/15 hover:scale-[1.02] hover:shadow-sm transition-all duration-200 motion-reduce:transition-none active:scale-[0.98]"
-              aria-label={`Quality score: ${qualityScore.grade} ${qualityScore.score}/100`}
-              title="View breakdown"
-            >
-              {/* "Quality:" label - always visible */}
-              <span className="text-xs text-slate-600 dark:text-slate-400">Quality:</span>
-              {/* Score - always visible, add "/100" when wide */}
-              <span className="text-xs font-semibold text-purple-700 dark:text-purple-400">
-                {qualityScore.score}<span className="@[600px]:inline hidden">/100</span>
-              </span>
-              {/* Grade - always visible, add label when wide */}
-              <span className={`text-xs font-semibold ${getGradeColor(qualityScore.grade)}`}>
-                {qualityScore.grade}<span className="@[600px]:inline hidden"> {getGradeLabel(qualityScore.grade)}</span>
-              </span>
-            </button>
+            qualityScore.isBatchSummary ? (
+              // Batch Summary Badge - Non-clickable
+              <div
+                className="flex items-center gap-1.5 @[600px]:gap-2 px-2.5 py-1.5 bg-white dark:bg-slate-800 border border-purple-200 dark:border-purple-400/30 rounded-lg"
+                aria-label="Batch summary document"
+              >
+                <span className="text-xs text-slate-600 dark:text-slate-400">Batch Summary</span>
+                {qualityScore.score > 0 && (
+                  <>
+                    <span className="text-xs font-semibold text-purple-700 dark:text-purple-400">
+                      Avg: {qualityScore.score}<span className="@[600px]:inline hidden">/100</span>
+                    </span>
+                    <span className={`text-xs font-semibold ${getGradeColor(qualityScore.grade)}`}>
+                      {qualityScore.grade}
+                    </span>
+                  </>
+                )}
+              </div>
+            ) : (
+              // Regular Quality Score Button - Clickable
+              <Tooltip content="View breakdown">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    onViewBreakdown();
+                  }}
+                  className="flex items-center gap-1.5 @[600px]:gap-2 px-2.5 py-1.5 bg-white dark:bg-slate-800 border border-purple-200 dark:border-purple-400/30 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-400/15 hover:scale-[1.02] hover:shadow-sm transition-all duration-200 motion-reduce:transition-none active:scale-[0.98]"
+                  aria-label={`Quality score: ${qualityScore.grade} ${qualityScore.score}/100`}
+                >
+                {/* "Quality:" label - always visible */}
+                <span className="text-xs text-slate-600 dark:text-slate-400">Quality:</span>
+                {/* Score - always visible, add "/100" when wide */}
+                <span className="text-xs font-semibold text-purple-700 dark:text-purple-400">
+                  {qualityScore.score}<span className="@[600px]:inline hidden">/100</span>
+                </span>
+                {/* Grade - always visible, add label when wide */}
+                <span className={`text-xs font-semibold ${getGradeColor(qualityScore.grade)}`}>
+                  {qualityScore.grade}<span className="@[600px]:inline hidden"> {getGradeLabel(qualityScore.grade)}</span>
+                </span>
+              </button>
+              </Tooltip>
+            )
+          )}
+
+          {/* Export All button - show when viewing batch summary */}
+          {qualityScore?.isBatchSummary && onDownloadAllDocs && (
+            <Tooltip content="Export all generated documentation as ZIP">
+              <button
+                type="button"
+                onClick={onDownloadAllDocs}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500 rounded-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900"
+                aria-label="Export all generated documentation as ZIP"
+              >
+                <Download className="w-3.5 h-3.5" aria-hidden="true" />
+                <span className="@[600px]:inline hidden">Export All</span>
+                <span className="@[600px]:hidden">All</span>
+              </button>
+            </Tooltip>
           )}
 
           {/* Desktop: Download, Copy, and Clear Buttons */}
           {documentation && (
             <>
-              <div className="@[700px]:flex hidden items-center gap-2">
+              {/* Wide screens: Icon + Label */}
+              <div className="@[600px]:flex hidden items-center gap-2">
                 <DownloadButton
                   content={documentation}
-                  docType={qualityScore?.docType || 'documentation'}
+                  docType={qualityScore?.isBatchSummary ? 'batch-summary' : (qualityScore?.docType || 'documentation')}
                   size="md"
                   variant="outline"
                   ariaLabel="Export documentation"
@@ -438,20 +568,50 @@ export const DocPanel = memo(function DocPanel({
                   ariaLabel="Copy documentation"
                   showLabel={true}
                 />
-                <button
-                  type="button"
-                  onClick={onReset}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500 rounded-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900"
-                  aria-label="Clear documentation"
-                  title="Clear documentation"
-                >
-                  <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
-                  <span>Clear</span>
-                </button>
+                <Tooltip content="Clear documentation">
+                  <button
+                    type="button"
+                    onClick={onReset}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500 rounded-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900"
+                    aria-label="Clear documentation"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
+                    <span>Clear</span>
+                  </button>
+                </Tooltip>
+              </div>
+
+              {/* Medium screens: Icon only */}
+              <div className="@[450px]:flex @[600px]:hidden hidden items-center gap-2">
+                <DownloadButton
+                  content={documentation}
+                  docType={qualityScore?.isBatchSummary ? 'batch-summary' : (qualityScore?.docType || 'documentation')}
+                  size="md"
+                  variant="outline"
+                  ariaLabel="Export documentation"
+                  showLabel={false}
+                />
+                <CopyButton
+                  text={documentation}
+                  size="md"
+                  variant="outline"
+                  ariaLabel="Copy documentation"
+                  showLabel={false}
+                />
+                <Tooltip content="Clear documentation">
+                  <button
+                    type="button"
+                    onClick={onReset}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500 rounded-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900"
+                    aria-label="Clear documentation"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
+                  </button>
+                </Tooltip>
               </div>
 
               {/* Mobile: Overflow Menu - show when buttons are hidden */}
-              <div className="@[700px]:hidden relative" ref={mobileMenuRef}>
+              <div className="@[450px]:hidden relative" ref={mobileMenuRef}>
                 <button
                   type="button"
                   onClick={() => setShowMobileMenu(!showMobileMenu)}
@@ -523,95 +683,67 @@ export const DocPanel = memo(function DocPanel({
         </div>
       </div>
 
-      {/* Batch Summary Banner - Shows Progress OR Final Summary */}
-      {(bulkGenerationProgress || bulkGenerationSummary) && (
-        <div className={`mx-4 mt-3 ${
-          bulkGenerationSummary && bulkGenerationSummary.failCount > 0
-            ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/50'
-            : bulkGenerationSummary
-            ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800/50'
-            : 'bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800/50'
-        } border rounded-lg overflow-hidden transition-colors`}>
+      {/* Batch Summary Banner - Shows Final Summary Only (Pro+ tier only) */}
+      {canUseBatchProcessing && bulkGenerationSummary && (
+        <div className="mx-4 mt-3 bg-white dark:bg-slate-800 border-2 border-indigo-600 dark:border-indigo-400 rounded-lg overflow-hidden shadow-sm transition-all">
           <div className="flex items-start justify-between p-3">
-            <div className="flex items-start gap-2.5 flex-1 min-w-0">
+            <div className="flex items-start gap-3 flex-1 min-w-0">
               {/* Icon based on state */}
-              {bulkGenerationProgress ? (
-                <div className="animate-spin rounded-full h-5 w-5 border-2 border-purple-600 dark:border-purple-400 border-t-transparent flex-shrink-0 mt-0.5" aria-hidden="true" />
-              ) : bulkGenerationSummary && bulkGenerationSummary.failCount > 0 ? (
-                <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
-              ) : (
-                <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
-              )}
+              <div className="flex-shrink-0">
+                {bulkGenerationSummary.successCount === 0 && bulkGenerationSummary.failCount > 0 ? (
+                  <XCircle className="w-5 h-5 text-red-600 dark:text-red-400" aria-hidden="true" />
+                ) : bulkGenerationSummary.failCount > 0 ? (
+                  <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+                ) : (
+                  <CheckCircle className="w-5 h-5 text-indigo-600 dark:text-indigo-400" aria-hidden="true" />
+                )}
+              </div>
 
               <div className="flex-1 min-w-0">
-                {/* Progress State */}
-                {bulkGenerationProgress && (
-                  <>
-                    <p className="text-sm font-medium text-purple-900 dark:text-purple-100 mb-2">
-                      Generating {bulkGenerationProgress.completed} of {bulkGenerationProgress.total} files... (Batch {bulkGenerationProgress.currentBatch}/{bulkGenerationProgress.totalBatches})
-                    </p>
-                    {/* Progress bar */}
-                    <div className="w-full bg-purple-200 dark:bg-purple-800/50 rounded-full h-2 overflow-hidden">
-                      <div
-                        className="bg-purple-600 dark:bg-purple-400 h-full transition-all duration-300 ease-out"
-                        style={{
-                          width: `${Math.round((bulkGenerationProgress.completed / bulkGenerationProgress.total) * 100)}%`
-                        }}
-                        role="progressbar"
-                        aria-valuenow={bulkGenerationProgress.completed}
-                        aria-valuemin={0}
-                        aria-valuemax={bulkGenerationProgress.total}
-                        aria-label={`Progress: ${bulkGenerationProgress.completed} of ${bulkGenerationProgress.total} files`}
-                      />
-                    </div>
-                  </>
-                )}
-
                 {/* Summary State */}
                 {bulkGenerationSummary && (
                   <>
-                    <div className="flex items-center gap-2 flex-wrap mb-2">
-                      <p className={`text-sm font-medium ${
-                        bulkGenerationSummary.failCount > 0
-                          ? 'text-amber-900 dark:text-amber-100'
-                          : 'text-green-900 dark:text-green-100'
-                      }`}>
+                    {/* Main status line */}
+                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                      Batch Complete: <span className="text-slate-700 dark:text-slate-300">
                         {bulkGenerationSummary.failCount === 0 ? (
-                          <>✓ {bulkGenerationSummary.successCount} {bulkGenerationSummary.successCount === 1 ? 'file' : 'files'}</>
+                          <>{bulkGenerationSummary.successCount} {bulkGenerationSummary.successCount === 1 ? 'file' : 'files'}</>
                         ) : (
                           <>
                             {bulkGenerationSummary.successCount > 0 ? (
-                              <>
-                                ⚠ {bulkGenerationSummary.successCount} of {bulkGenerationSummary.totalFiles} files
-                              </>
+                              <>{bulkGenerationSummary.successCount} of {bulkGenerationSummary.totalFiles} files</>
                             ) : (
-                              <>❌ 0 of {bulkGenerationSummary.totalFiles} files</>
+                              <>0 of {bulkGenerationSummary.totalFiles} files</>
                             )}
                           </>
                         )}
-                      </p>
+                      </span>
+                    </p>
+
+                    {/* Metadata line */}
+                    <div className="flex items-center gap-2 mt-1 flex-wrap">
                       {bulkGenerationSummary.successCount > 0 && (
-                        <span className={`text-xs px-2 py-0.5 rounded ${
-                          bulkGenerationSummary.failCount > 0
-                            ? 'bg-amber-200 dark:bg-amber-800/50 text-amber-900 dark:text-amber-100'
-                            : 'bg-green-200 dark:bg-green-800/50 text-green-900 dark:text-green-100'
-                        }`}>
-                          Avg: {bulkGenerationSummary.avgQuality}/100 ({bulkGenerationSummary.avgGrade})
-                        </span>
+                        <>
+                          <p className="text-xs text-slate-700 dark:text-slate-300">
+                            Avg Quality: <span className="font-medium">{bulkGenerationSummary.avgQuality}/100 ({bulkGenerationSummary.avgGrade})</span>
+                          </p>
+                        </>
                       )}
                       {bulkGenerationSummary.failCount > 0 && (
-                        <span className="text-xs px-2 py-0.5 rounded bg-red-200 dark:bg-red-800/50 text-red-900 dark:text-red-100">
-                          {bulkGenerationSummary.failCount} failed
-                        </span>
+                        <>
+                          {bulkGenerationSummary.successCount > 0 && (
+                            <span className="text-slate-400 dark:text-slate-500">•</span>
+                          )}
+                          <p className="text-xs text-slate-700 dark:text-slate-300">
+                            <span className="font-medium">{bulkGenerationSummary.failCount}</span> failed
+                          </p>
+                        </>
                       )}
+                      <span className="text-slate-400 dark:text-slate-500">•</span>
                       <button
                         type="button"
                         onClick={() => setShowErrorDetails(!showErrorDetails)}
-                        className={`inline-flex items-center gap-1 text-xs ${
-                          bulkGenerationSummary.failCount > 0
-                            ? 'text-amber-700 dark:text-amber-300 hover:text-amber-900 dark:hover:text-amber-100'
-                            : 'text-green-700 dark:text-green-300 hover:text-green-900 dark:hover:text-green-100'
-                        } transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 rounded px-1`}
+                        className="inline-flex items-center gap-1 text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 rounded"
                         aria-expanded={showErrorDetails}
                         aria-label={showErrorDetails ? 'Hide details' : 'Show details'}
                       >
@@ -635,17 +767,17 @@ export const DocPanel = memo(function DocPanel({
                         {/* Success Section */}
                         {bulkGenerationSummary.successfulFiles.length > 0 && (
                           <div>
-                            <h4 className="text-xs font-semibold text-green-900 dark:text-green-100 mb-1.5">
-                              ✓ Success ({bulkGenerationSummary.successfulFiles.length} {bulkGenerationSummary.successfulFiles.length === 1 ? 'file' : 'files'})
+                            <h4 className="text-xs font-semibold text-slate-900 dark:text-slate-100 mb-1.5">
+                              Success ({bulkGenerationSummary.successfulFiles.length} {bulkGenerationSummary.successfulFiles.length === 1 ? 'file' : 'files'})
                             </h4>
                             <div className="space-y-1">
                               {bulkGenerationSummary.successfulFiles.map((file, index) => (
                                 <div
                                   key={index}
-                                  className="bg-white dark:bg-slate-800 border border-green-200 dark:border-green-800/50 rounded px-2.5 py-1.5 text-xs flex items-center justify-between transition-colors"
+                                  className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded px-2.5 py-1.5 text-xs flex items-center justify-between transition-colors"
                                 >
-                                  <span className="font-medium text-green-900 dark:text-green-100">{file.name}</span>
-                                  <span className="text-green-700 dark:text-green-300">{file.score}/100 ({file.grade})</span>
+                                  <span className="font-medium text-slate-900 dark:text-slate-100">{file.name}</span>
+                                  <span className="text-slate-700 dark:text-slate-300">{file.score}/100 ({file.grade})</span>
                                 </div>
                               ))}
                             </div>
@@ -655,21 +787,21 @@ export const DocPanel = memo(function DocPanel({
                         {/* Failed Section */}
                         {bulkGenerationErrors.length > 0 && (
                           <div>
-                            <h4 className="text-xs font-semibold text-red-900 dark:text-red-100 mb-1.5">
-                              ❌ Failed ({bulkGenerationErrors.length} {bulkGenerationErrors.length === 1 ? 'file' : 'files'})
+                            <h4 className="text-xs font-semibold text-slate-900 dark:text-slate-100 mb-1.5">
+                              Failed ({bulkGenerationErrors.length} {bulkGenerationErrors.length === 1 ? 'file' : 'files'})
                             </h4>
                             <div className="space-y-1">
                               {bulkGenerationErrors.map((error, index) => (
                                 <div
                                   key={index}
-                                  className="bg-white dark:bg-slate-800 border border-red-200 dark:border-red-800/50 rounded p-2.5 text-xs transition-colors"
+                                  className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded p-2.5 text-xs transition-colors"
                                 >
                                   <div className="flex items-start gap-2">
-                                    <span className="font-medium text-red-900 dark:text-red-100 flex-shrink-0">
+                                    <span className="font-medium text-slate-900 dark:text-slate-100 flex-shrink-0">
                                       {error.filename}
                                     </span>
                                   </div>
-                                  <p className="mt-1 text-red-800 dark:text-red-200/90 leading-relaxed">
+                                  <p className="mt-1 text-slate-800 dark:text-slate-200/90 leading-relaxed">
                                     {error.error}
                                   </p>
                                 </div>
@@ -689,19 +821,11 @@ export const DocPanel = memo(function DocPanel({
               <button
                 type="button"
                 onClick={onDismissBulkErrors}
-                className={`flex-shrink-0 ml-2 p-1 rounded transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
-                  bulkGenerationSummary.failCount > 0
-                    ? 'hover:bg-amber-100 dark:hover:bg-amber-800/50 focus-visible:ring-amber-600 dark:focus-visible:ring-amber-400'
-                    : 'hover:bg-green-100 dark:hover:bg-green-800/50 focus-visible:ring-green-600 dark:focus-visible:ring-green-400'
-                }`}
+                className="flex-shrink-0 ml-2 p-1 rounded transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 hover:bg-slate-100 dark:hover:bg-slate-700 focus-visible:ring-slate-600 dark:focus-visible:ring-slate-400"
                 aria-label="Dismiss summary banner"
               >
                 <svg
-                  className={`w-4 h-4 ${
-                    bulkGenerationSummary.failCount > 0
-                      ? 'text-amber-600 dark:text-amber-400'
-                      : 'text-green-600 dark:text-green-400'
-                  }`}
+                  className="w-4 h-4 text-slate-600 dark:text-slate-400"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -715,19 +839,227 @@ export const DocPanel = memo(function DocPanel({
         </div>
       )}
 
+      {/* Currently Generating File Banner (Pro+ tier only) */}
+      {canUseBatchProcessing && currentlyGeneratingFile && (
+        <div className="mx-4 mt-3 bg-white dark:bg-slate-800 border-2 border-indigo-600 dark:border-indigo-400 rounded-lg overflow-hidden shadow-sm transition-all">
+          <div className="flex items-center gap-3 p-3">
+            {/* Sparkles icon with animated glow */}
+            <div className="relative flex-shrink-0">
+              <Sparkles className="w-5 h-5 text-indigo-600 dark:text-indigo-400 animate-pulse" aria-hidden="true" />
+              <div className="absolute inset-0 bg-indigo-500/20 dark:bg-indigo-400/20 rounded-full blur-md animate-pulse" aria-hidden="true" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-indigo-900 dark:text-indigo-100">
+                Generating: <span className="text-indigo-700 dark:text-indigo-300">{currentlyGeneratingFile.filename}</span>
+              </p>
+              <div className="flex items-center gap-2 mt-1">
+                <p className="text-xs text-indigo-700 dark:text-indigo-300">
+                  File {currentlyGeneratingFile.index} of {currentlyGeneratingFile.total}
+                </p>
+                <span className="text-indigo-400 dark:text-indigo-500">•</span>
+                <p className="text-xs text-indigo-600 dark:text-indigo-400 font-medium">
+                  {currentlyGeneratingFile.docType}
+                </p>
+              </div>
+              {/* Progress bar */}
+              <div className="mt-2 h-1 bg-indigo-200/50 dark:bg-indigo-800/30 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 dark:from-indigo-400 dark:to-purple-400 rounded-full transition-all duration-300"
+                  style={{ width: `${(currentlyGeneratingFile.index / currentlyGeneratingFile.total) * 100}%` }}
+                  aria-hidden="true"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Throttle Countdown Banner (Pro+ tier only) */}
+      {canUseBatchProcessing && throttleCountdown !== null && throttleCountdown > 0 && (
+        <div className="mx-4 mt-3 bg-white dark:bg-slate-800 border-2 border-indigo-600 dark:border-indigo-400 rounded-lg overflow-hidden shadow-sm transition-all">
+          <div className="flex items-center gap-3 p-3">
+            <div className="flex-shrink-0 text-2xl animate-pulse" role="img" aria-label="hourglass">⏳</div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-indigo-900 dark:text-indigo-100">
+                Next file in <span className="text-indigo-700 dark:text-indigo-300">{throttleCountdown}s</span>
+              </p>
+              <p className="text-xs text-indigo-700 dark:text-indigo-300 mt-0.5">
+                Rate limiting to respect API limits
+              </p>
+              {/* Countdown progress bar */}
+              <div className="mt-2 h-1 bg-indigo-200/50 dark:bg-indigo-800/30 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 dark:from-indigo-400 dark:to-purple-400 rounded-full transition-all duration-1000 ease-linear"
+                  style={{ width: `${(15 - throttleCountdown) / 15 * 100}%` }}
+                  aria-hidden="true"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Body - Documentation Content */}
-      <div ref={contentRef} className="flex-1 min-h-0 overflow-y-auto px-4 py-3 bg-white dark:bg-slate-900">
-        {isGenerating && !documentation ? (
+      <div
+        ref={contentRef}
+        className="flex-1 min-h-0 overflow-y-auto px-4 py-3 bg-white dark:bg-slate-900"
+        onClick={(e) => {
+          // Find the closest anchor element (handles clicks on nested elements like <strong>)
+          const link = e.target.closest('a');
+          if (!link) return;
+
+          // Intercept clicks on file links in batch summary
+          if (link.hash && link.hash.startsWith('#file:')) {
+            e.preventDefault();
+            const filename = decodeURIComponent(link.hash.substring(6)); // Remove '#file:'
+            if (onSummaryFileClick) {
+              onSummaryFileClick(filename);
+            }
+          }
+
+          // Intercept clicks on export links in batch summary
+          if (link.hash && link.hash.startsWith('#export:')) {
+            e.preventDefault();
+            const filename = decodeURIComponent(link.hash.substring(8)); // Remove '#export:'
+            if (onExportFile) {
+              onExportFile(filename);
+            }
+          }
+        }}
+      >
+        {(isGenerating || bulkGenerationProgress) && !documentation ? (
           <DocPanelGeneratingSkeleton />
         ) : documentation ? (
-          <div className="prose prose-slate dark:prose-invert max-w-none [&>*:first-child]:mt-0">
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              components={markdownComponents}
-            >
-              {documentation}
-            </ReactMarkdown>
-          </div>
+          <>
+            <style>{`
+              .file-card {
+                margin: 1rem 0;
+                border: 1px solid;
+                border-radius: 0.5rem;
+                overflow: hidden;
+                transition: all 0.2s;
+              }
+
+              .dark .file-card {
+                border-color: rgb(51 65 85);
+                background-color: rgb(30 41 59);
+              }
+
+              .file-card:not(.dark) {
+                border-color: rgb(226 232 240);
+                background-color: rgb(248 250 252);
+              }
+
+              .file-summary {
+                cursor: pointer;
+                padding: 1rem;
+                list-style: none;
+                user-select: none;
+              }
+
+              .file-summary::-webkit-details-marker {
+                display: none;
+              }
+
+              .file-summary::marker {
+                display: none;
+              }
+
+              .file-summary:hover {
+                background-color: rgb(241 245 249);
+              }
+
+              .dark .file-summary:hover {
+                background-color: rgb(51 65 85 / 0.5);
+              }
+
+              .file-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                gap: 1rem;
+                flex-wrap: wrap;
+              }
+
+              .file-info {
+                display: flex;
+                flex-direction: column;
+                gap: 0.25rem;
+                flex: 1;
+                min-width: 0;
+              }
+
+              .file-meta {
+                font-size: 0.875rem;
+                opacity: 0.7;
+              }
+
+              .file-actions {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                flex-shrink: 0;
+              }
+
+              .file-score {
+                font-size: 0.875rem;
+                white-space: nowrap;
+              }
+
+              .file-details {
+                padding: 0 1rem 1rem 1rem;
+                border-top: 1px solid;
+              }
+
+              .dark .file-details {
+                border-color: rgb(51 65 85);
+              }
+
+              .file-details:not(.dark) {
+                border-color: rgb(226 232 240);
+              }
+
+              .file-summary::before {
+                content: "▶";
+                display: inline-block;
+                margin-right: 0.5rem;
+                transition: transform 0.2s;
+                font-size: 0.75rem;
+                opacity: 0.6;
+              }
+
+              details[open] > .file-summary::before {
+                transform: rotate(90deg);
+              }
+            `}</style>
+
+            {/* Back to Summary button - show when viewing any file from a batch generation (Pro+ tier only) */}
+            {canUseBatchProcessing && batchSummaryMarkdown && documentation && documentation !== batchSummaryMarkdown && (
+              <div className="mb-4" data-no-export="true">
+                <button
+                  type="button"
+                  onClick={onBackToSummary}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-600 dark:border-indigo-400 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors text-xs font-medium text-indigo-900 dark:text-indigo-100"
+                  aria-label="Back to batch summary"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                  </svg>
+                  <span>Back to Summary</span>
+                </button>
+              </div>
+            )}
+
+            <div className="prose prose-slate dark:prose-invert max-w-none [&>*:first-child]:mt-0">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                rehypePlugins={[rehypeRaw]}
+                components={markdownComponents}
+              >
+                {documentation}
+              </ReactMarkdown>
+            </div>
+          </>
         ) : (
           <div
             className="flex flex-col items-center justify-center min-h-full text-center px-6 py-8 bg-white dark:bg-slate-900"
@@ -822,8 +1154,8 @@ export const DocPanel = memo(function DocPanel({
         )}
       </div>
 
-      {/* Footer - Quick Stats & Expandable Report */}
-      {qualityScore && (
+      {/* Footer - Quick Stats & Expandable Report (skip for batch summaries) */}
+      {qualityScore && !qualityScore.isBatchSummary && qualityScore.summary && (
         <div>
             {/* Quick Stats */}
             <div className="flex items-center justify-between px-4 py-2 bg-slate-50 dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 transition-colors">

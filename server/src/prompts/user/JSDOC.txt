@@ -2,6 +2,8 @@ Add comprehensive JSDoc comments to the following {{language}} code.
 
 {{baseContext}}
 
+Start your response with the heading "# JSDoc Documentation" followed by a brief 1-2 sentence description explaining that this is your code with comprehensive inline JSDoc comments added following industry standards.
+
 Code to document:
 ```{{language}}
 {{code}}

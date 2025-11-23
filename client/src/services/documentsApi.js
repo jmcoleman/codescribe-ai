@@ -8,6 +8,7 @@
  */
 
 import { API_URL } from '../config/api.js';
+import { STORAGE_KEYS, getStorageItem } from '../constants/storage.js';
 
 /**
  * Save a generated document to the database
@@ -27,7 +28,7 @@ import { API_URL } from '../config/api.js';
  * @returns {Promise<Object>} - { documentId, savedAt }
  */
 export async function saveDocument(docData) {
-  const token = localStorage.getItem('token');
+  const token = getStorageItem(STORAGE_KEYS.AUTH_TOKEN);
 
   const response = await fetch(`${API_URL}/api/documents`, {
     method: 'POST',
@@ -80,7 +81,7 @@ export async function saveDocument(docData) {
  * @returns {Promise<Object>} - { documents, total, hasMore }
  */
 export async function getUserDocuments(options = {}) {
-  const token = localStorage.getItem('token');
+  const token = getStorageItem(STORAGE_KEYS.AUTH_TOKEN);
   const params = new URLSearchParams({
     limit: options.limit || 50,
     offset: options.offset || 0,
@@ -108,7 +109,7 @@ export async function getUserDocuments(options = {}) {
  * @returns {Promise<Object>} - Document object
  */
 export async function getDocument(documentId) {
-  const token = localStorage.getItem('token');
+  const token = getStorageItem(STORAGE_KEYS.AUTH_TOKEN);
 
   const response = await fetch(`${API_URL}/api/documents/${documentId}`, {
     headers: {
@@ -131,7 +132,7 @@ export async function getDocument(documentId) {
  * @returns {Promise<Object>} - { success, deletedAt }
  */
 export async function deleteDocument(documentId) {
-  const token = localStorage.getItem('token');
+  const token = getStorageItem(STORAGE_KEYS.AUTH_TOKEN);
 
   const response = await fetch(`${API_URL}/api/documents/${documentId}`, {
     method: 'DELETE',
@@ -155,7 +156,7 @@ export async function deleteDocument(documentId) {
  * @returns {Promise<Object>} - { success, deletedCount }
  */
 export async function bulkDeleteDocuments(documentIds) {
-  const token = localStorage.getItem('token');
+  const token = getStorageItem(STORAGE_KEYS.AUTH_TOKEN);
 
   const response = await fetch(`${API_URL}/api/documents`, {
     method: 'DELETE',
@@ -180,7 +181,7 @@ export async function bulkDeleteDocuments(documentIds) {
  * @returns {Promise<Object>} - { success, restoredAt }
  */
 export async function restoreDocument(documentId) {
-  const token = localStorage.getItem('token');
+  const token = getStorageItem(STORAGE_KEYS.AUTH_TOKEN);
 
   const response = await fetch(`${API_URL}/api/documents/${documentId}/restore`, {
     method: 'POST',
@@ -203,7 +204,7 @@ export async function restoreDocument(documentId) {
  * @returns {Promise<Object>} - { success, deletedCount }
  */
 export async function deleteEphemeralDocuments() {
-  const token = localStorage.getItem('token');
+  const token = getStorageItem(STORAGE_KEYS.AUTH_TOKEN);
 
   const response = await fetch(`${API_URL}/api/documents/ephemeral`, {
     method: 'DELETE',
@@ -226,7 +227,7 @@ export async function deleteEphemeralDocuments() {
  * @returns {Promise<Object>} - { totalDocuments, avgQualityScore, etc. }
  */
 export async function getUserStats() {
-  const token = localStorage.getItem('token');
+  const token = getStorageItem(STORAGE_KEYS.AUTH_TOKEN);
 
   const response = await fetch(`${API_URL}/api/documents/stats`, {
     headers: {
