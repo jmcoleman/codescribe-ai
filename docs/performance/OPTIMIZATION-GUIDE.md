@@ -788,4 +788,23 @@ ls -lh client/dist/assets/
 
 ---
 
+## Related Documentation
+
+### Performance & Optimization
+- **[REACT-OPTIMIZATION-LESSONS.md](REACT-OPTIMIZATION-LESSONS.md)** - React memoization patterns, re-render prevention (v2.8.0)
+- **[ARCHITECTURE.md](../architecture/ARCHITECTURE.md)** - System architecture and performance strategies
+- **[PROMPT-CACHING-GUIDE.md](../architecture/PROMPT-CACHING-GUIDE.md)** - Backend cost optimization ($100-400/mo savings)
+
+### Testing & Quality
+- **[TEST-PATTERNS-GUIDE.md](../testing/TEST-PATTERNS-GUIDE.md)** - Test patterns and best practices
+- **[ACCESSIBILITY-AUDIT.md](../testing/ACCESSIBILITY-AUDIT.md)** - WCAG 2.1 AA audit results
+
+### Implementation
+- **[05-Dev-Guide.md](../planning/mvp/05-Dev-Guide.md)** - Implementation patterns
+- **[MERMAID-DIAGRAMS.md](../components/MERMAID-DIAGRAMS.md)** - Diagram optimization patterns
+
+**Last Updated:** November 23, 2025
+
+---
+
 **For questions or optimization suggestions, please refer to the [Architecture Documentation](../architecture/ARCHITECTURE.md) or create an issue in the repository.**

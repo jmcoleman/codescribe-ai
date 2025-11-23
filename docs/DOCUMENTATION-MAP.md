@@ -61,7 +61,7 @@ This document serves as the complete navigation hub for all CodeScribe AI docume
 **Database:**
 - [DB-NAMING-STANDARDS.md](database/DB-NAMING-STANDARDS.md) - PostgreSQL naming conventions
 - [DB-SCHEMA-AUDIT-2025-10-27.md](database/DB-SCHEMA-AUDIT-2025-10-27.md) - Complete schema audit
-- [DB-MIGRATION-MANAGEMENT.MD](database/DB-MIGRATION-MANAGEMENT.MD) - Migration management guide
+- [DB-MIGRATION-MANAGEMENT.md](database/DB-MIGRATION-MANAGEMENT.md) - Migration management guide
 - [PRODUCTION-DB-SETUP.md](database/PRODUCTION-DB-SETUP.md) - Production database setup
 
 **Authentication:**
@@ -107,7 +107,7 @@ This document serves as the complete navigation hub for all CodeScribe AI docume
 - [COMPONENT-TEST-COVERAGE.md](testing/COMPONENT-TEST-COVERAGE.md) - Coverage report (18/18 components)
 - [frontend-testing-guide.md](testing/frontend-testing-guide.md) - React testing patterns
 - [CROSS-BROWSER-TEST-PLAN.md](testing/CROSS-BROWSER-TEST-PLAN.md) - E2E strategy
-- [ACCESSIBILITY-AUDIT.MD](testing/ACCESSIBILITY-AUDIT.MD) - WCAG audit
+- [ACCESSIBILITY-AUDIT.md](testing/ACCESSIBILITY-AUDIT.md) - WCAG audit
 - [SCREEN-READER-TESTING-GUIDE.md](testing/SCREEN-READER-TESTING-GUIDE.md) - A11y testing
 - [ERROR-HANDLING-TESTS.md](testing/ERROR-HANDLING-TESTS.md) - Error tests (58 tests)
 - [MERMAID-DIAGRAM-TESTS.md](testing/MERMAID-DIAGRAM-TESTS.md) - Diagram tests (14 tests)
@@ -371,6 +371,6 @@ npm run versions      # Check all package versions
 
 ---
 
-**Last Updated:** October 28, 2025
+**Last Updated:** November 23, 2025
 **Project Status:** Production Ready ✅ | Phase 2 In Progress 🚧
-**Version:** 1.33
+**Version:** 1.34

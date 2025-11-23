@@ -422,3 +422,24 @@ All critical business logic, user interactions, and accessibility features are t
 
 **Status:**  Production Ready
 **Recommendation:** Current test coverage is sufficient for production deployment
+
+---
+
+## Related Documentation
+
+### Testing Resources
+- **[Testing README](README.md)** - Testing hub (2,529 tests, commands, coverage overview)
+- **[TEST-PATTERNS-GUIDE.md](TEST-PATTERNS-GUIDE.md)** - Test fix patterns (11 patterns, 97.8% pass rate)
+- **[frontend-testing-guide.md](frontend-testing-guide.md)** - React testing patterns (Vitest + RTL)
+- **[SKIPPED-TESTS.md](SKIPPED-TESTS.md)** - Intentionally skipped tests (56 tests)
+
+### Component Documentation
+- **[TOAST-SYSTEM.md](../components/TOAST-SYSTEM.md)** - Toast notification system
+- **[ERROR-HANDLING-UX.md](../components/ERROR-HANDLING-UX.md)** - Error UX patterns
+- **[USAGE-PROMPTS.md](../components/USAGE-PROMPTS.md)** - Usage limit warnings
+
+### Architecture
+- **[ARCHITECTURE-OVERVIEW.md](../architecture/ARCHITECTURE-OVERVIEW.md)** - System architecture
+- **[MULTI-FILE-ARCHITECTURE-ANALYSIS.md](../architecture/MULTI-FILE-ARCHITECTURE-ANALYSIS.md)** - Multi-file feature (v2.9.0)
+
+**Last Updated:** November 23, 2025

@@ -235,3 +235,29 @@ The diagram includes an interactive legend. Here's the complete color system:
 - Bundle: 78 KB gzipped (85% reduction from 516 KB)
 - Lighthouse: 75/100 (+67% improvement from 45)
 - Core Web Vitals: FCP -89%, LCP -93%, TBT -30%
+
+---
+
+## Related Documentation
+
+### Deep Dive & Implementation
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** - Complete technical architecture with security, performance, scalability
+- **[05-Dev-Guide.md](../planning/mvp/05-Dev-Guide.md)** - Implementation patterns and complete service code
+- **[API-Reference.md](../api/API-Reference.md)** - API endpoint specifications and request/response formats
+
+### Specific Systems
+- **[ERROR-HANDLING-PATTERNS.md](ERROR-HANDLING-PATTERNS.md)** - Error handling (app vs API errors, HTTP codes)
+- **[SUBSCRIPTION-MANAGEMENT.md](SUBSCRIPTION-MANAGEMENT.md)** - Subscription system architecture
+- **[PROMPT-CACHING-GUIDE.md](PROMPT-CACHING-GUIDE.md)** - Cost optimization via prompt caching
+- **[MULTI-FILE-ARCHITECTURE-ANALYSIS.md](MULTI-FILE-ARCHITECTURE-ANALYSIS.md)** - Multi-file feature architecture (v2.9.0)
+
+### Performance & Testing
+- **[OPTIMIZATION-GUIDE.md](../performance/OPTIMIZATION-GUIDE.md)** - Performance optimization strategies
+- **[REACT-OPTIMIZATION-LESSONS.md](../performance/REACT-OPTIMIZATION-LESSONS.md)** - React memoization and re-render prevention
+- **[TEST-PATTERNS-GUIDE.md](../testing/TEST-PATTERNS-GUIDE.md)** - Testing patterns (11 patterns, 97.8% pass rate)
+
+### Deployment
+- **[VERCEL-DEPLOYMENT-GUIDE.md](../deployment/VERCEL-DEPLOYMENT-GUIDE.md)** - Production deployment guide
+- **[RELEASE-QUICKSTART.md](../deployment/RELEASE-QUICKSTART.md)** - Release process (two-phase)
+
+**Last Updated:** November 23, 2025

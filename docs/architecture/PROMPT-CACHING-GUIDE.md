@@ -684,6 +684,23 @@ For questions or issues, check the troubleshooting section or review the impleme
 
 ---
 
-**Last Updated:** October 30, 2025
-**Version:** 1.0.0
+## Related Documentation
+
+### Cost & Performance
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** - System architecture and optimization strategies
+- **[OPTIMIZATION-GUIDE.md](../performance/OPTIMIZATION-GUIDE.md)** - Frontend performance optimization
+- **[REACT-OPTIMIZATION-LESSONS.md](../performance/REACT-OPTIMIZATION-LESSONS.md)** - React re-render prevention
+
+### Claude Integration
+- **[CLAUDE-INTEGRATION-QUICK-REFERENCE.md](CLAUDE-INTEGRATION-QUICK-REFERENCE.md)** - Claude API patterns
+- **[MULTI-PROVIDER-SIMPLIFIED-ARCHITECTURE.md](MULTI-PROVIDER-SIMPLIFIED-ARCHITECTURE.md)** - Multi-provider LLM architecture
+
+### Implementation
+- **[05-Dev-Guide.md](../planning/mvp/05-Dev-Guide.md)** - Service implementation patterns
+- **[defaultCode.js](../../client/src/constants/defaultCode.js)** - Example code for caching (EXAMPLE_CODES constant)
+
+---
+
+**Last Updated:** November 23, 2025
+**Version:** 1.0.1
 **Maintained By:** Development Team

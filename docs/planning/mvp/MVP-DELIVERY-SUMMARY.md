@@ -529,6 +529,29 @@ The MVP is production-ready, accessible, performant, and well-documented—ready
 
 ---
 
-**Last Updated:** October 28, 2025
-**Document Version:** 1.0
+## Related Documentation
+
+### Planning & Requirements
+- **[01-PRD.md](01-PRD.md)** - Product Requirements Document
+- **[02-Epics-Stories.md](02-Epics-Stories.md)** - User stories and sprint planning
+- **[03-Todo-List.md](03-Todo-List.md)** - Daily task tracking (Phase 1)
+
+### Implementation & Architecture
+- **[05-Dev-Guide.md](05-Dev-Guide.md)** - Implementation guide with code examples
+- **[ARCHITECTURE-OVERVIEW.md](../../architecture/ARCHITECTURE-OVERVIEW.md)** - Visual system architecture
+- **[ARCHITECTURE.md](../../architecture/ARCHITECTURE.md)** - Technical architecture details
+
+### Deployment & Testing
+- **[MVP-DEPLOY-LAUNCH.md](MVP-DEPLOY-LAUNCH.md)** - Deployment guide and checklist
+- **[TEST-PATTERNS-GUIDE.md](../../testing/TEST-PATTERNS-GUIDE.md)** - Test patterns (11 patterns)
+- **[Testing README](../../testing/README.md)** - Testing hub (2,529 tests)
+
+### Performance & Quality
+- **[OPTIMIZATION-GUIDE.md](../../performance/OPTIMIZATION-GUIDE.md)** - Performance optimization
+- **[ACCESSIBILITY-AUDIT.md](../../testing/ACCESSIBILITY-AUDIT.md)** - WCAG 2.1 AA audit results
+
+---
+
+**Last Updated:** November 23, 2025
+**Document Version:** 1.1
 **For:** Portfolio, interviews, and project retrospectives

@@ -1154,6 +1154,27 @@ const modals = useModals([
 
 ---
 
+## Related Documentation
+
+### Multi-File Feature Docs
+- **[GITHUB-MULTI-FILE-IMPORT.md](../features/GITHUB-MULTI-FILE-IMPORT.md)** - GitHub import feature (v2.9.0)
+- **[MULTI-FILE-SIDEBAR-UX.md](../components/MULTI-FILE-SIDEBAR-UX.md)** - Sidebar UX design patterns
+- **[FILE-DETAILS-PANEL.md](../components/FILE-DETAILS-PANEL.md)** - File details panel component
+- **[GITHUB-LOADER.md](../components/GITHUB-LOADER.md)** - GitHub import UI states
+
+### Architecture & Implementation
+- **[ARCHITECTURE-OVERVIEW.md](ARCHITECTURE-OVERVIEW.md)** - Visual system architecture
+- **[WORKSPACE-FILES-REFACTOR.md](WORKSPACE-FILES-REFACTOR.md)** - Workspace refactoring strategy
+- **[GITHUB-API-SCALING.md](GITHUB-API-SCALING.md)** - GitHub API rate limits and scaling
+
+### State Management
+- **[REACT-OPTIMIZATION-LESSONS.md](../performance/REACT-OPTIMIZATION-LESSONS.md)** - React memoization patterns
+- **[05-Dev-Guide.md](../planning/mvp/05-Dev-Guide.md)** - Implementation guide
+
+**Last Updated:** November 23, 2025
+
+---
+
 **Ready to implement Phase 1!** 🚀
 
 All analysis complete. Proceeding to detailed checklist next.

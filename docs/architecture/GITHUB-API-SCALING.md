@@ -230,6 +230,25 @@ if (remaining < 100) {
 
 ---
 
+## Related Documentation
+
+### Multi-File Feature
+- **[GITHUB-MULTI-FILE-IMPORT.md](../features/GITHUB-MULTI-FILE-IMPORT.md)** - GitHub import feature (v2.9.0)
+- **[MULTI-FILE-ARCHITECTURE-ANALYSIS.md](MULTI-FILE-ARCHITECTURE-ANALYSIS.md)** - Architecture analysis
+- **[GITHUB-LOADER.md](../components/GITHUB-LOADER.md)** - GitHub UI component
+
+### Authentication & Configuration
+- **[GITHUB-OAUTH-SETUP.md](../deployment/GITHUB-OAUTH-SETUP.md)** - GitHub OAuth configuration
+- **[GITHUB-OAUTH-IMPLEMENTATION.md](../planning/GOOGLE-OAUTH-IMPLEMENTATION.md)** - OAuth implementation guide
+
+### Architecture
+- **[ARCHITECTURE-OVERVIEW.md](ARCHITECTURE-OVERVIEW.md)** - System architecture
+- **[RATE-LIMITING-STRATEGY.md](RATE-LIMITING-STRATEGY.md)** - General rate limiting strategy
+
+**Last Updated:** November 23, 2025
+
+---
+
 ## References
 
 - [GitHub REST API Rate Limits](https://docs.github.com/en/rest/overview/resources-in-the-rest-api#rate-limiting)

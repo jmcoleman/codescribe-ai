@@ -3265,3 +3265,24 @@ For complete dark mode coverage, test:
 
 ---
 
+## Related Documentation
+
+### Testing Resources
+- **[Testing README](README.md)** - Testing hub (2,529 tests, commands, coverage)
+- **[COMPONENT-TEST-COVERAGE.md](COMPONENT-TEST-COVERAGE.md)** - Component coverage report
+- **[frontend-testing-guide.md](frontend-testing-guide.md)** - React testing patterns (Vitest + RTL)
+- **[SKIPPED-TESTS.md](SKIPPED-TESTS.md)** - Intentionally skipped tests (56 tests)
+
+### Specialized Tests
+- **[ERROR-HANDLING-TESTS.md](ERROR-HANDLING-TESTS.md)** - Error handling tests (58 tests)
+- **[AUTH-TESTS.md](AUTH-TESTS.md)** - Authentication tests (102 tests)
+- **[DATABASE-TESTING-GUIDE.md](DATABASE-TESTING-GUIDE.md)** - Database testing patterns
+
+### Architecture & Implementation
+- **[ARCHITECTURE.md](../architecture/ARCHITECTURE.md)** - System architecture
+- **[05-Dev-Guide.md](../planning/mvp/05-Dev-Guide.md)** - Implementation patterns
+
+**Last Updated:** November 23, 2025
+
+---
+
