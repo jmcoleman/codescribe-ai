@@ -65,9 +65,9 @@
       "text": "codescribeai.com",
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
-    "footerLeft": "<strong>CodeScribe AI</strong> \u00b7 Strategic Roadmap v3.14",
-    "footer": "Phase 1 Complete \u00b7 Phase 2 Complete \u00b7 Epic 3.1 Complete (Dark Mode) \u00b7 Epic 3.2 Complete (Workspace) \u00b7 Epic 4.1 Complete (GitHub) \u00b7 Multi-File Phase 0 & Phase 1 Day 1 Complete \u00b7 Launch: Mid-Jan 2026",
-    "lastUpdated": "November 16, 2025"
+    "footerLeft": "<strong>CodeScribe AI</strong> \u00b7 Strategic Roadmap v3.15",
+    "footer": "Phase 1 Complete \u00b7 Phase 2 Complete \u00b7 Epic 3.1 Complete (Dark Mode) \u00b7 Epic 3.2 Complete (Workspace) \u00b7 Epic 4.1 Complete (GitHub) \u00b7 v2.9.0 Complete (Layout Toggle & OPENAPI) \u00b7 Launch: Mid-Jan 2026",
+    "lastUpdated": "November 23, 2025"
   },
   "columns": [
     {
@@ -572,6 +572,40 @@
             "Updated sample count from 8 to 13 examples",
             "Added language validation tests for Kotlin, Swift, Dart, Shell, Apps Script"
           ]
+        },
+        {
+          "version": "v2.9.0",
+          "title": "Layout Toggle Streaming & OPENAPI Support",
+          "duration": "1 day",
+          "status": "✓ Complete",
+          "completedDate": "Nov 23, 2025",
+          "badge": "UX & Integration",
+          "features": [
+            "Layout toggle preserves streaming during panel switches",
+            "Imperative API for smooth panel resizing (0-100% based on mode)",
+            "OPENAPI documentation type added (generates OpenAPI 3.0 YAML specs)",
+            "Auto-scroll to top after single file generation completes",
+            "Eliminated duplicate toast notifications (single file + batch)",
+            "Fixed batch summary formatting with proper line breaks",
+            "Database migration 022: OPENAPI constraint support",
+            "Test suite: 101 tests fixed (17 backend + 84 frontend)",
+            "Total: 2,928 passing tests (1,717 frontend, 1,211 backend)"
+          ]
+        },
+        {
+          "version": "Epic 4.3 (Partial)",
+          "title": "OpenAPI/Swagger Generation - Core Features",
+          "duration": "1 day (part of v2.9.0)",
+          "status": "✓ Complete",
+          "completedDate": "Nov 23, 2025",
+          "badge": "API Documentation",
+          "features": [
+            "✓ New OPENAPI doc type with GPT-5.1 provider",
+            "✓ YAML output (OpenAPI 3.0 specification)",
+            "✓ Quality scoring integrated for API specs",
+            "✓ Database support for OPENAPI documents",
+            "Note: Advanced features (route auto-detection, schema generation) planned for future"
+          ]
         }
       ]
     },
@@ -579,63 +613,34 @@
       "id": "now",
       "label": "Now",
       "title": "Active",
-      "subtitle": "Phase 3: Multi-File Implementation (v2.9.0)",
+      "subtitle": "Phase 3: Next Features",
       "phases": [
+        {
+          "version": "v2.10.0",
+          "title": "Summary & Format Polish",
+          "duration": "1-2 days",
+          "status": "Planned",
+          "badge": "UX Polish",
+          "features": [
+            "Improve batch generation summary format and layout",
+            "Polish individual doc generation presentation",
+            "Enhanced quality score display in summaries",
+            "Better error messaging and recovery flows",
+            "Refined toast notification timing and content"
+          ]
+        },
         {
           "version": "Phase 1",
           "title": "Multi-File Sidebar & Integration",
-          "duration": "4 days remaining",
-          "status": "In Progress",
-          "badge": "v2.9.0",
-          "features": [
-            "✓ Day 1: Custom hooks and document persistence (completed)",
-            "Day 2: Sidebar components (FileList, FileItem, FileActions)",
-            "Day 3: App.jsx integration with multi-file state",
-            "Day 4: Layout integration and keyboard shortcuts (Cmd+B)",
-            "Day 5: Integration testing and accessibility audit",
-            "Note: Database setup (Phase 0) completed",
-            "Note: Split panel (Phase 4) completed in v2.8.0"
-          ]
-        },
-        {
-          "version": "Phase 2",
-          "title": "Bulk Operations & History UI",
-          "duration": "3-4 days",
+          "duration": "4-5 days",
           "status": "Planned",
-          "badge": "Optional",
+          "badge": "Pro+ Feature",
           "features": [
-            "Select all and delete multiple documents",
-            "Documentation history timeline view",
-            "Search and filter saved documents",
-            "Bulk export operations",
-            "Progress indicators for batch operations"
-          ]
-        },
-        {
-          "version": "Phase 3",
-          "title": "Backend Optimization",
-          "duration": "2-3 days",
-          "status": "Planned",
-          "badge": "Optional",
-          "features": [
-            "Pagination for large document lists",
-            "Advanced filtering (by language, date, quality score)",
-            "Search indexing for faster queries",
-            "Performance monitoring and optimization"
-          ]
-        },
-        {
-          "version": "Phase 5",
-          "title": "Advanced Workspace Features",
-          "duration": "2-3 days",
-          "status": "Planned",
-          "badge": "Optional",
-          "features": [
-            "Full-width layout option (remove max-width)",
-            "Layout presets (50/50, 70/30, 30/70)",
-            "Sidebar collapse/expand animations",
-            "Custom panel size presets",
-            "Workspace state persistence across sessions"
+            "Multi-file sidebar with file list and actions",
+            "Batch documentation generation",
+            "File upload and management",
+            "GitHub repository integration",
+            "Documentation history and export"
           ]
         }
       ]
@@ -707,17 +712,18 @@
       "subtitle": "Phases 4-6: Advanced Features & Enterprise",
       "phases": [
         {
-          "version": "Epic 4.3",
-          "title": "OpenAPI/Swagger Generation",
-          "duration": "3-4 days",
+          "version": "Epic 4.3 (Advanced)",
+          "title": "OpenAPI Advanced Features",
+          "duration": "2-3 days",
           "status": "Planned",
+          "badge": "Builds on v2.9.0",
           "features": [
-            "New OPENAPI doc type",
-            "YAML output (OpenAPI 3.0 specification)",
-            "Parse API routes (Express, Flask, FastAPI)",
-            "Quality scoring for API specs",
-            "Schema definitions and examples",
-            "Security and authentication docs"
+            "Auto-detect and parse API routes (Express, Flask, FastAPI)",
+            "Auto-generate schema definitions from code",
+            "Security and authentication documentation",
+            "Request/response examples generation",
+            "API-specific quality scoring enhancements",
+            "Note: Core OPENAPI doc type completed in v2.9.0"
           ]
         },
         {

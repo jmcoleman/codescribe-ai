@@ -9,6 +9,68 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.9.0] - 2025-11-23
+
+**Status:** ✅ Layout Toggle Streaming & OPENAPI Support
+
+**Summary:** Fixed layout toggle to preserve streaming during panel switches, added OPENAPI doc type support, eliminated duplicate toast notifications, and updated comprehensive test suite with 101 test fixes.
+
+### Added
+
+- **OPENAPI Documentation Support** ([server/src/prompts/docTypeConfig.js](server/src/prompts/docTypeConfig.js:60-67))
+  - Added OPENAPI as new documentation type using GPT-5.1
+  - Generates OpenAPI 3.0 YAML specifications from API code
+  - Database migration 022 adds OPENAPI to doc_type constraint
+  - Full integration across frontend/backend
+
+- **Auto-Scroll After Generation** ([client/src/components/DocPanel.jsx](client/src/components/DocPanel.jsx:324-338))
+  - Scrolls to top when single file generation completes
+  - 150ms delay ensures content is fully rendered
+  - Only triggers for single files (not batch summaries)
+
+### Fixed
+
+- **Layout Toggle Streaming** ([client/src/components/SplitPanel.jsx](client/src/components/SplitPanel.jsx:30-94))
+  - Fixed layout toggle to preserve streaming during panel switches
+  - Uses imperative API (`.resize()`) for smooth panel transitions
+  - Panels can resize 0-100% based on mode (code/doc/split)
+  - Resize handle only shows in split mode
+  - Both panels always mounted to preserve DocPanel state
+
+- **Duplicate Toast Notifications** ([client/src/App.jsx](client/src/App.jsx:1936-1945))
+  - Eliminated duplicate success toasts (single file + batch completion)
+  - Added batch mode check: `bulkGenerationProgress !== null`
+  - Only shows single file toast when not in batch mode
+
+- **Batch Summary Formatting** ([client/src/App.jsx](client/src/App.jsx:791-794))
+  - Fixed line break formatting in batch completion summary
+  - Added blank line after "# Generated Summary" heading
+  - Proper markdown rendering with separate lines for status
+
+- **Database Constraint Violation** ([server/src/db/migrations/022-add-openapi-doc-type.sql](server/src/db/migrations/022-add-openapi-doc-type.sql))
+  - Added OPENAPI to generated_documents doc_type constraint
+  - Fixed constraint violation when saving OPENAPI docs
+
+### Testing
+
+- **Test Suite Comprehensive Update** - 101 tests fixed
+  - **Backend** (17 tests): Auth middleware effectiveTier field
+  - **Frontend** (84 tests): Component updates, responsive buttons, mocks
+    - CopyButton/DownloadButton: aria-label instead of title
+    - CodePanel: Updated button labels, responsive duplicates
+    - ControlBar: "Add Code" dropdown structure
+    - MobileMenu: renderWithTheme() helper
+    - LoginModal: toastWelcomeBack, trackOAuth mocks
+    - FileActions: Menu label updates
+    - FileList: Delete confirmation modal
+    - useMultiFileState: removeFile behavior change
+
+- **Frontend**: 1,717 passed | 58 skipped (1,775 total) across 61 test files
+- **Backend**: 1,211 passed | 28 skipped (1,239 total) across 48 test suites
+- **Total**: 2,928 passed | 86 skipped (3,014 total)
+
+---
+
 ## [2.8.1] - 2025-11-16
 
 **Status:** ✅ Language Expansion & Bug Fixes
