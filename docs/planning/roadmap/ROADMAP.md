@@ -1,8 +1,8 @@
 # CodeScribe AI - Product Roadmap
 
-**Last Updated:** November 16, 2025
-**Current Phase:** Phase 3 - ✅ **Epic 3.2 COMPLETE** (Workspace Flexibility) | 🟡 **Multi-File Phase 1 IN PROGRESS** (Multi-File Sidebar)
-**Current Release:** v2.8.1 (Language Expansion, Middleware Tests & Bug Fixes)
+**Last Updated:** November 23, 2025
+**Current Phase:** Phase 4 - ✅ **Epic 4.1 COMPLETE** (OpenAPI) | 🟡 **Epic 4.2 IN PROGRESS** (Multi-File Project Documentation)
+**Current Release:** v2.9.0 (Layout Toggle Streaming & OPENAPI Support)
 **Production URL:** [https://codescribeai.com](https://codescribeai.com)
 
 ---
@@ -15,9 +15,9 @@
    - [Phase 1.5: Accessibility](#-phase-15-accessibility-2-days---oct-16-18)
    - [Phase 1.6: Deployment](#-phase-16-deployment-2-days---oct-17-19)
    - [Phase 2: Payments Infrastructure](#-phase-2-payments-infrastructure-5-days---oct-21-26)
-3. [💰 Phase 2: Payments Infrastructure (IN PROGRESS)](#-phase-2-payments-infrastructure-in-progress)
-4. [🎨 Phase 3: UX Enhancements (PLANNED)](#-phase-3-ux-enhancements-planned)
-5. [📄 Phase 4: Documentation Capabilities (PLANNED)](#-phase-4-documentation-capabilities-planned)
+3. [💰 Phase 2: Payments Infrastructure (COMPLETE)](#-phase-2-payments-infrastructure-complete)
+4. [🎨 Phase 3: UX Enhancements (COMPLETE)](#-phase-3-ux-enhancements-complete)
+5. [📄 Phase 4: Documentation Capabilities (IN PROGRESS)](#-phase-4-documentation-capabilities-in-progress)
 6. [💻 Phase 5: Developer Tools (PLANNED)](#-phase-5-developer-tools-planned)
 7. [🏢 Phase 6: Enterprise Readiness (FUTURE)](#-phase-6-enterprise-readiness-future)
 8. [💡 Optional Enhancements / Backlog](#note-on-optional-enhancements--backlog)
@@ -1782,23 +1782,23 @@ ALTER TABLE subscriptions ADD COLUMN stripe_receipt_url VARCHAR(500);
 
 ---
 
-## 📄 Phase 4: Documentation Capabilities (PLANNED)
+## 📄 Phase 4: Documentation Capabilities (IN PROGRESS)
 
-**Timeline:** TBD (after Phase 3)
+**Timeline:** November 2025 - In Progress
 **Estimated Duration:** 2-3 weeks
-**Status:** 📋 **NOT STARTED**
+**Status:** 🟡 **IN PROGRESS**
 **Target Release:** v4.0.0
 **Strategic Goal:** Expand documentation generation capabilities with new doc types and advanced features
 
 ### 📦 Epics
 
-#### Epic 4.1: OpenAPI/Swagger Generation (3-4 days)
-- New doc type: "OPENAPI" or "SWAGGER"
-- AI-powered generation from code
-- Output in YAML format (OpenAPI 3.0 specification)
-- Quality scoring with 5 criteria (0-100 scale)
-- Parse code for API routes/endpoints (Express, Flask, FastAPI, etc.)
-- Swagger-specific quality scoring algorithm
+#### Epic 4.1: OpenAPI/Swagger Generation (3-4 days) - ✅ **COMPLETE** (v2.9.0)
+- ✅ New doc type: "OPENAPI" with GPT-5.1 provider
+- ✅ AI-powered generation from code
+- ✅ Output in YAML format (OpenAPI 3.0 specification)
+- ✅ Quality scoring with 5 criteria (0-100 scale)
+- ✅ Database migration 022 for OPENAPI constraint support
+- 📋 Advanced features pending: Auto-detect routes from Express/Flask/FastAPI, auto-generate schemas, security docs, request/response examples
 
 **Quality Scoring Criteria:**
 1. API overview and metadata (20 points)
@@ -1807,13 +1807,18 @@ ALTER TABLE subscriptions ADD COLUMN stripe_receipt_url VARCHAR(500);
 4. Examples and request/response samples (20 points)
 5. Security and authentication docs (15 points)
 
-#### Epic 4.2: Multi-File Project Documentation (4-5 days)
-- Accept multiple files or directory structures (.zip upload)
-- Analyze project-wide architecture
-- Generate comprehensive README for entire project
-- Cross-reference between files
-- Identify project patterns (MVC, microservices, monorepo, etc.)
-- Project-level quality scoring
+#### Epic 4.2: Multi-File Project Documentation (4-5 days) - 🟡 **IN PROGRESS** (Phase 1 Complete)
+- ✅ **Phase 1 Complete:** Multi-file sidebar, batch generation, file management
+  - ✅ Multi-file sidebar with file list and actions (31 tier-based tests)
+  - ✅ Batch documentation generation (27 tests: rate limiting, progress, summary, errors, countdown)
+  - ✅ File upload and management (32 tests: validation, persistence, deletion, errors, drag-drop)
+  - ✅ GitHub repository integration (tree browsing, branch switching)
+- 📋 Accept multiple files via .zip upload (pending)
+- 📋 Analyze project-wide architecture
+- 📋 Generate comprehensive README for entire project
+- 📋 Cross-reference between files
+- 📋 Identify project patterns (MVC, microservices, monorepo, etc.)
+- 📋 Project-level quality scoring
 
 **Quality Scoring Criteria (Project-Level):**
 1. Project overview and purpose (20 points)
@@ -2020,11 +2025,13 @@ Features are tracked here when they:
 | Oct 26, 2025 | **Backend Test Coverage & CI Fixes** (100 tests fixed/added) | ✅ Complete |
 | Oct 27-29, 2025 | **Phase 2 (Epic 2.2): Tier System & Feature Flags** (v2.1.0-v2.2.0) | ✅ Complete |
 | Oct 29, 2025 | **Phase 2 (Epic 2.3): UX Enhancements & File Upload** (v2.3.0) | ✅ Complete |
-| TBD | Manual accessibility validation (optional) | ⏸️ Recommended |
-| TBD | **Phase 2 (Epic 2.4): Payment Integration** (Stripe) | 📋 Planned |
-| TBD | **Phase 2 (Epic 2.5): UI Integration** (UX polish) | 📋 Planned |
-| TBD | **Phase 3: UX Enhancements** (v3.0.0) | 📋 Planned |
-| TBD | **Phase 4: Documentation Capabilities** (v4.0.0) | 📋 Planned |
+| Oct 31-Nov 6, 2025 | **Phase 2 (Epic 2.4-2.6): Payment Integration & Legal Compliance** (v2.4.0-v2.6.0) | ✅ Complete |
+| Nov 7-8, 2025 | **Phase 3 (Epic 3.1): Dark Mode Complete** (v2.7.0) | ✅ Complete |
+| Nov 9-16, 2025 | **Phase 3 (Epic 3.2): Workspace Flexibility & Performance** (v2.7.1-v2.8.1) | ✅ Complete |
+| Nov 14, 2025 | **Phase 4 (Epic 4.1): GitHub Repository Integration** (v2.7.9) | ✅ Complete |
+| Nov 23, 2025 | **Phase 4 (Epic 4.1): OpenAPI/Swagger Generation** (v2.9.0) | ✅ Complete |
+| Nov 23, 2025 | **Phase 4 (Epic 4.2): Multi-File Phase 1** (Sidebar, Batch, File Management) | ✅ Complete |
+| Nov 2025 | **Phase 4 (Epic 4.2): Multi-File Project Documentation** | 🟡 In Progress |
 | TBD | **Phase 5: Developer Tools** (v5.0.0) | 📋 Planned |
 | TBD | **Phase 6: Enterprise Readiness** (v6.0.0) | 💡 Future (Evaluate based on demand) |
 
