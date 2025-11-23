@@ -72,7 +72,7 @@ export function HelpModal({ isOpen, onClose }) {
   const faqs = [
     {
       question: 'What file types are supported?',
-      answer: 'We support JavaScript (.js, .jsx), TypeScript (.ts, .tsx), Python (.py), Java, C/C++, C#, Go, Rust, Ruby, PHP, Kotlin (.kt), Swift (.swift), Dart (.dart), Shell scripts (.sh, .bash, .zsh), and Google Apps Script (.gs).'
+      answer: 'We support JavaScript (.js, .jsx), TypeScript (.ts, .tsx), Python (.py), Java, C/C++ (.c, .cpp, .h, .hpp), C# (.cs), Go (.go), Rust (.rs), Ruby (.rb), PHP (.php), Kotlin (.kt, .kts), Swift (.swift), Dart (.dart), Shell scripts (.sh, .bash, .zsh), and Google Apps Script (.gs).'
     },
     {
       question: 'How does the quality scoring work?',

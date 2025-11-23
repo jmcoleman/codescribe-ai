@@ -61,15 +61,17 @@ GitHubLoadModal (Main container)
 4. ✅ No "Load File" button
 
 ### Supported Files
-**Extensions:** JS, JSX, TS, TSX, PY, JAVA, GO, RS, HTML, CSS, JSON, MD, etc.
+**Extensions (for documentation generation):** JS, JSX, TS, TSX, PY, JAVA, C, CPP, H, HPP, CS, GO, RS, RB, PHP, KT, KTS, SWIFT, DART, SH, BASH, ZSH, GS, TXT
+
+**Note:** The GitHub Loader can also load and preview HTML, CSS, SQL, JSON, MD, and other text files, but these **cannot** be used for documentation generation (preview only).
 
 **Behavior:**
 1. ✅ Fetch and preview content
-2. ✅ No warning banners
+2. ✅ No warning banners (for supported types)
 3. ✅ Show footer stats
-4. ✅ Show "Load File" button (if under 100KB)
+4. ✅ Show "Load File" button (if under 100KB and type is supported for documentation)
 
-**Full list:** See `isFileSupported()` in `githubService.js`
+**Full list:** See `isFileSupported()` in `githubService.js` (editor preview) and `ALLOWED_EXTENSIONS` in `client/src/utils/fileValidation.js` (documentation generation)
 
 ---
 

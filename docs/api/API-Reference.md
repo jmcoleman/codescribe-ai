@@ -142,7 +142,7 @@ Content-Type: application/json
 |-------|------|----------|---------|-------------|
 | `code` | string | Yes | - | Source code to document (max 100,000 chars) |
 | `docType` | string | No | `README` | Documentation type: `README`, `JSDOC`, `API`, `ARCHITECTURE` |
-| `language` | string | No | `javascript` | Programming language: `javascript`, `typescript`, `python` |
+| `language` | string | No | `javascript` | Programming language: `javascript`, `typescript`, `python`, `java`, `c`, `cpp`, `csharp`, `go`, `rust`, `ruby`, `php`, `kotlin`, `swift`, `dart`, `bash` |
 
 **Response (200 OK):**
 ```json
@@ -506,7 +506,7 @@ POST /api/upload
 {
   "success": false,
   "error": "Invalid file type",
-  "message": "Invalid file type. Allowed: .js, .jsx, .ts, .tsx, .py, .java, .cpp, .c, .h, .hpp, .cs, .go, .rs, .rb, .php, .txt"
+  "message": "Invalid file type. Allowed: .js, .jsx, .ts, .tsx, .py, .java, .cpp, .c, .h, .hpp, .cs, .go, .rs, .rb, .php, .kt, .kts, .swift, .dart, .sh, .bash, .zsh, .gs, .txt"
 }
 ```
 
@@ -567,6 +567,11 @@ const upload = multer({
       '.rs',                          // Rust
       '.rb',                          // Ruby
       '.php',                         // PHP
+      '.kt', '.kts',                  // Kotlin
+      '.swift',                       // Swift
+      '.dart',                        // Dart
+      '.sh', '.bash', '.zsh',        // Shell scripts
+      '.gs',                          // Google Apps Script
       '.txt'                          // Plain text
     ];
     const ext = path.extname(file.originalname).toLowerCase();
