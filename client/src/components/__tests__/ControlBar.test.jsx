@@ -19,10 +19,8 @@ describe('ControlBar Component', () => {
     it('should render all action buttons', () => {
       render(<ControlBar {...defaultProps} />);
 
-      expect(screen.getByRole('button', { name: /upload file/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /add code/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /generate docs/i })).toBeInTheDocument();
-      // GitHub import button now visible (v2.7.8+)
-      expect(screen.getByRole('button', { name: /import from github/i })).toBeInTheDocument();
     });
 
     it('should render doc type selector', () => {
@@ -49,45 +47,50 @@ describe('ControlBar Component', () => {
   });
 
   describe('Upload Button', () => {
-    it('should call onUpload when upload button clicked', async () => {
+    it('should call onUpload when upload menu item clicked', async () => {
       const user = userEvent.setup();
       const onUpload = vi.fn();
 
       render(<ControlBar {...defaultProps} onUpload={onUpload} />);
 
-      const uploadButton = screen.getByRole('button', { name: /upload file/i });
-      await user.click(uploadButton);
+      // First click the dropdown button
+      const addCodeButton = screen.getByRole('button', { name: /add code/i });
+      await user.click(addCodeButton);
+
+      // Then click the upload menu item
+      const uploadMenuItem = await screen.findByText('Upload File');
+      await user.click(uploadMenuItem);
 
       expect(onUpload).toHaveBeenCalledTimes(1);
     });
 
-    it('should disable upload button when disabled prop is true', () => {
+    it('should disable Add Code button when disabled prop is true', () => {
       render(<ControlBar {...defaultProps} disabled={true} />);
 
-      const uploadButton = screen.getByRole('button', { name: /upload file/i });
-      expect(uploadButton).toBeDisabled();
+      const addCodeButton = screen.getByRole('button', { name: /add code/i });
+      expect(addCodeButton).toBeDisabled();
     });
 
-    it('should enable upload button when disabled prop is false', () => {
+    it('should enable Add Code button when disabled prop is false', () => {
       render(<ControlBar {...defaultProps} disabled={false} />);
 
-      const uploadButton = screen.getByRole('button', { name: /upload file/i });
-      expect(uploadButton).toBeEnabled();
+      const addCodeButton = screen.getByRole('button', { name: /add code/i });
+      expect(addCodeButton).toBeEnabled();
     });
 
     it('should have secondary variant styling', () => {
       render(<ControlBar {...defaultProps} />);
 
-      const uploadButton = screen.getByRole('button', { name: /upload file/i });
-      expect(uploadButton).toHaveClass('bg-slate-100');
+      const addCodeButton = screen.getByRole('button', { name: /add code/i });
+      expect(addCodeButton).toHaveClass('bg-slate-100');
     });
 
-    it('should display upload icon', () => {
+    it('should display plus icon in Add Code button', () => {
       render(<ControlBar {...defaultProps} />);
 
-      const uploadButton = screen.getByRole('button', { name: /upload file/i });
+      const addCodeButton = screen.getByRole('button', { name: /add code/i });
       // Icon is rendered as SVG within the button
-      expect(uploadButton.querySelector('svg')).toBeInTheDocument();
+      expect(addCodeButton.querySelector('svg')).toBeInTheDocument();
     });
   });
 
@@ -138,11 +141,17 @@ describe('ControlBar Component', () => {
       expect(screen.getByText('GitHub')).toHaveClass('sm:hidden');
     });
 
-    it('should render GitHub import button', () => {
+    it('should render GitHub import menu item', async () => {
+      const user = userEvent.setup();
       render(<ControlBar {...defaultProps} />);
 
-      const githubButton = screen.getByRole('button', { name: /import from github/i });
-      expect(githubButton).toBeInTheDocument();
+      // Click the dropdown to reveal menu items
+      const addCodeButton = screen.getByRole('button', { name: /add code/i });
+      await user.click(addCodeButton);
+
+      // GitHub import should be in the menu
+      const githubMenuItem = await screen.findByText('Import from GitHub');
+      expect(githubMenuItem).toBeInTheDocument();
     });
   });
 
@@ -353,22 +362,21 @@ describe('ControlBar Component', () => {
     it('should disable all action buttons when disabled prop is true', () => {
       render(<ControlBar {...defaultProps} disabled={true} />);
 
-      // Check main action buttons (Upload, Generate)
-      // Note: GitHub button hidden by feature flag
-      const uploadButton = screen.getByRole('button', { name: /upload file/i });
+      // Check main action buttons (Add Code dropdown, Generate)
+      const addCodeButton = screen.getByRole('button', { name: /add code/i });
       const generateButton = screen.getByRole('button', { name: /generate docs/i });
 
-      expect(uploadButton).toBeDisabled();
+      expect(addCodeButton).toBeDisabled();
       expect(generateButton).toBeDisabled();
     });
 
     it('should enable all buttons when disabled prop is false', () => {
       render(<ControlBar {...defaultProps} disabled={false} />);
 
-      const uploadButton = screen.getByRole('button', { name: /upload file/i });
+      const addCodeButton = screen.getByRole('button', { name: /add code/i });
       const generateButton = screen.getByRole('button', { name: /generate docs/i });
 
-      expect(uploadButton).toBeEnabled();
+      expect(addCodeButton).toBeEnabled();
       expect(generateButton).toBeEnabled();
     });
 
@@ -406,9 +414,9 @@ describe('ControlBar Component', () => {
     it('should not disable other buttons during generation', () => {
       render(<ControlBar {...defaultProps} isGenerating={true} disabled={false} />);
 
-      const uploadButton = screen.getByRole('button', { name: /upload file/i });
+      const addCodeButton = screen.getByRole('button', { name: /add code/i });
 
-      expect(uploadButton).toBeEnabled();
+      expect(addCodeButton).toBeEnabled();
     });
   });
 
@@ -454,20 +462,18 @@ describe('ControlBar Component', () => {
     it('should have descriptive button text', () => {
       render(<ControlBar {...defaultProps} />);
 
-      expect(screen.getByRole('button', { name: /upload file/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /add code/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /generate docs/i })).toBeInTheDocument();
-      // GitHub button now visible (v2.7.8+)
-      expect(screen.getByRole('button', { name: /import from github/i })).toBeInTheDocument();
     });
 
     it('should indicate disabled state through aria', () => {
       render(<ControlBar {...defaultProps} disabled={true} />);
 
       // Check main action buttons for disabled attribute
-      const uploadButton = screen.getByRole('button', { name: /upload file/i });
+      const addCodeButton = screen.getByRole('button', { name: /add code/i });
       const generateButton = screen.getByRole('button', { name: /generate docs/i });
 
-      expect(uploadButton).toHaveAttribute('disabled');
+      expect(addCodeButton).toHaveAttribute('disabled');
       expect(generateButton).toHaveAttribute('disabled');
     });
 
@@ -498,8 +504,9 @@ describe('ControlBar Component', () => {
         />
       );
 
-      // 1. Upload file
-      await user.click(screen.getByRole('button', { name: /upload file/i }));
+      // 1. Upload file (click dropdown, then upload menu item)
+      await user.click(screen.getByRole('button', { name: /add code/i }));
+      await user.click(await screen.findByText('Upload File'));
       expect(onUpload).toHaveBeenCalled();
 
       // 2. Change doc type

@@ -116,13 +116,14 @@ describe('CodePanel', () => {
   describe('Copy Button', () => {
     it('renders copy button when code is present', () => {
       render(<CodePanel {...defaultProps} code="some code" />);
-      expect(screen.getByRole('button', { name: /copy code to clipboard/i })).toBeInTheDocument();
+      // Multiple buttons due to responsive design, check that at least one exists
+      expect(screen.getAllByRole('button', { name: /copy code/i }).length).toBeGreaterThan(0);
       expect(screen.getByText('Copy')).toBeInTheDocument();
     });
 
     it('does not render copy button when code is empty', () => {
       render(<CodePanel {...defaultProps} code="" />);
-      expect(screen.queryByRole('button', { name: /copy code to clipboard/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /copy code/i })).not.toBeInTheDocument();
     });
 
     it('shows "Copy" text by default', () => {
@@ -263,8 +264,9 @@ describe('CodePanel', () => {
 
     it('copy button has aria-label', () => {
       render(<CodePanel {...defaultProps} />);
-      const copyButton = screen.getByRole('button', { name: /copy code to clipboard/i });
-      expect(copyButton).toHaveAttribute('aria-label', 'Copy code to clipboard');
+      // Multiple buttons due to responsive design, get first one
+      const copyButtons = screen.getAllByRole('button', { name: /copy code/i });
+      expect(copyButtons[0]).toHaveAttribute('aria-label', 'Copy code');
     });
 
     it('displays filename for screen readers', () => {
@@ -415,15 +417,16 @@ describe('CodePanel', () => {
       const onSamplesClick = vi.fn();
       render(<CodePanel {...defaultProps} onSamplesClick={onSamplesClick} />);
 
-      const examplesButton = screen.getByRole('button', { name: /load code samples/i });
-      expect(examplesButton).toBeInTheDocument();
-      expect(examplesButton).toHaveTextContent('Samples');
+      // Multiple buttons due to responsive design, get all and check first one
+      const examplesButtons = screen.getAllByRole('button', { name: /load sample code/i });
+      expect(examplesButtons.length).toBeGreaterThan(0);
+      expect(examplesButtons[0]).toHaveTextContent('Samples');
     });
 
     it('does not show examples button when onSamplesClick is not provided', () => {
       render(<CodePanel {...defaultProps} />);
 
-      const examplesButton = screen.queryByRole('button', { name: /load code samples/i });
+      const examplesButton = screen.queryByRole('button', { name: /load sample code/i });
       expect(examplesButton).not.toBeInTheDocument();
     });
 
@@ -432,8 +435,9 @@ describe('CodePanel', () => {
       const user = userEvent.setup();
       render(<CodePanel {...defaultProps} onSamplesClick={onSamplesClick} />);
 
-      const examplesButton = screen.getByRole('button', { name: /load code samples/i });
-      await user.click(examplesButton);
+      // Multiple buttons due to responsive design, click first one
+      const examplesButtons = screen.getAllByRole('button', { name: /load sample code/i });
+      await user.click(examplesButtons[0]);
 
       expect(onSamplesClick).toHaveBeenCalledTimes(1);
     });
@@ -444,22 +448,23 @@ describe('CodePanel', () => {
       const onClear = vi.fn();
       render(<CodePanel {...defaultProps} onClear={onClear} />);
 
-      const clearButton = screen.getByRole('button', { name: /clear editor/i });
-      expect(clearButton).toBeInTheDocument();
+      // Multiple buttons due to responsive design, check that at least one exists
+      const clearButtons = screen.getAllByRole('button', { name: /clear code/i });
+      expect(clearButtons.length).toBeGreaterThan(0);
     });
 
     it('does not show clear button when code is empty', () => {
       const onClear = vi.fn();
       render(<CodePanel {...defaultProps} code="" onClear={onClear} />);
 
-      const clearButton = screen.queryByRole('button', { name: /clear editor/i });
+      const clearButton = screen.queryByRole('button', { name: /clear code/i });
       expect(clearButton).not.toBeInTheDocument();
     });
 
     it('does not show clear button when onClear is not provided', () => {
       render(<CodePanel {...defaultProps} />);
 
-      const clearButton = screen.queryByRole('button', { name: /clear editor/i });
+      const clearButton = screen.queryByRole('button', { name: /clear code/i });
       expect(clearButton).not.toBeInTheDocument();
     });
 
@@ -467,7 +472,7 @@ describe('CodePanel', () => {
       const onClear = vi.fn();
       render(<CodePanel {...defaultProps} readOnly={true} onClear={onClear} />);
 
-      const clearButton = screen.queryByRole('button', { name: /clear editor/i });
+      const clearButton = screen.queryByRole('button', { name: /clear code/i });
       expect(clearButton).not.toBeInTheDocument();
     });
 
@@ -476,8 +481,9 @@ describe('CodePanel', () => {
       const user = userEvent.setup();
       render(<CodePanel {...defaultProps} onClear={onClear} />);
 
-      const clearButton = screen.getByRole('button', { name: /clear editor/i });
-      await user.click(clearButton);
+      // Multiple buttons due to responsive design, click first one
+      const clearButtons = screen.getAllByRole('button', { name: /clear code/i });
+      await user.click(clearButtons[0]);
 
       expect(onClear).toHaveBeenCalledTimes(1);
     });

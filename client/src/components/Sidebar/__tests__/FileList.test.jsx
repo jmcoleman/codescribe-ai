@@ -213,7 +213,7 @@ describe('FileList', () => {
       expect(mockOnGenerateSelected).toHaveBeenCalled();
     });
 
-    it('should call onDeleteSelected when Delete is clicked', async () => {
+    it('should call onDeleteSelected when Delete is clicked and confirmed', async () => {
       const user = userEvent.setup();
       const filesWithSelection = mockFiles.map(f => ({ ...f, content: 'test code' }));
       render(
@@ -225,8 +225,13 @@ describe('FileList', () => {
         />
       );
 
-      const deleteBtn = screen.getByRole('button', { name: /Del/ });
+      // Click Delete button to open confirmation modal
+      const deleteBtn = screen.getByRole('button', { name: /Delete 1 selected file/i });
       await user.click(deleteBtn);
+
+      // Confirm deletion in modal
+      const confirmBtn = screen.getByRole('button', { name: /^Delete$/i });
+      await user.click(confirmBtn);
 
       expect(mockOnDeleteSelected).toHaveBeenCalled();
     });

@@ -66,7 +66,7 @@ describe('FileActions', () => {
   });
 
   describe('View in History Action (NEW)', () => {
-    it('should NOT show "View in History" if documentId is null', async () => {
+    it('should NOT show "View History" if documentId is null', async () => {
       const user = userEvent.setup();
       const fileWithoutDocId = { ...mockFile, documentId: null };
 
@@ -75,10 +75,10 @@ describe('FileActions', () => {
       const menuButton = screen.getByRole('button', { name: /File actions/i });
       await user.click(menuButton);
 
-      expect(screen.queryByRole('menuitem', { name: /View in History/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('menuitem', { name: /View History/i })).not.toBeInTheDocument();
     });
 
-    it('should show "View in History" if documentId exists', async () => {
+    it('should show "View History" if documentId exists', async () => {
       const user = userEvent.setup();
       const fileWithDocId = { ...mockFile, documentId: 'doc-123' };
 
@@ -87,10 +87,10 @@ describe('FileActions', () => {
       const menuButton = screen.getByRole('button', { name: /File actions/i });
       await user.click(menuButton);
 
-      expect(screen.getByRole('menuitem', { name: /View in History/i })).toBeInTheDocument();
+      expect(screen.getByRole('menuitem', { name: /View History/i })).toBeInTheDocument();
     });
 
-    it('should navigate to dashboard when "View in History" is clicked', async () => {
+    it('should navigate to dashboard when "View History" is clicked', async () => {
       const user = userEvent.setup();
       const fileWithDocId = { ...mockFile, documentId: 'doc-123' };
 
@@ -103,7 +103,7 @@ describe('FileActions', () => {
       const menuButton = screen.getByRole('button', { name: /File actions/i });
       await user.click(menuButton);
 
-      const viewHistoryBtn = screen.getByRole('menuitem', { name: /View in History/i });
+      const viewHistoryBtn = screen.getByRole('menuitem', { name: /View History/i });
       await user.click(viewHistoryBtn);
 
       expect(window.location.href).toBe('/dashboard?doc=doc-123');
@@ -135,17 +135,17 @@ describe('FileActions', () => {
   });
 
   describe('Download Action', () => {
-    it('should show "Download Docs" if documentation exists', async () => {
+    it('should show "Download" if documentation exists', async () => {
       const user = userEvent.setup();
       render(<FileActions file={mockFile} onRemove={mockOnRemove} />);
 
       const menuButton = screen.getByRole('button', { name: /File actions/i });
       await user.click(menuButton);
 
-      expect(screen.getByRole('menuitem', { name: /Download Docs/i })).toBeInTheDocument();
+      expect(screen.getByRole('menuitem', { name: /^Download$/i })).toBeInTheDocument();
     });
 
-    it('should NOT show "Download Docs" if no documentation', async () => {
+    it('should NOT show "Download" if no documentation', async () => {
       const user = userEvent.setup();
       const fileWithoutDocs = { ...mockFile, documentation: null };
 
@@ -154,7 +154,7 @@ describe('FileActions', () => {
       const menuButton = screen.getByRole('button', { name: /File actions/i });
       await user.click(menuButton);
 
-      expect(screen.queryByRole('menuitem', { name: /Download Docs/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('menuitem', { name: /^Download$/i })).not.toBeInTheDocument();
     });
 
     it.skip('should trigger download when clicked', async () => {

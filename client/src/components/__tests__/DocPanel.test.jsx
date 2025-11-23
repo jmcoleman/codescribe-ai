@@ -619,15 +619,15 @@ Retrieve all users.
       // Note: DOM may contain both mobile and desktop variants (hidden with CSS)
       // So we check for specific buttons by their accessible names instead of counting all buttons
 
-      // Export button
-      const downloadButton = screen.getByRole('button', { name: /Export doc/i });
-      expect(downloadButton).toBeInTheDocument();
-      expect(downloadButton).toBeEnabled();
+      // Export button - multiple due to responsive design
+      const downloadButtons = screen.getAllByRole('button', { name: /Export doc/i });
+      expect(downloadButtons.length).toBeGreaterThan(0);
+      expect(downloadButtons[0]).toBeEnabled();
 
-      // Copy button
-      const copyButton = screen.getByRole('button', { name: /Copy doc/i });
-      expect(copyButton).toBeInTheDocument();
-      expect(copyButton).toBeEnabled();
+      // Copy button - multiple due to responsive design
+      const copyButtons = screen.getAllByRole('button', { name: /Copy doc/i });
+      expect(copyButtons.length).toBeGreaterThan(0);
+      expect(copyButtons[0]).toBeEnabled();
 
       // Quality score button
       const qualityButton = screen.getByRole('button', { name: /Quality score/i });
