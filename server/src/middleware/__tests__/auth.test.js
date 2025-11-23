@@ -57,7 +57,7 @@ describe('Auth Middleware', () => {
 
       expect(User.findById).toHaveBeenCalledWith(123);
       expect(next).toHaveBeenCalled();
-      expect(req.user).toEqual(mockUser);
+      expect(req.user).toEqual({ ...mockUser, effectiveTier: 'free' });
       expect(res.status).not.toHaveBeenCalled();
     });
 
@@ -117,7 +117,7 @@ describe('Auth Middleware', () => {
 
       expect(User.findById).toHaveBeenCalledWith(456);
       expect(next).toHaveBeenCalled();
-      expect(req.user).toEqual(mockUser);
+      expect(req.user).toEqual({ ...mockUser, effectiveTier: 'pro' });
     });
 
     it('should prioritize JWT over session', async () => {
@@ -135,6 +135,7 @@ describe('Auth Middleware', () => {
       expect(User.findById).toHaveBeenCalledWith(789);
       expect(next).toHaveBeenCalled();
       expect(req.user.id).toBe(789); // JWT takes precedence
+      expect(req.user.effectiveTier).toBe('team');
     });
 
   });
@@ -152,7 +153,7 @@ describe('Auth Middleware', () => {
 
       expect(User.findById).toHaveBeenCalledWith(123);
       expect(next).toHaveBeenCalled();
-      expect(req.user).toEqual(mockUser);
+      expect(req.user).toEqual({ ...mockUser, effectiveTier: 'free' });
     });
 
     it('should continue without user if not authenticated', () => {
@@ -184,7 +185,7 @@ describe('Auth Middleware', () => {
 
   describe('requireTier', () => {
     it('should allow access if user has exact required tier', async () => {
-      req.user = { id: 1, tier: 'pro' };
+      req.user = { id: 1, tier: 'pro', effectiveTier: 'pro' };
 
       const middleware = requireTier('pro');
       await middleware(req, res, next);
@@ -194,7 +195,7 @@ describe('Auth Middleware', () => {
     });
 
     it('should allow access if user has higher tier', async () => {
-      req.user = { id: 1, tier: 'enterprise' };
+      req.user = { id: 1, tier: 'enterprise', effectiveTier: 'enterprise' };
 
       const middleware = requireTier('pro');
       await middleware(req, res, next);
@@ -204,7 +205,7 @@ describe('Auth Middleware', () => {
     });
 
     it('should reject access if user has lower tier', async () => {
-      req.user = { id: 1, tier: 'free' };
+      req.user = { id: 1, tier: 'free', effectiveTier: 'free' };
 
       const middleware = requireTier('pro');
       await middleware(req, res, next);
@@ -243,7 +244,7 @@ describe('Auth Middleware', () => {
 
       for (const [userIndex, userTier] of tiers.entries()) {
         for (const [requiredIndex, requiredTier] of tiers.entries()) {
-          req.user = { id: 1, tier: userTier };
+          req.user = { id: 1, tier: userTier, effectiveTier: userTier };
           next.mockClear();
           res.status.mockClear();
 

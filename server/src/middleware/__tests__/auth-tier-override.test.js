@@ -14,6 +14,33 @@ import User from '../../models/User.js';
 // Mock User model
 jest.mock('../../models/User.js');
 
+// Mock tierOverride utilities
+jest.mock('../../utils/tierOverride.js', () => ({
+  getEffectiveTier: jest.fn((user) => {
+    if (!user) return 'free';
+
+    // Only admin/support/super_admin can have overrides
+    if (!['admin', 'support', 'super_admin'].includes(user.role)) {
+      return user.tier || 'free';
+    }
+
+    // Check if override exists and is valid
+    if (!user.viewing_as_tier || !user.override_expires_at) {
+      return user.tier || 'free';
+    }
+
+    // Check if override has expired
+    const now = new Date();
+    const expiry = new Date(user.override_expires_at);
+
+    if (isNaN(expiry.getTime()) || now > expiry) {
+      return user.tier || 'free';
+    }
+
+    return user.viewing_as_tier;
+  })
+}));
+
 describe('Auth Middleware - Tier Override Support', () => {
   let requireAuth;
   let requireTier;
@@ -82,6 +109,8 @@ describe('Auth Middleware - Tier Override Support', () => {
       expect(mockRequest.user.override_expires_at).toBe(dbUser.override_expires_at);
       expect(mockRequest.user.override_reason).toBe('Testing enterprise features');
       expect(mockRequest.user.override_applied_at).toBe(dbUser.override_applied_at);
+      // effectiveTier added by middleware - check it exists
+      expect(mockRequest.user).toHaveProperty('effectiveTier');
     });
 
     it('should work with JWT using sub field', async () => {
@@ -105,6 +134,8 @@ describe('Auth Middleware - Tier Override Support', () => {
 
       expect(User.findById).toHaveBeenCalledWith(1);
       expect(mockRequest.user.viewing_as_tier).toBe('pro');
+      // effectiveTier added by middleware - check it exists
+      expect(mockRequest.user).toHaveProperty('effectiveTier');
     });
 
     it('should work with JWT using id field', async () => {
@@ -128,6 +159,8 @@ describe('Auth Middleware - Tier Override Support', () => {
 
       expect(User.findById).toHaveBeenCalledWith(1);
       expect(mockRequest.user.viewing_as_tier).toBe('pro');
+      // effectiveTier added by middleware - check it exists
+      expect(mockRequest.user).toHaveProperty('effectiveTier');
     });
 
     it('should not have override fields when not present in database', async () => {
@@ -150,6 +183,8 @@ describe('Auth Middleware - Tier Override Support', () => {
       expect(mockNext).toHaveBeenCalled();
       expect(mockRequest.user.viewing_as_tier).toBeUndefined();
       expect(mockRequest.user.override_expires_at).toBeUndefined();
+      // effectiveTier added by middleware - check it exists
+      expect(mockRequest.user).toHaveProperty('effectiveTier');
     });
 
     it('should include all database fields in req.user', async () => {
@@ -184,6 +219,8 @@ describe('Auth Middleware - Tier Override Support', () => {
       expect(mockRequest.user.viewing_as_tier).toBe('team');
       expect(mockRequest.user.override_expires_at).toBe(dbUser.override_expires_at);
       expect(mockRequest.user.override_reason).toBe('Testing team features');
+      // effectiveTier added by middleware - check it exists
+      expect(mockRequest.user).toHaveProperty('effectiveTier');
     });
   });
 
@@ -194,7 +231,8 @@ describe('Auth Middleware - Tier Override Support', () => {
         tier: 'free',
         role: 'admin',
         viewing_as_tier: 'pro',
-        override_expires_at: new Date(Date.now() + 3600000).toISOString()
+        override_expires_at: new Date(Date.now() + 3600000).toISOString(),
+        effectiveTier: 'pro' // Added by requireAuth
       };
 
       const middleware = requireTier('pro');
@@ -210,7 +248,8 @@ describe('Auth Middleware - Tier Override Support', () => {
         tier: 'free',
         role: 'admin',
         viewing_as_tier: 'starter',
-        override_expires_at: new Date(Date.now() + 3600000).toISOString()
+        override_expires_at: new Date(Date.now() + 3600000).toISOString(),
+        effectiveTier: 'starter' // Added by requireAuth
       };
 
       const middleware = requireTier('pro');
@@ -232,7 +271,8 @@ describe('Auth Middleware - Tier Override Support', () => {
         tier: 'pro',
         role: 'admin',
         viewing_as_tier: 'free',
-        override_expires_at: new Date(Date.now() - 3600000).toISOString() // Expired
+        override_expires_at: new Date(Date.now() - 3600000).toISOString(), // Expired
+        effectiveTier: 'pro' // getEffectiveTier returns real tier when override expired
       };
 
       const middleware = requireTier('pro');
@@ -249,7 +289,8 @@ describe('Auth Middleware - Tier Override Support', () => {
         tier: 'free',
         role: 'user',
         viewing_as_tier: 'pro', // Should be ignored
-        override_expires_at: new Date(Date.now() + 3600000).toISOString()
+        override_expires_at: new Date(Date.now() + 3600000).toISOString(),
+        effectiveTier: 'free' // getEffectiveTier returns real tier for non-admin
       };
 
       const middleware = requireTier('pro');
@@ -266,7 +307,8 @@ describe('Auth Middleware - Tier Override Support', () => {
         tier: 'free',
         role: 'admin',
         viewing_as_tier: 'starter',
-        override_expires_at: new Date(Date.now() + 3600000).toISOString()
+        override_expires_at: new Date(Date.now() + 3600000).toISOString(),
+        effectiveTier: 'starter' // Added by requireAuth
       };
 
       const middleware = requireTier('pro');
@@ -292,7 +334,8 @@ describe('Auth Middleware - Tier Override Support', () => {
           tier: 'free',
           role: 'admin',
           viewing_as_tier: tier,
-          override_expires_at: new Date(Date.now() + 3600000).toISOString()
+          override_expires_at: new Date(Date.now() + 3600000).toISOString(),
+          effectiveTier: tier // Added by requireAuth
         };
 
         const middleware = requireTier(tier);
@@ -304,18 +347,19 @@ describe('Auth Middleware - Tier Override Support', () => {
 
     it('should handle tier hierarchy correctly', async () => {
       // Enterprise override can access all tiers
-      mockRequest.user = {
-        id: 1,
-        tier: 'free',
-        role: 'admin',
-        viewing_as_tier: 'enterprise',
-        override_expires_at: new Date(Date.now() + 3600000).toISOString()
-      };
-
       const tiers = ['free', 'starter', 'pro', 'team', 'enterprise'];
 
       for (const requiredTier of tiers) {
         jest.clearAllMocks();
+
+        mockRequest.user = {
+          id: 1,
+          tier: 'free',
+          role: 'admin',
+          viewing_as_tier: 'enterprise',
+          override_expires_at: new Date(Date.now() + 3600000).toISOString(),
+          effectiveTier: 'enterprise' // Added by requireAuth
+        };
 
         const middleware = requireTier(requiredTier);
         await middleware(mockRequest, mockResponse, mockNext);
@@ -331,7 +375,8 @@ describe('Auth Middleware - Tier Override Support', () => {
         tier: 'pro',
         role: 'admin',
         viewing_as_tier: 'free',
-        override_expires_at: new Date(Date.now() + 3600000).toISOString()
+        override_expires_at: new Date(Date.now() + 3600000).toISOString(),
+        effectiveTier: 'free' // Added by requireAuth
       };
 
       const middleware = requireTier('pro');
@@ -377,7 +422,8 @@ describe('Auth Middleware - Tier Override Support', () => {
         tier: 'free',
         role: 'admin',
         viewing_as_tier: 'pro',
-        override_expires_at: 'invalid-date'
+        override_expires_at: 'invalid-date',
+        effectiveTier: 'free' // getEffectiveTier returns real tier when date is malformed
       };
 
       const middleware = requireTier('pro');

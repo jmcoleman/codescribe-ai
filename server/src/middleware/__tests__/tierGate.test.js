@@ -39,7 +39,7 @@ describe('tierGate Middleware', () => {
 
   describe('requireFeature', () => {
     it('should allow access if feature is available in user tier', async () => {
-      req.user = { tier: 'pro' };
+      req.user = { tier: 'pro', effectiveTier: 'pro' };
       tiers.hasFeature.mockReturnValue(true);
 
       const middleware = requireFeature('batchProcessing');
@@ -51,7 +51,7 @@ describe('tierGate Middleware', () => {
     });
 
     it('should deny access if feature is not available in user tier', async () => {
-      req.user = { tier: 'free' };
+      req.user = { tier: 'free', effectiveTier: 'free' };
       tiers.hasFeature.mockReturnValue(false);
       tiers.getUpgradePath.mockReturnValue({
         availableIn: ['pro', 'team'],
@@ -90,7 +90,7 @@ describe('tierGate Middleware', () => {
 
   describe('checkUsage', () => {
     it('should allow request if usage is within limits', async () => {
-      req.user = { id: 1, tier: 'free' };
+      req.user = { id: 1, tier: 'free', effectiveTier: 'free' };
       Usage.getUserUsage.mockResolvedValue({
         dailyGenerations: 2,
         monthlyGenerations: 8,
@@ -113,7 +113,7 @@ describe('tierGate Middleware', () => {
     });
 
     it('should deny request if daily limit exceeded', async () => {
-      req.user = { id: 1, tier: 'free' };
+      req.user = { id: 1, tier: 'free', effectiveTier: 'free' };
       Usage.getUserUsage.mockResolvedValue({
         dailyGenerations: 3,
         monthlyGenerations: 9,
@@ -175,7 +175,7 @@ describe('tierGate Middleware', () => {
     });
 
     it('should check file size from req.file', async () => {
-      req.user = { id: 1, tier: 'free' };
+      req.user = { id: 1, tier: 'free', effectiveTier: 'free' };
       req.file = { size: 50000 };
       Usage.getUserUsage.mockResolvedValue({
         dailyGenerations: 0,
@@ -197,7 +197,7 @@ describe('tierGate Middleware', () => {
     });
 
     it('should check file size from req.body.code', async () => {
-      req.user = { id: 1, tier: 'free' };
+      req.user = { id: 1, tier: 'free', effectiveTier: 'free' };
       req.body.code = 'const x = 1;'; // 12 characters
       Usage.getUserUsage.mockResolvedValue({
         dailyGenerations: 0,
@@ -221,7 +221,7 @@ describe('tierGate Middleware', () => {
 
   describe('requireTier', () => {
     it('should allow access if user tier meets minimum requirement', () => {
-      req.user = { tier: 'team' };
+      req.user = { tier: 'team', effectiveTier: 'team' };
 
       const middleware = requireTier('pro');
       middleware(req, res, next);
@@ -231,7 +231,7 @@ describe('tierGate Middleware', () => {
     });
 
     it('should deny access if user tier is below minimum', () => {
-      req.user = { tier: 'free' };
+      req.user = { tier: 'free', effectiveTier: 'free' };
 
       const middleware = requireTier('team');
       middleware(req, res, next);
@@ -248,7 +248,7 @@ describe('tierGate Middleware', () => {
     });
 
     it('should allow access if user has exact minimum tier', () => {
-      req.user = { tier: 'pro' };
+      req.user = { tier: 'pro', effectiveTier: 'pro' };
 
       const middleware = requireTier('pro');
       middleware(req, res, next);
@@ -269,7 +269,7 @@ describe('tierGate Middleware', () => {
 
   describe('addTierHeaders', () => {
     it('should add tier info to response headers', async () => {
-      req.user = { id: 1, tier: 'pro' };
+      req.user = { id: 1, tier: 'pro', effectiveTier: 'pro' };
       Usage.getUserUsage.mockResolvedValue({
         dailyGenerations: 10,
         monthlyGenerations: 50,
@@ -293,7 +293,7 @@ describe('tierGate Middleware', () => {
     });
 
     it('should handle unlimited tiers', async () => {
-      req.user = { id: 1, tier: 'enterprise' };
+      req.user = { id: 1, tier: 'enterprise', effectiveTier: 'enterprise' };
       Usage.getUserUsage.mockResolvedValue({
         dailyGenerations: 100,
         monthlyGenerations: 500,
