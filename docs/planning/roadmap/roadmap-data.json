@@ -593,18 +593,18 @@
           ]
         },
         {
-          "version": "Epic 4.3 (Partial)",
-          "title": "OpenAPI/Swagger Generation - Core Features",
-          "duration": "1 day (part of v2.9.0)",
+          "version": "v2.9.0",
+          "title": "Epic 4.3 (Basic) - OpenAPI/Swagger Generation",
+          "duration": "1 day",
           "status": "✓ Complete",
           "completedDate": "Nov 23, 2025",
           "badge": "API Documentation",
           "features": [
-            "✓ New OPENAPI doc type with GPT-5.1 provider",
-            "✓ YAML output (OpenAPI 3.0 specification)",
-            "✓ Quality scoring integrated for API specs",
-            "✓ Database support for OPENAPI documents",
-            "Note: Advanced features (route auto-detection, schema generation) planned for future"
+            "New OPENAPI doc type with GPT-5.1 provider",
+            "YAML output (OpenAPI 3.0 specification)",
+            "Quality scoring integrated for API specs",
+            "Database support for OPENAPI documents",
+            "Note: Advanced features planned (auto-detect routes from Express/Flask/FastAPI, auto-generate schemas from code, security docs, request/response examples)"
           ]
         }
       ]
@@ -622,24 +622,24 @@
           "status": "Planned",
           "badge": "UX Polish",
           "features": [
-            "Improve batch generation summary format and layout",
+            "✓ Improve batch generation summary format and layout",
             "Polish individual doc generation presentation",
             "Enhanced quality score display in summaries",
             "Better error messaging and recovery flows",
-            "Refined toast notification timing and content"
+            "✓ Refined toast notification timing and content"
           ]
         },
         {
           "version": "Phase 1",
           "title": "Multi-File Sidebar & Integration",
           "duration": "4-5 days",
-          "status": "Planned",
+          "status": "In Progress",
           "badge": "Pro+ Feature",
           "features": [
-            "Multi-file sidebar with file list and actions",
+            "✓ Multi-file sidebar with file list and actions (31 tier-based tests)",
             "Batch documentation generation",
             "File upload and management",
-            "GitHub repository integration",
+            "✓ GitHub repository integration",
             "Documentation history and export"
           ]
         }
