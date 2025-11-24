@@ -1,4 +1,4 @@
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
 import LLMService from '../llmService.js';
 
 // Mock the provider modules
@@ -12,6 +12,7 @@ import { generateWithGemini, streamWithGemini } from '../providers/gemini.js';
 
 describe('LLMService - Provider/Model Overrides', () => {
   let llmService;
+  let originalEnv;
 
   // Helper to get mock function for current default provider from env
   const getDefaultGenerateMock = () => {
@@ -31,6 +32,18 @@ describe('LLMService - Provider/Model Overrides', () => {
   };
 
   beforeEach(() => {
+    // Save original env vars
+    originalEnv = {
+      CLAUDE_API_KEY: process.env.CLAUDE_API_KEY,
+      OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+      GEMINI_API_KEY: process.env.GEMINI_API_KEY
+    };
+
+    // Set dummy API keys for tests (providers are mocked, but config validation requires keys)
+    process.env.CLAUDE_API_KEY = 'test-claude-key';
+    process.env.OPENAI_API_KEY = 'test-openai-key';
+    process.env.GEMINI_API_KEY = 'test-gemini-key';
+
     llmService = new LLMService();
     jest.clearAllMocks();
 
@@ -64,6 +77,25 @@ describe('LLMService - Provider/Model Overrides', () => {
       text: 'Gemini stream response',
       metadata: { provider: 'gemini' }
     });
+  });
+
+  afterEach(() => {
+    // Restore original env vars to avoid polluting other tests
+    if (originalEnv.CLAUDE_API_KEY !== undefined) {
+      process.env.CLAUDE_API_KEY = originalEnv.CLAUDE_API_KEY;
+    } else {
+      delete process.env.CLAUDE_API_KEY;
+    }
+    if (originalEnv.OPENAI_API_KEY !== undefined) {
+      process.env.OPENAI_API_KEY = originalEnv.OPENAI_API_KEY;
+    } else {
+      delete process.env.OPENAI_API_KEY;
+    }
+    if (originalEnv.GEMINI_API_KEY !== undefined) {
+      process.env.GEMINI_API_KEY = originalEnv.GEMINI_API_KEY;
+    } else {
+      delete process.env.GEMINI_API_KEY;
+    }
   });
 
   describe('generate() with provider override', () => {
