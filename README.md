@@ -108,7 +108,8 @@ Generate professional documentation for **16 programming languages** with **24 f
 All documentation types (README, JSDoc, API docs, Architecture) work with every language!
 
 ### 🎯 Core Features
-- **Multiple Documentation Types**: Generate README.md, JSDoc/TSDoc comments, API documentation, and ARCHITECTURE overviews
+- **Multiple Documentation Types**: Generate README.md, JSDoc/TSDoc comments, API documentation, OpenAPI specs, and ARCHITECTURE overviews
+- **Multi-LLM Provider Support**: Choose between Claude Sonnet 4.5, OpenAI GPT-5.1, and Google Gemini 3.0 Pro with intelligent model routing per doc type for optimal quality and cost
 - **Real-Time Streaming**: Watch documentation generate character-by-character using Server-Sent Events
 - **Quality Scoring**: Get actionable feedback on documentation completeness (0-100 scale with letter grades)
 - **Code Analysis**: AST-based parsing extracts functions, classes, and exports automatically
@@ -241,9 +242,9 @@ For the basic setup without authentication, you only need these minimal environm
 
 **Server variables** (`server/.env`):
 
-#### LLM Provider Configuration (Claude or OpenAI)
+#### LLM Provider Configuration (Claude, OpenAI, or Gemini)
 
-CodeScribe AI supports multiple LLM providers. Configure your preferred provider:
+CodeScribe AI supports multiple LLM providers with intelligent routing per doc type. Configure your preferred provider:
 
 **Option 1: Claude (Default)**
 ```bash
@@ -262,12 +263,22 @@ LLM_PROVIDER=openai
 LLM_MODEL=gpt-5.1
 ```
 
+**Option 3: Google Gemini**
+```bash
+# Required
+GEMINI_API_KEY=your-gemini-key-here
+LLM_PROVIDER=gemini
+GEMINI_MODEL=gemini-3.0-pro
+```
+
 **Provider Configuration Variables:**
-- `LLM_PROVIDER` - Choose provider: `claude` (default) or `openai`
+- `LLM_PROVIDER` - Choose provider: `claude` (default), `openai`, or `gemini`
 - `LLM_API_KEY` - Generic API key (or use provider-specific keys)
 - `LLM_MODEL` - Override default model (optional)
 - `LLM_MAX_TOKENS` - Max tokens per request (default: 4000)
 - `LLM_TEMPERATURE` - Sampling temperature 0-1 (default: 0.7)
+
+**Per-Doc-Type Overrides:** JSDoc and OpenAPI automatically use GPT-5.1 for optimal structured output. See [LLM Model Selection Analysis](docs/architecture/LLM-MODEL-SELECTION-ANALYSIS.md) for details.
 
 For full configuration options, see [Multi-Provider Architecture Guide](docs/architecture/MULTI-PROVIDER-SIMPLIFIED-ARCHITECTURE.md).
 
@@ -276,8 +287,9 @@ For full configuration options, see [Multi-Provider Architecture Guide](docs/arc
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `CLAUDE_API_KEY` | ✅ Yes (if using Claude) | - | Your Anthropic Claude API key ([Get one here](https://console.anthropic.com/)) |
-| `OPENAI_API_KEY` | ✅ Yes (if using OpenAI) | - | Your OpenAI API key |
-| `LLM_PROVIDER` | No | `claude` | LLM provider: `claude` or `openai` |
+| `OPENAI_API_KEY` | ✅ Yes (if using OpenAI) | - | Your OpenAI API key ([Get one here](https://platform.openai.com/)) |
+| `GEMINI_API_KEY` | ✅ Yes (if using Gemini) | - | Your Google Gemini API key ([Get one here](https://makersuite.google.com/app/apikey)) |
+| `LLM_PROVIDER` | No | `claude` | LLM provider: `claude`, `openai`, or `gemini` |
 | `PORT` | No | `3000` | Server port number |
 | `NODE_ENV` | No | `development` | Environment mode (`development` or `production`) |
 
@@ -536,7 +548,7 @@ For a complete navigation guide with descriptions of all documentation, see **[D
 ### Backend
 - **Node.js 22** - JavaScript runtime (v22.19.0)
 - **Express 5** - Minimalist web framework
-- **Anthropic Claude API** - Claude Sonnet 4.5 (claude-sonnet-4-20250514) for AI generation
+- **Multi-LLM Provider Architecture** - Anthropic Claude Sonnet 4.5, OpenAI GPT-5.1, Google Gemini 3.0 Pro with intelligent routing per doc type
 - **Acorn** - JavaScript AST parser for code analysis
 - **Multer** - File upload middleware with validation
 - **express-rate-limit** - Rate limiting middleware (10 requests/min per IP)

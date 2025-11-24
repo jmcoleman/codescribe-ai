@@ -11,11 +11,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.9.0] - 2025-11-23
 
-**Status:** ✅ Layout Toggle Streaming & OPENAPI Support
+**Status:** ✅ Layout Toggle Streaming, OPENAPI Support & Gemini 3.0 Pro Integration
 
-**Summary:** Fixed layout toggle to preserve streaming during panel switches, added OPENAPI doc type support, eliminated duplicate toast notifications, and updated comprehensive test suite with 101 test fixes.
+**Summary:** Fixed layout toggle to preserve streaming during panel switches, added OPENAPI doc type support, integrated Gemini 3.0 Pro as third LLM provider with comprehensive cost analysis, eliminated duplicate toast notifications, and updated comprehensive test suite with 101 test fixes.
 
 ### Added
+
+- **Gemini 3.0 Pro Integration (Epic 3.4)** ([server/src/services/llm/providers/gemini.js](server/src/services/llm/providers/gemini.js))
+  - Added Google Gemini 3.0 Pro as third LLM provider
+  - Provider adapter following established pattern (Claude, OpenAI, Gemini)
+  - Default Gemini model: gemini-3.0-pro (SWE-bench 76.2%, training data: Jan 2025)
+  - Comprehensive LLM model selection analysis document ([docs/architecture/LLM-MODEL-SELECTION-ANALYSIS.md](docs/architecture/LLM-MODEL-SELECTION-ANALYSIS.md))
+  - Cost analysis across all providers with 4 scenarios (baseline, JSDOC→GPT, all OpenAI, all Gemini 3.0)
+  - JSDOC override to GPT-5.1 for 39% cost savings vs Claude
+  - Metadata capture for cost tracking (provider/model/tokens saved to database)
+  - Test infrastructure updated for config-aware provider testing
+  - Database migrations 023-024 for workspace file constraints
 
 - **OPENAPI Documentation Support** ([server/src/prompts/docTypeConfig.js](server/src/prompts/docTypeConfig.js:60-67))
   - Added OPENAPI as new documentation type using GPT-5.1
@@ -27,6 +38,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Scrolls to top when single file generation completes
   - 150ms delay ensures content is fully rendered
   - Only triggers for single files (not batch summaries)
+
+- **Developer Tools** ([server/package.json](server/package.json))
+  - Added llm:usage script for checking provider/model usage in database
+  - Usage: `npm run llm:usage [email]`
+  - Shows actual provider/model/token usage per generation
 
 ### Fixed
 
@@ -51,6 +67,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added OPENAPI to generated_documents doc_type constraint
   - Fixed constraint violation when saving OPENAPI docs
 
+- **LLM Metadata Not Saving** ([client/src/hooks/useDocGeneration.js](client/src/hooks/useDocGeneration.js))
+  - Fixed metadata not saving to database (provider/model/tokens)
+  - Updated useDocGeneration.js to capture streaming metadata
+  - Metadata now properly persisted for cost tracking
+
+- **Workspace Not Clearing on Logout** ([client/src/hooks/useWorkspacePersistence.js](client/src/hooks/useWorkspacePersistence.js), [client/src/App.jsx](client/src/App.jsx))
+  - Added logout clearing logic to useWorkspacePersistence.js
+  - Enhanced App.jsx logout to clear all user-specific state
+  - Fixed workspace files persisting after user logout
+
+- **OPENAPI Attribution Formatting** ([server/src/services/docGenerator.js](server/src/services/docGenerator.js))
+  - Fixed attribution appearing inside YAML code block
+  - Created insertAttribution() method to detect doc type
+  - Attribution now correctly inserted after closing code fence for OPENAPI
+
+- **Workspace File Duplicates** ([server/src/db/migrations/024-add-unique-constraint-workspace-files.sql](server/src/db/migrations/024-add-unique-constraint-workspace-files.sql))
+  - Added unique constraint on (user_id, filename, doc_type)
+  - Prevents duplicate file+doc_type combinations
+  - Allows same file with different doc types (future multi-doc-type feature)
+
 ### Testing
 
 - **Test Suite Comprehensive Update** - 101 tests fixed
@@ -65,9 +101,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - FileList: Delete confirmation modal
     - useMultiFileState: removeFile behavior change
 
+- **Config-Aware Test Infrastructure** ([server/src/prompts/__tests__/docTypeConfig.test.js](server/src/prompts/__tests__/docTypeConfig.test.js))
+  - Updated docTypeConfig tests to read from actual config (not hardcoded expectations)
+  - Updated llmService tests to use process.env.LLM_PROVIDER (not assume claude)
+  - Updated docGenerator tests to use DOC_TYPE_CONFIG (supports provider overrides)
+  - Tests now adapt to configuration changes automatically
+
 - **Frontend**: 1,717 passed | 58 skipped (1,775 total) across 61 test files
-- **Backend**: 1,211 passed | 28 skipped (1,239 total) across 48 test suites
-- **Total**: 2,928 passed | 86 skipped (3,014 total)
+- **Backend**: 1,212 passed | 28 skipped (1,240 total) across 48 test suites
+- **Total**: 2,929 passed | 86 skipped (3,015 total)
 
 ---
 
