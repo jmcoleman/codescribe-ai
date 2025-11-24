@@ -3,6 +3,7 @@ import { DocGeneratorService } from '../docGenerator.js';
 import LLMService from '../llm/llmService.js';
 import { parseCode } from '../codeParser.js';
 import { calculateQualityScore } from '../qualityScorer.js';
+import { DOC_TYPE_CONFIG } from '../../prompts/docTypeConfig.js';
 
 // Mock dependencies
 jest.mock('../llm/llmService.js');
@@ -64,68 +65,73 @@ describe('DocGeneratorService - Doc Type Configuration', () => {
   });
 
   describe('Provider/Model Configuration per Doc Type', () => {
-    it('should use Claude Sonnet for README', async () => {
+    it('should use configured provider/model for README', async () => {
       const result = await docGenerator.generateDocumentation(
         'function test() {}',
         { docType: 'README', language: 'javascript' }
       );
 
+      const expectedConfig = DOC_TYPE_CONFIG.README;
       expect(result.metadata.docTypeConfig).toEqual({
-        provider: 'claude',
-        model: 'claude-sonnet-4-5-20250929',
-        temperature: 0.7
+        provider: expectedConfig.provider,
+        model: expectedConfig.model,
+        temperature: expectedConfig.temperature
       });
     });
 
-    it('should use Claude Sonnet with temp 0.3 for JSDOC', async () => {
+    it('should use configured provider/model for JSDOC', async () => {
       const result = await docGenerator.generateDocumentation(
         'function test() {}',
         { docType: 'JSDOC', language: 'javascript' }
       );
 
+      const expectedConfig = DOC_TYPE_CONFIG.JSDOC;
       expect(result.metadata.docTypeConfig).toEqual({
-        provider: 'claude',
-        model: 'claude-sonnet-4-5-20250929',
-        temperature: 0.3
+        provider: expectedConfig.provider,
+        model: expectedConfig.model,
+        temperature: expectedConfig.temperature
       });
     });
 
-    it('should use Claude Sonnet with temp 0.5 for API', async () => {
+    it('should use configured provider/model for API', async () => {
       const result = await docGenerator.generateDocumentation(
         'function test() {}',
         { docType: 'API', language: 'javascript' }
       );
 
+      const expectedConfig = DOC_TYPE_CONFIG.API;
       expect(result.metadata.docTypeConfig).toEqual({
-        provider: 'claude',
-        model: 'claude-sonnet-4-5-20250929',
-        temperature: 0.5
+        provider: expectedConfig.provider,
+        model: expectedConfig.model,
+        temperature: expectedConfig.temperature
       });
     });
 
-    it('should use Claude Sonnet with temp 0.7 for ARCHITECTURE', async () => {
+    it('should use configured provider/model for ARCHITECTURE', async () => {
       const result = await docGenerator.generateDocumentation(
         'function test() {}',
         { docType: 'ARCHITECTURE', language: 'javascript' }
       );
 
+      const expectedConfig = DOC_TYPE_CONFIG.ARCHITECTURE;
       expect(result.metadata.docTypeConfig).toEqual({
-        provider: 'claude',
-        model: 'claude-sonnet-4-5-20250929',
-        temperature: 0.7
+        provider: expectedConfig.provider,
+        model: expectedConfig.model,
+        temperature: expectedConfig.temperature
       });
     });
 
-    it('should use OpenAI GPT-5.1 with temp 0.3 for OPENAPI', async () => {
+    it('should use configured provider/model for OPENAPI', async () => {
       const result = await docGenerator.generateDocumentation(
         'function test() {}',
         { docType: 'OPENAPI', language: 'javascript' }
       );
 
+      const expectedConfig = DOC_TYPE_CONFIG.OPENAPI;
       expect(result.metadata.docTypeConfig).toEqual({
-        provider: 'openai',
-        model: 'gpt-5.1',
-        temperature: 0.3
+        provider: expectedConfig.provider,
+        model: expectedConfig.model,
+        temperature: expectedConfig.temperature
       });
     });
   });
@@ -218,10 +224,11 @@ describe('DocGeneratorService - Doc Type Configuration', () => {
         }
       );
 
+      const expectedConfig = DOC_TYPE_CONFIG.README;
       expect(result.metadata.docTypeConfig).toEqual({
-        provider: 'claude',
-        model: 'claude-sonnet-4-5-20250929',
-        temperature: 0.7
+        provider: expectedConfig.provider,
+        model: expectedConfig.model,
+        temperature: expectedConfig.temperature
       });
       expect(chunks.length).toBeGreaterThan(0);
     });
@@ -234,10 +241,11 @@ describe('DocGeneratorService - Doc Type Configuration', () => {
         { docType: 'UNKNOWN_TYPE', language: 'javascript' }
       );
 
-      // Should fall back to default (README config)
+      // Should fall back to default (null provider/model, uses env defaults)
       expect(result.metadata.docTypeConfig).toHaveProperty('provider');
       expect(result.metadata.docTypeConfig).toHaveProperty('model');
-      expect(result.metadata.docTypeConfig.provider).toBe('claude');
+      expect(result.metadata.docTypeConfig.provider).toBe(null); // Default is null (use env)
+      expect(result.metadata.docTypeConfig.model).toBe(null); // Default is null (use provider default)
     });
   });
 

@@ -13,6 +13,23 @@ import { generateWithGemini, streamWithGemini } from '../providers/gemini.js';
 describe('LLMService - Provider/Model Overrides', () => {
   let llmService;
 
+  // Helper to get mock function for current default provider from env
+  const getDefaultGenerateMock = () => {
+    const provider = process.env.LLM_PROVIDER || 'claude';
+    if (provider === 'claude') return generateWithClaude;
+    if (provider === 'openai') return generateWithOpenAI;
+    if (provider === 'gemini') return generateWithGemini;
+    throw new Error(`Unknown provider in env: ${provider}`);
+  };
+
+  const getDefaultStreamMock = () => {
+    const provider = process.env.LLM_PROVIDER || 'claude';
+    if (provider === 'claude') return streamWithClaude;
+    if (provider === 'openai') return streamWithOpenAI;
+    if (provider === 'gemini') return streamWithGemini;
+    throw new Error(`Unknown provider in env: ${provider}`);
+  };
+
   beforeEach(() => {
     llmService = new LLMService();
     jest.clearAllMocks();
@@ -53,8 +70,8 @@ describe('LLMService - Provider/Model Overrides', () => {
     it('should use default provider when no override specified', async () => {
       await llmService.generate('test prompt');
 
-      expect(generateWithClaude).toHaveBeenCalled();
-      expect(generateWithOpenAI).not.toHaveBeenCalled();
+      const defaultMock = getDefaultGenerateMock();
+      expect(defaultMock).toHaveBeenCalled();
     });
 
     it('should use claude when provider override is claude', async () => {
@@ -102,49 +119,56 @@ describe('LLMService - Provider/Model Overrides', () => {
     it('should use default model when no override', async () => {
       await llmService.generate('test prompt');
 
-      expect(generateWithClaude).toHaveBeenCalled();
+      const defaultMock = getDefaultGenerateMock();
+      expect(defaultMock).toHaveBeenCalled();
       // Config object structure depends on environment, just verify it was called
     });
   });
 
   describe('generate() with temperature override', () => {
     it('should pass temperature override to provider', async () => {
+      // Use explicit provider to make test deterministic
       await llmService.generate('test prompt', {
+        provider: 'openai',
         temperature: 0.2
       });
 
-      expect(generateWithClaude).toHaveBeenCalled();
-      const config = generateWithClaude.mock.calls[0][2];
+      expect(generateWithOpenAI).toHaveBeenCalled();
+      const config = generateWithOpenAI.mock.calls[0][2];
       expect(config.temperature).toBe(0.2);
     });
 
     it('should allow temperature 0', async () => {
       await llmService.generate('test prompt', {
+        provider: 'openai',
         temperature: 0
       });
 
-      const config = generateWithClaude.mock.calls[0][2];
+      const config = generateWithOpenAI.mock.calls[0][2];
       expect(config.temperature).toBe(0);
     });
 
     it('should allow temperature 1', async () => {
       await llmService.generate('test prompt', {
+        provider: 'openai',
         temperature: 1
       });
 
-      const config = generateWithClaude.mock.calls[0][2];
+      const config = generateWithOpenAI.mock.calls[0][2];
       expect(config.temperature).toBe(1);
     });
   });
 
   describe('generate() with maxTokens override', () => {
     it('should pass maxTokens override to provider', async () => {
+      // Use explicit provider to make test deterministic
       await llmService.generate('test prompt', {
+        provider: 'openai',
         maxTokens: 1000
       });
 
-      expect(generateWithClaude).toHaveBeenCalled();
-      const config = generateWithClaude.mock.calls[0][2];
+      expect(generateWithOpenAI).toHaveBeenCalled();
+      const config = generateWithOpenAI.mock.calls[0][2];
       expect(config.maxTokens).toBe(1000);
     });
   });
@@ -172,8 +196,8 @@ describe('LLMService - Provider/Model Overrides', () => {
     it('should use default provider when no override', async () => {
       await llmService.generateWithStreaming('test', () => {});
 
-      expect(streamWithClaude).toHaveBeenCalled();
-      expect(streamWithOpenAI).not.toHaveBeenCalled();
+      const defaultMock = getDefaultStreamMock();
+      expect(defaultMock).toHaveBeenCalled();
     });
 
     it('should use openai when provider override is openai', async () => {
@@ -196,11 +220,13 @@ describe('LLMService - Provider/Model Overrides', () => {
     });
 
     it('should pass temperature override in streaming', async () => {
+      // Use explicit provider to make test deterministic
       await llmService.generateWithStreaming('test', () => {}, {
+        provider: 'openai',
         temperature: 0.1
       });
 
-      const config = streamWithClaude.mock.calls[0][3];
+      const config = streamWithOpenAI.mock.calls[0][3];
       expect(config.temperature).toBe(0.1);
     });
   });

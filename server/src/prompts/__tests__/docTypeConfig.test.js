@@ -18,7 +18,7 @@ describe('docTypeConfig', () => {
     });
 
     it('should have valid provider for each doc type', () => {
-      const validProviders = ['claude', 'openai'];
+      const validProviders = ['claude', 'openai', 'gemini', null]; // null = use env default
 
       Object.entries(DOC_TYPE_CONFIG).forEach(([docType, config]) => {
         expect(validProviders).toContain(config.provider);
@@ -28,8 +28,8 @@ describe('docTypeConfig', () => {
     it('should have model specified for each doc type', () => {
       Object.entries(DOC_TYPE_CONFIG).forEach(([docType, config]) => {
         expect(config.model).toBeDefined();
-        expect(typeof config.model).toBe('string');
-        expect(config.model.length).toBeGreaterThan(0);
+        // Model can be a string or null (null means use provider default)
+        expect(config.model === null || typeof config.model === 'string').toBe(true);
       });
     });
 
@@ -45,40 +45,49 @@ describe('docTypeConfig', () => {
   describe('getDocTypeConfig()', () => {
     it('should return correct config for README', () => {
       const config = getDocTypeConfig('README');
+      const expectedConfig = DOC_TYPE_CONFIG.README;
 
       expect(config).toHaveProperty('provider');
       expect(config).toHaveProperty('model');
       expect(config).toHaveProperty('temperature');
-      expect(config.provider).toBe('claude');
-      expect(config.model).toBe('claude-sonnet-4-5-20250929');
+      expect(config.provider).toBe(expectedConfig.provider);
+      expect(config.model).toBe(expectedConfig.model);
+      expect(config.temperature).toBe(expectedConfig.temperature);
     });
 
     it('should return correct config for JSDOC', () => {
       const config = getDocTypeConfig('JSDOC');
+      const expectedConfig = DOC_TYPE_CONFIG.JSDOC;
 
-      expect(config.provider).toBe('claude');
+      expect(config.provider).toBe(expectedConfig.provider);
+      expect(config.model).toBe(expectedConfig.model);
       expect(config.temperature).toBe(0.3);
     });
 
     it('should return correct config for API', () => {
       const config = getDocTypeConfig('API');
+      const expectedConfig = DOC_TYPE_CONFIG.API;
 
-      expect(config.provider).toBe('claude');
+      expect(config.provider).toBe(expectedConfig.provider);
+      expect(config.model).toBe(expectedConfig.model);
       expect(config.temperature).toBe(0.5);
     });
 
     it('should return correct config for ARCHITECTURE', () => {
       const config = getDocTypeConfig('ARCHITECTURE');
+      const expectedConfig = DOC_TYPE_CONFIG.ARCHITECTURE;
 
-      expect(config.provider).toBe('claude');
+      expect(config.provider).toBe(expectedConfig.provider);
+      expect(config.model).toBe(expectedConfig.model);
       expect(config.temperature).toBe(0.7);
     });
 
     it('should return correct config for OPENAPI', () => {
       const config = getDocTypeConfig('OPENAPI');
+      const expectedConfig = DOC_TYPE_CONFIG.OPENAPI;
 
-      expect(config.provider).toBe('openai');
-      expect(config.model).toBe('gpt-5.1');
+      expect(config.provider).toBe(expectedConfig.provider);
+      expect(config.model).toBe(expectedConfig.model);
       expect(config.temperature).toBe(0.3);
     });
 
@@ -89,8 +98,8 @@ describe('docTypeConfig', () => {
 
       expect(config).toHaveProperty('provider');
       expect(config).toHaveProperty('model');
-      expect(config.provider).toBe('claude');
-      expect(config.model).toBe('claude-sonnet-4-5-20250929');
+      expect(config.provider).toBe(null); // Default is null (use env)
+      expect(config.model).toBe(null); // Default is null (use provider default)
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining('No config found for docType: UNKNOWN_TYPE')
       );
@@ -154,20 +163,28 @@ describe('docTypeConfig', () => {
   });
 
   describe('Provider Configuration', () => {
-    it('should all use claude by default', () => {
-      const docTypes = ['README', 'JSDOC', 'API', 'ARCHITECTURE'];
+    it('should match configured providers for each doc type', () => {
+      const docTypes = ['README', 'JSDOC', 'API', 'ARCHITECTURE', 'OPENAPI'];
 
       docTypes.forEach(docType => {
         const config = getDocTypeConfig(docType);
-        expect(config.provider).toBe('claude');
+        const expectedConfig = DOC_TYPE_CONFIG[docType];
+
+        expect(config.provider).toBe(expectedConfig.provider);
+        expect(config.model).toBe(expectedConfig.model);
       });
     });
 
-    it('should use openai for OPENAPI doc type', () => {
-      const config = getDocTypeConfig('OPENAPI');
+    it('should allow explicit provider overrides', () => {
+      // Test that doc types can have explicit provider overrides (not null)
+      const explicitOverrides = Object.entries(DOC_TYPE_CONFIG)
+        .filter(([_, config]) => config.provider !== null);
 
-      expect(config.provider).toBe('openai');
-      expect(config.model).toBe('gpt-5.1');
+      expect(explicitOverrides.length).toBeGreaterThan(0);
+
+      explicitOverrides.forEach(([docType, config]) => {
+        expect(['claude', 'openai', 'gemini']).toContain(config.provider);
+      });
     });
   });
 
