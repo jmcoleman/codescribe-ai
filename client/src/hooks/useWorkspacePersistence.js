@@ -443,6 +443,16 @@ export function useWorkspacePersistence() {
     }
   }, [isAuthenticated, hasMultiFileAccess, user, clearFiles, addFiles]);
 
+  /**
+   * Clear workspace files on logout
+   */
+  useEffect(() => {
+    if (!isAuthenticated) {
+      // User logged out - clear all workspace files from state
+      clearFiles();
+    }
+  }, [isAuthenticated, clearFiles]);
+
   return {
     ...multiFileState,
     // Override operations with persistence

@@ -7,10 +7,14 @@
  * Configuration options per doc type:
  * - label: Display name for UI
  * - active: Whether this doc type is available (set to false to disable)
- * - provider: 'claude' | 'openai'
- * - model: Specific model identifier
+ * - provider: 'claude' | 'openai' | 'gemini' | null (null = use LLM_PROVIDER env variable)
+ * - model: Specific model identifier (or null to use provider's default)
  * - temperature: (optional) 0.0-1.0, controls randomness
  * - maxTokens: (optional) Maximum tokens in response
+ *
+ * Provider Defaults (when provider is null):
+ * - Uses LLM_PROVIDER environment variable
+ * - Falls back to 'claude' if not set
  *
  * OpenAI Model Notes:
  * - GPT-5+ models use 'max_completion_tokens' parameter
@@ -24,8 +28,8 @@ export const DOC_TYPE_CONFIG = {
   README: {
     label: 'README',
     active: true,
-    provider: 'claude',
-    model: 'claude-sonnet-4-5-20250929',
+    provider: null, // Use LLM_PROVIDER env variable (claude, openai, or gemini)
+    model: null,    // Use provider's default model
     temperature: 0.7,
     // Reason: Requires creativity for descriptions and examples
   },
@@ -33,17 +37,17 @@ export const DOC_TYPE_CONFIG = {
   JSDOC: {
     label: 'JSDoc Comments',
     active: true,
-    provider: 'claude',
-    model: 'claude-sonnet-4-5-20250929',
+    provider: 'openai',
+    model: 'gpt-5.1',
     temperature: 0.3,
-    // Reason: More structured, focus on accuracy
+    // Reason: Structured output API perfect for JSDoc format, 39% cost savings vs Claude
   },
 
   API: {
     label: 'API Docs',
     active: true,
-    provider: 'claude',
-    model: 'claude-sonnet-4-5-20250929',
+    provider: null, // Use LLM_PROVIDER env variable
+    model: null,    // Use provider's default model
     temperature: 0.5,
     // Reason: Balance between structure and helpful examples
   },
@@ -51,8 +55,8 @@ export const DOC_TYPE_CONFIG = {
   ARCHITECTURE: {
     label: 'Architecture Docs',
     active: true,
-    provider: 'claude',
-    model: 'claude-sonnet-4-5-20250929',
+    provider: null, // Use LLM_PROVIDER env variable
+    model: null,    // Use provider's default model
     temperature: 0.7,
     // Reason: Benefits from creative system design insights
   },
@@ -92,7 +96,7 @@ export const DOC_TYPE_CONFIG = {
 
 /**
  * Get configuration for a specific doc type
- * Falls back to default Claude Sonnet if doc type not configured
+ * Falls back to default provider if doc type not configured
  * @param {string} docType - Type of documentation
  * @returns {Object} Configuration with provider, model, and options
  */
@@ -100,15 +104,22 @@ export function getDocTypeConfig(docType) {
   const config = DOC_TYPE_CONFIG[docType];
 
   if (!config) {
-    console.warn(`No config found for docType: ${docType}, using default (Claude Sonnet)`);
+    console.warn(`No config found for docType: ${docType}, using default provider`);
     return {
-      provider: 'claude',
-      model: 'claude-sonnet-4-5-20250929',
+      provider: null,
+      model: null,
       temperature: 0.7,
     };
   }
 
-  return config;
+  // If provider is null, it will be resolved by docGenerator from LLM_PROVIDER env
+  // If model is null, it will be resolved by llmService from provider defaults
+  return {
+    ...config,
+    // Explicitly preserve null values - they signal "use defaults"
+    provider: config.provider,
+    model: config.model,
+  };
 }
 
 /**

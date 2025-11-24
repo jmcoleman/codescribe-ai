@@ -1,15 +1,17 @@
 /**
  * LLM Provider Configuration
- * Supports Claude (Anthropic) and OpenAI
+ * Supports Claude (Anthropic), OpenAI, and Google Gemini
  *
  * To switch providers, change LLM_PROVIDER environment variable:
  * - claude (default)
  * - openai
+ * - gemini
  */
 
 const LLM_PROVIDERS = {
   CLAUDE: 'claude',
-  OPENAI: 'openai'
+  OPENAI: 'openai',
+  GEMINI: 'gemini'
 }
 
 const config = {
@@ -43,6 +45,13 @@ const config = {
     apiKey: process.env.OPENAI_API_KEY || process.env.LLM_API_KEY,
     model: process.env.OPENAI_MODEL || process.env.LLM_MODEL || 'gpt-5.1',
     supportsCaching: false,
+    supportsStreaming: true
+  },
+
+  gemini: {
+    apiKey: process.env.GEMINI_API_KEY || process.env.LLM_API_KEY,
+    model: process.env.GEMINI_MODEL || process.env.LLM_MODEL || 'gemini-2.0-flash-exp',
+    supportsCaching: false,  // Gemini doesn't support prompt caching yet
     supportsStreaming: true
   }
 }
@@ -83,7 +92,8 @@ function getLLMConfig() {
     supportsStreaming: providerConfig.supportsStreaming,
     // Include all provider configs for runtime switching
     claude: config.claude,
-    openai: config.openai
+    openai: config.openai,
+    gemini: config.gemini
   }
 
   // Only add topP if explicitly configured (not used by default to avoid conflicts with temperature)

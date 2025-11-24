@@ -32,6 +32,7 @@ export function useDocGeneration(onUsageUpdate) {
     // Track generated documentation for return value
     let generatedDoc = '';
     let generatedScore = null;
+    let generatedMetadata = null;
 
     try {
       // Get auth token if available
@@ -111,6 +112,8 @@ export function useDocGeneration(onUsageUpdate) {
               setDocumentation(prev => prev + data.content);
             } else if (data.type === 'complete') {
               generatedScore = data.qualityScore; // Track locally for return value
+              generatedMetadata = data.metadata; // Track metadata for return value
+              console.log('[useDocGeneration] Received metadata:', data.metadata);
               setQualityScore(data.qualityScore);
               setIsGenerating(false);
 
@@ -151,10 +154,11 @@ export function useDocGeneration(onUsageUpdate) {
         }
       }
 
-      // Return the generated content
+      // Return the generated content with metadata
       return {
         documentation: generatedDoc,
-        qualityScore: generatedScore
+        qualityScore: generatedScore,
+        metadata: generatedMetadata
       };
     } catch (err) {
       console.error('Generation error:', err);

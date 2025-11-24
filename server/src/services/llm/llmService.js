@@ -1,6 +1,6 @@
 /**
  * Unified LLM Service
- * Routes requests to the appropriate provider (Claude or OpenAI) based on configuration
+ * Routes requests to the appropriate provider (Claude, OpenAI, or Gemini) based on configuration
  *
  * Usage:
  *   const llmService = new LLMService()
@@ -11,6 +11,7 @@
 import { getLLMConfig, logConfig } from '../../config/llm.config.js';
 import { generateWithClaude, streamWithClaude } from './providers/claude.js';
 import { generateWithOpenAI, streamWithOpenAI } from './providers/openai.js';
+import { generateWithGemini, streamWithGemini } from './providers/gemini.js';
 
 class LLMService {
   constructor() {
@@ -33,8 +34,8 @@ class LLMService {
    * @param {number} [options.maxTokens] - Override max tokens
    * @param {number} [options.temperature] - Sampling temperature (0-1)
    * @param {number} [options.topP] - Nucleus sampling parameter (0-1)
-   * @param {string} [options.provider] - Override provider ('claude' | 'openai')
-   * @param {string} [options.model] - Override model (e.g., 'gpt-5.1', 'claude-sonnet-4-5-20250929')
+   * @param {string} [options.provider] - Override provider ('claude' | 'openai' | 'gemini')
+   * @param {string} [options.model] - Override model (e.g., 'gpt-5.1', 'claude-sonnet-4-5-20250929', 'gemini-2.0-flash-exp')
    * @returns {Promise<{text: string, metadata: Object}>}
    * @throws {Error} On API errors or invalid configuration
    *
@@ -50,6 +51,10 @@ class LLMService {
     // Allow per-request provider override, fall back to default config
     const provider = options.provider || this.config.provider;
 
+    // Debug logging for provider selection
+    console.log(`[LLMService] Provider selected: ${provider} (options.provider: ${options.provider}, default: ${this.config.provider})`);
+    console.log(`[LLMService] Model: ${options.model || 'default'}`);
+
     // Build config with overrides
     const requestConfig = this._buildRequestConfig(provider, options);
 
@@ -60,10 +65,13 @@ class LLMService {
       case 'openai':
         return await generateWithOpenAI(prompt, options, requestConfig)
 
+      case 'gemini':
+        return await generateWithGemini(prompt, options, requestConfig)
+
       default:
         throw new Error(
           `Unsupported LLM provider: ${provider}. ` +
-          `Supported providers: claude, openai`
+          `Supported providers: claude, openai, gemini`
         )
     }
   }
@@ -81,7 +89,7 @@ class LLMService {
     // Validate provider exists BEFORE spreading
     if (!this.config[provider]) {
       throw new Error(
-        `Unknown provider: ${provider}. Available providers: claude, openai`
+        `Unknown provider: ${provider}. Available providers: claude, openai, gemini`
       );
     }
 
@@ -89,11 +97,15 @@ class LLMService {
 
     // Validate API key exists for the requested provider
     if (!providerConfig.apiKey) {
-      const envVar = provider === 'claude' ? 'CLAUDE_API_KEY' : 'OPENAI_API_KEY';
+      const envVarMap = {
+        'claude': 'CLAUDE_API_KEY',
+        'openai': 'OPENAI_API_KEY',
+        'gemini': 'GEMINI_API_KEY'
+      };
+      const envVar = envVarMap[provider] || `${provider.toUpperCase()}_API_KEY`;
       throw new Error(
         `API key required for ${provider} provider. ` +
-        `Please set ${envVar} in your .env file. ` +
-        `This is needed because the OPENAPI doc type uses OpenAI GPT-5.1.`
+        `Please set ${envVar} in your .env file.`
       );
     }
 
@@ -127,7 +139,7 @@ class LLMService {
    * @param {string} prompt - User prompt/message
    * @param {Function} onChunk - Callback for each text chunk: (chunk: string) => void
    * @param {Object} options - Generation options (same as generate())
-   * @param {string} [options.provider] - Override provider ('claude' | 'openai')
+   * @param {string} [options.provider] - Override provider ('claude' | 'openai' | 'gemini')
    * @param {string} [options.model] - Override model
    * @param {number} [options.temperature] - Override temperature
    * @returns {Promise<{text: string, metadata: Object}>} - Full text and metadata after streaming completes
@@ -145,6 +157,10 @@ class LLMService {
     // Allow per-request provider override, fall back to default config
     const provider = options.provider || this.config.provider;
 
+    // Debug logging for provider selection
+    console.log(`[LLMService STREAM] Provider selected: ${provider} (options.provider: ${options.provider}, default: ${this.config.provider})`);
+    console.log(`[LLMService STREAM] Model: ${options.model || 'default'}`);
+
     // Validate onChunk callback
     if (typeof onChunk !== 'function') {
       throw new Error('onChunk must be a function that receives text chunks')
@@ -160,17 +176,20 @@ class LLMService {
       case 'openai':
         return await streamWithOpenAI(prompt, onChunk, options, requestConfig)
 
+      case 'gemini':
+        return await streamWithGemini(prompt, onChunk, options, requestConfig)
+
       default:
         throw new Error(
           `Unsupported LLM provider: ${provider}. ` +
-          `Supported providers: claude, openai`
+          `Supported providers: claude, openai, gemini`
         )
     }
   }
 
   /**
    * Get current provider name
-   * @returns {string} Provider name ('claude' or 'openai')
+   * @returns {string} Provider name ('claude', 'openai', or 'gemini')
    */
   getProvider() {
     return this.config.provider
@@ -178,7 +197,7 @@ class LLMService {
 
   /**
    * Get current model identifier
-   * @returns {string} Model name (e.g., 'claude-sonnet-4-5-20250929', 'gpt-5.1')
+   * @returns {string} Model name (e.g., 'claude-sonnet-4-5-20250929', 'gpt-5.1', 'gemini-2.0-flash-exp')
    */
   getModel() {
     return this.config.model

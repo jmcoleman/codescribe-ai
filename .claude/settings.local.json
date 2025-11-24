@@ -15,7 +15,8 @@
       "Bash(node:*)",
       "Bash(npm run test:db:*)",
       "Bash(tee:*)",
-      "Bash(cut:*)"
+      "Bash(cut:*)",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []

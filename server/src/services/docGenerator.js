@@ -93,6 +93,9 @@ export class DocGeneratorService {
     // Step 3: Get doc type-specific LLM configuration
     const docTypeConfig = getDocTypeConfig(docType);
 
+    // Debug logging for provider override
+    console.log(`[DocGenerator] Doc type: ${docType}, Provider override: ${docTypeConfig.provider}, Model override: ${docTypeConfig.model}`);
+
     // Step 4: Generate documentation using LLM service with doc type config
     const llmOptions = {
       systemPrompt,
@@ -123,7 +126,7 @@ export class DocGeneratorService {
     // Step 5: Add tier-based attribution footer (works for both cached and non-cached responses)
     const attribution = this.buildAttribution(userTier);
     // Trim leading and trailing whitespace for clean output
-    const documentationWithAttribution = documentation.trim() + attribution;
+    const documentationWithAttribution = this.insertAttribution(documentation.trim(), attribution, docType);
 
     // Step 6: Calculate quality score (includes input code health assessment)
     const qualityScore = calculateQualityScore(documentationWithAttribution, analysis, docType, code);
@@ -169,6 +172,43 @@ export class DocGeneratorService {
     // Use hasOwnProperty to check if tier exists (not just if value is truthy)
     // This allows empty string for enterprise tier
     return attributions.hasOwnProperty(tier) ? attributions[tier] : attributions.free;
+  }
+
+  /**
+   * Insert attribution footer, handling special cases like code blocks
+   * @param {string} documentation - Generated documentation
+   * @param {string} attribution - Attribution footer
+   * @param {string} docType - Documentation type
+   * @returns {string} Documentation with attribution properly inserted
+   */
+  insertAttribution(documentation, attribution, docType) {
+    // Skip attribution if empty (enterprise tier)
+    if (!attribution) {
+      return documentation;
+    }
+
+    // OPENAPI docs end with YAML code blocks - insert attribution OUTSIDE the code block
+    if (docType === 'OPENAPI') {
+      // Check if doc ends with closing code fence (```\n or ``` at end)
+      const codeBlockPattern = /```\s*$/;
+      if (codeBlockPattern.test(documentation)) {
+        // Insert attribution after the code block
+        return documentation + attribution;
+      }
+      // Fallback: Try to find last ``` and insert after it
+      const lastCodeFenceIndex = documentation.lastIndexOf('```');
+      if (lastCodeFenceIndex !== -1) {
+        // Find the end of the line after ```
+        const afterCodeFence = documentation.indexOf('\n', lastCodeFenceIndex);
+        if (afterCodeFence !== -1) {
+          // Insert attribution after the code block
+          return documentation.slice(0, afterCodeFence + 1) + attribution + documentation.slice(afterCodeFence + 1);
+        }
+      }
+    }
+
+    // Default: Append attribution at the end
+    return documentation + attribution;
   }
 
   /**

@@ -344,8 +344,15 @@ function App() {
         }
       }
     } else {
-      // User logged out - clear user's code and show default sample
+      // User logged out - clear all user-specific state
       setCode(DEFAULT_CODE);
+      setFilename('code.js');
+      setDocType('README');
+      setBulkGenerationSummary(null);
+      setBatchSummaryMarkdown(null);
+      setBulkGenerationErrors([]);
+      setBulkGenerationProgress(null);
+      setCurrentlyGeneratingFile(null);
     }
   }, [user?.id]); // Only run when user ID changes (login/logout)
 
@@ -1020,6 +1027,7 @@ Error: ${file.error}
         let documentId = null;
         if (isAuthenticated) {
           try {
+            console.log('[App] Saving document with metadata:', result.metadata);
             const saveResult = await documentPersistence.saveDocument({
               filename: file.filename,
               language: file.language,

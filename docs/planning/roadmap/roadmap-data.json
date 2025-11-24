@@ -658,6 +658,22 @@
             "Project-level quality scoring",
             "✓ Phase 1 prerequisite met (multi-file sidebar, batch generation, file management)"
           ]
+        },
+        {
+          "version": "Epic 3.4",
+          "title": "Gemini 2.0 Flash Integration",
+          "duration": "5-6 hours",
+          "status": "Planned",
+          "badge": "Cost Optimization",
+          "features": [
+            "Add Google Gemini 2.0 Flash as third LLM provider",
+            "Provider adapter following established pattern (Claude, OpenAI, Gemini)",
+            "Test quality on structured doc types (JSDOC, OPENAPI)",
+            "Cost tracking across all three providers",
+            "Analytics dashboard for multi-provider comparison",
+            "Potential 63% cost savings ($128 → $47/month)",
+            "Data-driven provider selection per doc type"
+          ]
         }
       ]
     },
@@ -758,6 +774,24 @@
             "Browser compatibility detection for CSS features",
             "Documentation optimized for multi-file projects (design systems, component libraries)",
             "Requires Epic 4.2 (multi-file support) for meaningful context"
+          ]
+        },
+        {
+          "version": "Epic 4.6",
+          "title": "Multi-Doc-Type per File Architecture",
+          "duration": "3-4 days",
+          "status": "Planned",
+          "badge": "Workspace Enhancement",
+          "features": [
+            "Generate multiple documentation types from same file (README + JSDoc + API)",
+            "Normalized database schema: workspace_files (metadata) + workspace_generations (doc types)",
+            "Enhanced UI: Single file entry in sidebar, expandable to show all generated doc types",
+            "Switch between doc types without re-generating",
+            "View multiple doc types side-by-side",
+            "Track generation history per file+doctype combination",
+            "Clean separation: file metadata vs. generated documentation",
+            "Migration from current schema (user_id, filename, doc_type) to normalized structure",
+            "Improves UX: No duplicate file entries, clear doc type management"
           ]
         },
         {
@@ -877,6 +911,67 @@
             "Visual regression testing with Percy or Chromatic",
             "Performance testing with Lighthouse CI",
             "Test coverage reporting improvements"
+          ]
+        },
+        {
+          "version": "Epic 6.5",
+          "title": "User Model Selection",
+          "duration": "2-3 days",
+          "status": "Future",
+          "badge": "Pro/Team Feature",
+          "features": [
+            "Per-user model preferences for each doc type",
+            "UI for selecting preferred LLM provider (Claude, OpenAI, Gemini)",
+            "UI for selecting preferred model per provider",
+            "Save preferences to user profile in database",
+            "Model selection override at generation time",
+            "Track model preferences and usage patterns",
+            "Quality feedback system (thumbs up/down per generation)",
+            "Analytics dashboard showing quality by model/doc type",
+            "A/B testing framework for comparing models",
+            "Model recommendation engine based on user feedback",
+            "Cost tracking per user by model selection"
+          ]
+        },
+        {
+          "version": "Epic 6.6",
+          "title": "Ensemble Generation (Multi-Model)",
+          "duration": "4-5 days",
+          "status": "Future",
+          "badge": "Enterprise Feature",
+          "features": [
+            "Generate documentation with 2+ models simultaneously",
+            "GPT-4 or Claude as judge to select best output",
+            "Configurable judging criteria (accuracy, completeness, readability)",
+            "Side-by-side comparison UI for ensemble results",
+            "User override: manually select preferred output",
+            "Cost estimation before ensemble generation",
+            "Ensemble only for Enterprise tier (premium feature)",
+            "Quality scoring comparison across models",
+            "Automated model selection based on judging results",
+            "Ensemble generation history and analytics",
+            "Cost tracking for multi-model generations"
+          ]
+        },
+        {
+          "version": "Epic 6.7",
+          "title": "Intelligent Model Routing (Complexity-Based)",
+          "duration": "5-7 days",
+          "status": "Future",
+          "badge": "AST-Powered",
+          "features": [
+            "AST-based code complexity analysis (cyclomatic complexity, depth)",
+            "Automatic model selection based on code complexity",
+            "Simple code → Gemini (fast, cost-effective)",
+            "Medium complexity → GPT-5.1 (balanced)",
+            "High complexity → Claude (thorough, best for complex systems)",
+            "Configurable complexity thresholds per tier",
+            "Real-time cost estimation based on routing decision",
+            "Analytics: routing decisions vs quality scores",
+            "User override: force specific model regardless of complexity",
+            "Learning system: adjust routing based on quality feedback",
+            "Multi-file batch routing optimization",
+            "Cost savings dashboard showing routing efficiency"
           ]
         },
         {

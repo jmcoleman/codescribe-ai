@@ -4,9 +4,11 @@ import LLMService from '../llmService.js';
 // Mock the provider modules
 jest.mock('../providers/claude.js');
 jest.mock('../providers/openai.js');
+jest.mock('../providers/gemini.js');
 
 import { generateWithClaude, streamWithClaude } from '../providers/claude.js';
 import { generateWithOpenAI, streamWithOpenAI } from '../providers/openai.js';
+import { generateWithGemini, streamWithGemini } from '../providers/gemini.js';
 
 describe('LLMService - Provider/Model Overrides', () => {
   let llmService;
@@ -26,6 +28,11 @@ describe('LLMService - Provider/Model Overrides', () => {
       metadata: { provider: 'openai', model: 'gpt-5.1' }
     });
 
+    generateWithGemini.mockResolvedValue({
+      text: 'Gemini response',
+      metadata: { provider: 'gemini', model: 'gemini-2.0-flash-exp' }
+    });
+
     streamWithClaude.mockResolvedValue({
       text: 'Claude stream response',
       metadata: { provider: 'claude' }
@@ -34,6 +41,11 @@ describe('LLMService - Provider/Model Overrides', () => {
     streamWithOpenAI.mockResolvedValue({
       text: 'OpenAI stream response',
       metadata: { provider: 'openai' }
+    });
+
+    streamWithGemini.mockResolvedValue({
+      text: 'Gemini stream response',
+      metadata: { provider: 'gemini' }
     });
   });
 
@@ -57,6 +69,15 @@ describe('LLMService - Provider/Model Overrides', () => {
 
       expect(generateWithOpenAI).toHaveBeenCalled();
       expect(generateWithClaude).not.toHaveBeenCalled();
+      expect(generateWithGemini).not.toHaveBeenCalled();
+    });
+
+    it('should use gemini when provider override is gemini', async () => {
+      await llmService.generate('test prompt', { provider: 'gemini' });
+
+      expect(generateWithGemini).toHaveBeenCalled();
+      expect(generateWithClaude).not.toHaveBeenCalled();
+      expect(generateWithOpenAI).not.toHaveBeenCalled();
     });
 
     it('should throw error for invalid provider override', async () => {
