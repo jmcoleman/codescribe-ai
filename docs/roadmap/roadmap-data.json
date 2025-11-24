@@ -606,6 +606,24 @@
             "Database support for OPENAPI documents",
             "Note: Advanced features planned (auto-detect routes from Express/Flask/FastAPI, auto-generate schemas from code, security docs, request/response examples)"
           ]
+        },
+        {
+          "version": "v2.9.0",
+          "title": "Gemini 3.0 Pro Integration & LLM Analysis (Epic 3.4)",
+          "duration": "5-6 hours",
+          "status": "✓ Complete",
+          "completedDate": "Nov 23, 2025",
+          "badge": "Cost Optimization",
+          "features": [
+            "✓ Added Google Gemini 3.0 Pro as third LLM provider (gemini.js adapter)",
+            "✓ Comprehensive LLM model selection analysis document (Claude, OpenAI, Gemini comparison)",
+            "✓ Cost analysis across all providers with 4 scenarios (baseline, JSDOC→GPT, all OpenAI, all Gemini 3.0)",
+            "✓ Provider override configuration per doc type (docTypeConfig.js)",
+            "✓ JSDOC override to GPT-5.1 for 39% cost savings vs Claude",
+            "✓ Gemini 3.0 Pro as default (SWE-bench 76.2%, latest training data Jan 2025)",
+            "✓ Metadata capture for cost tracking (provider/model/tokens in database)",
+            "✓ Test infrastructure updated for config-aware provider testing"
+          ]
         }
       ]
     },
@@ -657,22 +675,6 @@
             "Comprehensive project README generation",
             "Project-level quality scoring",
             "✓ Phase 1 prerequisite met (multi-file sidebar, batch generation, file management)"
-          ]
-        },
-        {
-          "version": "Epic 3.4",
-          "title": "Gemini 2.0 Flash Integration",
-          "duration": "5-6 hours",
-          "status": "Planned",
-          "badge": "Cost Optimization",
-          "features": [
-            "Add Google Gemini 2.0 Flash as third LLM provider",
-            "Provider adapter following established pattern (Claude, OpenAI, Gemini)",
-            "Test quality on structured doc types (JSDOC, OPENAPI)",
-            "Cost tracking across all three providers",
-            "Analytics dashboard for multi-provider comparison",
-            "Potential 63% cost savings ($128 → $47/month)",
-            "Data-driven provider selection per doc type"
           ]
         }
       ]
@@ -941,7 +943,7 @@
           "badge": "Enterprise Feature",
           "features": [
             "Generate documentation with 2+ models simultaneously",
-            "GPT-4 or Claude as judge to select best output",
+            "Claude, GPT-5.1, or Gemini 3.0 as judge to select best output",
             "Configurable judging criteria (accuracy, completeness, readability)",
             "Side-by-side comparison UI for ensemble results",
             "User override: manually select preferred output",
@@ -961,10 +963,12 @@
           "badge": "AST-Powered",
           "features": [
             "AST-based code complexity analysis (cyclomatic complexity, depth)",
-            "Automatic model selection based on code complexity",
-            "Simple code → Gemini (fast, cost-effective)",
-            "Medium complexity → GPT-5.1 (balanced)",
-            "High complexity → Claude (thorough, best for complex systems)",
+            "Automatic model selection based on code complexity and doc type",
+            "Simple code → Gemini 3.0 (fast, cost-effective, 8.5% cheaper than Claude)",
+            "Medium complexity → Gemini 3.0 or GPT-5.1 (Gemini 3.0: 76.2% SWE-bench, structured output)",
+            "High complexity → Claude or Gemini 3.0 (Claude: 77.2% SWE-bench, Gemini 3.0: 76.2%)",
+            "Structured output docs (JSDOC, OPENAPI) → GPT-5.1 or Gemini 3.0 (both have structured output APIs)",
+            "A/B testing framework to validate routing strategy with real usage data",
             "Configurable complexity thresholds per tier",
             "Real-time cost estimation based on routing decision",
             "Analytics: routing decisions vs quality scores",
