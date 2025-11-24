@@ -2366,6 +2366,109 @@ export function MyModal({ isOpen, onClose }) {
 
 ---
 
+### 8. Global Test Setup for API Keys (Backend) ⭐ NEW - November 23, 2025 (v2.9.0)
+
+**Discovery:**
+Backend tests require dummy API keys to be set in the global Jest setup file (`setupFilesAfterEnv`), not in individual test files.
+
+**Problem:**
+When adding new LLM provider support (e.g., Gemini), tests passed locally but failed in CI with:
+```
+API key required for gemini provider. Please set GEMINI_API_KEY in your .env file.
+  at LLMService._buildRequestConfig (src/services/llm/llmService.js:106:13)
+```
+
+**Root Cause:**
+1. Local environment has `.env` file with all API keys
+2. CI environment has NO `.env` file (GitHub Actions doesn't have secrets for test keys)
+3. Config module (`llm.config.js`) creates config object **at module load time**, reading `process.env` immediately
+4. Setting env vars in individual test files (even at top before imports) is too late
+5. Other modules may import the config before the test file runs
+
+**Why Local Tests Pass:**
+```bash
+# Local .env file
+CLAUDE_API_KEY=sk-ant-...
+OPENAI_API_KEY=sk-...
+GEMINI_API_KEY=AIza...  # ✅ Real key exists
+```
+
+**Why CI Tests Fail:**
+```bash
+# CI logs
+[dotenv@17.2.3] injecting env (0) from .env  # ❌ No .env file!
+```
+
+**Solution - Add to Global Setup File:**
+
+File: `server/tests/helpers/setup.js`
+
+```javascript
+// Set test environment variables BEFORE any imports
+process.env.NODE_ENV = 'test';
+process.env.CLAUDE_API_KEY = process.env.CLAUDE_API_KEY || 'test-api-key-12345';
+process.env.OPENAI_API_KEY = process.env.OPENAI_API_KEY || 'test-openai-key-12345';
+process.env.GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'test-gemini-key-12345'; // ✅ Added!
+process.env.PORT = '3001';
+
+// ... rest of setup
+```
+
+**Why This Works:**
+1. `setupFilesAfterEnv` runs **before any test files load**
+2. API keys are available when config modules are first imported
+3. Pattern: `process.env.KEY || 'fallback'` uses real key if available (local), fallback if not (CI)
+4. Works for both local development and CI environments
+
+**Configuration (jest.config.cjs):**
+```javascript
+module.exports = {
+  setupFilesAfterEnv: ['<rootDir>/tests/helpers/setup.js'],  // ✅ Runs first!
+  // ...
+};
+```
+
+**Anti-Pattern - Setting in Test Files:**
+```javascript
+// ❌ DON'T DO THIS - Too late!
+// File: src/services/llm/__tests__/llmService.overrides.test.js
+
+// Even at top of file, this is too late
+process.env.GEMINI_API_KEY = 'test-key';
+
+import LLMService from '../llmService.js';  // Already imported config!
+```
+
+**Key Lessons:**
+1. ✅ **DO** add all provider API keys to global `setup.js` file
+2. ✅ **DO** use pattern `process.env.KEY || 'fallback'` for local/CI compatibility
+3. ✅ **DO** add new API keys when adding new LLM providers
+4. ❌ **DON'T** set API keys in individual test files
+5. ❌ **DON'T** assume CI has access to `.env` files
+
+**When Adding New LLM Providers:**
+```javascript
+// Step 1: Add to server/tests/helpers/setup.js
+process.env.NEW_PROVIDER_API_KEY = process.env.NEW_PROVIDER_API_KEY || 'test-new-provider-key';
+
+// Step 2: Tests will now pass in both local and CI environments
+```
+
+**Files Fixed:**
+- `server/tests/helpers/setup.js` - Added `GEMINI_API_KEY` (Line 10)
+- `server/src/services/llm/__tests__/llmService.overrides.test.js` - Removed redundant env var setup
+
+**Impact:**
+- ✅ Tests pass in both local (with .env) and CI (without .env) environments
+- ✅ No more "API key required" errors in CI
+- ✅ Consistent behavior across development and CI
+
+**Related Patterns:**
+- Pattern 11: ES Modules vs CommonJS (module load timing)
+- Pattern 5: Jest ESM Module Mocking (setup order matters)
+
+---
+
 ## 📊 Test Suite Statistics
 
 ### Before Session
@@ -2677,12 +2780,13 @@ await page.getByRole('dialog').getByRole('button', { name: /submit/i }).click();
 12. **Mock DOM APIs AFTER rendering React components** - mocking createElement before render causes "Target container is not a DOM element" (v2.5.2)
 13. **Always delegate to original DOM methods for non-target tags** - returning empty objects breaks React (v2.5.2)
 14. **Render-First, Mock-Second strategy prevents DOM pollution** - restore original methods in afterEach (v2.5.2)
+15. **Global test setup for API keys required for backend LLM tests** - module load timing means test file env vars too late (v2.9.0)
 
 ---
 
-**Last Updated:** November 4, 2025 (v2.5.2 - Added Pattern 14: DOM API Mocking with Render-First Strategy)
+**Last Updated:** November 23, 2025 (v2.9.0 - Added Insight 8: Global Test Setup for API Keys)
 **Status:** ✅ **COMPLETE - READY FOR PRODUCTION DEPLOYMENT**
-**Test Status:** 97.8% pass rate, 0 failures, 39 documented skips
+**Test Status:** 97.8% pass rate, 0 failures, 56 documented skips
 
 ---
 
