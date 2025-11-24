@@ -1,8 +1,3 @@
-// IMPORTANT: Set env vars BEFORE imports (config is created at module load time)
-process.env.CLAUDE_API_KEY = process.env.CLAUDE_API_KEY || 'test-claude-key';
-process.env.OPENAI_API_KEY = process.env.OPENAI_API_KEY || 'test-openai-key';
-process.env.GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'test-gemini-key';
-
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import LLMService from '../llmService.js';
 

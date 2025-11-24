@@ -7,6 +7,7 @@
 process.env.NODE_ENV = 'test';
 process.env.CLAUDE_API_KEY = process.env.CLAUDE_API_KEY || 'test-api-key-12345';
 process.env.OPENAI_API_KEY = process.env.OPENAI_API_KEY || 'test-openai-key-12345';
+process.env.GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'test-gemini-key-12345';
 process.env.PORT = '3001'; // Different port to avoid conflicts
 
 // Database priority: Docker test DB → Dev DB from .env → fallback
