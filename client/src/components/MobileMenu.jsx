@@ -24,13 +24,11 @@ export function MobileMenu({ isOpen, onClose, onHelpClick }) {
   const previousFocusRef = useRef(null);
   const [allowClickOutside, setAllowClickOutside] = useState(false);
 
-  // List of admin emails (must match server-side list)
-  const ADMIN_EMAILS = [
-    'jenni.m.coleman@gmail.com',
-  ];
+  // Admin roles that grant admin access
+  const ADMIN_ROLES = ['admin', 'support', 'super_admin'];
 
-  // Check if current user is an admin
-  const isAdmin = isAuthenticated && user?.email && ADMIN_EMAILS.includes(user.email);
+  // Check if current user has admin privileges
+  const isAdmin = isAuthenticated && user?.role && ADMIN_ROLES.includes(user.role);
 
   // Context-aware pricing button label
   const getPricingLabel = () => {

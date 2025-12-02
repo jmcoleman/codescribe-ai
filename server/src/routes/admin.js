@@ -20,16 +20,15 @@ import {
 const router = express.Router();
 
 /**
- * Middleware to check if user is an admin
- * Add your email to the ADMIN_EMAILS list to grant admin access
+ * Roles that grant admin access
+ */
+const ADMIN_ROLES = ['admin', 'support', 'super_admin'];
+
+/**
+ * Middleware to check if user has admin privileges
+ * Checks the user's role in the database (admin, support, or super_admin)
  */
 const requireAdmin = async (req, res, next) => {
-  // List of admin emails (add your email here)
-  const ADMIN_EMAILS = [
-    //'your-email@example.com', // Replace with your actual email
-    'jenni.m.coleman@gmail.com'
-  ];
-
   try {
     // requireAuth only sets req.user.id, we need to fetch the full user object
     if (!req.user || !req.user.id) {
@@ -39,7 +38,7 @@ const requireAdmin = async (req, res, next) => {
       });
     }
 
-    // Fetch user from database to get email
+    // Fetch user from database to get role
     const user = await User.findById(req.user.id);
 
     if (!user) {
@@ -49,8 +48,8 @@ const requireAdmin = async (req, res, next) => {
       });
     }
 
-    // Check if user's email is in admin list
-    if (!ADMIN_EMAILS.includes(user.email)) {
+    // Check if user has an admin role
+    if (!ADMIN_ROLES.includes(user.role)) {
       return res.status(403).json({
         success: false,
         error: 'Forbidden',
