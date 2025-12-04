@@ -1,6 +1,6 @@
 {
   "name": "server",
-  "version": "2.9.0",
+  "version": "2.10.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -45,6 +45,7 @@
     "@vercel/postgres": "^0.10.0",
     "acorn": "^8.15.0",
     "acorn-jsx": "^5.3.2",
+    "archiver": "^7.0.1",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",

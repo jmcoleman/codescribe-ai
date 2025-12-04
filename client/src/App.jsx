@@ -30,6 +30,7 @@ import { exposeUsageSimulator } from './utils/usageTestData';
 import { useAuth } from './contexts/AuthContext';
 import { hasFeature } from './utils/tierFeatures';
 import { DEFAULT_CODE, EXAMPLE_CODES } from './constants/defaultCode';
+import * as batchesApi from './services/batchesApi';
 
 // Lazy load heavy components that aren't needed on initial render
 const DocPanel = lazy(() => import('./components/DocPanel').then(m => ({ default: m.DocPanel })));
@@ -117,6 +118,7 @@ function App() {
   // Batch generation state - loaded from localStorage only if user has batch processing access
   const [bulkGenerationSummary, setBulkGenerationSummary] = useState(null);
   const [batchSummaryMarkdown, setBatchSummaryMarkdown] = useState(null);
+  const [currentBatchId, setCurrentBatchId] = useState(null); // Database batch ID for export
   const [testSkeletonMode, setTestSkeletonMode] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [isMobileView, setIsMobileView] = useState(() => window.innerWidth < 1024);
@@ -250,6 +252,7 @@ function App() {
       setCurrentlyGeneratingFile(null);
       setThrottleCountdown(null);
       setBatchSummaryMarkdown(null);
+      setCurrentBatchId(null);
 
       // Reset layout to split view (default)
       setLayout('split');
@@ -350,6 +353,7 @@ function App() {
       setDocType('README');
       setBulkGenerationSummary(null);
       setBatchSummaryMarkdown(null);
+      setCurrentBatchId(null);
       setBulkGenerationErrors([]);
       setBulkGenerationProgress(null);
       setCurrentlyGeneratingFile(null);
@@ -418,6 +422,14 @@ function App() {
         // Language will be derived from filename automatically
       }
 
+      // Skip documentation sync if a file is actively generating (SSE streaming in progress)
+      // During streaming, documentation is in the hook's state, not yet saved to multiFileState
+      // Syncing here would clear the streaming content
+      // Check activeFile.isGenerating or bulkGenerationProgress (batch generation in progress)
+      if (activeFile.isGenerating || bulkGenerationProgress) {
+        return; // Don't interfere with streaming
+      }
+
       // Sync documentation to DocPanel (overrides batch summary)
       if (activeFile.documentation) {
         setDocumentation(activeFile.documentation);
@@ -450,7 +462,7 @@ function App() {
         }
       }
     }
-  }, [multiFileState.activeFileId, multiFileState.files, batchSummaryMarkdown]);
+  }, [multiFileState.activeFileId, multiFileState.files, batchSummaryMarkdown, bulkGenerationProgress]);
 
   // Handle legal document acceptance
   const handleAcceptLegalDocuments = async (acceptance) => {
@@ -742,50 +754,35 @@ function App() {
   };
 
   /**
-   * Format criteria name for markdown display in batch summary
-   * @param {string} key - Criteria key (e.g., 'overview', 'apiDocs')
-   * @param {string} docType - Document type
-   * @returns {string} Formatted criteria name
-   */
-  const formatCriteriaNameForMarkdown = (key, docType = 'README') => {
-    const nameMap = {
-      'README': {
-        overview: 'Overview',
-        installation: 'Installation',
-        examples: 'Usage Examples',
-        apiDocs: 'Function Coverage',
-        structure: 'Structure & Formatting',
-      },
-      'JSDOC': {
-        overview: 'Overview',
-        installation: 'Installation',
-        examples: 'Usage Examples',
-        apiDocs: 'JSDoc Comments',
-        structure: 'Structure & Formatting',
-      },
-      'API': {
-        overview: 'Overview',
-        installation: 'Installation',
-        examples: 'Usage Examples',
-        apiDocs: 'API Endpoints',
-        structure: 'Structure & Formatting',
-      },
-    };
-
-    const names = nameMap[docType] || nameMap['README'];
-    return names[key] || key;
-  };
-
-  /**
    * Generate a batch summary document in markdown format
    * @param {Object} summary - Batch generation summary object
    * @param {Array} failedFiles - Array of failed file objects
    * @returns {string} Markdown formatted summary
    */
+  // Build tier-based attribution footer (matches server-side docGenerator.buildAttribution)
+  const buildAttribution = (tier) => {
+    const attributions = {
+      free: `\n\n---\n*🟣 Generated with [CodeScribe AI](https://codescribeai.com) • Free Tier*  \n*Upgrade to [Pro](https://codescribeai.com/pricing) to remove this watermark and unlock advanced features*`,
+      starter: `\n\n---\n*🟣 Generated with [CodeScribe AI](https://codescribeai.com) • Free Tier*  \n*Upgrade to [Pro](https://codescribeai.com/pricing) to remove this watermark and unlock advanced features*`,
+      pro: `\n\n---\n*Generated with [CodeScribe AI](https://codescribeai.com) - AI-powered code documentation*`,
+      premium: `\n\n---\n*Generated with [CodeScribe AI](https://codescribeai.com) - AI-powered code documentation*`,
+      team: `\n\n---\n*Generated with [CodeScribe AI](https://codescribeai.com)*`,
+      enterprise: '' // No attribution for enterprise
+    };
+    return attributions[tier] || attributions.free;
+  };
+
   const generateBatchSummaryDocument = (summary, failedFiles = []) => {
-    const timestamp = new Date().toLocaleString('en-US', {
-      dateStyle: 'medium',
-      timeStyle: 'short'
+    // Format timestamp without comma after year (e.g., "Dec 3, 2025 10:30 PM")
+    const now = new Date();
+    const timestamp = now.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    }) + ' ' + now.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
     });
 
     const { totalFiles, successCount, failCount, avgQuality, avgGrade, successfulFiles } = summary;
@@ -797,85 +794,26 @@ function App() {
 
     let markdown = `# Generated Summary
 
-**Generated:** ${timestamp}
-**Status:** ${statusText}
+| | |
+|---|---|
+| **Generated** | ${timestamp} |
+| **Status** | ${statusText} |
 
 ## Overall Statistics
-| Metric | Value |
-|--------|-------|
-| **Total Files** | ${totalFiles} |
-| **Successful** | ${successCount} (${Math.round((successCount / totalFiles) * 100)}%) |
-| **Failed** | ${failCount} (${Math.round((failCount / totalFiles) * 100)}%) |`;
+| Total | Successful | Failed | Avg Quality |
+|-------|------------|--------|-------------|
+| ${totalFiles} | ${successCount} (${Math.round((successCount / totalFiles) * 100)}%) | ${failCount} | ${successCount > 0 ? `${avgGrade} (${avgQuality}/100)` : 'N/A'} |`;
 
-    // Add average quality if any files succeeded
-    if (successCount > 0) {
-      markdown += `
-| **Average Quality** | ${avgGrade} (${avgQuality}/100) |`;
-    }
-
-    // Success section
+    // Success section - table format
     if (successfulFiles && successfulFiles.length > 0) {
       markdown += `
 
-## Successfully Generated (${successfulFiles.length})
-Click any file name to view its documentation. Expand quality details to see strengths and improvements.
-
+## Generated Files
+| File | Type | Score | |
+|------|------|-------|---|
 `;
       successfulFiles.forEach(file => {
-        // Format timestamp
-        const timestamp = file.generatedAt ? new Date(file.generatedAt).toLocaleString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          hour: 'numeric',
-          minute: '2-digit',
-          hour12: true
-        }) : 'N/A';
-
-        // Start file section with clickable filename
-        markdown += `### [${file.name}](#file:${encodeURIComponent(file.name)})\n`;
-        markdown += `**Type:** ${file.docType} | **Score:** **${file.grade}** (${file.score}/100) | **Generated:** ${timestamp} | [Export](#export:${encodeURIComponent(file.name)})\n\n`;
-
-        // Add quality details if available
-        if (file.qualityScore) {
-          markdown += `<details class="quality-compact">\n<summary>📊 Quality Details</summary>\n\n`;
-
-          // Add strengths and improvements if available
-          if (file.qualityScore.summary) {
-            const summary = file.qualityScore.summary;
-
-            if (summary.strengths && summary.strengths.length > 0) {
-              markdown += `**✅ Strengths:** `;
-              const strengthsList = summary.strengths.map(strength => formatCriteriaNameForMarkdown(strength, file.docType));
-              markdown += strengthsList.join(', ') + '\n\n';
-            }
-
-            if (summary.improvements && summary.improvements.length > 0) {
-              markdown += `**💡 Improvements:** `;
-              const improvementsList = summary.improvements.map(improvement => {
-                const criteriaName = formatCriteriaNameForMarkdown(improvement, file.docType);
-                const suggestionText = file.qualityScore.breakdown?.[improvement]?.suggestion || '';
-                return suggestionText ? `${criteriaName} (${suggestionText})` : criteriaName;
-              });
-              markdown += improvementsList.join(', ') + '\n\n';
-            }
-          }
-
-          // Add detailed breakdown if available
-          if (file.qualityScore.breakdown) {
-            const breakdown = file.qualityScore.breakdown;
-            markdown += `**Breakdown:** `;
-            const breakdownList = Object.entries(breakdown).map(([key, value]) => {
-              const criteriaName = formatCriteriaNameForMarkdown(key, file.docType);
-              const emoji = value.points >= value.maxPoints * 0.8 ? '✅' : value.points >= value.maxPoints * 0.6 ? '⚠️' : '❌';
-              return `${emoji} ${criteriaName} ${value.points}/${value.maxPoints}`;
-            });
-            markdown += breakdownList.join(' · ') + '\n';
-          }
-
-          markdown += `\n</details>\n\n`;
-        }
-
-        markdown += `---\n\n`;
+        markdown += `| [${file.name}](#file:${encodeURIComponent(file.name)}) | ${file.docType} | ${file.grade} (${file.score}/100) | [Export](#export:${encodeURIComponent(file.name)}) |\n`;
       });
     }
 
@@ -892,35 +830,41 @@ Error: ${file.error}
       });
     }
 
-    // Next steps
-    markdown += `
-
-## Next Steps`;
-
-    if (successCount > 0) {
+    // Quality Details section - table format
+    if (successfulFiles && successfulFiles.some(f => f.qualityScore?.breakdown)) {
       markdown += `
-- Click any file name above to view its documentation
-- Export files individually using the Export link in the table above
-- Export all files as a ZIP using the "Export All" button in the header`;
-    }
 
-    if (failCount > 0) {
-      markdown += `
-- Review error messages and correct any issues
-- Select failed files and try regenerating`;
-    }
-
-    if (successCount === totalFiles) {
-      markdown += `
-- All files generated successfully - ready for export!`;
-    }
-
-    markdown += `
-
----
-
-*Generated by CodeScribe AI*
+## Quality Details
+| File | Overview | Install | Examples | Docs | Structure | Suggestions |
+|------|----------|---------|----------|------|-----------|-------------|
 `;
+      successfulFiles.forEach(file => {
+        if (file.qualityScore?.breakdown) {
+          const b = file.qualityScore.breakdown;
+          const overview = b.overview ? `${b.overview.points}/${b.overview.maxPoints}` : '-';
+          const install = b.installation ? `${b.installation.points}/${b.installation.maxPoints}` : '-';
+          const examples = b.examples ? `${b.examples.points}/${b.examples.maxPoints}` : '-';
+          const docs = b.apiDocs ? `${b.apiDocs.points}/${b.apiDocs.maxPoints}` : '-';
+          const structure = b.structure ? `${b.structure.points}/${b.structure.maxPoints}` : '-';
+
+          // Get suggestions
+          let suggestions = '-';
+          if (file.qualityScore.summary?.improvements?.length > 0) {
+            const suggestionList = file.qualityScore.summary.improvements
+              .map(key => file.qualityScore.breakdown?.[key]?.suggestion)
+              .filter(Boolean);
+            if (suggestionList.length > 0) {
+              suggestions = suggestionList.join('; ');
+            }
+          }
+
+          markdown += `| ${file.name} | ${overview} | ${install} | ${examples} | ${docs} | ${structure} | ${suggestions} |\n`;
+        }
+      });
+    }
+
+    // Add tier-based attribution footer
+    markdown += buildAttribution(user?.tier || 'free');
 
     return markdown;
   };
@@ -977,6 +921,8 @@ Error: ${file.error}
     setDocumentation('');
     setQualityScore(null);
     setBulkGenerationSummary(null);
+    setBatchSummaryMarkdown(null); // Clear any previous batch summary
+    setCurrentBatchId(null);
     setBulkGenerationErrors([]);
 
     // Initialize progress
@@ -1019,7 +965,10 @@ Error: ${file.error}
 
       try {
         // Generate documentation with streaming (users see live progress)
+        console.log(`[App] Starting generation for file ${i + 1}/${totalFiles}: ${file.filename}`);
+        const startTime = Date.now();
         const result = await generate(file.content, file.docType, file.language, false);
+        console.log(`[App] Generation completed for ${file.filename} in ${(Date.now() - startTime) / 1000}s`);
 
         const generatedAt = new Date();
 
@@ -1067,6 +1016,7 @@ Error: ${file.error}
 
         // Track successful file
         successCount++;
+
         successfulFiles.push({
           name: file.filename,
           score: result.qualityScore?.score || 0,
@@ -1074,7 +1024,10 @@ Error: ${file.error}
           qualityScore: result.qualityScore, // Include full quality score for breakdown
           docType: file.docType || 'README',
           generatedAt: generatedAt,
-          fileId: file.id
+          fileId: file.id,
+          // Track model per file (can vary by doc type or configuration)
+          provider: result.metadata?.provider || 'claude',
+          model: result.metadata?.model || 'unknown'
         });
 
       } catch (error) {
@@ -1164,6 +1117,59 @@ Error: ${file.error}
     const summaryMarkdown = generateBatchSummaryDocument(summaryData, failedFiles);
     setDocumentation(summaryMarkdown);
     setBatchSummaryMarkdown(summaryMarkdown); // Store for navigation back from individual files
+
+    // Create batch record in database (if authenticated)
+    // This captures the generation data for history and enables ZIP export
+    if (isAuthenticated) {
+      try {
+        // Get unique doc types from successful files
+        const uniqueDocTypes = [...new Set(successfulFiles.map(f => f.docType))];
+
+        // Get document IDs from successful files (only those that were saved)
+        const documentIds = successfulFiles
+          .map(f => {
+            // Find the file in multiFileState to get its documentId
+            const file = multiFileState.files.find(mf => mf.id === f.fileId);
+            return file?.documentId;
+          })
+          .filter(id => id); // Filter out nulls
+
+        // Create the batch
+        const batchResult = await batchesApi.createBatch({
+          batchType: totalFiles === 1 ? 'single' : 'batch',
+          totalFiles,
+          successCount,
+          failCount: failureCount,
+          avgQualityScore: avgQuality,
+          avgGrade,
+          summaryMarkdown,
+          errorDetails: failedFiles.length > 0 ? failedFiles : null,
+          docTypes: uniqueDocTypes
+        });
+
+        if (batchResult.batchId) {
+          setCurrentBatchId(batchResult.batchId);
+          console.log(`[App] Created batch: ${batchResult.batchId}`);
+
+          // Link documents to the batch (if any were saved)
+          if (documentIds.length > 0) {
+            try {
+              const linkResult = await batchesApi.linkDocumentsToBatch(
+                batchResult.batchId,
+                documentIds
+              );
+              console.log(`[App] Linked ${linkResult.linkedCount} documents to batch`);
+            } catch (linkError) {
+              console.error('[App] Failed to link documents to batch:', linkError);
+              // Don't fail the whole operation if linking fails
+            }
+          }
+        }
+      } catch (batchError) {
+        console.error('[App] Failed to create batch record:', batchError);
+        // Don't fail the generation - batch creation is optional
+      }
+    }
 
     // Set a special quality score to indicate this is a batch summary
     setQualityScore({
@@ -1280,6 +1286,8 @@ Error: ${file.error}
 
   /**
    * Download all generated documentation as a ZIP file
+   * Uses server-side batch export when authenticated and batchId is available (includes MANIFEST.json, README.md)
+   * Falls back to client-side JSZip when not authenticated or no batchId
    */
   const handleDownloadAllDocs = async () => {
     try {
@@ -1291,7 +1299,26 @@ Error: ${file.error}
         return;
       }
 
-      // Create a new JSZip instance
+      // Try server-side batch export if authenticated and we have a batch ID
+      // This provides richer exports with MANIFEST.json, README.md, and proper file organization
+      if (isAuthenticated && currentBatchId) {
+        try {
+          console.log(`[App] Exporting batch ${currentBatchId} via server API`);
+          const { blob, filename } = await batchesApi.exportBatchZip(currentBatchId);
+          batchesApi.downloadBlob(blob, filename);
+
+          toastCompact(
+            `Downloaded ${filesWithDocs.length} documentation file${filesWithDocs.length > 1 ? 's' : ''} (with manifest)`,
+            'success'
+          );
+          return;
+        } catch (serverError) {
+          console.warn('[App] Server-side batch export failed, falling back to client-side:', serverError);
+          // Fall through to client-side export
+        }
+      }
+
+      // Client-side export fallback (unauthenticated users or no batch data)
       const zip = new JSZip();
 
       // Add each file's documentation to the ZIP

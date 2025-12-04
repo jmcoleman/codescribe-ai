@@ -156,15 +156,43 @@ const validateBody = (schema) => {
     for (const [field, validator] of Object.entries(schema)) {
       const value = req.body[field];
 
-      // Check required fields
-      if (validator.required && (!value || (typeof value === 'string' && value.trim() === ''))) {
+      // Check required fields (handle 0 as valid for numbers)
+      const isEmpty = value === undefined || value === null ||
+        (typeof value === 'string' && value.trim() === '');
+      if (validator.required && isEmpty) {
         errors[field] = `${field} is required`;
         continue;
       }
 
       // Skip validation if field is optional and not provided
-      if (!validator.required && !value) {
+      if (!validator.required && isEmpty) {
         continue;
+      }
+
+      // Number validation
+      if (validator.type === 'number') {
+        if (typeof value !== 'number' || isNaN(value)) {
+          errors[field] = `${field} must be a number`;
+          continue;
+        }
+        if (validator.min !== undefined && value < validator.min) {
+          errors[field] = `${field} must be at least ${validator.min}`;
+        }
+        if (validator.max !== undefined && value > validator.max) {
+          errors[field] = `${field} must be at most ${validator.max}`;
+        }
+      }
+
+      // String validation
+      if (validator.type === 'string') {
+        if (typeof value !== 'string') {
+          errors[field] = `${field} must be a string`;
+          continue;
+        }
+        // Enum validation
+        if (validator.enum && !validator.enum.includes(value)) {
+          errors[field] = `${field} must be one of: ${validator.enum.join(', ')}`;
+        }
       }
 
       // Email validation
@@ -182,13 +210,20 @@ const validateBody = (schema) => {
         }
       }
 
-      // Min length validation
-      if (validator.minLength && value.length < validator.minLength) {
+      // Array validation
+      if (validator.type === 'array') {
+        if (!Array.isArray(value)) {
+          errors[field] = `${field} must be an array`;
+        }
+      }
+
+      // Min length validation (for strings)
+      if (validator.minLength && typeof value === 'string' && value.length < validator.minLength) {
         errors[field] = `${field} must be at least ${validator.minLength} characters`;
       }
 
-      // Max length validation
-      if (validator.maxLength && value.length > validator.maxLength) {
+      // Max length validation (for strings)
+      if (validator.maxLength && typeof value === 'string' && value.length > validator.maxLength) {
         errors[field] = `${field} must be at most ${validator.maxLength} characters`;
       }
 

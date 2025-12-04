@@ -9,6 +9,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.10.0] - 2025-12-03
+
+**Status:** ✅ Multi-File Workspace & Batch Generation Complete
+
+**Summary:** Complete multi-file workspace with sidebar, batch documentation generation, GitHub repository integration, and documentation history data capture. Includes polished batch summary with table formatting and tier-based attribution.
+
+### Added
+
+- **Multi-File Sidebar** ([client/src/components/MultiFileSidebar.jsx](client/src/components/MultiFileSidebar.jsx))
+  - File list with selection, actions, and tier-based access (31 tests)
+  - Batch documentation generation with rate limiting and progress
+  - File upload with validation, persistence, and drag-drop support (32 tests)
+  - GitHub repository integration (tree browsing, branch switching)
+
+- **Batch Generation System** ([client/src/App.jsx](client/src/App.jsx))
+  - Sequential file processing with 15s rate limiting
+  - Progress tracking with countdown timer
+  - Batch summary document generation
+  - Quality score aggregation and display
+
+- **Documentation History Data Capture** ([server/src/services/batchService.js](server/src/services/batchService.js))
+  - BatchService for generation batch management
+  - ExportService for ZIP export functionality (64 tests)
+  - Database migration for generation_batches table
+  - Document-to-batch linking
+
+- **Batch Summary Document** ([client/src/App.jsx](client/src/App.jsx:762-870))
+  - Table-formatted Overall Statistics (Total, Successful, Failed, Avg Quality)
+  - Generated Files table with clickable links and export actions
+  - Quality Details table with per-file breakdown
+  - Tier-based attribution matching server-side branding
+
+### Fixed
+
+- **validateBody Middleware** ([server/src/middleware/auth.js](server/src/middleware/auth.js:152-237))
+  - Fixed `!value` treating 0 as falsy (broke failCount: 0 validation)
+  - Added proper type validation for `number`, `string` with enum, `array`
+  - Fixed batch creation 400 errors when failCount was 0
+
+- **Batch Summary Formatting**
+  - Timestamp without comma after year: "Dec 3, 2025 10:30 PM"
+  - Generated/Status in clean 2-column table for alignment
+  - Consistent tier-based attribution across all user tiers
+
+### Tests
+
+- Frontend: 1,819 passing, 58 skipped (1,877 total)
+- Backend: 1,264 passing, 28 skipped (1,292 total)
+- Total: 3,083 passing, 86 skipped (3,169 total)
+
+---
+
 ## [2.9.0] - 2025-11-23
 
 **Status:** ✅ Layout Toggle Streaming, OPENAPI Support & Gemini 3.0 Pro Integration

@@ -12,7 +12,7 @@
 AI-powered documentation generator with real-time streaming, quality scoring (0-100), and WCAG 2.1 AA compliance.
 
 **Key Metrics:**
-- 2,529 tests (2,473 passing, 56 skipped, 0 failing) | 97.8% pass rate | 96.71% middleware coverage
+- 3,169 tests (3,083 passing, 86 skipped, 0 failing) | 97.3% pass rate | 96.71% middleware coverage
 - Lighthouse: 75/100 performance (+67%), 100/100 accessibility
 - Bundle: 78KB gzipped (-85% reduction)
 - Accessibility: 95/100 score, 0 axe violations
@@ -415,7 +415,7 @@ cd server && npm test 2>&1 | grep "Tests:"           # Backend counts
 **Final Metrics:**
 - Accessibility: 95/100, WCAG 2.1 AA, 0 axe violations
 - Performance: 75/100 Lighthouse (+67%), 78KB bundle (-85%)
-- Testing: 2,391 tests (1,513 frontend, 878 backend, 50 skipped), 100% passing
+- Testing: 3,169 tests (1,877 frontend, 1,292 backend, 86 skipped), 100% passing
 - Deployment: Vercel + GitHub Actions CI/CD, custom domain
 
 **Optional:** README screenshots, demo video, extended manual a11y testing
@@ -457,19 +457,23 @@ codescribe-ai/
 
 ## 🔄 Version History
 
-**Current: v2.8.0** (November 16, 2025)
-- Arrow key navigation in AppearanceModal (Up/Down with smart entry)
-- ESC key navigation on Pricing/Privacy/Terms pages (consistent back navigation)
-- Skip-to-content enhancement (auto-focus first interactive element)
-- Mermaid diagram flashing eliminated (6-layer memoization strategy)
-- Responsive overflow fixes (removed global overflow: hidden, pricing page scrolls correctly)
-- React optimization documentation (comprehensive memoization & overflow lessons)
-- 2,596 tests (2,540 passing, 56 skipped, 97.8% pass rate)
-- Backend: 82.38% statements, 70.11% branches (957 passing, 23 skipped)
-- Frontend: 100% critical paths (1,583 passing, 33 skipped)
+**Current: v2.10.0** (December 3, 2025)
+- Multi-file sidebar with file list, selection, and tier-based access
+- Batch documentation generation with rate limiting, progress, and countdown
+- GitHub repository integration (tree browsing, branch switching, file selection)
+- Documentation history data capture with BatchService and ExportService
+- Batch summary document with table formatting (stats, files, quality details)
+- Tier-based attribution in batch summaries (matches server-side branding)
+- Fixed validateBody middleware for numeric validation (failCount: 0)
+- 3,169 tests (3,083 passing, 86 skipped)
+- Frontend: 1,819 passing, 58 skipped
+- Backend: 1,264 passing, 28 skipped
 
 <details>
-<summary>Recent Releases (v2.7.0-v2.7.11) & Milestones</summary>
+<summary>Recent Releases (v2.8.0-v2.9.0) & Milestones</summary>
+
+**v2.9.0** (Nov 23, 2025): Layout toggle streaming, OPENAPI doc type, Gemini 3.0 Pro integration
+**v2.8.0-v2.8.1** (Nov 16-20, 2025): Arrow key nav, ESC key nav, Mermaid fixes, overflow fixes
 
 **v2.7.x Series (Nov 2025):**
 - v2.7.11: Appearance modal, 3-state theme cycling, DocPanel empty state, multi-file sidebar design doc
@@ -495,7 +499,7 @@ codescribe-ai/
 - **v1.21** (Oct 19): Production deployment, codescribe-ai.vercel.app
 
 Full history: [CHANGELOG.md](CHANGELOG.md)
-Last updated: November 23, 2025
+Last updated: December 3, 2025
 </details>
 
 ---

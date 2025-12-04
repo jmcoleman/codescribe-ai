@@ -487,23 +487,14 @@ export const DocPanel = memo(function DocPanel({
           {/* Quality Score or Batch Summary Badge */}
           {qualityScore && (
             qualityScore.isBatchSummary ? (
-              // Batch Summary Badge - Non-clickable
-              <div
-                className="flex items-center gap-1.5 @[600px]:gap-2 px-2.5 py-1.5 bg-white dark:bg-slate-800 border border-purple-200 dark:border-purple-400/30 rounded-lg"
-                aria-label="Batch summary document"
+              // Batch Summary Chip - Non-interactive status indicator
+              <span
+                className="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300"
+                role="status"
+                aria-label="Viewing batch summary"
               >
-                <span className="text-xs text-slate-600 dark:text-slate-400">Batch Summary</span>
-                {qualityScore.score > 0 && (
-                  <>
-                    <span className="text-xs font-semibold text-purple-700 dark:text-purple-400">
-                      Avg: {qualityScore.score}<span className="@[600px]:inline hidden">/100</span>
-                    </span>
-                    <span className={`text-xs font-semibold ${getGradeColor(qualityScore.grade)}`}>
-                      {qualityScore.grade}
-                    </span>
-                  </>
-                )}
-              </div>
+                Batch Summary
+              </span>
             ) : (
               // Regular Quality Score Button - Clickable
               <Tooltip content="View breakdown">

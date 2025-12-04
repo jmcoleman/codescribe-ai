@@ -65,9 +65,9 @@
       "text": "codescribeai.com",
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
-    "footerLeft": "<strong>CodeScribe AI</strong> \u00b7 Strategic Roadmap v3.15",
-    "footer": "Phase 1 Complete \u00b7 Phase 2 Complete \u00b7 Epic 3.1 Complete (Dark Mode) \u00b7 Epic 3.2 Complete (Workspace) \u00b7 Epic 4.1 Complete (GitHub) \u00b7 v2.9.0 Complete (Layout Toggle & OPENAPI) \u00b7 Launch: Mid-Jan 2026",
-    "lastUpdated": "November 23, 2025"
+    "footerLeft": "<strong>CodeScribe AI</strong> \u00b7 Strategic Roadmap v3.18",
+    "footer": "v2.10.0 Complete (Multi-File Workspace & Batch) \u00b7 Up Next: Trial System \u00b7 Launch: Mid-Jan 2026",
+    "lastUpdated": "December 3, 2025"
   },
   "columns": [
     {
@@ -624,6 +624,25 @@
             "Metadata capture for cost tracking (provider/model/tokens in database)",
             "Test infrastructure updated for config-aware provider testing"
           ]
+        },
+        {
+          "version": "v2.10.0",
+          "title": "Multi-File Workspace & Batch Generation",
+          "duration": "5-6 days",
+          "status": "✓ Complete",
+          "completedDate": "Dec 3, 2025",
+          "badge": "Pro+ Feature",
+          "features": [
+            "Multi-file sidebar with file list and actions (31 tier-based tests)",
+            "Batch documentation generation with rate limiting, progress, and countdown",
+            "File upload and management with validation, persistence, and drag-drop",
+            "GitHub repository integration (tree browsing, branch switching, file selection)",
+            "Documentation history data capture with BatchService and ExportService (64 tests)",
+            "Batch summary document with table formatting (stats, files, quality details)",
+            "Tier-based attribution in batch summaries (matches server-side branding)",
+            "Fixed validateBody middleware for numeric validation (failCount: 0)",
+            "Database migration for generation_batches table"
+          ]
         }
       ]
     },
@@ -634,31 +653,21 @@
       "subtitle": "Phase 3: Next Features",
       "phases": [
         {
-          "version": "v2.10.0",
-          "title": "Summary & Format Polish",
-          "duration": "1-2 days",
-          "status": "Planned",
-          "badge": "UX Polish",
+          "version": "v3.0.0",
+          "title": "Trial System",
+          "duration": "3-4 days",
+          "status": "Up Next",
+          "badge": "Conversion & Growth",
           "features": [
-            "✓ Improve batch generation summary format and layout",
-            "Polish individual doc generation presentation",
-            "Enhanced quality score display in summaries",
-            "Better error messaging and recovery flows",
-            "✓ Refined toast notification timing and content"
-          ]
-        },
-        {
-          "version": "Phase 1",
-          "title": "Multi-File Sidebar & Integration",
-          "duration": "4-5 days",
-          "status": "In Progress",
-          "badge": "Pro+ Feature",
-          "features": [
-            "✓ Multi-file sidebar with file list and actions (31 tier-based tests)",
-            "✓ Batch documentation generation (27 tests: rate limiting, progress, summary, errors, countdown)",
-            "✓ File upload and management (32 tests: validation, persistence, deletion, errors, drag-drop)",
-            "✓ GitHub repository integration",
-            "Documentation history and export"
+            "14-day Pro trial for new users (no credit card required)",
+            "Trial eligibility tracking (one trial per user)",
+            "Trial status in header and pricing page",
+            "Automated email reminders (7, 3, 1 day before expiry)",
+            "Trial expiration handling with graceful downgrade to Free",
+            "Admin trial extension capability for support",
+            "Trial analytics dashboard (conversion rates, engagement)",
+            "Database: user_trials, trial_email_history tables",
+            "See: docs/architecture/TRIAL-SYSTEM-ARCHITECTURE.md"
           ]
         },
         {
@@ -719,6 +728,24 @@
             "Email notifications for subscription lifecycle events",
             "In-app notifications for billing issues and renewals",
             "Note: Core upgrade/downgrade flows completed in Epic 2.4"
+          ]
+        },
+        {
+          "version": "Epic 3.5",
+          "title": "Generation History UI (Pro+)",
+          "duration": "2-3 days",
+          "status": "Planned",
+          "badge": "Pro+ Feature",
+          "features": [
+            "History page showing past generation batches",
+            "Batch cards with summary, file count, quality scores",
+            "Reload past batches into workspace (one-click restore)",
+            "Search and filter batches by date, doc type, file count",
+            "ZIP export from history (server-side with manifest)",
+            "Tier-gated access: Pro+ only (Free/Starter see upgrade prompt)",
+            "Pagination for large batch histories",
+            "Display AI model used for each document (stored in DB, hidden from batch summary for cleaner UX)",
+            "Note: Data capture complete in v2.9.0 (generation_batches table, BatchService, ExportService)"
           ]
         }
       ]
