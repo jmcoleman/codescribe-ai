@@ -40,36 +40,25 @@ export function ThemeProvider({ children }) {
     const existing = getStorageItem(STORAGE_KEYS.THEME_PREFERENCE);
     if (!existing && theme) {
       setStorageItem(STORAGE_KEYS.THEME_PREFERENCE, theme);
-      console.log('[ThemeContext] Saved initial theme to localStorage:', theme);
     }
   }, []); // Run once on mount
 
   // Load theme from user account on login
   useEffect(() => {
     if (user && user.theme_preference && ['light', 'dark', 'auto'].includes(user.theme_preference)) {
-      console.log('[ThemeContext] Loading theme from user account:', user.theme_preference);
       setThemeInternal(user.theme_preference);
 
       // CRITICAL: Sync database preference to localStorage to prevent flash on next reload
       setStorageItem(STORAGE_KEYS.THEME_PREFERENCE, user.theme_preference);
-      console.log('[ThemeContext] Synced database theme to localStorage:', user.theme_preference);
-    } else if (user) {
-      console.log('[ThemeContext] User logged in but no theme_preference found in user object:', user);
     }
   }, [user]);
 
   // Wrapper for setTheme that saves to backend if user is logged in
   const setTheme = async (newTheme) => {
-    console.log('[ThemeContext] setTheme called with:', newTheme);
     setThemeInternal(newTheme);
 
     // Save to localStorage (for non-authenticated users and as backup)
-    const saved = setStorageItem(STORAGE_KEYS.THEME_PREFERENCE, newTheme);
-    if (saved) {
-      console.log('[ThemeContext] Saved to localStorage:', newTheme);
-    } else {
-      console.error('[ThemeContext] Failed to save to localStorage');
-    }
+    setStorageItem(STORAGE_KEYS.THEME_PREFERENCE, newTheme);
 
     // Save to backend if user is authenticated
     if (user && user.id) {
@@ -77,8 +66,7 @@ export function ThemeProvider({ children }) {
         const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
         const token = getStorageItem(STORAGE_KEYS.AUTH_TOKEN);
 
-        console.log('[ThemeContext] Saving to backend for user:', user.id);
-        const response = await fetch(`${API_URL}/api/auth/preferences`, {
+        await fetch(`${API_URL}/api/auth/preferences`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -88,15 +76,10 @@ export function ThemeProvider({ children }) {
             theme_preference: newTheme
           })
         });
-
-        const data = await response.json();
-        console.log('[ThemeContext] Backend response:', data);
       } catch (error) {
         console.error('[ThemeContext] Failed to save theme preference to backend:', error);
         // Don't throw - the local change still works
       }
-    } else {
-      console.log('[ThemeContext] Not saving to backend - user not authenticated');
     }
   };
 
@@ -110,14 +93,10 @@ export function ThemeProvider({ children }) {
       try {
         const matches = window.matchMedia('(prefers-color-scheme: dark)').matches;
         resolvedTheme = matches ? 'dark' : 'light';
-        console.log('[ThemeContext] Resolving auto mode:', { matches, resolvedTheme });
       } catch (e) {
-        console.error('[ThemeContext] Error checking system preference:', e);
         resolvedTheme = 'light';
       }
     }
-
-    console.log('[ThemeContext] Applying theme to DOM:', { theme, resolvedTheme });
 
     // Update effective theme state
     setEffectiveTheme(resolvedTheme);

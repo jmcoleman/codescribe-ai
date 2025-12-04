@@ -144,12 +144,15 @@ export const Header = forwardRef(function Header({ onMenuClick, onHelpClick, sho
                 Help
               </Button>
 
-              {/* Layout Toggle - Desktop (Pro+ only: pro, team, or enterprise) */}
+              {/* Layout Toggle - Desktop only (hidden on mobile/tablet where tabs are shown) */}
+              {/* Pro+ only: pro, team, or enterprise */}
               {hasProPlusTier && layout && onLayoutChange && (
-                <LayoutToggle
-                  layout={layout}
-                  onLayoutChange={onLayoutChange}
-                />
+                <div className="hidden lg:block">
+                  <LayoutToggle
+                    layout={layout}
+                    onLayoutChange={onLayoutChange}
+                  />
+                </div>
               )}
 
               {/* Appearance Settings - Desktop (icon only, unauthenticated users) */}

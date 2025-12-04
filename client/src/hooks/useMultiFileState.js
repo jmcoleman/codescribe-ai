@@ -45,11 +45,6 @@ export function useMultiFileState() {
       const saved = sessionStorage.getItem(WORKSPACE_STATE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        console.log('[useMultiFileState] Loading workspace from sessionStorage:', {
-          fileCount: parsed.files?.length || 0,
-          activeFileId: parsed.activeFileId,
-          selectedCount: parsed.selectedFileIds?.length || 0
-        });
         return {
           files: parsed.files || [],
           activeFileId: parsed.activeFileId || null,
@@ -59,7 +54,6 @@ export function useMultiFileState() {
     } catch (error) {
       console.error('[useMultiFileState] Error loading workspace from sessionStorage:', error);
     }
-    console.log('[useMultiFileState] No saved workspace found, starting fresh');
     return { files: [], activeFileId: null, selectedFileIds: [] };
   };
 
@@ -92,12 +86,8 @@ export function useMultiFileState() {
         selectedFileIds
       };
       sessionStorage.setItem(WORKSPACE_STATE_KEY, JSON.stringify(state));
-      console.log('[useMultiFileState] Saved workspace to sessionStorage:', files.length, 'files');
     } catch (error) {
       console.error('[useMultiFileState] Error saving workspace to sessionStorage:', error);
-      if (error.name === 'QuotaExceededError') {
-        console.warn('[useMultiFileState] sessionStorage quota exceeded');
-      }
     }
   }, [files, activeFileId, selectedFileIds]);
 
@@ -107,24 +97,25 @@ export function useMultiFileState() {
    * @returns {string} - File ID
    */
   const addFile = useCallback((fileData) => {
-    const fileId = uuidv4();
+    // Use provided ID if available (e.g., from database), otherwise generate new UUID
+    const fileId = fileData.id || uuidv4();
     const now = new Date();
     const newFile = {
       id: fileId,
       filename: fileData.filename || 'untitled.js',
       language: fileData.language || 'javascript',
       content: fileData.content || '',
-      documentation: null,
-      qualityScore: null,
+      documentation: fileData.documentation || null,
+      qualityScore: fileData.qualityScore || null,
       docType: fileData.docType || 'README',
       origin: fileData.origin || 'upload',
-      fileSize: fileData.content?.length || 0,
+      fileSize: fileData.content?.length || fileData.fileSize || 0,
       isGenerating: false,
       error: null,
-      documentId: null,
-      dateAdded: now,
-      dateModified: now,
-      ...fileData
+      documentId: fileData.documentId || null,
+      dateAdded: fileData.dateAdded || now,
+      dateModified: fileData.dateModified || now,
+      github: fileData.github || null
     };
 
     setFiles(prev => [...prev, newFile]);
@@ -143,23 +134,24 @@ export function useMultiFileState() {
   const addFiles = useCallback((filesData) => {
     const now = new Date();
     const newFiles = filesData.map(fileData => {
-      const fileId = uuidv4();
+      // Use provided ID if available (e.g., from database), otherwise generate new UUID
+      const fileId = fileData.id || uuidv4();
       return {
         id: fileId,
         filename: fileData.filename || 'untitled.js',
         language: fileData.language || 'javascript',
         content: fileData.content || '',
-        documentation: null,
-        qualityScore: null,
+        documentation: fileData.documentation || null,
+        qualityScore: fileData.qualityScore || null,
         docType: fileData.docType || 'README',
         origin: fileData.origin || 'upload',
-        fileSize: fileData.content?.length || 0,
+        fileSize: fileData.content?.length || fileData.fileSize || 0,
         isGenerating: false,
         error: null,
-        documentId: null,
-        dateAdded: now,
-        dateModified: now,
-        ...fileData
+        documentId: fileData.documentId || null,
+        dateAdded: fileData.dateAdded || now,
+        dateModified: fileData.dateModified || now,
+        github: fileData.github || null
       };
     });
 
@@ -195,7 +187,6 @@ export function useMultiFileState() {
           selectedFileIds
         };
         sessionStorage.setItem(WORKSPACE_STATE_KEY, JSON.stringify(state));
-        console.log('[useMultiFileState] Immediately saved after single file removal:', filtered.length, 'files');
       } catch (error) {
         console.error('[useMultiFileState] Error immediately saving to sessionStorage:', error);
       }
@@ -214,12 +205,10 @@ export function useMultiFileState() {
    * @param {string[]} fileIds - Array of file IDs to remove
    */
   const removeFiles = useCallback((fileIds) => {
-    console.log('[useMultiFileState] Removing files:', fileIds.length);
     const fileIdsSet = new Set(fileIds);
 
     setFiles(prev => {
       const filtered = prev.filter(f => !fileIdsSet.has(f.id));
-      console.log('[useMultiFileState] Files after removal:', filtered.length);
 
       // Immediately update sessionStorage synchronously to prevent race conditions
       try {
@@ -236,7 +225,6 @@ export function useMultiFileState() {
           selectedFileIds: newSelectedFileIds
         };
         sessionStorage.setItem(WORKSPACE_STATE_KEY, JSON.stringify(state));
-        console.log('[useMultiFileState] Immediately saved to sessionStorage:', filtered.length, 'files');
       } catch (error) {
         console.error('[useMultiFileState] Error immediately saving to sessionStorage:', error);
       }
@@ -280,7 +268,6 @@ export function useMultiFileState() {
     // Immediately clear sessionStorage synchronously BEFORE updating state
     try {
       sessionStorage.removeItem(WORKSPACE_STATE_KEY);
-      console.log('[useMultiFileState] Immediately cleared sessionStorage');
     } catch (error) {
       console.error('[useMultiFileState] Error clearing workspace from sessionStorage:', error);
     }
@@ -289,7 +276,7 @@ export function useMultiFileState() {
     try {
       localStorage.removeItem(WORKSPACE_STATE_KEY);
     } catch (error) {
-      console.error('[useMultiFileState] Error clearing old workspace from localStorage:', error);
+      // Ignore - old localStorage may not exist
     }
 
     // Now update state

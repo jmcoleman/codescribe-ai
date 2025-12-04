@@ -17,6 +17,7 @@ import { useUsageTracking } from './hooks/useUsageTracking';
 import { useWorkspacePersistence } from './hooks/useWorkspacePersistence';
 import { useDocumentPersistence } from './hooks/useDocumentPersistence';
 import { useTierOverride } from './hooks/useTierOverride';
+import { useBatchGeneration } from './hooks/useBatchGeneration';
 import { ErrorBanner } from './components/ErrorBanner';
 import { UsageWarningBanner } from './components/UsageWarningBanner';
 import { UsageLimitModal } from './components/UsageLimitModal';
@@ -81,7 +82,7 @@ const DEFAULT_SIDEBAR_SIZE = 20;
 const DEFAULT_MAIN_SIZE = 80;
 
 function App() {
-  const { getToken, user, isAuthenticated, checkLegalStatus, acceptLegalDocuments } = useAuth();
+  const { getToken, user, isAuthenticated, isLoading: authLoading, checkLegalStatus, acceptLegalDocuments } = useAuth();
   const { effectiveTheme } = useTheme();
 
   // Load persisted state from localStorage on mount, fallback to defaults
@@ -111,14 +112,6 @@ function App() {
   const [largeCodeStats, setLargeCodeStats] = useState(null);
   const [uploadError, setUploadError] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [bulkGenerationErrors, setBulkGenerationErrors] = useState([]); // Array of {filename, fileId, error}
-  const [bulkGenerationProgress, setBulkGenerationProgress] = useState(null); // { total, completed, currentBatch, totalBatches } or null
-  const [currentlyGeneratingFile, setCurrentlyGeneratingFile] = useState(null); // { filename, index, total } or null
-  const [throttleCountdown, setThrottleCountdown] = useState(null); // Seconds remaining in throttle delay
-  // Batch generation state - loaded from localStorage only if user has batch processing access
-  const [bulkGenerationSummary, setBulkGenerationSummary] = useState(null);
-  const [batchSummaryMarkdown, setBatchSummaryMarkdown] = useState(null);
-  const [currentBatchId, setCurrentBatchId] = useState(null); // Database batch ID for export
   const [testSkeletonMode, setTestSkeletonMode] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [isMobileView, setIsMobileView] = useState(() => window.innerWidth < 1024);
@@ -242,29 +235,7 @@ function App() {
   // This single flag controls: multi-file sidebar, GitHub multi-select, batch summary, summary button
   const canUseBatchProcessing = hasFeature(user, 'batchProcessing');
 
-  // Clear batch-related state when user loses batch processing access (tier downgrade/expiry)
-  useEffect(() => {
-    if (!canUseBatchProcessing) {
-      // Clear batch generation state
-      setBulkGenerationSummary(null);
-      setBulkGenerationProgress(null);
-      setBulkGenerationErrors([]);
-      setCurrentlyGeneratingFile(null);
-      setThrottleCountdown(null);
-      setBatchSummaryMarkdown(null);
-      setCurrentBatchId(null);
-
-      // Reset layout to split view (default)
-      setLayout('split');
-      setStorageItem(STORAGE_KEYS.LAYOUT_MODE, 'split');
-
-      // Clear from sessionStorage
-      removeSessionItem('bulk_generation_summary');
-      removeSessionItem('batch_summary_markdown');
-
-      console.log('[App] Batch processing access lost - cleared batch state and reset to split view');
-    }
-  }, [canUseBatchProcessing]);
+  // Note: Batch state clearing for tier downgrade is handled after useBatchGeneration hook
 
   // Check legal acceptance status on mount for authenticated users
   useEffect(() => {
@@ -301,39 +272,7 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]); // Only run when user changes, not when checkLegalStatus changes
 
-  // Load batch data from sessionStorage only if user has batch processing access
-  useEffect(() => {
-    if (canUseBatchProcessing) {
-      // Load bulk generation summary
-      try {
-        const saved = getSessionItem('bulk_generation_summary');
-        if (saved) {
-          setBulkGenerationSummary(JSON.parse(saved));
-        }
-      } catch (error) {
-        console.error('[App] Error loading bulk generation summary:', error);
-      }
-
-      // Load batch summary markdown
-      const markdown = getSessionItem('batch_summary_markdown');
-      if (markdown) {
-        setBatchSummaryMarkdown(markdown);
-      }
-    }
-  }, [canUseBatchProcessing]);
-
-  // Persist batch data to sessionStorage (only if user has access and data exists)
-  useEffect(() => {
-    if (canUseBatchProcessing) {
-      // Persist both together since they're tightly coupled
-      if (bulkGenerationSummary) {
-        setSessionItem('bulk_generation_summary', JSON.stringify(bulkGenerationSummary));
-      }
-      if (batchSummaryMarkdown) {
-        setSessionItem('batch_summary_markdown', batchSummaryMarkdown);
-      }
-    }
-  }, [canUseBatchProcessing, bulkGenerationSummary, batchSummaryMarkdown]);
+  // Note: Batch data persistence is handled after useBatchGeneration hook initialization
 
   // Load user-scoped editor content when user logs in
   useEffect(() => {
@@ -347,16 +286,11 @@ function App() {
         }
       }
     } else {
-      // User logged out - clear all user-specific state
+      // User logged out - clear editor state
+      // Batch state clearing is handled separately after useBatchGeneration hook
       setCode(DEFAULT_CODE);
       setFilename('code.js');
       setDocType('README');
-      setBulkGenerationSummary(null);
-      setBatchSummaryMarkdown(null);
-      setCurrentBatchId(null);
-      setBulkGenerationErrors([]);
-      setBulkGenerationProgress(null);
-      setCurrentlyGeneratingFile(null);
     }
   }, [user?.id]); // Only run when user ID changes (login/logout)
 
@@ -409,60 +343,6 @@ function App() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [canUseBatchProcessing, handleToggleSidebarCollapse]);
-
-  // Sync active file to CodePanel and DocPanel when selection changes
-  // Sync active file to code and doc panels when user clicks a file in sidebar
-  useEffect(() => {
-    const activeFile = multiFileState.files.find(f => f.id === multiFileState.activeFileId);
-    if (activeFile) {
-      // Sync code to CodePanel
-      if (activeFile.content) {
-        setCode(activeFile.content);
-        setFilename(activeFile.filename);
-        // Language will be derived from filename automatically
-      }
-
-      // Skip documentation sync if a file is actively generating (SSE streaming in progress)
-      // During streaming, documentation is in the hook's state, not yet saved to multiFileState
-      // Syncing here would clear the streaming content
-      // Check activeFile.isGenerating or bulkGenerationProgress (batch generation in progress)
-      if (activeFile.isGenerating || bulkGenerationProgress) {
-        return; // Don't interfere with streaming
-      }
-
-      // Sync documentation to DocPanel (overrides batch summary)
-      if (activeFile.documentation) {
-        setDocumentation(activeFile.documentation);
-        setQualityScore(activeFile.qualityScore || null);
-      } else {
-        // Clear DocPanel if file has no documentation
-        setDocumentation('');
-        setQualityScore(null);
-      }
-    } else if (multiFileState.activeFileId === null) {
-      // No active file - clear both panels (happens when file is deleted or deselected)
-      // UNLESS we're showing a batch summary
-      const isShowingBatchSummary = batchSummaryMarkdown && documentation === batchSummaryMarkdown;
-
-      if (!isShowingBatchSummary) {
-        // Keep default code in CodePanel
-        const defaultCode = DEFAULT_CODE;
-        const defaultFilename = 'code.js';
-        setCode(defaultCode);
-        setFilename(defaultFilename);
-
-        // Clear DocPanel completely
-        setDocumentation('');
-        setQualityScore(null);
-
-        // Also clear batch summary if showing
-        if (batchSummaryMarkdown) {
-          setBatchSummaryMarkdown(null);
-          setBulkGenerationSummary(null);
-        }
-      }
-    }
-  }, [multiFileState.activeFileId, multiFileState.files, batchSummaryMarkdown, bulkGenerationProgress]);
 
   // Handle legal document acceptance
   const handleAcceptLegalDocuments = async (acceptance) => {
@@ -588,14 +468,144 @@ function App() {
     retryAfter
   } = useDocGeneration(refetchUsage);
 
-  // Clear bulk generation progress when single-file generation completes
+  // Batch generation hook - manages bulk doc generation state and logic
+  const {
+    bulkGenerationProgress,
+    currentlyGeneratingFile,
+    throttleCountdown,
+    bulkGenerationSummary,
+    batchSummaryMarkdown,
+    bulkGenerationErrors,
+    currentBatchId,
+    setBulkGenerationSummary,
+    setBatchSummaryMarkdown,
+    setCurrentBatchId,
+    setBulkGenerationErrors,
+    handleGenerateSelected,
+    handleSummaryFileClick,
+    handleBackToSummary,
+    clearBatchState,
+    restoreBatchState
+  } = useBatchGeneration({
+    generate,
+    setDocumentation,
+    setQualityScore,
+    multiFileState,
+    documentPersistence,
+    isAuthenticated,
+    canGenerate,
+    setShowUsageLimitModal,
+    refetchUsage,
+    userTier: user?.effectiveTier || user?.tier || 'free'
+  });
+
+  // Clear batch-related state when user loses batch processing access (tier downgrade/expiry)
+  // Skip during initial auth loading to avoid clearing state before we know user's tier
   useEffect(() => {
-    // When isGenerating becomes false AND we have progress for a single file (total: 1)
-    // Clear the progress to hide the spinner on Generate Selected button
-    if (!isGenerating && bulkGenerationProgress && bulkGenerationProgress.total === 1) {
-      setBulkGenerationProgress(null);
+    if (authLoading) return; // Don't run until auth has finished loading
+
+    if (!canUseBatchProcessing) {
+      // Clear batch generation state using hook's clearBatchState
+      clearBatchState();
+
+      // Reset layout to split view (default)
+      setLayout('split');
+      setStorageItem(STORAGE_KEYS.LAYOUT_MODE, 'split');
+
+      // Clear from sessionStorage
+      removeSessionItem('bulk_generation_summary');
+      removeSessionItem('batch_summary_markdown');
     }
-  }, [isGenerating, bulkGenerationProgress]);
+  }, [authLoading, canUseBatchProcessing, clearBatchState]);
+
+  // Note: Bulk generation progress clearing is handled internally by useBatchGeneration
+
+  // Load batch data from sessionStorage only if user has batch processing access
+  useEffect(() => {
+    if (canUseBatchProcessing) {
+      // Load bulk generation summary
+      try {
+        const saved = getSessionItem('bulk_generation_summary');
+        const markdown = getSessionItem('batch_summary_markdown');
+        if (saved || markdown) {
+          restoreBatchState({
+            bulkGenerationSummary: saved ? JSON.parse(saved) : null,
+            batchSummaryMarkdown: markdown || null
+          });
+        }
+      } catch (error) {
+        console.error('[App] Error loading batch data from sessionStorage:', error);
+      }
+    }
+  }, [canUseBatchProcessing, restoreBatchState]);
+
+  // Persist batch data to sessionStorage (only if user has access and data exists)
+  useEffect(() => {
+    if (canUseBatchProcessing) {
+      if (bulkGenerationSummary) {
+        setSessionItem('bulk_generation_summary', JSON.stringify(bulkGenerationSummary));
+      }
+      if (batchSummaryMarkdown) {
+        setSessionItem('batch_summary_markdown', batchSummaryMarkdown);
+      }
+    }
+  }, [canUseBatchProcessing, bulkGenerationSummary, batchSummaryMarkdown]);
+
+  // Clear batch state on logout
+  useEffect(() => {
+    if (!user?.id) {
+      clearBatchState();
+    }
+  }, [user?.id, clearBatchState]);
+
+  // Sync active file to CodePanel and DocPanel when selection changes
+  // Sync active file to code and doc panels when user clicks a file in sidebar
+  useEffect(() => {
+    const activeFile = multiFileState.files.find(f => f.id === multiFileState.activeFileId);
+    if (activeFile) {
+      // Sync code to CodePanel
+      if (activeFile.content) {
+        setCode(activeFile.content);
+        setFilename(activeFile.filename);
+        // Language will be derived from filename automatically
+      }
+
+      // Skip documentation sync if a file is actively generating (SSE streaming in progress)
+      // During streaming, documentation is in the hook's state, not yet saved to multiFileState
+      // Syncing here would clear the streaming content
+      // Check activeFile.isGenerating or bulkGenerationProgress (batch generation in progress)
+      if (activeFile.isGenerating || bulkGenerationProgress) {
+        return; // Don't interfere with streaming
+      }
+
+      // Sync documentation to DocPanel (overrides batch summary)
+      if (activeFile.documentation) {
+        setDocumentation(activeFile.documentation);
+        setQualityScore(activeFile.qualityScore || null);
+      } else {
+        // Clear DocPanel if file has no documentation
+        setDocumentation('');
+        setQualityScore(null);
+      }
+    } else if (multiFileState.activeFileId === null) {
+      // No active file - clear both panels (happens when file is deleted or deselected)
+      // UNLESS we're showing a batch summary
+      if (!batchSummaryMarkdown) {
+        // Keep default code in CodePanel
+        const defaultCode = DEFAULT_CODE;
+        const defaultFilename = 'code.js';
+        setCode(defaultCode);
+        setFilename(defaultFilename);
+
+        // Clear DocPanel completely
+        setDocumentation('');
+        setQualityScore(null);
+      }
+    }
+    // Note: Only depend on activeFileId and files changes, not on documentation
+    // to avoid re-triggering during SSE streaming
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [multiFileState.activeFileId, multiFileState.files, batchSummaryMarkdown, bulkGenerationProgress]);
 
   // Load user-scoped documentation and quality score when user logs in
   useEffect(() => {
@@ -751,500 +761,6 @@ function App() {
     }
 
     return response.json();
-  };
-
-  /**
-   * Generate a batch summary document in markdown format
-   * @param {Object} summary - Batch generation summary object
-   * @param {Array} failedFiles - Array of failed file objects
-   * @returns {string} Markdown formatted summary
-   */
-  // Build tier-based attribution footer (matches server-side docGenerator.buildAttribution)
-  const buildAttribution = (tier) => {
-    const attributions = {
-      free: `\n\n---\n*🟣 Generated with [CodeScribe AI](https://codescribeai.com) • Free Tier*  \n*Upgrade to [Pro](https://codescribeai.com/pricing) to remove this watermark and unlock advanced features*`,
-      starter: `\n\n---\n*🟣 Generated with [CodeScribe AI](https://codescribeai.com) • Free Tier*  \n*Upgrade to [Pro](https://codescribeai.com/pricing) to remove this watermark and unlock advanced features*`,
-      pro: `\n\n---\n*Generated with [CodeScribe AI](https://codescribeai.com) - AI-powered code documentation*`,
-      premium: `\n\n---\n*Generated with [CodeScribe AI](https://codescribeai.com) - AI-powered code documentation*`,
-      team: `\n\n---\n*Generated with [CodeScribe AI](https://codescribeai.com)*`,
-      enterprise: '' // No attribution for enterprise
-    };
-    return attributions[tier] || attributions.free;
-  };
-
-  const generateBatchSummaryDocument = (summary, failedFiles = []) => {
-    // Format timestamp without comma after year (e.g., "Dec 3, 2025 10:30 PM")
-    const now = new Date();
-    const timestamp = now.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    }) + ' ' + now.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    });
-
-    const { totalFiles, successCount, failCount, avgQuality, avgGrade, successfulFiles } = summary;
-
-    // Determine overall status
-    const statusText = failCount === 0 ? 'All files processed successfully' :
-                      successCount > 0 ? 'Batch completed with some failures' :
-                      'Batch processing failed';
-
-    let markdown = `# Generated Summary
-
-| | |
-|---|---|
-| **Generated** | ${timestamp} |
-| **Status** | ${statusText} |
-
-## Overall Statistics
-| Total | Successful | Failed | Avg Quality |
-|-------|------------|--------|-------------|
-| ${totalFiles} | ${successCount} (${Math.round((successCount / totalFiles) * 100)}%) | ${failCount} | ${successCount > 0 ? `${avgGrade} (${avgQuality}/100)` : 'N/A'} |`;
-
-    // Success section - table format
-    if (successfulFiles && successfulFiles.length > 0) {
-      markdown += `
-
-## Generated Files
-| File | Type | Score | |
-|------|------|-------|---|
-`;
-      successfulFiles.forEach(file => {
-        markdown += `| [${file.name}](#file:${encodeURIComponent(file.name)}) | ${file.docType} | ${file.grade} (${file.score}/100) | [Export](#export:${encodeURIComponent(file.name)}) |\n`;
-      });
-    }
-
-    // Failed files section
-    if (failedFiles && failedFiles.length > 0) {
-      markdown += `
-
-## Failed Files (${failedFiles.length})
-`;
-      failedFiles.forEach(file => {
-        markdown += `**${file.filename}**
-Error: ${file.error}
-`;
-      });
-    }
-
-    // Quality Details section - table format
-    if (successfulFiles && successfulFiles.some(f => f.qualityScore?.breakdown)) {
-      markdown += `
-
-## Quality Details
-| File | Overview | Install | Examples | Docs | Structure | Suggestions |
-|------|----------|---------|----------|------|-----------|-------------|
-`;
-      successfulFiles.forEach(file => {
-        if (file.qualityScore?.breakdown) {
-          const b = file.qualityScore.breakdown;
-          const overview = b.overview ? `${b.overview.points}/${b.overview.maxPoints}` : '-';
-          const install = b.installation ? `${b.installation.points}/${b.installation.maxPoints}` : '-';
-          const examples = b.examples ? `${b.examples.points}/${b.examples.maxPoints}` : '-';
-          const docs = b.apiDocs ? `${b.apiDocs.points}/${b.apiDocs.maxPoints}` : '-';
-          const structure = b.structure ? `${b.structure.points}/${b.structure.maxPoints}` : '-';
-
-          // Get suggestions
-          let suggestions = '-';
-          if (file.qualityScore.summary?.improvements?.length > 0) {
-            const suggestionList = file.qualityScore.summary.improvements
-              .map(key => file.qualityScore.breakdown?.[key]?.suggestion)
-              .filter(Boolean);
-            if (suggestionList.length > 0) {
-              suggestions = suggestionList.join('; ');
-            }
-          }
-
-          markdown += `| ${file.name} | ${overview} | ${install} | ${examples} | ${docs} | ${structure} | ${suggestions} |\n`;
-        }
-      });
-    }
-
-    // Add tier-based attribution footer
-    markdown += buildAttribution(user?.tier || 'free');
-
-    return markdown;
-  };
-
-  /**
-   * Handle bulk generation for selected files
-   * Processes files in batches of 5 concurrently
-   */
-  const handleGenerateSelected = async (skipPreviouslyGenerated = false) => {
-    const filesWithContent = multiFileState.files.filter(f => f.content && f.content.length > 0);
-    let selectedFilesWithContent = filesWithContent.filter(f => multiFileState.selectedFileIds.includes(f.id));
-
-    if (selectedFilesWithContent.length === 0) {
-      toastCompact.error('No files with content selected');
-      return;
-    }
-
-    // Check if any selected files already have documentation (only if not explicitly choosing to skip)
-    if (!skipPreviouslyGenerated) {
-      const filesWithDocs = selectedFilesWithContent.filter(f => f.documentation);
-      const filesWithoutDocs = selectedFilesWithContent.filter(f => !f.documentation);
-
-      // If there are files with existing documentation, ask user what to do
-      if (filesWithDocs.length > 0 && filesWithoutDocs.length > 0) {
-        // Use AskUserQuestion to get user preference
-        // For now, use window.confirm as a simple solution
-        const regenerateAll = window.confirm(
-          `${filesWithDocs.length} of ${selectedFilesWithContent.length} selected files already have documentation.\n\n` +
-          `Click OK to regenerate all files.\n` +
-          `Click Cancel to only generate new documentation for files without it.`
-        );
-
-        if (!regenerateAll) {
-          // User chose to skip previously generated files
-          selectedFilesWithContent = filesWithoutDocs;
-        }
-      }
-    }
-
-    // Check usage quota for bulk generation
-    if (!canGenerate()) {
-      setShowUsageLimitModal(true);
-      return;
-    }
-
-    const totalFiles = selectedFilesWithContent.length;
-    const RATE_LIMIT_DELAY = 15000; // 15 seconds between requests to respect Claude API rate limits (8K tokens/min)
-    let successCount = 0;
-    let failureCount = 0;
-    const failedFiles = [];
-    const successfulFiles = []; // Track successful files with their quality scores
-
-    // Clear previous doc panel content and summaries
-    setDocumentation('');
-    setQualityScore(null);
-    setBulkGenerationSummary(null);
-    setBatchSummaryMarkdown(null); // Clear any previous batch summary
-    setCurrentBatchId(null);
-    setBulkGenerationErrors([]);
-
-    // Initialize progress
-    setBulkGenerationProgress({
-      total: totalFiles,
-      completed: 0,
-      currentBatch: 1,
-      totalBatches: 1
-    });
-
-    // Process files sequentially with rate limiting
-    for (let i = 0; i < selectedFilesWithContent.length; i++) {
-      const file = selectedFilesWithContent[i];
-
-      // Update progress state
-      setBulkGenerationProgress({
-        total: totalFiles,
-        completed: i,
-        currentBatch: 1,
-        totalBatches: 1
-      });
-
-      // Mark file as generating
-      multiFileState.updateFile(file.id, {
-        isGenerating: true,
-        error: null
-      });
-
-      // Show which file is currently being generated
-      setCurrentlyGeneratingFile({
-        filename: file.filename,
-        index: i + 1,
-        total: totalFiles,
-        docType: file.docType
-      });
-
-      // Clear previous documentation to show fresh streaming
-      setDocumentation('');
-      setQualityScore(null);
-
-      try {
-        // Generate documentation with streaming (users see live progress)
-        console.log(`[App] Starting generation for file ${i + 1}/${totalFiles}: ${file.filename}`);
-        const startTime = Date.now();
-        const result = await generate(file.content, file.docType, file.language, false);
-        console.log(`[App] Generation completed for ${file.filename} in ${(Date.now() - startTime) / 1000}s`);
-
-        const generatedAt = new Date();
-
-        // Save document to database (if authenticated)
-        let documentId = null;
-        if (isAuthenticated) {
-          try {
-            console.log('[App] Saving document with metadata:', result.metadata);
-            const saveResult = await documentPersistence.saveDocument({
-              filename: file.filename,
-              language: file.language,
-              fileSize: file.fileSize,
-              documentation: result.documentation,
-              qualityScore: result.qualityScore,
-              docType: file.docType,
-              origin: file.origin || 'upload',
-              provider: result.metadata?.provider || 'claude',
-              model: result.metadata?.model || 'claude-sonnet-4-5-20250929',
-              github: file.github || null,
-              llm: result.metadata || null
-            }, 'save'); // Explicitly choose to save (bypass preference check)
-
-            if (saveResult) {
-              documentId = saveResult.documentId;
-              console.log(`[App] Saved document to database: ${documentId}`);
-            }
-          } catch (saveError) {
-            console.error('[App] Failed to save document to database:', saveError);
-            // Continue even if save fails - don't block the generation
-          }
-        }
-
-        // Update file with generated documentation
-        multiFileState.updateFile(file.id, {
-          documentation: result.documentation,
-          qualityScore: result.qualityScore,
-          isGenerating: false,
-          error: null,
-          documentId: documentId, // Set database ID if saved
-          generatedAt // Timestamp of when documentation was generated
-        });
-
-        // Update usage tracking
-        refetchUsage();
-
-        // Track successful file
-        successCount++;
-
-        successfulFiles.push({
-          name: file.filename,
-          score: result.qualityScore?.score || 0,
-          grade: result.qualityScore?.grade || 'N/A',
-          qualityScore: result.qualityScore, // Include full quality score for breakdown
-          docType: file.docType || 'README',
-          generatedAt: generatedAt,
-          fileId: file.id,
-          // Track model per file (can vary by doc type or configuration)
-          provider: result.metadata?.provider || 'claude',
-          model: result.metadata?.model || 'unknown'
-        });
-
-      } catch (error) {
-        console.error(`[App] Failed to generate docs for ${file.filename}:`, error);
-
-        // Update file with error state
-        multiFileState.updateFile(file.id, {
-          isGenerating: false,
-          error: error.message
-        });
-
-        // Track failed file
-        failureCount++;
-        failedFiles.push({
-          filename: file.filename,
-          fileId: file.id,
-          error: error.message
-        });
-      }
-
-      // Update progress after each file
-      setBulkGenerationProgress({
-        total: totalFiles,
-        completed: i + 1,
-        currentBatch: 1,
-        totalBatches: 1
-      });
-
-      // Clear currently generating file indicator
-      setCurrentlyGeneratingFile(null);
-
-      // Throttle between requests (except after last file)
-      if (i < selectedFilesWithContent.length - 1) {
-        console.log(`[App] Throttling for ${RATE_LIMIT_DELAY / 1000}s to respect API rate limits...`);
-
-        // Show countdown during throttle delay
-        const delaySeconds = RATE_LIMIT_DELAY / 1000;
-        for (let remaining = delaySeconds; remaining > 0; remaining--) {
-          setThrottleCountdown(remaining);
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        }
-        setThrottleCountdown(null);
-      }
-    }
-
-    // Clear selection after generation
-    multiFileState.deselectAllFiles();
-
-    // Clear progress state
-    setBulkGenerationProgress(null);
-
-    // Calculate average quality score (Option A: Simple average of successes)
-    let avgQuality = 0;
-    let avgGrade = 'N/A';
-    if (successfulFiles.length > 0) {
-      const totalQuality = successfulFiles.reduce((sum, file) => sum + file.score, 0);
-      avgQuality = Math.round(totalQuality / successfulFiles.length);
-
-      // Calculate average grade
-      if (avgQuality >= 90) avgGrade = 'A';
-      else if (avgQuality >= 80) avgGrade = 'B';
-      else if (avgQuality >= 70) avgGrade = 'C';
-      else if (avgQuality >= 60) avgGrade = 'D';
-      else avgGrade = 'F';
-    }
-
-    // Set summary state for banner
-    const summaryData = {
-      totalFiles,
-      successCount,
-      failCount: failureCount,
-      avgQuality,
-      avgGrade,
-      successfulFiles
-    };
-    setBulkGenerationSummary(summaryData);
-
-    // Also set errors for backward compatibility
-    if (failedFiles.length > 0) {
-      setBulkGenerationErrors(failedFiles);
-    }
-
-    // Clear active file so the sync effect doesn't overwrite the batch summary
-    multiFileState.setActiveFile(null);
-
-    // Generate and display batch summary document in DocPanel
-    const summaryMarkdown = generateBatchSummaryDocument(summaryData, failedFiles);
-    setDocumentation(summaryMarkdown);
-    setBatchSummaryMarkdown(summaryMarkdown); // Store for navigation back from individual files
-
-    // Create batch record in database (if authenticated)
-    // This captures the generation data for history and enables ZIP export
-    if (isAuthenticated) {
-      try {
-        // Get unique doc types from successful files
-        const uniqueDocTypes = [...new Set(successfulFiles.map(f => f.docType))];
-
-        // Get document IDs from successful files (only those that were saved)
-        const documentIds = successfulFiles
-          .map(f => {
-            // Find the file in multiFileState to get its documentId
-            const file = multiFileState.files.find(mf => mf.id === f.fileId);
-            return file?.documentId;
-          })
-          .filter(id => id); // Filter out nulls
-
-        // Create the batch
-        const batchResult = await batchesApi.createBatch({
-          batchType: totalFiles === 1 ? 'single' : 'batch',
-          totalFiles,
-          successCount,
-          failCount: failureCount,
-          avgQualityScore: avgQuality,
-          avgGrade,
-          summaryMarkdown,
-          errorDetails: failedFiles.length > 0 ? failedFiles : null,
-          docTypes: uniqueDocTypes
-        });
-
-        if (batchResult.batchId) {
-          setCurrentBatchId(batchResult.batchId);
-          console.log(`[App] Created batch: ${batchResult.batchId}`);
-
-          // Link documents to the batch (if any were saved)
-          if (documentIds.length > 0) {
-            try {
-              const linkResult = await batchesApi.linkDocumentsToBatch(
-                batchResult.batchId,
-                documentIds
-              );
-              console.log(`[App] Linked ${linkResult.linkedCount} documents to batch`);
-            } catch (linkError) {
-              console.error('[App] Failed to link documents to batch:', linkError);
-              // Don't fail the whole operation if linking fails
-            }
-          }
-        }
-      } catch (batchError) {
-        console.error('[App] Failed to create batch record:', batchError);
-        // Don't fail the generation - batch creation is optional
-      }
-    }
-
-    // Set a special quality score to indicate this is a batch summary
-    setQualityScore({
-      score: avgQuality,
-      grade: avgGrade,
-      breakdown: null,
-      isBatchSummary: true
-    });
-
-    // Show final result toast
-    if (failureCount === 0) {
-      toastCompact(
-        `Successfully generated documentation for ${successCount} file${successCount > 1 ? 's' : ''}`,
-        'success',
-        { id: 'bulk-generation' }
-      );
-    } else if (successCount > 0) {
-      toastCompact(
-        `Generated ${successCount} of ${totalFiles} files. ${failureCount} failed - see banner above.`,
-        'warning',
-        { id: 'bulk-generation' }
-      );
-    } else {
-      toastCompact(
-        `Failed to generate documentation for all ${totalFiles} files - see banner above.`,
-        'error',
-        { id: 'bulk-generation' }
-      );
-    }
-  };
-
-  /**
-   * Handle clicking on a file link in the batch summary
-   * Finds the file and displays its documentation
-   * @param {string} filename - Name of the file to display
-   */
-  const handleSummaryFileClick = (filename) => {
-    const file = multiFileState.files.find(f => f.filename === filename);
-
-    if (!file) {
-      console.warn('[App] File not found in sidebar:', filename);
-      toastCompact('File not found', 'error');
-      return;
-    }
-
-    if (file.documentation) {
-      // Display the file's documentation
-      setDocumentation(file.documentation);
-      setQualityScore(file.qualityScore);
-      // Set the file as active in sidebar
-      multiFileState.setActiveFile(file.id);
-    } else {
-      console.warn('[App] File has no documentation:', filename);
-      toastCompact('Documentation not available for this file', 'error');
-    }
-  };
-
-  /**
-   * Handle returning to the batch summary from an individual file
-   */
-  const handleBackToSummary = () => {
-    if (batchSummaryMarkdown) {
-      setDocumentation(batchSummaryMarkdown);
-      // Restore the batch summary quality score
-      if (bulkGenerationSummary) {
-        setQualityScore({
-          score: bulkGenerationSummary.avgQuality,
-          grade: bulkGenerationSummary.avgGrade,
-          breakdown: null,
-          isBatchSummary: true
-        });
-      }
-      // Clear active file in sidebar
-      multiFileState.setActiveFile(null);
-    }
   };
 
   /**
@@ -1910,14 +1426,17 @@ Error: ${file.error}
     // Note: Does not clear documentation or quality score (those remain for reference)
   };
 
+  // Destructure the specific functions we need to avoid stale closure issues
+  const { removeFile, removeFiles } = multiFileState;
+
   /**
    * Remove a single file from workspace (keeps generated document in history)
    */
   const handleRemoveFile = useCallback(async (fileId) => {
     // Remove file from workspace (persistence layer handles workspace_files table)
     // NOTE: Does NOT delete from generated_documents - keeps doc in user's history
-    multiFileState.removeFile(fileId);
-  }, [multiFileState]);
+    removeFile(fileId);
+  }, [removeFile]);
 
   /**
    * Delete selected files from workspace (keeps generated documents in history)
@@ -1931,7 +1450,7 @@ Error: ${file.error}
 
     // Remove files from workspace (persistence layer handles workspace_files table)
     // NOTE: Does NOT delete from generated_documents - keeps docs in user's history
-    multiFileState.removeFiles(selectedIds);
+    removeFiles(selectedIds);
 
     // If deleting ALL files, also clear batch summary and documentation state
     if (isDeletingAll) {
@@ -1942,7 +1461,7 @@ Error: ${file.error}
       setDocumentation('');
       setQualityScore(null);
     }
-  }, [multiFileState]);
+  }, [multiFileState.selectedFileIds, multiFileState.files.length, removeFiles, setBulkGenerationSummary, setBatchSummaryMarkdown, setDocumentation, setQualityScore]);
 
   // Expose test data loader to window for console access (development/testing)
   useEffect(() => {
@@ -2790,13 +2309,8 @@ Error: ${file.error}
             onClose={() => setShowGenerateFromEditorModal(false)}
             onConfirm={() => {
               setShowGenerateFromEditorModal(false);
-              // Set progress to show spinner on Generate Selected button
-              setBulkGenerationProgress({
-                total: 1,
-                completed: 0,
-                currentBatch: 1,
-                totalBatches: 1
-              });
+              // Single-file generation uses isGenerating state from useDocGeneration hook
+              // (not bulkGenerationProgress which is for batch operations)
               handleGenerate();
             }}
             title="No Files Selected"

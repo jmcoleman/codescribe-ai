@@ -87,7 +87,7 @@ export function clearWorkspaceLocalStorage(userId) {
 }
 
 export function useWorkspacePersistence() {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, isLoading: authLoading } = useAuth();
   const hasMultiFileAccess = user && hasFeature(user, 'batchProcessing');
   const multiFileState = useMultiFileState();
   const { addFile, addFiles, removeFile, removeFiles, updateFile, clearFiles } = multiFileState;
@@ -96,6 +96,33 @@ export function useWorkspacePersistence() {
   const workspaceIdMap = useRef(new Map()); // workspace DB ID -> client file ID
   const clientIdMap = useRef(new Map());    // client file ID -> workspace DB ID
   const isSyncing = useRef(false);
+
+  /**
+   * Sync mappings from database when files exist in sessionStorage but mappings are empty
+   * This handles the case where files were loaded from sessionStorage on refresh
+   */
+  useEffect(() => {
+    // Only sync if:
+    // 1. User is authenticated with multi-file access
+    // 2. Files exist in state (from sessionStorage)
+    // 3. Mappings are empty (not yet synced from DB)
+    // 4. Not currently syncing
+    if (!isAuthenticated || !hasMultiFileAccess || multiFileState.files.length === 0 || isSyncing.current) {
+      return;
+    }
+
+    // Check if mappings need to be rebuilt
+    if (clientIdMap.current.size === 0) {
+      // Files are already in state - just rebuild the mappings
+      // Since we use DB ID as client ID, they should match
+      multiFileState.files.forEach(file => {
+        if (file.id) {
+          workspaceIdMap.current.set(file.id, file.id);
+          clientIdMap.current.set(file.id, file.id);
+        }
+      });
+    }
+  }, [isAuthenticated, hasMultiFileAccess, multiFileState.files]);
 
   /**
    * Load workspace from database on mount OR when files become empty
@@ -272,6 +299,7 @@ export function useWorkspacePersistence() {
     // Delete from DB if authenticated
     if (isAuthenticated && hasMultiFileAccess && !isSyncing.current) {
       const dbFileId = clientIdMap.current.get(fileId);
+
       if (dbFileId) {
         try {
           await workspaceApi.deleteWorkspaceFile(dbFileId);
@@ -361,20 +389,26 @@ export function useWorkspacePersistence() {
   }, [clearFiles, isAuthenticated, hasMultiFileAccess, user]);
 
   /**
-   * Enhanced updateFile with DB sync (for linking generated docs)
+   * Enhanced updateFile with DB sync (for linking generated docs and docType changes)
    */
   const updateFileWithPersistence = useCallback(async (fileId, updates) => {
     // Update local state first
     updateFile(fileId, updates);
 
-    // Sync to DB if authenticated and if documentId changed
-    if (isAuthenticated && hasMultiFileAccess && !isSyncing.current && updates.documentId !== undefined) {
+    // Sync to DB if authenticated and if relevant fields changed
+    const shouldSync = updates.documentId !== undefined || updates.docType !== undefined;
+    if (isAuthenticated && hasMultiFileAccess && !isSyncing.current && shouldSync) {
       const dbFileId = clientIdMap.current.get(fileId);
       if (dbFileId) {
         try {
-          await workspaceApi.updateWorkspaceFile(dbFileId, {
-            documentId: updates.documentId
-          });
+          const dbUpdates = {};
+          if (updates.documentId !== undefined) {
+            dbUpdates.documentId = updates.documentId;
+          }
+          if (updates.docType !== undefined) {
+            dbUpdates.docType = updates.docType;
+          }
+          await workspaceApi.updateWorkspaceFile(dbFileId, dbUpdates);
         } catch (error) {
           console.error('[useWorkspacePersistence] Failed to update workspace file:', error);
         }
@@ -444,14 +478,16 @@ export function useWorkspacePersistence() {
   }, [isAuthenticated, hasMultiFileAccess, user, clearFiles, addFiles]);
 
   /**
-   * Clear workspace files on logout
+   * Clear workspace files on logout (but not during initial auth loading)
    */
   useEffect(() => {
-    if (!isAuthenticated) {
+    // Only clear files when auth has finished loading AND user is not authenticated
+    // This prevents clearing files during the initial auth check on page refresh
+    if (!authLoading && !isAuthenticated) {
       // User logged out - clear all workspace files from state
       clearFiles();
     }
-  }, [isAuthenticated, clearFiles]);
+  }, [authLoading, isAuthenticated, clearFiles]);
 
   return {
     ...multiFileState,

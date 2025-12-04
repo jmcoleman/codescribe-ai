@@ -187,23 +187,35 @@ export class DocGeneratorService {
       return documentation;
     }
 
+    // Count all code fences to detect unclosed code blocks
+    const allFences = documentation.match(/```/g) || [];
+    const totalFenceCount = allFences.length;
+    const hasUnclosedCodeBlock = totalFenceCount % 2 === 1;
+
+    // If there's an unclosed code block, close it before adding attribution
+    if (hasUnclosedCodeBlock) {
+      return documentation.trimEnd() + '\n```' + attribution;
+    }
+
     // OPENAPI docs end with YAML code blocks - insert attribution OUTSIDE the code block
     if (docType === 'OPENAPI') {
-      // Check if doc ends with closing code fence (```\n or ``` at end)
-      const codeBlockPattern = /```\s*$/;
-      if (codeBlockPattern.test(documentation)) {
-        // Insert attribution after the code block
-        return documentation + attribution;
-      }
-      // Fallback: Try to find last ``` and insert after it
+      // Find the last closing code fence (```) in the document
       const lastCodeFenceIndex = documentation.lastIndexOf('```');
       if (lastCodeFenceIndex !== -1) {
-        // Find the end of the line after ```
-        const afterCodeFence = documentation.indexOf('\n', lastCodeFenceIndex);
-        if (afterCodeFence !== -1) {
-          // Insert attribution after the code block
-          return documentation.slice(0, afterCodeFence + 1) + attribution + documentation.slice(afterCodeFence + 1);
+        // Find where this fence line ends
+        const fenceEnd = documentation.indexOf('\n', lastCodeFenceIndex);
+        if (fenceEnd !== -1) {
+          // Insert attribution after the closing fence
+          const beforeAttribution = documentation.slice(0, fenceEnd + 1).trimEnd();
+          const afterFence = documentation.slice(fenceEnd + 1).trim();
+          if (afterFence) {
+            // There's trailing content - put attribution between fence and trailing content
+            return beforeAttribution + attribution + '\n\n' + afterFence;
+          }
+          return beforeAttribution + attribution;
         }
+        // No newline after fence - just append attribution
+        return documentation + attribution;
       }
     }
 

@@ -73,11 +73,6 @@ export function FileList({
   const [isDragging, setIsDragging] = useState(false);
   const [detailsFileId, setDetailsFileId] = useState(null);
   const [showNoCodeBanner, setShowNoCodeBanner] = useState(true);
-  const [applyConfirmModal, setApplyConfirmModal] = useState({
-    isOpen: false,
-    message: '',
-    warning: ''
-  });
   const [deleteConfirmModal, setDeleteConfirmModal] = useState({
     isOpen: false,
     count: 0
@@ -276,28 +271,9 @@ export function FileList({
                   type="button"
                   onClick={() => {
                     if (selectedCount === 0) return;
-
-                    // Check if any files have documentation with different docType (will be cleared)
-                    const selectedFiles = files.filter(f => selectedFileIds.includes(f.id));
-                    const filesWithDifferentDocType = selectedFiles.filter(f =>
-                      f.documentation && f.docType !== docType
-                    );
-
-                    if (filesWithDifferentDocType.length > 0) {
-                      // Show confirmation modal when documentation will be cleared
-                      const message = `Apply ${docType} to ${selectedCount} selected file${selectedCount !== 1 ? 's' : ''}?`;
-                      const warning = `${filesWithDifferentDocType.length} file${filesWithDifferentDocType.length !== 1 ? 's have' : ' has'} existing documentation that will be cleared. You'll need to regenerate.`;
-
-                      setApplyConfirmModal({
-                        isOpen: true,
-                        message,
-                        warning
-                      });
-                    } else {
-                      // No documentation will be cleared, apply directly
-                      if (onApplyDocType) {
-                        onApplyDocType(selectedFileIds, docType);
-                      }
+                    // Apply doc type directly - previous docs are saved in DB history
+                    if (onApplyDocType) {
+                      onApplyDocType(selectedFileIds, docType);
                     }
                   }}
                   disabled={selectedCount === 0}
@@ -417,28 +393,9 @@ export function FileList({
               type="button"
               onClick={() => {
                 if (selectedCount === 0) return;
-
-                // Check if any files have documentation with different docType (will be cleared)
-                const selectedFiles = files.filter(f => selectedFileIds.includes(f.id));
-                const filesWithDifferentDocType = selectedFiles.filter(f =>
-                  f.documentation && f.docType !== docType
-                );
-
-                if (filesWithDifferentDocType.length > 0) {
-                  // Show confirmation modal when documentation will be cleared
-                  const message = `Apply ${docType} to ${selectedCount} selected file${selectedCount !== 1 ? 's' : ''}?`;
-                  const warning = `${filesWithDifferentDocType.length} file${filesWithDifferentDocType.length !== 1 ? 's have' : ' has'} existing documentation that will be cleared. You'll need to regenerate.`;
-
-                  setApplyConfirmModal({
-                    isOpen: true,
-                    message,
-                    warning
-                  });
-                } else {
-                  // No documentation will be cleared, apply directly
-                  if (onApplyDocType) {
-                    onApplyDocType(selectedFileIds, docType);
-                  }
+                // Apply doc type directly - previous docs are saved in DB history
+                if (onApplyDocType) {
+                  onApplyDocType(selectedFileIds, docType);
                 }
               }}
               disabled={selectedCount === 0}
@@ -582,23 +539,6 @@ export function FileList({
           onClose={() => setDetailsFileId(null)}
         />
       )}
-
-      {/* Apply Doc Type Confirmation Modal */}
-      <ConfirmModal
-        isOpen={applyConfirmModal.isOpen}
-        onClose={() => setApplyConfirmModal({ isOpen: false, message: '', warning: '' })}
-        onConfirm={() => {
-          if (onApplyDocType) {
-            onApplyDocType(selectedFileIds, docType);
-          }
-        }}
-        title="Apply Doc Type"
-        message={applyConfirmModal.message}
-        warning={applyConfirmModal.warning}
-        confirmText="Apply"
-        cancelText="Cancel"
-        variant="warning"
-      />
 
       {/* Delete Confirmation Modal */}
       <ConfirmModal

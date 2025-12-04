@@ -568,7 +568,7 @@ details[open] summary::before {
   @apply my-4 p-4 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800/50;
 }
 
-/* Compact variant for quality details */
+/* Compact variant for quality assessment */
 .prose details.quality-compact {
   @apply my-2 p-2.5 text-sm;
 }

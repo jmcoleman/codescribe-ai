@@ -890,6 +890,23 @@ export const DocPanel = memo(function DocPanel({
         </div>
       )}
 
+      {/* Sticky Back to Summary button - show when viewing any file from a batch generation */}
+      {canUseBatchProcessing && batchSummaryMarkdown && documentation && documentation !== batchSummaryMarkdown && (
+        <div className="px-4 pt-3 pb-2 bg-white dark:bg-slate-900" data-no-export="true">
+          <button
+            type="button"
+            onClick={onBackToSummary}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-600 dark:border-indigo-400 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors text-xs font-medium text-indigo-900 dark:text-indigo-100"
+            aria-label="Back to batch summary"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            <span>Back to Summary</span>
+          </button>
+        </div>
+      )}
+
       {/* Body - Documentation Content */}
       <div
         ref={contentRef}
@@ -1023,23 +1040,6 @@ export const DocPanel = memo(function DocPanel({
                 transform: rotate(90deg);
               }
             `}</style>
-
-            {/* Back to Summary button - show when viewing any file from a batch generation (Pro+ tier only) */}
-            {canUseBatchProcessing && batchSummaryMarkdown && documentation && documentation !== batchSummaryMarkdown && (
-              <div className="mb-4" data-no-export="true">
-                <button
-                  type="button"
-                  onClick={onBackToSummary}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-600 dark:border-indigo-400 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors text-xs font-medium text-indigo-900 dark:text-indigo-100"
-                  aria-label="Back to batch summary"
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                  </svg>
-                  <span>Back to Summary</span>
-                </button>
-              </div>
-            )}
 
             <div className="prose prose-slate dark:prose-invert max-w-none [&>*:first-child]:mt-0">
               <ReactMarkdown
