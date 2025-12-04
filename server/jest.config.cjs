@@ -29,10 +29,10 @@ module.exports = {
 
     const baseThresholds = {
       './src/services/': {
-        branches: 52,  // qualityScorer.js has complex doc-type scoring functions with low branch coverage
+        branches: 85,  // qualityScorer.js now has 94% branch coverage
         functions: 85,
-        lines: 71,  // qualityScorer.js scoreJSDoc/API/Architecture functions need more tests
-        statements: 71,  // qualityScorer.js scoreJSDoc/API/Architecture functions need more tests
+        lines: 90,  // qualityScorer.js now has 95% line coverage
+        statements: 90,  // qualityScorer.js now has 95% statement coverage
       },
       './src/middleware/': {
         branches: 85,
