@@ -2,40 +2,41 @@
 
 **Project:** CodeScribe AI - Intelligent Code Documentation Generator
 **Testing Status:** ✅ Comprehensive Coverage Across 3 Frameworks
-**Last Updated:** November 16, 2025 (v2.8.1)
+**Last Updated:** December 4, 2025 (v2.11.0)
 
 ---
 
 ## 📊 Quick Stats
 
-- **Total Tests:** 2,597 tests (2,541 passing, 56 skipped, 0 failures)
-  - **Frontend:** 1,617 tests | 33 skipped (Vitest + React Testing Library)
+- **Total Tests:** 3,284 tests (3,199 passing, 85 skipped, 0 failures)
+  - **Frontend:** 1,902 tests | 57 skipped (Vitest + React Testing Library)
     - Component Tests: All components with dark mode variants tested (including AppearanceModal, SamplesModal)
     - GitHub Loader: FileTree, TreeNode, GitHubLoadModal integration tests
     - Dark Mode Tests: 106+ tests (ThemeContext with 3-state cycling, ThemeToggle, all components, integration)
     - Integration Tests: Auth, OAuth, password reset, upload, error handling, usage tracking, legal pages
     - UI Tests: Toast system, modals, forms, storage helpers, pricing page, focus trap
     - Contact Modals: ContactSalesModal (25 tests), ContactSupportModal (12 tests - getToken Promise fix)
-    - **Pass Rate:** 97.9% (1,584 passing, 33 skipped, 0 failures)
-  - **Backend:** 980 tests | 23 skipped (Jest + Supertest)
+    - Batch Generation: 35 tests (useBatchGeneration hook - buildAttribution, generateBatchSummaryDocument)
+    - **Pass Rate:** 97.0% (1,845 passing, 57 skipped, 0 failures)
+  - **Backend:** 1,382 tests | 28 skipped (Jest + Supertest)
     - Unit Tests: Services, models, utilities, middleware (emailService, requireTermsAcceptance, tierGate, rateLimitBypass, githubService)
-    - LLM Provider Tests: 69 tests (llmService, config, utils, adapters for Claude/OpenAI)
+    - LLM Provider Tests: 69 tests (llmService, config, utils, adapters for Claude/OpenAI/Gemini)
     - Integration Tests: Prompt quality, API contracts, authentication, tier system, contact sales/support, legal endpoints
     - Security Tests: Password hashing, JWT validation, OAuth flows, usage quotas, email rate limiting
     - Email Tests: 73 tests (contact route 45, emailService 28 - templates, attachments, rate limits)
     - Usage Tests: 29 tests (all passing)
     - Middleware Tests: 14 rateLimitBypass tests (2 skipped after debug logging cleanup)
-    - **Pass Rate:** 97.7% (957 passing, 23 skipped, 0 failures)
+    - **Pass Rate:** 98.0% (1,354 passing, 28 skipped, 0 failures)
   - **Database:** 37 migration tests (Docker sandbox + Neon dev validation)
     - Migration-010: 14 tests (terms/privacy acceptance tracking)
     - Migration-011: 10 tests (analytics_enabled column + index)
     - Migration-017: 13 tests (total_generations column with triggers)
   - **E2E:** 10 tests (Playwright - file upload flow)
-- **Pass Rate:** 97.8% (2,541/2,597 total tests passing, 56 skipped, 0 failures) ✅
+- **Pass Rate:** 97.4% (3,199/3,284 total tests passing, 85 skipped, 0 failures) ✅
 - **Backend Coverage:** 82.38% statements, 70.11% branches, 82.54% lines, 85%+ functions (CI passing)
 - **Test Execution Time:** Frontend ~29.4s, Backend ~14.2s, Database ~0.3s, E2E ~45s
 - **Coverage Target:** 90% ✅ EXCEEDED (96.71% middleware statements, 93.49% middleware branches)
-- **Recent Updates:** Added Google Apps Script support with comprehensive sample file, updated sample count from 8→13, added language validation tests for Kotlin/Swift/Dart/Shell/Apps Script (Nov 16, 2025 - v2.8.1)
+- **Recent Updates:** Added batch cancellation tests (35 new tests for useBatchGeneration hook), fixed enterprise tier attribution bug (Dec 4, 2025 - v2.11.0)
 
 ---
 

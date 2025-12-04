@@ -9,6 +9,87 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.11.0] - 2025-12-04
+
+**Status:** ✅ Doc-Type Specific Scoring, Regeneration Confirmation & Batch Cancellation
+
+**Summary:** Major quality scoring overhaul with doc-type specific criteria, smart regeneration confirmation modal, file sidebar context menu, batch cancellation with skipped files tracking, and comprehensive test coverage.
+
+### Added
+
+- **Doc-Type Specific Quality Scoring** ([server/src/services/qualityScorer.js](server/src/services/qualityScorer.js))
+  - README: Overview (20), Installation (15), Usage Examples (20), API Docs (25), Structure (20)
+  - JSDOC: Function Coverage (30), Parameters (25), Returns (20), Examples (15), Types (10)
+  - API: Endpoints (25), Request Docs (20), Response Docs (20), Examples (20), Errors (15)
+  - OPENAPI: Structure (20), Endpoints (25), Schemas (20), Parameters (15), Descriptions (20)
+  - ARCHITECTURE: System Overview (25), Components (25), Data Flow (20), Diagrams (15), Decisions (15)
+
+- **File Sidebar Context Menu** ([client/src/components/Sidebar/FileActions.jsx](client/src/components/Sidebar/FileActions.jsx))
+  - Generate action (only visible for files without existing docs)
+  - Regenerate action (only visible for files with existing docs)
+  - View Details action with keyboard shortcut (Cmd/Ctrl+I)
+  - Delete action with separator for destructive operations
+  - Accessible dropdown with proper ARIA attributes
+
+- **Regeneration Confirmation Modal** ([client/src/components/AppModals.jsx](client/src/components/AppModals.jsx))
+  - Detects files with existing documentation before generation
+  - "Existing Documentation Found" modal prevents accidental overwrites
+  - Single file: "Regenerate" or "Cancel" options
+  - Mixed batch: "Regenerate All" or "New Files Only" options
+  - Smart messaging adapts based on file count and generation status
+
+- **Batch Summary Doc-Type Specific Tables** ([client/src/hooks/useBatchGeneration.js](client/src/hooks/useBatchGeneration.js))
+  - Custom quality assessment tables per doc type
+  - README: Overview, Install, Examples, API Docs, Structure columns
+  - JSDOC: Functions, Params, Returns, Examples, Types columns
+  - API: Endpoints, Requests, Responses, Examples, Errors columns
+  - OPENAPI: Structure, Endpoints, Schemas, Params, Descriptions columns
+  - ARCHITECTURE: Overview, Components, Data Flow, Diagrams, Decisions columns
+  - Status symbols: ✓ (complete), ◐ (partial), ✗ (missing)
+
+- **Batch Cancellation** ([client/src/hooks/useBatchGeneration.js](client/src/hooks/useBatchGeneration.js))
+  - Cancel button in batch generation banners (during generation and throttle countdown)
+  - Visual feedback with "Cancelling..." disabled state after clicking
+  - Skipped files tracking for files not processed before cancellation
+  - Updated batch summary with "Cancelled" status and skipped files count
+  - Skipped Files section in batch summary document with file list
+
+- **Batch Summary Enhancements** ([client/src/components/DocPanel.jsx](client/src/components/DocPanel.jsx))
+  - "Batch Cancelled" header when batch was cancelled
+  - Skipped count in statistics table (when applicable)
+  - "X skipped" metadata in batch complete banner
+  - Skipped Files table with filename and doc type
+
+- **Quality Scoring Tests** ([server/src/services/__tests__/qualityScorer.docTypes.test.js](server/src/services/__tests__/qualityScorer.docTypes.test.js))
+  - 69 new tests covering all doc-type specific scoring criteria
+  - Improved qualityScorer.js coverage from 46% to 95%
+
+- **Batch Generation Tests** ([client/src/hooks/__tests__/useBatchGeneration.test.js](client/src/hooks/__tests__/useBatchGeneration.test.js))
+  - 35 new tests for batch summary document generation
+  - Tier attribution tests for all user tiers
+  - Cancellation and skipped files tests
+
+### Fixed
+
+- **Enterprise Tier Attribution** ([client/src/hooks/useBatchGeneration.js](client/src/hooks/useBatchGeneration.js:41))
+  - Fixed bug where enterprise tier received free tier attribution
+  - Changed from falsy check (`||`) to key existence check (`in` operator)
+
+- **Workspace File Deletion Persistence**
+  - Deleted files no longer reappear on page refresh
+
+- **Test Expectations** ([server/src/services/__tests__/docGenerator.mermaid.test.js](server/src/services/__tests__/docGenerator.mermaid.test.js))
+  - Updated Mermaid diagram test expectations for COMMON.txt refactor
+  - Fixed JSDoc prompt wording expectations in prompt-quality tests
+
+### Tests
+
+- Frontend: 1,845 passing, 57 skipped (1,902 total)
+- Backend: 1,354 passing, 28 skipped (1,382 total)
+- Total: 3,199 passing, 85 skipped (3,284 total)
+
+---
+
 ## [2.10.0] - 2025-12-03
 
 **Status:** ✅ Multi-File Workspace & Batch Generation Complete

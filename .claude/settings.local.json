@@ -17,7 +17,9 @@
       "Bash(tee:*)",
       "Bash(cut:*)",
       "WebSearch",
-      "Bash(App.jsx.new)"
+      "Bash(App.jsx.new)",
+      "Bash(npm run test:ci:*)",
+      "Bash(git tag:*)"
     ],
     "deny": [],
     "ask": []

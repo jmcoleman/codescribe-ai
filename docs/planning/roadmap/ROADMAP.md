@@ -1,8 +1,8 @@
 # CodeScribe AI - Product Roadmap
 
-**Last Updated:** November 23, 2025
+**Last Updated:** December 4, 2025
 **Current Phase:** Phase 4 - ✅ **Epic 4.1 COMPLETE** (OpenAPI) | 🟡 **Epic 4.2 IN PROGRESS** (Multi-File Project Documentation)
-**Current Release:** v2.9.0 (Layout Toggle Streaming & OPENAPI Support)
+**Current Release:** v2.11.0 (Doc-Type Specific Scoring & Regeneration Confirmation)
 **Production URL:** [https://codescribeai.com](https://codescribeai.com)
 
 ---
@@ -1807,12 +1807,29 @@ ALTER TABLE subscriptions ADD COLUMN stripe_receipt_url VARCHAR(500);
 4. Examples and request/response samples (20 points)
 5. Security and authentication docs (15 points)
 
-#### Epic 4.2: Multi-File Project Documentation (4-5 days) - 🟡 **IN PROGRESS** (Phase 1 Complete)
-- ✅ **Phase 1 Complete:** Multi-file sidebar, batch generation, file management
-  - ✅ Multi-file sidebar with file list and actions (31 tier-based tests)
-  - ✅ Batch documentation generation (27 tests: rate limiting, progress, summary, errors, countdown)
-  - ✅ File upload and management (32 tests: validation, persistence, deletion, errors, drag-drop)
-  - ✅ GitHub repository integration (tree browsing, branch switching)
+#### Epic 4.2: Multi-File Project Documentation (4-5 days) - 🟡 **IN PROGRESS** (Phase 1-2 Complete)
+
+**v2.10.0 - Multi-File Workspace & Batch Generation (Dec 3, 2025):**
+- ✅ Multi-file sidebar with file list and actions (31 tier-based tests)
+- ✅ Batch documentation generation with rate limiting, progress, and countdown
+- ✅ File upload and management with validation, persistence, and drag-drop
+- ✅ GitHub repository integration (tree browsing, branch switching, file selection)
+- ✅ Documentation history data capture with BatchService and ExportService (64 tests)
+- ✅ Batch summary document with table formatting (stats, files, quality details)
+- ✅ Tier-based attribution in batch summaries (matches server-side branding)
+
+**v2.11.0 - Doc-Type Specific Scoring & Regeneration Confirmation (Dec 4, 2025):**
+- ✅ Doc-type specific quality scoring (README/JSDOC/API/OPENAPI/ARCHITECTURE unique criteria)
+- ✅ File sidebar context menu (Generate/Regenerate/View Details/Delete actions)
+- ✅ Regeneration confirmation modal prevents accidental doc overwrites
+- ✅ Mixed batch support: "Regenerate All" or "New Files Only" options
+- ✅ Batch summary with doc-type specific quality tables and criteria columns
+- ✅ Batch cancellation with disabled "Cancelling..." button and skipped files tracking
+- ✅ Quality scorer test coverage improved from 46% to 95% (69 new tests)
+- ✅ 35 new batch generation tests for summary document and tier attribution
+- ✅ Total: 3,284 tests (3,199 passing, 85 skipped)
+
+**Remaining (Phase 2):**
 - 📋 Accept multiple files via .zip upload (pending)
 - 📋 Analyze project-wide architecture
 - 📋 Generate comprehensive README for entire project
@@ -2030,8 +2047,9 @@ Features are tracked here when they:
 | Nov 9-16, 2025 | **Phase 3 (Epic 3.2): Workspace Flexibility & Performance** (v2.7.1-v2.8.1) | ✅ Complete |
 | Nov 14, 2025 | **Phase 4 (Epic 4.1): GitHub Repository Integration** (v2.7.9) | ✅ Complete |
 | Nov 23, 2025 | **Phase 4 (Epic 4.1): OpenAPI/Swagger Generation** (v2.9.0) | ✅ Complete |
-| Nov 23, 2025 | **Phase 4 (Epic 4.2): Multi-File Phase 1** (Sidebar, Batch, File Management) | ✅ Complete |
-| Nov 2025 | **Phase 4 (Epic 4.2): Multi-File Project Documentation** | 🟡 In Progress |
+| Dec 3, 2025 | **Phase 4 (Epic 4.2): Multi-File Workspace & Batch Generation** (v2.10.0) | ✅ Complete |
+| Dec 4, 2025 | **Phase 4 (Epic 4.2): Doc-Type Specific Scoring & Regeneration** (v2.11.0) | ✅ Complete |
+| Dec 2025 | **Phase 4 (Epic 4.2): Multi-File Project Documentation** (Cross-file references) | 🟡 In Progress |
 | TBD | **Phase 5: Developer Tools** (v5.0.0) | 📋 Planned |
 | TBD | **Phase 6: Enterprise Readiness** (v6.0.0) | 💡 Future (Evaluate based on demand) |
 

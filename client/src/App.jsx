@@ -449,6 +449,7 @@ function App() {
     bulkGenerationProgress,
     currentlyGeneratingFile,
     throttleCountdown,
+    isCancelling,
     isBatchModeRef,
     bulkGenerationSummary,
     batchSummaryMarkdown,
@@ -470,7 +471,8 @@ function App() {
     dismissBanner,
     handleRegenerateAll,
     handleGenerateNewOnly,
-    handleCancelRegenerate
+    handleCancelRegenerate,
+    cancelBatchGeneration
   } = useBatchGeneration({
     generate,
     setDocumentation,
@@ -1572,6 +1574,8 @@ function App() {
         onExportFile={handleExportFile}
         docType={docType}
         filename={filename}
+        onCancelBatch={cancelBatchGeneration}
+        isCancelling={isCancelling}
       />
     </Suspense>
   ), [
@@ -1588,7 +1592,9 @@ function App() {
     batchSummaryMarkdown,
     canUseBatchProcessing,
     docType,
-    filename
+    filename,
+    cancelBatchGeneration,
+    isCancelling
   ]);
 
   return (
@@ -1934,6 +1940,8 @@ function App() {
                             onExportFile={handleExportFile}
                             docType={docType}
                             filename={filename}
+                            onCancelBatch={cancelBatchGeneration}
+                            isCancelling={isCancelling}
                           />
                         </Suspense>
                       }
@@ -2022,6 +2030,8 @@ function App() {
                       onExportFile={handleExportFile}
                       docType={docType}
                       filename={filename}
+                      onCancelBatch={cancelBatchGeneration}
+                      isCancelling={isCancelling}
                     />
                   </Suspense>
                 )
@@ -2067,6 +2077,8 @@ function App() {
                         onExportFile={handleExportFile}
                         docType={docType}
                         filename={filename}
+                        onCancelBatch={cancelBatchGeneration}
+                        isCancelling={isCancelling}
                       />
                     </Suspense>
                   }

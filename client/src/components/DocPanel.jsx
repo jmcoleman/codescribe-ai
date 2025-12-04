@@ -1,4 +1,4 @@
-import { Sparkles, CheckCircle, AlertCircle, XCircle, ChevronDown, ChevronUp, MoreVertical, Download, Copy, RefreshCw } from 'lucide-react';
+import { Sparkles, CheckCircle, AlertCircle, XCircle, ChevronDown, ChevronUp, MoreVertical, Download, Copy, RefreshCw, X } from 'lucide-react';
 import { useState, useEffect, useRef, memo, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -187,7 +187,9 @@ export const DocPanel = memo(function DocPanel({
   currentlyGeneratingFile = null,
   throttleCountdown = null,
   docType = null,
-  filename = null
+  filename = null,
+  onCancelBatch = null,
+  isCancelling = false
 }) {
   const { effectiveTheme } = useTheme();
 
@@ -722,8 +724,11 @@ export const DocPanel = memo(function DocPanel({
                   <>
                     {/* Main status line */}
                     <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                      Batch Complete: <span className="text-slate-700 dark:text-slate-300">
-                        {bulkGenerationSummary.failCount === 0 ? (
+                      {bulkGenerationSummary.wasCancelled ? 'Batch Cancelled: ' : 'Batch Complete: '}
+                      <span className="text-slate-700 dark:text-slate-300">
+                        {bulkGenerationSummary.wasCancelled ? (
+                          <>{bulkGenerationSummary.successCount} of {bulkGenerationSummary.totalFiles} {bulkGenerationSummary.totalFiles === 1 ? 'file' : 'files'} completed</>
+                        ) : bulkGenerationSummary.failCount === 0 ? (
                           <>{bulkGenerationSummary.successCount} {bulkGenerationSummary.successCount === 1 ? 'file' : 'files'}</>
                         ) : (
                           <>
@@ -753,6 +758,16 @@ export const DocPanel = memo(function DocPanel({
                           )}
                           <p className="text-xs text-slate-700 dark:text-slate-300">
                             <span className="font-medium">{bulkGenerationSummary.failCount}</span> failed
+                          </p>
+                        </>
+                      )}
+                      {bulkGenerationSummary.skippedCount > 0 && (
+                        <>
+                          {(bulkGenerationSummary.successCount > 0 || bulkGenerationSummary.failCount > 0) && (
+                            <span className="text-slate-400 dark:text-slate-500">•</span>
+                          )}
+                          <p className="text-xs text-slate-700 dark:text-slate-300">
+                            <span className="font-medium">{bulkGenerationSummary.skippedCount}</span> skipped
                           </p>
                         </>
                       )}
@@ -887,6 +902,23 @@ export const DocPanel = memo(function DocPanel({
                 />
               </div>
             </div>
+            {/* Cancel button - only show for multi-file batches */}
+            {onCancelBatch && currentlyGeneratingFile.total > 1 && (
+              <button
+                type="button"
+                onClick={onCancelBatch}
+                disabled={isCancelling}
+                className={`flex-shrink-0 px-2.5 py-1 rounded-md text-xs font-medium border transition-colors ${
+                  isCancelling
+                    ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-700 cursor-not-allowed'
+                    : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-700 dark:hover:text-red-300'
+                }`}
+                aria-label={isCancelling ? "Cancelling batch generation" : "Cancel batch generation"}
+                title={isCancelling ? "Cancelling after current file..." : "Cancel after current file completes"}
+              >
+                {isCancelling ? 'Cancelling...' : 'Cancel'}
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -912,6 +944,23 @@ export const DocPanel = memo(function DocPanel({
                 />
               </div>
             </div>
+            {/* Cancel button */}
+            {onCancelBatch && (
+              <button
+                type="button"
+                onClick={onCancelBatch}
+                disabled={isCancelling}
+                className={`flex-shrink-0 px-2.5 py-1 rounded-md text-xs font-medium border transition-colors ${
+                  isCancelling
+                    ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-700 cursor-not-allowed'
+                    : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-700 dark:hover:text-red-300'
+                }`}
+                aria-label={isCancelling ? "Cancelling batch generation" : "Cancel batch generation"}
+                title={isCancelling ? "Cancelling..." : "Cancel batch"}
+              >
+                {isCancelling ? 'Cancelling...' : 'Cancel'}
+              </button>
+            )}
           </div>
         </div>
       )}

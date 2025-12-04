@@ -38,7 +38,7 @@ export const buildAttribution = (tier) => {
     team: `\n\n---\n*Generated with [CodeScribe AI](https://codescribeai.com)*`,
     enterprise: '' // No attribution for enterprise
   };
-  return attributions[tier] || attributions.free;
+  return tier in attributions ? attributions[tier] : attributions.free;
 };
 
 /**
@@ -49,7 +49,7 @@ export const buildAttribution = (tier) => {
  * @returns {string} Markdown document
  */
 export const generateBatchSummaryDocument = (summary, failedFiles = [], tier = 'free') => {
-  const { totalFiles, successCount, failCount, avgQuality, avgGrade, successfulFiles = [] } = summary;
+  const { totalFiles, successCount, failCount, skippedCount = 0, avgQuality, avgGrade, successfulFiles = [], skippedFiles = [], wasCancelled = false } = summary;
 
   // Format timestamp without comma after year: "Dec 3, 2025 10:30 PM"
   const timestamp = new Date().toLocaleString('en-US', {
@@ -65,20 +65,41 @@ export const generateBatchSummaryDocument = (summary, failedFiles = [], tier = '
 
 `;
 
+  // Determine status message
+  let statusMessage;
+  if (wasCancelled) {
+    statusMessage = `⚠️ Cancelled - ${successCount} of ${totalFiles} files completed`;
+  } else if (failCount === 0) {
+    statusMessage = '✅ All files completed successfully';
+  } else {
+    statusMessage = `⚠️ ${failCount} file${failCount > 1 ? 's' : ''} failed`;
+  }
+
   // Generated timestamp and status as a clean 2-column table
   markdown += `| | |\n`;
   markdown += `|---|---|\n`;
   markdown += `| **Generated** | ${timestamp} |\n`;
-  markdown += `| **Status** | ${failCount === 0 ? '✅ All files completed successfully' : `⚠️ ${failCount} file${failCount > 1 ? 's' : ''} failed`} |\n\n`;
+  markdown += `| **Status** | ${statusMessage} |\n\n`;
 
   // Overall Statistics as a compact single-row table
-  markdown += `## Overall Statistics
+  // Include skipped column only if there are skipped files
+  if (skippedCount > 0) {
+    markdown += `## Overall Statistics
+
+| Total Files | Successful | Failed | Skipped | Avg Quality |
+|-------------|------------|--------|---------|-------------|
+| ${totalFiles} | ${successCount} | ${failCount} | ${skippedCount} | ${avgQuality}/100 (${avgGrade}) |
+
+`;
+  } else {
+    markdown += `## Overall Statistics
 
 | Total Files | Successful | Failed | Avg Quality |
 |-------------|------------|--------|-------------|
 | ${totalFiles} | ${successCount} | ${failCount} | ${avgQuality}/100 (${avgGrade}) |
 
 `;
+  }
 
   // Generated Files table
   if (successfulFiles.length > 0) {
@@ -108,6 +129,23 @@ export const generateBatchSummaryDocument = (summary, failedFiles = [], tier = '
     failedFiles.forEach(file => {
       const escapedError = file.error.replace(/\|/g, '\\|').replace(/\n/g, ' ');
       markdown += `| ${file.filename} | ${escapedError} |\n`;
+    });
+
+    markdown += '\n';
+  }
+
+  // Skipped Files section (cancelled before processing)
+  if (skippedFiles.length > 0) {
+    markdown += `## Skipped Files
+
+*These files were not processed due to batch cancellation.*
+
+| File | Doc Type |
+|------|----------|
+`;
+
+    skippedFiles.forEach(file => {
+      markdown += `| ${file.filename} | ${file.docType} |\n`;
     });
 
     markdown += '\n';
@@ -290,6 +328,12 @@ export function useBatchGeneration({
   // can check it immediately without waiting for React to process state updates
   const isBatchModeRef = useRef(false);
 
+  // Ref to track cancellation request - checked during batch loop
+  const cancelRequestedRef = useRef(false);
+
+  // State to track if cancellation is pending (for UI feedback)
+  const [isCancelling, setIsCancelling] = useState(false);
+
   // Batch results state (initialized from sessionStorage if available)
   const [bulkGenerationSummary, setBulkGenerationSummary] = useState(initialBatchState?.summary || null);
   const [batchSummaryMarkdown, setBatchSummaryMarkdown] = useState(initialBatchState?.markdown || null);
@@ -338,6 +382,7 @@ export function useBatchGeneration({
     let failureCount = 0;
     const failedFiles = [];
     const successfulFiles = [];
+    const skippedFiles = []; // Track files skipped due to cancellation
 
     // Clear previous doc panel content and summaries
     setDocumentation('');
@@ -353,6 +398,10 @@ export function useBatchGeneration({
     // because ref updates happen immediately, not in React's batched state updates
     isBatchModeRef.current = true;
 
+    // Reset cancellation flags at the start of a new batch
+    cancelRequestedRef.current = false;
+    setIsCancelling(false);
+
     // Initialize progress state
     setBulkGenerationProgress({
       total: totalFiles,
@@ -366,6 +415,20 @@ export function useBatchGeneration({
 
     // Process files sequentially with rate limiting
     for (let i = 0; i < filesToGenerate.length; i++) {
+      // Check for cancellation before starting each file
+      if (cancelRequestedRef.current) {
+        console.log('[useBatchGeneration] Batch cancelled by user');
+        // Track remaining files as skipped
+        for (let j = i; j < filesToGenerate.length; j++) {
+          skippedFiles.push({
+            filename: filesToGenerate[j].filename,
+            fileId: filesToGenerate[j].id,
+            docType: filesToGenerate[j].docType || 'README'
+          });
+        }
+        break;
+      }
+
       const file = filesToGenerate[i];
 
       // Update progress state
@@ -502,19 +565,45 @@ export function useBatchGeneration({
 
         const delaySeconds = RATE_LIMIT_DELAY / 1000;
         for (let remaining = delaySeconds; remaining > 0; remaining--) {
+          // Check for cancellation during throttle countdown
+          if (cancelRequestedRef.current) {
+            console.log('[useBatchGeneration] Batch cancelled during throttle countdown');
+            setThrottleCountdown(null);
+            break;
+          }
           setThrottleCountdown(remaining);
           await new Promise(resolve => setTimeout(resolve, 1000));
         }
         setThrottleCountdown(null);
+
+        // Check cancellation again after throttle loop exits
+        if (cancelRequestedRef.current) {
+          // Track remaining files as skipped (starting from next file)
+          for (let j = i + 1; j < filesToGenerate.length; j++) {
+            skippedFiles.push({
+              filename: filesToGenerate[j].filename,
+              fileId: filesToGenerate[j].id,
+              docType: filesToGenerate[j].docType || 'README'
+            });
+          }
+          break;
+        }
       }
     }
+
+    // Check if batch was cancelled
+    const wasCancelled = cancelRequestedRef.current;
 
     // Clear selection after generation
     multiFileState.deselectAllFiles();
 
     // Clear progress state and batch mode ref
     setBulkGenerationProgress(null);
+    setCurrentlyGeneratingFile(null);
+    setThrottleCountdown(null);
     isBatchModeRef.current = false;
+    cancelRequestedRef.current = false; // Reset for next batch
+    setIsCancelling(false); // Reset cancelling state
 
     // Calculate average quality score
     let avgQuality = 0;
@@ -536,9 +625,12 @@ export function useBatchGeneration({
       totalFiles,
       successCount,
       failCount: failureCount,
+      skippedCount: skippedFiles.length,
       avgQuality,
       avgGrade,
       successfulFiles,
+      skippedFiles,
+      wasCancelled,
       generatedAt: batchGeneratedAt
     };
     setBulkGenerationSummary(summaryData);
@@ -609,7 +701,21 @@ export function useBatchGeneration({
     });
 
     // Show final result toast
-    if (failureCount === 0) {
+    if (wasCancelled) {
+      if (successCount > 0) {
+        toastCompact(
+          `Batch cancelled. Generated ${successCount} of ${totalFiles} file${totalFiles > 1 ? 's' : ''} before stopping.`,
+          'warning',
+          { id: 'bulk-generation' }
+        );
+      } else {
+        toastCompact(
+          'Batch generation cancelled.',
+          'info',
+          { id: 'bulk-generation' }
+        );
+      }
+    } else if (failureCount === 0) {
       toastCompact(
         `Successfully generated documentation for ${successCount} file${successCount > 1 ? 's' : ''}`,
         'success',
@@ -847,11 +953,26 @@ export function useBatchGeneration({
     }
   }, []);
 
+  /**
+   * Cancel an in-progress batch generation
+   * Sets a flag that will be checked at the next opportunity in the batch loop
+   * (before starting each file or during the throttle countdown)
+   */
+  const cancelBatchGeneration = useCallback(() => {
+    if (bulkGenerationProgress && !isCancelling) {
+      console.log('[useBatchGeneration] Cancellation requested');
+      cancelRequestedRef.current = true;
+      setIsCancelling(true);
+      toastCompact('Cancelling batch...', 'info', { id: 'bulk-generation-cancel' });
+    }
+  }, [bulkGenerationProgress, isCancelling]);
+
   return {
     // Progress state
     bulkGenerationProgress,
     currentlyGeneratingFile,
     throttleCountdown,
+    isCancelling,
 
     // Ref for synchronous batch mode checking (avoids React batching race conditions)
     isBatchModeRef,
@@ -883,7 +1004,8 @@ export function useBatchGeneration({
     dismissBanner,
     handleRegenerateAll,
     handleGenerateNewOnly,
-    handleCancelRegenerate
+    handleCancelRegenerate,
+    cancelBatchGeneration
   };
 }
 
