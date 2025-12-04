@@ -3,8 +3,11 @@
  *
  * Tests the dropdown menu for per-file actions including:
  * - Menu visibility and keyboard navigation
- * - View in History action (NEW - only if documentId exists)
- * - Regenerate, Download, Remove actions
+ * - Regenerate action (requires documentation AND content)
+ * - Remove action
+ *
+ * Note: View History and Download actions were removed - history UI not built yet,
+ * download available in DocPanel
  */
 
 import { describe, it, expect, vi } from 'vitest';
@@ -17,6 +20,7 @@ describe('FileActions', () => {
     id: 'file-1',
     filename: 'test.js',
     documentation: '# Test Documentation',
+    content: 'const test = true;',  // Required for Regenerate action
     documentId: null
   };
 
@@ -65,50 +69,7 @@ describe('FileActions', () => {
     });
   });
 
-  describe('View in History Action (NEW)', () => {
-    it('should NOT show "View History" if documentId is null', async () => {
-      const user = userEvent.setup();
-      const fileWithoutDocId = { ...mockFile, documentId: null };
-
-      render(<FileActions file={fileWithoutDocId} onRemove={mockOnRemove} />);
-
-      const menuButton = screen.getByRole('button', { name: /File actions/i });
-      await user.click(menuButton);
-
-      expect(screen.queryByRole('menuitem', { name: /View History/i })).not.toBeInTheDocument();
-    });
-
-    it('should show "View History" if documentId exists', async () => {
-      const user = userEvent.setup();
-      const fileWithDocId = { ...mockFile, documentId: 'doc-123' };
-
-      render(<FileActions file={fileWithDocId} onRemove={mockOnRemove} />);
-
-      const menuButton = screen.getByRole('button', { name: /File actions/i });
-      await user.click(menuButton);
-
-      expect(screen.getByRole('menuitem', { name: /View History/i })).toBeInTheDocument();
-    });
-
-    it('should navigate to dashboard when "View History" is clicked', async () => {
-      const user = userEvent.setup();
-      const fileWithDocId = { ...mockFile, documentId: 'doc-123' };
-
-      // Mock window.location.href
-      delete window.location;
-      window.location = { href: '' };
-
-      render(<FileActions file={fileWithDocId} onRemove={mockOnRemove} />);
-
-      const menuButton = screen.getByRole('button', { name: /File actions/i });
-      await user.click(menuButton);
-
-      const viewHistoryBtn = screen.getByRole('menuitem', { name: /View History/i });
-      await user.click(viewHistoryBtn);
-
-      expect(window.location.href).toBe('/dashboard?doc=doc-123');
-    });
-  });
+  // Note: View History tests removed - feature not yet built out
 
   describe('Regenerate Action', () => {
     it('should show "Regenerate" if documentation exists', async () => {
@@ -134,66 +95,12 @@ describe('FileActions', () => {
     });
   });
 
-  describe('Download Action', () => {
-    it('should show "Download" if documentation exists', async () => {
-      const user = userEvent.setup();
-      render(<FileActions file={mockFile} onRemove={mockOnRemove} />);
-
-      const menuButton = screen.getByRole('button', { name: /File actions/i });
-      await user.click(menuButton);
-
-      expect(screen.getByRole('menuitem', { name: /^Download$/i })).toBeInTheDocument();
-    });
-
-    it('should NOT show "Download" if no documentation', async () => {
-      const user = userEvent.setup();
-      const fileWithoutDocs = { ...mockFile, documentation: null };
-
-      render(<FileActions file={fileWithoutDocs} onRemove={mockOnRemove} />);
-
-      const menuButton = screen.getByRole('button', { name: /File actions/i });
-      await user.click(menuButton);
-
-      expect(screen.queryByRole('menuitem', { name: /^Download$/i })).not.toBeInTheDocument();
-    });
-
-    it.skip('should trigger download when clicked', async () => {
-      const user = userEvent.setup();
-
-      // Mock createElement, appendChild, removeChild, and URL methods
-      const mockAnchor = document.createElement('a');
-      const createElementSpy = vi.spyOn(document, 'createElement').mockReturnValue(mockAnchor);
-      const appendChildSpy = vi.spyOn(document.body, 'appendChild').mockImplementation(() => {});
-      const removeChildSpy = vi.spyOn(document.body, 'removeChild').mockImplementation(() => {});
-      const createObjectURLSpy = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:mock-url');
-      const revokeObjectURLSpy = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
-      mockAnchor.click = vi.fn();
-
-      render(<FileActions file={mockFile} onRemove={mockOnRemove} />);
-
-      const menuButton = screen.getByRole('button', { name: /File actions/i });
-      await user.click(menuButton);
-
-      const downloadBtn = screen.getByRole('menuitem', { name: /Download Docs/i });
-      await user.click(downloadBtn);
-
-      expect(createElementSpy).toHaveBeenCalledWith('a');
-      expect(mockAnchor.download).toBe('test.js.md');
-      expect(mockAnchor.click).toHaveBeenCalled();
-
-      // Cleanup
-      createElementSpy.mockRestore();
-      appendChildSpy.mockRestore();
-      removeChildSpy.mockRestore();
-      createObjectURLSpy.mockRestore();
-      revokeObjectURLSpy.mockRestore();
-    });
-  });
+  // Note: Download action was removed - download is available in DocPanel instead
 
   describe('Remove Action', () => {
     it('should always show "Delete"', async () => {
       const user = userEvent.setup();
-      const { container } = render(<FileActions file={mockFile} onRemove={mockOnRemove} />);
+      render(<FileActions file={mockFile} onRemove={mockOnRemove} />);
 
       const menuButton = screen.getByRole('button', { name: /File actions/i });
       await user.click(menuButton);
@@ -203,7 +110,7 @@ describe('FileActions', () => {
 
     it('should call onRemove when clicked', async () => {
       const user = userEvent.setup();
-      const { container } = render(<FileActions file={mockFile} onRemove={mockOnRemove} />);
+      render(<FileActions file={mockFile} onRemove={mockOnRemove} />);
 
       const menuButton = screen.getByRole('button', { name: /File actions/i });
       await user.click(menuButton);

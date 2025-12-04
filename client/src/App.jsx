@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { Code2, FileText } from 'lucide-react';
 import JSZip from 'jszip';
 import { useTheme } from './contexts/ThemeContext';
 import { Header } from './components/Header';
@@ -18,10 +17,10 @@ import { useWorkspacePersistence } from './hooks/useWorkspacePersistence';
 import { useDocumentPersistence } from './hooks/useDocumentPersistence';
 import { useTierOverride } from './hooks/useTierOverride';
 import { useBatchGeneration } from './hooks/useBatchGeneration';
-import { ErrorBanner } from './components/ErrorBanner';
-import { UsageWarningBanner } from './components/UsageWarningBanner';
-import { UsageLimitModal } from './components/UsageLimitModal';
 import UnverifiedEmailBanner from './components/UnverifiedEmailBanner';
+import { PriorityBannerSection } from './components/PriorityBannerSection';
+import { MobileTabBar } from './components/MobileTabBar';
+import { AppModals } from './components/AppModals';
 import { validateFile, getValidationErrorMessage, detectLanguageFromFilename } from './utils/fileValidation';
 import { trackCodeInput, trackFileUpload, trackExampleUsage, trackInteraction } from './utils/analytics';
 import { toastCompact, toastError } from './utils/toastWithHistory';
@@ -35,29 +34,6 @@ import * as batchesApi from './services/batchesApi';
 
 // Lazy load heavy components that aren't needed on initial render
 const DocPanel = lazy(() => import('./components/DocPanel').then(m => ({ default: m.DocPanel })));
-const QualityScoreModal = lazy(() => import('./components/QualityScore').then(m => ({ default: m.QualityScoreModal })));
-const SamplesModal = lazy(() => import('./components/SamplesModal').then(m => ({ default: m.SamplesModal })));
-const HelpModal = lazy(() => import('./components/HelpModal').then(m => ({ default: m.HelpModal })));
-const ConfirmationModal = lazy(() => import('./components/ConfirmationModal').then(m => ({ default: m.ConfirmationModal })));
-const TermsAcceptanceModal = lazy(() => import('./components/TermsAcceptanceModal').then(m => ({ default: m.default })));
-const ContactSupportModal = lazy(() => import('./components/ContactSupportModal').then(m => ({ default: m.ContactSupportModal })));
-const GitHubLoadModal = lazy(() => import('./components/GitHubLoader').then(m => ({ default: m.GitHubLoadModal })));
-const UnsupportedFileModal = lazy(() => import('./components/UnsupportedFileModal').then(m => ({ default: m.UnsupportedFileModal })));
-
-// Loading fallback for modals - full screen to prevent layout shift
-function ModalLoadingFallback() {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div
-        className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"
-        role="status"
-        aria-label="Loading modal"
-      >
-        <span className="sr-only">Loading...</span>
-      </div>
-    </div>
-  );
-}
 
 // Loading fallback for panels
 function LoadingFallback() {
@@ -473,23 +449,34 @@ function App() {
     bulkGenerationProgress,
     currentlyGeneratingFile,
     throttleCountdown,
+    isBatchModeRef,
     bulkGenerationSummary,
     batchSummaryMarkdown,
     bulkGenerationErrors,
     currentBatchId,
+    bannerDismissed,
+    showRegenerateModal,
+    regenerateModalData,
     setBulkGenerationSummary,
     setBatchSummaryMarkdown,
     setCurrentBatchId,
     setBulkGenerationErrors,
     handleGenerateSelected,
+    handleGenerateSingleFile,
     handleSummaryFileClick,
     handleBackToSummary,
     clearBatchState,
-    restoreBatchState
+    restoreBatchState,
+    dismissBanner,
+    handleRegenerateAll,
+    handleGenerateNewOnly,
+    handleCancelRegenerate
   } = useBatchGeneration({
     generate,
     setDocumentation,
     setQualityScore,
+    setDocType,
+    setFilename,
     multiFileState,
     documentPersistence,
     isAuthenticated,
@@ -561,8 +548,20 @@ function App() {
   // Sync active file to CodePanel and DocPanel when selection changes
   // Sync active file to code and doc panels when user clicks a file in sidebar
   useEffect(() => {
+    // Skip all syncing during batch generation - the batch hook manages state directly
+    // Check both the ref (synchronous) and state (async) to handle React batching race conditions
+    // The ref is set synchronously at the START of batch generation, before any state updates
+    if (isBatchModeRef.current || bulkGenerationProgress) {
+      return;
+    }
+
     const activeFile = multiFileState.files.find(f => f.id === multiFileState.activeFileId);
     if (activeFile) {
+      // Skip syncing if file is actively generating (SSE streaming in progress)
+      if (activeFile.isGenerating) {
+        return; // Don't interfere with streaming
+      }
+
       // Sync code to CodePanel
       if (activeFile.content) {
         setCode(activeFile.content);
@@ -570,18 +569,14 @@ function App() {
         // Language will be derived from filename automatically
       }
 
-      // Skip documentation sync if a file is actively generating (SSE streaming in progress)
-      // During streaming, documentation is in the hook's state, not yet saved to multiFileState
-      // Syncing here would clear the streaming content
-      // Check activeFile.isGenerating or bulkGenerationProgress (batch generation in progress)
-      if (activeFile.isGenerating || bulkGenerationProgress) {
-        return; // Don't interfere with streaming
-      }
-
       // Sync documentation to DocPanel (overrides batch summary)
       if (activeFile.documentation) {
         setDocumentation(activeFile.documentation);
         setQualityScore(activeFile.qualityScore || null);
+        // Also sync docType for the panel title
+        if (activeFile.docType) {
+          setDocType(activeFile.docType);
+        }
       } else {
         // Clear DocPanel if file has no documentation
         setDocumentation('');
@@ -589,8 +584,9 @@ function App() {
       }
     } else if (multiFileState.activeFileId === null) {
       // No active file - clear both panels (happens when file is deleted or deselected)
-      // UNLESS we're showing a batch summary
-      if (!batchSummaryMarkdown) {
+      // UNLESS we're showing a batch summary or batch generation is in progress
+      // Check ref for synchronous batch mode check (handles React batching race conditions)
+      if (!batchSummaryMarkdown && !bulkGenerationProgress && !isBatchModeRef.current) {
         // Keep default code in CodePanel
         const defaultCode = DEFAULT_CODE;
         const defaultFilename = 'code.js';
@@ -720,7 +716,7 @@ function App() {
       const isDefaultCode = code === DEFAULT_CODE;
       const isExampleCode = EXAMPLE_CODES.has(code);
       const shouldCache = isDefaultCode || isExampleCode;
-      await generate(code, docType, language, shouldCache);
+      await generate(code, docType, language, shouldCache, filename);
       // Success toast will be shown after generation completes
     } catch (err) {
       // Error handling is done in useDocGeneration hook
@@ -751,7 +747,8 @@ function App() {
         code: file.content,
         docType: file.docType, // Use file's docType (multi-file mode)
         language: file.language,
-        isDefaultCode: false
+        isDefaultCode: false,
+        filename: file.filename // Pass filename for title formatting
       })
     });
 
@@ -1526,18 +1523,14 @@ function App() {
       if (scoreKey) setStorageItem(scoreKey, '');
     }
 
-    // Clear batch summary if that's what's being displayed
-    if (batchSummaryMarkdown && documentation === batchSummaryMarkdown) {
-      setBatchSummaryMarkdown(null);
-      setBulkGenerationSummary(null);
-      removeSessionItem('batch_summary_markdown');
-      removeSessionItem('bulk_generation_summary');
-    }
+    // Always clear batch state when resetting (clears state and sessionStorage)
+    // This removes the "batch complete" banner and prevents it from returning after refresh
+    clearBatchState();
 
     // Deselect active file in sidebar (clearing means no file is active in the doc panel)
     // This also triggers workspace state to save activeFileId=null to localStorage
     multiFileState.setActiveFile(null);
-  }, [reset, multiFileState, batchSummaryMarkdown, documentation, user]);
+  }, [reset, multiFileState, clearBatchState, user]);
 
   // Memoized panel components to avoid duplication (DRY principle)
   const codePanel = useMemo(() => (
@@ -1566,20 +1559,19 @@ function App() {
         onGenerate={handleGenerate}
         onReset={handleReset}
         bulkGenerationProgress={bulkGenerationProgress}
-        bulkGenerationSummary={bulkGenerationSummary}
+        bulkGenerationSummary={bannerDismissed ? null : bulkGenerationSummary}
         bulkGenerationErrors={bulkGenerationErrors}
         currentlyGeneratingFile={currentlyGeneratingFile}
         throttleCountdown={throttleCountdown}
-        onDismissBulkErrors={() => {
-          setBulkGenerationErrors([]);
-          setBulkGenerationSummary(null);
-        }}
+        onDismissBulkErrors={dismissBanner}
         onSummaryFileClick={handleSummaryFileClick}
         onBackToSummary={handleBackToSummary}
         onDownloadAllDocs={handleDownloadAllDocs}
         batchSummaryMarkdown={batchSummaryMarkdown}
         canUseBatchProcessing={canUseBatchProcessing}
         onExportFile={handleExportFile}
+        docType={docType}
+        filename={filename}
       />
     </Suspense>
   ), [
@@ -1589,11 +1581,14 @@ function App() {
     testSkeletonMode,
     bulkGenerationProgress,
     bulkGenerationSummary,
+    bannerDismissed,
     bulkGenerationErrors,
     currentlyGeneratingFile,
     throttleCountdown,
     batchSummaryMarkdown,
-    canUseBatchProcessing
+    canUseBatchProcessing,
+    docType,
+    filename
   ]);
 
   return (
@@ -1761,11 +1756,7 @@ function App() {
                 onAddFile={handleMultiFileUpload}
                 hasCodeInEditor={code.trim().length > 0}
                 onFilesDrop={handleMultiFilesDrop}
-                onGenerateFile={(fileId) => {
-                  // Single file generation not implemented - users should use ControlBar
-                  // Multi-file sidebar is for batch operations only
-                  console.log('[App] Single file generation not supported from sidebar:', fileId);
-                }}
+                onGenerateFile={handleGenerateSingleFile}
                 onGenerateSelected={() => {
                   // Check if any files are selected
                   const filesWithContent = multiFileState.files.filter(f => f.content && f.content.length > 0);
@@ -1787,71 +1778,26 @@ function App() {
               <div className="flex-1 min-w-0">
                 <main id="main-content" className="flex-1 w-full h-full flex flex-col overflow-auto lg:overflow-hidden lg:min-h-0">
 
-        {/* Priority Banner Section - Show only most critical message */}
-        {/* Priority Order: 1) Email Verification (handled above), 2) Claude API Error, 3) Upload Error, 4) Generation Error, 5) Usage Warning */}
-        {error ? (
-          // Priority 1: Claude API rate limit or generation errors (blocking)
-          <div role="region" aria-label="Error notification">
-            <ErrorBanner
-              error={error}
-              retryAfter={retryAfter}
-              onDismiss={clearError}
-            />
-          </div>
-        ) : uploadError ? (
-          // Priority 2: Upload errors
-          <div role="region" aria-label="Upload error notification">
-            <ErrorBanner
-              error={uploadError}
-              onDismiss={() => setUploadError(null)}
-            />
-          </div>
-        ) : showUsageWarning && (mockUsage || usage) ? (
-          // Priority 3: Usage warning (80%+ usage, non-blocking)
-          <div className="mb-6" role="region" aria-label="Usage warning">
-            <UsageWarningBanner
-              usage={mockUsage || getUsageForPeriod('monthly')}
-              currentTier={mockUsage?.tier || usage?.tier}
-              onDismiss={() => {
-                setShowUsageWarning(false);
-                setMockUsage(null); // Clear mock when dismissing
-              }}
-              onUpgrade={handleUpgradeClick}
-            />
-          </div>
-        ) : null}
+        <PriorityBannerSection
+          error={error}
+          retryAfter={retryAfter}
+          uploadError={uploadError}
+          showUsageWarning={showUsageWarning}
+          usage={mockUsage || getUsageForPeriod('monthly')}
+          currentTier={mockUsage?.tier || usage?.tier}
+          onDismissError={clearError}
+          onDismissUploadError={() => setUploadError(null)}
+          onDismissUsageWarning={() => {
+            setShowUsageWarning(false);
+            setMockUsage(null);
+          }}
+          onUpgrade={handleUpgradeClick}
+        />
 
-        {/* Control Bar - Hidden in Pro+ mode (sidebar has these controls) */}
-
-        {/* Mobile Tabs - Only visible on mobile (<1024px) */}
-        <div className="lg:hidden border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
-          <div className="flex">
-            <button
-              type="button"
-              onClick={() => setMobileActiveTab('code')}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
-                mobileActiveTab === 'code'
-                  ? 'text-purple-600 dark:text-purple-400 border-b-2 border-purple-600 dark:border-purple-400'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
-              }`}
-            >
-              <Code2 className="w-4 h-4" />
-              <span>Code</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setMobileActiveTab('doc')}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
-                mobileActiveTab === 'doc'
-                  ? 'text-purple-600 dark:text-purple-400 border-b-2 border-purple-600 dark:border-purple-400'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
-              }`}
-            >
-              <FileText className="w-4 h-4" />
-              <span>Documentation</span>
-            </button>
-          </div>
-        </div>
+        <MobileTabBar
+          activeTab={mobileActiveTab}
+          onTabChange={setMobileActiveTab}
+        />
 
         {/* Content Area - Mobile tabs or Desktop split view */}
         <div className="flex-1 min-h-0">
@@ -1899,10 +1845,7 @@ function App() {
                   onAddFile={handleMultiFileUpload}
                   hasCodeInEditor={code.trim().length > 0}
                   onFilesDrop={handleMultiFilesDrop}
-                  onGenerateFile={(fileId) => {
-                    // TODO: Implement single file generation
-                    console.log('[App] Generate file requested:', fileId);
-                  }}
+                  onGenerateFile={handleGenerateSingleFile}
                   onGenerateSelected={() => {
                     // Check if any files are selected
                     const filesWithContent = multiFileState.files.filter(f => f.content && f.content.length > 0);
@@ -1934,41 +1877,21 @@ function App() {
               <Panel defaultSize={sidebarCollapsed ? 97 : (100 - expandedSidebarWidth)} minSize={30}>
                 <main id="main-content" className="w-full h-full flex flex-col overflow-hidden">
 
-                  {/* Priority Banner Section - Show only most critical message */}
-                  {/* Priority Order: 1) Email Verification (handled above), 2) Claude API Error, 3) Upload Error, 4) Generation Error, 5) Usage Warning */}
-                  {error ? (
-                    // Priority 1: Claude API rate limit or generation errors (blocking)
-                    <div role="region" aria-label="Error notification">
-                      <ErrorBanner
-                        error={error}
-                        retryAfter={retryAfter}
-                        onDismiss={clearError}
-                      />
-                    </div>
-                  ) : uploadError ? (
-                    // Priority 2: Upload errors
-                    <div role="region" aria-label="Upload error notification">
-                      <ErrorBanner
-                        error={uploadError}
-                        onDismiss={() => setUploadError(null)}
-                      />
-                    </div>
-                  ) : showUsageWarning && (mockUsage || usage) ? (
-                    // Priority 3: Usage warning (80%+ usage, non-blocking)
-                    <div className="mb-6" role="region" aria-label="Usage warning">
-                      <UsageWarningBanner
-                        usage={mockUsage || getUsageForPeriod('monthly')}
-                        currentTier={mockUsage?.tier || usage?.tier}
-                        onDismiss={() => {
-                          setShowUsageWarning(false);
-                          setMockUsage(null); // Clear mock when dismissing
-                        }}
-                        onUpgrade={handleUpgradeClick}
-                      />
-                    </div>
-                  ) : null}
-
-                  {/* Control Bar - Hidden in Pro+ mode (sidebar has these controls) */}
+                  <PriorityBannerSection
+                    error={error}
+                    retryAfter={retryAfter}
+                    uploadError={uploadError}
+                    showUsageWarning={showUsageWarning}
+                    usage={mockUsage || getUsageForPeriod('monthly')}
+                    currentTier={mockUsage?.tier || usage?.tier}
+                    onDismissError={clearError}
+                    onDismissUploadError={() => setUploadError(null)}
+                    onDismissUsageWarning={() => {
+                      setShowUsageWarning(false);
+                      setMockUsage(null);
+                    }}
+                    onUpgrade={handleUpgradeClick}
+                  />
 
                   {/* Layout Views: Split | Code Only | Doc Only */}
                   <div className="flex-1 min-h-0 transition-all duration-300">
@@ -1998,20 +1921,19 @@ function App() {
                             onGenerate={handleGenerate}
                             onReset={handleReset}
                             bulkGenerationProgress={bulkGenerationProgress}
-                            bulkGenerationSummary={bulkGenerationSummary}
+                            bulkGenerationSummary={bannerDismissed ? null : bulkGenerationSummary}
                             bulkGenerationErrors={bulkGenerationErrors}
                             currentlyGeneratingFile={currentlyGeneratingFile}
                             throttleCountdown={throttleCountdown}
-                            onDismissBulkErrors={() => {
-                              setBulkGenerationErrors([]);
-                              setBulkGenerationSummary(null);
-                            }}
+                            onDismissBulkErrors={dismissBanner}
                             onSummaryFileClick={handleSummaryFileClick}
                             onBackToSummary={handleBackToSummary}
                             onDownloadAllDocs={handleDownloadAllDocs}
                             batchSummaryMarkdown={batchSummaryMarkdown}
                             canUseBatchProcessing={canUseBatchProcessing}
                             onExportFile={handleExportFile}
+                            docType={docType}
+                            filename={filename}
                           />
                         </Suspense>
                       }
@@ -2024,39 +1946,21 @@ function App() {
           )
         ) : (
           <main id="main-content" className="flex-1 w-full flex flex-col overflow-auto lg:overflow-hidden lg:min-h-0">
-            {/* Priority Banner Section - Show only most critical message */}
-            {/* Priority Order: 1) Email Verification (handled above), 2) Claude API Error, 3) Upload Error, 4) Generation Error, 5) Usage Warning */}
-            {error ? (
-              // Priority 1: Claude API rate limit or generation errors (blocking)
-              <div role="region" aria-label="Error notification">
-                <ErrorBanner
-                  error={error}
-                  retryAfter={retryAfter}
-                  onDismiss={clearError}
-                />
-              </div>
-            ) : uploadError ? (
-              // Priority 2: Upload errors
-              <div role="region" aria-label="Upload error notification">
-                <ErrorBanner
-                  error={uploadError}
-                  onDismiss={() => setUploadError(null)}
-                />
-              </div>
-            ) : showUsageWarning && (mockUsage || usage) ? (
-              // Priority 3: Usage warning (80%+ usage, non-blocking)
-              <div className="mb-6" role="region" aria-label="Usage warning">
-                <UsageWarningBanner
-                  usage={mockUsage || getUsageForPeriod('monthly')}
-                  currentTier={mockUsage?.tier || usage?.tier}
-                  onDismiss={() => {
-                    setShowUsageWarning(false);
-                    setMockUsage(null); // Clear mock when dismissing
-                  }}
-                  onUpgrade={handleUpgradeClick}
-                />
-              </div>
-            ) : null}
+            <PriorityBannerSection
+              error={error}
+              retryAfter={retryAfter}
+              uploadError={uploadError}
+              showUsageWarning={showUsageWarning}
+              usage={mockUsage || getUsageForPeriod('monthly')}
+              currentTier={mockUsage?.tier || usage?.tier}
+              onDismissError={clearError}
+              onDismissUploadError={() => setUploadError(null)}
+              onDismissUsageWarning={() => {
+                setShowUsageWarning(false);
+                setMockUsage(null);
+              }}
+              onUpgrade={handleUpgradeClick}
+            />
 
             {/* Control Bar */}
             <ControlBar
@@ -2072,35 +1976,10 @@ function App() {
               generateDisabled={!code.trim()}
             />
 
-            {/* Mobile Tabs - Only visible on mobile (<1024px) */}
-            <div className="lg:hidden border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
-              <div className="flex">
-                <button
-                  type="button"
-                  onClick={() => setMobileActiveTab('code')}
-                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
-                    mobileActiveTab === 'code'
-                      ? 'text-purple-600 dark:text-purple-400 border-b-2 border-purple-600 dark:border-purple-400'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
-                  }`}
-                >
-                  <Code2 className="w-4 h-4" />
-                  <span>Code</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setMobileActiveTab('doc')}
-                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
-                    mobileActiveTab === 'doc'
-                      ? 'text-purple-600 dark:text-purple-400 border-b-2 border-purple-600 dark:border-purple-400'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
-                  }`}
-                >
-                  <FileText className="w-4 h-4" />
-                  <span>Documentation</span>
-                </button>
-              </div>
-            </div>
+            <MobileTabBar
+              activeTab={mobileActiveTab}
+              onTabChange={setMobileActiveTab}
+            />
 
             {/* Content Area - Mobile tabs or Desktop split view */}
             <div className="flex-1 min-h-0">
@@ -2130,20 +2009,19 @@ function App() {
                       onGenerate={handleGenerate}
                       onReset={handleReset}
                       bulkGenerationProgress={bulkGenerationProgress}
-                      bulkGenerationSummary={bulkGenerationSummary}
+                      bulkGenerationSummary={bannerDismissed ? null : bulkGenerationSummary}
                       bulkGenerationErrors={bulkGenerationErrors}
                       currentlyGeneratingFile={currentlyGeneratingFile}
                       throttleCountdown={throttleCountdown}
-                      onDismissBulkErrors={() => {
-                        setBulkGenerationErrors([]);
-                        setBulkGenerationSummary(null);
-                      }}
+                      onDismissBulkErrors={dismissBanner}
                       onSummaryFileClick={handleSummaryFileClick}
                       onBackToSummary={handleBackToSummary}
                       onDownloadAllDocs={handleDownloadAllDocs}
                       batchSummaryMarkdown={batchSummaryMarkdown}
                       canUseBatchProcessing={canUseBatchProcessing}
                       onExportFile={handleExportFile}
+                      docType={docType}
+                      filename={filename}
                     />
                   </Suspense>
                 )
@@ -2176,20 +2054,19 @@ function App() {
                         onGenerate={handleGenerate}
                         onReset={handleReset}
                         bulkGenerationProgress={bulkGenerationProgress}
-                        bulkGenerationSummary={bulkGenerationSummary}
+                        bulkGenerationSummary={bannerDismissed ? null : bulkGenerationSummary}
                         bulkGenerationErrors={bulkGenerationErrors}
                         currentlyGeneratingFile={currentlyGeneratingFile}
                         throttleCountdown={throttleCountdown}
-                        onDismissBulkErrors={() => {
-                          setBulkGenerationErrors([]);
-                          setBulkGenerationSummary(null);
-                        }}
+                        onDismissBulkErrors={dismissBanner}
                         onSummaryFileClick={handleSummaryFileClick}
                         onBackToSummary={handleBackToSummary}
                         onDownloadAllDocs={handleDownloadAllDocs}
                         batchSummaryMarkdown={batchSummaryMarkdown}
                         canUseBatchProcessing={canUseBatchProcessing}
                         onExportFile={handleExportFile}
+                        docType={docType}
+                        filename={filename}
                       />
                     </Suspense>
                   }
@@ -2200,198 +2077,79 @@ function App() {
         )}
       </div>
 
-      {/* Quality Score Modal */}
-      {showQualityModal && qualityScore && (
-        <Suspense fallback={<ModalLoadingFallback />}>
-          <QualityScoreModal
-            qualityScore={qualityScore}
-            onClose={() => setShowQualityModal(false)}
-            filename={filename}
-          />
-        </Suspense>
-      )}
+      {/* All Application Modals */}
+      <AppModals
+        // Quality Score Modal
+        showQualityModal={showQualityModal}
+        qualityScore={qualityScore}
+        onCloseQualityModal={() => setShowQualityModal(false)}
+        filename={filename}
 
-      {/* Samples Modal */}
-      {showSamplesModal && (
-        <Suspense fallback={<ModalLoadingFallback />}>
-          <SamplesModal
-            isOpen={showSamplesModal}
-            onClose={() => {
-              setShowSamplesModal(false);
-              // Return focus to Samples button after modal closes
-              setTimeout(() => {
-                samplesButtonRef.current?.focus();
-              }, 0);
-            }}
-            onLoadSample={handleLoadSample}
-            currentCode={code}
-          />
-        </Suspense>
-      )}
+        // Samples Modal
+        showSamplesModal={showSamplesModal}
+        onCloseSamplesModal={() => setShowSamplesModal(false)}
+        onLoadSample={handleLoadSample}
+        currentCode={code}
+        samplesButtonRef={samplesButtonRef}
 
-      {/* Help Modal */}
-      {showHelpModal && (
-        <Suspense fallback={<ModalLoadingFallback />}>
-          <HelpModal
-            isOpen={showHelpModal}
-            onClose={() => setShowHelpModal(false)}
-          />
-        </Suspense>
-      )}
+        // Help Modal
+        showHelpModal={showHelpModal}
+        onCloseHelpModal={() => setShowHelpModal(false)}
 
-      {/* Confirmation Modal for Large Code Submissions */}
-      {showConfirmationModal && largeCodeStats && (
-        <Suspense fallback={<ModalLoadingFallback />}>
-          <ConfirmationModal
-            isOpen={showConfirmationModal}
-            onClose={() => {
-              setShowConfirmationModal(false);
-              setLargeCodeStats(null);
-            }}
-            onConfirm={performGeneration}
-            title="Large File Submission"
-            variant="warning"
-            confirmLabel="Generate Anyway"
-            cancelLabel="Cancel"
-            message={
-              <div className="space-y-4">
-                <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
-                  You're about to generate documentation for a <strong className="font-semibold text-slate-900 dark:text-white">large code file</strong>. This may take longer and consume more API resources.
-                </p>
+        // Large Code Confirmation Modal
+        showConfirmationModal={showConfirmationModal}
+        largeCodeStats={largeCodeStats}
+        onCloseConfirmationModal={() => {
+          setShowConfirmationModal(false);
+          setLargeCodeStats(null);
+        }}
+        onConfirmLargeCode={performGeneration}
 
-                {/* Visual separator */}
-                <div className="h-px bg-gradient-to-r from-transparent via-slate-200 dark:via-slate-700 to-transparent" />
+        // Generate From Editor Modal
+        showGenerateFromEditorModal={showGenerateFromEditorModal}
+        onCloseGenerateFromEditorModal={() => setShowGenerateFromEditorModal(false)}
+        onConfirmGenerateFromEditor={() => {
+          setShowGenerateFromEditorModal(false);
+          handleGenerate();
+        }}
 
-                {/* Stats box with purple accent */}
-                <div className="bg-white dark:bg-slate-800 border-l-4 border-purple-500 dark:border-purple-400 border border-slate-200 dark:border-slate-700 rounded-lg p-4 shadow-sm space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Lines of code</span>
-                    <div className="flex items-baseline gap-1.5">
-                      <span className="text-2xl font-bold text-purple-900 dark:text-purple-300">{largeCodeStats.lines.toLocaleString()}</span>
-                      <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">lines</span>
-                    </div>
-                  </div>
-                  <div className="h-px bg-slate-100 dark:bg-slate-700" />
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">File size</span>
-                    <div className="flex items-baseline gap-1.5">
-                      <span className="text-2xl font-bold text-indigo-900 dark:text-indigo-300">{largeCodeStats.sizeInKB}</span>
-                      <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">KB</span>
-                    </div>
-                  </div>
-                  <div className="h-px bg-slate-100 dark:bg-slate-700" />
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Characters</span>
-                    <div className="flex items-baseline gap-1.5">
-                      <span className="text-2xl font-bold text-purple-900 dark:text-purple-300">{largeCodeStats.charCount.toLocaleString()}</span>
-                      <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">chars</span>
-                    </div>
-                  </div>
-                </div>
+        // Regenerate Modal
+        showRegenerateModal={showRegenerateModal}
+        regenerateModalData={regenerateModalData}
+        onRegenerateAll={handleRegenerateAll}
+        onGenerateNewOnly={handleGenerateNewOnly}
+        onCancelRegenerate={handleCancelRegenerate}
 
-                {/* Tip box */}
-                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3 border border-slate-200 dark:border-slate-700">
-                  <p className="text-xs leading-relaxed text-slate-600 dark:text-slate-400">
-                    <span className="font-semibold text-slate-700 dark:text-slate-300">💡 Tip:</span> Breaking your code into smaller modules improves documentation quality and generation speed.
-                  </p>
-                </div>
-              </div>
-            }
-          />
-        </Suspense>
-      )}
+        // Usage Limit Modal
+        showUsageLimitModal={showUsageLimitModal}
+        onCloseUsageLimitModal={() => setShowUsageLimitModal(false)}
+        usage={getUsageForPeriod('monthly')}
+        onUpgrade={handleUpgradeClick}
 
-      {/* Confirmation Modal for Generating from Code Editor */}
-      {showGenerateFromEditorModal && (
-        <Suspense fallback={<ModalLoadingFallback />}>
-          <ConfirmationModal
-            isOpen={showGenerateFromEditorModal}
-            onClose={() => setShowGenerateFromEditorModal(false)}
-            onConfirm={() => {
-              setShowGenerateFromEditorModal(false);
-              // Single-file generation uses isGenerating state from useDocGeneration hook
-              // (not bulkGenerationProgress which is for batch operations)
-              handleGenerate();
-            }}
-            title="No Files Selected"
-            variant="info"
-            confirmLabel="Generate from Editor"
-            cancelLabel="Cancel"
-            message={
-              <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
-                No files are currently selected in your workspace. Would you like to generate documentation for the code in your editor instead?
-              </p>
-            }
-          />
-        </Suspense>
-      )}
+        // Terms Modal
+        showTermsModal={showTermsModal}
+        onAcceptTerms={handleAcceptLegalDocuments}
+        legalStatus={legalStatus}
 
-      {/* Usage Limit Modal (100% limit reached) */}
-      {showUsageLimitModal && usage && (
-        <UsageLimitModal
-          isOpen={showUsageLimitModal}
-          onClose={() => setShowUsageLimitModal(false)}
-          usage={getUsageForPeriod('monthly')}
-          currentTier={usage.tier}
-          onUpgrade={handleUpgradeClick}
-        />
-      )}
+        // Contact Support Modal
+        showSupportModal={showSupportModal}
+        onCloseSupportModal={() => setShowSupportModal(false)}
+        onShowLoginFromSupport={() => {
+          sessionStorage.setItem('pendingSupportModal', 'true');
+          headerRef.current?.openLoginModal();
+        }}
 
-      {/* Terms Acceptance Modal - Non-dismissible when terms need acceptance */}
-      {showTermsModal && (
-        <Suspense fallback={<ModalLoadingFallback />}>
-          <TermsAcceptanceModal
-            isOpen={showTermsModal}
-            onAccept={handleAcceptLegalDocuments}
-            missingAcceptance={legalStatus?.details}
-            currentVersions={{
-              terms: legalStatus?.details?.terms?.current_version,
-              privacy: legalStatus?.details?.privacy?.current_version,
-            }}
-          />
-        </Suspense>
-      )}
+        // GitHub Modal
+        showGithubModal={showGithubModal}
+        onCloseGithubModal={() => setShowGithubModal(false)}
+        onGithubFileLoad={handleGithubFileLoad}
+        onGithubFilesLoad={multiFileState.reloadWorkspace}
+        defaultDocType={docType}
 
-      {/* Contact Support Modal */}
-      {showSupportModal && (
-        <Suspense fallback={<ModalLoadingFallback />}>
-          <ContactSupportModal
-            isOpen={showSupportModal}
-            onClose={() => setShowSupportModal(false)}
-            onShowLogin={() => {
-              // Set sessionStorage flag so we reopen support modal after login
-              // (persists across OAuth redirects which cause page reload)
-              sessionStorage.setItem('pendingSupportModal', 'true');
-              headerRef.current?.openLoginModal();
-            }}
-          />
-        </Suspense>
-      )}
-
-      {/* GitHub Load Modal */}
-      {showGithubModal && (
-        <Suspense fallback={<ModalLoadingFallback />}>
-          <GitHubLoadModal
-            isOpen={showGithubModal}
-            onClose={() => setShowGithubModal(false)}
-            onFileLoad={handleGithubFileLoad}
-            onFilesLoad={multiFileState.reloadWorkspace}
-            defaultDocType={docType}
-          />
-        </Suspense>
-      )}
-
-      {/* Unsupported File Type Modal */}
-      {unsupportedFileModal.isOpen && (
-        <Suspense fallback={<ModalLoadingFallback />}>
-          <UnsupportedFileModal
-            isOpen={unsupportedFileModal.isOpen}
-            onClose={() => setUnsupportedFileModal({ isOpen: false, fileName: '', fileExtension: '' })}
-            fileName={unsupportedFileModal.fileName}
-            fileExtension={unsupportedFileModal.fileExtension}
-          />
-        </Suspense>
-      )}
+        // Unsupported File Modal
+        unsupportedFileModal={unsupportedFileModal}
+        onCloseUnsupportedFileModal={() => setUnsupportedFileModal({ isOpen: false, fileName: '', fileExtension: '' })}
+      />
 
       {/* Footer */}
       <Footer onSupportClick={() => setShowSupportModal(true)} />

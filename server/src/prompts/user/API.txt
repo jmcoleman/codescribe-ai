@@ -1,5 +1,10 @@
 Generate comprehensive API documentation for the following {{language}} code.
 
+Filename: {{filename}}
+
+IMPORTANT: Your response MUST start with exactly this H1 title:
+# API: {{filename}}
+
 {{baseContext}}
 
 Code to document:

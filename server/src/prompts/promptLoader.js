@@ -11,6 +11,34 @@ const promptsDir = isVercel
   : resolve(process.cwd(), 'src/prompts');        // Local/Test: <project>/src/prompts
 
 /**
+ * Load common/shared prompt content (appended to all system prompts)
+ * @returns {string} Common prompt content or empty string if not found
+ */
+function loadCommonPrompt() {
+  const commonPath = join(promptsDir, 'system', 'COMMON.txt');
+  try {
+    return readFileSync(commonPath, 'utf8');
+  } catch (error) {
+    // Common prompt is optional - return empty if not found
+    return '';
+  }
+}
+
+// Cache the common prompt content (loaded once at startup)
+let commonPromptCache = null;
+
+/**
+ * Get common prompt content (cached)
+ * @returns {string} Common prompt content
+ */
+function getCommonPrompt() {
+  if (commonPromptCache === null) {
+    commonPromptCache = loadCommonPrompt();
+  }
+  return commonPromptCache;
+}
+
+/**
  * Load prompt from file
  * @param {string} type - 'system' or 'user'
  * @param {string} docType - Type of documentation (README, JSDOC, API, ARCHITECTURE, OPENAPI)
@@ -31,7 +59,17 @@ function loadPrompt(type, docType) {
   const promptPath = join(promptsDir, type, `${docType}.txt`);
 
   try {
-    return readFileSync(promptPath, 'utf8');
+    const promptContent = readFileSync(promptPath, 'utf8');
+
+    // For system prompts, append the common prompt content
+    if (type === 'system') {
+      const commonPrompt = getCommonPrompt();
+      if (commonPrompt) {
+        return promptContent + '\n\n' + commonPrompt;
+      }
+    }
+
+    return promptContent;
   } catch (error) {
     throw new Error(`Failed to load ${type} prompt for ${docType}: ${error.message}`);
   }

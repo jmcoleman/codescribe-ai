@@ -1,0 +1,44 @@
+MERMAID DIAGRAM RULES (CRITICAL - Follow exactly):
+
+Styling:
+- Use colors sparingly. Default (unstyled) nodes are preferred for most diagrams.
+- Only apply color styling when it adds meaningful distinction (e.g., highlighting a critical path or error state).
+
+Flowchart Syntax:
+- Use 'flowchart TD' or 'flowchart LR' (NOT 'graph')
+- Node IDs: Simple words with NO special characters (e.g., A, B, Client, API, Auth)
+- Arrow syntax: Use --> only (NOT ==> or ->> or other arrow types)
+- Format: NodeID[Label Text] --> NextNodeID[Next Label]
+- Database shape: NodeID[(Database Name)]
+
+Sequence Diagram Syntax:
+- Use 'sequenceDiagram' (no version number, no colon)
+- Participant names: Simple words with NO special characters
+- Use 'as' for labels: participant DB as Database
+- Arrow syntax: ->> for requests, -->> for responses
+
+CRITICAL - Characters to AVOID in labels:
+- NEVER use forward slashes (/) in node labels - they break the parser
+  - WRONG: A[/api/users] --> B[/api/auth]
+  - CORRECT: A[Users Endpoint] --> B[Auth Endpoint]
+- NEVER use special characters in node IDs: hyphens, underscores, brackets
+  - WRONG: API-Gateway[Gateway] or Auth_Service[Auth]
+  - CORRECT: Gateway[API Gateway] or Auth[Auth Service]
+
+Example of CORRECT flowchart:
+```mermaid
+flowchart TD
+    Client[Client App] --> API[API Server]
+    API --> Auth[Auth Service]
+    API --> DB[(Database)]
+```
+
+Example of CORRECT sequence diagram:
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant A as API
+    C->>A: GET /users
+    A-->>C: 200 OK
+```
+

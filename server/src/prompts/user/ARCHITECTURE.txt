@@ -1,5 +1,10 @@
 Analyze the following {{language}} code and generate an architectural overview.
 
+Filename: {{filename}}
+
+IMPORTANT: Your response MUST start with exactly this H1 title:
+# Architecture: {{filename}}
+
 {{baseContext}}
 
 Code to analyze:

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { MoreVertical, Trash2, Download, History, RotateCw, Sparkles, Info } from 'lucide-react';
+import { MoreVertical, Trash2, RotateCw, Sparkles, Info } from 'lucide-react';
 
 /**
  * FileActions Component
@@ -9,9 +9,7 @@ import { MoreVertical, Trash2, Download, History, RotateCw, Sparkles, Info } fro
  * Actions (in order):
  * - Generate - Generate documentation for this file (if not generated)
  * - Regenerate - Re-generate documentation (if already generated)
- * - Download - Download .md file (if docs exist)
  * - View Details - View detailed file metadata (keyboard shortcut: Cmd/Ctrl+I)
- * - View History - View document in usage dashboard (if documentId exists)
  * - Delete - Remove file from list
  *
  * @param {Object} props
@@ -24,7 +22,7 @@ export function FileActions({ file, onRemove, onGenerate, onViewDetails }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  const { documentId, documentation, filename, content } = file;
+  const { documentation, content } = file;
   const hasContent = Boolean(content && content.length > 0);
 
   // Close dropdown when clicking outside
@@ -69,35 +67,10 @@ export function FileActions({ file, onRemove, onGenerate, onViewDetails }) {
     setIsOpen(false);
   };
 
-  const handleViewHistory = () => {
-    if (documentId) {
-      // Navigate to usage dashboard with document highlighted
-      window.location.href = `/dashboard?doc=${documentId}`;
-    }
-    setIsOpen(false);
-  };
-
   const handleRegenerate = () => {
     if (onGenerate) {
       onGenerate();
     }
-    setIsOpen(false);
-  };
-
-  const handleDownload = () => {
-    if (!documentation) return;
-
-    // Create blob and download
-    const blob = new Blob([documentation], { type: 'text/markdown' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${filename}.md`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
     setIsOpen(false);
   };
 
@@ -143,8 +116,8 @@ export function FileActions({ file, onRemove, onGenerate, onViewDetails }) {
             </button>
           )}
 
-          {/* Regenerate - only if already generated */}
-          {documentation && (
+          {/* Regenerate - only if already generated AND has content */}
+          {documentation && hasContent && (
             <button
               type="button"
               onClick={handleRegenerate}
@@ -153,19 +126,6 @@ export function FileActions({ file, onRemove, onGenerate, onViewDetails }) {
             >
               <RotateCw className="w-4 h-4" />
               Regenerate
-            </button>
-          )}
-
-          {/* Download */}
-          {documentation && (
-            <button
-              type="button"
-              onClick={handleDownload}
-              className="w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2 transition-colors duration-150"
-              role="menuitem"
-            >
-              <Download className="w-4 h-4" />
-              Download
             </button>
           )}
 
@@ -182,19 +142,6 @@ export function FileActions({ file, onRemove, onGenerate, onViewDetails }) {
             </span>
             <span className="text-xs text-slate-500 dark:text-slate-400">⌘I</span>
           </button>
-
-          {/* View History - only if documentId exists */}
-          {documentId && (
-            <button
-              type="button"
-              onClick={handleViewHistory}
-              className="w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2 transition-colors duration-150"
-              role="menuitem"
-            >
-              <History className="w-4 h-4" />
-              View History
-            </button>
-          )}
 
           {/* Divider before destructive action */}
           <div className="border-t border-slate-200 dark:border-slate-700 my-1" />

@@ -85,7 +85,7 @@ describe('FileItem', () => {
       expect(screen.getByRole('button', { name: /test\.js - Generating/i })).toBeInTheDocument();
     });
 
-    it('should show generated state with quality score', () => {
+    it('should show generated state', () => {
       const generatedFile = {
         ...mockFile,
         documentation: '# Test',
@@ -93,7 +93,7 @@ describe('FileItem', () => {
       };
       render(<FileItem {...defaultProps} file={generatedFile} />);
 
-      expect(screen.getByText(/B 85/i)).toBeInTheDocument();
+      // Quality score is no longer shown in FileItem - only checkmark icon indicates generated state
       expect(screen.getByRole('button', { name: /test\.js - Generated/i })).toBeInTheDocument();
     });
 
@@ -104,12 +104,7 @@ describe('FileItem', () => {
       expect(screen.getByText('Generation failed')).toBeInTheDocument();
     });
 
-    it('should show saved to database indicator', () => {
-      const savedFile = { ...mockFile, documentation: '# Test', documentId: 'doc-123' };
-      render(<FileItem {...defaultProps} file={savedFile} />);
-
-      expect(screen.getByText('Saved to database')).toBeInTheDocument();
-    });
+    // Note: generatedDocType indicator was removed - checkmark icon shows generation status instead
   });
 
   describe('Active State', () => {
@@ -136,43 +131,7 @@ describe('FileItem', () => {
     });
   });
 
-  describe('Quality Grades', () => {
-    it('should render grade A with green color', () => {
-      const fileA = {
-        ...mockFile,
-        documentation: '# Test',
-        qualityScore: { score: 95, grade: 'A' }
-      };
-      render(<FileItem {...defaultProps} file={fileA} />);
-
-      const gradeBadge = screen.getByText(/A 95/i);
-      expect(gradeBadge).toHaveClass('text-green-700');
-    });
-
-    it('should render grade B with blue color', () => {
-      const fileB = {
-        ...mockFile,
-        documentation: '# Test',
-        qualityScore: { score: 85, grade: 'B' }
-      };
-      render(<FileItem {...defaultProps} file={fileB} />);
-
-      const gradeBadge = screen.getByText(/B 85/i);
-      expect(gradeBadge).toHaveClass('text-blue-700');
-    });
-
-    it('should render grade F with red color', () => {
-      const fileF = {
-        ...mockFile,
-        documentation: '# Test',
-        qualityScore: { score: 45, grade: 'F' }
-      };
-      render(<FileItem {...defaultProps} file={fileF} />);
-
-      const gradeBadge = screen.getByText(/F 45/i);
-      expect(gradeBadge).toHaveClass('text-red-700');
-    });
-  });
+  // Note: Quality grades are no longer displayed in FileItem - they're shown in batch summary and DocPanel
 
   describe('Interactions', () => {
     it('should call onSelect when clicked', async () => {

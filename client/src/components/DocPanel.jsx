@@ -149,6 +149,22 @@ const codescribeDarkTheme = {
 
 import { STORAGE_KEYS, getStorageItem, setStorageItem } from '../constants/storage';
 
+/**
+ * Format doc type for display in panel title
+ * @param {string} docType - Raw doc type (e.g., 'README', 'JSDOC', 'API')
+ * @returns {string} Formatted doc type (e.g., 'README', 'JSDoc', 'API')
+ */
+const formatDocTypeForTitle = (docType) => {
+  const formatMap = {
+    'README': 'README',
+    'JSDOC': 'JSDoc',
+    'API': 'API',
+    'OPENAPI': 'OpenAPI',
+    'ARCHITECTURE': 'Architecture'
+  };
+  return formatMap[docType] || docType;
+};
+
 export const DocPanel = memo(function DocPanel({
   documentation,
   qualityScore = null,
@@ -169,7 +185,9 @@ export const DocPanel = memo(function DocPanel({
   canUseBatchProcessing = false,
   onExportFile,
   currentlyGeneratingFile = null,
-  throttleCountdown = null
+  throttleCountdown = null,
+  docType = null,
+  filename = null
 }) {
   const { effectiveTheme } = useTheme();
 
@@ -474,11 +492,19 @@ export const DocPanel = memo(function DocPanel({
         {/* Left: Icon + Title */}
         <div className="flex items-center gap-2 min-w-0">
           <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400 flex-shrink-0" aria-hidden="true" />
-          <h2 className="text-sm text-slate-600 dark:text-slate-300 @[500px]:inline hidden">
-            Generated Docs
-          </h2>
-          <h2 className="text-sm text-slate-600 dark:text-slate-300 @[500px]:hidden truncate">
-            Generated Docs
+          <h2 className="text-sm text-slate-600 dark:text-slate-300 truncate" title={
+            qualityScore?.isBatchSummary
+              ? `Batch Summary - ${qualityScore.generatedAt ? new Date(qualityScore.generatedAt).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true }) : ''}`
+              : documentation && docType && filename
+                ? `${formatDocTypeForTitle(docType)}: ${filename}`
+                : 'Generated Docs'
+          }>
+            {qualityScore?.isBatchSummary
+              ? `Batch Summary - ${qualityScore.generatedAt ? new Date(qualityScore.generatedAt).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true }) : ''}`
+              : documentation && docType && filename
+                ? `${formatDocTypeForTitle(docType)}: ${filename}`
+                : 'Generated Docs'
+            }
           </h2>
         </div>
 
@@ -895,7 +921,14 @@ export const DocPanel = memo(function DocPanel({
         <div className="px-4 pt-3 pb-2 bg-white dark:bg-slate-900" data-no-export="true">
           <button
             type="button"
-            onClick={onBackToSummary}
+            onClick={() => {
+              // Pass a scroll callback to scroll to top after returning to summary
+              onBackToSummary(() => {
+                if (contentRef.current) {
+                  contentRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+              });
+            }}
             className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-600 dark:border-indigo-400 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors text-xs font-medium text-indigo-900 dark:text-indigo-100"
             aria-label="Back to batch summary"
           >

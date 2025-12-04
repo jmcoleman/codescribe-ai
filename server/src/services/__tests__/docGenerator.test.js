@@ -124,7 +124,8 @@ function greet(name) {
         sampleCode,
         mockAnalysis,
         'README',
-        'javascript'
+        'javascript',
+        'untitled' // Default filename
       );
     });
 

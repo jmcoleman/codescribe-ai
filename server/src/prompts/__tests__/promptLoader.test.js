@@ -201,12 +201,14 @@ describe('promptLoader', () => {
       const processed = processTemplate(readmeTemplate, {
         language: 'javascript',
         baseContext: 'Functions detected: 2\nClasses detected: 0',
-        code: 'function add(a, b) { return a + b; }'
+        code: 'function add(a, b) { return a + b; }',
+        filename: 'calculator.js' // Required for title formatting
       });
 
       expect(processed).toContain('javascript');
       expect(processed).toContain('Functions detected: 2');
       expect(processed).toContain('function add(a, b)');
+      expect(processed).toContain('calculator.js'); // Filename should be in the processed output
       expect(processed).not.toContain('{{');
     });
   });

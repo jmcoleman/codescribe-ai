@@ -234,6 +234,10 @@ function scoreREADME(documentation, codeAnalysis) {
 /**
  * Score JSDoc documentation
  * Criteria: Function Coverage, Parameters, Returns, Examples, Types
+ *
+ * Supports markdown-wrapped JSDoc output with:
+ * - Overview section outside code block
+ * - Annotated code inside fenced code block
  */
 function scoreJSDoc(documentation, codeAnalysis) {
   let score = 0;
@@ -289,13 +293,12 @@ function scoreJSDoc(documentation, codeAnalysis) {
     suggestion: returnsRatio < 0.9 ? 'Add @returns tags for functions that return values' : null
   };
 
-  // 4. Examples (15 points) - @example tags or code blocks
+  // 4. Examples (15 points) - @example tags
   const exampleTags = (documentation.match(/@example/g) || []).length;
-  const codeBlocks = countCodeBlocks(documentation);
-  const hasExamples = exampleTags > 0 || codeBlocks > 0;
+  const hasExamples = exampleTags > 0;
   let examplePoints = 0;
 
-  if (exampleTags >= 2 || codeBlocks >= 2) {
+  if (exampleTags >= 2) {
     examplePoints = 15;
   } else if (hasExamples) {
     examplePoints = 10;
@@ -305,7 +308,6 @@ function scoreJSDoc(documentation, codeAnalysis) {
   breakdown.examples = {
     present: hasExamples,
     exampleTags,
-    codeBlocks,
     points: examplePoints,
     maxPoints: 15,
     status: examplePoints >= 15 ? 'complete' : examplePoints > 0 ? 'partial' : 'missing',

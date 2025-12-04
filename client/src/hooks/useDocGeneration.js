@@ -13,7 +13,7 @@ export function useDocGeneration(onUsageUpdate) {
   const [retryAfter, setRetryAfter] = useState(null);
   const eventSourceRef = useRef(null);
 
-  const generate = useCallback(async (code, docType, language, isDefaultCode = false) => {
+  const generate = useCallback(async (code, docType, language, isDefaultCode = false, filename = 'untitled') => {
     // Reset state
     setIsGenerating(true);
     setError(null);
@@ -54,7 +54,8 @@ export function useDocGeneration(onUsageUpdate) {
           code,
           docType,
           language,
-          isDefaultCode // Enable prompt caching for default/example code
+          isDefaultCode, // Enable prompt caching for default/example code
+          filename // Pass filename for title formatting
         })
       });
 
@@ -110,6 +111,27 @@ export function useDocGeneration(onUsageUpdate) {
             if (data.type === 'chunk') {
               generatedDoc += data.content; // Track locally for return value
               setDocumentation(prev => prev + data.content);
+            } else if (data.type === 'attribution') {
+              // Handle attribution separately to ensure it's outside any code blocks
+              // Check if current content ends with an unclosed code block
+              const fenceCount = (generatedDoc.match(/```/g) || []).length;
+              const hasUnclosedCodeBlock = fenceCount % 2 === 1;
+
+              let attributionContent = data.content;
+              if (hasUnclosedCodeBlock) {
+                // Close the code block before adding attribution
+                attributionContent = '\n```' + data.content;
+              }
+
+              generatedDoc += attributionContent;
+              setDocumentation(prev => {
+                const prevFenceCount = (prev.match(/```/g) || []).length;
+                const prevHasUnclosed = prevFenceCount % 2 === 1;
+                if (prevHasUnclosed) {
+                  return prev + '\n```' + data.content;
+                }
+                return prev + data.content;
+              });
             } else if (data.type === 'complete') {
               generatedScore = data.qualityScore; // Track locally for return value
               generatedMetadata = data.metadata; // Track metadata for return value

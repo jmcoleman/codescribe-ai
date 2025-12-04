@@ -1,8 +1,20 @@
-Add comprehensive JSDoc comments to the following {{language}} code.
+Generate JSDoc documentation for the following {{language}} code.
+
+Filename: {{filename}}
 
 {{baseContext}}
 
-Start your response with the heading "# JSDoc Documentation" followed by a brief 1-2 sentence description explaining that this is your code with comprehensive inline JSDoc comments added following industry standards.
+IMPORTANT: Your response MUST be a markdown document with this structure:
+
+1. **Title**: # JSDoc: {{filename}}
+2. **Overview section**: Brief intro about JSDoc and what this file does
+3. **Annotated Source Code section**: The complete code with JSDoc comments inside a fenced code block
+
+Start the Overview with: "JSDoc is an open-source documentation generator for JavaScript. It reads specially-formatted comments in your code and generates documentation."
+
+Then describe what this specific file does.
+
+Place ALL the annotated code inside a single fenced code block (```{{language}}...```).
 
 Code to document:
 ```{{language}}

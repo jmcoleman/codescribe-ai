@@ -113,7 +113,7 @@ router.get('/', (req, res) => {
 // Line 17 - add before route handler
 router.post('/generate', optionalAuth, rateLimitBypass, apiLimiter, generationLimiter, checkUsage(), async (req, res) => {
   try {
-    const { code, docType, language, isDefaultCode } = req.body;
+    const { code, docType, language, isDefaultCode, filename } = req.body;
 
     if (!code || typeof code !== 'string') {
       return res.status(400).json({
@@ -134,7 +134,8 @@ router.post('/generate', optionalAuth, rateLimitBypass, apiLimiter, generationLi
       language: language || 'javascript',
       streaming: false,
       isDefaultCode: isDefaultCode === true, // Cache user message if this is default/example code
-      userTier: req.user?.effectiveTier || 'free' // Pass effective tier for attribution (includes overrides)
+      userTier: req.user?.effectiveTier || 'free', // Pass effective tier for attribution (includes overrides)
+      filename: filename || 'untitled' // Pass filename for title formatting
     });
 
     // Track usage after successful generation
@@ -159,7 +160,7 @@ router.post('/generate', optionalAuth, rateLimitBypass, apiLimiter, generationLi
 // Line 51 - add before route handler
 router.post('/generate-stream', optionalAuth, rateLimitBypass, apiLimiter, generationLimiter, checkUsage(), async (req, res) => {
   try {
-    const { code, docType, language, isDefaultCode } = req.body;
+    const { code, docType, language, isDefaultCode, filename } = req.body;
 
     if (!code || typeof code !== 'string') {
       return res.status(400).json({
@@ -191,6 +192,7 @@ router.post('/generate-stream', optionalAuth, rateLimitBypass, apiLimiter, gener
       streaming: true,
       isDefaultCode: isDefaultCode === true, // Cache user message if this is default/example code
       userTier, // Pass effective tier for attribution (includes overrides)
+      filename: filename || 'untitled', // Pass filename for title formatting
       onChunk: (chunk) => {
         res.write(`data: ${JSON.stringify({
           type: 'chunk',
@@ -199,12 +201,15 @@ router.post('/generate-stream', optionalAuth, rateLimitBypass, apiLimiter, gener
       }
     });
 
-    // Send tier-based attribution footer as final chunk
+    // Send tier-based attribution footer as a separate message type
+    // The client will handle inserting it properly (closing any unclosed code blocks)
     const attribution = docGenerator.buildAttribution(userTier);
-    res.write(`data: ${JSON.stringify({
-      type: 'chunk',
-      content: attribution
-    })}\n\n`);
+    if (attribution) {
+      res.write(`data: ${JSON.stringify({
+        type: 'attribution',
+        content: attribution
+      })}\n\n`);
+    }
 
     // Track usage after successful generation
     const userIdentifier = req.user?.id || `ip:${req.ip || req.socket?.remoteAddress || 'unknown'}`;

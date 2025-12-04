@@ -81,14 +81,15 @@ export class DocGeneratorService {
       streaming = false,
       onChunk = null,
       isDefaultCode = false,
-      userTier = 'free'
+      userTier = 'free',
+      filename = 'untitled'
     } = options;
 
     // Step 1: Parse code to understand structure
     const analysis = await parseCode(code, language);
 
     // Step 2: Build system prompt (cacheable) and user message
-    const { systemPrompt, userMessage } = this.buildPromptWithCaching(code, analysis, docType, language);
+    const { systemPrompt, userMessage } = this.buildPromptWithCaching(code, analysis, docType, language, filename);
 
     // Step 3: Get doc type-specific LLM configuration
     const docTypeConfig = getDocTypeConfig(docType);
@@ -230,9 +231,10 @@ export class DocGeneratorService {
    * @param {Object} analysis - Code analysis data
    * @param {string} docType - Type of documentation
    * @param {string} language - Programming language
+   * @param {string} filename - Original filename for title formatting
    * @returns {Object} { systemPrompt, userMessage }
    */
-  buildPromptWithCaching(code, analysis, docType, language) {
+  buildPromptWithCaching(code, analysis, docType, language, filename = 'untitled') {
     // Validate docType - default to README if invalid (for backwards compatibility)
     const validDocTypes = getSupportedDocTypes();
     const normalizedDocType = validDocTypes.includes(docType) ? docType : 'README';
@@ -259,7 +261,8 @@ Complexity: ${analysis.complexity || 'Unknown'}
     const userMessage = processTemplate(userMessageTemplate, {
       language,
       baseContext,
-      code
+      code,
+      filename
     });
 
     return {
