@@ -13,6 +13,9 @@ import contactRoutes from '../server/src/routes/contact.js';
 import legalRoutes from '../server/src/routes/legal.js';
 import cronRoutes from '../server/src/routes/cron.js';
 import adminRoutes from '../server/src/routes/admin.js';
+import documentsRoutes from '../server/src/routes/documents.js';
+import workspaceRoutes from '../server/src/routes/workspace.js';
+import batchesRoutes from '../server/src/routes/batches.js';
 import errorHandler from '../server/src/middleware/errorHandler.js';
 import '../server/src/config/passport.js'; // Initialize passport strategies
 
@@ -85,6 +88,9 @@ if (ENABLE_AUTH) {
   app.use('/api/contact', contactRoutes);
   app.use('/api/legal', legalRoutes);
   app.use('/api/admin', adminRoutes); // Admin routes (requires auth + admin email)
+  app.use('/api/documents', documentsRoutes); // Document persistence routes
+  app.use('/api/workspace', workspaceRoutes); // Workspace file management (tier-gated)
+  app.use('/api/batches', batchesRoutes); // Batch history and ZIP export
 }
 app.use('/api/cron', cronRoutes);
 app.use('/api/migrate', migrateRoutes);
