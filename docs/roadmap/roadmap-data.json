@@ -65,9 +65,9 @@
       "text": "codescribeai.com",
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
-    "footerLeft": "<strong>CodeScribe AI</strong> \u00b7 Strategic Roadmap v3.18",
-    "footer": "v2.10.0 Complete (Multi-File Workspace & Batch) \u00b7 Up Next: Trial System \u00b7 Launch: Mid-Jan 2026",
-    "lastUpdated": "December 3, 2025"
+    "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.19",
+    "footer": "v2.11.0 Complete (Batch Cancellation & Skipped Files) · Up Next: Trial System · Launch: Mid-Jan 2026",
+    "lastUpdated": "December 4, 2025"
   },
   "columns": [
     {
@@ -643,6 +643,26 @@
             "Fixed validateBody middleware for numeric validation (failCount: 0)",
             "Database migration for generation_batches table"
           ]
+        },
+        {
+          "version": "v2.11.0",
+          "title": "Doc-Type Specific Scoring & Regeneration Confirmation",
+          "duration": "2 days",
+          "status": "✓ Complete",
+          "completedDate": "Dec 4, 2025",
+          "badge": "Quality & UX",
+          "features": [
+            "Doc-type specific quality scoring (README/JSDOC/API/OPENAPI/ARCHITECTURE each with unique criteria)",
+            "File sidebar context menu (Generate/Regenerate/View Details/Delete actions)",
+            "Regeneration confirmation modal prevents accidental doc overwrites",
+            "Mixed batch support: 'Regenerate All' or 'New Files Only' options",
+            "Batch summary with doc-type specific quality tables and criteria columns",
+            "Batch cancellation with disabled 'Cancelling...' button and skipped files tracking",
+            "Quality scorer test coverage improved from 46% to 95% (69 new tests)",
+            "35 new batch generation tests for summary document and tier attribution",
+            "Fixed enterprise tier attribution and workspace file deletion persistence",
+            "Total: 3,284 tests (3,199 passing, 85 skipped)"
+          ]
         }
       ]
     },
@@ -668,6 +688,24 @@
             "Trial analytics dashboard (conversion rates, engagement)",
             "Database: user_trials, trial_email_history tables",
             "See: docs/architecture/TRIAL-SYSTEM-ARCHITECTURE.md"
+          ]
+        },
+        {
+          "version": "Epic 3.5",
+          "title": "Generation History UI (Pro+)",
+          "duration": "2-3 days",
+          "status": "Planned",
+          "badge": "Pro+ Feature",
+          "features": [
+            "History page showing past generation batches",
+            "Batch cards with summary, file count, quality scores",
+            "Reload past batches into workspace (one-click restore)",
+            "Search and filter batches by date, doc type, file count",
+            "ZIP export from history (server-side with manifest)",
+            "Tier-gated access: Pro+ only (Free/Starter see upgrade prompt)",
+            "Pagination for large batch histories",
+            "Display AI model used for each document (stored in DB, hidden from batch summary for cleaner UX)",
+            "Note: Data capture complete in v2.9.0 (generation_batches table, BatchService, ExportService)"
           ]
         },
         {
@@ -728,24 +766,6 @@
             "Email notifications for subscription lifecycle events",
             "In-app notifications for billing issues and renewals",
             "Note: Core upgrade/downgrade flows completed in Epic 2.4"
-          ]
-        },
-        {
-          "version": "Epic 3.5",
-          "title": "Generation History UI (Pro+)",
-          "duration": "2-3 days",
-          "status": "Planned",
-          "badge": "Pro+ Feature",
-          "features": [
-            "History page showing past generation batches",
-            "Batch cards with summary, file count, quality scores",
-            "Reload past batches into workspace (one-click restore)",
-            "Search and filter batches by date, doc type, file count",
-            "ZIP export from history (server-side with manifest)",
-            "Tier-gated access: Pro+ only (Free/Starter see upgrade prompt)",
-            "Pagination for large batch histories",
-            "Display AI model used for each document (stored in DB, hidden from batch summary for cleaner UX)",
-            "Note: Data capture complete in v2.9.0 (generation_batches table, BatchService, ExportService)"
           ]
         }
       ]
