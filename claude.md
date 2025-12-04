@@ -12,7 +12,7 @@
 AI-powered documentation generator with real-time streaming, quality scoring (0-100), and WCAG 2.1 AA compliance.
 
 **Key Metrics:**
-- 3,169 tests (3,083 passing, 86 skipped, 0 failing) | 97.3% pass rate | 96.71% middleware coverage
+- 3,185 tests (3,099 passing, 86 skipped, 0 failing) | 97.3% pass rate | 95.45% middleware coverage
 - Lighthouse: 75/100 performance (+67%), 100/100 accessibility
 - Bundle: 78KB gzipped (-85% reduction)
 - Accessibility: 95/100 score, 0 axe violations
@@ -415,7 +415,7 @@ cd server && npm test 2>&1 | grep "Tests:"           # Backend counts
 **Final Metrics:**
 - Accessibility: 95/100, WCAG 2.1 AA, 0 axe violations
 - Performance: 75/100 Lighthouse (+67%), 78KB bundle (-85%)
-- Testing: 3,169 tests (1,877 frontend, 1,292 backend, 86 skipped), 100% passing
+- Testing: 3,185 tests (1,877 frontend, 1,308 backend, 86 skipped), 100% passing
 - Deployment: Vercel + GitHub Actions CI/CD, custom domain
 
 **Optional:** README screenshots, demo video, extended manual a11y testing
@@ -465,9 +465,9 @@ codescribe-ai/
 - Batch summary document with table formatting (stats, files, quality details)
 - Tier-based attribution in batch summaries (matches server-side branding)
 - Fixed validateBody middleware for numeric validation (failCount: 0)
-- 3,169 tests (3,083 passing, 86 skipped)
+- 3,185 tests (3,099 passing, 86 skipped)
 - Frontend: 1,819 passing, 58 skipped
-- Backend: 1,264 passing, 28 skipped
+- Backend: 1,280 passing, 28 skipped
 
 <details>
 <summary>Recent Releases (v2.8.0-v2.9.0) & Milestones</summary>

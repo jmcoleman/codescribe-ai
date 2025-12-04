@@ -56,8 +56,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Tests
 
 - Frontend: 1,819 passing, 58 skipped (1,877 total)
-- Backend: 1,264 passing, 28 skipped (1,292 total)
-- Total: 3,083 passing, 86 skipped (3,169 total)
+- Backend: 1,280 passing, 28 skipped (1,308 total)
+- Total: 3,099 passing, 86 skipped (3,185 total)
 
 ---
 

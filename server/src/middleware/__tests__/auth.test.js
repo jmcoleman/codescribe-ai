@@ -442,6 +442,226 @@ describe('Auth Middleware', () => {
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json.mock.calls[0][0].details.email).toBe('email is required');
     });
+
+    // Tests for number type validation
+    describe('number type validation', () => {
+      it('should accept valid number', () => {
+        req.body = { count: 5 };
+
+        const middleware = validateBody({
+          count: { required: true, type: 'number' }
+        });
+
+        middleware(req, res, next);
+
+        expect(next).toHaveBeenCalled();
+        expect(res.status).not.toHaveBeenCalled();
+      });
+
+      it('should accept 0 as valid number (not treat as missing)', () => {
+        req.body = { failCount: 0 };
+
+        const middleware = validateBody({
+          failCount: { required: true, type: 'number', min: 0 }
+        });
+
+        middleware(req, res, next);
+
+        expect(next).toHaveBeenCalled();
+        expect(res.status).not.toHaveBeenCalled();
+      });
+
+      it('should reject non-number value', () => {
+        req.body = { count: 'five' };
+
+        const middleware = validateBody({
+          count: { required: true, type: 'number' }
+        });
+
+        middleware(req, res, next);
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json.mock.calls[0][0].details.count).toBe('count must be a number');
+      });
+
+      it('should reject NaN', () => {
+        req.body = { count: NaN };
+
+        const middleware = validateBody({
+          count: { required: true, type: 'number' }
+        });
+
+        middleware(req, res, next);
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json.mock.calls[0][0].details.count).toBe('count must be a number');
+      });
+
+      it('should validate min constraint', () => {
+        req.body = { count: -1 };
+
+        const middleware = validateBody({
+          count: { required: true, type: 'number', min: 0 }
+        });
+
+        middleware(req, res, next);
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json.mock.calls[0][0].details.count).toBe('count must be at least 0');
+      });
+
+      it('should validate max constraint', () => {
+        req.body = { count: 101 };
+
+        const middleware = validateBody({
+          count: { required: true, type: 'number', max: 100 }
+        });
+
+        middleware(req, res, next);
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json.mock.calls[0][0].details.count).toBe('count must be at most 100');
+      });
+
+      it('should accept number within min/max range', () => {
+        req.body = { count: 50 };
+
+        const middleware = validateBody({
+          count: { required: true, type: 'number', min: 0, max: 100 }
+        });
+
+        middleware(req, res, next);
+
+        expect(next).toHaveBeenCalled();
+        expect(res.status).not.toHaveBeenCalled();
+      });
+    });
+
+    // Tests for string type with enum validation
+    describe('string type with enum validation', () => {
+      it('should accept valid enum value', () => {
+        req.body = { batchType: 'batch' };
+
+        const middleware = validateBody({
+          batchType: { required: true, type: 'string', enum: ['batch', 'single'] }
+        });
+
+        middleware(req, res, next);
+
+        expect(next).toHaveBeenCalled();
+        expect(res.status).not.toHaveBeenCalled();
+      });
+
+      it('should reject invalid enum value', () => {
+        req.body = { batchType: 'invalid' };
+
+        const middleware = validateBody({
+          batchType: { required: true, type: 'string', enum: ['batch', 'single'] }
+        });
+
+        middleware(req, res, next);
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json.mock.calls[0][0].details.batchType).toBe('batchType must be one of: batch, single');
+      });
+
+      it('should reject non-string value for string type', () => {
+        req.body = { batchType: 123 };
+
+        const middleware = validateBody({
+          batchType: { required: true, type: 'string' }
+        });
+
+        middleware(req, res, next);
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json.mock.calls[0][0].details.batchType).toBe('batchType must be a string');
+      });
+    });
+
+    // Tests for array type validation
+    describe('array type validation', () => {
+      it('should accept valid array', () => {
+        req.body = { documentIds: ['doc-1', 'doc-2'] };
+
+        const middleware = validateBody({
+          documentIds: { required: true, type: 'array' }
+        });
+
+        middleware(req, res, next);
+
+        expect(next).toHaveBeenCalled();
+        expect(res.status).not.toHaveBeenCalled();
+      });
+
+      it('should accept empty array', () => {
+        req.body = { documentIds: [] };
+
+        const middleware = validateBody({
+          documentIds: { required: true, type: 'array' }
+        });
+
+        middleware(req, res, next);
+
+        expect(next).toHaveBeenCalled();
+        expect(res.status).not.toHaveBeenCalled();
+      });
+
+      it('should reject non-array value', () => {
+        req.body = { documentIds: 'not-an-array' };
+
+        const middleware = validateBody({
+          documentIds: { required: true, type: 'array' }
+        });
+
+        middleware(req, res, next);
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json.mock.calls[0][0].details.documentIds).toBe('documentIds must be an array');
+      });
+    });
+
+    // Tests for null/undefined handling
+    describe('null and undefined handling', () => {
+      it('should treat null as missing for required fields', () => {
+        req.body = { email: null };
+
+        const middleware = validateBody({
+          email: { required: true }
+        });
+
+        middleware(req, res, next);
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json.mock.calls[0][0].details.email).toBe('email is required');
+      });
+
+      it('should treat undefined as missing for required fields', () => {
+        req.body = { email: undefined };
+
+        const middleware = validateBody({
+          email: { required: true }
+        });
+
+        middleware(req, res, next);
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json.mock.calls[0][0].details.email).toBe('email is required');
+      });
+
+      it('should skip validation for optional null fields', () => {
+        req.body = { name: null };
+
+        const middleware = validateBody({
+          name: { required: false, minLength: 2 }
+        });
+
+        middleware(req, res, next);
+
+        expect(next).toHaveBeenCalled();
+        expect(res.status).not.toHaveBeenCalled();
+      });
+    });
   });
 
   describe('generateToken', () => {
