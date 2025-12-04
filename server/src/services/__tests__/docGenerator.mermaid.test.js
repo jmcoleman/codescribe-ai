@@ -82,18 +82,20 @@ describe('DocGeneratorService - Mermaid Diagram Support', () => {
         const code = 'function test() {}';
         const { systemPrompt, userMessage } = docGenerator.buildPromptWithCaching(code, mockAnalysis, 'README', 'javascript');
 
-        expect(systemPrompt + userMessage).toContain('A[User Input] --> B[Process Data]');
-        expect(systemPrompt + userMessage).toContain('B --> C[Generate Output]');
-        expect(systemPrompt + userMessage).toContain('C --> D[Return Result]');
+        // Example from COMMON.txt
+        expect(systemPrompt + userMessage).toContain('Client[Client App] --> API[API Server]');
+        expect(systemPrompt + userMessage).toContain('API --> Auth[Auth Service]');
+        expect(systemPrompt + userMessage).toContain('API --> DB[(Database)]');
       });
 
       it('should warn against incorrect Mermaid syntax in README prompt', () => {
         const code = 'function test() {}';
         const { systemPrompt, userMessage } = docGenerator.buildPromptWithCaching(code, mockAnalysis, 'README', 'javascript');
 
-        expect(systemPrompt + userMessage).toContain('Examples of WRONG syntax to AVOID');
-        expect(systemPrompt + userMessage).toContain('Using ==> instead of -->');
-        expect(systemPrompt + userMessage).toContain('special characters in node IDs');
+        // COMMON.txt uses "CRITICAL - Characters to AVOID in labels" section
+        expect(systemPrompt + userMessage).toContain('CRITICAL - Characters to AVOID in labels');
+        expect(systemPrompt + userMessage).toContain('NEVER use forward slashes');
+        expect(systemPrompt + userMessage).toContain('NEVER use special characters in node IDs');
       });
     });
 
@@ -119,10 +121,11 @@ describe('DocGeneratorService - Mermaid Diagram Support', () => {
         const code = 'function test() {}';
         const { systemPrompt, userMessage } = docGenerator.buildPromptWithCaching(code, mockAnalysis, 'API', 'javascript');
 
-        expect(systemPrompt + userMessage).toContain('Client->>API:');
-        expect(systemPrompt + userMessage).toContain('API->>DB:');
-        expect(systemPrompt + userMessage).toContain('DB-->>API:');
-        expect(systemPrompt + userMessage).toContain('API-->>Client:');
+        // Example from COMMON.txt
+        expect(systemPrompt + userMessage).toContain('participant C as Client');
+        expect(systemPrompt + userMessage).toContain('participant A as API');
+        expect(systemPrompt + userMessage).toContain('C->>A: GET /users');
+        expect(systemPrompt + userMessage).toContain('A-->>C: 200 OK');
       });
 
       it('should explain arrow syntax for sequence diagrams in API prompt', () => {
@@ -131,7 +134,6 @@ describe('DocGeneratorService - Mermaid Diagram Support', () => {
 
         expect(systemPrompt + userMessage).toContain('->> for requests');
         expect(systemPrompt + userMessage).toContain('-->> for responses');
-        expect(systemPrompt + userMessage).toContain('NO other arrow types');
       });
     });
 
@@ -159,7 +161,8 @@ describe('DocGeneratorService - Mermaid Diagram Support', () => {
         const code = 'function test() {}';
         const { systemPrompt, userMessage } = docGenerator.buildPromptWithCaching(code, mockAnalysis, 'ARCHITECTURE', 'javascript');
 
-        expect(systemPrompt + userMessage).toContain('Client[Client Layer] --> API[API Gateway]');
+        // Example from COMMON.txt (shared across all doc types)
+        expect(systemPrompt + userMessage).toContain('Client[Client App] --> API[API Server]');
         expect(systemPrompt + userMessage).toContain('Auth[Auth Service]');
         expect(systemPrompt + userMessage).toContain('DB[(Database)]');
       });
@@ -174,13 +177,14 @@ describe('DocGeneratorService - Mermaid Diagram Support', () => {
     });
 
     describe('JSDOC prompts', () => {
-      it('should NOT include Mermaid instructions in JSDOC prompt', () => {
+      it('should include Mermaid rules in JSDOC prompt (via COMMON.txt)', () => {
         const code = 'function test() {}';
         const { systemPrompt, userMessage } = docGenerator.buildPromptWithCaching(code, mockAnalysis, 'JSDOC', 'javascript');
 
-        // JSDOC is code comments, not markdown, so no Mermaid diagrams expected
-        expect(systemPrompt + userMessage).not.toContain('MERMAID DIAGRAMS:');
-        expect(systemPrompt + userMessage).not.toContain('```mermaid');
+        // JSDOC now includes COMMON.txt with Mermaid rules for consistency
+        // (even though JSDoc typically doesn't use Mermaid, the rules are included)
+        expect(systemPrompt + userMessage).toContain('MERMAID DIAGRAM RULES');
+        expect(systemPrompt + userMessage).toContain('```mermaid');
       });
     });
   });
@@ -369,16 +373,17 @@ const result = test();
       const apiPrompt = api.systemPrompt + api.userMessage;
       const archPrompt = arch.systemPrompt + arch.userMessage;
 
-      // README should have flowchart example
+      // All prompts should have COMMON.txt Mermaid rules via shared content
+      // README should have flowchart example from COMMON.txt
       expect(readmePrompt).toContain('flowchart TD');
-      expect(readmePrompt).toContain('A[User Input] -->');
+      expect(readmePrompt).toContain('Client[Client App] --> API[API Server]');
 
-      // API should have sequence diagram example
+      // API should have sequence diagram example from COMMON.txt
       expect(apiPrompt).toContain('sequenceDiagram');
-      expect(apiPrompt).toContain('Client->>API:');
+      expect(apiPrompt).toContain('C->>A: GET /users');
 
-      // ARCHITECTURE should have component diagram example
-      expect(archPrompt).toContain('Client[Client Layer] -->');
+      // ARCHITECTURE should have flowchart and database example from COMMON.txt
+      expect(archPrompt).toContain('API --> DB[(Database)]');
       expect(archPrompt).toContain('[(Database)]');
     });
   });

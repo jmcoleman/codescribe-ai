@@ -342,8 +342,8 @@ describe('Prompt Quality Integration Tests', () => {
       expect(systemPrompt + userMessage).toContain('@returns tag');
       expect(systemPrompt + userMessage).toContain('@throws tag');
       expect(systemPrompt + userMessage).toContain('@example tag');
-      expect(systemPrompt + userMessage).toContain('COMPLETE code');
-      expect(systemPrompt + userMessage).toContain('Maintain all original code');
+      expect(systemPrompt + userMessage).toContain('COMPLETE source code');
+      expect(systemPrompt + userMessage).toContain('Preserve ALL original code exactly');
 
       console.log('\n=== JSDOC PROMPT ===');
       console.log('Prompt preview:', (systemPrompt + userMessage).substring(0, 600) + '...\n');
@@ -608,8 +608,8 @@ describe('Prompt Quality Integration Tests', () => {
       );
 
       // JSDOC should maintain original code with added comments
-      expect(systemPrompt + userMessage).toContain('COMPLETE code');
-      expect(systemPrompt + userMessage).toContain('Maintain all original code');
+      expect(systemPrompt + userMessage).toContain('COMPLETE source code');
+      expect(systemPrompt + userMessage).toContain('Preserve ALL original code exactly');
       expect(systemPrompt + userMessage).toContain('@example');
 
       console.log('\n=== JSDOC SYNTAX HIGHLIGHTING ===');
