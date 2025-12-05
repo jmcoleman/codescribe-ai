@@ -19,7 +19,10 @@
       "WebSearch",
       "Bash(App.jsx.new)",
       "Bash(npm run test:ci:*)",
-      "Bash(git tag:*)"
+      "Bash(git tag:*)",
+      "Bash(CI=true npm run test:ci:*)",
+      "Bash(CI=true npm test:*)",
+      "Bash(1)"
     ],
     "deny": [],
     "ask": []

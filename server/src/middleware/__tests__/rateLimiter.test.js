@@ -1,36 +1,118 @@
 /**
  * Rate Limiter Middleware Tests
- * Tests for rate limiting configuration and skip logic
+ * Tests for rate limiting configuration, skip logic, and handlers
  */
 
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-
-// Note: rateLimiter.js exports the configured middleware, not the shouldSkipRateLimit function
-// directly. To test the skip logic, we need to mock User.canBypassRateLimits and test through
-// the exported limiters' skip configuration.
-
-// Since express-rate-limit is difficult to mock in ES modules, we'll test the actual middleware
-// behavior by importing it directly. The rateLimiter module will use the real express-rate-limit
-// but we can still test the configuration and skip logic.
+import {
+  shouldSkipRateLimit,
+  rateLimitHandler,
+  hourlyLimitHandler,
+  apiLimiter,
+  generationLimiter
+} from '../rateLimiter.js';
 
 describe('Rate Limiter Middleware', () => {
-  // Note: These tests verify the rate limiter was configured correctly.
-  // The actual rate limiting behavior is tested through integration tests.
+  // ============================================================================
+  // shouldSkipRateLimit Function
+  // ============================================================================
 
-  it('should exist and be importable', async () => {
-    const rateLimiter = await import('../rateLimiter.js');
-    expect(rateLimiter.apiLimiter).toBeDefined();
-    expect(rateLimiter.generationLimiter).toBeDefined();
+  describe('shouldSkipRateLimit', () => {
+    it('should return true for admin users', () => {
+      const req = { user: { id: 1, role: 'admin' } };
+      expect(shouldSkipRateLimit(req)).toBe(true);
+    });
+
+    it('should return true for support users', () => {
+      const req = { user: { id: 2, role: 'support' } };
+      expect(shouldSkipRateLimit(req)).toBe(true);
+    });
+
+    it('should return true for super_admin users', () => {
+      const req = { user: { id: 3, role: 'super_admin' } };
+      expect(shouldSkipRateLimit(req)).toBe(true);
+    });
+
+    it('should return false for free users', () => {
+      const req = { user: { id: 4, role: 'free' } };
+      expect(shouldSkipRateLimit(req)).toBe(false);
+    });
+
+    it('should return false for pro users', () => {
+      const req = { user: { id: 5, role: 'pro' } };
+      expect(shouldSkipRateLimit(req)).toBe(false);
+    });
+
+    it('should return false when no user on request', () => {
+      const req = {};
+      expect(shouldSkipRateLimit(req)).toBeFalsy();
+    });
+
+    it('should return false when user is null', () => {
+      const req = { user: null };
+      expect(shouldSkipRateLimit(req)).toBeFalsy();
+    });
   });
 
-  it('should export apiLimiter as a function', async () => {
-    const { apiLimiter } = await import('../rateLimiter.js');
-    expect(typeof apiLimiter).toBe('function');
+  // ============================================================================
+  // Handler Functions
+  // ============================================================================
+
+  describe('rateLimitHandler', () => {
+    it('should respond with 429 and correct error message', () => {
+      const req = {};
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn()
+      };
+
+      rateLimitHandler(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(429);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Rate limit exceeded',
+        message: 'Too many requests. Please try again in 60 seconds.',
+        retryAfter: 60
+      });
+    });
   });
 
-  it('should export generationLimiter as a function', async () => {
-    const { generationLimiter } = await import('../rateLimiter.js');
-    expect(typeof generationLimiter).toBe('function');
+  describe('hourlyLimitHandler', () => {
+    it('should respond with 429 and correct error message', () => {
+      const req = {};
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn()
+      };
+
+      hourlyLimitHandler(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(429);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Hourly limit exceeded',
+        message: 'You have exceeded 100 generations per hour. Please try again later.',
+        retryAfter: 3600
+      });
+    });
+  });
+
+  // ============================================================================
+  // Exported Limiters
+  // ============================================================================
+
+  describe('Exported Limiters', () => {
+    it('should exist and be importable', async () => {
+      expect(apiLimiter).toBeDefined();
+      expect(generationLimiter).toBeDefined();
+    });
+
+    it('should export apiLimiter as a function', async () => {
+      expect(typeof apiLimiter).toBe('function');
+    });
+
+    it('should export generationLimiter as a function', async () => {
+      expect(typeof generationLimiter).toBe('function');
+    });
   });
 
   describe('Skip Logic', () => {

@@ -7,8 +7,34 @@ import User from '../models/User.js';
  * @param {Object} req - Express request object
  * @returns {boolean} True if request should skip rate limiting
  */
-const shouldSkipRateLimit = (req) => {
+export const shouldSkipRateLimit = (req) => {
   return req.user && User.canBypassRateLimits(req.user);
+};
+
+/**
+ * Handler for rate limit exceeded
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+export const rateLimitHandler = (req, res) => {
+  res.status(429).json({
+    error: 'Rate limit exceeded',
+    message: 'Too many requests. Please try again in 60 seconds.',
+    retryAfter: 60
+  });
+};
+
+/**
+ * Handler for hourly limit exceeded
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+export const hourlyLimitHandler = (req, res) => {
+  res.status(429).json({
+    error: 'Hourly limit exceeded',
+    message: 'You have exceeded 100 generations per hour. Please try again later.',
+    retryAfter: 3600
+  });
 };
 
 // Primary rate limiter: 10 requests per minute
@@ -23,13 +49,7 @@ export const apiLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: true,
   skip: shouldSkipRateLimit,
-  handler: (req, res) => {
-    res.status(429).json({
-      error: 'Rate limit exceeded',
-      message: 'Too many requests. Please try again in 60 seconds.',
-      retryAfter: 60
-    });
-  }
+  handler: rateLimitHandler
 });
 
 // Stricter limiter for generation endpoints
@@ -44,11 +64,5 @@ export const generationLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: true,
   skip: shouldSkipRateLimit,
-  handler: (req, res) => {
-    res.status(429).json({
-      error: 'Hourly limit exceeded',
-      message: 'You have exceeded 100 generations per hour. Please try again later.',
-      retryAfter: 3600
-    });
-  }
+  handler: hourlyLimitHandler
 });
