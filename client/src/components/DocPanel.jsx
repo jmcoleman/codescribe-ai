@@ -10,6 +10,7 @@ import { Tooltip } from './Tooltip';
 import { DocPanelGeneratingSkeleton } from './SkeletonLoader';
 import { MermaidDiagram } from './MermaidDiagram';
 import { useTheme } from '../contexts/ThemeContext';
+import { formatDateTime } from '../utils/formatters';
 
 // Custom Prism theme matching Monaco editor theme
 const codescribeLightTheme = {
@@ -496,13 +497,13 @@ export const DocPanel = memo(function DocPanel({
           <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400 flex-shrink-0" aria-hidden="true" />
           <h2 className="text-sm text-slate-600 dark:text-slate-300 truncate" title={
             qualityScore?.isBatchSummary
-              ? `Batch Summary - ${qualityScore.generatedAt ? new Date(qualityScore.generatedAt).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true }) : ''}`
+              ? `Batch Summary - ${qualityScore.generatedAt ? formatDateTime(qualityScore.generatedAt) : ''}`
               : documentation && docType && filename
                 ? `${formatDocTypeForTitle(docType)}: ${filename}`
                 : 'Generated Docs'
           }>
             {qualityScore?.isBatchSummary
-              ? `Batch Summary - ${qualityScore.generatedAt ? new Date(qualityScore.generatedAt).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true }) : ''}`
+              ? `Batch Summary - ${qualityScore.generatedAt ? formatDateTime(qualityScore.generatedAt) : ''}`
               : documentation && docType && filename
                 ? `${formatDocTypeForTitle(docType)}: ${filename}`
                 : 'Generated Docs'

@@ -13,6 +13,7 @@ import adminRoutes from './routes/admin.js';
 import documentsRoutes from './routes/documents.js';
 import workspaceRoutes from './routes/workspace.js';
 import batchesRoutes from './routes/batches.js';
+import trialsRoutes from './routes/trials.js';
 import errorHandler from './middleware/errorHandler.js';
 import securityHeaders from './middleware/securityHeaders.js';
 import { initializeDatabase, testConnection } from './db/connection.js';
@@ -122,6 +123,7 @@ if (ENABLE_AUTH) {
   app.use('/api/documents', documentsRoutes); // Document persistence routes
   app.use('/api/workspace', workspaceRoutes); // Workspace file management (tier-gated)
   app.use('/api/batches', batchesRoutes); // Batch history and ZIP export
+  app.use('/api/trials', trialsRoutes); // Trial management routes
 }
 app.use('/api/cron', cronRoutes);
 app.use('/api/migrate', migrateRoutes);

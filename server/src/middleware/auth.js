@@ -3,10 +3,13 @@
  *
  * Provides middleware for protecting routes and validating requests.
  * Uses JWT authentication only (both email/password and GitHub OAuth).
+ *
+ * Attaches trial information to req.user for downstream middleware.
  */
 
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import Trial from '../models/Trial.js';
 import { getEffectiveTier } from '../utils/tierOverride.js';
 
 /**
@@ -38,11 +41,37 @@ const requireAuth = async (req, res, next) => {
       });
     }
 
-    // User object from database already includes override fields
-    // Add effectiveTier for easy access (considers tier overrides)
+    // Fetch active trial for user (if any)
+    let activeTrial = null;
+    try {
+      activeTrial = await Trial.findActiveByUserId(user.id);
+
+      // Check if trial has expired (real-time check)
+      if (activeTrial && new Date() >= new Date(activeTrial.ends_at)) {
+        // Trial has expired - mark it asynchronously (don't block request)
+        Trial.expire(activeTrial.id).catch(err =>
+          console.error('[Auth] Failed to expire trial:', err.message)
+        );
+        activeTrial = null;
+      }
+    } catch (trialError) {
+      // Don't fail auth if trial lookup fails - just log it
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[Auth] Trial lookup error:', trialError.message);
+      }
+    }
+
+    // Calculate trial-aware effectiveTier and attach to user
+    const isOnTrial = activeTrial !== null;
+    const trialEndsAt = activeTrial?.ends_at || null;
+
     req.user = {
       ...user,
-      effectiveTier: getEffectiveTier(user)
+      activeTrial,
+      isOnTrial,
+      trialTier: activeTrial?.trial_tier || null,
+      trialEndsAt,
+      effectiveTier: getEffectiveTier(user, activeTrial)
     };
 
     return next();
@@ -85,10 +114,29 @@ const optionalAuth = async (req, res, next) => {
       const user = await User.findById(decoded.sub);
 
       if (user) {
-        // Add effectiveTier for easy access (considers tier overrides)
+        // Fetch active trial for user (if any)
+        let activeTrial = null;
+        try {
+          activeTrial = await Trial.findActiveByUserId(user.id);
+
+          // Check if trial has expired (real-time check)
+          if (activeTrial && new Date() >= new Date(activeTrial.ends_at)) {
+            activeTrial = null;
+          }
+        } catch (trialError) {
+          // Don't fail - just continue without trial info
+        }
+
+        // Add effectiveTier for easy access (considers tier overrides and trials)
+        const isOnTrial = activeTrial !== null;
+
         req.user = {
           ...user,
-          effectiveTier: getEffectiveTier(user)
+          activeTrial,
+          isOnTrial,
+          trialTier: activeTrial?.trial_tier || null,
+          trialEndsAt: activeTrial?.ends_at || null,
+          effectiveTier: getEffectiveTier(user, activeTrial)
         };
       }
     }

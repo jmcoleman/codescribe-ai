@@ -1,6 +1,7 @@
 import { X, CheckCircle, AlertTriangle, XCircle, Download, Sparkles } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { CopyButtonWithText } from './CopyButton';
+import { formatDateLong, formatTime } from '../utils/formatters';
 
 export function QualityScoreModal({ qualityScore, onClose, filename = 'code.js' }) {
   const closeButtonRef = useRef(null);
@@ -53,8 +54,8 @@ export function QualityScoreModal({ qualityScore, onClose, filename = 'code.js' 
   // Generate formatted text for copying
   const generateQualityReportText = () => {
     const now = new Date();
-    const dateStr = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-    const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    const dateStr = formatDateLong(now);
+    const timeStr = formatTime(now);
 
     let report = `# Documentation Quality Report\n\n`;
 

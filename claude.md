@@ -12,7 +12,7 @@
 AI-powered documentation generator with real-time streaming, quality scoring (0-100), and WCAG 2.1 AA compliance.
 
 **Key Metrics:**
-- 3,284 tests (3,199 passing, 85 skipped, 0 failing) | 97.4% pass rate | 95.45% middleware coverage
+- 3,284 tests (3,194 passing, 90 skipped, 0 failing) | 97.3% pass rate | 95.45% middleware coverage
 - Lighthouse: 75/100 performance (+67%), 100/100 accessibility
 - Bundle: 78KB gzipped (-85% reduction)
 - Accessibility: 95/100 score, 0 axe violations
@@ -457,21 +457,21 @@ codescribe-ai/
 
 ## 🔄 Version History
 
-**Current: v2.11.0** (December 4, 2025)
-- Doc-type specific quality scoring (README/JSDOC/API/OPENAPI/ARCHITECTURE unique criteria)
-- File sidebar context menu (Generate/Regenerate/View Details/Delete)
-- Regeneration confirmation modal prevents accidental doc overwrites
-- Mixed batch: "Regenerate All" or "New Files Only" options
-- Batch summary with doc-type specific quality tables
-- Batch cancellation with skipped files tracking
-- Quality scorer coverage improved 46% → 95% (69 new tests)
-- 3,284 tests (3,199 passing, 85 skipped)
+**Current: v3.0.0** (December 4, 2025)
+- Trial System Core: Invite-based trials for beta testers
+- Invite Code Admin UI: Create, manage, pause, delete codes
+- User Trial Tracking: Active trial with tier override
+- Trial Redemption API: Validate and redeem invite codes
+- Trial-Aware Tier System: getEffectiveTier() checks active trials
+- Database Migrations: invite_codes, user_trials, trial columns
+- 3,284 tests (3,194 passing, 90 skipped)
 - Frontend: 1,845 passing, 57 skipped
-- Backend: 1,354 passing, 28 skipped
+- Backend: 1,349 passing, 33 skipped
 
 <details>
-<summary>Recent Releases (v2.8.0-v2.10.0) & Milestones</summary>
+<summary>Recent Releases (v2.9.0-v2.11.0) & Milestones</summary>
 
+**v2.11.0** (Dec 4, 2025): Doc-type specific quality scoring, regeneration confirmation, batch cancellation
 **v2.10.0** (Dec 3, 2025): Multi-file workspace, batch generation, GitHub integration, tier-based attribution
 **v2.9.0** (Nov 23, 2025): Layout toggle streaming, OPENAPI doc type, Gemini 3.0 Pro integration
 **v2.8.0-v2.8.1** (Nov 16-20, 2025): Arrow key nav, ESC key nav, Mermaid fixes, overflow fixes

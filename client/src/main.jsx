@@ -7,6 +7,7 @@ import App from './App.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import { ThemeProvider } from './contexts/ThemeContext.jsx'
 import { AuthProvider } from './contexts/AuthContext.jsx'
+import { TrialProvider } from './contexts/TrialContext.jsx'
 import { AuthCallback } from './components/AuthCallback.jsx'
 import { ResetPassword } from './components/ResetPassword.jsx'
 import { PricingPage } from './components/PricingPage.jsx'
@@ -19,6 +20,8 @@ import Settings from './pages/Settings.jsx'
 import { RestoreAccount } from './pages/RestoreAccount.jsx'
 import { UsageDashboard } from './pages/UsageDashboard.jsx'
 import AdminUsage from './pages/AdminUsage.jsx'
+import InviteCodes from './pages/admin/InviteCodes.jsx'
+import { TrialRedemption } from './pages/TrialRedemption.jsx'
 import { ErrorTest } from './components/ErrorTest.jsx'
 
 createRoot(document.getElementById('root')).render(
@@ -26,6 +29,7 @@ createRoot(document.getElementById('root')).render(
     <ErrorBoundary>
       <BrowserRouter>
         <AuthProvider>
+          <TrialProvider>
           <ThemeProvider>
             <Routes>
               <Route path="/" element={<App />} />
@@ -41,11 +45,14 @@ createRoot(document.getElementById('root')).render(
               <Route path="/settings" element={<Settings />} />
               <Route path="/usage" element={<UsageDashboard />} />
               <Route path="/admin/usage" element={<AdminUsage />} />
+              <Route path="/admin/invite-codes" element={<InviteCodes />} />
+              <Route path="/trial" element={<TrialRedemption />} />
               {/* Testing route - triggers ErrorBoundary for dark mode and UI testing */}
               <Route path="/test-error" element={<ErrorTest />} />
             </Routes>
             <AnalyticsWrapper />
           </ThemeProvider>
+          </TrialProvider>
         </AuthProvider>
       </BrowserRouter>
     </ErrorBoundary>

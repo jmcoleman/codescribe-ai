@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { AlertCircle, X } from 'lucide-react';
 import { CopyButton } from './CopyButton';
+import { formatDateTime } from '../utils/formatters';
 
 /**
  * Formats error type strings into user-friendly headings
@@ -328,7 +329,7 @@ export function ErrorBanner({ error, retryAfter, onDismiss }) {
             {fullErrorObject && fullErrorObject.timestamp && (
               <div className="pt-3 border-t border-red-200">
                 <p className="text-xs text-slate-600">
-                  Captured at: <span className="font-mono text-slate-800">{new Date(fullErrorObject.timestamp).toLocaleString()}</span>
+                  Captured at: <span className="font-mono text-slate-800">{formatDateTime(fullErrorObject.timestamp)}</span>
                 </p>
               </div>
             )}

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Users, Globe, FileText, Clock, RefreshCw, Filter, AlertCircle, Calendar } from 'lucide-react';
 import { PageLayout } from '../components/PageLayout';
 import { useAuth } from '../contexts/AuthContext';
+import { formatDateTime, formatDate } from '../utils/formatters';
 import toast from 'react-hot-toast';
 
 export default function AdminUsage() {
@@ -121,22 +122,6 @@ export default function AdminUsage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [navigate]);
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const formatDateOnly = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
 
   // Format current billing period for display
   const formatPeriod = () => {
@@ -697,7 +682,7 @@ export default function AdminUsage() {
                                       {activity.type === 'anonymous' ? 'Anonymous' : activity.tier}
                                     </div>
                                     <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                                      {formatDate(activity.lastActivity)}
+                                      {formatDateTime(activity.lastActivity)}
                                     </div>
                                   </div>
                                 </td>
@@ -734,7 +719,7 @@ export default function AdminUsage() {
                               <div>
                                 <div className="text-sm font-mono text-slate-900 dark:text-slate-100">{activity.ipAddress}</div>
                                 <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                                  {formatDate(activity.lastActivity)}
+                                  {formatDateTime(activity.lastActivity)}
                                 </div>
                               </div>
                             </td>
@@ -770,7 +755,7 @@ export default function AdminUsage() {
                                 <div className="text-sm text-slate-900 dark:text-slate-100">{activity.email}</div>
                                 <div className="text-xs text-slate-500 dark:text-slate-400 capitalize">{activity.tier}</div>
                                 <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                                  {formatDate(activity.lastActivity)}
+                                  {formatDateTime(activity.lastActivity)}
                                 </div>
                               </div>
                             </td>
@@ -847,13 +832,13 @@ export default function AdminUsage() {
                     </div>
                     <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-4">
                       <div className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                        {formatDateOnly(ipDetails.summary.firstSeen)}
+                        {formatDate(ipDetails.summary.firstSeen)}
                       </div>
                       <div className="text-xs text-slate-600 dark:text-slate-400 mt-1">First Seen</div>
                     </div>
                     <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-4">
                       <div className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                        {formatDateOnly(ipDetails.summary.lastActivity)}
+                        {formatDate(ipDetails.summary.lastActivity)}
                       </div>
                       <div className="text-xs text-slate-600 dark:text-slate-400 mt-1">Last Activity</div>
                     </div>
@@ -869,10 +854,10 @@ export default function AdminUsage() {
                       >
                         <div>
                           <div className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                            {formatDateOnly(period.periodStart)}
+                            {formatDate(period.periodStart)}
                           </div>
                           <div className="text-xs text-slate-600 dark:text-slate-400 mt-1">
-                            Last active: {formatDate(period.lastActivity)}
+                            Last active: {formatDateTime(period.lastActivity)}
                           </div>
                         </div>
                         <div className="text-right">

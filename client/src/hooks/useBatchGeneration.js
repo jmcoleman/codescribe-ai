@@ -17,6 +17,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { toastCompact } from '../utils/toastWithHistory';
 import * as batchesApi from '../services/batchesApi';
+import { formatDateTime } from '../utils/formatters';
 
 // Rate limit delay between API calls (15 seconds to respect Claude API limits)
 const RATE_LIMIT_DELAY = 15000;
@@ -51,15 +52,8 @@ export const buildAttribution = (tier) => {
 export const generateBatchSummaryDocument = (summary, failedFiles = [], tier = 'free') => {
   const { totalFiles, successCount, failCount, skippedCount = 0, avgQuality, avgGrade, successfulFiles = [], skippedFiles = [], wasCancelled = false } = summary;
 
-  // Format timestamp without comma after year: "Dec 3, 2025 10:30 PM"
-  const timestamp = new Date().toLocaleString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true
-  }).replace(',', ''); // Remove comma after year
+  // Format timestamp: "Dec 3, 2025 at 10:30 PM"
+  const timestamp = formatDateTime(new Date());
 
   let markdown = `# Batch Documentation Summary
 

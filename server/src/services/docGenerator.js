@@ -72,6 +72,16 @@ export class DocGeneratorService {
    * Generate documentation for provided code
    * @param {string} code - Source code to document
    * @param {Object} options - Generation options
+   * @param {string} options.docType - Documentation type (README, JSDOC, API, etc.)
+   * @param {string} options.language - Programming language
+   * @param {boolean} options.streaming - Enable streaming mode
+   * @param {Function} options.onChunk - Callback for streaming chunks
+   * @param {boolean} options.isDefaultCode - Whether this is example/default code (for caching)
+   * @param {string} options.userTier - User tier (free, pro, etc.)
+   * @param {string} options.filename - Source filename
+   * @param {Object} options.trialInfo - Trial information (for watermarking)
+   * @param {boolean} options.trialInfo.isOnTrial - Whether user is on trial
+   * @param {string} options.trialInfo.trialEndsAt - Trial end date (ISO string)
    * @returns {Promise<Object>} Documentation result
    */
   async generateDocumentation(code, options = {}) {
@@ -82,7 +92,8 @@ export class DocGeneratorService {
       onChunk = null,
       isDefaultCode = false,
       userTier = 'free',
-      filename = 'untitled'
+      filename = 'untitled',
+      trialInfo = null
     } = options;
 
     // Step 1: Parse code to understand structure
@@ -125,7 +136,8 @@ export class DocGeneratorService {
     documentation = fixMermaidDiagrams(documentation);
 
     // Step 5: Add tier-based attribution footer (works for both cached and non-cached responses)
-    const attribution = this.buildAttribution(userTier);
+    // If user is on trial, show trial watermark with expiry date
+    const attribution = this.buildAttribution(userTier, trialInfo);
     // Trim leading and trailing whitespace for clean output
     const documentationWithAttribution = this.insertAttribution(documentation.trim(), attribution, docType);
 
@@ -157,11 +169,28 @@ export class DocGeneratorService {
   /**
    * Build tier-based attribution footer
    * @param {string} tier - User tier (free, pro, team, enterprise)
+   * @param {Object|null} trialInfo - Trial information (optional)
+   * @param {boolean} trialInfo.isOnTrial - Whether user is on trial
+   * @param {string} trialInfo.trialEndsAt - Trial end date (ISO string)
    * @returns {string} Attribution footer text
    */
-  buildAttribution(tier) {
+  buildAttribution(tier, trialInfo = null) {
+    // Trial attribution takes precedence - shows trial status with expiry date
+    if (trialInfo?.isOnTrial && trialInfo?.trialEndsAt) {
+      const expiryDate = new Date(trialInfo.trialEndsAt);
+      const formattedDate = expiryDate.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+
+      return `\n\n---\n*🔶 Trial Access - Generated with [CodeScribe AI](https://codescribeai.com)*  \n*Trial expires: ${formattedDate} | [Upgrade to Pro](https://codescribeai.com/pricing) to remove this watermark*`;
+    }
+
     const attributions = {
       free: `\n\n---\n*🟣 Generated with [CodeScribe AI](https://codescribeai.com) • Free Tier*  \n*Upgrade to [Pro](https://codescribeai.com/pricing) to remove this watermark and unlock advanced features*`,
+
+      starter: `\n\n---\n*Generated with [CodeScribe AI](https://codescribeai.com) - AI-powered code documentation*`,
 
       pro: `\n\n---\n*Generated with [CodeScribe AI](https://codescribeai.com) - AI-powered code documentation*`,
 

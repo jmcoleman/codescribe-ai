@@ -63,6 +63,18 @@ vi.mock('../contexts/AuthContext', () => ({
   useAuth: () => mockAuthContext
 }));
 
+// Mock TrialContext
+vi.mock('../contexts/TrialContext', () => ({
+  TrialProvider: ({ children }) => children,
+  useTrial: () => ({
+    isOnTrial: false,
+    trialTier: null,
+    trialEndsAt: null,
+    daysRemaining: 0,
+    loading: false
+  })
+}));
+
 // Helper to render App with all required providers
 function renderApp(user = null) {
   // Update mock auth context for this render

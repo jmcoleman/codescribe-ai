@@ -3,6 +3,7 @@ import { AlertCircle, RefreshCw, Home } from 'lucide-react';
 import { Button } from './Button';
 import { CopyButton } from './CopyButton';
 import { STORAGE_KEYS } from '../constants/storage';
+import { formatDateTime } from '../utils/formatters';
 
 /**
  * ErrorBoundary Component
@@ -267,7 +268,7 @@ class ErrorBoundary extends Component {
               {/* Production Error Message */}
               {!isDevelopment && (() => {
                 const errorId = `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
-                const timestamp = new Date().toLocaleString();
+                const timestamp = formatDateTime(new Date());
                 return (
                   <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-4 border border-slate-200 dark:border-slate-700">
                     <div className="flex items-center justify-between mb-2">

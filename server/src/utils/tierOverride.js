@@ -1,7 +1,7 @@
 /**
  * Tier Override System Utilities
  *
- * Provides helper functions for admin/support tier overrides.
+ * Provides helper functions for admin/support tier overrides and trial tier resolution.
  * Allows privileged users to temporarily test features as different tiers.
  *
  * Key Principles:
@@ -9,6 +9,7 @@
  * - Never modifies user.tier in database (billing integrity)
  * - All overrides logged to user_audit_log for compliance
  * - Only admin/support/super_admin roles can apply overrides
+ * - Trial tier is considered in effective tier calculation (priority: override > paid > trial > free)
  *
  * See: docs/architecture/TIER-OVERRIDE-SYSTEM.md
  */
@@ -16,53 +17,70 @@
 import { getTierFeatures, hasFeature } from '../config/tiers.js';
 
 /**
- * Get effective tier (considering override if present and valid)
+ * Get effective tier (considering override, paid subscription, and trial)
+ *
+ * Priority order:
+ * 1. Admin/support override (temporary testing)
+ * 2. Paid subscription tier (billing tier from database)
+ * 3. Active trial tier (if user has active trial)
+ * 4. Free tier (default)
  *
  * @param {Object} user - User object from database
  * @param {string} user.tier - Real tier from database (billing tier)
  * @param {string} user.role - User role (user, support, admin, super_admin)
  * @param {string} [user.viewing_as_tier] - Override tier (if applied)
  * @param {string} [user.override_expires_at] - Override expiry timestamp
+ * @param {Object|null} [activeTrial] - Active trial object (if passed from auth middleware)
+ * @param {string} activeTrial.trial_tier - Trial tier
+ * @param {string} activeTrial.ends_at - Trial end date
  * @returns {string} - Effective tier to use for feature checks
  */
-export const getEffectiveTier = (user) => {
+export const getEffectiveTier = (user, activeTrial = null) => {
   if (!user) return 'free';
 
-  // Only admin/support/super_admin can have overrides
-  if (!['admin', 'support', 'super_admin'].includes(user.role)) {
-    return user.tier || 'free';
+  // Priority 1: Admin/support override
+  if (['admin', 'support', 'super_admin'].includes(user.role)) {
+    // Check if override exists in database
+    if (user.viewing_as_tier && user.override_expires_at) {
+      const now = new Date();
+      const expiry = new Date(user.override_expires_at);
+
+      // Use override if valid and not expired
+      if (!isNaN(expiry.getTime()) && now < expiry) {
+        return user.viewing_as_tier;
+      }
+    }
   }
 
-  // Check if override exists in database
-  if (!user.viewing_as_tier || !user.override_expires_at) {
-    return user.tier || 'free';
+  // Priority 2: Paid subscription tier (not 'free')
+  if (user.tier && user.tier !== 'free') {
+    return user.tier;
   }
 
-  // Check if override has expired
-  const now = new Date();
-  const expiry = new Date(user.override_expires_at);
+  // Priority 3: Active trial tier
+  if (activeTrial) {
+    const now = new Date();
+    const trialEndsAt = new Date(activeTrial.ends_at);
 
-  // Handle invalid date
-  if (isNaN(expiry.getTime())) {
-    return user.tier || 'free';
+    if (!isNaN(trialEndsAt.getTime()) && now < trialEndsAt) {
+      return activeTrial.trial_tier || 'pro';
+    }
   }
 
-  if (now > expiry) {
-    return user.tier || 'free';
-  }
-
-  return user.viewing_as_tier;
+  // Priority 4: Default tier (free)
+  return user.tier || 'free';
 };
 
 /**
- * Check if user has feature (considering override)
+ * Check if user has feature (considering override and trial)
  *
  * @param {Object} user - User object from JWT
  * @param {string} feature - Feature name (e.g., 'batchProcessing')
+ * @param {Object|null} [activeTrial] - Active trial object (if any)
  * @returns {boolean} - Whether user has access to feature
  */
-export const hasFeatureWithOverride = (user, feature) => {
-  const effectiveTier = getEffectiveTier(user);
+export const hasFeatureWithOverride = (user, feature, activeTrial = null) => {
+  const effectiveTier = getEffectiveTier(user, activeTrial);
   return hasFeature(effectiveTier, feature);
 };
 
@@ -168,13 +186,14 @@ export const getOverrideDetails = (user) => {
 };
 
 /**
- * Get tier features (considering override)
+ * Get tier features (considering override and trial)
  *
  * @param {Object} user - User object from JWT
+ * @param {Object|null} [activeTrial] - Active trial object (if any)
  * @returns {Object} - Tier features configuration
  */
-export const getEffectiveTierFeatures = (user) => {
-  const effectiveTier = getEffectiveTier(user);
+export const getEffectiveTierFeatures = (user, activeTrial = null) => {
+  const effectiveTier = getEffectiveTier(user, activeTrial);
   return getTierFeatures(effectiveTier);
 };
 

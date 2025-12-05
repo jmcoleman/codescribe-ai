@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useUsageTracking } from '../../hooks/useUsageTracking';
+import { formatDateCompact } from '../../utils/formatters';
 import { CreditCard, TrendingUp, Calendar, ExternalLink, Check } from 'lucide-react';
 
 const TIER_INFO = {
@@ -146,10 +147,7 @@ export function SubscriptionTab() {
                 <span>
                   Resets{' '}
                   {monthlyUsage?.resetDate
-                    ? new Date(monthlyUsage.resetDate).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                      })
+                    ? formatDateCompact(monthlyUsage.resetDate)
                     : 'next month'}
                 </span>
               </div>

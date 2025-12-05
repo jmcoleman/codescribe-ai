@@ -17,6 +17,14 @@ import {
 // Mock User model
 jest.mock('../../models/User.js');
 
+// Mock Trial model
+jest.mock('../../models/Trial.js', () => ({
+  default: {
+    findActiveByUserId: jest.fn().mockResolvedValue(null),
+    expire: jest.fn().mockResolvedValue(null)
+  }
+}));
+
 describe('Auth Middleware', () => {
   let req, res, next;
 
@@ -57,7 +65,14 @@ describe('Auth Middleware', () => {
 
       expect(User.findById).toHaveBeenCalledWith(123);
       expect(next).toHaveBeenCalled();
-      expect(req.user).toEqual({ ...mockUser, effectiveTier: 'free' });
+      expect(req.user).toEqual({
+        ...mockUser,
+        effectiveTier: 'free',
+        activeTrial: null,
+        isOnTrial: false,
+        trialTier: null,
+        trialEndsAt: null
+      });
       expect(res.status).not.toHaveBeenCalled();
     });
 
@@ -117,7 +132,14 @@ describe('Auth Middleware', () => {
 
       expect(User.findById).toHaveBeenCalledWith(456);
       expect(next).toHaveBeenCalled();
-      expect(req.user).toEqual({ ...mockUser, effectiveTier: 'pro' });
+      expect(req.user).toEqual({
+        ...mockUser,
+        effectiveTier: 'pro',
+        activeTrial: null,
+        isOnTrial: false,
+        trialTier: null,
+        trialEndsAt: null
+      });
     });
 
     it('should prioritize JWT over session', async () => {
@@ -153,7 +175,14 @@ describe('Auth Middleware', () => {
 
       expect(User.findById).toHaveBeenCalledWith(123);
       expect(next).toHaveBeenCalled();
-      expect(req.user).toEqual({ ...mockUser, effectiveTier: 'free' });
+      expect(req.user).toEqual({
+        ...mockUser,
+        effectiveTier: 'free',
+        activeTrial: null,
+        isOnTrial: false,
+        trialTier: null,
+        trialEndsAt: null
+      });
     });
 
     it('should continue without user if not authenticated', () => {

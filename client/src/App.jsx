@@ -8,6 +8,7 @@ import { MobileMenu } from './components/MobileMenu';
 import { ControlBar } from './components/ControlBar';
 import { Sidebar } from './components/Sidebar';
 import { TierOverrideBanner } from './components/TierOverrideBanner';
+import { TrialBanner } from './components/trial/TrialBanner';
 import { CodePanel } from './components/CodePanel';
 import { SplitPanel } from './components/SplitPanel';
 import Footer from './components/Footer';
@@ -28,6 +29,7 @@ import { toastDocGenerated } from './utils/toast';
 import { createTestDataLoader, exposeTestDataLoader, createSkeletonTestHelper, exposeSkeletonTestHelper } from './utils/testData';
 import { exposeUsageSimulator } from './utils/usageTestData';
 import { useAuth } from './contexts/AuthContext';
+import { useTrial } from './contexts/TrialContext';
 import { hasFeature } from './utils/tierFeatures';
 import { DEFAULT_CODE, EXAMPLE_CODES } from './constants/defaultCode';
 import * as batchesApi from './services/batchesApi';
@@ -1727,6 +1729,11 @@ function App() {
           }}
         />
       )}
+
+      {/* Trial Banner - Shows when user has active trial */}
+      <TrialBanner
+        onUpgrade={() => setShowUpgradeModal(true)}
+      />
 
       {/* Mobile Menu */}
       <MobileMenu

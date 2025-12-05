@@ -10,6 +10,9 @@ import { sql } from '@vercel/postgres';
 import jwt from 'jsonwebtoken';
 import { requireAuth } from '../middleware/auth.js';
 import User from '../models/User.js';
+import InviteCode from '../models/InviteCode.js';
+import Trial from '../models/Trial.js';
+import trialService from '../services/trialService.js';
 import {
   validateOverrideRequest,
   createOverridePayload,
@@ -601,6 +604,409 @@ router.get('/tier-override/audit', requireAuth, requireAdmin, async (req, res) =
       success: false,
       error: 'Internal server error',
       message: 'Failed to fetch tier override audit log'
+    });
+  }
+});
+
+// ============================================================================
+// INVITE CODE MANAGEMENT
+// ============================================================================
+
+/**
+ * POST /api/admin/invite-codes
+ * Create a new invite code
+ */
+router.post('/invite-codes', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const {
+      trialTier = 'pro',
+      durationDays = 14,
+      maxUses = 1,
+      validUntil = null,
+      source = 'admin',
+      campaign = null,
+      notes = null
+    } = req.body;
+
+    // Validation
+    if (!['pro', 'team', 'enterprise'].includes(trialTier)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Trial tier must be pro, team, or enterprise'
+      });
+    }
+
+    if (durationDays < 1 || durationDays > 90) {
+      return res.status(400).json({
+        success: false,
+        error: 'Duration must be between 1 and 90 days'
+      });
+    }
+
+    // Parse validUntil as end-of-day UTC to ensure the code is valid for the entire selected day
+    let validUntilDate = null;
+    if (validUntil) {
+      validUntilDate = new Date(validUntil + 'T23:59:59.999Z');
+    }
+
+    const inviteCode = await trialService.createInviteCode({
+      trialTier,
+      durationDays,
+      maxUses,
+      validUntil: validUntilDate,
+      source,
+      campaign,
+      notes
+    }, req.user.id);
+
+    res.status(201).json({
+      success: true,
+      data: {
+        code: inviteCode.code,
+        inviteUrl: inviteCode.inviteUrl,
+        tier: inviteCode.trial_tier,
+        durationDays: inviteCode.duration_days,
+        maxUses: inviteCode.max_uses,
+        validUntil: inviteCode.valid_until
+      }
+    });
+  } catch (error) {
+    console.error('[Admin] Create invite code error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to create invite code'
+    });
+  }
+});
+
+/**
+ * GET /api/admin/invite-codes
+ * List all invite codes (with pagination)
+ */
+router.get('/invite-codes', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 20,
+      status,
+      tier,
+      campaign,
+      sortBy = 'created_at',
+      sortOrder = 'desc'
+    } = req.query;
+
+    const codes = await InviteCode.getAll({
+      page: parseInt(page),
+      limit: parseInt(limit),
+      status: status || null,
+      tier: tier || null,
+      campaign: campaign || null,
+      sortBy,
+      sortOrder
+    });
+
+    res.json({
+      success: true,
+      data: {
+        codes: codes.rows,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total: codes.total,
+          totalPages: Math.ceil(codes.total / parseInt(limit))
+        }
+      }
+    });
+  } catch (error) {
+    console.error('[Admin] List invite codes error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch invite codes'
+    });
+  }
+});
+
+/**
+ * GET /api/admin/invite-codes/:code/stats
+ * Get usage statistics for a specific invite code
+ */
+router.get('/invite-codes/:code/stats', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const inviteCode = await InviteCode.findByCode(req.params.code);
+
+    if (!inviteCode) {
+      return res.status(404).json({
+        success: false,
+        error: 'Invite code not found'
+      });
+    }
+
+    const redemptions = await Trial.findByInviteCodeId(inviteCode.id);
+
+    res.json({
+      success: true,
+      data: {
+        code: inviteCode.code,
+        tier: inviteCode.trial_tier,
+        durationDays: inviteCode.duration_days,
+        uses: inviteCode.current_uses,
+        maxUses: inviteCode.max_uses,
+        status: inviteCode.status,
+        source: inviteCode.source,
+        campaign: inviteCode.campaign,
+        createdAt: inviteCode.created_at,
+        validUntil: inviteCode.valid_until,
+        redemptions: redemptions.map(t => ({
+          userId: t.user_id,
+          userEmail: t.user_email,
+          startedAt: t.started_at,
+          endsAt: t.ends_at,
+          status: t.status,
+          converted: t.status === 'converted',
+          convertedToTier: t.converted_to_tier
+        }))
+      }
+    });
+  } catch (error) {
+    console.error('[Admin] Get invite code stats error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch invite code stats'
+    });
+  }
+});
+
+/**
+ * PATCH /api/admin/invite-codes/:code
+ * Update invite code (pause, extend validity, etc.)
+ */
+router.patch('/invite-codes/:code', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { status, maxUses, validUntil, notes } = req.body;
+
+    // Validate status if provided
+    if (status && !['active', 'paused', 'exhausted', 'expired'].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid status'
+      });
+    }
+
+    const updated = await InviteCode.update(req.params.code, {
+      status,
+      maxUses,
+      validUntil: validUntil ? new Date(validUntil) : undefined,
+      notes
+    });
+
+    if (!updated) {
+      return res.status(404).json({
+        success: false,
+        error: 'Invite code not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: updated
+    });
+  } catch (error) {
+    console.error('[Admin] Update invite code error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update invite code'
+    });
+  }
+});
+
+/**
+ * DELETE /api/admin/invite-codes/:code
+ * Delete an invite code (only if unused)
+ */
+router.delete('/invite-codes/:code', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const result = await InviteCode.delete(req.params.code);
+
+    if (!result.deleted) {
+      const status = result.error === 'Invite code not found' ? 404 : 400;
+      return res.status(status).json({
+        success: false,
+        error: result.error
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Invite code deleted'
+    });
+  } catch (error) {
+    console.error('[Admin] Delete invite code error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete invite code'
+    });
+  }
+});
+
+// ============================================================================
+// TRIAL MANAGEMENT
+// ============================================================================
+
+/**
+ * GET /api/admin/trials
+ * List all trials (with pagination and filtering)
+ */
+router.get('/trials', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { page = 1, limit = 20, status } = req.query;
+
+    const trials = await Trial.getRecent({
+      page: parseInt(page),
+      limit: parseInt(limit),
+      status: status || null
+    });
+
+    res.json({
+      success: true,
+      data: trials.rows,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total: trials.total,
+        totalPages: Math.ceil(trials.total / parseInt(limit))
+      }
+    });
+  } catch (error) {
+    console.error('[Admin] List trials error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch trials'
+    });
+  }
+});
+
+/**
+ * GET /api/admin/trials/:userId
+ * Get trial details for a specific user
+ */
+router.get('/trials/:userId', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId);
+    const trials = await Trial.findAllByUserId(userId);
+    const status = await trialService.getTrialStatus(userId);
+
+    res.json({
+      success: true,
+      data: {
+        currentStatus: status,
+        trialHistory: trials
+      }
+    });
+  } catch (error) {
+    console.error('[Admin] Get user trials error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch user trials'
+    });
+  }
+});
+
+/**
+ * PATCH /api/admin/trials/:userId/extend
+ * Extend a user's trial by adding days
+ */
+router.patch('/trials/:userId/extend', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId);
+    const { additionalDays, reason } = req.body;
+
+    if (!additionalDays || additionalDays < 1 || additionalDays > 90) {
+      return res.status(400).json({
+        success: false,
+        error: 'Additional days must be between 1 and 90'
+      });
+    }
+
+    if (!reason || reason.trim().length < 5) {
+      return res.status(400).json({
+        success: false,
+        error: 'Reason is required (minimum 5 characters)'
+      });
+    }
+
+    const extended = await trialService.extendTrial(userId, additionalDays, reason.trim());
+
+    res.json({
+      success: true,
+      message: `Trial extended by ${additionalDays} days`,
+      data: extended
+    });
+  } catch (error) {
+    console.error('[Admin] Extend trial error:', error);
+
+    if (error.message.includes('not have an active')) {
+      return res.status(404).json({
+        success: false,
+        error: error.message
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      error: 'Failed to extend trial'
+    });
+  }
+});
+
+/**
+ * POST /api/admin/trials/:userId/cancel
+ * Cancel a user's trial early
+ */
+router.post('/trials/:userId/cancel', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId);
+
+    const cancelled = await trialService.endTrial(userId, 'cancel');
+
+    res.json({
+      success: true,
+      message: 'Trial cancelled',
+      data: cancelled
+    });
+  } catch (error) {
+    console.error('[Admin] Cancel trial error:', error);
+
+    if (error.message.includes('not have an active')) {
+      return res.status(404).json({
+        success: false,
+        error: error.message
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      error: 'Failed to cancel trial'
+    });
+  }
+});
+
+/**
+ * GET /api/admin/trials/analytics
+ * Get trial analytics dashboard data
+ */
+router.get('/trials/analytics', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const analytics = await trialService.getAnalytics();
+
+    res.json({
+      success: true,
+      data: analytics
+    });
+  } catch (error) {
+    console.error('[Admin] Trial analytics error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch trial analytics'
     });
   }
 });

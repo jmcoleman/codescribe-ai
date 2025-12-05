@@ -5,6 +5,8 @@
  * Future: User can configure which fields show on cards, in what order.
  */
 
+import { formatTime, formatDateCompact } from '../utils/formatters';
+
 /**
  * Available metadata fields for file cards
  * Each field has an id, label, visibility rules, and format function
@@ -163,7 +165,7 @@ export function formatFileType(filename) {
 /**
  * Format timestamp for display
  * @param {Date|string|number} timestamp - Timestamp to format
- * @returns {string} Formatted timestamp (e.g., "Nov 19, 2:34 PM")
+ * @returns {string} Formatted timestamp (e.g., "Today at 2:34 PM" or "Nov 19 at 2:34 PM")
  */
 export function formatTimestamp(timestamp) {
   if (!timestamp) return 'Unknown';
@@ -175,22 +177,14 @@ export function formatTimestamp(timestamp) {
     const now = new Date();
     const isToday = date.toDateString() === now.toDateString();
 
-    const timeStr = date.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    });
+    const timeStr = formatTime(date);
 
     if (isToday) {
-      return `Today, ${timeStr}`;
+      return `Today at ${timeStr}`;
     }
 
-    const dateStr = date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric'
-    });
-
-    return `${dateStr}, ${timeStr}`;
+    const dateStr = formatDateCompact(date);
+    return `${dateStr} at ${timeStr}`;
   } catch (error) {
     console.error('Error formatting timestamp:', error);
     return 'Invalid Date';

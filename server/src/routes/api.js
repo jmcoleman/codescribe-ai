@@ -129,13 +129,20 @@ router.post('/generate', optionalAuth, rateLimitBypass, apiLimiter, generationLi
       });
     }
 
+    // Build trial info for watermarking (if user is on trial)
+    const trialInfo = req.user?.isOnTrial ? {
+      isOnTrial: true,
+      trialEndsAt: req.user.trialEndsAt
+    } : null;
+
     const result = await docGenerator.generateDocumentation(code, {
       docType: docType || 'README',
       language: language || 'javascript',
       streaming: false,
       isDefaultCode: isDefaultCode === true, // Cache user message if this is default/example code
       userTier: req.user?.effectiveTier || 'free', // Pass effective tier for attribution (includes overrides)
-      filename: filename || 'untitled' // Pass filename for title formatting
+      filename: filename || 'untitled', // Pass filename for title formatting
+      trialInfo // Pass trial info for watermarking
     });
 
     // Track usage after successful generation
@@ -186,6 +193,12 @@ router.post('/generate-stream', optionalAuth, rateLimitBypass, apiLimiter, gener
 
     const userTier = req.user?.effectiveTier || 'free';
 
+    // Build trial info for watermarking (if user is on trial)
+    const trialInfo = req.user?.isOnTrial ? {
+      isOnTrial: true,
+      trialEndsAt: req.user.trialEndsAt
+    } : null;
+
     const result = await docGenerator.generateDocumentation(code, {
       docType: docType || 'README',
       language: language || 'javascript',
@@ -193,6 +206,7 @@ router.post('/generate-stream', optionalAuth, rateLimitBypass, apiLimiter, gener
       isDefaultCode: isDefaultCode === true, // Cache user message if this is default/example code
       userTier, // Pass effective tier for attribution (includes overrides)
       filename: filename || 'untitled', // Pass filename for title formatting
+      trialInfo, // Pass trial info for watermarking
       onChunk: (chunk) => {
         res.write(`data: ${JSON.stringify({
           type: 'chunk',
@@ -203,7 +217,7 @@ router.post('/generate-stream', optionalAuth, rateLimitBypass, apiLimiter, gener
 
     // Send tier-based attribution footer as a separate message type
     // The client will handle inserting it properly (closing any unclosed code blocks)
-    const attribution = docGenerator.buildAttribution(userTier);
+    const attribution = docGenerator.buildAttribution(userTier, trialInfo);
     if (attribution) {
       res.write(`data: ${JSON.stringify({
         type: 'attribution',

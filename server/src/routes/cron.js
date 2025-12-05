@@ -10,6 +10,7 @@
 
 import express from 'express';
 import { processPermanentDeletions } from '../jobs/permanentDeletionJob.js';
+import { processTrialExpirations } from '../jobs/trialExpirationJob.js';
 
 const router = express.Router();
 
@@ -70,6 +71,51 @@ router.post('/permanent-deletions', verifyCronAuth, async (req, res) => {
     const duration = Date.now() - startTime;
 
     console.error(`[Cron] Permanent deletion job failed after ${duration}ms:`, error);
+
+    return res.status(500).json({
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString(),
+      duration
+    });
+  }
+});
+
+/**
+ * POST /trial-expirations
+ * Triggers the trial expiration job
+ *
+ * Called by Vercel Cron daily at 9:00 AM EST (14:00 UTC)
+ *
+ * Tasks:
+ * - Send 3-day and 1-day expiration reminders
+ * - Mark expired trials as expired
+ * - Update exhausted invite codes
+ *
+ * @returns {Object} Job results with reminder counts and expiration processing
+ */
+router.post('/trial-expirations', verifyCronAuth, async (req, res) => {
+  const startTime = Date.now();
+
+  try {
+    console.log('[Cron] Starting trial expiration job via Vercel Cron');
+
+    const results = await processTrialExpirations();
+
+    const duration = Date.now() - startTime;
+
+    console.log(`[Cron] Trial expiration job completed in ${duration}ms:`, results);
+
+    return res.status(200).json({
+      success: true,
+      timestamp: new Date().toISOString(),
+      duration,
+      results
+    });
+  } catch (error) {
+    const duration = Date.now() - startTime;
+
+    console.error(`[Cron] Trial expiration job failed after ${duration}ms:`, error);
 
     return res.status(500).json({
       success: false,

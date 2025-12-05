@@ -2,7 +2,7 @@
 
 **Project:** CodeScribe AI - Intelligent Code Documentation Generator
 **Testing Status:** ✅ Comprehensive Coverage Across 3 Frameworks
-**Last Updated:** December 4, 2025 (v2.11.0)
+**Last Updated:** December 4, 2025 (v3.0.0)
 
 ---
 
@@ -36,7 +36,7 @@
 - **Backend Coverage:** 82.38% statements, 70.11% branches, 82.54% lines, 85%+ functions (CI passing)
 - **Test Execution Time:** Frontend ~29.4s, Backend ~14.2s, Database ~0.3s, E2E ~45s
 - **Coverage Target:** 90% ✅ EXCEEDED (96.71% middleware statements, 93.49% middleware branches)
-- **Recent Updates:** Added batch cancellation tests (35 new tests for useBatchGeneration hook), fixed enterprise tier attribution bug (Dec 4, 2025 - v2.11.0)
+- **Recent Updates:** Added Trial System (invite codes, user trials, trial redemption), fixed 5 settings.test.js mocking issues (Dec 4, 2025 - v3.0.0)
 
 ---
 
@@ -231,7 +231,7 @@ git commit -m "Add migration XXX with tests"
 #### [Skipped Tests Reference](./SKIPPED-TESTS.md) ⭐ **MAINTENANCE**
 **Central reference for all intentionally skipped tests**
 
-- 39 total skipped tests (18 frontend, 21 backend)
+- 85 total skipped tests (57 frontend, 28 backend)
 - Complete justification for each skip
 - Line numbers and file paths for quick reference
 - Verification commands and review schedule
@@ -755,10 +755,10 @@ npm test -- -t "should render documentation"
 
 ---
 
-**Last Updated:** November 2, 2025 (v2.4.6)
+**Last Updated:** December 4, 2025 (v3.0.0)
 **Test Framework Versions:**
 - Vitest: 3.2.4
 - React Testing Library: 16.3.0
 - Jest: 29.7.0
 
-**Status:** ✅ All tests passing (97.82%), ready for production
+**Status:** ✅ All tests passing (97.4%), ready for production
