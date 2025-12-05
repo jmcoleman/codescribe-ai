@@ -66,7 +66,7 @@
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
     "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.19",
-    "footer": "v2.11.0 Complete (Batch Cancellation & Skipped Files) · Up Next: Trial System · Launch: Mid-Jan 2026",
+    "footer": "v3.0.0 Complete (Trial System Core) · Up Next: Trial Operations & Analytics · Launch: Mid-Jan 2026",
     "lastUpdated": "December 4, 2025"
   },
   "columns": [
@@ -663,6 +663,27 @@
             "Fixed enterprise tier attribution and workspace file deletion persistence",
             "Total: 3,284 tests (3,199 passing, 85 skipped)"
           ]
+        },
+        {
+          "version": "v3.0.0",
+          "title": "Trial System (Core)",
+          "duration": "3 days",
+          "status": "✓ Complete",
+          "completedDate": "Dec 4, 2025",
+          "badge": "Conversion & Growth",
+          "features": [
+            "14-day Pro trial via invite codes (no credit card required)",
+            "Invite code management admin UI (create, pause, delete, copy link)",
+            "Trial eligibility tracking (one trial per user, DB constraints)",
+            "Trial status in header (TrialBanner with countdown)",
+            "Trial expiration handling with graceful downgrade to Free",
+            "Admin trial extension capability (PATCH /api/admin/trials/:userId/extend)",
+            "Trial watermark on generated documentation",
+            "Database: invite_codes table with usage tracking",
+            "Database: user_trials table with status management",
+            "Trial redemption page (/trial?code=XXX)",
+            "TrialContext for frontend state management"
+          ]
         }
       ]
     },
@@ -672,24 +693,6 @@
       "title": "Active",
       "subtitle": "Phase 3: Next Features",
       "phases": [
-        {
-          "version": "v3.0.0",
-          "title": "Trial System",
-          "duration": "3-4 days",
-          "status": "Up Next",
-          "badge": "Conversion & Growth",
-          "features": [
-            "14-day Pro trial for new users (no credit card required)",
-            "Trial eligibility tracking (one trial per user)",
-            "Trial status in header and pricing page",
-            "Automated email reminders (7, 3, 1 day before expiry)",
-            "Trial expiration handling with graceful downgrade to Free",
-            "Admin trial extension capability for support",
-            "Trial analytics dashboard (conversion rates, engagement)",
-            "Database: user_trials, trial_email_history tables",
-            "See: docs/architecture/TRIAL-SYSTEM-ARCHITECTURE.md"
-          ]
-        },
         {
           "version": "Epic 3.5",
           "title": "Generation History UI (Pro+)",
@@ -722,6 +725,20 @@
             "Comprehensive project README generation",
             "Project-level quality scoring",
             "✓ Phase 1 prerequisite met (multi-file sidebar, batch generation, file management)"
+          ]
+        },
+        {
+          "version": "v3.1.0",
+          "title": "Trial Operations & Analytics",
+          "duration": "2-3 days",
+          "status": "Planned",
+          "badge": "Post-Launch",
+          "features": [
+            "Trial status indicator on pricing page",
+            "Automated email reminders (3, 1 day before expiry)",
+            "Trial analytics dashboard UI (conversion rates, engagement)",
+            "Database: trial_email_history table for deduplication",
+            "Note: Core trial system complete in v3.0.0"
           ]
         }
       ]
