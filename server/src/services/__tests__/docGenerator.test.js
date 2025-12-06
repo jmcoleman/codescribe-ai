@@ -6,18 +6,57 @@ import { DocGeneratorService } from '../docGenerator.js';
 import LLMService from '../llm/llmService.js';
 import { parseCode } from '../codeParser.js';
 import { calculateQualityScore } from '../qualityScorer.js';
+import { loadSystemPrompts, loadUserMessageTemplates, processTemplate, getPromptVersion } from '../../prompts/promptLoader.js';
 
 // Mock dependencies
 jest.mock('../llm/llmService.js');
 jest.mock('../codeParser.js');
 jest.mock('../qualityScorer.js');
 
+// Mock prompt loader
+jest.mock('../../prompts/promptLoader.js');
+
+// System prompts mock data
+const mockSystemPrompts = {
+  README: 'README.md documentation generator. Include Project Overview, Features, Installation, Usage, and API Documentation sections.',
+  JSDOC: 'JSDoc documentation generator. Include @param tags, @returns tag, @throws tag, and @example tag.',
+  API: 'API documentation generator. Include Endpoint/Function Overview, Parameters, Return value, and Error responses.',
+  ARCHITECTURE: 'architectural documentation generator. Include Architecture Overview, Component Breakdown, Data Flow, Dependencies, Design Patterns, and Scalability.',
+  OPENAPI: 'OpenAPI documentation generator.'
+};
+
+// User message templates mock data - uses {{baseContext}} which gets the pre-built context string
+const mockUserMessageTemplates = {
+  README: 'Generate a comprehensive README.md for the following {{language}} code.\n\nFilename: {{filename}}\n\n{{baseContext}}\n\nCode to document:\n```{{language}}\n{{code}}\n```',
+  JSDOC: 'Generate JSDoc documentation for the following {{language}} code.\n\nFilename: {{filename}}\n\n{{baseContext}}\n\nCode to document:\n```{{language}}\n{{code}}\n```',
+  API: 'Generate API documentation for the following {{language}} code.\n\nFilename: {{filename}}\n\n{{baseContext}}\n\nCode to document:\n```{{language}}\n{{code}}\n```',
+  ARCHITECTURE: 'Generate Architecture documentation for the following {{language}} code.\n\nFilename: {{filename}}\n\n{{baseContext}}\n\nCode to document:\n```{{language}}\n{{code}}\n```',
+  OPENAPI: 'Generate OpenAPI documentation for the following {{language}} code.\n\nFilename: {{filename}}\n\n{{baseContext}}\n\nCode to document:\n```{{language}}\n{{code}}\n```'
+};
+
+// Helper to setup prompt loader mocks
+function setupPromptLoaderMocks() {
+  loadSystemPrompts.mockResolvedValue(mockSystemPrompts);
+  loadUserMessageTemplates.mockResolvedValue(mockUserMessageTemplates);
+  processTemplate.mockImplementation((template, vars) => {
+    let result = template;
+    for (const [key, value] of Object.entries(vars)) {
+      result = result.replace(new RegExp(`{{${key}}}`, 'g'), value);
+    }
+    return result;
+  });
+  getPromptVersion.mockReturnValue('1.0.0');
+}
+
 describe('DocGeneratorService', () => {
   let docGenerator;
   let mockLlmService;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
+
+    // Setup prompt loader mocks after clearAllMocks
+    setupPromptLoaderMocks();
 
     // Create mock llmService instance
     mockLlmService = {
@@ -29,6 +68,8 @@ describe('DocGeneratorService', () => {
     LLMService.mockImplementation(() => mockLlmService);
 
     docGenerator = new DocGeneratorService();
+    // Ensure async initialization completes before tests run
+    await docGenerator._ensureInitialized();
   });
 
   describe('Constructor', () => {

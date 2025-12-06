@@ -282,6 +282,11 @@ describe('Prompt Quality Integration Tests', () => {
   // Increase timeout for Claude API calls
   jest.setTimeout(60000);
 
+  // Ensure async prompt loading is complete before tests
+  beforeAll(async () => {
+    await docGenerator._ensureInitialized();
+  });
+
   describe('README Template Quality', () => {
     it('should generate comprehensive README for simple utility functions', async () => {
       const analysis = await parseCode(sampleCodes.simple, 'javascript');
@@ -550,10 +555,10 @@ describe('Prompt Quality Integration Tests', () => {
         console.log('  Metrics:', JSON.stringify(r.metrics, null, 2));
       });
 
-      // All prompts should be comprehensive
+      // All prompts should be comprehensive (allow up to 12K for detailed prompts with Mermaid rules)
       results.forEach(result => {
         expect(result.promptLength).toBeGreaterThan(500);
-        expect(result.promptLength).toBeLessThan(10000);
+        expect(result.promptLength).toBeLessThan(12000);
       });
     });
   });
