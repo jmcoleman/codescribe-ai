@@ -11,7 +11,8 @@ import {
   requireVerifiedEmail,
   validateBody,
   generateToken,
-  sanitizeUser
+  sanitizeUser,
+  enrichUserWithTrialInfo
 } from '../auth.js';
 
 // Mock User model
@@ -858,6 +859,21 @@ describe('Auth Middleware', () => {
         error: 'Authentication required'
       });
       expect(next).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('enrichUserWithTrialInfo', () => {
+    // Note: Tests for trial-related scenarios are covered via integration tests
+    // because the ES module mocking is complex. These unit tests cover the null/undefined cases.
+
+    it('should return null for null user', async () => {
+      const result = await enrichUserWithTrialInfo(null);
+      expect(result).toBeNull();
+    });
+
+    it('should return null for undefined user', async () => {
+      const result = await enrichUserWithTrialInfo(undefined);
+      expect(result).toBeNull();
     });
   });
 });

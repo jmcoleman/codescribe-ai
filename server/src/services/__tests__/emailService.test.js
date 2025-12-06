@@ -30,7 +30,7 @@ jest.mock('resend', () => {
 });
 
 // Now import emailService (after env vars and mock are set)
-import emailService, { sendPasswordResetEmail, sendVerificationEmail, sendContactSalesEmail, sendSupportEmail, __resetResendClient } from '../emailService.js';
+import emailService, { sendPasswordResetEmail, sendVerificationEmail, sendContactSalesEmail, sendSupportEmail, sendTrialExpiringEmail, sendTrialExpiredEmail, sendTrialExtendedEmail, __resetResendClient } from '../emailService.js';
 
 describe('Email Service', () => {
   beforeEach(() => {
@@ -1846,6 +1846,445 @@ describe('Email Service', () => {
         // Restore
         process.env.MOCK_EMAILS = 'true';
       });
+    });
+  });
+
+  // ============================================================================
+  // Trial Email Functions
+  // ============================================================================
+  describe('sendTrialExpiringEmail', () => {
+    const validParams = {
+      to: 'user@example.com',
+      userName: 'John Doe',
+      daysRemaining: 3,
+      trialTier: 'pro',
+      expiresAt: new Date('2025-12-15T23:59:59Z')
+    };
+
+    beforeEach(() => {
+      // Restore correct environment for testing
+      process.env.MOCK_EMAILS = 'false';
+      process.env.RESEND_API_KEY = 'test_api_key';
+      mockSendEmail.mockClear();
+      __resetResendClient();
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_trial_123' } });
+    });
+
+    it('should send email with correct recipient', async () => {
+      await sendTrialExpiringEmail(validParams);
+
+      expect(mockSendEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: 'user@example.com'
+        })
+      );
+    });
+
+    it('should include correct subject for 3-day reminder', async () => {
+      await sendTrialExpiringEmail(validParams);
+
+      expect(mockSendEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          subject: 'Your Pro trial expires in 3 days'
+        })
+      );
+    });
+
+    it('should include correct subject for 1-day reminder', async () => {
+      await sendTrialExpiringEmail({
+        ...validParams,
+        daysRemaining: 1
+      });
+
+      expect(mockSendEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          subject: 'Last day! Your Pro trial expires tomorrow'
+        })
+      );
+    });
+
+    it('should include user name in HTML', async () => {
+      await sendTrialExpiringEmail(validParams);
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('John Doe');
+    });
+
+    it('should use email username when name not provided', async () => {
+      await sendTrialExpiringEmail({
+        ...validParams,
+        userName: undefined
+      });
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('user'); // From user@example.com
+    });
+
+    it('should include days remaining', async () => {
+      await sendTrialExpiringEmail(validParams);
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('3 days');
+    });
+
+    it('should include expiration date', async () => {
+      await sendTrialExpiringEmail(validParams);
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('December 15, 2025');
+    });
+
+    it('should include tier name', async () => {
+      await sendTrialExpiringEmail(validParams);
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('Pro');
+    });
+
+    it('should include upgrade link', async () => {
+      await sendTrialExpiringEmail(validParams);
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('/pricing');
+    });
+
+    it('should return email ID on success', async () => {
+      const result = await sendTrialExpiringEmail(validParams);
+      expect(result.data.id).toBe('email_trial_123');
+    });
+
+    it('should log email sending', async () => {
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+
+      await sendTrialExpiringEmail(validParams);
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[EMAIL SENT] Trial Expiring')
+      );
+
+      consoleSpy.mockRestore();
+    });
+
+    it('should throw error on email service failure', async () => {
+      mockSendEmail.mockRejectedValue(new Error('Service error'));
+
+      await expect(
+        sendTrialExpiringEmail(validParams)
+      ).rejects.toThrow('Failed to send trial expiring email');
+    });
+
+    it('should handle Resend rate limit errors (429)', async () => {
+      const rateLimitError = new Error('Too many requests');
+      rateLimitError.statusCode = 429;
+      mockSendEmail.mockRejectedValue(rateLimitError);
+
+      await expect(
+        sendTrialExpiringEmail(validParams)
+      ).rejects.toThrow('Email service is temporarily unavailable due to high demand');
+    });
+
+    it('should default to pro tier if not specified', async () => {
+      await sendTrialExpiringEmail({
+        to: 'user@example.com',
+        daysRemaining: 3,
+        expiresAt: new Date()
+      });
+
+      expect(mockSendEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          subject: expect.stringContaining('Pro')
+        })
+      );
+    });
+  });
+
+  describe('sendTrialExpiredEmail', () => {
+    const validParams = {
+      to: 'user@example.com',
+      userName: 'John Doe',
+      trialTier: 'pro',
+      expiredAt: new Date('2025-12-15T23:59:59Z')
+    };
+
+    beforeEach(() => {
+      // Restore correct environment for testing
+      process.env.MOCK_EMAILS = 'false';
+      process.env.RESEND_API_KEY = 'test_api_key';
+      mockSendEmail.mockClear();
+      __resetResendClient();
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_expired_123' } });
+    });
+
+    it('should send email with correct recipient', async () => {
+      await sendTrialExpiredEmail(validParams);
+
+      expect(mockSendEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: 'user@example.com'
+        })
+      );
+    });
+
+    it('should include correct subject', async () => {
+      await sendTrialExpiredEmail(validParams);
+
+      expect(mockSendEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          subject: 'Your Pro Trial Has Ended - CodeScribe AI'
+        })
+      );
+    });
+
+    it('should include user name in HTML', async () => {
+      await sendTrialExpiredEmail(validParams);
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('John Doe');
+    });
+
+    it('should use email username when name not provided', async () => {
+      await sendTrialExpiredEmail({
+        ...validParams,
+        userName: undefined
+      });
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('user');
+    });
+
+    it('should include expired date', async () => {
+      await sendTrialExpiredEmail(validParams);
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('December 15, 2025');
+    });
+
+    it('should include tier name', async () => {
+      await sendTrialExpiredEmail(validParams);
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('Pro');
+    });
+
+    it('should include upgrade link', async () => {
+      await sendTrialExpiredEmail(validParams);
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('/pricing');
+    });
+
+    it('should mention downgrade to Free tier', async () => {
+      await sendTrialExpiredEmail(validParams);
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('Free');
+    });
+
+    it('should return email ID on success', async () => {
+      const result = await sendTrialExpiredEmail(validParams);
+      expect(result.data.id).toBe('email_expired_123');
+    });
+
+    it('should log email sending', async () => {
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+
+      await sendTrialExpiredEmail(validParams);
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[EMAIL SENT] Trial Expired')
+      );
+
+      consoleSpy.mockRestore();
+    });
+
+    it('should throw error on email service failure', async () => {
+      mockSendEmail.mockRejectedValue(new Error('Service error'));
+
+      await expect(
+        sendTrialExpiredEmail(validParams)
+      ).rejects.toThrow('Failed to send trial expired email');
+    });
+
+    it('should handle Resend rate limit errors (429)', async () => {
+      const rateLimitError = new Error('Too many requests');
+      rateLimitError.statusCode = 429;
+      mockSendEmail.mockRejectedValue(rateLimitError);
+
+      await expect(
+        sendTrialExpiredEmail(validParams)
+      ).rejects.toThrow('Email service is temporarily unavailable due to high demand');
+    });
+
+    it('should default to pro tier if not specified', async () => {
+      await sendTrialExpiredEmail({
+        to: 'user@example.com',
+        expiredAt: new Date()
+      });
+
+      expect(mockSendEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          subject: expect.stringContaining('Pro')
+        })
+      );
+    });
+  });
+
+  describe('sendTrialExtendedEmail', () => {
+    const validParams = {
+      to: 'user@example.com',
+      userName: 'John Doe',
+      trialTier: 'pro',
+      additionalDays: 7,
+      newExpiresAt: new Date('2025-12-22T23:59:59Z'),
+      reason: 'Requested more time'
+    };
+
+    beforeEach(() => {
+      // Restore correct environment for testing
+      process.env.MOCK_EMAILS = 'false';
+      process.env.RESEND_API_KEY = 'test_api_key';
+      mockSendEmail.mockClear();
+      __resetResendClient();
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_extended_123' } });
+    });
+
+    it('should send email with correct recipient', async () => {
+      await sendTrialExtendedEmail(validParams);
+
+      expect(mockSendEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: 'user@example.com'
+        })
+      );
+    });
+
+    it('should include correct subject', async () => {
+      await sendTrialExtendedEmail(validParams);
+
+      expect(mockSendEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          subject: 'Your Pro Trial Extended - CodeScribe AI'
+        })
+      );
+    });
+
+    it('should include user name in HTML', async () => {
+      await sendTrialExtendedEmail(validParams);
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('John Doe');
+    });
+
+    it('should use email username when name not provided', async () => {
+      await sendTrialExtendedEmail({
+        ...validParams,
+        userName: undefined
+      });
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('user');
+    });
+
+    it('should include additional days', async () => {
+      await sendTrialExtendedEmail(validParams);
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('7 Days');
+    });
+
+    it('should include new expiration date', async () => {
+      await sendTrialExtendedEmail(validParams);
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('December 22, 2025');
+    });
+
+    it('should include tier name', async () => {
+      await sendTrialExtendedEmail(validParams);
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('Pro');
+    });
+
+    it('should include features list', async () => {
+      await sendTrialExtendedEmail(validParams);
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('unlimited documentation');
+      expect(callArgs.html).toContain('multiple files');
+    });
+
+    it('should return email ID on success', async () => {
+      const result = await sendTrialExtendedEmail(validParams);
+      expect(result.data.id).toBe('email_extended_123');
+    });
+
+    it('should log email sending', async () => {
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+
+      await sendTrialExtendedEmail(validParams);
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[EMAIL SENT] Trial Extended')
+      );
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Additional Days:'), 7
+      );
+
+      consoleSpy.mockRestore();
+    });
+
+    it('should throw error on email service failure', async () => {
+      mockSendEmail.mockRejectedValue(new Error('Service error'));
+
+      await expect(
+        sendTrialExtendedEmail(validParams)
+      ).rejects.toThrow('Failed to send trial extended email');
+    });
+
+    it('should handle Resend rate limit errors (429)', async () => {
+      const rateLimitError = new Error('Too many requests');
+      rateLimitError.statusCode = 429;
+      mockSendEmail.mockRejectedValue(rateLimitError);
+
+      await expect(
+        sendTrialExtendedEmail(validParams)
+      ).rejects.toThrow('Email service is temporarily unavailable due to high demand');
+    });
+
+    it('should default to pro tier if not specified', async () => {
+      await sendTrialExtendedEmail({
+        to: 'user@example.com',
+        additionalDays: 3,
+        newExpiresAt: new Date()
+      });
+
+      expect(mockSendEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          subject: expect.stringContaining('Pro')
+        })
+      );
+    });
+
+    it('should work with team tier', async () => {
+      await sendTrialExtendedEmail({
+        ...validParams,
+        trialTier: 'team'
+      });
+
+      expect(mockSendEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          subject: expect.stringContaining('Team')
+        })
+      );
+    });
+
+    it('should work without reason parameter', async () => {
+      const { reason, ...paramsWithoutReason } = validParams;
+
+      await sendTrialExtendedEmail(paramsWithoutReason);
+
+      expect(mockSendEmail).toHaveBeenCalled();
     });
   });
 });
