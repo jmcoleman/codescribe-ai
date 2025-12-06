@@ -44,6 +44,26 @@ vi.mock('../../contexts/AuthContext', () => ({
   AuthProvider: ({ children }) => children,
 }));
 
+// Mock TrialContext
+const mockTrialContext = {
+  isOnTrial: false,
+  trialTier: null,
+  trialEndsAt: null,
+  daysRemaining: null,
+  effectiveTier: 'free',
+  validateCode: vi.fn(),
+  redeemCode: vi.fn(),
+  fetchTrialStatus: vi.fn(),
+  isRedeeming: false,
+  redeemError: null,
+  clearRedeemError: vi.fn(),
+};
+
+vi.mock('../../contexts/TrialContext', () => ({
+  useTrial: () => mockTrialContext,
+  TrialProvider: ({ children }) => children,
+}));
+
 // Mock API_URL
 vi.mock('../../config/api', () => ({
   API_URL: 'http://localhost:3000',

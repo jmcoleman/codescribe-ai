@@ -16,7 +16,7 @@ import { trackOAuth } from '../utils/analytics';
 import { STORAGE_KEYS, setSessionItem } from '../constants/storage';
 import { API_URL } from '../config/api';
 
-export function SignupModal({ isOpen, onClose, onSwitchToLogin, subscriptionContext }) {
+export function SignupModal({ isOpen, onClose, onSwitchToLogin, subscriptionContext, trialCode, onTrialCodeConsumed }) {
   const { signup, error: authError, clearError } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -243,9 +243,20 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin, subscriptionCont
     try {
       setIsLoading(true);
 
-      const result = await signup(email.trim(), password);
+      // Pass trial code, subscription context, and legal acceptance
+      // Trial code and subscription will be embedded in the verification email
+      // Legal acceptance is recorded immediately during signup
+      const result = await signup(email.trim(), password, {
+        trialCode,
+        subscriptionTier: subscriptionContext?.tier,
+        subscriptionBillingPeriod: subscriptionContext?.billingPeriod,
+        subscriptionTierName: subscriptionContext?.tierName,
+        acceptTerms: true // User has checked the combined checkbox
+      });
 
       if (result.success) {
+        // Clear the trial code since it's now embedded in the verification email
+        if (onTrialCodeConsumed) onTrialCodeConsumed();
         toastCompact('Account created successfully!', 'success');
         onClose();
       } else {
@@ -373,6 +384,7 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin, subscriptionCont
                 <input
                   ref={emailInputRef}
                   id="signup-email"
+                  name="signup-email-new"
                   type="email"
                   value={email}
                   onChange={(e) => {
@@ -384,7 +396,9 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin, subscriptionCont
                   className={`block w-full pl-10 pr-3 py-2.5 border rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus:border-transparent transition-shadow ${
                     emailError ? 'border-red-300 dark:border-red-500 bg-red-50 dark:bg-red-900/20' : 'border-slate-300 dark:border-slate-600'
                   }`}
-                  autoComplete="off"
+                  autoComplete="new-email"
+                  data-lpignore="true"
+                  data-1p-ignore="true"
                   disabled={isLoading}
                   aria-invalid={!!emailError}
                   aria-describedby={emailError ? 'email-error' : undefined}

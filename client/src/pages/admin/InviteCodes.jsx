@@ -10,31 +10,25 @@
  * - View code redemption details
  */
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
   Plus,
-  Copy,
   CheckCircle,
-  XCircle,
   RefreshCw,
   Gift,
   Users,
   Clock,
-  Link as LinkIcon,
   AlertCircle,
   MoreVertical,
-  ChevronRight,
-  ChevronLeft,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
   Filter
 } from 'lucide-react';
 import { PageLayout } from '../../components/PageLayout';
 import { Select } from '../../components/Select';
 import { ConfirmationModal } from '../../components/ConfirmationModal';
+import { CopyButton } from '../../components/CopyButton';
+import { AdminTable } from '../../components/admin/AdminTable';
 import { useAuth } from '../../contexts/AuthContext';
 import { formatDate, formatDateTime } from '../../utils/formatters';
 import toast from 'react-hot-toast';
@@ -68,7 +62,7 @@ function ActionMenu({ invite, isOpen, onToggle, onClose, onCopyLink, onToggleSta
         aria-expanded={isOpen}
         aria-haspopup="true"
       >
-        <MoreVertical className="w-5 h-5 text-slate-500" />
+        <MoreVertical className="w-5 h-5 text-slate-500 dark:text-slate-400" />
       </button>
 
       {/* Dropdown Menu - Fixed position to escape table overflow */}
@@ -136,17 +130,132 @@ export default function InviteCodes() {
   const [error, setError] = useState(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [creating, setCreating] = useState(false);
-  const [expandedCodes, setExpandedCodes] = useState(new Set());
   const [createdCode, setCreatedCode] = useState(null); // Newly created code to display
   const [openMenuId, setOpenMenuId] = useState(null); // For action dropdown menu
   const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, code: null }); // Delete confirmation modal
 
   // Pagination, sorting, and filtering state
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 0 });
-  const [sortBy, setSortBy] = useState('created_at');
-  const [sortOrder, setSortOrder] = useState('desc');
+  const [sorting, setSorting] = useState([{ id: 'created_at', desc: true }]);
   const [filterStatus, setFilterStatus] = useState('');
   const [filterTier, setFilterTier] = useState('');
+
+  // Derive sortBy and sortOrder from TanStack sorting state
+  const sortBy = sorting.length > 0 ? sorting[0].id : 'created_at';
+  const sortOrder = sorting.length > 0 ? (sorting[0].desc ? 'desc' : 'asc') : 'desc';
+
+  // Get status badge color
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'active':
+        return 'bg-green-100 text-green-800 dark:bg-green-400/15 dark:text-green-400';
+      case 'paused':
+        return 'bg-amber-100 text-amber-800 dark:bg-amber-400/15 dark:text-amber-400';
+      case 'exhausted':
+        return 'bg-slate-100 text-slate-800 dark:bg-slate-700/50 dark:text-slate-400';
+      case 'expired':
+        return 'bg-red-100 text-red-800 dark:bg-red-400/15 dark:text-red-400';
+      default:
+        return 'bg-slate-100 text-slate-800 dark:bg-slate-700/50 dark:text-slate-400';
+    }
+  };
+
+  // Define columns for AdminTable
+  const columns = useMemo(() => [
+    {
+      accessorKey: 'code',
+      header: 'Code',
+      enableSorting: false,
+      cell: ({ row }) => (
+        <div>
+          <div className="flex items-center gap-2">
+            <code className="text-sm font-mono text-slate-900 dark:text-white">
+              {row.original.code}
+            </code>
+            <CopyButton
+              text={`${window.location.origin}/trial?code=${row.original.code}`}
+              size="sm"
+              variant="ghost"
+              ariaLabel="Copy invite link"
+            />
+          </div>
+          {row.original.campaign && (
+            <span className="text-xs text-slate-500 dark:text-slate-400">
+              {row.original.campaign}
+            </span>
+          )}
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'status',
+      header: 'Status',
+      enableSorting: true,
+      cell: ({ row }) => (
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(row.original.status)}`}>
+          {row.original.status}
+        </span>
+      ),
+    },
+    {
+      accessorKey: 'trial_tier',
+      header: 'Tier',
+      enableSorting: true,
+      cell: ({ row }) => (
+        <span className="capitalize text-sm text-slate-700 dark:text-slate-300">
+          {row.original.trial_tier}
+        </span>
+      ),
+    },
+    {
+      accessorKey: 'current_uses',
+      header: 'Uses',
+      enableSorting: true,
+      cell: ({ row }) => (
+        <span className="text-sm text-slate-700 dark:text-slate-300">
+          {row.original.current_uses} / {row.original.max_uses}
+        </span>
+      ),
+    },
+    {
+      accessorKey: 'duration_days',
+      header: 'Duration',
+      enableSorting: true,
+      cell: ({ row }) => (
+        <span className="text-sm text-slate-700 dark:text-slate-300">
+          {row.original.duration_days} days
+        </span>
+      ),
+    },
+    {
+      accessorKey: 'created_at',
+      header: 'Created',
+      enableSorting: true,
+      cell: ({ row }) => (
+        <span className="text-sm text-slate-500 dark:text-slate-400">
+          {formatDateTime(row.original.created_at)}
+        </span>
+      ),
+    },
+    {
+      id: 'actions',
+      header: 'Actions',
+      enableSorting: false,
+      cell: ({ row }) => (
+        <div className="text-right">
+          <ActionMenu
+            invite={row.original}
+            isOpen={openMenuId === row.original.id}
+            onToggle={() => setOpenMenuId(openMenuId === row.original.id ? null : row.original.id)}
+            onClose={() => setOpenMenuId(null)}
+            onCopyLink={handleCopyLink}
+            onToggleStatus={handleToggleStatus}
+            onDelete={handleDeleteClick}
+          />
+        </div>
+      ),
+    },
+  ], [openMenuId]);
 
   // Create form state
   const [formData, setFormData] = useState({
@@ -238,14 +347,12 @@ export default function InviteCodes() {
     }
   }, [sortBy, sortOrder, filterStatus, filterTier]);
 
-  // Handle sort column click
-  const handleSort = (column) => {
-    if (sortBy === column) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortBy(column);
-      setSortOrder('desc');
-    }
+  // Handle sorting change from AdminTable
+  const handleSortingChange = (updaterOrValue) => {
+    const newSorting = typeof updaterOrValue === 'function'
+      ? updaterOrValue(sorting)
+      : updaterOrValue;
+    setSorting(newSorting);
   };
 
   // Handle page change
@@ -369,6 +476,53 @@ export default function InviteCodes() {
     }
   };
 
+  // Render expanded row content
+  const renderExpandedRow = (row) => {
+    const invite = row.original;
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+        <div>
+          <p className="text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wide mb-1">Invite Link</p>
+          <div className="flex items-center gap-2">
+            <code className="text-xs text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-600 px-2 py-1 rounded truncate max-w-[200px]">
+              {`${window.location.origin}/trial?code=${invite.code}`}
+            </code>
+            <CopyButton
+              text={`${window.location.origin}/trial?code=${invite.code}`}
+              size="sm"
+              variant="ghost"
+              ariaLabel="Copy invite link"
+            />
+          </div>
+        </div>
+        <div>
+          <p className="text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wide mb-1">Valid From</p>
+          <p className="text-slate-700 dark:text-slate-300">{formatDate(invite.valid_from)}</p>
+        </div>
+        <div>
+          <p className="text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wide mb-1">Valid Until</p>
+          <p className="text-slate-700 dark:text-slate-300">{invite.valid_until ? formatDate(invite.valid_until) : 'No expiry'}</p>
+        </div>
+        <div>
+          <p className="text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wide mb-1">Created By</p>
+          <p className="text-slate-700 dark:text-slate-300">{invite.created_by_name || invite.created_by_email || 'Unknown'}</p>
+        </div>
+        {invite.campaign && (
+          <div>
+            <p className="text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wide mb-1">Campaign</p>
+            <p className="text-slate-700 dark:text-slate-300">{invite.campaign}</p>
+          </div>
+        )}
+        {invite.notes && (
+          <div className="col-span-2">
+            <p className="text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wide mb-1">Notes</p>
+            <p className="text-slate-700 dark:text-slate-300">{invite.notes}</p>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // Delete unused invite code - opens confirmation modal
   const handleDeleteClick = (code) => {
     setDeleteConfirm({ isOpen: true, code });
@@ -401,33 +555,17 @@ export default function InviteCodes() {
     }
   };
 
-  // Get status badge color
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
-      case 'paused':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
-      case 'exhausted':
-        return 'bg-slate-100 text-slate-800 dark:bg-slate-700/50 dark:text-slate-400';
-      case 'expired':
-        return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
-      default:
-        return 'bg-slate-100 text-slate-800 dark:bg-slate-700/50 dark:text-slate-400';
-    }
-  };
-
   return (
     <PageLayout>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => navigate('/admin')}
             className="inline-flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors group mb-3"
           >
             <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" aria-hidden="true" />
-            <span className="font-medium">Back</span>
+            <span className="font-medium">Back to Admin</span>
           </button>
 
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -440,13 +578,23 @@ export default function InviteCodes() {
               </p>
             </div>
 
-            <button
-              onClick={() => setShowCreateForm(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              Create Code
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => fetchCodes(pagination.page, true)}
+                disabled={isRefreshing}
+                className="inline-flex items-center gap-2 px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
+              >
+                <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                Refresh
+              </button>
+              <button
+                onClick={() => setShowCreateForm(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-700 dark:hover:bg-purple-800 dark:active:bg-purple-900 text-white rounded-lg font-medium transition-colors shadow-lg shadow-purple-600/20 dark:shadow-purple-900/30"
+              >
+                <Plus className="w-4 h-4" />
+                Create Code
+              </button>
+            </div>
           </div>
         </div>
 
@@ -547,7 +695,7 @@ export default function InviteCodes() {
                   <button
                     type="submit"
                     disabled={creating}
-                    className="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-slate-400 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                    className="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-700 dark:hover:bg-purple-800 dark:active:bg-purple-900 disabled:bg-slate-400 dark:disabled:bg-slate-600 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2 shadow-lg shadow-purple-600/20 dark:shadow-purple-900/30 disabled:shadow-none"
                   >
                     {creating ? (
                       <>
@@ -607,16 +755,12 @@ export default function InviteCodes() {
                     value={createdCode.inviteLink}
                     className="flex-1 px-3 py-2 text-sm bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-300 font-mono"
                   />
-                  <button
-                    onClick={async () => {
-                      await navigator.clipboard.writeText(createdCode.inviteLink);
-                      toast.success('Link copied!');
-                    }}
-                    className="px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors flex items-center gap-1"
-                  >
-                    <Copy className="w-4 h-4" />
-                    Copy
-                  </button>
+                  <CopyButton
+                    text={createdCode.inviteLink}
+                    showLabel
+                    variant="primary"
+                    ariaLabel="Copy invite link"
+                  />
                 </div>
               </div>
 
@@ -660,50 +804,66 @@ export default function InviteCodes() {
         {/* Loading State */}
         {loading && (
           <div className="flex items-center justify-center py-16">
-            <RefreshCw className="w-8 h-8 text-purple-600 animate-spin" />
+            <RefreshCw className="w-8 h-8 text-purple-600 dark:text-purple-400 animate-spin" />
           </div>
         )}
 
         {/* Summary Stats - at top for quick overview */}
-        {!loading && !error && codes.length > 0 && (
+        {!loading && !error && (
           <div className="mb-6 grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-white dark:bg-slate-800 rounded-lg p-4 border border-slate-200 dark:border-slate-700">
-              <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 mb-1">
-                <Gift className="w-4 h-4" />
-                <span className="text-sm">Total Codes</span>
+            <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg">
+                  <Gift className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                    {codes.length}
+                  </p>
+                  <p className="text-xs text-slate-600 dark:text-slate-400">Total Codes</p>
+                </div>
               </div>
-              <p className="text-2xl font-bold text-slate-900 dark:text-white">
-                {codes.length}
-              </p>
             </div>
-            <div className="bg-white dark:bg-slate-800 rounded-lg p-4 border border-slate-200 dark:border-slate-700">
-              <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 mb-1">
-                <CheckCircle className="w-4 h-4" />
-                <span className="text-sm">Active</span>
+            <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg">
+                  <CheckCircle className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                    {codes.filter(c => c.status === 'active').length}
+                  </p>
+                  <p className="text-xs text-slate-600 dark:text-slate-400">Active</p>
+                </div>
               </div>
-              <p className="text-2xl font-bold text-slate-900 dark:text-white">
-                {codes.filter(c => c.status === 'active').length}
-              </p>
             </div>
-            <div className="bg-white dark:bg-slate-800 rounded-lg p-4 border border-slate-200 dark:border-slate-700">
-              <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 mb-1">
-                <Users className="w-4 h-4" />
-                <span className="text-sm">Total Redeemed</span>
+            <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg">
+                  <Users className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                    {codes.reduce((sum, c) => sum + (c.current_uses || 0), 0)}
+                  </p>
+                  <p className="text-xs text-slate-600 dark:text-slate-400">Total Redeemed</p>
+                </div>
               </div>
-              <p className="text-2xl font-bold text-slate-900 dark:text-white">
-                {codes.reduce((sum, c) => sum + (c.current_uses || 0), 0)}
-              </p>
             </div>
-            <div className="bg-white dark:bg-slate-800 rounded-lg p-4 border border-slate-200 dark:border-slate-700">
-              <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 mb-1">
-                <Clock className="w-4 h-4" />
-                <span className="text-sm">Available Slots</span>
+            <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg">
+                  <Clock className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                    {codes
+                      .filter(c => c.status === 'active')
+                      .reduce((sum, c) => sum + (c.max_uses - c.current_uses), 0)}
+                  </p>
+                  <p className="text-xs text-slate-600 dark:text-slate-400">Available Slots</p>
+                </div>
               </div>
-              <p className="text-2xl font-bold text-slate-900 dark:text-white">
-                {codes
-                  .filter(c => c.status === 'active')
-                  .reduce((sum, c) => sum + (c.max_uses - c.current_uses), 0)}
-              </p>
             </div>
           </div>
         )}
@@ -713,7 +873,7 @@ export default function InviteCodes() {
           <div className="mb-4 flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2">
               {isRefreshing ? (
-                <RefreshCw className="w-4 h-4 text-purple-500 animate-spin" />
+                <RefreshCw className="w-4 h-4 text-purple-600 dark:text-purple-400 animate-spin" />
               ) : (
                 <Filter className="w-4 h-4 text-slate-400" />
               )}
@@ -762,318 +922,57 @@ export default function InviteCodes() {
 
         {/* Codes Table */}
         {!loading && !error && (
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+          <>
+            {/* Custom empty states for when no codes exist at all */}
             {codes.length === 0 && !filterStatus && !filterTier && pagination.total === 0 ? (
-              <div className="p-8 text-center">
-                <Gift className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">
-                  No invite codes yet
-                </h3>
-                <p className="text-slate-600 dark:text-slate-400 mb-4">
-                  Create your first invite code to start inviting users.
-                </p>
-                <button
-                  onClick={() => setShowCreateForm(true)}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                  Create Code
-                </button>
-              </div>
-            ) : codes.length === 0 ? (
-              <div className="p-8 text-center">
-                <Filter className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">
-                  No matching codes
-                </h3>
-                <p className="text-slate-600 dark:text-slate-400 mb-4">
-                  No invite codes match your current filters.
-                </p>
-                <button
-                  onClick={() => {
-                    setFilterStatus('');
-                    setFilterTier('');
-                  }}
-                  className="text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 font-medium"
-                >
-                  Clear filters
-                </button>
+              <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+                <div className="p-8 text-center">
+                  <Gift className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">
+                    No invite codes yet
+                  </h3>
+                  <p className="text-slate-600 dark:text-slate-400 mb-4">
+                    Create your first invite code to start inviting users.
+                  </p>
+                  <button
+                    onClick={() => setShowCreateForm(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-700 dark:hover:bg-purple-800 dark:active:bg-purple-900 text-white rounded-lg font-medium transition-colors shadow-lg shadow-purple-600/20 dark:shadow-purple-900/30"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Create Code
+                  </button>
+                </div>
               </div>
             ) : (
-              <div className={`overflow-x-auto transition-opacity duration-200 ${isRefreshing ? 'opacity-50' : ''}`}>
-                <table className="w-full">
-                  <thead className="bg-slate-50 dark:bg-slate-700/50">
-                    <tr>
-                      <th className="w-10 px-2 py-3"></th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        Code
-                      </th>
-                      <th
-                        onClick={() => handleSort('status')}
-                        className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-700 dark:hover:text-slate-200 select-none"
-                      >
-                        <span className="flex items-center gap-1">
-                          Status
-                          {sortBy === 'status' ? (
-                            sortOrder === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
-                          ) : (
-                            <ArrowUpDown className="w-3 h-3 opacity-50" />
-                          )}
-                        </span>
-                      </th>
-                      <th
-                        onClick={() => handleSort('trial_tier')}
-                        className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-700 dark:hover:text-slate-200 select-none"
-                      >
-                        <span className="flex items-center gap-1">
-                          Tier
-                          {sortBy === 'trial_tier' ? (
-                            sortOrder === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
-                          ) : (
-                            <ArrowUpDown className="w-3 h-3 opacity-50" />
-                          )}
-                        </span>
-                      </th>
-                      <th
-                        onClick={() => handleSort('current_uses')}
-                        className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-700 dark:hover:text-slate-200 select-none"
-                      >
-                        <span className="flex items-center gap-1">
-                          Uses
-                          {sortBy === 'current_uses' ? (
-                            sortOrder === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
-                          ) : (
-                            <ArrowUpDown className="w-3 h-3 opacity-50" />
-                          )}
-                        </span>
-                      </th>
-                      <th
-                        onClick={() => handleSort('duration_days')}
-                        className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-700 dark:hover:text-slate-200 select-none"
-                      >
-                        <span className="flex items-center gap-1">
-                          Duration
-                          {sortBy === 'duration_days' ? (
-                            sortOrder === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
-                          ) : (
-                            <ArrowUpDown className="w-3 h-3 opacity-50" />
-                          )}
-                        </span>
-                      </th>
-                      <th
-                        onClick={() => handleSort('created_at')}
-                        className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-700 dark:hover:text-slate-200 select-none"
-                      >
-                        <span className="flex items-center gap-1">
-                          Created
-                          {sortBy === 'created_at' ? (
-                            sortOrder === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
-                          ) : (
-                            <ArrowUpDown className="w-3 h-3 opacity-50" />
-                          )}
-                        </span>
-                      </th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {codes.map((invite) => (
-                      <React.Fragment key={invite.id}>
-                      <tr
-                        className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors"
-                      >
-                        <td className="w-10 px-2 py-3">
-                          <button
-                            onClick={() => {
-                              setExpandedCodes(prev => {
-                                const next = new Set(prev);
-                                if (next.has(invite.id)) {
-                                  next.delete(invite.id);
-                                } else {
-                                  next.add(invite.id);
-                                }
-                                return next;
-                              });
-                            }}
-                            className="p-1 hover:bg-slate-200 dark:hover:bg-slate-600 rounded transition-colors"
-                            aria-label={expandedCodes.has(invite.id) ? 'Collapse details' : 'Expand details'}
-                          >
-                            <ChevronRight
-                              className={`w-4 h-4 text-slate-500 transition-transform duration-200 ease-out ${
-                                expandedCodes.has(invite.id) ? 'rotate-90' : ''
-                              }`}
-                            />
-                          </button>
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            <code className="text-sm font-mono text-slate-900 dark:text-white">
-                              {invite.code}
-                            </code>
-                            <button
-                              onClick={() => handleCopyLink(invite.code)}
-                              className="p-1 hover:bg-slate-200 dark:hover:bg-slate-600 rounded transition-colors"
-                              title="Copy invite link"
-                            >
-                              <Copy className="w-4 h-4 text-slate-500" />
-                            </button>
-                          </div>
-                          {invite.campaign && (
-                            <span className="text-xs text-slate-500 dark:text-slate-400">
-                              {invite.campaign}
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(invite.status)}`}>
-                            {invite.status}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 capitalize text-sm text-slate-700 dark:text-slate-300">
-                          {invite.trial_tier}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">
-                          {invite.current_uses} / {invite.max_uses}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">
-                          {invite.duration_days} days
-                        </td>
-                        <td className="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">
-                          {formatDateTime(invite.created_at)}
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <ActionMenu
-                            invite={invite}
-                            isOpen={openMenuId === invite.id}
-                            onToggle={() => setOpenMenuId(openMenuId === invite.id ? null : invite.id)}
-                            onClose={() => setOpenMenuId(null)}
-                            onCopyLink={handleCopyLink}
-                            onToggleStatus={handleToggleStatus}
-                            onDelete={handleDeleteClick}
-                          />
-                        </td>
-                      </tr>
-                      {/* Expanded Details Row - Always rendered for smooth animation */}
-                      <tr className={expandedCodes.has(invite.id) ? 'bg-slate-50 dark:bg-slate-700/30' : ''}>
-                        <td className="w-10 p-0 border-0"></td>
-                        <td colSpan={7} className="p-0 border-0">
-                          <div
-                            className="grid transition-all duration-250 ease-out"
-                            style={{
-                              gridTemplateRows: expandedCodes.has(invite.id) ? '1fr' : '0fr',
-                              opacity: expandedCodes.has(invite.id) ? 1 : 0
-                            }}
-                          >
-                            <div className="overflow-hidden">
-                              <div className="px-4 py-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                                <div>
-                                  <p className="text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wide mb-1">Invite Link</p>
-                                  <div className="flex items-center gap-2">
-                                    <code className="text-xs text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-600 px-2 py-1 rounded truncate max-w-[200px]">
-                                      {`${window.location.origin}/trial?code=${invite.code}`}
-                                    </code>
-                                    <button
-                                      onClick={() => handleCopyLink(invite.code)}
-                                      className="p-1 hover:bg-slate-200 dark:hover:bg-slate-600 rounded"
-                                      title="Copy link"
-                                    >
-                                      <Copy className="w-3 h-3 text-slate-500" />
-                                    </button>
-                                  </div>
-                                </div>
-                                <div>
-                                  <p className="text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wide mb-1">Valid From</p>
-                                  <p className="text-slate-700 dark:text-slate-300">{formatDate(invite.valid_from)}</p>
-                                </div>
-                                <div>
-                                  <p className="text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wide mb-1">Valid Until</p>
-                                  <p className="text-slate-700 dark:text-slate-300">{invite.valid_until ? formatDate(invite.valid_until) : 'No expiry'}</p>
-                                </div>
-                                <div>
-                                  <p className="text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wide mb-1">Created By</p>
-                                  <p className="text-slate-700 dark:text-slate-300">{invite.created_by_name || invite.created_by_email || 'Unknown'}</p>
-                                </div>
-                                {invite.campaign && (
-                                  <div>
-                                    <p className="text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wide mb-1">Campaign</p>
-                                    <p className="text-slate-700 dark:text-slate-300">{invite.campaign}</p>
-                                  </div>
-                                )}
-                                {invite.notes && (
-                                  <div className="col-span-2">
-                                    <p className="text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wide mb-1">Notes</p>
-                                    <p className="text-slate-700 dark:text-slate-300">{invite.notes}</p>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                    </React.Fragment>
-                    ))}
-                  </tbody>
-                </table>
-
-                {/* Pagination */}
-                {pagination.totalPages > 1 && (
-                  <div className="px-4 py-3 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between">
-                    <div className="text-sm text-slate-600 dark:text-slate-400">
-                      Showing {((pagination.page - 1) * pagination.limit) + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} codes
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handlePageChange(pagination.page - 1)}
-                        disabled={pagination.page === 1}
-                        className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        aria-label="Previous page"
-                      >
-                        <ChevronLeft className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-                      </button>
-                      <div className="flex items-center gap-1">
-                        {/* Page numbers */}
-                        {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
-                          let pageNum;
-                          if (pagination.totalPages <= 5) {
-                            pageNum = i + 1;
-                          } else if (pagination.page <= 3) {
-                            pageNum = i + 1;
-                          } else if (pagination.page >= pagination.totalPages - 2) {
-                            pageNum = pagination.totalPages - 4 + i;
-                          } else {
-                            pageNum = pagination.page - 2 + i;
-                          }
-                          return (
-                            <button
-                              key={pageNum}
-                              onClick={() => handlePageChange(pageNum)}
-                              className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
-                                pagination.page === pageNum
-                                  ? 'bg-purple-600 text-white'
-                                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
-                              }`}
-                            >
-                              {pageNum}
-                            </button>
-                          );
-                        })}
-                      </div>
-                      <button
-                        onClick={() => handlePageChange(pagination.page + 1)}
-                        disabled={pagination.page === pagination.totalPages}
-                        className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        aria-label="Next page"
-                      >
-                        <ChevronRight className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
+              <AdminTable
+                data={codes}
+                columns={columns}
+                sorting={sorting}
+                onSortingChange={handleSortingChange}
+                pagination={pagination}
+                onPageChange={handlePageChange}
+                isLoading={loading}
+                isRefreshing={isRefreshing}
+                renderExpandedRow={renderExpandedRow}
+                emptyState={{
+                  icon: Filter,
+                  title: 'No matching codes',
+                  description: 'No invite codes match your current filters.',
+                  action: (
+                    <button
+                      onClick={() => {
+                        setFilterStatus('');
+                        setFilterTier('');
+                      }}
+                      className="text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 font-medium"
+                    >
+                      Clear filters
+                    </button>
+                  ),
+                }}
+              />
             )}
-          </div>
+          </>
         )}
 
       </div>

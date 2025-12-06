@@ -19,8 +19,10 @@ import PrivacyPolicy from './pages/PrivacyPolicy.jsx'
 import Settings from './pages/Settings.jsx'
 import { RestoreAccount } from './pages/RestoreAccount.jsx'
 import { UsageDashboard } from './pages/UsageDashboard.jsx'
+import Admin from './pages/Admin.jsx'
 import AdminUsage from './pages/AdminUsage.jsx'
 import InviteCodes from './pages/admin/InviteCodes.jsx'
+import TrialsAdmin from './pages/admin/Trials.jsx'
 import { TrialRedemption } from './pages/TrialRedemption.jsx'
 import { ErrorTest } from './components/ErrorTest.jsx'
 
@@ -44,8 +46,10 @@ createRoot(document.getElementById('root')).render(
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/usage" element={<UsageDashboard />} />
+              <Route path="/admin" element={<Admin />} />
               <Route path="/admin/usage" element={<AdminUsage />} />
               <Route path="/admin/invite-codes" element={<InviteCodes />} />
+              <Route path="/admin/trials" element={<TrialsAdmin />} />
               <Route path="/trial" element={<TrialRedemption />} />
               {/* Testing route - triggers ErrorBoundary for dark mode and UI testing */}
               <Route path="/test-error" element={<ErrorTest />} />

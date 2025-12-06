@@ -1,4 +1,4 @@
-import { X, LogOut, FileText, Shield, BarChart3, Settings, SlidersHorizontal, Gift } from 'lucide-react';
+import { X, LogOut, FileText, Shield, BarChart3, Settings, SlidersHorizontal } from 'lucide-react';
 import { useEffect, useRef, useState, lazy, Suspense } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from './Button';
@@ -194,19 +194,14 @@ export function MobileMenu({ isOpen, onClose, onHelpClick }) {
               <>
                 <div className="h-px bg-slate-200 dark:bg-slate-700 my-2" />
                 <MenuLink to="/usage" icon={BarChart3}>
-                  Usage Dashboard
+                  My Usage
                 </MenuLink>
 
-                {/* Admin links - Only visible to admins */}
+                {/* Admin link - Only visible to admins */}
                 {isAdmin && (
-                  <>
-                    <MenuLink to="/admin/usage" icon={Shield}>
-                      Admin Dashboard
-                    </MenuLink>
-                    <MenuLink to="/admin/invite-codes" icon={Gift}>
-                      Invite Codes
-                    </MenuLink>
-                  </>
+                  <MenuLink to="/admin" icon={Shield}>
+                    Administration
+                  </MenuLink>
                 )}
 
                 <MenuLink to="/settings" icon={Settings}>

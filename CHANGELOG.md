@@ -9,6 +9,103 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.1.0] - 2025-12-05
+
+**Status:** ✅ Trial System Production Ready
+
+**Summary:** Complete trial system with full user-facing flow, Pro feature access, trial-aware attribution watermarks, admin trial management with TanStack Table, and comprehensive test coverage.
+
+### Added
+
+- **Trial Management Admin UI** ([client/src/pages/admin/Trials.jsx](client/src/pages/admin/Trials.jsx))
+  - TanStack Table with sorting, filtering, pagination
+  - Trial status badges (Active, Expired, Converted, Cancelled)
+  - Extend trial duration modal with validation
+  - Cancel trial functionality with confirmation
+  - KPI dashboard (active trials, conversions, expiring soon)
+  - Refresh button for real-time updates
+
+- **Trial Redemption Flow** ([client/src/pages/TrialRedemption.jsx](client/src/pages/TrialRedemption.jsx))
+  - Landing page for ?code=XXX URL parameter
+  - Automatic code validation on page load
+  - Seamless signup/login integration with trial activation
+  - Email verification triggers trial activation
+  - Success state with trial details display
+
+- **Trial Banner** ([client/src/components/trial/TrialBanner.jsx](client/src/components/trial/TrialBanner.jsx))
+  - Persistent banner showing trial status and days remaining
+  - Warning color at <3 days remaining
+  - Upgrade CTA with link to pricing
+
+- **Trial-Aware Attribution Watermarks**
+  - Individual doc generation shows trial watermark with expiry date
+  - Batch summary documents show matching trial attribution
+  - Format: "🔶 Trial Access - Generated with CodeScribe AI"
+
+- **Trial Context Provider** ([client/src/contexts/TrialContext.jsx](client/src/contexts/TrialContext.jsx))
+  - isOnTrial, trialTier, daysRemaining, trialEndsAt state
+  - redeemCode() and validateCode() API methods
+  - Automatic trial status sync with auth state
+
+- **Admin Trial APIs** ([server/src/routes/admin.js](server/src/routes/admin.js))
+  - GET /api/admin/trials - List all trials (paginated)
+  - GET /api/admin/trials/analytics - Trial statistics
+  - PATCH /api/admin/trials/:userId/extend - Extend trial duration
+  - POST /api/admin/trials/:userId/cancel - Cancel active trial
+
+- **Trial Email Templates** ([server/src/services/emailTemplates/](server/src/services/emailTemplates/))
+  - trial-activated.jsx - Welcome email with trial details
+  - trial-expiring.jsx - 3-day and 1-day reminders
+  - trial-expired.jsx - Expiration notice with upgrade CTA
+
+### Changed
+
+- **Page Titles**
+  - Admin "Admin Usage Statistics" → "Usage Dashboard"
+  - User-facing "Usage Dashboard" → "My Usage"
+
+- **Frontend Tier Calculation** ([client/src/utils/tierFeatures.js](client/src/utils/tierFeatures.js))
+  - getEffectiveTier() now uses backend-calculated effectiveTier
+  - Properly supports trial tier for Pro feature access
+
+- **Auth Endpoints** ([server/src/routes/auth.js](server/src/routes/auth.js))
+  - Login, signup, verify-email now enrich user with trial info
+  - Added enrichUserWithTrialInfo() helper function
+
+- **Document Persistence** ([client/src/hooks/useDocumentPersistence.js](client/src/hooks/useDocumentPersistence.js))
+  - Default save preference changed from 'ask' to 'always'
+  - Simplifies UX - generated docs are always saved (users can opt-out)
+
+- **Terms Acceptance Modal** ([client/src/components/TermsAcceptanceModal.jsx](client/src/components/TermsAcceptanceModal.jsx))
+  - Simplified to single combined checkbox (matching SignupModal)
+  - Updated missingAcceptance prop structure
+
+### Fixed
+
+- **Trial Users Can't Access Pro Features**
+  - Frontend getEffectiveTier() was ignoring backend effectiveTier
+  - Auth endpoints weren't enriching user with trial info
+
+- **Batch Summary Missing Trial Attribution**
+  - buildAttribution() now accepts trialInfo parameter
+  - generateBatchSummaryDocument() passes trial info
+
+- **Admin Route Order** ([server/src/routes/admin.js](server/src/routes/admin.js))
+  - /trials/analytics now defined before /trials/:userId
+  - Prevents "analytics" from matching as userId
+
+### Tests
+
+- **Frontend:** 1,840 passing, 57 skipped (1,897 total)
+- **Backend:** 1,391 passing, 33 skipped (1,424 total)
+- **Total:** 3,231 passing, 90 skipped (3,321 total)
+
+- Updated TermsAcceptanceModal tests for simplified checkbox
+- Updated useDocumentPersistence tests for 'always' default
+- All trial-related tests passing
+
+---
+
 ## [3.0.0] - 2025-12-04
 
 **Status:** ✅ Trial System Core Complete

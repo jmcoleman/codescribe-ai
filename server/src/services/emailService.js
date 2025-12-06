@@ -15,7 +15,10 @@ import {
   contactSalesTemplate,
   deletionScheduledTemplate,
   accountRestoredTemplate,
-  finalDeletionWarningTemplate
+  finalDeletionWarningTemplate,
+  trialExpiringReminderTemplate,
+  trialExpiredNoticeTemplate,
+  trialExtendedTemplate
 } from './emailTemplates/index.js';
 
 // Initialize Resend lazily - will be created when needed
@@ -190,10 +193,28 @@ export async function sendPasswordResetEmail({ to, resetToken }) {
  * @param {Object} options - Email options
  * @param {string} options.to - Recipient email
  * @param {string} options.verificationToken - Email verification token
+ * @param {string} [options.trialCode] - Optional trial invite code to embed in URL
+ * @param {string} [options.subscriptionTier] - Optional subscription tier to embed in URL
+ * @param {string} [options.subscriptionBillingPeriod] - Optional billing period (monthly/yearly)
+ * @param {string} [options.subscriptionTierName] - Optional display name for the tier
  * @returns {Promise<Object>} Send result
  */
-export async function sendVerificationEmail({ to, verificationToken }) {
-  const verifyUrl = `${CLIENT_URL}/verify-email?token=${verificationToken}`;
+export async function sendVerificationEmail({ to, verificationToken, trialCode, subscriptionTier, subscriptionBillingPeriod, subscriptionTierName }) {
+  let verifyUrl = `${CLIENT_URL}/verify-email?token=${verificationToken}`;
+  // Append trial code to verification URL if provided
+  if (trialCode) {
+    verifyUrl += `&trial_code=${encodeURIComponent(trialCode)}`;
+  }
+  // Append subscription info to verification URL if provided
+  if (subscriptionTier) {
+    verifyUrl += `&sub_tier=${encodeURIComponent(subscriptionTier)}`;
+    if (subscriptionBillingPeriod) {
+      verifyUrl += `&sub_period=${encodeURIComponent(subscriptionBillingPeriod)}`;
+    }
+    if (subscriptionTierName) {
+      verifyUrl += `&sub_name=${encodeURIComponent(subscriptionTierName)}`;
+    }
+  }
 
   const emailData = {
     from: FROM_EMAIL,
@@ -652,6 +673,176 @@ async function sendFinalDeletionWarningEmail(userEmail, userName, restoreToken) 
   }
 }
 
+/**
+ * Send trial expiring reminder email
+ * @param {Object} options - Email options
+ * @param {string} options.to - Recipient email
+ * @param {string} options.userName - User's name or email
+ * @param {number} options.daysRemaining - Days until trial expires (1 or 3)
+ * @param {string} options.trialTier - Trial tier (e.g., 'pro')
+ * @param {Date|string} options.expiresAt - Trial expiration date
+ * @returns {Promise<Object>} Send result
+ */
+export async function sendTrialExpiringEmail({ to, userName, daysRemaining, trialTier = 'pro', expiresAt }) {
+  const tierDisplay = trialTier.charAt(0).toUpperCase() + trialTier.slice(1);
+  const subject = daysRemaining === 1
+    ? `Last day! Your ${tierDisplay} trial expires tomorrow`
+    : `Your ${tierDisplay} trial expires in ${daysRemaining} days`;
+
+  const emailData = {
+    from: FROM_EMAIL,
+    to,
+    subject,
+    html: trialExpiringReminderTemplate({
+      userName: userName || to.split('@')[0],
+      daysRemaining,
+      trialTier,
+      expiresAt,
+      environment: process.env.NODE_ENV,
+      clientUrl: CLIENT_URL
+    })
+  };
+
+  if (shouldMockEmails()) {
+    return await mockEmailSend(emailData);
+  }
+
+  const client = getResendClient();
+  if (!client) {
+    throw new Error('Email service not configured. Please set RESEND_API_KEY environment variable.');
+  }
+
+  try {
+    const result = await client.emails.send(emailData);
+    console.log('\n📧 [EMAIL SENT] Trial Expiring Reminder');
+    console.log('  To:', emailData.to);
+    console.log('  Days Remaining:', daysRemaining);
+    console.log('  Expires At:', expiresAt);
+    console.log('  Email ID:', result.data?.id);
+    return result;
+  } catch (error) {
+    console.error('Failed to send trial expiring email:', error);
+    if (error.statusCode === 429 || error.message?.toLowerCase().includes('too many requests')) {
+      const customError = new Error('Email service is temporarily unavailable due to high demand. Please try again in a few minutes.');
+      customError.code = 'RESEND_RATE_LIMIT';
+      customError.statusCode = 503;
+      throw customError;
+    }
+    throw new Error('Failed to send trial expiring email');
+  }
+}
+
+/**
+ * Send trial expired notice email
+ * @param {Object} options - Email options
+ * @param {string} options.to - Recipient email
+ * @param {string} options.userName - User's name or email
+ * @param {string} options.trialTier - Trial tier that expired (e.g., 'pro')
+ * @param {Date|string} options.expiredAt - When the trial expired
+ * @returns {Promise<Object>} Send result
+ */
+export async function sendTrialExpiredEmail({ to, userName, trialTier = 'pro', expiredAt }) {
+  const tierDisplay = trialTier.charAt(0).toUpperCase() + trialTier.slice(1);
+
+  const emailData = {
+    from: FROM_EMAIL,
+    to,
+    subject: `Your ${tierDisplay} Trial Has Ended - CodeScribe AI`,
+    html: trialExpiredNoticeTemplate({
+      userName: userName || to.split('@')[0],
+      trialTier,
+      expiredAt,
+      environment: process.env.NODE_ENV,
+      clientUrl: CLIENT_URL
+    })
+  };
+
+  if (shouldMockEmails()) {
+    return await mockEmailSend(emailData);
+  }
+
+  const client = getResendClient();
+  if (!client) {
+    throw new Error('Email service not configured. Please set RESEND_API_KEY environment variable.');
+  }
+
+  try {
+    const result = await client.emails.send(emailData);
+    console.log('\n📧 [EMAIL SENT] Trial Expired Notice');
+    console.log('  To:', emailData.to);
+    console.log('  Trial Tier:', trialTier);
+    console.log('  Email ID:', result.data?.id);
+    return result;
+  } catch (error) {
+    console.error('Failed to send trial expired email:', error);
+    if (error.statusCode === 429 || error.message?.toLowerCase().includes('too many requests')) {
+      const customError = new Error('Email service is temporarily unavailable due to high demand. Please try again in a few minutes.');
+      customError.code = 'RESEND_RATE_LIMIT';
+      customError.statusCode = 503;
+      throw customError;
+    }
+    throw new Error('Failed to send trial expired email');
+  }
+}
+
+/**
+ * Send trial extended confirmation email
+ * @param {Object} options - Email options
+ * @param {string} options.to - Recipient email
+ * @param {string} options.userName - User's name or email
+ * @param {string} options.trialTier - Trial tier (e.g., 'pro')
+ * @param {number} options.additionalDays - Number of days extended
+ * @param {Date|string} options.newExpiresAt - New expiration date
+ * @param {string} options.reason - Optional reason for extension
+ * @returns {Promise<Object>} Send result
+ */
+export async function sendTrialExtendedEmail({ to, userName, trialTier = 'pro', additionalDays, newExpiresAt, reason }) {
+  const tierDisplay = trialTier.charAt(0).toUpperCase() + trialTier.slice(1);
+
+  const emailData = {
+    from: FROM_EMAIL,
+    to,
+    subject: `Your ${tierDisplay} Trial Extended - CodeScribe AI`,
+    html: trialExtendedTemplate({
+      userName: userName || to.split('@')[0],
+      trialTier,
+      additionalDays,
+      newExpiresAt,
+      reason,
+      environment: process.env.NODE_ENV,
+      clientUrl: CLIENT_URL
+    })
+  };
+
+  if (shouldMockEmails()) {
+    return await mockEmailSend(emailData);
+  }
+
+  const client = getResendClient();
+  if (!client) {
+    throw new Error('Email service not configured. Please set RESEND_API_KEY environment variable.');
+  }
+
+  try {
+    const result = await client.emails.send(emailData);
+    console.log('\n📧 [EMAIL SENT] Trial Extended');
+    console.log('  To:', emailData.to);
+    console.log('  Additional Days:', additionalDays);
+    console.log('  New Expires At:', newExpiresAt);
+    console.log('  Email ID:', result.data?.id);
+    return result;
+  } catch (error) {
+    console.error('Failed to send trial extended email:', error);
+    if (error.statusCode === 429 || error.message?.toLowerCase().includes('too many requests')) {
+      const customError = new Error('Email service is temporarily unavailable due to high demand. Please try again in a few minutes.');
+      customError.code = 'RESEND_RATE_LIMIT';
+      customError.statusCode = 503;
+      throw customError;
+    }
+    throw new Error('Failed to send trial extended email');
+  }
+}
+
 export default {
   sendPasswordResetEmail,
   sendVerificationEmail,
@@ -659,5 +850,8 @@ export default {
   sendSupportEmail,
   sendDeletionScheduledEmail,
   sendAccountRestoredEmail,
-  sendFinalDeletionWarningEmail
+  sendFinalDeletionWarningEmail,
+  sendTrialExpiringEmail,
+  sendTrialExpiredEmail,
+  sendTrialExtendedEmail
 };

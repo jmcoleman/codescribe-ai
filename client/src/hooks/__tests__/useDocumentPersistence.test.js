@@ -221,7 +221,9 @@ describe('useDocumentPersistence', () => {
     });
   });
 
-  describe('Authenticated State - Preference: ask', () => {
+  describe('Authenticated State - Preference: ask (legacy - now acts like always)', () => {
+    // Note: 'ask' is a legacy preference value that now acts like 'always'
+    // The simplification removes the 'ask' flow - docs are always saved
     beforeEach(() => {
       useAuth.mockReturnValue({
         user: {
@@ -233,14 +235,22 @@ describe('useDocumentPersistence', () => {
       });
     });
 
-    it('should have savePreference=ask and needsConsent=true', () => {
+    it('should have savePreference=ask but needsConsent=false (acts like always)', () => {
       const { result } = renderHook(() => useDocumentPersistence());
 
+      // 'ask' preference is stored but behavior is like 'always'
       expect(result.current.savePreference).toBe('ask');
-      expect(result.current.needsConsent).toBe(true);
+      // Since 'ask' now acts like 'always', no consent is needed
+      expect(result.current.needsConsent).toBe(false);
     });
 
-    it('should not auto-save without user choice', async () => {
+    it('should auto-save even without user choice (ask now acts like always)', async () => {
+      const mockResponse = {
+        documentId: 'doc-123',
+        savedAt: '2025-11-15T12:00:00Z'
+      };
+      documentsApi.saveDocument.mockResolvedValue(mockResponse);
+
       const { result } = renderHook(() => useDocumentPersistence());
 
       const docData = {
@@ -257,8 +267,9 @@ describe('useDocumentPersistence', () => {
         saveResult = await result.current.saveDocument(docData);
       });
 
-      expect(saveResult).toBeNull();
-      expect(documentsApi.saveDocument).not.toHaveBeenCalled();
+      // Now auto-saves since 'ask' acts like 'always'
+      expect(documentsApi.saveDocument).toHaveBeenCalled();
+      expect(saveResult).toEqual(mockResponse);
     });
 
     it('should save when user chooses "save"', async () => {
@@ -323,13 +334,14 @@ describe('useDocumentPersistence', () => {
       );
     });
 
-    it('should return shouldSave=false when no user choice', () => {
+    it('should return shouldSave=true when no user choice (default is always)', () => {
       const { result } = renderHook(() => useDocumentPersistence());
 
       const decision = result.current.shouldSaveDocument(null);
 
+      // Default preference is 'always' - we only store generated docs, not user code
       expect(decision).toEqual({
-        shouldSave: false,
+        shouldSave: true,
         isEphemeral: false
       });
     });
@@ -629,7 +641,8 @@ describe('useDocumentPersistence', () => {
 
       const { result } = renderHook(() => useDocumentPersistence());
 
-      expect(result.current.savePreference).toBe('ask'); // Default to 'ask'
+      // Default to 'always' - we only store generated docs, not user code
+      expect(result.current.savePreference).toBe('always');
     });
 
     it('should handle API errors gracefully', async () => {

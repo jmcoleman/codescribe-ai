@@ -40,7 +40,16 @@ export const TIER_FEATURES = {
 };
 
 /**
- * Get effective tier (considering override if present and valid)
+ * Get effective tier (considering trials and overrides)
+ *
+ * The backend calculates effectiveTier considering:
+ * 1. Admin/support overrides
+ * 2. Paid subscription tier
+ * 3. Active trial tier
+ * 4. Default (free)
+ *
+ * We prefer to use the backend-calculated effectiveTier when available,
+ * falling back to local calculation for admin overrides only.
  *
  * @param {Object} user - User object from auth context
  * @returns {string} - Effective tier to use for feature checks
@@ -48,30 +57,25 @@ export const TIER_FEATURES = {
 export function getEffectiveTier(user) {
   if (!user) return 'free';
 
-  // Only admin/support/super_admin can have overrides
-  if (!['admin', 'support', 'super_admin'].includes(user.role)) {
-    return user.tier || 'free';
+  // Prefer backend-calculated effectiveTier (includes trials, overrides, etc.)
+  if (user.effectiveTier) {
+    return user.effectiveTier;
   }
 
-  // Check if override exists (database fields)
-  if (!user.viewing_as_tier || !user.override_expires_at) {
-    return user.tier || 'free';
+  // Fallback: local calculation for admin overrides
+  // (only needed if effectiveTier not provided by backend)
+  if (['admin', 'support', 'super_admin'].includes(user.role)) {
+    if (user.viewing_as_tier && user.override_expires_at) {
+      const now = new Date();
+      const expiry = new Date(user.override_expires_at);
+
+      if (!isNaN(expiry.getTime()) && now < expiry) {
+        return user.viewing_as_tier;
+      }
+    }
   }
 
-  // Check if override has expired
-  const now = new Date();
-  const expiry = new Date(user.override_expires_at);
-
-  // Handle invalid dates
-  if (isNaN(expiry.getTime())) {
-    return user.tier || 'free';
-  }
-
-  if (now > expiry) {
-    return user.tier || 'free';
-  }
-
-  return user.viewing_as_tier;
+  return user.tier || 'free';
 }
 
 /**

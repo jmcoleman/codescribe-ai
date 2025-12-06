@@ -229,7 +229,8 @@ export const trialService = {
     const results = {
       processed: 0,
       failed: 0,
-      errors: []
+      errors: [],
+      expiredTrials: [] // Include processed trials for email sending
     };
 
     for (const trial of expiredTrials) {
@@ -244,6 +245,14 @@ export const trialService = {
               updated_at = NOW()
           WHERE id = ${trial.user_id}
         `;
+
+        // Add to processed list with user info for email sending
+        results.expiredTrials.push({
+          ...trial,
+          user_name: trial.first_name || trial.last_name
+            ? `${trial.first_name || ''} ${trial.last_name || ''}`.trim()
+            : null
+        });
 
         results.processed++;
       } catch (error) {
@@ -269,7 +278,15 @@ export const trialService = {
    * @returns {Promise<Array>} Trials expiring soon
    */
   async getExpiringTrials(withinDays) {
-    return await Trial.getExpiring(withinDays);
+    const trials = await Trial.getExpiring(withinDays);
+
+    // Add user_name field from first_name/last_name
+    return trials.map(trial => ({
+      ...trial,
+      user_name: trial.first_name || trial.last_name
+        ? `${trial.first_name || ''} ${trial.last_name || ''}`.trim()
+        : null
+    }));
   },
 
   /**

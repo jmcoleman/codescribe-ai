@@ -28,9 +28,20 @@ const BATCH_SUMMARY_STATE_KEY = 'codescribe_batch_summary_state';
 /**
  * Build tier-based attribution footer (matches server-side docGenerator.buildAttribution)
  * @param {string} tier - User tier (free, starter, pro, premium, team, enterprise)
+ * @param {Object} trialInfo - Optional trial info { isOnTrial, trialEndsAt }
  * @returns {string} Attribution markdown
  */
-export const buildAttribution = (tier) => {
+export const buildAttribution = (tier, trialInfo = null) => {
+  // Trial attribution takes precedence - shows trial status with expiry date
+  if (trialInfo?.isOnTrial && trialInfo?.trialEndsAt) {
+    const formattedDate = new Date(trialInfo.trialEndsAt).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    return `\n\n---\n*🔶 Trial Access - Generated with [CodeScribe AI](https://codescribeai.com)*  \n*Trial expires: ${formattedDate} | [Upgrade to Pro](https://codescribeai.com/pricing) to remove this watermark*`;
+  }
+
   const attributions = {
     free: `\n\n---\n*🟣 Generated with [CodeScribe AI](https://codescribeai.com) • Free Tier*  \n*Upgrade to [Pro](https://codescribeai.com/pricing) to remove this watermark and unlock advanced features*`,
     starter: `\n\n---\n*🟣 Generated with [CodeScribe AI](https://codescribeai.com) • Starter*  \n*Upgrade to [Pro](https://codescribeai.com/pricing) to unlock batch processing and custom templates*`,
@@ -47,9 +58,10 @@ export const buildAttribution = (tier) => {
  * @param {Object} summary - Batch summary data
  * @param {Array} failedFiles - Array of failed file objects
  * @param {string} tier - User tier for attribution
+ * @param {Object} trialInfo - Optional trial info { isOnTrial, trialEndsAt }
  * @returns {string} Markdown document
  */
-export const generateBatchSummaryDocument = (summary, failedFiles = [], tier = 'free') => {
+export const generateBatchSummaryDocument = (summary, failedFiles = [], tier = 'free', trialInfo = null) => {
   const { totalFiles, successCount, failCount, skippedCount = 0, avgQuality, avgGrade, successfulFiles = [], skippedFiles = [], wasCancelled = false } = summary;
 
   // Format timestamp: "Dec 3, 2025 at 10:30 PM"
@@ -257,8 +269,8 @@ export const generateBatchSummaryDocument = (summary, failedFiles = [], tier = '
     markdown += `*Legend: ✓ Complete | ◐ Partial | ✗ Missing*\n\n`;
   }
 
-  // Add tier-based attribution footer (use effectiveTier for tier overrides)
-  markdown += buildAttribution(tier);
+  // Add tier-based attribution footer (use effectiveTier for tier overrides, trialInfo for trials)
+  markdown += buildAttribution(tier, trialInfo);
 
   return markdown;
 };
@@ -279,6 +291,7 @@ export const generateBatchSummaryDocument = (summary, failedFiles = [], tier = '
  * @param {Function} options.setShowUsageLimitModal - Show usage limit modal
  * @param {Function} options.refetchUsage - Refetch usage stats
  * @param {string} options.userTier - User's effective tier for attribution
+ * @param {Object} options.trialInfo - Optional trial info { isOnTrial, trialEndsAt }
  * @returns {Object} Batch generation state and handlers
  */
 export function useBatchGeneration({
@@ -293,7 +306,8 @@ export function useBatchGeneration({
   canGenerate,
   setShowUsageLimitModal,
   refetchUsage,
-  userTier = 'free'
+  userTier = 'free',
+  trialInfo = null
 }) {
   // Load initial batch state from sessionStorage (persists across refresh)
   const loadInitialBatchState = () => {
@@ -636,8 +650,8 @@ export function useBatchGeneration({
     // Clear active file so sync effect doesn't overwrite batch summary
     multiFileState.setActiveFile(null);
 
-    // Generate and display batch summary document
-    const summaryMarkdown = generateBatchSummaryDocument(summaryData, failedFiles, userTier);
+    // Generate and display batch summary document (include trialInfo for trial attribution)
+    const summaryMarkdown = generateBatchSummaryDocument(summaryData, failedFiles, userTier, trialInfo);
     setDocumentation(summaryMarkdown);
     setBatchSummaryMarkdown(summaryMarkdown);
 
@@ -738,7 +752,8 @@ export function useBatchGeneration({
     refetchUsage,
     setDocumentation,
     setQualityScore,
-    userTier
+    userTier,
+    trialInfo
   ]);
 
   /**

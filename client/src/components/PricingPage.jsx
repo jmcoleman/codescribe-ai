@@ -1,13 +1,15 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
-import { Check, Sparkles, Zap, Building2, Code2, Loader2, ArrowLeft, Star, DollarSign } from 'lucide-react';
+import { Check, Sparkles, Zap, Building2, Code2, Loader2, ArrowLeft, Star, DollarSign, Gift } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useTrial } from '../contexts/TrialContext';
 import { API_URL } from '../config/api';
 import { toastError } from '../utils/toast';
 import VerificationRequiredModal from './VerificationRequiredModal';
 import { ContactSalesModal } from './ContactSalesModal';
 import { STORAGE_KEYS, setSessionItem, getSessionItem, removeSessionItem } from '../constants/storage';
 import { PageLayout } from './PageLayout';
+import { TrialBanner } from './trial/TrialBanner';
 
 // Lazy load auth modals
 const SignupModal = lazy(() => import('./SignupModal').then(m => ({ default: m.SignupModal })));
@@ -31,6 +33,7 @@ function ModalLoadingFallback() {
 export function PricingPage() {
   const navigate = useNavigate();
   const { user, isAuthenticated, getToken } = useAuth();
+  const { isOnTrial, trialTier } = useTrial();
   const [loading, setLoading] = useState(null);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [showSignupModal, setShowSignupModal] = useState(false);
@@ -331,6 +334,11 @@ export function PricingPage() {
           )}
         </div>
 
+        {/* Trial Status Banner - reuse same component as main app, hide upgrade/dismiss since we're on pricing page */}
+        <div className="mb-4 rounded-xl overflow-hidden">
+          <TrialBanner hideUpgrade hideDismiss />
+        </div>
+
         <div className="text-center mb-1 sm:mb-2">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 dark:text-slate-100 mb-1">
             Simple, Transparent Pricing
@@ -409,6 +417,7 @@ export function PricingPage() {
             const Icon = tier.icon;
             const isLoading = loading === tier.id;
             const isCurrentTier = user?.tier === tier.id;
+            const isTrialTier = isOnTrial && trialTier === tier.id;
             const displayPrice = billingPeriod === 'annual' ? tier.yearlyPrice : tier.monthlyPrice;
             const showYearlySavings = billingPeriod === 'annual' && tier.yearlyTotal;
 
@@ -416,12 +425,25 @@ export function PricingPage() {
               <div
                 key={tier.name}
                 className={`relative rounded-2xl border-2 p-4 sm:p-5 bg-white dark:bg-slate-800 transition-all duration-200 hover:shadow-xl dark:hover:shadow-purple-500/10 flex flex-col max-w-sm mx-auto w-full ${
-                  tier.popular
+                  isTrialTier
+                    ? 'border-amber-500 dark:border-amber-600 shadow-lg shadow-amber-500/10 dark:shadow-amber-900/30 lg:scale-[1.02]'
+                    : tier.popular && !isCurrentTier
                     ? 'border-purple-600 dark:border-purple-500 shadow-lg shadow-purple-600/10 dark:shadow-purple-900/30 lg:scale-[1.02]'
                     : 'border-slate-200 dark:border-slate-700 hover:border-purple-300 dark:hover:border-purple-600'
                 }`}
               >
-                {tier.popular && !isCurrentTier && (
+                {/* Trial Badge - Highest priority */}
+                {isTrialTier && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500 dark:bg-amber-600 text-white">
+                      <Gift className="w-3 h-3" />
+                      On Trial
+                    </span>
+                  </div>
+                )}
+
+                {/* Most Popular Badge - Show if not on trial and not current tier */}
+                {tier.popular && !isCurrentTier && !isTrialTier && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-600 dark:bg-purple-700 text-white">
                       <Sparkles className="w-3 h-3" />
@@ -430,7 +452,8 @@ export function PricingPage() {
                   </div>
                 )}
 
-                {isCurrentTier && (
+                {/* Current Plan Badge - Show if not on trial */}
+                {isCurrentTier && !isTrialTier && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                     <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-green-600 dark:bg-green-700 text-white">
                       Current Plan
@@ -482,9 +505,11 @@ export function PricingPage() {
 
                 <button
                   onClick={() => handleSubscribe(tier.id, billingPeriod)}
-                  disabled={isLoading || isCurrentTier}
+                  disabled={isLoading || (isCurrentTier && !isTrialTier)}
                   className={`w-full py-3 px-4 rounded-lg font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-auto ${
-                    tier.ctaVariant === 'primary'
+                    isTrialTier
+                      ? 'bg-amber-500 hover:bg-amber-600 active:bg-amber-700 dark:bg-amber-600 dark:hover:bg-amber-700 dark:active:bg-amber-800 text-white shadow-lg shadow-amber-500/20 dark:shadow-amber-900/30'
+                      : tier.ctaVariant === 'primary'
                       ? 'bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-700 dark:hover:bg-purple-800 dark:active:bg-purple-900 text-white shadow-lg shadow-purple-600/20 dark:shadow-purple-900/30'
                       : 'bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-600'
                   }`}
@@ -494,8 +519,10 @@ export function PricingPage() {
                       <Loader2 className="w-4 h-4 animate-spin" />
                       Loading...
                     </>
-                  ) : isCurrentTier ? (
+                  ) : isCurrentTier && !isTrialTier ? (
                     'Current Plan'
+                  ) : isTrialTier ? (
+                    'Subscribe Now'
                   ) : (
                     tier.cta
                   )}

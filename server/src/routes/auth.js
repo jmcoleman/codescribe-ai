@@ -17,9 +17,14 @@ import {
   requireAuth,
   validateBody,
   generateToken,
-  sanitizeUser
+  sanitizeUser,
+  enrichUserWithTrialInfo
 } from '../middleware/auth.js';
 import { sendPasswordResetEmail, sendVerificationEmail } from '../services/emailService.js';
+import {
+  CURRENT_TERMS_VERSION,
+  CURRENT_PRIVACY_VERSION
+} from '../constants/legalVersions.js';
 
 const router = express.Router();
 
@@ -74,7 +79,7 @@ router.post(
   }),
   async (req, res, next) => {
     try {
-      const { email, password } = req.body;
+      const { email, password, trialCode, subscriptionTier, subscriptionBillingPeriod, subscriptionTierName, acceptTerms } = req.body;
 
       // Check if user already exists
       const existingUser = await User.findByEmail(email);
@@ -97,6 +102,22 @@ router.post(
             WHERE id = ${existingUser.id}
           `;
 
+          // Record legal document acceptance if user accepted during signup
+          if (acceptTerms) {
+            try {
+              await User.acceptLegalDocuments(
+                existingUser.id,
+                CURRENT_TERMS_VERSION,
+                CURRENT_PRIVACY_VERSION
+              );
+              if (process.env.NODE_ENV === 'development') {
+                console.log(`[Auth] Recorded legal acceptance for restored user ${existingUser.id}`);
+              }
+            } catch (legalError) {
+              console.error('[Auth] Failed to record legal acceptance:', legalError);
+            }
+          }
+
           // Fetch updated user data
           const user = await User.findById(existingUser.id);
 
@@ -118,7 +139,11 @@ router.post(
             const verificationToken = await User.createVerificationToken(user.id);
             await sendVerificationEmail({
               to: user.email,
-              verificationToken
+              verificationToken,
+              trialCode, // Pass trial code to embed in verification URL
+              subscriptionTier,
+              subscriptionBillingPeriod,
+              subscriptionTierName
             });
             if (process.env.NODE_ENV === 'development') {
               console.log(`Verification email sent to: ${user.email}`);
@@ -130,21 +155,23 @@ router.post(
           // Generate JWT token
           const token = generateToken(user);
 
-          // Log user in via session
+          // Enrich user with trial info (restored user may have had an active trial)
+          const enrichedUser = await enrichUserWithTrialInfo(user);
+
+          // Log user in via session (non-blocking)
           req.login(user, (err) => {
             if (err) {
               console.error('Session login error:', err);
             }
-
-            return res.status(200).json({
-              success: true,
-              message: 'Account deletion cancelled. Welcome back!',
-              restored: true,
-              user: sanitizeUser(user),
-              token
-            });
           });
-          return;
+
+          return res.status(200).json({
+            success: true,
+            message: 'Account deletion cancelled. Welcome back!',
+            restored: true,
+            user: sanitizeUser(enrichedUser),
+            token
+          });
         }
 
         // If account is permanently deleted (email is NULL), this won't match
@@ -157,6 +184,23 @@ router.post(
 
       // Create new user (password will be hashed in User.create)
       const user = await User.create({ email, password });
+
+      // Record legal document acceptance if user accepted during signup
+      if (acceptTerms) {
+        try {
+          await User.acceptLegalDocuments(
+            user.id,
+            CURRENT_TERMS_VERSION,
+            CURRENT_PRIVACY_VERSION
+          );
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`[Auth] Recorded legal acceptance for user ${user.id}`);
+          }
+        } catch (legalError) {
+          // Don't fail signup if legal recording fails - log and continue
+          console.error('[Auth] Failed to record legal acceptance:', legalError);
+        }
+      }
 
       // Migrate any anonymous usage from this IP to the new user account
       const ipAddress = req.ip || req.socket.remoteAddress || 'unknown';
@@ -177,10 +221,17 @@ router.post(
         const verificationToken = await User.createVerificationToken(user.id);
         await sendVerificationEmail({
           to: user.email,
-          verificationToken
+          verificationToken,
+          trialCode, // Pass trial code to embed in verification URL
+          subscriptionTier,
+          subscriptionBillingPeriod,
+          subscriptionTierName
         });
         if (process.env.NODE_ENV === 'development') {
-          console.log(`Verification email sent to: ${user.email}`);
+          const extras = [];
+          if (trialCode) extras.push(`trial: ${trialCode}`);
+          if (subscriptionTier) extras.push(`subscription: ${subscriptionTier}/${subscriptionBillingPeriod}`);
+          console.log(`Verification email sent to: ${user.email}${extras.length ? ` (${extras.join(', ')})` : ''}`);
         }
       } catch (emailError) {
         // Don't fail signup if email fails - log and continue
@@ -190,19 +241,22 @@ router.post(
       // Generate JWT token
       const token = generateToken(user);
 
-      // Log user in via session
+      // Enrich user with trial info (in case trial was activated during signup)
+      const enrichedUser = await enrichUserWithTrialInfo(user);
+
+      // Log user in via session (non-blocking)
       req.login(user, (err) => {
         if (err) {
           console.error('Session login error:', err);
           // Continue even if session fails (token is primary)
         }
+      });
 
-        res.status(201).json({
-          success: true,
-          message: 'User registered successfully',
-          user: sanitizeUser(user),
-          token
-        });
+      res.status(201).json({
+        success: true,
+        message: 'User registered successfully',
+        user: sanitizeUser(enrichedUser),
+        token
       });
     } catch (error) {
       console.error('Signup error:', error);
@@ -256,11 +310,14 @@ router.post(
       // Generate JWT token
       const token = generateToken(user);
 
+      // Enrich user with trial info before sending response
+      const enrichedUser = await enrichUserWithTrialInfo(user);
+
       // Return JWT token (no session needed - JWT is stateless)
       res.json({
         success: true,
         message: 'Login successful',
-        user: sanitizeUser(user),
+        user: sanitizeUser(enrichedUser),
         token
       });
     })(req, res, next);
@@ -945,7 +1002,7 @@ router.post(
   validateBody(['token']),
   async (req, res) => {
     try {
-      const { token } = req.body;
+      const { token, trialCode } = req.body;
 
       // Find user by verification token
       const user = await User.findByVerificationToken(token);
@@ -962,10 +1019,39 @@ router.post(
 
       console.log(`Email verified for user: ${updatedUser.email}`);
 
+      // If trial code provided, attempt to redeem it
+      let trialActivated = false;
+      let trialInfo = null;
+
+      if (trialCode) {
+        try {
+          // Import trialService dynamically to avoid circular dependency
+          const { trialService } = await import('../services/trialService.js');
+          const result = await trialService.redeemInviteCode(trialCode, user.id);
+          trialActivated = true;
+          trialInfo = {
+            trialTier: result.trialTier,
+            durationDays: result.durationDays,
+            endsAt: result.endsAt
+          };
+          console.log(`Trial activated for user ${updatedUser.email}: ${result.trialTier} tier for ${result.durationDays} days`);
+        } catch (trialError) {
+          // Log but don't fail verification if trial redemption fails
+          console.warn(`[verify-email] Failed to redeem trial code for ${updatedUser.email}:`, trialError.message);
+        }
+      }
+
+      // Enrich user with trial info (especially important after trial activation)
+      const enrichedUser = await enrichUserWithTrialInfo(updatedUser);
+
       res.json({
         success: true,
-        message: 'Email verified successfully',
-        user: sanitizeUser(updatedUser)
+        message: trialActivated
+          ? 'Email verified and trial activated!'
+          : 'Email verified successfully',
+        user: sanitizeUser(enrichedUser),
+        trialActivated,
+        trialInfo
       });
     } catch (error) {
       console.error('Email verification error:', error);

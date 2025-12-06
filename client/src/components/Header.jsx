@@ -1,4 +1,4 @@
-import { Menu as MenuIcon, LogOut, User, FileText, Shield, ChevronDown, Settings, BarChart3, Sparkles, SlidersHorizontal, PanelLeft, Gift } from 'lucide-react';
+import { Menu as MenuIcon, LogOut, User, FileText, Shield, ChevronDown, Settings, BarChart3, Sparkles, SlidersHorizontal, PanelLeft } from 'lucide-react';
 import { useState, lazy, Suspense, forwardRef, useImperativeHandle } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Menu } from '@headlessui/react';
@@ -18,7 +18,7 @@ const ForgotPasswordModal = lazy(() => import('./ForgotPasswordModal').then(m =>
 // Feature flag: Authentication enabled (from environment variable)
 const ENABLE_AUTH = import.meta.env.VITE_ENABLE_AUTH === 'true';
 
-export const Header = forwardRef(function Header({ onMenuClick, onHelpClick, showSidebarMenu, onSidebarMenuClick, layout, onLayoutChange }, ref) {
+export const Header = forwardRef(function Header({ onMenuClick, onHelpClick, showSidebarMenu, onSidebarMenuClick, layout, onLayoutChange, trialCode, onTrialCodeConsumed }, ref) {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -215,41 +215,26 @@ export const Header = forwardRef(function Header({ onMenuClick, onHelpClick, sho
                                 } group flex items-center gap-3 w-full px-3 py-2 text-sm text-slate-700 dark:text-slate-200 rounded-md transition-colors`}
                               >
                                 <BarChart3 className="w-4 h-4 text-slate-500 dark:text-slate-400" aria-hidden="true" />
-                                Usage Dashboard
+                                My Usage
                               </Link>
                             )}
                           </Menu.Item>
 
-                          {/* Admin Menu Items - Only visible to admins */}
+                          {/* Admin Menu Item - Only visible to admins */}
                           {isAdmin && (
-                            <>
-                              <Menu.Item>
-                                {({ active }) => (
-                                  <Link
-                                    to="/admin/usage"
-                                    className={`${
-                                      active ? 'bg-slate-100 dark:bg-slate-700' : ''
-                                    } group flex items-center gap-3 w-full px-3 py-2 text-sm text-slate-700 dark:text-slate-200 rounded-md transition-colors`}
-                                  >
-                                    <Shield className="w-4 h-4 text-slate-500 dark:text-slate-400" aria-hidden="true" />
-                                    Admin Dashboard
-                                  </Link>
-                                )}
-                              </Menu.Item>
-                              <Menu.Item>
-                                {({ active }) => (
-                                  <Link
-                                    to="/admin/invite-codes"
-                                    className={`${
-                                      active ? 'bg-slate-100 dark:bg-slate-700' : ''
-                                    } group flex items-center gap-3 w-full px-3 py-2 text-sm text-slate-700 dark:text-slate-200 rounded-md transition-colors`}
-                                  >
-                                    <Gift className="w-4 h-4 text-slate-500 dark:text-slate-400" aria-hidden="true" />
-                                    Invite Codes
-                                  </Link>
-                                )}
-                              </Menu.Item>
-                            </>
+                            <Menu.Item>
+                              {({ active }) => (
+                                <Link
+                                  to="/admin"
+                                  className={`${
+                                    active ? 'bg-slate-100 dark:bg-slate-700' : ''
+                                  } group flex items-center gap-3 w-full px-3 py-2 text-sm text-slate-700 dark:text-slate-200 rounded-md transition-colors`}
+                                >
+                                  <Shield className="w-4 h-4 text-slate-500 dark:text-slate-400" aria-hidden="true" />
+                                  Administration
+                                </Link>
+                              )}
+                            </Menu.Item>
                           )}
 
                           <Menu.Item>
@@ -359,8 +344,14 @@ export const Header = forwardRef(function Header({ onMenuClick, onHelpClick, sho
           {showSignupModal && (
             <SignupModal
               isOpen={showSignupModal}
-              onClose={() => setShowSignupModal(false)}
+              onClose={() => {
+                setShowSignupModal(false);
+                // Clear trial code when modal closes without completing signup
+                if (onTrialCodeConsumed) onTrialCodeConsumed();
+              }}
               onSwitchToLogin={switchToLogin}
+              trialCode={trialCode}
+              onTrialCodeConsumed={onTrialCodeConsumed}
             />
           )}
 

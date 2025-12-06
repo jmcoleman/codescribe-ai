@@ -18,22 +18,17 @@ export default function TermsAcceptanceModal({
   // Note: onClose is not provided for this modal as it's non-dismissible
   // Pass a no-op function to useFocusTrap
   const modalRef = useFocusTrap(isOpen, () => {});
-  const [acceptedTerms, setAcceptedTerms] = useState(false);
-  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
+  const [acceptedBoth, setAcceptedBoth] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const needsTerms = missingAcceptance?.terms !== null;
-  const needsPrivacy = missingAcceptance?.privacy !== null;
+  const needsTerms = missingAcceptance?.terms?.needs_acceptance;
+  const needsPrivacy = missingAcceptance?.privacy?.needs_acceptance;
 
   const handleAccept = async () => {
-    // Validate checkboxes
-    if (needsTerms && !acceptedTerms) {
-      setError('You must accept the Terms of Service to continue');
-      return;
-    }
-    if (needsPrivacy && !acceptedPrivacy) {
-      setError('You must accept the Privacy Policy to continue');
+    // Validate checkbox
+    if (!acceptedBoth) {
+      setError('You must accept the Terms of Service and Privacy Policy to continue');
       return;
     }
 
@@ -143,53 +138,37 @@ export default function TermsAcceptanceModal({
               )}
             </div>
 
-            {/* Acceptance Checkboxes */}
-            <div className="space-y-3 pt-4 border-t border-slate-200 dark:border-slate-700">
-              {needsTerms && (
-                <label className="flex items-start gap-3 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    checked={acceptedTerms}
-                    onChange={(e) => setAcceptedTerms(e.target.checked)}
-                    className="mt-1 w-4 h-4 text-purple-600 border-slate-300 dark:border-slate-600 rounded focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 cursor-pointer"
-                    disabled={loading}
-                  />
-                  <span className="text-sm text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-slate-100 select-none">
-                    I have read and accept the{' '}
-                    <Link
-                      to="/terms"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-purple-600 dark:text-cyan-400 hover:text-purple-700 dark:hover:text-cyan-300 font-medium"
-                    >
-                      Terms of Service
-                    </Link>
-                  </span>
-                </label>
-              )}
-
-              {needsPrivacy && (
-                <label className="flex items-start gap-3 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    checked={acceptedPrivacy}
-                    onChange={(e) => setAcceptedPrivacy(e.target.checked)}
-                    className="mt-1 w-4 h-4 text-purple-600 border-slate-300 dark:border-slate-600 rounded focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 cursor-pointer"
-                    disabled={loading}
-                  />
-                  <span className="text-sm text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-slate-100 select-none">
-                    I have read and accept the{' '}
-                    <Link
-                      to="/privacy"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-purple-600 dark:text-cyan-400 hover:text-purple-700 dark:hover:text-cyan-300 font-medium"
-                    >
-                      Privacy Policy
-                    </Link>
-                  </span>
-                </label>
-              )}
+            {/* Acceptance Checkbox - Combined like SignupModal */}
+            <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={acceptedBoth}
+                  onChange={(e) => setAcceptedBoth(e.target.checked)}
+                  className="mt-1 w-4 h-4 text-purple-600 border-slate-300 dark:border-slate-600 rounded focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 cursor-pointer"
+                  disabled={loading}
+                />
+                <span className="text-sm text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-slate-100 select-none">
+                  I have read and accept the{' '}
+                  <Link
+                    to="/terms"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-purple-600 dark:text-cyan-400 hover:text-purple-700 dark:hover:text-cyan-300 font-medium"
+                  >
+                    Terms of Service
+                  </Link>
+                  {' '}and{' '}
+                  <Link
+                    to="/privacy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-purple-600 dark:text-cyan-400 hover:text-purple-700 dark:hover:text-cyan-300 font-medium"
+                  >
+                    Privacy Policy
+                  </Link>
+                </span>
+              </label>
             </div>
 
             {/* Error Message */}
@@ -202,7 +181,7 @@ export default function TermsAcceptanceModal({
             {/* Action Button */}
             <button
               onClick={handleAccept}
-              disabled={loading || (!acceptedTerms && needsTerms) || (!acceptedPrivacy && needsPrivacy)}
+              disabled={loading || !acceptedBoth}
               className="btn-primary w-full px-6 py-3 font-semibold disabled:bg-slate-200 dark:disabled:bg-slate-700 disabled:text-slate-500 dark:disabled:text-slate-400 disabled:cursor-not-allowed disabled:shadow-none"
             >
               {loading ? 'Accepting...' : 'Accept and Continue'}

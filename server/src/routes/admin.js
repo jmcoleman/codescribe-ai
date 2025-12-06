@@ -12,7 +12,9 @@ import { requireAuth } from '../middleware/auth.js';
 import User from '../models/User.js';
 import InviteCode from '../models/InviteCode.js';
 import Trial from '../models/Trial.js';
+import TrialEmailHistory from '../models/TrialEmailHistory.js';
 import trialService from '../services/trialService.js';
+import { sendTrialExtendedEmail } from '../services/emailService.js';
 import {
   validateOverrideRequest,
   createOverridePayload,
@@ -171,38 +173,53 @@ router.get('/usage-stats', requireAuth, requireAdmin, async (req, res) => {
       `
     ]);
 
-    // 4. Get recent activity (last 50 records) - both anonymous and authenticated
-    const [recentAnonymous, recentAuthenticated] = await Promise.all([
+    // 4. Get recent generations from generated_documents table (actual doc generations)
+    // Note: generated_documents is only populated when user's save_docs_preference allows it
+    // If empty, documents are being generated but not persisted (user preference = 'ask' or 'never')
+    const [recentGenerations, generationsByDocType] = await Promise.all([
+      // Recent 50 individual generations (all time, not filtered by month)
       sql`
         SELECT
-          ip_address,
-          daily_count,
-          monthly_count,
-          last_reset_date,
-          period_start_date,
-          created_at
-        FROM anonymous_quotas
-        WHERE period_start_date = DATE_TRUNC('month', CURRENT_DATE)
-        ORDER BY last_reset_date DESC
-        LIMIT 50
-      `,
-      sql`
-        SELECT
-          u.id as user_id,
+          gd.id,
+          gd.user_id,
           u.email,
           u.tier,
-          COALESCE(uq.daily_count, 0) as daily_count,
-          COALESCE(uq.monthly_count, 0) as monthly_count,
-          COALESCE(uq.updated_at, u.created_at) as updated_at,
-          uq.period_start_date,
-          COALESCE(uq.created_at, u.created_at) as created_at
-        FROM users u
-        LEFT JOIN user_quotas uq ON u.id = uq.user_id
-          AND uq.period_start_date = DATE_TRUNC('month', CURRENT_DATE)
-        WHERE u.deleted_at IS NULL
+          gd.filename,
+          gd.doc_type,
+          gd.language,
+          gd.origin,
+          gd.quality_score,
+          gd.generated_at
+        FROM generated_documents gd
+        JOIN users u ON gd.user_id = u.id
+        WHERE gd.deleted_at IS NULL
+          AND u.deleted_at IS NULL
           AND u.email NOT LIKE 'test-%'
           AND u.email NOT LIKE '%@example.com'
-        ORDER BY COALESCE(uq.updated_at, u.created_at) DESC
+        ORDER BY gd.generated_at DESC
+        LIMIT 50
+      `,
+      // Aggregated by user and doc type (all time)
+      sql`
+        SELECT
+          gd.user_id,
+          u.email,
+          u.tier,
+          COUNT(*) FILTER (WHERE gd.doc_type = 'README') as readme_count,
+          COUNT(*) FILTER (WHERE gd.doc_type = 'JSDOC') as jsdoc_count,
+          COUNT(*) FILTER (WHERE gd.doc_type = 'API') as api_count,
+          COUNT(*) FILTER (WHERE gd.doc_type = 'OPENAPI') as openapi_count,
+          COUNT(*) FILTER (WHERE gd.doc_type = 'ARCHITECTURE') as architecture_count,
+          COUNT(*) as total_count,
+          MAX(gd.generated_at) as last_generation
+        FROM generated_documents gd
+        JOIN users u ON gd.user_id = u.id
+        WHERE gd.deleted_at IS NULL
+          AND u.deleted_at IS NULL
+          AND u.email NOT LIKE 'test-%'
+          AND u.email NOT LIKE '%@example.com'
+        GROUP BY gd.user_id, u.email, u.tier
+        ORDER BY total_count DESC
         LIMIT 50
       `
     ]);
@@ -252,23 +269,31 @@ router.get('/usage-stats', requireAuth, requireAdmin, async (req, res) => {
         allTime: parseInt(row.all_time),
         lastActivity: row.last_activity
       })),
-      recentAnonymous: recentAnonymous.rows.map(row => ({
-        ipAddress: row.ip_address,
-        dailyCount: parseInt(row.daily_count),
-        monthlyCount: parseInt(row.monthly_count),
-        lastActivity: row.last_reset_date,
-        periodStart: row.period_start_date,
-        firstSeen: row.created_at
-      })),
-      recentAuthenticated: recentAuthenticated.rows.map(row => ({
+      // Recent individual generations (last 50)
+      recentGenerations: recentGenerations.rows.map(row => ({
+        id: row.id,
         userId: row.user_id,
         email: row.email,
         tier: row.tier,
-        dailyCount: parseInt(row.daily_count),
-        monthlyCount: parseInt(row.monthly_count),
-        lastActivity: row.updated_at,
-        periodStart: row.period_start_date,
-        firstSeen: row.created_at
+        filename: row.filename,
+        docType: row.doc_type,
+        language: row.language,
+        origin: row.origin,
+        qualityScore: row.quality_score,
+        generatedAt: row.generated_at
+      })),
+      // Generations by doc type per user (current month)
+      generationsByUser: generationsByDocType.rows.map(row => ({
+        userId: row.user_id,
+        email: row.email,
+        tier: row.tier,
+        readme: parseInt(row.readme_count || 0),
+        jsdoc: parseInt(row.jsdoc_count || 0),
+        api: parseInt(row.api_count || 0),
+        openapi: parseInt(row.openapi_count || 0),
+        architecture: parseInt(row.architecture_count || 0),
+        total: parseInt(row.total_count || 0),
+        lastGeneration: row.last_generation
       }))
     };
 
@@ -886,6 +911,34 @@ router.get('/trials', requireAuth, requireAdmin, async (req, res) => {
 });
 
 /**
+ * GET /api/admin/trials/analytics
+ * Get trial analytics dashboard data
+ * NOTE: This route MUST be before /trials/:userId to avoid matching "analytics" as userId
+ */
+router.get('/trials/analytics', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const [trialAnalytics, emailStats] = await Promise.all([
+      trialService.getAnalytics(),
+      TrialEmailHistory.getStats()
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        ...trialAnalytics,
+        emailStats
+      }
+    });
+  } catch (error) {
+    console.error('[Admin] Trial analytics error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch trial analytics'
+    });
+  }
+});
+
+/**
  * GET /api/admin/trials/:userId
  * Get trial details for a specific user
  */
@@ -918,7 +971,7 @@ router.get('/trials/:userId', requireAuth, requireAdmin, async (req, res) => {
 router.patch('/trials/:userId/extend', requireAuth, requireAdmin, async (req, res) => {
   try {
     const userId = parseInt(req.params.userId);
-    const { additionalDays, reason } = req.body;
+    const { additionalDays, reason, sendEmail = true } = req.body;
 
     if (!additionalDays || additionalDays < 1 || additionalDays > 90) {
       return res.status(400).json({
@@ -936,10 +989,45 @@ router.patch('/trials/:userId/extend', requireAuth, requireAdmin, async (req, re
 
     const extended = await trialService.extendTrial(userId, additionalDays, reason.trim());
 
+    // Send notification email if requested
+    let emailSent = false;
+    if (sendEmail && extended) {
+      try {
+        // Get user info for email
+        const user = await User.findById(userId);
+        if (user && user.email) {
+          await sendTrialExtendedEmail({
+            to: user.email,
+            userName: user.name || user.email.split('@')[0],
+            trialTier: extended.trial_tier,
+            additionalDays,
+            newExpiresAt: extended.ends_at,
+            reason: reason.trim()
+          });
+          emailSent = true;
+
+          // Record email in history
+          await TrialEmailHistory.createPending({
+            trialId: extended.id,
+            userId,
+            emailType: TrialEmailHistory.EMAIL_TYPES.TRIAL_EXTENDED
+          }).then(record => {
+            if (record) TrialEmailHistory.markSent(record.id);
+          });
+        }
+      } catch (emailError) {
+        console.error('[Admin] Failed to send trial extension email:', emailError);
+        // Don't fail the request if email fails
+      }
+    }
+
     res.json({
       success: true,
       message: `Trial extended by ${additionalDays} days`,
-      data: extended
+      data: {
+        ...extended,
+        emailSent
+      }
     });
   } catch (error) {
     console.error('[Admin] Extend trial error:', error);
@@ -991,22 +1079,339 @@ router.post('/trials/:userId/cancel', requireAuth, requireAdmin, async (req, res
 });
 
 /**
- * GET /api/admin/trials/analytics
- * Get trial analytics dashboard data
+ * GET /api/admin/trials/:trialId/emails
+ * Get email history for a specific trial
  */
-router.get('/trials/analytics', requireAuth, requireAdmin, async (req, res) => {
+router.get('/trials/:trialId/emails', requireAuth, requireAdmin, async (req, res) => {
   try {
-    const analytics = await trialService.getAnalytics();
+    const trialId = parseInt(req.params.trialId);
+    const emails = await TrialEmailHistory.findByTrialId(trialId);
 
     res.json({
       success: true,
-      data: analytics
+      data: emails
     });
   } catch (error) {
-    console.error('[Admin] Trial analytics error:', error);
+    console.error('[Admin] Get trial emails error:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to fetch trial analytics'
+      error: 'Failed to fetch trial email history'
+    });
+  }
+});
+
+// ============================================================================
+// Generation Analytics Endpoints
+// ============================================================================
+
+/**
+ * GET /api/admin/generations
+ * Get paginated list of recent generations with sorting and filtering
+ *
+ * Query params:
+ * - page (default: 1)
+ * - limit (default: 20, max: 100)
+ * - sortBy (default: 'generated_at') - generated_at, filename, doc_type, quality_score
+ * - sortOrder (default: 'desc') - asc, desc
+ * - docType (filter) - README, JSDOC, API, OPENAPI, ARCHITECTURE
+ * - userId (filter) - filter by specific user
+ */
+router.get('/generations', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const {
+      page = '1',
+      limit = '20',
+      sortBy = 'generated_at',
+      sortOrder = 'desc',
+      docType,
+      userId
+    } = req.query;
+
+    const pageNum = Math.max(1, parseInt(page));
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit)));
+    const offset = (pageNum - 1) * limitNum;
+
+    // Validate sortBy to prevent SQL injection
+    const validSortColumns = ['generated_at', 'filename', 'doc_type', 'language', 'origin'];
+    const safeSortBy = validSortColumns.includes(sortBy) ? sortBy : 'generated_at';
+    const safeSortOrder = sortOrder === 'asc' ? 'ASC' : 'DESC';
+
+    // Build dynamic query based on filters
+    let dataQuery;
+    let countQuery;
+
+    if (docType && userId) {
+      dataQuery = sql`
+        SELECT
+          gd.id,
+          gd.user_id,
+          u.email,
+          u.tier,
+          gd.filename,
+          gd.doc_type,
+          gd.language,
+          gd.origin,
+          gd.quality_score,
+          gd.generated_at,
+          gd.batch_id,
+          gb.batch_type,
+          gb.total_files as batch_total_files
+        FROM generated_documents gd
+        JOIN users u ON gd.user_id = u.id
+        LEFT JOIN generation_batches gb ON gd.batch_id = gb.id
+        WHERE gd.deleted_at IS NULL
+          AND u.deleted_at IS NULL
+          AND gd.doc_type = ${docType}
+          AND gd.user_id = ${parseInt(userId)}
+        ORDER BY gd.generated_at DESC
+        LIMIT ${limitNum} OFFSET ${offset}
+      `;
+      countQuery = sql`
+        SELECT COUNT(*) as total
+        FROM generated_documents gd
+        JOIN users u ON gd.user_id = u.id
+        WHERE gd.deleted_at IS NULL
+          AND u.deleted_at IS NULL
+          AND gd.doc_type = ${docType}
+          AND gd.user_id = ${parseInt(userId)}
+      `;
+    } else if (docType) {
+      dataQuery = sql`
+        SELECT
+          gd.id,
+          gd.user_id,
+          u.email,
+          u.tier,
+          gd.filename,
+          gd.doc_type,
+          gd.language,
+          gd.origin,
+          gd.quality_score,
+          gd.generated_at,
+          gd.batch_id,
+          gb.batch_type,
+          gb.total_files as batch_total_files
+        FROM generated_documents gd
+        JOIN users u ON gd.user_id = u.id
+        LEFT JOIN generation_batches gb ON gd.batch_id = gb.id
+        WHERE gd.deleted_at IS NULL
+          AND u.deleted_at IS NULL
+          AND gd.doc_type = ${docType}
+        ORDER BY gd.generated_at DESC
+        LIMIT ${limitNum} OFFSET ${offset}
+      `;
+      countQuery = sql`
+        SELECT COUNT(*) as total
+        FROM generated_documents gd
+        JOIN users u ON gd.user_id = u.id
+        WHERE gd.deleted_at IS NULL
+          AND u.deleted_at IS NULL
+          AND gd.doc_type = ${docType}
+      `;
+    } else if (userId) {
+      dataQuery = sql`
+        SELECT
+          gd.id,
+          gd.user_id,
+          u.email,
+          u.tier,
+          gd.filename,
+          gd.doc_type,
+          gd.language,
+          gd.origin,
+          gd.quality_score,
+          gd.generated_at,
+          gd.batch_id,
+          gb.batch_type,
+          gb.total_files as batch_total_files
+        FROM generated_documents gd
+        JOIN users u ON gd.user_id = u.id
+        LEFT JOIN generation_batches gb ON gd.batch_id = gb.id
+        WHERE gd.deleted_at IS NULL
+          AND u.deleted_at IS NULL
+          AND gd.user_id = ${parseInt(userId)}
+        ORDER BY gd.generated_at DESC
+        LIMIT ${limitNum} OFFSET ${offset}
+      `;
+      countQuery = sql`
+        SELECT COUNT(*) as total
+        FROM generated_documents gd
+        JOIN users u ON gd.user_id = u.id
+        WHERE gd.deleted_at IS NULL
+          AND u.deleted_at IS NULL
+          AND gd.user_id = ${parseInt(userId)}
+      `;
+    } else {
+      dataQuery = sql`
+        SELECT
+          gd.id,
+          gd.user_id,
+          u.email,
+          u.tier,
+          gd.filename,
+          gd.doc_type,
+          gd.language,
+          gd.origin,
+          gd.quality_score,
+          gd.generated_at,
+          gd.batch_id,
+          gb.batch_type,
+          gb.total_files as batch_total_files
+        FROM generated_documents gd
+        JOIN users u ON gd.user_id = u.id
+        LEFT JOIN generation_batches gb ON gd.batch_id = gb.id
+        WHERE gd.deleted_at IS NULL
+          AND u.deleted_at IS NULL
+        ORDER BY gd.generated_at DESC
+        LIMIT ${limitNum} OFFSET ${offset}
+      `;
+      countQuery = sql`
+        SELECT COUNT(*) as total
+        FROM generated_documents gd
+        JOIN users u ON gd.user_id = u.id
+        WHERE gd.deleted_at IS NULL
+          AND u.deleted_at IS NULL
+      `;
+    }
+
+    const [dataResult, countResult] = await Promise.all([dataQuery, countQuery]);
+
+    const total = parseInt(countResult.rows[0]?.total || 0);
+    const totalPages = Math.ceil(total / limitNum);
+
+    res.json({
+      success: true,
+      data: {
+        generations: dataResult.rows.map(row => ({
+          id: row.id,
+          userId: row.user_id,
+          email: row.email,
+          tier: row.tier,
+          filename: row.filename,
+          docType: row.doc_type,
+          language: row.language,
+          origin: row.origin,
+          qualityScore: row.quality_score,
+          generatedAt: row.generated_at,
+          batchId: row.batch_id,
+          batchType: row.batch_type,
+          batchTotalFiles: row.batch_total_files
+        })),
+        pagination: {
+          page: pageNum,
+          limit: limitNum,
+          total,
+          totalPages
+        }
+      }
+    });
+  } catch (error) {
+    console.error('[Admin] Get generations error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch generations'
+    });
+  }
+});
+
+/**
+ * GET /api/admin/generations/by-user
+ * Get generation counts aggregated by user and doc type
+ *
+ * Query params:
+ * - page (default: 1)
+ * - limit (default: 20, max: 100)
+ * - sortBy (default: 'total') - total, readme, jsdoc, api, openapi, architecture, last_generation
+ * - sortOrder (default: 'desc') - asc, desc
+ */
+router.get('/generations/by-user', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const {
+      page = '1',
+      limit = '20',
+      sortBy = 'total',
+      sortOrder = 'desc'
+    } = req.query;
+
+    const pageNum = Math.max(1, parseInt(page));
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit)));
+    const offset = (pageNum - 1) * limitNum;
+
+    // Map frontend sort names to SQL columns
+    const sortColumnMap = {
+      total: 'total_count',
+      readme: 'readme_count',
+      jsdoc: 'jsdoc_count',
+      api: 'api_count',
+      openapi: 'openapi_count',
+      architecture: 'architecture_count',
+      last_generation: 'last_generation'
+    };
+
+    const safeSortOrder = sortOrder === 'asc' ? 'ASC' : 'DESC';
+
+    // Get aggregated data
+    const dataResult = await sql`
+      SELECT
+        gd.user_id,
+        u.email,
+        u.tier,
+        COUNT(*) FILTER (WHERE gd.doc_type = 'README') as readme_count,
+        COUNT(*) FILTER (WHERE gd.doc_type = 'JSDOC') as jsdoc_count,
+        COUNT(*) FILTER (WHERE gd.doc_type = 'API') as api_count,
+        COUNT(*) FILTER (WHERE gd.doc_type = 'OPENAPI') as openapi_count,
+        COUNT(*) FILTER (WHERE gd.doc_type = 'ARCHITECTURE') as architecture_count,
+        COUNT(*) as total_count,
+        MAX(gd.generated_at) as last_generation
+      FROM generated_documents gd
+      JOIN users u ON gd.user_id = u.id
+      WHERE gd.deleted_at IS NULL
+        AND u.deleted_at IS NULL
+      GROUP BY gd.user_id, u.email, u.tier
+      ORDER BY total_count DESC
+      LIMIT ${limitNum} OFFSET ${offset}
+    `;
+
+    // Get total count of unique users with generations
+    const countResult = await sql`
+      SELECT COUNT(DISTINCT gd.user_id) as total
+      FROM generated_documents gd
+      JOIN users u ON gd.user_id = u.id
+      WHERE gd.deleted_at IS NULL
+        AND u.deleted_at IS NULL
+    `;
+
+    const total = parseInt(countResult.rows[0]?.total || 0);
+    const totalPages = Math.ceil(total / limitNum);
+
+    res.json({
+      success: true,
+      data: {
+        users: dataResult.rows.map(row => ({
+          userId: row.user_id,
+          email: row.email,
+          tier: row.tier,
+          readme: parseInt(row.readme_count || 0),
+          jsdoc: parseInt(row.jsdoc_count || 0),
+          api: parseInt(row.api_count || 0),
+          openapi: parseInt(row.openapi_count || 0),
+          architecture: parseInt(row.architecture_count || 0),
+          total: parseInt(row.total_count || 0),
+          lastGeneration: row.last_generation
+        })),
+        pagination: {
+          page: pageNum,
+          limit: limitNum,
+          total,
+          totalPages
+        }
+      }
+    });
+  } catch (error) {
+    console.error('[Admin] Get generations by user error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch generation data'
     });
   }
 });

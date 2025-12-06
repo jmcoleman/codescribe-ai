@@ -1,7 +1,7 @@
 {
   "name": "client",
   "private": true,
-  "version": "3.0.0",
+  "version": "3.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite --config config/vite.config.js",
@@ -19,6 +19,7 @@
     "@stripe/stripe-js": "^8.2.0",
     "@tailwindcss/container-queries": "^0.1.1",
     "@tailwindcss/typography": "^0.5.19",
+    "@tanstack/react-table": "^8.21.3",
     "@vercel/analytics": "^1.5.0",
     "@vercel/speed-insights": "^1.2.0",
     "@vitejs/plugin-react": "^5.0.4",

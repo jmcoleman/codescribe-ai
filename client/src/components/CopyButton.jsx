@@ -21,7 +21,7 @@ import { Tooltip } from './Tooltip';
  * @param {string} text - Text to copy to clipboard
  * @param {string} className - Additional CSS classes
  * @param {string} size - Button size: 'sm' | 'md' | 'lg'
- * @param {string} variant - Button variant: 'ghost' | 'outline' | 'solid'
+ * @param {string} variant - Button variant: 'ghost' | 'outline' | 'solid' | 'primary'
  * @param {boolean} showLabel - Show text label alongside icon
  */
 export function CopyButton({
@@ -108,6 +108,7 @@ export function CopyButton({
     ghost: 'bg-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent',
     outline: 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500',
     solid: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-600',
+    primary: 'bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-700 dark:hover:bg-purple-800 dark:active:bg-purple-900 text-white border border-purple-600 dark:border-purple-700 hover:border-purple-700 dark:hover:border-purple-800 shadow-lg shadow-purple-600/20 dark:shadow-purple-900/30',
   };
 
   const iconSize = iconSizes[size];
@@ -160,7 +161,7 @@ export function CopyButton({
         <Check
           className={`
             ${iconSize}
-            ${copied ? 'text-cyan-600 dark:text-cyan-400' : ''}
+            ${copied ? (variant === 'primary' ? 'text-white' : 'text-cyan-600 dark:text-cyan-400') : ''}
             transition-all duration-200 ease-out
             ${copied ? 'opacity-100 scale-100 rotate-0' : 'opacity-0 scale-50 -rotate-90 absolute'}
           `}

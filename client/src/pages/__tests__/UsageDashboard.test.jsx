@@ -87,7 +87,7 @@ describe('UsageDashboard', () => {
       renderWithRouter(<UsageDashboard />);
 
       // Component should not render main content
-      expect(screen.queryByText('Usage Dashboard')).not.toBeInTheDocument();
+      expect(screen.queryByText('My Usage')).not.toBeInTheDocument();
     });
 
     it('renders dashboard for authenticated users', () => {
@@ -100,7 +100,7 @@ describe('UsageDashboard', () => {
 
       renderWithRouter(<UsageDashboard />);
 
-      expect(screen.getByText('Usage Dashboard')).toBeInTheDocument();
+      expect(screen.getByText('My Usage')).toBeInTheDocument();
       expect(screen.getByText('Monitor your document generation usage and quota limits')).toBeInTheDocument();
     });
   });

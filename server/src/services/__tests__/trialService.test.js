@@ -383,8 +383,8 @@ describe('TrialService', () => {
   describe('processExpiredTrials', () => {
     it('should process all expired trials', async () => {
       const expiredTrials = [
-        { id: 1, user_id: 10 },
-        { id: 2, user_id: 20 }
+        { id: 1, user_id: 10, first_name: 'John', last_name: 'Doe' },
+        { id: 2, user_id: 20, first_name: null, last_name: null }
       ];
       Trial.getExpired.mockResolvedValue(expiredTrials);
       Trial.expire.mockResolvedValue({});
@@ -397,6 +397,10 @@ describe('TrialService', () => {
       expect(InviteCode.updateExpiredCodes).toHaveBeenCalled();
       expect(result.processed).toBe(2);
       expect(result.failed).toBe(0);
+      // Should include expiredTrials list with user_name
+      expect(result.expiredTrials).toHaveLength(2);
+      expect(result.expiredTrials[0].user_name).toBe('John Doe');
+      expect(result.expiredTrials[1].user_name).toBe(null);
     });
 
     it('should track failed trial processing', async () => {
@@ -410,6 +414,7 @@ describe('TrialService', () => {
       expect(result.processed).toBe(0);
       expect(result.failed).toBe(1);
       expect(result.errors[0].error).toBe('DB error');
+      expect(result.expiredTrials).toHaveLength(0);
     });
 
     it('should handle empty expired trials list', async () => {
@@ -420,6 +425,7 @@ describe('TrialService', () => {
 
       expect(result.processed).toBe(0);
       expect(result.failed).toBe(0);
+      expect(result.expiredTrials).toHaveLength(0);
     });
   });
 
@@ -431,7 +437,30 @@ describe('TrialService', () => {
       const result = await trialService.getExpiringTrials(3);
 
       expect(Trial.getExpiring).toHaveBeenCalledWith(3);
-      expect(result).toEqual(expiringTrials);
+      // Should add user_name field from first_name/last_name
+      expect(result).toEqual([{ id: 1, user_email: 'test@example.com', user_name: null }]);
+    });
+
+    it('should add user_name from first_name and last_name', async () => {
+      const expiringTrials = [
+        { id: 1, user_email: 'test@example.com', first_name: 'John', last_name: 'Doe' }
+      ];
+      Trial.getExpiring.mockResolvedValue(expiringTrials);
+
+      const result = await trialService.getExpiringTrials(3);
+
+      expect(result[0].user_name).toBe('John Doe');
+    });
+
+    it('should handle only first_name', async () => {
+      const expiringTrials = [
+        { id: 1, user_email: 'test@example.com', first_name: 'John', last_name: null }
+      ];
+      Trial.getExpiring.mockResolvedValue(expiringTrials);
+
+      const result = await trialService.getExpiringTrials(3);
+
+      expect(result[0].user_name).toBe('John');
     });
   });
 

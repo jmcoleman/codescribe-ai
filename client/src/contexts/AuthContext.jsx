@@ -90,17 +90,38 @@ export function AuthProvider({ children }) {
 
   /**
    * Sign up a new user
+   * @param {string} email - User email
+   * @param {string} password - User password
+   * @param {Object} options - Optional parameters
+   * @param {string} options.trialCode - Trial invite code to embed in verification email
+   * @param {string} options.subscriptionTier - Subscription tier to embed in verification email
+   * @param {string} options.subscriptionBillingPeriod - Billing period (monthly/yearly)
+   * @param {string} options.subscriptionTierName - Display name for the tier
+   * @param {boolean} options.acceptTerms - Whether user accepted Terms and Privacy Policy
    */
-  const signup = async (email, password) => {
+  const signup = async (email, password, options = {}) => {
     try {
       setError(null);
+
+      const body = { email, password };
+      if (options.trialCode) {
+        body.trialCode = options.trialCode;
+      }
+      if (options.subscriptionTier) {
+        body.subscriptionTier = options.subscriptionTier;
+        body.subscriptionBillingPeriod = options.subscriptionBillingPeriod;
+        body.subscriptionTierName = options.subscriptionTierName;
+      }
+      if (options.acceptTerms) {
+        body.acceptTerms = true;
+      }
 
       const response = await fetch(`${API_URL}/api/auth/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(body),
       });
 
       const data = await response.json();

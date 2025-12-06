@@ -259,6 +259,7 @@ describe('SignupModal', () => {
           body: JSON.stringify({
             email: 'newuser@example.com',
             password: 'StrongPass123',
+            acceptTerms: true,
           }),
         })
       );

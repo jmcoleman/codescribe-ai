@@ -248,7 +248,7 @@ export function UsageDashboard() {
         <div className="mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-2">
             <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
-              Usage Dashboard
+              My Usage
             </h1>
             <button
               onClick={handleRefresh}

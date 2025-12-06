@@ -3,11 +3,12 @@
  *
  * Handles email verification from email link.
  * Reads token from URL query parameter and sends to backend.
+ * Also handles trial code redemption if present in URL.
  */
 
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import { CheckCircle2, XCircle, Loader2, Sparkles } from 'lucide-react';
 import { STORAGE_KEYS, getSessionItem, removeSessionItem } from '../constants/storage';
 import { API_URL } from '../config/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -18,10 +19,16 @@ export default function VerifyEmail() {
   const { getToken, refreshUser } = useAuth();
   const [status, setStatus] = useState('verifying'); // 'verifying' | 'success' | 'error'
   const [message, setMessage] = useState('');
+  const [trialActivated, setTrialActivated] = useState(false);
 
   useEffect(() => {
     const verifyEmail = async () => {
       const token = searchParams.get('token');
+      const trialCode = searchParams.get('trial_code');
+      // Read subscription info from URL (preferred) or fall back to sessionStorage
+      const subTier = searchParams.get('sub_tier');
+      const subPeriod = searchParams.get('sub_period');
+      const subName = searchParams.get('sub_name');
 
       if (!token) {
         setStatus('error');
@@ -30,12 +37,18 @@ export default function VerifyEmail() {
       }
 
       try {
+        // Send verification request - include trial code if present for server-side redemption
+        const verifyBody = { token };
+        if (trialCode) {
+          verifyBody.trialCode = trialCode;
+        }
+
         const response = await fetch(`${API_URL}/api/auth/verify-email`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ token }),
+          body: JSON.stringify(verifyBody),
         });
 
         const data = await response.json();
@@ -46,65 +59,84 @@ export default function VerifyEmail() {
           // Refresh user data to update email_verified status
           await refreshUser();
 
-          // Check for pending subscription
-          const pendingSubscriptionStr = getSessionItem(STORAGE_KEYS.PENDING_SUBSCRIPTION);
+          // Check if trial was activated server-side
+          if (data.trialActivated) {
+            setTrialActivated(true);
+            setMessage('Your email has been verified and your Pro trial is now active!');
+            setTimeout(() => navigate('/'), 3000);
+            return;
+          }
 
-          if (pendingSubscriptionStr) {
-            try {
-              const pendingSubscription = JSON.parse(pendingSubscriptionStr);
+          // Check for pending subscription - URL params (cross-device) take priority over sessionStorage (same browser)
+          let pendingSubscription = null;
 
-              // Check if this is a Contact Sales tier (enterprise/team)
-              const isContactSalesTier = pendingSubscription.tier === 'enterprise' || pendingSubscription.tier === 'team';
+          if (subTier) {
+            // Subscription info from URL (embedded in verification email - works cross-device)
+            pendingSubscription = {
+              tier: subTier,
+              billingPeriod: subPeriod || 'monthly',
+              tierName: subName || subTier
+            };
+          } else {
+            // Fall back to sessionStorage (same browser only - for other flows like LoginModal)
+            const pendingSubscriptionStr = getSessionItem(STORAGE_KEYS.PENDING_SUBSCRIPTION);
+            if (pendingSubscriptionStr) {
+              try {
+                pendingSubscription = JSON.parse(pendingSubscriptionStr);
+              } catch (e) {
+                console.error('Failed to parse pending subscription:', e);
+              }
+            }
+          }
 
-              if (isContactSalesTier) {
-                // Enterprise/Team tiers: Redirect to pricing (Contact Sales modal will auto-open)
-                setMessage(`Your email has been verified! Redirecting to contact our sales team...`);
+          if (pendingSubscription) {
+            // Check if this is a Contact Sales tier (enterprise/team)
+            const isContactSalesTier = pendingSubscription.tier === 'enterprise' || pendingSubscription.tier === 'team';
 
-                // Keep pending subscription in storage (PricingPage will consume it)
-                setTimeout(() => {
-                  navigate('/pricing');
-                }, 2000);
-              } else {
-                // Pro/Premium tiers: Create Stripe checkout session
-                setMessage(`Your email has been verified! Redirecting to complete your ${pendingSubscription.tierName} subscription...`);
+            if (isContactSalesTier) {
+              // Enterprise/Team tiers: Redirect to pricing (Contact Sales modal will auto-open)
+              setMessage(`Your email has been verified! Redirecting to contact our sales team...`);
 
-                // Clear pending subscription from storage
-                removeSessionItem(STORAGE_KEYS.PENDING_SUBSCRIPTION);
+              // Keep pending subscription in storage (PricingPage will consume it)
+              setTimeout(() => {
+                navigate('/pricing');
+              }, 2000);
+            } else {
+              // Pro/Starter tiers: Create Stripe checkout session
+              setMessage(`Your email has been verified! Redirecting to complete your ${pendingSubscription.tierName} subscription...`);
 
-                // Redirect to create checkout session
-                setTimeout(async () => {
-                  try {
-                    const token = getToken();
-                    const checkoutResponse = await fetch(`${API_URL}/api/payments/create-checkout-session`, {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`,
-                      },
-                      credentials: 'include',
-                      body: JSON.stringify({
-                        tier: pendingSubscription.tier,
-                        billingPeriod: pendingSubscription.billingPeriod,
-                      }),
-                    });
+              // Clear pending subscription from storage
+              removeSessionItem(STORAGE_KEYS.PENDING_SUBSCRIPTION);
 
-                    if (checkoutResponse.ok) {
-                      const { url } = await checkoutResponse.json();
-                      window.location.href = url; // Redirect to Stripe Checkout
-                    } else {
-                      // If checkout fails, redirect to pricing page
-                      navigate('/pricing');
-                    }
-                  } catch (error) {
-                    console.error('Checkout redirect error:', error);
+              // Redirect to create checkout session
+              setTimeout(async () => {
+                try {
+                  const authToken = getToken();
+                  const checkoutResponse = await fetch(`${API_URL}/api/payments/create-checkout-session`, {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${authToken}`,
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                      tier: pendingSubscription.tier,
+                      billingPeriod: pendingSubscription.billingPeriod,
+                    }),
+                  });
+
+                  if (checkoutResponse.ok) {
+                    const { url } = await checkoutResponse.json();
+                    window.location.href = url; // Redirect to Stripe Checkout
+                  } else {
+                    // If checkout fails, redirect to pricing page
                     navigate('/pricing');
                   }
-                }, 2000);
-              }
-            } catch (error) {
-              console.error('Failed to parse pending subscription:', error);
-              setMessage('Your email has been verified successfully!');
-              setTimeout(() => navigate('/'), 3000);
+                } catch (error) {
+                  console.error('Checkout redirect error:', error);
+                  navigate('/pricing');
+                }
+              }, 2000);
             }
           } else {
             // No pending subscription, normal redirect
@@ -140,7 +172,14 @@ export default function VerifyEmail() {
                 aria-label="Verifying email"
               />
             )}
-            {status === 'success' && (
+            {status === 'success' && trialActivated && (
+              <Sparkles
+                className="w-16 h-16 text-purple-600 dark:text-purple-400"
+                role="img"
+                aria-label="Trial activated"
+              />
+            )}
+            {status === 'success' && !trialActivated && (
               <CheckCircle2
                 className="w-16 h-16 text-green-600 dark:text-green-400"
                 role="img"
@@ -159,7 +198,8 @@ export default function VerifyEmail() {
           {/* Title */}
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">
             {status === 'verifying' && 'Verifying Your Email'}
-            {status === 'success' && 'Email Verified!'}
+            {status === 'success' && trialActivated && 'Trial Activated!'}
+            {status === 'success' && !trialActivated && 'Email Verified!'}
             {status === 'error' && 'Verification Failed'}
           </h1>
 

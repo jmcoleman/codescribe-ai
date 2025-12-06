@@ -52,6 +52,7 @@ function LoadingFallback() {
   );
 }
 
+import { useSearchParams } from 'react-router-dom';
 import { API_URL } from './config/api.js';
 import { STORAGE_KEYS, getStorageItem, setStorageItem, getEditorKey, getSessionItem, setSessionItem, removeSessionItem } from './constants/storage';
 
@@ -60,8 +61,10 @@ const DEFAULT_SIDEBAR_SIZE = 20;
 const DEFAULT_MAIN_SIZE = 80;
 
 function App() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const { getToken, user, isAuthenticated, isLoading: authLoading, checkLegalStatus, acceptLegalDocuments } = useAuth();
   const { effectiveTheme } = useTheme();
+  const { isOnTrial, trialEndsAt } = useTrial();
 
   // Load persisted state from localStorage on mount, fallback to defaults
   const [code, setCode] = useState(() => getStorageItem(STORAGE_KEYS.EDITOR_CODE, DEFAULT_CODE));
@@ -199,6 +202,28 @@ function App() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Trial code from URL (for signup flow from trial redemption page)
+  const [pendingTrialCode, setPendingTrialCode] = useState(null);
+
+  // Handle URL params for opening auth modals (e.g., from trial redemption flow)
+  useEffect(() => {
+    const signupParam = searchParams.get('signup');
+    const trialCode = searchParams.get('trial_code');
+
+    if (signupParam === 'true' && !isAuthenticated && !authLoading) {
+      // Store trial code if present
+      if (trialCode) {
+        setPendingTrialCode(trialCode);
+      }
+      // Open signup modal and clear the URL params
+      headerRef.current?.openSignupModal();
+      // Remove params from URL to prevent re-triggering
+      searchParams.delete('signup');
+      searchParams.delete('trial_code');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams, isAuthenticated, authLoading]);
 
   // Usage tracking
   const { usage, refetch: refetchUsage, checkThreshold, canGenerate, getUsageForPeriod } = useUsageTracking();
@@ -487,7 +512,8 @@ function App() {
     canGenerate,
     setShowUsageLimitModal,
     refetchUsage,
-    userTier: user?.effectiveTier || user?.tier || 'free'
+    userTier: user?.effectiveTier || user?.tier || 'free',
+    trialInfo: isOnTrial ? { isOnTrial, trialEndsAt } : null
   });
 
   // Clear batch-related state when user loses batch processing access (tier downgrade/expiry)
@@ -1713,6 +1739,8 @@ function App() {
         onSidebarMenuClick={() => setMobileSidebarOpen(true)}
         layout={layout}
         onLayoutChange={handleLayoutChange}
+        trialCode={pendingTrialCode}
+        onTrialCodeConsumed={() => setPendingTrialCode(null)}
       />
 
       {/* Email Verification Banner - Shows at top for unverified users */}
@@ -1732,7 +1760,7 @@ function App() {
 
       {/* Trial Banner - Shows when user has active trial */}
       <TrialBanner
-        onUpgrade={() => setShowUpgradeModal(true)}
+        onUpgrade={() => { window.location.href = '/pricing'; }}
       />
 
       {/* Mobile Menu */}

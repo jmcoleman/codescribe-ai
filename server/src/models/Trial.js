@@ -357,9 +357,11 @@ class Trial {
         SELECT t.id, t.user_id, t.trial_tier, t.duration_days,
                t.started_at, t.ends_at, t.status, t.source,
                t.converted_at, t.converted_to_tier,
-               u.email as user_email, u.first_name, u.last_name
+               u.email as user_email, u.first_name, u.last_name,
+               ic.code as invite_code
         FROM user_trials t
         JOIN users u ON u.id = t.user_id
+        LEFT JOIN invite_codes ic ON ic.id = t.invite_code_id
         WHERE t.status = ${status}
         ORDER BY t.created_at DESC
         LIMIT ${limit} OFFSET ${offset}
@@ -374,9 +376,11 @@ class Trial {
         SELECT t.id, t.user_id, t.trial_tier, t.duration_days,
                t.started_at, t.ends_at, t.status, t.source,
                t.converted_at, t.converted_to_tier,
-               u.email as user_email, u.first_name, u.last_name
+               u.email as user_email, u.first_name, u.last_name,
+               ic.code as invite_code
         FROM user_trials t
         JOIN users u ON u.id = t.user_id
+        LEFT JOIN invite_codes ic ON ic.id = t.invite_code_id
         ORDER BY t.created_at DESC
         LIMIT ${limit} OFFSET ${offset}
       `;
@@ -453,7 +457,7 @@ class Trial {
   static async checkEligibility(userId) {
     // Check if user has any previous trials
     const previousTrials = await sql`
-      SELECT id, status, trial_tier, ended_at
+      SELECT id, status, trial_tier, ends_at
       FROM user_trials
       WHERE user_id = ${userId}
       ORDER BY created_at DESC

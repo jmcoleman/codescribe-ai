@@ -17,3 +17,8 @@ export {
   accountRestoredTemplate,
   finalDeletionWarningTemplate
 } from './accountDeletion.js';
+export {
+  trialExpiringReminderTemplate,
+  trialExpiredNoticeTemplate,
+  trialExtendedTemplate
+} from './trialReminders.js';

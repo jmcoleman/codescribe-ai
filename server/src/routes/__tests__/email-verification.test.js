@@ -16,11 +16,17 @@ jest.mock('../../config/stripe.js');
 jest.mock('@vercel/postgres', () => ({
   sql: jest.fn()
 }));
+jest.mock('../../services/trialService.js', () => ({
+  trialService: {
+    redeemInviteCode: jest.fn()
+  }
+}));
 
 // Now import routes and models
 import authRouter, { resetPasswordResetRateLimit } from '../auth.js';
 import User from '../../models/User.js';
 import { sendVerificationEmail } from '../../services/emailService.js';
+import { trialService } from '../../services/trialService.js';
 
 // Create test app
 const app = express();
@@ -78,11 +84,106 @@ describeOrSkip('Email Verification Routes', () => {
           first_name: mockVerifiedUser.first_name,
           last_name: mockVerifiedUser.last_name,
           email_verified: mockVerifiedUser.email_verified
-        })
+        }),
+        trialActivated: false,
+        trialInfo: null
       });
 
       expect(User.findByVerificationToken).toHaveBeenCalledWith('valid-token-123');
       expect(User.markEmailAsVerified).toHaveBeenCalledWith(mockUser.id);
+    });
+
+    it('should verify email and redeem trial code when provided', async () => {
+      const mockUser = {
+        id: 1,
+        email: 'trial-test@example.com',
+        first_name: 'Trial',
+        last_name: 'User',
+        email_verified: false,
+        verification_token_expires: new Date(Date.now() + 3600000)
+      };
+
+      const mockVerifiedUser = {
+        ...mockUser,
+        email_verified: true
+      };
+
+      const mockTrialResult = {
+        trialId: 123,
+        trialTier: 'pro',
+        durationDays: 14,
+        startedAt: new Date(),
+        endsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
+      };
+
+      User.findByVerificationToken.mockResolvedValue(mockUser);
+      User.markEmailAsVerified.mockResolvedValue(mockVerifiedUser);
+      trialService.redeemInviteCode.mockResolvedValue(mockTrialResult);
+
+      const response = await request(app)
+        .post('/api/auth/verify-email')
+        .send({ token: 'valid-token-123', trialCode: 'TEST-CODE-123' })
+        .expect(200);
+
+      expect(response.body).toEqual({
+        success: true,
+        message: 'Email verified and trial activated!',
+        user: expect.objectContaining({
+          id: mockVerifiedUser.id,
+          email: mockVerifiedUser.email,
+          email_verified: true
+        }),
+        trialActivated: true,
+        trialInfo: {
+          trialTier: 'pro',
+          durationDays: 14,
+          endsAt: mockTrialResult.endsAt.toISOString()
+        }
+      });
+
+      expect(User.findByVerificationToken).toHaveBeenCalledWith('valid-token-123');
+      expect(User.markEmailAsVerified).toHaveBeenCalledWith(mockUser.id);
+      expect(trialService.redeemInviteCode).toHaveBeenCalledWith('TEST-CODE-123', mockUser.id);
+    });
+
+    it('should still succeed verification if trial redemption fails', async () => {
+      const mockUser = {
+        id: 1,
+        email: 'trial-fail@example.com',
+        first_name: 'Test',
+        last_name: 'User',
+        email_verified: false,
+        verification_token_expires: new Date(Date.now() + 3600000)
+      };
+
+      const mockVerifiedUser = {
+        ...mockUser,
+        email_verified: true
+      };
+
+      User.findByVerificationToken.mockResolvedValue(mockUser);
+      User.markEmailAsVerified.mockResolvedValue(mockVerifiedUser);
+      trialService.redeemInviteCode.mockRejectedValue(new Error('Code already used'));
+
+      const response = await request(app)
+        .post('/api/auth/verify-email')
+        .send({ token: 'valid-token-123', trialCode: 'USED-CODE' })
+        .expect(200);
+
+      // Should still succeed but without trial
+      expect(response.body).toEqual({
+        success: true,
+        message: 'Email verified successfully',
+        user: expect.objectContaining({
+          id: mockVerifiedUser.id,
+          email: mockVerifiedUser.email,
+          email_verified: true
+        }),
+        trialActivated: false,
+        trialInfo: null
+      });
+
+      expect(trialService.redeemInviteCode).toHaveBeenCalledWith('USED-CODE', mockUser.id);
     });
 
     it('should return 400 for invalid token', async () => {

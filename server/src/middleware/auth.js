@@ -388,6 +388,48 @@ function sanitizeUser(user) {
   return safeUser;
 }
 
+/**
+ * Enrich user object with trial information
+ * Fetches active trial and calculates effectiveTier
+ *
+ * @param {object} user - User object from database
+ * @returns {Promise<object>} User object with trial info
+ */
+async function enrichUserWithTrialInfo(user) {
+  if (!user) return null;
+
+  let activeTrial = null;
+  try {
+    activeTrial = await Trial.findActiveByUserId(user.id);
+
+    // Check if trial has expired (real-time check)
+    if (activeTrial && new Date() >= new Date(activeTrial.ends_at)) {
+      // Trial has expired - mark it asynchronously (don't block request)
+      Trial.expire(activeTrial.id).catch(err =>
+        console.error('[Auth] Failed to expire trial:', err.message)
+      );
+      activeTrial = null;
+    }
+  } catch (trialError) {
+    // Don't fail if trial lookup fails - just log it
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[Auth] Trial lookup error:', trialError.message);
+    }
+  }
+
+  const isOnTrial = activeTrial !== null;
+  const trialEndsAt = activeTrial?.ends_at || null;
+
+  return {
+    ...user,
+    activeTrial,
+    isOnTrial,
+    trialTier: activeTrial?.trial_tier || null,
+    trialEndsAt,
+    effectiveTier: getEffectiveTier(user, activeTrial)
+  };
+}
+
 export {
   requireAuth,
   optionalAuth,
@@ -395,5 +437,6 @@ export {
   requireVerifiedEmail,
   validateBody,
   generateToken,
-  sanitizeUser
+  sanitizeUser,
+  enrichUserWithTrialInfo
 };

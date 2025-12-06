@@ -302,13 +302,16 @@ export function TrialRedemption() {
                   <p className="text-center text-sm text-slate-600 dark:text-slate-400">
                     Sign in or create an account to redeem your trial
                   </p>
-                  <Link
-                    to={`/?signup=true&trial_code=${code}`}
+                  <button
+                    onClick={() => {
+                      // Navigate to signup with trial code - code will be passed through signup to verification email
+                      navigate(`/?signup=true&trial_code=${code}`);
+                    }}
                     className="w-full py-3 px-4 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
                   >
                     <LogIn className="w-4 h-4" />
                     Sign In to Redeem
-                  </Link>
+                  </button>
                 </div>
               ) : (
                 <button

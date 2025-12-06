@@ -17,7 +17,7 @@ import { Sparkles, Clock, X, ArrowRight } from 'lucide-react';
 import { useTrial } from '../../contexts/TrialContext';
 import { formatDateCompact } from '../../utils/formatters';
 
-export function TrialBanner({ onUpgrade, onDismiss }) {
+export function TrialBanner({ onUpgrade, onDismiss, hideUpgrade = false, hideDismiss = false }) {
   const { isOnTrial, trialTier, daysRemaining, trialEndsAt } = useTrial();
   const [isDismissed, setIsDismissed] = useState(false);
 
@@ -35,8 +35,8 @@ export function TrialBanner({ onUpgrade, onDismiss }) {
     onDismiss?.();
   };
 
-  // Don't show if not on trial or dismissed
-  if (!isOnTrial || isDismissed) {
+  // Don't show if not on trial or dismissed (unless hideDismiss is true)
+  if (!isOnTrial || (isDismissed && !hideDismiss)) {
     return null;
   }
 
@@ -129,7 +129,7 @@ export function TrialBanner({ onUpgrade, onDismiss }) {
         {/* Actions */}
         <div className="flex items-center gap-2 flex-shrink-0">
           {/* Upgrade Button */}
-          {onUpgrade && (
+          {onUpgrade && !hideUpgrade && (
             <button
               onClick={onUpgrade}
               className={`${buttonClasses} text-white text-sm px-3 py-1.5 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 flex items-center gap-1.5`}
@@ -140,13 +140,15 @@ export function TrialBanner({ onUpgrade, onDismiss }) {
           )}
 
           {/* Dismiss Button */}
-          <button
-            onClick={handleDismiss}
-            className={`p-1.5 rounded-lg ${dismissButtonClasses} transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2`}
-            aria-label="Dismiss trial banner"
-          >
-            <X className={`w-5 h-5 ${iconClasses}`} />
-          </button>
+          {!hideDismiss && (
+            <button
+              onClick={handleDismiss}
+              className={`p-1.5 rounded-lg ${dismissButtonClasses} transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2`}
+              aria-label="Dismiss trial banner"
+            >
+              <X className={`w-5 h-5 ${iconClasses}`} />
+            </button>
+          )}
         </div>
       </div>
     </div>

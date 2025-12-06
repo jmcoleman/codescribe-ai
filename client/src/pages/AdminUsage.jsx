@@ -4,6 +4,8 @@ import { ArrowLeft, Users, Globe, FileText, Clock, RefreshCw, Filter, AlertCircl
 import { PageLayout } from '../components/PageLayout';
 import { useAuth } from '../contexts/AuthContext';
 import { formatDateTime, formatDate } from '../utils/formatters';
+import { GenerationsByUserTable } from '../components/admin/GenerationsByUserTable';
+import { RecentGenerationsTable } from '../components/admin/RecentGenerationsTable';
 import toast from 'react-hot-toast';
 
 export default function AdminUsage() {
@@ -114,7 +116,7 @@ export default function AdminUsage() {
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
-        navigate(-1);
+        navigate('/admin');
       }
     };
 
@@ -180,16 +182,16 @@ export default function AdminUsage() {
         {/* Header */}
         <div className="mb-6">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => navigate('/admin')}
             className="inline-flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:text-purple-400 transition-colors group mb-3"
           >
             <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" aria-hidden="true" />
-            <span className="font-medium">Back</span>
+            <span className="font-medium">Back to Admin</span>
           </button>
 
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Admin Usage Statistics</h1>
+              <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Usage Dashboard</h1>
               <div className="flex items-center gap-3 flex-wrap">
                 <p className="text-slate-600 dark:text-slate-400">Monitor anonymous and authenticated user activity</p>
                 <span className="text-slate-300 dark:text-slate-600">•</span>
@@ -618,164 +620,12 @@ export default function AdminUsage() {
               </table>
             </div>
           </div>
+        </div>
 
-          {/* Recent Activity */}
-          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-slate-200 dark:border-slate-700">
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Recent Activity</h2>
-              <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                {userTypeFilter === 'anonymous' ? 'Last 50 generations (anonymous users)' :
-                 userTypeFilter === 'authenticated' ? 'Last 50 generations (authenticated users)' :
-                 'Last 50 generations across all documentation types'}
-              </p>
-            </div>
-            <div className="overflow-x-auto max-h-[400px] overflow-y-auto">
-              <table className="w-full">
-                <thead className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700 sticky top-0">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                      {userTypeFilter === 'authenticated' ? 'User' : userTypeFilter === 'anonymous' ? 'IP Address' : 'User'}
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                      Today
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                      Month
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                  {userTypeFilter === 'all' ? (
-                    // Show both anonymous and authenticated when "all" is selected
-                    <>
-                      {stats.recentAnonymous.length === 0 && stats.recentAuthenticated.length === 0 ? (
-                        <tr>
-                          <td colSpan="3" className="px-6 py-8 text-center text-slate-600 dark:text-slate-400">
-                            No recent activity
-                          </td>
-                        </tr>
-                      ) : (
-                        <>
-                          {/* Merge and sort by lastActivity */}
-                          {[
-                            ...stats.recentAnonymous.map(a => ({ ...a, type: 'anonymous' })),
-                            ...stats.recentAuthenticated.map(a => ({ ...a, type: 'authenticated' }))
-                          ]
-                            .sort((a, b) => new Date(b.lastActivity) - new Date(a.lastActivity))
-                            .slice(0, 50)
-                            .map((activity) => (
-                              <tr
-                                key={activity.type === 'anonymous' ? `anon-${activity.ipAddress}-${activity.lastActivity}` : `auth-${activity.userId}-${activity.lastActivity}`}
-                                className="hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors cursor-pointer"
-                                onClick={() => activity.type === 'anonymous' && fetchIPDetails(activity.ipAddress)}
-                              >
-                                <td className="px-6 py-4">
-                                  <div>
-                                    <div className="text-sm text-slate-900 dark:text-slate-100">
-                                      {activity.type === 'anonymous' ? (
-                                        <span className="font-mono text-slate-900 dark:text-slate-100">{activity.ipAddress}</span>
-                                      ) : (
-                                        activity.email
-                                      )}
-                                    </div>
-                                    <div className="text-xs text-slate-500 dark:text-slate-400 capitalize">
-                                      {activity.type === 'anonymous' ? 'Anonymous' : activity.tier}
-                                    </div>
-                                    <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                                      {formatDateTime(activity.lastActivity)}
-                                    </div>
-                                  </div>
-                                </td>
-                                <td className="px-6 py-4 text-right">
-                                  <span className="text-sm text-slate-900 dark:text-slate-100">{activity.dailyCount}</span>
-                                </td>
-                                <td className="px-6 py-4 text-right">
-                                  <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                                    {activity.monthlyCount}
-                                  </span>
-                                </td>
-                              </tr>
-                            ))}
-                        </>
-                      )}
-                    </>
-                  ) : userTypeFilter === 'anonymous' ? (
-                    // Show only anonymous activity
-                    <>
-                      {stats.recentAnonymous.length === 0 ? (
-                        <tr>
-                          <td colSpan="3" className="px-6 py-8 text-center text-slate-600 dark:text-slate-400">
-                            No recent activity
-                          </td>
-                        </tr>
-                      ) : (
-                        stats.recentAnonymous.map((activity) => (
-                          <tr
-                            key={`${activity.ipAddress}-${activity.lastActivity}`}
-                            className="hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors cursor-pointer"
-                            onClick={() => fetchIPDetails(activity.ipAddress)}
-                          >
-                            <td className="px-6 py-4">
-                              <div>
-                                <div className="text-sm font-mono text-slate-900 dark:text-slate-100">{activity.ipAddress}</div>
-                                <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                                  {formatDateTime(activity.lastActivity)}
-                                </div>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 text-right">
-                              <span className="text-sm text-slate-900 dark:text-slate-100">{activity.dailyCount}</span>
-                            </td>
-                            <td className="px-6 py-4 text-right">
-                              <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                                {activity.monthlyCount}
-                              </span>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </>
-                  ) : (
-                    // Show only authenticated activity
-                    <>
-                      {stats.recentAuthenticated.length === 0 ? (
-                        <tr>
-                          <td colSpan="3" className="px-6 py-8 text-center text-slate-600 dark:text-slate-400">
-                            No recent activity
-                          </td>
-                        </tr>
-                      ) : (
-                        stats.recentAuthenticated.map((activity) => (
-                          <tr
-                            key={`${activity.userId}-${activity.lastActivity}`}
-                            className="hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-                          >
-                            <td className="px-6 py-4">
-                              <div>
-                                <div className="text-sm text-slate-900 dark:text-slate-100">{activity.email}</div>
-                                <div className="text-xs text-slate-500 dark:text-slate-400 capitalize">{activity.tier}</div>
-                                <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                                  {formatDateTime(activity.lastActivity)}
-                                </div>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 text-right">
-                              <span className="text-sm text-slate-900 dark:text-slate-100">{activity.dailyCount}</span>
-                            </td>
-                            <td className="px-6 py-4 text-right">
-                              <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                                {activity.monthlyCount}
-                              </span>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+        {/* Full-width Generation Tables - Independent data fetching with sorting/filtering/pagination */}
+        <div className="space-y-8 mt-8">
+          <GenerationsByUserTable />
+          <RecentGenerationsTable />
         </div>
 
         {/* IP Details Modal */}

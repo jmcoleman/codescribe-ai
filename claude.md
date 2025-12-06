@@ -415,7 +415,7 @@ cd server && npm test 2>&1 | grep "Tests:"           # Backend counts
 **Final Metrics:**
 - Accessibility: 95/100, WCAG 2.1 AA, 0 axe violations
 - Performance: 75/100 Lighthouse (+67%), 78KB bundle (-85%)
-- Testing: 3,185 tests (1,877 frontend, 1,308 backend, 86 skipped), 100% passing
+- Testing: 3,231 tests (1,840 frontend, 1,391 backend, 90 skipped), 100% passing
 - Deployment: Vercel + GitHub Actions CI/CD, custom domain
 
 **Optional:** README screenshots, demo video, extended manual a11y testing
@@ -457,20 +457,20 @@ codescribe-ai/
 
 ## 🔄 Version History
 
-**Current: v3.0.0** (December 4, 2025)
-- Trial System Core: Invite-based trials for beta testers
-- Invite Code Admin UI: Create, manage, pause, delete codes
-- User Trial Tracking: Active trial with tier override
-- Trial Redemption API: Validate and redeem invite codes
-- Trial-Aware Tier System: getEffectiveTier() checks active trials
-- Database Migrations: invite_codes, user_trials, trial columns
-- 3,284 tests (3,194 passing, 90 skipped)
-- Frontend: 1,845 passing, 57 skipped
-- Backend: 1,349 passing, 33 skipped
+**Current: v3.1.0** (December 5, 2025)
+- Trial System Production Ready: Full user-facing flow working end-to-end
+- Trial Management Admin UI: TanStack Table with extend/cancel functionality
+- Trial Redemption Flow: Landing page, signup integration, email verification
+- Trial-Aware Attribution: Watermarks on individual docs and batch summaries
+- Pro Feature Access: Fixed effectiveTier calculation for trial users
+- 3,321 tests (3,231 passing, 90 skipped)
+- Frontend: 1,840 passing, 57 skipped
+- Backend: 1,391 passing, 33 skipped
 
 <details>
-<summary>Recent Releases (v2.9.0-v2.11.0) & Milestones</summary>
+<summary>Recent Releases (v2.9.0-v3.0.0) & Milestones</summary>
 
+**v3.0.0** (Dec 4, 2025): Trial System Core - Invite codes, user trials, trial-aware tier system
 **v2.11.0** (Dec 4, 2025): Doc-type specific quality scoring, regeneration confirmation, batch cancellation
 **v2.10.0** (Dec 3, 2025): Multi-file workspace, batch generation, GitHub integration, tier-based attribution
 **v2.9.0** (Nov 23, 2025): Layout toggle streaming, OPENAPI doc type, Gemini 3.0 Pro integration
@@ -500,7 +500,7 @@ codescribe-ai/
 - **v1.21** (Oct 19): Production deployment, codescribe-ai.vercel.app
 
 Full history: [CHANGELOG.md](CHANGELOG.md)
-Last updated: December 3, 2025
+Last updated: December 5, 2025
 </details>
 
 ---

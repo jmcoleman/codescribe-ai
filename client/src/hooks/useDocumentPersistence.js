@@ -23,16 +23,20 @@ export function useDocumentPersistence() {
 
   /**
    * Get user's save preference
-   * @returns {string} - 'always' | 'never' | 'ask'
+   * @returns {string} - 'always' | 'never'
    */
   const getSavePreference = useCallback(() => {
-    return user?.save_docs_preference || 'ask';
+    // Default to 'always' - we only store generated docs (our output), not user code
+    return user?.save_docs_preference || 'always';
   }, [user]);
 
   /**
    * Check if document should be saved based on user preference
    * @param {string} userChoice - User's choice for this specific doc ('save' | 'dont-save' | null)
    * @returns {Object} - { shouldSave: boolean, isEphemeral: boolean }
+   *
+   * Note: Default preference is 'always' since we only store generated docs (our output),
+   * never user's code. Users can opt-out via Settings.
    */
   const shouldSaveDocument = useCallback((userChoice = null) => {
     if (!isAuthenticated) {
@@ -49,15 +53,14 @@ export function useDocumentPersistence() {
       return { shouldSave: true, isEphemeral: true }; // Save but mark ephemeral
     }
 
-    // Otherwise use preference
+    // Otherwise use preference (default is 'always')
     switch (preference) {
-      case 'always':
-        return { shouldSave: true, isEphemeral: false };
       case 'never':
         return { shouldSave: true, isEphemeral: true }; // Save but mark ephemeral
-      case 'ask':
+      case 'always':
       default:
-        return { shouldSave: false, isEphemeral: false }; // Wait for user choice
+        // Default to saving - we only store generated docs, not user code
+        return { shouldSave: true, isEphemeral: false };
     }
   }, [isAuthenticated, getSavePreference]);
 
@@ -192,7 +195,7 @@ export function useDocumentPersistence() {
     cleanupEphemeralDocs,
     shouldSaveDocument,
 
-    // Helpers
-    needsConsent: getSavePreference() === 'ask'
+    // Helpers (needsConsent deprecated - default is now 'always')
+    needsConsent: false
   };
 }
