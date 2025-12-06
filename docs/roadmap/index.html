@@ -4899,6 +4899,501 @@
 .lf-player-controls > div:last-child {
   margin-right: 0px;
 }
+</style><style>
+      @keyframes slideIn {
+        from {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+      @keyframes slideOut {
+        from {
+          transform: translateX(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+      }
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style><style type="text/css">.lf-progress {
+  -webkit-appearance: none;
+  -moz-apperance: none;
+  width: 100%;
+  /* margin: 0 10px; */
+  height: 4px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.lf-progress:focus {
+  outline: none;
+  border: none;
+}
+.lf-progress::-moz-range-track {
+  cursor: pointer;
+  background: none;
+  border: none;
+  outline: none;
+}
+.lf-progress::-webkit-slider-thumb {
+  -webkit-appearance: none !important;
+  height: 13px;
+  width: 13px;
+  border: 0;
+  border-radius: 50%;
+  background: #0fccce;
+  cursor: pointer;
+}
+.lf-progress::-moz-range-thumb {
+  -moz-appearance: none !important;
+  height: 13px;
+  width: 13px;
+  border: 0;
+  border-radius: 50%;
+  background: #0fccce;
+  cursor: pointer;
+}
+.lf-progress::-ms-track {
+  width: 100%;
+  height: 3px;
+  cursor: pointer;
+  background: transparent;
+  border-color: transparent;
+  color: transparent;
+}
+.lf-progress::-ms-fill-lower {
+  background: #ccc;
+  border-radius: 3px;
+}
+.lf-progress::-ms-fill-upper {
+  background: #ccc;
+  border-radius: 3px;
+}
+.lf-progress::-ms-thumb {
+  border: 0;
+  height: 15px;
+  width: 15px;
+  border-radius: 50%;
+  background: #0fccce;
+  cursor: pointer;
+}
+.lf-progress:focus::-ms-fill-lower {
+  background: #ccc;
+}
+.lf-progress:focus::-ms-fill-upper {
+  background: #ccc;
+}
+.lf-player-container :focus {
+  outline: 0;
+}
+.lf-popover {
+  position: relative;
+}
+
+.lf-popover-content {
+  display: inline-block;
+  position: absolute;
+  opacity: 1;
+  visibility: visible;
+  transform: translate(0, -10px);
+  box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.26);
+  transition: all 0.3s cubic-bezier(0.75, -0.02, 0.2, 0.97);
+}
+
+.lf-popover-content.hidden {
+  opacity: 0;
+  visibility: hidden;
+  transform: translate(0, 0px);
+}
+
+.lf-player-btn-container {
+  display: flex;
+  align-items: center;
+}
+.lf-player-btn {
+  cursor: pointer;
+  fill: #999;
+  width: 14px;
+}
+
+.lf-player-btn.active {
+  fill: #555;
+}
+
+.lf-popover {
+  position: relative;
+}
+
+.lf-popover-content {
+  display: inline-block;
+  position: absolute;
+  background-color: #ffffff;
+  opacity: 1;
+
+  transform: translate(0, -10px);
+  box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.26);
+  transition: all 0.3s cubic-bezier(0.75, -0.02, 0.2, 0.97);
+  padding: 10px;
+}
+
+.lf-popover-content.hidden {
+  opacity: 0;
+  visibility: hidden;
+  transform: translate(0, 0px);
+}
+
+.lf-arrow {
+  position: absolute;
+  z-index: -1;
+  content: '';
+  bottom: -9px;
+  border-style: solid;
+  border-width: 10px 10px 0px 10px;
+}
+
+.lf-left-align,
+.lf-left-align .lfarrow {
+  left: 0;
+  right: unset;
+}
+
+.lf-right-align,
+.lf-right-align .lf-arrow {
+  right: 0;
+  left: unset;
+}
+
+.lf-text-input {
+  border: 1px #ccc solid;
+  border-radius: 5px;
+  padding: 3px;
+  width: 60px;
+  margin: 0;
+}
+
+.lf-color-picker {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  height: 90px;
+}
+
+.lf-color-selectors {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.lf-color-component {
+  display: flex;
+  flex-direction: row;
+  font-size: 12px;
+  align-items: center;
+  justify-content: center;
+}
+
+.lf-color-component strong {
+  width: 40px;
+}
+
+.lf-color-component input[type='range'] {
+  margin: 0 0 0 10px;
+}
+
+.lf-color-component input[type='number'] {
+  width: 50px;
+  margin: 0 0 0 10px;
+}
+
+.lf-color-preview {
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding-left: 5px;
+}
+
+.lf-preview {
+  height: 60px;
+  width: 60px;
+}
+
+.lf-popover-snapshot {
+  width: 150px;
+}
+.lf-popover-snapshot h5 {
+  margin: 5px 0 10px 0;
+  font-size: 0.75rem;
+}
+.lf-popover-snapshot a {
+  display: block;
+  text-decoration: none;
+}
+.lf-popover-snapshot a:before {
+  content: '⥼';
+  margin-right: 5px;
+}
+.lf-popover-snapshot .lf-note {
+  display: block;
+  margin-top: 10px;
+  color: #999;
+}
+.lf-player-controls > div {
+  margin-right: 5px;
+  margin-left: 5px;
+}
+.lf-player-controls > div:first-child {
+  margin-left: 0px;
+}
+.lf-player-controls > div:last-child {
+  margin-right: 0px;
+}
+</style><style type="text/css">.lf-progress {
+  -webkit-appearance: none;
+  -moz-apperance: none;
+  width: 100%;
+  /* margin: 0 10px; */
+  height: 4px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.lf-progress:focus {
+  outline: none;
+  border: none;
+}
+.lf-progress::-moz-range-track {
+  cursor: pointer;
+  background: none;
+  border: none;
+  outline: none;
+}
+.lf-progress::-webkit-slider-thumb {
+  -webkit-appearance: none !important;
+  height: 13px;
+  width: 13px;
+  border: 0;
+  border-radius: 50%;
+  background: #0fccce;
+  cursor: pointer;
+}
+.lf-progress::-moz-range-thumb {
+  -moz-appearance: none !important;
+  height: 13px;
+  width: 13px;
+  border: 0;
+  border-radius: 50%;
+  background: #0fccce;
+  cursor: pointer;
+}
+.lf-progress::-ms-track {
+  width: 100%;
+  height: 3px;
+  cursor: pointer;
+  background: transparent;
+  border-color: transparent;
+  color: transparent;
+}
+.lf-progress::-ms-fill-lower {
+  background: #ccc;
+  border-radius: 3px;
+}
+.lf-progress::-ms-fill-upper {
+  background: #ccc;
+  border-radius: 3px;
+}
+.lf-progress::-ms-thumb {
+  border: 0;
+  height: 15px;
+  width: 15px;
+  border-radius: 50%;
+  background: #0fccce;
+  cursor: pointer;
+}
+.lf-progress:focus::-ms-fill-lower {
+  background: #ccc;
+}
+.lf-progress:focus::-ms-fill-upper {
+  background: #ccc;
+}
+.lf-player-container :focus {
+  outline: 0;
+}
+.lf-popover {
+  position: relative;
+}
+
+.lf-popover-content {
+  display: inline-block;
+  position: absolute;
+  opacity: 1;
+  visibility: visible;
+  transform: translate(0, -10px);
+  box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.26);
+  transition: all 0.3s cubic-bezier(0.75, -0.02, 0.2, 0.97);
+}
+
+.lf-popover-content.hidden {
+  opacity: 0;
+  visibility: hidden;
+  transform: translate(0, 0px);
+}
+
+.lf-player-btn-container {
+  display: flex;
+  align-items: center;
+}
+.lf-player-btn {
+  cursor: pointer;
+  fill: #999;
+  width: 14px;
+}
+
+.lf-player-btn.active {
+  fill: #555;
+}
+
+.lf-popover {
+  position: relative;
+}
+
+.lf-popover-content {
+  display: inline-block;
+  position: absolute;
+  background-color: #ffffff;
+  opacity: 1;
+
+  transform: translate(0, -10px);
+  box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.26);
+  transition: all 0.3s cubic-bezier(0.75, -0.02, 0.2, 0.97);
+  padding: 10px;
+}
+
+.lf-popover-content.hidden {
+  opacity: 0;
+  visibility: hidden;
+  transform: translate(0, 0px);
+}
+
+.lf-arrow {
+  position: absolute;
+  z-index: -1;
+  content: '';
+  bottom: -9px;
+  border-style: solid;
+  border-width: 10px 10px 0px 10px;
+}
+
+.lf-left-align,
+.lf-left-align .lfarrow {
+  left: 0;
+  right: unset;
+}
+
+.lf-right-align,
+.lf-right-align .lf-arrow {
+  right: 0;
+  left: unset;
+}
+
+.lf-text-input {
+  border: 1px #ccc solid;
+  border-radius: 5px;
+  padding: 3px;
+  width: 60px;
+  margin: 0;
+}
+
+.lf-color-picker {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  height: 90px;
+}
+
+.lf-color-selectors {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.lf-color-component {
+  display: flex;
+  flex-direction: row;
+  font-size: 12px;
+  align-items: center;
+  justify-content: center;
+}
+
+.lf-color-component strong {
+  width: 40px;
+}
+
+.lf-color-component input[type='range'] {
+  margin: 0 0 0 10px;
+}
+
+.lf-color-component input[type='number'] {
+  width: 50px;
+  margin: 0 0 0 10px;
+}
+
+.lf-color-preview {
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding-left: 5px;
+}
+
+.lf-preview {
+  height: 60px;
+  width: 60px;
+}
+
+.lf-popover-snapshot {
+  width: 150px;
+}
+.lf-popover-snapshot h5 {
+  margin: 5px 0 10px 0;
+  font-size: 0.75rem;
+}
+.lf-popover-snapshot a {
+  display: block;
+  text-decoration: none;
+}
+.lf-popover-snapshot a:before {
+  content: '⥼';
+  margin-right: 5px;
+}
+.lf-popover-snapshot .lf-note {
+  display: block;
+  margin-top: 10px;
+  color: #999;
+}
+.lf-player-controls > div {
+  margin-right: 5px;
+  margin-left: 5px;
+}
+.lf-player-controls > div:first-child {
+  margin-left: 0px;
+}
+.lf-player-controls > div:last-child {
+  margin-right: 0px;
+}
 </style></head>
 <body data-new-gr-c-s-check-loaded="14.1259.0" data-gr-ext-installed="">
   <div class="page">
@@ -4954,7 +5449,7 @@ Press D to toggle dark mode"></div>
             <div class="column-title">Completed</div>
             <div class="column-timeline">Phase 1: Core Capabilities</div>
           </div>
-          <div class="column-body"><div class="phase-card"><div class="phase-header"><div class="phase-title">Web Application (MVP)</div><div class="phase-version">v1.0.0</div></div><ul class="feature-list"><li>4 documentation types (README, JSDoc, API, ARCHITECTURE)</li><li>Monaco Editor with syntax highlighting (24+ languages)</li><li>Real-time streaming with SSE</li><li>Quality scoring system (0-100 scale, 5 criteria)</li><li>File upload &amp; drag-and-drop</li><li>Copy-to-clipboard &amp; download</li><li>Responsive design (mobile, tablet, desktop)</li><li>Mermaid diagram support</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">WCAG AA Compliance</div><div class="phase-version">v1.2.0</div></div><ul class="feature-list"><li>WCAG 2.1 AA compliance</li><li>Full keyboard navigation</li><li>Screen reader compatibility (NVDA, VoiceOver)</li><li>High contrast colors (18.2:1 ratio)</li><li>Focus indicators in modals</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Performance &amp; Infrastructure</div><div class="phase-version">v1.2.0</div></div><ul class="feature-list"><li>Production deployment with custom domain</li><li>Fast page load times with optimized bundle size</li><li>Lazy loading for better performance</li><li>Cross-browser compatibility (Chrome, Firefox, Safari, Edge)</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Security &amp; Quality</div><div class="phase-version">v1.2.0</div></div><ul class="feature-list"><li>Secure API key handling</li><li>Rate limiting to prevent abuse</li><li>Input validation and sanitization</li><li>File upload security checks</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">UX Refinements</div><div class="phase-version">v1.2.1</div></div><ul class="feature-list"><li>Improved panel layout consistency</li><li>Refined download button behavior</li><li>Enhanced modal focus management</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Mobile Enhancements</div><div class="phase-version">v1.2.2</div></div><ul class="feature-list"><li>Improved mobile clipboard support</li><li>Enhanced mobile accessibility</li><li>Better mobile file upload experience</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Authentication &amp; Database (Epic 2.1)</div><div class="phase-version">v2.0.0</div></div><ul class="feature-list"><li>Email/password login and signup</li><li>GitHub OAuth integration for one-click signup</li><li>Complete password reset flow with email verification</li><li>Account linking (OAuth users can add password)</li><li>Password visibility toggles</li></ul><div class="metric-badge">Phase 2 Started</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Tier System &amp; Usage Limits (Epic 2.2)</div><div class="phase-version">v2.1.0-v2.2.0</div></div><ul class="feature-list"><li>3-tier subscription system: Free (10 docs/month), Starter (50 docs), Pro (200 docs)</li><li>Usage warning banner at 80% of monthly limit</li><li>Usage limit modal to prevent over-usage</li><li>Daily and monthly usage tracking</li><li>All 4 documentation types available in Free tier</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">UX Enhancements &amp; File Upload (Epic 2.3)</div><div class="phase-version">v2.3.0</div></div><ul class="feature-list"><li>Drag-and-drop file upload with visual overlay</li><li>Clear button to reset code editor</li><li>Dynamic filename display in editor header</li><li>Mobile menu logout button</li><li>Wider page layout for better space utilization</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Payment Integration (Epic 2.4)</div><div class="phase-version">v2.4.0</div></div><ul class="feature-list"><li>Stripe integration for subscription payments</li><li>Upgrade/downgrade flows with prorated billing</li><li>Pricing page with 4 tiers and monthly/annual toggle</li><li>Stripe Customer Portal for managing subscriptions</li><li>Automated subscription lifecycle management</li></ul><div class="metric-badge">Test Mode</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Email Rate Limiting &amp; UI Polish</div><div class="phase-version">v2.4.1</div></div><ul class="feature-list"><li>Email rate limiting to prevent abuse</li><li>Redesigned unverified email banner</li><li>Improved modal layouts and alignment</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Subscription Safety &amp; Cost Optimization</div><div class="phase-version">v2.4.2</div></div><ul class="feature-list"><li>Test vs production subscription detection</li><li>AI prompt caching for faster responses and lower costs</li><li>Automatic cache refresh for consistent performance</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Payment &amp; Verification Fixes</div><div class="phase-version">v2.4.3</div></div><ul class="feature-list"><li>Fixed payment checkout flow in production</li><li>Email verification banner now disappears immediately after verification</li><li>Improved user state refresh after email verification</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Contact Sales &amp; Email Fixes</div><div class="phase-version">v2.4.4</div></div><ul class="feature-list"><li>Contact Sales modal for Enterprise and Team inquiries</li><li>Smart name collection (only asks if not already provided)</li><li>Fixed critical email verification token bug</li><li>Manage Subscription button on payment success page</li><li>Improved subscription flow with tier-aware routing</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Refined Light Theme</div><div class="phase-version">v2.4.5</div></div><ul class="feature-list"><li>Custom Monaco Editor color theme with purple, green, and cyan accents</li><li>Matching syntax highlighting in documentation panel</li><li>Enhanced Mermaid diagram borders for better visibility</li><li>Improved pricing page layout on large displays</li><li>Cleaner code block rendering</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Help Modal &amp; Billing UX</div><div class="phase-version">v2.4.6</div></div><ul class="feature-list"><li>Tabbed Help Modal (Quick Start, Quality Scores, FAQs)</li><li>FAQ accordion with smooth animations</li><li>Billing period selection persists across page refreshes</li><li>Character limit and counter for Contact Sales form</li><li>Improved mobile navigation layout</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Legal Compliance - Phase 1-2</div><div class="phase-version">v2.5.0</div></div><ul class="feature-list"><li>Terms of Service and Privacy Policy pages</li><li>Footer with legal links on all pages</li><li>Terms acceptance modal with version tracking</li><li>Contact Support modal for inquiries</li><li>Smart acceptance flow (OAuth users bypass, email signup requires acceptance)</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Settings Page &amp; Privacy Controls</div><div class="phase-version">v2.5.1</div></div><ul class="feature-list"><li>Settings page with 4 tabs (Account, Privacy, Subscription, Danger Zone)</li><li>Email and password change functionality</li><li>Analytics opt-out toggle for privacy control</li><li>Subscription usage stats and billing information</li><li>Account deletion with confirmation modal</li><li>Attribution footer on all generated documentation</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">User Data Rights &amp; Restoration</div><div class="phase-version">v2.5.2</div></div><ul class="feature-list"><li>30-day account deletion grace period</li><li>Automatic account restoration on re-signup</li><li>Email notifications for deletion and restoration</li><li>GDPR/CCPA compliant data handling</li><li>7-year financial record retention</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Email System Overhaul</div><div class="phase-version">v2.5.3</div></div><ul class="feature-list"><li>7 branded email templates for all user communications</li><li>Support request attachments (up to 5 files, 10MB each)</li><li>6 subject categories for support inquiries</li><li>Tier-based email priority and SLA response times</li><li>Enhanced Contact Support modal with file upload</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Usage Dashboard &amp; Profile</div><div class="phase-version">v2.6.0</div></div><ul class="feature-list"><li>Modern usage dashboard with daily and monthly tracking</li><li>Color-coded status indicators (green, yellow, orange, red)</li><li>Animated progress bars with percentages</li><li>Reset countdowns showing time until limit refresh</li><li>User profile dropdown with tier badge</li><li>Contextual upgrade prompts when approaching limits</li><li>Quick action cards for common tasks</li></ul><div class="metric-badge">Phase 2 Complete</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Dark Mode Complete</div><div class="phase-version">v2.7.0</div></div><ul class="feature-list"><li>Full dark mode across all pages and components</li><li>System preference detection and auto-sync</li><li>Theme persistence between sessions</li><li>Custom dark Monaco Editor theme (Neon Cyberpunk)</li><li>Dark Mermaid diagrams with enhanced borders</li><li>Smooth theme transitions</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Error Handling Improvements</div><div class="phase-version">v2.7.1</div></div><ul class="feature-list"><li>ErrorBoundary dark mode support</li><li>Horizontal scrolling for long error messages</li><li>Wider error modal for better readability</li><li>Fixed admin dashboard error display</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Appearance Settings &amp; Mobile UX</div><div class="phase-version">v2.7.2</div></div><ul class="feature-list"><li>Appearance settings tab with Light/Dark/Auto theme options</li><li>Auto theme mode follows system preferences</li><li>Responsive mobile code editor that adapts to screen size</li><li>Improved mobile error logging</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">UX Polish &amp; Terminology</div><div class="phase-version">v2.7.3</div></div><ul class="feature-list"><li>Fixed toast notifications to only show on actual completion</li><li>Changed 'Download' to 'Export' for clarity</li><li>Renamed 'Examples' to 'Samples' for accuracy</li><li>User display shows first name only</li><li>Improved dark mode skeleton visibility</li><li>Better content alignment between panels</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Samples Modal Optimization</div><div class="phase-version">v2.7.4</div></div><ul class="feature-list"><li>Wider Samples modal for better code preview</li><li>Improved keyboard navigation in modal</li><li>Better focus management</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Visual Consistency &amp; UX Polish</div><div class="phase-version">v2.7.5</div></div><ul class="feature-list"><li>Consistent toast notification borders</li><li>Improved back button layout and spacing across pages</li><li>Enhanced Contact Sales messaging for enterprise tiers</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Quality Breakdown Modal Enhancements</div><div class="phase-version">v2.7.6</div></div><ul class="feature-list"><li>Dual-tab quality breakdown showing before and after analysis</li><li>Input Code Health tab analyzes original code quality (comments, naming, structure, existing docs)</li><li>Generated Documentation tab shows AI-enhanced documentation quality</li><li>Side-by-side score comparison with improvement indicator</li><li>Enhanced download includes comprehensive quality report in markdown format</li><li>8 new code samples (C#, Java Spring Boot, Ruby Sinatra, and more)</li></ul><div class="metric-badge">Feature Enhancement</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Admin Dashboard Performance Optimization</div><div class="phase-version">v2.7.7</div></div><ul class="feature-list"><li>Admin dashboard shows 'This Period' and 'All Time' usage statistics</li><li>Significantly faster dashboard loading with optimized database queries</li><li>Top users sorted by lifetime usage for better insights</li><li>Recent activity displays last 50 generations across all doc types</li></ul><div class="metric-badge">Performance</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Multi-Provider LLM Architecture</div><div class="phase-version">v2.7.8</div></div><ul class="feature-list"><li>Support for multiple AI providers (Claude and OpenAI)</li><li>Easy provider switching via configuration (no code changes needed)</li><li>Claude Sonnet 4.5 as default provider with 200K context window</li><li>OpenAI GPT-4 Turbo as alternative provider with 128K context</li><li>Automatic prompt caching for cost optimization (90% savings with Claude)</li><li>Provider metadata in responses (model used, token counts, latency)</li></ul><div class="metric-badge">Architecture</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Epic 4.1: GitHub Repository Integration</div><div class="phase-version">v2.7.9</div></div><ul class="feature-list"><li>Import code from GitHub repositories via URL</li><li>Tree-based file browser with folder expansion/collapse</li><li>Branch switching dropdown to explore different branches</li><li>File preview with syntax highlighting</li><li>Support for public repositories (no GitHub account required)</li><li>Auto-scroll to selected files for easy navigation</li><li>Mobile-responsive design with proper scrolling</li></ul><div class="metric-badge">Developer Adoption</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Mermaid Diagram Improvements &amp; UX Refinements</div><div class="phase-version">v2.7.10</div></div><ul class="feature-list"><li>Mermaid diagrams auto-show when generation completes (no manual button clicks)</li><li>Entity-relationship diagram theming with brand colors (indigo-600, purple-600)</li><li>Amber warning colors for diagram errors (improved UX vs red)</li><li>Quality modal default tab set to 'Criteria Breakdown' for immediate insights</li><li>Added Cancel buttons to Samples and Quality modals for consistency</li><li>Improved attribution footer spacing for better visual balance</li><li>Auto-scroll to visible area during generation for better UX</li></ul><div class="metric-badge">UX Polish</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Theme Selection &amp; Multi-File Design</div><div class="phase-version">v2.7.11</div></div><ul class="feature-list"><li>Appearance modal for unauthenticated users</li><li>3-state theme cycling (Light/Dark/Auto with system detection)</li><li>Enhanced DocPanel empty state with GitHub import</li><li>Multi-file sidebar design document for v2.8.0</li></ul><div class="metric-badge">UX &amp; Planning</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Workspace Flexibility &amp; Performance (Epic 3.2)</div><div class="phase-version">v2.8.0</div></div><ul class="feature-list"><li>Resizable panels with VS Code-style draggable divider</li><li>Panel constraints (30% min, 70% max)</li><li>Panel size persistence (localStorage)</li><li>Keyboard accessible panel controls</li><li>Arrow key navigation in AppearanceModal</li><li>ESC key navigation on Pricing/Privacy/Terms pages</li><li>Skip-to-content enhancement with auto-focus</li><li>Mermaid diagram flashing eliminated (6-layer memoization)</li><li>Responsive overflow fixes for pricing page scrolling</li></ul><div class="metric-badge">UX &amp; Optimization</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Language Expansion &amp; Bug Fixes</div><div class="phase-version">v2.8.1</div></div><ul class="feature-list"><li>Google Apps Script (.gs) support added as 16th language</li><li>406-line production-ready Apps Script sample (triggers, SpreadsheetApp, MailApp)</li><li>Updated language count: 15→16, file extensions: 23→24</li><li>Fixed ESC key navigation in UsageDashboard and AdminUsage pages</li><li>Fixed duplicate arrows in Settings collapsibles (removed ::before pseudo-element)</li><li>Fixed privacy wording to clarify input code vs generated documentation storage</li><li>Fixed legal links styling (removed breadcrumb-style ChevronRight icons)</li><li>Fixed attribution watermark markdown formatting (removed nested bold)</li><li>Updated sample count from 8 to 13 examples</li><li>Added language validation tests for Kotlin, Swift, Dart, Shell, Apps Script</li></ul><div class="metric-badge">Language Support</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Layout Toggle Streaming &amp; OPENAPI Support</div><div class="phase-version">v2.9.0</div></div><ul class="feature-list"><li>Layout toggle preserves streaming during panel switches</li><li>Imperative API for smooth panel resizing (0-100% based on mode)</li><li>OPENAPI documentation type added (generates OpenAPI 3.0 YAML specs)</li><li>Auto-scroll to top after single file generation completes</li><li>Eliminated duplicate toast notifications (single file + batch)</li><li>Fixed batch summary formatting with proper line breaks</li><li>Database migration 022: OPENAPI constraint support</li><li>Test suite: 101 tests fixed (17 backend + 84 frontend)</li><li>Total: 2,928 passing tests (1,717 frontend, 1,211 backend)</li></ul><div class="metric-badge">UX &amp; Integration</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Epic 4.3 (Basic) - OpenAPI/Swagger Generation</div><div class="phase-version">v2.9.0</div></div><ul class="feature-list"><li>New OPENAPI doc type with GPT-5.1 provider</li><li>YAML output (OpenAPI 3.0 specification)</li><li>Quality scoring integrated for API specs</li><li>Database support for OPENAPI documents</li><li>Note: Advanced features planned (auto-detect routes from Express/Flask/FastAPI, auto-generate schemas from code, security docs, request/response examples)</li></ul><div class="metric-badge">API Documentation</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Gemini 3.0 Pro Integration &amp; LLM Analysis (Epic 3.4)</div><div class="phase-version">v2.9.0</div></div><ul class="feature-list"><li>Added Google Gemini 3.0 Pro as third LLM provider (gemini.js adapter)</li><li>Comprehensive LLM model selection analysis document (Claude, OpenAI, Gemini comparison)</li><li>Cost analysis across all providers with 4 scenarios (baseline, JSDOC→GPT, all OpenAI, all Gemini 3.0)</li><li>Provider override configuration per doc type (docTypeConfig.js)</li><li>JSDOC override to GPT-5.1 for 39% cost savings vs Claude</li><li>Gemini 3.0 Pro as default (SWE-bench 76.2%, latest training data Jan 2025)</li><li>Metadata capture for cost tracking (provider/model/tokens in database)</li><li>Test infrastructure updated for config-aware provider testing</li></ul><div class="metric-badge">Cost Optimization</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Multi-File Workspace &amp; Batch Generation</div><div class="phase-version">v2.10.0</div></div><ul class="feature-list"><li>Multi-file sidebar with file list and actions (31 tier-based tests)</li><li>Batch documentation generation with rate limiting, progress, and countdown</li><li>File upload and management with validation, persistence, and drag-drop</li><li>GitHub repository integration (tree browsing, branch switching, file selection)</li><li>Documentation history data capture with BatchService and ExportService (64 tests)</li><li>Batch summary document with table formatting (stats, files, quality details)</li><li>Tier-based attribution in batch summaries (matches server-side branding)</li><li>Fixed validateBody middleware for numeric validation (failCount: 0)</li><li>Database migration for generation_batches table</li></ul><div class="metric-badge">Pro+ Feature</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Doc-Type Specific Scoring &amp; Regeneration Confirmation</div><div class="phase-version">v2.11.0</div></div><ul class="feature-list"><li>Doc-type specific quality scoring (README/JSDOC/API/OPENAPI/ARCHITECTURE each with unique criteria)</li><li>File sidebar context menu (Generate/Regenerate/View Details/Delete actions)</li><li>Regeneration confirmation modal prevents accidental doc overwrites</li><li>Mixed batch support: 'Regenerate All' or 'New Files Only' options</li><li>Batch summary with doc-type specific quality tables and criteria columns</li><li>Batch cancellation with disabled 'Cancelling...' button and skipped files tracking</li><li>Quality scorer test coverage improved from 46% to 95% (69 new tests)</li><li>35 new batch generation tests for summary document and tier attribution</li><li>Fixed enterprise tier attribution and workspace file deletion persistence</li><li>Total: 3,284 tests (3,199 passing, 85 skipped)</li></ul><div class="metric-badge">Quality &amp; UX</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Trial System (Core)</div><div class="phase-version">v3.0.0</div></div><ul class="feature-list"><li>14-day Pro trial via invite codes (no credit card required)</li><li>Invite code management admin UI (create, pause, delete, copy link)</li><li>Trial eligibility tracking (one trial per user, DB constraints)</li><li>Trial status in header (TrialBanner with countdown)</li><li>Trial expiration handling with graceful downgrade to Free</li><li>Admin trial extension capability (PATCH /api/admin/trials/:userId/extend)</li><li>Trial watermark on generated documentation</li><li>Database: invite_codes table with usage tracking</li><li>Database: user_trials table with status management</li><li>Trial redemption page (/trial?code=XXX)</li><li>TrialContext for frontend state management</li></ul><div class="metric-badge">Conversion &amp; Growth</div></div></div>
+          <div class="column-body"><div class="phase-card"><div class="phase-header"><div class="phase-title">Web Application (MVP)</div><div class="phase-version">v1.0.0</div></div><ul class="feature-list"><li>4 documentation types (README, JSDoc, API, ARCHITECTURE)</li><li>Monaco Editor with syntax highlighting (24+ languages)</li><li>Real-time streaming with SSE</li><li>Quality scoring system (0-100 scale, 5 criteria)</li><li>File upload &amp; drag-and-drop</li><li>Copy-to-clipboard &amp; download</li><li>Responsive design (mobile, tablet, desktop)</li><li>Mermaid diagram support</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">WCAG AA Compliance</div><div class="phase-version">v1.2.0</div></div><ul class="feature-list"><li>WCAG 2.1 AA compliance</li><li>Full keyboard navigation</li><li>Screen reader compatibility (NVDA, VoiceOver)</li><li>High contrast colors (18.2:1 ratio)</li><li>Focus indicators in modals</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Performance &amp; Infrastructure</div><div class="phase-version">v1.2.0</div></div><ul class="feature-list"><li>Production deployment with custom domain</li><li>Fast page load times with optimized bundle size</li><li>Lazy loading for better performance</li><li>Cross-browser compatibility (Chrome, Firefox, Safari, Edge)</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Security &amp; Quality</div><div class="phase-version">v1.2.0</div></div><ul class="feature-list"><li>Secure API key handling</li><li>Rate limiting to prevent abuse</li><li>Input validation and sanitization</li><li>File upload security checks</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">UX Refinements</div><div class="phase-version">v1.2.1</div></div><ul class="feature-list"><li>Improved panel layout consistency</li><li>Refined download button behavior</li><li>Enhanced modal focus management</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Mobile Enhancements</div><div class="phase-version">v1.2.2</div></div><ul class="feature-list"><li>Improved mobile clipboard support</li><li>Enhanced mobile accessibility</li><li>Better mobile file upload experience</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Authentication &amp; Database (Epic 2.1)</div><div class="phase-version">v2.0.0</div></div><ul class="feature-list"><li>Email/password login and signup</li><li>GitHub OAuth integration for one-click signup</li><li>Complete password reset flow with email verification</li><li>Account linking (OAuth users can add password)</li><li>Password visibility toggles</li></ul><div class="metric-badge">Phase 2 Started</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Tier System &amp; Usage Limits (Epic 2.2)</div><div class="phase-version">v2.1.0-v2.2.0</div></div><ul class="feature-list"><li>3-tier subscription system: Free (10 docs/month), Starter (50 docs), Pro (200 docs)</li><li>Usage warning banner at 80% of monthly limit</li><li>Usage limit modal to prevent over-usage</li><li>Daily and monthly usage tracking</li><li>All 4 documentation types available in Free tier</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">UX Enhancements &amp; File Upload (Epic 2.3)</div><div class="phase-version">v2.3.0</div></div><ul class="feature-list"><li>Drag-and-drop file upload with visual overlay</li><li>Clear button to reset code editor</li><li>Dynamic filename display in editor header</li><li>Mobile menu logout button</li><li>Wider page layout for better space utilization</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Payment Integration (Epic 2.4)</div><div class="phase-version">v2.4.0</div></div><ul class="feature-list"><li>Stripe integration for subscription payments</li><li>Upgrade/downgrade flows with prorated billing</li><li>Pricing page with 4 tiers and monthly/annual toggle</li><li>Stripe Customer Portal for managing subscriptions</li><li>Automated subscription lifecycle management</li></ul><div class="metric-badge">Test Mode</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Email Rate Limiting &amp; UI Polish</div><div class="phase-version">v2.4.1</div></div><ul class="feature-list"><li>Email rate limiting to prevent abuse</li><li>Redesigned unverified email banner</li><li>Improved modal layouts and alignment</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Subscription Safety &amp; Cost Optimization</div><div class="phase-version">v2.4.2</div></div><ul class="feature-list"><li>Test vs production subscription detection</li><li>AI prompt caching for faster responses and lower costs</li><li>Automatic cache refresh for consistent performance</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Payment &amp; Verification Fixes</div><div class="phase-version">v2.4.3</div></div><ul class="feature-list"><li>Fixed payment checkout flow in production</li><li>Email verification banner now disappears immediately after verification</li><li>Improved user state refresh after email verification</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Contact Sales &amp; Email Fixes</div><div class="phase-version">v2.4.4</div></div><ul class="feature-list"><li>Contact Sales modal for Enterprise and Team inquiries</li><li>Smart name collection (only asks if not already provided)</li><li>Fixed critical email verification token bug</li><li>Manage Subscription button on payment success page</li><li>Improved subscription flow with tier-aware routing</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Refined Light Theme</div><div class="phase-version">v2.4.5</div></div><ul class="feature-list"><li>Custom Monaco Editor color theme with purple, green, and cyan accents</li><li>Matching syntax highlighting in documentation panel</li><li>Enhanced Mermaid diagram borders for better visibility</li><li>Improved pricing page layout on large displays</li><li>Cleaner code block rendering</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Help Modal &amp; Billing UX</div><div class="phase-version">v2.4.6</div></div><ul class="feature-list"><li>Tabbed Help Modal (Quick Start, Quality Scores, FAQs)</li><li>FAQ accordion with smooth animations</li><li>Billing period selection persists across page refreshes</li><li>Character limit and counter for Contact Sales form</li><li>Improved mobile navigation layout</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Legal Compliance - Phase 1-2</div><div class="phase-version">v2.5.0</div></div><ul class="feature-list"><li>Terms of Service and Privacy Policy pages</li><li>Footer with legal links on all pages</li><li>Terms acceptance modal with version tracking</li><li>Contact Support modal for inquiries</li><li>Smart acceptance flow (OAuth users bypass, email signup requires acceptance)</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Settings Page &amp; Privacy Controls</div><div class="phase-version">v2.5.1</div></div><ul class="feature-list"><li>Settings page with 4 tabs (Account, Privacy, Subscription, Danger Zone)</li><li>Email and password change functionality</li><li>Analytics opt-out toggle for privacy control</li><li>Subscription usage stats and billing information</li><li>Account deletion with confirmation modal</li><li>Attribution footer on all generated documentation</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">User Data Rights &amp; Restoration</div><div class="phase-version">v2.5.2</div></div><ul class="feature-list"><li>30-day account deletion grace period</li><li>Automatic account restoration on re-signup</li><li>Email notifications for deletion and restoration</li><li>GDPR/CCPA compliant data handling</li><li>7-year financial record retention</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Email System Overhaul</div><div class="phase-version">v2.5.3</div></div><ul class="feature-list"><li>7 branded email templates for all user communications</li><li>Support request attachments (up to 5 files, 10MB each)</li><li>6 subject categories for support inquiries</li><li>Tier-based email priority and SLA response times</li><li>Enhanced Contact Support modal with file upload</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Usage Dashboard &amp; Profile</div><div class="phase-version">v2.6.0</div></div><ul class="feature-list"><li>Modern usage dashboard with daily and monthly tracking</li><li>Color-coded status indicators (green, yellow, orange, red)</li><li>Animated progress bars with percentages</li><li>Reset countdowns showing time until limit refresh</li><li>User profile dropdown with tier badge</li><li>Contextual upgrade prompts when approaching limits</li><li>Quick action cards for common tasks</li></ul><div class="metric-badge">Phase 2 Complete</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Dark Mode Complete</div><div class="phase-version">v2.7.0</div></div><ul class="feature-list"><li>Full dark mode across all pages and components</li><li>System preference detection and auto-sync</li><li>Theme persistence between sessions</li><li>Custom dark Monaco Editor theme (Neon Cyberpunk)</li><li>Dark Mermaid diagrams with enhanced borders</li><li>Smooth theme transitions</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Error Handling Improvements</div><div class="phase-version">v2.7.1</div></div><ul class="feature-list"><li>ErrorBoundary dark mode support</li><li>Horizontal scrolling for long error messages</li><li>Wider error modal for better readability</li><li>Fixed admin dashboard error display</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Appearance Settings &amp; Mobile UX</div><div class="phase-version">v2.7.2</div></div><ul class="feature-list"><li>Appearance settings tab with Light/Dark/Auto theme options</li><li>Auto theme mode follows system preferences</li><li>Responsive mobile code editor that adapts to screen size</li><li>Improved mobile error logging</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">UX Polish &amp; Terminology</div><div class="phase-version">v2.7.3</div></div><ul class="feature-list"><li>Fixed toast notifications to only show on actual completion</li><li>Changed 'Download' to 'Export' for clarity</li><li>Renamed 'Examples' to 'Samples' for accuracy</li><li>User display shows first name only</li><li>Improved dark mode skeleton visibility</li><li>Better content alignment between panels</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Samples Modal Optimization</div><div class="phase-version">v2.7.4</div></div><ul class="feature-list"><li>Wider Samples modal for better code preview</li><li>Improved keyboard navigation in modal</li><li>Better focus management</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Visual Consistency &amp; UX Polish</div><div class="phase-version">v2.7.5</div></div><ul class="feature-list"><li>Consistent toast notification borders</li><li>Improved back button layout and spacing across pages</li><li>Enhanced Contact Sales messaging for enterprise tiers</li></ul></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Quality Breakdown Modal Enhancements</div><div class="phase-version">v2.7.6</div></div><ul class="feature-list"><li>Dual-tab quality breakdown showing before and after analysis</li><li>Input Code Health tab analyzes original code quality (comments, naming, structure, existing docs)</li><li>Generated Documentation tab shows AI-enhanced documentation quality</li><li>Side-by-side score comparison with improvement indicator</li><li>Enhanced download includes comprehensive quality report in markdown format</li><li>8 new code samples (C#, Java Spring Boot, Ruby Sinatra, and more)</li></ul><div class="metric-badge">Feature Enhancement</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Admin Dashboard Performance Optimization</div><div class="phase-version">v2.7.7</div></div><ul class="feature-list"><li>Admin dashboard shows 'This Period' and 'All Time' usage statistics</li><li>Significantly faster dashboard loading with optimized database queries</li><li>Top users sorted by lifetime usage for better insights</li><li>Recent activity displays last 50 generations across all doc types</li></ul><div class="metric-badge">Performance</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Multi-Provider LLM Architecture</div><div class="phase-version">v2.7.8</div></div><ul class="feature-list"><li>Support for multiple AI providers (Claude and OpenAI)</li><li>Easy provider switching via configuration (no code changes needed)</li><li>Claude Sonnet 4.5 as default provider with 200K context window</li><li>OpenAI GPT-4 Turbo as alternative provider with 128K context</li><li>Automatic prompt caching for cost optimization (90% savings with Claude)</li><li>Provider metadata in responses (model used, token counts, latency)</li></ul><div class="metric-badge">Architecture</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Epic 4.1: GitHub Repository Integration</div><div class="phase-version">v2.7.9</div></div><ul class="feature-list"><li>Import code from GitHub repositories via URL</li><li>Tree-based file browser with folder expansion/collapse</li><li>Branch switching dropdown to explore different branches</li><li>File preview with syntax highlighting</li><li>Support for public repositories (no GitHub account required)</li><li>Auto-scroll to selected files for easy navigation</li><li>Mobile-responsive design with proper scrolling</li></ul><div class="metric-badge">Developer Adoption</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Mermaid Diagram Improvements &amp; UX Refinements</div><div class="phase-version">v2.7.10</div></div><ul class="feature-list"><li>Mermaid diagrams auto-show when generation completes (no manual button clicks)</li><li>Entity-relationship diagram theming with brand colors (indigo-600, purple-600)</li><li>Amber warning colors for diagram errors (improved UX vs red)</li><li>Quality modal default tab set to 'Criteria Breakdown' for immediate insights</li><li>Added Cancel buttons to Samples and Quality modals for consistency</li><li>Improved attribution footer spacing for better visual balance</li><li>Auto-scroll to visible area during generation for better UX</li></ul><div class="metric-badge">UX Polish</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Theme Selection &amp; Multi-File Design</div><div class="phase-version">v2.7.11</div></div><ul class="feature-list"><li>Appearance modal for unauthenticated users</li><li>3-state theme cycling (Light/Dark/Auto with system detection)</li><li>Enhanced DocPanel empty state with GitHub import</li><li>Multi-file sidebar design document for v2.8.0</li></ul><div class="metric-badge">UX &amp; Planning</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Workspace Flexibility &amp; Performance (Epic 3.2)</div><div class="phase-version">v2.8.0</div></div><ul class="feature-list"><li>Resizable panels with VS Code-style draggable divider</li><li>Panel constraints (30% min, 70% max)</li><li>Panel size persistence (localStorage)</li><li>Keyboard accessible panel controls</li><li>Arrow key navigation in AppearanceModal</li><li>ESC key navigation on Pricing/Privacy/Terms pages</li><li>Skip-to-content enhancement with auto-focus</li><li>Mermaid diagram flashing eliminated (6-layer memoization)</li><li>Responsive overflow fixes for pricing page scrolling</li></ul><div class="metric-badge">UX &amp; Optimization</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Language Expansion &amp; Bug Fixes</div><div class="phase-version">v2.8.1</div></div><ul class="feature-list"><li>Google Apps Script (.gs) support added as 16th language</li><li>406-line production-ready Apps Script sample (triggers, SpreadsheetApp, MailApp)</li><li>Updated language count: 15→16, file extensions: 23→24</li><li>Fixed ESC key navigation in UsageDashboard and AdminUsage pages</li><li>Fixed duplicate arrows in Settings collapsibles (removed ::before pseudo-element)</li><li>Fixed privacy wording to clarify input code vs generated documentation storage</li><li>Fixed legal links styling (removed breadcrumb-style ChevronRight icons)</li><li>Fixed attribution watermark markdown formatting (removed nested bold)</li><li>Updated sample count from 8 to 13 examples</li><li>Added language validation tests for Kotlin, Swift, Dart, Shell, Apps Script</li></ul><div class="metric-badge">Language Support</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Layout Toggle Streaming &amp; OPENAPI Support</div><div class="phase-version">v2.9.0</div></div><ul class="feature-list"><li>Layout toggle preserves streaming during panel switches</li><li>Imperative API for smooth panel resizing (0-100% based on mode)</li><li>OPENAPI documentation type added (generates OpenAPI 3.0 YAML specs)</li><li>Auto-scroll to top after single file generation completes</li><li>Eliminated duplicate toast notifications (single file + batch)</li><li>Fixed batch summary formatting with proper line breaks</li><li>Database migration 022: OPENAPI constraint support</li><li>Test suite: 101 tests fixed (17 backend + 84 frontend)</li><li>Total: 2,928 passing tests (1,717 frontend, 1,211 backend)</li></ul><div class="metric-badge">UX &amp; Integration</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Epic 4.3 (Basic) - OpenAPI/Swagger Generation</div><div class="phase-version">v2.9.0</div></div><ul class="feature-list"><li>New OPENAPI doc type with GPT-5.1 provider</li><li>YAML output (OpenAPI 3.0 specification)</li><li>Quality scoring integrated for API specs</li><li>Database support for OPENAPI documents</li><li>Note: Advanced features planned (auto-detect routes from Express/Flask/FastAPI, auto-generate schemas from code, security docs, request/response examples)</li></ul><div class="metric-badge">API Documentation</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Gemini 3.0 Pro Integration &amp; LLM Analysis (Epic 3.4)</div><div class="phase-version">v2.9.0</div></div><ul class="feature-list"><li>Added Google Gemini 3.0 Pro as third LLM provider (gemini.js adapter)</li><li>Comprehensive LLM model selection analysis document (Claude, OpenAI, Gemini comparison)</li><li>Cost analysis across all providers with 4 scenarios (baseline, JSDOC→GPT, all OpenAI, all Gemini 3.0)</li><li>Provider override configuration per doc type (docTypeConfig.js)</li><li>JSDOC override to GPT-5.1 for 39% cost savings vs Claude</li><li>Gemini 3.0 Pro as default (SWE-bench 76.2%, latest training data Jan 2025)</li><li>Metadata capture for cost tracking (provider/model/tokens in database)</li><li>Test infrastructure updated for config-aware provider testing</li></ul><div class="metric-badge">Cost Optimization</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Multi-File Workspace &amp; Batch Generation</div><div class="phase-version">v2.10.0</div></div><ul class="feature-list"><li>Multi-file sidebar with file list and actions (31 tier-based tests)</li><li>Batch documentation generation with rate limiting, progress, and countdown</li><li>File upload and management with validation, persistence, and drag-drop</li><li>GitHub repository integration (tree browsing, branch switching, file selection)</li><li>Documentation history data capture with BatchService and ExportService (64 tests)</li><li>Batch summary document with table formatting (stats, files, quality details)</li><li>Tier-based attribution in batch summaries (matches server-side branding)</li><li>Fixed validateBody middleware for numeric validation (failCount: 0)</li><li>Database migration for generation_batches table</li></ul><div class="metric-badge">Pro+ Feature</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Doc-Type Specific Scoring &amp; Regeneration Confirmation</div><div class="phase-version">v2.11.0</div></div><ul class="feature-list"><li>Doc-type specific quality scoring (README/JSDOC/API/OPENAPI/ARCHITECTURE each with unique criteria)</li><li>File sidebar context menu (Generate/Regenerate/View Details/Delete actions)</li><li>Regeneration confirmation modal prevents accidental doc overwrites</li><li>Mixed batch support: 'Regenerate All' or 'New Files Only' options</li><li>Batch summary with doc-type specific quality tables and criteria columns</li><li>Batch cancellation with disabled 'Cancelling...' button and skipped files tracking</li><li>Quality scorer test coverage improved from 46% to 95% (69 new tests)</li><li>35 new batch generation tests for summary document and tier attribution</li><li>Fixed enterprise tier attribution and workspace file deletion persistence</li><li>Total: 3,284 tests (3,199 passing, 85 skipped)</li></ul><div class="metric-badge">Quality &amp; UX</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Trial System (Core)</div><div class="phase-version">v3.0.0</div></div><ul class="feature-list"><li>14-day Pro trial via invite codes (no credit card required)</li><li>Invite code management admin UI (create, pause, delete, copy link)</li><li>Trial eligibility tracking (one trial per user, DB constraints)</li><li>Trial status in header (TrialBanner with countdown)</li><li>Trial expiration handling with graceful downgrade to Free</li><li>Admin trial extension capability (PATCH /api/admin/trials/:userId/extend)</li><li>Trial watermark on generated documentation</li><li>Database: invite_codes table with usage tracking</li><li>Database: user_trials table with status management</li><li>Trial redemption page (/trial?code=XXX)</li><li>TrialContext for frontend state management</li></ul><div class="metric-badge">Conversion &amp; Growth</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Trial Operations &amp; Production Ready</div><div class="phase-version">v3.1.0</div></div><ul class="feature-list"><li>Trial status indicator on pricing page (isTrialTier detection)</li><li>Automated email reminders (3-day, 1-day before expiry)</li><li>Trial expiration job with email deduplication</li><li>Database: trial_email_history table (migration 029)</li><li>Trial admin UI with TanStack Table (sorting, filtering, pagination)</li><li>Extend/cancel trial modals with validation</li><li>Trial-aware attribution in batch summaries</li><li>Fixed Pro feature access for trial users (effectiveTier)</li><li>Auth endpoints enriched with trial info</li><li>3,231 tests passing (1,840 frontend, 1,391 backend)</li></ul><div class="metric-badge">Post-Launch</div></div></div>
         </div>
 
         <!-- NOW Column -->
@@ -4962,9 +5457,9 @@ Press D to toggle dark mode"></div>
           <div class="column-header">
             <div class="column-label">Now</div>
             <div class="column-title">Active</div>
-            <div class="column-timeline">Phase 3: Platform Infrastructure</div>
+            <div class="column-timeline">Phase 3: Quick Wins → Platform Infrastructure</div>
           </div>
-          <div class="column-body"><div class="phase-card"><div class="phase-header"><div class="phase-title">Graph Engine API (Shared Infrastructure)</div><div class="phase-version">Epic 5.4</div></div><ul class="feature-list"><li>Server-side dependency graph service (graphService.js)</li><li>Cross-file analysis and import resolution in codeParser.js</li><li>Context injection: 'This function is imported by [files] and calls [functions]'</li><li>project_graphs table with 24h TTL (metadata only, no code storage)</li><li>API: /api/graph/analyze, /api/graph/:id/context, /api/graph/:id/diagram</li><li>On-demand Mermaid architecture diagrams from graph data</li><li>SOC2 compliance: Zero code retention, metadata-only storage</li><li>Enables: Multi-file README, cross-file ARCHITECTURE diagrams</li><li>Shared by: Web app, VS Code extension, CLI, MCP server</li><li>Note: Extension-specific work tracked in codescribe-vscode repo</li></ul><div class="metric-badge">Platform Foundation</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Diff Analyzer &amp; Webhook APIs</div><div class="phase-version">Epic 5.5</div></div><ul class="feature-list"><li>diffAnalyzer.js service for semantic diff parsing</li><li>Detect function changes, breaking changes, env var changes</li><li>API: POST /api/diff/analyze → suggested doc updates with priority</li><li>GitHub webhook endpoint: /api/github/webhook</li><li>GitLab webhook endpoint: /api/gitlab/webhook</li><li>PR opened → Analyze changes → Return suggested updates</li><li>Push to main → Queue doc regeneration (if configured)</li><li>Webhook signature verification for security</li><li>Shared by: Web app, VS Code extension, CI/CD integrations</li></ul><div class="metric-badge">Git Integration</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Generation History UI (Pro+)</div><div class="phase-version">Epic 3.5</div></div><ul class="feature-list"><li>History page showing past generation batches</li><li>Batch cards with summary, file count, quality scores</li><li>Reload past batches into workspace (one-click restore)</li><li>Search and filter batches by date, doc type, file count</li><li>ZIP export from history (server-side with manifest)</li><li>Tier-gated access: Pro+ only (Free/Starter see upgrade prompt)</li><li>Pagination for large batch histories</li><li>Display AI model used for each document (stored in DB, hidden from batch summary for cleaner UX)</li><li>Note: Data capture complete in v2.9.0 (generation_batches table, BatchService, ExportService)</li></ul><div class="metric-badge">Pro+ Feature</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Trial Operations &amp; Analytics</div><div class="phase-version">v3.1.0</div></div><ul class="feature-list"><li>Trial status indicator on pricing page</li><li>Automated email reminders (3, 1 day before expiry)</li><li>Trial analytics dashboard UI (conversion rates, engagement)</li><li>Database: trial_email_history table for deduplication</li><li>Note: Core trial system complete in v3.0.0</li></ul><div class="metric-badge">Post-Launch</div></div></div>
+          <div class="column-body"><div class="phase-card"><div class="phase-header"><div class="phase-title">Generation History UI (Pro+)</div><div class="phase-version">Epic 3.5</div></div><ul class="feature-list"><li>History page showing past generation batches</li><li>Batch cards with summary, file count, quality scores</li><li>Reload past batches into workspace (one-click restore)</li><li>Search and filter batches by date, doc type, file count</li><li>ZIP export from history (server-side with manifest)</li><li>Tier-gated access: Pro+ only (Free/Starter see upgrade prompt)</li><li>Pagination for large batch histories</li><li>Display AI model used for each document (stored in DB, hidden from batch summary for cleaner UX)</li><li>Note: Data capture complete in v2.9.0 (generation_batches table, BatchService, ExportService)</li></ul><div class="metric-badge">Pro+ Feature</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Graph Engine API (Shared Infrastructure)</div><div class="phase-version">Epic 5.4</div></div><ul class="feature-list"><li>Server-side dependency graph service (graphService.js)</li><li>Cross-file analysis and import resolution in codeParser.js</li><li>Context injection: 'This function is imported by [files] and calls [functions]'</li><li>project_graphs table with 24h TTL (metadata only, no code storage)</li><li>API: /api/graph/analyze, /api/graph/:id/context, /api/graph/:id/diagram</li><li>On-demand Mermaid architecture diagrams from graph data</li><li>SOC2 compliance: Zero code retention, metadata-only storage</li><li>Enables: Multi-file README, cross-file ARCHITECTURE diagrams</li><li>Shared by: Web app, VS Code extension, CLI, MCP server</li><li>Note: Extension-specific work tracked in codescribe-vscode repo</li></ul><div class="metric-badge">Platform Foundation</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Diff Analyzer &amp; Webhook APIs</div><div class="phase-version">Epic 5.5</div></div><ul class="feature-list"><li>diffAnalyzer.js service for semantic diff parsing</li><li>Detect function changes, breaking changes, env var changes</li><li>API: POST /api/diff/analyze → suggested doc updates with priority</li><li>GitHub webhook endpoint: /api/github/webhook</li><li>GitLab webhook endpoint: /api/gitlab/webhook</li><li>PR opened → Analyze changes → Return suggested updates</li><li>Push to main → Queue doc regeneration (if configured)</li><li>Webhook signature verification for security</li><li>Shared by: Web app, VS Code extension, CI/CD integrations</li></ul><div class="metric-badge">Git Integration</div></div></div>
         </div>
 
         <!-- NEXT Column -->
@@ -4991,8 +5486,8 @@ Press D to toggle dark mode"></div>
 
     <footer>
       <div class="footer-content">
-        <div class="footer-left"><strong>CodeScribe AI</strong> · Strategic Roadmap v3.21</div>
-        <div class="footer-center">v3.0.0 Complete (Trial System Core) · Up Next: Graph Engine API · VS Code Extension: Separate Repo</div>
+        <div class="footer-left"><strong>CodeScribe AI</strong> · Strategic Roadmap v3.23</div>
+        <div class="footer-center">v3.1.0 Complete · Up Next: History UI → Graph Engine · VS Code Extension: Separate Repo</div>
         <div class="footer-right">Last Updated: December 5, 2025</div>
       </div>
     </footer>
@@ -5071,8 +5566,8 @@ Press D to toggle dark mode"></div>
       "text": "codescribeai.com",
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
-    "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.21",
-    "footer": "v3.0.0 Complete (Trial System Core) · Up Next: Graph Engine API · VS Code Extension: Separate Repo",
+    "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.23",
+    "footer": "v3.1.0 Complete · Up Next: History UI → Graph Engine · VS Code Extension: Separate Repo",
     "lastUpdated": "December 5, 2025"
   },
   "columns": [
@@ -5690,6 +6185,26 @@ Press D to toggle dark mode"></div>
             "Trial redemption page (/trial?code=XXX)",
             "TrialContext for frontend state management"
           ]
+        },
+        {
+          "version": "v3.1.0",
+          "title": "Trial Operations & Production Ready",
+          "duration": "2 days",
+          "status": "✓ Complete",
+          "completedDate": "Dec 5, 2025",
+          "badge": "Post-Launch",
+          "features": [
+            "Trial status indicator on pricing page (isTrialTier detection)",
+            "Automated email reminders (3-day, 1-day before expiry)",
+            "Trial expiration job with email deduplication",
+            "Database: trial_email_history table (migration 029)",
+            "Trial admin UI with TanStack Table (sorting, filtering, pagination)",
+            "Extend/cancel trial modals with validation",
+            "Trial-aware attribution in batch summaries",
+            "Fixed Pro feature access for trial users (effectiveTier)",
+            "Auth endpoints enriched with trial info",
+            "3,231 tests passing (1,840 frontend, 1,391 backend)"
+          ]
         }
       ]
     },
@@ -5697,13 +6212,31 @@ Press D to toggle dark mode"></div>
       "id": "now",
       "label": "Now",
       "title": "Active",
-      "subtitle": "Phase 3: Platform Infrastructure",
+      "subtitle": "Phase 3: Quick Wins → Platform Infrastructure",
       "phases": [
+        {
+          "version": "Epic 3.5",
+          "title": "Generation History UI (Pro+)",
+          "duration": "2-3 days",
+          "status": "Quick Win",
+          "badge": "Pro+ Feature",
+          "features": [
+            "History page showing past generation batches",
+            "Batch cards with summary, file count, quality scores",
+            "Reload past batches into workspace (one-click restore)",
+            "Search and filter batches by date, doc type, file count",
+            "ZIP export from history (server-side with manifest)",
+            "Tier-gated access: Pro+ only (Free/Starter see upgrade prompt)",
+            "Pagination for large batch histories",
+            "Display AI model used for each document (stored in DB, hidden from batch summary for cleaner UX)",
+            "Note: Data capture complete in v2.9.0 (generation_batches table, BatchService, ExportService)"
+          ]
+        },
         {
           "version": "Epic 5.4",
           "title": "Graph Engine API (Shared Infrastructure)",
           "duration": "4-5 weeks",
-          "status": "Priority",
+          "status": "Planned",
           "badge": "Platform Foundation",
           "features": [
             "Server-side dependency graph service (graphService.js)",
@@ -5734,38 +6267,6 @@ Press D to toggle dark mode"></div>
             "Push to main → Queue doc regeneration (if configured)",
             "Webhook signature verification for security",
             "Shared by: Web app, VS Code extension, CI/CD integrations"
-          ]
-        },
-        {
-          "version": "Epic 3.5",
-          "title": "Generation History UI (Pro+)",
-          "duration": "2-3 days",
-          "status": "Planned",
-          "badge": "Pro+ Feature",
-          "features": [
-            "History page showing past generation batches",
-            "Batch cards with summary, file count, quality scores",
-            "Reload past batches into workspace (one-click restore)",
-            "Search and filter batches by date, doc type, file count",
-            "ZIP export from history (server-side with manifest)",
-            "Tier-gated access: Pro+ only (Free/Starter see upgrade prompt)",
-            "Pagination for large batch histories",
-            "Display AI model used for each document (stored in DB, hidden from batch summary for cleaner UX)",
-            "Note: Data capture complete in v2.9.0 (generation_batches table, BatchService, ExportService)"
-          ]
-        },
-        {
-          "version": "v3.1.0",
-          "title": "Trial Operations & Analytics",
-          "duration": "2-3 days",
-          "status": "Planned",
-          "badge": "Post-Launch",
-          "features": [
-            "Trial status indicator on pricing page",
-            "Automated email reminders (3, 1 day before expiry)",
-            "Trial analytics dashboard UI (conversion rates, engagement)",
-            "Database: trial_email_history table for deduplication",
-            "Note: Core trial system complete in v3.0.0"
           ]
         }
       ]
@@ -6588,6 +7089,44 @@ Press D to toggle dark mode"></div>
 	// ]]>
 </script>
 <grammarly-desktop-integration data-grammarly-shadow-root="true"></grammarly-desktop-integration><!-- Code injected by live-server -->
+<script>
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					var parent = elem.parentElement || head;
+					parent.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					parent.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
+</script>
+<!-- Code injected by live-server -->
 <script>
 	// <![CDATA[  <-- For SVG support
 	if ('WebSocket' in window) {
