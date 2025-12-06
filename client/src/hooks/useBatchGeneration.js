@@ -15,6 +15,7 @@
  */
 
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { flushSync } from 'react-dom';
 import { toastCompact } from '../utils/toastWithHistory';
 import * as batchesApi from '../services/batchesApi';
 import { formatDateTime } from '../utils/formatters';
@@ -24,6 +25,22 @@ const RATE_LIMIT_DELAY = 15000;
 
 // sessionStorage key for batch summary state (persists across refresh)
 const BATCH_SUMMARY_STATE_KEY = 'codescribe_batch_summary_state';
+
+/**
+ * Clear batch state from sessionStorage
+ * Called on logout to prevent stale batch content from showing
+ */
+export function clearBatchSessionStorage() {
+  try {
+    sessionStorage.removeItem(BATCH_SUMMARY_STATE_KEY);
+    sessionStorage.removeItem('bulk_generation_summary');
+    sessionStorage.removeItem('batch_summary_markdown');
+    sessionStorage.removeItem('current_batch_id');
+    console.log('[useBatchGeneration] Cleared batch state from sessionStorage (logout)');
+  } catch (error) {
+    console.error('[useBatchGeneration] Error clearing batch state:', error);
+  }
+}
 
 /**
  * Build tier-based attribution footer (matches server-side docGenerator.buildAttribution)
@@ -392,14 +409,27 @@ export function useBatchGeneration({
     const successfulFiles = [];
     const skippedFiles = []; // Track files skipped due to cancellation
 
-    // Clear previous doc panel content and summaries
-    setDocumentation('');
-    setQualityScore(null);
-    setBulkGenerationSummary(null);
-    setBatchSummaryMarkdown(null);
-    setCurrentBatchId(null);
-    setBulkGenerationErrors([]);
-    setBannerDismissed(false); // Reset banner dismissed state for new batch
+    // Clear ALL files' generating state first to prevent stale spinners
+    // This handles cases where a previous batch was interrupted or cancelled
+    multiFileState.files.forEach(file => {
+      if (file.isGenerating) {
+        multiFileState.updateFile(file.id, { isGenerating: false });
+      }
+    });
+
+    // Use flushSync to ensure all state clears are processed immediately
+    // This prevents the old summary banner from appearing alongside the new generating banner
+    flushSync(() => {
+      // Clear previous doc panel content and summaries
+      setDocumentation('');
+      setQualityScore(null);
+      setBulkGenerationSummary(null);
+      setBatchSummaryMarkdown(null);
+      setCurrentBatchId(null);
+      setBulkGenerationErrors([]);
+      setBannerDismissed(false); // Reset banner dismissed state for new batch
+      setCurrentlyGeneratingFile(null); // Clear any lingering generating file indicator
+    });
 
     // Set batch mode ref SYNCHRONOUSLY before any async state updates
     // This prevents the App.jsx sync effect from resetting filename to 'code.js'
@@ -534,6 +564,7 @@ export function useBatchGeneration({
           docType: file.docType || 'README',
           generatedAt: generatedAt,
           fileId: file.id,
+          documentId: documentId, // Store documentId directly to avoid race condition with React state
           provider: result.metadata?.provider || 'claude',
           model: result.metadata?.model || 'unknown'
         });
@@ -659,11 +690,9 @@ export function useBatchGeneration({
     if (isAuthenticated) {
       try {
         const uniqueDocTypes = [...new Set(successfulFiles.map(f => f.docType))];
+        // Use documentId directly from successfulFiles (not from React state) to avoid race condition
         const documentIds = successfulFiles
-          .map(f => {
-            const file = multiFileState.files.find(mf => mf.id === f.fileId);
-            return file?.documentId;
-          })
+          .map(f => f.documentId)
           .filter(id => id);
 
         const batchResult = await batchesApi.createBatch({
@@ -681,6 +710,13 @@ export function useBatchGeneration({
         if (batchResult.batchId) {
           setCurrentBatchId(batchResult.batchId);
           console.log(`[useBatchGeneration] Created batch: ${batchResult.batchId}`);
+
+          // Update each successful file with the batchId so they can link back to summary
+          successfulFiles.forEach(sf => {
+            if (sf.fileId) {
+              multiFileState.updateFile(sf.fileId, { batchId: batchResult.batchId });
+            }
+          });
 
           if (documentIds.length > 0) {
             try {
@@ -841,7 +877,12 @@ export function useBatchGeneration({
     }
 
     if (!file.content || file.content.length === 0) {
-      toastCompact.error('No content available for this file');
+      // Provide context-aware guidance based on file origin
+      if (file.origin === 'github' && file.github) {
+        toastCompact.info('No code content available. Use "Reload from GitHub" in the file menu.');
+      } else {
+        toastCompact.info('No code content available. Re-upload this file to generate documentation.');
+      }
       return;
     }
 
@@ -939,6 +980,7 @@ export function useBatchGeneration({
       sessionStorage.removeItem(BATCH_SUMMARY_STATE_KEY);
       sessionStorage.removeItem('bulk_generation_summary');
       sessionStorage.removeItem('batch_summary_markdown');
+      sessionStorage.removeItem('current_batch_id');
       console.log('[useBatchGeneration] Cleared batch state from sessionStorage');
     } catch (error) {
       console.error('[useBatchGeneration] Error clearing batch state from sessionStorage:', error);

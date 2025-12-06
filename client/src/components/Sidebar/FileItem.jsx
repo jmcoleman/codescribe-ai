@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { FileText, CheckCircle, Loader2, AlertCircle, Star } from 'lucide-react';
 import { FileActions } from './FileActions';
 
@@ -20,8 +21,12 @@ import { FileActions } from './FileActions';
  * @param {Function} props.onSelect - Called when file is clicked
  * @param {Function} props.onRemove - Called when remove action is clicked
  * @param {Function} props.onViewDetails - Called when view details action is clicked
+ * @param {Function} props.onReloadFromGitHub - Called when reload from GitHub is clicked
+ * @param {boolean} props.isReloading - Whether file is currently being reloaded
  */
-export function FileItem({ file, isActive, isSelected, onSelect, onToggleSelection, onRemove, onGenerate, onViewDetails }) {
+export function FileItem({ file, isActive, isSelected, onSelect, onToggleSelection, onRemove, onGenerate, onViewDetails, onReloadFromGitHub, isReloading = false }) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   const {
     filename,
     language,
@@ -37,6 +42,8 @@ export function FileItem({ file, isActive, isSelected, onSelect, onToggleSelecti
   const hasDocumentation = Boolean(documentation);
   const hasError = Boolean(error);
   const hasContent = Boolean(content && content.length > 0);
+  // File is clickable if it has content OR documentation (allows viewing generated docs)
+  const isClickable = hasContent || hasDocumentation;
 
   // Status icon
   const StatusIcon = () => {
@@ -63,19 +70,20 @@ export function FileItem({ file, isActive, isSelected, onSelect, onToggleSelecti
 
   return (
     <div
-      onClick={hasContent ? onSelect : undefined}
+      onClick={isClickable ? onSelect : undefined}
       className={`
         group
         relative
         p-3
         border-b border-slate-200 dark:border-slate-700
-        ${hasContent ? 'cursor-pointer' : 'cursor-default opacity-60'}
+        ${isClickable ? 'cursor-pointer' : 'cursor-default'}
         transition-all duration-150
         ${isActive
           ? 'bg-purple-50 dark:bg-purple-900/20'
           : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800'
         }
         focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-inset
+        ${isMenuOpen ? 'z-50' : ''}
       `}
       role="button"
       tabIndex={0}
@@ -83,7 +91,7 @@ export function FileItem({ file, isActive, isSelected, onSelect, onToggleSelecti
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          onSelect();
+          if (isClickable) onSelect();
         }
       }}
     >
@@ -95,7 +103,7 @@ export function FileItem({ file, isActive, isSelected, onSelect, onToggleSelecti
       {/* File info */}
       <div className="flex items-start gap-3">
         {/* Checkbox */}
-        <div className="flex-shrink-0 mt-0.5">
+        <div className={`flex-shrink-0 mt-0.5 ${!hasContent ? 'opacity-60' : ''}`}>
           <input
             type="checkbox"
             checked={isSelected}
@@ -110,7 +118,7 @@ export function FileItem({ file, isActive, isSelected, onSelect, onToggleSelecti
         </div>
 
         {/* File details */}
-        <div className="flex-1 min-w-0">
+        <div className={`flex-1 min-w-0 ${!hasContent ? 'opacity-60' : ''}`}>
           {/* Filename */}
           <div className="flex items-center gap-2 mb-1">
             <span className="text-sm text-slate-900 dark:text-slate-100 truncate">
@@ -173,6 +181,9 @@ export function FileItem({ file, isActive, isSelected, onSelect, onToggleSelecti
             onRemove={onRemove}
             onGenerate={onGenerate}
             onViewDetails={onViewDetails}
+            onReloadFromGitHub={onReloadFromGitHub}
+            isReloading={isReloading}
+            onMenuOpenChange={setIsMenuOpen}
           />
         </div>
       </div>

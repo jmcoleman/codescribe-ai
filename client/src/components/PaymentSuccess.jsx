@@ -13,28 +13,9 @@ import { CheckCircle2, Settings } from 'lucide-react';
 export function PaymentSuccess() {
   const navigate = useNavigate();
 
-  const handleManageSubscription = async () => {
-    try {
-      // Create Stripe billing portal session
-      const response = await fetch('/api/payments/create-portal-session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to create portal session');
-      }
-
-      const { url } = await response.json();
-      window.location.href = url;
-    } catch (error) {
-      console.error('Error opening billing portal:', error);
-      // Fallback: navigate to home if portal fails
-      navigate('/');
-    }
+  const handleManageSubscription = () => {
+    // Navigate to settings page with subscription tab selected
+    navigate('/settings?tab=subscription');
   };
 
   return (

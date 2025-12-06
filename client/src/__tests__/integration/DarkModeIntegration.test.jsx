@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from '../../contexts/ThemeContext';
 import { AuthProvider } from '../../contexts/AuthContext';
+import { TrialProvider } from '../../contexts/TrialContext';
 import { Header } from '../../components/Header';
 import Footer from '../../components/Footer';
 import { ThemeToggle } from '../../components/ThemeToggle';
@@ -24,9 +25,11 @@ describe('Dark Mode Integration', () => {
     return render(
       <BrowserRouter>
         <AuthProvider>
-          <ThemeProvider>
-            {component}
-          </ThemeProvider>
+          <TrialProvider>
+            <ThemeProvider>
+              {component}
+            </ThemeProvider>
+          </TrialProvider>
         </AuthProvider>
       </BrowserRouter>
     );

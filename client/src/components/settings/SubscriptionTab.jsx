@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTrial } from '../../contexts/TrialContext';
 import { useUsageTracking } from '../../hooks/useUsageTracking';
 import { formatDateCompact } from '../../utils/formatters';
-import { CreditCard, TrendingUp, Calendar, ExternalLink, Check } from 'lucide-react';
+import { getEffectiveTier } from '../../utils/tierFeatures';
+import { CreditCard, TrendingUp, Calendar, ExternalLink, Check, Clock, Shield } from 'lucide-react';
 
 const TIER_INFO = {
   FREE: {
@@ -30,12 +32,27 @@ const TIER_INFO = {
 
 export function SubscriptionTab() {
   const { user } = useAuth();
+  const { isOnTrial, trialTier, daysRemaining, trialEndsAt } = useTrial();
   const { usage, getUsageForPeriod } = useUsageTracking();
   const navigate = useNavigate();
   const [isManaging, setIsManaging] = useState(false);
 
   const currentTier = (user?.tier || 'FREE').toUpperCase();
-  const tierInfo = TIER_INFO[currentTier] || TIER_INFO.FREE;
+  const effectiveTier = getEffectiveTier(user);
+
+  // Check admin status and tier override
+  const isAdmin = ['admin', 'support', 'super_admin'].includes(user?.role);
+  const hasAdminOverride = isAdmin && user?.effectiveTier && user.effectiveTier !== user.tier;
+  // Admins get unlimited usage by role (separate from tier override)
+  const hasUnlimitedAccess = isAdmin;
+
+  // For trial users or admin override, show effective tier info
+  const displayTier = isOnTrial
+    ? (trialTier || 'PRO').toUpperCase()
+    : hasAdminOverride
+      ? effectiveTier.toUpperCase()
+      : currentTier;
+  const tierInfo = TIER_INFO[displayTier] || TIER_INFO.FREE;
   const monthlyUsage = getUsageForPeriod('monthly');
 
   const handleManageSubscription = async () => {
@@ -65,6 +82,31 @@ export function SubscriptionTab() {
 
   return (
     <div className="space-y-6">
+      {/* Usage limit warning - shown at top for visibility */}
+      {currentTier === 'FREE' && !hasUnlimitedAccess && (monthlyUsage?.percentage || 0) >= 80 && (
+        <div className={`flex items-center justify-between gap-4 p-4 rounded-lg border ${
+          (monthlyUsage?.percentage || 0) >= 100
+            ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+            : 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-700'
+        }`}>
+          <p className={`text-sm ${
+            (monthlyUsage?.percentage || 0) >= 100
+              ? 'text-red-800 dark:text-red-200'
+              : 'text-amber-800 dark:text-amber-200'
+          }`}>
+            {(monthlyUsage?.percentage || 0) >= 100
+              ? "You've reached your monthly limit. Upgrade to continue generating documentation."
+              : `You've used ${monthlyUsage?.percentage || 0}% of your monthly limit.`}
+          </p>
+          <button
+            onClick={handleUpgrade}
+            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded-lg font-medium transition-colors whitespace-nowrap"
+          >
+            Upgrade Plan
+          </button>
+        </div>
+      )}
+
       {/* Current Plan */}
       <div>
         <div className="flex items-center justify-between mb-4">
@@ -86,12 +128,58 @@ export function SubscriptionTab() {
           <h3 className="text-xl font-semibold text-slate-900 dark:text-white">
             {tierInfo.name}
           </h3>
-          {currentTier !== 'FREE' && (
+          {isOnTrial ? (
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-full">
+              <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+              <span className="text-xs font-semibold text-amber-900 dark:text-amber-300">
+                Trial ({daysRemaining} {daysRemaining === 1 ? 'day' : 'days'} left)
+              </span>
+            </div>
+          ) : hasAdminOverride ? (
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-full">
+              <Shield className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+              <span className="text-xs font-semibold text-amber-900 dark:text-amber-300">
+                Admin Override
+              </span>
+            </div>
+          ) : hasUnlimitedAccess ? (
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded-full">
+              <Shield className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" aria-hidden="true" />
+              <span className="text-xs font-semibold text-purple-900 dark:text-purple-300">
+                Unlimited Access
+              </span>
+            </div>
+          ) : currentTier !== 'FREE' && (
             <span className="px-2.5 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs font-medium rounded-full">
               Active
             </span>
           )}
         </div>
+
+        {/* Trial info banner */}
+        {isOnTrial && (
+          <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg p-3 mb-4">
+            <p className="text-sm text-slate-600 dark:text-slate-300">
+              You're currently on a <span className="font-semibold">{trialTier || 'Pro'}</span> trial.
+              {trialEndsAt && (
+                <> Your trial ends on <span className="font-semibold">{formatDateCompact(trialEndsAt)}</span>.</>
+              )}
+              {' '}Upgrade to keep your access after the trial ends.
+            </p>
+          </div>
+        )}
+
+        {/* Admin override info banner */}
+        {hasAdminOverride && !isOnTrial && (
+          <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg p-3 mb-4">
+            <p className="text-sm text-slate-600 dark:text-slate-300">
+              You have an admin tier override active. You're viewing the app as a{' '}
+              <span className="font-semibold capitalize">{effectiveTier}</span> user.
+              Your actual plan is <span className="font-semibold capitalize">{user?.tier || 'Free'}</span>.
+              Usage limits reflect the override tier.
+            </p>
+          </div>
+        )}
 
         <ul className="space-y-2">
           {tierInfo.features.map((feature, index) => (
@@ -117,28 +205,33 @@ export function SubscriptionTab() {
                 Documents Generated
               </span>
               <span className="text-sm font-semibold text-slate-900 dark:text-white">
-                {usage.monthly || 0} / {monthlyUsage?.limit || 10}
+                {hasUnlimitedAccess
+                  ? <>{usage.monthly || 0} / <span className="text-lg">∞</span></>
+                  : <>{usage.monthly || 0} / {monthlyUsage?.limit || 10}</>
+                }
               </span>
             </div>
 
-            {/* Progress Bar */}
-            <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5 overflow-hidden mb-3">
-              <div
-                className={`h-full rounded-full transition-all duration-300 ${
-                  (monthlyUsage?.percentage || 0) >= 100
-                    ? 'bg-red-600'
-                    : (monthlyUsage?.percentage || 0) >= 80
-                    ? 'bg-yellow-500'
-                    : 'bg-purple-600'
-                }`}
-                style={{ width: `${Math.min(monthlyUsage?.percentage || 0, 100)}%` }}
-                role="progressbar"
-                aria-valuenow={monthlyUsage?.percentage || 0}
-                aria-valuemin="0"
-                aria-valuemax="100"
-                aria-label="Monthly usage progress"
-              />
-            </div>
+            {/* Progress Bar - hidden for unlimited access */}
+            {!hasUnlimitedAccess && (
+              <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5 overflow-hidden mb-3">
+                <div
+                  className={`h-full rounded-full transition-all duration-300 ${
+                    (monthlyUsage?.percentage || 0) >= 100
+                      ? 'bg-red-600'
+                      : (monthlyUsage?.percentage || 0) >= 80
+                      ? 'bg-yellow-500'
+                      : 'bg-purple-600'
+                  }`}
+                  style={{ width: `${Math.min(monthlyUsage?.percentage || 0, 100)}%` }}
+                  role="progressbar"
+                  aria-valuenow={monthlyUsage?.percentage || 0}
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  aria-label="Monthly usage progress"
+                />
+              </div>
+            )}
 
             {/* Reset Date */}
             <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-400">
@@ -151,25 +244,11 @@ export function SubscriptionTab() {
                     : 'next month'}
                 </span>
               </div>
-              <span className="font-medium">{monthlyUsage?.percentage || 0}% used</span>
+              {!hasUnlimitedAccess && (
+                <span className="font-medium">{monthlyUsage?.percentage || 0}% used</span>
+              )}
             </div>
 
-            {/* Upgrade CTA if approaching/at limit */}
-            {currentTier === 'FREE' && (monthlyUsage?.percentage || 0) >= 80 && (
-              <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between gap-4">
-                <p className="text-sm text-slate-700 dark:text-slate-300">
-                  {(monthlyUsage?.percentage || 0) >= 100
-                    ? "You've reached your monthly limit."
-                    : 'Running low on documents.'}
-                </p>
-                <button
-                  onClick={handleUpgrade}
-                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded-lg font-medium transition-colors whitespace-nowrap"
-                >
-                  Upgrade Plan
-                </button>
-              </div>
-            )}
           </>
         ) : (
           <div className="flex items-center gap-2 py-4">

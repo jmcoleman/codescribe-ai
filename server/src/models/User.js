@@ -932,12 +932,28 @@ class User {
   /**
    * Check if user can bypass rate limits based on role
    * Admin, support, and super_admin roles bypass rate limiting
-   * @param {Object} user - User object with role field
+   * UNLESS they have an active tier override (for testing as a specific tier)
+   * @param {Object} user - User object with role and tier override fields
    * @returns {boolean} True if user can bypass rate limits
    */
   static canBypassRateLimits(user) {
     if (!user || !user.role) return false;
-    return ['admin', 'support', 'super_admin'].includes(user.role);
+
+    const isPrivilegedRole = ['admin', 'support', 'super_admin'].includes(user.role);
+    if (!isPrivilegedRole) return false;
+
+    // If admin has an active tier override, they should NOT bypass limits
+    // This allows them to experience the app as the overridden tier
+    if (user.viewing_as_tier && user.override_expires_at) {
+      const now = new Date();
+      const expiry = new Date(user.override_expires_at);
+      if (expiry > now) {
+        // Active tier override - do not bypass limits
+        return false;
+      }
+    }
+
+    return true;
   }
 
   /**

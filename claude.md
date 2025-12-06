@@ -457,19 +457,20 @@ codescribe-ai/
 
 ## 🔄 Version History
 
-**Current: v3.1.0** (December 5, 2025)
-- Trial System Production Ready: Full user-facing flow working end-to-end
-- Trial Management Admin UI: TanStack Table with extend/cancel functionality
-- Trial Redemption Flow: Landing page, signup integration, email verification
-- Trial-Aware Attribution: Watermarks on individual docs and batch summaries
-- Pro Feature Access: Fixed effectiveTier calculation for trial users
-- 3,321 tests (3,231 passing, 90 skipped)
+**Current: v3.2.0** (December 6, 2025)
+- Batch Generation Fixes: Fixed race condition where only last doc got batch_id
+- Workspace Persistence: Files with docs now clickable after logout/login
+- Mermaid Diagrams: Fixed error icon cleanup without breaking rendering
+- Async Prompt Loading: Converted to async/await with Promise.all for performance
+- Stripe Webhooks: Fixed signature verification with raw body handling
+- 3,680 tests (3,680 passing, 114 skipped)
 - Frontend: 1,840 passing, 57 skipped
-- Backend: 1,391 passing, 33 skipped
+- Backend: 1,840 passing, 57 skipped
 
 <details>
-<summary>Recent Releases (v2.9.0-v3.0.0) & Milestones</summary>
+<summary>Recent Releases (v2.9.0-v3.1.0) & Milestones</summary>
 
+**v3.1.0** (Dec 5, 2025): Trial System Production Ready - Full user-facing flow, admin UI, attribution
 **v3.0.0** (Dec 4, 2025): Trial System Core - Invite codes, user trials, trial-aware tier system
 **v2.11.0** (Dec 4, 2025): Doc-type specific quality scoring, regeneration confirmation, batch cancellation
 **v2.10.0** (Dec 3, 2025): Multi-file workspace, batch generation, GitHub integration, tier-based attribution
@@ -500,7 +501,7 @@ codescribe-ai/
 - **v1.21** (Oct 19): Production deployment, codescribe-ai.vercel.app
 
 Full history: [CHANGELOG.md](CHANGELOG.md)
-Last updated: December 5, 2025
+Last updated: December 6, 2025
 </details>
 
 ---

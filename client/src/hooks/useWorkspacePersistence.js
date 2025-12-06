@@ -125,16 +125,15 @@ export function useWorkspacePersistence() {
   }, [isAuthenticated, hasMultiFileAccess, multiFileState.files]);
 
   /**
-   * Load workspace from database on mount OR when files become empty
-   * (handles navigation back to app)
+   * Load workspace from database on mount to get fresh data (like generatedAt)
+   * Merges DB data with any existing sessionStorage content
    */
   useEffect(() => {
     // Only load if:
     // 1. User is authenticated
     // 2. User has multi-file access
-    // 3. Current file list is empty (nothing loaded yet OR user cleared it)
-    // 4. Not currently syncing
-    if (!isAuthenticated || !hasMultiFileAccess || multiFileState.files.length > 0 || isSyncing.current) {
+    // 3. Not currently syncing
+    if (!isAuthenticated || !hasMultiFileAccess || isSyncing.current) {
       return;
     }
 
@@ -147,6 +146,10 @@ export function useWorkspacePersistence() {
           // Load all contents from localStorage once
           const allContents = getWorkspaceContents(user.id);
 
+          // Get existing files from sessionStorage (for content that's not in DB)
+          const existingFiles = multiFileState.files;
+          const existingFilesMap = new Map(existingFiles.map(f => [f.id, f]));
+
           // Convert DB files to client file format
           const clientFiles = result.files.map(dbFile => {
             const clientId = dbFile.id; // Use DB ID as client ID for simplicity
@@ -155,14 +158,17 @@ export function useWorkspacePersistence() {
             workspaceIdMap.current.set(dbFile.id, clientId);
             clientIdMap.current.set(clientId, dbFile.id);
 
-            // Load code content from localStorage object
-            const savedContent = allContents[dbFile.id] || '';
+            // Get existing file from sessionStorage (may have content)
+            const existingFile = existingFilesMap.get(clientId);
+
+            // Load code content from localStorage object, or fall back to existing sessionStorage content
+            const savedContent = allContents[dbFile.id] || existingFile?.content || '';
 
             return {
               id: clientId,
               filename: dbFile.filename,
               language: dbFile.language,
-              content: savedContent, // Load from localStorage
+              content: savedContent, // Load from localStorage or sessionStorage
               documentation: dbFile.documentation || null,
               qualityScore: dbFile.quality_score || null,
               docType: dbFile.doc_type,
@@ -171,6 +177,8 @@ export function useWorkspacePersistence() {
               isGenerating: false,
               error: null,
               documentId: dbFile.document_id,
+              generatedAt: dbFile.generated_at ? new Date(dbFile.generated_at) : null,
+              batchId: dbFile.batch_id || null,
               github: dbFile.github_repo ? {
                 repo: dbFile.github_repo,
                 path: dbFile.github_path,
@@ -180,19 +188,20 @@ export function useWorkspacePersistence() {
             };
           });
 
-          // Load files into state
+          // Clear existing files and load fresh from DB
+          clearFiles();
           addFiles(clientFiles);
         }
       } catch (error) {
         console.error('[useWorkspacePersistence] Failed to load workspace:', error);
-        // Don't throw - allow app to continue with empty workspace
+        // Don't throw - allow app to continue with sessionStorage data
       } finally {
         isSyncing.current = false;
       }
     };
 
     loadWorkspace();
-  }, [isAuthenticated, hasMultiFileAccess, addFiles, user]);
+  }, [isAuthenticated, hasMultiFileAccess, user]); // Removed addFiles, clearFiles, multiFileState.files from deps to prevent loops
 
   /**
    * Enhanced addFile with DB persistence
@@ -390,13 +399,17 @@ export function useWorkspacePersistence() {
 
   /**
    * Enhanced updateFile with DB sync (for linking generated docs and docType changes)
+   * Note: batchId is NOT synced here because it's stored on generated_documents table,
+   * not workspace_files. The batchId comes from the document join on workspace GET.
    */
   const updateFileWithPersistence = useCallback(async (fileId, updates) => {
-    // Update local state first
+    // Update local state first (includes batchId for current session)
     updateFile(fileId, updates);
 
     // Sync to DB if authenticated and if relevant fields changed
+    // Only documentId and docType are stored on workspace_files table
     const shouldSync = updates.documentId !== undefined || updates.docType !== undefined;
+
     if (isAuthenticated && hasMultiFileAccess && !isSyncing.current && shouldSync) {
       const dbFileId = clientIdMap.current.get(fileId);
       if (dbFileId) {
@@ -412,6 +425,8 @@ export function useWorkspacePersistence() {
         } catch (error) {
           console.error('[useWorkspacePersistence] Failed to update workspace file:', error);
         }
+      } else {
+        console.warn('[useWorkspacePersistence] No dbFileId mapping found for fileId:', fileId);
       }
     }
   }, [updateFile, isAuthenticated, hasMultiFileAccess, user]);
@@ -457,6 +472,8 @@ export function useWorkspacePersistence() {
             isGenerating: false,
             error: null,
             documentId: dbFile.document_id,
+            generatedAt: dbFile.generated_at ? new Date(dbFile.generated_at) : null,
+            batchId: dbFile.batch_id || null,
             github: dbFile.github_repo ? {
               repo: dbFile.github_repo,
               path: dbFile.github_path,

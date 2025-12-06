@@ -1,6 +1,6 @@
 {
   "name": "server",
-  "version": "3.1.0",
+  "version": "3.2.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -26,6 +26,7 @@
     "migrate:status": "node -r dotenv/config src/db/migrate.js status",
     "migrate:validate": "node -r dotenv/config src/db/migrate.js validate",
     "reset:user": "node -r dotenv/config scripts/reset-dev-user.js",
+    "clear:history": "node scripts/clear-user-history.js",
     "llm:usage": "node scripts/check-llm-usage.js",
     "cleanup:testdata": "node cleanup-test-data.js",
     "test:db": "jest --config jest.config.db.cjs",

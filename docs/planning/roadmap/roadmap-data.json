@@ -65,9 +65,9 @@
       "text": "codescribeai.com",
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
-    "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.23",
-    "footer": "v3.1.0 Complete · Up Next: History UI → Graph Engine · VS Code Extension: Separate Repo",
-    "lastUpdated": "December 5, 2025"
+    "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.24",
+    "footer": "v3.2.0 Complete · Up Next: History UI → Graph Engine · VS Code Extension: Separate Repo",
+    "lastUpdated": "December 6, 2025"
   },
   "columns": [
     {
@@ -703,6 +703,23 @@
             "Fixed Pro feature access for trial users (effectiveTier)",
             "Auth endpoints enriched with trial info",
             "3,231 tests passing (1,840 frontend, 1,391 backend)"
+          ]
+        },
+        {
+          "version": "v3.2.0",
+          "title": "Batch Generation & Workspace Persistence Fixes",
+          "duration": "1 day",
+          "status": "✓ Complete",
+          "completedDate": "Dec 6, 2025",
+          "badge": "Critical Fixes",
+          "features": [
+            "Fixed batch document linking race condition (only last doc got batch_id)",
+            "Files with documentation now clickable after logout/login",
+            "Removed localStorage for authenticated users (docs from DB only)",
+            "Mermaid error icon cleanup without breaking rendering",
+            "Async prompt loading with Promise.all for performance",
+            "Stripe webhook signature verification with raw body handling",
+            "3,680 tests passing (1,840 frontend, 1,840 backend)"
           ]
         }
       ]

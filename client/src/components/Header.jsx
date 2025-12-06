@@ -1,4 +1,4 @@
-import { Menu as MenuIcon, LogOut, User, FileText, Shield, ChevronDown, Settings, BarChart3, Sparkles, SlidersHorizontal, PanelLeft } from 'lucide-react';
+import { Menu as MenuIcon, LogOut, User, FileText, Shield, ChevronDown, Settings, BarChart3, Sparkles, SlidersHorizontal, PanelLeft, Clock } from 'lucide-react';
 import { useState, lazy, Suspense, forwardRef, useImperativeHandle } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Menu } from '@headlessui/react';
@@ -6,6 +6,7 @@ import { Button } from './Button';
 import { Logo } from './Logo';
 import { Tooltip } from './Tooltip';
 import { useAuth } from '../contexts/AuthContext';
+import { useTrial } from '../contexts/TrialContext';
 import { AppearanceModal } from './AppearanceModal';
 import { LayoutToggle } from './LayoutToggle';
 import { getEffectiveTier } from '../utils/tierFeatures';
@@ -21,6 +22,7 @@ const ENABLE_AUTH = import.meta.env.VITE_ENABLE_AUTH === 'true';
 export const Header = forwardRef(function Header({ onMenuClick, onHelpClick, showSidebarMenu, onSidebarMenuClick, layout, onLayoutChange, trialCode, onTrialCodeConsumed }, ref) {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
+  const { isOnTrial, trialTier, daysRemaining } = useTrial();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showSignupModal, setShowSignupModal] = useState(false);
   const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
@@ -34,6 +36,9 @@ export const Header = forwardRef(function Header({ onMenuClick, onHelpClick, sho
 
   // Get effective tier (considering tier override for admins)
   const effectiveTier = getEffectiveTier(user);
+
+  // Check if admin has active tier override
+  const hasAdminOverride = isAdmin && user?.effectiveTier && user.effectiveTier !== user.tier;
 
   // Check if user has Pro+ tier (pro, team, or enterprise)
   const hasProPlusTier = isAuthenticated && ['pro', 'team', 'enterprise'].includes(effectiveTier);
@@ -179,13 +184,17 @@ export const Header = forwardRef(function Header({ onMenuClick, onHelpClick, sho
                             <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
                               {getDisplayName()}
                             </span>
-                            {/* Tier badge */}
-                            {user?.tier && user.tier !== 'free' && (
-                              <span className="inline-flex items-center gap-1 text-xs font-semibold text-purple-600 dark:text-purple-400">
-                                <Sparkles className="w-3 h-3" aria-hidden="true" />
-                                {user.tier.charAt(0).toUpperCase() + user.tier.slice(1)}
+                            {/* Tier info */}
+                            {(effectiveTier && effectiveTier !== 'free') || isOnTrial || hasAdminOverride ? (
+                              <span className="text-xs text-slate-500 dark:text-slate-400">
+                                {isOnTrial
+                                  ? `${(trialTier || 'Pro').charAt(0).toUpperCase() + (trialTier || 'pro').slice(1)} Trial`
+                                  : hasAdminOverride
+                                    ? `${effectiveTier.charAt(0).toUpperCase() + effectiveTier.slice(1)} (Override)`
+                                    : effectiveTier.charAt(0).toUpperCase() + effectiveTier.slice(1)
+                                }
                               </span>
-                            )}
+                            ) : null}
                           </div>
                         </div>
                         <ChevronDown className="w-4 h-4 text-slate-500 dark:text-slate-400" aria-hidden="true" />
@@ -197,9 +206,14 @@ export const Header = forwardRef(function Header({ onMenuClick, onHelpClick, sho
                           <div className="px-3 py-2 mb-1">
                             <p className="text-xs text-slate-500 dark:text-slate-400">Signed in as</p>
                             <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">{user?.email}</p>
-                            {user?.tier && (
-                              <p className="text-xs text-purple-600 dark:text-purple-400 font-semibold mt-0.5 capitalize">
-                                {user.tier} Plan
+                            {(effectiveTier || isOnTrial || hasAdminOverride) && (
+                              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 capitalize">
+                                {isOnTrial
+                                  ? `${trialTier || 'Pro'} Trial (${daysRemaining}d left)`
+                                  : hasAdminOverride
+                                    ? `${effectiveTier} Plan (Override)`
+                                    : `${effectiveTier} Plan`
+                                }
                               </p>
                             )}
                           </div>
@@ -216,6 +230,20 @@ export const Header = forwardRef(function Header({ onMenuClick, onHelpClick, sho
                               >
                                 <BarChart3 className="w-4 h-4 text-slate-500 dark:text-slate-400" aria-hidden="true" />
                                 My Usage
+                              </Link>
+                            )}
+                          </Menu.Item>
+
+                          <Menu.Item>
+                            {({ active }) => (
+                              <Link
+                                to="/history"
+                                className={`${
+                                  active ? 'bg-slate-100 dark:bg-slate-700' : ''
+                                } group flex items-center gap-3 w-full px-3 py-2 text-sm text-slate-700 dark:text-slate-200 rounded-md transition-colors`}
+                              >
+                                <Clock className="w-4 h-4 text-slate-500 dark:text-slate-400" aria-hidden="true" />
+                                History
                               </Link>
                             )}
                           </Menu.Item>

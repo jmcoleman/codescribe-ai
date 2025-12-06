@@ -19,13 +19,31 @@ vi.mock('../../contexts/AuthContext', async () => {
   };
 });
 
+// Mock the useTrial hook
+vi.mock('../../contexts/TrialContext', async () => {
+  const actual = await vi.importActual('../../contexts/TrialContext');
+  return {
+    ...actual,
+    useTrial: vi.fn()
+  };
+});
+
 // Import mocked modules
 import { useUsageTracking } from '../../hooks/useUsageTracking';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTrial } from '../../contexts/TrialContext';
 
 describe('UsageDashboard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default useTrial mock - not on trial
+    useTrial.mockReturnValue({
+      isOnTrial: false,
+      trialTier: null,
+      daysRemaining: 0,
+      trialEndsAt: null,
+      effectiveTier: 'free'
+    });
   });
 
   const mockUsageData = {

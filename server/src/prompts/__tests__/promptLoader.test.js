@@ -8,8 +8,8 @@ import {
 
 describe('promptLoader', () => {
   describe('loadSystemPrompts()', () => {
-    it('should load all system prompts', () => {
-      const prompts = loadSystemPrompts();
+    it('should load all system prompts', async () => {
+      const prompts = await loadSystemPrompts();
 
       expect(prompts).toHaveProperty('README');
       expect(prompts).toHaveProperty('JSDOC');
@@ -18,8 +18,8 @@ describe('promptLoader', () => {
       expect(prompts).toHaveProperty('OPENAPI');
     });
 
-    it('should load non-empty prompts', () => {
-      const prompts = loadSystemPrompts();
+    it('should load non-empty prompts', async () => {
+      const prompts = await loadSystemPrompts();
 
       Object.entries(prompts).forEach(([docType, prompt]) => {
         expect(typeof prompt).toBe('string');
@@ -27,48 +27,56 @@ describe('promptLoader', () => {
       });
     });
 
-    it('should load README prompt with correct content', () => {
-      const prompts = loadSystemPrompts();
+    it('should load README prompt with correct content', async () => {
+      const prompts = await loadSystemPrompts();
 
       expect(prompts.README).toContain('technical documentation expert');
       expect(prompts.README).toContain('README.md');
       expect(prompts.README).toContain('IMPORTANT:');
     });
 
-    it('should load JSDOC prompt with correct content', () => {
-      const prompts = loadSystemPrompts();
+    it('should load JSDOC prompt with correct content', async () => {
+      const prompts = await loadSystemPrompts();
 
       expect(prompts.JSDOC).toContain('code documentation expert');
       expect(prompts.JSDOC).toContain('JSDoc');
       expect(prompts.JSDOC).toContain('@param');
     });
 
-    it('should load API prompt with correct content', () => {
-      const prompts = loadSystemPrompts();
+    it('should load API prompt with correct content', async () => {
+      const prompts = await loadSystemPrompts();
 
       expect(prompts.API).toContain('API documentation');
       expect(prompts.API).toContain('Endpoint');
     });
 
-    it('should load ARCHITECTURE prompt with correct content', () => {
-      const prompts = loadSystemPrompts();
+    it('should load ARCHITECTURE prompt with correct content', async () => {
+      const prompts = await loadSystemPrompts();
 
       expect(prompts.ARCHITECTURE).toContain('architect');
       expect(prompts.ARCHITECTURE).toContain('Architecture Overview');
     });
 
-    it('should load OPENAPI prompt with correct content', () => {
-      const prompts = loadSystemPrompts();
+    it('should load OPENAPI prompt with correct content', async () => {
+      const prompts = await loadSystemPrompts();
 
       expect(prompts.OPENAPI).toContain('OpenAPI');
       expect(prompts.OPENAPI).toContain('Swagger');
       expect(prompts.OPENAPI).toContain('specification');
     });
+
+    it('should return cached prompts on subsequent calls', async () => {
+      const prompts1 = await loadSystemPrompts();
+      const prompts2 = await loadSystemPrompts();
+
+      // Should be the exact same object reference due to caching
+      expect(prompts1).toBe(prompts2);
+    });
   });
 
   describe('loadUserMessageTemplates()', () => {
-    it('should load all user message templates', () => {
-      const templates = loadUserMessageTemplates();
+    it('should load all user message templates', async () => {
+      const templates = await loadUserMessageTemplates();
 
       expect(templates).toHaveProperty('README');
       expect(templates).toHaveProperty('JSDOC');
@@ -77,22 +85,30 @@ describe('promptLoader', () => {
       expect(templates).toHaveProperty('OPENAPI');
     });
 
-    it('should load non-empty templates', () => {
-      const templates = loadUserMessageTemplates();
+    it('should load non-empty templates', async () => {
+      const templates = await loadUserMessageTemplates();
 
-      Object.entries(templates).forEach(([docType, template]) => {
+      Object.entries(templates).forEach(([, template]) => {
         expect(typeof template).toBe('string');
         expect(template.length).toBeGreaterThan(0);
       });
     });
 
-    it('should have template variables in user messages', () => {
-      const templates = loadUserMessageTemplates();
+    it('should have template variables in user messages', async () => {
+      const templates = await loadUserMessageTemplates();
 
-      Object.entries(templates).forEach(([docType, template]) => {
+      Object.entries(templates).forEach(([, template]) => {
         // Should contain at least {{code}} variable
         expect(template).toContain('{{code}}');
       });
+    });
+
+    it('should return cached templates on subsequent calls', async () => {
+      const templates1 = await loadUserMessageTemplates();
+      const templates2 = await loadUserMessageTemplates();
+
+      // Should be the exact same object reference due to caching
+      expect(templates1).toBe(templates2);
     });
   });
 
@@ -194,8 +210,8 @@ describe('promptLoader', () => {
   });
 
   describe('Integration: Full Template Processing', () => {
-    it('should process a complete user message template', () => {
-      const templates = loadUserMessageTemplates();
+    it('should process a complete user message template', async () => {
+      const templates = await loadUserMessageTemplates();
       const readmeTemplate = templates.README;
 
       const processed = processTemplate(readmeTemplate, {

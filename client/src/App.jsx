@@ -537,24 +537,56 @@ function App() {
 
   // Note: Bulk generation progress clearing is handled internally by useBatchGeneration
 
-  // Load batch data from sessionStorage only if user has batch processing access
+  // Load batch data from sessionStorage or database if user has batch processing access
+  // NOTE: This should NOT run after logout - batch data is ephemeral for the session
   useEffect(() => {
-    if (canUseBatchProcessing) {
-      // Load bulk generation summary
+    if (!canUseBatchProcessing || !isAuthenticated) return;
+
+    const loadBatchData = async () => {
       try {
+        // First try sessionStorage (faster, for current session)
         const saved = getSessionItem('bulk_generation_summary');
         const markdown = getSessionItem('batch_summary_markdown');
+        const batchId = getSessionItem('current_batch_id');
+
+        console.log('[App] loadBatchData - sessionStorage check:', { saved: !!saved, markdown: !!markdown, batchId });
+
         if (saved || markdown) {
+          console.log('[App] Restoring batch from sessionStorage');
+          const parsedSummary = saved ? JSON.parse(saved) : null;
           restoreBatchState({
-            bulkGenerationSummary: saved ? JSON.parse(saved) : null,
+            bulkGenerationSummary: parsedSummary,
             batchSummaryMarkdown: markdown || null
           });
+
+          // Also restore the documentation display if we have a batch summary
+          // and no active file is selected
+          if (markdown && !multiFileState.activeFileId) {
+            setDocumentation(markdown);
+            // Restore the quality score from summary if available
+            if (parsedSummary) {
+              setQualityScore({
+                score: parsedSummary.avgQuality || 0,
+                grade: parsedSummary.avgGrade || 'N/A',
+                breakdown: null,
+                isBatchSummary: true,
+                generatedAt: parsedSummary.generatedAt || null
+              });
+            }
+          }
+          return; // Found in sessionStorage, no need to fetch from DB
         }
+
+        // DON'T load from database on login - batch summaries are ephemeral
+        // Only load from sessionStorage (same session) not from DB (previous sessions)
+        // The batch summary should only persist within the same browser session
       } catch (error) {
-        console.error('[App] Error loading batch data from sessionStorage:', error);
+        console.error('[App] Error loading batch data:', error);
       }
-    }
-  }, [canUseBatchProcessing, restoreBatchState]);
+    };
+
+    loadBatchData();
+  }, [canUseBatchProcessing, isAuthenticated, restoreBatchState, multiFileState.activeFileId, setDocumentation, setQualityScore]);
 
   // Persist batch data to sessionStorage (only if user has access and data exists)
   useEffect(() => {
@@ -565,14 +597,26 @@ function App() {
       if (batchSummaryMarkdown) {
         setSessionItem('batch_summary_markdown', batchSummaryMarkdown);
       }
+      if (currentBatchId) {
+        setSessionItem('current_batch_id', currentBatchId);
+      }
     }
-  }, [canUseBatchProcessing, bulkGenerationSummary, batchSummaryMarkdown]);
+  }, [canUseBatchProcessing, bulkGenerationSummary, batchSummaryMarkdown, currentBatchId]);
 
-  // Clear batch state on logout
+  // Clear batch state on logout (batch data is in sessionStorage)
+  // NOTE: Documentation clearing is handled in a separate effect below
+  const prevUserIdRef = useRef(user?.id);
   useEffect(() => {
-    if (!user?.id) {
+    const wasLoggedIn = prevUserIdRef.current !== undefined && prevUserIdRef.current !== null;
+    const isLoggedOut = !user?.id;
+
+    // Only clear on actual logout (was logged in, now logged out)
+    // This prevents clearing on initial page load
+    if (wasLoggedIn && isLoggedOut) {
       clearBatchState();
     }
+
+    prevUserIdRef.current = user?.id;
   }, [user?.id, clearBatchState]);
 
   // Sync active file to CodePanel and DocPanel when selection changes
@@ -612,6 +656,36 @@ function App() {
         setDocumentation('');
         setQualityScore(null);
       }
+
+      // If file belongs to a batch and we don't have the batch summary loaded, fetch it
+      if (activeFile.batchId && !batchSummaryMarkdown && canUseBatchProcessing) {
+        const loadBatchForFile = async () => {
+          try {
+            console.log('[App] Loading batch for file:', activeFile.batchId);
+            const batchData = await batchesApi.getBatch(activeFile.batchId);
+
+            if (batchData && batchData.summary_markdown) {
+              const summaryData = {
+                totalFiles: batchData.total_files,
+                successCount: batchData.success_count,
+                failCount: batchData.fail_count,
+                avgQuality: batchData.avg_quality_score,
+                avgGrade: batchData.avg_grade,
+                generatedAt: batchData.created_at
+              };
+
+              restoreBatchState({
+                bulkGenerationSummary: summaryData,
+                batchSummaryMarkdown: batchData.summary_markdown,
+                currentBatchId: activeFile.batchId
+              });
+            }
+          } catch (error) {
+            console.error('[App] Failed to load batch for file:', error);
+          }
+        };
+        loadBatchForFile();
+      }
     } else if (multiFileState.activeFileId === null) {
       // No active file - clear both panels (happens when file is deleted or deselected)
       // UNLESS we're showing a batch summary or batch generation is in progress
@@ -631,70 +705,37 @@ function App() {
     // Note: Only depend on activeFileId and files changes, not on documentation
     // to avoid re-triggering during SSE streaming
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [multiFileState.activeFileId, multiFileState.files, batchSummaryMarkdown, bulkGenerationProgress]);
+  }, [multiFileState.activeFileId, multiFileState.files, batchSummaryMarkdown, bulkGenerationProgress, canUseBatchProcessing, restoreBatchState]);
 
-  // Load user-scoped documentation and quality score when user logs in
+  // Clear documentation and quality score when user logs out
+  // NOTE: For authenticated users, docs come from the database via workspace/file selection
+  // localStorage is NOT used to restore docs on login - this prevents stale batch summaries
   useEffect(() => {
-    if (user && user.id) {
-      // User is logged in - load from user-scoped keys
-      const docKey = getEditorKey(user.id, 'doc');
-      const scoreKey = getEditorKey(user.id, 'score');
-
-      if (docKey) {
-        const savedDoc = getStorageItem(docKey);
-        if (savedDoc) {
-          setDocumentation(savedDoc);
-        }
-      }
-
-      if (scoreKey) {
-        const savedScore = getStorageItem(scoreKey);
-        if (savedScore) {
-          try {
-            setQualityScore(JSON.parse(savedScore));
-          } catch (e) {
-            // Invalid JSON, ignore
-          }
-        }
-      }
-    } else {
+    if (!user?.id) {
       // User logged out - clear all documentation and quality score from UI
       setDocumentation('');
       setQualityScore(null);
     }
+    // When user logs IN, we don't load from localStorage - docs come from DB via workspace
   }, [user?.id, setDocumentation, setQualityScore]);
 
-  // Persist documentation to localStorage whenever it changes (user-scoped for privacy)
+  // Persist documentation to localStorage for UNAUTHENTICATED users only
+  // Authenticated users' docs are persisted to the database, not localStorage
+  // This avoids stale batch summaries reappearing after logout/login
   useEffect(() => {
-    if (documentation) {
-      if (user && user.id) {
-        // User is logged in - use user-scoped key
-        const key = getEditorKey(user.id, 'doc');
-        if (key) {
-          setStorageItem(key, documentation);
-        }
-      } else {
-        // User not logged in - use global key
-        setStorageItem(STORAGE_KEYS.EDITOR_DOCUMENTATION, documentation);
-      }
+    // Only persist for unauthenticated users
+    if (!user?.id && documentation) {
+      setStorageItem(STORAGE_KEYS.EDITOR_DOCUMENTATION, documentation);
     }
-  }, [documentation, user]);
+  }, [documentation, user?.id]);
 
-  // Persist quality score to localStorage whenever it changes (user-scoped for privacy)
+  // Persist quality score to localStorage for UNAUTHENTICATED users only
   useEffect(() => {
-    if (qualityScore) {
-      if (user && user.id) {
-        // User is logged in - use user-scoped key
-        const key = getEditorKey(user.id, 'score');
-        if (key) {
-          setStorageItem(key, JSON.stringify(qualityScore));
-        }
-      } else {
-        // User not logged in - use global key
-        setStorageItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE, JSON.stringify(qualityScore));
-      }
+    // Only persist for unauthenticated users
+    if (!user?.id && qualityScore) {
+      setStorageItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE, JSON.stringify(qualityScore));
     }
-  }, [qualityScore, user]);
+  }, [qualityScore, user?.id]);
 
   // Auto-switch to Doc tab on mobile when generation starts
   useEffect(() => {
@@ -1374,17 +1415,14 @@ function App() {
       language: fileLang || detectLanguageFromFilename(fileName)
     });
 
-    // Clear any previous documentation (user-scoped)
+    // Clear any previous documentation
     reset();
-    if (user && user.id) {
-      const docKey = getEditorKey(user.id, 'doc');
-      const scoreKey = getEditorKey(user.id, 'score');
-      if (docKey) setStorageItem(docKey, '');
-      if (scoreKey) setStorageItem(scoreKey, '');
-    } else {
+    // For unauthenticated users, clear localStorage too
+    if (!user?.id) {
       setStorageItem(STORAGE_KEYS.EDITOR_DOCUMENTATION, '');
       setStorageItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE, '');
     }
+    // For authenticated users, docs are in DB - no localStorage to clear
   };
 
   const handleLoadSample = (sample) => {
@@ -1540,18 +1578,12 @@ function App() {
     // Clear documentation and quality score from state
     reset();
 
-    // Clear from localStorage (both global and user-scoped keys)
-    // IMPORTANT: Clear BOTH keys because initial state loads from global key on mount
-    setStorageItem(STORAGE_KEYS.EDITOR_DOCUMENTATION, ''); // Always clear global keys
-    setStorageItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE, '');
-
-    if (user && user.id) {
-      // User is logged in - also clear user-scoped keys
-      const docKey = getEditorKey(user.id, 'doc');
-      const scoreKey = getEditorKey(user.id, 'score');
-      if (docKey) setStorageItem(docKey, '');
-      if (scoreKey) setStorageItem(scoreKey, '');
+    // For unauthenticated users, clear localStorage too
+    if (!user?.id) {
+      setStorageItem(STORAGE_KEYS.EDITOR_DOCUMENTATION, '');
+      setStorageItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE, '');
     }
+    // For authenticated users, docs are in DB - no localStorage to clear
 
     // Always clear batch state when resetting (clears state and sessionStorage)
     // This removes the "batch complete" banner and prevents it from returning after refresh
@@ -1806,6 +1838,15 @@ function App() {
                   if (selectedFilesWithContent.length > 0) {
                     // Generate documentation for all selected files
                     handleGenerateSelected();
+                  } else if (multiFileState.selectedFileIds.length > 0) {
+                    // Files are selected but none have content
+                    const selectedFiles = multiFileState.files.filter(f => multiFileState.selectedFileIds.includes(f.id));
+                    const hasGitHubFiles = selectedFiles.some(f => f.origin === 'github' && f.github);
+                    if (hasGitHubFiles) {
+                      toastCompact.info('Selected files have no code content. Use "Reload from GitHub" in the file menu to fetch code.');
+                    } else {
+                      toastCompact.info('Selected files have no code content. Re-upload the files to generate documentation.');
+                    }
                   } else {
                     // No files selected, show confirmation to generate from code editor
                     setShowGenerateFromEditorModal(true);
@@ -1813,6 +1854,7 @@ function App() {
                 }}
                 onDeleteSelected={handleDeleteSelected}
                 bulkGenerationProgress={bulkGenerationProgress}
+                onUpdateFile={multiFileState.updateFile}
               />
 
               {/* Main Content - Full width on mobile */}
@@ -1895,6 +1937,15 @@ function App() {
                     if (selectedFilesWithContent.length > 0) {
                       // Generate documentation for all selected files
                       handleGenerateSelected();
+                    } else if (multiFileState.selectedFileIds.length > 0) {
+                      // Files are selected but none have content
+                      const selectedFiles = multiFileState.files.filter(f => multiFileState.selectedFileIds.includes(f.id));
+                      const hasGitHubFiles = selectedFiles.some(f => f.origin === 'github' && f.github);
+                      if (hasGitHubFiles) {
+                        toastCompact.info('Selected files have no code content. Use "Reload from GitHub" in the file menu to fetch code.');
+                      } else {
+                        toastCompact.info('Selected files have no code content. Re-upload the files to generate documentation.');
+                      }
                     } else {
                       // No files selected, show confirmation to generate from code editor
                       setShowGenerateFromEditorModal(true);
@@ -1902,6 +1953,7 @@ function App() {
                   }}
                   onDeleteSelected={handleDeleteSelected}
                   bulkGenerationProgress={bulkGenerationProgress}
+                  onUpdateFile={multiFileState.updateFile}
                 />
               </Panel>
 

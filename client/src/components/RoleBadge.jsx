@@ -67,7 +67,7 @@ export function RoleBadge({ role = 'user', size = 'md', className = '' }) {
   return (
     <span
       className={`
-        inline-flex items-center gap-1.5 rounded-md border font-medium
+        inline-flex items-center gap-1.5 rounded-full border font-medium
         ${config.bgClass}
         ${config.textClass}
         ${config.borderClass}

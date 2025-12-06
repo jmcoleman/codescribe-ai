@@ -158,6 +158,67 @@ describe('Rate Limiter Middleware', () => {
       const enterpriseUser = { id: '6', role: 'enterprise' };
       expect(User.canBypassRateLimits(enterpriseUser)).toBe(false);
     });
+
+    // Tier override tests
+    it('should NOT bypass rate limits when admin has active tier override', () => {
+      const adminWithOverride = {
+        id: '1',
+        role: 'admin',
+        viewing_as_tier: 'free',
+        override_expires_at: new Date(Date.now() + 3600000).toISOString() // 1 hour from now
+      };
+      expect(User.canBypassRateLimits(adminWithOverride)).toBe(false);
+    });
+
+    it('should NOT bypass rate limits when support has active tier override', () => {
+      const supportWithOverride = {
+        id: '2',
+        role: 'support',
+        viewing_as_tier: 'starter',
+        override_expires_at: new Date(Date.now() + 3600000).toISOString()
+      };
+      expect(User.canBypassRateLimits(supportWithOverride)).toBe(false);
+    });
+
+    it('should NOT bypass rate limits when super_admin has active tier override', () => {
+      const superAdminWithOverride = {
+        id: '3',
+        role: 'super_admin',
+        viewing_as_tier: 'pro',
+        override_expires_at: new Date(Date.now() + 3600000).toISOString()
+      };
+      expect(User.canBypassRateLimits(superAdminWithOverride)).toBe(false);
+    });
+
+    it('should bypass rate limits when admin has EXPIRED tier override', () => {
+      const adminWithExpiredOverride = {
+        id: '1',
+        role: 'admin',
+        viewing_as_tier: 'free',
+        override_expires_at: new Date(Date.now() - 3600000).toISOString() // 1 hour ago (expired)
+      };
+      expect(User.canBypassRateLimits(adminWithExpiredOverride)).toBe(true);
+    });
+
+    it('should bypass rate limits when admin has viewing_as_tier but no expiry', () => {
+      const adminWithPartialOverride = {
+        id: '1',
+        role: 'admin',
+        viewing_as_tier: 'free',
+        override_expires_at: null
+      };
+      expect(User.canBypassRateLimits(adminWithPartialOverride)).toBe(true);
+    });
+
+    it('should bypass rate limits when admin has no tier override', () => {
+      const adminNoOverride = {
+        id: '1',
+        role: 'admin',
+        viewing_as_tier: null,
+        override_expires_at: null
+      };
+      expect(User.canBypassRateLimits(adminNoOverride)).toBe(true);
+    });
   });
 
   describe('Configuration Values', () => {

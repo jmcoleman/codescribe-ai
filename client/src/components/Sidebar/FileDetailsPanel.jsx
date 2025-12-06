@@ -146,7 +146,8 @@ export function FileDetailsPanel({ file, isOpen, onClose }) {
     fileSize,
     origin,
     dateAdded,
-    dateModified
+    dateModified,
+    generatedAt
   } = file;
 
   // Calculate metadata
@@ -173,7 +174,8 @@ export function FileDetailsPanel({ file, isOpen, onClose }) {
   // Format timestamps
   const formattedDateAdded = formatTimestamp(dateAdded);
   const formattedDateModified = formatTimestamp(dateModified);
-  const dateGenerated = documentation ? formatTimestamp(new Date()) : null;
+  // Use actual generation timestamp if available
+  const dateGenerated = generatedAt ? formatTimestamp(generatedAt) : null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-end">

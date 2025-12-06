@@ -81,6 +81,76 @@ class Subscription {
   }
 
   /**
+   * Create or update a subscription (upsert)
+   * Uses ON CONFLICT to handle race conditions from concurrent webhooks
+   *
+   * @param {Object} data - Subscription data (same as create)
+   * @returns {Promise<Object>} Created or updated subscription
+   */
+  static async createOrUpdate({
+    userId,
+    stripeSubscriptionId,
+    stripePriceId,
+    tier,
+    status,
+    currentPeriodStart,
+    currentPeriodEnd,
+    livemode = false,
+    cancelAtPeriodEnd = false,
+    canceledAt = null,
+    trialStart = null,
+    trialEnd = null,
+    createdVia = 'app',
+  }) {
+    const result = await sql`
+      INSERT INTO subscriptions (
+        user_id,
+        stripe_subscription_id,
+        stripe_price_id,
+        tier,
+        status,
+        current_period_start,
+        current_period_end,
+        livemode,
+        cancel_at_period_end,
+        canceled_at,
+        trial_start,
+        trial_end,
+        created_via
+      ) VALUES (
+        ${userId},
+        ${stripeSubscriptionId},
+        ${stripePriceId},
+        ${tier},
+        ${status},
+        ${currentPeriodStart},
+        ${currentPeriodEnd},
+        ${livemode},
+        ${cancelAtPeriodEnd},
+        ${canceledAt},
+        ${trialStart},
+        ${trialEnd},
+        ${createdVia}
+      )
+      ON CONFLICT (stripe_subscription_id) DO UPDATE SET
+        stripe_price_id = EXCLUDED.stripe_price_id,
+        tier = EXCLUDED.tier,
+        status = EXCLUDED.status,
+        current_period_start = EXCLUDED.current_period_start,
+        current_period_end = EXCLUDED.current_period_end,
+        livemode = EXCLUDED.livemode,
+        cancel_at_period_end = EXCLUDED.cancel_at_period_end,
+        canceled_at = EXCLUDED.canceled_at,
+        trial_start = EXCLUDED.trial_start,
+        trial_end = EXCLUDED.trial_end,
+        updated_at = NOW()
+      RETURNING *
+    `;
+
+    return result.rows[0];
+  }
+
+  /**
    * Find subscription by Stripe subscription ID
    *
    * @param {string} stripeSubscriptionId - Stripe subscription ID

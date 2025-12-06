@@ -494,9 +494,12 @@ router.patch('/profile', requireAuth, async (req, res) => {
       }
     }
 
+    // Enrich with trial info before returning (same as login/me endpoints)
+    const enrichedUser = await enrichUserWithTrialInfo(updatedUser);
+
     res.json({
       success: true,
-      user: sanitizeUser(updatedUser),
+      user: sanitizeUser(enrichedUser),
       message: 'Profile updated successfully'
     });
   } catch (error) {

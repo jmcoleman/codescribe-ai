@@ -29,6 +29,78 @@ const LIGHT_THEME_CONFIG = {
   }
 };
 
+/**
+ * Clean up Mermaid error icons (bomb images) from document.body
+ * Mermaid renders error icons directly into body when diagrams have issues
+ * This runs after render to clean up any stray error elements
+ *
+ * IMPORTANT: Only clean up actual ERROR elements, not normal temp render containers
+ * Mermaid needs its temp containers during rendering - removing them breaks rendering
+ */
+function cleanupMermaidErrorIcons() {
+  // Clean up SVG elements that contain bomb images (error icons)
+  const bodySvgs = document.querySelectorAll('body > svg');
+  bodySvgs.forEach(svg => {
+    // Only remove if it contains bomb images or syntax error text
+    const hasBombImage = svg.querySelector('image[href*="bomb"]') ||
+                         svg.querySelector('image[xlink\\:href*="bomb"]');
+    const hasSyntaxError = svg.textContent?.includes('Syntax error');
+    const isErrorIcon = svg.classList.contains('error-icon');
+
+    if (hasBombImage || hasSyntaxError || isErrorIcon) {
+      svg.remove();
+    }
+  });
+
+  // Clean up any explicitly marked error icon elements
+  const errorIcons = document.querySelectorAll('body > svg.error-icon, body > .error-icon');
+  errorIcons.forEach(el => el.remove());
+}
+
+// Set up a MutationObserver to catch error icons (bombs) added to body
+// IMPORTANT: Only clean up actual error elements, NOT temp render containers
+// Mermaid needs its temp containers to extract the SVG before we can remove them
+let mermaidCleanupObserver = null;
+
+function setupMermaidCleanupObserver() {
+  if (mermaidCleanupObserver || typeof MutationObserver === 'undefined') return;
+
+  mermaidCleanupObserver = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+        mutation.addedNodes.forEach(node => {
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            // Only clean up SVGs that contain error indicators (bomb images, error text)
+            // Do NOT clean up normal mermaid temp elements - they're needed for rendering
+            if (node.tagName === 'svg' && node.parentElement === document.body) {
+              // Check specifically for error content - bomb images or syntax error text
+              const hasBombImage = node.querySelector('image[href*="bomb"]') ||
+                                   node.querySelector('image[xlink\\:href*="bomb"]');
+              const hasSyntaxError = node.textContent?.includes('Syntax error');
+
+              if (hasBombImage || hasSyntaxError) {
+                // Use setTimeout to ensure Mermaid has finished with it
+                setTimeout(() => {
+                  if (node.parentElement) {
+                    node.remove();
+                  }
+                }, 100);
+              }
+            }
+          }
+        });
+      }
+    }
+  });
+
+  mermaidCleanupObserver.observe(document.body, { childList: true });
+}
+
+// Initialize observer when module loads
+if (typeof window !== 'undefined') {
+  setupMermaidCleanupObserver();
+}
+
 // Dark theme configuration
 const DARK_THEME_CONFIG = {
   startOnLoad: false,
@@ -74,6 +146,7 @@ export const LazyMermaidRenderer = memo(function LazyMermaidRenderer({ chart, id
 
   useEffect(() => {
     let cancelled = false;
+    let uniqueId = null;
 
     const renderDiagram = async () => {
       if (!chart) {
@@ -92,13 +165,13 @@ export const LazyMermaidRenderer = memo(function LazyMermaidRenderer({ chart, id
         });
 
         // Generate unique ID for this render with more entropy
-        const uniqueId = `mermaid-${id}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+        uniqueId = `mermaid-${id}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
         // Render the diagram
         const { svg } = await mermaid.render(uniqueId, cleanChart);
 
         // Clean up any DOM elements that Mermaid created
-        // Mermaid sometimes creates temporary elements in the document
+        // Mermaid sometimes creates temporary elements in document.body
         const mermaidElement = document.getElementById(uniqueId);
         if (mermaidElement) {
           mermaidElement.remove();
@@ -170,10 +243,16 @@ export const LazyMermaidRenderer = memo(function LazyMermaidRenderer({ chart, id
         // Serialize back to string
         const cleanSvg = new XMLSerializer().serializeToString(doc);
 
+        // Clean up any stray error icons that Mermaid may have added to body
+        cleanupMermaidErrorIcons();
+
         setSvg(cleanSvg);
         setError(null);
         if (onSuccess) onSuccess();
       } catch (err) {
+        // Clean up error icons on failure too
+        cleanupMermaidErrorIcons();
+
         if (cancelled) {
           return;
         }

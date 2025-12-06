@@ -43,7 +43,9 @@ router.get('/', requireAuth, requireFeature('batchProcessing'), async (req, res)
         wf.created_at,
         wf.updated_at,
         gd.documentation,
-        gd.quality_score
+        gd.quality_score,
+        gd.created_at as generated_at,
+        gd.batch_id
       FROM workspace_files wf
       LEFT JOIN generated_documents gd ON wf.document_id = gd.id AND gd.deleted_at IS NULL
       WHERE wf.user_id = ${userId}

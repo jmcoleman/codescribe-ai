@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { FileItem } from './FileItem';
 import { FileDetailsPanel } from './FileDetailsPanel';
-import { FileCode, PanelLeftClose, Plus, Github, Upload, Info, X, Stamp, Trash2, Sparkles, Loader2 } from 'lucide-react';
+import { FileCode, PanelLeftClose, Plus, Github, Upload, Info, X, Stamp, Trash2, Sparkles, Loader2, RefreshCw } from 'lucide-react';
 import { Select } from '../Select';
 import { Button } from '../Button';
 import { Tooltip } from '../Tooltip';
 import { ConfirmModal } from '../ConfirmModal';
 import { fetchDocTypes } from '../../services/api';
+import { fetchFile as fetchGitHubFile } from '../../services/githubService';
 
 /**
  * SparklesPlus - Sparkles icon with + overlay to indicate multiple/batch action
@@ -17,6 +18,23 @@ function SparklesPlus({ className }) {
       <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
       <span className="absolute -top-0.5 -right-0.5 text-[10px] font-bold leading-none">+</span>
     </div>
+  );
+}
+
+/**
+ * GitHubSync - GitHub icon with sync/refresh indicator overlay
+ * Used for "reload from GitHub" actions
+ */
+function GitHubSync({ className, isLoading = false }) {
+  return (
+    <span className={`relative ${className}`}>
+      <Github className="w-4 h-4" aria-hidden="true" />
+      {isLoading ? (
+        <Loader2 className="absolute -bottom-0.5 -right-1 w-2 h-2 animate-spin" aria-hidden="true" />
+      ) : (
+        <RefreshCw className="absolute -bottom-0.5 -right-1 w-2 h-2" aria-hidden="true" />
+      )}
+    </span>
   );
 }
 
@@ -45,6 +63,7 @@ function SparklesPlus({ className }) {
  * @param {Function} props.onGenerateSelected - Called when Generate is clicked (for selected files)
  * @param {Function} props.onDeleteSelected - Called when Delete is clicked (for selected files)
  * @param {Function} props.onToggleSidebar - Called when collapse button is clicked
+ * @param {Function} props.onUpdateFile - Called when file content is updated (e.g., after GitHub reload)
  */
 export function FileList({
   files = [],
@@ -68,7 +87,8 @@ export function FileList({
   onToggleSidebar,
   hasCodeInEditor = false,
   onFilesDrop,
-  bulkGenerationProgress = null // { total, completed, currentBatch, totalBatches }
+  bulkGenerationProgress = null, // { total, completed, currentBatch, totalBatches }
+  onUpdateFile
 }) {
   const [isDragging, setIsDragging] = useState(false);
   const [detailsFileId, setDetailsFileId] = useState(null);
@@ -77,6 +97,8 @@ export function FileList({
     isOpen: false,
     count: 0
   });
+  const [reloadingFileIds, setReloadingFileIds] = useState(new Set());
+  const [bulkReloadProgress, setBulkReloadProgress] = useState(null); // { total, completed }
 
   const generatedCount = files.filter(f => f.documentation).length;
   const canGenerateAll = files.some(f => !f.documentation && !f.isGenerating);
@@ -85,6 +107,10 @@ export function FileList({
   // Check if there are files with no code content
   const filesWithoutCode = files.filter(f => !f.content || f.content.length === 0);
   const hasFilesWithoutCode = filesWithoutCode.length > 0;
+
+  // Count GitHub-origin files that can be reloaded
+  const githubFiles = files.filter(f => f.origin === 'github' && f.github?.repo && f.github?.path);
+  const hasGitHubFiles = githubFiles.length > 0;
 
   // Keyboard shortcut handlers
   useEffect(() => {
@@ -161,6 +187,91 @@ export function FileList({
     }
   };
 
+  /**
+   * Handle reloading a file from GitHub
+   * Fetches the file content from GitHub and updates the file in state
+   */
+  const handleReloadFromGitHub = async (fileId) => {
+    const file = files.find(f => f.id === fileId);
+    if (!file || !file.github) return;
+
+    const { repo, path, branch } = file.github;
+    // Parse owner/repo from the repo string (e.g., "owner/repo")
+    const [owner, repoName] = repo.split('/');
+
+    if (!owner || !repoName || !path) {
+      console.error('[FileList] Invalid GitHub metadata for file:', file);
+      return;
+    }
+
+    // Mark file as reloading
+    setReloadingFileIds(prev => new Set([...prev, fileId]));
+
+    try {
+      // Fetch file content from GitHub
+      const fetchedFile = await fetchGitHubFile(owner, repoName, path, branch || null);
+
+      if (fetchedFile && fetchedFile.content && onUpdateFile) {
+        // Update the file with the new content
+        onUpdateFile(fileId, {
+          content: fetchedFile.content,
+          fileSize: fetchedFile.content.length
+        });
+      }
+    } catch (error) {
+      console.error('[FileList] Failed to reload file from GitHub:', error);
+      // Could show a toast here if needed
+    } finally {
+      // Remove from reloading state
+      setReloadingFileIds(prev => {
+        const next = new Set(prev);
+        next.delete(fileId);
+        return next;
+      });
+    }
+  };
+
+  /**
+   * Handle reloading all GitHub files
+   * Fetches the latest content from GitHub for all GitHub-origin files
+   */
+  const handleReloadAllFromGitHub = async () => {
+    if (!hasGitHubFiles || bulkReloadProgress) return;
+
+    const filesToReload = githubFiles;
+    setBulkReloadProgress({ total: filesToReload.length, completed: 0 });
+
+    for (let i = 0; i < filesToReload.length; i++) {
+      const file = filesToReload[i];
+      const { repo, path, branch } = file.github;
+      const [owner, repoName] = repo.split('/');
+
+      if (!owner || !repoName || !path) {
+        console.error('[FileList] Invalid GitHub metadata for file:', file);
+        setBulkReloadProgress(prev => ({ ...prev, completed: i + 1 }));
+        continue;
+      }
+
+      try {
+        const fetchedFile = await fetchGitHubFile(owner, repoName, path, branch || null);
+
+        if (fetchedFile && fetchedFile.content && onUpdateFile) {
+          onUpdateFile(file.id, {
+            content: fetchedFile.content,
+            fileSize: fetchedFile.content.length
+          });
+        }
+      } catch (error) {
+        console.error('[FileList] Failed to reload file from GitHub:', file.filename, error);
+      }
+
+      setBulkReloadProgress(prev => ({ ...prev, completed: i + 1 }));
+    }
+
+    // Clear progress after a short delay
+    setTimeout(() => setBulkReloadProgress(null), 500);
+  };
+
   // Count only files with content in selection
   const filesWithContent = files.filter(f => f.content && f.content.length > 0);
   const selectedFilesWithContent = filesWithContent.filter(f => selectedFileIds.includes(f.id));
@@ -203,9 +314,9 @@ export function FileList({
       )}
       {/* Unified Header - Title, Selection, and Actions (desktop only, mobile has its own header) */}
       {!isMobile && (
-        <div className="border-b border-slate-200 dark:border-slate-700 px-3 py-2.5 bg-white dark:bg-slate-900">
+        <div className="border-b border-slate-200 dark:border-slate-700 px-3 bg-white dark:bg-slate-900">
           {/* Top row: Toggle and Title */}
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2 mb-1.5">
             <Tooltip content="Collapse sidebar">
               <button
                 type="button"
@@ -222,7 +333,7 @@ export function FileList({
           </div>
 
           {/* Doc Type selector */}
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2 mb-1.5">
             <label htmlFor="sidebar-doc-type-select" className="text-xs font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap flex-shrink-0">
               Doc Type:
             </label>
@@ -250,6 +361,17 @@ export function FileList({
                   aria-label="Import from GitHub"
                 >
                   <Github className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                </button>
+              </Tooltip>
+              <Tooltip content={bulkReloadProgress ? `Reloading ${bulkReloadProgress.completed}/${bulkReloadProgress.total}` : `Reload from GitHub (${githubFiles.length} files)`}>
+                <button
+                  type="button"
+                  onClick={handleReloadAllFromGitHub}
+                  disabled={!hasGitHubFiles || bulkReloadProgress}
+                  className="icon-btn interactive-scale-sm focus-ring-light flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-label={bulkReloadProgress ? `Reloading ${bulkReloadProgress.completed} of ${bulkReloadProgress.total} files` : `Reload ${githubFiles.length} files from GitHub`}
+                >
+                  <GitHubSync className="text-slate-600 dark:text-slate-400" isLoading={!!bulkReloadProgress} />
                 </button>
               </Tooltip>
               <Tooltip content="Add files">
@@ -366,6 +488,22 @@ export function FileList({
               Add Files
             </button>
           </div>
+
+          {/* Reload from GitHub button - Only show when GitHub files exist */}
+          {hasGitHubFiles && (
+            <button
+              type="button"
+              onClick={handleReloadAllFromGitHub}
+              disabled={bulkReloadProgress}
+              className="w-full px-2.5 py-1.5 mb-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-100 rounded text-xs font-medium flex items-center justify-center gap-1.5 border border-slate-200 dark:border-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <GitHubSync isLoading={!!bulkReloadProgress} />
+              {bulkReloadProgress
+                ? `Reloading ${bulkReloadProgress.completed}/${bulkReloadProgress.total}`
+                : `Reload from GitHub (${githubFiles.length})`
+              }
+            </button>
+          )}
 
           {/* File management controls - Only show when files exist */}
           {files.length > 0 && (
@@ -526,6 +664,8 @@ export function FileList({
               onRemove={() => onRemoveFile(file.id)}
               onGenerate={() => onGenerateFile(file.id)}
               onViewDetails={() => setDetailsFileId(file.id)}
+              onReloadFromGitHub={() => handleReloadFromGitHub(file.id)}
+              isReloading={reloadingFileIds.has(file.id)}
             />
           ))
         )}

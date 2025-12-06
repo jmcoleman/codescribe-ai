@@ -9,6 +9,7 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import { API_URL } from '../config/api';
 import { STORAGE_KEYS, getStorageItem, setStorageItem, removeStorageItem, clearAppStorage } from '../constants/storage';
 import { clearWorkspaceLocalStorage } from '../hooks/useWorkspacePersistence';
+import { clearBatchSessionStorage } from '../hooks/useBatchGeneration';
 
 const AuthContext = createContext(null);
 
@@ -210,6 +211,9 @@ export function AuthProvider({ children }) {
         clearWorkspaceLocalStorage(currentUserId);
         clearAppStorage(currentUserId);
       }
+
+      // Clear batch state from sessionStorage (prevents stale batch content on re-login)
+      clearBatchSessionStorage();
     } catch (err) {
       console.error('Logout error:', err);
     } finally {

@@ -33,6 +33,8 @@ const WORKSPACE_STATE_KEY = 'codescribe_workspace_state';
  *   isGenerating: boolean,    // Is currently generating
  *   error: string | null,     // Generation error if any
  *   documentId: string | null,// UUID from database (null if not saved)
+ *   generatedAt: Date | null, // When documentation was generated (from DB)
+ *   batchId: string | null,   // UUID of the batch this doc belongs to (from DB)
  *   dateAdded: Date,          // When file was added to workspace
  *   dateModified: Date        // When file content was last modified
  * }
@@ -113,6 +115,8 @@ export function useMultiFileState() {
       isGenerating: false,
       error: null,
       documentId: fileData.documentId || null,
+      generatedAt: fileData.generatedAt || null,
+      batchId: fileData.batchId || null,
       dateAdded: fileData.dateAdded || now,
       dateModified: fileData.dateModified || now,
       github: fileData.github || null
@@ -149,6 +153,8 @@ export function useMultiFileState() {
         isGenerating: false,
         error: null,
         documentId: fileData.documentId || null,
+        generatedAt: fileData.generatedAt || null,
+        batchId: fileData.batchId || null,
         dateAdded: fileData.dateAdded || now,
         dateModified: fileData.dateModified || now,
         github: fileData.github || null

@@ -1048,40 +1048,35 @@ npm run test:e2e:headed       # With browser UI (for debugging)
 
 ### 🚀 Future Development
 
-**Phase 2 - Payments & Core Features (Current - v2.7.1):**
+**Phase 2 - Payments & Core Features (v2.0.0-v2.7.1):**
 - ✅ Epic 2.1: Authentication & User Management (v2.0.0-v2.0.1) - **COMPLETE**
 - ✅ Epic 2.2: Tier System & Feature Flags (v2.1.0-v2.2.0) - **COMPLETE**
 - ✅ Epic 2.3: UX Enhancements & File Upload (v2.3.0) - **COMPLETE**
 - ✅ Epic 2.4: Payment Integration & Test Infrastructure (v2.4.0-v2.4.6) - **COMPLETE**
-  - Stripe integration (test + live modes)
-  - Email rate limiting & verification
-  - Contact sales & support features
-  - 1-hour prompt caching ($100-400/mo savings)
 - ✅ Epic 2.5: Legal Compliance (v2.5.0-v2.5.3) - **COMPLETE**
-  - Terms of Service & Privacy Policy pages
-  - Terms acceptance system with version tracking
-  - Settings page (Account, Privacy, Subscription, Danger Zone)
-  - Account deletion & restoration (30-day grace period)
-  - Email system overhaul with branded templates
 - ✅ Epic 2.6: Usage Dashboard & Admin Tools (v2.6.0) - **COMPLETE**
-  - Modern usage analytics dashboard with daily/monthly tracking
-  - Admin dashboard with global metrics & CSV export
-  - Critical bug fixes (auth, SQL, migrations)
-- ✅ Epic 2.7: Dark Mode & UI Enhancements (v2.7.0-v2.7.1) - **COMPLETE**
-  - Complete dark mode with theme persistence
-  - Custom syntax highlighting themes (Monaco, Prism)
-  - ThemeContext with system preference detection
-  - ErrorBoundary fixes & manual testing route
-  - 2,385 tests (100% pass rate)
-- 📋 Epic 2.8: Subscription Management UI - **PLANNED**
-  - Customer portal with upgrade/downgrade flows
-  - Billing history and invoice management
-  - Payment method updates
-- 📋 Epic 2.9: Production Launch (Post-LLC, Jan 14+ 2026) - **PLANNED**
+- ✅ Epic 2.7: Dark Mode & UI Enhancements (v2.7.0-v2.7.11) - **COMPLETE**
+
+**Phase 3 - Multi-File & Trial System (Current - v3.2.0):**
+- ✅ Epic 3.1: Multi-File Workspace (v2.10.0) - **COMPLETE**
+  - Multi-file workspace with sidebar management
+  - Batch documentation generation
+  - GitHub repository import integration
+  - Tier-based attribution watermarks
+- ✅ Epic 3.2: Trial System (v3.0.0-v3.1.0) - **COMPLETE**
+  - Trial invite codes with admin management
+  - Trial redemption flow and email verification
+  - Pro feature access during trial period
+  - Trial-aware attribution watermarks
+- ✅ Epic 3.3: Batch Generation Fixes (v3.2.0) - **COMPLETE**
+  - Fixed batch document linking race condition
+  - Workspace restoration after logout/login
+  - Mermaid diagram rendering stability
+  - Async prompt loading for performance
 
 **Upcoming Phases:**
-- **Phase 3:** Advanced Documentation Capabilities (OpenAPI, multi-file support, custom templates)
-- **Phase 4:** Developer Tools (CLI, VS Code extension, API client)
+- **Phase 4:** Subscription Management (upgrade/downgrade flows, billing history)
+- **Phase 5:** Developer Tools (CLI, VS Code extension, API client)
 - **Phase 5:** Enterprise Readiness (SSO, audit logs, white-label, teams)
 
 📚 **Complete Roadmap:** [ROADMAP.md](docs/planning/roadmap/ROADMAP.md) | 🗺️ **Interactive Timeline:** [codescribe-ai/docs/roadmap/](https://jmcoleman.github.io/codescribe-ai/docs/roadmap/)

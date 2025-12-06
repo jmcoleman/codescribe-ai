@@ -11,11 +11,14 @@ import {
   ChevronRight,
   Settings as SettingsIcon,
   FileText,
-  RefreshCw
+  RefreshCw,
+  Shield
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
+import { useTrial } from '../contexts/TrialContext.jsx';
 import { useUsageTracking } from '../hooks/useUsageTracking.js';
 import { PageLayout } from '../components/PageLayout.jsx';
+import { getEffectiveTier } from '../utils/tierFeatures.js';
 
 /**
  * Usage Dashboard - Modern, sleek usage analytics page
@@ -39,6 +42,7 @@ import { PageLayout } from '../components/PageLayout.jsx';
 export function UsageDashboard() {
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();
+  const { isOnTrial, trialTier, daysRemaining, effectiveTier } = useTrial();
   const { usage, isLoading, refetch, getUsageForPeriod, shouldShowWarnings } = useUsageTracking();
   const [refreshing, setRefreshing] = useState(false);
   const refreshTimeoutRef = useRef(null);
@@ -146,8 +150,15 @@ export function UsageDashboard() {
     return `${month} ${firstDay}–${lastDay}, ${year}`;
   };
 
-  // Tier configuration
+  // Admin role check and tier override detection
+  const ADMIN_ROLES = ['admin', 'support', 'super_admin'];
+  const isAdmin = user?.role && ADMIN_ROLES.includes(user.role);
+  const computedEffectiveTier = getEffectiveTier(user);
+  const hasAdminOverride = isAdmin && user?.effectiveTier && user.effectiveTier !== user.tier;
+
+  // Tier configuration - use effective tier for display when there's an override
   const currentTier = user?.tier || 'free';
+  const displayTier = hasAdminOverride ? computedEffectiveTier : currentTier;
   const tierInfo = {
     free: { name: 'Free', color: 'slate', nextTier: 'starter' },
     starter: { name: 'Starter', color: 'indigo', nextTier: 'pro' },
@@ -156,7 +167,7 @@ export function UsageDashboard() {
     enterprise: { name: 'Enterprise', color: 'purple', nextTier: null }
   };
 
-  const currentTierInfo = tierInfo[currentTier] || tierInfo.free;
+  const currentTierInfo = tierInfo[displayTier] || tierInfo.free;
 
   // Upgrade paths
   const upgradePaths = {
@@ -278,39 +289,6 @@ export function UsageDashboard() {
           </div>
         </div>
 
-        {/* Admin/Support/Super Admin Unlimited Access Banner */}
-        {!shouldShowWarnings && (
-          <div className="bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 border-2 border-purple-300 dark:border-purple-600 rounded-lg p-6 mb-6">
-            <div className="flex items-start gap-4">
-              <div className="flex-shrink-0 bg-purple-600 dark:bg-purple-500 p-3 rounded-lg">
-                <Sparkles className="w-6 h-6 text-white" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">
-                  Unlimited Access
-                </h3>
-                <p className="text-sm text-slate-700 dark:text-slate-300 mb-3">
-                  Your account has unlimited generation privileges. You can create as many documentation files as needed without any usage limits or warnings.
-                </p>
-                <div className="flex flex-wrap gap-3">
-                  <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
-                    <div className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full" />
-                    <span>Unlimited daily generations</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
-                    <div className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full" />
-                    <span>Unlimited monthly generations</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
-                    <div className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full" />
-                    <span>Priority rate limits</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Upgrade prompt (show if usage > 60% or at limit) - ONLY for regular users */}
         {shouldShowWarnings && nextTierPath && (monthlyUsage?.percentage >= 60 || dailyUsage?.percentage >= 60) && (
           <div className="bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 border border-purple-200 dark:border-purple-700 rounded-lg p-4 mb-6">
@@ -343,12 +321,52 @@ export function UsageDashboard() {
 
         {/* Current tier badge */}
         <div className="mb-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded-full">
-            <Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-            <span className="text-xs font-semibold text-purple-900 dark:text-purple-300 capitalize">
-              {currentTierInfo.name} Plan
-            </span>
+          <div className="flex items-center gap-3 flex-wrap">
+            {isOnTrial ? (
+              /* Combined trial badge */
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-full">
+                <Sparkles className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                <span className="text-xs font-semibold text-amber-900 dark:text-amber-300 capitalize">
+                  {trialTier || 'Pro'} Trial ({daysRemaining} {daysRemaining === 1 ? 'day' : 'days'} left)
+                </span>
+              </div>
+            ) : (
+              /* Regular tier badge - shows effective tier when override is active */
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded-full">
+                <Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                <span className="text-xs font-semibold text-purple-900 dark:text-purple-300 capitalize">
+                  {currentTierInfo.name} Plan
+                </span>
+              </div>
+            )}
+
+            {/* Admin override badge - shown when admin is viewing as different tier */}
+            {hasAdminOverride && (
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-full">
+                <Shield className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+                <span className="text-xs font-semibold text-amber-900 dark:text-amber-300">
+                  Admin Override
+                </span>
+              </div>
+            )}
+
+            {/* Admin unlimited access badge - only when NOT using override */}
+            {!shouldShowWarnings && !hasAdminOverride && (
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded-full">
+                <Shield className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" aria-hidden="true" />
+                <span className="text-xs font-semibold text-purple-900 dark:text-purple-300">
+                  Unlimited Access
+                </span>
+              </div>
+            )}
           </div>
+
+          {/* Trial info text */}
+          {isOnTrial && (
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+              You have <span className="font-medium capitalize">{trialTier || effectiveTier}</span> tier access during your trial. Usage limits reflect your trial tier.
+            </p>
+          )}
         </div>
 
         {/* Usage cards - Side by side on desktop, stacked on mobile */}

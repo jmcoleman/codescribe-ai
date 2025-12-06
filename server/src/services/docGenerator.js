@@ -62,10 +62,41 @@ export class DocGeneratorService {
     // Initialize LLM service (uses config from environment)
     this.llmService = new LLMService();
 
-    // Load prompts from external files (loaded once at startup)
-    this.systemPrompts = loadSystemPrompts();
-    this.userMessageTemplates = loadUserMessageTemplates();
+    // Prompts will be loaded asynchronously on first use
+    this.systemPrompts = null;
+    this.userMessageTemplates = null;
     this.promptVersion = getPromptVersion();
+    this._initialized = false;
+    this._initPromise = null;
+  }
+
+  /**
+   * Initialize prompts (called automatically on first use)
+   * Loads all prompts in parallel for better performance
+   * @returns {Promise<void>}
+   */
+  async _ensureInitialized() {
+    if (this._initialized) return;
+
+    // Prevent multiple concurrent initializations
+    if (this._initPromise) {
+      await this._initPromise;
+      return;
+    }
+
+    this._initPromise = (async () => {
+      // Load both system prompts and user templates in parallel
+      const [systemPrompts, userTemplates] = await Promise.all([
+        loadSystemPrompts(),
+        loadUserMessageTemplates()
+      ]);
+
+      this.systemPrompts = systemPrompts;
+      this.userMessageTemplates = userTemplates;
+      this._initialized = true;
+    })();
+
+    await this._initPromise;
   }
 
   /**
@@ -85,6 +116,9 @@ export class DocGeneratorService {
    * @returns {Promise<Object>} Documentation result
    */
   async generateDocumentation(code, options = {}) {
+    // Ensure prompts are loaded (lazy initialization)
+    await this._ensureInitialized();
+
     const {
       docType = 'README',
       language = 'javascript',

@@ -1,9 +1,11 @@
-import { X, LogOut, FileText, Shield, BarChart3, Settings, SlidersHorizontal } from 'lucide-react';
+import { X, LogOut, FileText, Shield, BarChart3, Settings, SlidersHorizontal, Clock } from 'lucide-react';
 import { useEffect, useRef, useState, lazy, Suspense } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from './Button';
 import { useAuth } from '../contexts/AuthContext';
+import { useTrial } from '../contexts/TrialContext';
 import { AppearanceModal } from './AppearanceModal';
+import { getEffectiveTier } from '../utils/tierFeatures';
 
 // Lazy load auth modals
 const LoginModal = lazy(() => import('./LoginModal').then(m => ({ default: m.LoginModal })));
@@ -16,6 +18,7 @@ const ENABLE_AUTH = import.meta.env.VITE_ENABLE_AUTH === 'true';
 export function MobileMenu({ isOpen, onClose, onHelpClick }) {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
+  const { isOnTrial, trialTier, daysRemaining } = useTrial();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showSignupModal, setShowSignupModal] = useState(false);
   const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
@@ -29,6 +32,10 @@ export function MobileMenu({ isOpen, onClose, onHelpClick }) {
 
   // Check if current user has admin privileges
   const isAdmin = isAuthenticated && user?.role && ADMIN_ROLES.includes(user.role);
+
+  // Get effective tier and check for admin override
+  const effectiveTier = getEffectiveTier(user);
+  const hasAdminOverride = isAdmin && user?.effectiveTier && user.effectiveTier !== user.tier;
 
   // Context-aware pricing button label
   const getPricingLabel = () => {
@@ -197,6 +204,10 @@ export function MobileMenu({ isOpen, onClose, onHelpClick }) {
                   My Usage
                 </MenuLink>
 
+                <MenuLink to="/history" icon={Clock}>
+                  History
+                </MenuLink>
+
                 {/* Admin link - Only visible to admins */}
                 {isAdmin && (
                   <MenuLink to="/admin" icon={Shield}>
@@ -231,7 +242,12 @@ export function MobileMenu({ isOpen, onClose, onHelpClick }) {
                     {user?.email || user?.name || 'User'}
                   </div>
                   <div className="text-xs text-slate-500 dark:text-slate-400 mb-3">
-                    {user?.tier ? `${user.tier.charAt(0).toUpperCase() + user.tier.slice(1)} tier` : 'Free tier'}
+                    {isOnTrial
+                      ? `${(trialTier || 'Pro').charAt(0).toUpperCase() + (trialTier || 'pro').slice(1)} Trial (${daysRemaining}d left)`
+                      : hasAdminOverride
+                        ? `${effectiveTier.charAt(0).toUpperCase() + effectiveTier.slice(1)} Plan (Override)`
+                        : effectiveTier ? `${effectiveTier.charAt(0).toUpperCase() + effectiveTier.slice(1)} Plan` : 'Free Plan'
+                    }
                   </div>
                   <Button
                     variant="outline"

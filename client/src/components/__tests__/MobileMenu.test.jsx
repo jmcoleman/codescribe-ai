@@ -47,6 +47,18 @@ vi.mock('../../contexts/AuthContext', () => ({
   AuthProvider: ({ children }) => children,
 }));
 
+// Mock trial context
+vi.mock('../../contexts/TrialContext', () => ({
+  useTrial: () => ({
+    isOnTrial: false,
+    trialTier: null,
+    daysRemaining: 0,
+    trialEndsAt: null,
+    effectiveTier: 'free'
+  }),
+  TrialProvider: ({ children }) => children,
+}));
+
 describe('MobileMenu', () => {
   const mockOnClose = vi.fn();
   const mockOnHelpClick = vi.fn();
@@ -177,7 +189,7 @@ describe('MobileMenu', () => {
 
       renderMobileMenu(true);
 
-      expect(screen.getByText('Pro tier')).toBeInTheDocument();
+      expect(screen.getByText('Pro Plan')).toBeInTheDocument();
     });
 
     it('should capitalize tier name', () => {
@@ -186,16 +198,16 @@ describe('MobileMenu', () => {
 
       renderMobileMenu(true);
 
-      expect(screen.getByText('Starter tier')).toBeInTheDocument();
+      expect(screen.getByText('Starter Plan')).toBeInTheDocument();
     });
 
-    it('should show Free tier as fallback when tier is not set', () => {
+    it('should show Free Plan as fallback when tier is not set', () => {
       mockAuthContext.isAuthenticated = true;
       mockAuthContext.user = { email: 'test@example.com' };
 
       renderMobileMenu(true);
 
-      expect(screen.getByText('Free tier')).toBeInTheDocument();
+      expect(screen.getByText('Free Plan')).toBeInTheDocument();
     });
 
     it('should NOT show Sign In button when authenticated', () => {

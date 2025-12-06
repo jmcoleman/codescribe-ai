@@ -37,6 +37,7 @@ import { STORAGE_KEYS, getStorageItem, setStorageItem } from '../../constants/st
  * @param {Function} props.onGenerateFile - Called when Generate is clicked for single file
  * @param {Function} props.onGenerateSelected - Called when Generate is clicked for selected files
  * @param {Function} props.onDeleteSelected - Called when Delete is clicked
+ * @param {Function} props.onUpdateFile - Called when file content is updated (e.g., after GitHub reload)
  */
 export function Sidebar({
   files = [],
@@ -62,7 +63,8 @@ export function Sidebar({
   onDeleteSelected,
   hasCodeInEditor = false,
   onFilesDrop,
-  bulkGenerationProgress = null
+  bulkGenerationProgress = null,
+  onUpdateFile
 }) {
   // Sidebar state: 'expanded', 'collapsed' (desktop only)
   // If controlled (isCollapsedProp is defined), use prop, otherwise use local state
@@ -196,6 +198,7 @@ export function Sidebar({
             onToggleSidebar={onMobileClose}
             hasCodeInEditor={hasCodeInEditor}
             onFilesDrop={onFilesDrop}
+            onUpdateFile={onUpdateFile}
             isMobile={true}
           />
         </div>
@@ -257,6 +260,7 @@ export function Sidebar({
             hasCodeInEditor={hasCodeInEditor}
             onFilesDrop={onFilesDrop}
             onToggleSidebar={toggleSidebar}
+            onUpdateFile={onUpdateFile}
             isMobile={false}
           />
         )}

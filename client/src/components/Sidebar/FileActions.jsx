@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { MoreVertical, Trash2, RotateCw, Sparkles, Info } from 'lucide-react';
+import { MoreVertical, Trash2, RotateCw, Sparkles, Info, Github, Loader2 } from 'lucide-react';
 
 /**
  * FileActions Component
@@ -9,6 +9,7 @@ import { MoreVertical, Trash2, RotateCw, Sparkles, Info } from 'lucide-react';
  * Actions (in order):
  * - Generate - Generate documentation for this file (if not generated)
  * - Regenerate - Re-generate documentation (if already generated)
+ * - Reload from GitHub - Reload file content from GitHub (if github origin and no content)
  * - View Details - View detailed file metadata (keyboard shortcut: Cmd/Ctrl+I)
  * - Delete - Remove file from list
  *
@@ -17,13 +18,23 @@ import { MoreVertical, Trash2, RotateCw, Sparkles, Info } from 'lucide-react';
  * @param {Function} props.onRemove - Called when remove is clicked
  * @param {Function} props.onGenerate - Called when generate is clicked
  * @param {Function} props.onViewDetails - Called when view details is clicked
+ * @param {Function} props.onReloadFromGitHub - Called when reload from GitHub is clicked
+ * @param {boolean} props.isReloading - Whether file is currently being reloaded
  */
-export function FileActions({ file, onRemove, onGenerate, onViewDetails }) {
+export function FileActions({ file, onRemove, onGenerate, onViewDetails, onReloadFromGitHub, isReloading = false, onMenuOpenChange }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  const { documentation, content } = file;
+  const { documentation, content, origin, github } = file;
+
+  // Notify parent when menu open state changes
+  useEffect(() => {
+    if (onMenuOpenChange) {
+      onMenuOpenChange(isOpen);
+    }
+  }, [isOpen, onMenuOpenChange]);
   const hasContent = Boolean(content && content.length > 0);
+  const canReloadFromGitHub = origin === 'github' && !hasContent && github?.repo && github?.path;
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -74,13 +85,20 @@ export function FileActions({ file, onRemove, onGenerate, onViewDetails }) {
     setIsOpen(false);
   };
 
+  const handleReloadFromGitHub = () => {
+    if (onReloadFromGitHub) {
+      onReloadFromGitHub();
+    }
+    setIsOpen(false);
+  };
+
   const handleRemove = () => {
     onRemove();
     setIsOpen(false);
   };
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className={`relative ${isOpen ? 'z-50' : ''}`} ref={dropdownRef}>
       {/* Menu button */}
       <button
         type="button"
@@ -126,6 +144,29 @@ export function FileActions({ file, onRemove, onGenerate, onViewDetails }) {
             >
               <RotateCw className="w-4 h-4" />
               Regenerate
+            </button>
+          )}
+
+          {/* Reload from GitHub - only if github origin and no content */}
+          {canReloadFromGitHub && (
+            <button
+              type="button"
+              onClick={handleReloadFromGitHub}
+              disabled={isReloading}
+              className="w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+              role="menuitem"
+            >
+              {isReloading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Reloading...
+                </>
+              ) : (
+                <>
+                  <Github className="w-4 h-4" />
+                  Reload from GitHub
+                </>
+              )}
             </button>
           )}
 

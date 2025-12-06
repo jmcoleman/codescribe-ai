@@ -416,41 +416,40 @@ async function createOrUpdateSubscription(stripeSubscription, userId, createdVia
     return;
   }
 
+  // Helper to safely convert Unix timestamp to Date
+  const toDate = (unixTimestamp) => {
+    if (unixTimestamp === null || unixTimestamp === undefined || isNaN(unixTimestamp)) {
+      return null;
+    }
+    const date = new Date(unixTimestamp * 1000);
+    // Validate the date is valid
+    if (isNaN(date.getTime())) {
+      console.warn(`Invalid timestamp: ${unixTimestamp}`);
+      return null;
+    }
+    return date;
+  };
+
   const subscriptionData = {
     userId,
     stripeSubscriptionId: stripeSubscription.id,
     stripePriceId: priceId,
     tier,
     status: stripeSubscription.status,
-    currentPeriodStart: new Date(stripeSubscription.current_period_start * 1000),
-    currentPeriodEnd: new Date(stripeSubscription.current_period_end * 1000),
+    currentPeriodStart: toDate(stripeSubscription.current_period_start) || new Date(),
+    currentPeriodEnd: toDate(stripeSubscription.current_period_end) || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // Default to 30 days from now
     livemode: stripeSubscription.livemode, // Track test vs production subscriptions
-    cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end,
-    canceledAt: stripeSubscription.canceled_at
-      ? new Date(stripeSubscription.canceled_at * 1000)
-      : null,
-    trialStart: stripeSubscription.trial_start
-      ? new Date(stripeSubscription.trial_start * 1000)
-      : null,
-    trialEnd: stripeSubscription.trial_end
-      ? new Date(stripeSubscription.trial_end * 1000)
-      : null,
+    cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end || false,
+    canceledAt: toDate(stripeSubscription.canceled_at),
+    trialStart: toDate(stripeSubscription.trial_start),
+    trialEnd: toDate(stripeSubscription.trial_end),
     createdVia, // 'app' or 'stripe_dashboard'
   };
 
-  // Check if subscription exists
-  const existing = await Subscription.findByStripeId(stripeSubscription.id);
-
-  if (existing) {
-    // Update existing subscription (don't update created_via on update)
-    const { createdVia: _, ...updateData } = subscriptionData;
-    await Subscription.update(stripeSubscription.id, updateData);
-    console.log(`✅ Updated subscription ${stripeSubscription.id}`);
-  } else {
-    // Create new subscription
-    await Subscription.create(subscriptionData);
-    console.log(`✅ Created subscription ${stripeSubscription.id} (via: ${createdVia})`);
-  }
+  // Use upsert to handle race conditions from concurrent webhooks
+  // (e.g., checkout.session.completed and customer.subscription.created arriving simultaneously)
+  await Subscription.createOrUpdate(subscriptionData);
+  console.log(`✅ Upserted subscription ${stripeSubscription.id} (via: ${createdVia})`)
 
   // Update user's tier ONLY if subscription is active AND in production mode
   // Test/sandbox subscriptions (livemode=false) are recorded but don't upgrade tier

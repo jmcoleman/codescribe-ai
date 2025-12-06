@@ -9,6 +9,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.2.0] - 2025-12-06
+
+**Status:** ✅ Batch Generation & Workspace Persistence Fixes
+
+**Summary:** Critical fixes for batch generation document linking, workspace restoration after logout/login, Mermaid diagram rendering, and async prompt loading for improved performance.
+
+### Fixed
+
+- **Batch Document Linking Race Condition** ([client/src/hooks/useBatchGeneration.js](client/src/hooks/useBatchGeneration.js))
+  - Fixed bug where only the last document in a batch received `batch_id` in database
+  - Root cause: React state race condition - `documentId` was being read from state before it committed
+  - Solution: Store `documentId` directly in `successfulFiles` array during generation
+  - Impact: "Back to Summary" links now work correctly for all files in a batch
+
+- **Workspace File Navigation After Login** ([client/src/components/Sidebar/FileItem.jsx](client/src/components/Sidebar/FileItem.jsx))
+  - Files with documentation but no code content are now clickable
+  - Added `isClickable` check: `hasContent || hasDocumentation`
+  - Allows navigation between batch-generated docs after logout/login
+
+- **Stale Batch Summary After Logout** ([client/src/App.jsx](client/src/App.jsx))
+  - Removed localStorage persistence of docs/scores for authenticated users
+  - Docs now come exclusively from database via workspace, preventing stale data
+  - localStorage still used for unauthenticated users as fallback
+  - Simplified logout cleanup - batch state clears correctly
+
+- **Mermaid Diagram Error Icons** ([client/src/components/LazyMermaidRenderer.jsx](client/src/components/LazyMermaidRenderer.jsx))
+  - MutationObserver now only removes actual error elements (bomb images, syntax errors)
+  - Fixed "Cannot read properties of null (reading 'firstChild')" error
+  - Preserved normal temp render containers needed for diagram rendering
+
+- **Stripe Webhook Signature Verification** ([server/src/routes/webhooks.js](server/src/routes/webhooks.js))
+  - Fixed webhook failing due to body already being parsed as JSON
+  - Added raw body handling with `express.raw()` middleware for webhook route
+  - Signature verification now works correctly in production
+
+### Changed
+
+- **Async Prompt Loading** ([server/src/prompts/promptLoader.js](server/src/prompts/promptLoader.js))
+  - Converted from synchronous to async/await with Promise.all for parallel loading
+  - `loadSystemPrompts()` and `loadUserMessageTemplates()` now return Promises
+  - Added lazy initialization in DocGeneratorService with `_ensureInitialized()`
+  - Improved server startup time by not blocking on file I/O
+
+- **FileActions Z-Index** ([client/src/components/Sidebar/FileActions.jsx](client/src/components/Sidebar/FileActions.jsx))
+  - Fixed dropdown menu appearing behind other elements
+
+- **Usage Dashboard Improvements** ([client/src/pages/UsageDashboard.jsx](client/src/pages/UsageDashboard.jsx))
+  - Enhanced display and user experience
+
+### Technical Details
+
+- **Test Count:** 3,680 tests (3,680 passing, 114 skipped)
+  - Frontend: 1,840 passing, 57 skipped
+  - Backend: 1,840 passing, 57 skipped
+
+---
+
 ## [3.1.0] - 2025-12-05
 
 **Status:** ✅ Trial System Production Ready
