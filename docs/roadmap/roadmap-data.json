@@ -65,9 +65,9 @@
       "text": "codescribeai.com",
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
-    "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.19",
-    "footer": "v3.0.0 Complete (Trial System Core) · Up Next: Trial Operations & Analytics · Launch: Mid-Jan 2026",
-    "lastUpdated": "December 4, 2025"
+    "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.23",
+    "footer": "v3.1.0 Complete · Up Next: History UI → Graph Engine · VS Code Extension: Separate Repo",
+    "lastUpdated": "December 5, 2025"
   },
   "columns": [
     {
@@ -684,6 +684,26 @@
             "Trial redemption page (/trial?code=XXX)",
             "TrialContext for frontend state management"
           ]
+        },
+        {
+          "version": "v3.1.0",
+          "title": "Trial Operations & Production Ready",
+          "duration": "2 days",
+          "status": "✓ Complete",
+          "completedDate": "Dec 5, 2025",
+          "badge": "Post-Launch",
+          "features": [
+            "Trial status indicator on pricing page (isTrialTier detection)",
+            "Automated email reminders (3-day, 1-day before expiry)",
+            "Trial expiration job with email deduplication",
+            "Database: trial_email_history table (migration 029)",
+            "Trial admin UI with TanStack Table (sorting, filtering, pagination)",
+            "Extend/cancel trial modals with validation",
+            "Trial-aware attribution in batch summaries",
+            "Fixed Pro feature access for trial users (effectiveTier)",
+            "Auth endpoints enriched with trial info",
+            "3,231 tests passing (1,840 frontend, 1,391 backend)"
+          ]
         }
       ]
     },
@@ -691,13 +711,13 @@
       "id": "now",
       "label": "Now",
       "title": "Active",
-      "subtitle": "Phase 3: Next Features",
+      "subtitle": "Phase 3: Quick Wins → Platform Infrastructure",
       "phases": [
         {
           "version": "Epic 3.5",
           "title": "Generation History UI (Pro+)",
           "duration": "2-3 days",
-          "status": "Planned",
+          "status": "Quick Win",
           "badge": "Pro+ Feature",
           "features": [
             "History page showing past generation batches",
@@ -712,33 +732,40 @@
           ]
         },
         {
-          "version": "Epic 4.2",
-          "title": "Multi-File Project Documentation",
-          "duration": "4-5 days",
-          "status": "In Progress",
-          "badge": "Developer Adoption",
+          "version": "Epic 5.4",
+          "title": "Graph Engine API (Shared Infrastructure)",
+          "duration": "4-5 weeks",
+          "status": "Planned",
+          "badge": "Platform Foundation",
           "features": [
-            "✓ Accept multiple files from GitHub and upload (.zip support pending)",
-            "Project-wide architecture analysis",
-            "Cross-file references and dependency mapping",
-            "Pattern detection (MVC, microservices, monorepo)",
-            "Comprehensive project README generation",
-            "Project-level quality scoring",
-            "✓ Phase 1 prerequisite met (multi-file sidebar, batch generation, file management)"
+            "Server-side dependency graph service (graphService.js)",
+            "Cross-file analysis and import resolution in codeParser.js",
+            "Context injection: 'This function is imported by [files] and calls [functions]'",
+            "project_graphs table with 24h TTL (metadata only, no code storage)",
+            "API: /api/graph/analyze, /api/graph/:id/context, /api/graph/:id/diagram",
+            "On-demand Mermaid architecture diagrams from graph data",
+            "SOC2 compliance: Zero code retention, metadata-only storage",
+            "Enables: Multi-file README, cross-file ARCHITECTURE diagrams",
+            "Shared by: Web app, VS Code extension, CLI, MCP server",
+            "Note: Extension-specific work tracked in codescribe-vscode repo"
           ]
         },
         {
-          "version": "v3.1.0",
-          "title": "Trial Operations & Analytics",
-          "duration": "2-3 days",
+          "version": "Epic 5.5",
+          "title": "Diff Analyzer & Webhook APIs",
+          "duration": "3-4 weeks",
           "status": "Planned",
-          "badge": "Post-Launch",
+          "badge": "Git Integration",
           "features": [
-            "Trial status indicator on pricing page",
-            "Automated email reminders (3, 1 day before expiry)",
-            "Trial analytics dashboard UI (conversion rates, engagement)",
-            "Database: trial_email_history table for deduplication",
-            "Note: Core trial system complete in v3.0.0"
+            "diffAnalyzer.js service for semantic diff parsing",
+            "Detect function changes, breaking changes, env var changes",
+            "API: POST /api/diff/analyze → suggested doc updates with priority",
+            "GitHub webhook endpoint: /api/github/webhook",
+            "GitLab webhook endpoint: /api/gitlab/webhook",
+            "PR opened → Analyze changes → Return suggested updates",
+            "Push to main → Queue doc regeneration (if configured)",
+            "Webhook signature verification for security",
+            "Shared by: Web app, VS Code extension, CI/CD integrations"
           ]
         }
       ]
@@ -903,20 +930,17 @@
         {
           "version": "Epic 5.3",
           "title": "VS Code Extension",
-          "duration": "7-10 days",
-          "status": "Planned",
-          "badge": "VS Code Specific",
+          "duration": "See codescribe-vscode repo",
+          "status": "Separate Repo",
+          "badge": "External Roadmap",
           "features": [
-            "Right-click 'Generate Documentation' menu",
-            "Two implementation options: native extension OR MCP integration via Cline",
-            "OAuth login flow in IDE (same as web/CLI/MCP)",
-            "JWT token storage in VS Code SecretStorage",
-            "Inline documentation preview (WebView)",
-            "Quality score in status bar",
-            "Suggestions in problems panel",
-            "Extension settings (API key, doc type, mode selection)",
+            "VS Code extension with TypeScript",
+            "JWT auth, streaming preview, context menu",
+            "Tree view, status bar, keyboard shortcuts",
+            "Local LLM (Ollama) and BYOK modes",
             "VS Code Marketplace publication",
-            "Note: Cursor has native MCP support (Epic 5.2 covers Cursor)"
+            "Repo: github.com/[org]/codescribe-vscode",
+            "Note: Has its own roadmap. Server APIs (Graph Engine, Diff Analyzer) tracked here."
           ]
         },
         {
