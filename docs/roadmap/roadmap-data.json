@@ -65,8 +65,8 @@
       "text": "codescribeai.com",
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
-    "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.25",
-    "footer": "v3.2.1 Complete · History UI ✓ · Up Next: Graph Engine · VS Code Extension: Separate Repo",
+    "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.26",
+    "footer": "v3.2.2 Complete · UX Polish & Tier Updates ✓ · Up Next: Graph Engine · VS Code Extension: Separate Repo",
     "lastUpdated": "December 7, 2025"
   },
   "columns": [
@@ -754,6 +754,25 @@
             "Row expansion for multi-file batches",
             "Column resizing with localStorage persistence"
           ]
+        },
+        {
+          "version": "v3.2.2",
+          "title": "UX Polish & Tier Access Updates",
+          "duration": "0.5 days",
+          "status": "✓ Complete",
+          "completedDate": "Dec 7, 2025",
+          "badge": "UX & Fixes",
+          "features": [
+            "Fixed trial users seeing Free tier usage limits instead of Pro",
+            "Fixed markdown code block rendering (extra backtick/spacing)",
+            "Fixed workspace file persistence with documentId linking",
+            "Starter tier: Added GitHub import and Generation History access",
+            "Pricing page: Removed redundant trial banner, compact toggle, neutral 'Base Plan' badge",
+            "History page: '(12 docs in 4 batches)' count display",
+            "Profile menu: Renamed 'History' to 'Generation History'",
+            "Batch summary links use document IDs for version tracking",
+            "3,449 tests (3,349 passing, 97 skipped)"
+          ]
         }
       ]
     },
@@ -917,6 +936,45 @@
             "Clean separation: file metadata vs. generated documentation",
             "Migration from current schema (user_id, filename, doc_type) to normalized structure",
             "Improves UX: No duplicate file entries, clear doc type management"
+          ]
+        },
+        {
+          "version": "Epic 4.7",
+          "title": "Documentation Sets (Projects)",
+          "duration": "3-4 days",
+          "status": "Planned",
+          "badge": "Pro+ Feature",
+          "features": [
+            "Distinct from Generation Batches: Sets are mutable collections, Batches are immutable audit records",
+            "Create named documentation sets (e.g., 'Auth Module', 'API v2')",
+            "Add/remove files from sets without regenerating",
+            "Regenerate individual files within a set (updates set, preserves grouping)",
+            "Set-level quality dashboard (avg score, coverage, outdated docs)",
+            "Set export: Download all docs in set as ZIP with folder structure",
+            "Set sharing: Generate shareable link for team review (read-only)",
+            "Database: documentation_sets table with set_files junction table",
+            "UI: Set manager in sidebar, set selector dropdown, set details panel",
+            "Batch history preserved: Each regeneration creates new batch record for audit trail",
+            "Set versioning: Track which batch generated each doc in set"
+          ]
+        },
+        {
+          "version": "Epic 4.8",
+          "title": "Document Version History & Batch Navigation",
+          "duration": "3-4 days",
+          "status": "Planned",
+          "badge": "Pro+ Feature",
+          "features": [
+            "Document ID-based links in batch summaries (replace filename-based #file: links with #doc: links)",
+            "Read-only historical document view: When viewing old batch summary, clicking a file that has a newer version shows read-only view",
+            "Historical version banner: 'Viewing historical version • A newer generation exists in workspace' with 'View current' action",
+            "Batch list for workspace context: Shows all batches related to files currently in workspace",
+            "Batch list accessible from DocPanel header or sidebar (dropdown/accordion)",
+            "Clicking batch in list loads that batch's summary in DocPanel",
+            "Version indicator in sidebar: Subtle badge showing generation date or 'Latest' / 'v2' for files with multiple versions",
+            "Tooltip on version indicator: 'Generated Dec 7, 2025 • 1 prior version'",
+            "Database: Query to find all batches containing documents matching workspace filenames",
+            "Handles mixed-batch workspaces: Files from different batches coexist, each accessible via their batch summary"
           ]
         },
         {
