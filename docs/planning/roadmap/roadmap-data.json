@@ -66,7 +66,7 @@
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
     "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.25",
-    "footer": "v3.2.1 Complete · Up Next: History UI → Graph Engine · VS Code Extension: Separate Repo",
+    "footer": "v3.2.1 Complete · History UI ✓ · Up Next: Graph Engine · VS Code Extension: Separate Repo",
     "lastUpdated": "December 7, 2025"
   },
   "columns": [
@@ -736,6 +736,24 @@
             "15 new workspace persistence tests",
             "3,440 tests (3,340 passing, 97 skipped)"
           ]
+        },
+        {
+          "version": "v3.2.1",
+          "title": "Generation History UI (Pro+)",
+          "duration": "2-3 days",
+          "status": "✓ Complete",
+          "completedDate": "Dec 7, 2025",
+          "badge": "Pro+ Feature",
+          "features": [
+            "History page showing past generation batches (TanStack Table)",
+            "Batch rows with file count, quality scores, doc type",
+            "Reload past batches into workspace (one-click restore)",
+            "Search by filename, filter by grade and doc type",
+            "Tier-gated access: Pro+ only (Free/Starter see upgrade prompt)",
+            "Server-side pagination with configurable page size",
+            "Row expansion for multi-file batches",
+            "Column resizing with localStorage persistence"
+          ]
         }
       ]
     },
@@ -743,26 +761,8 @@
       "id": "now",
       "label": "Now",
       "title": "Active",
-      "subtitle": "Phase 3: Quick Wins → Platform Infrastructure",
+      "subtitle": "Phase 3: Platform Infrastructure",
       "phases": [
-        {
-          "version": "Epic 3.5",
-          "title": "Generation History UI (Pro+)",
-          "duration": "2-3 days",
-          "status": "Quick Win",
-          "badge": "Pro+ Feature",
-          "features": [
-            "History page showing past generation batches",
-            "Batch cards with summary, file count, quality scores",
-            "Reload past batches into workspace (one-click restore)",
-            "Search and filter batches by date, doc type, file count",
-            "ZIP export from history (server-side with manifest)",
-            "Tier-gated access: Pro+ only (Free/Starter see upgrade prompt)",
-            "Pagination for large batch histories",
-            "Display AI model used for each document (stored in DB, hidden from batch summary for cleaner UX)",
-            "Note: Data capture complete in v2.9.0 (generation_batches table, BatchService, ExportService)"
-          ]
-        },
         {
           "version": "Epic 5.4",
           "title": "Graph Engine API (Shared Infrastructure)",
