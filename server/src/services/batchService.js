@@ -295,8 +295,11 @@ class BatchService {
       `;
 
       // Count query with same conditions (no sorting/pagination)
+      // Also get total document count across all matching batches
       const countQuery = `
-        SELECT COUNT(*) as total
+        SELECT
+          COUNT(*) as total,
+          COALESCE(SUM(gb.total_files), 0) as total_documents
         FROM generation_batches gb
         WHERE ${whereClause}
       `;
@@ -306,6 +309,7 @@ class BatchService {
       const countResult = await sql.query(countQuery, params.slice(0, paramIndex - 1));
 
       const total = parseInt(countResult.rows[0].total);
+      const totalDocuments = parseInt(countResult.rows[0].total_documents);
       const totalPages = Math.ceil(total / limit);
       const page = Math.floor(offset / limit) + 1;
       const hasMore = offset + limit < total;
@@ -313,6 +317,7 @@ class BatchService {
       return {
         batches: batches.rows,
         total,
+        totalDocuments,
         hasMore,
         page,
         limit,
@@ -423,7 +428,7 @@ class BatchService {
         SELECT
           id, filename, language, file_size_bytes,
           documentation, quality_score, doc_type,
-          generated_at, origin,
+          generated_at, created_at, origin,
           github_repo, github_path, github_sha, github_branch,
           provider, model
         FROM generated_documents

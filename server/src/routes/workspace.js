@@ -76,7 +76,8 @@ router.get('/', requireAuth, requireFeature('batchProcessing'), async (req, res)
  *   fileSizeBytes: number,
  *   docType?: 'README' | 'JSDOC' | 'API' | 'ARCHITECTURE',
  *   origin?: 'upload' | 'github' | 'paste' | 'sample',
- *   github?: { repo, path, sha, branch }
+ *   github?: { repo, path, sha, branch },
+ *   documentId?: string (UUID) - link to existing generated_documents record
  * }
  */
 router.post('/', requireAuth, requireFeature('batchProcessing'), async (req, res) => {
@@ -88,7 +89,8 @@ router.post('/', requireAuth, requireFeature('batchProcessing'), async (req, res
       fileSizeBytes,
       docType = 'README',
       origin = 'upload',
-      github
+      github,
+      documentId = null
     } = req.body;
 
     // Validation
@@ -102,10 +104,11 @@ router.post('/', requireAuth, requireFeature('batchProcessing'), async (req, res
     const result = await sql`
       INSERT INTO workspace_files (
         user_id, filename, language, file_size_bytes, doc_type, origin,
-        github_repo, github_path, github_sha, github_branch
+        github_repo, github_path, github_sha, github_branch, document_id
       ) VALUES (
         ${userId}, ${filename}, ${language}, ${fileSizeBytes}, ${docType}, ${origin},
-        ${github?.repo || null}, ${github?.path || null}, ${github?.sha || null}, ${github?.branch || null}
+        ${github?.repo || null}, ${github?.path || null}, ${github?.sha || null}, ${github?.branch || null},
+        ${documentId}
       ) RETURNING *
     `;
 

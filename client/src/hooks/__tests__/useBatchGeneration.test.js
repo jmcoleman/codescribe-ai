@@ -235,12 +235,33 @@ describe('useBatchGeneration', () => {
           avgQuality: 95,
           avgGrade: 'A',
           successfulFiles: [
-            { name: 'component.jsx', docType: 'JSDOC', score: 95, grade: 'A' }
+            { name: 'component.jsx', docType: 'JSDOC', score: 95, grade: 'A', documentId: 'doc-123' }
           ]
         };
 
         const result = generateBatchSummaryDocument(summary, [], 'pro');
-        expect(result).toContain('[component.jsx]');
+        // File links use documentId for specific version linking
+        expect(result).toContain('[component.jsx](#doc:doc-123)');
+        expect(result).toContain('[Export]');
+      });
+
+      it('should render filename as plain text when no documentId', () => {
+        const summary = {
+          totalFiles: 1,
+          successCount: 1,
+          failCount: 0,
+          avgQuality: 95,
+          avgGrade: 'A',
+          successfulFiles: [
+            { name: 'component.jsx', docType: 'JSDOC', score: 95, grade: 'A' }
+            // No documentId - shouldn't happen in practice but graceful fallback
+          ]
+        };
+
+        const result = generateBatchSummaryDocument(summary, [], 'pro');
+        // Without documentId, filename is plain text (not a link)
+        expect(result).toContain('| component.jsx |');
+        expect(result).not.toContain('#doc:');
         expect(result).toContain('[Export]');
       });
 

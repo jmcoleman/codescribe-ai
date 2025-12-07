@@ -17,7 +17,7 @@ import { Sparkles, Clock, X, ArrowRight } from 'lucide-react';
 import { useTrial } from '../../contexts/TrialContext';
 import { formatDateCompact } from '../../utils/formatters';
 
-export function TrialBanner({ onUpgrade, onDismiss, hideUpgrade = false, hideDismiss = false }) {
+export function TrialBanner({ onUpgrade, onDismiss, hideUpgrade = false, hideDismiss = false, compact = false }) {
   const { isOnTrial, trialTier, daysRemaining, trialEndsAt } = useTrial();
   const [isDismissed, setIsDismissed] = useState(false);
 
@@ -82,18 +82,18 @@ export function TrialBanner({ onUpgrade, onDismiss, hideUpgrade = false, hideDis
     <div
       role="status"
       aria-live="polite"
-      className={`${bannerClasses} p-4`}
+      className={`${bannerClasses} ${compact ? 'px-3 py-2' : 'p-4'}`}
     >
-      <div className="flex items-start gap-3">
+      <div className={`flex items-center ${compact ? 'gap-2' : 'gap-3'}`}>
         {/* Icon */}
         {isUrgent ? (
           <Clock
-            className={`w-5 h-5 ${iconClasses} flex-shrink-0 mt-0.5`}
+            className={`${compact ? 'w-4 h-4' : 'w-5 h-5'} ${iconClasses} flex-shrink-0`}
             aria-hidden="true"
           />
         ) : (
           <Sparkles
-            className={`w-5 h-5 ${iconClasses} flex-shrink-0 mt-0.5`}
+            className={`${compact ? 'w-4 h-4' : 'w-5 h-5'} ${iconClasses} flex-shrink-0`}
             aria-hidden="true"
           />
         )}
@@ -101,7 +101,18 @@ export function TrialBanner({ onUpgrade, onDismiss, hideUpgrade = false, hideDis
         {/* Content */}
         <div className="flex-1 min-w-0">
           <p className={`text-sm ${textClasses}`}>
-            {isExpiringSoon ? (
+            {compact ? (
+              // Compact version for pricing page - single line
+              <>
+                <span className="font-semibold">{trialTier || 'Pro'} Trial:</span>{' '}
+                {getDaysText()}
+                {isUrgent && formattedExpiry && (
+                  <span className="text-amber-700 dark:text-amber-300 ml-1">
+                    (expires {formattedExpiry})
+                  </span>
+                )}
+              </>
+            ) : isExpiringSoon ? (
               <>
                 <span className="font-semibold">Trial Expires Tomorrow!</span>{' '}
                 Upgrade now to keep your {trialTier || 'Pro'} features.

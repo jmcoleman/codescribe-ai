@@ -9,11 +9,108 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.2.2] - 2025-12-07
+
+**Status:** ✅ UX Polish & Tier Access Updates
+
+**Summary:** UX improvements including pricing page refinements, tier feature updates, trial user usage limits fix, Generation History enhancements, and code block rendering fixes.
+
+### Fixed
+
+- **Trial Users Seeing Wrong Usage Limits** ([server/src/routes/api.js](server/src/routes/api.js))
+  - Fixed Pro trial users seeing Free tier limits (3 daily, 10 monthly) instead of Pro limits (40 daily, 200 monthly)
+  - Root cause: Usage API used `req.user.tier` instead of `req.user.effectiveTier`
+  - `effectiveTier` properly accounts for trials and admin tier overrides
+
+- **Markdown Code Block Rendering** ([client/src/index.css](client/src/index.css))
+  - Fixed extra backtick appearing at start of inline code blocks
+  - Fixed extra spacing in code blocks within documentation output
+  - Root cause: Tailwind Typography plugin adds `::before`/`::after` pseudo-elements with backticks
+  - Solution: CSS rules to remove default prose code styling and handle SyntaxHighlighter's div wrapper
+
+- **Workspace File Persistence** ([client/src/hooks/useWorkspacePersistence.js](client/src/hooks/useWorkspacePersistence.js), [server/src/routes/workspace.js](server/src/routes/workspace.js))
+  - Fixed workspace files losing `documentId` link to generated documents
+  - Now properly passes `documentId` to workspace API for database persistence
+  - Enables proper JOIN between `workspace_files` and `generated_documents` tables
+
+### Changed
+
+- **Pricing Page Improvements** ([client/src/components/PricingPage.jsx](client/src/components/PricingPage.jsx))
+  - Removed redundant trial banner (trial status already shown via amber border and "On Trial" badge)
+  - Made billing period toggle more compact (`-17%` instead of `Save 17%`)
+  - Added spacing below Monthly/Yearly toggle for better visual balance
+  - "Current Plan" badge now shows as neutral gray "Base Plan" when on trial (not green)
+
+- **Tier Feature Updates** ([client/src/components/PricingPage.jsx](client/src/components/PricingPage.jsx), [client/src/pages/History.jsx](client/src/pages/History.jsx))
+  - Free tier: Added "GitHub import" to feature list
+  - Starter tier: Added "GitHub import" and "Generation history" features
+  - Starter tier: Now has access to Generation History page (was Pro+ only)
+  - Pro tier: Added "Batch generation" with NEW badge, "Generation history"
+
+- **Generation History UX** ([client/src/pages/History.jsx](client/src/pages/History.jsx))
+  - Updated total count display from "(4 total)" to "(12 docs in 4 batches)"
+  - Shows document count first (more relevant) with batch count for context
+  - Proper singular/plural handling for both counts
+
+- **Profile Menu Label** ([client/src/components/Header.jsx](client/src/components/Header.jsx), [client/src/components/MobileMenu.jsx](client/src/components/MobileMenu.jsx))
+  - Renamed "History" to "Generation History" for clarity
+
+- **Batch Summary Links** ([client/src/hooks/useBatchGeneration.js](client/src/hooks/useBatchGeneration.js))
+  - Links now use `#doc:documentId` format instead of `#file:filename`
+  - Ensures clicking a file in batch summary shows that specific version, not newer regenerated versions
+  - Removed legacy `#file:` link handler from DocPanel
+
+### Added
+
+- **Total Documents Count in API** ([server/src/services/batchService.js](server/src/services/batchService.js))
+  - Added `totalDocuments` field to batches API response
+  - Sums `total_files` across all matching batches for accurate document count
+
+- **Trial Banner Compact Mode** ([client/src/components/trial/TrialBanner.jsx](client/src/components/trial/TrialBanner.jsx))
+  - Added `compact` prop for single-line display in space-constrained areas
+
+### Migration Required
+
+> ⚠️ **BEFORE DEPLOYING**: Run the following SQL in Neon production console:
+> ```sql
+> DELETE FROM generation_batches;
+> ```
+> This clears old batch summaries that use the deprecated `#file:` link format.
+> Safe to run - no production users have batch data yet (Pro+ feature, testers only).
+
+### Technical Details
+
+- **Test Count:** 3,449 tests (3,349 passing, 97 skipped)
+  - Frontend: 1,854 passing, 64 skipped (1,918 total)
+  - Backend: 1,495 passing, 33 skipped (1,528 total)
+
+---
+
 ## [3.2.1] - 2025-12-07
 
-**Status:** ✅ Workspace Persistence Fix
+**Status:** ✅ Workspace Persistence Fix & Generation History UI
 
-**Summary:** Fixed critical issue where generated documentation was lost when navigating away from the main page and returning. Single-file generation now properly persists documentation in workspace sessionStorage.
+**Summary:** Fixed critical issue where generated documentation was lost when navigating away from the main page. Added Generation History page for Pro+ users to view and restore past generations.
+
+### Added
+
+- **Generation History Page** ([client/src/pages/History.jsx](client/src/pages/History.jsx)) - Pro+ Feature
+  - View past documentation generations with TanStack Table
+  - Batch rows showing file count, quality scores, doc types
+  - One-click restore: reload past batches into workspace
+  - Search by filename, filter by grade and doc type
+  - Server-side pagination with configurable page size
+  - Row expansion for multi-file batches
+  - Column resizing with localStorage persistence
+  - Tier-gated access: Pro+ only (Free/Starter see upgrade prompt)
+
+- **Workspace Persistence Tests** ([client/src/__tests__/App-WorkspacePersistence.test.jsx](client/src/__tests__/App-WorkspacePersistence.test.jsx))
+  - 15 new tests covering workspace persistence functionality
+  - Tests for single-file generation persistence in sessionStorage
+  - Tests for workspace sync and restoration on navigation
+  - Tests for logout vs navigation behavior (hasSeenUserRef logic)
+  - Tests for History page workspace loading
+  - Tests for sessionStorage edge cases (corrupted data, missing properties)
 
 ### Fixed
 
@@ -28,16 +125,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Auth state temporarily shows `user` as `undefined` on page refresh before restoring session
   - Added `hasSeenUserRef` check to distinguish actual logout from auth loading states
   - Docs only cleared on actual logout (when user was logged in, now logged out)
-
-### Added
-
-- **Workspace Persistence Tests** ([client/src/__tests__/App-WorkspacePersistence.test.jsx](client/src/__tests__/App-WorkspacePersistence.test.jsx))
-  - 15 new tests covering workspace persistence functionality
-  - Tests for single-file generation persistence in sessionStorage
-  - Tests for workspace sync and restoration on navigation
-  - Tests for logout vs navigation behavior (hasSeenUserRef logic)
-  - Tests for History page workspace loading
-  - Tests for sessionStorage edge cases (corrupted data, missing properties)
 
 ### Technical Details
 

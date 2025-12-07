@@ -234,19 +234,22 @@ export const Header = forwardRef(function Header({ onMenuClick, onHelpClick, sho
                             )}
                           </Menu.Item>
 
-                          <Menu.Item>
-                            {({ active }) => (
-                              <Link
-                                to="/history"
-                                className={`${
-                                  active ? 'bg-slate-100 dark:bg-slate-700' : ''
-                                } group flex items-center gap-3 w-full px-3 py-2 text-sm text-slate-700 dark:text-slate-200 rounded-md transition-colors`}
-                              >
-                                <Clock className="w-4 h-4 text-slate-500 dark:text-slate-400" aria-hidden="true" />
-                                History
-                              </Link>
-                            )}
-                          </Menu.Item>
+                          {/* History - Only visible to Pro+ tier or admin users */}
+                          {(hasProPlusTier || isAdmin) && (
+                            <Menu.Item>
+                              {({ active }) => (
+                                <Link
+                                  to="/history"
+                                  className={`${
+                                    active ? 'bg-slate-100 dark:bg-slate-700' : ''
+                                  } group flex items-center gap-3 w-full px-3 py-2 text-sm text-slate-700 dark:text-slate-200 rounded-md transition-colors`}
+                                >
+                                  <Clock className="w-4 h-4 text-slate-500 dark:text-slate-400" aria-hidden="true" />
+                                  Generation History
+                                </Link>
+                              )}
+                            </Menu.Item>
+                          )}
 
                           {/* Admin Menu Item - Only visible to admins */}
                           {isAdmin && (

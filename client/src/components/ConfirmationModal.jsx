@@ -12,6 +12,7 @@ import { useEffect, useRef } from 'react';
  * @param {string} [props.confirmLabel='Confirm'] - Text for confirm button
  * @param {string} [props.cancelLabel='Cancel'] - Text for cancel button
  * @param {string} [props.variant='warning'] - Visual style: 'warning', 'danger', 'info'
+ * @param {boolean} [props.closeOnConfirm=true] - Whether to auto-close modal after confirm
  */
 export function ConfirmationModal({
   isOpen,
@@ -21,7 +22,8 @@ export function ConfirmationModal({
   message,
   confirmLabel = 'Confirm',
   cancelLabel = 'Cancel',
-  variant = 'warning'
+  variant = 'warning',
+  closeOnConfirm = true
 }) {
   const modalRef = useRef(null);
   const cancelButtonRef = useRef(null);
@@ -33,9 +35,9 @@ export function ConfirmationModal({
     }
   }, [isOpen]);
 
-  // Keyboard navigation - Esc to close
+  // Keyboard navigation - Esc to close (only if onClose is provided)
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || !onClose) return;
 
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
@@ -81,8 +83,12 @@ export function ConfirmationModal({
   }, [isOpen]);
 
   const handleConfirm = () => {
+    if (!onConfirm) return; // Guard against undefined onConfirm
     onConfirm();
-    onClose();
+    // Only auto-close if closeOnConfirm is true and onClose is provided
+    if (closeOnConfirm && onClose) {
+      onClose();
+    }
   };
 
   // Variant-specific styling - using brand colors (purple primary, indigo secondary)
@@ -111,7 +117,7 @@ export function ConfirmationModal({
   return (
     <div
       className="modal-backdrop"
-      onClick={onClose}
+      onClick={onClose || undefined}
       role="dialog"
       aria-modal="true"
       aria-labelledby="confirmation-modal-title"
@@ -136,14 +142,16 @@ export function ConfirmationModal({
                 <h2 id="confirmation-modal-title" className="text-lg font-semibold text-slate-900 dark:text-slate-100">
                   {title}
                 </h2>
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="icon-btn interactive-scale-sm focus-ring-light flex-shrink-0"
-                  aria-label="Close confirmation modal"
-                >
-                  <X className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-                </button>
+                {onClose && (
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="icon-btn interactive-scale-sm focus-ring-light flex-shrink-0"
+                    aria-label="Close confirmation modal"
+                  >
+                    <X className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -162,14 +170,16 @@ export function ConfirmationModal({
             type="button"
             ref={cancelButtonRef}
             onClick={onClose}
-            className="btn-secondary px-5 py-2.5 shadow-sm"
+            disabled={!onClose}
+            className={`btn-secondary px-5 py-2.5 shadow-sm ${!onClose ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             {cancelLabel}
           </button>
           <button
             type="button"
             onClick={handleConfirm}
-            className={`px-5 py-2.5 text-white rounded-lg font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-800 ${styles.confirmButton}`}
+            disabled={!onConfirm}
+            className={`px-5 py-2.5 text-white rounded-lg font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-800 ${styles.confirmButton} ${!onConfirm ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             {confirmLabel}
           </button>

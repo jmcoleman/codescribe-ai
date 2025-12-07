@@ -88,7 +88,8 @@ export function FileList({
   hasCodeInEditor = false,
   onFilesDrop,
   bulkGenerationProgress = null, // { total, completed, currentBatch, totalBatches }
-  onUpdateFile
+  onUpdateFile,
+  onViewBatchSummary
 }) {
   const [isDragging, setIsDragging] = useState(false);
   const [detailsFileId, setDetailsFileId] = useState(null);
@@ -111,6 +112,10 @@ export function FileList({
   // Count GitHub-origin files that can be reloaded
   const githubFiles = files.filter(f => f.origin === 'github' && f.github?.repo && f.github?.path);
   const hasGitHubFiles = githubFiles.length > 0;
+
+  // Files without code that can be reloaded from GitHub
+  const reloadableFilesWithoutCode = filesWithoutCode.filter(f => f.origin === 'github' && f.github?.repo && f.github?.path);
+  const hasReloadableFiles = reloadableFilesWithoutCode.length > 0;
 
   // Keyboard shortcut handlers
   useEffect(() => {
@@ -613,20 +618,47 @@ export function FileList({
             <Info className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
             <div className="flex-1 min-w-0">
               <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
-                Code not saved for privacy. Re-upload files after closing browser. <button
-                  onClick={() => {
-                    // Select all files first
-                    onSelectAllFiles();
-                    // Then show confirmation modal
-                    setDeleteConfirmModal({
-                      isOpen: true,
-                      count: files.length
-                    });
-                  }}
-                  className="font-medium hover:underline"
-                >
-                  Delete workspace
-                </button>
+                {hasReloadableFiles ? (
+                  <>
+                    Some files have no code.{' '}
+                    <button
+                      onClick={handleReloadAllFromGitHub}
+                      disabled={bulkReloadProgress}
+                      className="font-medium hover:underline disabled:opacity-50"
+                    >
+                      Reload from source
+                    </button>
+                    {' '}or{' '}
+                    <button
+                      onClick={() => {
+                        onSelectAllFiles();
+                        setDeleteConfirmModal({
+                          isOpen: true,
+                          count: files.length
+                        });
+                      }}
+                      className="font-medium hover:underline"
+                    >
+                      delete all
+                    </button>.
+                  </>
+                ) : (
+                  <>
+                    Code not saved for privacy. Re-upload or{' '}
+                    <button
+                      onClick={() => {
+                        onSelectAllFiles();
+                        setDeleteConfirmModal({
+                          isOpen: true,
+                          count: files.length
+                        });
+                      }}
+                      className="font-medium hover:underline"
+                    >
+                      delete all
+                    </button>.
+                  </>
+                )}
               </p>
             </div>
             <button
@@ -664,7 +696,7 @@ export function FileList({
               onRemove={() => onRemoveFile(file.id)}
               onGenerate={() => onGenerateFile(file.id)}
               onViewDetails={() => setDetailsFileId(file.id)}
-              onReloadFromGitHub={() => handleReloadFromGitHub(file.id)}
+              onReloadFromSource={() => handleReloadFromGitHub(file.id)}
               isReloading={reloadingFileIds.has(file.id)}
             />
           ))
@@ -677,6 +709,7 @@ export function FileList({
           file={files.find(f => f.id === detailsFileId)}
           isOpen={true}
           onClose={() => setDetailsFileId(null)}
+          onViewBatchSummary={onViewBatchSummary}
         />
       )}
 

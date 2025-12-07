@@ -93,7 +93,15 @@ export function AppModals({
 
   // Unsupported File Modal
   unsupportedFileModal,
-  onCloseUnsupportedFileModal
+  onCloseUnsupportedFileModal,
+
+  // Reload From Source Modal
+  showReloadFromSourceModal,
+  filesToReloadFromSource,
+  reloadFromSourceProgress,
+  onCloseReloadFromSourceModal,
+  onConfirmReloadFromSource,
+  onGenerateAfterReload
 }) {
   return (
     <>
@@ -316,6 +324,104 @@ export function AppModals({
             fileName={unsupportedFileModal.fileName}
             fileExtension={unsupportedFileModal.fileExtension}
           />
+        </Suspense>
+      )}
+
+      {/* Reload From Source Modal */}
+      {showReloadFromSourceModal && (
+        <Suspense fallback={<ModalLoadingFallback />}>
+          {(() => {
+            const isLoading = reloadFromSourceProgress && reloadFromSourceProgress.completed < reloadFromSourceProgress.total;
+            const isComplete = reloadFromSourceProgress && reloadFromSourceProgress.completed === reloadFromSourceProgress.total;
+            const successCount = reloadFromSourceProgress?.successIds?.length || 0;
+            const failCount = isComplete ? (reloadFromSourceProgress.total - successCount) : 0;
+
+            return (
+              <ConfirmationModal
+                isOpen={showReloadFromSourceModal}
+                onClose={isLoading ? undefined : onCloseReloadFromSourceModal}
+                onConfirm={isLoading ? undefined : (isComplete ? onGenerateAfterReload : onConfirmReloadFromSource)}
+                closeOnConfirm={false}
+                title={isComplete ? 'Ready to Generate' : 'Code Content Required'}
+                variant="info"
+                confirmLabel={
+                  isLoading
+                    ? `Loading ${reloadFromSourceProgress.completed}/${reloadFromSourceProgress.total}...`
+                    : isComplete
+                    ? `Generate ${successCount} File${successCount !== 1 ? 's' : ''}`
+                    : filesToReloadFromSource?.length > 0
+                    ? 'Reload from Source'
+                    : 'OK'
+                }
+                cancelLabel={isComplete ? 'Close' : 'Cancel'}
+                message={
+                  <div className="space-y-3">
+                    {isComplete ? (
+                      <>
+                        <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+                          {successCount > 0 ? (
+                            <>
+                              Successfully reloaded <span className="font-semibold">{successCount}</span> file{successCount !== 1 ? 's' : ''} from GitHub.
+                              {failCount > 0 && (
+                                <span className="text-amber-600 dark:text-amber-400"> ({failCount} failed)</span>
+                              )}
+                            </>
+                          ) : (
+                            <span className="text-red-600 dark:text-red-400">
+                              Failed to reload files. Please try again or re-upload the files.
+                            </span>
+                          )}
+                        </p>
+                        {successCount > 0 && (
+                          <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+                            Click <span className="font-semibold">Generate</span> to create documentation.
+                          </p>
+                        )}
+                      </>
+                    ) : isLoading ? (
+                      <>
+                        <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+                          Reloading files from GitHub...
+                        </p>
+                        <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
+                          <div
+                            className="bg-purple-600 dark:bg-purple-500 h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${(reloadFromSourceProgress.completed / reloadFromSourceProgress.total) * 100}%` }}
+                          />
+                        </div>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 text-center">
+                          {reloadFromSourceProgress.completed} of {reloadFromSourceProgress.total} files
+                        </p>
+                      </>
+                    ) : filesToReloadFromSource?.length > 0 ? (
+                      <>
+                        <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+                          The selected files have no code content. They were loaded from history without the original source code.
+                        </p>
+                        <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+                          <span className="font-semibold">{filesToReloadFromSource.length}</span> {filesToReloadFromSource.length === 1 ? 'file can' : 'files can'} be reloaded from GitHub:
+                        </p>
+                        <ul className="text-sm text-slate-600 dark:text-slate-400 list-disc list-inside space-y-1 max-h-32 overflow-y-auto">
+                          {filesToReloadFromSource.slice(0, 10).map((file, i) => (
+                            <li key={file.id || i} className="truncate">
+                              {file.filename}
+                            </li>
+                          ))}
+                          {filesToReloadFromSource.length > 10 && (
+                            <li className="text-slate-500">...and {filesToReloadFromSource.length - 10} more</li>
+                          )}
+                        </ul>
+                      </>
+                    ) : (
+                      <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+                        The selected files have no code content and cannot be reloaded from their original source. Please re-upload the files to generate documentation.
+                      </p>
+                    )}
+                  </div>
+                }
+              />
+            );
+          })()}
         </Suspense>
       )}
     </>

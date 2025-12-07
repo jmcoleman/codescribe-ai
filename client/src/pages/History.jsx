@@ -74,6 +74,7 @@ export function History() {
     page: 1,
     limit: 20,
     total: 0,
+    totalDocuments: 0,
     totalPages: 0
   });
 
@@ -102,8 +103,8 @@ export function History() {
   // Check if user is admin
   const isAdmin = user?.role === 'admin';
 
-  // Check if user has Pro+ tier (pro, team, or enterprise) OR is admin
-  const hasAccess = ['pro', 'team', 'enterprise'].includes(effectiveTier) || isAdmin;
+  // Check if user has Starter+ tier (starter, pro, team, or enterprise) OR is admin
+  const hasAccess = ['starter', 'pro', 'team', 'enterprise'].includes(effectiveTier) || isAdmin;
 
   // Check if user can use batch/multi-file features (for opening batches)
   const canUseBatchProcessing = hasFeature(user, 'batchProcessing');
@@ -168,6 +169,7 @@ export function History() {
         ...prev,
         page: result.page,
         total: result.total,
+        totalDocuments: result.totalDocuments || 0,
         totalPages: result.totalPages
       }));
     } catch (err) {
@@ -349,19 +351,36 @@ export function History() {
 
       await clearFiles();
 
-      const workspaceFiles = documents.map(doc => ({
-        id: doc.id,
-        filename: doc.filename || 'untitled.js',
-        language: doc.language || 'javascript',
-        content: doc.source_code || '',
-        documentation: doc.documentation || null,
-        qualityScore: doc.quality_score || null,
-        docType: doc.doc_type || 'README',
-        origin: 'history',
-        documentId: doc.id,
-        generatedAt: doc.created_at ? new Date(doc.created_at) : null,
-        batchId: batchId
-      }));
+      const workspaceFiles = documents.map(doc => {
+        // Use created_at as when code was added, generated_at as when doc was generated
+        const codeAddedDate = doc.created_at ? new Date(doc.created_at) : null;
+        const docGeneratedDate = doc.generated_at ? new Date(doc.generated_at) : codeAddedDate;
+
+        return {
+          id: doc.id,
+          filename: doc.filename || 'untitled.js',
+          language: doc.language || 'javascript',
+          content: doc.source_code || '',
+          fileSize: doc.file_size_bytes || 0, // Original file size from DB
+          documentation: doc.documentation || null,
+          qualityScore: doc.quality_score || null,
+          docType: doc.doc_type || 'README',
+          origin: doc.origin || 'history', // Preserve original origin for reload capability
+          // Include GitHub metadata if available (for reload from source functionality)
+          github: doc.github_repo ? {
+            repo: doc.github_repo,
+            path: doc.github_path,
+            sha: doc.github_sha,
+            branch: doc.github_branch
+          } : null,
+          documentId: doc.id,
+          generatedAt: docGeneratedDate,
+          // Preserve original timestamps from when code was added/modified
+          dateAdded: codeAddedDate,
+          dateModified: codeAddedDate, // For history items, modified = added (no edits)
+          batchId: batchId
+        };
+      });
 
       // Wait for files to be added before navigating to prevent flash
       await addFiles(workspaceFiles);
@@ -385,17 +404,32 @@ export function History() {
     await clearFiles();
     console.log('[History] Files cleared');
 
+    // Use created_at as when code was added, generated_at as when doc was generated
+    const codeAddedDate = doc.created_at ? new Date(doc.created_at) : null;
+    const docGeneratedDate = doc.generated_at ? new Date(doc.generated_at) : codeAddedDate;
+
     const workspaceFile = {
       id: doc.id,
       filename: doc.filename || 'untitled.js',
       language: doc.language || 'javascript',
       content: doc.source_code || '',
+      fileSize: doc.file_size_bytes || 0, // Original file size from DB
       documentation: doc.documentation || null,
       qualityScore: doc.quality_score || null,
       docType: doc.doc_type || 'README',
-      origin: 'history',
+      origin: doc.origin || 'history', // Preserve original origin for reload capability
+      // Include GitHub metadata if available (for reload from source functionality)
+      github: doc.github_repo ? {
+        repo: doc.github_repo,
+        path: doc.github_path,
+        sha: doc.github_sha,
+        branch: doc.github_branch
+      } : null,
       documentId: doc.id,
-      generatedAt: doc.created_at ? new Date(doc.created_at) : null,
+      generatedAt: docGeneratedDate,
+      // Preserve original timestamps from when code was added/modified
+      dateAdded: codeAddedDate,
+      dateModified: codeAddedDate, // For history items, modified = added (no edits)
       batchId: batchId
     };
 
@@ -838,7 +872,7 @@ export function History() {
             View your past documentation generations
             {pagination.total > 0 && (
               <span className="ml-2 text-slate-500 dark:text-slate-500">
-                ({pagination.total} total)
+                ({pagination.totalDocuments} {pagination.totalDocuments === 1 ? 'doc' : 'docs'} in {pagination.total} {pagination.total === 1 ? 'batch' : 'batches'})
               </span>
             )}
           </p>

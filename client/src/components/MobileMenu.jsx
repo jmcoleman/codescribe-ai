@@ -37,6 +37,9 @@ export function MobileMenu({ isOpen, onClose, onHelpClick }) {
   const effectiveTier = getEffectiveTier(user);
   const hasAdminOverride = isAdmin && user?.effectiveTier && user.effectiveTier !== user.tier;
 
+  // Check if user has Pro+ tier (pro, team, or enterprise)
+  const hasProPlusTier = isAuthenticated && ['pro', 'team', 'enterprise'].includes(effectiveTier);
+
   // Context-aware pricing button label
   const getPricingLabel = () => {
     if (!isAuthenticated) return 'Pricing';
@@ -204,9 +207,12 @@ export function MobileMenu({ isOpen, onClose, onHelpClick }) {
                   My Usage
                 </MenuLink>
 
-                <MenuLink to="/history" icon={Clock}>
-                  History
-                </MenuLink>
+                {/* Generation History - Only visible to Starter+ tier or admin users */}
+                {(hasProPlusTier || isAdmin) && (
+                  <MenuLink to="/history" icon={Clock}>
+                    Generation History
+                  </MenuLink>
+                )}
 
                 {/* Admin link - Only visible to admins */}
                 {isAdmin && (

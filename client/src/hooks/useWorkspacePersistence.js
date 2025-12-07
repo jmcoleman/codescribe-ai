@@ -219,7 +219,8 @@ export function useWorkspacePersistence() {
           fileSizeBytes: fileData.content?.length || fileData.fileSize || 0,
           docType: fileData.docType || 'README',
           origin: fileData.origin || 'upload',
-          github: fileData.github
+          github: fileData.github,
+          documentId: fileData.documentId || null
         });
 
         if (result.success) {
@@ -267,7 +268,8 @@ export function useWorkspacePersistence() {
                 fileSizeBytes: fileData.content?.length || fileData.fileSize || 0,
                 docType: fileData.docType || 'README',
                 origin: fileData.origin || 'upload',
-                github: fileData.github
+                github: fileData.github,
+                documentId: fileData.documentId || null
               });
 
               if (result.success) {

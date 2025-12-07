@@ -40,6 +40,7 @@ export async function getWorkspace() {
  * @param {string} [fileData.docType] - Documentation type (README, JSDOC, API, ARCHITECTURE)
  * @param {string} [fileData.origin] - File origin (upload, github, paste, sample)
  * @param {Object} [fileData.github] - GitHub metadata
+ * @param {string} [fileData.documentId] - Link to existing generated_documents record (UUID)
  * @returns {Promise<{ success: boolean, file: Object }>}
  */
 export async function addWorkspaceFile(fileData) {

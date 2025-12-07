@@ -135,7 +135,12 @@ export const generateBatchSummaryDocument = (summary, failedFiles = [], tier = '
     successfulFiles.forEach(file => {
       const encodedFilename = encodeURIComponent(file.name);
       const exportAction = `[Export](#export:${encodedFilename})`;
-      markdown += `| [${file.name}](#file:${encodedFilename}) | ${file.docType} | ${file.score}/100 | ${file.grade} | ${exportAction} |\n`;
+      // Use documentId for links (enables viewing specific document version)
+      // documentId is required - files without it won't have clickable links
+      const fileLink = file.documentId
+        ? `[${file.name}](#doc:${file.documentId})`
+        : file.name; // Plain text if no documentId (shouldn't happen for saved docs)
+      markdown += `| ${fileLink} | ${file.docType} | ${file.score}/100 | ${file.grade} | ${exportAction} |\n`;
     });
 
     markdown += '\n';
@@ -500,8 +505,11 @@ export function useBatchGeneration({
       }
 
       // Clear previous documentation to show fresh streaming
-      setDocumentation('');
-      setQualityScore(null);
+      // Use flushSync to ensure the UI updates before streaming starts
+      flushSync(() => {
+        setDocumentation('');
+        setQualityScore(null);
+      });
 
       try {
         console.log(`[useBatchGeneration] Starting generation for file ${i + 1}/${totalFiles}: ${file.filename}`);
@@ -904,36 +912,166 @@ export function useBatchGeneration({
   }, [multiFileState.files, executeBatchGeneration]);
 
   /**
-   * Handle clicking on a file link in the batch summary
+   * Handle clicking on a document link (#doc:documentId) in the batch summary
+   * Fetches the specific document by ID, ensuring the correct version is displayed
+   * @param {string} documentId - The document ID to load
    */
-  const handleSummaryFileClick = useCallback((filename) => {
-    const file = multiFileState.files.find(f => f.filename === filename);
+  const handleDocumentClick = useCallback(async (documentId) => {
+    // First check if this document is already in the workspace (by documentId)
+    const workspaceFile = multiFileState.files.find(f => f.documentId === documentId);
 
-    if (!file) {
-      console.warn('[useBatchGeneration] File not found in sidebar:', filename);
-      toastCompact('File not found', 'error');
+    if (workspaceFile) {
+      // Document is current version in workspace - show it normally
+      if (workspaceFile.documentation) {
+        setDocumentation(workspaceFile.documentation);
+        setQualityScore(workspaceFile.qualityScore);
+        if (setDocType && workspaceFile.docType) {
+          setDocType(workspaceFile.docType);
+        }
+        if (setFilename && workspaceFile.filename) {
+          setFilename(workspaceFile.filename);
+        }
+        multiFileState.setActiveFile(workspaceFile.id);
+      } else {
+        console.warn('[useBatchGeneration] File has no documentation:', workspaceFile.filename);
+        toastCompact('Documentation not available for this file', 'error');
+      }
       return;
     }
 
-    if (file.documentation) {
-      setDocumentation(file.documentation);
-      setQualityScore(file.qualityScore);
-      // Update docType for the panel title
-      if (setDocType && file.docType) {
-        setDocType(file.docType);
+    // Document not in workspace - fetch from database
+    try {
+      // Import documentsApi dynamically to avoid circular dependencies
+      const documentsApi = await import('../services/documentsApi');
+      const doc = await documentsApi.getDocument(documentId);
+
+      if (!doc) {
+        console.warn('[useBatchGeneration] Document not found:', documentId);
+        toastCompact('Document not found', 'error');
+        return;
       }
-      multiFileState.setActiveFile(file.id);
-    } else {
-      console.warn('[useBatchGeneration] File has no documentation:', filename);
-      toastCompact('Documentation not available for this file', 'error');
+
+      // Check if a newer version exists in workspace (same filename, different documentId)
+      const newerVersionInWorkspace = multiFileState.files.find(f =>
+        f.filename === doc.filename &&
+        f.documentId !== documentId &&
+        f.documentId // Must have a documentId (generated doc)
+      );
+
+      // Add to workspace as a new file entry
+      const newFile = {
+        id: `file-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
+        filename: doc.filename,
+        content: '', // No source code available from history
+        language: doc.language || 'javascript',
+        docType: doc.doc_type || 'README',
+        documentation: doc.documentation,
+        qualityScore: doc.quality_score ? (
+          typeof doc.quality_score === 'object' ? {
+            score: doc.quality_score.score,
+            grade: doc.quality_score.grade || 'N/A',
+            breakdown: doc.quality_score.breakdown || null
+          } : {
+            score: doc.quality_score,
+            grade: doc.quality_grade || 'N/A',
+            breakdown: null
+          }
+        ) : null,
+        isGenerating: false,
+        error: null,
+        documentId: doc.id,
+        batchId: doc.batch_id,
+        fileSize: doc.file_size || 0,
+        origin: doc.origin || 'unknown',
+        github: doc.github_repo ? {
+          repo: doc.github_repo,
+          path: doc.github_path,
+          sha: doc.github_sha,
+          branch: doc.github_branch
+        } : null,
+        dateAdded: new Date().toISOString(),
+        generatedAt: doc.generated_at
+      };
+
+      multiFileState.addFile(newFile);
+
+      // Show the file
+      setDocumentation(doc.documentation);
+      setQualityScore(newFile.qualityScore);
+      if (setDocType && newFile.docType) {
+        setDocType(newFile.docType);
+      }
+      if (setFilename && newFile.filename) {
+        setFilename(newFile.filename);
+      }
+
+      // Set as active after a brief delay to ensure state is updated
+      setTimeout(() => {
+        multiFileState.setActiveFile(newFile.id);
+      }, 50);
+
+      // Show appropriate toast based on whether a newer version exists
+      if (newerVersionInWorkspace) {
+        toastCompact('Loaded historical version', 'info');
+      } else {
+        toastCompact('File loaded', 'success');
+      }
+    } catch (error) {
+      console.error('[useBatchGeneration] Failed to load document:', error);
+      toastCompact('Failed to load document', 'error');
     }
-  }, [multiFileState.files, multiFileState.setActiveFile, setDocumentation, setQualityScore, setDocType]);
+  }, [multiFileState.files, multiFileState.setActiveFile, multiFileState.addFile, setDocumentation, setQualityScore, setDocType, setFilename]);
 
   /**
    * Handle returning to the batch summary from an individual file
-   * @param {Function} scrollToTop - Optional callback to scroll DocPanel to top
+   * @param {Function|string} scrollToTopOrBatchId - Either a scroll callback or a batchId to fetch
+   * @param {Function} scrollToTop - Optional callback to scroll DocPanel to top (when first param is batchId)
    */
-  const handleBackToSummary = useCallback((scrollToTop) => {
+  const handleBackToSummary = useCallback(async (scrollToTopOrBatchId, scrollToTop) => {
+    // Determine if first param is a batchId (string) or scroll callback (function)
+    const isSpecificBatch = typeof scrollToTopOrBatchId === 'string';
+    const targetBatchId = isSpecificBatch ? scrollToTopOrBatchId : null;
+    const scrollCallback = isSpecificBatch ? scrollToTop : scrollToTopOrBatchId;
+
+    // If a specific batchId is provided and it's different from current, fetch from database
+    if (targetBatchId && targetBatchId !== currentBatchId) {
+      try {
+        const batchData = await batchesApi.getBatch(targetBatchId);
+        if (batchData && batchData.summary_markdown) {
+          // Update all batch-related state so subsequent "Back to Summary" clicks work
+          setBatchSummaryMarkdown(batchData.summary_markdown);
+          setCurrentBatchId(targetBatchId);
+          setBulkGenerationSummary({
+            avgQuality: batchData.avg_quality_score || 0,
+            avgGrade: batchData.avg_grade || 'N/A',
+            generatedAt: batchData.created_at || null,
+            successfulFiles: [], // Not available from batch fetch, but needed for DocPanel
+            failedFiles: []
+          });
+
+          setDocumentation(batchData.summary_markdown);
+          setQualityScore({
+            score: batchData.avg_quality_score || 0,
+            grade: batchData.avg_grade || 'N/A',
+            breakdown: null,
+            isBatchSummary: true,
+            generatedAt: batchData.created_at || null
+          });
+          multiFileState.setActiveFile(null);
+
+          // Scroll to top after state updates
+          if (scrollCallback) {
+            setTimeout(scrollCallback, 100);
+          }
+          return;
+        }
+      } catch (error) {
+        console.error('[useBatchGeneration] Failed to fetch batch summary:', error);
+        // Fall through to use current batch summary if fetch fails
+      }
+    }
+
+    // Default behavior: use current batch summary
     if (batchSummaryMarkdown) {
       setDocumentation(batchSummaryMarkdown);
       // Always set qualityScore with isBatchSummary: true when returning to summary
@@ -948,11 +1086,11 @@ export function useBatchGeneration({
       multiFileState.setActiveFile(null);
 
       // Scroll to top after state updates
-      if (scrollToTop) {
-        setTimeout(scrollToTop, 100);
+      if (scrollCallback) {
+        setTimeout(scrollCallback, 100);
       }
     }
-  }, [batchSummaryMarkdown, bulkGenerationSummary, setDocumentation, setQualityScore, multiFileState.setActiveFile]);
+  }, [batchSummaryMarkdown, bulkGenerationSummary, currentBatchId, setDocumentation, setQualityScore, multiFileState.setActiveFile]);
 
   /**
    * Dismiss the batch complete banner (persists across refresh)
@@ -1048,7 +1186,7 @@ export function useBatchGeneration({
     // Handlers
     handleGenerateSelected,
     handleGenerateSingleFile,
-    handleSummaryFileClick,
+    handleDocumentClick,
     handleBackToSummary,
     clearBatchState,
     restoreBatchState,

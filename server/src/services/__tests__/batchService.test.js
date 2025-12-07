@@ -168,7 +168,7 @@ describe('BatchService', () => {
           { id: 'batch-2', batch_type: 'single', total_files: 1, file_count: 1 }
         ]
       };
-      const mockCount = { rows: [{ total: '10' }] };
+      const mockCount = { rows: [{ total: '10', total_documents: '45' }] };
 
       // getUserBatches now uses sql.query() for dynamic queries
       sql.query.mockResolvedValueOnce(mockBatches);
@@ -182,6 +182,7 @@ describe('BatchService', () => {
       expect(result).toEqual({
         batches: mockBatches.rows,
         total: 10,
+        totalDocuments: 45,
         hasMore: false,
         page: 1,
         limit: 10,
@@ -195,7 +196,7 @@ describe('BatchService', () => {
           { id: 'batch-1', batch_type: 'batch', total_files: 5, file_count: 5 }
         ]
       };
-      const mockCount = { rows: [{ total: '1' }] };
+      const mockCount = { rows: [{ total: '1', total_documents: '5' }] };
 
       // getUserBatches now uses sql.query() for dynamic queries
       sql.query.mockResolvedValueOnce(mockBatches);
@@ -215,7 +216,7 @@ describe('BatchService', () => {
           { id: 'batch-1', batch_type: 'batch', avg_grade: 'A', total_files: 5 }
         ]
       };
-      const mockCount = { rows: [{ total: '1' }] };
+      const mockCount = { rows: [{ total: '1', total_documents: '5' }] };
 
       sql.query.mockResolvedValueOnce(mockBatches);
       sql.query.mockResolvedValueOnce(mockCount);
@@ -236,7 +237,7 @@ describe('BatchService', () => {
           { id: 'batch-1', batch_type: 'batch', avg_grade: 'A', total_files: 3 }
         ]
       };
-      const mockCount = { rows: [{ total: '1' }] };
+      const mockCount = { rows: [{ total: '1', total_documents: '3' }] };
 
       sql.query.mockResolvedValueOnce(mockBatches);
       sql.query.mockResolvedValueOnce(mockCount);

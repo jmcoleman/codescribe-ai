@@ -439,9 +439,9 @@ describe('MermaidDiagram', () => {
 
       await user.click(button);
 
-      // Button should disappear after click, focus handled by browser
+      // After clicking Show, diagram renders with a "Show Code" toggle button
       await waitFor(() => {
-        expect(screen.queryByRole('button', { name: /show/i })).not.toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /show code/i })).toBeInTheDocument();
       });
     });
 
@@ -452,6 +452,109 @@ describe('MermaidDiagram', () => {
       // Button should have accessible text
       expect(screen.getByText('Diagram Available')).toBeInTheDocument();
       expect(screen.getByText('Click to render visualization')).toBeInTheDocument();
+    });
+  });
+
+  describe('Code/Diagram Toggle', () => {
+    it('should show "Show Code" button after diagram renders', async () => {
+      const user = userEvent.setup();
+      const chart = 'flowchart TD\n    A --> B';
+
+      render(<MermaidDiagram chart={chart} id="toggle-1" />);
+
+      // Click initial "Show" button to render diagram
+      const showButton = screen.getByRole('button', { name: /show/i });
+      await user.click(showButton);
+
+      // Wait for diagram to render, then toggle button should appear
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /show code/i })).toBeInTheDocument();
+      });
+    });
+
+    it('should toggle to show code when "Show Code" is clicked', async () => {
+      const user = userEvent.setup();
+      const chart = 'flowchart TD\n    A --> B';
+
+      render(<MermaidDiagram chart={chart} id="toggle-2" />);
+
+      // Click initial "Show" button
+      const showButton = screen.getByRole('button', { name: /show/i });
+      await user.click(showButton);
+
+      // Wait for "Show Code" button to appear
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /show code/i })).toBeInTheDocument();
+      });
+
+      // Click "Show Code" button
+      await user.click(screen.getByRole('button', { name: /show code/i }));
+
+      // Should now show "Show Diagram" button and the code in a pre/code block
+      expect(screen.getByRole('button', { name: /show diagram/i })).toBeInTheDocument();
+      const codeElement = screen.getByRole('code');
+      expect(codeElement).toHaveTextContent('flowchart TD');
+      expect(codeElement).toHaveTextContent('A --> B');
+    });
+
+    it('should toggle back to diagram when "Show Diagram" is clicked', async () => {
+      const user = userEvent.setup();
+      const chart = 'flowchart TD\n    A --> B';
+
+      render(<MermaidDiagram chart={chart} id="toggle-3" />);
+
+      // Click initial "Show" button
+      const showButton = screen.getByRole('button', { name: /show/i });
+      await user.click(showButton);
+
+      // Wait for diagram to render
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /show code/i })).toBeInTheDocument();
+      });
+
+      // Click "Show Code" button
+      await user.click(screen.getByRole('button', { name: /show code/i }));
+
+      // Click "Show Diagram" button
+      await user.click(screen.getByRole('button', { name: /show diagram/i }));
+
+      // Should be back to diagram view
+      expect(screen.getByRole('button', { name: /show code/i })).toBeInTheDocument();
+    });
+
+    it('should display "Diagram" label when showing diagram', async () => {
+      const user = userEvent.setup();
+      const chart = 'flowchart TD\n    A --> B';
+
+      render(<MermaidDiagram chart={chart} id="toggle-4" />);
+
+      // Click initial "Show" button
+      const showButton = screen.getByRole('button', { name: /show/i });
+      await user.click(showButton);
+
+      // Wait for diagram to render
+      await waitFor(() => {
+        expect(screen.getByText('Diagram')).toBeInTheDocument();
+      });
+    });
+
+    it('should display "Mermaid Code" label when showing code', async () => {
+      const user = userEvent.setup();
+      const chart = 'flowchart TD\n    A --> B';
+
+      render(<MermaidDiagram chart={chart} id="toggle-5" />);
+
+      // Click initial "Show" button
+      const showButton = screen.getByRole('button', { name: /show/i });
+      await user.click(showButton);
+
+      // Wait for diagram, then toggle to code
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /show code/i })).toBeInTheDocument();
+      });
+      await user.click(screen.getByRole('button', { name: /show code/i }));
+
+      expect(screen.getByText('Mermaid Code')).toBeInTheDocument();
     });
   });
 

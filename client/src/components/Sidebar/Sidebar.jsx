@@ -64,7 +64,8 @@ export function Sidebar({
   hasCodeInEditor = false,
   onFilesDrop,
   bulkGenerationProgress = null,
-  onUpdateFile
+  onUpdateFile,
+  onViewBatchSummary
 }) {
   // Sidebar state: 'expanded', 'collapsed' (desktop only)
   // If controlled (isCollapsedProp is defined), use prop, otherwise use local state
@@ -199,6 +200,7 @@ export function Sidebar({
             hasCodeInEditor={hasCodeInEditor}
             onFilesDrop={onFilesDrop}
             onUpdateFile={onUpdateFile}
+            onViewBatchSummary={onViewBatchSummary}
             isMobile={true}
           />
         </div>
@@ -261,6 +263,7 @@ export function Sidebar({
             onFilesDrop={onFilesDrop}
             onToggleSidebar={toggleSidebar}
             onUpdateFile={onUpdateFile}
+            onViewBatchSummary={onViewBatchSummary}
             isMobile={false}
           />
         )}

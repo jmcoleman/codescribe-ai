@@ -179,7 +179,7 @@ export const DocPanel = memo(function DocPanel({
   bulkGenerationSummary = null,
   bulkGenerationErrors = [],
   onDismissBulkErrors,
-  onSummaryFileClick,
+  onDocumentClick,
   onBackToSummary,
   onDownloadAllDocs,
   batchSummaryMarkdown = null,
@@ -999,12 +999,13 @@ export const DocPanel = memo(function DocPanel({
           const link = e.target.closest('a');
           if (!link) return;
 
-          // Intercept clicks on file links in batch summary
-          if (link.hash && link.hash.startsWith('#file:')) {
+          // Intercept clicks on document links in batch summary (documentId-based)
+          // These links point to specific document versions, ensuring historical accuracy
+          if (link.hash && link.hash.startsWith('#doc:')) {
             e.preventDefault();
-            const filename = decodeURIComponent(link.hash.substring(6)); // Remove '#file:'
-            if (onSummaryFileClick) {
-              onSummaryFileClick(filename);
+            const documentId = link.hash.substring(5); // Remove '#doc:'
+            if (onDocumentClick) {
+              onDocumentClick(documentId);
             }
           }
 

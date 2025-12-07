@@ -33,6 +33,7 @@ import { useTrial } from './contexts/TrialContext';
 import { hasFeature } from './utils/tierFeatures';
 import { DEFAULT_CODE, EXAMPLE_CODES } from './constants/defaultCode';
 import * as batchesApi from './services/batchesApi';
+import { fetchFile as fetchGitHubFile } from './services/githubService';
 
 // Lazy load heavy components that aren't needed on initial render
 const DocPanel = lazy(() => import('./components/DocPanel').then(m => ({ default: m.DocPanel })));
@@ -72,6 +73,9 @@ function App() {
   const [filename, setFilename] = useState(() => getStorageItem(STORAGE_KEYS.EDITOR_FILENAME, 'code.js'));
   // Track where the code came from (valid: 'upload', 'github', 'paste', 'sample')
   const [codeOrigin, setCodeOrigin] = useState('sample'); // Default code is a sample
+  // Source metadata for reloadable origins (github, gitlab, bitbucket, etc.)
+  // Structure: { source: 'github'|'gitlab'|etc, repo: string, path: string, sha?: string, branch?: string }
+  const [sourceMetadata, setSourceMetadata] = useState(null);
   // Language is derived from filename, not stored separately
   const language = detectLanguageFromFilename(filename);
 
@@ -90,6 +94,9 @@ function App() {
   const [showGithubModal, setShowGithubModal] = useState(false);
   const [showRegenerateConfirmModal, setShowRegenerateConfirmModal] = useState(false);
   const [showGenerateFromEditorModal, setShowGenerateFromEditorModal] = useState(false);
+  const [showReloadFromSourceModal, setShowReloadFromSourceModal] = useState(false);
+  const [filesToReloadFromSource, setFilesToReloadFromSource] = useState([]);
+  const [reloadFromSourceProgress, setReloadFromSourceProgress] = useState(null); // { total, completed, successIds: [] }
   const [unsupportedFileModal, setUnsupportedFileModal] = useState({ isOpen: false, fileName: '', fileExtension: '' });
   const [legalStatus, setLegalStatus] = useState(null);
   const [largeCodeStats, setLargeCodeStats] = useState(null);
@@ -448,7 +455,7 @@ function App() {
 
   // Prevent body scroll and layout shift when any modal opens
   useEffect(() => {
-    const isAnyModalOpen = showQualityModal || showSamplesModal || showHelpModal || showConfirmationModal || showUsageLimitModal || showTermsModal || showSupportModal || showGithubModal || showRegenerateConfirmModal || showGenerateFromEditorModal || unsupportedFileModal.isOpen;
+    const isAnyModalOpen = showQualityModal || showSamplesModal || showHelpModal || showConfirmationModal || showUsageLimitModal || showTermsModal || showSupportModal || showGithubModal || showRegenerateConfirmModal || showGenerateFromEditorModal || showReloadFromSourceModal || unsupportedFileModal.isOpen;
 
     if (isAnyModalOpen) {
       // Calculate scrollbar width BEFORE hiding overflow
@@ -466,7 +473,7 @@ function App() {
       document.body.style.overflow = '';
       document.body.style.paddingRight = '';
     };
-  }, [showQualityModal, showSamplesModal, showHelpModal, showTermsModal, showSupportModal]);
+  }, [showQualityModal, showSamplesModal, showHelpModal, showConfirmationModal, showUsageLimitModal, showTermsModal, showSupportModal, showGithubModal, showRegenerateConfirmModal, showGenerateFromEditorModal, showReloadFromSourceModal, unsupportedFileModal.isOpen]);
   
   const {
     generate,
@@ -501,7 +508,7 @@ function App() {
     setBulkGenerationErrors,
     handleGenerateSelected,
     handleGenerateSingleFile,
-    handleSummaryFileClick,
+    handleDocumentClick,
     handleBackToSummary,
     clearBatchState,
     restoreBatchState,
@@ -708,6 +715,18 @@ function App() {
       if (activeFile.content) {
         setCode(activeFile.content);
         setCodeOrigin(activeFile.origin || 'paste'); // Use file's origin
+        // Sync source metadata for reload functionality (github, gitlab, etc.)
+        if (activeFile.origin === 'github' && activeFile.github) {
+          setSourceMetadata({
+            source: 'github',
+            repo: activeFile.github.repo,
+            path: activeFile.github.path,
+            sha: activeFile.github.sha,
+            branch: activeFile.github.branch
+          });
+        } else {
+          setSourceMetadata(null);
+        }
         setFilename(activeFile.filename);
         // Language will be derived from filename automatically
       }
@@ -716,9 +735,13 @@ function App() {
       if (activeFile.documentation) {
         setDocumentation(activeFile.documentation);
         setQualityScore(activeFile.qualityScore || null);
-        // Also sync docType for the panel title
+        // Also sync docType and filename for the panel title
         if (activeFile.docType) {
           setDocType(activeFile.docType);
+        }
+        // Set filename even if no content (e.g., files loaded from history)
+        if (activeFile.filename) {
+          setFilename(activeFile.filename);
         }
       } else {
         // Clear DocPanel if file has no documentation
@@ -726,8 +749,10 @@ function App() {
         setQualityScore(null);
       }
 
-      // If file belongs to a batch and we don't have the batch summary loaded, fetch it
-      if (activeFile.batchId && !batchSummaryMarkdown && canUseBatchProcessing) {
+      // If file belongs to a batch and we don't have the batch summary loaded (or it's a different batch), fetch it
+      // But don't fetch if a batch generation is currently in progress (we're creating a new batch)
+      const needsBatchLoad = activeFile.batchId && (!batchSummaryMarkdown || activeFile.batchId !== currentBatchId) && !bulkGenerationProgress && canUseBatchProcessing;
+      if (needsBatchLoad) {
         const loadBatchForFile = async () => {
           try {
             console.log('[App] Loading batch for file:', activeFile.batchId);
@@ -747,6 +772,14 @@ function App() {
                 bulkGenerationSummary: summaryData,
                 batchSummaryMarkdown: batchData.summary_markdown,
                 currentBatchId: activeFile.batchId
+              });
+              // Also set qualityScore with the batch's generatedAt for display in DocPanel header
+              setQualityScore({
+                score: batchData.avg_quality_score || 0,
+                grade: batchData.avg_grade || 'N/A',
+                breakdown: null,
+                isBatchSummary: true,
+                generatedAt: batchData.created_at
               });
             }
           } catch (error) {
@@ -775,7 +808,7 @@ function App() {
     // Note: Only depend on activeFileId and files changes, not on documentation
     // to avoid re-triggering during SSE streaming
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [multiFileState.activeFileId, multiFileState.files, batchSummaryMarkdown, bulkGenerationProgress, canUseBatchProcessing, restoreBatchState]);
+  }, [multiFileState.activeFileId, multiFileState.files, batchSummaryMarkdown, bulkGenerationProgress, canUseBatchProcessing, restoreBatchState, currentBatchId]);
 
   // Clear documentation and quality score when user logs out (actual logout, not auth loading)
   // NOTE: For authenticated users, docs come from the workspace/file selection
@@ -867,6 +900,14 @@ function App() {
       if (isAuthenticated && result) {
         try {
           const fileSize = new Blob([code]).size;
+          // Extract github-specific metadata if source is github (extensible for gitlab, etc.)
+          const githubData = sourceMetadata?.source === 'github' ? {
+            repo: sourceMetadata.repo,
+            path: sourceMetadata.path,
+            sha: sourceMetadata.sha,
+            branch: sourceMetadata.branch
+          } : null;
+
           const saveResult = await documentPersistence.saveDocument({
             filename: filename,
             language: language,
@@ -875,6 +916,7 @@ function App() {
             qualityScore: result.qualityScore,
             docType: docType,
             origin: codeOrigin, // Tracked from where code was loaded (upload, github, paste, sample)
+            github: githubData, // GitHub metadata for reload functionality
             provider: result.metadata?.provider || 'claude',
             model: result.metadata?.model || 'claude-sonnet-4-5-20250929',
             llm: result.metadata || null
@@ -914,6 +956,7 @@ function App() {
                 qualityScore: result.qualityScore,
                 docType: docType,
                 origin: codeOrigin,
+                github: githubData, // GitHub metadata for reload functionality
                 documentId: saveResult.documentId,
                 batchId: batchResult.batchId,
                 generatedAt: new Date()
@@ -1276,6 +1319,7 @@ function App() {
         // Set the uploaded file content in the editor
         setCode(data.file.content);
         setCodeOrigin('upload'); // File was uploaded
+        setSourceMetadata(null); // Clear any previous source metadata (upload is not reloadable)
         setFilename(data.file.name);
         // Language will be derived from filename automatically
 
@@ -1545,6 +1589,19 @@ function App() {
     setCode(fileCode);
     setCodeOrigin('github'); // Code is from GitHub
 
+    // Store source metadata for reload functionality (extensible for gitlab, bitbucket, etc.)
+    if (metadata?.owner && metadata?.repo && metadata?.path) {
+      setSourceMetadata({
+        source: 'github',
+        repo: `${metadata.owner}/${metadata.repo}`,
+        path: metadata.path,
+        sha: metadata.sha || null,
+        branch: metadata.branch || null
+      });
+    } else {
+      setSourceMetadata(null);
+    }
+
     // Set filename (language will be derived from filename)
     if (fileName) {
       setFilename(fileName);
@@ -1568,9 +1625,79 @@ function App() {
     // For authenticated users, docs are in DB - no localStorage to clear
   };
 
+  /**
+   * Handle reloading multiple files from their source (GitHub, etc.)
+   * Used when generating files loaded from history that have no code content
+   */
+  const handleReloadFilesFromSource = async () => {
+    if (!filesToReloadFromSource || filesToReloadFromSource.length === 0) {
+      setShowReloadFromSourceModal(false);
+      return;
+    }
+
+    const total = filesToReloadFromSource.length;
+    const successIds = [];
+
+    // Initialize progress
+    setReloadFromSourceProgress({ total, completed: 0, successIds: [] });
+
+    for (let i = 0; i < filesToReloadFromSource.length; i++) {
+      const file = filesToReloadFromSource[i];
+
+      if (!file.github?.repo || !file.github?.path) {
+        setReloadFromSourceProgress(prev => ({ ...prev, completed: i + 1 }));
+        continue;
+      }
+
+      const { repo, path, branch } = file.github;
+      const [owner, repoName] = repo.split('/');
+
+      if (!owner || !repoName || !path) {
+        setReloadFromSourceProgress(prev => ({ ...prev, completed: i + 1 }));
+        continue;
+      }
+
+      try {
+        const fetchedFile = await fetchGitHubFile(owner, repoName, path, branch || null);
+
+        if (fetchedFile?.content) {
+          multiFileState.updateFile(file.id, {
+            content: fetchedFile.content,
+            fileSize: fetchedFile.content.length,
+            dateModified: new Date().toISOString()
+          });
+          successIds.push(file.id);
+        }
+      } catch (error) {
+        console.error(`[App] Failed to reload ${file.filename} from GitHub:`, error);
+      }
+
+      // Update progress
+      setReloadFromSourceProgress({ total, completed: i + 1, successIds: [...successIds] });
+    }
+  };
+
+  const handleGenerateAfterReload = () => {
+    const successIds = reloadFromSourceProgress?.successIds || [];
+
+    // Close modal and clear state
+    setShowReloadFromSourceModal(false);
+    setFilesToReloadFromSource([]);
+    setReloadFromSourceProgress(null);
+
+    if (successIds.length > 0) {
+      // Clear any existing batch summary from previously loaded history
+      clearBatchState();
+      // Files are already selected - just trigger generation
+      // The files now have content loaded, so handleGenerateSelected will work
+      handleGenerateSelected();
+    }
+  };
+
   const handleLoadSample = (sample) => {
     setCode(sample.code);
     setCodeOrigin('sample'); // Code is from a sample
+    setSourceMetadata(null); // Clear any previous source metadata
     setDocType(sample.docType);
 
     // Set filename based on sample title and language (language will be derived from filename)
@@ -1775,7 +1902,7 @@ function App() {
         currentlyGeneratingFile={currentlyGeneratingFile}
         throttleCountdown={throttleCountdown}
         onDismissBulkErrors={dismissBanner}
-        onSummaryFileClick={handleSummaryFileClick}
+        onDocumentClick={handleDocumentClick}
         onBackToSummary={handleBackToSummary}
         onDownloadAllDocs={handleDownloadAllDocs}
         batchSummaryMarkdown={batchSummaryMarkdown}
@@ -1988,14 +2115,11 @@ function App() {
                     // Generate documentation for all selected files
                     handleGenerateSelected();
                   } else if (multiFileState.selectedFileIds.length > 0) {
-                    // Files are selected but none have content
+                    // Files are selected but none have content - show reload modal
                     const selectedFiles = multiFileState.files.filter(f => multiFileState.selectedFileIds.includes(f.id));
-                    const hasGitHubFiles = selectedFiles.some(f => f.origin === 'github' && f.github);
-                    if (hasGitHubFiles) {
-                      toastCompact.info('Selected files have no code content. Use "Reload from GitHub" in the file menu to fetch code.');
-                    } else {
-                      toastCompact.info('Selected files have no code content. Re-upload the files to generate documentation.');
-                    }
+                    const reloadableFiles = selectedFiles.filter(f => f.origin === 'github' && f.github?.repo && f.github?.path);
+                    setFilesToReloadFromSource(reloadableFiles);
+                    setShowReloadFromSourceModal(true);
                   } else {
                     // No files selected, show confirmation to generate from code editor
                     setShowGenerateFromEditorModal(true);
@@ -2004,6 +2128,7 @@ function App() {
                 onDeleteSelected={handleDeleteSelected}
                 bulkGenerationProgress={bulkGenerationProgress}
                 onUpdateFile={multiFileState.updateFile}
+                onViewBatchSummary={handleBackToSummary}
               />
 
               {/* Main Content - Full width on mobile */}
@@ -2087,14 +2212,11 @@ function App() {
                       // Generate documentation for all selected files
                       handleGenerateSelected();
                     } else if (multiFileState.selectedFileIds.length > 0) {
-                      // Files are selected but none have content
+                      // Files are selected but none have content - show reload modal
                       const selectedFiles = multiFileState.files.filter(f => multiFileState.selectedFileIds.includes(f.id));
-                      const hasGitHubFiles = selectedFiles.some(f => f.origin === 'github' && f.github);
-                      if (hasGitHubFiles) {
-                        toastCompact.info('Selected files have no code content. Use "Reload from GitHub" in the file menu to fetch code.');
-                      } else {
-                        toastCompact.info('Selected files have no code content. Re-upload the files to generate documentation.');
-                      }
+                      const reloadableFiles = selectedFiles.filter(f => f.origin === 'github' && f.github?.repo && f.github?.path);
+                      setFilesToReloadFromSource(reloadableFiles);
+                      setShowReloadFromSourceModal(true);
                     } else {
                       // No files selected, show confirmation to generate from code editor
                       setShowGenerateFromEditorModal(true);
@@ -2103,6 +2225,7 @@ function App() {
                   onDeleteSelected={handleDeleteSelected}
                   bulkGenerationProgress={bulkGenerationProgress}
                   onUpdateFile={multiFileState.updateFile}
+                  onViewBatchSummary={handleBackToSummary}
                 />
               </Panel>
 
@@ -2168,7 +2291,7 @@ function App() {
                             currentlyGeneratingFile={currentlyGeneratingFile}
                             throttleCountdown={throttleCountdown}
                             onDismissBulkErrors={dismissBanner}
-                            onSummaryFileClick={handleSummaryFileClick}
+                            onDocumentClick={handleDocumentClick}
                             onBackToSummary={handleBackToSummary}
                             onDownloadAllDocs={handleDownloadAllDocs}
                             batchSummaryMarkdown={batchSummaryMarkdown}
@@ -2258,7 +2381,7 @@ function App() {
                       currentlyGeneratingFile={currentlyGeneratingFile}
                       throttleCountdown={throttleCountdown}
                       onDismissBulkErrors={dismissBanner}
-                      onSummaryFileClick={handleSummaryFileClick}
+                      onDocumentClick={handleDocumentClick}
                       onBackToSummary={handleBackToSummary}
                       onDownloadAllDocs={handleDownloadAllDocs}
                       batchSummaryMarkdown={batchSummaryMarkdown}
@@ -2305,7 +2428,7 @@ function App() {
                         currentlyGeneratingFile={currentlyGeneratingFile}
                         throttleCountdown={throttleCountdown}
                         onDismissBulkErrors={dismissBanner}
-                        onSummaryFileClick={handleSummaryFileClick}
+                        onDocumentClick={handleDocumentClick}
                         onBackToSummary={handleBackToSummary}
                         onDownloadAllDocs={handleDownloadAllDocs}
                         batchSummaryMarkdown={batchSummaryMarkdown}
@@ -2397,6 +2520,18 @@ function App() {
         // Unsupported File Modal
         unsupportedFileModal={unsupportedFileModal}
         onCloseUnsupportedFileModal={() => setUnsupportedFileModal({ isOpen: false, fileName: '', fileExtension: '' })}
+
+        // Reload From Source Modal
+        showReloadFromSourceModal={showReloadFromSourceModal}
+        filesToReloadFromSource={filesToReloadFromSource}
+        reloadFromSourceProgress={reloadFromSourceProgress}
+        onCloseReloadFromSourceModal={() => {
+          setShowReloadFromSourceModal(false);
+          setFilesToReloadFromSource([]);
+          setReloadFromSourceProgress(null);
+        }}
+        onConfirmReloadFromSource={handleReloadFilesFromSource}
+        onGenerateAfterReload={handleGenerateAfterReload}
       />
 
       {/* Footer */}

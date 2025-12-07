@@ -48,7 +48,7 @@ describe('Usage and Tier API Endpoints', () => {
     // Mock authentication middleware - attach user to request
     app.use((req, res, next) => {
       if (req.headers.authorization === 'Bearer valid-token') {
-        req.user = { id: 1, tier: 'free' };
+        req.user = { id: 1, tier: 'free', effectiveTier: 'free' };
       }
       next();
     });
@@ -129,7 +129,7 @@ describe('Usage and Tier API Endpoints', () => {
       app.use(express.json());
       app.use((req, res, next) => {
         if (req.headers.authorization === 'Bearer enterprise-token') {
-          req.user = { id: 2, tier: 'enterprise' };
+          req.user = { id: 2, tier: 'enterprise', effectiveTier: 'enterprise' };
         }
         next();
       });
@@ -205,7 +205,7 @@ describe('Usage and Tier API Endpoints', () => {
       app.use(express.json());
       app.use((req, res, next) => {
         if (req.headers.authorization === 'Bearer pro-token') {
-          req.user = { id: 3, tier: 'pro' };
+          req.user = { id: 3, tier: 'pro', effectiveTier: 'pro' };
         }
         next();
       });

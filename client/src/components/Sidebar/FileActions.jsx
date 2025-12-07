@@ -9,7 +9,7 @@ import { MoreVertical, Trash2, RotateCw, Sparkles, Info, Github, Loader2 } from 
  * Actions (in order):
  * - Generate - Generate documentation for this file (if not generated)
  * - Regenerate - Re-generate documentation (if already generated)
- * - Reload from GitHub - Reload file content from GitHub (if github origin and no content)
+ * - Reload from Source - Reload file content from remote source (github, gitlab, etc.)
  * - View Details - View detailed file metadata (keyboard shortcut: Cmd/Ctrl+I)
  * - Delete - Remove file from list
  *
@@ -18,10 +18,10 @@ import { MoreVertical, Trash2, RotateCw, Sparkles, Info, Github, Loader2 } from 
  * @param {Function} props.onRemove - Called when remove is clicked
  * @param {Function} props.onGenerate - Called when generate is clicked
  * @param {Function} props.onViewDetails - Called when view details is clicked
- * @param {Function} props.onReloadFromGitHub - Called when reload from GitHub is clicked
+ * @param {Function} props.onReloadFromSource - Called when reload from source is clicked
  * @param {boolean} props.isReloading - Whether file is currently being reloaded
  */
-export function FileActions({ file, onRemove, onGenerate, onViewDetails, onReloadFromGitHub, isReloading = false, onMenuOpenChange }) {
+export function FileActions({ file, onRemove, onGenerate, onViewDetails, onReloadFromSource, isReloading = false, onMenuOpenChange }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -34,7 +34,25 @@ export function FileActions({ file, onRemove, onGenerate, onViewDetails, onReloa
     }
   }, [isOpen, onMenuOpenChange]);
   const hasContent = Boolean(content && content.length > 0);
-  const canReloadFromGitHub = origin === 'github' && !hasContent && github?.repo && github?.path;
+
+  // Check if file can be reloaded from a remote source (extensible for gitlab, bitbucket, etc.)
+  // Currently supports: github
+  const canReloadFromSource = !hasContent && (
+    (origin === 'github' && github?.repo && github?.path)
+    // Future: || (origin === 'gitlab' && gitlab?.project && gitlab?.path)
+    // Future: || (origin === 'bitbucket' && bitbucket?.repo && bitbucket?.path)
+  );
+
+  // Get the source label for UI display
+  const getSourceLabel = () => {
+    if (origin === 'github') return 'GitHub';
+    if (origin === 'gitlab') return 'GitLab';
+    if (origin === 'bitbucket') return 'Bitbucket';
+    return 'Source';
+  };
+
+  // Get the source icon component
+  const SourceIcon = origin === 'github' ? Github : Github; // Future: add GitLab, Bitbucket icons
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -85,9 +103,9 @@ export function FileActions({ file, onRemove, onGenerate, onViewDetails, onReloa
     setIsOpen(false);
   };
 
-  const handleReloadFromGitHub = () => {
-    if (onReloadFromGitHub) {
-      onReloadFromGitHub();
+  const handleReloadFromSource = () => {
+    if (onReloadFromSource) {
+      onReloadFromSource();
     }
     setIsOpen(false);
   };
@@ -147,11 +165,11 @@ export function FileActions({ file, onRemove, onGenerate, onViewDetails, onReloa
             </button>
           )}
 
-          {/* Reload from GitHub - only if github origin and no content */}
-          {canReloadFromGitHub && (
+          {/* Reload from Source - only if remote origin (github, gitlab, etc.) and no content */}
+          {canReloadFromSource && (
             <button
               type="button"
-              onClick={handleReloadFromGitHub}
+              onClick={handleReloadFromSource}
               disabled={isReloading}
               className="w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
               role="menuitem"
@@ -163,8 +181,8 @@ export function FileActions({ file, onRemove, onGenerate, onViewDetails, onReloa
                 </>
               ) : (
                 <>
-                  <Github className="w-4 h-4" />
-                  Reload from GitHub
+                  <SourceIcon className="w-4 h-4" />
+                  Reload from {getSourceLabel()}
                 </>
               )}
             </button>

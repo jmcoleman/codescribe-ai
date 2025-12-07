@@ -172,7 +172,7 @@ describe('PricingPage', () => {
 
       expect(screen.getByRole('button', { name: /monthly/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /yearly/i })).toBeInTheDocument();
-      expect(screen.getByText('Save 17%')).toBeInTheDocument();
+      expect(screen.getByText('-17%')).toBeInTheDocument();
     });
 
     it('should show monthly prices by default', () => {

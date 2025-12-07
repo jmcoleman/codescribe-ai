@@ -381,7 +381,8 @@ router.get('/user/usage', optionalAuth, async (req, res) => {
 
     // Support both authenticated users and anonymous users
     const userIdentifier = req.user?.id || `ip:${req.ip || req.socket?.remoteAddress || 'unknown'}`;
-    const tier = req.user?.tier || 'free';
+    // Use effectiveTier to account for trials and admin overrides
+    const tier = req.user?.effectiveTier || 'free';
 
     // Get usage from database
     const usage = await Usage.getUserUsage(userIdentifier);

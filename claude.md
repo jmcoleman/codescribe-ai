@@ -457,18 +457,21 @@ codescribe-ai/
 
 ## 🔄 Version History
 
-**Current: v3.2.1** (December 7, 2025)
-- Workspace Persistence Fix: Generated docs now persist across page navigation
-- Single-file generation now adds to workspace (sessionStorage) for persistence
-- Logout effect only clears docs on actual logout (hasSeenUserRef pattern)
-- 15 new workspace persistence tests
-- 3,440 tests (3,340 passing, 97 skipped)
-- Frontend: 1,848 passing, 64 skipped
-- Backend: 1,492 passing, 33 skipped
+**Current: v3.2.2** (December 7, 2025)
+- UX Polish & Tier Access Updates
+- Fixed trial users seeing Free tier limits instead of Pro (effectiveTier fix)
+- Fixed markdown code block rendering (extra backtick/spacing)
+- Starter tier: Added GitHub import and Generation History access
+- Pricing page: Removed redundant trial banner, neutral "Base Plan" badge when on trial
+- History page: "(12 docs in 4 batches)" count display
+- 3,449 tests (3,349 passing, 97 skipped)
+- Frontend: 1,854 passing, 64 skipped
+- Backend: 1,495 passing, 33 skipped
 
 <details>
-<summary>Recent Releases (v2.9.0-v3.2.0) & Milestones</summary>
+<summary>Recent Releases (v2.9.0-v3.2.1) & Milestones</summary>
 
+**v3.2.1** (Dec 7, 2025): Workspace Persistence Fix - Single-file generation persists to sessionStorage
 **v3.2.0** (Dec 6, 2025): Batch Generation & Workspace Fixes - Race condition fix, Mermaid cleanup, async prompts
 **v3.1.0** (Dec 5, 2025): Trial System Production Ready - Full user-facing flow, admin UI, attribution
 **v3.0.0** (Dec 4, 2025): Trial System Core - Invite codes, user trials, trial-aware tier system

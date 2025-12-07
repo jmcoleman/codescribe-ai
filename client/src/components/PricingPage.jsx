@@ -9,7 +9,6 @@ import VerificationRequiredModal from './VerificationRequiredModal';
 import { ContactSalesModal } from './ContactSalesModal';
 import { STORAGE_KEYS, setSessionItem, getSessionItem, removeSessionItem } from '../constants/storage';
 import { PageLayout } from './PageLayout';
-import { TrialBanner } from './trial/TrialBanner';
 
 // Lazy load auth modals
 const SignupModal = lazy(() => import('./SignupModal').then(m => ({ default: m.SignupModal })));
@@ -225,6 +224,7 @@ export function PricingPage() {
         'All 16 languages',
         '4 doc types',
         'Quality scoring',
+        'GitHub import',
         'Community support'
       ],
       cta: 'Get Started',
@@ -246,7 +246,8 @@ export function PricingPage() {
         '10 docs/day',
         'All 16 languages',
         '4 doc types',
-        'Priority support',
+        'GitHub import',
+        'Generation history',
         'Email support'
       ],
       cta: 'Subscribe',
@@ -267,9 +268,9 @@ export function PricingPage() {
         '200 docs/month',
         '40 docs/day',
         'Priority processing',
-        'Email (24h response)',
+        { text: 'Batch generation', badge: 'NEW' },
         { text: 'Multi-file GitHub import', badge: 'NEW' },
-        'Custom templates*'
+        'Generation history'
       ],
       cta: 'Subscribe',
       ctaVariant: 'primary',
@@ -334,48 +335,41 @@ export function PricingPage() {
           )}
         </div>
 
-        {/* Trial Status Banner - reuse same component as main app, hide upgrade/dismiss since we're on pricing page */}
-        <div className="mb-4 rounded-xl overflow-hidden">
-          <TrialBanner hideUpgrade hideDismiss />
-        </div>
-
-        <div className="text-center mb-1 sm:mb-2">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 dark:text-slate-100 mb-1">
+        <div className="text-center mb-1">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 dark:text-slate-100 mb-0.5">
             Simple, Transparent Pricing
           </h1>
-          <p className="text-base sm:text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-1 sm:mb-2">
+          <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
             Choose the plan that fits your needs. All plans include full language support.
           </p>
 
-          {/* Billing Period Toggle - wrapper has padding to prevent focus ring clipping */}
-          <div className="inline-block p-1">
-            <div className="inline-flex items-center gap-0.5 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg">
-              <button
-                onClick={() => setBillingPeriod('monthly')}
-                className={`relative px-6 py-2 rounded-md font-medium transition-[background-color,box-shadow,color] duration-200 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-2 focus-visible:z-10 ${
-                  billingPeriod === 'monthly'
-                    ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-md'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-700/50'
-                }`}
-                aria-pressed={billingPeriod === 'monthly'}
-              >
-                Monthly
-              </button>
-              <button
-                onClick={() => setBillingPeriod('annual')}
-                className={`relative px-6 py-2 rounded-md font-medium transition-[background-color,box-shadow,color] duration-200 ease-out flex items-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-2 focus-visible:z-10 ${
-                  billingPeriod === 'annual'
-                    ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-md'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-700/50'
-                }`}
-                aria-pressed={billingPeriod === 'annual'}
-              >
-                Yearly
-                <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full font-semibold border border-transparent dark:border-green-500/50">
-                  Save 17%
-                </span>
-              </button>
-            </div>
+          {/* Billing Period Toggle - compact inline layout */}
+          <div className="inline-flex items-center gap-0.5 p-0.5 bg-slate-100 dark:bg-slate-800 rounded-lg mt-2 mb-2">
+            <button
+              onClick={() => setBillingPeriod('monthly')}
+              className={`relative px-4 py-1.5 rounded-md text-sm font-medium transition-[background-color,box-shadow,color] duration-200 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-2 focus-visible:z-10 ${
+                billingPeriod === 'monthly'
+                  ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-md'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-700/50'
+              }`}
+              aria-pressed={billingPeriod === 'monthly'}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setBillingPeriod('annual')}
+              className={`relative px-4 py-1.5 rounded-md text-sm font-medium transition-[background-color,box-shadow,color] duration-200 ease-out flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-2 focus-visible:z-10 ${
+                billingPeriod === 'annual'
+                  ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-md'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-700/50'
+              }`}
+              aria-pressed={billingPeriod === 'annual'}
+            >
+              Yearly
+              <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-1.5 py-0.5 rounded-full font-semibold border border-transparent dark:border-green-500/50">
+                -17%
+              </span>
+            </button>
           </div>
         </div>
 
@@ -452,11 +446,15 @@ export function PricingPage() {
                   </div>
                 )}
 
-                {/* Current Plan Badge - Show if not on trial */}
-                {isCurrentTier && !isTrialTier && (
+                {/* Current Plan Badge - Green if active, neutral gray if on trial (since trial gives higher tier features) */}
+                {isCurrentTier && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-green-600 dark:bg-green-700 text-white">
-                      Current Plan
+                    <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${
+                      isOnTrial
+                        ? 'bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-white'
+                        : 'bg-green-600 dark:bg-green-700 text-white'
+                    }`}>
+                      {isOnTrial ? 'Base Plan' : 'Current Plan'}
                     </span>
                   </div>
                 )}

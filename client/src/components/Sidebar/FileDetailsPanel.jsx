@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { X, FileText, Calendar, Info } from 'lucide-react';
+import { X, FileText, Sparkles, FolderGit2, ExternalLink } from 'lucide-react';
 import {
   formatOrigin,
   formatFileType,
@@ -24,7 +24,7 @@ import {
  * @param {boolean} props.isOpen - Whether panel is open
  * @param {Function} props.onClose - Called when panel closes
  */
-export function FileDetailsPanel({ file, isOpen, onClose }) {
+export function FileDetailsPanel({ file, isOpen, onClose, onViewBatchSummary }) {
   const panelRef = useRef(null);
   const closeButtonRef = useRef(null);
   const previousActiveElement = useRef(null);
@@ -67,7 +67,7 @@ export function FileDetailsPanel({ file, isOpen, onClose }) {
     // Focus close button when panel opens
     if (closeButtonRef.current) {
       setTimeout(() => {
-        closeButtonRef.current.focus();
+        closeButtonRef.current?.focus();
       }, 50);
     }
 
@@ -143,8 +143,10 @@ export function FileDetailsPanel({ file, isOpen, onClose }) {
     isGenerating,
     error,
     documentId,
+    batchId,
     fileSize,
     origin,
+    github,
     dateAdded,
     dateModified,
     generatedAt
@@ -153,7 +155,9 @@ export function FileDetailsPanel({ file, isOpen, onClose }) {
   // Calculate metadata
   const fileType = formatFileType(filename);
   const formattedSize = getMetadataValue('fileSize', file);
-  const linesOfCode = content?.split('\n').length || 0;
+  // Lines of code: calculate from content if available, otherwise show N/A
+  const hasContent = content && content.length > 0;
+  const linesOfCode = hasContent ? content.split('\n').length : null;
   const formattedOrigin = formatOrigin(origin);
   const docStatus = getDocumentationStatus(file);
   const qualityDisplay = qualityScore
@@ -199,7 +203,7 @@ export function FileDetailsPanel({ file, isOpen, onClose }) {
         className={`
           relative bg-white dark:bg-slate-800 shadow-xl border-l border-slate-200 dark:border-slate-700
           h-full overflow-y-auto
-          w-80
+          w-96
           max-md:w-full max-md:h-[60vh] max-md:border-l-0 max-md:border-t
           max-md:mt-auto max-md:rounded-t-xl
           ${isEntering
@@ -241,7 +245,7 @@ export function FileDetailsPanel({ file, isOpen, onClose }) {
           <div>
             <h3 className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-3 flex items-center gap-2">
               <FileText className="w-4 h-4" aria-hidden="true" />
-              File Information
+              Input File
             </h3>
             <dl className="space-y-2">
               <div className="flex justify-between items-start gap-4">
@@ -254,43 +258,79 @@ export function FileDetailsPanel({ file, isOpen, onClose }) {
               </div>
               <div className="flex justify-between items-start gap-4">
                 <dt className="text-sm text-slate-600 dark:text-slate-400 flex-shrink-0">Lines</dt>
-                <dd className="text-sm text-slate-900 dark:text-slate-100 text-right">{linesOfCode}</dd>
+                <dd className={`text-sm text-right ${linesOfCode !== null ? 'text-slate-900 dark:text-slate-100' : 'text-slate-400 dark:text-slate-500 italic'}`}>
+                  {linesOfCode !== null ? linesOfCode : 'N/A'}
+                </dd>
               </div>
+              <div className="flex justify-between items-start gap-4">
+                <dt className="text-sm text-slate-600 dark:text-slate-400 flex-shrink-0">Added</dt>
+                <dd className="text-sm text-slate-900 dark:text-slate-100 text-right">{formattedDateAdded}</dd>
+              </div>
+              {/* Only show Modified if different from Added (indicates edits were made) */}
+              {formattedDateModified !== formattedDateAdded && (
+                <div className="flex justify-between items-start gap-4">
+                  <dt className="text-sm text-slate-600 dark:text-slate-400 flex-shrink-0">Modified</dt>
+                  <dd className="text-sm text-slate-900 dark:text-slate-100 text-right">{formattedDateModified}</dd>
+                </div>
+              )}
+            </dl>
+          </div>
+
+          {/* Source - Origin and provider-specific metadata */}
+          <div>
+            <h3 className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-3 flex items-center gap-2">
+              <FolderGit2 className="w-4 h-4" aria-hidden="true" />
+              Source
+            </h3>
+            <dl className="space-y-2">
               <div className="flex justify-between items-start gap-4">
                 <dt className="text-sm text-slate-600 dark:text-slate-400 flex-shrink-0">Origin</dt>
                 <dd className="text-sm text-slate-900 dark:text-slate-100 text-right">{formattedOrigin}</dd>
               </div>
+              {/* GitHub-specific metadata */}
+              {origin === 'github' && github?.repo && (
+                <>
+                  <div className="flex justify-between items-start gap-4">
+                    <dt className="text-sm text-slate-600 dark:text-slate-400 flex-shrink-0">Repository</dt>
+                    <dd className="text-sm text-slate-900 dark:text-slate-100 text-right font-mono text-xs break-all">{github.repo}</dd>
+                  </div>
+                  {github.path && (
+                    <div className="flex justify-between items-start gap-4">
+                      <dt className="text-sm text-slate-600 dark:text-slate-400 flex-shrink-0">Path</dt>
+                      <dd className="text-sm text-slate-900 dark:text-slate-100 text-right font-mono text-xs break-all">{github.path}</dd>
+                    </div>
+                  )}
+                  {github.branch && (
+                    <div className="flex justify-between items-start gap-4">
+                      <dt className="text-sm text-slate-600 dark:text-slate-400 flex-shrink-0">Branch</dt>
+                      <dd className="text-sm text-slate-900 dark:text-slate-100 text-right font-mono text-xs">{github.branch}</dd>
+                    </div>
+                  )}
+                </>
+              )}
             </dl>
           </div>
 
           {/* Documentation (Always visible - Requirement #4) */}
           <div>
             <h3 className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-3 flex items-center gap-2">
-              <Info className="w-4 h-4" aria-hidden="true" />
-              Documentation
+              <Sparkles className="w-4 h-4" aria-hidden="true" />
+              Generated Docs
             </h3>
             <dl className="space-y-2">
               <div className="flex justify-between items-start gap-4">
                 <dt className="text-sm text-slate-600 dark:text-slate-400 flex-shrink-0">Type</dt>
-                <dd className="text-sm font-medium text-purple-600 dark:text-purple-400 text-right">
+                <dd className="text-sm text-slate-900 dark:text-slate-100 text-right">
                   {docType || 'README'}
                 </dd>
               </div>
               <div className="flex justify-between items-start gap-4">
                 <dt className="text-sm text-slate-600 dark:text-slate-400 flex-shrink-0">Quality</dt>
-                <dd className={`text-sm text-right font-medium ${qualityColor}`}>{qualityDisplay}</dd>
+                <dd className={`text-sm text-right ${qualityColor}`}>{qualityDisplay}</dd>
               </div>
               <div className="flex justify-between items-start gap-4">
                 <dt className="text-sm text-slate-600 dark:text-slate-400 flex-shrink-0">Status</dt>
-                <dd className={`text-sm text-right font-medium ${
-                  isGenerating
-                    ? 'text-indigo-600 dark:text-indigo-400'
-                    : error
-                    ? 'text-red-600 dark:text-red-400'
-                    : documentation
-                    ? 'text-green-600 dark:text-green-400'
-                    : 'text-slate-500 dark:text-slate-400'
-                }`}>
+                <dd className="text-sm text-slate-900 dark:text-slate-100 text-right">
                   {docStatus}
                 </dd>
               </div>
@@ -300,24 +340,24 @@ export function FileDetailsPanel({ file, isOpen, onClose }) {
                   <dd className="text-sm text-slate-900 dark:text-slate-100 text-right">{dateGenerated}</dd>
                 </div>
               )}
-            </dl>
-          </div>
-
-          {/* Timestamps */}
-          <div>
-            <h3 className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-3 flex items-center gap-2">
-              <Calendar className="w-4 h-4" aria-hidden="true" />
-              Timestamps
-            </h3>
-            <dl className="space-y-2">
-              <div className="flex justify-between items-start gap-4">
-                <dt className="text-sm text-slate-600 dark:text-slate-400 flex-shrink-0">Added</dt>
-                <dd className="text-sm text-slate-900 dark:text-slate-100 text-right">{formattedDateAdded}</dd>
-              </div>
-              <div className="flex justify-between items-start gap-4">
-                <dt className="text-sm text-slate-600 dark:text-slate-400 flex-shrink-0">Modified</dt>
-                <dd className="text-sm text-slate-900 dark:text-slate-100 text-right">{formattedDateModified}</dd>
-              </div>
+              {batchId && onViewBatchSummary && (
+                <div className="flex justify-between items-start gap-4 pt-1">
+                  <dt className="text-sm text-slate-600 dark:text-slate-400 flex-shrink-0">Batch</dt>
+                  <dd className="text-sm text-right">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onViewBatchSummary(batchId);
+                        handleClose();
+                      }}
+                      className="inline-flex items-center gap-1 text-slate-900 dark:text-slate-100 hover:text-slate-700 dark:hover:text-slate-300 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-slate-800 rounded"
+                    >
+                      View Summary
+                      <ExternalLink className="w-3 h-3" aria-hidden="true" />
+                    </button>
+                  </dd>
+                </div>
+              )}
             </dl>
           </div>
 
@@ -329,12 +369,19 @@ export function FileDetailsPanel({ file, isOpen, onClose }) {
             </div>
           )}
 
-          {/* Database ID (if saved) */}
-          {documentId && (
-            <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Document ID: <span className="font-mono">{documentId}</span>
-              </p>
+          {/* Database IDs (if saved) */}
+          {(documentId || batchId) && (
+            <div className="pt-4 border-t border-slate-200 dark:border-slate-700 space-y-1">
+              {documentId && (
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Document ID: <span className="font-mono">{documentId}</span>
+                </p>
+              )}
+              {batchId && (
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Batch ID: <span className="font-mono">{batchId}</span>
+                </p>
+              )}
             </div>
           )}
         </div>
