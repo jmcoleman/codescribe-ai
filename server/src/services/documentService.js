@@ -108,14 +108,13 @@ class DocumentService {
     const validSortOrder = allowedSortOrders.includes(sortOrder?.toLowerCase()) ? sortOrder.toUpperCase() : 'DESC';
 
     try {
-      // Build WHERE clause
-      const whereClause = includeDeleted
-        ? sql`WHERE user_id = ${userId}`
-        : sql`WHERE user_id = ${userId} AND deleted_at IS NULL`;
+      // Build WHERE clause condition
+      const deletedCondition = includeDeleted ? '' : 'AND deleted_at IS NULL';
 
-      // Get documents
-      const result = await sql`
-        SELECT
+      // Get documents - use query() for dynamic ORDER BY since sql`` doesn't support dynamic identifiers
+      // Both validSortField and validSortOrder are validated against allowlists above, so safe to interpolate
+      const result = await sql.query(
+        `SELECT
           id, filename, language, file_size_bytes,
           documentation, quality_score, doc_type,
           generated_at, origin,
@@ -124,18 +123,20 @@ class DocumentService {
           was_cached, latency_ms, is_ephemeral,
           deleted_at
         FROM generated_documents
-        ${whereClause}
-        ORDER BY ${sql(validSortField)} ${sql.unsafe(validSortOrder)}
-        LIMIT ${limit}
-        OFFSET ${offset}
-      `;
+        WHERE user_id = $1 ${deletedCondition}
+        ORDER BY ${validSortField} ${validSortOrder}
+        LIMIT $2
+        OFFSET $3`,
+        [userId, limit, offset]
+      );
 
       // Get total count
-      const countResult = await sql`
-        SELECT COUNT(*) as total
+      const countResult = await sql.query(
+        `SELECT COUNT(*) as total
         FROM generated_documents
-        ${whereClause}
-      `;
+        WHERE user_id = $1 ${deletedCondition}`,
+        [userId]
+      );
 
       const total = parseInt(countResult.rows[0].total);
       const hasMore = offset + limit < total;

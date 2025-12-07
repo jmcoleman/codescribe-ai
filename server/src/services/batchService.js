@@ -121,10 +121,10 @@ class BatchService {
   }
 
   /**
-   * Get user's batches with pagination
+   * Get user's batches with pagination, sorting, and filtering
    * @param {number} userId - User ID
    * @param {Object} options - Query options
-   * @returns {Promise<Object>} { batches, total, hasMore }
+   * @returns {Promise<Object>} { batches, total, hasMore, page, limit, totalPages }
    */
   async getUserBatches(userId, options = {}) {
     if (!userId) {
@@ -132,63 +132,191 @@ class BatchService {
     }
 
     const {
-      limit = 50,
+      limit = 20,
       offset = 0,
-      batchType = null // Filter by 'batch' or 'single'
+      batchType = null,    // Filter by 'batch' or 'single'
+      sortBy = 'created_at', // 'created_at', 'avg_grade', 'total_files', 'first_doc_filename'
+      sortOrder = 'desc',  // 'asc' or 'desc'
+      gradeFilter = null,  // 'A', 'B', 'C', 'D', 'F'
+      docTypeFilter = null, // 'README', 'JSDOC', 'API', 'ARCHITECTURE', etc.
+      filenameSearch = null // Search by filename (partial match)
     } = options;
 
+    // Validate sortBy to prevent SQL injection
+    const validSortColumns = ['created_at', 'avg_grade', 'total_files', 'first_doc_filename', 'avg_quality_score'];
+    const safeSortBy = validSortColumns.includes(sortBy) ? sortBy : 'created_at';
+    const safeSortOrder = sortOrder === 'asc' ? 'ASC' : 'DESC';
+
     try {
-      // Build query with optional type filter
-      let batches;
-      let countResult;
+      // Build WHERE conditions dynamically
+      // Note: Using parameterized queries for all user inputs
+      const conditions = ['gb.user_id = $1'];
+      const params = [userId];
+      let paramIndex = 2;
 
       if (batchType) {
-        batches = await sql`
-          SELECT
-            gb.*,
-            (SELECT COUNT(*) FROM generated_documents gd
-             WHERE gd.batch_id = gb.id AND gd.deleted_at IS NULL) as file_count
-          FROM generation_batches gb
-          WHERE gb.user_id = ${userId}
-            AND gb.batch_type = ${batchType}
-          ORDER BY gb.created_at DESC
-          LIMIT ${limit}
-          OFFSET ${offset}
-        `;
-
-        countResult = await sql`
-          SELECT COUNT(*) as total
-          FROM generation_batches
-          WHERE user_id = ${userId}
-            AND batch_type = ${batchType}
-        `;
-      } else {
-        batches = await sql`
-          SELECT
-            gb.*,
-            (SELECT COUNT(*) FROM generated_documents gd
-             WHERE gd.batch_id = gb.id AND gd.deleted_at IS NULL) as file_count
-          FROM generation_batches gb
-          WHERE gb.user_id = ${userId}
-          ORDER BY gb.created_at DESC
-          LIMIT ${limit}
-          OFFSET ${offset}
-        `;
-
-        countResult = await sql`
-          SELECT COUNT(*) as total
-          FROM generation_batches
-          WHERE user_id = ${userId}
-        `;
+        conditions.push(`gb.batch_type = $${paramIndex}`);
+        params.push(batchType);
+        paramIndex++;
       }
 
+      if (gradeFilter) {
+        // Filter by individual document grades, not batch average
+        // This ensures consistency with the document-level filtering when expanding
+        // quality_score is JSONB with structure: { score: number, grade: string, breakdown: {...} }
+        const gradeRanges = {
+          'A': [90, 100],
+          'B': [80, 89],
+          'C': [70, 79],
+          'D': [60, 69],
+          'F': [0, 59]
+        };
+        const range = gradeRanges[gradeFilter];
+        if (range) {
+          conditions.push(`EXISTS (
+            SELECT 1 FROM generated_documents gd
+            WHERE gd.batch_id = gb.id
+            AND gd.deleted_at IS NULL
+            AND gd.quality_score IS NOT NULL
+            AND (gd.quality_score->>'score')::int BETWEEN $${paramIndex} AND $${paramIndex + 1}
+          )`);
+          params.push(range[0], range[1]);
+          paramIndex += 2;
+        }
+      }
+
+      if (docTypeFilter) {
+        // Filter by individual document doc_type, not batch-level doc_types
+        conditions.push(`EXISTS (
+          SELECT 1 FROM generated_documents gd
+          WHERE gd.batch_id = gb.id
+          AND gd.deleted_at IS NULL
+          AND gd.doc_type = $${paramIndex}
+        )`);
+        params.push(docTypeFilter);
+        paramIndex++;
+      }
+
+      if (filenameSearch) {
+        // Search for batches that have at least one document with matching filename
+        conditions.push(`EXISTS (
+          SELECT 1 FROM generated_documents gd
+          WHERE gd.batch_id = gb.id
+          AND gd.deleted_at IS NULL
+          AND gd.filename ILIKE $${paramIndex}
+        )`);
+        params.push(`%${filenameSearch}%`);
+        paramIndex++;
+      }
+
+      const whereClause = conditions.join(' AND ');
+
+      // Build ORDER BY - for first_doc_filename, we need to handle it specially
+      let orderByClause;
+      if (safeSortBy === 'first_doc_filename') {
+        orderByClause = `ORDER BY first_doc.filename ${safeSortOrder} NULLS LAST`;
+      } else if (safeSortBy === 'avg_grade') {
+        // Grade sorting: A < B < C < D < F (ascending = best first)
+        orderByClause = `ORDER BY
+          CASE gb.avg_grade
+            WHEN 'A' THEN 1
+            WHEN 'B' THEN 2
+            WHEN 'C' THEN 3
+            WHEN 'D' THEN 4
+            WHEN 'F' THEN 5
+            ELSE 6
+          END ${safeSortOrder}`;
+      } else {
+        orderByClause = `ORDER BY gb.${safeSortBy} ${safeSortOrder}`;
+      }
+
+      // Build LATERAL join conditions to match the same filters
+      // This ensures we show the document that matches the filter, not just the first doc
+      const lateralConditions = ['batch_id = gb.id', 'deleted_at IS NULL'];
+      const lateralParams = [];
+      let lateralParamOffset = paramIndex; // Start after main query params
+
+      if (gradeFilter) {
+        const gradeRanges = {
+          'A': [90, 100],
+          'B': [80, 89],
+          'C': [70, 79],
+          'D': [60, 69],
+          'F': [0, 59]
+        };
+        const range = gradeRanges[gradeFilter];
+        if (range) {
+          lateralConditions.push(`quality_score IS NOT NULL AND (quality_score->>'score')::int BETWEEN $${lateralParamOffset} AND $${lateralParamOffset + 1}`);
+          lateralParams.push(range[0], range[1]);
+          lateralParamOffset += 2;
+        }
+      }
+
+      if (docTypeFilter) {
+        lateralConditions.push(`doc_type = $${lateralParamOffset}`);
+        lateralParams.push(docTypeFilter);
+        lateralParamOffset++;
+      }
+
+      if (filenameSearch) {
+        lateralConditions.push(`filename ILIKE $${lateralParamOffset}`);
+        lateralParams.push(`%${filenameSearch}%`);
+        lateralParamOffset++;
+      }
+
+      const lateralWhereClause = lateralConditions.join(' AND ');
+
+      // Add lateral params then limit/offset params
+      params.push(...lateralParams);
+      params.push(limit, offset);
+
+      // Main query with dynamic conditions
+      const query = `
+        SELECT
+          gb.*,
+          (SELECT COUNT(*) FROM generated_documents gd
+           WHERE gd.batch_id = gb.id AND gd.deleted_at IS NULL) as file_count,
+          first_doc.filename as first_doc_filename,
+          first_doc.language as first_doc_language,
+          first_doc.quality_score as first_doc_quality_score,
+          first_doc.doc_type as first_doc_doc_type,
+          first_doc.generated_at as first_doc_generated_at
+        FROM generation_batches gb
+        LEFT JOIN LATERAL (
+          SELECT filename, language, quality_score, doc_type, generated_at
+          FROM generated_documents
+          WHERE ${lateralWhereClause}
+          ORDER BY generated_at ASC
+          LIMIT 1
+        ) first_doc ON gb.batch_type = 'single'
+        WHERE ${whereClause}
+        ${orderByClause}
+        LIMIT $${lateralParamOffset} OFFSET $${lateralParamOffset + 1}
+      `;
+
+      // Count query with same conditions (no sorting/pagination)
+      const countQuery = `
+        SELECT COUNT(*) as total
+        FROM generation_batches gb
+        WHERE ${whereClause}
+      `;
+
+      // Execute queries using raw sql template
+      const batches = await sql.query(query, params);
+      const countResult = await sql.query(countQuery, params.slice(0, paramIndex - 1));
+
       const total = parseInt(countResult.rows[0].total);
+      const totalPages = Math.ceil(total / limit);
+      const page = Math.floor(offset / limit) + 1;
       const hasMore = offset + limit < total;
 
       return {
         batches: batches.rows,
         total,
-        hasMore
+        hasMore,
+        page,
+        limit,
+        totalPages
       };
     } catch (error) {
       console.error('[BatchService] Error fetching user batches:', error);
@@ -222,15 +350,25 @@ class BatchService {
   }
 
   /**
-   * Get a batch with all its documents (for reload/export)
+   * Get a batch with its documents (optionally filtered)
    * @param {number} userId - User ID
    * @param {string} batchId - Batch UUID
+   * @param {Object} filters - Optional filters for documents
+   * @param {string} filters.filenameSearch - Filter by filename (partial match)
+   * @param {string} filters.gradeFilter - Filter by grade: 'A', 'B', 'C', 'D', 'F'
+   * @param {string} filters.docTypeFilter - Filter by doc type
    * @returns {Promise<Object|null>} { batch, documents } or null
    */
-  async getBatchWithDocuments(userId, batchId) {
+  async getBatchWithDocuments(userId, batchId, filters = {}) {
     if (!userId || !batchId) {
       throw new Error('User ID and Batch ID are required');
     }
+
+    const {
+      filenameSearch = null,
+      gradeFilter = null,
+      docTypeFilter = null
+    } = filters;
 
     try {
       // Get batch
@@ -244,8 +382,44 @@ class BatchService {
         return null;
       }
 
-      // Get documents in this batch
-      const docsResult = await sql`
+      // Build document query with optional filters
+      const conditions = ['batch_id = $1', 'user_id = $2', 'deleted_at IS NULL'];
+      const params = [batchId, userId];
+      let paramIndex = 3;
+
+      if (filenameSearch) {
+        conditions.push(`filename ILIKE $${paramIndex}`);
+        params.push(`%${filenameSearch}%`);
+        paramIndex++;
+      }
+
+      if (gradeFilter) {
+        // Grade is derived from quality_score, need to filter by score ranges
+        // quality_score is JSONB with structure: { score: number, grade: string, breakdown: {...} }
+        const gradeRanges = {
+          'A': [90, 100],
+          'B': [80, 89],
+          'C': [70, 79],
+          'D': [60, 69],
+          'F': [0, 59]
+        };
+        const range = gradeRanges[gradeFilter];
+        if (range) {
+          conditions.push(`(quality_score IS NOT NULL AND (quality_score->>'score')::int BETWEEN $${paramIndex} AND $${paramIndex + 1})`);
+          params.push(range[0], range[1]);
+          paramIndex += 2;
+        }
+      }
+
+      if (docTypeFilter) {
+        conditions.push(`doc_type = $${paramIndex}`);
+        params.push(docTypeFilter);
+        paramIndex++;
+      }
+
+      const whereClause = conditions.join(' AND ');
+
+      const docsQuery = `
         SELECT
           id, filename, language, file_size_bytes,
           documentation, quality_score, doc_type,
@@ -253,11 +427,11 @@ class BatchService {
           github_repo, github_path, github_sha, github_branch,
           provider, model
         FROM generated_documents
-        WHERE batch_id = ${batchId}
-          AND user_id = ${userId}
-          AND deleted_at IS NULL
+        WHERE ${whereClause}
         ORDER BY filename ASC
       `;
+
+      const docsResult = await sql.query(docsQuery, params);
 
       return {
         batch: batchResult.rows[0],

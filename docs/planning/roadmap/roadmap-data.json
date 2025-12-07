@@ -65,9 +65,9 @@
       "text": "codescribeai.com",
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
-    "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.24",
-    "footer": "v3.2.0 Complete · Up Next: History UI → Graph Engine · VS Code Extension: Separate Repo",
-    "lastUpdated": "December 6, 2025"
+    "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.25",
+    "footer": "v3.2.1 Complete · Up Next: History UI → Graph Engine · VS Code Extension: Separate Repo",
+    "lastUpdated": "December 7, 2025"
   },
   "columns": [
     {
@@ -720,6 +720,21 @@
             "Async prompt loading with Promise.all for performance",
             "Stripe webhook signature verification with raw body handling",
             "3,680 tests passing (1,840 frontend, 1,840 backend)"
+          ]
+        },
+        {
+          "version": "v3.2.1",
+          "title": "Single-File Workspace Persistence",
+          "duration": "0.5 days",
+          "status": "✓ Complete",
+          "completedDate": "Dec 7, 2025",
+          "badge": "UX Fix",
+          "features": [
+            "Fixed documentation lost on navigation (generate → navigate → return)",
+            "Single-file generation now persists to workspace sessionStorage",
+            "Logout effect only clears docs on actual logout (hasSeenUserRef)",
+            "15 new workspace persistence tests",
+            "3,440 tests (3,340 passing, 97 skipped)"
           ]
         }
       ]

@@ -14,7 +14,7 @@ import { SplitPanel } from './components/SplitPanel';
 import Footer from './components/Footer';
 import { useDocGeneration } from './hooks/useDocGeneration';
 import { useUsageTracking } from './hooks/useUsageTracking';
-import { useWorkspacePersistence } from './hooks/useWorkspacePersistence';
+import { useWorkspace } from './contexts/WorkspaceContext';
 import { useDocumentPersistence } from './hooks/useDocumentPersistence';
 import { useTierOverride } from './hooks/useTierOverride';
 import { useBatchGeneration } from './hooks/useBatchGeneration';
@@ -54,7 +54,7 @@ function LoadingFallback() {
 
 import { useSearchParams } from 'react-router-dom';
 import { API_URL } from './config/api.js';
-import { STORAGE_KEYS, getStorageItem, setStorageItem, getEditorKey, getSessionItem, setSessionItem, removeSessionItem } from './constants/storage';
+import { STORAGE_KEYS, getStorageItem, setStorageItem, removeStorageItem, getEditorKey, getSessionItem, setSessionItem, removeSessionItem } from './constants/storage';
 
 // Default sidebar panel sizes (percentage)
 const DEFAULT_SIDEBAR_SIZE = 20;
@@ -70,6 +70,8 @@ function App() {
   const [code, setCode] = useState(() => getStorageItem(STORAGE_KEYS.EDITOR_CODE, DEFAULT_CODE));
   const [docType, setDocType] = useState(() => getStorageItem(STORAGE_KEYS.EDITOR_DOC_TYPE, 'README'));
   const [filename, setFilename] = useState(() => getStorageItem(STORAGE_KEYS.EDITOR_FILENAME, 'code.js'));
+  // Track where the code came from (valid: 'upload', 'github', 'paste', 'sample')
+  const [codeOrigin, setCodeOrigin] = useState('sample'); // Default code is a sample
   // Language is derived from filename, not stored separately
   const language = detectLanguageFromFilename(filename);
 
@@ -230,7 +232,7 @@ function App() {
   const [mockUsage, setMockUsage] = useState(null);
 
   // Multi-file state (Phase 3: Multi-file integration)
-  const multiFileState = useWorkspacePersistence();
+  const multiFileState = useWorkspace();
   const documentPersistence = useDocumentPersistence();
   const { override, clearOverride } = useTierOverride();
 
@@ -278,8 +280,11 @@ function App() {
   // Note: Batch data persistence is handled after useBatchGeneration hook initialization
 
   // Load user-scoped editor content when user logs in
+  // Track if we've seen a logged-in user to differentiate logout from initial load
+  const hasSeenUserRef = useRef(false);
   useEffect(() => {
     if (user && user.id) {
+      hasSeenUserRef.current = true;
       // Load user's code from user-scoped key
       const codeKey = getEditorKey(user.id, 'code');
       if (codeKey) {
@@ -288,13 +293,18 @@ function App() {
           setCode(savedCode);
         }
       }
-    } else {
-      // User logged out - clear editor state
+    } else if (hasSeenUserRef.current) {
+      // User logged out (not initial page load) - clear editor state
       // Batch state clearing is handled separately after useBatchGeneration hook
       setCode(DEFAULT_CODE);
+      setCodeOrigin('sample'); // Default code is a sample
       setFilename('code.js');
       setDocType('README');
+      // Reset "doc panel cleared" flag so next login will load from DB
+      localStorage.removeItem(STORAGE_KEYS.DOC_PANEL_CLEARED);
+      hasSeenUserRef.current = false;
     }
+    // Note: If user is null/undefined on initial load, we do nothing - preserving localStorage state
   }, [user?.id]); // Only run when user ID changes (login/logout)
 
   // Reopen support modal after user logs in (if they came from support modal)
@@ -619,6 +629,64 @@ function App() {
     prevUserIdRef.current = user?.id;
   }, [user?.id, clearBatchState]);
 
+  // Load most recent document from database for free tier users (who don't have workspace/multi-file)
+  // Pro+ users get their docs loaded via useWorkspacePersistence → multiFileState
+  // Free tier users need this separate effect since they don't have workspace access
+  useEffect(() => {
+    // Only run for authenticated users WITHOUT multi-file access (free tier)
+    // Pro+ users get their workspace loaded via useWorkspacePersistence
+    if (!isAuthenticated || !user?.id || authLoading || canUseBatchProcessing) return;
+
+    // Skip if user intentionally cleared the doc panel (prevents reload after clear → refresh)
+    // Uses localStorage so it survives browser refresh; cleared on logout or new generation
+    const docPanelCleared = getStorageItem(STORAGE_KEYS.DOC_PANEL_CLEARED);
+    if (docPanelCleared === 'true') {
+      return;
+    }
+
+    // Skip if there's already documentation showing
+    if (documentation) return;
+
+    // Skip if there are files in the workspace (e.g., loaded from History)
+    if (multiFileState.files.length > 0) return;
+
+    // Skip if in batch mode
+    if (isBatchModeRef.current || bulkGenerationProgress) return;
+
+    const loadMostRecentDoc = async () => {
+      try {
+        const result = await documentPersistence.loadDocuments({ limit: 1 });
+
+        if (result.documents && result.documents.length > 0) {
+          const doc = result.documents[0];
+          console.log('[App] Loaded most recent document from DB for free tier user:', doc.filename);
+
+          // Set the documentation panel state
+          setDocumentation(doc.documentation);
+
+          // Set quality score with full structure
+          if (doc.quality_score) {
+            setQualityScore({
+              score: doc.quality_score.score || doc.quality_score,
+              grade: doc.quality_score.grade || null,
+              breakdown: doc.quality_score.breakdown || null
+            });
+          }
+
+          // Set filename and docType to match the loaded doc
+          if (doc.filename) setFilename(doc.filename);
+          if (doc.doc_type) setDocType(doc.doc_type);
+        }
+      } catch (error) {
+        console.error('[App] Error loading most recent document:', error);
+        // Don't block the app - just log the error
+      }
+    };
+
+    loadMostRecentDoc();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, user?.id, authLoading, canUseBatchProcessing]); // Intentionally minimal deps - only run on auth changes
+
   // Sync active file to CodePanel and DocPanel when selection changes
   // Sync active file to code and doc panels when user clicks a file in sidebar
   useEffect(() => {
@@ -639,6 +707,7 @@ function App() {
       // Sync code to CodePanel
       if (activeFile.content) {
         setCode(activeFile.content);
+        setCodeOrigin(activeFile.origin || 'paste'); // Use file's origin
         setFilename(activeFile.filename);
         // Language will be derived from filename automatically
       }
@@ -695,6 +764,7 @@ function App() {
         const defaultCode = DEFAULT_CODE;
         const defaultFilename = 'code.js';
         setCode(defaultCode);
+        setCodeOrigin('sample'); // Default code is a sample
         setFilename(defaultFilename);
 
         // Clear DocPanel completely
@@ -707,16 +777,18 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [multiFileState.activeFileId, multiFileState.files, batchSummaryMarkdown, bulkGenerationProgress, canUseBatchProcessing, restoreBatchState]);
 
-  // Clear documentation and quality score when user logs out
-  // NOTE: For authenticated users, docs come from the database via workspace/file selection
-  // localStorage is NOT used to restore docs on login - this prevents stale batch summaries
+  // Clear documentation and quality score when user logs out (actual logout, not auth loading)
+  // NOTE: For authenticated users, docs come from the workspace/file selection
+  // This effect uses hasSeenUserRef to distinguish logout from initial page load/navigation
   useEffect(() => {
-    if (!user?.id) {
-      // User logged out - clear all documentation and quality score from UI
+    // Only clear documentation on actual logout (not on initial mount or navigation)
+    // hasSeenUserRef.current is set to true when user is authenticated, and false after logout
+    if (!user?.id && hasSeenUserRef.current) {
+      // User actually logged out - clear all documentation and quality score from UI
       setDocumentation('');
       setQualityScore(null);
     }
-    // When user logs IN, we don't load from localStorage - docs come from DB via workspace
+    // When user is null on initial load or navigation, we do nothing - workspace sync handles restoration
   }, [user?.id, setDocumentation, setQualityScore]);
 
   // Persist documentation to localStorage for UNAUTHENTICATED users only
@@ -781,13 +853,82 @@ function App() {
   const performGeneration = async () => {
     setShowQualityModal(false); // Close modal when starting new generation
     setShowConfirmationModal(false); // Close confirmation modal if open
+    // Reset "doc panel cleared" flag since user is generating new content
+    removeStorageItem(STORAGE_KEYS.DOC_PANEL_CLEARED);
     try {
       // Check if code matches the default code or any example (for prompt caching optimization)
       // When cache hits, users benefit from 90% cost reduction!
       const isDefaultCode = code === DEFAULT_CODE;
       const isExampleCode = EXAMPLE_CODES.has(code);
       const shouldCache = isDefaultCode || isExampleCode;
-      await generate(code, docType, language, shouldCache, filename);
+      const result = await generate(code, docType, language, shouldCache, filename);
+
+      // Save document to database for authenticated users
+      if (isAuthenticated && result) {
+        try {
+          const fileSize = new Blob([code]).size;
+          const saveResult = await documentPersistence.saveDocument({
+            filename: filename,
+            language: language,
+            fileSize: fileSize,
+            documentation: result.documentation,
+            qualityScore: result.qualityScore,
+            docType: docType,
+            origin: codeOrigin, // Tracked from where code was loaded (upload, github, paste, sample)
+            provider: result.metadata?.provider || 'claude',
+            model: result.metadata?.model || 'claude-sonnet-4-5-20250929',
+            llm: result.metadata || null
+          });
+          console.log('[App] Single-file generation saved to database:', saveResult?.documentId);
+
+          // Create a batch record for History page (batch_type = 'single')
+          if (saveResult?.documentId) {
+            try {
+              const score = result.qualityScore?.score || 0;
+              const grade = result.qualityScore?.grade || (score >= 90 ? 'A' : score >= 80 ? 'B' : score >= 70 ? 'C' : score >= 60 ? 'D' : 'F');
+
+              const batchResult = await batchesApi.createBatch({
+                batchType: 'single',
+                totalFiles: 1,
+                successCount: 1,
+                failCount: 0,
+                avgQualityScore: score,
+                avgGrade: grade,
+                docTypes: [docType]
+              });
+              console.log('[App] Created single-file batch:', batchResult.batchId);
+
+              // Link document to batch
+              await batchesApi.linkDocumentsToBatch(batchResult.batchId, [saveResult.documentId]);
+              console.log('[App] Linked document to batch');
+
+              // Add file to workspace so it persists across navigation
+              // Clear existing files first to avoid duplicates
+              multiFileState.clearFiles();
+              multiFileState.addFile({
+                id: saveResult.documentId,
+                filename: filename,
+                language: language,
+                content: code,
+                documentation: result.documentation,
+                qualityScore: result.qualityScore,
+                docType: docType,
+                origin: codeOrigin,
+                documentId: saveResult.documentId,
+                batchId: batchResult.batchId,
+                generatedAt: new Date()
+              });
+              console.log('[App] Added file to workspace for persistence');
+            } catch (batchError) {
+              console.error('[App] Failed to create batch for single-file generation:', batchError);
+              // Don't throw - document saved, just batch creation failed
+            }
+          }
+        } catch (saveError) {
+          console.error('[App] Failed to save single-file generation to database:', saveError);
+          // Don't throw - generation succeeded, just saving failed
+        }
+      }
       // Success toast will be shown after generation completes
     } catch (err) {
       // Error handling is done in useDocGeneration hook
@@ -1134,6 +1275,7 @@ function App() {
       if (data.success && data.file) {
         // Set the uploaded file content in the editor
         setCode(data.file.content);
+        setCodeOrigin('upload'); // File was uploaded
         setFilename(data.file.name);
         // Language will be derived from filename automatically
 
@@ -1401,6 +1543,7 @@ function App() {
   const handleGithubFileLoad = ({ code: fileCode, language: fileLang, filename: fileName, metadata }) => {
     // Set the code from GitHub file
     setCode(fileCode);
+    setCodeOrigin('github'); // Code is from GitHub
 
     // Set filename (language will be derived from filename)
     if (fileName) {
@@ -1427,6 +1570,7 @@ function App() {
 
   const handleLoadSample = (sample) => {
     setCode(sample.code);
+    setCodeOrigin('sample'); // Code is from a sample
     setDocType(sample.docType);
 
     // Set filename based on sample title and language (language will be derived from filename)
@@ -1468,6 +1612,7 @@ function App() {
 
     // Reset code to default placeholder
     setCode(defaultCode);
+    setCodeOrigin('sample'); // Cleared editor shows sample placeholder
     // Reset filename to default (language will be derived automatically as 'javascript')
     setFilename(defaultFilename);
 
@@ -1575,6 +1720,10 @@ function App() {
   }, [qualityScore]);
 
   const handleReset = useCallback(() => {
+    // Mark that user intentionally cleared doc panel - prevents auto-reload from DB on refresh
+    // Uses localStorage so it survives browser refresh; cleared on logout or new generation
+    setStorageItem(STORAGE_KEYS.DOC_PANEL_CLEARED, 'true');
+
     // Clear documentation and quality score from state
     reset();
 

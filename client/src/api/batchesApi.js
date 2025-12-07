@@ -21,23 +21,51 @@ const getAuthHeaders = () => {
 };
 
 /**
- * Fetch user's generation batches
+ * Fetch user's generation batches with sorting and filtering
  * @param {Object} options - Query options
- * @param {number} options.limit - Max results (default: 50)
+ * @param {number} options.limit - Max results (default: 20)
  * @param {number} options.offset - Pagination offset (default: 0)
  * @param {string} options.batchType - Filter by 'batch' or 'single' (optional)
- * @returns {Promise<Object>} { batches, total, hasMore }
+ * @param {string} options.sortBy - Column to sort by: 'created_at', 'avg_grade', 'total_files' (default: 'created_at')
+ * @param {string} options.sortOrder - Sort direction: 'asc' or 'desc' (default: 'desc')
+ * @param {string} options.gradeFilter - Filter by grade: 'A', 'B', 'C', 'D', 'F' (optional)
+ * @param {string} options.docTypeFilter - Filter by doc type: 'README', 'JSDOC', 'API', etc. (optional)
+ * @param {string} options.filenameSearch - Search by filename (partial match, optional)
+ * @returns {Promise<Object>} { batches, total, hasMore, page, limit, totalPages }
  */
 export async function fetchBatches(options = {}) {
-  const { limit = 50, offset = 0, batchType = null } = options;
+  const {
+    limit = 20,
+    offset = 0,
+    batchType = null,
+    sortBy = 'created_at',
+    sortOrder = 'desc',
+    gradeFilter = null,
+    docTypeFilter = null,
+    filenameSearch = null
+  } = options;
 
   const params = new URLSearchParams({
     limit: limit.toString(),
-    offset: offset.toString()
+    offset: offset.toString(),
+    sortBy,
+    sortOrder
   });
 
   if (batchType) {
     params.append('batchType', batchType);
+  }
+
+  if (gradeFilter) {
+    params.append('gradeFilter', gradeFilter);
+  }
+
+  if (docTypeFilter) {
+    params.append('docTypeFilter', docTypeFilter);
+  }
+
+  if (filenameSearch) {
+    params.append('filenameSearch', filenameSearch);
   }
 
   const response = await fetch(`${API_URL}/api/batches?${params}`, {
@@ -54,12 +82,32 @@ export async function fetchBatches(options = {}) {
 }
 
 /**
- * Fetch a single batch with all its documents
+ * Fetch a single batch with its documents (optionally filtered)
  * @param {string} batchId - Batch UUID
+ * @param {Object} filters - Optional filters
+ * @param {string} filters.filenameSearch - Filter by filename (partial match)
+ * @param {string} filters.gradeFilter - Filter by grade: 'A', 'B', 'C', 'D', 'F'
+ * @param {string} filters.docTypeFilter - Filter by doc type
  * @returns {Promise<Object>} { batch, documents }
  */
-export async function fetchBatchWithDocuments(batchId) {
-  const response = await fetch(`${API_URL}/api/batches/${batchId}/documents`, {
+export async function fetchBatchWithDocuments(batchId, filters = {}) {
+  const { filenameSearch, gradeFilter, docTypeFilter } = filters;
+
+  const params = new URLSearchParams();
+  if (filenameSearch) {
+    params.append('filenameSearch', filenameSearch);
+  }
+  if (gradeFilter) {
+    params.append('gradeFilter', gradeFilter);
+  }
+  if (docTypeFilter) {
+    params.append('docTypeFilter', docTypeFilter);
+  }
+
+  const queryString = params.toString();
+  const url = `${API_URL}/api/batches/${batchId}/documents${queryString ? `?${queryString}` : ''}`;
+
+  const response = await fetch(url, {
     method: 'GET',
     headers: getAuthHeaders()
   });

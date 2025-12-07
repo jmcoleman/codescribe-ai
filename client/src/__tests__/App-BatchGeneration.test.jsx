@@ -78,6 +78,37 @@ vi.mock('../contexts/TrialContext', () => ({
   })
 }));
 
+// Mock WorkspaceContext
+vi.mock('../contexts/WorkspaceContext', () => ({
+  WorkspaceProvider: ({ children }) => children,
+  useWorkspace: () => ({
+    files: [],
+    activeFileId: null,
+    activeFile: null,
+    selectedFileIds: [],
+    selectedFiles: [],
+    addFile: vi.fn(),
+    addFiles: vi.fn(),
+    removeFile: vi.fn(),
+    removeFiles: vi.fn(),
+    updateFile: vi.fn(),
+    clearFiles: vi.fn(),
+    setActiveFile: vi.fn(),
+    getFileById: vi.fn(),
+    toggleFileSelection: vi.fn(),
+    selectAllFiles: vi.fn(),
+    deselectAllFiles: vi.fn(),
+    selectFiles: vi.fn(),
+    isFileSelected: vi.fn(),
+    getSelectedFiles: vi.fn(() => []),
+    fileCount: 0,
+    hasFiles: false,
+    selectedCount: 0,
+    hasSelection: false,
+    reloadWorkspace: vi.fn()
+  })
+}));
+
 // Helper to render App with all required providers
 function renderApp(user = null) {
   mockAuthContext.isAuthenticated = !!user;

@@ -12,7 +12,7 @@
 AI-powered documentation generator with real-time streaming, quality scoring (0-100), and WCAG 2.1 AA compliance.
 
 **Key Metrics:**
-- 3,284 tests (3,194 passing, 90 skipped, 0 failing) | 97.3% pass rate | 95.45% middleware coverage
+- 3,440 tests (3,340 passing, 97 skipped, 0 failing) | 97.2% pass rate | 95.45% middleware coverage
 - Lighthouse: 75/100 performance (+67%), 100/100 accessibility
 - Bundle: 78KB gzipped (-85% reduction)
 - Accessibility: 95/100 score, 0 axe violations
@@ -457,19 +457,19 @@ codescribe-ai/
 
 ## 🔄 Version History
 
-**Current: v3.2.0** (December 6, 2025)
-- Batch Generation Fixes: Fixed race condition where only last doc got batch_id
-- Workspace Persistence: Files with docs now clickable after logout/login
-- Mermaid Diagrams: Fixed error icon cleanup without breaking rendering
-- Async Prompt Loading: Converted to async/await with Promise.all for performance
-- Stripe Webhooks: Fixed signature verification with raw body handling
-- 3,680 tests (3,680 passing, 114 skipped)
-- Frontend: 1,840 passing, 57 skipped
-- Backend: 1,840 passing, 57 skipped
+**Current: v3.2.1** (December 7, 2025)
+- Workspace Persistence Fix: Generated docs now persist across page navigation
+- Single-file generation now adds to workspace (sessionStorage) for persistence
+- Logout effect only clears docs on actual logout (hasSeenUserRef pattern)
+- 15 new workspace persistence tests
+- 3,440 tests (3,340 passing, 97 skipped)
+- Frontend: 1,848 passing, 64 skipped
+- Backend: 1,492 passing, 33 skipped
 
 <details>
-<summary>Recent Releases (v2.9.0-v3.1.0) & Milestones</summary>
+<summary>Recent Releases (v2.9.0-v3.2.0) & Milestones</summary>
 
+**v3.2.0** (Dec 6, 2025): Batch Generation & Workspace Fixes - Race condition fix, Mermaid cleanup, async prompts
 **v3.1.0** (Dec 5, 2025): Trial System Production Ready - Full user-facing flow, admin UI, attribution
 **v3.0.0** (Dec 4, 2025): Trial System Core - Invite codes, user trials, trial-aware tier system
 **v2.11.0** (Dec 4, 2025): Doc-type specific quality scoring, regeneration confirmation, batch cancellation
@@ -501,7 +501,7 @@ codescribe-ai/
 - **v1.21** (Oct 19): Production deployment, codescribe-ai.vercel.app
 
 Full history: [CHANGELOG.md](CHANGELOG.md)
-Last updated: December 6, 2025
+Last updated: December 7, 2025
 </details>
 
 ---

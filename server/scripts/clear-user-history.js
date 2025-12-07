@@ -26,17 +26,20 @@ const args = process.argv.slice(2);
 const dryRun = args.includes('--dry-run');
 const batchesOnly = args.includes('--batches');
 const docsOnly = args.includes('--docs');
+const cleanupOrphans = args.includes('--cleanup-orphans');
 
 // Get user identifier (email or ID)
 const userIdentifier = args.find(arg => !arg.startsWith('--'));
 
-if (!userIdentifier) {
+if (!userIdentifier && !cleanupOrphans) {
   console.error('Usage: node scripts/clear-user-history.js <user_email_or_id> [--dry-run] [--batches] [--docs]');
+  console.error('       node scripts/clear-user-history.js --cleanup-orphans [--dry-run]');
   console.error('');
   console.error('Options:');
-  console.error('  --dry-run    Show what would be deleted without actually deleting');
-  console.error('  --batches    Only clear batches (keep documents)');
-  console.error('  --docs       Only clear documents (keep batches)');
+  console.error('  --dry-run          Show what would be deleted without actually deleting');
+  console.error('  --batches          Only clear batches (keep documents)');
+  console.error('  --docs             Only clear documents (keep batches)');
+  console.error('  --cleanup-orphans  Clean up all orphaned batches (no user required)');
   process.exit(1);
 }
 
@@ -84,7 +87,7 @@ async function getStats(userId) {
 
 async function clearHistory(userId, options = {}) {
   const { dryRun, batchesOnly, docsOnly } = options;
-  const results = { batches: 0, documents: 0 };
+  const results = { batches: 0, documents: 0, orphanedBatches: 0 };
 
   if (!docsOnly) {
     // Clear batches
@@ -117,12 +120,87 @@ async function clearHistory(userId, options = {}) {
       `;
       results.documents = result.rowCount;
     }
+
+    // Also clean up orphaned batches (batches with no linked documents)
+    if (dryRun) {
+      const orphanCount = await sql`
+        SELECT COUNT(*) as count FROM generation_batches gb
+        WHERE gb.user_id = ${userId}
+        AND NOT EXISTS (
+          SELECT 1 FROM generated_documents gd WHERE gd.batch_id = gb.id
+        )
+      `;
+      results.orphanedBatches = parseInt(orphanCount.rows[0].count);
+    } else {
+      const orphanResult = await sql`
+        DELETE FROM generation_batches gb
+        WHERE gb.user_id = ${userId}
+        AND NOT EXISTS (
+          SELECT 1 FROM generated_documents gd WHERE gd.batch_id = gb.id
+        )
+        RETURNING id
+      `;
+      results.orphanedBatches = orphanResult.rowCount;
+    }
   }
 
   return results;
 }
 
+async function cleanupAllOrphanedBatches(dryRun) {
+  // Find and delete all orphaned batches across all users
+  if (dryRun) {
+    const result = await sql`
+      SELECT gb.id, gb.user_id, gb.total_files, gb.created_at, u.email
+      FROM generation_batches gb
+      LEFT JOIN users u ON gb.user_id = u.id
+      WHERE NOT EXISTS (
+        SELECT 1 FROM generated_documents gd WHERE gd.batch_id = gb.id
+      )
+      ORDER BY gb.created_at DESC
+    `;
+    return { count: result.rows.length, batches: result.rows };
+  } else {
+    const result = await sql`
+      DELETE FROM generation_batches gb
+      WHERE NOT EXISTS (
+        SELECT 1 FROM generated_documents gd WHERE gd.batch_id = gb.id
+      )
+      RETURNING id, user_id, total_files, created_at
+    `;
+    return { count: result.rowCount, batches: result.rows };
+  }
+}
+
 async function main() {
+  // Handle --cleanup-orphans mode
+  if (cleanupOrphans) {
+    console.log('🔍 Finding orphaned batches (batches with no documents)...');
+    console.log('');
+
+    const result = await cleanupAllOrphanedBatches(dryRun);
+
+    if (result.count === 0) {
+      console.log('✅ No orphaned batches found');
+      process.exit(0);
+    }
+
+    if (dryRun) {
+      console.log(`📋 Found ${result.count} orphaned batch(es):`);
+      console.log('');
+      for (const batch of result.batches) {
+        const date = new Date(batch.created_at).toLocaleDateString();
+        console.log(`   - Batch ${batch.id.slice(0, 8)}... (${batch.total_files} files) - User: ${batch.email || batch.user_id} - Created: ${date}`);
+      }
+      console.log('');
+      console.log('💡 Run without --dry-run to delete these batches');
+    } else {
+      console.log(`✅ Deleted ${result.count} orphaned batch(es)`);
+    }
+
+    process.exit(0);
+  }
+
   console.log('🔍 Looking up user...');
 
   const user = await findUser(userIdentifier);
@@ -188,6 +266,9 @@ async function main() {
   }
   if (!batchesOnly) {
     console.log(`   Documents: ${results.documents}`);
+    if (results.orphanedBatches > 0) {
+      console.log(`   Orphaned batches: ${results.orphanedBatches} (batches with no documents)`);
+    }
   }
 
   console.log('');

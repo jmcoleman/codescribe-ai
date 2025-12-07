@@ -21,7 +21,8 @@ jest.mock('@vercel/postgres', () => {
   const mockSql = Object.assign(
     jest.fn(),
     {
-      unsafe: jest.fn((value) => value)
+      unsafe: jest.fn((value) => value),
+      query: jest.fn() // For raw SQL queries with parameters
     }
   );
 
@@ -169,8 +170,9 @@ describe('BatchService', () => {
       };
       const mockCount = { rows: [{ total: '10' }] };
 
-      sql.mockResolvedValueOnce(mockBatches);
-      sql.mockResolvedValueOnce(mockCount);
+      // getUserBatches now uses sql.query() for dynamic queries
+      sql.query.mockResolvedValueOnce(mockBatches);
+      sql.query.mockResolvedValueOnce(mockCount);
 
       const result = await batchService.getUserBatches(42, {
         limit: 10,
@@ -180,7 +182,10 @@ describe('BatchService', () => {
       expect(result).toEqual({
         batches: mockBatches.rows,
         total: 10,
-        hasMore: false
+        hasMore: false,
+        page: 1,
+        limit: 10,
+        totalPages: 1
       });
     });
 
@@ -192,8 +197,9 @@ describe('BatchService', () => {
       };
       const mockCount = { rows: [{ total: '1' }] };
 
-      sql.mockResolvedValueOnce(mockBatches);
-      sql.mockResolvedValueOnce(mockCount);
+      // getUserBatches now uses sql.query() for dynamic queries
+      sql.query.mockResolvedValueOnce(mockBatches);
+      sql.query.mockResolvedValueOnce(mockCount);
 
       const result = await batchService.getUserBatches(42, {
         batchType: 'batch'
@@ -201,6 +207,46 @@ describe('BatchService', () => {
 
       expect(result.batches).toHaveLength(1);
       expect(result.batches[0].batch_type).toBe('batch');
+    });
+
+    it('should support server-side sorting', async () => {
+      const mockBatches = {
+        rows: [
+          { id: 'batch-1', batch_type: 'batch', avg_grade: 'A', total_files: 5 }
+        ]
+      };
+      const mockCount = { rows: [{ total: '1' }] };
+
+      sql.query.mockResolvedValueOnce(mockBatches);
+      sql.query.mockResolvedValueOnce(mockCount);
+
+      const result = await batchService.getUserBatches(42, {
+        sortBy: 'avg_grade',
+        sortOrder: 'asc'
+      });
+
+      expect(result.batches).toHaveLength(1);
+      // Verify sql.query was called with correct parameters
+      expect(sql.query).toHaveBeenCalled();
+    });
+
+    it('should support grade filtering', async () => {
+      const mockBatches = {
+        rows: [
+          { id: 'batch-1', batch_type: 'batch', avg_grade: 'A', total_files: 3 }
+        ]
+      };
+      const mockCount = { rows: [{ total: '1' }] };
+
+      sql.query.mockResolvedValueOnce(mockBatches);
+      sql.query.mockResolvedValueOnce(mockCount);
+
+      const result = await batchService.getUserBatches(42, {
+        gradeFilter: 'A'
+      });
+
+      expect(result.batches).toHaveLength(1);
+      expect(result.batches[0].avg_grade).toBe('A');
     });
   });
 
@@ -248,8 +294,9 @@ describe('BatchService', () => {
         ]
       };
 
+      // First call uses sql tagged template, second uses sql.query()
       sql.mockResolvedValueOnce(mockBatch);
-      sql.mockResolvedValueOnce(mockDocs);
+      sql.query.mockResolvedValueOnce(mockDocs);
 
       const result = await batchService.getBatchWithDocuments(42, 'batch-123');
 

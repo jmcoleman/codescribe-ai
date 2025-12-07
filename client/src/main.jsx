@@ -8,6 +8,7 @@ import ErrorBoundary from './components/ErrorBoundary.jsx'
 import { ThemeProvider } from './contexts/ThemeContext.jsx'
 import { AuthProvider } from './contexts/AuthContext.jsx'
 import { TrialProvider } from './contexts/TrialContext.jsx'
+import { WorkspaceProvider } from './contexts/WorkspaceContext.jsx'
 import { AuthCallback } from './components/AuthCallback.jsx'
 import { ResetPassword } from './components/ResetPassword.jsx'
 import { PricingPage } from './components/PricingPage.jsx'
@@ -34,6 +35,7 @@ createRoot(document.getElementById('root')).render(
         <AuthProvider>
           <TrialProvider>
           <ThemeProvider>
+          <WorkspaceProvider>
             <Routes>
               <Route path="/" element={<App />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
@@ -57,6 +59,7 @@ createRoot(document.getElementById('root')).render(
               <Route path="/test-error" element={<ErrorTest />} />
             </Routes>
             <AnalyticsWrapper />
+          </WorkspaceProvider>
           </ThemeProvider>
           </TrialProvider>
         </AuthProvider>

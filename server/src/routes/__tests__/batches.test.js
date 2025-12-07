@@ -161,7 +161,35 @@ describe('Batches Routes', () => {
       expect(mockGetUserBatches).toHaveBeenCalledWith(42, {
         limit: 10,
         offset: 20,
-        batchType: null
+        batchType: null,
+        sortBy: 'created_at',
+        sortOrder: 'desc',
+        gradeFilter: null,
+        docTypeFilter: null,
+        filenameSearch: null
+      });
+    });
+
+    it('should support sorting and filtering', async () => {
+      mockGetUserBatches.mockResolvedValue({
+        batches: [],
+        total: 5,
+        hasMore: false
+      });
+
+      const response = await request(app)
+        .get('/api/batches?sortBy=avg_grade&sortOrder=asc&gradeFilter=A&docTypeFilter=README');
+
+      expect(response.status).toBe(200);
+      expect(mockGetUserBatches).toHaveBeenCalledWith(42, {
+        limit: 20,
+        offset: 0,
+        batchType: null,
+        sortBy: 'avg_grade',
+        sortOrder: 'asc',
+        gradeFilter: 'A',
+        docTypeFilter: 'README',
+        filenameSearch: null
       });
     });
   });

@@ -9,6 +9,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.2.1] - 2025-12-07
+
+**Status:** ✅ Workspace Persistence Fix
+
+**Summary:** Fixed critical issue where generated documentation was lost when navigating away from the main page and returning. Single-file generation now properly persists documentation in workspace sessionStorage.
+
+### Fixed
+
+- **Documentation Lost on Navigation** ([client/src/App.jsx](client/src/App.jsx))
+  - Fixed issue where generating a document, navigating to another page, and returning would lose the generated content
+  - Root cause: Single-file generation only stored docs in React state, which was lost on component unmount
+  - Solution: After successful single-file generation, add file to workspace via `multiFileState.addFile()`
+  - Workspace (persisted in sessionStorage) now restores documentation on navigation return
+
+- **Logout Effect Triggering on Navigation** ([client/src/App.jsx](client/src/App.jsx))
+  - Fixed false positive logout detection during navigation
+  - Auth state temporarily shows `user` as `undefined` on page refresh before restoring session
+  - Added `hasSeenUserRef` check to distinguish actual logout from auth loading states
+  - Docs only cleared on actual logout (when user was logged in, now logged out)
+
+### Added
+
+- **Workspace Persistence Tests** ([client/src/__tests__/App-WorkspacePersistence.test.jsx](client/src/__tests__/App-WorkspacePersistence.test.jsx))
+  - 15 new tests covering workspace persistence functionality
+  - Tests for single-file generation persistence in sessionStorage
+  - Tests for workspace sync and restoration on navigation
+  - Tests for logout vs navigation behavior (hasSeenUserRef logic)
+  - Tests for History page workspace loading
+  - Tests for sessionStorage edge cases (corrupted data, missing properties)
+
+### Technical Details
+
+- **Test Count:** 3,440 tests (3,340 passing, 97 skipped)
+  - Frontend: 1,848 passing, 64 skipped (1,912 total)
+  - Backend: 1,492 passing, 33 skipped (1,528 total)
+
+---
+
 ## [3.2.0] - 2025-12-06
 
 **Status:** ✅ Batch Generation & Workspace Persistence Fixes

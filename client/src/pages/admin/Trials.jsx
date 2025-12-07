@@ -30,7 +30,7 @@ import {
 import { PageLayout } from '../../components/PageLayout';
 import { Select } from '../../components/Select';
 import { ConfirmationModal } from '../../components/ConfirmationModal';
-import { AdminTable } from '../../components/admin/AdminTable';
+import { BaseTable } from '../../components/BaseTable';
 import { useAuth } from '../../contexts/AuthContext';
 import { formatDate, formatDateTime } from '../../utils/formatters';
 import toast from 'react-hot-toast';
@@ -708,7 +708,7 @@ export default function TrialsAdmin() {
         )}
 
         {/* Trials Table */}
-        <AdminTable
+        <BaseTable
           data={filteredTrials}
           columns={columns}
           sorting={sorting}

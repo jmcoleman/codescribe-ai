@@ -98,16 +98,31 @@ router.post(
 
 // ============================================================================
 // GET /api/batches - Get User's Batches
+// Supports server-side sorting and filtering for TanStack Table
 // ============================================================================
 router.get('/', requireAuth, async (req, res, next) => {
   try {
     const userId = req.user.id;
-    const { limit, offset, batchType } = req.query;
+    const {
+      limit,
+      offset,
+      batchType,
+      sortBy,       // Column to sort by: 'created_at', 'avg_grade', 'total_files'
+      sortOrder,    // 'asc' or 'desc'
+      gradeFilter,  // Filter by grade: 'A', 'B', 'C', 'D', 'F'
+      docTypeFilter, // Filter by doc type: 'README', 'JSDOC', 'API', etc.
+      filenameSearch // Search by filename (partial match)
+    } = req.query;
 
     const result = await batchService.getUserBatches(userId, {
-      limit: limit ? parseInt(limit) : 50,
+      limit: limit ? parseInt(limit) : 20,
       offset: offset ? parseInt(offset) : 0,
-      batchType: batchType || null
+      batchType: batchType || null,
+      sortBy: sortBy || 'created_at',
+      sortOrder: sortOrder === 'asc' ? 'asc' : 'desc',
+      gradeFilter: gradeFilter || null,
+      docTypeFilter: docTypeFilter || null,
+      filenameSearch: filenameSearch || null
     });
 
     res.json(result);
@@ -156,14 +171,19 @@ router.get('/:id', requireAuth, async (req, res, next) => {
 });
 
 // ============================================================================
-// GET /api/batches/:id/documents - Get Batch with All Documents
+// GET /api/batches/:id/documents - Get Batch with Documents (optionally filtered)
 // ============================================================================
 router.get('/:id/documents', requireAuth, async (req, res, next) => {
   try {
     const userId = req.user.id;
     const { id } = req.params;
+    const { filenameSearch, gradeFilter, docTypeFilter } = req.query;
 
-    const result = await batchService.getBatchWithDocuments(userId, id);
+    const result = await batchService.getBatchWithDocuments(userId, id, {
+      filenameSearch: filenameSearch || null,
+      gradeFilter: gradeFilter || null,
+      docTypeFilter: docTypeFilter || null
+    });
 
     if (!result) {
       return res.status(404).json({

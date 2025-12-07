@@ -28,7 +28,7 @@ import { PageLayout } from '../../components/PageLayout';
 import { Select } from '../../components/Select';
 import { ConfirmationModal } from '../../components/ConfirmationModal';
 import { CopyButton } from '../../components/CopyButton';
-import { AdminTable } from '../../components/admin/AdminTable';
+import { BaseTable } from '../../components/BaseTable';
 import { useAuth } from '../../contexts/AuthContext';
 import { formatDate, formatDateTime } from '../../utils/formatters';
 import toast from 'react-hot-toast';
@@ -944,7 +944,7 @@ export default function InviteCodes() {
                 </div>
               </div>
             ) : (
-              <AdminTable
+              <BaseTable
                 data={codes}
                 columns={columns}
                 sorting={sorting}

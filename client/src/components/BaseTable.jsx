@@ -1,16 +1,17 @@
 /**
- * AdminTable Component
+ * BaseTable Component
  *
- * Reusable table component built on TanStack Table for admin pages.
+ * Reusable table component built on TanStack Table with CSS Grid layout.
  * Provides consistent styling, sorting, pagination, filtering, and row expansion.
  *
  * Features:
  * - Server-side or client-side sorting
  * - Server-side or client-side pagination
- * - Expandable rows with custom content
+ * - Expandable rows with smooth animations (250ms enter, 200ms exit)
  * - Loading and empty states
  * - Refresh indicator
  * - Consistent dark/light mode styling
+ * - ARIA roles for accessibility
  *
  * @example
  * const columns = [
@@ -18,7 +19,7 @@
  *   { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status} /> },
  * ];
  *
- * <AdminTable
+ * <BaseTable
  *   data={users}
  *   columns={columns}
  *   sorting={sorting}
@@ -31,7 +32,7 @@
  * />
  */
 
-import React, { useState, Fragment } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -81,7 +82,7 @@ function SortableHeader({ column, children }) {
 /**
  * Pagination Component
  */
-function Pagination({ table, pagination, onPageChange, totalItems }) {
+function Pagination({ pagination, onPageChange, totalItems }) {
   const { page, limit, totalPages } = pagination;
 
   if (totalPages <= 1) return null;
@@ -181,9 +182,9 @@ function LoadingState() {
 }
 
 /**
- * AdminTable Component
+ * BaseTable Component - CSS Grid Layout with smooth expand/collapse animations
  */
-export function AdminTable({
+export function BaseTable({
   // Data
   data = [],
   columns = [],
@@ -201,6 +202,12 @@ export function AdminTable({
   // Expansion
   renderExpandedRow,
   getRowCanExpand,
+  onRowExpandToggle, // Callback when row expansion is toggled: (row, isExpanding) => void
+
+  // Column resizing
+  enableColumnResizing = false,
+  columnSizing: externalColumnSizing,
+  onColumnSizingChange: externalOnColumnSizingChange,
 
   // States
   isLoading = false,
@@ -213,6 +220,25 @@ export function AdminTable({
   // Internal expansion state
   const [expanded, setExpanded] = useState({});
 
+  // Column sizing state for resizing - use external state if provided, otherwise internal
+  const [internalColumnSizing, setInternalColumnSizing] = useState({});
+  const columnSizing = externalColumnSizing ?? internalColumnSizing;
+  const setColumnSizing = externalOnColumnSizingChange ?? setInternalColumnSizing;
+
+  // Build grid template columns dynamically based on column sizes
+  const buildGridTemplateColumns = useCallback((table) => {
+    const cols = table.getAllColumns().filter(col => col.getIsVisible());
+    const expandPrefix = renderExpandedRow ? '40px ' : '';
+
+    const colSizes = cols.map(col => {
+      const size = col.getSize();
+      // Use the actual size from TanStack (which includes resizing)
+      return `${size}px`;
+    }).join(' ');
+
+    return expandPrefix + colSizes;
+  }, [renderExpandedRow]);
+
   // Configure table
   const table = useReactTable({
     data,
@@ -220,9 +246,11 @@ export function AdminTable({
     state: {
       sorting,
       expanded,
+      columnSizing,
     },
     onSortingChange,
     onExpandedChange: setExpanded,
+    onColumnSizingChange: setColumnSizing,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: manualSorting ? undefined : getSortedRowModel(),
     getPaginationRowModel: manualPagination ? undefined : getPaginationRowModel(),
@@ -230,7 +258,12 @@ export function AdminTable({
     getRowCanExpand: getRowCanExpand || (() => !!renderExpandedRow),
     manualSorting,
     manualPagination,
+    enableColumnResizing,
+    columnResizeMode: 'onChange',
   });
+
+  // Get current grid template columns
+  const gridTemplateColumns = buildGridTemplateColumns(table);
 
   // Loading state
   if (isLoading) {
@@ -253,44 +286,79 @@ export function AdminTable({
   return (
     <div className={`bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden ${className}`}>
       <div className={`overflow-x-auto transition-opacity duration-200 ${isRefreshing ? 'opacity-50' : ''}`}>
-        <table className="w-full">
-          <thead className="bg-slate-50 dark:bg-slate-700/50">
+        {/* Grid-based table */}
+        <div role="table" aria-label="Data table" className="w-full min-w-full">
+          {/* Header */}
+          <div
+            role="rowgroup"
+            className="bg-slate-50 dark:bg-slate-700/50"
+          >
             {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
-                {/* Expand column */}
+              <div
+                key={headerGroup.id}
+                role="row"
+                className="grid items-center"
+                style={{ gridTemplateColumns }}
+              >
+                {/* Expand column header */}
                 {renderExpandedRow && (
-                  <th className="w-10 px-2 py-3"></th>
+                  <div role="columnheader" className="px-2 py-3"></div>
                 )}
                 {headerGroup.headers.map((header) => (
-                  <th
+                  <div
                     key={header.id}
-                    className={`px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider ${
+                    role="columnheader"
+                    className={`group relative px-4 py-3 text-left text-sm font-medium text-slate-500 dark:text-slate-400 ${
                       header.column.getCanSort() ? 'cursor-pointer' : ''
                     }`}
-                    style={{ width: header.column.columnDef.size }}
                   >
                     {header.isPlaceholder ? null : (
                       <SortableHeader column={header.column}>
                         {flexRender(header.column.columnDef.header, header.getContext())}
                       </SortableHeader>
                     )}
-                  </th>
+                    {/* Column resize handle */}
+                    {enableColumnResizing && header.column.getCanResize() && (
+                      <div
+                        onMouseDown={header.getResizeHandler()}
+                        onTouchStart={header.getResizeHandler()}
+                        onDoubleClick={() => header.column.resetSize()}
+                        className="absolute right-0 top-1/2 -translate-y-1/2 h-4 w-[3px] cursor-col-resize select-none touch-none rounded-full bg-slate-300 dark:bg-slate-600 opacity-0 hover:opacity-100 transition-opacity group-hover:opacity-50"
+                        style={{ userSelect: 'none' }}
+                      />
+                    )}
+                  </div>
                 ))}
-              </tr>
+              </div>
             ))}
-          </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+          </div>
+
+          {/* Body */}
+          <div role="rowgroup" className="divide-y divide-slate-200 dark:divide-slate-700">
             {table.getRowModel().rows.map((row) => (
-              <Fragment key={row.id}>
-                <tr className="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+              <div key={row.id}>
+                {/* Main row */}
+                <div
+                  role="row"
+                  className="grid items-center hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors"
+                  style={{ gridTemplateColumns }}
+                >
                   {/* Expand button */}
                   {renderExpandedRow && (
-                    <td className="w-10 px-2 py-3">
+                    <div role="cell" className="px-2 py-3">
                       {row.getCanExpand() && (
                         <button
-                          onClick={row.getToggleExpandedHandler()}
+                          onClick={() => {
+                            const isExpanding = !row.getIsExpanded();
+                            row.getToggleExpandedHandler()();
+                            // Call external callback if provided
+                            if (onRowExpandToggle) {
+                              onRowExpandToggle(row, isExpanding);
+                            }
+                          }}
                           className="p-1 hover:bg-slate-200 dark:hover:bg-slate-600 rounded transition-colors"
                           aria-label={row.getIsExpanded() ? 'Collapse row' : 'Expand row'}
+                          aria-expanded={row.getIsExpanded()}
                         >
                           <ChevronDown
                             className={`w-4 h-4 text-slate-500 transition-transform duration-200 ${
@@ -299,35 +367,40 @@ export function AdminTable({
                           />
                         </button>
                       )}
-                    </td>
+                    </div>
                   )}
                   {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="px-4 py-3">
+                    <div key={cell.id} role="cell" className="px-4 py-3">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
+                    </div>
                   ))}
-                </tr>
-                {/* Expanded row content */}
-                {renderExpandedRow && row.getIsExpanded() && (
-                  <tr className="bg-slate-50 dark:bg-slate-700/30">
-                    <td className="w-10 p-0"></td>
-                    <td colSpan={row.getVisibleCells().length} className="p-0">
-                      <div className="px-4 py-4">
-                        {renderExpandedRow(row)}
-                      </div>
-                    </td>
-                  </tr>
+                </div>
+
+                {/* Expanded row content with smooth animation */}
+                {renderExpandedRow && (
+                  <div
+                    className={`grid transition-all duration-300 ease-in-out ${
+                      row.getIsExpanded()
+                        ? 'grid-rows-[1fr] opacity-100'
+                        : 'grid-rows-[0fr] opacity-0'
+                    }`}
+                    style={{ transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)' }}
+                    aria-hidden={!row.getIsExpanded()}
+                  >
+                    <div className="overflow-hidden">
+                      {renderExpandedRow(row, gridTemplateColumns)}
+                    </div>
+                  </div>
                 )}
-              </Fragment>
+              </div>
             ))}
-          </tbody>
-        </table>
+          </div>
+        </div>
       </div>
 
       {/* Pagination */}
       {manualPagination && onPageChange && (
         <Pagination
-          table={table}
           pagination={pagination}
           onPageChange={onPageChange}
           totalItems={pagination.total}
@@ -337,4 +410,7 @@ export function AdminTable({
   );
 }
 
-export default AdminTable;
+// Backward compatibility alias
+export const AdminTable = BaseTable;
+
+export default BaseTable;

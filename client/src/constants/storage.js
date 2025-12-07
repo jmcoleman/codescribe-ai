@@ -31,6 +31,7 @@ export const STORAGE_KEYS = {
   SIDEBAR_WIDTH: 'cs_ui_sidebar_width',
   THEME_PREFERENCE: 'cs_ui_theme',
   LAYOUT_MODE: 'cs_ui_layout', // 'split' | 'code' | 'doc'
+  // Note: Table column sizes use cs_ui_tbl_cols_{tableId} via useTableColumnSizing hook
 
   // Editor State (localStorage - persists code/docs across refreshes)
   // Privacy-sensitive: cs_ed_code, cs_ed_doc, cs_ed_score are user-scoped
@@ -61,6 +62,10 @@ export const STORAGE_KEYS = {
 
   // UI Banners (sessionStorage - dismissed state for current session)
   EMAIL_VERIFICATION_BANNER_DISMISSED: 'cs_banner_email',
+
+  // Doc Panel State (localStorage - tracks if user intentionally cleared doc panel)
+  // Note: Using localStorage so it survives refresh; cleared on logout or new generation
+  DOC_PANEL_CLEARED: 'cs_ui_doc_cleared',
 
   // Subscription Flow (sessionStorage - temporary subscription intent before verification)
   PENDING_SUBSCRIPTION: 'cs_sub_pending',
