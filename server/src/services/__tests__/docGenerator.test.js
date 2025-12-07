@@ -166,7 +166,8 @@ function greet(name) {
         mockAnalysis,
         'README',
         'javascript',
-        'untitled' // Default filename
+        'untitled', // Default filename
+        null // graphContext (default)
       );
     });
 

@@ -113,6 +113,9 @@ export class DocGeneratorService {
    * @param {Object} options.trialInfo - Trial information (for watermarking)
    * @param {boolean} options.trialInfo.isOnTrial - Whether user is on trial
    * @param {string} options.trialInfo.trialEndsAt - Trial end date (ISO string)
+   * @param {Object} options.graphContext - Graph context for cross-file awareness
+   * @param {string} options.graphContext.contextString - Human-readable context string
+   * @param {Object} options.graphContext.stats - Context statistics
    * @returns {Promise<Object>} Documentation result
    */
   async generateDocumentation(code, options = {}) {
@@ -127,14 +130,15 @@ export class DocGeneratorService {
       isDefaultCode = false,
       userTier = 'free',
       filename = 'untitled',
-      trialInfo = null
+      trialInfo = null,
+      graphContext = null
     } = options;
 
     // Step 1: Parse code to understand structure
     const analysis = await parseCode(code, language);
 
     // Step 2: Build system prompt (cacheable) and user message
-    const { systemPrompt, userMessage } = this.buildPromptWithCaching(code, analysis, docType, language, filename);
+    const { systemPrompt, userMessage } = this.buildPromptWithCaching(code, analysis, docType, language, filename, graphContext);
 
     // Step 3: Get doc type-specific LLM configuration
     const docTypeConfig = getDocTypeConfig(docType);
@@ -295,9 +299,10 @@ export class DocGeneratorService {
    * @param {string} docType - Type of documentation
    * @param {string} language - Programming language
    * @param {string} filename - Original filename for title formatting
+   * @param {Object|null} graphContext - Graph context for cross-file awareness
    * @returns {Object} { systemPrompt, userMessage }
    */
-  buildPromptWithCaching(code, analysis, docType, language, filename = 'untitled') {
+  buildPromptWithCaching(code, analysis, docType, language, filename = 'untitled', graphContext = null) {
     // Validate docType - default to README if invalid (for backwards compatibility)
     const validDocTypes = getSupportedDocTypes();
     const normalizedDocType = validDocTypes.includes(docType) ? docType : 'README';
@@ -308,13 +313,32 @@ export class DocGeneratorService {
       : 'None';
 
     // Build base context for user message
-    const baseContext = `
+    let baseContext = `
 Language: ${language}
 Functions detected: ${analysis.functions.length}
 Classes detected: ${analysis.classes.length}
 Exports: ${exportsStr}
 Complexity: ${analysis.complexity || 'Unknown'}
 `;
+
+    // Add graph context if available (cross-file awareness)
+    if (graphContext?.contextString) {
+      baseContext += `
+Project Context:
+${graphContext.contextString}
+`;
+      // Add statistics if available
+      if (graphContext.stats) {
+        const { dependentCount, dependencyCount, exportCount, functionCount } = graphContext.stats;
+        baseContext += `
+Cross-File Stats:
+- Files that import this: ${dependentCount || 0}
+- Internal dependencies: ${dependencyCount || 0}
+- Exported items: ${exportCount || 0}
+- Functions defined: ${functionCount || 0}
+`;
+      }
+    }
 
     // Get system prompt (cached, loaded from external file)
     const systemPrompt = this.systemPrompts[normalizedDocType];

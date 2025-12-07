@@ -9,6 +9,20 @@ const { sql } = require('./helpers/setup.js');
 describe('Migration 008: Name and Origin Tracking', () => {
   // Cleanup any test users from previous runs
   beforeEach(async () => {
+    // Get IDs of test users first (needed to cleanup related tables with FK constraints)
+    const testUsers = await sql`
+      SELECT id FROM users
+      WHERE email LIKE 'test-%@example.com'
+      OR email LIKE '%@example.com'
+    `;
+
+    // Clean up user_audit_log first (has FK to users)
+    if (testUsers.rows.length > 0) {
+      const userIds = testUsers.rows.map(r => r.id);
+      await sql`DELETE FROM user_audit_log WHERE user_id = ANY(${userIds})`;
+    }
+
+    // Now safe to delete users
     await sql`
       DELETE FROM users
       WHERE email LIKE 'test-%@example.com'
@@ -286,7 +300,9 @@ describe('Migration 008: Name and Origin Tracking', () => {
       expect(updateResult.rows[0].last_name).toBe('Smith');
       expect(updateResult.rows[0].customer_created_via).toBe('api');
 
-      // Cleanup
+      // Cleanup - delete audit logs first due to FK constraint, then users
+      const userId = createResult.rows[0].id;
+      await sql`DELETE FROM user_audit_log WHERE user_id = ${userId}`;
       await sql`DELETE FROM users WHERE email = 'test-backward-compat@example.com'`;
     });
   });

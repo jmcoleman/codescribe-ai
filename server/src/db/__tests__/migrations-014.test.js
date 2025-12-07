@@ -25,11 +25,31 @@ describe('Migration 014: Usage Analytics Aggregate Table', () => {
 
   beforeAll(async () => {
     client = await pool.connect();
+
+    // Clean up any leftover test data from previous runs
+    const testUsers = await client.query(`
+      SELECT id FROM users WHERE email LIKE 'test-%@example.com'
+    `);
+    if (testUsers.rows.length > 0) {
+      const userIds = testUsers.rows.map(r => r.id);
+      await client.query(`DELETE FROM user_audit_log WHERE user_id = ANY($1)`, [userIds]);
+      await client.query(`DELETE FROM users WHERE email LIKE 'test-%@example.com'`);
+    }
   });
 
   afterAll(async () => {
     // Clean up test data
     await client.query("DELETE FROM usage_analytics_aggregate WHERE tier LIKE 'test_%'");
+
+    // Also cleanup test users - need to delete from user_audit_log first due to FK constraint
+    const testUsers = await client.query(`
+      SELECT id FROM users WHERE email LIKE 'test-%@example.com'
+    `);
+    if (testUsers.rows.length > 0) {
+      const userIds = testUsers.rows.map(r => r.id);
+      await client.query(`DELETE FROM user_audit_log WHERE user_id = ANY($1)`, [userIds]);
+      await client.query(`DELETE FROM users WHERE email LIKE 'test-%@example.com'`);
+    }
 
     if (client) {
       client.release();
@@ -265,7 +285,10 @@ describe('Migration 014: Usage Analytics Aggregate Table', () => {
 
   describe('Integration with User Deletion Flow', () => {
     it('should simulate aggregate-then-delete pattern from User.permanentlyDelete()', async () => {
-      // Simulate user with quotas (use valid tier: 'pro')
+      // Use a unique tier prefix to avoid collisions with other test data
+      const testTier = `test_integration_${Date.now()}`;
+
+      // Simulate user with quotas
       const testUser = await client.query(`
         INSERT INTO users (email, first_name, last_name, password_hash, tier)
         VALUES ('test-agg@example.com', 'Test', 'User', 'hash123', 'pro')
@@ -278,11 +301,12 @@ describe('Migration 014: Usage Analytics Aggregate Table', () => {
       await client.query(`
         INSERT INTO user_quotas (user_id, daily_count, monthly_count, period_start_date)
         VALUES
-          (${userId}, 5, 100, '2024-10-01'),
-          (${userId}, 3, 80, '2024-11-01')
-      `);
+          ($1, 5, 100, '2024-10-01'),
+          ($1, 3, 80, '2024-11-01')
+      `, [userId]);
 
       // Step 1: Aggregate usage data (what User.permanentlyDelete() does)
+      // Use a unique tier for this test to avoid collisions
       await client.query(`
         INSERT INTO usage_analytics_aggregate (
           tier, account_age_days, created_at_month,
@@ -290,7 +314,7 @@ describe('Migration 014: Usage Analytics Aggregate Table', () => {
           avg_daily_count, avg_monthly_count, usage_periods_count
         )
         SELECT
-          u.tier,
+          $2,
           EXTRACT(DAY FROM NOW() - u.created_at)::INTEGER,
           DATE_TRUNC('month', u.created_at)::DATE,
           COALESCE(SUM(uq.daily_count), 0),
@@ -300,20 +324,20 @@ describe('Migration 014: Usage Analytics Aggregate Table', () => {
           COUNT(uq.id)
         FROM users u
         LEFT JOIN user_quotas uq ON uq.user_id = u.id
-        WHERE u.id = ${userId}
+        WHERE u.id = $1
         GROUP BY u.tier, u.created_at
-      `);
+      `, [userId, testTier]);
 
       // Step 2: Delete granular usage data
-      await client.query(`DELETE FROM user_quotas WHERE user_id = ${userId}`);
+      await client.query(`DELETE FROM user_quotas WHERE user_id = $1`, [userId]);
 
       // Step 3: Verify aggregated data was preserved
       const analytics = await client.query(`
         SELECT tier, total_daily_count, total_monthly_count, usage_periods_count
         FROM usage_analytics_aggregate
-        WHERE tier = 'pro'
+        WHERE tier = $1
           AND deleted_date::date = CURRENT_DATE
-      `);
+      `, [testTier]);
 
       expect(analytics.rows.length).toBe(1);
       expect(analytics.rows[0].total_daily_count).toBe(8); // 5 + 3
@@ -322,13 +346,15 @@ describe('Migration 014: Usage Analytics Aggregate Table', () => {
 
       // Step 4: Verify granular data was deleted
       const quotas = await client.query(`
-        SELECT * FROM user_quotas WHERE user_id = ${userId}
-      `);
+        SELECT * FROM user_quotas WHERE user_id = $1
+      `, [userId]);
 
       expect(quotas.rows.length).toBe(0);
 
-      // Cleanup
-      await client.query(`DELETE FROM users WHERE id = ${userId}`);
+      // Cleanup - delete audit logs first due to FK constraint, then users, then analytics
+      await client.query(`DELETE FROM user_audit_log WHERE user_id = $1`, [userId]);
+      await client.query(`DELETE FROM users WHERE id = $1`, [userId]);
+      await client.query(`DELETE FROM usage_analytics_aggregate WHERE tier = $1`, [testTier]);
     });
   });
 });

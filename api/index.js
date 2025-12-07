@@ -17,6 +17,7 @@ import documentsRoutes from '../server/src/routes/documents.js';
 import workspaceRoutes from '../server/src/routes/workspace.js';
 import batchesRoutes from '../server/src/routes/batches.js';
 import trialsRoutes from '../server/src/routes/trials.js';
+import graphRoutes from '../server/src/routes/graph.js';
 import errorHandler from '../server/src/middleware/errorHandler.js';
 import '../server/src/config/passport.js'; // Initialize passport strategies
 
@@ -93,6 +94,7 @@ if (ENABLE_AUTH) {
   app.use('/api/workspace', workspaceRoutes); // Workspace file management (tier-gated)
   app.use('/api/batches', batchesRoutes); // Batch history and ZIP export
   app.use('/api/trials', trialsRoutes); // Trial management routes
+  app.use('/api/graph', graphRoutes); // Graph Engine API (dependency analysis)
 }
 app.use('/api/cron', cronRoutes);
 app.use('/api/migrate', migrateRoutes);

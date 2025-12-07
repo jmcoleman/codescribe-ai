@@ -44,6 +44,9 @@ describe('Migration 004: Fix Index Naming', () => {
     });
 
     it('should have removed duplicate session index (PascalCase)', async () => {
+      // Note: Session table was dropped in migration 016 (JWT-only auth)
+      // This test verifies the index doesn't exist (either because it was removed
+      // by migration 004 or because the table was dropped in migration 016)
       const duplicateIndex = await sql`
         SELECT indexname
         FROM pg_indexes
@@ -51,21 +54,8 @@ describe('Migration 004: Fix Index Naming', () => {
         AND indexname = 'IDX_session_expire'
       `;
 
-      // Duplicate should be removed
+      // Duplicate should not exist
       expect(duplicateIndex.rows).toHaveLength(0);
-    });
-
-    it('should still have the correct session index (snake_case)', async () => {
-      const correctIndex = await sql`
-        SELECT indexname, indexdef
-        FROM pg_indexes
-        WHERE tablename = 'session'
-        AND indexname = 'idx_session_expire'
-      `;
-
-      // Correct index should exist
-      expect(correctIndex.rows).toHaveLength(1);
-      expect(correctIndex.rows[0].indexdef).toContain('expire');
     });
 
     it('should have added missing operation_type index', async () => {
