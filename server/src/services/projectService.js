@@ -9,6 +9,7 @@
  */
 
 import { sql } from '@vercel/postgres';
+import { getGraphByPersistentProjectId, analyzeProject as analyzeProjectGraph } from './graphService.js';
 
 /**
  * @typedef {Object} Project
@@ -295,6 +296,108 @@ export async function getProjectCount(userId) {
 }
 
 // ============================================================================
+// Graph-Related Functions
+// ============================================================================
+
+/**
+ * Get the linked graph for a project
+ * Returns the most recent non-expired graph linked to this project
+ *
+ * @param {number} projectId - Project ID
+ * @param {number} userId - User ID (for authorization)
+ * @returns {Promise<Object|null>} Graph or null if not found
+ */
+export async function getProjectGraph(projectId, userId) {
+  if (!projectId || !userId) {
+    return null;
+  }
+
+  // Verify project ownership
+  const project = await getProject(projectId, userId);
+  if (!project) {
+    return null;
+  }
+
+  // Get linked graph
+  return getGraphByPersistentProjectId(projectId, userId);
+}
+
+/**
+ * Analyze files and link the resulting graph to a project
+ * This creates or updates the graph associated with the project
+ *
+ * @param {number} projectId - Project ID
+ * @param {number} userId - User ID (for authorization)
+ * @param {Array<{path: string, content: string}>} files - Files to analyze
+ * @param {Object} [options] - Analysis options
+ * @param {string} [options.branch='main'] - Git branch
+ * @returns {Promise<Object|null>} Graph or null if project not found
+ */
+export async function analyzeProjectFiles(projectId, userId, files, options = {}) {
+  if (!projectId || !userId || !files?.length) {
+    return null;
+  }
+
+  // Verify project ownership
+  const project = await getProject(projectId, userId);
+  if (!project) {
+    return null;
+  }
+
+  // Analyze files with persistent project ID
+  const graph = await analyzeProjectGraph(userId, project.name, files, {
+    branch: options.branch || 'main',
+    projectPath: project.githubRepoUrl || '',
+    persistentProjectId: projectId
+  });
+
+  return graph;
+}
+
+/**
+ * Check if a project has an active (non-expired) graph
+ *
+ * @param {number} projectId - Project ID
+ * @param {number} userId - User ID (for authorization)
+ * @returns {Promise<boolean>} True if project has an active graph
+ */
+export async function hasActiveGraph(projectId, userId) {
+  const graph = await getProjectGraph(projectId, userId);
+  return graph !== null;
+}
+
+/**
+ * Get project with its linked graph (if any)
+ * Combines project data with graph summary for efficient loading
+ *
+ * @param {number} projectId - Project ID
+ * @param {number} userId - User ID (for authorization)
+ * @returns {Promise<Object|null>} Project with graph summary or null
+ */
+export async function getProjectWithGraph(projectId, userId) {
+  if (!projectId || !userId) {
+    return null;
+  }
+
+  const project = await getProject(projectId, userId);
+  if (!project) {
+    return null;
+  }
+
+  const graph = await getGraphByPersistentProjectId(projectId, userId);
+
+  return {
+    ...project,
+    graph: graph ? {
+      projectId: graph.projectId,
+      fileCount: graph.stats?.totalFiles || 0,
+      analyzedAt: graph.analyzedAt,
+      expiresAt: graph.expiresAt
+    } : null
+  };
+}
+
+// ============================================================================
 // Helper Functions
 // ============================================================================
 
@@ -336,5 +439,10 @@ export default {
   updateProject,
   deleteProject,
   projectExists,
-  getProjectCount
+  getProjectCount,
+  // Graph-related functions
+  getProjectGraph,
+  analyzeProjectFiles,
+  hasActiveGraph,
+  getProjectWithGraph
 };

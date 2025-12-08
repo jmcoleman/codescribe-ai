@@ -174,10 +174,11 @@ function detectLanguage(filePath) {
  * @param {Object} options - Analysis options
  * @param {string} [options.branch='main'] - Git branch
  * @param {string} [options.projectPath] - Project root path
+ * @param {number} [options.persistentProjectId] - Optional persistent project ID (FK to projects table)
  * @returns {Promise<ProjectGraph>} The complete project graph
  */
 export async function analyzeProject(userId, projectName, files, options = {}) {
-  const { branch = 'main', projectPath = '' } = options;
+  const { branch = 'main', projectPath = '', persistentProjectId = null } = options;
 
   // Generate unique project ID
   const projectId = generateProjectId(userId, projectName, branch);
@@ -286,6 +287,7 @@ export async function analyzeProject(userId, projectName, files, options = {}) {
     projectName,
     projectPath,
     branch,
+    persistentProjectId,
     nodes,
     edges,
     stats,
@@ -308,16 +310,19 @@ async function saveGraph(graph) {
   const edgesJson = JSON.stringify(graph.edges);
   const statsJson = JSON.stringify(graph.stats);
   const projectPath = graph.projectPath || '';
+  const persistentProjectId = graph.persistentProjectId || null;
 
   await sql`
     INSERT INTO project_graphs (
       project_id, user_id, project_name, project_path, branch,
+      persistent_project_id,
       nodes, edges, stats,
       file_count, total_functions, total_classes, total_exports,
       analyzed_at, expires_at, updated_at
     )
     VALUES (
       ${graph.projectId}, ${graph.userId}, ${graph.projectName}, ${projectPath}, ${graph.branch},
+      ${persistentProjectId},
       ${nodesJson}::jsonb, ${edgesJson}::jsonb, ${statsJson}::jsonb,
       ${graph.stats.totalFiles}, ${graph.stats.totalFunctions}, ${graph.stats.totalClasses}, ${graph.stats.totalExports},
       ${graph.analyzedAt}, ${graph.expiresAt}, NOW()
@@ -327,6 +332,7 @@ async function saveGraph(graph) {
       nodes = EXCLUDED.nodes,
       edges = EXCLUDED.edges,
       stats = EXCLUDED.stats,
+      persistent_project_id = EXCLUDED.persistent_project_id,
       file_count = EXCLUDED.file_count,
       total_functions = EXCLUDED.total_functions,
       total_classes = EXCLUDED.total_classes,
@@ -364,6 +370,50 @@ export async function getGraph(projectId, userId) {
     projectName: row.project_name,
     projectPath: row.project_path,
     branch: row.branch,
+    persistentProjectId: row.persistent_project_id,
+    nodes: row.nodes,
+    edges: row.edges,
+    stats: row.stats,
+    analyzedAt: row.analyzed_at,
+    expiresAt: row.expires_at
+  };
+}
+
+/**
+ * Get a project graph by persistent project ID
+ * This is used when a user has a persistent project and wants to find its associated graph
+ *
+ * @param {number} persistentProjectId - Persistent project ID (FK to projects table)
+ * @param {number} userId - User ID (for authorization)
+ * @returns {Promise<ProjectGraph|null>} The graph or null if not found/expired
+ */
+export async function getGraphByPersistentProjectId(persistentProjectId, userId) {
+  if (!persistentProjectId || !userId) {
+    return null;
+  }
+
+  const result = await sql`
+    SELECT *
+    FROM project_graphs
+    WHERE persistent_project_id = ${persistentProjectId}
+      AND user_id = ${userId}
+      AND expires_at > NOW()
+    ORDER BY analyzed_at DESC
+    LIMIT 1
+  `;
+
+  if (result.rows.length === 0) {
+    return null;
+  }
+
+  const row = result.rows[0];
+  return {
+    projectId: row.project_id,
+    userId: row.user_id,
+    projectName: row.project_name,
+    projectPath: row.project_path,
+    branch: row.branch,
+    persistentProjectId: row.persistent_project_id,
     nodes: row.nodes,
     edges: row.edges,
     stats: row.stats,
@@ -718,6 +768,7 @@ export async function listGraphs(userId) {
       project_id,
       project_name,
       branch,
+      persistent_project_id,
       file_count,
       total_functions,
       stats,
@@ -733,6 +784,7 @@ export async function listGraphs(userId) {
     projectId: row.project_id,
     projectName: row.project_name,
     branch: row.branch,
+    persistentProjectId: row.persistent_project_id,
     fileCount: row.file_count,
     totalFunctions: row.total_functions,
     stats: row.stats,
@@ -757,6 +809,7 @@ export async function cleanupExpiredGraphs() {
 export default {
   analyzeProject,
   getGraph,
+  getGraphByPersistentProjectId,
   getFileContext,
   generateDiagram,
   refreshGraph,

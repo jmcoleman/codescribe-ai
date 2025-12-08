@@ -26,6 +26,7 @@ jest.mock('../codeParser.js', () => ({
 import graphService, {
   analyzeProject,
   getGraph,
+  getGraphByPersistentProjectId,
   getFileContext,
   generateDiagram,
   deleteGraph,
@@ -159,6 +160,18 @@ describe('GraphService', () => {
 
       expect(graph.branch).toBe('feature/test');
     });
+
+    it('should accept and store persistentProjectId option', async () => {
+      const graph = await analyzeProject(1, 'test-project', mockFiles, { persistentProjectId: 42 });
+
+      expect(graph.persistentProjectId).toBe(42);
+    });
+
+    it('should default persistentProjectId to null when not provided', async () => {
+      const graph = await analyzeProject(1, 'test-project', mockFiles);
+
+      expect(graph.persistentProjectId).toBeNull();
+    });
   });
 
   // ============================================================================
@@ -202,6 +215,99 @@ describe('GraphService', () => {
       const graph = await getGraph('expired123', 1);
 
       expect(graph).toBeNull();
+    });
+
+    it('should include persistentProjectId in returned graph', async () => {
+      const mockGraph = {
+        project_id: 'abc123',
+        user_id: 1,
+        project_name: 'test-project',
+        project_path: '',
+        branch: 'main',
+        persistent_project_id: 42,
+        nodes: [],
+        edges: [],
+        stats: { totalFiles: 1 },
+        analyzed_at: new Date(),
+        expires_at: new Date(Date.now() + 86400000)
+      };
+      sql.mockResolvedValue({ rows: [mockGraph] });
+
+      const graph = await getGraph('abc123', 1);
+
+      expect(graph.persistentProjectId).toBe(42);
+    });
+  });
+
+  // ============================================================================
+  // GET GRAPH BY PERSISTENT PROJECT ID
+  // ============================================================================
+
+  describe('getGraphByPersistentProjectId', () => {
+    it('should retrieve a graph by persistent project ID', async () => {
+      const mockGraph = {
+        project_id: 'abc123',
+        user_id: 1,
+        project_name: 'test-project',
+        project_path: '',
+        branch: 'main',
+        persistent_project_id: 42,
+        nodes: [{ id: 'index.js', fileName: 'index.js', exports: [], imports: [], functions: [], classes: [] }],
+        edges: [],
+        stats: { totalFiles: 1 },
+        analyzed_at: new Date(),
+        expires_at: new Date(Date.now() + 86400000)
+      };
+      sql.mockResolvedValue({ rows: [mockGraph] });
+
+      const graph = await getGraphByPersistentProjectId(42, 1);
+
+      expect(graph).toBeDefined();
+      expect(graph.projectId).toBe('abc123');
+      expect(graph.persistentProjectId).toBe(42);
+    });
+
+    it('should return null for non-existent persistent project ID', async () => {
+      sql.mockResolvedValue({ rows: [] });
+
+      const graph = await getGraphByPersistentProjectId(999, 1);
+
+      expect(graph).toBeNull();
+    });
+
+    it('should return null when persistentProjectId is missing', async () => {
+      const graph = await getGraphByPersistentProjectId(null, 1);
+
+      expect(graph).toBeNull();
+    });
+
+    it('should return null when userId is missing', async () => {
+      const graph = await getGraphByPersistentProjectId(42, null);
+
+      expect(graph).toBeNull();
+    });
+
+    it('should return the most recent graph when multiple exist', async () => {
+      // Query uses ORDER BY analyzed_at DESC LIMIT 1
+      const mockGraph = {
+        project_id: 'latest123',
+        user_id: 1,
+        project_name: 'test-project',
+        project_path: '',
+        branch: 'main',
+        persistent_project_id: 42,
+        nodes: [],
+        edges: [],
+        stats: { totalFiles: 3 },
+        analyzed_at: new Date(),
+        expires_at: new Date(Date.now() + 86400000)
+      };
+      sql.mockResolvedValue({ rows: [mockGraph] });
+
+      const graph = await getGraphByPersistentProjectId(42, 1);
+
+      expect(graph.projectId).toBe('latest123');
+      expect(graph.stats.totalFiles).toBe(3);
     });
   });
 
@@ -387,6 +493,7 @@ describe('GraphService', () => {
           project_id: 'abc123',
           project_name: 'Project A',
           branch: 'main',
+          persistent_project_id: 42,
           file_count: 10,
           total_functions: 25,
           stats: { totalFiles: 10 },
@@ -397,6 +504,7 @@ describe('GraphService', () => {
           project_id: 'def456',
           project_name: 'Project B',
           branch: 'develop',
+          persistent_project_id: null,
           file_count: 5,
           total_functions: 12,
           stats: { totalFiles: 5 },
@@ -410,7 +518,9 @@ describe('GraphService', () => {
 
       expect(graphs).toHaveLength(2);
       expect(graphs[0].projectId).toBe('abc123');
+      expect(graphs[0].persistentProjectId).toBe(42);
       expect(graphs[1].projectName).toBe('Project B');
+      expect(graphs[1].persistentProjectId).toBeNull();
     });
 
     it('should return empty array for user with no graphs', async () => {

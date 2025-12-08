@@ -17,6 +17,12 @@ jest.mock('@vercel/postgres', () => ({
   sql: jest.fn().mockResolvedValue({ rows: [], rowCount: 0 })
 }));
 
+// Mock graphService BEFORE importing projectService
+jest.mock('../graphService.js', () => ({
+  getGraphByPersistentProjectId: jest.fn(),
+  analyzeProject: jest.fn()
+}));
+
 import projectService, {
   createProject,
   getProject,
@@ -24,9 +30,14 @@ import projectService, {
   updateProject,
   deleteProject,
   projectExists,
-  getProjectCount
+  getProjectCount,
+  getProjectGraph,
+  analyzeProjectFiles,
+  hasActiveGraph,
+  getProjectWithGraph
 } from '../projectService.js';
 import { sql } from '@vercel/postgres';
+import { getGraphByPersistentProjectId, analyzeProject as analyzeProjectGraph } from '../graphService.js';
 
 describe('ProjectService', () => {
   beforeEach(() => {
@@ -540,6 +551,279 @@ describe('ProjectService', () => {
   });
 
   // ============================================================================
+  // GET PROJECT GRAPH
+  // ============================================================================
+
+  describe('getProjectGraph', () => {
+    const mockProject = {
+      id: 1,
+      user_id: 1,
+      name: 'Test Project',
+      description: null,
+      github_repo_url: null,
+      created_at: new Date(),
+      updated_at: new Date()
+    };
+
+    const mockGraph = {
+      projectId: 'abc123',
+      userId: 1,
+      projectName: 'Test Project',
+      persistentProjectId: 1,
+      nodes: [],
+      edges: [],
+      stats: { totalFiles: 5 },
+      analyzedAt: new Date(),
+      expiresAt: new Date(Date.now() + 86400000)
+    };
+
+    it('should return linked graph for a project', async () => {
+      sql.mockResolvedValueOnce({ rows: [mockProject] });
+      getGraphByPersistentProjectId.mockResolvedValueOnce(mockGraph);
+
+      const graph = await getProjectGraph(1, 1);
+
+      expect(graph).toBeDefined();
+      expect(graph.projectId).toBe('abc123');
+      expect(getGraphByPersistentProjectId).toHaveBeenCalledWith(1, 1);
+    });
+
+    it('should return null for non-existent project', async () => {
+      sql.mockResolvedValueOnce({ rows: [] });
+
+      const graph = await getProjectGraph(999, 1);
+
+      expect(graph).toBeNull();
+    });
+
+    it('should return null when projectId is missing', async () => {
+      const graph = await getProjectGraph(null, 1);
+
+      expect(graph).toBeNull();
+    });
+
+    it('should return null when userId is missing', async () => {
+      const graph = await getProjectGraph(1, null);
+
+      expect(graph).toBeNull();
+    });
+
+    it('should return null when project has no linked graph', async () => {
+      sql.mockResolvedValueOnce({ rows: [mockProject] });
+      getGraphByPersistentProjectId.mockResolvedValueOnce(null);
+
+      const graph = await getProjectGraph(1, 1);
+
+      expect(graph).toBeNull();
+    });
+  });
+
+  // ============================================================================
+  // ANALYZE PROJECT FILES
+  // ============================================================================
+
+  describe('analyzeProjectFiles', () => {
+    const mockProject = {
+      id: 1,
+      user_id: 1,
+      name: 'Test Project',
+      description: null,
+      github_repo_url: 'https://github.com/user/repo',
+      created_at: new Date(),
+      updated_at: new Date()
+    };
+
+    const mockFiles = [
+      { path: 'src/index.js', content: 'export default function main() {}' }
+    ];
+
+    const mockGraph = {
+      projectId: 'abc123',
+      userId: 1,
+      projectName: 'Test Project',
+      persistentProjectId: 1,
+      nodes: [{ id: 'src/index.js' }],
+      edges: [],
+      stats: { totalFiles: 1 }
+    };
+
+    it('should analyze files and link graph to project', async () => {
+      sql.mockResolvedValueOnce({ rows: [mockProject] });
+      analyzeProjectGraph.mockResolvedValueOnce(mockGraph);
+
+      const graph = await analyzeProjectFiles(1, 1, mockFiles);
+
+      expect(graph).toBeDefined();
+      expect(graph.projectId).toBe('abc123');
+      expect(analyzeProjectGraph).toHaveBeenCalledWith(
+        1,
+        'Test Project',
+        mockFiles,
+        {
+          branch: 'main',
+          projectPath: 'https://github.com/user/repo',
+          persistentProjectId: 1
+        }
+      );
+    });
+
+    it('should use custom branch option', async () => {
+      sql.mockResolvedValueOnce({ rows: [mockProject] });
+      analyzeProjectGraph.mockResolvedValueOnce(mockGraph);
+
+      await analyzeProjectFiles(1, 1, mockFiles, { branch: 'develop' });
+
+      expect(analyzeProjectGraph).toHaveBeenCalledWith(
+        1,
+        'Test Project',
+        mockFiles,
+        expect.objectContaining({ branch: 'develop' })
+      );
+    });
+
+    it('should return null for non-existent project', async () => {
+      sql.mockResolvedValueOnce({ rows: [] });
+
+      const graph = await analyzeProjectFiles(999, 1, mockFiles);
+
+      expect(graph).toBeNull();
+      expect(analyzeProjectGraph).not.toHaveBeenCalled();
+    });
+
+    it('should return null when projectId is missing', async () => {
+      const graph = await analyzeProjectFiles(null, 1, mockFiles);
+
+      expect(graph).toBeNull();
+    });
+
+    it('should return null when userId is missing', async () => {
+      const graph = await analyzeProjectFiles(1, null, mockFiles);
+
+      expect(graph).toBeNull();
+    });
+
+    it('should return null when files array is empty', async () => {
+      const graph = await analyzeProjectFiles(1, 1, []);
+
+      expect(graph).toBeNull();
+    });
+  });
+
+  // ============================================================================
+  // HAS ACTIVE GRAPH
+  // ============================================================================
+
+  describe('hasActiveGraph', () => {
+    const mockProject = {
+      id: 1,
+      user_id: 1,
+      name: 'Test Project',
+      description: null,
+      github_repo_url: null,
+      created_at: new Date(),
+      updated_at: new Date()
+    };
+
+    it('should return true when project has active graph', async () => {
+      sql.mockResolvedValueOnce({ rows: [mockProject] });
+      getGraphByPersistentProjectId.mockResolvedValueOnce({ projectId: 'abc123' });
+
+      const result = await hasActiveGraph(1, 1);
+
+      expect(result).toBe(true);
+    });
+
+    it('should return false when project has no graph', async () => {
+      sql.mockResolvedValueOnce({ rows: [mockProject] });
+      getGraphByPersistentProjectId.mockResolvedValueOnce(null);
+
+      const result = await hasActiveGraph(1, 1);
+
+      expect(result).toBe(false);
+    });
+
+    it('should return false for non-existent project', async () => {
+      sql.mockResolvedValueOnce({ rows: [] });
+
+      const result = await hasActiveGraph(999, 1);
+
+      expect(result).toBe(false);
+    });
+  });
+
+  // ============================================================================
+  // GET PROJECT WITH GRAPH
+  // ============================================================================
+
+  describe('getProjectWithGraph', () => {
+    const mockProject = {
+      id: 1,
+      user_id: 1,
+      name: 'Test Project',
+      description: 'A test project',
+      github_repo_url: 'https://github.com/user/repo',
+      created_at: new Date(),
+      updated_at: new Date()
+    };
+
+    const mockGraph = {
+      projectId: 'abc123',
+      userId: 1,
+      projectName: 'Test Project',
+      persistentProjectId: 1,
+      nodes: [],
+      edges: [],
+      stats: { totalFiles: 5 },
+      analyzedAt: new Date(),
+      expiresAt: new Date(Date.now() + 86400000)
+    };
+
+    it('should return project with graph summary', async () => {
+      sql.mockResolvedValueOnce({ rows: [mockProject] });
+      getGraphByPersistentProjectId.mockResolvedValueOnce(mockGraph);
+
+      const result = await getProjectWithGraph(1, 1);
+
+      expect(result).toBeDefined();
+      expect(result.name).toBe('Test Project');
+      expect(result.graph).toBeDefined();
+      expect(result.graph.projectId).toBe('abc123');
+      expect(result.graph.fileCount).toBe(5);
+    });
+
+    it('should return project with null graph when no graph exists', async () => {
+      sql.mockResolvedValueOnce({ rows: [mockProject] });
+      getGraphByPersistentProjectId.mockResolvedValueOnce(null);
+
+      const result = await getProjectWithGraph(1, 1);
+
+      expect(result).toBeDefined();
+      expect(result.name).toBe('Test Project');
+      expect(result.graph).toBeNull();
+    });
+
+    it('should return null for non-existent project', async () => {
+      sql.mockResolvedValueOnce({ rows: [] });
+
+      const result = await getProjectWithGraph(999, 1);
+
+      expect(result).toBeNull();
+    });
+
+    it('should return null when projectId is missing', async () => {
+      const result = await getProjectWithGraph(null, 1);
+
+      expect(result).toBeNull();
+    });
+
+    it('should return null when userId is missing', async () => {
+      const result = await getProjectWithGraph(1, null);
+
+      expect(result).toBeNull();
+    });
+  });
+
+  // ============================================================================
   // DEFAULT EXPORT
   // ============================================================================
 
@@ -552,6 +836,11 @@ describe('ProjectService', () => {
       expect(projectService.deleteProject).toBeDefined();
       expect(projectService.projectExists).toBeDefined();
       expect(projectService.getProjectCount).toBeDefined();
+      // Graph-related functions
+      expect(projectService.getProjectGraph).toBeDefined();
+      expect(projectService.analyzeProjectFiles).toBeDefined();
+      expect(projectService.hasActiveGraph).toBeDefined();
+      expect(projectService.getProjectWithGraph).toBeDefined();
     });
   });
 });

@@ -8,6 +8,7 @@
  * - POST /api/graph/analyze    - Build dependency graph from files
  * - GET  /api/graph            - List user's graphs
  * - GET  /api/graph/:id        - Get a specific graph
+ * - GET  /api/graph/project/:projectId - Get graph by persistent project ID
  * - GET  /api/graph/:id/context/:filePath - Get file context
  * - GET  /api/graph/:id/diagram - Generate Mermaid diagram
  * - POST /api/graph/:id/refresh - Refresh graph with changed files
@@ -74,16 +75,21 @@ router.post(
         });
       }
 
+      // Get optional persistent project ID for linking
+      const persistentProjectId = req.body.persistentProjectId || null;
+
       // Analyze the project
       const graph = await graphService.analyzeProject(userId, projectName, files, {
         branch: branch || 'main',
-        projectPath: projectPath || ''
+        projectPath: projectPath || '',
+        persistentProjectId: persistentProjectId ? parseInt(persistentProjectId, 10) : null
       });
 
       res.status(201).json({
         success: true,
         graph: {
           projectId: graph.projectId,
+          persistentProjectId: graph.persistentProjectId,
           projectName: graph.projectName,
           branch: graph.branch,
           stats: graph.stats,
@@ -115,6 +121,46 @@ router.get(
         success: true,
         graphs,
         count: graphs.length
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// ============================================================================
+// GET /api/graph/project/:projectId - Get graph by persistent project ID
+// ============================================================================
+router.get(
+  '/project/:projectId',
+  requireAuth,
+  apiLimiter,
+  async (req, res, next) => {
+    try {
+      const userId = req.user.id;
+      const persistentProjectId = parseInt(req.params.projectId, 10);
+
+      if (isNaN(persistentProjectId)) {
+        return res.status(400).json({
+          success: false,
+          error: 'INVALID_PROJECT_ID',
+          message: 'Project ID must be a number'
+        });
+      }
+
+      const graph = await graphService.getGraphByPersistentProjectId(persistentProjectId, userId);
+
+      if (!graph) {
+        return res.status(404).json({
+          success: false,
+          error: 'GRAPH_NOT_FOUND',
+          message: 'No graph found for this project or graph has expired'
+        });
+      }
+
+      res.json({
+        success: true,
+        graph
       });
     } catch (error) {
       next(error);
@@ -273,6 +319,7 @@ router.post(
         success: true,
         graph: {
           projectId: graph.projectId,
+          persistentProjectId: graph.persistentProjectId,
           projectName: graph.projectName,
           branch: graph.branch,
           stats: graph.stats,
