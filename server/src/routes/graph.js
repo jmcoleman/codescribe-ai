@@ -193,18 +193,20 @@ router.get(
 );
 
 // ============================================================================
-// GET /api/graph/:id/context/* - Get file context (supports deep paths)
+// GET /api/graph/:id/context/*filePath - Get file context (supports deep paths)
 // ============================================================================
 router.get(
-  '/:id/context/*',
+  '/:id/context/*filePath',
   requireAuth,
   apiLimiter,
   async (req, res, next) => {
     try {
       const userId = req.user.id;
       const projectId = req.params.id;
-      // Get the file path from the wildcard - handles nested paths like src/services/auth.js
-      const filePath = req.params[0];
+      // Get the file path from the wildcard - path-to-regexp v8+ returns array of segments
+      const filePath = Array.isArray(req.params.filePath)
+        ? req.params.filePath.join('/')
+        : req.params.filePath;
 
       if (!filePath) {
         return res.status(400).json({
