@@ -824,6 +824,165 @@ describe('ProjectService', () => {
   });
 
   // ============================================================================
+  // PROJECT BATCHES (Phase 3)
+  // ============================================================================
+
+  describe('getProjectBatches', () => {
+    const mockProject = {
+      id: 1,
+      user_id: 1,
+      name: 'Test Project',
+      description: null,
+      github_repo_url: null,
+      created_at: new Date(),
+      updated_at: new Date()
+    };
+
+    it('should return batches for a project', async () => {
+      // First call: getProject, then batchService.getProjectBatches calls
+      sql.mockResolvedValueOnce({ rows: [mockProject] })
+        .mockResolvedValueOnce({ rows: [{ total: '2' }] })
+        .mockResolvedValueOnce({ rows: [
+          { id: 'batch-1', project_id: 1, total_files: 5 },
+          { id: 'batch-2', project_id: 1, total_files: 3 }
+        ] });
+
+      const { getProjectBatches } = await import('../projectService.js');
+      const result = await getProjectBatches(1, 1);
+
+      expect(result.batches).toBeDefined();
+    });
+
+    it('should return empty result for non-existent project', async () => {
+      sql.mockResolvedValueOnce({ rows: [] });
+
+      const { getProjectBatches } = await import('../projectService.js');
+      const result = await getProjectBatches(999, 1);
+
+      expect(result.batches).toEqual([]);
+      expect(result.total).toBe(0);
+    });
+
+    it('should return empty result when projectId is missing', async () => {
+      const { getProjectBatches } = await import('../projectService.js');
+      const result = await getProjectBatches(null, 1);
+
+      expect(result.batches).toEqual([]);
+      expect(result.total).toBe(0);
+    });
+  });
+
+  describe('getProjectWithBatches', () => {
+    const mockProject = {
+      id: 1,
+      user_id: 1,
+      name: 'Test Project',
+      description: null,
+      github_repo_url: null,
+      created_at: new Date(),
+      updated_at: new Date()
+    };
+
+    it('should return project with batch stats', async () => {
+      sql.mockResolvedValueOnce({ rows: [mockProject] })
+        .mockResolvedValueOnce({ rows: [{
+          batch_count: '3',
+          total_files: '15',
+          success_count: '14',
+          last_batch_at: new Date()
+        }] });
+
+      const { getProjectWithBatches } = await import('../projectService.js');
+      const result = await getProjectWithBatches(1, 1);
+
+      expect(result).toBeDefined();
+      expect(result.name).toBe('Test Project');
+      expect(result.batchStats).toBeDefined();
+      expect(result.batchStats.batchCount).toBe(3);
+      expect(result.batchStats.totalFiles).toBe(15);
+    });
+
+    it('should return null for non-existent project', async () => {
+      sql.mockResolvedValueOnce({ rows: [] });
+
+      const { getProjectWithBatches } = await import('../projectService.js');
+      const result = await getProjectWithBatches(999, 1);
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('getProjectSummary', () => {
+    const mockProject = {
+      id: 1,
+      user_id: 1,
+      name: 'Test Project',
+      description: 'A test project',
+      github_repo_url: 'https://github.com/user/repo',
+      created_at: new Date(),
+      updated_at: new Date()
+    };
+
+    const mockGraph = {
+      projectId: 'abc123',
+      stats: { totalFiles: 10 },
+      analyzedAt: new Date(),
+      expiresAt: new Date(Date.now() + 86400000)
+    };
+
+    it('should return full project summary with graph and batches', async () => {
+      sql.mockResolvedValueOnce({ rows: [mockProject] });
+      getGraphByPersistentProjectId.mockResolvedValueOnce(mockGraph);
+      sql.mockResolvedValueOnce({ rows: [{
+        batch_count: '5',
+        total_files: '25',
+        success_count: '24',
+        avg_quality: '85.5',
+        last_batch_at: new Date()
+      }] });
+
+      const { getProjectSummary } = await import('../projectService.js');
+      const result = await getProjectSummary(1, 1);
+
+      expect(result).toBeDefined();
+      expect(result.name).toBe('Test Project');
+      expect(result.graph).toBeDefined();
+      expect(result.graph.fileCount).toBe(10);
+      expect(result.batchStats).toBeDefined();
+      expect(result.batchStats.batchCount).toBe(5);
+      expect(result.batchStats.avgQuality).toBe(85.5);
+    });
+
+    it('should return summary with null graph when no graph exists', async () => {
+      sql.mockResolvedValueOnce({ rows: [mockProject] });
+      getGraphByPersistentProjectId.mockResolvedValueOnce(null);
+      sql.mockResolvedValueOnce({ rows: [{
+        batch_count: '0',
+        total_files: '0',
+        success_count: '0',
+        avg_quality: null,
+        last_batch_at: null
+      }] });
+
+      const { getProjectSummary } = await import('../projectService.js');
+      const result = await getProjectSummary(1, 1);
+
+      expect(result).toBeDefined();
+      expect(result.graph).toBeNull();
+      expect(result.batchStats.batchCount).toBe(0);
+    });
+
+    it('should return null for non-existent project', async () => {
+      sql.mockResolvedValueOnce({ rows: [] });
+
+      const { getProjectSummary } = await import('../projectService.js');
+      const result = await getProjectSummary(999, 1);
+
+      expect(result).toBeNull();
+    });
+  });
+
+  // ============================================================================
   // DEFAULT EXPORT
   // ============================================================================
 
@@ -841,6 +1000,10 @@ describe('ProjectService', () => {
       expect(projectService.analyzeProjectFiles).toBeDefined();
       expect(projectService.hasActiveGraph).toBeDefined();
       expect(projectService.getProjectWithGraph).toBeDefined();
+      // Batch-related functions
+      expect(projectService.getProjectBatches).toBeDefined();
+      expect(projectService.getProjectWithBatches).toBeDefined();
+      expect(projectService.getProjectSummary).toBeDefined();
     });
   });
 });

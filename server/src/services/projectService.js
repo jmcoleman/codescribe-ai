@@ -10,6 +10,7 @@
 
 import { sql } from '@vercel/postgres';
 import { getGraphByPersistentProjectId, analyzeProject as analyzeProjectGraph } from './graphService.js';
+import batchService from './batchService.js';
 
 /**
  * @typedef {Object} Project
@@ -398,6 +399,126 @@ export async function getProjectWithGraph(projectId, userId) {
 }
 
 // ============================================================================
+// Batch-Related Functions
+// ============================================================================
+
+/**
+ * Get batches for a project
+ *
+ * @param {number} projectId - Project ID
+ * @param {number} userId - User ID (for authorization)
+ * @param {Object} [options] - Pagination options
+ * @returns {Promise<Object>} { batches, total }
+ */
+export async function getProjectBatches(projectId, userId, options = {}) {
+  if (!projectId || !userId) {
+    return { batches: [], total: 0 };
+  }
+
+  // Verify project ownership
+  const project = await getProject(projectId, userId);
+  if (!project) {
+    return { batches: [], total: 0 };
+  }
+
+  return batchService.getProjectBatches(userId, projectId, options);
+}
+
+/**
+ * Get project with batch summary
+ * Combines project data with batch statistics
+ *
+ * @param {number} projectId - Project ID
+ * @param {number} userId - User ID (for authorization)
+ * @returns {Promise<Object|null>} Project with batch stats or null
+ */
+export async function getProjectWithBatches(projectId, userId) {
+  if (!projectId || !userId) {
+    return null;
+  }
+
+  const project = await getProject(projectId, userId);
+  if (!project) {
+    return null;
+  }
+
+  // Get batch count and stats
+  const batchStats = await sql`
+    SELECT
+      COUNT(*) as batch_count,
+      COALESCE(SUM(total_files), 0) as total_files,
+      COALESCE(SUM(success_count), 0) as success_count,
+      MAX(created_at) as last_batch_at
+    FROM generation_batches
+    WHERE project_id = ${projectId} AND user_id = ${userId}
+  `;
+
+  const stats = batchStats.rows[0];
+
+  return {
+    ...project,
+    batchStats: {
+      batchCount: parseInt(stats.batch_count, 10),
+      totalFiles: parseInt(stats.total_files, 10),
+      successCount: parseInt(stats.success_count, 10),
+      lastBatchAt: stats.last_batch_at
+    }
+  };
+}
+
+/**
+ * Get full project summary with graph and batches
+ *
+ * @param {number} projectId - Project ID
+ * @param {number} userId - User ID (for authorization)
+ * @returns {Promise<Object|null>} Full project summary or null
+ */
+export async function getProjectSummary(projectId, userId) {
+  if (!projectId || !userId) {
+    return null;
+  }
+
+  const project = await getProject(projectId, userId);
+  if (!project) {
+    return null;
+  }
+
+  // Get graph info
+  const graph = await getGraphByPersistentProjectId(projectId, userId);
+
+  // Get batch stats
+  const batchStats = await sql`
+    SELECT
+      COUNT(*) as batch_count,
+      COALESCE(SUM(total_files), 0) as total_files,
+      COALESCE(SUM(success_count), 0) as success_count,
+      COALESCE(AVG(avg_quality_score), 0) as avg_quality,
+      MAX(created_at) as last_batch_at
+    FROM generation_batches
+    WHERE project_id = ${projectId} AND user_id = ${userId}
+  `;
+
+  const stats = batchStats.rows[0];
+
+  return {
+    ...project,
+    graph: graph ? {
+      projectId: graph.projectId,
+      fileCount: graph.stats?.totalFiles || 0,
+      analyzedAt: graph.analyzedAt,
+      expiresAt: graph.expiresAt
+    } : null,
+    batchStats: {
+      batchCount: parseInt(stats.batch_count, 10),
+      totalFiles: parseInt(stats.total_files, 10),
+      successCount: parseInt(stats.success_count, 10),
+      avgQuality: parseFloat(stats.avg_quality) || 0,
+      lastBatchAt: stats.last_batch_at
+    }
+  };
+}
+
+// ============================================================================
 // Helper Functions
 // ============================================================================
 
@@ -444,5 +565,9 @@ export default {
   getProjectGraph,
   analyzeProjectFiles,
   hasActiveGraph,
-  getProjectWithGraph
+  getProjectWithGraph,
+  // Batch-related functions
+  getProjectBatches,
+  getProjectWithBatches,
+  getProjectSummary
 };

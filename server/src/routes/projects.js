@@ -2,14 +2,16 @@
  * Projects API Routes
  *
  * Provides endpoints for project management (CRUD operations).
- * Part of: Graph Engine API (Epic 5.4) - Phase 1: Projects Entity
+ * Part of: Graph Engine API (Epic 5.4) - Phase 1-3: Projects Entity
  *
  * Endpoints:
- * - POST   /api/projects       - Create a new project
- * - GET    /api/projects       - List user's projects
- * - GET    /api/projects/:id   - Get a specific project
- * - PUT    /api/projects/:id   - Update a project
- * - DELETE /api/projects/:id   - Delete a project
+ * - POST   /api/projects           - Create a new project
+ * - GET    /api/projects           - List user's projects
+ * - GET    /api/projects/:id       - Get a specific project
+ * - GET    /api/projects/:id/summary - Get project with graph and batch stats
+ * - GET    /api/projects/:id/batches - Get batches for a project
+ * - PUT    /api/projects/:id       - Update a project
+ * - DELETE /api/projects/:id       - Delete a project
  *
  * Access: Pro+ tier only (projectManagement feature)
  */
@@ -136,6 +138,93 @@ router.get(
       res.json({
         success: true,
         project
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// ============================================================================
+// GET /api/projects/:id/summary - Get project with graph and batch stats
+// ============================================================================
+router.get(
+  '/:id/summary',
+  requireAuth,
+  requireProjectAccess,
+  apiLimiter,
+  async (req, res, next) => {
+    try {
+      const userId = req.user.id;
+      const projectId = parseInt(req.params.id, 10);
+
+      if (isNaN(projectId)) {
+        return res.status(400).json({
+          success: false,
+          error: 'INVALID_PROJECT_ID',
+          message: 'Project ID must be a number'
+        });
+      }
+
+      const project = await projectService.getProjectSummary(projectId, userId);
+
+      if (!project) {
+        return res.status(404).json({
+          success: false,
+          error: 'PROJECT_NOT_FOUND',
+          message: 'Project not found'
+        });
+      }
+
+      res.json({
+        success: true,
+        project
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// ============================================================================
+// GET /api/projects/:id/batches - Get batches for a project
+// ============================================================================
+router.get(
+  '/:id/batches',
+  requireAuth,
+  requireProjectAccess,
+  apiLimiter,
+  async (req, res, next) => {
+    try {
+      const userId = req.user.id;
+      const projectId = parseInt(req.params.id, 10);
+
+      if (isNaN(projectId)) {
+        return res.status(400).json({
+          success: false,
+          error: 'INVALID_PROJECT_ID',
+          message: 'Project ID must be a number'
+        });
+      }
+
+      const limit = parseInt(req.query.limit, 10) || 20;
+      const offset = parseInt(req.query.offset, 10) || 0;
+
+      const { batches, total } = await projectService.getProjectBatches(
+        projectId,
+        userId,
+        { limit, offset }
+      );
+
+      res.json({
+        success: true,
+        batches,
+        pagination: {
+          total,
+          limit,
+          offset,
+          hasMore: offset + batches.length < total
+        }
       });
     } catch (error) {
       next(error);

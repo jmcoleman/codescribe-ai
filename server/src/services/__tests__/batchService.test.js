@@ -377,4 +377,135 @@ describe('BatchService', () => {
         .rejects.toThrow('documentIds must be a non-empty array');
     });
   });
+
+  // ============================================================================
+  // PROJECT-BATCH INTEGRATION (Phase 3)
+  // ============================================================================
+
+  describe('createBatch with projectId', () => {
+    it('should create a batch linked to a project', async () => {
+      const mockResult = {
+        rows: [{
+          id: 'batch-123-uuid',
+          created_at: '2025-12-07T12:00:00Z',
+          project_id: 42
+        }]
+      };
+      sql.mockResolvedValue(mockResult);
+
+      const result = await batchService.createBatch(1, {
+        batchType: 'batch',
+        totalFiles: 3,
+        successCount: 3,
+        failCount: 0,
+        projectId: 42
+      });
+
+      expect(result.batchId).toBe('batch-123-uuid');
+      expect(result.projectId).toBe(42);
+    });
+
+    it('should create a batch without project link when projectId is null', async () => {
+      const mockResult = {
+        rows: [{
+          id: 'batch-456-uuid',
+          created_at: '2025-12-07T12:00:00Z',
+          project_id: null
+        }]
+      };
+      sql.mockResolvedValue(mockResult);
+
+      const result = await batchService.createBatch(1, {
+        batchType: 'single',
+        totalFiles: 1,
+        successCount: 1,
+        failCount: 0
+      });
+
+      expect(result.batchId).toBe('batch-456-uuid');
+      expect(result.projectId).toBeNull();
+    });
+  });
+
+  describe('getUserBatches with projectId filter', () => {
+    it('should filter batches by projectId', async () => {
+      const mockBatches = {
+        rows: [
+          { id: 'batch-1', batch_type: 'batch', project_id: 42, total_files: 5 }
+        ]
+      };
+      const mockCount = { rows: [{ total: '1', total_documents: '5' }] };
+
+      sql.query.mockResolvedValueOnce(mockBatches);
+      sql.query.mockResolvedValueOnce(mockCount);
+
+      const result = await batchService.getUserBatches(1, {
+        projectId: 42
+      });
+
+      expect(result.batches).toHaveLength(1);
+      expect(result.batches[0].project_id).toBe(42);
+    });
+  });
+
+  describe('getProjectBatches', () => {
+    it('should return batches for a specific project', async () => {
+      const mockCount = { rows: [{ total: '2' }] };
+      const mockBatches = {
+        rows: [
+          { id: 'batch-1', project_id: 42, total_files: 5, file_count: 5 },
+          { id: 'batch-2', project_id: 42, total_files: 3, file_count: 3 }
+        ]
+      };
+
+      sql.mockResolvedValueOnce(mockCount);
+      sql.mockResolvedValueOnce(mockBatches);
+
+      const result = await batchService.getProjectBatches(1, 42);
+
+      expect(result.batches).toHaveLength(2);
+      expect(result.total).toBe(2);
+    });
+
+    it('should throw error when userId is missing', async () => {
+      await expect(batchService.getProjectBatches(null, 42))
+        .rejects.toThrow('User ID and Project ID are required');
+    });
+
+    it('should throw error when projectId is missing', async () => {
+      await expect(batchService.getProjectBatches(1, null))
+        .rejects.toThrow('User ID and Project ID are required');
+    });
+  });
+
+  describe('updateBatchProject', () => {
+    it('should update batch project association', async () => {
+      sql.mockResolvedValue({ rowCount: 1 });
+
+      const result = await batchService.updateBatchProject(1, 'batch-123', 42);
+
+      expect(result).toBe(true);
+    });
+
+    it('should unlink batch from project when projectId is null', async () => {
+      sql.mockResolvedValue({ rowCount: 1 });
+
+      const result = await batchService.updateBatchProject(1, 'batch-123', null);
+
+      expect(result).toBe(true);
+    });
+
+    it('should return false when batch not found', async () => {
+      sql.mockResolvedValue({ rowCount: 0 });
+
+      const result = await batchService.updateBatchProject(1, 'nonexistent', 42);
+
+      expect(result).toBe(false);
+    });
+
+    it('should throw error when userId is missing', async () => {
+      await expect(batchService.updateBatchProject(null, 'batch-123', 42))
+        .rejects.toThrow('User ID and Batch ID are required');
+    });
+  });
 });

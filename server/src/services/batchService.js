@@ -32,7 +32,8 @@ class BatchService {
       avgGrade = null,
       summaryMarkdown = null,
       errorDetails = null,
-      docTypes = null
+      docTypes = null,
+      projectId = null  // Optional link to project
     } = batchData;
 
     // Validation
@@ -56,19 +57,22 @@ class BatchService {
       const result = await sql`
         INSERT INTO generation_batches (
           user_id, batch_type, total_files, success_count, fail_count,
-          avg_quality_score, avg_grade, summary_markdown, error_details, doc_types
+          avg_quality_score, avg_grade, summary_markdown, error_details, doc_types,
+          project_id
         ) VALUES (
           ${userId}, ${batchType}, ${totalFiles}, ${successCount}, ${failCount},
           ${avgQualityScore}, ${avgGrade}, ${summaryMarkdown},
           ${errorDetails ? JSON.stringify(errorDetails) : null},
-          ${docTypes ? JSON.stringify(docTypes) : null}
+          ${docTypes ? JSON.stringify(docTypes) : null},
+          ${projectId}
         )
-        RETURNING id, created_at
+        RETURNING id, created_at, project_id
       `;
 
       return {
         batchId: result.rows[0].id,
-        createdAt: result.rows[0].created_at
+        createdAt: result.rows[0].created_at,
+        projectId: result.rows[0].project_id
       };
     } catch (error) {
       console.error('[BatchService] Error creating batch:', error);
@@ -139,7 +143,8 @@ class BatchService {
       sortOrder = 'desc',  // 'asc' or 'desc'
       gradeFilter = null,  // 'A', 'B', 'C', 'D', 'F'
       docTypeFilter = null, // 'README', 'JSDOC', 'API', 'ARCHITECTURE', etc.
-      filenameSearch = null // Search by filename (partial match)
+      filenameSearch = null, // Search by filename (partial match)
+      projectId = null     // Filter by project ID
     } = options;
 
     // Validate sortBy to prevent SQL injection
@@ -157,6 +162,12 @@ class BatchService {
       if (batchType) {
         conditions.push(`gb.batch_type = $${paramIndex}`);
         params.push(batchType);
+        paramIndex++;
+      }
+
+      if (projectId) {
+        conditions.push(`gb.project_id = $${paramIndex}`);
+        params.push(projectId);
         paramIndex++;
       }
 
@@ -540,6 +551,78 @@ class BatchService {
     } catch (error) {
       console.error('[BatchService] Error fetching documents by IDs:', error);
       throw new Error(`Failed to fetch documents: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get batches for a specific project
+   * @param {number} userId - User ID (for ownership validation)
+   * @param {number} projectId - Project ID
+   * @param {Object} options - Query options (limit, offset)
+   * @returns {Promise<Object>} { batches, total }
+   */
+  async getProjectBatches(userId, projectId, options = {}) {
+    if (!userId || !projectId) {
+      throw new Error('User ID and Project ID are required');
+    }
+
+    const { limit = 20, offset = 0 } = options;
+
+    try {
+      // Get total count
+      const countResult = await sql`
+        SELECT COUNT(*) as total
+        FROM generation_batches
+        WHERE user_id = ${userId} AND project_id = ${projectId}
+      `;
+      const total = parseInt(countResult.rows[0].total, 10);
+
+      // Get batches
+      const result = await sql`
+        SELECT
+          gb.*,
+          (SELECT COUNT(*) FROM generated_documents gd
+           WHERE gd.batch_id = gb.id AND gd.deleted_at IS NULL) as file_count
+        FROM generation_batches gb
+        WHERE gb.user_id = ${userId} AND gb.project_id = ${projectId}
+        ORDER BY gb.created_at DESC
+        LIMIT ${limit} OFFSET ${offset}
+      `;
+
+      return {
+        batches: result.rows,
+        total
+      };
+    } catch (error) {
+      console.error('[BatchService] Error fetching project batches:', error);
+      throw new Error(`Failed to fetch project batches: ${error.message}`);
+    }
+  }
+
+  /**
+   * Update batch's project association
+   * @param {number} userId - User ID (for ownership validation)
+   * @param {string} batchId - Batch UUID
+   * @param {number|null} projectId - Project ID (null to unlink)
+   * @returns {Promise<boolean>} true if updated
+   */
+  async updateBatchProject(userId, batchId, projectId) {
+    if (!userId || !batchId) {
+      throw new Error('User ID and Batch ID are required');
+    }
+
+    try {
+      const result = await sql`
+        UPDATE generation_batches
+        SET project_id = ${projectId}
+        WHERE id = ${batchId} AND user_id = ${userId}
+        RETURNING id
+      `;
+
+      return result.rowCount > 0;
+    } catch (error) {
+      console.error('[BatchService] Error updating batch project:', error);
+      throw new Error(`Failed to update batch project: ${error.message}`);
     }
   }
 }

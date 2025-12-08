@@ -38,7 +38,8 @@ router.post(
         avgGrade,
         summaryMarkdown,
         errorDetails,
-        docTypes
+        docTypes,
+        projectId  // Optional: link batch to a project
       } = req.body;
 
       const result = await batchService.createBatch(userId, {
@@ -50,7 +51,8 @@ router.post(
         avgGrade,
         summaryMarkdown,
         errorDetails,
-        docTypes
+        docTypes,
+        projectId: projectId ? parseInt(projectId, 10) : null
       });
 
       res.json({
@@ -111,7 +113,8 @@ router.get('/', requireAuth, async (req, res, next) => {
       sortOrder,    // 'asc' or 'desc'
       gradeFilter,  // Filter by grade: 'A', 'B', 'C', 'D', 'F'
       docTypeFilter, // Filter by doc type: 'README', 'JSDOC', 'API', etc.
-      filenameSearch // Search by filename (partial match)
+      filenameSearch, // Search by filename (partial match)
+      projectId     // Filter by project ID
     } = req.query;
 
     const result = await batchService.getUserBatches(userId, {
@@ -122,7 +125,8 @@ router.get('/', requireAuth, async (req, res, next) => {
       sortOrder: sortOrder === 'asc' ? 'asc' : 'desc',
       gradeFilter: gradeFilter || null,
       docTypeFilter: docTypeFilter || null,
-      filenameSearch: filenameSearch || null
+      filenameSearch: filenameSearch || null,
+      projectId: projectId ? parseInt(projectId, 10) : null
     });
 
     res.json(result);
@@ -298,6 +302,37 @@ router.post(
     }
   }
 );
+
+// ============================================================================
+// PATCH /api/batches/:id/project - Update Batch Project Association
+// ============================================================================
+router.patch('/:id/project', requireAuth, async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const { id } = req.params;
+    const { projectId } = req.body;
+
+    const updated = await batchService.updateBatchProject(
+      userId,
+      id,
+      projectId ? parseInt(projectId, 10) : null
+    );
+
+    if (!updated) {
+      return res.status(404).json({
+        error: 'Batch not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      projectId: projectId ? parseInt(projectId, 10) : null
+    });
+  } catch (error) {
+    console.error('[Batches API] Error updating batch project:', error);
+    next(error);
+  }
+});
 
 // ============================================================================
 // DELETE /api/batches/:id - Delete Batch
