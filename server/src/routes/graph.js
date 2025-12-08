@@ -65,17 +65,9 @@ router.post(
         }
       }
 
-      // Limit file count (prevent abuse)
-      const MAX_FILES = 500;
-      if (files.length > MAX_FILES) {
-        return res.status(400).json({
-          success: false,
-          error: 'TOO_MANY_FILES',
-          message: `Maximum ${MAX_FILES} files allowed per analysis`
-        });
-      }
-
       // Get optional persistent project ID for linking
+      // Note: No file count limit - chunked processing handles large projects efficiently
+      // Request timeout serves as the practical limit
       const persistentProjectId = req.body.persistentProjectId || null;
 
       // Analyze the project

@@ -14,6 +14,9 @@ import crypto from 'crypto';
 // Graph TTL: 24 hours (in milliseconds)
 const GRAPH_TTL_MS = 24 * 60 * 60 * 1000;
 
+// Chunk size for processing large projects (memory-friendly)
+const CHUNK_SIZE = 500;
+
 /**
  * GraphNode represents a single file in the dependency graph
  * @typedef {Object} GraphNode
@@ -167,6 +170,7 @@ function detectLanguage(filePath) {
 
 /**
  * Analyze a project and build its dependency graph
+ * Uses chunked processing for large projects to manage memory efficiently.
  *
  * @param {number} userId - User ID
  * @param {string} projectName - Project name
@@ -175,20 +179,121 @@ function detectLanguage(filePath) {
  * @param {string} [options.branch='main'] - Git branch
  * @param {string} [options.projectPath] - Project root path
  * @param {number} [options.persistentProjectId] - Optional persistent project ID (FK to projects table)
+ * @param {Function} [options.onProgress] - Optional progress callback (chunksProcessed, totalChunks)
  * @returns {Promise<ProjectGraph>} The complete project graph
  */
 export async function analyzeProject(userId, projectName, files, options = {}) {
-  const { branch = 'main', projectPath = '', persistentProjectId = null } = options;
+  const { branch = 'main', projectPath = '', persistentProjectId = null, onProgress } = options;
+
+  const startTime = Date.now();
+  const isLargeProject = files.length > CHUNK_SIZE;
+
+  if (isLargeProject) {
+    console.log(`[Graph Analysis] Large project: ${files.length} files, processing in chunks of ${CHUNK_SIZE}`);
+  }
 
   // Generate unique project ID
   const projectId = generateProjectId(userId, projectName, branch);
 
-  // Create set of all file paths for import resolution
+  // Create set of all file paths for import resolution (needed for cross-chunk resolution)
   const projectFilePaths = new Set(files.map(f => f.path));
 
-  // Build nodes by parsing each file
+  // Split files into chunks for memory-efficient processing
+  const chunks = chunkArray(files, CHUNK_SIZE);
+  const totalChunks = chunks.length;
+
+  // Process files in chunks, collecting nodes and pending edges
+  const allNodes = [];
+  const pendingEdges = []; // { from, importSource, specifiers }
+
+  for (let i = 0; i < chunks.length; i++) {
+    const chunk = chunks[i];
+
+    if (isLargeProject) {
+      console.log(`[Graph Analysis] Processing chunk ${i + 1}/${totalChunks}: ${chunk.length} files`);
+    }
+
+    // Process this chunk
+    const { nodes, edges } = await processFileChunk(chunk, projectFilePaths);
+    allNodes.push(...nodes);
+    pendingEdges.push(...edges);
+
+    // Report progress if callback provided
+    if (onProgress) {
+      onProgress(i + 1, totalChunks);
+    }
+
+    // Yield control between chunks to prevent blocking event loop
+    if (isLargeProject && i < chunks.length - 1) {
+      await new Promise(resolve => setImmediate(resolve));
+    }
+  }
+
+  // Resolve all edges now that we have complete node set
+  const edges = resolveAllEdges(pendingEdges, projectFilePaths);
+
+  // Calculate dependent counts
+  for (const edge of edges) {
+    const targetNode = allNodes.find(n => n.id === edge.to);
+    if (targetNode) {
+      targetNode.dependentCount++;
+    }
+  }
+
+  // Calculate aggregate statistics
+  const processingTime = Date.now() - startTime;
+  const stats = {
+    totalFiles: allNodes.length,
+    totalFunctions: allNodes.reduce((sum, n) => sum + n.functions.length, 0),
+    totalClasses: allNodes.reduce((sum, n) => sum + n.classes.length, 0),
+    totalExports: allNodes.reduce((sum, n) => sum + n.exports.length, 0),
+    totalEdges: edges.length,
+    avgComplexity: allNodes.length > 0
+      ? (allNodes.reduce((sum, n) => sum + n.complexity, 0) / allNodes.length).toFixed(2)
+      : 0,
+    maxDependents: Math.max(...allNodes.map(n => n.dependentCount), 0),
+    languages: [...new Set(allNodes.map(n => n.language))].filter(l => l !== 'unknown'),
+    chunksProcessed: totalChunks,
+    processingTimeMs: processingTime
+  };
+
+  if (isLargeProject) {
+    console.log(`[Graph Analysis] Complete: ${allNodes.length} nodes, ${edges.length} edges in ${processingTime}ms`);
+  }
+
+  // Calculate expiration time
+  const expiresAt = new Date(Date.now() + GRAPH_TTL_MS);
+
+  // Build the complete graph object
+  const graph = {
+    projectId,
+    userId,
+    projectName,
+    projectPath,
+    branch,
+    persistentProjectId,
+    nodes: allNodes,
+    edges,
+    stats,
+    analyzedAt: new Date(),
+    expiresAt
+  };
+
+  // Persist to database
+  await saveGraph(graph);
+
+  return graph;
+}
+
+/**
+ * Process a chunk of files, returning nodes and pending edge references
+ * @param {Array<{path: string, content: string}>} files - Files to process
+ * @param {Set<string>} projectFilePaths - Complete set of project file paths
+ * @returns {Promise<{nodes: Array, edges: Array}>}
+ */
+async function processFileChunk(files, projectFilePaths) {
   const nodes = [];
-  const edgeMap = new Map(); // Track edges to avoid duplicates
+  const pendingEdges = [];
 
   for (const file of files) {
     const language = detectLanguage(file.path);
@@ -225,80 +330,67 @@ export async function analyzeProject(userId, projectName, files, options = {}) {
         methods: (c.methods || []).map(m => m.name)
       })),
       complexity: analysis.cyclomaticComplexity || 0,
-      dependentCount: 0, // Will be calculated after all edges
+      dependentCount: 0, // Will be calculated after all edges resolved
       dependencyCount: 0,
       language
     };
 
     nodes.push(node);
 
-    // Build edges from imports
+    // Collect pending edges (to be resolved after all chunks processed)
     for (const imp of analysis.imports || []) {
-      const resolvedPath = resolveImportPath(imp.source, file.path, projectFilePaths);
+      pendingEdges.push({
+        from: file.path,
+        importSource: imp.source,
+        specifiers: imp.specifiers?.map(s => s.local || s.imported || 'default') || []
+      });
+      node.dependencyCount++;
+    }
+  }
 
-      if (resolvedPath) {
-        // Internal dependency
-        const edgeKey = `${file.path}:${resolvedPath}`;
-        if (!edgeMap.has(edgeKey)) {
-          edgeMap.set(edgeKey, {
-            from: file.path,
-            to: resolvedPath,
-            specifiers: imp.specifiers?.map(s => s.local || s.imported || 'default') || [],
-            type: 'import'
-          });
-        }
-        node.dependencyCount++;
+  return { nodes, edges: pendingEdges };
+}
+
+/**
+ * Resolve all pending edges against the complete file manifest
+ * @param {Array} pendingEdges - Pending edge references
+ * @param {Set<string>} projectFilePaths - Complete set of project file paths
+ * @returns {Array} Resolved edges
+ */
+function resolveAllEdges(pendingEdges, projectFilePaths) {
+  const edgeMap = new Map(); // Deduplicate edges
+
+  for (const pending of pendingEdges) {
+    const resolvedPath = resolveImportPath(pending.importSource, pending.from, projectFilePaths);
+
+    if (resolvedPath) {
+      const edgeKey = `${pending.from}:${resolvedPath}`;
+      if (!edgeMap.has(edgeKey)) {
+        edgeMap.set(edgeKey, {
+          from: pending.from,
+          to: resolvedPath,
+          specifiers: pending.specifiers,
+          type: 'import'
+        });
       }
     }
   }
 
-  // Convert edge map to array
-  const edges = Array.from(edgeMap.values());
+  return Array.from(edgeMap.values());
+}
 
-  // Calculate dependent counts
-  for (const edge of edges) {
-    const targetNode = nodes.find(n => n.id === edge.to);
-    if (targetNode) {
-      targetNode.dependentCount++;
-    }
+/**
+ * Split an array into chunks of specified size
+ * @param {Array} array - Array to split
+ * @param {number} size - Chunk size
+ * @returns {Array<Array>} Array of chunks
+ */
+function chunkArray(array, size) {
+  const chunks = [];
+  for (let i = 0; i < array.length; i += size) {
+    chunks.push(array.slice(i, i + size));
   }
-
-  // Calculate aggregate statistics
-  const stats = {
-    totalFiles: nodes.length,
-    totalFunctions: nodes.reduce((sum, n) => sum + n.functions.length, 0),
-    totalClasses: nodes.reduce((sum, n) => sum + n.classes.length, 0),
-    totalExports: nodes.reduce((sum, n) => sum + n.exports.length, 0),
-    totalEdges: edges.length,
-    avgComplexity: nodes.length > 0
-      ? (nodes.reduce((sum, n) => sum + n.complexity, 0) / nodes.length).toFixed(2)
-      : 0,
-    maxDependents: Math.max(...nodes.map(n => n.dependentCount), 0),
-    languages: [...new Set(nodes.map(n => n.language))].filter(l => l !== 'unknown')
-  };
-
-  // Calculate expiration time
-  const expiresAt = new Date(Date.now() + GRAPH_TTL_MS);
-
-  // Build the complete graph object
-  const graph = {
-    projectId,
-    userId,
-    projectName,
-    projectPath,
-    branch,
-    persistentProjectId,
-    nodes,
-    edges,
-    stats,
-    analyzedAt: new Date(),
-    expiresAt
-  };
-
-  // Persist to database
-  await saveGraph(graph);
-
-  return graph;
+  return chunks;
 }
 
 /**

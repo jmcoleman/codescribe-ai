@@ -1229,6 +1229,184 @@ describe('GraphService', () => {
   });
 
   // ============================================================================
+  // CHUNKED PROCESSING FOR LARGE PROJECTS
+  // ============================================================================
+
+  describe('chunked processing', () => {
+    beforeEach(() => {
+      sql.mockResolvedValue({ rows: [{ id: 1 }], rowCount: 1 });
+      parseCode.mockResolvedValue({
+        functions: [{ name: 'test', params: [], async: false }],
+        classes: [],
+        exports: [{ name: 'test', type: 'named' }],
+        imports: [],
+        cyclomaticComplexity: 1
+      });
+    });
+
+    it('should process small projects in a single chunk', async () => {
+      const files = Array.from({ length: 10 }, (_, i) => ({
+        path: `src/file${i}.js`,
+        content: `export function test${i}() {}`
+      }));
+
+      const graph = await analyzeProject(1, 'small-project', files);
+
+      expect(graph.nodes).toHaveLength(10);
+      expect(graph.stats.chunksProcessed).toBe(1);
+    });
+
+    it('should process large projects in multiple chunks', async () => {
+      // Create 600 files to force 2 chunks (500 + 100)
+      const files = Array.from({ length: 600 }, (_, i) => ({
+        path: `src/file${i}.js`,
+        content: `export function test${i}() {}`
+      }));
+
+      const graph = await analyzeProject(1, 'large-project', files);
+
+      expect(graph.nodes).toHaveLength(600);
+      expect(graph.stats.chunksProcessed).toBe(2);
+      expect(graph.stats.totalFiles).toBe(600);
+    });
+
+    it('should resolve cross-chunk dependencies correctly', async () => {
+      // File in chunk 2 imports from file in chunk 1
+      parseCode.mockImplementation((content) => {
+        if (content.includes('import { shared }')) {
+          return Promise.resolve({
+            functions: [],
+            classes: [],
+            exports: [],
+            imports: [{ source: '../shared/utils', specifiers: [{ local: 'shared' }] }],
+            cyclomaticComplexity: 1
+          });
+        }
+        return Promise.resolve({
+          functions: [{ name: 'shared', params: [] }],
+          classes: [],
+          exports: [{ name: 'shared', type: 'named' }],
+          imports: [],
+          cyclomaticComplexity: 1
+        });
+      });
+
+      const files = [];
+
+      // First 500 files (chunk 1) - including the shared utility
+      files.push({ path: 'src/shared/utils.js', content: 'export function shared() {}' });
+      for (let i = 1; i < 500; i++) {
+        files.push({ path: `src/chunk1/file${i}.js`, content: 'export function test() {}' });
+      }
+
+      // Next 100 files (chunk 2) - with one importing from chunk 1
+      files.push({ path: 'src/chunk2/consumer.js', content: 'import { shared } from "../shared/utils";' });
+      for (let i = 1; i < 100; i++) {
+        files.push({ path: `src/chunk2/file${i}.js`, content: 'export function test() {}' });
+      }
+
+      const graph = await analyzeProject(1, 'cross-chunk-project', files);
+
+      expect(graph.stats.chunksProcessed).toBe(2);
+
+      // Find edge from consumer to shared/utils
+      const crossChunkEdge = graph.edges.find(e =>
+        e.from === 'src/chunk2/consumer.js' && e.to === 'src/shared/utils.js'
+      );
+      expect(crossChunkEdge).toBeDefined();
+
+      // Verify dependent count was updated across chunks
+      const sharedNode = graph.nodes.find(n => n.id === 'src/shared/utils.js');
+      expect(sharedNode.dependentCount).toBe(1);
+    });
+
+    it('should track processing time in stats', async () => {
+      const files = [{ path: 'src/index.js', content: '' }];
+
+      const graph = await analyzeProject(1, 'timed-project', files);
+
+      expect(graph.stats.processingTimeMs).toBeDefined();
+      expect(typeof graph.stats.processingTimeMs).toBe('number');
+      expect(graph.stats.processingTimeMs).toBeGreaterThanOrEqual(0);
+    });
+
+    it('should call onProgress callback during chunked processing', async () => {
+      const files = Array.from({ length: 600 }, (_, i) => ({
+        path: `src/file${i}.js`,
+        content: `export function test${i}() {}`
+      }));
+
+      const onProgress = jest.fn();
+
+      await analyzeProject(1, 'progress-project', files, { onProgress });
+
+      // Should be called for each chunk
+      expect(onProgress).toHaveBeenCalledTimes(2);
+      expect(onProgress).toHaveBeenNthCalledWith(1, 1, 2); // chunk 1 of 2
+      expect(onProgress).toHaveBeenNthCalledWith(2, 2, 2); // chunk 2 of 2
+    });
+
+    it('should deduplicate edges from same file to same target', async () => {
+      // Same import appearing multiple times should only create one edge
+      parseCode.mockResolvedValue({
+        functions: [],
+        classes: [],
+        exports: [],
+        imports: [
+          { source: './utils', specifiers: [{ local: 'foo' }] },
+          { source: './utils', specifiers: [{ local: 'bar' }] } // Same file, different import
+        ],
+        cyclomaticComplexity: 1
+      });
+
+      const files = [
+        { path: 'src/a.js', content: 'import { foo, bar } from "./utils";' },
+        { path: 'src/utils.js', content: 'export const foo = 1; export const bar = 2;' }
+      ];
+
+      const graph = await analyzeProject(1, 'dedup-project', files);
+
+      // Should only have one edge from a.js to utils.js
+      const edgesFromA = graph.edges.filter(e => e.from === 'src/a.js');
+      expect(edgesFromA).toHaveLength(1);
+    });
+
+    it('should handle parse errors gracefully during chunked processing', async () => {
+      // First file parses, second fails, third parses
+      let callCount = 0;
+      parseCode.mockImplementation(() => {
+        callCount++;
+        if (callCount === 2) {
+          return Promise.reject(new Error('Parse error'));
+        }
+        return Promise.resolve({
+          functions: [{ name: 'test', params: [] }],
+          classes: [],
+          exports: [],
+          imports: [],
+          cyclomaticComplexity: 1
+        });
+      });
+
+      const files = [
+        { path: 'src/good1.js', content: 'function test() {}' },
+        { path: 'src/bad.js', content: 'invalid {{{{' },
+        { path: 'src/good2.js', content: 'function test() {}' }
+      ];
+
+      const graph = await analyzeProject(1, 'error-project', files);
+
+      // All files should still have nodes
+      expect(graph.nodes).toHaveLength(3);
+
+      // Bad file should have empty arrays for functions/classes
+      const badNode = graph.nodes.find(n => n.id === 'src/bad.js');
+      expect(badNode.functions).toEqual([]);
+      expect(badNode.exports).toEqual([]);
+    });
+  });
+
+  // ============================================================================
   // BRANCH COVERAGE: PARSING WITH MISSING/NULL FIELDS
   // ============================================================================
 
