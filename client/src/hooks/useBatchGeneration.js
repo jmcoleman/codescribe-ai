@@ -314,6 +314,7 @@ export const generateBatchSummaryDocument = (summary, failedFiles = [], tier = '
  * @param {Function} options.refetchUsage - Refetch usage stats
  * @param {string} options.userTier - User's effective tier for attribution
  * @param {Object} options.trialInfo - Optional trial info { isOnTrial, trialEndsAt }
+ * @param {number|null} options.projectId - Optional project ID for batch association
  * @returns {Object} Batch generation state and handlers
  */
 export function useBatchGeneration({
@@ -329,7 +330,8 @@ export function useBatchGeneration({
   setShowUsageLimitModal,
   refetchUsage,
   userTier = 'free',
-  trialInfo = null
+  trialInfo = null,
+  projectId = null
 }) {
   // Load initial batch state from sessionStorage (persists across refresh)
   const loadInitialBatchState = () => {
@@ -712,7 +714,8 @@ export function useBatchGeneration({
           avgGrade,
           summaryMarkdown,
           errorDetails: failedFiles.length > 0 ? failedFiles : null,
-          docTypes: uniqueDocTypes
+          docTypes: uniqueDocTypes,
+          projectId: projectId
         });
 
         if (batchResult.batchId) {
@@ -797,7 +800,8 @@ export function useBatchGeneration({
     setDocumentation,
     setQualityScore,
     userTier,
-    trialInfo
+    trialInfo,
+    projectId
   ]);
 
   /**

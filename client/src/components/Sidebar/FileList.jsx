@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { FileItem } from './FileItem';
 import { FileDetailsPanel } from './FileDetailsPanel';
+import { ProjectSelector } from './ProjectSelector';
 import { FileCode, PanelLeftClose, Plus, Github, Upload, Info, X, Stamp, Trash2, Sparkles, Loader2, RefreshCw } from 'lucide-react';
 import { Select } from '../Select';
 import { Button } from '../Button';
@@ -64,6 +65,9 @@ function GitHubSync({ className, isLoading = false }) {
  * @param {Function} props.onDeleteSelected - Called when Delete is clicked (for selected files)
  * @param {Function} props.onToggleSidebar - Called when collapse button is clicked
  * @param {Function} props.onUpdateFile - Called when file content is updated (e.g., after GitHub reload)
+ * @param {number|null} props.selectedProjectId - Currently selected project ID (Pro+ only)
+ * @param {Function} props.onProjectChange - Called when project selection changes (Pro+ only)
+ * @param {boolean} props.canUseProjectManagement - Whether user can use project management (Pro+ only)
  */
 export function FileList({
   files = [],
@@ -89,7 +93,10 @@ export function FileList({
   onFilesDrop,
   bulkGenerationProgress = null, // { total, completed, currentBatch, totalBatches }
   onUpdateFile,
-  onViewBatchSummary
+  onViewBatchSummary,
+  selectedProjectId = null,
+  onProjectChange,
+  canUseProjectManagement = false
 }) {
   const [isDragging, setIsDragging] = useState(false);
   const [detailsFileId, setDetailsFileId] = useState(null);
@@ -353,6 +360,22 @@ export function FileList({
               />
             </div>
           </div>
+
+          {/* Project selector (Pro+ only) */}
+          {canUseProjectManagement && onProjectChange && (
+            <div className="flex items-center gap-2 mb-1.5">
+              <label className="text-xs font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap flex-shrink-0">
+                Project:
+              </label>
+              <div className="flex-1 min-w-0">
+                <ProjectSelector
+                  selectedProjectId={selectedProjectId}
+                  onProjectChange={onProjectChange}
+                  size="small"
+                />
+              </div>
+            </div>
+          )}
 
           {/* Action buttons - file management (left) and selection actions (right) */}
           <div className="flex gap-2 justify-between">

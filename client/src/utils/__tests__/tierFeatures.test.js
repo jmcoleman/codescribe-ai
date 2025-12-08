@@ -148,6 +148,14 @@ describe('tierFeatures utilities', () => {
       expect(hasFeature({ tier: 'team', role: 'user' }, 'customTemplates')).toBe(true);
       expect(hasFeature({ tier: 'enterprise', role: 'user' }, 'customTemplates')).toBe(true);
     });
+
+    it('should handle projectManagement feature correctly', () => {
+      expect(hasFeature({ tier: 'free', role: 'user' }, 'projectManagement')).toBe(false);
+      expect(hasFeature({ tier: 'starter', role: 'user' }, 'projectManagement')).toBe(false);
+      expect(hasFeature({ tier: 'pro', role: 'user' }, 'projectManagement')).toBe(true);
+      expect(hasFeature({ tier: 'team', role: 'user' }, 'projectManagement')).toBe(true);
+      expect(hasFeature({ tier: 'enterprise', role: 'user' }, 'projectManagement')).toBe(true);
+    });
   });
 
   describe('getTierFeatures', () => {
@@ -278,6 +286,21 @@ describe('tierFeatures utilities', () => {
 
     it('should return null for customTemplates from pro', () => {
       const upgradeTier = getUpgradeTierForFeature('pro', 'customTemplates');
+      expect(upgradeTier).toBeNull();
+    });
+
+    it('should recommend pro for projectManagement from free', () => {
+      const upgradeTier = getUpgradeTierForFeature('free', 'projectManagement');
+      expect(upgradeTier).toBe('pro');
+    });
+
+    it('should recommend pro for projectManagement from starter', () => {
+      const upgradeTier = getUpgradeTierForFeature('starter', 'projectManagement');
+      expect(upgradeTier).toBe('pro');
+    });
+
+    it('should return null for projectManagement from pro', () => {
+      const upgradeTier = getUpgradeTierForFeature('pro', 'projectManagement');
       expect(upgradeTier).toBeNull();
     });
   });

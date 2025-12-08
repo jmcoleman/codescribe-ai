@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { screen, waitFor } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { renderWithTheme as render } from '../../__tests__/utils/renderWithTheme';
 import userEvent from '@testing-library/user-event';
 import { ControlBar } from '../ControlBar';
@@ -94,52 +94,8 @@ describe('ControlBar Component', () => {
     });
   });
 
-  describe('GitHub Import Button', () => {
-    // Note: GitHub import feature is currently disabled via feature flag (ENABLE_GITHUB_IMPORT = false)
-    // These tests are skipped until the feature is implemented in v2.0
-
-    it.skip('should call onGithubImport when clicked', async () => {
-      const user = userEvent.setup();
-      const onGithubImport = vi.fn();
-
-      render(<ControlBar {...defaultProps} onGithubImport={onGithubImport} />);
-
-      const githubButton = screen.getByRole('button', { name: /import from github/i });
-      await user.click(githubButton);
-
-      expect(onGithubImport).toHaveBeenCalledTimes(1);
-    });
-
-    it.skip('should disable github button when disabled prop is true', () => {
-      render(<ControlBar {...defaultProps} disabled={true} />);
-
-      const githubButton = screen.getByRole('button', { name: /import from github/i });
-      expect(githubButton).toBeDisabled();
-    });
-
-    it.skip('should have secondary variant styling', () => {
-      render(<ControlBar {...defaultProps} />);
-
-      const githubButton = screen.getByRole('button', { name: /import from github/i });
-      expect(githubButton).toHaveClass('bg-slate-100');
-    });
-
-    it.skip('should display github icon', () => {
-      render(<ControlBar {...defaultProps} />);
-
-      const githubButton = screen.getByRole('button', { name: /import from github/i });
-      expect(githubButton.querySelector('svg')).toBeInTheDocument();
-    });
-
-    it.skip('should show responsive text content', () => {
-      render(<ControlBar {...defaultProps} />);
-
-      // Desktop text (hidden on mobile)
-      expect(screen.getByText('Import from GitHub')).toHaveClass('hidden', 'sm:inline');
-
-      // Mobile text (hidden on desktop)
-      expect(screen.getByText('GitHub')).toHaveClass('sm:hidden');
-    });
+  describe('GitHub Import Menu Item', () => {
+    // GitHub import is available as a menu item in the "Add Code" dropdown (v2.8.0+)
 
     it('should render GitHub import menu item', async () => {
       const user = userEvent.setup();
@@ -153,43 +109,40 @@ describe('ControlBar Component', () => {
       const githubMenuItem = await screen.findByText('Import from GitHub');
       expect(githubMenuItem).toBeInTheDocument();
     });
+
+    it('should call onGithubImport when menu item clicked', async () => {
+      const user = userEvent.setup();
+      const onGithubImport = vi.fn();
+
+      render(<ControlBar {...defaultProps} onGithubImport={onGithubImport} />);
+
+      // Open dropdown
+      const addCodeButton = screen.getByRole('button', { name: /add code/i });
+      await user.click(addCodeButton);
+
+      // Click GitHub import menu item
+      const githubMenuItem = await screen.findByText('Import from GitHub');
+      await user.click(githubMenuItem);
+
+      expect(onGithubImport).toHaveBeenCalledTimes(1);
+    });
+
+    it('should display GitHub icon in menu item', async () => {
+      const user = userEvent.setup();
+      render(<ControlBar {...defaultProps} />);
+
+      // Open dropdown
+      const addCodeButton = screen.getByRole('button', { name: /add code/i });
+      await user.click(addCodeButton);
+
+      // Find the menu item and check for icon
+      const githubMenuItem = await screen.findByText('Import from GitHub');
+      const menuItemButton = githubMenuItem.closest('button');
+      expect(menuItemButton.querySelector('svg')).toBeInTheDocument();
+    });
   });
 
   describe('Doc Type Selector', () => {
-    it.skip('should open dropdown when clicked', async () => {
-      const user = userEvent.setup();
-
-      render(<ControlBar {...defaultProps} />);
-
-      // Click the select trigger
-      const selectButton = screen.getByRole('button', { name: /select documentation type/i });
-      await user.click(selectButton);
-
-      // All options should now be visible (Claude-only fallback types)
-      await waitFor(() => {
-        expect(screen.getByText('JSDoc Comments')).toBeInTheDocument();
-        expect(screen.getByText('API Documentation')).toBeInTheDocument();
-        expect(screen.getByText('Architecture Docs')).toBeInTheDocument();
-      });
-    });
-
-    it.skip('should call onDocTypeChange when option selected', async () => {
-      const user = userEvent.setup();
-      const onDocTypeChange = vi.fn();
-
-      render(<ControlBar {...defaultProps} onDocTypeChange={onDocTypeChange} />);
-
-      // Open dropdown
-      const selectButton = screen.getByRole('button', { name: /select documentation type/i });
-      await user.click(selectButton);
-
-      // Select JSDOC option
-      const jsdocOption = await screen.findByText('JSDoc Comments');
-      await user.click(jsdocOption);
-
-      expect(onDocTypeChange).toHaveBeenCalledWith('JSDOC');
-    });
-
     it('should change to JSDOC doc type', async () => {
       const user = userEvent.setup();
       const onDocTypeChange = vi.fn();
@@ -209,25 +162,6 @@ describe('ControlBar Component', () => {
       expect(jsDocElements.length).toBeGreaterThanOrEqual(1);
     });
 
-    it.skip('should change to API doc type', async () => {
-      const user = userEvent.setup();
-      const onDocTypeChange = vi.fn();
-
-      const { rerender } = render(<ControlBar {...defaultProps} onDocTypeChange={onDocTypeChange} />);
-
-      // Open dropdown and select API
-      await user.click(screen.getByRole('button', { name: /select documentation type/i }));
-      const apiOptions = await screen.findAllByText('API Documentation');
-      await user.click(apiOptions[apiOptions.length - 1]); // Click the one in dropdown
-
-      // Simulate parent component updating the docType prop
-      rerender(<ControlBar {...defaultProps} docType="API" onDocTypeChange={onDocTypeChange} />);
-
-      // API Documentation should now be displayed (may appear multiple times if dropdown still open)
-      const apiElements = screen.getAllByText('API Documentation');
-      expect(apiElements.length).toBeGreaterThanOrEqual(1);
-    });
-
     it('should change to ARCHITECTURE doc type', async () => {
       const user = userEvent.setup();
       const onDocTypeChange = vi.fn();
@@ -245,51 +179,6 @@ describe('ControlBar Component', () => {
       // Architecture Docs should now be displayed (may appear multiple times if dropdown still open)
       const archElements = screen.getAllByText('Architecture Docs');
       expect(archElements.length).toBeGreaterThanOrEqual(1);
-    });
-
-    it.skip('should close dropdown after selecting option', async () => {
-      const user = userEvent.setup();
-
-      render(<ControlBar {...defaultProps} />);
-
-      // Open dropdown
-      await user.click(screen.getByRole('button', { name: /select documentation type/i }));
-
-      // Verify dropdown is open by waiting for options to appear
-      await waitFor(() => {
-        expect(screen.getByText('API Documentation')).toBeInTheDocument();
-      });
-
-      // Select an option
-      await user.click(screen.getByText('JSDoc Comments'));
-
-      // Dropdown should close (API Documentation should no longer be visible)
-      await waitFor(() => {
-        expect(screen.queryByText('API Documentation')).not.toBeInTheDocument();
-      });
-    });
-
-    it.skip('should highlight selected option in dropdown', async () => {
-      const user = userEvent.setup();
-      render(<ControlBar {...defaultProps} docType="API" />);
-
-      // Open dropdown by clicking the select button
-      const selectButton = screen.getByRole('button', { name: /select documentation type/i });
-      await user.click(selectButton);
-
-      // Wait for dropdown to open and find all options (use findAllByText for async)
-      const apiOptionText = await screen.findAllByText('API Documentation');
-
-      // There should be at least 2 instances: one on the button, one in dropdown
-      expect(apiOptionText.length).toBeGreaterThanOrEqual(2);
-
-      // Check that at least one has a sibling or parent with a checkmark SVG
-      const hasCheckmark = apiOptionText.some(element => {
-        const parent = element.closest('li');
-        return parent && parent.querySelector('svg') !== null;
-      });
-
-      expect(hasCheckmark).toBe(true);
     });
   });
 
@@ -530,14 +419,13 @@ describe('ControlBar Component', () => {
       expect(onGenerate).toHaveBeenCalled();
     });
 
-    it.skip('should handle github import → select type → generate', async () => {
-      // Skipped: GitHub import feature disabled (ENABLE_GITHUB_IMPORT = false)
+    it('should handle github import → select type → generate', async () => {
       const user = userEvent.setup();
       const onGithubImport = vi.fn();
       const onDocTypeChange = vi.fn();
       const onGenerate = vi.fn();
 
-      render(
+      const { rerender } = render(
         <ControlBar
           {...defaultProps}
           onGithubImport={onGithubImport}
@@ -546,14 +434,26 @@ describe('ControlBar Component', () => {
         />
       );
 
-      // 1. Import from GitHub
-      await user.click(screen.getByRole('button', { name: /import from github/i }));
+      // 1. Import from GitHub (via dropdown menu)
+      await user.click(screen.getByRole('button', { name: /add code/i }));
+      await user.click(await screen.findByText('Import from GitHub'));
       expect(onGithubImport).toHaveBeenCalled();
 
       // 2. Select doc type
       await user.click(screen.getByRole('button', { name: /select documentation type/i }));
       await user.click(await screen.findByText('API Documentation'));
       expect(onDocTypeChange).toHaveBeenCalledWith('API');
+
+      // Update docType
+      rerender(
+        <ControlBar
+          {...defaultProps}
+          docType="API"
+          onGithubImport={onGithubImport}
+          onDocTypeChange={onDocTypeChange}
+          onGenerate={onGenerate}
+        />
+      );
 
       // 3. Generate docs
       await user.click(screen.getByRole('button', { name: /generate docs/i }));

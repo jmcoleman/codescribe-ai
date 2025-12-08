@@ -247,6 +247,12 @@ function App() {
   // This single flag controls: multi-file sidebar, GitHub multi-select, batch summary, summary button
   const canUseBatchProcessing = hasFeature(user, 'batchProcessing');
 
+  // Feature detection: Check if user can use project management (Pro+ tier)
+  const canUseProjectManagement = hasFeature(user, 'projectManagement');
+
+  // Project selection state (Pro+ feature for linking batches to projects)
+  const [selectedProjectId, setSelectedProjectId] = useState(null);
+
   // Note: Batch state clearing for tier downgrade is handled after useBatchGeneration hook
 
   // Check legal acceptance status on mount for authenticated users
@@ -530,7 +536,8 @@ function App() {
     setShowUsageLimitModal,
     refetchUsage,
     userTier: user?.effectiveTier || user?.tier || 'free',
-    trialInfo: isOnTrial ? { isOnTrial, trialEndsAt } : null
+    trialInfo: isOnTrial ? { isOnTrial, trialEndsAt } : null,
+    projectId: canUseProjectManagement ? selectedProjectId : null
   });
 
   // Clear batch-related state when user loses batch processing access (tier downgrade/expiry)
@@ -2129,6 +2136,9 @@ function App() {
                 bulkGenerationProgress={bulkGenerationProgress}
                 onUpdateFile={multiFileState.updateFile}
                 onViewBatchSummary={handleBackToSummary}
+                selectedProjectId={selectedProjectId}
+                onProjectChange={setSelectedProjectId}
+                canUseProjectManagement={canUseProjectManagement}
               />
 
               {/* Main Content - Full width on mobile */}
@@ -2226,6 +2236,9 @@ function App() {
                   bulkGenerationProgress={bulkGenerationProgress}
                   onUpdateFile={multiFileState.updateFile}
                   onViewBatchSummary={handleBackToSummary}
+                  selectedProjectId={selectedProjectId}
+                  onProjectChange={setSelectedProjectId}
+                  canUseProjectManagement={canUseProjectManagement}
                 />
               </Panel>
 
