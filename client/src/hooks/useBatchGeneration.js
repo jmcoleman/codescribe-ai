@@ -516,7 +516,8 @@ export function useBatchGeneration({
       try {
         console.log(`[useBatchGeneration] Starting generation for file ${i + 1}/${totalFiles}: ${file.filename}`);
         const startTime = Date.now();
-        const result = await generate(file.content, file.docType, file.language, false, file.filename);
+        // Pass projectId and filename as filePath for graph context
+        const result = await generate(file.content, file.docType, file.language, false, file.filename, projectId, file.filename);
         console.log(`[useBatchGeneration] Generation completed for ${file.filename} in ${(Date.now() - startTime) / 1000}s`);
 
         const generatedAt = new Date();

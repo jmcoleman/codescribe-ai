@@ -8,6 +8,7 @@ import ErrorBoundary from './components/ErrorBoundary.jsx'
 import { ThemeProvider } from './contexts/ThemeContext.jsx'
 import { AuthProvider } from './contexts/AuthContext.jsx'
 import { TrialProvider } from './contexts/TrialContext.jsx'
+import { PreferencesProvider } from './contexts/PreferencesContext.jsx'
 import { WorkspaceProvider } from './contexts/WorkspaceContext.jsx'
 import { AuthCallback } from './components/AuthCallback.jsx'
 import { ResetPassword } from './components/ResetPassword.jsx'
@@ -34,6 +35,7 @@ createRoot(document.getElementById('root')).render(
       <BrowserRouter>
         <AuthProvider>
           <TrialProvider>
+          <PreferencesProvider>
           <ThemeProvider>
           <WorkspaceProvider>
             <Routes>
@@ -61,6 +63,7 @@ createRoot(document.getElementById('root')).render(
             <AnalyticsWrapper />
           </WorkspaceProvider>
           </ThemeProvider>
+          </PreferencesProvider>
           </TrialProvider>
         </AuthProvider>
       </BrowserRouter>

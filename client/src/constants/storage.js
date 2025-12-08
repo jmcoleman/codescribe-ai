@@ -275,6 +275,8 @@ export const clearAppStorage = (userId = null) => {
         localStorage.removeItem(githubRecentKey);
         result.localStorage++;
       }
+      // Note: selectedProjectId is stored inside workspace data (cs_ws_{userId})
+      // and is cleared when workspace is cleared above
     }
   } catch (error) {
     console.warn('Failed to clear app storage:', error);

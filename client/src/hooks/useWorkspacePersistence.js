@@ -17,39 +17,86 @@
  * @returns {Object} Multi-file state with DB persistence
  */
 
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback, useRef, useContext, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import PreferencesContext from '../contexts/PreferencesContext';
 import { hasFeature } from '../utils/tierFeatures';
 import workspaceApi from '../services/workspaceApi';
 import { useMultiFileState } from './useMultiFileState';
 import { getWorkspaceKey } from '../constants/storage';
 
 /**
- * Get all workspace contents from localStorage for a specific user
- * @param {number|string} userId - User ID
- * @returns {Object} Workspace contents { fileId: content, ... }
+ * Safe hook to get selectedProjectId from PreferencesContext.
+ * Falls back to local state if PreferencesContext is not available (e.g., in tests).
  */
-function getWorkspaceContents(userId) {
-  if (!userId) return {};
+function useSafeSelectedProject() {
+  const context = useContext(PreferencesContext);
+  // Local state fallback for tests
+  const [localProjectId, setLocalProjectId] = useState(null);
+
+  if (context) {
+    return {
+      selectedProjectId: context.selectedProjectId,
+      setSelectedProjectId: context.setSelectedProjectId
+    };
+  }
+  // Fallback for tests where PreferencesContext isn't provided
+  return {
+    selectedProjectId: localProjectId,
+    setSelectedProjectId: setLocalProjectId
+  };
+}
+
+/**
+ * Workspace localStorage structure:
+ * {
+ *   files: { [fileId]: content, ... }  // File contents by DB ID
+ * }
+ *
+ * Note: selectedProjectId is now managed by PreferencesContext (syncs to user_preferences table)
+ */
+
+/**
+ * Get workspace file contents from localStorage for a specific user
+ * @param {number|string} userId - User ID
+ * @returns {Object} Workspace files { fileId: content, ... }
+ */
+function getWorkspaceData(userId) {
+  if (!userId) return { files: {} };
 
   try {
     const key = getWorkspaceKey(userId);
-    if (!key) return {};
+    if (!key) return { files: {} };
 
-    const contents = localStorage.getItem(key);
-    return contents ? JSON.parse(contents) : {};
+    const data = localStorage.getItem(key);
+    if (!data) return { files: {} };
+
+    const parsed = JSON.parse(data);
+
+    // Handle migration from old format (flat object with file contents)
+    // Old format: { fileId: content, ... }
+    // New format: { files: { fileId: content, ... } }
+    // Even older: { files: {...}, selectedProjectId: ... } - selectedProjectId now in PreferencesContext
+    if (!parsed.files && typeof parsed === 'object') {
+      // Migrate old format: treat entire object as files
+      return { files: parsed };
+    }
+
+    return {
+      files: parsed.files || {}
+    };
   } catch (error) {
-    console.error('[useWorkspacePersistence] Failed to parse workspace contents:', error);
-    return {};
+    console.error('[useWorkspacePersistence] Failed to parse workspace data:', error);
+    return { files: {} };
   }
 }
 
 /**
- * Save all workspace contents to localStorage for a specific user
+ * Save workspace file contents to localStorage for a specific user
  * @param {number|string} userId - User ID
- * @param {Object} contents - Workspace contents { fileId: content, ... }
+ * @param {Object} data - Workspace data { files: {...} }
  */
-function saveWorkspaceContents(userId, contents) {
+function saveWorkspaceData(userId, data) {
   if (!userId) {
     console.warn('[useWorkspacePersistence] Cannot save workspace without userId');
     return;
@@ -59,10 +106,10 @@ function saveWorkspaceContents(userId, contents) {
     const key = getWorkspaceKey(userId);
     if (!key) return;
 
-    localStorage.setItem(key, JSON.stringify(contents));
+    // Only save files, not selectedProjectId (which is in PreferencesContext)
+    localStorage.setItem(key, JSON.stringify({ files: data.files || {} }));
   } catch (error) {
-    console.error('[useWorkspacePersistence] Failed to save workspace contents:', error);
-    // QuotaExceededError handling
+    console.error('[useWorkspacePersistence] Failed to save workspace data:', error);
     if (error.name === 'QuotaExceededError') {
       console.warn('[useWorkspacePersistence] localStorage quota exceeded. Consider clearing old files.');
     }
@@ -70,8 +117,37 @@ function saveWorkspaceContents(userId, contents) {
 }
 
 /**
+ * Get all workspace file contents from localStorage for a specific user
+ * @param {number|string} userId - User ID
+ * @returns {Object} Workspace contents { fileId: content, ... }
+ */
+function getWorkspaceContents(userId) {
+  return getWorkspaceData(userId).files;
+}
+
+/**
+ * Save workspace file contents to localStorage for a specific user
+ * Preserves other workspace data (like selectedProjectId)
+ * @param {number|string} userId - User ID
+ * @param {Object} contents - Workspace contents { fileId: content, ... }
+ */
+function saveWorkspaceContents(userId, contents) {
+  if (!userId) {
+    console.warn('[useWorkspacePersistence] Cannot save workspace without userId');
+    return;
+  }
+
+  const currentData = getWorkspaceData(userId);
+  saveWorkspaceData(userId, {
+    ...currentData,
+    files: contents
+  });
+}
+
+/**
  * Clear workspace file content from localStorage for a specific user
  * Exported for use in logout/cleanup flows
+ * Note: selectedProjectId is managed by PreferencesContext, not here
  * @param {number|string} userId - User ID
  */
 export function clearWorkspaceLocalStorage(userId) {
@@ -82,7 +158,8 @@ export function clearWorkspaceLocalStorage(userId) {
 
   const key = getWorkspaceKey(userId);
   if (key) {
-    localStorage.removeItem(key);
+    // Clear workspace files (selectedProjectId is managed by PreferencesContext)
+    saveWorkspaceData(userId, { files: {} });
   }
 }
 
@@ -91,6 +168,10 @@ export function useWorkspacePersistence() {
   const hasMultiFileAccess = user && hasFeature(user, 'batchProcessing');
   const multiFileState = useMultiFileState();
   const { addFile, addFiles, removeFile, removeFiles, updateFile, clearFiles } = multiFileState;
+
+  // Get selectedProjectId from PreferencesContext (which syncs to DB)
+  // Falls back to local state if context not available (e.g., in tests)
+  const { selectedProjectId, setSelectedProjectId } = useSafeSelectedProject();
 
   // Track workspace file ID -> client file ID mapping
   const workspaceIdMap = useRef(new Map()); // workspace DB ID -> client file ID
@@ -517,6 +598,9 @@ export function useWorkspacePersistence() {
     removeFiles: removeFilesWithPersistence,
     updateFile: updateFileWithPersistence,
     clearFiles: clearFilesWithPersistence,
-    reloadWorkspace
+    reloadWorkspace,
+    // Project selection (Pro+ feature)
+    selectedProjectId,
+    setSelectedProjectId
   };
 }

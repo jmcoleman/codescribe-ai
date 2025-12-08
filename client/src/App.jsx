@@ -30,6 +30,7 @@ import { createTestDataLoader, exposeTestDataLoader, createSkeletonTestHelper, e
 import { exposeUsageSimulator } from './utils/usageTestData';
 import { useAuth } from './contexts/AuthContext';
 import { useTrial } from './contexts/TrialContext';
+import { usePreferences } from './contexts/PreferencesContext';
 import { hasFeature } from './utils/tierFeatures';
 import { DEFAULT_CODE, EXAMPLE_CODES } from './constants/defaultCode';
 import * as batchesApi from './services/batchesApi';
@@ -66,6 +67,16 @@ function App() {
   const { getToken, user, isAuthenticated, isLoading: authLoading, checkLegalStatus, acceptLegalDocuments } = useAuth();
   const { effectiveTheme } = useTheme();
   const { isOnTrial, trialEndsAt } = useTrial();
+  const {
+    layoutMode: prefsLayoutMode,
+    sidebarCollapsed: prefsSidebarCollapsed,
+    sidebarWidth: prefsSidebarWidth,
+    selectedProjectId: prefsSelectedProjectId,
+    setLayoutMode: setPrefsLayoutMode,
+    setSidebarCollapsed: setPrefsSidebarCollapsed,
+    setSidebarWidth: setPrefsSidebarWidth,
+    setSelectedProjectId: setPrefsSelectedProjectId
+  } = usePreferences();
 
   // Load persisted state from localStorage on mount, fallback to defaults
   const [code, setCode] = useState(() => getStorageItem(STORAGE_KEYS.EDITOR_CODE, DEFAULT_CODE));
@@ -79,8 +90,20 @@ function App() {
   // Language is derived from filename, not stored separately
   const language = detectLanguageFromFilename(filename);
 
-  // Layout mode state (Pro+ feature)
-  const [layout, setLayout] = useState(() => getStorageItem(STORAGE_KEYS.LAYOUT_MODE, 'split'));
+  // Layout mode state - sync with PreferencesContext
+  const [layout, setLayout] = useState(() => {
+    // Use localStorage for fast initial render, PreferencesContext will sync after load
+    const stored = getStorageItem(STORAGE_KEYS.LAYOUT_MODE);
+    return stored && ['split', 'code', 'doc'].includes(stored) ? stored : 'split';
+  });
+
+  // Sync layout with PreferencesContext when it loads from API
+  useEffect(() => {
+    if (prefsLayoutMode && prefsLayoutMode !== layout) {
+      setLayout(prefsLayoutMode);
+      setStorageItem(STORAGE_KEYS.LAYOUT_MODE, prefsLayoutMode);
+    }
+  }, [prefsLayoutMode]);
 
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showQualityModal, setShowQualityModal] = useState(false);
@@ -106,13 +129,24 @@ function App() {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [isMobileView, setIsMobileView] = useState(() => window.innerWidth < 1024);
   const [mobileActiveTab, setMobileActiveTab] = useState('code'); // 'code' or 'doc' (mobile only, not persisted)
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-    // Load sidebar collapsed state from localStorage
+  // Sidebar collapsed state - sync with PreferencesContext
+  const [sidebarCollapsed, setSidebarCollapsedLocal] = useState(() => {
+    // Load sidebar collapsed state from localStorage for fast initial render
     const saved = getStorageItem(STORAGE_KEYS.SIDEBAR_MODE);
     return saved === 'collapsed';
   });
-  const [expandedSidebarWidth, setExpandedSidebarWidth] = useState(() => {
-    // Load user's preferred expanded width from localStorage
+
+  // Sync sidebarCollapsed with PreferencesContext when it loads from API
+  useEffect(() => {
+    if (prefsSidebarCollapsed !== undefined && prefsSidebarCollapsed !== sidebarCollapsed) {
+      setSidebarCollapsedLocal(prefsSidebarCollapsed);
+      setStorageItem(STORAGE_KEYS.SIDEBAR_MODE, prefsSidebarCollapsed ? 'collapsed' : 'expanded');
+    }
+  }, [prefsSidebarCollapsed]);
+
+  // Expanded sidebar width state - sync with PreferencesContext
+  const [expandedSidebarWidth, setExpandedSidebarWidthLocal] = useState(() => {
+    // Load user's preferred expanded width from localStorage for fast initial render
     try {
       const saved = getStorageItem(STORAGE_KEYS.SIDEBAR_WIDTH);
       if (saved) {
@@ -124,6 +158,17 @@ function App() {
     }
     return DEFAULT_SIDEBAR_SIZE;
   });
+
+  // Sync sidebarWidth with PreferencesContext when it loads from API
+  useEffect(() => {
+    if (prefsSidebarWidth && prefsSidebarWidth !== expandedSidebarWidth) {
+      setExpandedSidebarWidthLocal(prefsSidebarWidth);
+      setStorageItem(STORAGE_KEYS.SIDEBAR_WIDTH, JSON.stringify({
+        sidebar: prefsSidebarWidth,
+        main: 100 - prefsSidebarWidth
+      }));
+    }
+  }, [prefsSidebarWidth]);
   const fileInputRef = useRef(null); // For single-file uploads (Command Bar)
   const multiFileInputRef = useRef(null); // For multi-file uploads (Sidebar)
   const samplesButtonRef = useRef(null);
@@ -160,10 +205,12 @@ function App() {
 
   // Toggle sidebar collapse state
   const handleToggleSidebarCollapse = useCallback(() => {
-    setSidebarCollapsed(prev => {
+    setSidebarCollapsedLocal(prev => {
       const newValue = !prev;
       // Persist to localStorage
       setStorageItem(STORAGE_KEYS.SIDEBAR_MODE, newValue ? 'collapsed' : 'expanded');
+      // Sync to PreferencesContext (which syncs to API)
+      setPrefsSidebarCollapsed(newValue);
 
       // Control panel size via ref
       if (sidebarPanelRef.current) {
@@ -178,14 +225,16 @@ function App() {
 
       return newValue;
     });
-  }, [expandedSidebarWidth]);
+  }, [expandedSidebarWidth, setPrefsSidebarCollapsed]);
 
   // Handle layout mode change (Pro+ feature)
   const handleLayoutChange = useCallback((newLayout) => {
     setLayout(newLayout);
     // Persist to localStorage
     setStorageItem(STORAGE_KEYS.LAYOUT_MODE, newLayout);
-  }, []);
+    // Sync to PreferencesContext (which syncs to API)
+    setPrefsLayoutMode(newLayout);
+  }, [setPrefsLayoutMode]);
 
   // Handle sidebar resize (when user drags the handle)
   const handleSidebarResize = useCallback((sizes) => {
@@ -193,11 +242,13 @@ function App() {
       const sidebarSize = sizes[0];
       // Save the expanded width when user resizes (not when collapsed)
       if (sidebarSize > 10) { // Only save if it's a meaningful size (not collapsed)
-        setExpandedSidebarWidth(sidebarSize);
+        setExpandedSidebarWidthLocal(sidebarSize);
         saveSidebarSizes(sidebarSize, sizes[1]);
+        // Sync to PreferencesContext (which syncs to API)
+        setPrefsSidebarWidth(Math.round(sidebarSize));
       }
     }
-  }, [sidebarCollapsed, saveSidebarSizes]);
+  }, [sidebarCollapsed, saveSidebarSizes, setPrefsSidebarWidth]);
 
   // Track if we just accepted terms to prevent re-checking immediately after
   const justAcceptedTermsRef = useRef(false);
@@ -239,7 +290,11 @@ function App() {
   const [mockUsage, setMockUsage] = useState(null);
 
   // Multi-file state (Phase 3: Multi-file integration)
+  // selectedProjectId and setSelectedProjectId now come from PreferencesContext (syncs to DB)
   const multiFileState = useWorkspace();
+  // Alias preferences for easier use (and consistency with old API)
+  const selectedProjectId = prefsSelectedProjectId;
+  const setSelectedProjectId = setPrefsSelectedProjectId;
   const documentPersistence = useDocumentPersistence();
   const { override, clearOverride } = useTierOverride();
 
@@ -249,9 +304,6 @@ function App() {
 
   // Feature detection: Check if user can use project management (Pro+ tier)
   const canUseProjectManagement = hasFeature(user, 'projectManagement');
-
-  // Project selection state (Pro+ feature for linking batches to projects)
-  const [selectedProjectId, setSelectedProjectId] = useState(null);
 
   // Note: Batch state clearing for tier downgrade is handled after useBatchGeneration hook
 
