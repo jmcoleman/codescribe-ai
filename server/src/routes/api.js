@@ -12,6 +12,7 @@ import { TIER_FEATURES, TIER_PRICING } from '../config/tiers.js';
 import { requireAuth, optionalAuth } from '../middleware/auth.js';
 import githubService from '../services/githubService.js';
 import { getDocTypeOptions } from '../prompts/docTypeConfig.js';
+import graphService from '../services/graphService.js';
 
 const router = express.Router();
 
@@ -22,6 +23,24 @@ function formatBytes(bytes) {
   const sizes = ['Bytes', 'KB', 'MB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+}
+
+/**
+ * Fetch graph context for a file with graceful fallback on any failure.
+ * Returns null if params are missing, user is unauthenticated, or graph/file not found.
+ * @param {string|null} projectId - Project graph ID
+ * @param {string|null} filePath - Path to the file in the project
+ * @param {Object|null} user - Authenticated user (from req.user)
+ * @returns {Promise<Object|null>} Graph context or null
+ */
+async function fetchGraphContext(projectId, filePath, user) {
+  if (!projectId || !filePath || !user?.id) return null;
+  try {
+    return await graphService.getFileContext(projectId, filePath, user.id);
+  } catch (error) {
+    console.error('[Graph Context] Failed to fetch:', { projectId, filePath, error: error.message });
+    return null;
+  }
 }
 
 // API root endpoint - provides API metadata and documentation
@@ -110,10 +129,10 @@ router.get('/', (req, res) => {
   });
 });
 
-// Line 17 - add before route handler
+// Generate documentation (non-streaming)
 router.post('/generate', optionalAuth, rateLimitBypass, apiLimiter, generationLimiter, checkUsage(), async (req, res) => {
   try {
-    const { code, docType, language, isDefaultCode, filename } = req.body;
+    const { code, docType, language, isDefaultCode, filename, projectId, filePath } = req.body;
 
     if (!code || typeof code !== 'string') {
       return res.status(400).json({
@@ -129,6 +148,9 @@ router.post('/generate', optionalAuth, rateLimitBypass, apiLimiter, generationLi
       });
     }
 
+    // Fetch graph context if projectId and filePath provided (for cross-file context)
+    const graphContext = await fetchGraphContext(projectId, filePath, req.user);
+
     // Build trial info for watermarking (if user is on trial)
     const trialInfo = req.user?.isOnTrial ? {
       isOnTrial: true,
@@ -142,7 +164,8 @@ router.post('/generate', optionalAuth, rateLimitBypass, apiLimiter, generationLi
       isDefaultCode: isDefaultCode === true, // Cache user message if this is default/example code
       userTier: req.user?.effectiveTier || 'free', // Pass effective tier for attribution (includes overrides)
       filename: filename || 'untitled', // Pass filename for title formatting
-      trialInfo // Pass trial info for watermarking
+      trialInfo, // Pass trial info for watermarking
+      graphContext // Pass graph context for cross-file awareness
     });
 
     // Track usage after successful generation
@@ -164,10 +187,10 @@ router.post('/generate', optionalAuth, rateLimitBypass, apiLimiter, generationLi
   }
 });
 
-// Line 51 - add before route handler
+// Generate documentation (streaming SSE)
 router.post('/generate-stream', optionalAuth, rateLimitBypass, apiLimiter, generationLimiter, checkUsage(), async (req, res) => {
   try {
-    const { code, docType, language, isDefaultCode, filename } = req.body;
+    const { code, docType, language, isDefaultCode, filename, projectId, filePath } = req.body;
 
     if (!code || typeof code !== 'string') {
       return res.status(400).json({
@@ -191,6 +214,9 @@ router.post('/generate-stream', optionalAuth, rateLimitBypass, apiLimiter, gener
 
     res.write(`data: ${JSON.stringify({ type: 'connected' })}\n\n`);
 
+    // Fetch graph context if projectId and filePath provided (for cross-file context)
+    const graphContext = await fetchGraphContext(projectId, filePath, req.user);
+
     const userTier = req.user?.effectiveTier || 'free';
 
     // Build trial info for watermarking (if user is on trial)
@@ -207,6 +233,7 @@ router.post('/generate-stream', optionalAuth, rateLimitBypass, apiLimiter, gener
       userTier, // Pass effective tier for attribution (includes overrides)
       filename: filename || 'untitled', // Pass filename for title formatting
       trialInfo, // Pass trial info for watermarking
+      graphContext, // Pass graph context for cross-file awareness
       onChunk: (chunk) => {
         res.write(`data: ${JSON.stringify({
           type: 'chunk',
