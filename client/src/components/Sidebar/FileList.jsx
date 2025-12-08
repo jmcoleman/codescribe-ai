@@ -553,6 +553,22 @@ export function FileList({
             </div>
           </div>
 
+          {/* Project selector (Pro+ only) - Mobile */}
+          {canUseProjectManagement && onProjectChange && (
+            <div className="flex items-center gap-2 mb-2">
+              <label className="text-xs font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                Project:
+              </label>
+              <div className="flex-1">
+                <ProjectSelector
+                  selectedProjectId={selectedProjectId}
+                  onProjectChange={onProjectChange}
+                  size="small"
+                />
+              </div>
+            </div>
+          )}
+
           {/* Action buttons - Apply, Delete, Generate */}
           <div className="flex gap-1.5">
             <button
