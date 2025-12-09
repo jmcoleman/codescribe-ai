@@ -20,7 +20,17 @@ jest.mock('@vercel/postgres', () => ({
 // Mock graphService BEFORE importing projectService
 jest.mock('../graphService.js', () => ({
   getGraphByProjectId: jest.fn(),
-  analyzeProject: jest.fn()
+  analyzeProject: jest.fn(),
+  syncProjectName: jest.fn().mockResolvedValue(0)
+}));
+
+// Mock batchService BEFORE importing projectService
+jest.mock('../batchService.js', () => ({
+  __esModule: true,
+  default: {
+    syncProjectName: jest.fn().mockResolvedValue(0),
+    getProjectBatches: jest.fn().mockResolvedValue({ batches: [], total: 0 })
+  }
 }));
 
 import projectService, {
@@ -34,8 +44,10 @@ import projectService, {
   getProjectGraph,
   analyzeProjectFiles,
   hasActiveGraph,
-  getProjectWithGraph
+  getProjectWithGraph,
+  getProjectBatches
 } from '../projectService.js';
+import batchService from '../batchService.js';
 import { sql } from '@vercel/postgres';
 import { getGraphByProjectId, analyzeProject as analyzeProjectGraph } from '../graphService.js';
 
@@ -839,24 +851,28 @@ describe('ProjectService', () => {
     };
 
     it('should return batches for a project', async () => {
-      // First call: getProject, then batchService.getProjectBatches calls
-      sql.mockResolvedValueOnce({ rows: [mockProject] })
-        .mockResolvedValueOnce({ rows: [{ total: '2' }] })
-        .mockResolvedValueOnce({ rows: [
+      // Mock getProject to return a valid project
+      sql.mockResolvedValueOnce({ rows: [mockProject] });
+
+      // Mock batchService.getProjectBatches to return batches
+      batchService.getProjectBatches.mockResolvedValueOnce({
+        batches: [
           { id: 'batch-1', project_id: 1, total_files: 5 },
           { id: 'batch-2', project_id: 1, total_files: 3 }
-        ] });
+        ],
+        total: 2
+      });
 
-      const { getProjectBatches } = await import('../projectService.js');
       const result = await getProjectBatches(1, 1);
 
       expect(result.batches).toBeDefined();
+      expect(result.batches).toHaveLength(2);
+      expect(batchService.getProjectBatches).toHaveBeenCalledWith(1, 1, {});
     });
 
     it('should return empty result for non-existent project', async () => {
       sql.mockResolvedValueOnce({ rows: [] });
 
-      const { getProjectBatches } = await import('../projectService.js');
       const result = await getProjectBatches(999, 1);
 
       expect(result.batches).toEqual([]);
@@ -864,7 +880,6 @@ describe('ProjectService', () => {
     });
 
     it('should return empty result when projectId is missing', async () => {
-      const { getProjectBatches } = await import('../projectService.js');
       const result = await getProjectBatches(null, 1);
 
       expect(result.batches).toEqual([]);

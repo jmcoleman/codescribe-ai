@@ -406,12 +406,15 @@ function App() {
         }
       }
     } else if (hasSeenUserRef.current) {
-      // User logged out (not initial page load) - clear editor state
+      // User logged out (not initial page load) - clear all UI state
       // Batch state clearing is handled separately after useBatchGeneration hook
       setCode(DEFAULT_CODE);
       setCodeOrigin('sample'); // Default code is a sample
       setFilename('code.js');
       setDocType('README');
+      // Clear documentation panel
+      setDocumentation('');
+      setQualityScore(null);
       // Reset "doc panel cleared" flag so next login will load from DB
       localStorage.removeItem(STORAGE_KEYS.DOC_PANEL_CLEARED);
       hasSeenUserRef.current = false;
@@ -931,19 +934,10 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [multiFileState.activeFileId, multiFileState.files, batchSummaryMarkdown, bulkGenerationProgress, canUseBatchProcessing, restoreBatchState, currentBatchId]);
 
-  // Clear documentation and quality score when user logs out (actual logout, not auth loading)
-  // NOTE: For authenticated users, docs come from the workspace/file selection
-  // This effect uses hasSeenUserRef to distinguish logout from initial page load/navigation
-  useEffect(() => {
-    // Only clear documentation on actual logout (not on initial mount or navigation)
-    // hasSeenUserRef.current is set to true when user is authenticated, and false after logout
-    if (!user?.id && hasSeenUserRef.current) {
-      // User actually logged out - clear all documentation and quality score from UI
-      setDocumentation('');
-      setQualityScore(null);
-    }
-    // When user is null on initial load or navigation, we do nothing - workspace sync handles restoration
-  }, [user?.id, setDocumentation, setQualityScore]);
+  // NOTE: Documentation clearing on logout is now handled in the main user ID effect above
+  // (where hasSeenUserRef.current is checked before being set to false)
+  // This effect is kept as a safety net but won't typically trigger since
+  // hasSeenUserRef.current is set to false before this effect runs
 
   // Restore documentation from sessionStorage for UNAUTHENTICATED users on initial mount
   // Uses sessionStorage (not localStorage) for privacy - clears when tab/browser closes
@@ -1100,7 +1094,9 @@ function App() {
                 failCount: 0,
                 avgQualityScore: score,
                 avgGrade: grade,
-                docTypes: [docType]
+                docTypes: [docType],
+                projectId: canUseProjectManagement ? selectedProjectId : null,
+                projectName: canUseProjectManagement ? selectedProjectName : null
               });
               console.log('[App] Created single-file batch:', batchResult.batchId);
 
@@ -2339,6 +2335,7 @@ function App() {
                 onUpdateFile={multiFileState.updateFile}
                 onViewBatchSummary={handleBackToSummary}
                 selectedProjectId={selectedProjectId}
+                selectedProjectName={selectedProjectName}
                 onProjectChange={handleProjectChange}
                 canUseProjectManagement={canUseProjectManagement}
               />
@@ -2439,6 +2436,7 @@ function App() {
                   onUpdateFile={multiFileState.updateFile}
                   onViewBatchSummary={handleBackToSummary}
                   selectedProjectId={selectedProjectId}
+                  selectedProjectName={selectedProjectName}
                   onProjectChange={handleProjectChange}
                   canUseProjectManagement={canUseProjectManagement}
                 />

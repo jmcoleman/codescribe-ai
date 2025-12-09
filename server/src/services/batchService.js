@@ -442,6 +442,9 @@ class BatchService {
 
       const whereClause = conditions.join(' AND ');
 
+      // Get batch's project_name for fallback (in case graph expired)
+      const batchProjectName = batchResult.rows[0].project_name;
+
       const docsQuery = `
         SELECT
           gd.id, gd.filename, gd.language, gd.file_size_bytes,
@@ -449,12 +452,13 @@ class BatchService {
           gd.generated_at, gd.created_at, gd.origin,
           gd.github_repo, gd.github_path, gd.github_sha, gd.github_branch,
           gd.provider, gd.model, gd.graph_id,
-          pg.project_name
+          COALESCE(pg.project_name, $${paramIndex}) as project_name
         FROM generated_documents gd
         LEFT JOIN project_graphs pg ON gd.graph_id = pg.graph_id
         WHERE ${whereClause.replace(/\b(batch_id|user_id|deleted_at|filename|quality_score|doc_type)\b/g, 'gd.$1')}
         ORDER BY gd.filename ASC
       `;
+      params.push(batchProjectName);
 
       const docsResult = await sql.query(docsQuery, params);
 
@@ -543,15 +547,17 @@ class BatchService {
     }
 
     try {
+      // Join to batch for project_name fallback when graph expires
       const result = await sql`
         SELECT
           gd.id, gd.filename, gd.language, gd.file_size_bytes,
           gd.documentation, gd.quality_score, gd.doc_type,
           gd.generated_at, gd.origin,
           gd.github_repo, gd.github_path, gd.graph_id,
-          pg.project_name
+          COALESCE(pg.project_name, gb.project_name) as project_name
         FROM generated_documents gd
         LEFT JOIN project_graphs pg ON gd.graph_id = pg.graph_id
+        LEFT JOIN generation_batches gb ON gd.batch_id = gb.id
         WHERE gd.user_id = ${userId}
           AND gd.id = ANY(${documentIds})
           AND gd.deleted_at IS NULL

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { FileItem } from './FileItem';
 import { FileDetailsPanel } from './FileDetailsPanel';
 import { ProjectSelector } from './ProjectSelector';
+import { ProjectGraphInfo } from './ProjectGraphInfo';
 import { FileCode, PanelLeftClose, Plus, Github, Upload, Info, X, Stamp, Trash2, Sparkles, Loader2, RefreshCw, FolderUp } from 'lucide-react';
 import { Select } from '../Select';
 import { Button } from '../Button';
@@ -112,6 +113,7 @@ export function FileList({
   onUpdateFile,
   onViewBatchSummary,
   selectedProjectId = null,
+  selectedProjectName = null,
   onProjectChange,
   canUseProjectManagement = false
 }) {
@@ -519,6 +521,14 @@ export function FileList({
             </div>
           )}
 
+          {/* Project & Graph info (Pro+ only) - collapsible section */}
+          {canUseProjectManagement && selectedProjectId && (
+            <ProjectGraphInfo
+              selectedProjectId={selectedProjectId}
+              selectedProjectName={selectedProjectName}
+            />
+          )}
+
           {/* Action buttons - file management (left) and selection actions (right) */}
           <div className="flex gap-2 justify-between">
             {/* Left group: File management */}
@@ -742,6 +752,14 @@ export function FileList({
                 />
               </div>
             </div>
+          )}
+
+          {/* Project & Graph info (Pro+ only) - collapsible section */}
+          {canUseProjectManagement && selectedProjectId && (
+            <ProjectGraphInfo
+              selectedProjectId={selectedProjectId}
+              selectedProjectName={selectedProjectName}
+            />
           )}
 
           {/* Action buttons - Apply, Delete, Generate */}

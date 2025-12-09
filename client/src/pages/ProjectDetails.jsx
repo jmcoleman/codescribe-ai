@@ -15,7 +15,13 @@ import {
   Edit3,
   Save,
   X,
-  AlertTriangle
+  AlertTriangle,
+  ChevronDown,
+  ChevronRight,
+  Code,
+  Package,
+  Link2,
+  Network
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { PageLayout } from '../components/PageLayout.jsx';
@@ -25,8 +31,10 @@ import {
   deleteProject,
   getProjectBatches
 } from '../services/projectsApi.js';
-import { getEffectiveTier, hasFeature } from '../utils/tierFeatures.js';
+import { hasFeature } from '../utils/tierFeatures.js';
 import { toastCompact } from '../utils/toastWithHistory.js';
+import { generateDiagram } from '../services/graphApi.js';
+import { LazyMermaidRenderer } from '../components/LazyMermaidRenderer.jsx';
 
 /**
  * Project Details Page
@@ -63,11 +71,15 @@ export function ProjectDetails() {
   // Delete confirmation state
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [deleteConfirmText, setDeleteConfirmText] = useState('');
 
-  // Check feature access
-  const effectiveTier = user ? getEffectiveTier(user) : 'free';
-  const canAccessProjects = hasFeature(effectiveTier, 'projectManagement');
+  // Graph visualization state
+  const [showFileList, setShowFileList] = useState(false);
+  const [diagram, setDiagram] = useState(null);
+  const [isDiagramLoading, setIsDiagramLoading] = useState(false);
+  const [diagramError, setDiagramError] = useState(null);
+
+  // Check feature access - hasFeature uses getEffectiveTier internally
+  const canAccessProjects = hasFeature(user, 'projectManagement');
 
   // Load project data
   const loadProject = useCallback(async (showRefreshIndicator = false) => {
@@ -111,6 +123,39 @@ export function ProjectDetails() {
     }
   }, [authLoading, user, canAccessProjects, loadProject]);
 
+  // Load architecture diagram when graph is available
+  const loadDiagram = useCallback(async () => {
+    if (!project?.graph?.graphId) return;
+
+    setIsDiagramLoading(true);
+    setDiagramError(null);
+
+    try {
+      const result = await generateDiagram(project.graph.graphId, {
+        type: 'architecture',
+        maxNodes: 30
+      });
+
+      if (result.success && result.diagram) {
+        setDiagram(result.diagram);
+      } else {
+        setDiagramError('Failed to generate diagram');
+      }
+    } catch (err) {
+      console.error('[ProjectDetails] Failed to load diagram:', err);
+      setDiagramError(err.message || 'Failed to load diagram');
+    } finally {
+      setIsDiagramLoading(false);
+    }
+  }, [project?.graph?.graphId]);
+
+  // Auto-load diagram when graph becomes available
+  useEffect(() => {
+    if (project?.graph?.graphId && !diagram && !isDiagramLoading) {
+      loadDiagram();
+    }
+  }, [project?.graph?.graphId, diagram, isDiagramLoading, loadDiagram]);
+
   // Handle save edits
   const handleSave = async () => {
     if (!editName.trim()) {
@@ -141,11 +186,6 @@ export function ProjectDetails() {
 
   // Handle delete
   const handleDelete = async () => {
-    if (deleteConfirmText !== project?.name) {
-      toastCompact('Please type the project name to confirm', 'error');
-      return;
-    }
-
     setIsDeleting(true);
     try {
       await deleteProject(projectId);
@@ -316,13 +356,22 @@ export function ProjectDetails() {
               <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
             </button>
             {!isEditing && (
-              <button
-                onClick={() => setIsEditing(true)}
-                className="inline-flex items-center gap-2 px-3 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
-              >
-                <Edit3 className="w-4 h-4" />
-                Edit
-              </button>
+              <>
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="inline-flex items-center gap-2 px-3 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                >
+                  <Edit3 className="w-4 h-4" />
+                  Edit
+                </button>
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                  aria-label="Delete project"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
+              </>
             )}
           </div>
         </div>
@@ -399,28 +448,6 @@ export function ProjectDetails() {
 
         {/* Stats Cards */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
-          {/* Graph Status */}
-          <div className="p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg">
-            <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 mb-1">
-              <Layers className="w-4 h-4" />
-              <span className="text-xs font-medium uppercase">Graph</span>
-            </div>
-            {project.graph ? (
-              <>
-                <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                  {project.graph.fileCount} files
-                </p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Expires: {formatRelativeTime(project.graph.expiresAt)}
-                </p>
-              </>
-            ) : (
-              <p className="text-lg font-semibold text-slate-400 dark:text-slate-500">
-                No graph
-              </p>
-            )}
-          </div>
-
           {/* Batch Count */}
           <div className="p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg">
             <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 mb-1">
@@ -471,7 +498,197 @@ export function ProjectDetails() {
               </a>
             )}
           </div>
+
+          {/* Graph Status */}
+          <div className="p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg">
+            <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 mb-1">
+              <Layers className="w-4 h-4" />
+              <span className="text-xs font-medium uppercase">Graph</span>
+            </div>
+            {project.graph ? (
+              <>
+                <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                  Active
+                </p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Expires {formatRelativeTime(project.graph.expiresAt)}
+                </p>
+              </>
+            ) : (
+              <p className="text-lg font-semibold text-slate-400 dark:text-slate-500">
+                No graph
+              </p>
+            )}
+          </div>
         </div>
+
+        {/* Graph Analysis Section */}
+        {project.graph && (
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-3 flex items-center gap-2">
+              <Network className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              Graph Analysis
+            </h2>
+
+            {/* Graph Stats Grid */}
+            <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6 mb-4">
+              <div className="p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-center">
+                <div className="flex items-center justify-center gap-1.5 text-slate-500 dark:text-slate-400 mb-1">
+                  <FileText className="w-3.5 h-3.5" />
+                  <span className="text-[10px] font-medium uppercase">Files</span>
+                </div>
+                <p className="text-xl font-bold text-slate-900 dark:text-slate-100">
+                  {project.graph.fileCount || 0}
+                </p>
+              </div>
+              <div className="p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-center">
+                <div className="flex items-center justify-center gap-1.5 text-slate-500 dark:text-slate-400 mb-1">
+                  <Code className="w-3.5 h-3.5" />
+                  <span className="text-[10px] font-medium uppercase">Functions</span>
+                </div>
+                <p className="text-xl font-bold text-slate-900 dark:text-slate-100">
+                  {project.graph.totalFunctions || 0}
+                </p>
+              </div>
+              <div className="p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-center">
+                <div className="flex items-center justify-center gap-1.5 text-slate-500 dark:text-slate-400 mb-1">
+                  <Package className="w-3.5 h-3.5" />
+                  <span className="text-[10px] font-medium uppercase">Classes</span>
+                </div>
+                <p className="text-xl font-bold text-slate-900 dark:text-slate-100">
+                  {project.graph.totalClasses || 0}
+                </p>
+              </div>
+              <div className="p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-center">
+                <div className="flex items-center justify-center gap-1.5 text-slate-500 dark:text-slate-400 mb-1">
+                  <Package className="w-3.5 h-3.5" />
+                  <span className="text-[10px] font-medium uppercase">Exports</span>
+                </div>
+                <p className="text-xl font-bold text-slate-900 dark:text-slate-100">
+                  {project.graph.totalExports || 0}
+                </p>
+              </div>
+              <div className="p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-center">
+                <div className="flex items-center justify-center gap-1.5 text-slate-500 dark:text-slate-400 mb-1">
+                  <Link2 className="w-3.5 h-3.5" />
+                  <span className="text-[10px] font-medium uppercase">Dependencies</span>
+                </div>
+                <p className="text-xl font-bold text-slate-900 dark:text-slate-100">
+                  {project.graph.dependencyCount || 0}
+                </p>
+              </div>
+              <div className="p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-center">
+                <div className="flex items-center justify-center gap-1.5 text-slate-500 dark:text-slate-400 mb-1">
+                  <GitBranch className="w-3.5 h-3.5" />
+                  <span className="text-[10px] font-medium uppercase">Branch</span>
+                </div>
+                <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
+                  {project.graph.branch || 'main'}
+                </p>
+              </div>
+            </div>
+
+            {/* Architecture Diagram */}
+            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden mb-4">
+              <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                <h3 className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                  Architecture Diagram
+                </h3>
+                {diagramError && (
+                  <button
+                    onClick={loadDiagram}
+                    className="text-xs text-purple-600 dark:text-purple-400 hover:underline"
+                  >
+                    Retry
+                  </button>
+                )}
+              </div>
+              <div className="p-4">
+                {isDiagramLoading && (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="w-6 h-6 text-purple-600 animate-spin" />
+                    <span className="ml-2 text-sm text-slate-500 dark:text-slate-400">
+                      Generating diagram...
+                    </span>
+                  </div>
+                )}
+                {diagramError && !isDiagramLoading && (
+                  <div className="flex items-center justify-center py-8 text-slate-500 dark:text-slate-400">
+                    <AlertCircle className="w-5 h-5 mr-2" />
+                    <span className="text-sm">{diagramError}</span>
+                  </div>
+                )}
+                {diagram && !isDiagramLoading && (
+                  <div className="overflow-x-auto">
+                    <LazyMermaidRenderer chart={diagram} />
+                  </div>
+                )}
+                {!diagram && !isDiagramLoading && !diagramError && (
+                  <div className="flex items-center justify-center py-8 text-slate-400 dark:text-slate-500">
+                    <span className="text-sm">No diagram available</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Collapsible File List */}
+            {project.graph.files && project.graph.files.length > 0 && (
+              <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setShowFileList(!showFileList)}
+                  className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+                >
+                  <h3 className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                    Analyzed Files ({project.graph.files.length})
+                  </h3>
+                  {showFileList ? (
+                    <ChevronDown className="w-4 h-4 text-slate-500" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4 text-slate-500" />
+                  )}
+                </button>
+                {showFileList && (
+                  <div className="border-t border-slate-200 dark:border-slate-700 max-h-64 overflow-y-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-slate-50 dark:bg-slate-900 sticky top-0">
+                        <tr>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">File</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Language</th>
+                          <th className="px-4 py-2 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Exports</th>
+                          <th className="px-4 py-2 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Imports</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                        {project.graph.files.map((file, idx) => (
+                          <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                            <td className="px-4 py-2 text-slate-900 dark:text-slate-100 font-mono text-xs truncate max-w-xs" title={file.path}>
+                              {file.path}
+                            </td>
+                            <td className="px-4 py-2 text-slate-500 dark:text-slate-400 capitalize">
+                              {file.language || '—'}
+                            </td>
+                            <td className="px-4 py-2 text-center text-slate-600 dark:text-slate-400">
+                              {file.exports || 0}
+                            </td>
+                            <td className="px-4 py-2 text-center text-slate-600 dark:text-slate-400">
+                              {file.imports || 0}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Analyzed timestamp */}
+            <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
+              Analyzed {formatDate(project.graph.analyzedAt)}
+            </p>
+          </div>
+        )}
 
         {/* Recent Batches */}
         {batches.length > 0 && (
@@ -524,23 +741,6 @@ export function ProjectDetails() {
           </div>
         )}
 
-        {/* Danger Zone */}
-        <div className="p-4 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg">
-          <h2 className="text-lg font-semibold text-red-700 dark:text-red-400 mb-2">
-            Danger Zone
-          </h2>
-          <p className="text-sm text-red-600 dark:text-red-400 mb-4">
-            Deleting this project will remove it permanently. Associated batches will be preserved but unlinked from this project.
-          </p>
-          <button
-            onClick={() => setShowDeleteConfirm(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-          >
-            <Trash2 className="w-4 h-4" />
-            Delete Project
-          </button>
-        </div>
-
         {/* Delete Confirmation Modal */}
         {showDeleteConfirm && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
@@ -550,43 +750,29 @@ export function ProjectDetails() {
             >
               <div className="p-6">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-full">
-                    <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400" />
+                  <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-full">
+                    <AlertTriangle className="w-6 h-6 text-amber-600 dark:text-amber-400" />
                   </div>
                   <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
                     Delete Project
                   </h2>
                 </div>
 
-                <p className="text-slate-600 dark:text-slate-400 mb-4">
-                  This action cannot be undone. The project graph will be deleted, but associated batches will be preserved.
+                <p className="text-slate-600 dark:text-slate-400 mb-6">
+                  Are you sure you want to delete <span className="font-semibold text-slate-900 dark:text-slate-100">{project.name}</span>? The project graph will be removed, but associated batches will be preserved.
                 </p>
-
-                <p className="text-sm text-slate-700 dark:text-slate-300 mb-2">
-                  Type <span className="font-mono font-semibold text-red-600 dark:text-red-400">{project.name}</span> to confirm:
-                </p>
-                <input
-                  type="text"
-                  value={deleteConfirmText}
-                  onChange={e => setDeleteConfirmText(e.target.value)}
-                  placeholder="Project name"
-                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-red-500 mb-4"
-                />
 
                 <div className="flex justify-end gap-3">
                   <button
-                    onClick={() => {
-                      setShowDeleteConfirm(false);
-                      setDeleteConfirmText('');
-                    }}
+                    onClick={() => setShowDeleteConfirm(false)}
                     className="px-4 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleDelete}
-                    disabled={deleteConfirmText !== project.name || isDeleting}
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
+                    disabled={isDeleting}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 inline-flex items-center gap-2"
                   >
                     {isDeleting ? (
                       <>
@@ -594,10 +780,7 @@ export function ProjectDetails() {
                         Deleting...
                       </>
                     ) : (
-                      <>
-                        <Trash2 className="w-4 h-4" />
-                        Delete Project
-                      </>
+                      'Delete'
                     )}
                   </button>
                 </div>

@@ -70,6 +70,7 @@ export function Sidebar({
   onUpdateFile,
   onViewBatchSummary,
   selectedProjectId = null,
+  selectedProjectName = null,
   onProjectChange,
   canUseProjectManagement = false
 }) {
@@ -209,6 +210,7 @@ export function Sidebar({
             onViewBatchSummary={onViewBatchSummary}
             isMobile={true}
             selectedProjectId={selectedProjectId}
+            selectedProjectName={selectedProjectName}
             onProjectChange={onProjectChange}
             canUseProjectManagement={canUseProjectManagement}
           />
@@ -275,6 +277,7 @@ export function Sidebar({
             onViewBatchSummary={onViewBatchSummary}
             isMobile={false}
             selectedProjectId={selectedProjectId}
+            selectedProjectName={selectedProjectName}
             onProjectChange={onProjectChange}
             canUseProjectManagement={canUseProjectManagement}
           />

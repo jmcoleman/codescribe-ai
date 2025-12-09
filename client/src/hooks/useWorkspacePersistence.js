@@ -260,6 +260,9 @@ export function useWorkspacePersistence() {
               documentId: dbFile.document_id,
               generatedAt: dbFile.generated_at ? new Date(dbFile.generated_at) : null,
               batchId: dbFile.batch_id || null,
+              graphId: dbFile.graph_id || null,
+              projectId: dbFile.project_id || null,
+              projectName: dbFile.project_name || null,
               github: dbFile.github_repo ? {
                 repo: dbFile.github_repo,
                 path: dbFile.github_path,
@@ -557,6 +560,9 @@ export function useWorkspacePersistence() {
             documentId: dbFile.document_id,
             generatedAt: dbFile.generated_at ? new Date(dbFile.generated_at) : null,
             batchId: dbFile.batch_id || null,
+            graphId: dbFile.graph_id || null,
+            projectId: dbFile.project_id || null,
+            projectName: dbFile.project_name || null,
             github: dbFile.github_repo ? {
               repo: dbFile.github_repo,
               path: dbFile.github_path,

@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import {
   Clock,
   ArrowLeft,
@@ -540,11 +540,27 @@ export function History() {
       cell: ({ row }) => {
         const batch = row.original;
         const projectName = batch.project_name;
+        const projectId = batch.project_id;
 
         if (!projectName) {
           return <span className="text-slate-400 dark:text-slate-500">—</span>;
         }
 
+        // If we have a project_id, make it a link to the project page
+        if (projectId) {
+          return (
+            <Link
+              to={`/projects/${projectId}`}
+              className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 hover:underline truncate"
+              title={`View ${projectName}`}
+              onClick={(e) => e.stopPropagation()} // Prevent row click
+            >
+              {projectName}
+            </Link>
+          );
+        }
+
+        // No project_id (project was deleted), just show the name
         return (
           <span className="text-sm text-slate-600 dark:text-slate-400 truncate" title={projectName}>
             {projectName}

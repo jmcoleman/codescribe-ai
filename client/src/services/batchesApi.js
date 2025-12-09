@@ -23,7 +23,8 @@ import { STORAGE_KEYS, getStorageItem } from '../constants/storage.js';
  * @param {Array} [batchData.errorDetails] - Array of error objects
  * @param {Array} [batchData.docTypes] - Array of doc types used
  * @param {number} [batchData.projectId] - Optional project ID to associate with batch
- * @returns {Promise<Object>} - { batchId, createdAt, projectId }
+ * @param {string} [batchData.projectName] - Optional project name (denormalized for persistence)
+ * @returns {Promise<Object>} - { batchId, createdAt, projectId, projectName }
  */
 export async function createBatch(batchData) {
   const token = getStorageItem(STORAGE_KEYS.AUTH_TOKEN);
@@ -44,7 +45,8 @@ export async function createBatch(batchData) {
       summaryMarkdown: batchData.summaryMarkdown || null,
       errorDetails: batchData.errorDetails || null,
       docTypes: batchData.docTypes || null,
-      projectId: batchData.projectId || null
+      projectId: batchData.projectId || null,
+      projectName: batchData.projectName || null
     })
   });
 

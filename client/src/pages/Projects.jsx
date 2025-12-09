@@ -14,7 +14,7 @@ import {
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { PageLayout } from '../components/PageLayout.jsx';
 import { getProjects, createProject } from '../services/projectsApi.js';
-import { getEffectiveTier, hasFeature } from '../utils/tierFeatures.js';
+import { hasFeature } from '../utils/tierFeatures.js';
 import { toastCompact } from '../utils/toastWithHistory.js';
 
 /**
@@ -49,9 +49,8 @@ export function Projects() {
   const [newProjectDescription, setNewProjectDescription] = useState('');
   const [isCreating, setIsCreating] = useState(false);
 
-  // Check feature access
-  const effectiveTier = user ? getEffectiveTier(user) : 'free';
-  const canAccessProjects = hasFeature(effectiveTier, 'projectManagement');
+  // Check feature access - hasFeature uses getEffectiveTier internally
+  const canAccessProjects = hasFeature(user, 'projectManagement');
 
   // Load projects
   const loadProjects = useCallback(async (showRefreshIndicator = false) => {

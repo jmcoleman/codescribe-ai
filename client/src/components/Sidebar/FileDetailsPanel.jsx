@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
+import { Link } from 'react-router-dom';
 import { X, FileText, Sparkles, FolderGit2, ExternalLink } from 'lucide-react';
 import {
   formatOrigin,
@@ -146,6 +147,7 @@ export function FileDetailsPanel({ file, isOpen, onClose, onViewBatchSummary }) 
     documentId,
     batchId,
     graphId,
+    projectId,
     projectName,
     fileSize,
     origin,
@@ -345,7 +347,19 @@ export function FileDetailsPanel({ file, isOpen, onClose, onViewBatchSummary }) 
               {projectName && (
                 <div className="flex justify-between items-start gap-4">
                   <dt className="text-sm text-slate-600 dark:text-slate-400 flex-shrink-0">Project</dt>
-                  <dd className="text-sm text-slate-900 dark:text-slate-100 text-right">{projectName}</dd>
+                  <dd className="text-sm text-right">
+                    {projectId ? (
+                      <Link
+                        to={`/projects/${projectId}`}
+                        className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 hover:underline"
+                        title={`View ${projectName}`}
+                      >
+                        {projectName}
+                      </Link>
+                    ) : (
+                      <span className="text-slate-900 dark:text-slate-100">{projectName}</span>
+                    )}
+                  </dd>
                 </div>
               )}
               {batchId && onViewBatchSummary && (

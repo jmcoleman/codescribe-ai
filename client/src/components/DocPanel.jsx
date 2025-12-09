@@ -1058,7 +1058,7 @@ export const DocPanel = memo(function DocPanel({
           }
         }}
       >
-        {(isGenerating || bulkGenerationProgress) && !documentation ? (
+        {(isGenerating || bulkGenerationProgress || isAnalyzingGraph) && !documentation ? (
           <>
             <DocPanelGeneratingSkeleton />
           </>

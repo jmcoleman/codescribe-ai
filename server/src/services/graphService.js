@@ -899,6 +899,29 @@ export async function cleanupExpiredGraphs() {
   return result.rowCount;
 }
 
+/**
+ * Sync project name to all graphs for a project
+ * Called when a project is renamed to keep denormalized data consistent
+ *
+ * @param {number} projectId - Project ID
+ * @param {string} newName - New project name
+ * @returns {Promise<number>} Number of graphs updated
+ */
+export async function syncProjectName(projectId, newName) {
+  if (!projectId || !newName) {
+    return 0;
+  }
+
+  const result = await sql`
+    UPDATE project_graphs
+    SET project_name = ${newName}
+    WHERE project_id = ${projectId}
+    RETURNING graph_id
+  `;
+
+  return result.rowCount;
+}
+
 export default {
   analyzeProject,
   getGraph,
@@ -908,5 +931,6 @@ export default {
   refreshGraph,
   deleteGraph,
   listGraphs,
-  cleanupExpiredGraphs
+  cleanupExpiredGraphs,
+  syncProjectName
 };

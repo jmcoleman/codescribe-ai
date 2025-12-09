@@ -9,7 +9,7 @@
  */
 
 import { sql } from '@vercel/postgres';
-import { getGraphByProjectId, analyzeProject as analyzeProjectGraph } from './graphService.js';
+import { getGraphByProjectId, analyzeProject as analyzeProjectGraph, syncProjectName as syncGraphProjectName } from './graphService.js';
 import batchService from './batchService.js';
 
 /**
@@ -233,16 +233,19 @@ export async function updateProject(projectId, userId, updates) {
     return null;
   }
 
-  // Sync project_name to batches if name changed
+  // Sync project_name to batches and graphs if name changed
   if (nameChanged) {
     try {
-      const updatedCount = await batchService.syncProjectName(projectId, name);
-      if (updatedCount > 0) {
-        console.log(`[ProjectService] Synced project name to ${updatedCount} batches`);
+      const [batchCount, graphCount] = await Promise.all([
+        batchService.syncProjectName(projectId, name),
+        syncGraphProjectName(projectId, name)
+      ]);
+      if (batchCount > 0 || graphCount > 0) {
+        console.log(`[ProjectService] Synced project name to ${batchCount} batches and ${graphCount} graphs`);
       }
     } catch (syncError) {
-      // Log but don't fail the update - batches will still have old name
-      console.error('[ProjectService] Failed to sync project name to batches:', syncError);
+      // Log but don't fail the update - batches/graphs will still have old name
+      console.error('[ProjectService] Failed to sync project name:', syncError);
     }
   }
 
@@ -519,8 +522,25 @@ export async function getProjectSummary(projectId, userId) {
   return {
     ...project,
     graph: graph ? {
+      graphId: graph.graphId,
       projectId: graph.projectId,
+      branch: graph.branch,
       fileCount: graph.stats?.totalFiles || 0,
+      totalFunctions: graph.stats?.totalFunctions || 0,
+      totalClasses: graph.stats?.totalClasses || 0,
+      totalExports: graph.stats?.totalExports || 0,
+      dependencyCount: Array.isArray(graph.edges) ? graph.edges.length : 0,
+      // Include file paths from nodes for file list display
+      // Node structure: { id: filePath, fileName, language, exports: [], imports: [], ... }
+      files: Array.isArray(graph.nodes)
+        ? graph.nodes.map(n => ({
+            path: n.id,           // id contains the full file path
+            fileName: n.fileName, // just the filename
+            language: n.language,
+            exports: Array.isArray(n.exports) ? n.exports.length : 0,
+            imports: Array.isArray(n.imports) ? n.imports.length : 0
+          }))
+        : [],
       analyzedAt: graph.analyzedAt,
       expiresAt: graph.expiresAt
     } : null,

@@ -39,7 +39,8 @@ router.post(
         summaryMarkdown,
         errorDetails,
         docTypes,
-        projectId  // Optional: link batch to a project
+        projectId,  // Optional: link batch to a project
+        projectName // Denormalized project name (persists if project deleted)
       } = req.body;
 
       const result = await batchService.createBatch(userId, {
@@ -52,7 +53,8 @@ router.post(
         summaryMarkdown,
         errorDetails,
         docTypes,
-        projectId: projectId ? parseInt(projectId, 10) : null
+        projectId: projectId ? parseInt(projectId, 10) : null,
+        projectName: projectName || null
       });
 
       res.json({
