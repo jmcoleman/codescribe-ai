@@ -28,6 +28,8 @@ import InviteCodes from './pages/admin/InviteCodes.jsx'
 import TrialsAdmin from './pages/admin/Trials.jsx'
 import { TrialRedemption } from './pages/TrialRedemption.jsx'
 import { ErrorTest } from './components/ErrorTest.jsx'
+import { Projects } from './pages/Projects.jsx'
+import { ProjectDetails } from './pages/ProjectDetails.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -57,6 +59,9 @@ createRoot(document.getElementById('root')).render(
               <Route path="/admin/invite-codes" element={<InviteCodes />} />
               <Route path="/admin/trials" element={<TrialsAdmin />} />
               <Route path="/trial" element={<TrialRedemption />} />
+              {/* Project management routes (Pro+ feature) - not yet linked from main nav */}
+              <Route path="/projects" element={<Projects />} />
+              <Route path="/projects/:id" element={<ProjectDetails />} />
               {/* Testing route - triggers ErrorBoundary for dark mode and UI testing */}
               <Route path="/test-error" element={<ErrorTest />} />
             </Routes>
