@@ -282,7 +282,10 @@ class BatchService {
       params.push(limit, offset);
 
       // Main query with dynamic conditions
-      // Joins with project_graphs to get project_name for documents that used a graph
+      // Gets project_name from:
+      // 1. Batch's project_id (for multi-file batches) via projects table
+      // 2. First doc's graph_id (for single-file batches) via project_graphs table
+      // COALESCE ensures we get project_name from either source
       const query = `
         SELECT
           gb.*,
@@ -294,8 +297,9 @@ class BatchService {
           first_doc.doc_type as first_doc_doc_type,
           first_doc.generated_at as first_doc_generated_at,
           first_doc.graph_id as first_doc_graph_id,
-          pg.project_name as project_name
+          COALESCE(p.name, pg.project_name) as project_name
         FROM generation_batches gb
+        LEFT JOIN projects p ON gb.project_id = p.id
         LEFT JOIN LATERAL (
           SELECT filename, language, quality_score, doc_type, generated_at, graph_id
           FROM generated_documents
