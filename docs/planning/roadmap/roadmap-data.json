@@ -66,7 +66,7 @@
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
     "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.27",
-    "footer": "v3.3.0 Complete · Graph Engine & Projects ✓ · Up Next: Diff Analyzer · VS Code Extension: Separate Repo",
+    "footer": "v3.3.0 Complete · Graph Engine & Projects ✓ · Up Next: Project Architecture Doc · VS Code Extension: Separate Repo",
     "lastUpdated": "December 9, 2025"
   },
   "columns": [
@@ -839,10 +839,29 @@
       "subtitle": "Phase 3: Platform Infrastructure",
       "phases": [
         {
+          "version": "Epic 5.6",
+          "title": "Project Architecture Document",
+          "duration": "3-4 days",
+          "status": "Up Next",
+          "badge": "Leverages Graph Engine",
+          "features": [
+            "Generate project-level ARCHITECTURE doc from graph metadata (not per-file)",
+            "Single LLM call with graph nodes/edges as input (low token usage)",
+            "Output: project structure, module organization, dependency flow, entry points",
+            "Embedded Mermaid architecture diagram",
+            "Listed as first entry in batch summary with link",
+            "Clickable from ProjectGraphInfo sidebar section",
+            "Stored on project_graphs table (architecture_doc column)",
+            "Quality scoring with ARCHITECTURE criteria",
+            "Regenerate button on Project Details page",
+            "Spec: docs/planning/PROJECT-ARCHITECTURE-DOC-SPEC.md"
+          ]
+        },
+        {
           "version": "Epic 5.5",
           "title": "Diff Analyzer & Webhook APIs",
           "duration": "3-4 weeks",
-          "status": "Up Next",
+          "status": "Planned",
           "badge": "Git Integration",
           "features": [
             "diffAnalyzer.js service for semantic diff parsing",
