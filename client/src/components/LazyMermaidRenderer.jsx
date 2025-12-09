@@ -363,11 +363,31 @@ export const LazyMermaidRenderer = memo(function LazyMermaidRenderer({ chart, id
         </button>
       </div>
 
-      {/* Content: Diagram or Code */}
+      {/* Content: Diagram or Code - using inline styles for theme since dark: variants don't work in this context */}
       {showCode ? (
-        <div className="p-4 bg-slate-100 dark:bg-slate-800 overflow-x-auto">
-          <pre className="text-xs text-slate-800 dark:text-slate-200 font-mono whitespace-pre-wrap">
-            <code>{chart}</code>
+        <div
+          className="p-4 overflow-x-auto"
+          style={{ backgroundColor: effectiveTheme === 'dark' ? '#1e293b' : '#ffffff' }}
+        >
+          <pre
+            className="text-xs font-mono whitespace-pre-wrap"
+            style={{
+              color: effectiveTheme === 'dark' ? '#e2e8f0' : '#1e293b',
+              backgroundColor: 'transparent',
+              margin: 0,
+              padding: 0,
+              border: 'none'
+            }}
+          >
+            <code
+              style={{
+                backgroundColor: 'transparent',
+                color: 'inherit',
+                border: 'none'
+              }}
+            >
+              {chart}
+            </code>
           </pre>
         </div>
       ) : (
