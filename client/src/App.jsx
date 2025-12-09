@@ -1958,7 +1958,7 @@ function App() {
     // NOTE: Does NOT delete from generated_documents - keeps docs in user's history
     removeFiles(selectedIds);
 
-    // If deleting ALL files, also clear batch summary and documentation state
+    // If deleting ALL files, also clear batch summary, documentation, and code state
     if (isDeletingAll) {
       setBulkGenerationSummary(null);
       setBatchSummaryMarkdown(null);
@@ -1966,8 +1966,9 @@ function App() {
       removeSessionItem('batch_summary_markdown');
       setDocumentation('');
       setQualityScore(null);
+      setCode(''); // Clear code panel when workspace is fully cleared
     }
-  }, [multiFileState.selectedFileIds, multiFileState.files.length, removeFiles, setBulkGenerationSummary, setBatchSummaryMarkdown, setDocumentation, setQualityScore]);
+  }, [multiFileState.selectedFileIds, multiFileState.files.length, removeFiles, setBulkGenerationSummary, setBatchSummaryMarkdown, setDocumentation, setQualityScore, setCode]);
 
   // Expose test data loader to window for console access (development/testing)
   useEffect(() => {
