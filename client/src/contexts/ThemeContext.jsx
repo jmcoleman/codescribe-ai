@@ -1,14 +1,31 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import { useAuth } from './AuthContext';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import PreferencesContext from './PreferencesContext';
 import { STORAGE_KEYS, getStorageItem, setStorageItem } from '../constants/storage';
 
 const ThemeContext = createContext();
 
+/**
+ * Safe hook to get preferences - returns null values if PreferencesContext is not available.
+ * This allows ThemeProvider to work in tests without PreferencesProvider.
+ */
+function useSafePreferences() {
+  const context = useContext(PreferencesContext);
+  // Return null values if context is not available (for tests/backwards compatibility)
+  if (!context) {
+    return { theme: null, setTheme: () => {} };
+  }
+  return { theme: context.theme, setTheme: context.setTheme };
+}
+
 export function ThemeProvider({ children }) {
-  const { user } = useAuth();
+  // Get theme from PreferencesContext (which handles DB sync)
+  // Falls back gracefully if PreferencesContext is not available (e.g., in tests)
+  const { theme: prefsTheme, setTheme: setPrefsTheme } = useSafePreferences();
+
+  // Use preferences theme, or fall back to localStorage for initial render
   const [theme, setThemeInternal] = useState(() => {
     // Priority: localStorage > default to 'light'
-    // User account preference will override this after auth loads
+    // PreferencesContext will update this after loading
     const stored = getStorageItem(STORAGE_KEYS.THEME_PREFERENCE);
 
     if (stored && ['light', 'dark', 'auto'].includes(stored)) {
@@ -43,44 +60,24 @@ export function ThemeProvider({ children }) {
     }
   }, []); // Run once on mount
 
-  // Load theme from user account on login
+  // Sync theme from PreferencesContext when it loads from API
   useEffect(() => {
-    if (user && user.theme_preference && ['light', 'dark', 'auto'].includes(user.theme_preference)) {
-      setThemeInternal(user.theme_preference);
-
-      // CRITICAL: Sync database preference to localStorage to prevent flash on next reload
-      setStorageItem(STORAGE_KEYS.THEME_PREFERENCE, user.theme_preference);
+    if (prefsTheme && ['light', 'dark', 'auto'].includes(prefsTheme)) {
+      setThemeInternal(prefsTheme);
+      // CRITICAL: Sync to localStorage to prevent flash on next reload
+      setStorageItem(STORAGE_KEYS.THEME_PREFERENCE, prefsTheme);
     }
-  }, [user]);
+  }, [prefsTheme]);
 
-  // Wrapper for setTheme that saves to backend if user is logged in
-  const setTheme = async (newTheme) => {
+  // Wrapper for setTheme that saves to PreferencesContext (which handles DB sync)
+  const setTheme = (newTheme) => {
     setThemeInternal(newTheme);
 
     // Save to localStorage (for non-authenticated users and as backup)
     setStorageItem(STORAGE_KEYS.THEME_PREFERENCE, newTheme);
 
-    // Save to backend if user is authenticated
-    if (user && user.id) {
-      try {
-        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-        const token = getStorageItem(STORAGE_KEYS.AUTH_TOKEN);
-
-        await fetch(`${API_URL}/api/auth/preferences`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            theme_preference: newTheme
-          })
-        });
-      } catch (error) {
-        console.error('[ThemeContext] Failed to save theme preference to backend:', error);
-        // Don't throw - the local change still works
-      }
-    }
+    // Save to PreferencesContext (which handles debounced API sync)
+    setPrefsTheme(newTheme);
   };
 
   useEffect(() => {

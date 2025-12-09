@@ -15,6 +15,7 @@ export default defineConfig({
     }),
   ],
   server: {
+    allowedHosts: ['.ngrok-free.app', '.ngrok.io'],
     proxy: {
       '/api': {
         target: 'http://localhost:3000',

@@ -99,7 +99,8 @@ export function useDocumentPersistence() {
         model: docData.model || 'claude-sonnet-4-5-20250929',
         github: docData.github || null,
         llm: docData.llm || null,
-        isEphemeral
+        isEphemeral,
+        graphId: docData.graphId || null  // Store graph reference for cross-file context
       });
 
       console.log('[useDocumentPersistence] Document saved successfully:', result.documentId);

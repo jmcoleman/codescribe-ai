@@ -52,7 +52,8 @@ router.post(
         wasCached,
         latencyMs,
         isEphemeral,
-        sessionId
+        sessionId,
+        graphId  // Reference to project graph used for cross-file context
       } = req.body;
 
       // Save document
@@ -75,7 +76,8 @@ router.post(
         wasCached,
         latencyMs,
         isEphemeral,
-        sessionId
+        sessionId,
+        graphId
       });
 
       res.json({

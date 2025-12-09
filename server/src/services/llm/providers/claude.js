@@ -116,6 +116,7 @@ async function generateWithClaude(prompt, options = {}, config) {
  * @param {string} prompt - User message/prompt
  * @param {Function} onChunk - Callback for each text chunk: (chunk: string) => void
  * @param {Object} options - Generation options (same as generateWithClaude)
+ * @param {Function} [options.onRetry] - Callback when retry occurs: (attempt, maxAttempts, delayMs, error, reason) => void
  * @param {Object} config - Provider configuration
  * @returns {Promise<{text: string, metadata: Object}>}
  */
@@ -189,7 +190,7 @@ async function streamWithClaude(prompt, onChunk, options = {}, config) {
           usage = { ...usage, ...event.usage }
         }
       }
-    }, config.maxRetries, 'Claude stream')
+    }, config.maxRetries, 'Claude stream', { onRetry: options.onRetry })
 
     // Build metadata
     const metadata = {

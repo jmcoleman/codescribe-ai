@@ -32,7 +32,9 @@ class BatchService {
       avgGrade = null,
       summaryMarkdown = null,
       errorDetails = null,
-      docTypes = null
+      docTypes = null,
+      projectId = null,  // Optional link to project
+      projectName = null // Denormalized project name (persists if project deleted)
     } = batchData;
 
     // Validation
@@ -56,19 +58,23 @@ class BatchService {
       const result = await sql`
         INSERT INTO generation_batches (
           user_id, batch_type, total_files, success_count, fail_count,
-          avg_quality_score, avg_grade, summary_markdown, error_details, doc_types
+          avg_quality_score, avg_grade, summary_markdown, error_details, doc_types,
+          project_id, project_name
         ) VALUES (
           ${userId}, ${batchType}, ${totalFiles}, ${successCount}, ${failCount},
           ${avgQualityScore}, ${avgGrade}, ${summaryMarkdown},
           ${errorDetails ? JSON.stringify(errorDetails) : null},
-          ${docTypes ? JSON.stringify(docTypes) : null}
+          ${docTypes ? JSON.stringify(docTypes) : null},
+          ${projectId}, ${projectName}
         )
-        RETURNING id, created_at
+        RETURNING id, created_at, project_id, project_name
       `;
 
       return {
         batchId: result.rows[0].id,
-        createdAt: result.rows[0].created_at
+        createdAt: result.rows[0].created_at,
+        projectId: result.rows[0].project_id,
+        projectName: result.rows[0].project_name
       };
     } catch (error) {
       console.error('[BatchService] Error creating batch:', error);
@@ -139,7 +145,8 @@ class BatchService {
       sortOrder = 'desc',  // 'asc' or 'desc'
       gradeFilter = null,  // 'A', 'B', 'C', 'D', 'F'
       docTypeFilter = null, // 'README', 'JSDOC', 'API', 'ARCHITECTURE', etc.
-      filenameSearch = null // Search by filename (partial match)
+      filenameSearch = null, // Search by filename (partial match)
+      projectId = null     // Filter by project ID
     } = options;
 
     // Validate sortBy to prevent SQL injection
@@ -157,6 +164,12 @@ class BatchService {
       if (batchType) {
         conditions.push(`gb.batch_type = $${paramIndex}`);
         params.push(batchType);
+        paramIndex++;
+      }
+
+      if (projectId) {
+        conditions.push(`gb.project_id = $${paramIndex}`);
+        params.push(projectId);
         paramIndex++;
       }
 
@@ -271,6 +284,8 @@ class BatchService {
       params.push(limit, offset);
 
       // Main query with dynamic conditions
+      // project_name is now denormalized on the batch itself (persists if project deleted)
+      // For single-file batches created before migration, fall back to project_graphs
       const query = `
         SELECT
           gb.*,
@@ -280,15 +295,18 @@ class BatchService {
           first_doc.language as first_doc_language,
           first_doc.quality_score as first_doc_quality_score,
           first_doc.doc_type as first_doc_doc_type,
-          first_doc.generated_at as first_doc_generated_at
+          first_doc.generated_at as first_doc_generated_at,
+          first_doc.graph_id as first_doc_graph_id,
+          COALESCE(gb.project_name, pg.project_name) as project_name
         FROM generation_batches gb
         LEFT JOIN LATERAL (
-          SELECT filename, language, quality_score, doc_type, generated_at
+          SELECT filename, language, quality_score, doc_type, generated_at, graph_id
           FROM generated_documents
           WHERE ${lateralWhereClause}
           ORDER BY generated_at ASC
           LIMIT 1
         ) first_doc ON gb.batch_type = 'single'
+        LEFT JOIN project_graphs pg ON first_doc.graph_id = pg.graph_id
         WHERE ${whereClause}
         ${orderByClause}
         LIMIT $${lateralParamOffset} OFFSET $${lateralParamOffset + 1}
@@ -424,17 +442,23 @@ class BatchService {
 
       const whereClause = conditions.join(' AND ');
 
+      // Get batch's project_name for fallback (in case graph expired)
+      const batchProjectName = batchResult.rows[0].project_name;
+
       const docsQuery = `
         SELECT
-          id, filename, language, file_size_bytes,
-          documentation, quality_score, doc_type,
-          generated_at, created_at, origin,
-          github_repo, github_path, github_sha, github_branch,
-          provider, model
-        FROM generated_documents
-        WHERE ${whereClause}
-        ORDER BY filename ASC
+          gd.id, gd.filename, gd.language, gd.file_size_bytes,
+          gd.documentation, gd.quality_score, gd.doc_type,
+          gd.generated_at, gd.created_at, gd.origin,
+          gd.github_repo, gd.github_path, gd.github_sha, gd.github_branch,
+          gd.provider, gd.model, gd.graph_id,
+          COALESCE(pg.project_name, $${paramIndex}) as project_name
+        FROM generated_documents gd
+        LEFT JOIN project_graphs pg ON gd.graph_id = pg.graph_id
+        WHERE ${whereClause.replace(/\b(batch_id|user_id|deleted_at|filename|quality_score|doc_type)\b/g, 'gd.$1')}
+        ORDER BY gd.filename ASC
       `;
+      params.push(batchProjectName);
 
       const docsResult = await sql.query(docsQuery, params);
 
@@ -523,23 +547,126 @@ class BatchService {
     }
 
     try {
+      // Join to batch for project_name fallback when graph expires
       const result = await sql`
         SELECT
-          id, filename, language, file_size_bytes,
-          documentation, quality_score, doc_type,
-          generated_at, origin,
-          github_repo, github_path
-        FROM generated_documents
-        WHERE user_id = ${userId}
-          AND id = ANY(${documentIds})
-          AND deleted_at IS NULL
-        ORDER BY filename ASC
+          gd.id, gd.filename, gd.language, gd.file_size_bytes,
+          gd.documentation, gd.quality_score, gd.doc_type,
+          gd.generated_at, gd.origin,
+          gd.github_repo, gd.github_path, gd.graph_id,
+          COALESCE(pg.project_name, gb.project_name) as project_name
+        FROM generated_documents gd
+        LEFT JOIN project_graphs pg ON gd.graph_id = pg.graph_id
+        LEFT JOIN generation_batches gb ON gd.batch_id = gb.id
+        WHERE gd.user_id = ${userId}
+          AND gd.id = ANY(${documentIds})
+          AND gd.deleted_at IS NULL
+        ORDER BY gd.filename ASC
       `;
 
       return result.rows;
     } catch (error) {
       console.error('[BatchService] Error fetching documents by IDs:', error);
       throw new Error(`Failed to fetch documents: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get batches for a specific project
+   * @param {number} userId - User ID (for ownership validation)
+   * @param {number} projectId - Project ID
+   * @param {Object} options - Query options (limit, offset)
+   * @returns {Promise<Object>} { batches, total }
+   */
+  async getProjectBatches(userId, projectId, options = {}) {
+    if (!userId || !projectId) {
+      throw new Error('User ID and Project ID are required');
+    }
+
+    const { limit = 20, offset = 0 } = options;
+
+    try {
+      // Get total count
+      const countResult = await sql`
+        SELECT COUNT(*) as total
+        FROM generation_batches
+        WHERE user_id = ${userId} AND project_id = ${projectId}
+      `;
+      const total = parseInt(countResult.rows[0].total, 10);
+
+      // Get batches
+      const result = await sql`
+        SELECT
+          gb.*,
+          (SELECT COUNT(*) FROM generated_documents gd
+           WHERE gd.batch_id = gb.id AND gd.deleted_at IS NULL) as file_count
+        FROM generation_batches gb
+        WHERE gb.user_id = ${userId} AND gb.project_id = ${projectId}
+        ORDER BY gb.created_at DESC
+        LIMIT ${limit} OFFSET ${offset}
+      `;
+
+      return {
+        batches: result.rows,
+        total
+      };
+    } catch (error) {
+      console.error('[BatchService] Error fetching project batches:', error);
+      throw new Error(`Failed to fetch project batches: ${error.message}`);
+    }
+  }
+
+  /**
+   * Update batch's project association
+   * @param {number} userId - User ID (for ownership validation)
+   * @param {string} batchId - Batch UUID
+   * @param {number|null} projectId - Project ID (null to unlink)
+   * @returns {Promise<boolean>} true if updated
+   */
+  async updateBatchProject(userId, batchId, projectId) {
+    if (!userId || !batchId) {
+      throw new Error('User ID and Batch ID are required');
+    }
+
+    try {
+      const result = await sql`
+        UPDATE generation_batches
+        SET project_id = ${projectId}
+        WHERE id = ${batchId} AND user_id = ${userId}
+        RETURNING id
+      `;
+
+      return result.rowCount > 0;
+    } catch (error) {
+      console.error('[BatchService] Error updating batch project:', error);
+      throw new Error(`Failed to update batch project: ${error.message}`);
+    }
+  }
+
+  /**
+   * Sync project name across all batches when a project is renamed
+   * Called from projectService.updateProject when name changes
+   * @param {number} projectId - Project ID
+   * @param {string} newName - New project name
+   * @returns {Promise<number>} Number of batches updated
+   */
+  async syncProjectName(projectId, newName) {
+    if (!projectId || !newName) {
+      return 0;
+    }
+
+    try {
+      const result = await sql`
+        UPDATE generation_batches
+        SET project_name = ${newName}
+        WHERE project_id = ${projectId}
+        RETURNING id
+      `;
+
+      return result.rowCount;
+    } catch (error) {
+      console.error('[BatchService] Error syncing project name:', error);
+      throw new Error(`Failed to sync project name: ${error.message}`);
     }
   }
 }

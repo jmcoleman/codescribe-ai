@@ -12,6 +12,7 @@ import { TIER_FEATURES, TIER_PRICING } from '../config/tiers.js';
 import { requireAuth, optionalAuth } from '../middleware/auth.js';
 import githubService from '../services/githubService.js';
 import { getDocTypeOptions } from '../prompts/docTypeConfig.js';
+import graphService from '../services/graphService.js';
 
 const router = express.Router();
 
@@ -22,6 +23,50 @@ function formatBytes(bytes) {
   const sizes = ['Bytes', 'KB', 'MB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+}
+
+/**
+ * Fetch graph context for a file with graceful fallback on any failure.
+ * Returns null if params are missing, user is unauthenticated, or graph/file not found.
+ *
+ * Supports two modes:
+ * 1. Direct graph ID: Pass `graphId` (32-char hash) to use a specific graph
+ * 2. Project ID: Pass `projectId` (FK to projects table) to look up the graph by project
+ *
+ * @param {Object} params - Context parameters
+ * @param {string|null} params.graphId - Direct graph_id (32-char hash)
+ * @param {number|null} params.projectId - Project ID (FK to projects table)
+ * @param {string|null} params.filePath - Path to the file in the project
+ * @param {Object|null} user - Authenticated user (from req.user)
+ * @returns {Promise<Object|null>} Graph context or null
+ */
+async function fetchGraphContext(params, user) {
+  const { graphId, projectId, filePath } = params || {};
+
+  // Must have filePath and authenticated user
+  if (!filePath || !user?.id) return null;
+
+  // Must have either graphId or projectId
+  if (!graphId && !projectId) return null;
+
+  try {
+    let targetGraphId = graphId;
+
+    // If we have projectId but not graphId, look up the graph by project ID
+    if (!targetGraphId && projectId) {
+      const graph = await graphService.getGraphByProjectId(projectId, user.id);
+      if (!graph) {
+        console.log('[Graph Context] No graph found for projectId:', projectId);
+        return null;
+      }
+      targetGraphId = graph.graphId;
+    }
+
+    return await graphService.getFileContext(targetGraphId, filePath, user.id);
+  } catch (error) {
+    console.error('[Graph Context] Failed to fetch:', { graphId, projectId, filePath, error: error.message });
+    return null;
+  }
 }
 
 // API root endpoint - provides API metadata and documentation
@@ -110,10 +155,10 @@ router.get('/', (req, res) => {
   });
 });
 
-// Line 17 - add before route handler
+// Generate documentation (non-streaming)
 router.post('/generate', optionalAuth, rateLimitBypass, apiLimiter, generationLimiter, checkUsage(), async (req, res) => {
   try {
-    const { code, docType, language, isDefaultCode, filename } = req.body;
+    const { code, docType, language, isDefaultCode, filename, graphId, projectId, filePath } = req.body;
 
     if (!code || typeof code !== 'string') {
       return res.status(400).json({
@@ -129,6 +174,11 @@ router.post('/generate', optionalAuth, rateLimitBypass, apiLimiter, generationLi
       });
     }
 
+    // Fetch graph context if graphId/projectId and filePath provided (for cross-file context)
+    // graphId: direct 32-char hash to a specific graph instance
+    // projectId: FK to projects table, used to look up the most recent graph for that project
+    const graphContext = await fetchGraphContext({ graphId, projectId, filePath }, req.user);
+
     // Build trial info for watermarking (if user is on trial)
     const trialInfo = req.user?.isOnTrial ? {
       isOnTrial: true,
@@ -142,7 +192,8 @@ router.post('/generate', optionalAuth, rateLimitBypass, apiLimiter, generationLi
       isDefaultCode: isDefaultCode === true, // Cache user message if this is default/example code
       userTier: req.user?.effectiveTier || 'free', // Pass effective tier for attribution (includes overrides)
       filename: filename || 'untitled', // Pass filename for title formatting
-      trialInfo // Pass trial info for watermarking
+      trialInfo, // Pass trial info for watermarking
+      graphContext // Pass graph context for cross-file awareness
     });
 
     // Track usage after successful generation
@@ -164,10 +215,10 @@ router.post('/generate', optionalAuth, rateLimitBypass, apiLimiter, generationLi
   }
 });
 
-// Line 51 - add before route handler
+// Generate documentation (streaming SSE)
 router.post('/generate-stream', optionalAuth, rateLimitBypass, apiLimiter, generationLimiter, checkUsage(), async (req, res) => {
   try {
-    const { code, docType, language, isDefaultCode, filename } = req.body;
+    const { code, docType, language, isDefaultCode, filename, graphId, projectId, filePath, testRetry } = req.body;
 
     if (!code || typeof code !== 'string') {
       return res.status(400).json({
@@ -191,6 +242,46 @@ router.post('/generate-stream', optionalAuth, rateLimitBypass, apiLimiter, gener
 
     res.write(`data: ${JSON.stringify({ type: 'connected' })}\n\n`);
 
+    // DEV ONLY: Simulate retry for testing UI (pass testRetry: true in body)
+    if (process.env.NODE_ENV !== 'production' && testRetry === true) {
+      console.log('[API] Test mode: Simulating retry events');
+      // Simulate 2 retry attempts with delays
+      res.write(`data: ${JSON.stringify({
+        type: 'retry',
+        attempt: 1,
+        maxAttempts: 3,
+        delayMs: 2000,
+        reason: 'server_error',
+        message: 'Retrying... (attempt 1/3)'
+      })}\n\n`);
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      res.write(`data: ${JSON.stringify({
+        type: 'retry',
+        attempt: 2,
+        maxAttempts: 3,
+        delayMs: 4000,
+        reason: 'server_error',
+        message: 'Retrying... (attempt 2/3)'
+      })}\n\n`);
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Send mock documentation response (skip actual API call)
+      const mockDoc = `# Test Documentation\n\nThis is a simulated response to test the retry UI.\n\nThe retry banner should have appeared above before this content loaded.`;
+      res.write(`data: ${JSON.stringify({ type: 'chunk', content: mockDoc })}\n\n`);
+      res.write(`data: ${JSON.stringify({
+        type: 'complete',
+        qualityScore: { score: 85, grade: 'B' },
+        metadata: { provider: 'test', model: 'mock', inputTokens: 0, outputTokens: 0 }
+      })}\n\n`);
+      res.end();
+      return; // Exit early, don't call real API
+    }
+
+    // Fetch graph context if graphId/projectId and filePath provided (for cross-file context)
+    // graphId: direct 32-char hash to a specific graph instance
+    // projectId: FK to projects table, used to look up the most recent graph for that project
+    const graphContext = await fetchGraphContext({ graphId, projectId, filePath }, req.user);
+
     const userTier = req.user?.effectiveTier || 'free';
 
     // Build trial info for watermarking (if user is on trial)
@@ -207,10 +298,24 @@ router.post('/generate-stream', optionalAuth, rateLimitBypass, apiLimiter, gener
       userTier, // Pass effective tier for attribution (includes overrides)
       filename: filename || 'untitled', // Pass filename for title formatting
       trialInfo, // Pass trial info for watermarking
+      graphContext, // Pass graph context for cross-file awareness
       onChunk: (chunk) => {
         res.write(`data: ${JSON.stringify({
           type: 'chunk',
           content: chunk
+        })}\n\n`);
+      },
+      onRetry: (attempt, maxAttempts, delayMs, error, reason, provider) => {
+        const providerName = provider ? provider.charAt(0).toUpperCase() + provider.slice(1) : 'API';
+        console.log(`[API] Sending retry event to client: provider=${provider}, attempt=${attempt}/${maxAttempts}, reason=${reason}, delay=${delayMs}ms`);
+        res.write(`data: ${JSON.stringify({
+          type: 'retry',
+          attempt,
+          maxAttempts,
+          delayMs,
+          reason,
+          provider: provider || 'unknown',
+          message: `${providerName} API: Retrying... (attempt ${attempt}/${maxAttempts})`
         })}\n\n`);
       }
     });
@@ -243,10 +348,19 @@ router.post('/generate-stream', optionalAuth, rateLimitBypass, apiLimiter, gener
     res.end();
   } catch (error) {
     console.error('Stream error:', error);
-    res.write(`data: ${JSON.stringify({
+    // Send structured error data so client can display appropriate error type
+    // The standardizeError function adds: provider, errorType, statusCode, originalError
+    const errorData = {
       type: 'error',
-      error: error.message
-    })}\n\n`);
+      error: error.message,
+      errorType: error.errorType || error.name || 'Error', // From standardizeError or Error.name
+      provider: error.provider || null, // 'claude', 'openai', 'gemini'
+      // Include Anthropic API error details if available
+      apiError: error.error || error.originalError?.error || null,
+      status: error.status || error.statusCode || null,
+      retryAfter: error.retryAfter || null
+    };
+    res.write(`data: ${JSON.stringify(errorData)}\n\n`);
     res.end();
   }
 });

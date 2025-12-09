@@ -166,7 +166,8 @@ describe('Batches Routes', () => {
         sortOrder: 'desc',
         gradeFilter: null,
         docTypeFilter: null,
-        filenameSearch: null
+        filenameSearch: null,
+        projectId: null
       });
     });
 
@@ -189,7 +190,8 @@ describe('Batches Routes', () => {
         sortOrder: 'asc',
         gradeFilter: 'A',
         docTypeFilter: 'README',
-        filenameSearch: null
+        filenameSearch: null,
+        projectId: null
       });
     });
   });

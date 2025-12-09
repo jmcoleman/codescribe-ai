@@ -38,6 +38,9 @@ import { STORAGE_KEYS, getStorageItem, setStorageItem } from '../../constants/st
  * @param {Function} props.onGenerateSelected - Called when Generate is clicked for selected files
  * @param {Function} props.onDeleteSelected - Called when Delete is clicked
  * @param {Function} props.onUpdateFile - Called when file content is updated (e.g., after GitHub reload)
+ * @param {number|null} props.selectedProjectId - Currently selected project ID (Pro+ only)
+ * @param {Function} props.onProjectChange - Called when project selection changes (Pro+ only)
+ * @param {boolean} props.canUseProjectManagement - Whether user can use project management (Pro+ only)
  */
 export function Sidebar({
   files = [],
@@ -65,7 +68,11 @@ export function Sidebar({
   onFilesDrop,
   bulkGenerationProgress = null,
   onUpdateFile,
-  onViewBatchSummary
+  onViewBatchSummary,
+  selectedProjectId = null,
+  selectedProjectName = null,
+  onProjectChange,
+  canUseProjectManagement = false
 }) {
   // Sidebar state: 'expanded', 'collapsed' (desktop only)
   // If controlled (isCollapsedProp is defined), use prop, otherwise use local state
@@ -202,6 +209,10 @@ export function Sidebar({
             onUpdateFile={onUpdateFile}
             onViewBatchSummary={onViewBatchSummary}
             isMobile={true}
+            selectedProjectId={selectedProjectId}
+            selectedProjectName={selectedProjectName}
+            onProjectChange={onProjectChange}
+            canUseProjectManagement={canUseProjectManagement}
           />
         </div>
       </>
@@ -265,6 +276,10 @@ export function Sidebar({
             onUpdateFile={onUpdateFile}
             onViewBatchSummary={onViewBatchSummary}
             isMobile={false}
+            selectedProjectId={selectedProjectId}
+            selectedProjectName={selectedProjectName}
+            onProjectChange={onProjectChange}
+            canUseProjectManagement={canUseProjectManagement}
           />
         )}
     </div>

@@ -22,7 +22,8 @@
       "Bash(git tag:*)",
       "Bash(CI=true npm run test:ci:*)",
       "Bash(CI=true npm test:*)",
-      "Bash(1)"
+      "Bash(1)",
+      "Bash(npm run test:db:setup:*)"
     ],
     "deny": [],
     "ask": []

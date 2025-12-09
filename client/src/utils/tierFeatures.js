@@ -12,30 +12,35 @@ export const TIER_FEATURES = {
     customTemplates: false,
     apiAccess: false,
     versionHistory: false,
+    projectManagement: false,
   },
   starter: {
     batchProcessing: false,
     customTemplates: false,
     apiAccess: false,
     versionHistory: false,
+    projectManagement: false,
   },
   pro: {
     batchProcessing: true,
     customTemplates: true,
     apiAccess: false,
     versionHistory: false,
+    projectManagement: true,
   },
   team: {
     batchProcessing: true,
     customTemplates: true,
     apiAccess: true,
     versionHistory: true,
+    projectManagement: true,
   },
   enterprise: {
     batchProcessing: true,
     customTemplates: true,
     apiAccess: true,
     versionHistory: true,
+    projectManagement: true,
   },
 };
 

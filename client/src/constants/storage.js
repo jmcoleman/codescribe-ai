@@ -32,6 +32,7 @@ export const STORAGE_KEYS = {
   THEME_PREFERENCE: 'cs_ui_theme',
   LAYOUT_MODE: 'cs_ui_layout', // 'split' | 'code' | 'doc'
   // Note: Table column sizes use cs_ui_tbl_cols_{tableId} via useTableColumnSizing hook
+  HISTORY_COLUMN_VISIBILITY: 'cs_ui_hist_cols', // History table column visibility state
 
   // Editor State (localStorage - persists code/docs across refreshes)
   // Privacy-sensitive: cs_ed_code, cs_ed_doc, cs_ed_score are user-scoped
@@ -275,6 +276,8 @@ export const clearAppStorage = (userId = null) => {
         localStorage.removeItem(githubRecentKey);
         result.localStorage++;
       }
+      // Note: selectedProjectId is stored inside workspace data (cs_ws_{userId})
+      // and is cleared when workspace is cleared above
     }
   } catch (error) {
     console.warn('Failed to clear app storage:', error);

@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { FileItem } from './FileItem';
 import { FileDetailsPanel } from './FileDetailsPanel';
-import { FileCode, PanelLeftClose, Plus, Github, Upload, Info, X, Stamp, Trash2, Sparkles, Loader2, RefreshCw } from 'lucide-react';
+import { ProjectSelector } from './ProjectSelector';
+import { ProjectGraphInfo } from './ProjectGraphInfo';
+import { FileCode, PanelLeftClose, Plus, Github, Upload, Info, X, Stamp, Trash2, Sparkles, Loader2, RefreshCw, FolderUp } from 'lucide-react';
 import { Select } from '../Select';
 import { Button } from '../Button';
 import { Tooltip } from '../Tooltip';
@@ -39,6 +41,23 @@ function GitHubSync({ className, isLoading = false }) {
 }
 
 /**
+ * LocalSync - Upload icon with sync/refresh indicator overlay
+ * Used for "re-upload local files" actions
+ */
+function LocalSync({ className, isLoading = false }) {
+  return (
+    <span className={`relative ${className}`}>
+      <FolderUp className="w-4 h-4" aria-hidden="true" />
+      {isLoading ? (
+        <Loader2 className="absolute -bottom-0.5 -right-1 w-2 h-2 animate-spin" aria-hidden="true" />
+      ) : (
+        <RefreshCw className="absolute -bottom-0.5 -right-1 w-2 h-2" aria-hidden="true" />
+      )}
+    </span>
+  );
+}
+
+/**
  * FileList Component
  *
  * Scrollable list of files with bulk action buttons.
@@ -64,6 +83,9 @@ function GitHubSync({ className, isLoading = false }) {
  * @param {Function} props.onDeleteSelected - Called when Delete is clicked (for selected files)
  * @param {Function} props.onToggleSidebar - Called when collapse button is clicked
  * @param {Function} props.onUpdateFile - Called when file content is updated (e.g., after GitHub reload)
+ * @param {number|null} props.selectedProjectId - Currently selected project ID (Pro+ only)
+ * @param {Function} props.onProjectChange - Called when project selection changes (Pro+ only)
+ * @param {boolean} props.canUseProjectManagement - Whether user can use project management (Pro+ only)
  */
 export function FileList({
   files = [],
@@ -89,7 +111,11 @@ export function FileList({
   onFilesDrop,
   bulkGenerationProgress = null, // { total, completed, currentBatch, totalBatches }
   onUpdateFile,
-  onViewBatchSummary
+  onViewBatchSummary,
+  selectedProjectId = null,
+  selectedProjectName = null,
+  onProjectChange,
+  canUseProjectManagement = false
 }) {
   const [isDragging, setIsDragging] = useState(false);
   const [detailsFileId, setDetailsFileId] = useState(null);
@@ -112,6 +138,19 @@ export function FileList({
   // Count GitHub-origin files that can be reloaded
   const githubFiles = files.filter(f => f.origin === 'github' && f.github?.repo && f.github?.path);
   const hasGitHubFiles = githubFiles.length > 0;
+
+  // Count local-origin files that can be re-uploaded
+  // Supports: upload, paste, sample (not github - use "Reload from GitHub" instead)
+  const localFiles = files.filter(f => f.origin === 'upload' || f.origin === 'paste' || f.origin === 'sample');
+  const hasLocalFiles = localFiles.length > 0;
+
+  // Ref for hidden file input (for bulk re-upload)
+  const reuploadInputRef = useRef(null);
+  const [localReuploadProgress, setLocalReuploadProgress] = useState(null); // { total, matched, updated }
+
+  // Ref and state for single file re-upload
+  const singleReuploadInputRef = useRef(null);
+  const [reuploadTargetFileId, setReuploadTargetFileId] = useState(null);
 
   // Files without code that can be reloaded from GitHub
   const reloadableFilesWithoutCode = filesWithoutCode.filter(f => f.origin === 'github' && f.github?.repo && f.github?.path);
@@ -277,6 +316,118 @@ export function FileList({
     setTimeout(() => setBulkReloadProgress(null), 500);
   };
 
+  /**
+   * Handle re-uploading local files
+   * Opens file picker and matches uploaded files by filename to update existing files
+   */
+  const handleReuploadLocalFiles = async (uploadedFiles) => {
+    if (!uploadedFiles || uploadedFiles.length === 0 || !onUpdateFile) return;
+
+    // Build a map of local files by filename for quick lookup
+    const localFilesByName = new Map();
+    localFiles.forEach(f => {
+      // Use just the filename (last part of path)
+      const filename = f.filename.split('/').pop();
+      localFilesByName.set(filename, f);
+    });
+
+    let matchedCount = 0;
+    let updatedCount = 0;
+
+    setLocalReuploadProgress({ total: uploadedFiles.length, matched: 0, updated: 0 });
+
+    for (const uploadedFile of uploadedFiles) {
+      const filename = uploadedFile.name;
+      const existingFile = localFilesByName.get(filename);
+
+      if (existingFile) {
+        matchedCount++;
+        setLocalReuploadProgress(prev => ({ ...prev, matched: matchedCount }));
+
+        try {
+          // Read the file content
+          const content = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target.result);
+            reader.onerror = reject;
+            reader.readAsText(uploadedFile);
+          });
+
+          // Update the file with new content
+          onUpdateFile(existingFile.id, {
+            content: content,
+            fileSize: content.length
+          });
+
+          updatedCount++;
+          setLocalReuploadProgress(prev => ({ ...prev, updated: updatedCount }));
+        } catch (error) {
+          console.error('[FileList] Failed to read uploaded file:', filename, error);
+        }
+      }
+    }
+
+    // Clear progress after a short delay
+    setTimeout(() => setLocalReuploadProgress(null), 1500);
+  };
+
+  /**
+   * Handle file input change for bulk re-upload
+   */
+  const handleReuploadInputChange = (e) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      handleReuploadLocalFiles(Array.from(files));
+    }
+    // Reset the input so the same files can be selected again
+    e.target.value = '';
+  };
+
+  /**
+   * Handle single file re-upload from the file menu
+   * Opens file picker and updates the specific file with selected content
+   */
+  const handleSingleFileReupload = (fileId) => {
+    setReuploadTargetFileId(fileId);
+    singleReuploadInputRef.current?.click();
+  };
+
+  /**
+   * Handle file input change for single file re-upload
+   */
+  const handleSingleReuploadInputChange = async (e) => {
+    const uploadedFiles = e.target.files;
+    if (!uploadedFiles || uploadedFiles.length === 0 || !reuploadTargetFileId || !onUpdateFile) {
+      setReuploadTargetFileId(null);
+      e.target.value = '';
+      return;
+    }
+
+    const uploadedFile = uploadedFiles[0];
+
+    try {
+      // Read the file content
+      const content = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (evt) => resolve(evt.target.result);
+        reader.onerror = reject;
+        reader.readAsText(uploadedFile);
+      });
+
+      // Update the file with new content
+      onUpdateFile(reuploadTargetFileId, {
+        content: content,
+        fileSize: content.length
+      });
+    } catch (error) {
+      console.error('[FileList] Failed to read uploaded file:', error);
+    }
+
+    // Clean up
+    setReuploadTargetFileId(null);
+    e.target.value = '';
+  };
+
   // Count only files with content in selection
   const filesWithContent = files.filter(f => f.content && f.content.length > 0);
   const selectedFilesWithContent = filesWithContent.filter(f => selectedFileIds.includes(f.id));
@@ -354,10 +505,35 @@ export function FileList({
             </div>
           </div>
 
+          {/* Project selector (Pro+ only) */}
+          {canUseProjectManagement && onProjectChange && (
+            <div className="flex items-center gap-2 mb-1.5">
+              <label className="text-xs font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap flex-shrink-0">
+                Project:
+              </label>
+              <div className="flex-1 min-w-0">
+                <ProjectSelector
+                  selectedProjectId={selectedProjectId}
+                  onProjectChange={onProjectChange}
+                  size="small"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Project & Graph info (Pro+ only) - collapsible section */}
+          {canUseProjectManagement && selectedProjectId && (
+            <ProjectGraphInfo
+              selectedProjectId={selectedProjectId}
+              selectedProjectName={selectedProjectName}
+            />
+          )}
+
           {/* Action buttons - file management (left) and selection actions (right) */}
           <div className="flex gap-2 justify-between">
             {/* Left group: File management */}
             <div className="flex gap-1">
+              {/* GitHub actions grouped together */}
               <Tooltip content="Import from GitHub">
                 <button
                   type="button"
@@ -379,6 +555,7 @@ export function FileList({
                   <GitHubSync className="text-slate-600 dark:text-slate-400" isLoading={!!bulkReloadProgress} />
                 </button>
               </Tooltip>
+              {/* Local actions grouped together */}
               <Tooltip content="Add files">
                 <button
                   type="button"
@@ -387,6 +564,17 @@ export function FileList({
                   aria-label="Add files"
                 >
                   <Plus className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                </button>
+              </Tooltip>
+              <Tooltip content={localReuploadProgress ? `Updated ${localReuploadProgress.updated}/${localReuploadProgress.matched} matched` : `Re-upload local files (${localFiles.length} files)`}>
+                <button
+                  type="button"
+                  onClick={() => reuploadInputRef.current?.click()}
+                  disabled={!hasLocalFiles || localReuploadProgress}
+                  className="icon-btn interactive-scale-sm focus-ring-light flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-label={localReuploadProgress ? `Updated ${localReuploadProgress.updated} of ${localReuploadProgress.matched} matched files` : `Re-upload ${localFiles.length} local files`}
+                >
+                  <LocalSync className="text-slate-600 dark:text-slate-400" isLoading={!!localReuploadProgress} />
                 </button>
               </Tooltip>
             </div>
@@ -494,20 +682,40 @@ export function FileList({
             </button>
           </div>
 
-          {/* Reload from GitHub button - Only show when GitHub files exist */}
-          {hasGitHubFiles && (
-            <button
-              type="button"
-              onClick={handleReloadAllFromGitHub}
-              disabled={bulkReloadProgress}
-              className="w-full px-2.5 py-1.5 mb-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-100 rounded text-xs font-medium flex items-center justify-center gap-1.5 border border-slate-200 dark:border-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <GitHubSync isLoading={!!bulkReloadProgress} />
-              {bulkReloadProgress
-                ? `Reloading ${bulkReloadProgress.completed}/${bulkReloadProgress.total}`
-                : `Reload from GitHub (${githubFiles.length})`
-              }
-            </button>
+          {/* Reload buttons - Only show when files exist */}
+          {(hasGitHubFiles || hasLocalFiles) && (
+            <div className="flex gap-2 mb-2">
+              {/* Reload from GitHub button */}
+              {hasGitHubFiles && (
+                <button
+                  type="button"
+                  onClick={handleReloadAllFromGitHub}
+                  disabled={bulkReloadProgress}
+                  className="flex-1 px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-100 rounded text-xs font-medium flex items-center justify-center gap-1.5 border border-slate-200 dark:border-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <GitHubSync isLoading={!!bulkReloadProgress} />
+                  {bulkReloadProgress
+                    ? `${bulkReloadProgress.completed}/${bulkReloadProgress.total}`
+                    : `GitHub (${githubFiles.length})`
+                  }
+                </button>
+              )}
+              {/* Re-upload local files button */}
+              {hasLocalFiles && (
+                <button
+                  type="button"
+                  onClick={() => reuploadInputRef.current?.click()}
+                  disabled={localReuploadProgress}
+                  className="flex-1 px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-100 rounded text-xs font-medium flex items-center justify-center gap-1.5 border border-slate-200 dark:border-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <LocalSync isLoading={!!localReuploadProgress} />
+                  {localReuploadProgress
+                    ? `${localReuploadProgress.updated}/${localReuploadProgress.matched}`
+                    : `Local (${localFiles.length})`
+                  }
+                </button>
+              )}
+            </div>
           )}
 
           {/* File management controls - Only show when files exist */}
@@ -529,6 +737,30 @@ export function FileList({
               />
             </div>
           </div>
+
+          {/* Project selector (Pro+ only) - Mobile */}
+          {canUseProjectManagement && onProjectChange && (
+            <div className="flex items-center gap-2 mb-2">
+              <label className="text-xs font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                Project:
+              </label>
+              <div className="flex-1">
+                <ProjectSelector
+                  selectedProjectId={selectedProjectId}
+                  onProjectChange={onProjectChange}
+                  size="small"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Project & Graph info (Pro+ only) - collapsible section */}
+          {canUseProjectManagement && selectedProjectId && (
+            <ProjectGraphInfo
+              selectedProjectId={selectedProjectId}
+              selectedProjectName={selectedProjectName}
+            />
+          )}
 
           {/* Action buttons - Apply, Delete, Generate */}
           <div className="flex gap-1.5">
@@ -695,8 +927,10 @@ export function FileList({
               onToggleSelection={() => onToggleFileSelection(file.id)}
               onRemove={() => onRemoveFile(file.id)}
               onGenerate={() => onGenerateFile(file.id)}
+              onApplyDocType={() => onApplyDocType && onApplyDocType([file.id], docType)}
               onViewDetails={() => setDetailsFileId(file.id)}
               onReloadFromSource={() => handleReloadFromGitHub(file.id)}
+              onReuploadFile={() => handleSingleFileReupload(file.id)}
               isReloading={reloadingFileIds.has(file.id)}
             />
           ))
@@ -728,6 +962,25 @@ export function FileList({
         confirmText="Delete"
         cancelText="Cancel"
         variant="danger"
+      />
+
+      {/* Hidden file input for bulk re-uploading local files */}
+      <input
+        ref={reuploadInputRef}
+        type="file"
+        multiple
+        onChange={handleReuploadInputChange}
+        className="hidden"
+        aria-hidden="true"
+      />
+
+      {/* Hidden file input for single file re-upload */}
+      <input
+        ref={singleReuploadInputRef}
+        type="file"
+        onChange={handleSingleReuploadInputChange}
+        className="hidden"
+        aria-hidden="true"
       />
     </div>
   );

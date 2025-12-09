@@ -15,10 +15,11 @@
  */
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { flushSync } from 'react-dom';
 import { toastCompact } from '../utils/toastWithHistory';
 import * as batchesApi from '../services/batchesApi';
+import { analyzeProject } from '../services/graphApi';
 import { formatDateTime } from '../utils/formatters';
+import { hasFeature } from '../utils/tierFeatures';
 
 // Rate limit delay between API calls (15 seconds to respect Claude API limits)
 const RATE_LIMIT_DELAY = 15000;
@@ -314,6 +315,8 @@ export const generateBatchSummaryDocument = (summary, failedFiles = [], tier = '
  * @param {Function} options.refetchUsage - Refetch usage stats
  * @param {string} options.userTier - User's effective tier for attribution
  * @param {Object} options.trialInfo - Optional trial info { isOnTrial, trialEndsAt }
+ * @param {number|null} options.projectId - Optional project ID for batch association
+ * @param {string|null} options.projectName - Optional project name for file metadata
  * @returns {Object} Batch generation state and handlers
  */
 export function useBatchGeneration({
@@ -329,7 +332,10 @@ export function useBatchGeneration({
   setShowUsageLimitModal,
   refetchUsage,
   userTier = 'free',
-  trialInfo = null
+  trialInfo = null,
+  projectId = null,
+  projectName = null,
+  user = null
 }) {
   // Load initial batch state from sessionStorage (persists across refresh)
   const loadInitialBatchState = () => {
@@ -337,7 +343,6 @@ export function useBatchGeneration({
       const saved = sessionStorage.getItem(BATCH_SUMMARY_STATE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        console.log('[useBatchGeneration] Loading batch state from sessionStorage');
         return parsed;
       }
     } catch (error) {
@@ -364,6 +369,9 @@ export function useBatchGeneration({
   // State to track if cancellation is pending (for UI feedback)
   const [isCancelling, setIsCancelling] = useState(false);
 
+  // State to track graph analysis progress
+  const [isAnalyzingGraph, setIsAnalyzingGraph] = useState(false);
+
   // Batch results state (initialized from sessionStorage if available)
   const [bulkGenerationSummary, setBulkGenerationSummary] = useState(initialBatchState?.summary || null);
   const [batchSummaryMarkdown, setBatchSummaryMarkdown] = useState(initialBatchState?.markdown || null);
@@ -378,9 +386,13 @@ export function useBatchGeneration({
   const [regenerateModalData, setRegenerateModalData] = useState(null);
 
   // Save batch state to sessionStorage whenever it changes
+  // IMPORTANT: This syncs both saves AND clears. When batch state is cleared via flushSync
+  // at the start of a new generation, we must also clear sessionStorage to prevent
+  // the old batch banner from persisting.
   useEffect(() => {
-    if (batchSummaryMarkdown || bulkGenerationSummary || currentBatchId || bannerDismissed) {
-      try {
+    try {
+      // If any batch state exists, save it
+      if (batchSummaryMarkdown || bulkGenerationSummary || currentBatchId) {
         const state = {
           summary: bulkGenerationSummary,
           markdown: batchSummaryMarkdown,
@@ -389,10 +401,13 @@ export function useBatchGeneration({
           bannerDismissed: bannerDismissed
         };
         sessionStorage.setItem(BATCH_SUMMARY_STATE_KEY, JSON.stringify(state));
-        console.log('[useBatchGeneration] Saved batch state to sessionStorage');
-      } catch (error) {
-        console.error('[useBatchGeneration] Error saving batch state to sessionStorage:', error);
+      } else {
+        // All batch state is cleared - remove from sessionStorage
+        // This ensures the banner doesn't persist when starting a new generation
+        sessionStorage.removeItem(BATCH_SUMMARY_STATE_KEY);
       }
+    } catch (error) {
+      console.error('[useBatchGeneration] Error syncing batch state to sessionStorage:', error);
     }
   }, [bulkGenerationSummary, batchSummaryMarkdown, bulkGenerationErrors, currentBatchId, bannerDismissed]);
 
@@ -407,13 +422,6 @@ export function useBatchGeneration({
       return;
     }
 
-    const totalFiles = filesToGenerate.length;
-    let successCount = 0;
-    let failureCount = 0;
-    const failedFiles = [];
-    const successfulFiles = [];
-    const skippedFiles = []; // Track files skipped due to cancellation
-
     // Clear ALL files' generating state first to prevent stale spinners
     // This handles cases where a previous batch was interrupted or cancelled
     multiFileState.files.forEach(file => {
@@ -422,19 +430,71 @@ export function useBatchGeneration({
       }
     });
 
-    // Use flushSync to ensure all state clears are processed immediately
-    // This prevents the old summary banner from appearing alongside the new generating banner
-    flushSync(() => {
-      // Clear previous doc panel content and summaries
-      setDocumentation('');
-      setQualityScore(null);
-      setBulkGenerationSummary(null);
-      setBatchSummaryMarkdown(null);
-      setCurrentBatchId(null);
-      setBulkGenerationErrors([]);
-      setBannerDismissed(false); // Reset banner dismissed state for new batch
-      setCurrentlyGeneratingFile(null); // Clear any lingering generating file indicator
-    });
+    // Clear previous batch state before starting new generation
+    // Note: The banner is hidden during generation via the bulkGenerationProgress check in App.jsx,
+    // so we don't need flushSync here - normal state updates are sufficient
+    setDocumentation('');
+    setQualityScore(null);
+    setBulkGenerationSummary(null);
+    setBatchSummaryMarkdown(null);
+    setCurrentBatchId(null);
+    setBulkGenerationErrors([]);
+    setBannerDismissed(false);
+    setCurrentlyGeneratingFile(null);
+
+    // Run graph analysis BEFORE batch generation (Pro+ only)
+    // This ensures the graph is ready for cross-file awareness during doc generation
+    let graphId = null;
+    let resolvedProjectName = projectName; // Use passed projectName, may be updated from graph result
+    console.log('[useBatchGeneration] Starting batch with projectId:', projectId, 'projectName:', projectName);
+    if (projectId && hasFeature(user, 'batchProcessing')) {
+      try {
+        // Collect ALL workspace files (not just files to generate) for complete graph
+        const allWorkspaceFiles = multiFileState.files
+          .filter(f => f.content && f.content.length > 0)
+          .map(f => ({
+            path: f.github?.path || f.filename, // Use GitHub path if available, else filename
+            content: f.content
+          }));
+
+        if (allWorkspaceFiles.length > 0) {
+          console.log('[useBatchGeneration] Starting graph analysis for', allWorkspaceFiles.length, 'workspace files');
+          setIsAnalyzingGraph(true);
+
+          try {
+            const result = await analyzeProject({
+              projectName: projectName || 'Workspace', // Use actual project name if available
+              files: allWorkspaceFiles,
+              projectId: projectId,  // FK to projects table
+              branch: 'main',
+              projectPath: ''
+            });
+
+            if (result.success && result.graph?.graphId) {
+              graphId = result.graph.graphId;
+              // Use project name from graph result if available (may differ from input)
+              resolvedProjectName = result.graph.projectName || projectName;
+              console.log('[useBatchGeneration] Graph analysis complete:', graphId, 'project:', resolvedProjectName);
+            }
+          } catch (err) {
+            // Log but don't block generation - graph is an enhancement, not required
+            console.warn('[useBatchGeneration] Graph analysis failed (non-blocking):', err.message);
+          } finally {
+            setIsAnalyzingGraph(false);
+          }
+        }
+      } catch (err) {
+        console.warn('[useBatchGeneration] Graph analysis setup failed:', err.message);
+        setIsAnalyzingGraph(false);
+      }
+    }
+
+    const totalFiles = filesToGenerate.length;
+    let successCount = 0;
+    let failureCount = 0;
+    const failedFiles = [];
+    const successfulFiles = [];
+    const skippedFiles = []; // Track files skipped due to cancellation
 
     // Set batch mode ref SYNCHRONOUSLY before any async state updates
     // This prevents the App.jsx sync effect from resetting filename to 'code.js'
@@ -505,16 +565,18 @@ export function useBatchGeneration({
       }
 
       // Clear previous documentation to show fresh streaming
-      // Use flushSync to ensure the UI updates before streaming starts
-      flushSync(() => {
-        setDocumentation('');
-        setQualityScore(null);
-      });
+      setDocumentation('');
+      setQualityScore(null);
 
       try {
-        console.log(`[useBatchGeneration] Starting generation for file ${i + 1}/${totalFiles}: ${file.filename}`);
+        console.log(`[useBatchGeneration] Starting generation for file ${i + 1}/${totalFiles}: ${file.filename}${graphId ? ` (with graph ${graphId})` : ''}`);
         const startTime = Date.now();
-        const result = await generate(file.content, file.docType, file.language, false, file.filename);
+        // Pass graphId, projectId, and filePath via options object for graph context
+        const result = await generate(file.content, file.docType, file.language, false, file.filename, {
+          graphId,      // Direct graph ID from analysis (32-char hash)
+          projectId,    // FK to projects table (for fallback lookup)
+          filePath: file.github?.path || file.filename  // File path within project
+        });
         console.log(`[useBatchGeneration] Generation completed for ${file.filename} in ${(Date.now() - startTime) / 1000}s`);
 
         const generatedAt = new Date();
@@ -523,7 +585,7 @@ export function useBatchGeneration({
         let documentId = null;
         if (isAuthenticated) {
           try {
-            console.log('[useBatchGeneration] Saving document with metadata:', result.metadata);
+            console.log('[useBatchGeneration] Saving document with metadata:', result.metadata, 'graphId:', graphId);
             const saveResult = await documentPersistence.saveDocument({
               filename: file.filename,
               language: file.language,
@@ -535,7 +597,8 @@ export function useBatchGeneration({
               provider: result.metadata?.provider || 'claude',
               model: result.metadata?.model || 'claude-sonnet-4-5-20250929',
               github: file.github || null,
-              llm: result.metadata || null
+              llm: result.metadata || null,
+              graphId: graphId || null  // Store graph reference for cross-file context
             }, 'save');
 
             if (saveResult) {
@@ -549,6 +612,7 @@ export function useBatchGeneration({
 
         // Update file with generated documentation
         // Store generatedDocType to track what was actually generated (separate from selected docType)
+        // Include graphId and projectName for file details panel
         multiFileState.updateFile(file.id, {
           documentation: result.documentation,
           qualityScore: result.qualityScore,
@@ -556,7 +620,9 @@ export function useBatchGeneration({
           error: null,
           documentId: documentId,
           generatedAt,
-          generatedDocType: file.docType || 'README'
+          generatedDocType: file.docType || 'README',
+          graphId: graphId || null,              // Graph ID for cross-file context
+          projectName: resolvedProjectName || null  // Project name for file details
         });
 
         // Update usage tracking
@@ -712,7 +778,9 @@ export function useBatchGeneration({
           avgGrade,
           summaryMarkdown,
           errorDetails: failedFiles.length > 0 ? failedFiles : null,
-          docTypes: uniqueDocTypes
+          docTypes: uniqueDocTypes,
+          projectId: projectId,
+          projectName: projectName // Denormalized for persistence if project deleted
         });
 
         if (batchResult.batchId) {
@@ -797,7 +865,10 @@ export function useBatchGeneration({
     setDocumentation,
     setQualityScore,
     userTier,
-    trialInfo
+    trialInfo,
+    projectId,
+    projectName,
+    user
   ]);
 
   /**
@@ -1162,6 +1233,7 @@ export function useBatchGeneration({
     currentlyGeneratingFile,
     throttleCountdown,
     isCancelling,
+    isAnalyzingGraph,
 
     // Ref for synchronous batch mode checking (avoids React batching race conditions)
     isBatchModeRef,

@@ -15,9 +15,11 @@ import {
 // Mock dependencies
 jest.mock('../../config/tiers.js');
 jest.mock('../../models/Usage.js');
+jest.mock('../../models/User.js');
 
 import * as tiers from '../../config/tiers.js';
 import Usage from '../../models/Usage.js';
+import User from '../../models/User.js';
 
 describe('tierGate Middleware', () => {
   let req, res, next;
@@ -35,6 +37,8 @@ describe('tierGate Middleware', () => {
     };
     next = jest.fn();
     jest.clearAllMocks();
+    // Default: non-admin users don't bypass rate limits
+    User.canBypassRateLimits.mockReturnValue(false);
   });
 
   describe('requireFeature', () => {
@@ -121,6 +125,7 @@ describe('tierGate Middleware', () => {
       });
       tiers.checkUsageLimits.mockReturnValue({
         allowed: false,
+        limits: { fileSize: true, daily: false, monthly: true }, // daily limit exceeded
         remaining: { daily: 0, monthly: 1 },
       });
       tiers.getTierFeatures.mockReturnValue({
@@ -140,7 +145,8 @@ describe('tierGate Middleware', () => {
       expect(res.json).toHaveBeenCalledWith(
         expect.objectContaining({
           error: 'Usage Limit Exceeded',
-          message: 'You have reached your usage limit for this period.',
+          message: 'You have reached your daily documentation generation limit. It will reset at midnight.',
+          limitType: 'daily',
           currentTier: 'free',
           limits: {
             maxFileSize: 100000,
@@ -216,6 +222,92 @@ describe('tierGate Middleware', () => {
         'free',
         expect.objectContaining({ fileSize: 12 })
       );
+    });
+
+    it('should bypass usage check for admin users', async () => {
+      req.user = { id: 1, tier: 'free', effectiveTier: 'free', role: 'admin' };
+      User.canBypassRateLimits.mockReturnValue(true);
+
+      const middleware = checkUsage();
+      await middleware(req, res, next);
+
+      expect(User.canBypassRateLimits).toHaveBeenCalledWith(req.user);
+      expect(next).toHaveBeenCalled();
+      expect(Usage.getUserUsage).not.toHaveBeenCalled();
+    });
+
+    it('should deny request if monthly limit exceeded', async () => {
+      req.user = { id: 1, tier: 'free', effectiveTier: 'free' };
+      User.canBypassRateLimits.mockReturnValue(false);
+      Usage.getUserUsage.mockResolvedValue({
+        dailyGenerations: 2,
+        monthlyGenerations: 10,
+        resetDate: new Date(),
+      });
+      tiers.checkUsageLimits.mockReturnValue({
+        allowed: false,
+        limits: { fileSize: true, daily: true, monthly: false }, // monthly limit exceeded
+        remaining: { daily: 1, monthly: 0 },
+      });
+      tiers.getTierFeatures.mockReturnValue({
+        maxFileSize: 100000,
+        dailyGenerations: 3,
+        monthlyGenerations: 10,
+      });
+      tiers.getUpgradePath.mockReturnValue({
+        recommendedUpgrade: 'pro',
+        pricing: { price: 29, period: 'month' },
+      });
+
+      const middleware = checkUsage();
+      await middleware(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(429);
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          error: 'Usage Limit Exceeded',
+          message: 'You have reached your monthly documentation generation limit.',
+          limitType: 'monthly',
+        })
+      );
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('should show daily limit message when both limits exceeded', async () => {
+      req.user = { id: 1, tier: 'free', effectiveTier: 'free' };
+      User.canBypassRateLimits.mockReturnValue(false);
+      Usage.getUserUsage.mockResolvedValue({
+        dailyGenerations: 3,
+        monthlyGenerations: 10,
+        resetDate: new Date(),
+      });
+      tiers.checkUsageLimits.mockReturnValue({
+        allowed: false,
+        limits: { fileSize: true, daily: false, monthly: false }, // both limits exceeded
+        remaining: { daily: 0, monthly: 0 },
+      });
+      tiers.getTierFeatures.mockReturnValue({
+        maxFileSize: 100000,
+        dailyGenerations: 3,
+        monthlyGenerations: 10,
+      });
+      tiers.getUpgradePath.mockReturnValue({
+        recommendedUpgrade: 'pro',
+        pricing: { price: 29, period: 'month' },
+      });
+
+      const middleware = checkUsage();
+      await middleware(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(429);
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          error: 'Usage Limit Exceeded',
+          message: 'You have reached your daily documentation generation limit. It will reset at midnight.',
+          limitType: 'daily',
+        })
+      );
+      expect(next).not.toHaveBeenCalled();
     });
   });
 

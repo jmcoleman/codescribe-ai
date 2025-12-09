@@ -35,6 +35,8 @@ const WORKSPACE_STATE_KEY = 'codescribe_workspace_state';
  *   documentId: string | null,// UUID from database (null if not saved)
  *   generatedAt: Date | null, // When documentation was generated (from DB)
  *   batchId: string | null,   // UUID of the batch this doc belongs to (from DB)
+ *   graphId: string | null,   // Graph ID used for generation (32-char hash)
+ *   projectName: string | null, // Project name from graph if applicable
  *   dateAdded: Date,          // When file was added to workspace
  *   dateModified: Date        // When file content was last modified
  * }
@@ -117,6 +119,8 @@ export function useMultiFileState() {
       documentId: fileData.documentId || null,
       generatedAt: fileData.generatedAt || null,
       batchId: fileData.batchId || null,
+      graphId: fileData.graphId || null,
+      projectName: fileData.projectName || null,
       dateAdded: fileData.dateAdded || now,
       dateModified: fileData.dateModified || now,
       github: fileData.github || null
@@ -155,6 +159,8 @@ export function useMultiFileState() {
         documentId: fileData.documentId || null,
         generatedAt: fileData.generatedAt || null,
         batchId: fileData.batchId || null,
+        graphId: fileData.graphId || null,
+        projectName: fileData.projectName || null,
         dateAdded: fileData.dateAdded || now,
         dateModified: fileData.dateModified || now,
         github: fileData.github || null

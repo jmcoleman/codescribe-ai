@@ -207,10 +207,10 @@ export function MobileMenu({ isOpen, onClose, onHelpClick }) {
                   My Usage
                 </MenuLink>
 
-                {/* Generation History - Only visible to Starter+ tier or admin users */}
+                {/* History - Only visible to Starter+ tier or admin users */}
                 {(hasProPlusTier || isAdmin) && (
                   <MenuLink to="/history" icon={Clock}>
-                    Generation History
+                    History
                   </MenuLink>
                 )}
 

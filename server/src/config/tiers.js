@@ -106,6 +106,7 @@ export const TIER_FEATURES = {
     customTemplates: true,              // Deferred to Phase 4 Epic 4.3
     exportFormats: ['markdown', 'html', 'pdf'],  // Deferred to Phase 4 Epic 4.3
     advancedParsing: true,              // Deferred to Phase 4
+    projectManagement: true,            // Epic 5.4: Project organization for multi-file docs
 
     // Team+ Features (Not in Pro)
     apiAccess: false,                   // Reserved for Team+
@@ -141,6 +142,7 @@ export const TIER_FEATURES = {
     priorityQueue: true,
     exportFormats: ['markdown', 'html', 'pdf'],
     advancedParsing: true,
+    projectManagement: true,            // Epic 5.4: Project organization for multi-file docs
 
     // Team Additions (Collaboration-focused)
     apiAccess: true,                    // REST API + CLI access
@@ -185,6 +187,7 @@ export const TIER_FEATURES = {
     exportFormats: ['markdown', 'html', 'pdf'],
     versionHistory: true,               // Unlimited retention
     advancedParsing: true,
+    projectManagement: true,            // Epic 5.4: Project organization for multi-file docs
     teamWorkspace: true,
     sharedTemplates: true,
     usageAnalytics: true,

@@ -30,6 +30,7 @@ import { createTestDataLoader, exposeTestDataLoader, createSkeletonTestHelper, e
 import { exposeUsageSimulator } from './utils/usageTestData';
 import { useAuth } from './contexts/AuthContext';
 import { useTrial } from './contexts/TrialContext';
+import { usePreferences } from './contexts/PreferencesContext';
 import { hasFeature } from './utils/tierFeatures';
 import { DEFAULT_CODE, EXAMPLE_CODES } from './constants/defaultCode';
 import * as batchesApi from './services/batchesApi';
@@ -66,6 +67,16 @@ function App() {
   const { getToken, user, isAuthenticated, isLoading: authLoading, checkLegalStatus, acceptLegalDocuments } = useAuth();
   const { effectiveTheme } = useTheme();
   const { isOnTrial, trialEndsAt } = useTrial();
+  const {
+    layoutMode: prefsLayoutMode,
+    sidebarCollapsed: prefsSidebarCollapsed,
+    sidebarWidth: prefsSidebarWidth,
+    selectedProjectId: prefsSelectedProjectId,
+    setLayoutMode: setPrefsLayoutMode,
+    setSidebarCollapsed: setPrefsSidebarCollapsed,
+    setSidebarWidth: setPrefsSidebarWidth,
+    setSelectedProjectId: setPrefsSelectedProjectId
+  } = usePreferences();
 
   // Load persisted state from localStorage on mount, fallback to defaults
   const [code, setCode] = useState(() => getStorageItem(STORAGE_KEYS.EDITOR_CODE, DEFAULT_CODE));
@@ -79,8 +90,20 @@ function App() {
   // Language is derived from filename, not stored separately
   const language = detectLanguageFromFilename(filename);
 
-  // Layout mode state (Pro+ feature)
-  const [layout, setLayout] = useState(() => getStorageItem(STORAGE_KEYS.LAYOUT_MODE, 'split'));
+  // Layout mode state - sync with PreferencesContext
+  const [layout, setLayout] = useState(() => {
+    // Use localStorage for fast initial render, PreferencesContext will sync after load
+    const stored = getStorageItem(STORAGE_KEYS.LAYOUT_MODE);
+    return stored && ['split', 'code', 'doc'].includes(stored) ? stored : 'split';
+  });
+
+  // Sync layout with PreferencesContext when it loads from API
+  useEffect(() => {
+    if (prefsLayoutMode && prefsLayoutMode !== layout) {
+      setLayout(prefsLayoutMode);
+      setStorageItem(STORAGE_KEYS.LAYOUT_MODE, prefsLayoutMode);
+    }
+  }, [prefsLayoutMode]);
 
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showQualityModal, setShowQualityModal] = useState(false);
@@ -106,13 +129,24 @@ function App() {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [isMobileView, setIsMobileView] = useState(() => window.innerWidth < 1024);
   const [mobileActiveTab, setMobileActiveTab] = useState('code'); // 'code' or 'doc' (mobile only, not persisted)
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-    // Load sidebar collapsed state from localStorage
+  // Sidebar collapsed state - sync with PreferencesContext
+  const [sidebarCollapsed, setSidebarCollapsedLocal] = useState(() => {
+    // Load sidebar collapsed state from localStorage for fast initial render
     const saved = getStorageItem(STORAGE_KEYS.SIDEBAR_MODE);
     return saved === 'collapsed';
   });
-  const [expandedSidebarWidth, setExpandedSidebarWidth] = useState(() => {
-    // Load user's preferred expanded width from localStorage
+
+  // Sync sidebarCollapsed with PreferencesContext when it loads from API
+  useEffect(() => {
+    if (prefsSidebarCollapsed !== undefined && prefsSidebarCollapsed !== sidebarCollapsed) {
+      setSidebarCollapsedLocal(prefsSidebarCollapsed);
+      setStorageItem(STORAGE_KEYS.SIDEBAR_MODE, prefsSidebarCollapsed ? 'collapsed' : 'expanded');
+    }
+  }, [prefsSidebarCollapsed]);
+
+  // Expanded sidebar width state - sync with PreferencesContext
+  const [expandedSidebarWidth, setExpandedSidebarWidthLocal] = useState(() => {
+    // Load user's preferred expanded width from localStorage for fast initial render
     try {
       const saved = getStorageItem(STORAGE_KEYS.SIDEBAR_WIDTH);
       if (saved) {
@@ -124,6 +158,17 @@ function App() {
     }
     return DEFAULT_SIDEBAR_SIZE;
   });
+
+  // Sync sidebarWidth with PreferencesContext when it loads from API
+  useEffect(() => {
+    if (prefsSidebarWidth && prefsSidebarWidth !== expandedSidebarWidth) {
+      setExpandedSidebarWidthLocal(prefsSidebarWidth);
+      setStorageItem(STORAGE_KEYS.SIDEBAR_WIDTH, JSON.stringify({
+        sidebar: prefsSidebarWidth,
+        main: 100 - prefsSidebarWidth
+      }));
+    }
+  }, [prefsSidebarWidth]);
   const fileInputRef = useRef(null); // For single-file uploads (Command Bar)
   const multiFileInputRef = useRef(null); // For multi-file uploads (Sidebar)
   const samplesButtonRef = useRef(null);
@@ -160,10 +205,12 @@ function App() {
 
   // Toggle sidebar collapse state
   const handleToggleSidebarCollapse = useCallback(() => {
-    setSidebarCollapsed(prev => {
+    setSidebarCollapsedLocal(prev => {
       const newValue = !prev;
       // Persist to localStorage
       setStorageItem(STORAGE_KEYS.SIDEBAR_MODE, newValue ? 'collapsed' : 'expanded');
+      // Sync to PreferencesContext (which syncs to API)
+      setPrefsSidebarCollapsed(newValue);
 
       // Control panel size via ref
       if (sidebarPanelRef.current) {
@@ -178,14 +225,16 @@ function App() {
 
       return newValue;
     });
-  }, [expandedSidebarWidth]);
+  }, [expandedSidebarWidth, setPrefsSidebarCollapsed]);
 
   // Handle layout mode change (Pro+ feature)
   const handleLayoutChange = useCallback((newLayout) => {
     setLayout(newLayout);
     // Persist to localStorage
     setStorageItem(STORAGE_KEYS.LAYOUT_MODE, newLayout);
-  }, []);
+    // Sync to PreferencesContext (which syncs to API)
+    setPrefsLayoutMode(newLayout);
+  }, [setPrefsLayoutMode]);
 
   // Handle sidebar resize (when user drags the handle)
   const handleSidebarResize = useCallback((sizes) => {
@@ -193,11 +242,13 @@ function App() {
       const sidebarSize = sizes[0];
       // Save the expanded width when user resizes (not when collapsed)
       if (sidebarSize > 10) { // Only save if it's a meaningful size (not collapsed)
-        setExpandedSidebarWidth(sidebarSize);
+        setExpandedSidebarWidthLocal(sidebarSize);
         saveSidebarSizes(sidebarSize, sizes[1]);
+        // Sync to PreferencesContext (which syncs to API)
+        setPrefsSidebarWidth(Math.round(sidebarSize));
       }
     }
-  }, [sidebarCollapsed, saveSidebarSizes]);
+  }, [sidebarCollapsed, saveSidebarSizes, setPrefsSidebarWidth]);
 
   // Track if we just accepted terms to prevent re-checking immediately after
   const justAcceptedTermsRef = useRef(false);
@@ -239,13 +290,67 @@ function App() {
   const [mockUsage, setMockUsage] = useState(null);
 
   // Multi-file state (Phase 3: Multi-file integration)
+  // selectedProjectId and setSelectedProjectId now come from PreferencesContext (syncs to DB)
   const multiFileState = useWorkspace();
+  // Alias preferences for easier use (and consistency with old API)
+  const selectedProjectId = prefsSelectedProjectId;
+  const setSelectedProjectId = setPrefsSelectedProjectId;
+  // Track selected project name for graph analysis (not persisted, derived from selection)
+  const [selectedProjectName, setSelectedProjectName] = useState(null);
+
+  // Handler for project selection that captures both id and name
+  const handleProjectChange = useCallback((projectId, projectName = null) => {
+    setSelectedProjectId(projectId);
+    setSelectedProjectName(projectName);
+  }, [setSelectedProjectId]);
+
+  // Fetch project name when we have an ID but no name (e.g., after page refresh)
+  // This ensures graph analysis has the correct project name
+  useEffect(() => {
+    const fetchProjectName = async () => {
+      if (selectedProjectId && !selectedProjectName && isAuthenticated) {
+        try {
+          const { getProject } = await import('./services/projectsApi');
+          const result = await getProject(selectedProjectId);
+          // API returns { success, project: { id, name, ... } }
+          if (result?.project?.name) {
+            setSelectedProjectName(result.project.name);
+          }
+        } catch (err) {
+          console.warn('[App] Could not fetch project name:', err.message);
+        }
+      }
+    };
+    fetchProjectName();
+  }, [selectedProjectId, selectedProjectName, isAuthenticated]);
+
+  // Check for project info stored by History page when loading batch into workspace
+  // This runs once on mount to set the project selector to match the loaded batch
+  useEffect(() => {
+    const historyProjectId = sessionStorage.getItem('history_load_project_id');
+    const historyProjectName = sessionStorage.getItem('history_load_project_name');
+
+    if (historyProjectId) {
+      const projectId = parseInt(historyProjectId, 10);
+      if (!isNaN(projectId)) {
+        setSelectedProjectId(projectId);
+        setSelectedProjectName(historyProjectName || null);
+      }
+      // Clear after reading to prevent re-applying on refresh
+      sessionStorage.removeItem('history_load_project_id');
+      sessionStorage.removeItem('history_load_project_name');
+    }
+  }, [setSelectedProjectId]);
+
   const documentPersistence = useDocumentPersistence();
   const { override, clearOverride } = useTierOverride();
 
   // Feature detection: Check if user can use batch processing (Pro+ tier)
   // This single flag controls: multi-file sidebar, GitHub multi-select, batch summary, summary button
   const canUseBatchProcessing = hasFeature(user, 'batchProcessing');
+
+  // Feature detection: Check if user can use project management (Pro+ tier)
+  const canUseProjectManagement = hasFeature(user, 'projectManagement');
 
   // Note: Batch state clearing for tier downgrade is handled after useBatchGeneration hook
 
@@ -301,12 +406,15 @@ function App() {
         }
       }
     } else if (hasSeenUserRef.current) {
-      // User logged out (not initial page load) - clear editor state
+      // User logged out (not initial page load) - clear all UI state
       // Batch state clearing is handled separately after useBatchGeneration hook
       setCode(DEFAULT_CODE);
       setCodeOrigin('sample'); // Default code is a sample
       setFilename('code.js');
       setDocType('README');
+      // Clear documentation panel
+      setDocumentation('');
+      setQualityScore(null);
       // Reset "doc panel cleared" flag so next login will load from DB
       localStorage.removeItem(STORAGE_KEYS.DOC_PANEL_CLEARED);
       hasSeenUserRef.current = false;
@@ -480,13 +588,19 @@ function App() {
     reset,
     clearError,
     isGenerating,
+    setIsGenerating,
     documentation,
     setDocumentation,
     qualityScore,
     setQualityScore,
     error,
-    retryAfter
+    retryAfter,
+    retryStatus,
+    setRetryStatus
   } = useDocGeneration(refetchUsage);
+
+  // DEV ONLY: State for testing retry UI
+  const [testRetryMode, setTestRetryMode] = useState(false);
 
   // Batch generation hook - manages bulk doc generation state and logic
   const {
@@ -502,6 +616,7 @@ function App() {
     bannerDismissed,
     showRegenerateModal,
     regenerateModalData,
+    isAnalyzingGraph,
     setBulkGenerationSummary,
     setBatchSummaryMarkdown,
     setCurrentBatchId,
@@ -530,7 +645,10 @@ function App() {
     setShowUsageLimitModal,
     refetchUsage,
     userTier: user?.effectiveTier || user?.tier || 'free',
-    trialInfo: isOnTrial ? { isOnTrial, trialEndsAt } : null
+    trialInfo: isOnTrial ? { isOnTrial, trialEndsAt } : null,
+    projectId: canUseProjectManagement ? selectedProjectId : null,
+    projectName: canUseProjectManagement ? selectedProjectName : null,
+    user
   });
 
   // Clear batch-related state when user loses batch processing access (tier downgrade/expiry)
@@ -564,12 +682,8 @@ function App() {
         // First try sessionStorage (faster, for current session)
         const saved = getSessionItem('bulk_generation_summary');
         const markdown = getSessionItem('batch_summary_markdown');
-        const batchId = getSessionItem('current_batch_id');
-
-        console.log('[App] loadBatchData - sessionStorage check:', { saved: !!saved, markdown: !!markdown, batchId });
 
         if (saved || markdown) {
-          console.log('[App] Restoring batch from sessionStorage');
           const parsedSummary = saved ? JSON.parse(saved) : null;
           restoreBatchState({
             bulkGenerationSummary: parsedSummary,
@@ -605,17 +719,25 @@ function App() {
     loadBatchData();
   }, [canUseBatchProcessing, isAuthenticated, restoreBatchState, multiFileState.activeFileId, setDocumentation, setQualityScore]);
 
-  // Persist batch data to sessionStorage (only if user has access and data exists)
+  // Persist batch data to sessionStorage (sync both writes AND clears)
+  // When batch state is cleared via flushSync at start of new generation,
+  // we must also clear sessionStorage to prevent stale data from being restored
   useEffect(() => {
     if (canUseBatchProcessing) {
       if (bulkGenerationSummary) {
         setSessionItem('bulk_generation_summary', JSON.stringify(bulkGenerationSummary));
+      } else {
+        removeSessionItem('bulk_generation_summary');
       }
       if (batchSummaryMarkdown) {
         setSessionItem('batch_summary_markdown', batchSummaryMarkdown);
+      } else {
+        removeSessionItem('batch_summary_markdown');
       }
       if (currentBatchId) {
         setSessionItem('current_batch_id', currentBatchId);
+      } else {
+        removeSessionItem('current_batch_id');
       }
     }
   }, [canUseBatchProcessing, bulkGenerationSummary, batchSummaryMarkdown, currentBatchId]);
@@ -788,10 +910,12 @@ function App() {
         };
         loadBatchForFile();
       }
-    } else if (multiFileState.activeFileId === null) {
-      // No active file - clear both panels (happens when file is deleted or deselected)
+    } else if (multiFileState.activeFileId === null && multiFileState.files.length > 0) {
+      // No active file but files exist - clear both panels (happens when file is deleted or deselected)
       // UNLESS we're showing a batch summary or batch generation is in progress
       // Check ref for synchronous batch mode check (handles React batching race conditions)
+      // NOTE: Only clear when files.length > 0 to avoid clearing restored docs for unauthenticated
+      // single-file users who have no files in workspace but have sessionStorage docs
       if (!batchSummaryMarkdown && !bulkGenerationProgress && !isBatchModeRef.current) {
         // Keep default code in CodePanel
         const defaultCode = DEFAULT_CODE;
@@ -810,35 +934,58 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [multiFileState.activeFileId, multiFileState.files, batchSummaryMarkdown, bulkGenerationProgress, canUseBatchProcessing, restoreBatchState, currentBatchId]);
 
-  // Clear documentation and quality score when user logs out (actual logout, not auth loading)
-  // NOTE: For authenticated users, docs come from the workspace/file selection
-  // This effect uses hasSeenUserRef to distinguish logout from initial page load/navigation
-  useEffect(() => {
-    // Only clear documentation on actual logout (not on initial mount or navigation)
-    // hasSeenUserRef.current is set to true when user is authenticated, and false after logout
-    if (!user?.id && hasSeenUserRef.current) {
-      // User actually logged out - clear all documentation and quality score from UI
-      setDocumentation('');
-      setQualityScore(null);
-    }
-    // When user is null on initial load or navigation, we do nothing - workspace sync handles restoration
-  }, [user?.id, setDocumentation, setQualityScore]);
+  // NOTE: Documentation clearing on logout is now handled in the main user ID effect above
+  // (where hasSeenUserRef.current is checked before being set to false)
+  // This effect is kept as a safety net but won't typically trigger since
+  // hasSeenUserRef.current is set to false before this effect runs
 
-  // Persist documentation to localStorage for UNAUTHENTICATED users only
-  // Authenticated users' docs are persisted to the database, not localStorage
-  // This avoids stale batch summaries reappearing after logout/login
+  // Restore documentation from sessionStorage for UNAUTHENTICATED users on initial mount
+  // Uses sessionStorage (not localStorage) for privacy - clears when tab/browser closes
+  // This allows refresh protection without leaving persistent data on shared computers
+  useEffect(() => {
+    // Wait for auth to finish loading
+    if (authLoading) return;
+
+    // Only restore for unauthenticated users
+    if (user?.id) return;
+
+    // Skip if there's already documentation (e.g., just generated)
+    if (documentation) return;
+
+    // Restore documentation from sessionStorage
+    const savedDoc = getSessionItem(STORAGE_KEYS.EDITOR_DOCUMENTATION);
+    if (savedDoc) {
+      setDocumentation(savedDoc);
+    }
+
+    // Restore quality score from sessionStorage
+    const savedScore = getSessionItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE);
+    if (savedScore) {
+      try {
+        const parsedScore = JSON.parse(savedScore);
+        setQualityScore(parsedScore);
+      } catch (e) {
+        console.warn('[App] Failed to parse saved quality score:', e);
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, user?.id]); // Only run when auth state changes, not when documentation changes
+
+  // Persist documentation to sessionStorage for UNAUTHENTICATED users only
+  // Uses sessionStorage for privacy - survives refresh but clears on tab/browser close
+  // Authenticated users' docs are persisted to the database, not storage
   useEffect(() => {
     // Only persist for unauthenticated users
     if (!user?.id && documentation) {
-      setStorageItem(STORAGE_KEYS.EDITOR_DOCUMENTATION, documentation);
+      setSessionItem(STORAGE_KEYS.EDITOR_DOCUMENTATION, documentation);
     }
   }, [documentation, user?.id]);
 
-  // Persist quality score to localStorage for UNAUTHENTICATED users only
+  // Persist quality score to sessionStorage for UNAUTHENTICATED users only
   useEffect(() => {
     // Only persist for unauthenticated users
     if (!user?.id && qualityScore) {
-      setStorageItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE, JSON.stringify(qualityScore));
+      setSessionItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE, JSON.stringify(qualityScore));
     }
   }, [qualityScore, user?.id]);
 
@@ -894,7 +1041,18 @@ function App() {
       const isDefaultCode = code === DEFAULT_CODE;
       const isExampleCode = EXAMPLE_CODES.has(code);
       const shouldCache = isDefaultCode || isExampleCode;
-      const result = await generate(code, docType, language, shouldCache, filename);
+
+      // Get file path for graph context (from sourceMetadata if available)
+      const filePath = sourceMetadata?.source === 'github' ? sourceMetadata.path : null;
+
+      const result = await generate(code, docType, language, shouldCache, filename, {
+        projectId: selectedProjectId, // For graph context lookup (FK to projects table)
+        filePath, // For identifying file in the project graph
+        testRetry: testRetryMode // DEV ONLY: Simulate retry for testing UI
+      });
+
+      // Reset test retry mode after generation
+      if (testRetryMode) setTestRetryMode(false);
 
       // Save document to database for authenticated users
       if (isAuthenticated && result) {
@@ -936,7 +1094,9 @@ function App() {
                 failCount: 0,
                 avgQualityScore: score,
                 avgGrade: grade,
-                docTypes: [docType]
+                docTypes: [docType],
+                projectId: canUseProjectManagement ? selectedProjectId : null,
+                projectName: canUseProjectManagement ? selectedProjectName : null
               });
               console.log('[App] Created single-file batch:', batchResult.batchId);
 
@@ -995,6 +1155,9 @@ function App() {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
+    // Get file path for graph context (GitHub files have github.path)
+    const filePath = file.github?.path || null;
+
     const response = await fetch(`${API_URL}/api/generate`, {
       method: 'POST',
       headers,
@@ -1003,7 +1166,9 @@ function App() {
         docType: file.docType, // Use file's docType (multi-file mode)
         language: file.language,
         isDefaultCode: false,
-        filename: file.filename // Pass filename for title formatting
+        filename: file.filename, // Pass filename for title formatting
+        projectId: selectedProjectId, // For graph context lookup (FK to projects table)
+        filePath // For identifying file in the project graph
       })
     });
 
@@ -1617,12 +1782,12 @@ function App() {
 
     // Clear any previous documentation
     reset();
-    // For unauthenticated users, clear localStorage too
+    // For unauthenticated users, clear sessionStorage too
     if (!user?.id) {
-      setStorageItem(STORAGE_KEYS.EDITOR_DOCUMENTATION, '');
-      setStorageItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE, '');
+      setSessionItem(STORAGE_KEYS.EDITOR_DOCUMENTATION, '');
+      setSessionItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE, '');
     }
-    // For authenticated users, docs are in DB - no localStorage to clear
+    // For authenticated users, docs are in DB - no sessionStorage to clear
   };
 
   /**
@@ -1789,7 +1954,7 @@ function App() {
     // NOTE: Does NOT delete from generated_documents - keeps docs in user's history
     removeFiles(selectedIds);
 
-    // If deleting ALL files, also clear batch summary and documentation state
+    // If deleting ALL files, also clear batch summary, documentation, and code state
     if (isDeletingAll) {
       setBulkGenerationSummary(null);
       setBatchSummaryMarkdown(null);
@@ -1797,8 +1962,9 @@ function App() {
       removeSessionItem('batch_summary_markdown');
       setDocumentation('');
       setQualityScore(null);
+      setCode(''); // Clear code panel when workspace is fully cleared
     }
-  }, [multiFileState.selectedFileIds, multiFileState.files.length, removeFiles, setBulkGenerationSummary, setBatchSummaryMarkdown, setDocumentation, setQualityScore]);
+  }, [multiFileState.selectedFileIds, multiFileState.files.length, removeFiles, setBulkGenerationSummary, setBatchSummaryMarkdown, setDocumentation, setQualityScore, setCode]);
 
   // Expose test data loader to window for console access (development/testing)
   useEffect(() => {
@@ -1819,6 +1985,42 @@ function App() {
     const cleanup = exposeSkeletonTestHelper(skeletonHelper);
     return cleanup;
   }, [setDocumentation, setQualityScore, setTestSkeletonMode]);
+
+  // DEV ONLY: Expose retry test mode helper
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      // Preview retry banner UI without making any API calls
+      // Usage: window.__previewRetry('claude') - shows banner for Claude API
+      // Usage: window.__previewRetry('openai') - shows banner for OpenAI API
+      window.__previewRetry = (provider = 'claude') => {
+        const providerName = provider.charAt(0).toUpperCase() + provider.slice(1);
+        console.log(`[DEV] Showing ${providerName} retry banner. Call window.__stopRetry() to clear.`);
+
+        // Clear any existing doc and simulate generating state
+        setDocumentation('');
+        setIsGenerating(true);
+
+        setRetryStatus({
+          attempt: 1,
+          maxAttempts: 3,
+          message: `${providerName} API: Retrying... (attempt 1/3)`,
+          reason: 'rate_limit',
+          provider: provider
+        });
+      };
+
+      window.__stopRetry = () => {
+        setRetryStatus(null);
+        setIsGenerating(false);
+        console.log('[DEV] Retry preview cleared.');
+      };
+
+      console.log('[DEV] Retry preview: window.__previewRetry("claude"|"openai"|"gemini") and window.__stopRetry()');
+    }
+    return () => {
+      delete window.__previewRetry;
+    };
+  }, [setDocumentation, setIsGenerating, setRetryStatus]);
 
   // Show toast notifications for documentation generation success only
   // Track previous isGenerating state to detect generation completion
@@ -1854,12 +2056,12 @@ function App() {
     // Clear documentation and quality score from state
     reset();
 
-    // For unauthenticated users, clear localStorage too
+    // For unauthenticated users, clear sessionStorage too
     if (!user?.id) {
-      setStorageItem(STORAGE_KEYS.EDITOR_DOCUMENTATION, '');
-      setStorageItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE, '');
+      setSessionItem(STORAGE_KEYS.EDITOR_DOCUMENTATION, '');
+      setSessionItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE, '');
     }
-    // For authenticated users, docs are in DB - no localStorage to clear
+    // For authenticated users, docs are in DB - no sessionStorage to clear
 
     // Always clear batch state when resetting (clears state and sessionStorage)
     // This removes the "batch complete" banner and prevents it from returning after refresh
@@ -1897,10 +2099,11 @@ function App() {
         onGenerate={handleGenerate}
         onReset={handleReset}
         bulkGenerationProgress={bulkGenerationProgress}
-        bulkGenerationSummary={bannerDismissed ? null : bulkGenerationSummary}
+        bulkGenerationSummary={(bannerDismissed || bulkGenerationProgress || isAnalyzingGraph) ? null : bulkGenerationSummary}
         bulkGenerationErrors={bulkGenerationErrors}
         currentlyGeneratingFile={currentlyGeneratingFile}
         throttleCountdown={throttleCountdown}
+        isAnalyzingGraph={isAnalyzingGraph}
         onDismissBulkErrors={dismissBanner}
         onDocumentClick={handleDocumentClick}
         onBackToSummary={handleBackToSummary}
@@ -1912,6 +2115,7 @@ function App() {
         filename={filename}
         onCancelBatch={cancelBatchGeneration}
         isCancelling={isCancelling}
+        retryStatus={retryStatus}
       />
     </Suspense>
   ), [
@@ -1930,7 +2134,8 @@ function App() {
     docType,
     filename,
     cancelBatchGeneration,
-    isCancelling
+    isCancelling,
+    retryStatus
   ]);
 
   return (
@@ -2129,6 +2334,10 @@ function App() {
                 bulkGenerationProgress={bulkGenerationProgress}
                 onUpdateFile={multiFileState.updateFile}
                 onViewBatchSummary={handleBackToSummary}
+                selectedProjectId={selectedProjectId}
+                selectedProjectName={selectedProjectName}
+                onProjectChange={handleProjectChange}
+                canUseProjectManagement={canUseProjectManagement}
               />
 
               {/* Main Content - Full width on mobile */}
@@ -2226,6 +2435,10 @@ function App() {
                   bulkGenerationProgress={bulkGenerationProgress}
                   onUpdateFile={multiFileState.updateFile}
                   onViewBatchSummary={handleBackToSummary}
+                  selectedProjectId={selectedProjectId}
+                  selectedProjectName={selectedProjectName}
+                  onProjectChange={handleProjectChange}
+                  canUseProjectManagement={canUseProjectManagement}
                 />
               </Panel>
 
@@ -2286,10 +2499,11 @@ function App() {
                             onGenerate={handleGenerate}
                             onReset={handleReset}
                             bulkGenerationProgress={bulkGenerationProgress}
-                            bulkGenerationSummary={bannerDismissed ? null : bulkGenerationSummary}
+                            bulkGenerationSummary={(bannerDismissed || bulkGenerationProgress || isAnalyzingGraph) ? null : bulkGenerationSummary}
                             bulkGenerationErrors={bulkGenerationErrors}
                             currentlyGeneratingFile={currentlyGeneratingFile}
                             throttleCountdown={throttleCountdown}
+                            isAnalyzingGraph={isAnalyzingGraph}
                             onDismissBulkErrors={dismissBanner}
                             onDocumentClick={handleDocumentClick}
                             onBackToSummary={handleBackToSummary}
@@ -2301,6 +2515,7 @@ function App() {
                             filename={filename}
                             onCancelBatch={cancelBatchGeneration}
                             isCancelling={isCancelling}
+                            retryStatus={retryStatus}
                           />
                         </Suspense>
                       }
@@ -2376,10 +2591,11 @@ function App() {
                       onGenerate={handleGenerate}
                       onReset={handleReset}
                       bulkGenerationProgress={bulkGenerationProgress}
-                      bulkGenerationSummary={bannerDismissed ? null : bulkGenerationSummary}
+                      bulkGenerationSummary={(bannerDismissed || bulkGenerationProgress || isAnalyzingGraph) ? null : bulkGenerationSummary}
                       bulkGenerationErrors={bulkGenerationErrors}
                       currentlyGeneratingFile={currentlyGeneratingFile}
                       throttleCountdown={throttleCountdown}
+                      isAnalyzingGraph={isAnalyzingGraph}
                       onDismissBulkErrors={dismissBanner}
                       onDocumentClick={handleDocumentClick}
                       onBackToSummary={handleBackToSummary}
@@ -2391,6 +2607,7 @@ function App() {
                       filename={filename}
                       onCancelBatch={cancelBatchGeneration}
                       isCancelling={isCancelling}
+                      retryStatus={retryStatus}
                     />
                   </Suspense>
                 )
@@ -2423,10 +2640,11 @@ function App() {
                         onGenerate={handleGenerate}
                         onReset={handleReset}
                         bulkGenerationProgress={bulkGenerationProgress}
-                        bulkGenerationSummary={bannerDismissed ? null : bulkGenerationSummary}
+                        bulkGenerationSummary={(bannerDismissed || bulkGenerationProgress || isAnalyzingGraph) ? null : bulkGenerationSummary}
                         bulkGenerationErrors={bulkGenerationErrors}
                         currentlyGeneratingFile={currentlyGeneratingFile}
                         throttleCountdown={throttleCountdown}
+                        isAnalyzingGraph={isAnalyzingGraph}
                         onDismissBulkErrors={dismissBanner}
                         onDocumentClick={handleDocumentClick}
                         onBackToSummary={handleBackToSummary}
@@ -2438,6 +2656,7 @@ function App() {
                         filename={filename}
                         onCancelBatch={cancelBatchGeneration}
                         isCancelling={isCancelling}
+                        retryStatus={retryStatus}
                       />
                     </Suspense>
                   }

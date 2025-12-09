@@ -185,17 +185,20 @@ describe('Migration 021: Create workspace_files table', () => {
       expect(result.rows[0].indexdef).toContain('created_at');
     });
 
-    test('should have index on user_id and filename', async () => {
+    test('should have unique constraint on user_id, filename, and doc_type', async () => {
+      // Note: Migration 024 replaced idx_workspace_files_user_filename with a UNIQUE constraint
+      // that includes doc_type to support future multi-doc-type per file feature
       const result = await client.query(`
-        SELECT indexname, indexdef
-        FROM pg_indexes
-        WHERE tablename = 'workspace_files'
-          AND indexname = 'idx_workspace_files_user_filename'
+        SELECT conname, pg_get_constraintdef(oid) as constraint_def
+        FROM pg_constraint
+        WHERE conrelid = 'workspace_files'::regclass
+          AND conname = 'workspace_files_user_filename_doctype_unique'
       `);
 
       expect(result.rows).toHaveLength(1);
-      expect(result.rows[0].indexdef).toContain('user_id');
-      expect(result.rows[0].indexdef).toContain('filename');
+      expect(result.rows[0].constraint_def).toContain('user_id');
+      expect(result.rows[0].constraint_def).toContain('filename');
+      expect(result.rows[0].constraint_def).toContain('doc_type');
     });
 
     test('should have index on document_id', async () => {

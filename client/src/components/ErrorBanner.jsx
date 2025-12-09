@@ -20,12 +20,24 @@ function formatErrorType(errorType, errorObject = {}) {
   if (errorType === 'TypeError' && originalMessage.includes('Failed to fetch')) {
     return 'Connection Error';
   }
+  // Claude API rate limit (check BEFORE generic usage limit since message may contain "usage limit")
   if (errorType === 'RateLimitError' || userMessage.includes('Rate limit') || originalMessage.includes('Rate limit')) {
-    // Check if it's Claude API rate limit (external) vs CodeScribe quota
     if (userMessage.includes('Claude API') || originalMessage.includes('Claude API')) {
       return 'Claude API Rate Limit';
     }
     return 'Rate Limit Exceeded';
+  }
+  // CodeScribe usage limit (quota exceeded) - but NOT Claude API limits
+  if (errorType === 'UsageLimitError' ||
+      (userMessage.includes('usage limit') && !userMessage.includes('Claude API'))) {
+    // Check for specific limit type in message
+    if (userMessage.includes('daily')) {
+      return 'Daily Limit Reached';
+    }
+    if (userMessage.includes('monthly')) {
+      return 'Monthly Limit Reached';
+    }
+    return 'Usage Limit Reached';
   }
   if (errorType === 'InvalidRequestError') {
     return 'Invalid Request';
@@ -216,7 +228,7 @@ export function ErrorBanner({ error, retryAfter, onDismiss }) {
 
       {/* Technical Details (Development Mode Only) - Positioned at bottom */}
       {isDevelopment && (
-        <div className="border-t border-red-200">
+        <div className="border-t border-red-200 dark:border-red-800">
           <button
             type="button"
             onClick={handleToggleDetails}
@@ -224,7 +236,7 @@ export function ErrorBanner({ error, retryAfter, onDismiss }) {
             aria-expanded={isDetailsExpanded}
             aria-controls="error-technical-details"
             aria-label={isDetailsExpanded ? "Hide technical details" : "Show technical details"}
-            className="w-full flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-slate-600 hover:text-slate-800 hover:bg-red-100 transition-colors duration-200 motion-reduce:transition-none focus:outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-inset"
+            className="w-full flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors duration-200 motion-reduce:transition-none focus:outline-none focus-visible:ring-2 focus-visible:ring-red-600 dark:focus-visible:ring-red-400 focus-visible:ring-inset"
           >
             <svg className={`w-3 h-3 text-slate-400 transition-transform duration-300 ${isDetailsExpanded ? 'rotate-90' : ''}`} fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
@@ -244,7 +256,7 @@ export function ErrorBanner({ error, retryAfter, onDismiss }) {
             {/* Error Object */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <h4 className="text-xs font-semibold text-slate-700">
+                <h4 className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                   {fullErrorObject ? 'Error object' : 'Raw error'}
                 </h4>
                 <CopyButton
@@ -254,7 +266,7 @@ export function ErrorBanner({ error, retryAfter, onDismiss }) {
                   ariaLabel={fullErrorObject ? "Copy error object" : "Copy raw error"}
                 />
               </div>
-              <pre className="bg-white text-slate-800 p-3 rounded-md text-xs overflow-x-auto max-h-64 overflow-y-auto border border-red-200 font-mono leading-relaxed shadow-sm whitespace-pre-wrap">
+              <pre className="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 p-3 rounded-md text-xs overflow-x-auto max-h-64 overflow-y-auto border border-red-200 dark:border-red-800 font-mono leading-relaxed shadow-sm whitespace-pre-wrap">
                 {fullErrorObject ? (() => {
                   // Custom formatter: display each field with proper formatting
                   const obj = { ...fullErrorObject };
@@ -293,7 +305,7 @@ export function ErrorBanner({ error, retryAfter, onDismiss }) {
             {fullErrorObject && fullErrorObject.originalMessage && (
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-xs font-semibold text-slate-700">Error message</h4>
+                  <h4 className="text-xs font-semibold text-slate-700 dark:text-slate-300">Error message</h4>
                   <CopyButton
                     text={fullErrorObject.originalMessage}
                     size="sm"
@@ -301,7 +313,7 @@ export function ErrorBanner({ error, retryAfter, onDismiss }) {
                     ariaLabel="Copy error message"
                   />
                 </div>
-                <pre className="bg-white text-slate-800 p-3 rounded-md text-xs overflow-x-auto border border-red-200 font-mono shadow-sm">
+                <pre className="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 p-3 rounded-md text-xs overflow-x-auto border border-red-200 dark:border-red-800 font-mono shadow-sm">
                   {fullErrorObject.originalMessage}
                 </pre>
               </div>
@@ -311,7 +323,7 @@ export function ErrorBanner({ error, retryAfter, onDismiss }) {
             {fullErrorObject && fullErrorObject.stack && (
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-xs font-semibold text-slate-700">Stack trace</h4>
+                  <h4 className="text-xs font-semibold text-slate-700 dark:text-slate-300">Stack trace</h4>
                   <CopyButton
                     text={fullErrorObject.stack}
                     size="sm"
@@ -319,7 +331,7 @@ export function ErrorBanner({ error, retryAfter, onDismiss }) {
                     ariaLabel="Copy stack trace"
                   />
                 </div>
-                <pre className="bg-white text-slate-800 p-3 rounded-md text-xs overflow-x-auto max-h-64 overflow-y-auto border border-red-200 font-mono leading-relaxed shadow-sm">
+                <pre className="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 p-3 rounded-md text-xs overflow-x-auto max-h-64 overflow-y-auto border border-red-200 dark:border-red-800 font-mono leading-relaxed shadow-sm">
                   {fullErrorObject.stack}
                 </pre>
               </div>
@@ -327,9 +339,9 @@ export function ErrorBanner({ error, retryAfter, onDismiss }) {
 
             {/* Timestamp */}
             {fullErrorObject && fullErrorObject.timestamp && (
-              <div className="pt-3 border-t border-red-200">
-                <p className="text-xs text-slate-600">
-                  Captured at: <span className="font-mono text-slate-800">{formatDateTime(fullErrorObject.timestamp)}</span>
+              <div className="pt-3 border-t border-red-200 dark:border-red-800">
+                <p className="text-xs text-slate-600 dark:text-slate-400">
+                  Captured at: <span className="font-mono text-slate-800 dark:text-slate-200">{formatDateTime(fullErrorObject.timestamp)}</span>
                 </p>
               </div>
             )}

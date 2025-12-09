@@ -115,6 +115,7 @@ async function generateWithGemini(prompt, options = {}, config) {
  * @param {string} prompt - User message/prompt
  * @param {Function} onChunk - Callback for each text chunk: (chunk: string) => void
  * @param {Object} options - Generation options (same as generateWithGemini)
+ * @param {Function} [options.onRetry] - Callback when retry occurs: (attempt, maxAttempts, delayMs, error, reason) => void
  * @param {Object} config - Provider configuration
  * @returns {Promise<{text: string, metadata: Object}>}
  */
@@ -175,7 +176,7 @@ async function streamWithGemini(prompt, onChunk, options = {}, config) {
           usageMetadata = chunk.usageMetadata;
         }
       }
-    }, config.maxRetries, 'Gemini stream');
+    }, config.maxRetries, 'Gemini stream', { onRetry: options.onRetry });
 
     // Build metadata
     // Note: Gemini may not provide token counts in streaming mode,

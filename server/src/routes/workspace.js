@@ -45,9 +45,14 @@ router.get('/', requireAuth, requireFeature('batchProcessing'), async (req, res)
         gd.documentation,
         gd.quality_score,
         gd.created_at as generated_at,
-        gd.batch_id
+        gd.batch_id,
+        gd.graph_id,
+        COALESCE(pg.project_id, gb.project_id) as project_id,
+        COALESCE(pg.project_name, gb.project_name) as project_name
       FROM workspace_files wf
       LEFT JOIN generated_documents gd ON wf.document_id = gd.id AND gd.deleted_at IS NULL
+      LEFT JOIN project_graphs pg ON gd.graph_id = pg.graph_id
+      LEFT JOIN generation_batches gb ON gd.batch_id = gb.id
       WHERE wf.user_id = ${userId}
       ORDER BY wf.created_at ASC
     `;

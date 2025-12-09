@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import {
   Clock,
   ArrowLeft,
@@ -19,11 +19,12 @@ import { useWorkspace } from '../contexts/WorkspaceContext.jsx';
 import { PageLayout } from '../components/PageLayout.jsx';
 import { BaseTable } from '../components/BaseTable.jsx';
 import { Select } from '../components/Select.jsx';
+import { ColumnVisibilityDropdown } from '../components/ColumnVisibilityDropdown.jsx';
 import { fetchBatches, fetchBatchWithDocuments } from '../api/batchesApi.js';
 import { getEffectiveTier, hasFeature } from '../utils/tierFeatures.js';
 import { toastCompact } from '../utils/toastWithHistory.js';
 import { useTableColumnSizing } from '../hooks/useTableColumnSizing.js';
-import { STORAGE_KEYS, removeStorageItem } from '../constants/storage.js';
+import { STORAGE_KEYS, removeStorageItem, getStorageItem, setStorageItem } from '../constants/storage.js';
 
 /**
  * Generation History Page
@@ -96,6 +97,22 @@ export function History() {
 
   // Column sizing state - persisted to localStorage via reusable hook
   const { columnSizing, onColumnSizingChange } = useTableColumnSizing('history');
+
+  // Column visibility state - persisted to localStorage
+  const [columnVisibility, setColumnVisibility] = useState(() => {
+    const saved = getStorageItem(STORAGE_KEYS.HISTORY_COLUMN_VISIBILITY);
+    return saved ? JSON.parse(saved) : {};
+  });
+
+  // Table instance ref for ColumnVisibilityDropdown
+  const [tableInstance, setTableInstance] = useState(null);
+
+  // Persist column visibility to localStorage
+  useEffect(() => {
+    if (Object.keys(columnVisibility).length > 0) {
+      setStorageItem(STORAGE_KEYS.HISTORY_COLUMN_VISIBILITY, JSON.stringify(columnVisibility));
+    }
+  }, [columnVisibility]);
 
   // Get effective tier (considering tier override for admins)
   const effectiveTier = getEffectiveTier(user);
@@ -338,6 +355,9 @@ export function History() {
     try {
       setOpeningBatchId(batchId);
 
+      // Find the batch to get project info
+      const batch = batches.find(b => b.id === batchId);
+
       let documents = expandedBatches[batchId];
       if (!documents) {
         const result = await fetchBatchWithDocuments(batchId);
@@ -347,6 +367,16 @@ export function History() {
       if (documents.length === 0) {
         toastCompact('No documents found in this batch', 'error');
         return;
+      }
+
+      // Store project info in sessionStorage so App.jsx can set the project selector
+      if (batch?.project_id) {
+        sessionStorage.setItem('history_load_project_id', batch.project_id.toString());
+        sessionStorage.setItem('history_load_project_name', batch.project_name || '');
+      } else {
+        // Clear any previous project info if this batch has no project
+        sessionStorage.removeItem('history_load_project_id');
+        sessionStorage.removeItem('history_load_project_name');
       }
 
       await clearFiles();
@@ -365,7 +395,7 @@ export function History() {
           documentation: doc.documentation || null,
           qualityScore: doc.quality_score || null,
           docType: doc.doc_type || 'README',
-          origin: doc.origin || 'history', // Preserve original origin for reload capability
+          origin: doc.origin || 'upload', // Preserve original origin; fallback to 'upload' for legacy docs
           // Include GitHub metadata if available (for reload from source functionality)
           github: doc.github_repo ? {
             repo: doc.github_repo,
@@ -378,7 +408,10 @@ export function History() {
           // Preserve original timestamps from when code was added/modified
           dateAdded: codeAddedDate,
           dateModified: codeAddedDate, // For history items, modified = added (no edits)
-          batchId: batchId
+          batchId: batchId,
+          // Graph context for cross-file awareness
+          graphId: doc.graph_id || null,
+          projectName: doc.project_name || null
         };
       });
 
@@ -401,6 +434,20 @@ export function History() {
     e?.stopPropagation();
 
     console.log('[History] Opening doc:', doc.filename, doc.id);
+
+    // Find the batch to get project info
+    const batch = batches.find(b => b.id === batchId);
+
+    // Store project info in sessionStorage so App.jsx can set the project selector
+    if (batch?.project_id) {
+      sessionStorage.setItem('history_load_project_id', batch.project_id.toString());
+      sessionStorage.setItem('history_load_project_name', batch.project_name || '');
+    } else {
+      // Clear any previous project info if this batch has no project
+      sessionStorage.removeItem('history_load_project_id');
+      sessionStorage.removeItem('history_load_project_name');
+    }
+
     await clearFiles();
     console.log('[History] Files cleared');
 
@@ -417,7 +464,7 @@ export function History() {
       documentation: doc.documentation || null,
       qualityScore: doc.quality_score || null,
       docType: doc.doc_type || 'README',
-      origin: doc.origin || 'history', // Preserve original origin for reload capability
+      origin: doc.origin || 'upload', // Preserve original origin for reload capability
       // Include GitHub metadata if available (for reload from source functionality)
       github: doc.github_repo ? {
         repo: doc.github_repo,
@@ -430,7 +477,10 @@ export function History() {
       // Preserve original timestamps from when code was added/modified
       dateAdded: codeAddedDate,
       dateModified: codeAddedDate, // For history items, modified = added (no edits)
-      batchId: batchId
+      batchId: batchId,
+      // Graph context for cross-file awareness
+      graphId: doc.graph_id || null,
+      projectName: doc.project_name || null
     };
 
     console.log('[History] Adding file:', workspaceFile.filename, 'with doc length:', workspaceFile.documentation?.length);
@@ -477,6 +527,44 @@ export function History() {
               </span>
             </div>
           </div>
+        );
+      }
+    },
+    {
+      accessorKey: 'project_name',
+      header: 'Project',
+      enableSorting: false,
+      size: 150,
+      minSize: 100,
+      maxSize: 250,
+      cell: ({ row }) => {
+        const batch = row.original;
+        const projectName = batch.project_name;
+        const projectId = batch.project_id;
+
+        if (!projectName) {
+          return <span className="text-slate-400 dark:text-slate-500">—</span>;
+        }
+
+        // If we have a project_id, make it a link to the project page
+        if (projectId) {
+          return (
+            <Link
+              to={`/projects/${projectId}`}
+              className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 hover:underline truncate"
+              title={`View ${projectName}`}
+              onClick={(e) => e.stopPropagation()} // Prevent row click
+            >
+              {projectName}
+            </Link>
+          );
+        }
+
+        // No project_id (project was deleted), just show the name
+        return (
+          <span className="text-sm text-slate-600 dark:text-slate-400 truncate" title={projectName}>
+            {projectName}
+          </span>
         );
       }
     },
@@ -658,8 +746,8 @@ export function History() {
               className="relative grid items-center bg-slate-50 dark:bg-slate-800/70 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors group"
               style={{ gridTemplateColumns }}
             >
-              {/* Continuous left border line for hierarchy */}
-              <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-slate-200/60 dark:bg-slate-600/40" aria-hidden="true" />
+              {/* Continuous left border line for hierarchy - matches expand/collapse chevron color */}
+              <div className="absolute left-6 top-0 bottom-0 w-px bg-slate-500/50 dark:bg-slate-500/50" aria-hidden="true" />
               {/* Empty cell for expand button column alignment */}
               <div role="cell" className="px-2 py-3"></div>
 
@@ -675,6 +763,17 @@ export function History() {
                     </span>
                   </div>
                 </div>
+              </div>
+
+              {/* Project column */}
+              <div role="cell" className="px-4 py-3">
+                {doc.project_name ? (
+                  <span className="text-sm text-slate-600 dark:text-slate-400 truncate" title={doc.project_name}>
+                    {doc.project_name}
+                  </span>
+                ) : (
+                  <span className="text-slate-400 dark:text-slate-500">—</span>
+                )}
               </div>
 
               {/* Doc Type column */}
@@ -794,7 +893,7 @@ export function History() {
               <Clock className="w-8 h-8 text-purple-600 dark:text-purple-400" />
             </div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-3">
-              Generation History
+              History
             </h1>
             <p className="text-slate-600 dark:text-slate-400 mb-6 max-w-md mx-auto">
               View and access your past documentation generations. This feature is available on Pro plans and above.
@@ -829,7 +928,7 @@ export function History() {
         <div className="mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-2">
             <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
-              Generation History
+              History
             </h1>
             <div className="flex items-center gap-2">
               {/* Filter toggle */}
@@ -850,6 +949,21 @@ export function History() {
                   <span className="w-2 h-2 bg-slate-600 dark:bg-slate-300 rounded-full" />
                 )}
               </button>
+
+              {/* Column visibility */}
+              {tableInstance && (
+                <ColumnVisibilityDropdown
+                  table={tableInstance}
+                  excludeColumns={['actions']}
+                  columnLabels={{
+                    first_doc_filename: 'File/Batch',
+                    project_name: 'Project',
+                    doc_types: 'Doc Type',
+                    created_at: 'Generated',
+                    avg_grade: 'Grade'
+                  }}
+                />
+              )}
 
               {/* Refresh */}
               <button
@@ -962,6 +1076,9 @@ export function History() {
           enableColumnResizing={true}
           columnSizing={columnSizing}
           onColumnSizingChange={onColumnSizingChange}
+          columnVisibility={columnVisibility}
+          onColumnVisibilityChange={setColumnVisibility}
+          onTableReady={setTableInstance}
           isLoading={isLoading}
           isRefreshing={isRefreshing}
           emptyState={{

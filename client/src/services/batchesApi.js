@@ -22,7 +22,9 @@ import { STORAGE_KEYS, getStorageItem } from '../constants/storage.js';
  * @param {string} [batchData.summaryMarkdown] - Batch summary markdown
  * @param {Array} [batchData.errorDetails] - Array of error objects
  * @param {Array} [batchData.docTypes] - Array of doc types used
- * @returns {Promise<Object>} - { batchId, createdAt }
+ * @param {number} [batchData.projectId] - Optional project ID to associate with batch
+ * @param {string} [batchData.projectName] - Optional project name (denormalized for persistence)
+ * @returns {Promise<Object>} - { batchId, createdAt, projectId, projectName }
  */
 export async function createBatch(batchData) {
   const token = getStorageItem(STORAGE_KEYS.AUTH_TOKEN);
@@ -42,7 +44,9 @@ export async function createBatch(batchData) {
       avgGrade: batchData.avgGrade || null,
       summaryMarkdown: batchData.summaryMarkdown || null,
       errorDetails: batchData.errorDetails || null,
-      docTypes: batchData.docTypes || null
+      docTypes: batchData.docTypes || null,
+      projectId: batchData.projectId || null,
+      projectName: batchData.projectName || null
     })
   });
 
@@ -86,6 +90,7 @@ export async function linkDocumentsToBatch(batchId, documentIds) {
  * @param {number} [options.limit=50] - Number of batches to return
  * @param {number} [options.offset=0] - Offset for pagination
  * @param {string} [options.batchType] - Filter by 'batch' or 'single'
+ * @param {number} [options.projectId] - Filter by project ID
  * @returns {Promise<Object>} - { batches, total, hasMore }
  */
 export async function getUserBatches(options = {}) {
@@ -95,6 +100,7 @@ export async function getUserBatches(options = {}) {
   if (options.limit) params.append('limit', options.limit);
   if (options.offset) params.append('offset', options.offset);
   if (options.batchType) params.append('batchType', options.batchType);
+  if (options.projectId) params.append('projectId', options.projectId);
 
   const response = await fetch(`${API_URL}/api/batches?${params.toString()}`, {
     headers: {

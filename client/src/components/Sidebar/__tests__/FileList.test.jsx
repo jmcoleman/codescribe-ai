@@ -252,4 +252,219 @@ describe('FileList', () => {
       expect(file1).toHaveClass('bg-purple-50');
     });
   });
+
+  describe('Local File Re-upload', () => {
+    const localFiles = [
+      {
+        id: 'local-1',
+        filename: 'component.jsx',
+        language: 'javascript',
+        fileSize: 2048,
+        content: 'old content',
+        origin: 'upload', // Local files use 'upload' origin
+        documentation: null,
+        qualityScore: null,
+        isGenerating: false,
+        error: null,
+        documentId: null
+      },
+      {
+        id: 'local-2',
+        filename: 'utils.js',
+        language: 'javascript',
+        fileSize: 1024,
+        content: 'old utils',
+        origin: 'paste', // Or 'paste' for pasted content
+        documentation: null,
+        qualityScore: null,
+        isGenerating: false,
+        error: null,
+        documentId: null
+      }
+    ];
+
+    it('should show re-upload button when local files exist', () => {
+      render(
+        <FileList
+          {...defaultProps}
+          files={localFiles}
+        />
+      );
+
+      const reuploadBtn = screen.getByRole('button', { name: /Re-upload 2 local files/i });
+      expect(reuploadBtn).toBeInTheDocument();
+      expect(reuploadBtn).not.toBeDisabled();
+    });
+
+    it('should NOT show re-upload button when no local files exist', () => {
+      const githubFiles = [
+        {
+          id: 'github-1',
+          filename: 'app.js',
+          language: 'javascript',
+          fileSize: 2048,
+          content: 'github content',
+          origin: 'github',
+          github: { repo: 'owner/repo', path: 'src/app.js', branch: 'main' },
+          documentation: null,
+          qualityScore: null,
+          isGenerating: false,
+          error: null,
+          documentId: null
+        }
+      ];
+
+      render(
+        <FileList
+          {...defaultProps}
+          files={githubFiles}
+        />
+      );
+
+      // Re-upload button should be disabled since no local files
+      const reuploadBtn = screen.getByRole('button', { name: /Re-upload 0 local files/i });
+      expect(reuploadBtn).toBeDisabled();
+    });
+
+    it('should have hidden file input for re-upload', () => {
+      render(
+        <FileList
+          {...defaultProps}
+          files={localFiles}
+        />
+      );
+
+      const fileInput = document.querySelector('input[type="file"][multiple]');
+      expect(fileInput).toBeInTheDocument();
+      expect(fileInput).toHaveClass('hidden');
+    });
+
+    it('should trigger file input click when re-upload button is clicked', async () => {
+      const user = userEvent.setup();
+      render(
+        <FileList
+          {...defaultProps}
+          files={localFiles}
+        />
+      );
+
+      const fileInput = document.querySelector('input[type="file"][multiple]');
+      const clickSpy = vi.spyOn(fileInput, 'click');
+
+      const reuploadBtn = screen.getByRole('button', { name: /Re-upload 2 local files/i });
+      await user.click(reuploadBtn);
+
+      expect(clickSpy).toHaveBeenCalled();
+    });
+
+    it('should count files with upload origin as local files', () => {
+      const mixedFiles = [
+        {
+          id: 'upload-file-1',
+          filename: 'uploaded.js',
+          language: 'javascript',
+          fileSize: 1024,
+          content: 'content',
+          origin: 'upload', // Files with upload origin are counted as local
+          documentation: null,
+          qualityScore: null,
+          isGenerating: false,
+          error: null,
+          documentId: null
+        }
+      ];
+
+      render(
+        <FileList
+          {...defaultProps}
+          files={mixedFiles}
+        />
+      );
+
+      const reuploadBtn = screen.getByRole('button', { name: /Re-upload 1 local file/i });
+      expect(reuploadBtn).toBeInTheDocument();
+      expect(reuploadBtn).not.toBeDisabled();
+    });
+
+    it('should call onUpdateFile when files are re-uploaded and matched', async () => {
+      const mockOnUpdateFile = vi.fn();
+      render(
+        <FileList
+          {...defaultProps}
+          files={localFiles}
+          onUpdateFile={mockOnUpdateFile}
+        />
+      );
+
+      const fileInput = document.querySelector('input[type="file"][multiple]');
+
+      // Create a mock file that matches an existing local file
+      const mockFile = new File(['new content'], 'component.jsx', { type: 'text/javascript' });
+
+      // Simulate file selection
+      await userEvent.upload(fileInput, mockFile);
+
+      // Wait for async file reading
+      await vi.waitFor(() => {
+        expect(mockOnUpdateFile).toHaveBeenCalledWith('local-1', {
+          content: 'new content',
+          fileSize: 11 // 'new content'.length
+        });
+      });
+    });
+
+    it('should NOT call onUpdateFile for non-matching files', async () => {
+      const mockOnUpdateFile = vi.fn();
+      render(
+        <FileList
+          {...defaultProps}
+          files={localFiles}
+          onUpdateFile={mockOnUpdateFile}
+        />
+      );
+
+      const fileInput = document.querySelector('input[type="file"][multiple]');
+
+      // Create a mock file that does NOT match any existing file
+      const mockFile = new File(['content'], 'nonexistent.js', { type: 'text/javascript' });
+
+      await userEvent.upload(fileInput, mockFile);
+
+      // Wait a bit to ensure no call is made
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      expect(mockOnUpdateFile).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Mobile Re-upload Button', () => {
+    const localFiles = [
+      {
+        id: 'local-1',
+        filename: 'mobile.js',
+        language: 'javascript',
+        fileSize: 1024,
+        content: 'content',
+        origin: 'upload', // Local files use 'upload' origin
+        documentation: null,
+        qualityScore: null,
+        isGenerating: false,
+        error: null,
+        documentId: null
+      }
+    ];
+
+    it('should show mobile re-upload button with correct label', () => {
+      render(
+        <FileList
+          {...defaultProps}
+          files={localFiles}
+          isMobile={true}
+        />
+      );
+
+      // Mobile shows "Local (1)" format
+      expect(screen.getByText(/Local \(1\)/)).toBeInTheDocument();
+    });
+  });
 });

@@ -130,6 +130,7 @@ async function generateWithOpenAI(prompt, options = {}, config) {
  * @param {string} prompt - User message/prompt
  * @param {Function} onChunk - Callback for each text chunk: (chunk: string) => void
  * @param {Object} options - Generation options (same as generateWithOpenAI)
+ * @param {Function} [options.onRetry] - Callback when retry occurs: (attempt, maxAttempts, delayMs, error, reason) => void
  * @param {Object} config - Provider configuration
  * @returns {Promise<{text: string, metadata: Object}>}
  */
@@ -192,7 +193,7 @@ async function streamWithOpenAI(prompt, onChunk, options = {}, config) {
           onChunk(delta)
         }
       }
-    }, config.maxRetries, 'OpenAI stream')
+    }, config.maxRetries, 'OpenAI stream', { onRetry: options.onRetry })
 
     // Build metadata
     // Note: OpenAI doesn't provide token counts in streaming mode,

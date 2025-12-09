@@ -8,6 +8,7 @@ import ErrorBoundary from './components/ErrorBoundary.jsx'
 import { ThemeProvider } from './contexts/ThemeContext.jsx'
 import { AuthProvider } from './contexts/AuthContext.jsx'
 import { TrialProvider } from './contexts/TrialContext.jsx'
+import { PreferencesProvider } from './contexts/PreferencesContext.jsx'
 import { WorkspaceProvider } from './contexts/WorkspaceContext.jsx'
 import { AuthCallback } from './components/AuthCallback.jsx'
 import { ResetPassword } from './components/ResetPassword.jsx'
@@ -27,6 +28,8 @@ import InviteCodes from './pages/admin/InviteCodes.jsx'
 import TrialsAdmin from './pages/admin/Trials.jsx'
 import { TrialRedemption } from './pages/TrialRedemption.jsx'
 import { ErrorTest } from './components/ErrorTest.jsx'
+import { Projects } from './pages/Projects.jsx'
+import { ProjectDetails } from './pages/ProjectDetails.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -34,6 +37,7 @@ createRoot(document.getElementById('root')).render(
       <BrowserRouter>
         <AuthProvider>
           <TrialProvider>
+          <PreferencesProvider>
           <ThemeProvider>
           <WorkspaceProvider>
             <Routes>
@@ -55,12 +59,16 @@ createRoot(document.getElementById('root')).render(
               <Route path="/admin/invite-codes" element={<InviteCodes />} />
               <Route path="/admin/trials" element={<TrialsAdmin />} />
               <Route path="/trial" element={<TrialRedemption />} />
+              {/* Project management routes (Pro+ feature) - not yet linked from main nav */}
+              <Route path="/projects" element={<Projects />} />
+              <Route path="/projects/:id" element={<ProjectDetails />} />
               {/* Testing route - triggers ErrorBoundary for dark mode and UI testing */}
               <Route path="/test-error" element={<ErrorTest />} />
             </Routes>
             <AnalyticsWrapper />
           </WorkspaceProvider>
           </ThemeProvider>
+          </PreferencesProvider>
           </TrialProvider>
         </AuthProvider>
       </BrowserRouter>
