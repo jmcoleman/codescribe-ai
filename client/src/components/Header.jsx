@@ -150,8 +150,7 @@ export const Header = forwardRef(function Header({ onMenuClick, onHelpClick, sho
               </Button>
 
               {/* Layout Toggle - Desktop only (hidden on mobile/tablet where tabs are shown) */}
-              {/* Pro+ only: pro, team, or enterprise */}
-              {hasProPlusTier && layout && onLayoutChange && (
+              {layout && onLayoutChange && (
                 <div className="hidden lg:block">
                   <LayoutToggle
                     layout={layout}

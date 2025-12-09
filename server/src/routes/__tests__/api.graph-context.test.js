@@ -72,6 +72,8 @@ describe('Graph Context in Generate Endpoints', () => {
         dependents: [{ path: 'a.js' }, { path: 'b.js' }],
         dependencies: [{ path: 'utils.js' }]
       };
+      // Mock getGraphByProjectId to return a graph (projectId lookup happens first)
+      graphService.getGraphByProjectId.mockResolvedValue({ graphId: 'graph-abc123' });
       graphService.getFileContext.mockResolvedValue(mockContext);
 
       await request(app)
@@ -85,7 +87,9 @@ describe('Graph Context in Generate Endpoints', () => {
         })
         .expect(200);
 
-      expect(graphService.getFileContext).toHaveBeenCalledWith('abc123', 'src/utils.js', 1);
+      // First looks up graph by projectId, then gets file context with the graphId
+      expect(graphService.getGraphByProjectId).toHaveBeenCalledWith('abc123', 1);
+      expect(graphService.getFileContext).toHaveBeenCalledWith('graph-abc123', 'src/utils.js', 1);
       expect(docGenerator.generateDocumentation).toHaveBeenCalledWith(
         'function test() {}',
         expect.objectContaining({
@@ -114,7 +118,8 @@ describe('Graph Context in Generate Endpoints', () => {
     });
 
     it('should gracefully handle graph not found', async () => {
-      graphService.getFileContext.mockResolvedValue(null);
+      // No graph found for the projectId
+      graphService.getGraphByProjectId.mockResolvedValue(null);
 
       const res = await request(app)
         .post('/api/generate')
@@ -126,6 +131,9 @@ describe('Graph Context in Generate Endpoints', () => {
         })
         .expect(200);
 
+      expect(graphService.getGraphByProjectId).toHaveBeenCalledWith('nonexistent', 1);
+      // getFileContext should not be called since no graph was found
+      expect(graphService.getFileContext).not.toHaveBeenCalled();
       expect(docGenerator.generateDocumentation).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({
@@ -135,7 +143,8 @@ describe('Graph Context in Generate Endpoints', () => {
     });
 
     it('should gracefully handle graphService errors', async () => {
-      graphService.getFileContext.mockRejectedValue(new Error('Database error'));
+      // Error during graph lookup
+      graphService.getGraphByProjectId.mockRejectedValue(new Error('Database error'));
 
       const res = await request(app)
         .post('/api/generate')
@@ -220,6 +229,8 @@ describe('Graph Context in Generate Endpoints', () => {
         contextString: 'This module exports: authenticate. It is imported by 3 file(s).',
         stats: { dependentCount: 3, dependencyCount: 2 }
       };
+      // Mock getGraphByProjectId to return a graph (projectId lookup happens first)
+      graphService.getGraphByProjectId.mockResolvedValue({ graphId: 'graph-proj456' });
       graphService.getFileContext.mockResolvedValue(mockContext);
 
       const res = await request(app)
@@ -233,7 +244,9 @@ describe('Graph Context in Generate Endpoints', () => {
         })
         .expect(200);
 
-      expect(graphService.getFileContext).toHaveBeenCalledWith('proj456', 'src/auth.js', 1);
+      // First looks up graph by projectId, then gets file context with the graphId
+      expect(graphService.getGraphByProjectId).toHaveBeenCalledWith('proj456', 1);
+      expect(graphService.getFileContext).toHaveBeenCalledWith('graph-proj456', 'src/auth.js', 1);
       expect(docGenerator.generateDocumentation).toHaveBeenCalledWith(
         'function authenticate() {}',
         expect.objectContaining({
@@ -264,7 +277,8 @@ describe('Graph Context in Generate Endpoints', () => {
     });
 
     it('should gracefully handle graph errors for streaming', async () => {
-      graphService.getFileContext.mockRejectedValue(new Error('Network error'));
+      // Error during graph lookup
+      graphService.getGraphByProjectId.mockRejectedValue(new Error('Network error'));
 
       const res = await request(app)
         .post('/api/generate-stream')
