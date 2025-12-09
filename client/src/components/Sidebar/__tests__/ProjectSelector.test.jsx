@@ -208,7 +208,7 @@ describe('ProjectSelector', () => {
       const projectOption = screen.getByRole('option', { name: /Project Alpha/i });
       await user.click(projectOption);
 
-      expect(onProjectChange).toHaveBeenCalledWith(1);
+      expect(onProjectChange).toHaveBeenCalledWith(1, 'Project Alpha');
     });
 
     it('should call onProjectChange with null when selecting "No Project"', async () => {
@@ -226,7 +226,8 @@ describe('ProjectSelector', () => {
       const noProjectOption = screen.getByRole('option', { name: /No Project/i });
       await user.click(noProjectOption);
 
-      expect(onProjectChange).toHaveBeenCalledWith(null);
+      // Name defaults to null when selecting "No Project"
+      expect(onProjectChange).toHaveBeenCalledWith(null, null);
     });
 
     it('should close dropdown after selection', async () => {
@@ -330,7 +331,7 @@ describe('ProjectSelector', () => {
         expect(projectsApi.createProject).toHaveBeenCalledWith({
           name: 'New Test Project'
         });
-        expect(onProjectChange).toHaveBeenCalledWith(4);
+        expect(onProjectChange).toHaveBeenCalledWith(4, 'New Test Project');
       });
     });
 

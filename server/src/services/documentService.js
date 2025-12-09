@@ -41,7 +41,8 @@ class DocumentService {
       outputTokens = null,
       wasCached = false,
       latencyMs = null,
-      isEphemeral = false
+      isEphemeral = false,
+      graphId = null  // Reference to project_graphs.project_id for cross-file context
     } = docData;
 
     // Validation
@@ -60,13 +61,13 @@ class DocumentService {
           documentation, quality_score, doc_type,
           origin, github_repo, github_path, github_sha, github_branch,
           provider, model, input_tokens, output_tokens,
-          was_cached, latency_ms, is_ephemeral
+          was_cached, latency_ms, is_ephemeral, graph_id
         ) VALUES (
           ${userId}, ${filename}, ${language}, ${fileSize},
           ${documentation}, ${JSON.stringify(qualityScore)}, ${docType},
           ${origin}, ${githubRepo}, ${githubPath}, ${githubSha}, ${githubBranch},
           ${provider}, ${model}, ${inputTokens}, ${outputTokens},
-          ${wasCached}, ${latencyMs}, ${isEphemeral}
+          ${wasCached}, ${latencyMs}, ${isEphemeral}, ${graphId}
         )
         RETURNING id, generated_at
       `;

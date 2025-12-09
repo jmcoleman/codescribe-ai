@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { MoreVertical, Trash2, RotateCw, Sparkles, Info, Github, Loader2 } from 'lucide-react';
+import { MoreVertical, Trash2, RotateCw, Sparkles, Info, Github, Loader2, Upload, Stamp } from 'lucide-react';
 
 /**
  * FileActions Component
@@ -9,7 +9,9 @@ import { MoreVertical, Trash2, RotateCw, Sparkles, Info, Github, Loader2 } from 
  * Actions (in order):
  * - Generate - Generate documentation for this file (if not generated)
  * - Regenerate - Re-generate documentation (if already generated)
+ * - Apply Doc Type - Apply the current doc type to this file
  * - Reload from Source - Reload file content from remote source (github, gitlab, etc.)
+ * - Re-upload File - Re-upload local file (for upload/paste/sample origin files without content)
  * - View Details - View detailed file metadata (keyboard shortcut: Cmd/Ctrl+I)
  * - Delete - Remove file from list
  *
@@ -17,11 +19,13 @@ import { MoreVertical, Trash2, RotateCw, Sparkles, Info, Github, Loader2 } from 
  * @param {Object} props.file - File object
  * @param {Function} props.onRemove - Called when remove is clicked
  * @param {Function} props.onGenerate - Called when generate is clicked
+ * @param {Function} props.onApplyDocType - Called when apply doc type is clicked
  * @param {Function} props.onViewDetails - Called when view details is clicked
  * @param {Function} props.onReloadFromSource - Called when reload from source is clicked
+ * @param {Function} props.onReuploadFile - Called when re-upload file is clicked
  * @param {boolean} props.isReloading - Whether file is currently being reloaded
  */
-export function FileActions({ file, onRemove, onGenerate, onViewDetails, onReloadFromSource, isReloading = false, onMenuOpenChange }) {
+export function FileActions({ file, onRemove, onGenerate, onApplyDocType, onViewDetails, onReloadFromSource, onReuploadFile, isReloading = false, onMenuOpenChange }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -42,6 +46,10 @@ export function FileActions({ file, onRemove, onGenerate, onViewDetails, onReloa
     // Future: || (origin === 'gitlab' && gitlab?.project && gitlab?.path)
     // Future: || (origin === 'bitbucket' && bitbucket?.repo && bitbucket?.path)
   );
+
+  // Check if file can be re-uploaded (local-origin files without content)
+  // Supports: upload, paste, sample (not github - use "Reload from GitHub" instead)
+  const canReuploadFile = !hasContent && (origin === 'upload' || origin === 'paste' || origin === 'sample');
 
   // Get the source label for UI display
   const getSourceLabel = () => {
@@ -103,9 +111,23 @@ export function FileActions({ file, onRemove, onGenerate, onViewDetails, onReloa
     setIsOpen(false);
   };
 
+  const handleApplyDocType = () => {
+    if (onApplyDocType) {
+      onApplyDocType();
+    }
+    setIsOpen(false);
+  };
+
   const handleReloadFromSource = () => {
     if (onReloadFromSource) {
       onReloadFromSource();
+    }
+    setIsOpen(false);
+  };
+
+  const handleReuploadFile = () => {
+    if (onReuploadFile) {
+      onReuploadFile();
     }
     setIsOpen(false);
   };
@@ -165,6 +187,17 @@ export function FileActions({ file, onRemove, onGenerate, onViewDetails, onReloa
             </button>
           )}
 
+          {/* Apply Doc Type - always available */}
+          <button
+            type="button"
+            onClick={handleApplyDocType}
+            className="w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2 transition-colors duration-150"
+            role="menuitem"
+          >
+            <Stamp className="w-4 h-4" />
+            Apply Doc Type
+          </button>
+
           {/* Reload from Source - only if remote origin (github, gitlab, etc.) and no content */}
           {canReloadFromSource && (
             <button
@@ -185,6 +218,19 @@ export function FileActions({ file, onRemove, onGenerate, onViewDetails, onReloa
                   Reload from {getSourceLabel()}
                 </>
               )}
+            </button>
+          )}
+
+          {/* Re-upload File - only if local origin (upload, paste, sample) and no content */}
+          {canReuploadFile && (
+            <button
+              type="button"
+              onClick={handleReuploadFile}
+              className="w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2 transition-colors duration-150"
+              role="menuitem"
+            >
+              <Upload className="w-4 h-4" />
+              Re-upload File
             </button>
           )}
 

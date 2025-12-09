@@ -295,6 +295,53 @@ function App() {
   // Alias preferences for easier use (and consistency with old API)
   const selectedProjectId = prefsSelectedProjectId;
   const setSelectedProjectId = setPrefsSelectedProjectId;
+  // Track selected project name for graph analysis (not persisted, derived from selection)
+  const [selectedProjectName, setSelectedProjectName] = useState(null);
+
+  // Handler for project selection that captures both id and name
+  const handleProjectChange = useCallback((projectId, projectName = null) => {
+    setSelectedProjectId(projectId);
+    setSelectedProjectName(projectName);
+  }, [setSelectedProjectId]);
+
+  // Fetch project name when we have an ID but no name (e.g., after page refresh)
+  // This ensures graph analysis has the correct project name
+  useEffect(() => {
+    const fetchProjectName = async () => {
+      if (selectedProjectId && !selectedProjectName && isAuthenticated) {
+        try {
+          const { getProject } = await import('./services/projectsApi');
+          const result = await getProject(selectedProjectId);
+          // API returns { success, project: { id, name, ... } }
+          if (result?.project?.name) {
+            setSelectedProjectName(result.project.name);
+          }
+        } catch (err) {
+          console.warn('[App] Could not fetch project name:', err.message);
+        }
+      }
+    };
+    fetchProjectName();
+  }, [selectedProjectId, selectedProjectName, isAuthenticated]);
+
+  // Check for project info stored by History page when loading batch into workspace
+  // This runs once on mount to set the project selector to match the loaded batch
+  useEffect(() => {
+    const historyProjectId = sessionStorage.getItem('history_load_project_id');
+    const historyProjectName = sessionStorage.getItem('history_load_project_name');
+
+    if (historyProjectId) {
+      const projectId = parseInt(historyProjectId, 10);
+      if (!isNaN(projectId)) {
+        setSelectedProjectId(projectId);
+        setSelectedProjectName(historyProjectName || null);
+      }
+      // Clear after reading to prevent re-applying on refresh
+      sessionStorage.removeItem('history_load_project_id');
+      sessionStorage.removeItem('history_load_project_name');
+    }
+  }, [setSelectedProjectId]);
+
   const documentPersistence = useDocumentPersistence();
   const { override, clearOverride } = useTierOverride();
 
@@ -560,6 +607,7 @@ function App() {
     bannerDismissed,
     showRegenerateModal,
     regenerateModalData,
+    isAnalyzingGraph,
     setBulkGenerationSummary,
     setBatchSummaryMarkdown,
     setCurrentBatchId,
@@ -589,7 +637,9 @@ function App() {
     refetchUsage,
     userTier: user?.effectiveTier || user?.tier || 'free',
     trialInfo: isOnTrial ? { isOnTrial, trialEndsAt } : null,
-    projectId: canUseProjectManagement ? selectedProjectId : null
+    projectId: canUseProjectManagement ? selectedProjectId : null,
+    projectName: canUseProjectManagement ? selectedProjectName : null,
+    user
   });
 
   // Clear batch-related state when user loses batch processing access (tier downgrade/expiry)
@@ -623,12 +673,8 @@ function App() {
         // First try sessionStorage (faster, for current session)
         const saved = getSessionItem('bulk_generation_summary');
         const markdown = getSessionItem('batch_summary_markdown');
-        const batchId = getSessionItem('current_batch_id');
-
-        console.log('[App] loadBatchData - sessionStorage check:', { saved: !!saved, markdown: !!markdown, batchId });
 
         if (saved || markdown) {
-          console.log('[App] Restoring batch from sessionStorage');
           const parsedSummary = saved ? JSON.parse(saved) : null;
           restoreBatchState({
             bulkGenerationSummary: parsedSummary,
@@ -664,17 +710,25 @@ function App() {
     loadBatchData();
   }, [canUseBatchProcessing, isAuthenticated, restoreBatchState, multiFileState.activeFileId, setDocumentation, setQualityScore]);
 
-  // Persist batch data to sessionStorage (only if user has access and data exists)
+  // Persist batch data to sessionStorage (sync both writes AND clears)
+  // When batch state is cleared via flushSync at start of new generation,
+  // we must also clear sessionStorage to prevent stale data from being restored
   useEffect(() => {
     if (canUseBatchProcessing) {
       if (bulkGenerationSummary) {
         setSessionItem('bulk_generation_summary', JSON.stringify(bulkGenerationSummary));
+      } else {
+        removeSessionItem('bulk_generation_summary');
       }
       if (batchSummaryMarkdown) {
         setSessionItem('batch_summary_markdown', batchSummaryMarkdown);
+      } else {
+        removeSessionItem('batch_summary_markdown');
       }
       if (currentBatchId) {
         setSessionItem('current_batch_id', currentBatchId);
+      } else {
+        removeSessionItem('current_batch_id');
       }
     }
   }, [canUseBatchProcessing, bulkGenerationSummary, batchSummaryMarkdown, currentBatchId]);
@@ -953,7 +1007,14 @@ function App() {
       const isDefaultCode = code === DEFAULT_CODE;
       const isExampleCode = EXAMPLE_CODES.has(code);
       const shouldCache = isDefaultCode || isExampleCode;
-      const result = await generate(code, docType, language, shouldCache, filename);
+
+      // Get file path for graph context (from sourceMetadata if available)
+      const filePath = sourceMetadata?.source === 'github' ? sourceMetadata.path : null;
+
+      const result = await generate(code, docType, language, shouldCache, filename, {
+        projectId: selectedProjectId, // For graph context lookup (FK to projects table)
+        filePath // For identifying file in the project graph
+      });
 
       // Save document to database for authenticated users
       if (isAuthenticated && result) {
@@ -1054,6 +1115,9 @@ function App() {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
+    // Get file path for graph context (GitHub files have github.path)
+    const filePath = file.github?.path || null;
+
     const response = await fetch(`${API_URL}/api/generate`, {
       method: 'POST',
       headers,
@@ -1062,7 +1126,9 @@ function App() {
         docType: file.docType, // Use file's docType (multi-file mode)
         language: file.language,
         isDefaultCode: false,
-        filename: file.filename // Pass filename for title formatting
+        filename: file.filename, // Pass filename for title formatting
+        projectId: selectedProjectId, // For graph context lookup (FK to projects table)
+        filePath // For identifying file in the project graph
       })
     });
 
@@ -1956,10 +2022,11 @@ function App() {
         onGenerate={handleGenerate}
         onReset={handleReset}
         bulkGenerationProgress={bulkGenerationProgress}
-        bulkGenerationSummary={bannerDismissed ? null : bulkGenerationSummary}
+        bulkGenerationSummary={(bannerDismissed || bulkGenerationProgress || isAnalyzingGraph) ? null : bulkGenerationSummary}
         bulkGenerationErrors={bulkGenerationErrors}
         currentlyGeneratingFile={currentlyGeneratingFile}
         throttleCountdown={throttleCountdown}
+        isAnalyzingGraph={isAnalyzingGraph}
         onDismissBulkErrors={dismissBanner}
         onDocumentClick={handleDocumentClick}
         onBackToSummary={handleBackToSummary}
@@ -2189,7 +2256,7 @@ function App() {
                 onUpdateFile={multiFileState.updateFile}
                 onViewBatchSummary={handleBackToSummary}
                 selectedProjectId={selectedProjectId}
-                onProjectChange={setSelectedProjectId}
+                onProjectChange={handleProjectChange}
                 canUseProjectManagement={canUseProjectManagement}
               />
 
@@ -2289,7 +2356,7 @@ function App() {
                   onUpdateFile={multiFileState.updateFile}
                   onViewBatchSummary={handleBackToSummary}
                   selectedProjectId={selectedProjectId}
-                  onProjectChange={setSelectedProjectId}
+                  onProjectChange={handleProjectChange}
                   canUseProjectManagement={canUseProjectManagement}
                 />
               </Panel>
@@ -2351,10 +2418,11 @@ function App() {
                             onGenerate={handleGenerate}
                             onReset={handleReset}
                             bulkGenerationProgress={bulkGenerationProgress}
-                            bulkGenerationSummary={bannerDismissed ? null : bulkGenerationSummary}
+                            bulkGenerationSummary={(bannerDismissed || bulkGenerationProgress || isAnalyzingGraph) ? null : bulkGenerationSummary}
                             bulkGenerationErrors={bulkGenerationErrors}
                             currentlyGeneratingFile={currentlyGeneratingFile}
                             throttleCountdown={throttleCountdown}
+                            isAnalyzingGraph={isAnalyzingGraph}
                             onDismissBulkErrors={dismissBanner}
                             onDocumentClick={handleDocumentClick}
                             onBackToSummary={handleBackToSummary}
@@ -2441,10 +2509,11 @@ function App() {
                       onGenerate={handleGenerate}
                       onReset={handleReset}
                       bulkGenerationProgress={bulkGenerationProgress}
-                      bulkGenerationSummary={bannerDismissed ? null : bulkGenerationSummary}
+                      bulkGenerationSummary={(bannerDismissed || bulkGenerationProgress || isAnalyzingGraph) ? null : bulkGenerationSummary}
                       bulkGenerationErrors={bulkGenerationErrors}
                       currentlyGeneratingFile={currentlyGeneratingFile}
                       throttleCountdown={throttleCountdown}
+                      isAnalyzingGraph={isAnalyzingGraph}
                       onDismissBulkErrors={dismissBanner}
                       onDocumentClick={handleDocumentClick}
                       onBackToSummary={handleBackToSummary}
@@ -2488,10 +2557,11 @@ function App() {
                         onGenerate={handleGenerate}
                         onReset={handleReset}
                         bulkGenerationProgress={bulkGenerationProgress}
-                        bulkGenerationSummary={bannerDismissed ? null : bulkGenerationSummary}
+                        bulkGenerationSummary={(bannerDismissed || bulkGenerationProgress || isAnalyzingGraph) ? null : bulkGenerationSummary}
                         bulkGenerationErrors={bulkGenerationErrors}
                         currentlyGeneratingFile={currentlyGeneratingFile}
                         throttleCountdown={throttleCountdown}
+                        isAnalyzingGraph={isAnalyzingGraph}
                         onDismissBulkErrors={dismissBanner}
                         onDocumentClick={handleDocumentClick}
                         onBackToSummary={handleBackToSummary}

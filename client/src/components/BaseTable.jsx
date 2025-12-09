@@ -209,6 +209,13 @@ export function BaseTable({
   columnSizing: externalColumnSizing,
   onColumnSizingChange: externalOnColumnSizingChange,
 
+  // Column visibility
+  columnVisibility: externalColumnVisibility,
+  onColumnVisibilityChange: externalOnColumnVisibilityChange,
+
+  // Table instance callback (for external access to table instance)
+  onTableReady,
+
   // States
   isLoading = false,
   isRefreshing = false,
@@ -224,6 +231,11 @@ export function BaseTable({
   const [internalColumnSizing, setInternalColumnSizing] = useState({});
   const columnSizing = externalColumnSizing ?? internalColumnSizing;
   const setColumnSizing = externalOnColumnSizingChange ?? setInternalColumnSizing;
+
+  // Column visibility state - use external state if provided, otherwise internal
+  const [internalColumnVisibility, setInternalColumnVisibility] = useState({});
+  const columnVisibility = externalColumnVisibility ?? internalColumnVisibility;
+  const setColumnVisibility = externalOnColumnVisibilityChange ?? setInternalColumnVisibility;
 
   // Build grid template columns dynamically based on column sizes
   const buildGridTemplateColumns = useCallback((table) => {
@@ -247,10 +259,12 @@ export function BaseTable({
       sorting,
       expanded,
       columnSizing,
+      columnVisibility,
     },
     onSortingChange,
     onExpandedChange: setExpanded,
     onColumnSizingChange: setColumnSizing,
+    onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: manualSorting ? undefined : getSortedRowModel(),
     getPaginationRowModel: manualPagination ? undefined : getPaginationRowModel(),
@@ -261,6 +275,13 @@ export function BaseTable({
     enableColumnResizing,
     columnResizeMode: 'onChange',
   });
+
+  // Call onTableReady callback if provided (for external access to table instance)
+  React.useEffect(() => {
+    if (onTableReady) {
+      onTableReady(table);
+    }
+  }, [table, onTableReady]);
 
   // Get current grid template columns
   const gridTemplateColumns = buildGridTemplateColumns(table);

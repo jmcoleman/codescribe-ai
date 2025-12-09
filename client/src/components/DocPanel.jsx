@@ -1,4 +1,4 @@
-import { Sparkles, CheckCircle, AlertCircle, XCircle, ChevronDown, ChevronUp, MoreVertical, Download, Copy, RefreshCw, X } from 'lucide-react';
+import { Sparkles, CheckCircle, AlertCircle, XCircle, ChevronDown, ChevronUp, MoreVertical, Download, Copy, RefreshCw, X, Network } from 'lucide-react';
 import { useState, useEffect, useRef, memo, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -190,7 +190,8 @@ export const DocPanel = memo(function DocPanel({
   docType = null,
   filename = null,
   onCancelBatch = null,
-  isCancelling = false
+  isCancelling = false,
+  isAnalyzingGraph = false
 }) {
   const { effectiveTheme } = useTheme();
 
@@ -873,38 +874,56 @@ export const DocPanel = memo(function DocPanel({
       )}
 
       {/* Currently Generating File Banner (Pro+ tier only) */}
-      {canUseBatchProcessing && currentlyGeneratingFile && (
+      {/* Shows graph analysis status OR file generation progress */}
+      {canUseBatchProcessing && (isAnalyzingGraph || currentlyGeneratingFile) && (
         <div className="mx-4 mt-3 bg-white dark:bg-slate-800 border-2 border-indigo-600 dark:border-indigo-400 rounded-lg overflow-hidden shadow-sm transition-all">
           <div className="flex items-center gap-3 p-3">
-            {/* Sparkles icon with animated glow */}
+            {/* Icon with animated glow - Network for graph, Sparkles for generation */}
             <div className="relative flex-shrink-0">
-              <Sparkles className="w-5 h-5 text-indigo-600 dark:text-indigo-400 animate-pulse" aria-hidden="true" />
+              {isAnalyzingGraph ? (
+                <Network className="w-5 h-5 text-indigo-600 dark:text-indigo-400 animate-pulse" aria-hidden="true" />
+              ) : (
+                <Sparkles className="w-5 h-5 text-indigo-600 dark:text-indigo-400 animate-pulse" aria-hidden="true" />
+              )}
               <div className="absolute inset-0 bg-indigo-500/20 dark:bg-indigo-400/20 rounded-full blur-md animate-pulse" aria-hidden="true" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-indigo-900 dark:text-indigo-100">
-                Generating: <span className="text-indigo-700 dark:text-indigo-300">{currentlyGeneratingFile.filename}</span>
-              </p>
-              <div className="flex items-center gap-2 mt-1">
-                <p className="text-xs text-indigo-700 dark:text-indigo-300">
-                  File {currentlyGeneratingFile.index} of {currentlyGeneratingFile.total}
-                </p>
-                <span className="text-indigo-400 dark:text-indigo-500">•</span>
-                <p className="text-xs text-indigo-600 dark:text-indigo-400 font-medium">
-                  {currentlyGeneratingFile.docType}
-                </p>
-              </div>
-              {/* Progress bar */}
-              <div className="mt-2 h-1 bg-indigo-200/50 dark:bg-indigo-800/30 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 dark:from-indigo-400 dark:to-purple-400 rounded-full transition-all duration-300"
-                  style={{ width: `${(currentlyGeneratingFile.index / currentlyGeneratingFile.total) * 100}%` }}
-                  aria-hidden="true"
-                />
-              </div>
+              {isAnalyzingGraph ? (
+                <>
+                  <p className="text-sm font-semibold text-indigo-900 dark:text-indigo-100">
+                    Analyzing project structure...
+                  </p>
+                  <p className="text-xs text-indigo-700 dark:text-indigo-300 mt-0.5">
+                    Building dependency graph for cross-file awareness
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm font-semibold text-indigo-900 dark:text-indigo-100">
+                    Generating: <span className="text-indigo-700 dark:text-indigo-300">{currentlyGeneratingFile.filename}</span>
+                  </p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <p className="text-xs text-indigo-700 dark:text-indigo-300">
+                      File {currentlyGeneratingFile.index} of {currentlyGeneratingFile.total}
+                    </p>
+                    <span className="text-indigo-400 dark:text-indigo-500">•</span>
+                    <p className="text-xs text-indigo-600 dark:text-indigo-400 font-medium">
+                      {currentlyGeneratingFile.docType}
+                    </p>
+                  </div>
+                  {/* Progress bar */}
+                  <div className="mt-2 h-1 bg-indigo-200/50 dark:bg-indigo-800/30 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 dark:from-indigo-400 dark:to-purple-400 rounded-full transition-all duration-300"
+                      style={{ width: `${(currentlyGeneratingFile.index / currentlyGeneratingFile.total) * 100}%` }}
+                      aria-hidden="true"
+                    />
+                  </div>
+                </>
+              )}
             </div>
-            {/* Cancel button - only show for multi-file batches */}
-            {onCancelBatch && currentlyGeneratingFile.total > 1 && (
+            {/* Cancel button - show during graph analysis or multi-file generation */}
+            {onCancelBatch && (isAnalyzingGraph || currentlyGeneratingFile?.total > 1) && (
               <button
                 type="button"
                 onClick={onCancelBatch}
@@ -912,7 +931,7 @@ export const DocPanel = memo(function DocPanel({
                 className={`flex-shrink-0 px-2.5 py-1 rounded-md text-xs font-medium border transition-colors ${
                   isCancelling
                     ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-700 cursor-not-allowed'
-                    : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-700 dark:hover:text-red-300'
+                    : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-300'
                 }`}
                 aria-label={isCancelling ? "Cancelling batch generation" : "Cancel batch generation"}
                 title={isCancelling ? "Cancelling after current file..." : "Cancel after current file completes"}
@@ -954,7 +973,7 @@ export const DocPanel = memo(function DocPanel({
                 className={`flex-shrink-0 px-2.5 py-1 rounded-md text-xs font-medium border transition-colors ${
                   isCancelling
                     ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-700 cursor-not-allowed'
-                    : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-700 dark:hover:text-red-300'
+                    : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-300'
                 }`}
                 aria-label={isCancelling ? "Cancelling batch generation" : "Cancel batch generation"}
                 title={isCancelling ? "Cancelling..." : "Cancel batch"}

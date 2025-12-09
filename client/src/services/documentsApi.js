@@ -25,6 +25,7 @@ import { STORAGE_KEYS, getStorageItem } from '../constants/storage.js';
  * @param {Object} [docData.github] - Optional GitHub metadata
  * @param {Object} [docData.llm] - Optional LLM metadata
  * @param {boolean} [docData.isEphemeral] - Whether to auto-delete on logout
+ * @param {string} [docData.graphId] - Optional project graph ID for cross-file context
  * @returns {Promise<Object>} - { documentId, savedAt }
  */
 export async function saveDocument(docData) {
@@ -60,7 +61,10 @@ export async function saveDocument(docData) {
       latencyMs: docData.llm?.latencyMs || null,
 
       // Ephemeral flag
-      isEphemeral: docData.isEphemeral || false
+      isEphemeral: docData.isEphemeral || false,
+
+      // Graph context (for cross-file awareness)
+      graphId: docData.graphId || null
     })
   });
 

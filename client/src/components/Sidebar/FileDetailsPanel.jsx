@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { X, FileText, Sparkles, FolderGit2, ExternalLink } from 'lucide-react';
 import {
   formatOrigin,
@@ -144,6 +145,8 @@ export function FileDetailsPanel({ file, isOpen, onClose, onViewBatchSummary }) 
     error,
     documentId,
     batchId,
+    graphId,
+    projectName,
     fileSize,
     origin,
     github,
@@ -181,15 +184,14 @@ export function FileDetailsPanel({ file, isOpen, onClose, onViewBatchSummary }) 
   // Use actual generation timestamp if available
   const dateGenerated = generatedAt ? formatTimestamp(generatedAt) : null;
 
-  return (
+  // Use portal to render outside sidebar DOM tree
+  // This fixes the issue where sidebar's transform creates a new stacking context
+  // and breaks fixed positioning on mobile
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-start justify-end">
-      {/* Backdrop */}
+      {/* Backdrop - transparent, just for click-to-close */}
       <div
-        className={`
-          fixed inset-0 bg-slate-900/20 dark:bg-slate-900/40 backdrop-blur-sm
-          transition-opacity duration-200
-          ${isExiting ? 'opacity-0' : 'opacity-100'}
-        `}
+        className="fixed inset-0"
         onClick={handleClose}
         aria-hidden="true"
       />
@@ -330,7 +332,7 @@ export function FileDetailsPanel({ file, isOpen, onClose, onViewBatchSummary }) 
               </div>
               <div className="flex justify-between items-start gap-4">
                 <dt className="text-sm text-slate-600 dark:text-slate-400 flex-shrink-0">Status</dt>
-                <dd className="text-sm text-slate-900 dark:text-slate-100 text-right">
+                <dd className={`text-sm text-right ${docStatus === 'Not generated' ? 'text-slate-500 dark:text-slate-400' : 'text-slate-900 dark:text-slate-100'}`}>
                   {docStatus}
                 </dd>
               </div>
@@ -338,6 +340,12 @@ export function FileDetailsPanel({ file, isOpen, onClose, onViewBatchSummary }) 
                 <div className="flex justify-between items-start gap-4">
                   <dt className="text-sm text-slate-600 dark:text-slate-400 flex-shrink-0">Generated</dt>
                   <dd className="text-sm text-slate-900 dark:text-slate-100 text-right">{dateGenerated}</dd>
+                </div>
+              )}
+              {projectName && (
+                <div className="flex justify-between items-start gap-4">
+                  <dt className="text-sm text-slate-600 dark:text-slate-400 flex-shrink-0">Project</dt>
+                  <dd className="text-sm text-slate-900 dark:text-slate-100 text-right">{projectName}</dd>
                 </div>
               )}
               {batchId && onViewBatchSummary && (
@@ -370,7 +378,7 @@ export function FileDetailsPanel({ file, isOpen, onClose, onViewBatchSummary }) 
           )}
 
           {/* Database IDs (if saved) */}
-          {(documentId || batchId) && (
+          {(documentId || batchId || graphId) && (
             <div className="pt-4 border-t border-slate-200 dark:border-slate-700 space-y-1">
               {documentId && (
                 <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -382,10 +390,16 @@ export function FileDetailsPanel({ file, isOpen, onClose, onViewBatchSummary }) 
                   Batch ID: <span className="font-mono">{batchId}</span>
                 </p>
               )}
+              {graphId && (
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Graph ID: <span className="font-mono">{graphId}</span>
+                </p>
+              )}
             </div>
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

@@ -307,7 +307,7 @@ describe('App - Workspace Persistence', () => {
           documentation: '# History Documentation\n\nLoaded from history.',
           qualityScore: { score: 92, grade: 'A' },
           docType: 'JSDOC',
-          origin: 'history',
+          origin: 'upload', // Original origin preserved; 'upload' is fallback for legacy docs
           documentId: 'history-doc-123',
           batchId: 'history-batch-456',
           generatedAt: new Date('2025-01-01')
@@ -317,7 +317,7 @@ describe('App - Workspace Persistence', () => {
       expect(result.current.files).toHaveLength(1);
       expect(result.current.files[0].filename).toBe('HistoryFile.jsx');
       expect(result.current.files[0].documentation).toBe('# History Documentation\n\nLoaded from history.');
-      expect(result.current.files[0].origin).toBe('history');
+      expect(result.current.files[0].origin).toBe('upload');
       expect(result.current.activeFileId).toBe('history-doc-123');
     });
 
@@ -372,7 +372,7 @@ describe('App - Workspace Persistence', () => {
             content: '',
             documentation: '# Component 1 Docs',
             qualityScore: { score: 88, grade: 'B' },
-            origin: 'history',
+            origin: 'upload', // Original origin preserved from when file was first added
             batchId: 'shared-batch'
           },
           {
@@ -381,7 +381,7 @@ describe('App - Workspace Persistence', () => {
             content: '',
             documentation: '# Component 2 Docs',
             qualityScore: { score: 91, grade: 'A' },
-            origin: 'history',
+            origin: 'upload', // Original origin preserved from when file was first added
             batchId: 'shared-batch'
           }
         ]);

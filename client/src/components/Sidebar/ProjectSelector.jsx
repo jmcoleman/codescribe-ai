@@ -18,7 +18,7 @@ import { toastCompact } from '../../utils/toastWithHistory';
  *
  * @param {Object} props
  * @param {number|null} props.selectedProjectId - Currently selected project ID (null = no project)
- * @param {Function} props.onProjectChange - Called when project selection changes
+ * @param {Function} props.onProjectChange - Called when project selection changes (receives id, name)
  * @param {string} [props.size='small'] - Size variant ('small' or 'default')
  */
 export function ProjectSelector({
@@ -88,7 +88,7 @@ export function ProjectSelector({
 
       if (result.project) {
         setProjects(prev => [result.project, ...prev]);
-        onProjectChange(result.project.id);
+        onProjectChange(result.project.id, result.project.name);
         setShowCreateForm(false);
         setNewProjectName('');
         setIsOpen(false);
@@ -102,8 +102,8 @@ export function ProjectSelector({
     }
   };
 
-  const handleSelect = (projectId) => {
-    onProjectChange(projectId);
+  const handleSelect = (projectId, projectName = null) => {
+    onProjectChange(projectId, projectName);
     setIsOpen(false);
   };
 
@@ -234,7 +234,7 @@ export function ProjectSelector({
               <button
                 key={project.id}
                 type="button"
-                onClick={() => handleSelect(project.id)}
+                onClick={() => handleSelect(project.id, project.name)}
                 className={`
                   w-full flex items-center gap-2 px-3 py-2 text-xs text-left
                   hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors

@@ -19,7 +19,7 @@ jest.mock('@vercel/postgres', () => ({
 
 // Mock graphService BEFORE importing projectService
 jest.mock('../graphService.js', () => ({
-  getGraphByPersistentProjectId: jest.fn(),
+  getGraphByProjectId: jest.fn(),
   analyzeProject: jest.fn()
 }));
 
@@ -37,7 +37,7 @@ import projectService, {
   getProjectWithGraph
 } from '../projectService.js';
 import { sql } from '@vercel/postgres';
-import { getGraphByPersistentProjectId, analyzeProject as analyzeProjectGraph } from '../graphService.js';
+import { getGraphByProjectId, analyzeProject as analyzeProjectGraph } from '../graphService.js';
 
 describe('ProjectService', () => {
   beforeEach(() => {
@@ -566,10 +566,10 @@ describe('ProjectService', () => {
     };
 
     const mockGraph = {
-      projectId: 'abc123',
+      graphId: 'abc123',
       userId: 1,
       projectName: 'Test Project',
-      persistentProjectId: 1,
+      projectId: 1,
       nodes: [],
       edges: [],
       stats: { totalFiles: 5 },
@@ -579,13 +579,13 @@ describe('ProjectService', () => {
 
     it('should return linked graph for a project', async () => {
       sql.mockResolvedValueOnce({ rows: [mockProject] });
-      getGraphByPersistentProjectId.mockResolvedValueOnce(mockGraph);
+      getGraphByProjectId.mockResolvedValueOnce(mockGraph);
 
       const graph = await getProjectGraph(1, 1);
 
       expect(graph).toBeDefined();
-      expect(graph.projectId).toBe('abc123');
-      expect(getGraphByPersistentProjectId).toHaveBeenCalledWith(1, 1);
+      expect(graph.graphId).toBe('abc123');
+      expect(getGraphByProjectId).toHaveBeenCalledWith(1, 1);
     });
 
     it('should return null for non-existent project', async () => {
@@ -610,7 +610,7 @@ describe('ProjectService', () => {
 
     it('should return null when project has no linked graph', async () => {
       sql.mockResolvedValueOnce({ rows: [mockProject] });
-      getGraphByPersistentProjectId.mockResolvedValueOnce(null);
+      getGraphByProjectId.mockResolvedValueOnce(null);
 
       const graph = await getProjectGraph(1, 1);
 
@@ -638,10 +638,10 @@ describe('ProjectService', () => {
     ];
 
     const mockGraph = {
-      projectId: 'abc123',
+      graphId: 'abc123',
       userId: 1,
       projectName: 'Test Project',
-      persistentProjectId: 1,
+      projectId: 1,
       nodes: [{ id: 'src/index.js' }],
       edges: [],
       stats: { totalFiles: 1 }
@@ -654,7 +654,7 @@ describe('ProjectService', () => {
       const graph = await analyzeProjectFiles(1, 1, mockFiles);
 
       expect(graph).toBeDefined();
-      expect(graph.projectId).toBe('abc123');
+      expect(graph.graphId).toBe('abc123');
       expect(analyzeProjectGraph).toHaveBeenCalledWith(
         1,
         'Test Project',
@@ -662,7 +662,7 @@ describe('ProjectService', () => {
         {
           branch: 'main',
           projectPath: 'https://github.com/user/repo',
-          persistentProjectId: 1
+          projectId: 1
         }
       );
     });
@@ -726,7 +726,7 @@ describe('ProjectService', () => {
 
     it('should return true when project has active graph', async () => {
       sql.mockResolvedValueOnce({ rows: [mockProject] });
-      getGraphByPersistentProjectId.mockResolvedValueOnce({ projectId: 'abc123' });
+      getGraphByProjectId.mockResolvedValueOnce({ projectId: 'abc123' });
 
       const result = await hasActiveGraph(1, 1);
 
@@ -735,7 +735,7 @@ describe('ProjectService', () => {
 
     it('should return false when project has no graph', async () => {
       sql.mockResolvedValueOnce({ rows: [mockProject] });
-      getGraphByPersistentProjectId.mockResolvedValueOnce(null);
+      getGraphByProjectId.mockResolvedValueOnce(null);
 
       const result = await hasActiveGraph(1, 1);
 
@@ -767,10 +767,10 @@ describe('ProjectService', () => {
     };
 
     const mockGraph = {
-      projectId: 'abc123',
+      graphId: 'abc123',
       userId: 1,
       projectName: 'Test Project',
-      persistentProjectId: 1,
+      projectId: 1,
       nodes: [],
       edges: [],
       stats: { totalFiles: 5 },
@@ -780,20 +780,20 @@ describe('ProjectService', () => {
 
     it('should return project with graph summary', async () => {
       sql.mockResolvedValueOnce({ rows: [mockProject] });
-      getGraphByPersistentProjectId.mockResolvedValueOnce(mockGraph);
+      getGraphByProjectId.mockResolvedValueOnce(mockGraph);
 
       const result = await getProjectWithGraph(1, 1);
 
       expect(result).toBeDefined();
       expect(result.name).toBe('Test Project');
       expect(result.graph).toBeDefined();
-      expect(result.graph.projectId).toBe('abc123');
+      expect(result.graph.graphId).toBe('abc123');
       expect(result.graph.fileCount).toBe(5);
     });
 
     it('should return project with null graph when no graph exists', async () => {
       sql.mockResolvedValueOnce({ rows: [mockProject] });
-      getGraphByPersistentProjectId.mockResolvedValueOnce(null);
+      getGraphByProjectId.mockResolvedValueOnce(null);
 
       const result = await getProjectWithGraph(1, 1);
 
@@ -932,7 +932,7 @@ describe('ProjectService', () => {
 
     it('should return full project summary with graph and batches', async () => {
       sql.mockResolvedValueOnce({ rows: [mockProject] });
-      getGraphByPersistentProjectId.mockResolvedValueOnce(mockGraph);
+      getGraphByProjectId.mockResolvedValueOnce(mockGraph);
       sql.mockResolvedValueOnce({ rows: [{
         batch_count: '5',
         total_files: '25',
@@ -955,7 +955,7 @@ describe('ProjectService', () => {
 
     it('should return summary with null graph when no graph exists', async () => {
       sql.mockResolvedValueOnce({ rows: [mockProject] });
-      getGraphByPersistentProjectId.mockResolvedValueOnce(null);
+      getGraphByProjectId.mockResolvedValueOnce(null);
       sql.mockResolvedValueOnce({ rows: [{
         batch_count: '0',
         total_files: '0',

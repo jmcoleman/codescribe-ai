@@ -22,9 +22,11 @@ import { FileActions } from './FileActions';
  * @param {Function} props.onRemove - Called when remove action is clicked
  * @param {Function} props.onViewDetails - Called when view details action is clicked
  * @param {Function} props.onReloadFromSource - Called when reload from source (github, gitlab, etc.) is clicked
+ * @param {Function} props.onReuploadFile - Called when re-upload file is clicked (for local files)
+ * @param {Function} props.onApplyDocType - Called when apply doc type is clicked
  * @param {boolean} props.isReloading - Whether file is currently being reloaded
  */
-export function FileItem({ file, isActive, isSelected, onSelect, onToggleSelection, onRemove, onGenerate, onViewDetails, onReloadFromSource, isReloading = false }) {
+export function FileItem({ file, isActive, isSelected, onSelect, onToggleSelection, onRemove, onGenerate, onViewDetails, onReloadFromSource, onReuploadFile, onApplyDocType, isReloading = false }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const {
@@ -180,8 +182,10 @@ export function FileItem({ file, isActive, isSelected, onSelect, onToggleSelecti
             file={file}
             onRemove={onRemove}
             onGenerate={onGenerate}
+            onApplyDocType={onApplyDocType}
             onViewDetails={onViewDetails}
             onReloadFromSource={onReloadFromSource}
+            onReuploadFile={onReuploadFile}
             isReloading={isReloading}
             onMenuOpenChange={setIsMenuOpen}
           />

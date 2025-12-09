@@ -37,10 +37,11 @@ export const hourlyLimitHandler = (req, res) => {
   });
 };
 
-// Primary rate limiter: 10 requests per minute
+// Primary rate limiter: 100 requests per minute
+// Note: Generation endpoints also have generationLimiter (100/hour) for additional protection
 export const apiLimiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 60 * 1000,
-  max: parseInt(process.env.RATE_LIMIT_MAX) || 10,
+  max: parseInt(process.env.RATE_LIMIT_MAX) || 100,
   message: {
     error: 'Rate limit exceeded',
     message: 'Too many requests. Please try again in 60 seconds.',

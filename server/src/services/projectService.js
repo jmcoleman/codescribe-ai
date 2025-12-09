@@ -9,7 +9,7 @@
  */
 
 import { sql } from '@vercel/postgres';
-import { getGraphByPersistentProjectId, analyzeProject as analyzeProjectGraph } from './graphService.js';
+import { getGraphByProjectId, analyzeProject as analyzeProjectGraph } from './graphService.js';
 import batchService from './batchService.js';
 
 /**
@@ -320,7 +320,7 @@ export async function getProjectGraph(projectId, userId) {
   }
 
   // Get linked graph
-  return getGraphByPersistentProjectId(projectId, userId);
+  return getGraphByProjectId(projectId, userId);
 }
 
 /**
@@ -345,11 +345,11 @@ export async function analyzeProjectFiles(projectId, userId, files, options = {}
     return null;
   }
 
-  // Analyze files with persistent project ID
+  // Analyze files with project ID (FK to projects table)
   const graph = await analyzeProjectGraph(userId, project.name, files, {
     branch: options.branch || 'main',
     projectPath: project.githubRepoUrl || '',
-    persistentProjectId: projectId
+    projectId: projectId
   });
 
   return graph;
@@ -385,12 +385,12 @@ export async function getProjectWithGraph(projectId, userId) {
     return null;
   }
 
-  const graph = await getGraphByPersistentProjectId(projectId, userId);
+  const graph = await getGraphByProjectId(projectId, userId);
 
   return {
     ...project,
     graph: graph ? {
-      projectId: graph.projectId,
+      graphId: graph.graphId,
       fileCount: graph.stats?.totalFiles || 0,
       analyzedAt: graph.analyzedAt,
       expiresAt: graph.expiresAt
@@ -484,7 +484,7 @@ export async function getProjectSummary(projectId, userId) {
   }
 
   // Get graph info
-  const graph = await getGraphByPersistentProjectId(projectId, userId);
+  const graph = await getGraphByProjectId(projectId, userId);
 
   // Get batch stats
   const batchStats = await sql`

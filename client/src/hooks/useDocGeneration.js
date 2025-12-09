@@ -13,7 +13,8 @@ export function useDocGeneration(onUsageUpdate) {
   const [retryAfter, setRetryAfter] = useState(null);
   const eventSourceRef = useRef(null);
 
-  const generate = useCallback(async (code, docType, language, isDefaultCode = false, filename = 'untitled', projectId = null, filePath = null) => {
+  const generate = useCallback(async (code, docType, language, isDefaultCode = false, filename = 'untitled', options = {}) => {
+    const { graphId = null, projectId = null, filePath = null } = options;
     // Reset state
     setIsGenerating(true);
     setError(null);
@@ -56,7 +57,8 @@ export function useDocGeneration(onUsageUpdate) {
           language,
           isDefaultCode, // Enable prompt caching for default/example code
           filename, // Pass filename for title formatting
-          projectId, // For graph context (cross-file awareness)
+          graphId, // For graph context (cross-file awareness) - direct 32-char hash
+          projectId, // For graph context - looks up graph by project FK
           filePath // For graph context (identifies file in project)
         })
       });

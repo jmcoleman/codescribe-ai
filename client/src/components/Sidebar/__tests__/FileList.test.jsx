@@ -261,7 +261,7 @@ describe('FileList', () => {
         language: 'javascript',
         fileSize: 2048,
         content: 'old content',
-        origin: 'local',
+        origin: 'upload', // Local files use 'upload' origin
         documentation: null,
         qualityScore: null,
         isGenerating: false,
@@ -274,7 +274,7 @@ describe('FileList', () => {
         language: 'javascript',
         fileSize: 1024,
         content: 'old utils',
-        origin: 'local',
+        origin: 'paste', // Or 'paste' for pasted content
         documentation: null,
         qualityScore: null,
         isGenerating: false,
@@ -357,15 +357,15 @@ describe('FileList', () => {
       expect(clickSpy).toHaveBeenCalled();
     });
 
-    it('should count files without origin as local files', () => {
+    it('should count files with upload origin as local files', () => {
       const mixedFiles = [
         {
-          id: 'no-origin-1',
-          filename: 'noorigin.js',
+          id: 'upload-file-1',
+          filename: 'uploaded.js',
           language: 'javascript',
           fileSize: 1024,
           content: 'content',
-          // No origin property - should be counted as local
+          origin: 'upload', // Files with upload origin are counted as local
           documentation: null,
           qualityScore: null,
           isGenerating: false,
@@ -445,7 +445,7 @@ describe('FileList', () => {
         language: 'javascript',
         fileSize: 1024,
         content: 'content',
-        origin: 'local',
+        origin: 'upload', // Local files use 'upload' origin
         documentation: null,
         qualityScore: null,
         isGenerating: false,

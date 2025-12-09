@@ -138,12 +138,17 @@ export function FileList({
   const hasGitHubFiles = githubFiles.length > 0;
 
   // Count local-origin files that can be re-uploaded
-  const localFiles = files.filter(f => f.origin === 'local' || !f.origin);
+  // Supports: upload, paste, sample (not github - use "Reload from GitHub" instead)
+  const localFiles = files.filter(f => f.origin === 'upload' || f.origin === 'paste' || f.origin === 'sample');
   const hasLocalFiles = localFiles.length > 0;
 
-  // Ref for hidden file input (for re-upload)
+  // Ref for hidden file input (for bulk re-upload)
   const reuploadInputRef = useRef(null);
   const [localReuploadProgress, setLocalReuploadProgress] = useState(null); // { total, matched, updated }
+
+  // Ref and state for single file re-upload
+  const singleReuploadInputRef = useRef(null);
+  const [reuploadTargetFileId, setReuploadTargetFileId] = useState(null);
 
   // Files without code that can be reloaded from GitHub
   const reloadableFilesWithoutCode = filesWithoutCode.filter(f => f.origin === 'github' && f.github?.repo && f.github?.path);
@@ -365,7 +370,7 @@ export function FileList({
   };
 
   /**
-   * Handle file input change for re-upload
+   * Handle file input change for bulk re-upload
    */
   const handleReuploadInputChange = (e) => {
     const files = e.target.files;
@@ -373,6 +378,51 @@ export function FileList({
       handleReuploadLocalFiles(Array.from(files));
     }
     // Reset the input so the same files can be selected again
+    e.target.value = '';
+  };
+
+  /**
+   * Handle single file re-upload from the file menu
+   * Opens file picker and updates the specific file with selected content
+   */
+  const handleSingleFileReupload = (fileId) => {
+    setReuploadTargetFileId(fileId);
+    singleReuploadInputRef.current?.click();
+  };
+
+  /**
+   * Handle file input change for single file re-upload
+   */
+  const handleSingleReuploadInputChange = async (e) => {
+    const uploadedFiles = e.target.files;
+    if (!uploadedFiles || uploadedFiles.length === 0 || !reuploadTargetFileId || !onUpdateFile) {
+      setReuploadTargetFileId(null);
+      e.target.value = '';
+      return;
+    }
+
+    const uploadedFile = uploadedFiles[0];
+
+    try {
+      // Read the file content
+      const content = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (evt) => resolve(evt.target.result);
+        reader.onerror = reject;
+        reader.readAsText(uploadedFile);
+      });
+
+      // Update the file with new content
+      onUpdateFile(reuploadTargetFileId, {
+        content: content,
+        fileSize: content.length
+      });
+    } catch (error) {
+      console.error('[FileList] Failed to read uploaded file:', error);
+    }
+
+    // Clean up
+    setReuploadTargetFileId(null);
     e.target.value = '';
   };
 
@@ -473,6 +523,7 @@ export function FileList({
           <div className="flex gap-2 justify-between">
             {/* Left group: File management */}
             <div className="flex gap-1">
+              {/* GitHub actions grouped together */}
               <Tooltip content="Import from GitHub">
                 <button
                   type="button"
@@ -494,6 +545,17 @@ export function FileList({
                   <GitHubSync className="text-slate-600 dark:text-slate-400" isLoading={!!bulkReloadProgress} />
                 </button>
               </Tooltip>
+              {/* Local actions grouped together */}
+              <Tooltip content="Add files">
+                <button
+                  type="button"
+                  onClick={onAddFile}
+                  className="icon-btn interactive-scale-sm focus-ring-light flex-shrink-0"
+                  aria-label="Add files"
+                >
+                  <Plus className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                </button>
+              </Tooltip>
               <Tooltip content={localReuploadProgress ? `Updated ${localReuploadProgress.updated}/${localReuploadProgress.matched} matched` : `Re-upload local files (${localFiles.length} files)`}>
                 <button
                   type="button"
@@ -503,16 +565,6 @@ export function FileList({
                   aria-label={localReuploadProgress ? `Updated ${localReuploadProgress.updated} of ${localReuploadProgress.matched} matched files` : `Re-upload ${localFiles.length} local files`}
                 >
                   <LocalSync className="text-slate-600 dark:text-slate-400" isLoading={!!localReuploadProgress} />
-                </button>
-              </Tooltip>
-              <Tooltip content="Add files">
-                <button
-                  type="button"
-                  onClick={onAddFile}
-                  className="icon-btn interactive-scale-sm focus-ring-light flex-shrink-0"
-                  aria-label="Add files"
-                >
-                  <Plus className="w-4 h-4 text-slate-600 dark:text-slate-400" />
                 </button>
               </Tooltip>
             </div>
@@ -857,8 +909,10 @@ export function FileList({
               onToggleSelection={() => onToggleFileSelection(file.id)}
               onRemove={() => onRemoveFile(file.id)}
               onGenerate={() => onGenerateFile(file.id)}
+              onApplyDocType={() => onApplyDocType && onApplyDocType([file.id], docType)}
               onViewDetails={() => setDetailsFileId(file.id)}
               onReloadFromSource={() => handleReloadFromGitHub(file.id)}
+              onReuploadFile={() => handleSingleFileReupload(file.id)}
               isReloading={reloadingFileIds.has(file.id)}
             />
           ))
@@ -892,12 +946,21 @@ export function FileList({
         variant="danger"
       />
 
-      {/* Hidden file input for re-uploading local files */}
+      {/* Hidden file input for bulk re-uploading local files */}
       <input
         ref={reuploadInputRef}
         type="file"
         multiple
         onChange={handleReuploadInputChange}
+        className="hidden"
+        aria-hidden="true"
+      />
+
+      {/* Hidden file input for single file re-upload */}
+      <input
+        ref={singleReuploadInputRef}
+        type="file"
+        onChange={handleSingleReuploadInputChange}
         className="hidden"
         aria-hidden="true"
       />

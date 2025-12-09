@@ -282,6 +282,7 @@ class BatchService {
       params.push(limit, offset);
 
       // Main query with dynamic conditions
+      // Joins with project_graphs to get project_name for documents that used a graph
       const query = `
         SELECT
           gb.*,
@@ -291,15 +292,18 @@ class BatchService {
           first_doc.language as first_doc_language,
           first_doc.quality_score as first_doc_quality_score,
           first_doc.doc_type as first_doc_doc_type,
-          first_doc.generated_at as first_doc_generated_at
+          first_doc.generated_at as first_doc_generated_at,
+          first_doc.graph_id as first_doc_graph_id,
+          pg.project_name as project_name
         FROM generation_batches gb
         LEFT JOIN LATERAL (
-          SELECT filename, language, quality_score, doc_type, generated_at
+          SELECT filename, language, quality_score, doc_type, generated_at, graph_id
           FROM generated_documents
           WHERE ${lateralWhereClause}
           ORDER BY generated_at ASC
           LIMIT 1
         ) first_doc ON gb.batch_type = 'single'
+        LEFT JOIN project_graphs pg ON first_doc.graph_id = pg.graph_id
         WHERE ${whereClause}
         ${orderByClause}
         LIMIT $${lateralParamOffset} OFFSET $${lateralParamOffset + 1}
@@ -437,14 +441,16 @@ class BatchService {
 
       const docsQuery = `
         SELECT
-          id, filename, language, file_size_bytes,
-          documentation, quality_score, doc_type,
-          generated_at, created_at, origin,
-          github_repo, github_path, github_sha, github_branch,
-          provider, model
-        FROM generated_documents
-        WHERE ${whereClause}
-        ORDER BY filename ASC
+          gd.id, gd.filename, gd.language, gd.file_size_bytes,
+          gd.documentation, gd.quality_score, gd.doc_type,
+          gd.generated_at, gd.created_at, gd.origin,
+          gd.github_repo, gd.github_path, gd.github_sha, gd.github_branch,
+          gd.provider, gd.model, gd.graph_id,
+          pg.project_name
+        FROM generated_documents gd
+        LEFT JOIN project_graphs pg ON gd.graph_id = pg.graph_id
+        WHERE ${whereClause.replace(/\b(batch_id|user_id|deleted_at|filename|quality_score|doc_type)\b/g, 'gd.$1')}
+        ORDER BY gd.filename ASC
       `;
 
       const docsResult = await sql.query(docsQuery, params);
@@ -536,15 +542,17 @@ class BatchService {
     try {
       const result = await sql`
         SELECT
-          id, filename, language, file_size_bytes,
-          documentation, quality_score, doc_type,
-          generated_at, origin,
-          github_repo, github_path
-        FROM generated_documents
-        WHERE user_id = ${userId}
-          AND id = ANY(${documentIds})
-          AND deleted_at IS NULL
-        ORDER BY filename ASC
+          gd.id, gd.filename, gd.language, gd.file_size_bytes,
+          gd.documentation, gd.quality_score, gd.doc_type,
+          gd.generated_at, gd.origin,
+          gd.github_repo, gd.github_path, gd.graph_id,
+          pg.project_name
+        FROM generated_documents gd
+        LEFT JOIN project_graphs pg ON gd.graph_id = pg.graph_id
+        WHERE gd.user_id = ${userId}
+          AND gd.id = ANY(${documentIds})
+          AND gd.deleted_at IS NULL
+        ORDER BY gd.filename ASC
       `;
 
       return result.rows;

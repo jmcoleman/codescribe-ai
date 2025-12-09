@@ -245,7 +245,7 @@ export const Header = forwardRef(function Header({ onMenuClick, onHelpClick, sho
                                   } group flex items-center gap-3 w-full px-3 py-2 text-sm text-slate-700 dark:text-slate-200 rounded-md transition-colors`}
                                 >
                                   <Clock className="w-4 h-4 text-slate-500 dark:text-slate-400" aria-hidden="true" />
-                                  Generation History
+                                  History
                                 </Link>
                               )}
                             </Menu.Item>

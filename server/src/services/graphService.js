@@ -44,10 +44,11 @@ const CHUNK_SIZE = 500;
 /**
  * ProjectGraph is the complete dependency graph for a project
  * @typedef {Object} ProjectGraph
- * @property {string} projectId - Unique identifier
+ * @property {string} graphId - Unique 32-char hash identifier for this graph instance
  * @property {number} userId - Owner's user ID
  * @property {string} projectName - Human-readable project name
  * @property {string} branch - Git branch (default: 'main')
+ * @property {number|null} projectId - FK to projects table (null for ad-hoc graphs)
  * @property {GraphNode[]} nodes - All file nodes
  * @property {GraphEdge[]} edges - All dependency edges
  * @property {Object} stats - Aggregate statistics
@@ -55,13 +56,13 @@ const CHUNK_SIZE = 500;
  */
 
 /**
- * Generate a unique project ID
+ * Generate a unique graph ID (32-char hash)
  * @param {number} userId - User ID
  * @param {string} projectName - Project name
  * @param {string} branch - Git branch
- * @returns {string} Unique project ID
+ * @returns {string} Unique graph ID (32-char hash)
  */
-function generateProjectId(userId, projectName, branch = 'main') {
+function generateGraphId(userId, projectName, branch = 'main') {
   const input = `${userId}:${projectName}:${branch}:${Date.now()}`;
   return crypto.createHash('sha256').update(input).digest('hex').substring(0, 32);
 }
@@ -178,12 +179,12 @@ function detectLanguage(filePath) {
  * @param {Object} options - Analysis options
  * @param {string} [options.branch='main'] - Git branch
  * @param {string} [options.projectPath] - Project root path
- * @param {number} [options.persistentProjectId] - Optional persistent project ID (FK to projects table)
+ * @param {number} [options.projectId] - Optional project ID (FK to projects table)
  * @param {Function} [options.onProgress] - Optional progress callback (chunksProcessed, totalChunks)
  * @returns {Promise<ProjectGraph>} The complete project graph
  */
 export async function analyzeProject(userId, projectName, files, options = {}) {
-  const { branch = 'main', projectPath = '', persistentProjectId = null, onProgress } = options;
+  const { branch = 'main', projectPath = '', projectId = null, onProgress } = options;
 
   const startTime = Date.now();
   const isLargeProject = files.length > CHUNK_SIZE;
@@ -192,8 +193,8 @@ export async function analyzeProject(userId, projectName, files, options = {}) {
     console.log(`[Graph Analysis] Large project: ${files.length} files, processing in chunks of ${CHUNK_SIZE}`);
   }
 
-  // Generate unique project ID
-  const projectId = generateProjectId(userId, projectName, branch);
+  // Generate unique graph ID (32-char hash)
+  const graphId = generateGraphId(userId, projectName, branch);
 
   // Create set of all file paths for import resolution (needed for cross-chunk resolution)
   const projectFilePaths = new Set(files.map(f => f.path));
@@ -266,12 +267,12 @@ export async function analyzeProject(userId, projectName, files, options = {}) {
 
   // Build the complete graph object
   const graph = {
-    projectId,
+    graphId,
     userId,
     projectName,
     projectPath,
     branch,
-    persistentProjectId,
+    projectId,  // FK to projects table (may be null for ad-hoc graphs)
     nodes: allNodes,
     edges,
     stats,
@@ -402,29 +403,29 @@ async function saveGraph(graph) {
   const edgesJson = JSON.stringify(graph.edges);
   const statsJson = JSON.stringify(graph.stats);
   const projectPath = graph.projectPath || '';
-  const persistentProjectId = graph.persistentProjectId || null;
+  const projectId = graph.projectId || null;  // FK to projects table
 
   await sql`
     INSERT INTO project_graphs (
-      project_id, user_id, project_name, project_path, branch,
-      persistent_project_id,
+      graph_id, user_id, project_name, project_path, branch,
+      project_id,
       nodes, edges, stats,
       file_count, total_functions, total_classes, total_exports,
       analyzed_at, expires_at, updated_at
     )
     VALUES (
-      ${graph.projectId}, ${graph.userId}, ${graph.projectName}, ${projectPath}, ${graph.branch},
-      ${persistentProjectId},
+      ${graph.graphId}, ${graph.userId}, ${graph.projectName}, ${projectPath}, ${graph.branch},
+      ${projectId},
       ${nodesJson}::jsonb, ${edgesJson}::jsonb, ${statsJson}::jsonb,
       ${graph.stats.totalFiles}, ${graph.stats.totalFunctions}, ${graph.stats.totalClasses}, ${graph.stats.totalExports},
       ${graph.analyzedAt}, ${graph.expiresAt}, NOW()
     )
-    ON CONFLICT (project_id)
+    ON CONFLICT (graph_id)
     DO UPDATE SET
       nodes = EXCLUDED.nodes,
       edges = EXCLUDED.edges,
       stats = EXCLUDED.stats,
-      persistent_project_id = EXCLUDED.persistent_project_id,
+      project_id = EXCLUDED.project_id,
       file_count = EXCLUDED.file_count,
       total_functions = EXCLUDED.total_functions,
       total_classes = EXCLUDED.total_classes,
@@ -437,16 +438,16 @@ async function saveGraph(graph) {
 }
 
 /**
- * Get a project graph by ID
- * @param {string} projectId - Project ID
+ * Get a project graph by graph ID (the 32-char hash)
+ * @param {string} graphId - Graph ID (32-char hash)
  * @param {number} userId - User ID (for authorization)
  * @returns {Promise<ProjectGraph|null>} The graph or null if not found/expired
  */
-export async function getGraph(projectId, userId) {
+export async function getGraph(graphId, userId) {
   const result = await sql`
     SELECT *
     FROM project_graphs
-    WHERE project_id = ${projectId}
+    WHERE graph_id = ${graphId}
       AND user_id = ${userId}
       AND expires_at > NOW()
   `;
@@ -457,12 +458,12 @@ export async function getGraph(projectId, userId) {
 
   const row = result.rows[0];
   return {
-    projectId: row.project_id,
+    graphId: row.graph_id,
     userId: row.user_id,
     projectName: row.project_name,
     projectPath: row.project_path,
     branch: row.branch,
-    persistentProjectId: row.persistent_project_id,
+    projectId: row.project_id,  // FK to projects table
     nodes: row.nodes,
     edges: row.edges,
     stats: row.stats,
@@ -472,22 +473,22 @@ export async function getGraph(projectId, userId) {
 }
 
 /**
- * Get a project graph by persistent project ID
+ * Get a project graph by project ID (FK to projects table)
  * This is used when a user has a persistent project and wants to find its associated graph
  *
- * @param {number} persistentProjectId - Persistent project ID (FK to projects table)
+ * @param {number} projectId - Project ID (FK to projects table)
  * @param {number} userId - User ID (for authorization)
  * @returns {Promise<ProjectGraph|null>} The graph or null if not found/expired
  */
-export async function getGraphByPersistentProjectId(persistentProjectId, userId) {
-  if (!persistentProjectId || !userId) {
+export async function getGraphByProjectId(projectId, userId) {
+  if (!projectId || !userId) {
     return null;
   }
 
   const result = await sql`
     SELECT *
     FROM project_graphs
-    WHERE persistent_project_id = ${persistentProjectId}
+    WHERE project_id = ${projectId}
       AND user_id = ${userId}
       AND expires_at > NOW()
     ORDER BY analyzed_at DESC
@@ -500,12 +501,12 @@ export async function getGraphByPersistentProjectId(persistentProjectId, userId)
 
   const row = result.rows[0];
   return {
-    projectId: row.project_id,
+    graphId: row.graph_id,
     userId: row.user_id,
     projectName: row.project_name,
     projectPath: row.project_path,
     branch: row.branch,
-    persistentProjectId: row.persistent_project_id,
+    projectId: row.project_id,  // FK to projects table
     nodes: row.nodes,
     edges: row.edges,
     stats: row.stats,
@@ -518,13 +519,13 @@ export async function getGraphByPersistentProjectId(persistentProjectId, userId)
  * Get file context from a project graph
  * Returns information about a specific file's role in the project
  *
- * @param {string} projectId - Project ID
+ * @param {string} graphId - Graph ID (32-char hash)
  * @param {string} filePath - Path to the file
  * @param {number} userId - User ID (for authorization)
  * @returns {Promise<Object|null>} File context or null
  */
-export async function getFileContext(projectId, filePath, userId) {
-  const graph = await getGraph(projectId, userId);
+export async function getFileContext(graphId, filePath, userId) {
+  const graph = await getGraph(graphId, userId);
   if (!graph) {
     return null;
   }
@@ -599,7 +600,7 @@ export async function getFileContext(projectId, filePath, userId) {
 /**
  * Generate a Mermaid diagram from a project graph
  *
- * @param {string} projectId - Project ID
+ * @param {string} graphId - Graph ID (32-char hash)
  * @param {number} userId - User ID (for authorization)
  * @param {Object} options - Diagram options
  * @param {string} [options.type='architecture'] - Diagram type
@@ -607,10 +608,10 @@ export async function getFileContext(projectId, filePath, userId) {
  * @param {number} [options.maxNodes=30] - Maximum nodes to show
  * @returns {Promise<string|null>} Mermaid diagram syntax or null
  */
-export async function generateDiagram(projectId, userId, options = {}) {
+export async function generateDiagram(graphId, userId, options = {}) {
   const { type = 'architecture', focusFile, maxNodes = 30 } = options;
 
-  const graph = await getGraph(projectId, userId);
+  const graph = await getGraph(graphId, userId);
   if (!graph) {
     return null;
   }
@@ -811,13 +812,13 @@ function generateDataFlowDiagram(graph, entryPoint) {
 /**
  * Refresh a graph with updated files (incremental update)
  *
- * @param {string} projectId - Project ID
+ * @param {string} graphId - Graph ID (32-char hash)
  * @param {number} userId - User ID
  * @param {Array<{path: string, content: string}>} changedFiles - Files that changed
  * @returns {Promise<ProjectGraph|null>} Updated graph or null
  */
-export async function refreshGraph(projectId, userId, changedFiles) {
-  const existingGraph = await getGraph(projectId, userId);
+export async function refreshGraph(graphId, userId, changedFiles) {
+  const existingGraph = await getGraph(graphId, userId);
   if (!existingGraph) {
     return null;
   }
@@ -835,14 +836,14 @@ export async function refreshGraph(projectId, userId, changedFiles) {
 /**
  * Delete a project graph
  *
- * @param {string} projectId - Project ID
+ * @param {string} graphId - Graph ID (32-char hash)
  * @param {number} userId - User ID (for authorization)
  * @returns {Promise<boolean>} True if deleted
  */
-export async function deleteGraph(projectId, userId) {
+export async function deleteGraph(graphId, userId) {
   const result = await sql`
     DELETE FROM project_graphs
-    WHERE project_id = ${projectId} AND user_id = ${userId}
+    WHERE graph_id = ${graphId} AND user_id = ${userId}
     RETURNING id
   `;
   return result.rowCount > 0;
@@ -857,10 +858,10 @@ export async function deleteGraph(projectId, userId) {
 export async function listGraphs(userId) {
   const result = await sql`
     SELECT
-      project_id,
+      graph_id,
       project_name,
       branch,
-      persistent_project_id,
+      project_id,
       file_count,
       total_functions,
       stats,
@@ -873,10 +874,10 @@ export async function listGraphs(userId) {
   `;
 
   return result.rows.map(row => ({
-    projectId: row.project_id,
+    graphId: row.graph_id,
     projectName: row.project_name,
     branch: row.branch,
-    persistentProjectId: row.persistent_project_id,
+    projectId: row.project_id,  // FK to projects table
     fileCount: row.file_count,
     totalFunctions: row.total_functions,
     stats: row.stats,
@@ -901,7 +902,7 @@ export async function cleanupExpiredGraphs() {
 export default {
   analyzeProject,
   getGraph,
-  getGraphByPersistentProjectId,
+  getGraphByProjectId,
   getFileContext,
   generateDiagram,
   refreshGraph,

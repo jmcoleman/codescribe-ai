@@ -28,17 +28,43 @@ function formatBytes(bytes) {
 /**
  * Fetch graph context for a file with graceful fallback on any failure.
  * Returns null if params are missing, user is unauthenticated, or graph/file not found.
- * @param {string|null} projectId - Project graph ID
- * @param {string|null} filePath - Path to the file in the project
+ *
+ * Supports two modes:
+ * 1. Direct graph ID: Pass `graphId` (32-char hash) to use a specific graph
+ * 2. Project ID: Pass `projectId` (FK to projects table) to look up the graph by project
+ *
+ * @param {Object} params - Context parameters
+ * @param {string|null} params.graphId - Direct graph_id (32-char hash)
+ * @param {number|null} params.projectId - Project ID (FK to projects table)
+ * @param {string|null} params.filePath - Path to the file in the project
  * @param {Object|null} user - Authenticated user (from req.user)
  * @returns {Promise<Object|null>} Graph context or null
  */
-async function fetchGraphContext(projectId, filePath, user) {
-  if (!projectId || !filePath || !user?.id) return null;
+async function fetchGraphContext(params, user) {
+  const { graphId, projectId, filePath } = params || {};
+
+  // Must have filePath and authenticated user
+  if (!filePath || !user?.id) return null;
+
+  // Must have either graphId or projectId
+  if (!graphId && !projectId) return null;
+
   try {
-    return await graphService.getFileContext(projectId, filePath, user.id);
+    let targetGraphId = graphId;
+
+    // If we have projectId but not graphId, look up the graph by project ID
+    if (!targetGraphId && projectId) {
+      const graph = await graphService.getGraphByProjectId(projectId, user.id);
+      if (!graph) {
+        console.log('[Graph Context] No graph found for projectId:', projectId);
+        return null;
+      }
+      targetGraphId = graph.graphId;
+    }
+
+    return await graphService.getFileContext(targetGraphId, filePath, user.id);
   } catch (error) {
-    console.error('[Graph Context] Failed to fetch:', { projectId, filePath, error: error.message });
+    console.error('[Graph Context] Failed to fetch:', { graphId, projectId, filePath, error: error.message });
     return null;
   }
 }
@@ -132,7 +158,7 @@ router.get('/', (req, res) => {
 // Generate documentation (non-streaming)
 router.post('/generate', optionalAuth, rateLimitBypass, apiLimiter, generationLimiter, checkUsage(), async (req, res) => {
   try {
-    const { code, docType, language, isDefaultCode, filename, projectId, filePath } = req.body;
+    const { code, docType, language, isDefaultCode, filename, graphId, projectId, filePath } = req.body;
 
     if (!code || typeof code !== 'string') {
       return res.status(400).json({
@@ -148,8 +174,10 @@ router.post('/generate', optionalAuth, rateLimitBypass, apiLimiter, generationLi
       });
     }
 
-    // Fetch graph context if projectId and filePath provided (for cross-file context)
-    const graphContext = await fetchGraphContext(projectId, filePath, req.user);
+    // Fetch graph context if graphId/projectId and filePath provided (for cross-file context)
+    // graphId: direct 32-char hash to a specific graph instance
+    // projectId: FK to projects table, used to look up the most recent graph for that project
+    const graphContext = await fetchGraphContext({ graphId, projectId, filePath }, req.user);
 
     // Build trial info for watermarking (if user is on trial)
     const trialInfo = req.user?.isOnTrial ? {
@@ -190,7 +218,7 @@ router.post('/generate', optionalAuth, rateLimitBypass, apiLimiter, generationLi
 // Generate documentation (streaming SSE)
 router.post('/generate-stream', optionalAuth, rateLimitBypass, apiLimiter, generationLimiter, checkUsage(), async (req, res) => {
   try {
-    const { code, docType, language, isDefaultCode, filename, projectId, filePath } = req.body;
+    const { code, docType, language, isDefaultCode, filename, graphId, projectId, filePath } = req.body;
 
     if (!code || typeof code !== 'string') {
       return res.status(400).json({
@@ -214,8 +242,10 @@ router.post('/generate-stream', optionalAuth, rateLimitBypass, apiLimiter, gener
 
     res.write(`data: ${JSON.stringify({ type: 'connected' })}\n\n`);
 
-    // Fetch graph context if projectId and filePath provided (for cross-file context)
-    const graphContext = await fetchGraphContext(projectId, filePath, req.user);
+    // Fetch graph context if graphId/projectId and filePath provided (for cross-file context)
+    // graphId: direct 32-char hash to a specific graph instance
+    // projectId: FK to projects table, used to look up the most recent graph for that project
+    const graphContext = await fetchGraphContext({ graphId, projectId, filePath }, req.user);
 
     const userTier = req.user?.effectiveTier || 'free';
 

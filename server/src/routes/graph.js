@@ -4,11 +4,15 @@
  * Provides endpoints for project dependency graph analysis.
  * Part of: Graph Engine API (Epic 5.4)
  *
+ * Terminology:
+ * - graphId: 32-char SHA256 hash uniquely identifying a graph instance
+ * - projectId: FK to projects table (for persistent project association)
+ *
  * Endpoints:
  * - POST /api/graph/analyze    - Build dependency graph from files
  * - GET  /api/graph            - List user's graphs
- * - GET  /api/graph/:id        - Get a specific graph
- * - GET  /api/graph/project/:projectId - Get graph by persistent project ID
+ * - GET  /api/graph/:id        - Get a specific graph by graphId
+ * - GET  /api/graph/project/:projectId - Get graph by project ID (FK)
  * - GET  /api/graph/:id/context/:filePath - Get file context
  * - GET  /api/graph/:id/diagram - Generate Mermaid diagram
  * - POST /api/graph/:id/refresh - Refresh graph with changed files
@@ -65,23 +69,23 @@ router.post(
         }
       }
 
-      // Get optional persistent project ID for linking
+      // Get optional project ID for linking to persistent project
       // Note: No file count limit - chunked processing handles large projects efficiently
       // Request timeout serves as the practical limit
-      const persistentProjectId = req.body.persistentProjectId || null;
+      const projectId = req.body.projectId || null;
 
       // Analyze the project
       const graph = await graphService.analyzeProject(userId, projectName, files, {
         branch: branch || 'main',
         projectPath: projectPath || '',
-        persistentProjectId: persistentProjectId ? parseInt(persistentProjectId, 10) : null
+        projectId: projectId ? parseInt(projectId, 10) : null
       });
 
       res.status(201).json({
         success: true,
         graph: {
+          graphId: graph.graphId,
           projectId: graph.projectId,
-          persistentProjectId: graph.persistentProjectId,
           projectName: graph.projectName,
           branch: graph.branch,
           stats: graph.stats,
@@ -121,7 +125,7 @@ router.get(
 );
 
 // ============================================================================
-// GET /api/graph/project/:projectId - Get graph by persistent project ID
+// GET /api/graph/project/:projectId - Get graph by project ID (FK to projects table)
 // ============================================================================
 router.get(
   '/project/:projectId',
@@ -130,9 +134,9 @@ router.get(
   async (req, res, next) => {
     try {
       const userId = req.user.id;
-      const persistentProjectId = parseInt(req.params.projectId, 10);
+      const projectId = parseInt(req.params.projectId, 10);
 
-      if (isNaN(persistentProjectId)) {
+      if (isNaN(projectId)) {
         return res.status(400).json({
           success: false,
           error: 'INVALID_PROJECT_ID',
@@ -140,7 +144,7 @@ router.get(
         });
       }
 
-      const graph = await graphService.getGraphByPersistentProjectId(persistentProjectId, userId);
+      const graph = await graphService.getGraphByProjectId(projectId, userId);
 
       if (!graph) {
         return res.status(404).json({
@@ -312,8 +316,8 @@ router.post(
       res.json({
         success: true,
         graph: {
+          graphId: graph.graphId,
           projectId: graph.projectId,
-          persistentProjectId: graph.persistentProjectId,
           projectName: graph.projectName,
           branch: graph.branch,
           stats: graph.stats,
