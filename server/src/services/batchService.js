@@ -33,7 +33,8 @@ class BatchService {
       summaryMarkdown = null,
       errorDetails = null,
       docTypes = null,
-      projectId = null  // Optional link to project
+      projectId = null,  // Optional link to project
+      projectName = null // Denormalized project name (persists if project deleted)
     } = batchData;
 
     // Validation
@@ -58,21 +59,22 @@ class BatchService {
         INSERT INTO generation_batches (
           user_id, batch_type, total_files, success_count, fail_count,
           avg_quality_score, avg_grade, summary_markdown, error_details, doc_types,
-          project_id
+          project_id, project_name
         ) VALUES (
           ${userId}, ${batchType}, ${totalFiles}, ${successCount}, ${failCount},
           ${avgQualityScore}, ${avgGrade}, ${summaryMarkdown},
           ${errorDetails ? JSON.stringify(errorDetails) : null},
           ${docTypes ? JSON.stringify(docTypes) : null},
-          ${projectId}
+          ${projectId}, ${projectName}
         )
-        RETURNING id, created_at, project_id
+        RETURNING id, created_at, project_id, project_name
       `;
 
       return {
         batchId: result.rows[0].id,
         createdAt: result.rows[0].created_at,
-        projectId: result.rows[0].project_id
+        projectId: result.rows[0].project_id,
+        projectName: result.rows[0].project_name
       };
     } catch (error) {
       console.error('[BatchService] Error creating batch:', error);
@@ -282,10 +284,8 @@ class BatchService {
       params.push(limit, offset);
 
       // Main query with dynamic conditions
-      // Gets project_name from:
-      // 1. Batch's project_id (for multi-file batches) via projects table
-      // 2. First doc's graph_id (for single-file batches) via project_graphs table
-      // COALESCE ensures we get project_name from either source
+      // project_name is now denormalized on the batch itself (persists if project deleted)
+      // For single-file batches created before migration, fall back to project_graphs
       const query = `
         SELECT
           gb.*,
@@ -297,9 +297,8 @@ class BatchService {
           first_doc.doc_type as first_doc_doc_type,
           first_doc.generated_at as first_doc_generated_at,
           first_doc.graph_id as first_doc_graph_id,
-          COALESCE(p.name, pg.project_name) as project_name
+          COALESCE(gb.project_name, pg.project_name) as project_name
         FROM generation_batches gb
-        LEFT JOIN projects p ON gb.project_id = p.id
         LEFT JOIN LATERAL (
           SELECT filename, language, quality_score, doc_type, generated_at, graph_id
           FROM generated_documents
@@ -635,6 +634,33 @@ class BatchService {
     } catch (error) {
       console.error('[BatchService] Error updating batch project:', error);
       throw new Error(`Failed to update batch project: ${error.message}`);
+    }
+  }
+
+  /**
+   * Sync project name across all batches when a project is renamed
+   * Called from projectService.updateProject when name changes
+   * @param {number} projectId - Project ID
+   * @param {string} newName - New project name
+   * @returns {Promise<number>} Number of batches updated
+   */
+  async syncProjectName(projectId, newName) {
+    if (!projectId || !newName) {
+      return 0;
+    }
+
+    try {
+      const result = await sql`
+        UPDATE generation_batches
+        SET project_name = ${newName}
+        WHERE project_id = ${projectId}
+        RETURNING id
+      `;
+
+      return result.rowCount;
+    } catch (error) {
+      console.error('[BatchService] Error syncing project name:', error);
+      throw new Error(`Failed to sync project name: ${error.message}`);
     }
   }
 }

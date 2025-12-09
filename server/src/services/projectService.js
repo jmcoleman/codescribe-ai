@@ -208,6 +208,9 @@ export async function updateProject(projectId, userId, updates) {
     throw new Error('Invalid GitHub repository URL');
   }
 
+  // Check if name is changing
+  const nameChanged = name !== existing.name;
+
   const result = await sql`
     UPDATE projects
     SET
@@ -228,6 +231,19 @@ export async function updateProject(projectId, userId, updates) {
 
   if (result.rows.length === 0) {
     return null;
+  }
+
+  // Sync project_name to batches if name changed
+  if (nameChanged) {
+    try {
+      const updatedCount = await batchService.syncProjectName(projectId, name);
+      if (updatedCount > 0) {
+        console.log(`[ProjectService] Synced project name to ${updatedCount} batches`);
+      }
+    } catch (syncError) {
+      // Log but don't fail the update - batches will still have old name
+      console.error('[ProjectService] Failed to sync project name to batches:', syncError);
+    }
   }
 
   return formatProject(result.rows[0]);
