@@ -191,7 +191,8 @@ export const DocPanel = memo(function DocPanel({
   filename = null,
   onCancelBatch = null,
   isCancelling = false,
-  isAnalyzingGraph = false
+  isAnalyzingGraph = false,
+  retryStatus = null // { attempt, maxAttempts, message, reason }
 }) {
   const { effectiveTheme } = useTheme();
 
@@ -943,6 +944,25 @@ export const DocPanel = memo(function DocPanel({
         </div>
       )}
 
+      {/* Retry Status Banner - shows when LLM API is being retried */}
+      {retryStatus && (
+        <div className="mx-4 mt-3 bg-amber-100 dark:bg-amber-900/40 border-2 border-amber-400 dark:border-amber-600 rounded-lg overflow-hidden shadow-lg">
+          <div className="flex items-center gap-3 p-3">
+            <div className="animate-spin rounded-full h-6 w-6 border-2 border-amber-600 border-t-transparent flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-amber-900 dark:text-amber-100">
+                {retryStatus.message}
+              </p>
+              <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">
+                {retryStatus.reason === 'rate_limit'
+                  ? `${retryStatus.provider ? retryStatus.provider.charAt(0).toUpperCase() + retryStatus.provider.slice(1) + ' ' : ''}rate limit reached. Waiting before retrying...`
+                  : 'Server temporarily unavailable. Retrying automatically...'}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Throttle Countdown Banner (Pro+ tier only) */}
       {canUseBatchProcessing && throttleCountdown !== null && throttleCountdown > 0 && (
         <div className="mx-4 mt-3 bg-white dark:bg-slate-800 border-2 border-indigo-600 dark:border-indigo-400 rounded-lg overflow-hidden shadow-sm transition-all">
@@ -1039,7 +1059,9 @@ export const DocPanel = memo(function DocPanel({
         }}
       >
         {(isGenerating || bulkGenerationProgress) && !documentation ? (
-          <DocPanelGeneratingSkeleton />
+          <>
+            <DocPanelGeneratingSkeleton />
+          </>
         ) : documentation ? (
           <>
             <style>{`

@@ -116,6 +116,7 @@ export class DocGeneratorService {
    * @param {Object} options.graphContext - Graph context for cross-file awareness
    * @param {string} options.graphContext.contextString - Human-readable context string
    * @param {Object} options.graphContext.stats - Context statistics
+   * @param {Function} options.onRetry - Callback for retry events (attempt, maxAttempts, delayMs, error, reason)
    * @returns {Promise<Object>} Documentation result
    */
   async generateDocumentation(code, options = {}) {
@@ -131,7 +132,8 @@ export class DocGeneratorService {
       userTier = 'free',
       filename = 'untitled',
       trialInfo = null,
-      graphContext = null
+      graphContext = null,
+      onRetry = null
     } = options;
 
     // Step 1: Parse code to understand structure
@@ -154,7 +156,9 @@ export class DocGeneratorService {
       provider: docTypeConfig.provider,
       model: docTypeConfig.model,
       temperature: docTypeConfig.temperature,
-      maxTokens: docTypeConfig.maxTokens
+      maxTokens: docTypeConfig.maxTokens,
+      // Pass retry callback for streaming status updates
+      onRetry
     };
 
     let result;

@@ -19,11 +19,14 @@ function sleep(ms) {
  * @param {Function} fn - Async function to execute
  * @param {number} maxRetries - Maximum number of retry attempts
  * @param {string} [operation='LLM request'] - Operation name for logging
+ * @param {Object} [options={}] - Additional options
+ * @param {Function} [options.onRetry] - Callback when retry occurs: (attempt, maxAttempts, delayMs, error) => void
  * @returns {Promise<any>} Result from successful execution
  * @throws {Error} If all retries are exhausted
  */
-async function retryWithBackoff(fn, maxRetries = 3, operation = 'LLM request') {
+async function retryWithBackoff(fn, maxRetries = 3, operation = 'LLM request', options = {}) {
   let lastError
+  const { onRetry } = options
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
@@ -42,6 +45,11 @@ async function retryWithBackoff(fn, maxRetries = 3, operation = 'LLM request') {
           `[LLM] Rate limit hit (attempt ${attempt + 1}/${maxRetries + 1}), ` +
           `waiting ${retryAfter}s before retry...`
         );
+
+        // Notify about retry
+        if (onRetry) {
+          onRetry(attempt + 1, maxRetries + 1, retryAfter * 1000, error, 'rate_limit')
+        }
 
         await sleep(retryAfter * 1000);
         continue; // Skip regular backoff, retry immediately after wait
@@ -64,6 +72,11 @@ async function retryWithBackoff(fn, maxRetries = 3, operation = 'LLM request') {
         `[LLM] ${operation} failed (attempt ${attempt + 1}/${maxRetries + 1}), ` +
         `retrying in ${delayMs}ms... Error: ${error.message}`
       )
+
+      // Notify about retry
+      if (onRetry) {
+        onRetry(attempt + 1, maxRetries + 1, delayMs, error, 'server_error')
+      }
 
       await sleep(delayMs)
     }

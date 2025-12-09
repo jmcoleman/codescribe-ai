@@ -365,8 +365,8 @@ export const LazyMermaidRenderer = memo(function LazyMermaidRenderer({ chart, id
 
       {/* Content: Diagram or Code */}
       {showCode ? (
-        <div className="p-4 bg-slate-50 dark:bg-slate-900 overflow-x-auto">
-          <pre className="text-xs text-slate-700 dark:text-slate-300 font-mono whitespace-pre-wrap">
+        <div className="p-4 bg-slate-100 dark:bg-slate-800 overflow-x-auto">
+          <pre className="text-xs text-slate-800 dark:text-slate-200 font-mono whitespace-pre-wrap">
             <code>{chart}</code>
           </pre>
         </div>

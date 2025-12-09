@@ -218,7 +218,7 @@ router.post('/generate', optionalAuth, rateLimitBypass, apiLimiter, generationLi
 // Generate documentation (streaming SSE)
 router.post('/generate-stream', optionalAuth, rateLimitBypass, apiLimiter, generationLimiter, checkUsage(), async (req, res) => {
   try {
-    const { code, docType, language, isDefaultCode, filename, graphId, projectId, filePath } = req.body;
+    const { code, docType, language, isDefaultCode, filename, graphId, projectId, filePath, testRetry } = req.body;
 
     if (!code || typeof code !== 'string') {
       return res.status(400).json({
@@ -241,6 +241,41 @@ router.post('/generate-stream', optionalAuth, rateLimitBypass, apiLimiter, gener
     res.setHeader('X-Accel-Buffering', 'no');
 
     res.write(`data: ${JSON.stringify({ type: 'connected' })}\n\n`);
+
+    // DEV ONLY: Simulate retry for testing UI (pass testRetry: true in body)
+    if (process.env.NODE_ENV !== 'production' && testRetry === true) {
+      console.log('[API] Test mode: Simulating retry events');
+      // Simulate 2 retry attempts with delays
+      res.write(`data: ${JSON.stringify({
+        type: 'retry',
+        attempt: 1,
+        maxAttempts: 3,
+        delayMs: 2000,
+        reason: 'server_error',
+        message: 'Retrying... (attempt 1/3)'
+      })}\n\n`);
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      res.write(`data: ${JSON.stringify({
+        type: 'retry',
+        attempt: 2,
+        maxAttempts: 3,
+        delayMs: 4000,
+        reason: 'server_error',
+        message: 'Retrying... (attempt 2/3)'
+      })}\n\n`);
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Send mock documentation response (skip actual API call)
+      const mockDoc = `# Test Documentation\n\nThis is a simulated response to test the retry UI.\n\nThe retry banner should have appeared above before this content loaded.`;
+      res.write(`data: ${JSON.stringify({ type: 'chunk', content: mockDoc })}\n\n`);
+      res.write(`data: ${JSON.stringify({
+        type: 'complete',
+        qualityScore: { score: 85, grade: 'B' },
+        metadata: { provider: 'test', model: 'mock', inputTokens: 0, outputTokens: 0 }
+      })}\n\n`);
+      res.end();
+      return; // Exit early, don't call real API
+    }
 
     // Fetch graph context if graphId/projectId and filePath provided (for cross-file context)
     // graphId: direct 32-char hash to a specific graph instance
@@ -268,6 +303,19 @@ router.post('/generate-stream', optionalAuth, rateLimitBypass, apiLimiter, gener
         res.write(`data: ${JSON.stringify({
           type: 'chunk',
           content: chunk
+        })}\n\n`);
+      },
+      onRetry: (attempt, maxAttempts, delayMs, error, reason, provider) => {
+        const providerName = provider ? provider.charAt(0).toUpperCase() + provider.slice(1) : 'API';
+        console.log(`[API] Sending retry event to client: provider=${provider}, attempt=${attempt}/${maxAttempts}, reason=${reason}, delay=${delayMs}ms`);
+        res.write(`data: ${JSON.stringify({
+          type: 'retry',
+          attempt,
+          maxAttempts,
+          delayMs,
+          reason,
+          provider: provider || 'unknown',
+          message: `${providerName} API: Retrying... (attempt ${attempt}/${maxAttempts})`
         })}\n\n`);
       }
     });
@@ -300,10 +348,19 @@ router.post('/generate-stream', optionalAuth, rateLimitBypass, apiLimiter, gener
     res.end();
   } catch (error) {
     console.error('Stream error:', error);
-    res.write(`data: ${JSON.stringify({
+    // Send structured error data so client can display appropriate error type
+    // The standardizeError function adds: provider, errorType, statusCode, originalError
+    const errorData = {
       type: 'error',
-      error: error.message
-    })}\n\n`);
+      error: error.message,
+      errorType: error.errorType || error.name || 'Error', // From standardizeError or Error.name
+      provider: error.provider || null, // 'claude', 'openai', 'gemini'
+      // Include Anthropic API error details if available
+      apiError: error.error || error.originalError?.error || null,
+      status: error.status || error.statusCode || null,
+      retryAfter: error.retryAfter || null
+    };
+    res.write(`data: ${JSON.stringify(errorData)}\n\n`);
     res.end();
   }
 });

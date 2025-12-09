@@ -169,15 +169,23 @@ class LLMService {
     // Build config with overrides
     const requestConfig = this._buildRequestConfig(provider, options);
 
+    // Wrap onRetry callback to include provider name
+    const wrappedOptions = { ...options };
+    if (options.onRetry) {
+      wrappedOptions.onRetry = (attempt, maxAttempts, delayMs, error, reason) => {
+        options.onRetry(attempt, maxAttempts, delayMs, error, reason, provider);
+      };
+    }
+
     switch (provider) {
       case 'claude':
-        return await streamWithClaude(prompt, onChunk, options, requestConfig)
+        return await streamWithClaude(prompt, onChunk, wrappedOptions, requestConfig)
 
       case 'openai':
-        return await streamWithOpenAI(prompt, onChunk, options, requestConfig)
+        return await streamWithOpenAI(prompt, onChunk, wrappedOptions, requestConfig)
 
       case 'gemini':
-        return await streamWithGemini(prompt, onChunk, options, requestConfig)
+        return await streamWithGemini(prompt, onChunk, wrappedOptions, requestConfig)
 
       default:
         throw new Error(

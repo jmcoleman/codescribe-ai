@@ -121,6 +121,7 @@ describe('tierGate Middleware', () => {
       });
       tiers.checkUsageLimits.mockReturnValue({
         allowed: false,
+        limits: { fileSize: true, daily: false, monthly: true }, // daily limit exceeded
         remaining: { daily: 0, monthly: 1 },
       });
       tiers.getTierFeatures.mockReturnValue({
@@ -140,7 +141,8 @@ describe('tierGate Middleware', () => {
       expect(res.json).toHaveBeenCalledWith(
         expect.objectContaining({
           error: 'Usage Limit Exceeded',
-          message: 'You have reached your usage limit for this period.',
+          message: 'You have reached your daily documentation generation limit. It will reset at midnight.',
+          limitType: 'daily',
           currentTier: 'free',
           limits: {
             maxFileSize: 100000,

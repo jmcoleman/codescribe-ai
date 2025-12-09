@@ -93,9 +93,26 @@ export const checkUsage = () => {
       const tierConfig = getTierFeatures(userTier);
       const upgradePath = getUpgradePath(userTier, 'monthlyGenerations');
 
+      // Determine which limit was exceeded for a more specific message
+      let limitMessage = 'You have reached your documentation generation limit for this period.';
+      let limitType = 'period'; // 'daily', 'monthly', or 'period' (fallback)
+
+      if (!usageCheck.limits.daily && usageCheck.limits.monthly) {
+        limitMessage = 'You have reached your daily documentation generation limit. It will reset at midnight.';
+        limitType = 'daily';
+      } else if (usageCheck.limits.daily && !usageCheck.limits.monthly) {
+        limitMessage = 'You have reached your monthly documentation generation limit.';
+        limitType = 'monthly';
+      } else if (!usageCheck.limits.daily && !usageCheck.limits.monthly) {
+        // Both limits exceeded - show daily since it resets sooner
+        limitMessage = 'You have reached your daily documentation generation limit. It will reset at midnight.';
+        limitType = 'daily';
+      }
+
       return res.status(429).json({
         error: 'Usage Limit Exceeded',
-        message: 'You have reached your usage limit for this period.',
+        message: limitMessage,
+        limitType,
         currentTier: userTier,
         limits: {
           maxFileSize: tierConfig.maxFileSize,

@@ -11,16 +11,18 @@ export function useDocGeneration(onUsageUpdate) {
   const [error, setError] = useState(null);
   const [rateLimitInfo, setRateLimitInfo] = useState(null);
   const [retryAfter, setRetryAfter] = useState(null);
+  const [retryStatus, setRetryStatus] = useState(null); // { attempt, maxAttempts, message }
   const eventSourceRef = useRef(null);
 
   const generate = useCallback(async (code, docType, language, isDefaultCode = false, filename = 'untitled', options = {}) => {
-    const { graphId = null, projectId = null, filePath = null } = options;
+    const { graphId = null, projectId = null, filePath = null, testRetry = false } = options;
     // Reset state
     setIsGenerating(true);
     setError(null);
     setDocumentation('');
     setQualityScore(null);
     setRetryAfter(null);
+    setRetryStatus(null);
 
     // Close any existing connection
     if (eventSourceRef.current) {
@@ -59,7 +61,8 @@ export function useDocGeneration(onUsageUpdate) {
           filename, // Pass filename for title formatting
           graphId, // For graph context (cross-file awareness) - direct 32-char hash
           projectId, // For graph context - looks up graph by project FK
-          filePath // For graph context (identifies file in project)
+          filePath, // For graph context (identifies file in project)
+          testRetry // DEV ONLY: Simulate retry events for testing UI
         })
       });
 
@@ -90,11 +93,17 @@ export function useDocGeneration(onUsageUpdate) {
         // Handle 429 (rate limit) specifically
         if (response.status === 429) {
           setRetryAfter(errorData.retryAfter || 60);
-          throw new Error(errorData.message || 'Rate limit exceeded');
+          // Create error with additional info for proper error type detection
+          const error = new Error(errorData.message || 'Rate limit exceeded');
+          error.name = 'UsageLimitError'; // CodeScribe app usage limit
+          error.errorData = errorData; // Preserve full error response
+          throw error;
         }
 
         // For other errors (400, 500, etc.), throw with the backend's message
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        const error = new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        error.errorData = errorData; // Preserve full error response
+        throw error;
       }
 
       // Read the stream
@@ -112,7 +121,18 @@ export function useDocGeneration(onUsageUpdate) {
           if (line.startsWith('data: ')) {
             const data = JSON.parse(line.slice(6));
 
-            if (data.type === 'chunk') {
+            if (data.type === 'retry') {
+              console.log('[useDocGeneration] Retry event received:', data);
+              // Server is retrying the LLM request
+              setRetryStatus({
+                attempt: data.attempt,
+                maxAttempts: data.maxAttempts,
+                message: data.message,
+                reason: data.reason
+              });
+            } else if (data.type === 'chunk') {
+              // Clear retry status when we start receiving chunks
+              setRetryStatus(null);
               generatedDoc += data.content; // Track locally for return value
               setDocumentation(prev => prev + data.content);
             } else if (data.type === 'attribution') {
@@ -174,7 +194,14 @@ export function useDocGeneration(onUsageUpdate) {
                 onUsageUpdate();
               }
             } else if (data.type === 'error') {
-              throw new Error(data.error);
+              // Create error with additional properties from server
+              const error = new Error(data.error);
+              error.name = data.errorType || 'Error';
+              error.apiError = data.apiError;
+              error.status = data.status;
+              error.provider = data.provider;
+              error.retryAfter = data.retryAfter;
+              throw error;
             }
           }
         }
@@ -189,14 +216,17 @@ export function useDocGeneration(onUsageUpdate) {
     } catch (err) {
       console.error('Generation error:', err);
 
-      // Check if the error message is a JSON string from the API
-      let apiError = null;
-      try {
-        if (typeof err.message === 'string' && err.message.startsWith('{')) {
-          apiError = JSON.parse(err.message);
+      // Check if the error has apiError attached (from SSE error event)
+      // or if the error message is a JSON string from the API
+      let apiError = err.apiError || null;
+      if (!apiError) {
+        try {
+          if (typeof err.message === 'string' && err.message.startsWith('{')) {
+            apiError = JSON.parse(err.message);
+          }
+        } catch (parseError) {
+          // Not JSON, continue with normal error handling
         }
-      } catch (parseError) {
-        // Not JSON, continue with normal error handling
       }
 
       // Provide more helpful error messages based on error type
@@ -227,9 +257,20 @@ export function useDocGeneration(onUsageUpdate) {
           errorType = apiError.error || errorType;
         }
       }
-      // Check if it's a rate limit error
-      else if (err.name === 'RateLimitError' || err.message.includes('Rate limit')) {
+      // Check if it's a CodeScribe usage limit error (from tierGate middleware)
+      else if (err.name === 'UsageLimitError' || err.message.includes('usage limit for this period')) {
+        errorMessage = err.message || 'You have reached your usage limit for this period.';
+        errorType = 'UsageLimitError';
+        // Don't set retryAfter - usage resets at period end, not after a few seconds
+        setRetryAfter(null);
+      }
+      // Check if it's a Claude/LLM rate limit error (handle both server format 'RATE_LIMIT' and 'RateLimitError')
+      else if (err.name === 'RateLimitError' || err.name === 'RATE_LIMIT' || err.message.includes('Rate limit')) {
         errorMessage = err.message || 'Rate limit exceeded. Please wait before trying again.';
+        // Add provider name for clarity (e.g., "Claude rate limit exceeded")
+        if (err.provider && !errorMessage.toLowerCase().includes(err.provider)) {
+          errorMessage = `${err.provider.charAt(0).toUpperCase() + err.provider.slice(1)} ${errorMessage.charAt(0).toLowerCase() + errorMessage.slice(1)}`;
+        }
         errorType = 'RateLimitError';
         setRetryAfter(err.retryAfter || 60);
       } else if (err.message.includes('429')) {
@@ -333,12 +374,15 @@ export function useDocGeneration(onUsageUpdate) {
     reset,
     clearError,
     isGenerating,
+    setIsGenerating, // Exposed for testing
     documentation,
     setDocumentation, // Exposed for testing
     qualityScore,
     setQualityScore, // Exposed for testing
     error,
     rateLimitInfo,
-    retryAfter
+    retryAfter,
+    retryStatus, // { attempt, maxAttempts, message, reason } when retrying
+    setRetryStatus // Exposed for testing
   };
 }

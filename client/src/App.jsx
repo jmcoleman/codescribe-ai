@@ -585,13 +585,19 @@ function App() {
     reset,
     clearError,
     isGenerating,
+    setIsGenerating,
     documentation,
     setDocumentation,
     qualityScore,
     setQualityScore,
     error,
-    retryAfter
+    retryAfter,
+    retryStatus,
+    setRetryStatus
   } = useDocGeneration(refetchUsage);
+
+  // DEV ONLY: State for testing retry UI
+  const [testRetryMode, setTestRetryMode] = useState(false);
 
   // Batch generation hook - manages bulk doc generation state and logic
   const {
@@ -1013,8 +1019,12 @@ function App() {
 
       const result = await generate(code, docType, language, shouldCache, filename, {
         projectId: selectedProjectId, // For graph context lookup (FK to projects table)
-        filePath // For identifying file in the project graph
+        filePath, // For identifying file in the project graph
+        testRetry: testRetryMode // DEV ONLY: Simulate retry for testing UI
       });
+
+      // Reset test retry mode after generation
+      if (testRetryMode) setTestRetryMode(false);
 
       // Save document to database for authenticated users
       if (isAuthenticated && result) {
@@ -1945,6 +1955,42 @@ function App() {
     return cleanup;
   }, [setDocumentation, setQualityScore, setTestSkeletonMode]);
 
+  // DEV ONLY: Expose retry test mode helper
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      // Preview retry banner UI without making any API calls
+      // Usage: window.__previewRetry('claude') - shows banner for Claude API
+      // Usage: window.__previewRetry('openai') - shows banner for OpenAI API
+      window.__previewRetry = (provider = 'claude') => {
+        const providerName = provider.charAt(0).toUpperCase() + provider.slice(1);
+        console.log(`[DEV] Showing ${providerName} retry banner. Call window.__stopRetry() to clear.`);
+
+        // Clear any existing doc and simulate generating state
+        setDocumentation('');
+        setIsGenerating(true);
+
+        setRetryStatus({
+          attempt: 1,
+          maxAttempts: 3,
+          message: `${providerName} API: Retrying... (attempt 1/3)`,
+          reason: 'rate_limit',
+          provider: provider
+        });
+      };
+
+      window.__stopRetry = () => {
+        setRetryStatus(null);
+        setIsGenerating(false);
+        console.log('[DEV] Retry preview cleared.');
+      };
+
+      console.log('[DEV] Retry preview: window.__previewRetry("claude"|"openai"|"gemini") and window.__stopRetry()');
+    }
+    return () => {
+      delete window.__previewRetry;
+    };
+  }, [setDocumentation, setIsGenerating, setRetryStatus]);
+
   // Show toast notifications for documentation generation success only
   // Track previous isGenerating state to detect generation completion
   const prevGeneratingRef = useRef(isGenerating);
@@ -2038,6 +2084,7 @@ function App() {
         filename={filename}
         onCancelBatch={cancelBatchGeneration}
         isCancelling={isCancelling}
+        retryStatus={retryStatus}
       />
     </Suspense>
   ), [
@@ -2056,7 +2103,8 @@ function App() {
     docType,
     filename,
     cancelBatchGeneration,
-    isCancelling
+    isCancelling,
+    retryStatus
   ]);
 
   return (
@@ -2434,6 +2482,7 @@ function App() {
                             filename={filename}
                             onCancelBatch={cancelBatchGeneration}
                             isCancelling={isCancelling}
+                            retryStatus={retryStatus}
                           />
                         </Suspense>
                       }
@@ -2525,6 +2574,7 @@ function App() {
                       filename={filename}
                       onCancelBatch={cancelBatchGeneration}
                       isCancelling={isCancelling}
+                      retryStatus={retryStatus}
                     />
                   </Suspense>
                 )
@@ -2573,6 +2623,7 @@ function App() {
                         filename={filename}
                         onCancelBatch={cancelBatchGeneration}
                         isCancelling={isCancelling}
+                        retryStatus={retryStatus}
                       />
                     </Suspense>
                   }
