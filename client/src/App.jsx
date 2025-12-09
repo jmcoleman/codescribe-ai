@@ -907,10 +907,12 @@ function App() {
         };
         loadBatchForFile();
       }
-    } else if (multiFileState.activeFileId === null) {
-      // No active file - clear both panels (happens when file is deleted or deselected)
+    } else if (multiFileState.activeFileId === null && multiFileState.files.length > 0) {
+      // No active file but files exist - clear both panels (happens when file is deleted or deselected)
       // UNLESS we're showing a batch summary or batch generation is in progress
       // Check ref for synchronous batch mode check (handles React batching race conditions)
+      // NOTE: Only clear when files.length > 0 to avoid clearing restored docs for unauthenticated
+      // single-file users who have no files in workspace but have sessionStorage docs
       if (!batchSummaryMarkdown && !bulkGenerationProgress && !isBatchModeRef.current) {
         // Keep default code in CodePanel
         const defaultCode = DEFAULT_CODE;
@@ -943,21 +945,53 @@ function App() {
     // When user is null on initial load or navigation, we do nothing - workspace sync handles restoration
   }, [user?.id, setDocumentation, setQualityScore]);
 
-  // Persist documentation to localStorage for UNAUTHENTICATED users only
-  // Authenticated users' docs are persisted to the database, not localStorage
-  // This avoids stale batch summaries reappearing after logout/login
+  // Restore documentation from sessionStorage for UNAUTHENTICATED users on initial mount
+  // Uses sessionStorage (not localStorage) for privacy - clears when tab/browser closes
+  // This allows refresh protection without leaving persistent data on shared computers
+  useEffect(() => {
+    // Wait for auth to finish loading
+    if (authLoading) return;
+
+    // Only restore for unauthenticated users
+    if (user?.id) return;
+
+    // Skip if there's already documentation (e.g., just generated)
+    if (documentation) return;
+
+    // Restore documentation from sessionStorage
+    const savedDoc = getSessionItem(STORAGE_KEYS.EDITOR_DOCUMENTATION);
+    if (savedDoc) {
+      setDocumentation(savedDoc);
+    }
+
+    // Restore quality score from sessionStorage
+    const savedScore = getSessionItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE);
+    if (savedScore) {
+      try {
+        const parsedScore = JSON.parse(savedScore);
+        setQualityScore(parsedScore);
+      } catch (e) {
+        console.warn('[App] Failed to parse saved quality score:', e);
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, user?.id]); // Only run when auth state changes, not when documentation changes
+
+  // Persist documentation to sessionStorage for UNAUTHENTICATED users only
+  // Uses sessionStorage for privacy - survives refresh but clears on tab/browser close
+  // Authenticated users' docs are persisted to the database, not storage
   useEffect(() => {
     // Only persist for unauthenticated users
     if (!user?.id && documentation) {
-      setStorageItem(STORAGE_KEYS.EDITOR_DOCUMENTATION, documentation);
+      setSessionItem(STORAGE_KEYS.EDITOR_DOCUMENTATION, documentation);
     }
   }, [documentation, user?.id]);
 
-  // Persist quality score to localStorage for UNAUTHENTICATED users only
+  // Persist quality score to sessionStorage for UNAUTHENTICATED users only
   useEffect(() => {
     // Only persist for unauthenticated users
     if (!user?.id && qualityScore) {
-      setStorageItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE, JSON.stringify(qualityScore));
+      setSessionItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE, JSON.stringify(qualityScore));
     }
   }, [qualityScore, user?.id]);
 
@@ -1752,12 +1786,12 @@ function App() {
 
     // Clear any previous documentation
     reset();
-    // For unauthenticated users, clear localStorage too
+    // For unauthenticated users, clear sessionStorage too
     if (!user?.id) {
-      setStorageItem(STORAGE_KEYS.EDITOR_DOCUMENTATION, '');
-      setStorageItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE, '');
+      setSessionItem(STORAGE_KEYS.EDITOR_DOCUMENTATION, '');
+      setSessionItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE, '');
     }
-    // For authenticated users, docs are in DB - no localStorage to clear
+    // For authenticated users, docs are in DB - no sessionStorage to clear
   };
 
   /**
@@ -2025,12 +2059,12 @@ function App() {
     // Clear documentation and quality score from state
     reset();
 
-    // For unauthenticated users, clear localStorage too
+    // For unauthenticated users, clear sessionStorage too
     if (!user?.id) {
-      setStorageItem(STORAGE_KEYS.EDITOR_DOCUMENTATION, '');
-      setStorageItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE, '');
+      setSessionItem(STORAGE_KEYS.EDITOR_DOCUMENTATION, '');
+      setSessionItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE, '');
     }
-    // For authenticated users, docs are in DB - no localStorage to clear
+    // For authenticated users, docs are in DB - no sessionStorage to clear
 
     // Always clear batch state when resetting (clears state and sessionStorage)
     // This removes the "batch complete" banner and prevents it from returning after refresh
