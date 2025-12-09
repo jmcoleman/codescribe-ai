@@ -65,9 +65,9 @@
       "text": "codescribeai.com",
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
-    "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.26",
-    "footer": "v3.2.2 Complete · UX Polish & Tier Updates ✓ · Up Next: Graph Engine · VS Code Extension: Separate Repo",
-    "lastUpdated": "December 7, 2025"
+    "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.27",
+    "footer": "v3.3.0 Complete · Graph Engine & Projects ✓ · Up Next: Diff Analyzer · VS Code Extension: Separate Repo",
+    "lastUpdated": "December 9, 2025"
   },
   "columns": [
     {
@@ -773,6 +773,62 @@
             "Batch summary links use document IDs for version tracking",
             "3,449 tests (3,349 passing, 97 skipped)"
           ]
+        },
+        {
+          "version": "v3.3.0",
+          "title": "User Preferences Cross-Device Sync",
+          "duration": "1 day",
+          "status": "✓ Complete",
+          "completedDate": "Dec 8, 2025",
+          "badge": "UX Enhancement",
+          "features": [
+            "user_preferences table for cross-device sync (theme, layout, sidebar, project)",
+            "user_table_preferences table for per-table column sizing",
+            "PreferencesContext with localStorage cache and API sync",
+            "Debounced preference updates (300ms) for performance",
+            "Graceful fallback when API unavailable",
+            "Migration of theme_preference from users table",
+            "All preferences persist across logout/login and devices"
+          ]
+        },
+        {
+          "version": "v3.3.0",
+          "title": "Epic 5.4: Graph Engine API (Phase 1-4)",
+          "duration": "2 weeks",
+          "status": "✓ Complete",
+          "completedDate": "Dec 9, 2025",
+          "badge": "Platform Foundation",
+          "features": [
+            "Server-side dependency graph service (graphService.js) with chunked processing",
+            "Cross-file analysis: imports, exports, functions, classes extraction",
+            "project_graphs table with 24h TTL (metadata only, SOC2 compliant)",
+            "API: /api/graph/analyze, /api/graph/:id, /api/graph/:id/context, /api/graph/:id/diagram",
+            "Projects entity with CRUD operations (projectService.js)",
+            "Link batches and workspace files to projects (project_id FK)",
+            "Denormalized project_name on generation_batches for query efficiency",
+            "Project selector in sidebar (desktop + mobile)",
+            "ProjectGraphInfo component: collapsible project header with graph stats",
+            "Project Details page: graph analysis section with stats, architecture diagram, file list",
+            "Clickable project links in History page and FileDetailsPanel",
+            "Graph context injection for enhanced documentation generation",
+            "On-demand Mermaid architecture diagrams from graph data"
+          ]
+        },
+        {
+          "version": "v3.3.0",
+          "title": "UX Fixes & Polish",
+          "duration": "1 day",
+          "status": "✓ Complete",
+          "completedDate": "Dec 9, 2025",
+          "badge": "Bug Fixes",
+          "features": [
+            "Fixed doc panel not clearing on logout (race condition with hasSeenUserRef)",
+            "Fixed unauthenticated user docs not persisting across page refresh",
+            "Fixed Mermaid diagram dark mode styling in code view",
+            "Improved usage limit messages with LLM retry visibility",
+            "Fixed workspace clear button to also clear code panel",
+            "Bulk re-upload support for local files"
+          ]
         }
       ]
     },
@@ -783,29 +839,10 @@
       "subtitle": "Phase 3: Platform Infrastructure",
       "phases": [
         {
-          "version": "Epic 5.4",
-          "title": "Graph Engine API (Shared Infrastructure)",
-          "duration": "4-5 weeks",
-          "status": "Planned",
-          "badge": "Platform Foundation",
-          "features": [
-            "Server-side dependency graph service (graphService.js)",
-            "Cross-file analysis and import resolution in codeParser.js",
-            "Context injection: 'This function is imported by [files] and calls [functions]'",
-            "project_graphs table with 24h TTL (metadata only, no code storage)",
-            "API: /api/graph/analyze, /api/graph/:id/context, /api/graph/:id/diagram",
-            "On-demand Mermaid architecture diagrams from graph data",
-            "SOC2 compliance: Zero code retention, metadata-only storage",
-            "Enables: Multi-file README, cross-file ARCHITECTURE diagrams",
-            "Shared by: Web app, VS Code extension, CLI, MCP server",
-            "Note: Extension-specific work tracked in codescribe-vscode repo"
-          ]
-        },
-        {
           "version": "Epic 5.5",
           "title": "Diff Analyzer & Webhook APIs",
           "duration": "3-4 weeks",
-          "status": "Planned",
+          "status": "Up Next",
           "badge": "Git Integration",
           "features": [
             "diffAnalyzer.js service for semantic diff parsing",
