@@ -779,7 +779,8 @@ export function useBatchGeneration({
           summaryMarkdown,
           errorDetails: failedFiles.length > 0 ? failedFiles : null,
           docTypes: uniqueDocTypes,
-          projectId: projectId
+          projectId: projectId,
+          projectName: projectName // Denormalized for persistence if project deleted
         });
 
         if (batchResult.batchId) {
