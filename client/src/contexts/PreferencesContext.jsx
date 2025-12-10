@@ -121,6 +121,14 @@ export function PreferencesProvider({ children }) {
     if (!isAuthenticated && !authLoading) {
       // User logged out - keep preferences in localStorage but reset API load flag
       hasLoadedFromApiRef.current = false;
+
+      // Clear project-related preferences since they require authentication
+      // This prevents API calls for projects when user is not logged in
+      setPreferencesInternal(prev => {
+        const newPrefs = { ...prev, selectedProjectId: null };
+        saveCachedPreferences(newPrefs);
+        return newPrefs;
+      });
     }
   }, [isAuthenticated, authLoading]);
 
