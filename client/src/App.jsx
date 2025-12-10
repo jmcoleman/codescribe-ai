@@ -174,6 +174,8 @@ function App() {
   const samplesButtonRef = useRef(null);
   const headerRef = useRef(null);
   const sidebarPanelRef = useRef(null); // For programmatically controlling sidebar panel size
+  const prevFilesLengthRef = useRef(0); // Track previous files count to detect "all files deleted"
+  const hasUserInteractedWithWorkspaceRef = useRef(false); // Track if user has selected/deselected files
 
   // Load saved sidebar panel sizes from localStorage
   const loadSidebarSizes = useCallback(() => {
@@ -585,6 +587,7 @@ function App() {
   
   const {
     generate,
+    cancel: cancelGeneration,
     reset,
     clearError,
     isGenerating,
@@ -634,6 +637,7 @@ function App() {
     cancelBatchGeneration
   } = useBatchGeneration({
     generate,
+    cancelGeneration,
     setDocumentation,
     setQualityScore,
     setDocType,
@@ -910,25 +914,38 @@ function App() {
         };
         loadBatchForFile();
       }
-    } else if (multiFileState.activeFileId === null && multiFileState.files.length > 0) {
-      // No active file but files exist - clear both panels (happens when file is deleted or deselected)
+    } else if (multiFileState.activeFileId === null) {
+      // No active file - determine what to show based on context
+      const hadFilesBeforeNowEmpty = prevFilesLengthRef.current > 0 && multiFileState.files.length === 0;
+
       // UNLESS we're showing a batch summary or batch generation is in progress
       // Check ref for synchronous batch mode check (handles React batching race conditions)
-      // NOTE: Only clear when files.length > 0 to avoid clearing restored docs for unauthenticated
-      // single-file users who have no files in workspace but have sessionStorage docs
       if (!batchSummaryMarkdown && !bulkGenerationProgress && !isBatchModeRef.current) {
-        // Keep default code in CodePanel
-        const defaultCode = DEFAULT_CODE;
-        const defaultFilename = 'code.js';
-        setCode(defaultCode);
-        setCodeOrigin('sample'); // Default code is a sample
-        setFilename(defaultFilename);
-
-        // Clear DocPanel completely
-        setDocumentation('');
-        setQualityScore(null);
+        // Only clear documentation if user has explicitly interacted with the workspace
+        // This prevents clearing on initial load when workspace loads from DB but no file is selected yet
+        if (hadFilesBeforeNowEmpty && hasUserInteractedWithWorkspaceRef.current) {
+          // User deleted all files (transition from files > 0 to files === 0)
+          // Reset to default code
+          setCode(DEFAULT_CODE);
+          setCodeOrigin('sample');
+          setFilename('code.js');
+          setDocumentation('');
+          setQualityScore(null);
+        }
+        // Note: When files exist but none are selected (hasFilesButNoneActive),
+        // we no longer clear - keep showing whatever was there before.
+        // The user can click a file to see its documentation.
       }
     }
+
+    // Track that files have loaded (for detecting "all deleted" vs "initial empty")
+    if (multiFileState.files.length > 0) {
+      prevFilesLengthRef.current = multiFileState.files.length;
+    } else if (prevFilesLengthRef.current > 0) {
+      // Transition from files to no files - update ref
+      prevFilesLengthRef.current = 0;
+    }
+
     // Note: Only depend on activeFileId and files changes, not on documentation
     // to avoid re-triggering during SSE streaming
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1929,12 +1946,25 @@ function App() {
   };
 
   // Destructure the specific functions we need to avoid stale closure issues
-  const { removeFile, removeFiles } = multiFileState;
+  const { removeFile, removeFiles, setActiveFile } = multiFileState;
+
+  /**
+   * Wrapped setActiveFile that tracks user interaction
+   */
+  const handleSelectFile = useCallback((fileId) => {
+    // Mark that user has interacted with workspace (for clearing logic on delete)
+    if (fileId !== null) {
+      hasUserInteractedWithWorkspaceRef.current = true;
+    }
+    setActiveFile(fileId);
+  }, [setActiveFile]);
 
   /**
    * Remove a single file from workspace (keeps generated document in history)
    */
   const handleRemoveFile = useCallback(async (fileId) => {
+    // Mark that user has interacted with workspace (for clearing logic)
+    hasUserInteractedWithWorkspaceRef.current = true;
     // Remove file from workspace (persistence layer handles workspace_files table)
     // NOTE: Does NOT delete from generated_documents - keeps doc in user's history
     removeFile(fileId);
@@ -1948,13 +1978,16 @@ function App() {
     const selectedIds = multiFileState.selectedFileIds;
     if (selectedIds.length === 0) return;
 
+    // Mark that user has interacted with workspace (for clearing logic)
+    hasUserInteractedWithWorkspaceRef.current = true;
+
     const isDeletingAll = selectedIds.length === multiFileState.files.length;
 
     // Remove files from workspace (persistence layer handles workspace_files table)
     // NOTE: Does NOT delete from generated_documents - keeps docs in user's history
     removeFiles(selectedIds);
 
-    // If deleting ALL files, also clear batch summary, documentation, and code state
+    // If deleting ALL files, also clear batch summary, documentation, and reset code to default
     if (isDeletingAll) {
       setBulkGenerationSummary(null);
       setBatchSummaryMarkdown(null);
@@ -1962,9 +1995,11 @@ function App() {
       removeSessionItem('batch_summary_markdown');
       setDocumentation('');
       setQualityScore(null);
-      setCode(''); // Clear code panel when workspace is fully cleared
+      setCode(DEFAULT_CODE); // Reset to default code when workspace is fully cleared
+      setFilename('code.js');
+      setCodeOrigin('sample');
     }
-  }, [multiFileState.selectedFileIds, multiFileState.files.length, removeFiles, setBulkGenerationSummary, setBatchSummaryMarkdown, setDocumentation, setQualityScore, setCode]);
+  }, [multiFileState.selectedFileIds, multiFileState.files.length, removeFiles, setBulkGenerationSummary, setBatchSummaryMarkdown, setDocumentation, setQualityScore, setCode, setFilename, setCodeOrigin]);
 
   // Expose test data loader to window for console access (development/testing)
   useEffect(() => {
@@ -2302,7 +2337,7 @@ function App() {
                 onGithubImport={handleGithubImport}
                 mobileOpen={mobileSidebarOpen}
                 onMobileClose={() => setMobileSidebarOpen(false)}
-                onSelectFile={multiFileState.setActiveFile}
+                onSelectFile={handleSelectFile}
                 onToggleFileSelection={multiFileState.toggleFileSelection}
                 onSelectAllFiles={multiFileState.selectAllFiles}
                 onDeselectAllFiles={multiFileState.deselectAllFiles}
@@ -2403,7 +2438,7 @@ function App() {
                   onGithubImport={handleGithubImport}
                   mobileOpen={mobileSidebarOpen}
                   onMobileClose={() => setMobileSidebarOpen(false)}
-                  onSelectFile={multiFileState.setActiveFile}
+                  onSelectFile={handleSelectFile}
                   onToggleFileSelection={multiFileState.toggleFileSelection}
                   onSelectAllFiles={multiFileState.selectAllFiles}
                   onDeselectAllFiles={multiFileState.deselectAllFiles}

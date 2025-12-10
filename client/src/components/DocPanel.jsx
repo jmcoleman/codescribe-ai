@@ -944,6 +944,29 @@ export const DocPanel = memo(function DocPanel({
         </div>
       )}
 
+      {/* Single-file Generating Banner (free/non-batch users) */}
+      {/* Shows when generating AND we have some documentation (streaming in progress) */}
+      {/* Don't show if batch/graph banner is already visible */}
+      {isGenerating && documentation && !currentlyGeneratingFile && !isAnalyzingGraph && (
+        <div className="mx-4 mt-3 bg-white dark:bg-slate-800 border-2 border-purple-600 dark:border-purple-400 rounded-lg overflow-hidden shadow-sm transition-all">
+          <div className="flex items-center gap-3 p-3">
+            {/* Animated spinner */}
+            <div className="relative flex-shrink-0">
+              <Sparkles className="w-5 h-5 text-purple-600 dark:text-purple-400 animate-pulse" aria-hidden="true" />
+              <div className="absolute inset-0 bg-purple-500/20 dark:bg-purple-400/20 rounded-full blur-md animate-pulse" aria-hidden="true" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-purple-900 dark:text-purple-100">
+                Generating documentation...
+              </p>
+              <p className="text-xs text-purple-700 dark:text-purple-300 mt-0.5">
+                {docType ? `Creating ${formatDocTypeForTitle(docType)}` : 'Streaming content'}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Retry Status Banner - shows when LLM API is being retried */}
       {retryStatus && (
         <div className="mx-4 mt-3 bg-amber-100 dark:bg-amber-900/40 border-2 border-amber-400 dark:border-amber-600 rounded-lg overflow-hidden shadow-lg">

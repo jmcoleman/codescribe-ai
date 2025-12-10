@@ -454,7 +454,8 @@ x = 1
       render(<DocPanel documentation={doc} qualityScore={null} isGenerating={true} />);
 
       expect(screen.getByText('Partial Documentation')).toBeInTheDocument();
-      expect(screen.queryByText(/Generating documentation.../i)).not.toBeInTheDocument();
+      // Should show the generating banner while streaming
+      expect(screen.getByText(/Generating documentation.../i)).toBeInTheDocument();
     });
   });
 

@@ -303,6 +303,7 @@ export const generateBatchSummaryDocument = (summary, failedFiles = [], tier = '
  *
  * @param {Object} options - Hook options
  * @param {Function} options.generate - Generate function from useDocGeneration
+ * @param {Function} options.cancelGeneration - Cancel function from useDocGeneration (aborts in-flight request)
  * @param {Function} options.setDocumentation - Set documentation state
  * @param {Function} options.setQualityScore - Set quality score state
  * @param {Function} options.setDocType - Set doc type state (for panel title)
@@ -321,6 +322,7 @@ export const generateBatchSummaryDocument = (summary, failedFiles = [], tier = '
  */
 export function useBatchGeneration({
   generate,
+  cancelGeneration,
   setDocumentation,
   setQualityScore,
   setDocType,
@@ -416,6 +418,14 @@ export function useBatchGeneration({
    * Called directly or after modal confirmation
    */
   const executeBatchGeneration = useCallback(async (filesToGenerate) => {
+    // Prevent starting a new batch while one is still in progress (including cleanup)
+    // This prevents race conditions when cancelling and immediately regenerating
+    if (isBatchModeRef.current) {
+      console.log('[useBatchGeneration] Batch already in progress, ignoring new request');
+      toastCompact('Please wait for the current batch to finish', 'warning', { id: 'batch-in-progress' });
+      return;
+    }
+
     // Check usage quota for bulk generation
     if (!canGenerate()) {
       setShowUsageLimitModal(true);
@@ -710,13 +720,12 @@ export function useBatchGeneration({
     // Clear selection after generation
     multiFileState.deselectAllFiles();
 
-    // Clear progress state and batch mode ref
+    // Clear progress state (but NOT batch mode ref yet - wait for async operations)
     setBulkGenerationProgress(null);
     setCurrentlyGeneratingFile(null);
     setThrottleCountdown(null);
-    isBatchModeRef.current = false;
-    cancelRequestedRef.current = false; // Reset for next batch
-    setIsCancelling(false); // Reset cancelling state
+    // NOTE: isBatchModeRef and cancelRequestedRef are reset AFTER async DB operations complete
+    // to prevent race conditions when cancelling and immediately regenerating
 
     // Calculate average quality score
     let avgQuality = 0;
@@ -760,8 +769,10 @@ export function useBatchGeneration({
     setDocumentation(summaryMarkdown);
     setBatchSummaryMarkdown(summaryMarkdown);
 
-    // Create batch record in database (if authenticated)
-    if (isAuthenticated) {
+    // Create batch record in database (if authenticated and at least some files were processed)
+    // When cancelled, only count files that were actually processed (not skipped)
+    const processedFiles = successCount + failureCount;
+    if (isAuthenticated && processedFiles > 0) {
       try {
         const uniqueDocTypes = [...new Set(successfulFiles.map(f => f.docType))];
         // Use documentId directly from successfulFiles (not from React state) to avoid race condition
@@ -770,8 +781,8 @@ export function useBatchGeneration({
           .filter(id => id);
 
         const batchResult = await batchesApi.createBatch({
-          batchType: totalFiles === 1 ? 'single' : 'batch',
-          totalFiles,
+          batchType: processedFiles === 1 ? 'single' : 'batch',
+          totalFiles: processedFiles, // Only count files that were actually processed
           successCount,
           failCount: failureCount,
           avgQualityScore: avgQuality,
@@ -819,6 +830,12 @@ export function useBatchGeneration({
       isBatchSummary: true,
       generatedAt: batchGeneratedAt
     });
+
+    // NOW reset refs after all async operations are complete
+    // This prevents race conditions when cancelling and immediately regenerating
+    isBatchModeRef.current = false;
+    cancelRequestedRef.current = false;
+    setIsCancelling(false);
 
     // Show final result toast
     if (wasCancelled) {
@@ -1217,15 +1234,22 @@ export function useBatchGeneration({
    * Cancel an in-progress batch generation
    * Sets a flag that will be checked at the next opportunity in the batch loop
    * (before starting each file or during the throttle countdown)
+   * Also aborts any in-flight API request to stop streaming immediately
    */
   const cancelBatchGeneration = useCallback(() => {
     if (bulkGenerationProgress && !isCancelling) {
       console.log('[useBatchGeneration] Cancellation requested');
       cancelRequestedRef.current = true;
       setIsCancelling(true);
+
+      // Abort any in-flight generation request to stop streaming immediately
+      if (cancelGeneration) {
+        cancelGeneration();
+      }
+
       toastCompact('Cancelling batch...', 'info', { id: 'bulk-generation-cancel' });
     }
-  }, [bulkGenerationProgress, isCancelling]);
+  }, [bulkGenerationProgress, isCancelling, cancelGeneration]);
 
   return {
     // Progress state

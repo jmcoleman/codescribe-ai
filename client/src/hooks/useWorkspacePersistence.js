@@ -177,6 +177,8 @@ export function useWorkspacePersistence() {
   const workspaceIdMap = useRef(new Map()); // workspace DB ID -> client file ID
   const clientIdMap = useRef(new Map());    // client file ID -> workspace DB ID
   const isSyncing = useRef(false);
+  // Track if initial workspace load has completed (prevents re-running on user object changes)
+  const hasLoadedWorkspace = useRef(false);
 
   /**
    * Sync mappings from database when files exist in sessionStorage but mappings are empty
@@ -208,19 +210,26 @@ export function useWorkspacePersistence() {
   /**
    * Load workspace from database on mount to get fresh data (like generatedAt)
    * Merges DB data with any existing sessionStorage content
+   *
+   * IMPORTANT: This effect only runs ONCE when user first authenticates.
+   * It does NOT re-run when the user object reference changes, which prevents
+   * files from being cleared during batch generation when other state updates
+   * cause the user object to get a new reference.
    */
   useEffect(() => {
     // Only load if:
     // 1. User is authenticated
     // 2. User has multi-file access
     // 3. Not currently syncing
-    if (!isAuthenticated || !hasMultiFileAccess || isSyncing.current) {
+    // 4. Haven't already loaded workspace (prevents re-running on user object changes)
+    if (!isAuthenticated || !hasMultiFileAccess || isSyncing.current || hasLoadedWorkspace.current) {
       return;
     }
 
     const loadWorkspace = async () => {
       try {
         isSyncing.current = true;
+        hasLoadedWorkspace.current = true; // Mark as loaded immediately to prevent race conditions
         const result = await workspaceApi.getWorkspace();
 
         if (result.success && result.files.length > 0) {
@@ -592,6 +601,8 @@ export function useWorkspacePersistence() {
     if (!authLoading && !isAuthenticated) {
       // User logged out - clear all workspace files from state
       clearFiles();
+      // Reset the hasLoadedWorkspace flag so next login will load fresh
+      hasLoadedWorkspace.current = false;
     }
   }, [authLoading, isAuthenticated, clearFiles]);
 

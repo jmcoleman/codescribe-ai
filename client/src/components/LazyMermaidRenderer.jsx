@@ -45,9 +45,12 @@ function cleanupMermaidErrorIcons() {
     const hasBombImage = svg.querySelector('image[href*="bomb"]') ||
                          svg.querySelector('image[xlink\\:href*="bomb"]');
     const hasSyntaxError = svg.textContent?.includes('Syntax error');
-    const isErrorIcon = svg.classList.contains('error-icon');
+    const isErrorIcon = svg.classList.contains('error-icon') ||
+                        svg.querySelector('.error-icon');
+    // Also check for mermaid version text which appears in error diagrams
+    const hasMermaidVersion = svg.textContent?.includes('mermaid version');
 
-    if (hasBombImage || hasSyntaxError || isErrorIcon) {
+    if (hasBombImage || hasSyntaxError || isErrorIcon || hasMermaidVersion) {
       svg.remove();
     }
   });
@@ -55,6 +58,15 @@ function cleanupMermaidErrorIcons() {
   // Clean up any explicitly marked error icon elements
   const errorIcons = document.querySelectorAll('body > svg.error-icon, body > .error-icon');
   errorIcons.forEach(el => el.remove());
+
+  // Clean up any stray mermaid temp elements that weren't cleaned up
+  const strayMermaidElements = document.querySelectorAll('body > [id^="mermaid-"]');
+  strayMermaidElements.forEach(el => {
+    // Only remove if it's a detached/orphaned element (not inside our diagram container)
+    if (el.parentElement === document.body) {
+      el.remove();
+    }
+  });
 }
 
 // Set up a MutationObserver to catch error icons (bombs) added to body
@@ -77,14 +89,17 @@ function setupMermaidCleanupObserver() {
               const hasBombImage = node.querySelector('image[href*="bomb"]') ||
                                    node.querySelector('image[xlink\\:href*="bomb"]');
               const hasSyntaxError = node.textContent?.includes('Syntax error');
+              // Also check for error-icon class which mermaid uses for error diagrams
+              const hasErrorClass = node.classList.contains('error-icon') ||
+                                    node.querySelector('.error-icon');
 
-              if (hasBombImage || hasSyntaxError) {
+              if (hasBombImage || hasSyntaxError || hasErrorClass) {
                 // Use setTimeout to ensure Mermaid has finished with it
                 setTimeout(() => {
                   if (node.parentElement) {
                     node.remove();
                   }
-                }, 100);
+                }, 50);
               }
             }
           }
@@ -99,6 +114,30 @@ function setupMermaidCleanupObserver() {
 // Initialize observer when module loads
 if (typeof window !== 'undefined') {
   setupMermaidCleanupObserver();
+
+  // Also run periodic cleanup as a fallback (every 2 seconds while diagrams might be rendering)
+  // This catches any bombs that slip through the observer
+  let cleanupInterval = null;
+  const startPeriodicCleanup = () => {
+    if (!cleanupInterval) {
+      cleanupInterval = setInterval(() => {
+        cleanupMermaidErrorIcons();
+      }, 2000);
+    }
+  };
+  const stopPeriodicCleanup = () => {
+    if (cleanupInterval) {
+      clearInterval(cleanupInterval);
+      cleanupInterval = null;
+    }
+  };
+
+  // Start cleanup when page loads, stop after a delay if no diagrams are being rendered
+  startPeriodicCleanup();
+  // Stop after 30 seconds to avoid unnecessary CPU usage
+  setTimeout(() => {
+    stopPeriodicCleanup();
+  }, 30000);
 }
 
 // Dark theme configuration
@@ -218,26 +257,55 @@ export const LazyMermaidRenderer = memo(function LazyMermaidRenderer({ chart, id
           }
         });
 
-        // Fix ER diagram row colors - remove alternating backgrounds, use same color for all rows
-        const evenRowPaths = doc.querySelectorAll('.row-rect-even path[fill]');
-        const oddRowPaths = doc.querySelectorAll('.row-rect-odd path[fill]');
+        // Normalize all background colors to our theme colors
+        // This strips custom colors from LLM-generated diagrams that may clash with dark/light mode
+        // and ensures consistent, readable diagrams
+        const themeBgColor = effectiveTheme === 'dark' ? '#1e293b' : '#ffffff'; // slate-800 : white
+        const themeTextColor = effectiveTheme === 'dark' ? '#e2e8f0' : '#1e293b'; // slate-200 : slate-800
 
-        // Use same background color for all rows - white in light mode, dark in dark mode
-        const rowColor = effectiveTheme === 'dark' ? '#1e293b' : '#ffffff'; // slate-800 : white
+        // Standard colors that we allow (our theme colors)
+        const allowedBgColors = new Set([
+          // Light mode standard colors
+          '#ffffff', '#f8fafc', '#f1f5f9', '#e2e8f0', // white and slate variations
+          '#9333ea', '#7c3aed', '#a78bfa', '#c4b5fd', // purple variations
+          '#e0e7ff', '#c7d2fe', // indigo variations
+          // Dark mode standard colors
+          '#0f172a', '#1e293b', '#334155', '#475569', // slate dark variations
+          '#312e81', // indigo-900
+          // Transparent/none
+          'none', 'transparent',
+        ]);
 
-        evenRowPaths.forEach(path => {
-          const currentFill = path.getAttribute('fill');
-          // Only replace if it's not "none" and looks like a color (not a gradient/pattern)
-          if (currentFill && currentFill !== 'none' && !currentFill.startsWith('url(')) {
-            path.setAttribute('fill', rowColor);
+        // Find all rect and path elements with fill colors
+        const allShapes = doc.querySelectorAll('rect, path, polygon, circle, ellipse');
+        allShapes.forEach(shape => {
+          const fill = shape.getAttribute('fill');
+          if (fill && fill !== 'none' && fill !== 'transparent' && !fill.startsWith('url(')) {
+            const fillLower = fill.toLowerCase();
+            // If it's not one of our standard colors, replace with theme background
+            if (!allowedBgColors.has(fillLower)) {
+              shape.setAttribute('fill', themeBgColor);
+            }
           }
         });
 
-        oddRowPaths.forEach(path => {
-          const currentFill = path.getAttribute('fill');
-          if (currentFill && currentFill !== 'none' && !currentFill.startsWith('url(')) {
-            path.setAttribute('fill', rowColor);
+        // Normalize all text colors to our theme text color
+        const textElements = doc.querySelectorAll('text, tspan');
+        textElements.forEach(text => {
+          // Set text to theme color
+          text.setAttribute('fill', themeTextColor);
+          if (text.style) {
+            text.style.fill = themeTextColor;
           }
+        });
+
+        // Handle foreignObject elements (used for HTML labels)
+        const foreignObjects = doc.querySelectorAll('foreignObject');
+        foreignObjects.forEach(fo => {
+          const elements = fo.querySelectorAll('div, span, p');
+          elements.forEach(el => {
+            el.style.color = themeTextColor;
+          });
         });
 
         // Serialize back to string

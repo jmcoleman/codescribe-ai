@@ -636,12 +636,17 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, defa
       let successCount = 0;
 
       // Load workspace contents once at the start (user-scoped)
+      // Format: { files: { fileId: content, ... } }
       const workspaceKey = getWorkspaceKey(user.id);
       let workspaceContents = {};
       if (workspaceKey) {
         try {
           const stored = localStorage.getItem(workspaceKey);
-          workspaceContents = stored ? JSON.parse(stored) : {};
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            // Handle both old flat format and new nested format
+            workspaceContents = parsed.files || parsed;
+          }
         } catch (error) {
           console.error('[GitHubLoadModal] Failed to load workspace contents:', error);
           workspaceContents = {};
@@ -712,9 +717,10 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, defa
       }
 
       // Save all workspace contents at once (user-scoped)
+      // Use new nested format: { files: { fileId: content, ... } }
       if (workspaceKey) {
         try {
-          localStorage.setItem(workspaceKey, JSON.stringify(workspaceContents));
+          localStorage.setItem(workspaceKey, JSON.stringify({ files: workspaceContents }));
         } catch (error) {
           console.error('[GitHubLoadModal] Failed to save workspace contents:', error);
           if (error.name === 'QuotaExceededError') {

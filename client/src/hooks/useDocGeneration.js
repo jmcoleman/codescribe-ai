@@ -12,7 +12,7 @@ export function useDocGeneration(onUsageUpdate) {
   const [rateLimitInfo, setRateLimitInfo] = useState(null);
   const [retryAfter, setRetryAfter] = useState(null);
   const [retryStatus, setRetryStatus] = useState(null); // { attempt, maxAttempts, message }
-  const eventSourceRef = useRef(null);
+  const abortControllerRef = useRef(null);
 
   const generate = useCallback(async (code, docType, language, isDefaultCode = false, filename = 'untitled', options = {}) => {
     const { graphId = null, projectId = null, filePath = null, testRetry = false } = options;
@@ -24,10 +24,12 @@ export function useDocGeneration(onUsageUpdate) {
     setRetryAfter(null);
     setRetryStatus(null);
 
-    // Close any existing connection
-    if (eventSourceRef.current) {
-      eventSourceRef.current.close();
+    // Abort any existing request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
     }
+    // Create new AbortController for this request
+    abortControllerRef.current = new AbortController();
 
     // Track start time for performance metrics
     const startTime = performance.now();
@@ -53,6 +55,7 @@ export function useDocGeneration(onUsageUpdate) {
       const response = await fetch(`${API_URL}/api/generate-stream`, {
         method: 'POST',
         headers,
+        signal: abortControllerRef.current.signal,
         body: JSON.stringify({
           code,
           docType,
@@ -214,6 +217,19 @@ export function useDocGeneration(onUsageUpdate) {
         metadata: generatedMetadata
       };
     } catch (err) {
+      // Handle abort gracefully (not an error, just cancelled)
+      if (err.name === 'AbortError') {
+        console.log('[useDocGeneration] Request aborted');
+        setIsGenerating(false);
+        // Return partial content if any was generated before abort
+        return {
+          documentation: generatedDoc,
+          qualityScore: null,
+          metadata: null,
+          aborted: true
+        };
+      }
+
       console.error('Generation error:', err);
 
       // Check if the error has apiError attached (from SSE error event)
@@ -349,9 +365,9 @@ export function useDocGeneration(onUsageUpdate) {
   }, [onUsageUpdate, getToken]);
 
   const cancel = useCallback(() => {
-    if (eventSourceRef.current) {
-      eventSourceRef.current.close();
-      eventSourceRef.current = null;
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
     }
     setIsGenerating(false);
   }, []);
