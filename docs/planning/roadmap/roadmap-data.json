@@ -65,9 +65,9 @@
       "text": "codescribeai.com",
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
-    "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.27",
-    "footer": "v3.3.0 Complete · Graph Engine & Projects ✓ · Up Next: Project Architecture Doc · VS Code Extension: Separate Repo",
-    "lastUpdated": "December 9, 2025"
+    "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.28",
+    "footer": "v3.3.1 Complete · Batch & Mermaid Fixes ✓ · Up Next: Project Architecture Doc · VS Code Extension: Separate Repo",
+    "lastUpdated": "December 10, 2025"
   },
   "columns": [
     {
@@ -828,6 +828,23 @@
             "Improved usage limit messages with LLM retry visibility",
             "Fixed workspace clear button to also clear code panel",
             "Bulk re-upload support for local files"
+          ]
+        },
+        {
+          "version": "v3.3.1",
+          "title": "Batch Generation & Mermaid Dark Mode Fixes",
+          "duration": "0.5 days",
+          "status": "✓ Complete",
+          "completedDate": "Dec 10, 2025",
+          "badge": "Critical Fixes",
+          "features": [
+            "Fixed batch cancel/regenerate race condition (guard + AbortController)",
+            "Fixed files disappearing from sidebar during batch operations",
+            "Fixed GitHub import localStorage format mismatch",
+            "Fixed empty code panel when deleting all workspace files",
+            "Fixed Mermaid diagram dark mode text readability (enforce theme palette)",
+            "Added single-file generating banner for UX consistency",
+            "3,638 tests (3,638 passing, 87 skipped)"
           ]
         }
       ]

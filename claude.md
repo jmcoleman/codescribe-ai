@@ -457,19 +457,21 @@ codescribe-ai/
 
 ## 🔄 Version History
 
-**Current: v3.3.0** (December 9, 2025)
-- Graph Engine API & Project Analysis
-- Project Details page with Graph Analysis section (stats grid, architecture diagram, analyzed files list)
-- Extended graph data in project API (functions, classes, exports, dependencies)
-- Fixed doc panel not clearing on logout (race condition fix)
-- Project Architecture Document spec (Epic 5.6 roadmap)
-- 3,724 tests (3,637 passing, 87 skipped)
+**Current: v3.3.1** (December 10, 2025)
+- Batch Generation & Mermaid Dark Mode Fixes
+- Fixed batch cancel/regenerate race condition (guard + AbortController)
+- Fixed files disappearing from sidebar during batch operations
+- Fixed GitHub import localStorage format mismatch
+- Fixed Mermaid diagram dark mode text readability (enforce theme palette)
+- Added single-file generating banner for UX consistency
+- 3,725 tests (3,638 passing, 87 skipped)
 - Frontend: 1,913 passing, 54 skipped
-- Backend: 1,724 passing, 33 skipped
+- Backend: 1,725 passing, 33 skipped
 
 <details>
-<summary>Recent Releases (v2.9.0-v3.2.2) & Milestones</summary>
+<summary>Recent Releases (v2.9.0-v3.3.0) & Milestones</summary>
 
+**v3.3.0** (Dec 9, 2025): Graph Engine API & Project Analysis - Project Details page, graph stats, architecture diagrams
 **v3.2.2** (Dec 7, 2025): UX Polish & Tier Access Updates - Trial user usage limits fix, code block rendering
 **v3.2.1** (Dec 7, 2025): Workspace Persistence Fix - Single-file generation persists to sessionStorage
 **v3.2.0** (Dec 6, 2025): Batch Generation & Workspace Fixes - Race condition fix, Mermaid cleanup, async prompts

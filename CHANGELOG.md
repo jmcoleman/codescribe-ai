@@ -9,6 +9,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.3.1] - 2025-12-10
+
+**Status:** ✅ Batch Generation & Mermaid Dark Mode Fixes
+
+**Summary:** Critical fixes for batch generation race conditions, workspace stability during operations, and Mermaid diagram readability in dark mode.
+
+### Fixed
+
+- **Batch Generation Race Conditions** ([client/src/hooks/useBatchGeneration.js](client/src/hooks/useBatchGeneration.js))
+  - Fixed race condition when cancelling and immediately regenerating batch
+  - Added guard to prevent concurrent batch executions
+  - Stop streaming immediately on batch cancellation via AbortController
+  - Fixed batch record validation error (only count processed files, not skipped)
+
+- **Files Disappearing During Batch Generation** ([client/src/hooks/useWorkspacePersistence.js](client/src/hooks/useWorkspacePersistence.js))
+  - Fixed files being removed from sidebar during batch operations
+  - Added `hasLoadedWorkspace` ref to prevent workspace reload during active operations
+  - Reset flag on logout so next login loads workspace fresh
+
+- **GitHub Import localStorage Format** ([client/src/components/GitHubLoader/GitHubLoadModal.jsx](client/src/components/GitHubLoader/GitHubLoadModal.jsx))
+  - Fixed files showing no code after GitHub import
+  - Root cause: Format mismatch between flat and nested `{ files: {...} }` format
+  - Now consistently uses nested format for both load and save
+
+- **Empty Code Panel on Workspace Clear** ([client/src/App.jsx](client/src/App.jsx))
+  - Fixed code panel becoming blank when deleting all files
+  - Now properly resets to default sample code
+
+- **Mermaid Diagram Dark Mode Readability** ([client/src/components/LazyMermaidRenderer.jsx](client/src/components/LazyMermaidRenderer.jsx))
+  - Fixed unreadable text in dark mode caused by LLM-generated custom colors
+  - Simplified approach: Strip non-standard background colors, enforce theme palette
+  - All text now uses theme colors (light in dark mode, dark in light mode)
+
+### Added
+
+- **Single-File Generating Banner** ([client/src/components/DocPanel.jsx](client/src/components/DocPanel.jsx))
+  - Added "Generating documentation..." banner during single-file generation
+  - Matches batch generation UX for consistency
+
+### Technical Details
+
+- **Test Count:** 3,638 tests (3,638 passing, 87 skipped)
+  - Frontend: 1,913 passing, 54 skipped (1,967 total)
+  - Backend: 1,725 passing, 33 skipped (1,758 total)
+
+---
+
 ## [3.3.0] - 2025-12-09
 
 **Status:** ✅ Graph Engine API & Project Analysis

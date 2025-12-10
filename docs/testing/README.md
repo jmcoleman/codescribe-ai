@@ -2,13 +2,13 @@
 
 **Project:** CodeScribe AI - Intelligent Code Documentation Generator
 **Testing Status:** ✅ Comprehensive Coverage Across 3 Frameworks
-**Last Updated:** December 9, 2025 (v3.3.0)
+**Last Updated:** December 10, 2025 (v3.3.1)
 
 ---
 
 ## 📊 Quick Stats
 
-- **Total Tests:** 3,724 tests (3,637 passing, 87 skipped, 0 failures)
+- **Total Tests:** 3,725 tests (3,638 passing, 87 skipped, 0 failures)
   - **Frontend:** 1,967 tests | 54 skipped (Vitest + React Testing Library)
     - Component Tests: All components with dark mode variants tested (including AppearanceModal, SamplesModal)
     - GitHub Loader: FileTree, TreeNode, GitHubLoadModal integration tests
@@ -18,7 +18,7 @@
     - Contact Modals: ContactSalesModal (25 tests), ContactSupportModal (12 tests - getToken Promise fix)
     - Batch Generation: 35 tests (useBatchGeneration hook - buildAttribution, generateBatchSummaryDocument)
     - **Pass Rate:** 97.3% (1,913 passing, 54 skipped, 0 failures)
-  - **Backend:** 1,757 tests | 33 skipped (Jest + Supertest)
+  - **Backend:** 1,758 tests | 33 skipped (Jest + Supertest)
     - Unit Tests: Services, models, utilities, middleware (emailService, requireTermsAcceptance, tierGate, rateLimitBypass, githubService)
     - LLM Provider Tests: 69 tests (llmService, config, utils, adapters for Claude/OpenAI/Gemini)
     - Integration Tests: Prompt quality, API contracts, authentication, tier system, contact sales/support, legal endpoints
@@ -27,17 +27,17 @@
     - Usage Tests: 29 tests (all passing)
     - Middleware Tests: 14 rateLimitBypass tests (2 skipped after debug logging cleanup)
     - Graph Engine: graph analysis, project dependencies, architecture generation
-    - **Pass Rate:** 98.1% (1,724 passing, 33 skipped, 0 failures)
+    - **Pass Rate:** 98.1% (1,725 passing, 33 skipped, 0 failures)
   - **Database:** 37 migration tests (Docker sandbox + Neon dev validation)
     - Migration-010: 14 tests (terms/privacy acceptance tracking)
     - Migration-011: 10 tests (analytics_enabled column + index)
     - Migration-017: 13 tests (total_generations column with triggers)
   - **E2E:** 10 tests (Playwright - file upload flow)
-- **Pass Rate:** 97.7% (3,637/3,724 total tests passing, 87 skipped, 0 failures) ✅
+- **Pass Rate:** 97.7% (3,638/3,725 total tests passing, 87 skipped, 0 failures) ✅
 - **Backend Coverage:** 82.38% statements, 70.11% branches, 82.54% lines, 85%+ functions (CI passing)
 - **Test Execution Time:** Frontend ~20.3s, Backend ~12.1s, Database ~0.3s, E2E ~45s
 - **Coverage Target:** 90% ✅ EXCEEDED (96.71% middleware statements, 93.49% middleware branches)
-- **Recent Updates:** Graph Engine API integration, Project Details graph analysis section (Dec 9, 2025 - v3.3.0)
+- **Recent Updates:** Batch generation & Mermaid dark mode fixes (Dec 10, 2025 - v3.3.1)
 
 ---
 

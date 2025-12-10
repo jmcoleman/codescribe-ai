@@ -510,7 +510,7 @@ For a complete navigation guide with descriptions of all documentation, see **[D
 
 **Development & Testing:**
 - **[Dev Guide](docs/planning/mvp/05-Dev-Guide.md)** - Implementation guide with code examples
-- **[Testing Hub](docs/testing/README.md)** - 3,724 tests (3,637 passing, 87 skipped), coverage reports, test patterns
+- **[Testing Hub](docs/testing/README.md)** - 3,725 tests (3,638 passing, 87 skipped), coverage reports, test patterns
 - **[Test Fixes Guide](docs/testing/TEST-PATTERNS-GUIDE.md)** - Testing patterns & best practices
 
 **Design & UX:**
@@ -812,8 +812,8 @@ See [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) for complete
 
 ### 📊 Testing & Quality
 
-**Comprehensive Test Coverage: 3,724 Tests** (3,637 passing, 87 skipped, 97.7% pass rate)
-- **Backend Tests**: 1,757 tests (1,724 passing, 33 skipped, 0 failures) - Jest + Supertest
+**Comprehensive Test Coverage: 3,725 Tests** (3,638 passing, 87 skipped, 97.7% pass rate)
+- **Backend Tests**: 1,758 tests (1,725 passing, 33 skipped, 0 failures) - Jest + Supertest
   - Service layer: qualityScorer, claudeClient, codeParser, docGenerator, emailService, githubService
   - LLM provider tests: 69 tests (llmService, config, utils, adapters)
   - Authentication: 102 tests (auth middleware, user model, OAuth flows)
@@ -844,7 +844,7 @@ See [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) for complete
   - Cross-browser validation (Chromium, Firefox, WebKit, Chrome, Edge)
   - File upload + generate workflows
   - **Pass Rate**: 100% (10/10 tests passing)
-- **Overall Pass Rate**: 97.7% passing (3,637/3,724 tests passing, 87 intentionally skipped, 0 failures)
+- **Overall Pass Rate**: 97.7% passing (3,638/3,725 tests passing, 87 intentionally skipped, 0 failures)
 
 **Running Tests:**
 ```bash
