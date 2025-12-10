@@ -510,7 +510,7 @@ For a complete navigation guide with descriptions of all documentation, see **[D
 
 **Development & Testing:**
 - **[Dev Guide](docs/planning/mvp/05-Dev-Guide.md)** - Implementation guide with code examples
-- **[Testing Hub](docs/testing/README.md)** - 2,529 tests (2,473 passing, 56 skipped), coverage reports, test patterns
+- **[Testing Hub](docs/testing/README.md)** - 3,724 tests (3,637 passing, 87 skipped), coverage reports, test patterns
 - **[Test Fixes Guide](docs/testing/TEST-PATTERNS-GUIDE.md)** - Testing patterns & best practices
 
 **Design & UX:**
@@ -812,8 +812,8 @@ See [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) for complete
 
 ### 📊 Testing & Quality
 
-**Comprehensive Test Coverage: 2,596 Tests** (2,540 passing, 56 skipped, 97.8% pass rate)
-- **Backend Tests**: 980 tests (957 passing, 23 skipped, 0 failures) - Jest + Supertest
+**Comprehensive Test Coverage: 3,724 Tests** (3,637 passing, 87 skipped, 97.7% pass rate)
+- **Backend Tests**: 1,757 tests (1,724 passing, 33 skipped, 0 failures) - Jest + Supertest
   - Service layer: qualityScorer, claudeClient, codeParser, docGenerator, emailService, githubService
   - LLM provider tests: 69 tests (llmService, config, utils, adapters)
   - Authentication: 102 tests (auth middleware, user model, OAuth flows)
@@ -825,8 +825,8 @@ See [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) for complete
   - Integration: file upload, quality scoring, prompt quality, settings API
   - Mermaid generation tests
   - **Coverage**: 82.38% statements, 70.11% branches, 82.54% lines, 85%+ functions
-  - **Pass Rate**: 97.7% (957 passing, 23 skipped, 0 failures)
-- **Frontend Tests**: 1,616 tests (1,583 passing, 33 skipped, 0 failures) - Vitest + React Testing Library
+  - **Pass Rate**: 98.1% (1,724 passing, 33 skipped, 0 failures)
+- **Frontend Tests**: 1,967 tests (1,913 passing, 54 skipped, 0 failures) - Vitest + React Testing Library
   - Component tests with accessibility checks (18/18 components tested)
   - GitHub Loader: FileTree, TreeNode, GitHubLoadModal integration
   - Authentication UI: SignupModal, LoginModal, ForgotPasswordModal, ResetPasswordModal
@@ -839,12 +839,12 @@ See [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) for complete
   - Mermaid diagram rendering tests
   - Toast notification system tests (33 tests)
   - **Coverage**: 100% critical user paths
-  - **Pass Rate**: 98.0% (1,583 passing, 33 skipped, 0 failures)
+  - **Pass Rate**: 97.3% (1,913 passing, 54 skipped, 0 failures)
 - **E2E Tests**: 10 tests across 5 browsers (Playwright)
   - Cross-browser validation (Chromium, Firefox, WebKit, Chrome, Edge)
   - File upload + generate workflows
   - **Pass Rate**: 100% (10/10 tests passing)
-- **Overall Pass Rate**: 97.8% passing (2,540/2,596 tests passing, 56 intentionally skipped, 0 failures)
+- **Overall Pass Rate**: 97.7% passing (3,637/3,724 tests passing, 87 intentionally skipped, 0 failures)
 
 **Running Tests:**
 ```bash
@@ -942,9 +942,9 @@ npm run test:e2e:headed       # With browser UI (for debugging)
 - Production deployment with CI/CD (GitHub Actions)
 
 **Quality Metrics:**
-- **2,529 tests** (1,549 frontend, 980 backend) - 97.8% pass rate
-- **Backend coverage:** 82.38% statements, 70.11% branches (957 passing, 23 skipped)
-- **Frontend coverage:** 100% critical paths (1,516 passing, 33 skipped)
+- **3,724 tests** (1,967 frontend, 1,757 backend) - 97.7% pass rate
+- **Backend coverage:** 82.38% statements, 70.11% branches (1,724 passing, 33 skipped)
+- **Frontend coverage:** 100% critical paths (1,913 passing, 54 skipped)
 - **Database:** 14 migration tests (Docker sandbox + Neon dev validation)
 
 ### ✅ Phase 2 - Epic 2.6 Complete (Nov 5-7, 2025)

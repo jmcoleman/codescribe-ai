@@ -9,6 +9,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.3.0] - 2025-12-09
+
+**Status:** ✅ Graph Engine API & Project Analysis
+
+**Summary:** Graph Engine API integration complete with Project Details page enhancements showing graph analysis data including stats, architecture diagrams, and analyzed file lists. Plus doc panel logout fix and roadmap planning updates.
+
+### Added
+
+- **Project Details Graph Analysis Section** ([client/src/pages/ProjectDetails.jsx](client/src/pages/ProjectDetails.jsx))
+  - Stats grid showing: files, functions, classes, exports, dependencies
+  - Architecture diagram generation with Mermaid renderer
+  - Collapsible "Analyzed Files" list with file details (language, exports, imports)
+  - Visual badges and icons for better data presentation
+
+- **Extended Graph Data in Project API** ([server/src/services/projectService.js](server/src/services/projectService.js))
+  - `getProjectSummary` now returns comprehensive graph metadata
+  - Includes: totalFunctions, totalClasses, totalExports, dependencyCount, files array
+  - Each file entry includes: path, fileName, language, exports count, imports count
+
+- **Project Architecture Document Spec** ([docs/planning/PROJECT-ARCHITECTURE-DOC-SPEC.md](docs/planning/PROJECT-ARCHITECTURE-DOC-SPEC.md))
+  - Planning specification for Epic 5.6
+  - Project-level architecture doc generation from graph metadata
+  - LLM input/output format, data model, UI integration plans
+
+- **Roadmap Updates** ([docs/planning/roadmap/roadmap-data.json](docs/planning/roadmap/roadmap-data.json))
+  - Added Epic 5.6: Project Architecture Document to Active column
+  - Moved completed Graph Engine features to Done column
+
+### Fixed
+
+- **Doc Panel Not Clearing on Logout** ([client/src/App.jsx](client/src/App.jsx))
+  - Fixed race condition where doc panel content persisted after logout
+  - Root cause: `hasSeenUserRef.current` was set to false before separate useEffect cleared docs
+  - Solution: Added `setDocumentation('')` and `setQualityScore(null)` to same effect block
+
+- **Graph Node File Paths** ([server/src/services/projectService.js](server/src/services/projectService.js))
+  - Fixed file names not appearing in Analyzed Files list
+  - Graph nodes use `id` for file path, not `path` property
+
+### Changed
+
+- **ProjectGraphInfo Component** ([client/src/components/Sidebar/ProjectGraphInfo.jsx](client/src/components/Sidebar/ProjectGraphInfo.jsx))
+  - Now part of expanded graph analysis ecosystem
+  - Provides sidebar view linking to full Project Details page
+
+### Removed
+
+- **Coverage Files from Git** - Removed accidentally tracked coverage directories from version control
+
+### Technical Details
+
+- **Test Count:** 3,637 tests (3,637 passing, 87 skipped)
+  - Frontend: 1,913 passing, 54 skipped (1,967 total)
+  - Backend: 1,724 passing, 33 skipped (1,757 total)
+
+---
+
 ## [3.2.2] - 2025-12-07
 
 **Status:** ✅ UX Polish & Tier Access Updates

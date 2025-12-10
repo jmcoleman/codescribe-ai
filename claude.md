@@ -457,20 +457,20 @@ codescribe-ai/
 
 ## 🔄 Version History
 
-**Current: v3.2.2** (December 7, 2025)
-- UX Polish & Tier Access Updates
-- Fixed trial users seeing Free tier limits instead of Pro (effectiveTier fix)
-- Fixed markdown code block rendering (extra backtick/spacing)
-- Starter tier: Added GitHub import and Generation History access
-- Pricing page: Removed redundant trial banner, neutral "Base Plan" badge when on trial
-- History page: "(12 docs in 4 batches)" count display
-- 3,449 tests (3,349 passing, 97 skipped)
-- Frontend: 1,854 passing, 64 skipped
-- Backend: 1,495 passing, 33 skipped
+**Current: v3.3.0** (December 9, 2025)
+- Graph Engine API & Project Analysis
+- Project Details page with Graph Analysis section (stats grid, architecture diagram, analyzed files list)
+- Extended graph data in project API (functions, classes, exports, dependencies)
+- Fixed doc panel not clearing on logout (race condition fix)
+- Project Architecture Document spec (Epic 5.6 roadmap)
+- 3,724 tests (3,637 passing, 87 skipped)
+- Frontend: 1,913 passing, 54 skipped
+- Backend: 1,724 passing, 33 skipped
 
 <details>
-<summary>Recent Releases (v2.9.0-v3.2.1) & Milestones</summary>
+<summary>Recent Releases (v2.9.0-v3.2.2) & Milestones</summary>
 
+**v3.2.2** (Dec 7, 2025): UX Polish & Tier Access Updates - Trial user usage limits fix, code block rendering
 **v3.2.1** (Dec 7, 2025): Workspace Persistence Fix - Single-file generation persists to sessionStorage
 **v3.2.0** (Dec 6, 2025): Batch Generation & Workspace Fixes - Race condition fix, Mermaid cleanup, async prompts
 **v3.1.0** (Dec 5, 2025): Trial System Production Ready - Full user-facing flow, admin UI, attribution
@@ -504,7 +504,7 @@ codescribe-ai/
 - **v1.21** (Oct 19): Production deployment, codescribe-ai.vercel.app
 
 Full history: [CHANGELOG.md](CHANGELOG.md)
-Last updated: December 7, 2025
+Last updated: December 9, 2025
 </details>
 
 ---
