@@ -65,8 +65,8 @@
       "text": "codescribeai.com",
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
-    "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.28",
-    "footer": "v3.3.1 Complete · Batch & Mermaid Fixes ✓ · Up Next: Project Architecture Doc · VS Code Extension: Separate Repo",
+    "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.29",
+    "footer": "v3.3.2 Complete · Sidebar UX Polish ✓ · Up Next: Private GitHub Repos · VS Code Extension: Separate Repo",
     "lastUpdated": "December 10, 2025"
   },
   "columns": [
@@ -846,6 +846,23 @@
             "Added single-file generating banner for UX consistency",
             "3,638 tests (3,638 passing, 87 skipped)"
           ]
+        },
+        {
+          "version": "v3.3.2",
+          "title": "Sidebar UX Polish & Toolbar Improvements",
+          "duration": "0.5 days",
+          "status": "✓ Complete",
+          "completedDate": "Dec 10, 2025",
+          "badge": "UX Polish",
+          "features": [
+            "ProjectSelector two-line dropdown showing graph status (file count, expiration) for each project",
+            "Apply doc type consolidated into dropdown menu (one-click workflow)",
+            "Toolbar visual grouping: Add button separated from selection actions (Apply, Delete, Generate)",
+            "View project details link (ExternalLink icon) opens in new tab",
+            "Auto-deselect files after Apply doc type and Generate actions",
+            "Responsive toolbar: labels hidden at 300px breakpoint, flex-wrap for narrow widths",
+            "3,638 tests (3,638 passing, 87 skipped)"
+          ]
         }
       ]
     },
@@ -856,10 +873,26 @@
       "subtitle": "Phase 3: Platform Infrastructure",
       "phases": [
         {
+          "version": "Epic 4.1.1",
+          "title": "Private GitHub Repository Support",
+          "duration": "1-2 days",
+          "status": "Up Next",
+          "badge": "High Value",
+          "features": [
+            "Persist GitHub OAuth access token for authenticated users",
+            "Add 'repo' scope to GitHub OAuth request for private repo access",
+            "Pass user token to @octokit/rest client for API calls",
+            "5,000 requests/hour (vs 60 unauthenticated) + private repo access",
+            "UI: 'Link GitHub' prompt for users without connected GitHub account",
+            "Private repos appear automatically in GitHub import modal",
+            "Builds on existing GitHub OAuth login infrastructure (minimal new code)"
+          ]
+        },
+        {
           "version": "Epic 5.6",
           "title": "Project Architecture Document",
           "duration": "3-4 days",
-          "status": "Up Next",
+          "status": "Planned",
           "badge": "Leverages Graph Engine",
           "features": [
             "Generate project-level ARCHITECTURE doc from graph metadata (not per-file)",
