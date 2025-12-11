@@ -1,11 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { FileItem } from './FileItem';
 import { FileDetailsPanel } from './FileDetailsPanel';
 import { ProjectSelector } from './ProjectSelector';
-import { ProjectGraphInfo } from './ProjectGraphInfo';
-import { FileCode, PanelLeftClose, Plus, Github, Upload, Info, X, Stamp, Trash2, Sparkles, Loader2, RefreshCw, FolderUp } from 'lucide-react';
-import { Select } from '../Select';
-import { Button } from '../Button';
+import { FileCode, PanelLeftClose, Plus, Github, Upload, Info, X, Stamp, Trash2, Sparkles, Loader2, RefreshCw, FolderUp, Search, ChevronDown } from 'lucide-react';
+import { Menu } from '@headlessui/react';
 import { Tooltip } from '../Tooltip';
 import { ConfirmModal } from '../ConfirmModal';
 import { fetchDocTypes } from '../../services/api';
@@ -69,8 +67,7 @@ function LocalSync({ className, isLoading = false }) {
  * @param {Array} props.selectedFileIds - Array of selected file IDs
  * @param {number} props.selectedCount - Number of selected files
  * @param {boolean} props.isMobile - Mobile mode (hides toggle button)
- * @param {string} props.docType - Current documentation type
- * @param {Function} props.onDocTypeChange - Called when doc type changes
+ * @param {Function} props.onApplyDocType - Called when user applies a doc type to selected files
  * @param {Function} props.onGithubImport - Called when GitHub import is clicked
  * @param {Function} props.onSelectFile - Called when user clicks a file
  * @param {Function} props.onToggleFileSelection - Called when checkbox is toggled
@@ -93,8 +90,6 @@ export function FileList({
   selectedFileIds = [],
   selectedCount = 0,
   isMobile = false,
-  docType,
-  onDocTypeChange,
   onApplyDocType,
   onGithubImport,
   onSelectFile,
@@ -113,7 +108,6 @@ export function FileList({
   onUpdateFile,
   onViewBatchSummary,
   selectedProjectId = null,
-  selectedProjectName = null,
   onProjectChange,
   canUseProjectManagement = false
 }) {
@@ -126,6 +120,8 @@ export function FileList({
   });
   const [reloadingFileIds, setReloadingFileIds] = useState(new Set());
   const [bulkReloadProgress, setBulkReloadProgress] = useState(null); // { total, completed }
+  const [searchFilter, setSearchFilter] = useState(''); // Search/filter for file list
+  const [selectedExtensions, setSelectedExtensions] = useState([]); // Extension filter pills
 
   const generatedCount = files.filter(f => f.documentation).length;
   const canGenerateAll = files.some(f => !f.documentation && !f.isGenerating);
@@ -155,6 +151,34 @@ export function FileList({
   // Files without code that can be reloaded from GitHub
   const reloadableFilesWithoutCode = filesWithoutCode.filter(f => f.origin === 'github' && f.github?.repo && f.github?.path);
   const hasReloadableFiles = reloadableFilesWithoutCode.length > 0;
+
+  // Compute available file extensions for filter pills
+  const availableExtensions = useMemo(() => {
+    const extensions = new Set();
+    files.forEach(file => {
+      const ext = file.filename.split('.').pop()?.toLowerCase();
+      if (ext && ext !== file.filename.toLowerCase()) {
+        extensions.add(ext);
+      }
+    });
+    return Array.from(extensions).sort();
+  }, [files]);
+
+  // Toggle extension filter
+  const toggleExtension = (ext) => {
+    setSelectedExtensions(prev => {
+      if (prev.includes(ext)) {
+        return prev.filter(e => e !== ext);
+      } else {
+        return [...prev, ext];
+      }
+    });
+  };
+
+  // Clear all extension filters
+  const clearExtensionFilters = () => {
+    setSelectedExtensions([]);
+  };
 
   // Keyboard shortcut handlers
   useEffect(() => {
@@ -488,24 +512,7 @@ export function FileList({
             </h2>
           </div>
 
-          {/* Doc Type selector */}
-          <div className="flex items-center gap-2 mb-1.5">
-            <label htmlFor="sidebar-doc-type-select" className="text-xs font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap flex-shrink-0">
-              Doc Type:
-            </label>
-            <div className="flex-1 min-w-0">
-              <Select
-                id="sidebar-doc-type-select"
-                options={docTypes}
-                value={docType}
-                onChange={onDocTypeChange}
-                ariaLabel="Select documentation type"
-                size="small"
-              />
-            </div>
-          </div>
-
-          {/* Project selector (Pro+ only) */}
+          {/* Project selector (Pro+ only) - includes integrated graph info */}
           {canUseProjectManagement && onProjectChange && (
             <div className="flex items-center gap-2 mb-1.5">
               <label className="text-xs font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap flex-shrink-0">
@@ -521,83 +528,139 @@ export function FileList({
             </div>
           )}
 
-          {/* Project & Graph info (Pro+ only) - collapsible section */}
-          {canUseProjectManagement && selectedProjectId && (
-            <ProjectGraphInfo
-              selectedProjectId={selectedProjectId}
-              selectedProjectName={selectedProjectName}
-            />
-          )}
+          {/* Action buttons row */}
+          <div className="flex flex-wrap items-center gap-2 justify-between">
+            {/* Left: Add files dropdown */}
+            <Menu as="div" className="relative">
+              <Menu.Button className="inline-flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400">
+                <Plus className="w-3.5 h-3.5" aria-hidden="true" />
+                <span className="@[180px]:inline hidden">Add</span>
+                <ChevronDown className="w-3 h-3 text-slate-500 dark:text-slate-400" aria-hidden="true" />
+              </Menu.Button>
 
-          {/* Action buttons - file management (left) and selection actions (right) */}
-          <div className="flex gap-2 justify-between">
-            {/* Left group: File management */}
-            <div className="flex gap-1">
-              {/* GitHub actions grouped together */}
-              <Tooltip content="Import from GitHub">
-                <button
-                  type="button"
-                  onClick={onGithubImport}
-                  className="icon-btn interactive-scale-sm focus-ring-light flex-shrink-0"
-                  aria-label="Import from GitHub"
-                >
-                  <Github className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-                </button>
-              </Tooltip>
-              <Tooltip content={bulkReloadProgress ? `Reloading ${bulkReloadProgress.completed}/${bulkReloadProgress.total}` : `Reload from GitHub (${githubFiles.length} files)`}>
-                <button
-                  type="button"
-                  onClick={handleReloadAllFromGitHub}
-                  disabled={!hasGitHubFiles || bulkReloadProgress}
-                  className="icon-btn interactive-scale-sm focus-ring-light flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
-                  aria-label={bulkReloadProgress ? `Reloading ${bulkReloadProgress.completed} of ${bulkReloadProgress.total} files` : `Reload ${githubFiles.length} files from GitHub`}
-                >
-                  <GitHubSync className="text-slate-600 dark:text-slate-400" isLoading={!!bulkReloadProgress} />
-                </button>
-              </Tooltip>
-              {/* Local actions grouped together */}
-              <Tooltip content="Add files">
-                <button
-                  type="button"
-                  onClick={onAddFile}
-                  className="icon-btn interactive-scale-sm focus-ring-light flex-shrink-0"
-                  aria-label="Add files"
-                >
-                  <Plus className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-                </button>
-              </Tooltip>
-              <Tooltip content={localReuploadProgress ? `Updated ${localReuploadProgress.updated}/${localReuploadProgress.matched} matched` : `Re-upload local files (${localFiles.length} files)`}>
-                <button
-                  type="button"
-                  onClick={() => reuploadInputRef.current?.click()}
-                  disabled={!hasLocalFiles || localReuploadProgress}
-                  className="icon-btn interactive-scale-sm focus-ring-light flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
-                  aria-label={localReuploadProgress ? `Updated ${localReuploadProgress.updated} of ${localReuploadProgress.matched} matched files` : `Re-upload ${localFiles.length} local files`}
-                >
-                  <LocalSync className="text-slate-600 dark:text-slate-400" isLoading={!!localReuploadProgress} />
-                </button>
-              </Tooltip>
-            </div>
+              <Menu.Items
+                anchor="bottom start"
+                className="w-52 rounded-lg bg-white dark:bg-slate-800 shadow-lg ring-1 ring-black dark:ring-slate-700 ring-opacity-5 dark:ring-opacity-50 focus:outline-none z-[100] [--anchor-gap:4px]"
+              >
+                <div className="p-1">
+                  {/* Add new files */}
+                  <Menu.Item>
+                    {({ active }) => (
+                      <button
+                        type="button"
+                        onClick={onAddFile}
+                        className={`${active ? 'bg-slate-100 dark:bg-slate-700' : ''} group flex items-center gap-3 w-full px-3 py-2 text-sm text-slate-700 dark:text-slate-200 rounded-md transition-colors`}
+                      >
+                        <Upload className="w-4 h-4 text-slate-500 dark:text-slate-400" aria-hidden="true" />
+                        Add local files
+                      </button>
+                    )}
+                  </Menu.Item>
 
-            {/* Right group: Selection actions */}
-            <div className="flex gap-1">
-              <Tooltip content={selectedCount > 0 ? 'Apply to selection' : 'Select files to apply doc type'}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (selectedCount === 0) return;
-                    // Apply doc type directly - previous docs are saved in DB history
-                    if (onApplyDocType) {
-                      onApplyDocType(selectedFileIds, docType);
-                    }
-                  }}
-                  disabled={selectedCount === 0}
-                  className="icon-btn interactive-scale-sm focus-ring-light flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
-                  aria-label={selectedCount > 0 ? `Apply ${docType} doc type to ${selectedCount} selected file${selectedCount !== 1 ? 's' : ''}` : 'Select files to apply doc type'}
+                  <Menu.Item>
+                    {({ active }) => (
+                      <button
+                        type="button"
+                        onClick={onGithubImport}
+                        className={`${active ? 'bg-slate-100 dark:bg-slate-700' : ''} group flex items-center gap-3 w-full px-3 py-2 text-sm text-slate-700 dark:text-slate-200 rounded-md transition-colors`}
+                      >
+                        <Github className="w-4 h-4 text-slate-500 dark:text-slate-400" aria-hidden="true" />
+                        Import from GitHub
+                      </button>
+                    )}
+                  </Menu.Item>
+
+                  {/* Divider - only show if there are reloadable files */}
+                  {(hasLocalFiles || hasGitHubFiles) && (
+                    <div className="h-px bg-slate-200 dark:bg-slate-700 my-1" />
+                  )}
+
+                  {/* Reload existing files */}
+                  {hasLocalFiles && (
+                    <Menu.Item disabled={localReuploadProgress}>
+                      {({ active, disabled }) => (
+                        <button
+                          type="button"
+                          onClick={() => reuploadInputRef.current?.click()}
+                          disabled={disabled}
+                          className={`${active && !disabled ? 'bg-slate-100 dark:bg-slate-700' : ''} ${disabled ? 'opacity-50 cursor-not-allowed' : ''} group flex items-center gap-3 w-full px-3 py-2 text-sm text-slate-700 dark:text-slate-200 rounded-md transition-colors`}
+                        >
+                          <LocalSync className="text-slate-500 dark:text-slate-400" isLoading={!!localReuploadProgress} />
+                          {localReuploadProgress
+                            ? `Updating ${localReuploadProgress.updated}/${localReuploadProgress.matched}...`
+                            : `Re-upload local (${localFiles.length})`
+                          }
+                        </button>
+                      )}
+                    </Menu.Item>
+                  )}
+
+                  {hasGitHubFiles && (
+                    <Menu.Item disabled={bulkReloadProgress}>
+                      {({ active, disabled }) => (
+                        <button
+                          type="button"
+                          onClick={handleReloadAllFromGitHub}
+                          disabled={disabled}
+                          className={`${active && !disabled ? 'bg-slate-100 dark:bg-slate-700' : ''} ${disabled ? 'opacity-50 cursor-not-allowed' : ''} group flex items-center gap-3 w-full px-3 py-2 text-sm text-slate-700 dark:text-slate-200 rounded-md transition-colors`}
+                        >
+                          <GitHubSync className="text-slate-500 dark:text-slate-400" isLoading={!!bulkReloadProgress} />
+                          {bulkReloadProgress
+                            ? `Reloading ${bulkReloadProgress.completed}/${bulkReloadProgress.total}...`
+                            : `Reload from GitHub (${githubFiles.length})`
+                          }
+                        </button>
+                      )}
+                    </Menu.Item>
+                  )}
+                </div>
+              </Menu.Items>
+            </Menu>
+
+            {/* Right group: Selection actions (Apply, Delete, Generate) - visually grouped */}
+            <div className="flex gap-1 p-1 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
+              {/* Apply doc type menu */}
+              <Menu as="div" className="relative">
+                <Tooltip content={selectedCount > 0 ? 'Apply doc type to selection' : 'Select files to apply doc type'}>
+                  <Menu.Button
+                    disabled={selectedCount === 0}
+                    className="inline-flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400"
+                  >
+                    <Stamp className="w-3.5 h-3.5" aria-hidden="true" />
+                    <span className="@[300px]:inline hidden">Apply</span>
+                    <ChevronDown className="w-3 h-3 text-slate-500 dark:text-slate-400 @[300px]:inline hidden" aria-hidden="true" />
+                  </Menu.Button>
+                </Tooltip>
+
+                <Menu.Items
+                  anchor="bottom start"
+                  className="w-48 rounded-lg bg-white dark:bg-slate-800 shadow-lg ring-1 ring-black dark:ring-slate-700 ring-opacity-5 dark:ring-opacity-50 focus:outline-none z-[100] [--anchor-gap:4px]"
                 >
-                  <Stamp className="w-4 h-4 text-slate-600 dark:text-slate-400" aria-hidden="true" />
-                </button>
-              </Tooltip>
+                  <div className="p-1">
+                    <div className="px-3 py-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
+                      Apply to {selectedCount} file{selectedCount !== 1 ? 's' : ''}
+                    </div>
+                    {docTypes.map((type) => (
+                      <Menu.Item key={type.value}>
+                        {({ active }) => (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (onApplyDocType) {
+                                onApplyDocType(selectedFileIds, type.value);
+                                onDeselectAllFiles?.();
+                              }
+                            }}
+                            className={`${active ? 'bg-slate-100 dark:bg-slate-700' : ''} group flex items-center gap-3 w-full px-3 py-2 text-sm text-slate-700 dark:text-slate-200 rounded-md transition-colors`}
+                          >
+                            {type.label}
+                          </button>
+                        )}
+                      </Menu.Item>
+                    ))}
+                  </div>
+                </Menu.Items>
+              </Menu>
 
               <Tooltip content={selectedCount > 0 ? 'Delete selection (⌫)' : 'Select files to delete'}>
                 <button
@@ -610,26 +673,28 @@ export function FileList({
                     });
                   }}
                   disabled={selectedCount === 0}
-                  className="icon-btn interactive-scale-sm focus-ring-light flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400"
                   aria-label={selectedCount > 0 ? `Delete ${selectedCount} selected file${selectedCount !== 1 ? 's' : ''}` : 'Select files to delete'}
                 >
-                  <Trash2 className="w-4 h-4 text-slate-600 dark:text-slate-400" aria-hidden="true" />
+                  <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
+                  <span className="@[300px]:inline hidden">Delete</span>
                 </button>
               </Tooltip>
 
-              <Tooltip content={bulkGenerationProgress ? `Generating ${bulkGenerationProgress.completed}/${bulkGenerationProgress.total}` : "Generate for selection (⌘G)"}>
+              <Tooltip content={bulkGenerationProgress ? `Generating ${bulkGenerationProgress.completed}/${bulkGenerationProgress.total}` : "Generate documentation (⌘G)"}>
                 <button
                   type="button"
                   onClick={onGenerateSelected}
                   disabled={selectedCountWithContent === 0 && !hasCodeInEditor || bulkGenerationProgress}
-                  className="icon-btn interactive-scale-sm focus-ring-light flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
-                  aria-label={bulkGenerationProgress ? `Generating ${bulkGenerationProgress.completed} of ${bulkGenerationProgress.total}` : "Generate for selection"}
+                  className="inline-flex items-center gap-1 px-2 py-1.5 text-xs font-medium rounded-md transition-all duration-200 bg-purple-600 dark:bg-purple-400 text-white dark:text-slate-950 shadow-md shadow-purple-600/20 dark:shadow-purple-400/30 hover:enabled:scale-[1.02] active:enabled:scale-[0.98] disabled:cursor-not-allowed disabled:shadow-none disabled:bg-slate-300 dark:disabled:bg-slate-700 disabled:text-slate-500 dark:disabled:text-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400"
+                  aria-label={bulkGenerationProgress ? `Generating ${bulkGenerationProgress.completed} of ${bulkGenerationProgress.total}` : "Generate documentation (⌘G)"}
                 >
                   {bulkGenerationProgress ? (
-                    <Loader2 className="w-4 h-4 text-purple-600 dark:text-purple-400 animate-spin" aria-hidden="true" />
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   ) : (
-                    <Sparkles className="w-4 h-4 text-slate-600 dark:text-slate-400" aria-hidden="true" />
+                    <Sparkles className="w-3.5 h-3.5" />
                   )}
+                  <span className="@[300px]:inline hidden">Generate</span>
                 </button>
               </Tooltip>
             </div>
@@ -662,83 +727,7 @@ export function FileList({
       {/* Mobile: Action controls (replaces desktop header) */}
       {isMobile && (
         <div className="border-b border-slate-200 dark:border-slate-700 px-3 py-2.5 bg-white dark:bg-slate-900">
-          {/* Top row: GitHub Import and Add Files - Always visible */}
-          <div className="flex gap-2 mb-2">
-            <button
-              type="button"
-              onClick={onGithubImport}
-              className="flex-1 px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-100 rounded text-xs font-medium flex items-center justify-center gap-1.5 border border-slate-200 dark:border-slate-600"
-            >
-              <Github className="w-4 h-4" />
-              Import from GitHub
-            </button>
-            <button
-              type="button"
-              onClick={onAddFile}
-              className="flex-1 px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-100 rounded text-xs font-medium flex items-center justify-center gap-1.5 border border-slate-200 dark:border-slate-600"
-            >
-              <Plus className="w-4 h-4" />
-              Add Files
-            </button>
-          </div>
-
-          {/* Reload buttons - Only show when files exist */}
-          {(hasGitHubFiles || hasLocalFiles) && (
-            <div className="flex gap-2 mb-2">
-              {/* Reload from GitHub button */}
-              {hasGitHubFiles && (
-                <button
-                  type="button"
-                  onClick={handleReloadAllFromGitHub}
-                  disabled={bulkReloadProgress}
-                  className="flex-1 px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-100 rounded text-xs font-medium flex items-center justify-center gap-1.5 border border-slate-200 dark:border-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <GitHubSync isLoading={!!bulkReloadProgress} />
-                  {bulkReloadProgress
-                    ? `${bulkReloadProgress.completed}/${bulkReloadProgress.total}`
-                    : `GitHub (${githubFiles.length})`
-                  }
-                </button>
-              )}
-              {/* Re-upload local files button */}
-              {hasLocalFiles && (
-                <button
-                  type="button"
-                  onClick={() => reuploadInputRef.current?.click()}
-                  disabled={localReuploadProgress}
-                  className="flex-1 px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-100 rounded text-xs font-medium flex items-center justify-center gap-1.5 border border-slate-200 dark:border-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <LocalSync isLoading={!!localReuploadProgress} />
-                  {localReuploadProgress
-                    ? `${localReuploadProgress.updated}/${localReuploadProgress.matched}`
-                    : `Local (${localFiles.length})`
-                  }
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* File management controls - Only show when files exist */}
-          {files.length > 0 && (
-            <>
-              {/* Doc Type selector */}
-              <div className="flex items-center gap-2 mb-2">
-            <label htmlFor="mobile-doc-type-select" className="text-xs font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
-              Doc Type:
-            </label>
-            <div className="flex-1">
-              <Select
-                id="mobile-doc-type-select"
-                options={docTypes}
-                value={docType}
-                onChange={onDocTypeChange}
-                ariaLabel="Select documentation type"
-                size="small"
-              />
-            </div>
-          </div>
-
-          {/* Project selector (Pro+ only) - Mobile */}
+          {/* Project selector (Pro+ only) - Mobile - includes integrated graph info */}
           {canUseProjectManagement && onProjectChange && (
             <div className="flex items-center gap-2 mb-2">
               <label className="text-xs font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
@@ -754,70 +743,172 @@ export function FileList({
             </div>
           )}
 
-          {/* Project & Graph info (Pro+ only) - collapsible section */}
-          {canUseProjectManagement && selectedProjectId && (
-            <ProjectGraphInfo
-              selectedProjectId={selectedProjectId}
-              selectedProjectName={selectedProjectName}
-            />
-          )}
+          {/* Action buttons row: Add dropdown + Apply, Delete, Generate */}
+          <div className="flex items-center gap-2">
+            {/* Add files dropdown */}
+            <Menu as="div" className="relative">
+              <Menu.Button className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-100 rounded text-xs font-medium flex items-center justify-center gap-1.5 border border-slate-200 dark:border-slate-600">
+                <Plus className="w-4 h-4" />
+                Add
+                <ChevronDown className="w-3 h-3 text-slate-500" aria-hidden="true" />
+              </Menu.Button>
 
-          {/* Action buttons - Apply, Delete, Generate */}
-          <div className="flex gap-1.5">
-            <button
-              type="button"
-              onClick={() => {
-                if (selectedCount === 0) return;
-                // Apply doc type directly - previous docs are saved in DB history
-                if (onApplyDocType) {
-                  onApplyDocType(selectedFileIds, docType);
-                }
-              }}
-              disabled={selectedCount === 0}
-              className="flex-1 px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-600 rounded text-xs font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:focus-visible:ring-slate-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1"
-              aria-label={selectedCount > 0 ? 'Apply to selection' : 'Select files to apply doc type'}
-            >
-              <Stamp className="w-3.5 h-3.5" />
-              Apply
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                if (selectedCount === 0) return;
-                setDeleteConfirmModal({
-                  isOpen: true,
-                  count: selectedCount
-                });
-              }}
-              disabled={selectedCount === 0}
-              className="flex-1 px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-600 rounded text-xs font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:focus-visible:ring-slate-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1"
-              aria-label={selectedCount > 0 ? 'Delete selection' : 'Select files to delete'}
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-              Delete
-            </button>
-            <button
-              type="button"
-              onClick={onGenerateSelected}
-              disabled={selectedCountWithContent === 0 && !hasCodeInEditor || bulkGenerationProgress}
-              className="flex-1 px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-600 rounded text-xs font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:focus-visible:ring-slate-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1"
-              aria-label={bulkGenerationProgress ? `Generating ${bulkGenerationProgress.completed} of ${bulkGenerationProgress.total}` : "Generate for selection"}
-            >
-              {bulkGenerationProgress ? (
-                <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  {bulkGenerationProgress.completed}/{bulkGenerationProgress.total}
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-3.5 h-3.5" />
-                  Generate
-                </>
-              )}
-            </button>
+              <Menu.Items
+                anchor="bottom start"
+                className="w-52 rounded-lg bg-white dark:bg-slate-800 shadow-lg ring-1 ring-black dark:ring-slate-700 ring-opacity-5 dark:ring-opacity-50 focus:outline-none z-[100] [--anchor-gap:4px]"
+              >
+                <div className="p-1">
+                  <Menu.Item>
+                    {({ active }) => (
+                      <button
+                        type="button"
+                        onClick={onAddFile}
+                        className={`${active ? 'bg-slate-100 dark:bg-slate-700' : ''} group flex items-center gap-3 w-full px-3 py-2 text-sm text-slate-700 dark:text-slate-200 rounded-md transition-colors`}
+                      >
+                        <Upload className="w-4 h-4 text-slate-500 dark:text-slate-400" aria-hidden="true" />
+                        Add local files
+                      </button>
+                    )}
+                  </Menu.Item>
+
+                  <Menu.Item>
+                    {({ active }) => (
+                      <button
+                        type="button"
+                        onClick={onGithubImport}
+                        className={`${active ? 'bg-slate-100 dark:bg-slate-700' : ''} group flex items-center gap-3 w-full px-3 py-2 text-sm text-slate-700 dark:text-slate-200 rounded-md transition-colors`}
+                      >
+                        <Github className="w-4 h-4 text-slate-500 dark:text-slate-400" aria-hidden="true" />
+                        Import from GitHub
+                      </button>
+                    )}
+                  </Menu.Item>
+
+                  {(hasLocalFiles || hasGitHubFiles) && (
+                    <div className="h-px bg-slate-200 dark:bg-slate-700 my-1" />
+                  )}
+
+                  {hasLocalFiles && (
+                    <Menu.Item disabled={localReuploadProgress}>
+                      {({ active, disabled }) => (
+                        <button
+                          type="button"
+                          onClick={() => reuploadInputRef.current?.click()}
+                          disabled={disabled}
+                          className={`${active && !disabled ? 'bg-slate-100 dark:bg-slate-700' : ''} ${disabled ? 'opacity-50 cursor-not-allowed' : ''} group flex items-center gap-3 w-full px-3 py-2 text-sm text-slate-700 dark:text-slate-200 rounded-md transition-colors`}
+                        >
+                          <LocalSync className="text-slate-500 dark:text-slate-400" isLoading={!!localReuploadProgress} />
+                          {localReuploadProgress
+                            ? `Updating ${localReuploadProgress.updated}/${localReuploadProgress.matched}...`
+                            : `Re-upload local (${localFiles.length})`
+                          }
+                        </button>
+                      )}
+                    </Menu.Item>
+                  )}
+
+                  {hasGitHubFiles && (
+                    <Menu.Item disabled={bulkReloadProgress}>
+                      {({ active, disabled }) => (
+                        <button
+                          type="button"
+                          onClick={handleReloadAllFromGitHub}
+                          disabled={disabled}
+                          className={`${active && !disabled ? 'bg-slate-100 dark:bg-slate-700' : ''} ${disabled ? 'opacity-50 cursor-not-allowed' : ''} group flex items-center gap-3 w-full px-3 py-2 text-sm text-slate-700 dark:text-slate-200 rounded-md transition-colors`}
+                        >
+                          <GitHubSync className="text-slate-500 dark:text-slate-400" isLoading={!!bulkReloadProgress} />
+                          {bulkReloadProgress
+                            ? `Reloading ${bulkReloadProgress.completed}/${bulkReloadProgress.total}...`
+                            : `Reload from GitHub (${githubFiles.length})`
+                          }
+                        </button>
+                      )}
+                    </Menu.Item>
+                  )}
+                </div>
+              </Menu.Items>
+            </Menu>
+
+            {/* Selection actions group (Apply, Delete, Generate) - visually grouped */}
+            <div className="flex gap-1 p-1 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
+              {/* Apply doc type menu */}
+              <Menu as="div" className="relative">
+                <Tooltip content={selectedCount > 0 ? 'Apply doc type' : 'Select files to apply doc type'}>
+                  <Menu.Button
+                    disabled={selectedCount === 0}
+                    className="p-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-100 rounded flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Stamp className="w-4 h-4" />
+                  </Menu.Button>
+                </Tooltip>
+
+                <Menu.Items
+                  anchor="bottom start"
+                  className="w-48 rounded-lg bg-white dark:bg-slate-800 shadow-lg ring-1 ring-black dark:ring-slate-700 ring-opacity-5 dark:ring-opacity-50 focus:outline-none z-[100] [--anchor-gap:4px]"
+                >
+                  <div className="p-1">
+                    <div className="px-3 py-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
+                      Apply to {selectedCount} file{selectedCount !== 1 ? 's' : ''}
+                    </div>
+                    {docTypes.map((type) => (
+                      <Menu.Item key={type.value}>
+                        {({ active }) => (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (onApplyDocType) {
+                                onApplyDocType(selectedFileIds, type.value);
+                                onDeselectAllFiles?.();
+                              }
+                            }}
+                            className={`${active ? 'bg-slate-100 dark:bg-slate-700' : ''} group flex items-center gap-3 w-full px-3 py-2 text-sm text-slate-700 dark:text-slate-200 rounded-md transition-colors`}
+                          >
+                            {type.label}
+                          </button>
+                        )}
+                      </Menu.Item>
+                    ))}
+                  </div>
+                </Menu.Items>
+              </Menu>
+
+              <Tooltip content="Delete selected">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (selectedCount === 0) return;
+                    setDeleteConfirmModal({
+                      isOpen: true,
+                      count: selectedCount
+                    });
+                  }}
+                  disabled={selectedCount === 0}
+                  className="p-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-100 rounded flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-label={selectedCount > 0 ? 'Delete selection' : 'Select files to delete'}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </Tooltip>
+              <Tooltip content={bulkGenerationProgress ? `Generating ${bulkGenerationProgress.completed}/${bulkGenerationProgress.total}` : "Generate docs"}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onGenerateSelected();
+                    if (onToggleSidebar) onToggleSidebar();
+                  }}
+                  disabled={selectedCountWithContent === 0 && !hasCodeInEditor || bulkGenerationProgress}
+                  className="p-1.5 rounded bg-purple-600 dark:bg-purple-400 text-white dark:text-slate-950 shadow-sm shadow-purple-600/20 dark:shadow-purple-400/30 hover:enabled:scale-[1.02] active:enabled:scale-[0.98] disabled:cursor-not-allowed disabled:shadow-none disabled:bg-slate-300 dark:disabled:bg-slate-700 disabled:text-slate-500 dark:disabled:text-slate-400 flex items-center justify-center"
+                  aria-label={bulkGenerationProgress ? `Generating ${bulkGenerationProgress.completed} of ${bulkGenerationProgress.total}` : "Generate for selection"}
+                >
+                  {bulkGenerationProgress ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="w-4 h-4" />
+                  )}
+                </button>
+              </Tooltip>
+            </div>
           </div>
-            </>
-          )}
         </div>
       )}
 
@@ -840,6 +931,67 @@ export function FileList({
           >
             {selectedCount > 0 ? 'Deselect All' : 'Select All'}
           </button>
+        </div>
+      )}
+
+      {/* Search/Filter Bar - Only show when there are files */}
+      {files.length > 0 && (
+        <div className="px-3 py-2 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 dark:text-slate-500 pointer-events-none" />
+            <input
+              type="text"
+              value={searchFilter}
+              onChange={(e) => setSearchFilter(e.target.value)}
+              placeholder="Filter files..."
+              className="w-full pl-8 pr-8 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-transparent"
+              aria-label="Filter files by name"
+            />
+            {searchFilter && (
+              <button
+                type="button"
+                onClick={() => setSearchFilter('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                aria-label="Clear filter"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            )}
+          </div>
+
+          {/* Extension Filter Pills - Only show when multiple extensions exist */}
+          {availableExtensions.length > 1 && (
+            <div className="flex flex-wrap gap-1 mt-2">
+              {availableExtensions.map((ext) => {
+                const isActive = selectedExtensions.includes(ext);
+                return (
+                  <button
+                    key={ext}
+                    type="button"
+                    onClick={() => toggleExtension(ext)}
+                    className={`px-1.5 py-0.5 text-[10px] font-medium rounded transition-colors ${
+                      isActive
+                        ? 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-700'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:border-purple-300 dark:hover:border-purple-600 hover:text-purple-600 dark:hover:text-purple-400'
+                    }`}
+                  >
+                    .{ext}
+                  </button>
+                );
+              })}
+              {/* Clear all button - only show when filters are active */}
+              {selectedExtensions.length > 0 && (
+                <button
+                  type="button"
+                  onClick={clearExtensionFilters}
+                  className="px-1.5 py-0.5 text-[10px] font-medium rounded text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+                  aria-label="Clear extension filters"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -917,23 +1069,82 @@ export function FileList({
             </p>
           </div>
         ) : (
-          files.map(file => (
-            <FileItem
-              key={file.id}
-              file={file}
-              isActive={file.id === activeFileId}
-              isSelected={selectedFileIds.includes(file.id)}
-              onSelect={() => onSelectFile(file.id)}
-              onToggleSelection={() => onToggleFileSelection(file.id)}
-              onRemove={() => onRemoveFile(file.id)}
-              onGenerate={() => onGenerateFile(file.id)}
-              onApplyDocType={() => onApplyDocType && onApplyDocType([file.id], docType)}
-              onViewDetails={() => setDetailsFileId(file.id)}
-              onReloadFromSource={() => handleReloadFromGitHub(file.id)}
-              onReuploadFile={() => handleSingleFileReupload(file.id)}
-              isReloading={reloadingFileIds.has(file.id)}
-            />
-          ))
+          (() => {
+            // Filter files: selected files always show, others are filtered by search and extension pills
+            const searchLower = searchFilter.toLowerCase().trim();
+            const isExtensionSearch = searchLower.startsWith('.');
+            const hasActiveFilters = searchFilter || selectedExtensions.length > 0;
+
+            const filteredFiles = hasActiveFilters
+              ? files.filter(file => {
+                  // Always show selected files
+                  if (selectedFileIds.includes(file.id)) return true;
+
+                  const filenameLower = file.filename.toLowerCase();
+                  const fileExt = file.filename.split('.').pop()?.toLowerCase();
+
+                  // Apply extension pill filters first (if any selected)
+                  if (selectedExtensions.length > 0 && !selectedExtensions.includes(fileExt)) {
+                    return false;
+                  }
+
+                  // If no search filter, extension match is enough
+                  if (!searchFilter) return true;
+
+                  // Extension search from search bar (e.g., ".js", ".jsx", ".ts")
+                  if (isExtensionSearch) {
+                    return filenameLower.endsWith(searchLower);
+                  }
+
+                  // Regular search - match anywhere in filename
+                  return filenameLower.includes(searchLower);
+                })
+              : files;
+
+            // Show "no matches" message if filter active but no results
+            const filterDescription = selectedExtensions.length > 0
+              ? (searchFilter ? `"${searchFilter}" + .${selectedExtensions.join(', .')}` : `.${selectedExtensions.join(', .')}`)
+              : `"${searchFilter}"`;
+
+            if (filteredFiles.length === 0 && hasActiveFilters) {
+              return (
+                <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
+                  <Search className="w-8 h-8 text-slate-300 dark:text-slate-600 mb-3" />
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    No files match {filterDescription}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchFilter('');
+                      clearExtensionFilters();
+                    }}
+                    className="mt-2 text-xs text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium"
+                  >
+                    Clear filters
+                  </button>
+                </div>
+              );
+            }
+
+            return filteredFiles.map(file => (
+              <FileItem
+                key={file.id}
+                file={file}
+                isActive={file.id === activeFileId}
+                isSelected={selectedFileIds.includes(file.id)}
+                onSelect={() => onSelectFile(file.id)}
+                onToggleSelection={() => onToggleFileSelection(file.id)}
+                onRemove={() => onRemoveFile(file.id)}
+                onGenerate={() => onGenerateFile(file.id)}
+                onApplyDocType={null}
+                onViewDetails={() => setDetailsFileId(file.id)}
+                onReloadFromSource={() => handleReloadFromGitHub(file.id)}
+                onReuploadFile={() => handleSingleFileReupload(file.id)}
+                isReloading={reloadingFileIds.has(file.id)}
+              />
+            ));
+          })()
         )}
       </div>
 

@@ -252,7 +252,9 @@ export function useDocGeneration(onUsageUpdate) {
       // If we have a parsed API error, use it
       if (apiError) {
         // Use the API's message directly (it's already user-friendly)
-        errorMessage = apiError.message || errorMessage;
+        // Handle nested structure: apiError.error.message or apiError.message
+        // Fall back to err.message which contains data.error from the SSE event
+        errorMessage = apiError.error?.message || apiError.message || err.message || errorMessage;
 
         // Add "Claude" clarification for API usage limit errors
         // Also treat these as rate limit errors for proper title formatting
@@ -262,15 +264,20 @@ export function useDocGeneration(onUsageUpdate) {
           // Don't set retryAfter - Claude's error message already includes the specific reset time
         }
         // Map API error types to better names
-        else if (apiError.error === 'invalid_request_error') {
+        // Handle both flat (apiError.error = 'type') and nested (apiError.error.type) structures
+        const apiErrorType = typeof apiError.error === 'string'
+          ? apiError.error
+          : apiError.error?.type;
+
+        if (apiErrorType === 'invalid_request_error') {
           errorType = 'InvalidRequestError';
-        } else if (apiError.error === 'authentication_error') {
+        } else if (apiErrorType === 'authentication_error') {
           errorType = 'AuthenticationError';
-        } else if (apiError.error === 'rate_limit_error') {
+        } else if (apiErrorType === 'rate_limit_error') {
           errorType = 'RateLimitError';
           setRetryAfter(60);
-        } else {
-          errorType = apiError.error || errorType;
+        } else if (apiErrorType) {
+          errorType = apiErrorType;
         }
       }
       // Check if it's a CodeScribe usage limit error (from tierGate middleware)

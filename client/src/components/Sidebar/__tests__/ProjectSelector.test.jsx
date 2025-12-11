@@ -13,6 +13,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 import { ProjectSelector } from '../ProjectSelector';
 import * as projectsApi from '../../../services/projectsApi';
@@ -23,10 +24,25 @@ vi.mock('../../../services/projectsApi', () => ({
   createProject: vi.fn()
 }));
 
+// Mock graphApi
+vi.mock('../../../services/graphApi', () => ({
+  getGraphByProjectId: vi.fn().mockResolvedValue({ success: false, graph: null })
+}));
+
 // Mock toast utility
 vi.mock('../../../utils/toastWithHistory', () => ({
   toastCompact: vi.fn()
 }));
+
+// Helper to render with Router
+const renderWithRouter = (ui, options = {}) => {
+  return render(
+    <MemoryRouter>
+      {ui}
+    </MemoryRouter>,
+    options
+  );
+};
 
 describe('ProjectSelector', () => {
   const mockProjects = [
@@ -52,7 +68,7 @@ describe('ProjectSelector', () => {
 
   describe('Initial Render', () => {
     it('should render with "No Project" as default when selectedProjectId is null', async () => {
-      render(<ProjectSelector {...defaultProps} />);
+      renderWithRouter(<ProjectSelector {...defaultProps} />);
 
       await waitFor(() => {
         expect(screen.getByText('No Project')).toBeInTheDocument();
@@ -63,13 +79,13 @@ describe('ProjectSelector', () => {
       // Delay the mock to capture loading state
       projectsApi.getProjects.mockImplementation(() => new Promise(() => {}));
 
-      render(<ProjectSelector {...defaultProps} />);
+      renderWithRouter(<ProjectSelector {...defaultProps} />);
 
       expect(screen.getByText('Loading...')).toBeInTheDocument();
     });
 
     it('should load projects on mount', async () => {
-      render(<ProjectSelector {...defaultProps} />);
+      renderWithRouter(<ProjectSelector {...defaultProps} />);
 
       await waitFor(() => {
         expect(projectsApi.getProjects).toHaveBeenCalledWith({ limit: 100 });
@@ -77,7 +93,7 @@ describe('ProjectSelector', () => {
     });
 
     it('should show selected project name when selectedProjectId is set', async () => {
-      render(<ProjectSelector {...defaultProps} selectedProjectId={2} />);
+      renderWithRouter(<ProjectSelector {...defaultProps} selectedProjectId={2} />);
 
       await waitFor(() => {
         expect(screen.getByText('Project Beta')).toBeInTheDocument();
@@ -87,7 +103,7 @@ describe('ProjectSelector', () => {
     it('should be disabled while loading', () => {
       projectsApi.getProjects.mockImplementation(() => new Promise(() => {}));
 
-      render(<ProjectSelector {...defaultProps} />);
+      renderWithRouter(<ProjectSelector {...defaultProps} />);
 
       const button = screen.getByRole('button', { name: /Select project/i });
       expect(button).toBeDisabled();
@@ -97,7 +113,7 @@ describe('ProjectSelector', () => {
   describe('Dropdown Behavior', () => {
     it('should open dropdown when button is clicked', async () => {
       const user = userEvent.setup();
-      render(<ProjectSelector {...defaultProps} />);
+      renderWithRouter(<ProjectSelector {...defaultProps} />);
 
       await waitFor(() => {
         expect(screen.getByText('No Project')).toBeInTheDocument();
@@ -114,7 +130,7 @@ describe('ProjectSelector', () => {
 
     it('should show "No Project" option in dropdown', async () => {
       const user = userEvent.setup();
-      render(<ProjectSelector {...defaultProps} />);
+      renderWithRouter(<ProjectSelector {...defaultProps} />);
 
       await waitFor(() => {
         expect(screen.getByText('No Project')).toBeInTheDocument();
@@ -130,7 +146,7 @@ describe('ProjectSelector', () => {
 
     it('should show "New project" button in dropdown', async () => {
       const user = userEvent.setup();
-      render(<ProjectSelector {...defaultProps} />);
+      renderWithRouter(<ProjectSelector {...defaultProps} />);
 
       await waitFor(() => {
         expect(screen.getByText('No Project')).toBeInTheDocument();
@@ -145,10 +161,12 @@ describe('ProjectSelector', () => {
     it('should close dropdown when clicking outside', async () => {
       const user = userEvent.setup();
       render(
-        <div>
-          <ProjectSelector {...defaultProps} />
-          <div data-testid="outside">Outside</div>
-        </div>
+        <MemoryRouter>
+          <div>
+            <ProjectSelector {...defaultProps} />
+            <div data-testid="outside">Outside</div>
+          </div>
+        </MemoryRouter>
       );
 
       await waitFor(() => {
@@ -172,7 +190,7 @@ describe('ProjectSelector', () => {
 
     it('should toggle dropdown on button click', async () => {
       const user = userEvent.setup();
-      render(<ProjectSelector {...defaultProps} />);
+      renderWithRouter(<ProjectSelector {...defaultProps} />);
 
       await waitFor(() => {
         expect(screen.getByText('No Project')).toBeInTheDocument();
@@ -196,7 +214,7 @@ describe('ProjectSelector', () => {
     it('should call onProjectChange when selecting a project', async () => {
       const user = userEvent.setup();
       const onProjectChange = vi.fn();
-      render(<ProjectSelector {...defaultProps} onProjectChange={onProjectChange} />);
+      renderWithRouter(<ProjectSelector {...defaultProps} onProjectChange={onProjectChange} />);
 
       await waitFor(() => {
         expect(screen.getByText('No Project')).toBeInTheDocument();
@@ -214,7 +232,7 @@ describe('ProjectSelector', () => {
     it('should call onProjectChange with null when selecting "No Project"', async () => {
       const user = userEvent.setup();
       const onProjectChange = vi.fn();
-      render(<ProjectSelector {...defaultProps} selectedProjectId={1} onProjectChange={onProjectChange} />);
+      renderWithRouter(<ProjectSelector {...defaultProps} selectedProjectId={1} onProjectChange={onProjectChange} />);
 
       await waitFor(() => {
         expect(screen.getByText('Project Alpha')).toBeInTheDocument();
@@ -232,7 +250,7 @@ describe('ProjectSelector', () => {
 
     it('should close dropdown after selection', async () => {
       const user = userEvent.setup();
-      render(<ProjectSelector {...defaultProps} />);
+      renderWithRouter(<ProjectSelector {...defaultProps} />);
 
       await waitFor(() => {
         expect(screen.getByText('No Project')).toBeInTheDocument();
@@ -251,7 +269,7 @@ describe('ProjectSelector', () => {
 
     it('should show checkmark on selected project', async () => {
       const user = userEvent.setup();
-      render(<ProjectSelector {...defaultProps} selectedProjectId={2} />);
+      renderWithRouter(<ProjectSelector {...defaultProps} selectedProjectId={2} />);
 
       await waitFor(() => {
         expect(screen.getByText('Project Beta')).toBeInTheDocument();
@@ -269,7 +287,7 @@ describe('ProjectSelector', () => {
   describe('Inline Project Creation', () => {
     it('should show create form when "New project" is clicked', async () => {
       const user = userEvent.setup();
-      render(<ProjectSelector {...defaultProps} />);
+      renderWithRouter(<ProjectSelector {...defaultProps} />);
 
       await waitFor(() => {
         expect(screen.getByText('No Project')).toBeInTheDocument();
@@ -286,7 +304,7 @@ describe('ProjectSelector', () => {
 
     it('should focus input when create form opens', async () => {
       const user = userEvent.setup();
-      render(<ProjectSelector {...defaultProps} />);
+      renderWithRouter(<ProjectSelector {...defaultProps} />);
 
       await waitFor(() => {
         expect(screen.getByText('No Project')).toBeInTheDocument();
@@ -309,7 +327,7 @@ describe('ProjectSelector', () => {
         project: { id: 4, name: 'New Test Project' }
       });
 
-      render(<ProjectSelector {...defaultProps} onProjectChange={onProjectChange} />);
+      renderWithRouter(<ProjectSelector {...defaultProps} onProjectChange={onProjectChange} />);
 
       await waitFor(() => {
         expect(screen.getByText('No Project')).toBeInTheDocument();
@@ -342,7 +360,7 @@ describe('ProjectSelector', () => {
         project: { id: 5, name: 'Enter Project' }
       });
 
-      render(<ProjectSelector {...defaultProps} onProjectChange={onProjectChange} />);
+      renderWithRouter(<ProjectSelector {...defaultProps} onProjectChange={onProjectChange} />);
 
       await waitFor(() => {
         expect(screen.getByText('No Project')).toBeInTheDocument();
@@ -366,7 +384,7 @@ describe('ProjectSelector', () => {
 
     it('should not create project with empty name', async () => {
       const user = userEvent.setup();
-      render(<ProjectSelector {...defaultProps} />);
+      renderWithRouter(<ProjectSelector {...defaultProps} />);
 
       await waitFor(() => {
         expect(screen.getByText('No Project')).toBeInTheDocument();
@@ -384,7 +402,7 @@ describe('ProjectSelector', () => {
 
     it('should cancel create form when Cancel button is clicked', async () => {
       const user = userEvent.setup();
-      render(<ProjectSelector {...defaultProps} />);
+      renderWithRouter(<ProjectSelector {...defaultProps} />);
 
       await waitFor(() => {
         expect(screen.getByText('No Project')).toBeInTheDocument();
@@ -408,7 +426,7 @@ describe('ProjectSelector', () => {
 
     it('should cancel create form when Escape is pressed', async () => {
       const user = userEvent.setup();
-      render(<ProjectSelector {...defaultProps} />);
+      renderWithRouter(<ProjectSelector {...defaultProps} />);
 
       await waitFor(() => {
         expect(screen.getByText('No Project')).toBeInTheDocument();
@@ -432,7 +450,7 @@ describe('ProjectSelector', () => {
       // Delay the mock to capture loading state
       projectsApi.createProject.mockImplementation(() => new Promise(() => {}));
 
-      render(<ProjectSelector {...defaultProps} />);
+      renderWithRouter(<ProjectSelector {...defaultProps} />);
 
       await waitFor(() => {
         expect(screen.getByText('No Project')).toBeInTheDocument();
@@ -460,7 +478,7 @@ describe('ProjectSelector', () => {
         project: { id: 6, name: 'Brand New Project' }
       });
 
-      render(<ProjectSelector {...defaultProps} />);
+      renderWithRouter(<ProjectSelector {...defaultProps} />);
 
       await waitFor(() => {
         expect(screen.getByText('No Project')).toBeInTheDocument();
@@ -495,7 +513,7 @@ describe('ProjectSelector', () => {
       projectsApi.getProjects.mockResolvedValue({ projects: [] });
       const user = userEvent.setup();
 
-      render(<ProjectSelector {...defaultProps} />);
+      renderWithRouter(<ProjectSelector {...defaultProps} />);
 
       await waitFor(() => {
         expect(screen.getByText('No Project')).toBeInTheDocument();
@@ -513,7 +531,7 @@ describe('ProjectSelector', () => {
       const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
       projectsApi.getProjects.mockRejectedValue(new Error('Network error'));
 
-      render(<ProjectSelector {...defaultProps} />);
+      renderWithRouter(<ProjectSelector {...defaultProps} />);
 
       await waitFor(() => {
         expect(screen.getByText('No Project')).toBeInTheDocument();
@@ -529,7 +547,7 @@ describe('ProjectSelector', () => {
 
   describe('Size Variants', () => {
     it('should apply small size classes by default', async () => {
-      render(<ProjectSelector {...defaultProps} />);
+      renderWithRouter(<ProjectSelector {...defaultProps} />);
 
       await waitFor(() => {
         expect(screen.getByText('No Project')).toBeInTheDocument();
@@ -541,7 +559,7 @@ describe('ProjectSelector', () => {
     });
 
     it('should apply default size classes when size is "default"', async () => {
-      render(<ProjectSelector {...defaultProps} size="default" />);
+      renderWithRouter(<ProjectSelector {...defaultProps} size="default" />);
 
       await waitFor(() => {
         expect(screen.getByText('No Project')).toBeInTheDocument();
@@ -555,7 +573,7 @@ describe('ProjectSelector', () => {
 
   describe('Accessibility', () => {
     it('should have proper ARIA attributes on button', async () => {
-      render(<ProjectSelector {...defaultProps} />);
+      renderWithRouter(<ProjectSelector {...defaultProps} />);
 
       await waitFor(() => {
         expect(screen.getByText('No Project')).toBeInTheDocument();
@@ -568,7 +586,7 @@ describe('ProjectSelector', () => {
 
     it('should update aria-expanded when dropdown opens', async () => {
       const user = userEvent.setup();
-      render(<ProjectSelector {...defaultProps} />);
+      renderWithRouter(<ProjectSelector {...defaultProps} />);
 
       await waitFor(() => {
         expect(screen.getByText('No Project')).toBeInTheDocument();
@@ -582,7 +600,7 @@ describe('ProjectSelector', () => {
 
     it('should have aria-selected on options', async () => {
       const user = userEvent.setup();
-      render(<ProjectSelector {...defaultProps} selectedProjectId={1} />);
+      renderWithRouter(<ProjectSelector {...defaultProps} selectedProjectId={1} />);
 
       await waitFor(() => {
         expect(screen.getByText('Project Alpha')).toBeInTheDocument();

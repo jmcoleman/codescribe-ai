@@ -187,16 +187,18 @@ export function FileActions({ file, onRemove, onGenerate, onApplyDocType, onView
             </button>
           )}
 
-          {/* Apply Doc Type - always available */}
-          <button
-            type="button"
-            onClick={handleApplyDocType}
-            className="w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2 transition-colors duration-150"
-            role="menuitem"
-          >
-            <Stamp className="w-4 h-4" />
-            Apply Doc Type
-          </button>
+          {/* Apply Doc Type - only show if callback provided */}
+          {onApplyDocType && (
+            <button
+              type="button"
+              onClick={handleApplyDocType}
+              className="w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2 transition-colors duration-150"
+              role="menuitem"
+            >
+              <Stamp className="w-4 h-4" />
+              Apply Doc Type
+            </button>
+          )}
 
           {/* Reload from Source - only if remote origin (github, gitlab, etc.) and no content */}
           {canReloadFromSource && (

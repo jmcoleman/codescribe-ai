@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FileText, CheckCircle, Loader2, AlertCircle, Star } from 'lucide-react';
+import { CheckCircle, Loader2, AlertCircle, Star, Github, Upload, FileCode, Clipboard } from 'lucide-react';
 import { FileActions } from './FileActions';
 
 /**
@@ -37,7 +37,8 @@ export function FileItem({ file, isActive, isSelected, onSelect, onToggleSelecti
     documentation,
     isGenerating,
     error,
-    docType
+    docType,
+    origin
   } = file;
 
   // Determine file state
@@ -47,7 +48,35 @@ export function FileItem({ file, isActive, isSelected, onSelect, onToggleSelecti
   // File is clickable if it has content OR documentation (allows viewing generated docs)
   const isClickable = hasContent || hasDocumentation;
 
-  // Status icon
+  // Origin icon - shows source of file (GitHub, upload, paste, sample)
+  const OriginIcon = () => {
+    switch (origin) {
+      case 'github':
+        return <Github className="w-4 h-4 text-slate-400 dark:text-slate-500" />;
+      case 'paste':
+        return <Clipboard className="w-4 h-4 text-slate-400 dark:text-slate-500" />;
+      case 'sample':
+        return <FileCode className="w-4 h-4 text-slate-400 dark:text-slate-500" />;
+      // Future: case 'bitbucket': return <Bitbucket ... />;
+      // Future: case 'gitlab': return <Gitlab ... />;
+      case 'upload':
+      default:
+        return <Upload className="w-4 h-4 text-slate-400 dark:text-slate-500" />;
+    }
+  };
+
+  // Get origin label for tooltip
+  const getOriginLabel = () => {
+    switch (origin) {
+      case 'github': return 'From GitHub';
+      case 'paste': return 'Pasted code';
+      case 'sample': return 'Sample code';
+      case 'upload':
+      default: return 'Uploaded file';
+    }
+  };
+
+  // Status icon - shows generation state
   const StatusIcon = () => {
     if (isGenerating) {
       return <Loader2 className="w-4 h-4 text-slate-400 dark:text-slate-500 animate-spin" />;
@@ -58,7 +87,8 @@ export function FileItem({ file, isActive, isSelected, onSelect, onToggleSelecti
     if (hasDocumentation) {
       return <CheckCircle className="w-4 h-4 text-slate-400 dark:text-slate-500" />;
     }
-    return <FileText className="w-4 h-4 text-slate-400 dark:text-slate-500" />;
+    // No icon for "ready to generate" state - origin icon is sufficient
+    return null;
   };
 
   // Format file size
@@ -103,7 +133,7 @@ export function FileItem({ file, isActive, isSelected, onSelect, onToggleSelecti
       )}
 
       {/* File info */}
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-2">
         {/* Checkbox */}
         <div className={`flex-shrink-0 mt-0.5 ${!hasContent ? 'opacity-60' : ''}`}>
           <input
@@ -119,6 +149,11 @@ export function FileItem({ file, isActive, isSelected, onSelect, onToggleSelecti
           />
         </div>
 
+        {/* Origin Icon */}
+        <div className={`flex-shrink-0 mt-0.5 ${!hasContent ? 'opacity-60' : ''}`} title={getOriginLabel()}>
+          <OriginIcon />
+        </div>
+
         {/* File details */}
         <div className={`flex-1 min-w-0 ${!hasContent ? 'opacity-60' : ''}`}>
           {/* Filename */}
@@ -126,15 +161,16 @@ export function FileItem({ file, isActive, isSelected, onSelect, onToggleSelecti
             <span className="text-sm text-slate-900 dark:text-slate-100 truncate">
               {filename}
             </span>
-            {/* Status Icon */}
-            <span className="flex-shrink-0" title={
-              isGenerating ? 'Generating documentation...' :
-              hasError ? `Error: ${error}` :
-              hasDocumentation ? 'Documentation generated' :
-              'Ready to generate'
-            }>
-              <StatusIcon />
-            </span>
+            {/* Status Icon - only shows if generating, error, or has docs */}
+            {(isGenerating || hasError || hasDocumentation) && (
+              <span className="flex-shrink-0" title={
+                isGenerating ? 'Generating documentation...' :
+                hasError ? `Error: ${error}` :
+                'Documentation generated'
+              }>
+                <StatusIcon />
+              </span>
+            )}
             {isActive && (
               <Star className="w-3 h-3 text-purple-600 dark:text-purple-400 flex-shrink-0" fill="currentColor" />
             )}

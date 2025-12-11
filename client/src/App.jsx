@@ -115,6 +115,7 @@ function App() {
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showSupportModal, setShowSupportModal] = useState(false);
   const [showGithubModal, setShowGithubModal] = useState(false);
+  const [githubImportErrors, setGithubImportErrors] = useState([]); // Failed file imports to display in sidebar
   const [showRegenerateConfirmModal, setShowRegenerateConfirmModal] = useState(false);
   const [showGenerateFromEditorModal, setShowGenerateFromEditorModal] = useState(false);
   const [showReloadFromSourceModal, setShowReloadFromSourceModal] = useState(false);
@@ -417,6 +418,11 @@ function App() {
       // Clear documentation panel
       setDocumentation('');
       setQualityScore(null);
+      // Clear sessionStorage doc/score to prevent restore effect from reloading old content
+      removeSessionItem(STORAGE_KEYS.EDITOR_DOCUMENTATION);
+      removeSessionItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE);
+      // Clear global code key to prevent anonymous user's old code from persisting
+      setStorageItem(STORAGE_KEYS.EDITOR_CODE, DEFAULT_CODE);
       // Reset "doc panel cleared" flag so next login will load from DB
       localStorage.removeItem(STORAGE_KEYS.DOC_PANEL_CLEARED);
       hasSeenUserRef.current = false;
@@ -654,6 +660,31 @@ function App() {
     projectName: canUseProjectManagement ? selectedProjectName : null,
     user
   });
+
+  // Check for batch summary stored by History page (for failed batches with no documents)
+  // This allows viewing the error summary from failed generation attempts
+  useEffect(() => {
+    const batchSummary = sessionStorage.getItem('history_load_batch_summary');
+
+    if (batchSummary) {
+      // Clear code panel state (no files to show)
+      setCode('');
+      setFilename('');
+      setCodeOrigin(null);
+      // Display the batch summary in the doc panel
+      setDocumentation(batchSummary);
+      setQualityScore({
+        score: 0,
+        grade: null,
+        breakdown: null,
+        isBatchSummary: true
+      });
+      // Keep user's current layout - don't force doc-only view
+      // Clear after reading
+      sessionStorage.removeItem('history_load_batch_summary');
+      sessionStorage.removeItem('history_load_batch_id');
+    }
+  }, [setDocumentation, setQualityScore, setCode, setFilename, setCodeOrigin]);
 
   // Clear batch-related state when user loses batch processing access (tier downgrade/expiry)
   // Skip during initial auth loading to avoid clearing state before we know user's tier
@@ -2065,8 +2096,10 @@ function App() {
     // Only show toast if:
     // 1. Generation just completed (not loaded from storage)
     // 2. NOT in batch generation mode (batch has its own completion toast)
+    // 3. Not a batch summary (which has its own banner)
     const isBatchMode = bulkGenerationProgress !== null;
-    if (prevGeneratingRef.current && !isGenerating && documentation && qualityScore && !isBatchMode) {
+    const isBatchSummary = qualityScore?.isBatchSummary === true;
+    if (prevGeneratingRef.current && !isGenerating && documentation && qualityScore && !isBatchMode && !isBatchSummary) {
       toastDocGenerated(qualityScore.grade, qualityScore.score);
     }
     prevGeneratingRef.current = isGenerating;
@@ -2331,8 +2364,6 @@ function App() {
                 selectedCount={multiFileState.selectedCount}
                 isCollapsed={sidebarCollapsed}
                 onToggleCollapse={handleToggleSidebarCollapse}
-                docType={docType}
-                onDocTypeChange={setDocType}
                 onApplyDocType={handleApplyDocType}
                 onGithubImport={handleGithubImport}
                 mobileOpen={mobileSidebarOpen}
@@ -2354,6 +2385,8 @@ function App() {
                   if (selectedFilesWithContent.length > 0) {
                     // Generate documentation for all selected files
                     handleGenerateSelected();
+                    // Clear selection after generation starts
+                    multiFileState.deselectAll();
                   } else if (multiFileState.selectedFileIds.length > 0) {
                     // Files are selected but none have content - show reload modal
                     const selectedFiles = multiFileState.files.filter(f => multiFileState.selectedFileIds.includes(f.id));
@@ -2370,9 +2403,10 @@ function App() {
                 onUpdateFile={multiFileState.updateFile}
                 onViewBatchSummary={handleBackToSummary}
                 selectedProjectId={selectedProjectId}
-                selectedProjectName={selectedProjectName}
                 onProjectChange={handleProjectChange}
                 canUseProjectManagement={canUseProjectManagement}
+                importErrors={githubImportErrors}
+                onDismissImportErrors={() => setGithubImportErrors([])}
               />
 
               {/* Main Content - Full width on mobile */}
@@ -2455,6 +2489,8 @@ function App() {
                     if (selectedFilesWithContent.length > 0) {
                       // Generate documentation for all selected files
                       handleGenerateSelected();
+                      // Clear selection after generation starts
+                      multiFileState.deselectAll();
                     } else if (multiFileState.selectedFileIds.length > 0) {
                       // Files are selected but none have content - show reload modal
                       const selectedFiles = multiFileState.files.filter(f => multiFileState.selectedFileIds.includes(f.id));
@@ -2471,9 +2507,10 @@ function App() {
                   onUpdateFile={multiFileState.updateFile}
                   onViewBatchSummary={handleBackToSummary}
                   selectedProjectId={selectedProjectId}
-                  selectedProjectName={selectedProjectName}
                   onProjectChange={handleProjectChange}
                   canUseProjectManagement={canUseProjectManagement}
+                  importErrors={githubImportErrors}
+                  onDismissImportErrors={() => setGithubImportErrors([])}
                 />
               </Panel>
 
@@ -2769,6 +2806,7 @@ function App() {
         onCloseGithubModal={() => setShowGithubModal(false)}
         onGithubFileLoad={handleGithubFileLoad}
         onGithubFilesLoad={multiFileState.reloadWorkspace}
+        onGithubImportErrors={setGithubImportErrors}
         defaultDocType={docType}
 
         // Unsupported File Modal

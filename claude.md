@@ -457,20 +457,21 @@ codescribe-ai/
 
 ## 🔄 Version History
 
-**Current: v3.3.1** (December 10, 2025)
-- Batch Generation & Mermaid Dark Mode Fixes
-- Fixed batch cancel/regenerate race condition (guard + AbortController)
-- Fixed files disappearing from sidebar during batch operations
-- Fixed GitHub import localStorage format mismatch
-- Fixed Mermaid diagram dark mode text readability (enforce theme palette)
-- Added single-file generating banner for UX consistency
-- 3,725 tests (3,638 passing, 87 skipped)
+**Current: v3.3.2** (December 10, 2025)
+- Sidebar UX Improvements & Project Selector Enhancements
+- Apply doc type as dropdown menu (one-click workflow)
+- ProjectSelector two-line dropdown with graph status (file count, expiration)
+- Toolbar visual grouping (selection actions separated from Add)
+- Auto-deselect after Apply/Generate actions
+- Responsive toolbar with label hiding at 300px and wrapping
+- 3,638 tests (3,638 passing, 87 skipped)
 - Frontend: 1,913 passing, 54 skipped
 - Backend: 1,725 passing, 33 skipped
 
 <details>
-<summary>Recent Releases (v2.9.0-v3.3.0) & Milestones</summary>
+<summary>Recent Releases (v2.9.0-v3.3.1) & Milestones</summary>
 
+**v3.3.1** (Dec 10, 2025): Batch Generation & Mermaid Dark Mode Fixes - Race condition fixes, workspace stability
 **v3.3.0** (Dec 9, 2025): Graph Engine API & Project Analysis - Project Details page, graph stats, architecture diagrams
 **v3.2.2** (Dec 7, 2025): UX Polish & Tier Access Updates - Trial user usage limits fix, code block rendering
 **v3.2.1** (Dec 7, 2025): Workspace Persistence Fix - Single-file generation persists to sessionStorage
@@ -506,7 +507,7 @@ codescribe-ai/
 - **v1.21** (Oct 19): Production deployment, codescribe-ai.vercel.app
 
 Full history: [CHANGELOG.md](CHANGELOG.md)
-Last updated: December 9, 2025
+Last updated: December 10, 2025
 </details>
 
 ---

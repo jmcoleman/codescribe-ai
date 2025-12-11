@@ -89,6 +89,7 @@ export function AppModals({
   onCloseGithubModal,
   onGithubFileLoad,
   onGithubFilesLoad,
+  onGithubImportErrors,
   defaultDocType,
 
   // Unsupported File Modal
@@ -310,6 +311,7 @@ export function AppModals({
             onClose={onCloseGithubModal}
             onFileLoad={onGithubFileLoad}
             onFilesLoad={onGithubFilesLoad}
+            onImportErrors={onGithubImportErrors}
             defaultDocType={defaultDocType}
           />
         </Suspense>

@@ -60,15 +60,14 @@ describe('FileList', () => {
   const mockOnGenerateSelected = vi.fn();
   const mockOnDeleteSelected = vi.fn();
   const mockOnToggleSidebar = vi.fn();
-  const mockOnDocTypeChange = vi.fn();
   const mockOnGithubImport = vi.fn();
   const mockOnFilesDrop = vi.fn();
+  const mockOnApplyDocType = vi.fn();
 
   const defaultProps = {
     activeFileId: null,
     selectedFileIds: [],
     selectedCount: 0,
-    docType: 'README',
     hasCodeInEditor: false,
     onSelectFile: mockOnSelectFile,
     onToggleFileSelection: mockOnToggleFileSelection,
@@ -80,9 +79,9 @@ describe('FileList', () => {
     onGenerateSelected: mockOnGenerateSelected,
     onDeleteSelected: mockOnDeleteSelected,
     onToggleSidebar: mockOnToggleSidebar,
-    onDocTypeChange: mockOnDocTypeChange,
     onGithubImport: mockOnGithubImport,
-    onFilesDrop: mockOnFilesDrop
+    onFilesDrop: mockOnFilesDrop,
+    onApplyDocType: mockOnApplyDocType
   };
 
   beforeEach(() => {
@@ -283,7 +282,8 @@ describe('FileList', () => {
       }
     ];
 
-    it('should show re-upload button when local files exist', () => {
+    it('should show re-upload option in Add menu when local files exist', async () => {
+      const user = userEvent.setup();
       render(
         <FileList
           {...defaultProps}
@@ -291,12 +291,17 @@ describe('FileList', () => {
         />
       );
 
-      const reuploadBtn = screen.getByRole('button', { name: /Re-upload 2 local files/i });
-      expect(reuploadBtn).toBeInTheDocument();
-      expect(reuploadBtn).not.toBeDisabled();
+      // Open the Add dropdown menu
+      const addMenuBtn = screen.getByRole('button', { name: /Add/i });
+      await user.click(addMenuBtn);
+
+      // Re-upload option should appear in the menu
+      const reuploadOption = await screen.findByRole('menuitem', { name: /Re-upload local \(2\)/i });
+      expect(reuploadOption).toBeInTheDocument();
     });
 
-    it('should NOT show re-upload button when no local files exist', () => {
+    it('should NOT show re-upload option when no local files exist', async () => {
+      const user = userEvent.setup();
       const githubFiles = [
         {
           id: 'github-1',
@@ -321,9 +326,12 @@ describe('FileList', () => {
         />
       );
 
-      // Re-upload button should be disabled since no local files
-      const reuploadBtn = screen.getByRole('button', { name: /Re-upload 0 local files/i });
-      expect(reuploadBtn).toBeDisabled();
+      // Open the Add dropdown menu
+      const addMenuBtn = screen.getByRole('button', { name: /Add/i });
+      await user.click(addMenuBtn);
+
+      // Re-upload option should NOT appear since no local files
+      expect(screen.queryByRole('menuitem', { name: /Re-upload local/i })).not.toBeInTheDocument();
     });
 
     it('should have hidden file input for re-upload', () => {
@@ -339,7 +347,7 @@ describe('FileList', () => {
       expect(fileInput).toHaveClass('hidden');
     });
 
-    it('should trigger file input click when re-upload button is clicked', async () => {
+    it('should trigger file input click when re-upload menu item is clicked', async () => {
       const user = userEvent.setup();
       render(
         <FileList
@@ -351,13 +359,19 @@ describe('FileList', () => {
       const fileInput = document.querySelector('input[type="file"][multiple]');
       const clickSpy = vi.spyOn(fileInput, 'click');
 
-      const reuploadBtn = screen.getByRole('button', { name: /Re-upload 2 local files/i });
-      await user.click(reuploadBtn);
+      // Open the Add dropdown menu
+      const addMenuBtn = screen.getByRole('button', { name: /Add/i });
+      await user.click(addMenuBtn);
+
+      // Click the re-upload option
+      const reuploadOption = await screen.findByRole('menuitem', { name: /Re-upload local \(2\)/i });
+      await user.click(reuploadOption);
 
       expect(clickSpy).toHaveBeenCalled();
     });
 
-    it('should count files with upload origin as local files', () => {
+    it('should count files with upload origin as local files', async () => {
+      const user = userEvent.setup();
       const mixedFiles = [
         {
           id: 'upload-file-1',
@@ -381,9 +395,13 @@ describe('FileList', () => {
         />
       );
 
-      const reuploadBtn = screen.getByRole('button', { name: /Re-upload 1 local file/i });
-      expect(reuploadBtn).toBeInTheDocument();
-      expect(reuploadBtn).not.toBeDisabled();
+      // Open the Add dropdown menu
+      const addMenuBtn = screen.getByRole('button', { name: /Add/i });
+      await user.click(addMenuBtn);
+
+      // Re-upload option should show count of 1
+      const reuploadOption = await screen.findByRole('menuitem', { name: /Re-upload local \(1\)/i });
+      expect(reuploadOption).toBeInTheDocument();
     });
 
     it('should call onUpdateFile when files are re-uploaded and matched', async () => {
@@ -454,7 +472,8 @@ describe('FileList', () => {
       }
     ];
 
-    it('should show mobile re-upload button with correct label', () => {
+    it('should show mobile re-upload option in Add menu with correct label', async () => {
+      const user = userEvent.setup();
       render(
         <FileList
           {...defaultProps}
@@ -463,8 +482,13 @@ describe('FileList', () => {
         />
       );
 
-      // Mobile shows "Local (1)" format
-      expect(screen.getByText(/Local \(1\)/)).toBeInTheDocument();
+      // Open the Add dropdown menu
+      const addMenuBtn = screen.getByRole('button', { name: /Add/i });
+      await user.click(addMenuBtn);
+
+      // Mobile shows "Re-upload local (1)" in menu
+      const reuploadOption = await screen.findByRole('menuitem', { name: /Re-upload local \(1\)/i });
+      expect(reuploadOption).toBeInTheDocument();
     });
   });
 });

@@ -3,24 +3,23 @@
  * Large modal for loading files from GitHub repositories
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { X, AlertCircle, Github, Loader2, File, Clock, ChevronDown, ChevronRight, Sparkles, Zap, ExternalLink, FolderGit2, FolderTree, Eye } from 'lucide-react';
 import { SmartInput } from './SmartInput';
 import { FileTree } from './FileTree';
 import { FilePreview } from './FilePreview';
-import { ImportProgress } from './ImportProgress';
 import { ImportErrorList } from './ImportErrorList';
 import { Button } from '../Button';
 import { ErrorBanner } from '../ErrorBanner';
 import * as githubService from '../../services/githubService';
-import { isFileSupported } from '../../services/githubService';
+import { isFileSupported, isCodeFile } from '../../services/githubService';
 import { toastSuccess, toastInfo, toastWarning, toastError } from '../../utils/toast';
 import { useAuth } from '../../contexts/AuthContext';
 import { hasFeature, getEffectiveTier } from '../../utils/tierFeatures';
 import { GITHUB_BATCH_LIMITS } from '../../constants/github';
 import { STORAGE_KEYS, getWorkspaceKey } from '../../constants/storage';
 
-export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, defaultDocType = 'README' }) {
+export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, onImportErrors, defaultDocType = 'README' }) {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -39,6 +38,7 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, defa
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   const [showProHint, setShowProHint] = useState(true); // Dismissable Pro feature hint
   const lastSelectedFileRef = useRef(null); // Track last selected file for shift-click range selection
+  const [extensionFilters, setExtensionFilters] = useState([]); // Extension filter for file tree
 
   // Batch import state
   const [importing, setImporting] = useState(false);
@@ -51,7 +51,6 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, defa
   });
   const [importErrors, setImportErrors] = useState([]);
   const [showErrorList, setShowErrorList] = useState(false);
-  const [duplicateWarning, setDuplicateWarning] = useState(null);
   const [batchImportError, setBatchImportError] = useState(null); // For 403/feature gate errors
   const [workspaceFiles, setWorkspaceFiles] = useState([]);
   const [mobileActiveTab, setMobileActiveTab] = useState('tree'); // 'tree' or 'preview' (mobile only)
@@ -166,9 +165,16 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, defa
   // Handle import completion
   useEffect(() => {
     if (importing && importProgress.isComplete) {
-      handleImportComplete();
+      setImporting(false);
+
+      // If there were errors (check from progress state, not importErrors which may be stale)
+      if (importProgress.failed > 0) {
+        setShowErrorList(true);
+      }
+      // Close main modal (error list will show separately if there are errors)
+      onClose();
     }
-  }, [importing, importProgress.isComplete]);
+  }, [importing, importProgress.isComplete, importProgress.failed, onClose]);
 
   // Toggle folder expansion
   const toggleFolder = (path) => {
@@ -206,6 +212,7 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, defa
     setSelectedFile(null);
     setFilePreview(null);
     setExpandedPaths(new Set()); // Reset expanded paths
+    setExtensionFilters([]); // Reset extension filters
 
     try {
       // Parse the input
@@ -219,6 +226,9 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, defa
 
       setRepository(repo);
       setBranches(branchesData);
+
+      // Auto-expand all folders by default for easier navigation
+      setExpandedPaths(getAllFolderPaths(repo.tree));
 
       // If a file was specified in the URL, auto-select it
       if (parsed.type === 'file' && parsed.path) {
@@ -244,12 +254,14 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, defa
     setError(null);
     setSelectedFile(null);
     setFilePreview(null);
-    setExpandedPaths(new Set()); // Reset expanded paths
+    setExtensionFilters([]); // Reset extension filters
 
     try {
       // Refetch the tree with the new branch
       const repo = await githubService.fetchTree(repository.owner, repository.repo, newBranch);
       setRepository(repo);
+      // Auto-expand all folders by default for easier navigation
+      setExpandedPaths(getAllFolderPaths(repo.tree));
     } catch (err) {
       console.error('Failed to switch branch:', err);
       setError(err.message);
@@ -354,9 +366,11 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, defa
       setRepository(repo);
       setBranches(branchesData);
 
+      // Auto-expand all folders by default for easier navigation
+      setExpandedPaths(getAllFolderPaths(repo.tree));
+
       const file = findFileInTree(repo.tree, recent.path);
       if (file) {
-        expandParentFolders(recent.path);
         handleFileSelect(file, repo);
       }
     } catch (err) {
@@ -393,11 +407,6 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, defa
       newSelected.add(filePath);
     }
     setSelectedFiles(newSelected);
-
-    // Clear duplicate warning when selection changes
-    if (duplicateWarning) {
-      setDuplicateWarning(null);
-    }
   };
 
   // Get all files in flat array for range selection
@@ -481,15 +490,19 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, defa
       handleFileSelect(file);
       lastSelectedFileRef.current = file.path;
     }
-
-    // Clear duplicate warning when selection changes
-    if (duplicateWarning) {
-      setDuplicateWarning(null);
-    }
   };
 
   const handleSelectAllFiles = () => {
-    const allFiles = getAllSupportedFiles(repository.tree);
+    let allFiles = getAllCodeFiles(repository.tree);
+
+    // Apply extension filter if any extensions are selected
+    if (extensionFilters.length > 0) {
+      allFiles = allFiles.filter(file => {
+        const ext = file.name.split('.').pop()?.toLowerCase();
+        return extensionFilters.includes(ext);
+      });
+    }
+
     const filePaths = allFiles.slice(0, maxFiles).map(f => f.path);
     setSelectedFiles(new Set(filePaths));
 
@@ -500,16 +513,44 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, defa
 
   const handleDeselectAllFiles = () => {
     setSelectedFiles(new Set());
-    setDuplicateWarning(null);
   };
 
-  const getAllSupportedFiles = (tree) => {
+  // Helper to collect all folder paths from a tree
+  const getAllFolderPaths = (tree) => {
+    const allFolderPaths = new Set();
+    const collectFolders = (items) => {
+      items.forEach(item => {
+        if (item.type === 'tree') {
+          allFolderPaths.add(item.path);
+          if (item.children) {
+            collectFolders(item.children);
+          }
+        }
+      });
+    };
+    collectFolders(tree);
+    return allFolderPaths;
+  };
+
+  // Expand all folders in the tree
+  const handleExpandAll = () => {
+    if (!repository?.tree) return;
+    setExpandedPaths(getAllFolderPaths(repository.tree));
+  };
+
+  // Collapse all folders in the tree
+  const handleCollapseAll = () => {
+    setExpandedPaths(new Set());
+  };
+
+  // Get all code files (excludes markdown, configs, styles, etc.)
+  const getAllCodeFiles = (tree) => {
     const files = [];
     const traverse = (items) => {
       items.forEach(item => {
         if (item.type === 'blob') {
-          const fileSupport = isFileSupported(item.name);
-          if (fileSupport.isSupported) {
+          // Use isCodeFile for selection - more restrictive than isFileSupported
+          if (isCodeFile(item.name)) {
             files.push(item);
           }
         } else if (item.children) {
@@ -521,11 +562,24 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, defa
     return files;
   };
 
+  // Memoize the count of supported files for the Select All button (respects extension filter)
+  const supportedFileCount = useMemo(() => {
+    if (!repository?.tree) return 0;
+    let files = getAllCodeFiles(repository.tree);
+
+    // Apply extension filter if any extensions are selected
+    if (extensionFilters.length > 0) {
+      files = files.filter(file => {
+        const ext = file.name.split('.').pop()?.toLowerCase();
+        return extensionFilters.includes(ext);
+      });
+    }
+
+    return files.length;
+  }, [repository?.tree, extensionFilters]);
+
   // Batch import handler
   const handleBatchImport = async (filePaths = null) => {
-    // Clear any previous warnings
-    setDuplicateWarning(null);
-
     // Ensure we have an array of paths
     let pathsToImport;
     if (filePaths) {
@@ -539,47 +593,39 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, defa
       return;
     }
 
-    // Filter out duplicates (files already in workspace from this repo)
-    const repoName = `${repository.owner}/${repository.repo}`;
-    const existingRepoFiles = workspaceFiles
-      .filter(f => f.github_repo === repoName)
-      .map(f => f.github_path);
-
-    const duplicates = [];
-    const filteredPaths = pathsToImport.filter(path => {
-      if (typeof path !== 'string') {
-        return false;
-      }
-      const isDuplicate = existingRepoFiles.includes(path);
-      if (isDuplicate) {
-        duplicates.push(path);
-      }
-      return !isDuplicate;
+    // Check for duplicates - the DB constraint is on (user_id, filename, doc_type)
+    // So we need to find existing files with matching filename (full path) AND doc_type
+    // These will be REPLACED with fresh GitHub versions
+    const existingFilesMap = new Map(); // "filename|doc_type" -> workspace file id
+    workspaceFiles.forEach(f => {
+      const key = `${f.filename}|${f.doc_type}`;
+      existingFilesMap.set(key, f.id);
     });
 
-    if (filteredPaths.length === 0) {
-      setDuplicateWarning({
-        type: 'all',
-        count: pathsToImport.length,
-        files: duplicates
-      });
-      return;
-    }
+    const filesToReplace = [];
+    pathsToImport.forEach(path => {
+      if (typeof path === 'string') {
+        // Use full path as filename (matches how we save files)
+        const key = `${path}|${defaultDocType}`;
+        if (existingFilesMap.has(key)) {
+          filesToReplace.push({
+            path,
+            filename: path,
+            existingId: existingFilesMap.get(key)
+          });
+        }
+      }
+    });
 
-    if (filteredPaths.length < pathsToImport.length) {
-      const skipped = pathsToImport.length - filteredPaths.length;
-      setDuplicateWarning({
-        type: 'partial',
-        skipped,
-        importing: filteredPaths.length,
-        files: duplicates
-      });
+    // Show info if replacing files
+    if (filesToReplace.length > 0) {
+      toastInfo(`Refreshing ${filesToReplace.length} existing file${filesToReplace.length !== 1 ? 's' : ''} from GitHub`);
     }
 
     // Initialize progress
     setImporting(true);
     setImportProgress({
-      total: filteredPaths.length,
+      total: pathsToImport.length,
       completed: 0,
       failed: 0,
       currentFile: '',
@@ -590,6 +636,24 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, defa
     try {
       // Call batch endpoint
       const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+
+      // Delete existing files that will be replaced (in parallel)
+      if (filesToReplace.length > 0) {
+        await Promise.all(
+          filesToReplace.map(({ existingId }) =>
+            fetch(`${import.meta.env.VITE_API_URL}/api/workspace/${existingId}`, {
+              method: 'DELETE',
+              headers: {
+                'Authorization': token ? `Bearer ${token}` : ''
+              }
+            }).catch(err => {
+              console.warn(`[GitHubLoadModal] Failed to delete existing file ${existingId}:`, err);
+              // Continue anyway - the POST might fail with duplicate error but that's ok
+            })
+          )
+        );
+      }
+
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/github/files-batch`, {
         method: 'POST',
         headers: {
@@ -599,7 +663,7 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, defa
         body: JSON.stringify({
           owner: repository.owner,
           repo: repository.repo,
-          paths: filteredPaths,
+          paths: pathsToImport,
           branch: repository.branch
         })
       });
@@ -651,6 +715,11 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, defa
           console.error('[GitHubLoadModal] Failed to load workspace contents:', error);
           workspaceContents = {};
         }
+
+        // Remove content for files being replaced
+        filesToReplace.forEach(({ existingId }) => {
+          delete workspaceContents[existingId];
+        });
       }
 
       for (let i = 0; i < batchResult.results.length; i++) {
@@ -672,7 +741,9 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, defa
                 'Content-Type': 'application/json'
               },
               body: JSON.stringify({
-                filename: result.data.name,
+                // Use full path as filename to support same-named files in different directories
+                // e.g., "src/utils/index.js" and "src/components/index.js" are different files
+                filename: result.data.path,
                 language: result.data.language,
                 fileSizeBytes: result.data.size,
                 docType: defaultDocType, // Use doc type from ControlBar
@@ -699,19 +770,26 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, defa
               const errorData = await workspaceResponse.json();
               errors.push({
                 path: result.path,
-                error: errorData.error || 'Failed to add to workspace'
+                filename: result.data?.name || result.path.split('/').pop(),
+                error: errorData.error || 'Failed to add to workspace',
+                stage: 'workspace'
               });
             }
           } catch (err) {
             errors.push({
               path: result.path,
-              error: err.message
+              filename: result.data?.name || result.path.split('/').pop(),
+              error: `Network error: ${err.message}`,
+              stage: 'workspace'
             });
           }
         } else {
+          // GitHub fetch failed
           errors.push({
             path: result.path,
-            error: result.error
+            filename: result.path.split('/').pop(),
+            error: result.error || 'Failed to fetch from GitHub',
+            stage: 'github'
           });
         }
       }
@@ -762,7 +840,10 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, defa
       }
 
       if (errors.length > 0) {
-        toastError(`${errors.length} file${errors.length !== 1 ? 's' : ''} failed to import`);
+        // Pass errors to parent for persistent display in sidebar
+        if (onImportErrors) {
+          onImportErrors(errors);
+        }
       }
 
       // Clear selection
@@ -787,53 +868,31 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, defa
     }
   };
 
-  // Handle import completion
-  const handleImportComplete = () => {
-    setImporting(false);
-
-    // If there were errors, show error list
-    if (importErrors.length > 0) {
-      setShowErrorList(true);
-    } else {
-      // Otherwise close modal
-      onClose();
-    }
-  };
-
   // Retry failed imports
   const handleRetryImport = (paths) => {
     setShowErrorList(false);
     handleBatchImport(paths);
   };
 
-  if (!isOpen) return null;
+  // Show error list even if main modal is closed
+  if (!isOpen && !showErrorList) return null;
 
   return (
     <>
-      {/* Import Progress Modal */}
-      {importing && (
-        <ImportProgress
-          total={importProgress.total}
-          completed={importProgress.completed}
-          failed={importProgress.failed}
-          currentFile={importProgress.currentFile}
-          isComplete={importProgress.isComplete}
-        />
-      )}
-
-      {/* Import Error List Modal */}
+      {/* Import Error List Modal - shown even after main modal closes */}
       {showErrorList && (
         <ImportErrorList
           errors={importErrors}
           onRetry={handleRetryImport}
           onClose={() => {
             setShowErrorList(false);
-            onClose();
+            // Don't call onClose here - main modal is already closed
           }}
         />
       )}
 
-      {/* Main Modal */}
+      {/* Main Modal - only show if isOpen */}
+      {!isOpen ? null : (
       <div
         className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 cursor-default"
         onClick={(e) => e.target === e.currentTarget && onClose()}
@@ -1019,12 +1078,18 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, defa
                   repository={repository}
                   expandedPaths={expandedPaths}
                   onToggleFolder={toggleFolder}
+                  onExpandAll={handleExpandAll}
+                  onCollapseAll={handleCollapseAll}
                   branches={branches}
                   onBranchChange={handleBranchChange}
                   multiSelectMode={canUseBatchProcessing}
                   selectedFiles={selectedFiles}
                   onToggleFileSelection={canUseBatchProcessing ? handleToggleFileSelection : undefined}
                   onClearSelection={handleDeselectAllFiles}
+                  onSelectAll={canUseBatchProcessing ? handleSelectAllFiles : undefined}
+                  supportedFileCount={supportedFileCount}
+                  maxFiles={maxFiles}
+                  onExtensionFiltersChange={setExtensionFilters}
                   searchInputRef={fileTreeSearchRef}
                 />
               </div>
@@ -1071,46 +1136,6 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, defa
                           <X className="h-4 w-4" aria-hidden="true" />
                         </button>
                       </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Duplicate Warning Banner */}
-                {duplicateWarning && (
-                  <div className="p-4 pb-0">
-                    <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 flex items-start gap-3">
-                      <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-amber-900 dark:text-amber-100 mb-2">
-                          {duplicateWarning.type === 'all' ? (
-                            <>
-                              {duplicateWarning.count === 1
-                                ? 'This file is already in your workspace:'
-                                : `All ${duplicateWarning.count} selected files are already in your workspace:`
-                              }
-                            </>
-                          ) : (
-                            <>
-                              {duplicateWarning.skipped} duplicate file{duplicateWarning.skipped !== 1 ? 's' : ''} will be skipped.
-                              {' '}Importing {duplicateWarning.importing} new file{duplicateWarning.importing !== 1 ? 's' : ''}.
-                            </>
-                          )}
-                        </p>
-                        {duplicateWarning.files && duplicateWarning.files.length > 0 && (
-                          <ul className="text-xs text-amber-800 dark:text-amber-200 space-y-0.5 ml-4">
-                            {duplicateWarning.files.map((file, idx) => (
-                              <li key={idx} className="truncate">• {file}</li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
-                      <button
-                        onClick={() => setDuplicateWarning(null)}
-                        className="text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 flex-shrink-0"
-                        aria-label="Dismiss"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
                     </div>
                   </div>
                 )}
@@ -1170,8 +1195,16 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, defa
                   onClick={() => handleBatchImport()}
                   disabled={importing || selectedFiles.size === 0}
                   title={selectedFiles.size > 0 ? `Import ${selectedFiles.size} file${selectedFiles.size !== 1 ? 's' : ''}` : 'Select files to import'}
+                  className="min-w-[120px]"
                 >
-                  Import {selectedFiles.size > 0 ? `${selectedFiles.size} ` : ''}File{selectedFiles.size !== 1 ? 's' : ''}
+                  {importing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      Importing...
+                    </>
+                  ) : (
+                    <>Import {selectedFiles.size > 0 ? `${selectedFiles.size} ` : ''}File{selectedFiles.size !== 1 ? 's' : ''}</>
+                  )}
                 </Button>
               </>
             ) : (
@@ -1215,6 +1248,7 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, defa
         )}
       </div>
       </div>
+      )}
     </>
   );
 }

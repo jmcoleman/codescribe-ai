@@ -33,8 +33,7 @@ describe('Sidebar', () => {
     selectedFileIds: [],
     selectedCount: 0,
     mobileOpen: false,
-    docType: 'README',
-    onDocTypeChange: vi.fn(),
+    onApplyDocType: vi.fn(),
     onGithubImport: vi.fn(),
     onMobileClose: vi.fn(),
     onSelectFile: vi.fn(),
@@ -88,10 +87,10 @@ describe('Sidebar', () => {
       expect(screen.getByRole('button', { name: /Collapse sidebar/i })).toBeInTheDocument();
     });
 
-    it('should show add files button in expanded mode', () => {
+    it('should show Add dropdown button in expanded mode', () => {
       render(<Sidebar {...mockProps} />);
 
-      expect(screen.getByRole('button', { name: /Add files/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Add/i })).toBeInTheDocument();
     });
   });
 
@@ -295,12 +294,17 @@ describe('Sidebar', () => {
   });
 
   describe('Actions', () => {
-    it('should call onAddFile when add button is clicked', async () => {
+    it('should call onAddFile when Add local files menu item is clicked', async () => {
       const user = userEvent.setup();
       render(<Sidebar {...mockProps} />);
 
-      const addBtn = screen.getByRole('button', { name: /Add files/i });
+      // Open the Add dropdown menu
+      const addBtn = screen.getByRole('button', { name: /Add/i });
       await user.click(addBtn);
+
+      // Click the "Add local files" menu item
+      const addLocalItem = await screen.findByRole('menuitem', { name: /Add local files/i });
+      await user.click(addLocalItem);
 
       expect(mockProps.onAddFile).toHaveBeenCalled();
     });

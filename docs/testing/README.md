@@ -2,7 +2,7 @@
 
 **Project:** CodeScribe AI - Intelligent Code Documentation Generator
 **Testing Status:** ✅ Comprehensive Coverage Across 3 Frameworks
-**Last Updated:** December 10, 2025 (v3.3.1)
+**Last Updated:** December 10, 2025 (v3.3.2)
 
 ---
 
@@ -37,7 +37,7 @@
 - **Backend Coverage:** 82.38% statements, 70.11% branches, 82.54% lines, 85%+ functions (CI passing)
 - **Test Execution Time:** Frontend ~20.3s, Backend ~12.1s, Database ~0.3s, E2E ~45s
 - **Coverage Target:** 90% ✅ EXCEEDED (96.71% middleware statements, 93.49% middleware branches)
-- **Recent Updates:** Batch generation & Mermaid dark mode fixes (Dec 10, 2025 - v3.3.1)
+- **Recent Updates:** Sidebar UX improvements & ProjectSelector enhancements (Dec 10, 2025 - v3.3.2)
 
 ---
 

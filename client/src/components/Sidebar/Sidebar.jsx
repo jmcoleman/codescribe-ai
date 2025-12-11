@@ -1,7 +1,42 @@
 import { useState, useEffect } from 'react';
-import { PanelLeft, PanelLeftClose, Plus, X } from 'lucide-react';
+import { PanelLeft, PanelLeftClose, Plus, X, AlertTriangle, Sparkles, Loader2 } from 'lucide-react';
 import { FileList } from './FileList';
+import { Tooltip } from '../Tooltip';
 import { STORAGE_KEYS, getStorageItem, setStorageItem } from '../../constants/storage';
+
+/**
+ * Import Error Banner - Shows failed GitHub imports
+ */
+function ImportErrorBanner({ errors, onDismiss }) {
+  if (!errors || errors.length === 0) return null;
+
+  const fileNames = errors.map(e => e.filename || e.path?.split('/').pop() || 'Unknown').slice(0, 3);
+  const moreCount = errors.length - fileNames.length;
+
+  return (
+    <div className="px-3 py-2 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800">
+      <div className="flex items-start gap-2">
+        <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-medium text-amber-900 dark:text-amber-100">
+            {errors.length} file{errors.length !== 1 ? 's' : ''} failed to import
+          </p>
+          <p className="text-xs text-amber-700 dark:text-amber-300 truncate mt-0.5">
+            {fileNames.join(', ')}{moreCount > 0 ? ` +${moreCount} more` : ''}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onDismiss}
+          className="flex-shrink-0 p-0.5 rounded hover:bg-amber-100 dark:hover:bg-amber-800/50 text-amber-600 dark:text-amber-400 transition-colors"
+          aria-label="Dismiss"
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
+      </div>
+    </div>
+  );
+}
 
 /**
  * Sidebar Component
@@ -24,8 +59,7 @@ import { STORAGE_KEYS, getStorageItem, setStorageItem } from '../../constants/st
  * @param {boolean} props.mobileOpen - Mobile overlay open state (controlled by parent)
  * @param {boolean} props.isCollapsed - Controlled collapse state (desktop only)
  * @param {Function} props.onToggleCollapse - Called when collapse button is clicked (desktop only)
- * @param {string} props.docType - Current documentation type
- * @param {Function} props.onDocTypeChange - Called when doc type changes
+ * @param {Function} props.onApplyDocType - Called when user applies a doc type to files
  * @param {Function} props.onGithubImport - Called when GitHub import is clicked
  * @param {Function} props.onMobileClose - Called when mobile overlay should close
  * @param {Function} props.onSelectFile - Called when user selects a file
@@ -50,8 +84,6 @@ export function Sidebar({
   mobileOpen = false,
   isCollapsed: isCollapsedProp,
   onToggleCollapse,
-  docType,
-  onDocTypeChange,
   onApplyDocType,
   onGithubImport,
   onMobileClose,
@@ -70,9 +102,10 @@ export function Sidebar({
   onUpdateFile,
   onViewBatchSummary,
   selectedProjectId = null,
-  selectedProjectName = null,
   onProjectChange,
-  canUseProjectManagement = false
+  canUseProjectManagement = false,
+  importErrors = [],
+  onDismissImportErrors
 }) {
   // Sidebar state: 'expanded', 'collapsed' (desktop only)
   // If controlled (isCollapsedProp is defined), use prop, otherwise use local state
@@ -183,15 +216,16 @@ export function Sidebar({
             </button>
           </div>
 
+          {/* Import Error Banner */}
+          <ImportErrorBanner errors={importErrors} onDismiss={onDismissImportErrors} />
+
           {/* File List */}
           <FileList
             files={files}
             activeFileId={activeFileId}
             selectedFileIds={selectedFileIds}
             selectedCount={selectedCount}
-            docType={docType}
             bulkGenerationProgress={bulkGenerationProgress}
-            onDocTypeChange={onDocTypeChange}
             onApplyDocType={onApplyDocType}
             onGithubImport={onGithubImport}
             onSelectFile={onSelectFile}
@@ -210,7 +244,6 @@ export function Sidebar({
             onViewBatchSummary={onViewBatchSummary}
             isMobile={true}
             selectedProjectId={selectedProjectId}
-            selectedProjectName={selectedProjectName}
             onProjectChange={onProjectChange}
             canUseProjectManagement={canUseProjectManagement}
           />
@@ -234,19 +267,40 @@ export function Sidebar({
         motion-reduce:transition-none
       `}
     >
-        {/* Compact Header - Toggle only when collapsed */}
+        {/* Compact Header - Toggle and Generate when collapsed */}
         {isCollapsed && (
-          <div className="flex items-center justify-center p-3 border-b border-slate-200 dark:border-slate-700">
-            <button
-              type="button"
-              onClick={toggleSidebar}
-              className="p-2 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400"
-              aria-label="Expand sidebar"
-              title="Expand sidebar"
-            >
-              <PanelLeft className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-            </button>
+          <div className="flex flex-col items-center gap-2 p-3 border-b border-slate-200 dark:border-slate-700">
+            <Tooltip content="Expand sidebar" side="right">
+              <button
+                type="button"
+                onClick={toggleSidebar}
+                className="p-2 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400"
+                aria-label="Expand sidebar"
+              >
+                <PanelLeft className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+              </button>
+            </Tooltip>
+            <Tooltip content={bulkGenerationProgress ? `Generating ${bulkGenerationProgress.completed}/${bulkGenerationProgress.total}` : "Generate docs (⌘G)"} side="right">
+              <button
+                type="button"
+                onClick={onGenerateSelected}
+                disabled={selectedCount === 0 || bulkGenerationProgress}
+                className="p-2 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                aria-label={bulkGenerationProgress ? `Generating ${bulkGenerationProgress.completed} of ${bulkGenerationProgress.total}` : "Generate documentation"}
+              >
+                {bulkGenerationProgress ? (
+                  <Loader2 className="w-5 h-5 text-purple-600 dark:text-purple-400 animate-spin" />
+                ) : (
+                  <Sparkles className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                )}
+              </button>
+            </Tooltip>
           </div>
+        )}
+
+        {/* Import Error Banner (only show when expanded) */}
+        {isExpanded && (
+          <ImportErrorBanner errors={importErrors} onDismiss={onDismissImportErrors} />
         )}
 
         {/* File List (only show when expanded) */}
@@ -256,9 +310,7 @@ export function Sidebar({
             activeFileId={activeFileId}
             selectedFileIds={selectedFileIds}
             selectedCount={selectedCount}
-            docType={docType}
             bulkGenerationProgress={bulkGenerationProgress}
-            onDocTypeChange={onDocTypeChange}
             onApplyDocType={onApplyDocType}
             onGithubImport={onGithubImport}
             onSelectFile={onSelectFile}
@@ -277,7 +329,6 @@ export function Sidebar({
             onViewBatchSummary={onViewBatchSummary}
             isMobile={false}
             selectedProjectId={selectedProjectId}
-            selectedProjectName={selectedProjectName}
             onProjectChange={onProjectChange}
             canUseProjectManagement={canUseProjectManagement}
           />

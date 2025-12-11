@@ -226,8 +226,8 @@ describe('ControlBar Component', () => {
 
       const generateButton = screen.getByRole('button', { name: /generate docs/i });
       expect(generateButton).toHaveClass('bg-purple-600');
-      // Verify hover class with enabled pseudo-class
-      expect(generateButton.className).toContain('hover:enabled:bg-purple-700');
+      // Verify hover scale effect (removed background color change)
+      expect(generateButton.className).toContain('hover:enabled:scale-[1.02]');
     });
 
     it('should display sparkles icon when not generating', () => {

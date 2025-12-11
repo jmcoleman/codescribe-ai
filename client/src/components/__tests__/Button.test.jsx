@@ -39,7 +39,7 @@ describe('Button', () => {
       render(<Button variant="primary">Primary</Button>);
       const button = screen.getByRole('button');
       expect(button).toHaveClass('bg-purple-600');
-      expect(button.className).toContain('hover:enabled:bg-purple-700');
+      expect(button.className).toContain('hover:enabled:scale-[1.02]');
       expect(button).toHaveClass('text-white');
     });
 

@@ -9,6 +9,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.3.2] - 2025-12-10
+
+**Status:** ✅ Sidebar UX Improvements & Project Selector Enhancements
+
+**Summary:** Major UX improvements to the file sidebar including consolidated Apply doc type menu, enhanced ProjectSelector with two-line dropdown items showing graph status, responsive toolbar with visual action grouping, and auto-deselect after Apply/Generate actions.
+
+### Changed
+
+- **Apply Doc Type as Dropdown Menu** ([client/src/components/Sidebar/FileList.jsx](client/src/components/Sidebar/FileList.jsx))
+  - Consolidated doc type selector and Apply button into single "Apply" dropdown menu
+  - One-click workflow: select doc type from menu to immediately apply to selected files
+  - Auto-deselects files after applying doc type
+
+- **ProjectSelector Two-Line Dropdown** ([client/src/components/Sidebar/ProjectSelector.jsx](client/src/components/Sidebar/ProjectSelector.jsx))
+  - Each project option shows name on line 1, graph status on line 2
+  - Graph status displays: file count, expiration time (e.g., "5 files • Expires in 3d")
+  - "No Project" option shows "Generate without graph context"
+  - Added view details icon (opens project page in new tab)
+  - Status badge on selected project button (Active/Expired/No Graph)
+
+- **Toolbar Visual Grouping** ([client/src/components/Sidebar/FileList.jsx](client/src/components/Sidebar/FileList.jsx))
+  - Selection actions (Apply, Delete, Generate) visually grouped with border/background
+  - Separates file management (Add) from selection-based actions
+  - Responsive breakpoints adjusted: labels hide at 300px width
+  - Toolbar wraps to second line when space is constrained
+
+- **Auto-Deselect After Actions** ([client/src/App.jsx](client/src/App.jsx), [client/src/components/Sidebar/FileList.jsx](client/src/components/Sidebar/FileList.jsx))
+  - Selection cleared after applying doc type
+  - Selection cleared after starting batch generation
+
+### Removed
+
+- **Standalone Doc Type Selector** - Replaced by Apply dropdown menu
+- **ProjectGraphInfo Component** - Graph info now integrated into ProjectSelector
+
+### Technical Details
+
+- **Test Count:** 3,638 tests (3,638 passing, 87 skipped)
+  - Frontend: 1,913 passing, 54 skipped (1,967 total)
+  - Backend: 1,725 passing, 33 skipped (1,758 total)
+
+---
+
 ## [3.3.1] - 2025-12-10
 
 **Status:** ✅ Batch Generation & Mermaid Dark Mode Fixes

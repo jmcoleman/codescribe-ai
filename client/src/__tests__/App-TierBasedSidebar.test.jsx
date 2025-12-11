@@ -14,6 +14,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { renderWithTheme as render } from './utils/renderWithTheme';
 import { MemoryRouter } from 'react-router-dom';
 import App from '../App';
@@ -313,21 +314,31 @@ describe('App - Tier-Based Sidebar Access Control', () => {
       });
     });
 
-    it('should show add files button', async () => {
+    it('should show Add dropdown button', async () => {
       renderApp(proUser);
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /add files/i })).toBeInTheDocument();
+        // Add button is now a dropdown menu
+        expect(screen.getByRole('button', { name: /^Add$/i })).toBeInTheDocument();
       });
     });
 
-    it('should show GitHub import button', async () => {
+    it('should show GitHub import in Add dropdown menu', async () => {
+      const user = userEvent.setup();
       renderApp(proUser);
 
+      // Wait for sidebar to render
       await waitFor(() => {
-        // GitHub button has aria-label="Import from GitHub" (may have multiple for mobile/desktop)
-        const githubButtons = screen.getAllByRole('button', { name: /import from github/i });
-        expect(githubButtons.length).toBeGreaterThan(0);
+        expect(screen.getByRole('button', { name: /^Add$/i })).toBeInTheDocument();
+      });
+
+      // Open the Add dropdown
+      const addBtn = screen.getByRole('button', { name: /^Add$/i });
+      await user.click(addBtn);
+
+      // GitHub import option should be in the menu
+      await waitFor(() => {
+        expect(screen.getByRole('menuitem', { name: /import from github/i })).toBeInTheDocument();
       });
     });
 
@@ -369,21 +380,31 @@ describe('App - Tier-Based Sidebar Access Control', () => {
       });
     });
 
-    it('should show add files button', async () => {
+    it('should show Add dropdown button', async () => {
       renderApp(teamUser);
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /add files/i })).toBeInTheDocument();
+        // Add button is now a dropdown menu
+        expect(screen.getByRole('button', { name: /^Add$/i })).toBeInTheDocument();
       });
     });
 
-    it('should show GitHub import button', async () => {
+    it('should show GitHub import in Add dropdown menu', async () => {
+      const user = userEvent.setup();
       renderApp(teamUser);
 
+      // Wait for sidebar to render
       await waitFor(() => {
-        // GitHub button has aria-label="Import from GitHub" (may have multiple for mobile/desktop)
-        const githubButtons = screen.getAllByRole('button', { name: /import from github/i });
-        expect(githubButtons.length).toBeGreaterThan(0);
+        expect(screen.getByRole('button', { name: /^Add$/i })).toBeInTheDocument();
+      });
+
+      // Open the Add dropdown
+      const addBtn = screen.getByRole('button', { name: /^Add$/i });
+      await user.click(addBtn);
+
+      // GitHub import option should be in the menu
+      await waitFor(() => {
+        expect(screen.getByRole('menuitem', { name: /import from github/i })).toBeInTheDocument();
       });
     });
   });
@@ -417,21 +438,31 @@ describe('App - Tier-Based Sidebar Access Control', () => {
       });
     });
 
-    it('should show add files button', async () => {
+    it('should show Add dropdown button', async () => {
       renderApp(enterpriseUser);
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /add files/i })).toBeInTheDocument();
+        // Add button is now a dropdown menu
+        expect(screen.getByRole('button', { name: /^Add$/i })).toBeInTheDocument();
       });
     });
 
-    it('should show GitHub import button', async () => {
+    it('should show GitHub import in Add dropdown menu', async () => {
+      const user = userEvent.setup();
       renderApp(enterpriseUser);
 
+      // Wait for sidebar to render
       await waitFor(() => {
-        // GitHub button has aria-label="Import from GitHub" (may have multiple for mobile/desktop)
-        const githubButtons = screen.getAllByRole('button', { name: /import from github/i });
-        expect(githubButtons.length).toBeGreaterThan(0);
+        expect(screen.getByRole('button', { name: /^Add$/i })).toBeInTheDocument();
+      });
+
+      // Open the Add dropdown
+      const addBtn = screen.getByRole('button', { name: /^Add$/i });
+      await user.click(addBtn);
+
+      // GitHub import option should be in the menu
+      await waitFor(() => {
+        expect(screen.getByRole('menuitem', { name: /import from github/i })).toBeInTheDocument();
       });
     });
   });

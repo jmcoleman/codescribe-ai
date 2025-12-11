@@ -160,7 +160,7 @@ body {
 
   /* Icon Button */
   .icon-btn {
-    @apply p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors-smooth focus-ring-light;
+    @apply p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors-smooth focus-ring-light;
   }
 
   /* Input Field */

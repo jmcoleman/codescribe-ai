@@ -3,7 +3,7 @@
  * Displays failed imports with retry capability
  */
 
-import { XCircle, RefreshCw, Copy, ChevronDown, ChevronUp } from 'lucide-react';
+import { XCircle, RefreshCw, Copy, ChevronDown, ChevronUp, Github, Database } from 'lucide-react';
 import { useState } from 'react';
 
 export function ImportErrorList({
@@ -25,10 +25,22 @@ export function ImportErrorList({
   };
 
   const copyError = (error, index) => {
-    const errorText = `File: ${error.path}\nError: ${error.error}`;
+    const errorText = `File: ${error.path}\nStage: ${error.stage || 'unknown'}\nError: ${error.error}`;
     navigator.clipboard.writeText(errorText);
     setCopiedIndex(index);
     setTimeout(() => setCopiedIndex(null), 2000);
+  };
+
+  // Get stage icon and label
+  const getStageInfo = (stage) => {
+    switch (stage) {
+      case 'github':
+        return { icon: Github, label: 'GitHub fetch failed' };
+      case 'workspace':
+        return { icon: Database, label: 'Workspace save failed' };
+      default:
+        return { icon: XCircle, label: 'Import failed' };
+    }
   };
 
   const retryAll = () => {
@@ -75,6 +87,8 @@ export function ImportErrorList({
             {errors.map((error, index) => {
               const isExpanded = expandedErrors.has(index);
               const isCopied = copiedIndex === index;
+              const stageInfo = getStageInfo(error.stage);
+              const StageIcon = stageInfo.icon;
 
               return (
                 <div
@@ -85,19 +99,29 @@ export function ImportErrorList({
                   <div className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/20">
                     <button
                       onClick={() => toggleError(index)}
-                      className="flex-1 flex items-center gap-2 text-left"
+                      className="flex-1 flex items-center gap-2 text-left min-w-0"
                     >
                       {isExpanded ? (
                         <ChevronUp className="w-4 h-4 text-red-600 dark:text-red-400 flex-shrink-0" />
                       ) : (
                         <ChevronDown className="w-4 h-4 text-red-600 dark:text-red-400 flex-shrink-0" />
                       )}
-                      <span className="text-sm font-medium text-red-900 dark:text-red-100 truncate">
-                        {error.path}
-                      </span>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-sm font-medium text-red-900 dark:text-red-100 block truncate">
+                          {error.filename || error.path.split('/').pop()}
+                        </span>
+                        <span className="text-xs text-red-700 dark:text-red-300 block truncate">
+                          {error.path}
+                        </span>
+                      </div>
                     </button>
 
                     <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                      {/* Stage indicator */}
+                      <span className="flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300" title={stageInfo.label}>
+                        <StageIcon className="w-3 h-3" />
+                        <span className="hidden sm:inline">{error.stage === 'github' ? 'Fetch' : 'Save'}</span>
+                      </span>
                       <button
                         onClick={() => copyError(error, index)}
                         className="p-1.5 rounded hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 transition-colors"
@@ -115,14 +139,21 @@ export function ImportErrorList({
                     </div>
                   </div>
 
-                  {/* Error Details */}
-                  {isExpanded && (
-                    <div className="p-3 bg-white dark:bg-slate-900 border-t border-red-200 dark:border-red-800">
-                      <p className="text-sm text-slate-700 dark:text-slate-300 font-mono break-words">
-                        {error.error}
-                      </p>
+                  {/* Error Details - Always visible now for better UX */}
+                  <div className={`p-3 bg-white dark:bg-slate-900 border-t border-red-200 dark:border-red-800 ${isExpanded ? '' : 'hidden'}`}>
+                    <div className="space-y-2">
+                      <div className="flex items-start gap-2">
+                        <span className="text-xs font-medium text-slate-500 dark:text-slate-400 w-12 flex-shrink-0">Stage:</span>
+                        <span className="text-sm text-slate-700 dark:text-slate-300">{stageInfo.label}</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span className="text-xs font-medium text-slate-500 dark:text-slate-400 w-12 flex-shrink-0">Error:</span>
+                        <p className="text-sm text-slate-700 dark:text-slate-300 font-mono break-words">
+                          {error.error}
+                        </p>
+                      </div>
                     </div>
-                  )}
+                  </div>
                 </div>
               );
             })}

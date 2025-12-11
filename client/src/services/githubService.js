@@ -200,18 +200,38 @@ export function addRecentFile(file, userId = null) {
     console.log('[addRecentFile] Called with file:', file, 'userId:', userId);
     const recent = getRecentFiles(userId);
 
-    // Remove duplicates
+    // For repo entries (isRepo: true), check if this repo already exists
+    // If it does, don't add a duplicate - just keep the existing entry
+    if (file.isRepo) {
+      const existingRepoIndex = recent.findIndex(f => f.isRepo && f.owner === file.owner && f.repo === file.repo);
+      if (existingRepoIndex !== -1) {
+        console.log('[addRecentFile] Repo already exists in recent, skipping:', `${file.owner}/${file.repo}`);
+        return; // Skip adding duplicate repo
+      }
+    }
+
+    // Remove duplicates (for file entries, match on path + owner + repo)
     const filtered = recent.filter(f => f.path !== file.path || f.owner !== file.owner || f.repo !== file.repo);
 
-    // Add to beginning
-    filtered.unshift({
+    // Add to beginning, preserving all properties
+    const newEntry = {
       owner: file.owner,
       repo: file.repo,
       path: file.path,
       name: file.name,
       language: file.language,
       timestamp: new Date().toISOString()
-    });
+    };
+
+    // Include repo-specific properties if present
+    if (file.isRepo) {
+      newEntry.isRepo = true;
+      if (file.fileCount) {
+        newEntry.fileCount = file.fileCount;
+      }
+    }
+
+    filtered.unshift(newEntry);
 
     // Keep only last 5
     const limited = filtered.slice(0, 5);
@@ -262,6 +282,69 @@ export function isBinaryFile(filename) {
   ];
 
   return binaryExtensions.includes(extension);
+}
+
+/**
+ * Code-only extensions that can have documentation generated
+ * Excludes: markdown, config files, plain text, styles, markup
+ */
+const CODE_EXTENSIONS = [
+  // JavaScript/TypeScript
+  'js', 'jsx', 'ts', 'tsx', 'mjs', 'cjs',
+  // Python
+  'py', 'pyw',
+  // Java
+  'java',
+  // C/C++
+  'c', 'cpp', 'cc', 'cxx', 'h', 'hpp',
+  // C#
+  'cs',
+  // Go
+  'go',
+  // Rust
+  'rs',
+  // Ruby
+  'rb',
+  // PHP
+  'php',
+  // Swift
+  'swift',
+  // Kotlin
+  'kt', 'kts',
+  // Scala
+  'scala',
+  // Shell
+  'sh', 'bash', 'zsh',
+  // SQL
+  'sql',
+  // Frameworks
+  'vue', 'svelte',
+  // Other languages
+  'r', 'm', 'dart', 'lua', 'perl', 'pl'
+];
+
+/**
+ * Check if a file is a code file that can have documentation generated
+ * More restrictive than isFileSupported - excludes markdown, configs, styles, etc.
+ * @param {string} filename - File name with extension
+ * @returns {boolean} true if file is a code file suitable for doc generation
+ */
+export function isCodeFile(filename) {
+  if (!filename) return false;
+
+  const extension = filename.split('.').pop()?.toLowerCase();
+  const name = filename.toLowerCase();
+
+  // Binary files are not code
+  if (isBinaryFile(filename)) return false;
+
+  // Special case: Dockerfile, Makefile are code-like
+  const codeNoExtension = ['dockerfile', 'makefile', 'gemfile', 'rakefile'];
+  if (!extension || extension === name) {
+    return codeNoExtension.includes(name);
+  }
+
+  return CODE_EXTENSIONS.includes(extension);
 }
 
 /**

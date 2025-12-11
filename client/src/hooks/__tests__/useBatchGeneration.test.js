@@ -271,7 +271,7 @@ describe('useBatchGeneration', () => {
           successCount: 0,
           failCount: 2,
           avgQuality: 0,
-          avgGrade: 'N/A',
+          avgGrade: null,
           successfulFiles: []
         };
 
@@ -310,7 +310,7 @@ describe('useBatchGeneration', () => {
           successCount: 0,
           failCount: 1,
           avgQuality: 0,
-          avgGrade: 'N/A',
+          avgGrade: null,
           successfulFiles: []
         };
 
@@ -443,7 +443,7 @@ describe('useBatchGeneration', () => {
           failCount: 0,
           skippedCount: 3,
           avgQuality: 0,
-          avgGrade: 'N/A',
+          avgGrade: null,
           successfulFiles: [],
           skippedFiles: [
             { filename: 'file1.js', docType: 'README' },
@@ -561,7 +561,7 @@ describe('useBatchGeneration', () => {
           successCount: 0,
           failCount: 0,
           avgQuality: 0,
-          avgGrade: 'N/A',
+          avgGrade: null,
           successfulFiles: []
         };
 

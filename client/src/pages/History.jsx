@@ -359,12 +359,32 @@ export function History() {
       const batch = batches.find(b => b.id === batchId);
 
       let documents = expandedBatches[batchId];
+      let batchData = null;
       if (!documents) {
         const result = await fetchBatchWithDocuments(batchId);
         documents = result.documents || [];
+        batchData = result.batch;
       }
 
+      // Handle failed batches with no documents but with summary
       if (documents.length === 0) {
+        // Check if batch has a summary we can display
+        const summaryMarkdown = batchData?.summary_markdown || batch?.summary_markdown;
+        if (summaryMarkdown) {
+          // Clear existing workspace files first
+          await clearFiles();
+          // Store the summary in sessionStorage for App.jsx to display
+          sessionStorage.setItem('history_load_batch_summary', summaryMarkdown);
+          sessionStorage.setItem('history_load_batch_id', batchId);
+          // Clear project info since we're just viewing a summary
+          sessionStorage.removeItem('history_load_project_id');
+          sessionStorage.removeItem('history_load_project_name');
+          // Clear "doc panel cleared" flag so the doc will show on page load
+          removeStorageItem(STORAGE_KEYS.DOC_PANEL_CLEARED);
+          toastCompact('Opening batch summary', 'info');
+          navigate('/');
+          return;
+        }
         toastCompact('No documents found in this batch', 'error');
         return;
       }
@@ -521,8 +541,10 @@ export function History() {
             <div className="min-w-0">
               <span className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">
                 {isSingleFile
-                  ? (batch.first_doc_filename || 'Untitled')
-                  : `Batch Summary (${batch.total_files} files)`
+                  ? (batch.first_doc_filename || (batch.success_count === 0 ? 'Failed Generation' : 'Untitled'))
+                  : (batch.success_count === 0
+                      ? `Failed Batch (${batch.total_files} files)`
+                      : `Batch Summary (${batch.total_files} files)`)
                 }
               </span>
             </div>

@@ -112,7 +112,7 @@ export const generateBatchSummaryDocument = (summary, failedFiles = [], tier = '
 
 | Total Files | Successful | Failed | Skipped | Avg Quality |
 |-------------|------------|--------|---------|-------------|
-| ${totalFiles} | ${successCount} | ${failCount} | ${skippedCount} | ${avgQuality}/100 (${avgGrade}) |
+| ${totalFiles} | ${successCount} | ${failCount} | ${skippedCount} | ${avgQuality}/100 (${avgGrade || 'N/A'}) |
 
 `;
   } else {
@@ -120,7 +120,7 @@ export const generateBatchSummaryDocument = (summary, failedFiles = [], tier = '
 
 | Total Files | Successful | Failed | Avg Quality |
 |-------------|------------|--------|-------------|
-| ${totalFiles} | ${successCount} | ${failCount} | ${avgQuality}/100 (${avgGrade}) |
+| ${totalFiles} | ${successCount} | ${failCount} | ${avgQuality}/100 (${avgGrade || 'N/A'}) |
 
 `;
   }
@@ -669,6 +669,46 @@ export function useBatchGeneration({
           fileId: file.id,
           error: error.message
         });
+
+        // Check if this is a rate limit, usage limit, or credit error - skip remaining files
+        // These errors will affect all subsequent files, so no point retrying
+        const errorLower = error.message?.toLowerCase() || '';
+        const errorName = error.name || '';
+        const isLimitError = errorName === 'RateLimitError' ||
+                            errorName === 'UsageLimitError' ||
+                            errorName === 'RATE_LIMIT' ||
+                            errorLower.includes('rate limit') ||
+                            errorLower.includes('usage limit') ||
+                            errorLower.includes('limit exceeded') ||
+                            errorLower.includes('quota exceeded') ||
+                            errorLower.includes('credit balance') ||
+                            errorLower.includes('insufficient credits') ||
+                            errorLower.includes('billing');
+
+        console.log('[useBatchGeneration] Error details:', { errorName, errorMessage: error.message, isLimitError });
+
+        if (isLimitError && i < filesToGenerate.length - 1) {
+          console.log('[useBatchGeneration] Rate/usage limit hit, skipping remaining files');
+
+          // Track remaining files as skipped (starting from next file)
+          for (let j = i + 1; j < filesToGenerate.length; j++) {
+            skippedFiles.push({
+              filename: filesToGenerate[j].filename,
+              fileId: filesToGenerate[j].id,
+              docType: filesToGenerate[j].docType || 'README'
+            });
+          }
+
+          // Update final progress and clear indicators before breaking
+          setBulkGenerationProgress({
+            total: totalFiles,
+            completed: totalFiles, // Mark as complete since we're done
+            currentBatch: 1,
+            totalBatches: 1
+          });
+          setCurrentlyGeneratingFile(null);
+          break;
+        }
       }
 
       // Update progress after each file
@@ -729,7 +769,7 @@ export function useBatchGeneration({
 
     // Calculate average quality score
     let avgQuality = 0;
-    let avgGrade = 'N/A';
+    let avgGrade = null;
     if (successfulFiles.length > 0) {
       const totalQuality = successfulFiles.reduce((sum, file) => sum + file.score, 0);
       avgQuality = Math.round(totalQuality / successfulFiles.length);
