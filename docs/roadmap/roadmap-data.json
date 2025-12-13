@@ -65,9 +65,9 @@
       "text": "codescribeai.com",
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
-    "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.29",
-    "footer": "v3.3.2 Complete · Sidebar UX Polish ✓ · Up Next: Private GitHub Repos · VS Code Extension: Separate Repo",
-    "lastUpdated": "December 10, 2025"
+    "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.30",
+    "footer": "v3.3.3 Complete · Private GitHub Repos ✓ · Up Next: Project Architecture Doc · VS Code Extension: Separate Repo",
+    "lastUpdated": "December 12, 2025"
   },
   "columns": [
     {
@@ -855,13 +855,29 @@
           "completedDate": "Dec 10, 2025",
           "badge": "UX Polish",
           "features": [
-            "ProjectSelector two-line dropdown showing graph status (file count, expiration) for each project",
+            "ProjectSelector two-line dropdown showing graph status (file count, expiration)",
             "Apply doc type consolidated into dropdown menu (one-click workflow)",
-            "Toolbar visual grouping: Add button separated from selection actions (Apply, Delete, Generate)",
-            "View project details link (ExternalLink icon) opens in new tab",
+            "Toolbar visual grouping: Add button separated from selection actions",
+            "View project details link opens in new tab",
             "Auto-deselect files after Apply doc type and Generate actions",
-            "Responsive toolbar: labels hidden at 300px breakpoint, flex-wrap for narrow widths",
-            "3,638 tests (3,638 passing, 87 skipped)"
+            "Responsive toolbar with label hiding and flex-wrap for narrow widths"
+          ]
+        },
+        {
+          "version": "v3.3.3",
+          "title": "Private GitHub Repository Support",
+          "duration": "2 days",
+          "status": "✓ Complete",
+          "completedDate": "Dec 12, 2025",
+          "badge": "High Value",
+          "features": [
+            "Access private GitHub repositories (Starter/Pro/Team tiers)",
+            "One-click GitHub connection from 'Public only' badge",
+            "Private/Public repository badge in file tree header",
+            "Lock/Globe icons show private vs public repos in recent list",
+            "'Selected' filter to quickly find selected files in large repos",
+            "Enhanced error messages guide users to connect GitHub",
+            "Secure OAuth token storage with AES-256-GCM encryption"
           ]
         }
       ]
@@ -872,22 +888,6 @@
       "title": "Active",
       "subtitle": "Phase 3: Platform Infrastructure",
       "phases": [
-        {
-          "version": "Epic 4.1.1",
-          "title": "Private GitHub Repository Support",
-          "duration": "1-2 days",
-          "status": "Up Next",
-          "badge": "High Value",
-          "features": [
-            "Persist GitHub OAuth access token for authenticated users",
-            "Add 'repo' scope to GitHub OAuth request for private repo access",
-            "Pass user token to @octokit/rest client for API calls",
-            "5,000 requests/hour (vs 60 unauthenticated) + private repo access",
-            "UI: 'Link GitHub' prompt for users without connected GitHub account",
-            "Private repos appear automatically in GitHub import modal",
-            "Builds on existing GitHub OAuth login infrastructure (minimal new code)"
-          ]
-        },
         {
           "version": "Epic 5.6",
           "title": "Project Architecture Document",
@@ -923,6 +923,25 @@
             "Push to main → Queue doc regeneration (if configured)",
             "Webhook signature verification for security",
             "Shared by: Web app, VS Code extension, CI/CD integrations"
+          ]
+        },
+        {
+          "version": "Campaign",
+          "title": "Auto-Trial Campaign System",
+          "duration": "0.5 days",
+          "status": "Ready to Implement",
+          "badge": "Growth & Feedback",
+          "features": [
+            "Auto-grant Pro trial to all new signups during campaign period",
+            "Environment variable toggle (CAMPAIGN_AUTO_TRIAL=true/false)",
+            "Configurable trial duration (CAMPAIGN_TRIAL_DAYS, default 14)",
+            "Configurable trial tier (CAMPAIGN_TRIAL_TIER, default pro)",
+            "Optional campaign end date for auto-disable (CAMPAIGN_END_DATE)",
+            "Trial source tracking for analytics ('auto-campaign' vs 'invite_code')",
+            "Admin visibility endpoint for campaign status",
+            "Existing users covered via public invite code (no code changes)",
+            "Instant rollback: Set env var to false and redeploy",
+            "Spec: docs/planning/roadmap/AUTO-TRIAL-CAMPAIGN.md"
           ]
         }
       ]
