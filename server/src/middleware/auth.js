@@ -380,10 +380,13 @@ const requireVerifiedEmail = async (req, res, next) => {
 function sanitizeUser(user) {
   if (!user) return null;
 
-  const { password_hash, ...safeUser } = user;
+  const { password_hash, github_access_token_encrypted, ...safeUser } = user;
 
   // Add has_password field (true if password_hash exists and is not null)
   safeUser.has_password = Boolean(password_hash);
+
+  // Add has_github_private_access field (true if GitHub OAuth token is stored)
+  safeUser.has_github_private_access = Boolean(github_access_token_encrypted);
 
   return safeUser;
 }

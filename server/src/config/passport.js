@@ -59,7 +59,7 @@ if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
         clientSecret: process.env.GITHUB_CLIENT_SECRET,
         callbackURL,
       },
-      async (_accessToken, _refreshToken, profile, done) => {
+      async (accessToken, _refreshToken, profile, done) => {
         try {
           console.log('[Passport] GitHub OAuth callback invoked for user:', profile.username);
 
@@ -67,10 +67,11 @@ if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
           const email = profile.emails?.[0]?.value || `${profile.username}@github.user`;
           console.log('[Passport] Email extracted:', email);
 
-          // Find or create user
+          // Find or create user, storing the GitHub access token for private repo access
           const user = await User.findOrCreateByGithub({
             githubId: profile.id,
             email,
+            accessToken,  // Pass access token for storage (will be encrypted)
           });
 
           console.log('[Passport] User found/created:', user.id);

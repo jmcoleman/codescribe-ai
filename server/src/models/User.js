@@ -6,6 +6,7 @@
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import { sql } from '@vercel/postgres';
+import { encrypt, decrypt, isEncryptionConfigured } from '../utils/encryption.js';
 
 const SALT_ROUNDS = 10;
 
@@ -83,9 +84,23 @@ class User {
    *
    * @param {string} githubId - GitHub user ID
    * @param {string} email - User email
+   * @param {string} accessToken - GitHub OAuth access token (will be encrypted)
    * @returns {Promise<Object>} User object with email_verified=true
    */
-  static async findOrCreateByGithub({ githubId, email }) {
+  static async findOrCreateByGithub({ githubId, email, accessToken }) {
+    // Encrypt the access token if provided and encryption is configured
+    let encryptedToken = null;
+    if (accessToken && isEncryptionConfigured()) {
+      try {
+        encryptedToken = encrypt(accessToken);
+      } catch (err) {
+        console.error('[User.findOrCreateByGithub] Failed to encrypt access token:', err.message);
+        // Continue without storing the token - private repos won't work but auth will
+      }
+    } else if (accessToken && !isEncryptionConfigured()) {
+      console.warn('[User.findOrCreateByGithub] TOKEN_ENCRYPTION_KEY not configured - GitHub access token will not be stored');
+    }
+
     // Try to find existing user by GitHub ID
     let result = await sql`
       SELECT id, email, github_id, tier, email_verified,
@@ -105,7 +120,27 @@ class User {
         }
         await User.restoreAccount(user.id);
         // Fetch updated user data without deletion fields
-        return await User.findById(user.id);
+        const restoredUser = await User.findById(user.id);
+
+        // Update the access token on re-login (tokens can change/refresh)
+        if (encryptedToken) {
+          await sql`
+            UPDATE users
+            SET github_access_token_encrypted = ${encryptedToken}, updated_at = NOW()
+            WHERE id = ${user.id}
+          `;
+        }
+
+        return restoredUser;
+      }
+
+      // Update the access token on re-login (tokens can change/refresh)
+      if (encryptedToken) {
+        await sql`
+          UPDATE users
+          SET github_access_token_encrypted = ${encryptedToken}, updated_at = NOW()
+          WHERE id = ${user.id}
+        `;
       }
 
       return user;
@@ -133,9 +168,13 @@ class User {
 
       // Link GitHub account to existing user and mark email as verified
       // (GitHub has already verified the email address)
+      // Also store the encrypted access token for private repo access
       const updateResult = await sql`
         UPDATE users
-        SET github_id = ${githubId}, email_verified = true, updated_at = NOW()
+        SET github_id = ${githubId},
+            email_verified = true,
+            github_access_token_encrypted = ${encryptedToken},
+            updated_at = NOW()
         WHERE id = ${existingUser.id}
         RETURNING id, email, github_id, tier, email_verified,
                   terms_accepted_at, terms_version_accepted, privacy_accepted_at, privacy_version_accepted, created_at
@@ -146,8 +185,8 @@ class User {
     // Create new user with verified email
     // (GitHub has already verified the email address)
     const createResult = await sql`
-      INSERT INTO users (email, github_id, tier, email_verified)
-      VALUES (${email}, ${githubId}, 'free', true)
+      INSERT INTO users (email, github_id, tier, email_verified, github_access_token_encrypted)
+      VALUES (${email}, ${githubId}, 'free', true, ${encryptedToken})
       RETURNING id, email, github_id, tier, email_verified,
                 terms_accepted_at, terms_version_accepted, privacy_accepted_at, privacy_version_accepted, created_at
     `;
@@ -164,7 +203,7 @@ class User {
   static async findById(id) {
     try {
       const result = await sql`
-        SELECT id, email, first_name, last_name, password_hash, github_id, tier, role, stripe_customer_id, customer_created_via, email_verified,
+        SELECT id, email, first_name, last_name, password_hash, github_id, github_access_token_encrypted, tier, role, stripe_customer_id, customer_created_via, email_verified,
                terms_accepted_at, terms_version_accepted, privacy_accepted_at, privacy_version_accepted, analytics_enabled, theme_preference,
                viewing_as_tier, override_expires_at, override_reason, override_applied_at,
                deletion_scheduled_at, deleted_at, created_at
@@ -764,6 +803,7 @@ class User {
         last_name = NULL,
         password_hash = NULL,
         github_id = NULL,
+        github_access_token_encrypted = NULL,
         verification_token = NULL,
         verification_token_expires = NULL,
         restore_token = NULL,
@@ -1151,6 +1191,73 @@ class User {
     `;
 
     return result.rows;
+  }
+
+  /**
+   * Get decrypted GitHub access token for a user
+   * Used for making authenticated GitHub API requests on behalf of the user
+   * @param {number} userId - User ID
+   * @returns {Promise<string|null>} Decrypted GitHub access token or null
+   */
+  static async getGitHubToken(userId) {
+    if (!isEncryptionConfigured()) {
+      console.warn('[User.getGitHubToken] TOKEN_ENCRYPTION_KEY not configured');
+      return null;
+    }
+
+    const result = await sql`
+      SELECT github_access_token_encrypted
+      FROM users
+      WHERE id = ${userId}
+        AND github_access_token_encrypted IS NOT NULL
+        AND deleted_at IS NULL
+    `;
+
+    if (result.rows.length === 0 || !result.rows[0].github_access_token_encrypted) {
+      return null;
+    }
+
+    try {
+      return decrypt(result.rows[0].github_access_token_encrypted);
+    } catch (err) {
+      console.error('[User.getGitHubToken] Failed to decrypt token:', err.message);
+      return null;
+    }
+  }
+
+  /**
+   * Check if user has a GitHub access token stored
+   * Does not decrypt the token - just checks existence
+   * @param {number} userId - User ID
+   * @returns {Promise<boolean>} True if user has a GitHub token
+   */
+  static async hasGitHubToken(userId) {
+    const result = await sql`
+      SELECT 1
+      FROM users
+      WHERE id = ${userId}
+        AND github_access_token_encrypted IS NOT NULL
+        AND deleted_at IS NULL
+    `;
+
+    return result.rows.length > 0;
+  }
+
+  /**
+   * Clear GitHub access token for a user
+   * Used when user wants to disconnect GitHub or revoke access
+   * @param {number} userId - User ID
+   * @returns {Promise<boolean>} True if token was cleared
+   */
+  static async clearGitHubToken(userId) {
+    const result = await sql`
+      UPDATE users
+      SET github_access_token_encrypted = NULL,
+          updated_at = NOW()
+      WHERE id = ${userId}
+    `;
+
+    return result.rowCount > 0;
   }
 }
 

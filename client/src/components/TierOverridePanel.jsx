@@ -105,28 +105,28 @@ export function TierOverridePanel({ currentTier, override, onApply, onClear }) {
   return (
     <div>
       {/* Header */}
-      <div className={`flex items-start gap-3 ${hasActiveOverride ? 'mb-6' : 'mb-4'}`}>
-        <Shield className="w-5 h-5 text-purple-600 dark:text-purple-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
-        <div className="flex-1">
-          <h2 className="text-base font-semibold text-slate-900 dark:text-white mb-1">
+      <div className={`${hasActiveOverride ? 'mb-6' : 'mb-4'}`}>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+            <Shield className="w-5 h-5" aria-hidden="true" />
             Tier Override
           </h2>
           {hasActiveOverride && (
-            <p className="text-sm text-slate-600 dark:text-slate-400">
-              <span className="font-medium">Viewing As:</span>{' '}
-              <span className="font-medium text-amber-600 dark:text-amber-400 capitalize">{override.tier}</span>
-              {' '}(expires in {override.remainingTime?.hours}h {override.remainingTime?.minutes}m)
-            </p>
+            <button
+              onClick={handleClear}
+              disabled={isSubmitting}
+              className="text-sm font-medium text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 transition-colors disabled:opacity-50"
+            >
+              Clear
+            </button>
           )}
         </div>
         {hasActiveOverride && (
-          <button
-            onClick={handleClear}
-            disabled={isSubmitting}
-            className="text-sm font-medium text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 transition-colors disabled:opacity-50"
-          >
-            Clear
-          </button>
+          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+            <span className="font-medium">Viewing As:</span>{' '}
+            <span className="font-medium text-amber-600 dark:text-amber-400 capitalize">{override.tier}</span>
+            {' '}(expires in {override.remainingTime?.hours}h {override.remainingTime?.minutes}m)
+          </p>
         )}
       </div>
 

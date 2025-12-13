@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { X, AlertCircle, Github, Loader2, File, Clock, ChevronDown, ChevronRight, Sparkles, Zap, ExternalLink, FolderGit2, FolderTree, Eye } from 'lucide-react';
+import { X, AlertCircle, Github, Loader2, File, Clock, ChevronDown, ChevronRight, Sparkles, Zap, ExternalLink, FolderGit2, FolderTree, Eye, Lock, Unlock, Link2, Globe } from 'lucide-react';
 import { SmartInput } from './SmartInput';
 import { FileTree } from './FileTree';
 import { FilePreview } from './FilePreview';
@@ -60,7 +60,7 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, onIm
   const fileTreeSearchRef = useRef(null);
 
   // Tier features
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const effectiveTier = getEffectiveTier(user);
   const canUseBatchProcessing = hasFeature(user, 'batchProcessing');
   const maxFiles = GITHUB_BATCH_LIMITS[effectiveTier] || 1;
@@ -78,6 +78,13 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, onIm
       });
     }
   }, [isOpen, user, effectiveTier, canUseBatchProcessing, maxFiles]);
+
+  // Refresh user data when modal opens to ensure has_github_private_access is current
+  useEffect(() => {
+    if (isOpen && user) {
+      refreshUser();
+    }
+  }, [isOpen]); // Only depend on isOpen, not user or refreshUser to avoid loops
 
   // Load recent files and workspace files on mount
   useEffect(() => {
@@ -213,6 +220,7 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, onIm
     setFilePreview(null);
     setExpandedPaths(new Set()); // Reset expanded paths
     setExtensionFilters([]); // Reset extension filters
+    setSelectedFiles(new Set()); // Clear file selection when changing repos
 
     try {
       // Parse the input
@@ -241,7 +249,18 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, onIm
       }
     } catch (err) {
       console.error('Failed to load repository:', err);
-      setError(err.message);
+
+      // Enhance error message for "not found" errors when user doesn't have private repo access
+      let errorMessage = err.message;
+      if (!user?.has_github_private_access && (
+        err.message.includes('not found') ||
+        err.message.includes('Not Found') ||
+        err.message.includes('private')
+      )) {
+        errorMessage = 'Repository not found. If this is a private repository, click the "Public only" badge above to connect your GitHub account.';
+      }
+
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -255,6 +274,7 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, onIm
     setSelectedFile(null);
     setFilePreview(null);
     setExtensionFilters([]); // Reset extension filters
+    setSelectedFiles(new Set()); // Clear file selection when changing branches
 
     try {
       // Refetch the tree with the new branch
@@ -340,7 +360,8 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, onIm
       repo: repository.repo,
       path: filePreview.path,
       name: filePreview.name,
-      language: filePreview.language
+      language: filePreview.language,
+      isPrivate: repository.isPrivate
     }, user?.id);
 
     // Show success toast
@@ -355,6 +376,7 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, onIm
     setLoading(true);
     setError(null);
     setRecentFilesExpanded(false); // Collapse after selection
+    setSelectedFiles(new Set()); // Clear file selection when changing repos
 
     try {
       // Fetch the repository tree and branches in parallel
@@ -375,7 +397,18 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, onIm
       }
     } catch (err) {
       console.error('Failed to load recent file:', err);
-      setError(err.message);
+
+      // Enhance error message for "not found" errors when user doesn't have private repo access
+      let errorMessage = err.message;
+      if (!user?.has_github_private_access && (
+        err.message.includes('not found') ||
+        err.message.includes('Not Found') ||
+        err.message.includes('private')
+      )) {
+        errorMessage = 'Repository not found. If this is a private repository, click the "Public only" badge above to connect your GitHub account.';
+      }
+
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -830,7 +863,8 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, onIm
           name: `${repository.owner}/${repository.repo}`, // Show full repo name
           language: 'repository', // Special marker for repo entries
           isRepo: true, // Flag to indicate this is a repo, not a file
-          fileCount: successCount // Track how many files were imported
+          fileCount: successCount, // Track how many files were imported
+          isPrivate: repository.isPrivate
         }, user?.id);
 
         // Notify parent to refresh workspace
@@ -913,6 +947,33 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, onIm
             <h2 id="github-modal-title" className="text-lg font-semibold text-slate-900 dark:text-white">
               Import from GitHub
             </h2>
+            {/* Private repo access indicator */}
+            {user?.has_github_private_access ? (
+              <span
+                className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
+                title="You can access your private repositories"
+              >
+                <Unlock className="w-3 h-3" />
+                <span className="hidden sm:inline">Private repos</span>
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  // Redirect to GitHub OAuth to enable private repo access
+                  window.location.href = `${import.meta.env.VITE_API_URL}/api/auth/github`;
+                }}
+                className="group inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 hover:bg-purple-100 hover:text-purple-700 dark:hover:bg-purple-900/30 dark:hover:text-purple-400 transition-colors cursor-pointer"
+                title="Click to connect GitHub for private repository access"
+              >
+                <Lock className="w-3 h-3 group-hover:hidden" />
+                <Link2 className="w-3 h-3 hidden group-hover:block" />
+                <span className="hidden sm:inline">
+                  <span className="group-hover:hidden">Public only</span>
+                  <span className="hidden group-hover:inline">Connect GitHub</span>
+                </span>
+              </button>
+            )}
           </div>
           <button
             onClick={onClose}
@@ -969,10 +1030,10 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, onIm
                       disabled={loading}
                       className="group flex items-center gap-2 px-2 py-1 text-sm text-left rounded-md hover:enabled:bg-slate-100 dark:hover:enabled:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
-                      {recent.isRepo ? (
-                        <FolderGit2 className="w-3.5 h-3.5 flex-shrink-0 text-purple-500 dark:text-purple-400 group-hover:enabled:text-purple-600 dark:group-hover:enabled:text-purple-300 transition-colors" />
+                      {recent.isPrivate ? (
+                        <Lock className="w-3.5 h-3.5 flex-shrink-0 text-slate-500 dark:text-slate-400 group-hover:enabled:text-slate-600 dark:group-hover:enabled:text-slate-300 transition-colors" />
                       ) : (
-                        <File className="w-3.5 h-3.5 flex-shrink-0 text-slate-400 dark:text-slate-500 group-hover:enabled:text-slate-600 dark:group-hover:enabled:text-slate-300 transition-colors" />
+                        <Globe className="w-3.5 h-3.5 flex-shrink-0 text-slate-400 dark:text-slate-500 group-hover:enabled:text-slate-600 dark:group-hover:enabled:text-slate-300 transition-colors" />
                       )}
                       <div className="flex-1 min-w-0 flex items-baseline gap-2">
                         <span className="text-slate-700 dark:text-slate-200 font-medium truncate">

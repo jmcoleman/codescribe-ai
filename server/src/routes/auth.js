@@ -732,9 +732,16 @@ router.patch('/preferences', requireAuth, async (req, res) => {
 // ============================================================================
 router.get(
   '/github',
-  passport.authenticate('github', {
-    scope: ['user:email']
-  })
+  (req, res, next) => {
+    // Store returnTo in session state for redirect after callback
+    const returnTo = req.query.returnTo;
+    const state = returnTo ? Buffer.from(JSON.stringify({ returnTo })).toString('base64') : undefined;
+
+    passport.authenticate('github', {
+      scope: ['user:email', 'repo'],  // 'repo' scope enables private repository access
+      state
+    })(req, res, next);
+  }
 );
 
 // ============================================================================
@@ -774,10 +781,22 @@ router.get(
       // Generate JWT token
       const token = generateToken(user);
 
-      // Redirect to frontend with token
+      // Extract returnTo from state if present
+      let returnTo = null;
+      if (req.query.state) {
+        try {
+          const stateData = JSON.parse(Buffer.from(req.query.state, 'base64').toString());
+          returnTo = stateData.returnTo;
+        } catch (e) {
+          // Invalid state, ignore
+        }
+      }
+
+      // Redirect to frontend with token (and returnTo if present)
       // Frontend will extract token from URL and store it
       const frontendUrl = process.env.CLIENT_URL || 'http://localhost:5173';
-      res.redirect(`${frontendUrl}/auth/callback?token=${token}`);
+      const returnToParam = returnTo ? `&returnTo=${encodeURIComponent(returnTo)}` : '';
+      res.redirect(`${frontendUrl}/auth/callback?token=${token}${returnToParam}`);
     })(req, res, next);
   }
 );

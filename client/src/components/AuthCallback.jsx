@@ -124,11 +124,14 @@ export function AuthCallback() {
             }
           }
 
-          // Redirect to home page with full page reload
+          // Check for returnTo param (e.g., from Settings page GitHub connect)
+          const returnTo = searchParams.get('returnTo');
+
+          // Redirect to returnTo or home page with full page reload
           // This triggers AuthContext initialization with the new token
           // Using window.location.href instead of navigate + reload
           // ensures a clean navigation without the callback URL in history
-          window.location.href = '/';
+          window.location.href = returnTo || '/';
         } catch (err) {
           console.error('Error storing auth token:', err);
 

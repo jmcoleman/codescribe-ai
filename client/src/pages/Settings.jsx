@@ -8,6 +8,7 @@ import { PrivacyTab } from '../components/settings/PrivacyTab';
 import { SubscriptionTab } from '../components/settings/SubscriptionTab';
 import { DangerZoneTab } from '../components/settings/DangerZoneTab';
 import { PageLayout } from '../components/PageLayout';
+import { AppToaster } from '../components/AppToaster';
 
 const TABS = [
   { id: 'account', label: 'Account', icon: User },
@@ -78,6 +79,7 @@ export default function Settings() {
 
   return (
     <PageLayout showGradient={false} className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-950">
+      <AppToaster />
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-2">
         <button
           onClick={() => navigate(-1)}

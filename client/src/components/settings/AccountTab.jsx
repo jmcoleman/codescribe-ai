@@ -1,20 +1,27 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { Mail, Lock, User, Save, Check, AlertCircle, Download } from 'lucide-react';
+import { Mail, Lock, User, Save, Check, AlertCircle, Download, Github, ShieldOff } from 'lucide-react';
 import { toastCompact } from '../../utils/toast';
 import { RoleBadge } from '../RoleBadge';
 import { TierOverridePanel } from '../TierOverridePanel';
 import { useTierOverride } from '../../hooks/useTierOverride';
 import { STORAGE_KEYS, getStorageItem } from '../../constants/storage';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 export function AccountTab() {
-  const { user, updateProfile } = useAuth();
+  const { user, updateProfile, refreshUser } = useAuth();
   const { override, applyOverride, clearOverride } = useTierOverride();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+
+  // GitHub connection state
+  const [githubStatus, setGithubStatus] = useState({ connected: false, hasPrivateAccess: false });
+  const [isLoadingGithubStatus, setIsLoadingGithubStatus] = useState(true);
+  const [isRevokingGithub, setIsRevokingGithub] = useState(false);
 
   // Profile form state
   const [firstName, setFirstName] = useState(user?.first_name || '');
@@ -39,6 +46,64 @@ export function AccountTab() {
   };
 
   const passwordStrength = Object.values(passwordChecks).filter(Boolean).length;
+
+  // Fetch GitHub status on mount
+  useEffect(() => {
+    const fetchGithubStatus = async () => {
+      try {
+        const token = getStorageItem(STORAGE_KEYS.AUTH_TOKEN);
+        const response = await fetch(`${API_URL}/api/user/github-status`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setGithubStatus(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch GitHub status:', error);
+      } finally {
+        setIsLoadingGithubStatus(false);
+      }
+    };
+
+    fetchGithubStatus();
+  }, []);
+
+  const handleRevokeGithubAccess = async () => {
+    setIsRevokingGithub(true);
+    try {
+      const token = getStorageItem(STORAGE_KEYS.AUTH_TOKEN);
+      const response = await fetch(`${API_URL}/api/user/revoke-github-access`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to revoke GitHub access');
+      }
+
+      setGithubStatus(prev => ({ ...prev, hasPrivateAccess: false }));
+      // Refresh user context so other components (like GitHubLoadModal) get updated has_github_private_access
+      await refreshUser();
+      toastCompact('GitHub private repo access revoked', 'success');
+    } catch (error) {
+      toastCompact(error.message || 'Failed to revoke GitHub access', 'error');
+    } finally {
+      setIsRevokingGithub(false);
+    }
+  };
+
+  const handleConnectGithub = () => {
+    // Redirect to GitHub OAuth with returnTo to come back to settings
+    window.location.href = `${API_URL}/api/auth/github?returnTo=/settings`;
+  };
 
   const handleSaveProfile = async (e) => {
     e.preventDefault();
@@ -484,6 +549,104 @@ export function AccountTab() {
           )}
         </div>
       )}
+
+      {/* GitHub Connection Section */}
+      <div className="pt-8 border-t border-slate-200 dark:border-slate-700">
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2 mb-2">
+            <Github className="w-5 h-5" aria-hidden="true" />
+            GitHub Connection
+          </h2>
+          <p className="text-sm text-slate-700 dark:text-slate-300">
+            Connect GitHub to access private repositories in the GitHub import.
+          </p>
+        </div>
+
+        {isLoadingGithubStatus ? (
+          <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+            <div className="w-4 h-4 border-2 border-slate-300 dark:border-slate-600 border-t-purple-600 rounded-full animate-spin" />
+            Loading...
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {/* Connection Status */}
+            <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-slate-200 dark:bg-slate-700">
+                  <Github className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-900 dark:text-white">
+                    {githubStatus.connected ? 'GitHub Connected' : 'GitHub Not Connected'}
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    {githubStatus.connected
+                      ? githubStatus.hasPrivateAccess
+                        ? 'Private repository access enabled'
+                        : 'Connected (public repos only)'
+                      : 'Connect to access private repositories'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              {githubStatus.connected ? (
+                githubStatus.hasPrivateAccess ? (
+                  <button
+                    onClick={handleRevokeGithubAccess}
+                    disabled={isRevokingGithub}
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isRevokingGithub ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-slate-300 dark:border-slate-500 border-t-slate-600 dark:border-t-slate-300 rounded-full animate-spin" />
+                        Revoking...
+                      </>
+                    ) : (
+                      <>
+                        <ShieldOff className="w-4 h-4" />
+                        Revoke Private Access
+                      </>
+                    )}
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleConnectGithub}
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg transition-colors"
+                  >
+                    <Github className="w-4 h-4" />
+                    Enable Private Access
+                  </button>
+                )
+              ) : (
+                <button
+                  onClick={handleConnectGithub}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 dark:hover:bg-slate-600 rounded-lg transition-colors"
+                >
+                  <Github className="w-4 h-4" />
+                  Connect GitHub
+                </button>
+              )}
+            </div>
+
+            {/* Info about GitHub access */}
+            {githubStatus.hasPrivateAccess && (
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Revoking private access removes the stored token. You can re-enable it anytime by connecting GitHub again.
+                To fully disconnect GitHub from your account, visit{' '}
+                <a
+                  href="https://github.com/settings/applications"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-purple-600 dark:text-purple-400 hover:underline"
+                >
+                  GitHub Settings → Applications
+                </a>.
+              </p>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Tier Override Panel (Admin/Support Only) */}
       {(user?.role === 'admin' || user?.role === 'support' || user?.role === 'super_admin') && (

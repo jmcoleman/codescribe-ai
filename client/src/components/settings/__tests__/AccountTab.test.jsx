@@ -46,10 +46,51 @@ describe('AccountTab', () => {
   let originalAppendChild;
   let originalRemoveChild;
 
+  // Helper to create a mock fetch that handles GitHub status and custom responses
+  const createMockFetch = (customResponses = {}) => {
+    return vi.fn((url) => {
+      // Handle GitHub status check first
+      if (url.includes('/api/user/github-status')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ connected: false, has_private_access: false })
+        });
+      }
+      // Handle password change
+      if (url.includes('/api/user/change-password')) {
+        if (customResponses.passwordChange) {
+          return customResponses.passwordChange;
+        }
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ success: true })
+        });
+      }
+      // Handle data export
+      if (url.includes('/api/user/data-export')) {
+        if (customResponses.dataExport) {
+          return customResponses.dataExport;
+        }
+        return Promise.resolve({
+          ok: true,
+          headers: { get: () => null },
+          blob: () => Promise.resolve(new Blob(['{}'], { type: 'application/json' }))
+        });
+      }
+      // Default fallback
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({})
+      });
+    });
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
-    mockFetch = vi.fn();
+
+    // Default mock for fetch - handles GitHub status check on mount
+    mockFetch = createMockFetch();
     global.fetch = mockFetch;
 
     // Save original DOM methods
@@ -69,6 +110,7 @@ describe('AccountTab', () => {
         auth_method: 'email',
       },
       updateProfile: mockUpdateProfile,
+      refreshUser: vi.fn().mockResolvedValue(),
     });
   });
 
@@ -360,6 +402,7 @@ describe('AccountTab', () => {
           auth_method: 'github',
         },
         updateProfile: mockUpdateProfile,
+        refreshUser: vi.fn().mockResolvedValue(),
       });
 
       renderWithRouter();
@@ -428,10 +471,7 @@ describe('AccountTab', () => {
     it('should show success toast on successful password change', async () => {
       const user = userEvent.setup();
 
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ success: true })
-      });
+      // Password change is already mocked as successful by default in createMockFetch
 
       localStorage.setItem('cs_auth_token', 'test-token');
 
@@ -453,10 +493,7 @@ describe('AccountTab', () => {
     it('should close password form and clear fields after successful change', async () => {
       const user = userEvent.setup();
 
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ success: true })
-      });
+      // Password change is already mocked as successful by default in createMockFetch
 
       localStorage.setItem('cs_auth_token', 'test-token');
 
@@ -518,13 +555,17 @@ describe('AccountTab', () => {
       const user = userEvent.setup();
       const mockBlob = new Blob(['{"user": "data"}'], { type: 'application/json' });
 
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        headers: {
-          get: (header) => header === 'Content-Disposition' ? 'attachment; filename="export-2024-11-04.json"' : null
-        },
-        blob: () => Promise.resolve(mockBlob)
+      // Set up custom fetch with export response
+      global.fetch = createMockFetch({
+        dataExport: Promise.resolve({
+          ok: true,
+          headers: {
+            get: (header) => header === 'Content-Disposition' ? 'attachment; filename="export-2024-11-04.json"' : null
+          },
+          blob: () => Promise.resolve(mockBlob)
+        })
       });
+      mockFetch = global.fetch;
 
       localStorage.setItem('cs_auth_token', 'test-token');
 
@@ -573,13 +614,17 @@ describe('AccountTab', () => {
       const user = userEvent.setup();
       const mockBlob = new Blob(['{"user": "data"}'], { type: 'application/json' });
 
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        headers: {
-          get: (header) => header === 'Content-Disposition' ? 'attachment; filename="export-2024-11-04.json"' : null
-        },
-        blob: () => Promise.resolve(mockBlob)
+      // Set up custom fetch with export response
+      global.fetch = createMockFetch({
+        dataExport: Promise.resolve({
+          ok: true,
+          headers: {
+            get: (header) => header === 'Content-Disposition' ? 'attachment; filename="export-2024-11-04.json"' : null
+          },
+          blob: () => Promise.resolve(mockBlob)
+        })
       });
+      mockFetch = global.fetch;
 
       localStorage.setItem('cs_auth_token', 'test-token');
 
@@ -621,13 +666,17 @@ describe('AccountTab', () => {
       const user = userEvent.setup();
       const mockBlob = new Blob(['{"user": "data"}'], { type: 'application/json' });
 
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        headers: {
-          get: () => null
-        },
-        blob: () => Promise.resolve(mockBlob)
+      // Set up custom fetch with export response
+      global.fetch = createMockFetch({
+        dataExport: Promise.resolve({
+          ok: true,
+          headers: {
+            get: () => null
+          },
+          blob: () => Promise.resolve(mockBlob)
+        })
       });
+      mockFetch = global.fetch;
 
       localStorage.setItem('cs_auth_token', 'test-token');
 
@@ -662,10 +711,14 @@ describe('AccountTab', () => {
     it('should show error toast on export failure', async () => {
       const user = userEvent.setup();
 
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        json: () => Promise.resolve({ error: 'Export failed' })
+      // Set up custom fetch with export failure
+      global.fetch = createMockFetch({
+        dataExport: Promise.resolve({
+          ok: false,
+          json: () => Promise.resolve({ error: 'Export failed' })
+        })
       });
+      mockFetch = global.fetch;
 
       localStorage.setItem('cs_auth_token', 'test-token');
 
@@ -681,7 +734,23 @@ describe('AccountTab', () => {
     it('should handle network errors gracefully', async () => {
       const user = userEvent.setup();
 
-      mockFetch.mockRejectedValueOnce(new Error('Network error'));
+      // Set up custom fetch that rejects on data export
+      global.fetch = vi.fn((url) => {
+        if (url.includes('/api/user/github-status')) {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ connected: false, has_private_access: false })
+          });
+        }
+        if (url.includes('/api/user/data-export')) {
+          return Promise.reject(new Error('Network error'));
+        }
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({})
+        });
+      });
+      mockFetch = global.fetch;
 
       localStorage.setItem('cs_auth_token', 'test-token');
 

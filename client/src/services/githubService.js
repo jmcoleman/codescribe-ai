@@ -1,10 +1,24 @@
 /**
  * GitHub Service - Frontend
  * Handles GitHub API calls for loading files and repository trees
+ * Supports private repositories when user is authenticated with GitHub OAuth
  */
 
 import { API_URL } from '../config/api.js';
-import { getGitHubRecentKey } from '../constants/storage.js';
+import { getGitHubRecentKey, STORAGE_KEYS } from '../constants/storage.js';
+
+/**
+ * Get authorization headers for API requests
+ * @returns {Object} Headers object with Authorization if user is logged in
+ */
+function getAuthHeaders() {
+  const headers = { 'Content-Type': 'application/json' };
+  const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+}
 
 /**
  * Parse GitHub URL
@@ -14,7 +28,7 @@ import { getGitHubRecentKey } from '../constants/storage.js';
 export async function parseGitHubUrl(url) {
   const response = await fetch(`${API_URL}/api/github/parse-url`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getAuthHeaders(),
     body: JSON.stringify({ url })
   });
 
@@ -36,6 +50,7 @@ export async function parseGitHubUrl(url) {
 
 /**
  * Fetch file from GitHub
+ * Supports private repositories when user is authenticated with GitHub OAuth
  * @param {string} owner - Repository owner
  * @param {string} repo - Repository name
  * @param {string} path - File path
@@ -48,7 +63,7 @@ export async function fetchFile(owner, repo, path, ref = null) {
 
   const response = await fetch(`${API_URL}/api/github/file`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getAuthHeaders(),
     body: JSON.stringify(body)
   });
 
@@ -71,6 +86,7 @@ export async function fetchFile(owner, repo, path, ref = null) {
 
 /**
  * Fetch repository tree
+ * Supports private repositories when user is authenticated with GitHub OAuth
  * @param {string} owner - Repository owner
  * @param {string} repo - Repository name
  * @param {string} ref - Branch/tag/commit (optional)
@@ -82,7 +98,7 @@ export async function fetchTree(owner, repo, ref = null) {
 
   const response = await fetch(`${API_URL}/api/github/tree`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getAuthHeaders(),
     body: JSON.stringify(body)
   });
 
@@ -105,6 +121,7 @@ export async function fetchTree(owner, repo, ref = null) {
 
 /**
  * Fetch repository branches
+ * Supports private repositories when user is authenticated with GitHub OAuth
  * @param {string} owner - Repository owner
  * @param {string} repo - Repository name
  * @returns {Promise<Array>} List of branches
@@ -112,7 +129,7 @@ export async function fetchTree(owner, repo, ref = null) {
 export async function fetchBranches(owner, repo) {
   const response = await fetch(`${API_URL}/api/github/branches`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getAuthHeaders(),
     body: JSON.stringify({ owner, repo })
   });
 
@@ -229,6 +246,11 @@ export function addRecentFile(file, userId = null) {
       if (file.fileCount) {
         newEntry.fileCount = file.fileCount;
       }
+    }
+
+    // Include private repo flag if present
+    if (file.isPrivate !== undefined) {
+      newEntry.isPrivate = file.isPrivate;
     }
 
     filtered.unshift(newEntry);

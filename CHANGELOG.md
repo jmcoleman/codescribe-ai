@@ -9,6 +9,105 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.3.3] - 2025-12-12
+
+**Status:** ✅ Private GitHub Repository Support
+
+**Summary:** Added support for loading files from private GitHub repositories. Users who sign in with GitHub OAuth can now access their private repos through the GitHub import modal. OAuth tokens are encrypted with AES-256-GCM before storage. Added "Private GitHub repos" as a paid feature on the pricing page.
+
+### Added
+
+- **Private Repository Support** ([server/src/services/githubService.js](server/src/services/githubService.js), [server/src/routes/api.js](server/src/routes/api.js))
+  - Per-user GitHub token authentication for API requests
+  - Fallback to server token or unauthenticated when user has no token
+  - 5,000 requests/hour with user token (vs 60 unauthenticated)
+
+- **Token Encryption** ([server/src/utils/encryption.js](server/src/utils/encryption.js))
+  - AES-256-GCM encryption for GitHub OAuth access tokens
+  - Unique IV per encryption with authentication tag
+  - `TOKEN_ENCRYPTION_KEY` environment variable (64-char hex string)
+
+- **Database Migration** ([server/src/db/migrations/045-add-github-access-token.sql](server/src/db/migrations/045-add-github-access-token.sql))
+  - Added `github_access_token_encrypted` column to users table
+
+- **Private/Public Repository Badge** ([client/src/components/GitHubLoader/FileTree.jsx](client/src/components/GitHubLoader/FileTree.jsx))
+  - Shows Lock icon for private repos, Globe icon for public repos
+  - Badge displayed next to repository name in file tree header
+
+- **Clickable "Public only" Badge** ([client/src/components/GitHubLoader/GitHubLoadModal.jsx](client/src/components/GitHubLoader/GitHubLoadModal.jsx))
+  - Header badge indicates private repo access status
+  - Clicking "Public only" redirects to GitHub OAuth to connect account
+  - Badge changes to "Private repos" when GitHub is connected
+
+- **Selected Files Filter** ([client/src/components/GitHubLoader/FileTree.jsx](client/src/components/GitHubLoader/FileTree.jsx))
+  - Filter button to show only selected files in large repositories
+  - Helps locate selected files scattered across folder structure
+
+- **Enhanced Error Messages** ([client/src/components/GitHubLoader/GitHubLoadModal.jsx](client/src/components/GitHubLoader/GitHubLoadModal.jsx))
+  - "Repository not found" error now guides users to connect GitHub for private repos
+  - Recent repo click errors also guide users to enable private access
+
+- **Reusable Toast Component** ([client/src/components/AppToaster.jsx](client/src/components/AppToaster.jsx))
+  - Extracted reusable toast component for pages outside main App layout
+  - Added to Settings page for toast notifications
+
+- **OAuth Return-To Flow** ([server/src/routes/auth.js](server/src/routes/auth.js), [client/src/components/AuthCallback.jsx](client/src/components/AuthCallback.jsx))
+  - Users return to Settings page after enabling GitHub private access
+  - Encoded in OAuth state parameter for security
+
+- **Private GitHub Repos Feature on Pricing** ([client/src/pages/PricingPage.jsx](client/src/pages/PricingPage.jsx))
+  - Added "Private GitHub repos" as feature for paid tiers (Starter/Pro/Team) with NEW badge
+  - Free tier shows "Public GitHub repos"
+
+### Changed
+
+- **OAuth Scope** ([server/src/routes/auth.js](server/src/routes/auth.js))
+  - Added `repo` scope to GitHub OAuth for private repository access
+
+- **Selection Cleared on Context Change** ([client/src/components/GitHubLoader/GitHubLoadModal.jsx](client/src/components/GitHubLoader/GitHubLoadModal.jsx))
+  - File selection cleared when changing repositories or branches
+  - Prevents stale selection count after repo switch
+
+- **Consistent Toolbar Styling** ([client/src/components/GitHubLoader/FileTree.jsx](client/src/components/GitHubLoader/FileTree.jsx))
+  - All toolbar buttons now use icon+text pattern
+  - Improved visual consistency in selection status bar
+
+- **Neutral UI Styling** ([client/src/components/settings/AccountTab.jsx](client/src/components/settings/AccountTab.jsx), [client/src/components/settings/TierOverridePanel.jsx](client/src/components/settings/TierOverridePanel.jsx))
+  - Changed GitHub connection icons and buttons from purple to neutral slate
+  - Consistent icon styling across all settings sections
+
+- **Recent Repo Icons** ([client/src/components/GitHubLoader/GitHubLoadModal.jsx](client/src/components/GitHubLoader/GitHubLoadModal.jsx))
+  - Changed from FolderGit2/File (batch vs single) to Lock/Globe (private vs public)
+  - Stores isPrivate flag with recent repo entries
+
+- **Stale User Data Fix** ([client/src/components/GitHubLoader/GitHubLoadModal.jsx](client/src/components/GitHubLoader/GitHubLoadModal.jsx))
+  - Refreshes user data when modal opens to show accurate private access status
+
+### Documentation
+
+- **Environment Variables** ([server/.env.example](server/.env.example), [README.md](README.md))
+  - Added `TOKEN_ENCRYPTION_KEY` documentation with generation command
+  - Note about re-authentication requirement after adding key
+
+- **Auto-Trial Campaign Plan** ([docs/planning/mvp/AUTO-TRIAL-CAMPAIGN.md](docs/planning/mvp/AUTO-TRIAL-CAMPAIGN.md))
+  - Added plan document for auto-granting Pro trials to new signups
+  - Added as epic in roadmap-data.json
+
+### Technical Details
+
+- **Test Count:** 3,693 passing, 87 skipped (+55 tests from v3.3.2)
+  - Frontend: 1,913 passing, 54 skipped (1,967 total)
+  - Backend: 1,780 passing, 33 skipped (1,813 total)
+- **New Tests:** 55 backend tests for private repo support
+  - 14 encryption utility tests
+  - 15 User model GitHub token tests
+  - 13 GitHubService private repo tests
+  - 13 GitHub API route tests
+- **Updated Tests:**
+  - AccountTab tests updated to mock GitHub status fetch on mount
+
+---
+
 ## [3.3.2] - 2025-12-10
 
 **Status:** ✅ Sidebar UX Improvements & Project Selector Enhancements

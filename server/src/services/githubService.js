@@ -1,14 +1,15 @@
 /**
  * GitHub Service
  * Handles GitHub API interactions for loading files and repository trees
+ * Supports both server-level token and per-user tokens for private repo access
  */
 
 import { Octokit } from '@octokit/rest';
 
 class GitHubService {
   constructor() {
-    // Initialize Octokit client
-    // Public repos: 60 requests/hour
+    // Initialize default Octokit client with server token (if available)
+    // Public repos: 60 requests/hour (unauthenticated)
     // With token: 5000 requests/hour
     const options = {};
 
@@ -20,6 +21,20 @@ class GitHubService {
 
     // File size limit: 100KB (reasonable for LLM context)
     this.MAX_FILE_SIZE = 100 * 1024; // 100KB in bytes
+  }
+
+  /**
+   * Create an Octokit client with a specific user token
+   * Used for accessing private repositories on behalf of authenticated users
+   * @param {string} userToken - User's GitHub OAuth access token
+   * @returns {Octokit} Authenticated Octokit client
+   */
+  getClientForUser(userToken) {
+    if (userToken) {
+      return new Octokit({ auth: userToken });
+    }
+    // Fall back to default client (server token or unauthenticated)
+    return this.octokit;
   }
 
   /**
@@ -100,10 +115,12 @@ class GitHubService {
    * @param {string} repo - Repository name
    * @param {string} path - File path
    * @param {string} ref - Branch, tag, or commit SHA (optional)
+   * @param {string} userToken - User's GitHub OAuth token for private repos (optional)
    * @returns {Promise<Object>} File content and metadata
    */
-  async fetchFile(owner, repo, path, ref = null) {
+  async fetchFile(owner, repo, path, ref = null, userToken = null) {
     try {
+      const client = this.getClientForUser(userToken);
       const params = {
         owner,
         repo,
@@ -114,7 +131,7 @@ class GitHubService {
         params.ref = ref;
       }
 
-      const response = await this.octokit.rest.repos.getContent(params);
+      const response = await client.rest.repos.getContent(params);
 
       // Check if it's a file (not a directory)
       if (response.data.type !== 'file') {
@@ -150,11 +167,13 @@ class GitHubService {
    * Fetch repository branches
    * @param {string} owner - Repository owner
    * @param {string} repo - Repository name
+   * @param {string} userToken - User's GitHub OAuth token for private repos (optional)
    * @returns {Promise<Array>} List of branches with name and commit info
    */
-  async fetchBranches(owner, repo) {
+  async fetchBranches(owner, repo, userToken = null) {
     try {
-      const response = await this.octokit.rest.repos.listBranches({
+      const client = this.getClientForUser(userToken);
+      const response = await client.rest.repos.listBranches({
         owner,
         repo,
         per_page: 100 // Get up to 100 branches (most repos have fewer)
@@ -175,16 +194,18 @@ class GitHubService {
    * @param {string} owner - Repository owner
    * @param {string} repo - Repository name
    * @param {string} ref - Branch, tag, or commit SHA (optional)
+   * @param {string} userToken - User's GitHub OAuth token for private repos (optional)
    * @returns {Promise<Object>} Repository tree structure
    */
-  async fetchTree(owner, repo, ref = null) {
+  async fetchTree(owner, repo, ref = null, userToken = null) {
     try {
+      const client = this.getClientForUser(userToken);
       // First, get the repository to get the default branch if ref not provided
-      const repoInfo = await this.octokit.rest.repos.get({ owner, repo });
+      const repoInfo = await client.rest.repos.get({ owner, repo });
       const branch = ref || repoInfo.data.default_branch;
 
       // Get the tree recursively
-      const response = await this.octokit.rest.git.getTree({
+      const response = await client.rest.git.getTree({
         owner,
         repo,
         tree_sha: branch,
@@ -211,7 +232,8 @@ class GitHubService {
         truncated: response.data.truncated,
         totalItems: items.length,
         stars: repoInfo.data.stargazers_count,
-        description: repoInfo.data.description
+        description: repoInfo.data.description,
+        isPrivate: repoInfo.data.private
       };
     } catch (error) {
       throw this.normalizeError(error);

@@ -94,19 +94,16 @@ export const SmartInput = forwardRef(function SmartInput({ value, onChange, onSu
         </Button>
       </form>
 
-      {/* Client Validation Error */}
+      {/* Client Validation Error - Field-level pattern (simple text, no banner) */}
       {showError && (
-        <div id="github-url-error" className="mt-2 flex items-start gap-2 text-sm text-red-600 dark:text-red-400">
-          <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-          <div>
-            <p className="font-medium">Invalid GitHub URL</p>
-            <p className="mt-1">Please use one of these formats:</p>
-            <ul className="mt-1 space-y-0.5 text-xs font-mono ml-2">
-              <li>• owner/repo</li>
-              <li>• github.com/owner/repo/blob/main/file.js</li>
-              <li>• https://github.com/owner/repo</li>
-            </ul>
-          </div>
+        <div id="github-url-error" className="mt-1.5 text-sm text-red-600 dark:text-red-400" role="alert">
+          <p className="font-medium">Invalid GitHub URL</p>
+          <p className="mt-1">Please use one of these formats:</p>
+          <ul className="mt-1 space-y-0.5 text-xs font-mono ml-2">
+            <li>• owner/repo</li>
+            <li>• github.com/owner/repo/blob/main/file.js</li>
+            <li>• https://github.com/owner/repo</li>
+          </ul>
         </div>
       )}
     </div>

@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { ChevronRight, ChevronDown, Folder, FolderOpen, File, GitBranch, Search, AlertCircle, Check, X } from 'lucide-react';
+import { ChevronRight, ChevronDown, Folder, FolderOpen, File, GitBranch, Search, AlertCircle, CheckSquare, X, Filter, Lock, Globe } from 'lucide-react';
 import { Listbox } from '@headlessui/react';
 import { isFileSupported, isCodeFile } from '../../services/githubService';
 
@@ -34,7 +34,15 @@ export function FileTree({
   searchInputRef
 }) {
   const [searchTerm, setSearchTerm] = useState('');
+  const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const selectedFileRef = useRef(null);
+
+  // Reset "show selected only" filter when no files are selected
+  useEffect(() => {
+    if (selectedFiles.size === 0 && showSelectedOnly) {
+      setShowSelectedOnly(false);
+    }
+  }, [selectedFiles.size, showSelectedOnly]);
 
   const toggleFolder = (path) => {
     onToggleFolder(path);
@@ -104,12 +112,13 @@ export function FileTree({
   // Filter tree to only show code files (files that can be selected for doc generation)
   // Non-code files (.md, .json, .css, etc.) are excluded - users can view them on GitHub directly
   // Also applies search term and extension filters from search bar
-  const filterTree = (items, term) => {
+  // When showSelectedOnly is true, only shows files that are in the selectedFiles set
+  const filterTree = (items, term, filterSelectedOnly = false) => {
     const { textSearch, extensions } = parseSearchTerm(term);
 
     return items.reduce((acc, item) => {
       if (item.type === 'tree' && item.children) {
-        const filteredChildren = filterTree(item.children, term);
+        const filteredChildren = filterTree(item.children, term, filterSelectedOnly);
         // Only include folder if it has code files after filtering
         if (filteredChildren.length > 0) {
           acc.push({ ...item, children: filteredChildren });
@@ -118,6 +127,11 @@ export function FileTree({
         // Only include code files
         if (isCodeFile(item.name)) {
           const filenameLower = item.name.toLowerCase();
+
+          // Apply "show selected only" filter
+          if (filterSelectedOnly && !selectedFiles.has(item.path)) {
+            return acc;
+          }
 
           // Apply extension filters if any are in the search
           if (extensions.length > 0) {
@@ -139,7 +153,7 @@ export function FileTree({
     }, []);
   };
 
-  const filteredTree = filterTree(tree, searchTerm);
+  const filteredTree = filterTree(tree, searchTerm, showSelectedOnly);
 
   // Also parse for the extension filters to pass to parent for Select All
   const { extensions: parsedExtensions } = parseSearchTerm(searchTerm);
@@ -176,9 +190,19 @@ export function FileTree({
       {/* Repository Header - Compact */}
       <div className="px-3 py-2 border-b border-slate-200 dark:border-slate-700">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-slate-900 dark:text-white truncate">
-            {repository.owner}/{repository.repo}
-          </h3>
+          <div className="flex items-center gap-2 min-w-0">
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white truncate">
+              {repository.owner}/{repository.repo}
+            </h3>
+            {/* Private/Public badge */}
+            <span
+              className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400 flex-shrink-0"
+              title={repository.isPrivate ? "Private repository" : "Public repository"}
+            >
+              {repository.isPrivate ? <Lock className="w-3 h-3" /> : <Globe className="w-3 h-3" />}
+              <span className="hidden sm:inline">{repository.isPrivate ? 'Private' : 'Public'}</span>
+            </span>
+          </div>
           <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 flex-shrink-0">
             {branches && branches.length > 0 ? (
               <Listbox value={repository.branch} onChange={onBranchChange}>
@@ -302,24 +326,46 @@ export function FileTree({
             <span className="text-xs font-medium text-purple-700 dark:text-purple-300">
               {selectedFiles.size} file{selectedFiles.size !== 1 ? 's' : ''} selected
             </span>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
+              {/* Show Selected Only toggle */}
+              {selectedFiles.size > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setShowSelectedOnly(!showSelectedOnly)}
+                  className={`flex items-center gap-1 px-2 py-1 text-xs font-medium rounded transition-colors ${
+                    showSelectedOnly
+                      ? 'bg-purple-200 dark:bg-purple-800 text-purple-800 dark:text-purple-200'
+                      : 'text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/30'
+                  }`}
+                  title={showSelectedOnly ? 'Show all files' : 'Show only selected files'}
+                >
+                  <Filter className="w-3 h-3" />
+                  <span>{showSelectedOnly ? 'All' : 'Selected'}</span>
+                </button>
+              )}
               {supportedFileCount > 0 && onSelectAll && (
                 <button
                   type="button"
                   onClick={onSelectAll}
-                  className="text-xs font-medium text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors"
+                  className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded transition-colors"
                   title={`Select all ${supportedFileCount} code files${maxFiles > 0 && supportedFileCount > maxFiles ? ` (limited to ${maxFiles})` : ''}`}
                 >
-                  Select All ({Math.min(supportedFileCount, maxFiles || supportedFileCount)})
+                  <CheckSquare className="w-3 h-3" />
+                  <span>All ({Math.min(supportedFileCount, maxFiles || supportedFileCount)})</span>
                 </button>
               )}
               {selectedFiles.size > 0 && (
                 <button
                   type="button"
-                  onClick={onClearSelection}
-                  className="text-xs font-medium text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors"
+                  onClick={() => {
+                    onClearSelection();
+                    setShowSelectedOnly(false); // Reset filter when clearing
+                  }}
+                  className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded transition-colors"
+                  title="Clear selection"
                 >
-                  Clear
+                  <X className="w-3 h-3" />
+                  <span>Clear</span>
                 </button>
               )}
               {/* Expand/Collapse buttons */}
@@ -327,22 +373,22 @@ export function FileTree({
                 <button
                   type="button"
                   onClick={onExpandAll}
-                  className="p-1 text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded transition-colors"
+                  className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded transition-colors"
                   title="Expand all folders"
-                  aria-label="Expand all folders"
                 >
-                  <FolderOpen className="w-3.5 h-3.5" />
+                  <FolderOpen className="w-3 h-3" />
+                  <span>Expand</span>
                 </button>
               )}
               {onCollapseAll && (
                 <button
                   type="button"
                   onClick={onCollapseAll}
-                  className="p-1 text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded transition-colors"
+                  className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded transition-colors"
                   title="Collapse all folders"
-                  aria-label="Collapse all folders"
                 >
-                  <Folder className="w-3.5 h-3.5" />
+                  <Folder className="w-3 h-3" />
+                  <span>Collapse</span>
                 </button>
               )}
             </div>
@@ -354,7 +400,11 @@ export function FileTree({
       <div className="flex-1 overflow-y-auto px-3 py-2">
         {filteredTree.length === 0 ? (
           <div className="text-center py-8 text-slate-500 dark:text-slate-400 text-sm">
-            {searchTerm
+            {showSelectedOnly && searchTerm
+              ? 'No selected files match your search'
+              : showSelectedOnly
+              ? 'No files selected'
+              : searchTerm
               ? 'No files match your search'
               : 'No supported code files found'}
           </div>

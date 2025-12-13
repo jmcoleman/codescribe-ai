@@ -224,7 +224,7 @@ export function PricingPage() {
         'All 16 languages',
         '4 doc types',
         'Quality scoring',
-        'GitHub import',
+        'Public GitHub repos',
         'Community support'
       ],
       cta: 'Get Started',
@@ -246,7 +246,7 @@ export function PricingPage() {
         '10 docs/day',
         'All 16 languages',
         '4 doc types',
-        'GitHub import',
+        { text: 'Private GitHub repos', badge: 'NEW' },
         'Generation history',
         'Email support'
       ],
@@ -268,8 +268,8 @@ export function PricingPage() {
         '200 docs/month',
         '40 docs/day',
         'Priority processing',
-        { text: 'Batch generation', badge: 'NEW' },
-        { text: 'Multi-file GitHub import', badge: 'NEW' },
+        { text: 'Multi-file & batch', badge: 'NEW' },
+        { text: 'Private GitHub repos', badge: 'NEW' },
         'Generation history'
       ],
       cta: 'Subscribe',
@@ -290,8 +290,8 @@ export function PricingPage() {
         '1,000 docs/month',
         '200 docs/day',
         'Highest priority',
+        { text: 'Private GitHub repos', badge: 'NEW' },
         'Dedicated support',
-        'Team collaboration*',
         'API access*'
       ],
       cta: 'Contact Sales',

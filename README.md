@@ -374,6 +374,14 @@ To enable authentication features, set `ENABLE_AUTH=true` and configure addition
 | `GITHUB_CLIENT_SECRET` | GitHub OAuth client secret |
 | `GITHUB_CALLBACK_URL` | OAuth callback URL (e.g., `http://localhost:3000/api/auth/github/callback`) |
 | `CLIENT_URL` | Frontend URL for OAuth redirects (default: `http://localhost:5173`) |
+| `TOKEN_ENCRYPTION_KEY` | 64-character hex string for encrypting GitHub tokens (required for private repo access) |
+
+**Generating TOKEN_ENCRYPTION_KEY:**
+```bash
+# Generate a secure 32-byte (64-character hex) encryption key
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+> **Note:** After adding `TOKEN_ENCRYPTION_KEY`, users must re-authenticate with GitHub to store their access token for private repository access.
 
 **Client variables** (`client/.env`):
 

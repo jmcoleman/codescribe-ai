@@ -457,20 +457,24 @@ codescribe-ai/
 
 ## 🔄 Version History
 
-**Current: v3.3.2** (December 10, 2025)
-- Sidebar UX Improvements & Project Selector Enhancements
-- Apply doc type as dropdown menu (one-click workflow)
-- ProjectSelector two-line dropdown with graph status (file count, expiration)
-- Toolbar visual grouping (selection actions separated from Add)
-- Auto-deselect after Apply/Generate actions
-- Responsive toolbar with label hiding at 300px and wrapping
-- 3,638 tests (3,638 passing, 87 skipped)
+**Current: v3.3.3** (December 12, 2025)
+- Private GitHub Repository Support
+- AES-256-GCM encryption for OAuth tokens
+- Per-user GitHub authentication for API requests
+- Private/Public badge in file tree header
+- Clickable "Public only" badge to connect GitHub
+- OAuth return-to flow (returns to Settings after enabling private access)
+- Private GitHub repos feature on pricing page
+- Reusable AppToaster component for Settings page
+- Recent repos show Lock/Globe icons for private/public
+- 3,693 tests (1,913 frontend, 1,780 backend)
 - Frontend: 1,913 passing, 54 skipped
-- Backend: 1,725 passing, 33 skipped
+- Backend: 1,780 passing, 33 skipped
 
 <details>
-<summary>Recent Releases (v2.9.0-v3.3.1) & Milestones</summary>
+<summary>Recent Releases (v2.9.0-v3.3.2) & Milestones</summary>
 
+**v3.3.2** (Dec 10, 2025): Sidebar UX Polish - Apply dropdown, ProjectSelector graph status, toolbar grouping
 **v3.3.1** (Dec 10, 2025): Batch Generation & Mermaid Dark Mode Fixes - Race condition fixes, workspace stability
 **v3.3.0** (Dec 9, 2025): Graph Engine API & Project Analysis - Project Details page, graph stats, architecture diagrams
 **v3.2.2** (Dec 7, 2025): UX Polish & Tier Access Updates - Trial user usage limits fix, code block rendering
@@ -507,7 +511,7 @@ codescribe-ai/
 - **v1.21** (Oct 19): Production deployment, codescribe-ai.vercel.app
 
 Full history: [CHANGELOG.md](CHANGELOG.md)
-Last updated: December 10, 2025
+Last updated: December 11, 2025
 </details>
 
 ---

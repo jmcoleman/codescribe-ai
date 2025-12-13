@@ -711,6 +711,62 @@ router.get('/user/data-export', requireAuth, async (req, res) => {
   }
 });
 
+// GET /api/user/github-status - Check GitHub connection status
+router.get('/user/github-status', requireAuth, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const hasToken = await User.hasGitHubToken(userId);
+
+    res.json({
+      connected: !!req.user.github_id,
+      hasPrivateAccess: hasToken,
+      githubId: req.user.github_id || null
+    });
+  } catch (error) {
+    console.error('[GitHub Status] Failed:', error);
+    res.status(500).json({
+      error: 'Failed to get GitHub status',
+      message: error.message
+    });
+  }
+});
+
+// POST /api/user/revoke-github-access - Revoke private repo access (clear token)
+router.post('/user/revoke-github-access', requireAuth, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Check if user has a token to revoke
+    const hasToken = await User.hasGitHubToken(userId);
+    if (!hasToken) {
+      return res.status(400).json({
+        error: 'No GitHub private access to revoke'
+      });
+    }
+
+    // Clear the token
+    const cleared = await User.clearGitHubToken(userId);
+
+    if (cleared) {
+      console.log(`[GitHub] User ${userId} revoked private repo access`);
+      res.json({
+        message: 'GitHub private repo access revoked successfully',
+        hasPrivateAccess: false
+      });
+    } else {
+      res.status(500).json({
+        error: 'Failed to revoke GitHub access'
+      });
+    }
+  } catch (error) {
+    console.error('[GitHub Revoke] Failed:', error);
+    res.status(500).json({
+      error: 'Failed to revoke GitHub access',
+      message: error.message
+    });
+  }
+});
+
 // POST /api/user/delete-account - Schedule account for deletion (soft delete)
 router.post('/user/delete-account', requireAuth, async (req, res) => {
   try {
@@ -853,8 +909,10 @@ router.post('/github/parse-url', apiLimiter, (req, res) => {
  * POST /api/github/file
  * Body: { owner: string, repo: string, path: string, ref?: string }
  * Returns: File content and metadata
+ *
+ * Supports private repositories when user is authenticated with GitHub OAuth
  */
-router.post('/github/file', apiLimiter, async (req, res) => {
+router.post('/github/file', optionalAuth, apiLimiter, async (req, res) => {
   try {
     const { owner, repo, path, ref } = req.body;
 
@@ -873,7 +931,13 @@ router.post('/github/file', apiLimiter, async (req, res) => {
       });
     }
 
-    const fileData = await githubService.fetchFile(owner, repo, path, ref);
+    // Get user's GitHub token if authenticated (for private repo access)
+    let userGitHubToken = null;
+    if (req.user?.id) {
+      userGitHubToken = await User.getGitHubToken(req.user.id);
+    }
+
+    const fileData = await githubService.fetchFile(owner, repo, path, ref, userGitHubToken);
 
     res.json({
       success: true,
@@ -923,8 +987,10 @@ router.post('/github/file', apiLimiter, async (req, res) => {
  * POST /api/github/tree
  * Body: { owner: string, repo: string, ref?: string }
  * Returns: Repository tree structure
+ *
+ * Supports private repositories when user is authenticated with GitHub OAuth
  */
-router.post('/github/tree', apiLimiter, async (req, res) => {
+router.post('/github/tree', optionalAuth, apiLimiter, async (req, res) => {
   try {
     const { owner, repo, ref } = req.body;
 
@@ -943,7 +1009,13 @@ router.post('/github/tree', apiLimiter, async (req, res) => {
       });
     }
 
-    const treeData = await githubService.fetchTree(owner, repo, ref);
+    // Get user's GitHub token if authenticated (for private repo access)
+    let userGitHubToken = null;
+    if (req.user?.id) {
+      userGitHubToken = await User.getGitHubToken(req.user.id);
+    }
+
+    const treeData = await githubService.fetchTree(owner, repo, ref, userGitHubToken);
 
     res.json({
       success: true,
@@ -986,8 +1058,10 @@ router.post('/github/tree', apiLimiter, async (req, res) => {
  * POST /api/github/branches
  * Body: { owner: string, repo: string }
  * Returns: List of branches
+ *
+ * Supports private repositories when user is authenticated with GitHub OAuth
  */
-router.post('/github/branches', apiLimiter, async (req, res) => {
+router.post('/github/branches', optionalAuth, apiLimiter, async (req, res) => {
   try {
     const { owner, repo } = req.body;
 
@@ -1006,7 +1080,13 @@ router.post('/github/branches', apiLimiter, async (req, res) => {
       });
     }
 
-    const branches = await githubService.fetchBranches(owner, repo);
+    // Get user's GitHub token if authenticated (for private repo access)
+    let userGitHubToken = null;
+    if (req.user?.id) {
+      userGitHubToken = await User.getGitHubToken(req.user.id);
+    }
+
+    const branches = await githubService.fetchBranches(owner, repo, userGitHubToken);
 
     res.json({
       success: true,
@@ -1055,10 +1135,14 @@ router.post('/github/branches', apiLimiter, async (req, res) => {
  * - Respects tier-based batch limits
  * - Processes files in parallel batches of 5
  * - Returns partial success (some files may fail)
+ * - Supports private repositories when user has GitHub OAuth token
  */
 router.post('/github/files-batch', requireAuth, apiLimiter, requireFeature('batchProcessing'), async (req, res) => {
   try {
     const { owner, repo, paths, branch = 'main' } = req.body;
+
+    // Get user's GitHub token for private repo access
+    const userGitHubToken = await User.getGitHubToken(req.user.id);
 
     // Validation
     if (!owner || !repo || !paths) {
@@ -1124,7 +1208,7 @@ router.post('/github/files-batch', requireAuth, apiLimiter, requireFeature('batc
       const batchResults = await Promise.allSettled(
         batch.map(async (path) => {
           try {
-            const fileData = await githubService.fetchFile(owner, repo, path, branch);
+            const fileData = await githubService.fetchFile(owner, repo, path, branch, userGitHubToken);
             return {
               success: true,
               path,
