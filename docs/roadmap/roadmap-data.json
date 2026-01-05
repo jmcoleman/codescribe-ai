@@ -66,7 +66,7 @@
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
     "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.30",
-    "footer": "v3.3.3 Complete · Private GitHub Repos ✓ · Up Next: Project Architecture Doc · VS Code Extension: Separate Repo",
+    "footer": "v3.3.3 Complete · Private GitHub Repos ✓ · Up Next: Workflow Outcome Metrics · VS Code Extension: Separate Repo",
     "lastUpdated": "December 12, 2025"
   },
   "columns": [
@@ -888,6 +888,45 @@
       "title": "Active",
       "subtitle": "Phase 3: Platform Infrastructure",
       "phases": [
+        {
+          "version": "Analytics",
+          "title": "Workflow Outcome Metrics",
+          "duration": "4-6 hours",
+          "status": "Ready to Implement",
+          "badge": "Business Intelligence",
+          "features": [
+            "FIX: Analytics opt-out not respected in custom events (only AnalyticsWrapper checks)",
+            "Session tracking with unique session IDs and timestamps",
+            "Copy/download button event tracking for value capture measurement",
+            "Workflow funnel events (paste → generate → review → copy)",
+            "Conversion funnel tracking (limit hit → pricing view → checkout → complete)",
+            "Returning user detection (new vs returning session flag)",
+            "Regeneration success rate tracking (before/after score comparison)",
+            "Batch metrics export to analytics (files per session, completion rate)",
+            "Pricing page view and upgrade CTA click tracking",
+            "Connect existing DB metrics to Vercel Analytics events",
+            "Spec: docs/planning/WORKFLOW-OUTCOME-METRICS-PLAN.md"
+          ]
+        },
+        {
+          "version": "Analytics",
+          "title": "Admin Metrics Dashboard",
+          "duration": "4-6 hours",
+          "status": "Planned",
+          "badge": "Server-Side Metrics",
+          "features": [
+            "New /admin/metrics page with business metrics dashboard",
+            "GET /api/admin/metrics endpoint for aggregate data",
+            "Outcome 1: Time-to-value proxy (avg generation time, completion rate)",
+            "Outcome 2: Quality distribution chart (% scoring A/B/C/D/F, by doc type)",
+            "Outcome 3: Documentation coverage (avg files per batch, batch completion rate)",
+            "Outcome 4: Conversion funnel (free users, trial starts, paid conversions, churn)",
+            "Time period selector (7d, 30d, 90d, all time)",
+            "Trend sparklines for key metrics",
+            "100% user coverage (not affected by client analytics opt-out)",
+            "Reuses existing admin auth and layout patterns"
+          ]
+        },
         {
           "version": "Epic 5.6",
           "title": "Project Architecture Document",
