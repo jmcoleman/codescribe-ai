@@ -31,6 +31,7 @@ AI-powered documentation generator with real-time streaming, quality scoring (0-
 | [03-Todo-List.md](docs/planning/mvp/03-Todo-List.md) | Daily task tracking | Day 1-5 tasks, setup instructions, checkpoints |
 | [MVP-DELIVERY-SUMMARY.md](docs/planning/mvp/MVP-DELIVERY-SUMMARY.md) | Interview/portfolio highlight ⭐ | 9-day delivery, 100% completion, 1,381+ tests, quality metrics, PM competencies |
 | [MVP-DEPLOY-LAUNCH.md](docs/planning/mvp/MVP-DEPLOY-LAUNCH.md) | MVP deployment guide | Vercel deployment, troubleshooting, launch checklist, post-launch monitoring |
+| [WORKFLOW-OUTCOME-METRICS-PLAN.md](docs/planning/WORKFLOW-OUTCOME-METRICS-PLAN.md) | Analytics implementation ⭐ | Session tracking, funnel events, conversion metrics, 4-6 hour implementation plan |
 
 ### 🏗️ Architecture & Development
 | Document | Use Case | Key Contents |
@@ -134,6 +135,12 @@ AI-powered documentation generator with real-time streaming, quality scoring (0-
 | [GITHUB-MULTI-FILE-IMPORT.md](docs/features/GITHUB-MULTI-FILE-IMPORT.md) | GitHub import ⭐ | Multi-file import from GitHub repos, tree browsing, file selection |
 | [ADD-NEW-DOC-TYPE.md](docs/guides/ADD-NEW-DOC-TYPE.md) | Extension guide | Adding new documentation types, prompt templates |
 
+### 📋 Project Templates
+| Document | Use Case | Key Contents |
+|----------|----------|--------------|
+| [WORKFLOW-FIRST-PRD-TEMPLATE.md](docs/templates/WORKFLOW-FIRST-PRD-TEMPLATE.md) | New project PRD ⭐ | Meta prompt for workflow-first PRDs, outcome-based planning, anti-patterns to avoid |
+| [WORKFLOW-FIRST-PRD-EXAMPLE-CODESCRIBE.md](docs/templates/WORKFLOW-FIRST-PRD-EXAMPLE-CODESCRIBE.md) | PRD example ⭐ | Complete CodeScribe PRD demonstrating workflow-first approach, 5 core workflows |
+
 ---
 
 ## 🔑 Technical Essentials
@@ -235,6 +242,9 @@ const response = await fetch(`${API_URL}/api/protected-endpoint`, {
 | Versions | Run `npm run versions`, VERSION-CHECKER.md |
 | Database | DB-NAMING-STANDARDS.md, DB-MIGRATION-MANAGEMENT.md, USAGE-QUOTA-SYSTEM.md, PRODUCTION-DB-SETUP.md |
 | Release/Deployment | RELEASE-QUICKSTART.md (prep for release vs. deploy), VERCEL-DEPLOYMENT-GUIDE.md |
+| New Project PRD | WORKFLOW-FIRST-PRD-TEMPLATE.md (meta prompt), WORKFLOW-FIRST-PRD-EXAMPLE-CODESCRIBE.md (example) |
+| Workflow Planning | WORKFLOW-FIRST-PRD-TEMPLATE.md (outcome-based planning, jobs-to-be-done, workflow diagrams) |
+| Analytics/Metrics | WORKFLOW-OUTCOME-METRICS-PLAN.md (session tracking, funnels, conversion metrics) |
 
 ### 2. Best Practices
 - ✅ **Always cite sources:** Mention document name + file path
