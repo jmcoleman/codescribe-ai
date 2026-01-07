@@ -326,7 +326,7 @@ export const analyticsService = {
    * @returns {Promise<Object>} Usage patterns
    */
   async getUsagePatterns({ startDate, endDate, excludeInternal = true }) {
-    // Get doc type breakdown
+    // Get doc type breakdown (only successful generations)
     let docTypes;
     if (excludeInternal) {
       docTypes = await sql`
@@ -335,6 +335,7 @@ export const analyticsService = {
           COUNT(*) as count
         FROM analytics_events
         WHERE event_name = 'doc_generation'
+          AND event_data->>'success' = 'true'
           AND created_at >= ${startDate}
           AND created_at < ${endDate}
           AND is_internal = FALSE
@@ -348,6 +349,7 @@ export const analyticsService = {
           COUNT(*) as count
         FROM analytics_events
         WHERE event_name = 'doc_generation'
+          AND event_data->>'success' = 'true'
           AND created_at >= ${startDate}
           AND created_at < ${endDate}
         GROUP BY event_data->>'doc_type'
@@ -396,7 +398,7 @@ export const analyticsService = {
       `;
     }
 
-    // Get batch vs single generation
+    // Get batch vs single generation (only successful generations)
     let batchVsSingle;
     if (excludeInternal) {
       batchVsSingle = await sql`
@@ -405,6 +407,7 @@ export const analyticsService = {
           COUNT(*) as count
         FROM analytics_events
         WHERE event_name IN ('doc_generation', 'batch_generation')
+          AND event_data->>'success' = 'true'
           AND created_at >= ${startDate}
           AND created_at < ${endDate}
           AND is_internal = FALSE
@@ -417,13 +420,14 @@ export const analyticsService = {
           COUNT(*) as count
         FROM analytics_events
         WHERE event_name IN ('doc_generation', 'batch_generation')
+          AND event_data->>'success' = 'true'
           AND created_at >= ${startDate}
           AND created_at < ${endDate}
         GROUP BY type
       `;
     }
 
-    // Get language breakdown
+    // Get language breakdown (only successful generations)
     let languages;
     if (excludeInternal) {
       languages = await sql`
@@ -432,6 +436,7 @@ export const analyticsService = {
           COUNT(*) as count
         FROM analytics_events
         WHERE event_name = 'doc_generation'
+          AND event_data->>'success' = 'true'
           AND event_data->>'language' IS NOT NULL
           AND created_at >= ${startDate}
           AND created_at < ${endDate}
@@ -447,6 +452,7 @@ export const analyticsService = {
           COUNT(*) as count
         FROM analytics_events
         WHERE event_name = 'doc_generation'
+          AND event_data->>'success' = 'true'
           AND event_data->>'language' IS NOT NULL
           AND created_at >= ${startDate}
           AND created_at < ${endDate}
@@ -456,7 +462,7 @@ export const analyticsService = {
       `;
     }
 
-    // Get origin breakdown
+    // Get origin breakdown (only successful generations)
     let origins;
     if (excludeInternal) {
       origins = await sql`
@@ -465,6 +471,7 @@ export const analyticsService = {
           COUNT(*) as count
         FROM analytics_events
         WHERE event_name = 'doc_generation'
+          AND event_data->>'success' = 'true'
           AND event_data->>'origin' IS NOT NULL
           AND created_at >= ${startDate}
           AND created_at < ${endDate}
@@ -479,6 +486,7 @@ export const analyticsService = {
           COUNT(*) as count
         FROM analytics_events
         WHERE event_name = 'doc_generation'
+          AND event_data->>'success' = 'true'
           AND event_data->>'origin' IS NOT NULL
           AND created_at >= ${startDate}
           AND created_at < ${endDate}
@@ -556,6 +564,7 @@ export const analyticsService = {
         break;
 
       case 'generations':
+        // Only count successful generations
         if (excludeInternal) {
           result = await sql`
             SELECT
@@ -563,6 +572,7 @@ export const analyticsService = {
               COUNT(*) as value
             FROM analytics_events
             WHERE event_name IN ('doc_generation', 'batch_generation')
+              AND event_data->>'success' = 'true'
               AND created_at >= ${startDate}
               AND created_at < ${endDate}
               AND is_internal = FALSE
@@ -576,6 +586,7 @@ export const analyticsService = {
               COUNT(*) as value
             FROM analytics_events
             WHERE event_name IN ('doc_generation', 'batch_generation')
+              AND event_data->>'success' = 'true'
               AND created_at >= ${startDate}
               AND created_at < ${endDate}
             GROUP BY 1

@@ -470,23 +470,19 @@ codescribe-ai/
 
 ## 🔄 Version History
 
-**Current: v3.3.4** (January 6, 2026)
-- Admin Analytics Dashboard with Recharts (3 tabs: Funnel, Business, Usage)
-- Workflow Outcome Metrics: session tracking, conversion funnel, regeneration tracking
-- Conversion funnel: Sessions → Code Input → Generation → Copy/Download
-- Business metrics: signups, tier upgrades/downgrades, revenue trends
-- Usage patterns: doc types, quality scores, languages, origins
-- Regeneration success rate tracking (before/after score comparison)
-- Analytics opt-out fix: custom events respect user preference
-- Date range picker, "Exclude Internal" toggle, dark mode support
-- Server-side admin detection for accurate internal user filtering
+**Current: v3.3.5** (January 6, 2026)
+- Analytics accuracy hotfix: exclude failed generations from metrics
+- Doc types, languages, origins, batch vs single now filter by success status
+- Generations over time chart only counts successful generations
+- Failed generations still tracked for error analysis
 - 3,882 tests (2,044 frontend, 1,838 backend)
 - Frontend: 2,044 passing, 56 skipped
 - Backend: 1,838 passing, 33 skipped
 
 <details>
-<summary>Recent Releases (v2.9.0-v3.3.3) & Milestones</summary>
+<summary>Recent Releases (v2.9.0-v3.3.4) & Milestones</summary>
 
+**v3.3.4** (Jan 6, 2026): Admin Analytics Dashboard & Workflow Outcome Metrics - Recharts funnel/business/usage tabs, session tracking, conversion metrics
 **v3.3.3** (Dec 12, 2025): Private GitHub Repository Support - AES-256-GCM token encryption, per-user auth, private/public badges
 **v3.3.2** (Dec 10, 2025): Sidebar UX Polish - Apply dropdown, ProjectSelector graph status, toolbar grouping
 **v3.3.1** (Dec 10, 2025): Batch Generation & Mermaid Dark Mode Fixes - Race condition fixes, workspace stability

@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.3.5] - 2026-01-06
+
+**Status:** ✅ Analytics Accuracy Hotfix
+
+**Summary:** Fixed analytics dashboard to only count successful generations. Previously, failed generation attempts (e.g., Anthropic API credit balance errors, rate limits) were incorrectly included in metrics.
+
+### Fixed
+
+- **Analytics: Exclude failed generations from metrics** ([server/src/services/analyticsService.js](server/src/services/analyticsService.js))
+  - `getUsagePatterns()` - Doc types, languages, origins, and batch vs single now filter by `success = 'true'`
+  - `getTimeSeries()` - Generations over time chart now only counts successful generations
+  - Failed generations are still tracked (useful for error analysis) but no longer inflate success metrics
+
+---
+
 ## [3.3.4] - 2026-01-06
 
 **Status:** ✅ Admin Analytics Dashboard & Workflow Outcome Metrics
