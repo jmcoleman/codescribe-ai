@@ -1,10 +1,11 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { Check, Sparkles, Zap, Building2, Code2, Loader2, ArrowLeft, Star, DollarSign, Gift } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTrial } from '../contexts/TrialContext';
 import { API_URL } from '../config/api';
 import { toastError } from '../utils/toast';
+import { trackInteraction } from '../utils/analytics';
 import VerificationRequiredModal from './VerificationRequiredModal';
 import { ContactSalesModal } from './ContactSalesModal';
 import { STORAGE_KEYS, setSessionItem, getSessionItem, removeSessionItem } from '../constants/storage';
@@ -31,6 +32,7 @@ function ModalLoadingFallback() {
  */
 export function PricingPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, isAuthenticated, getToken } = useAuth();
   const { isOnTrial, trialTier } = useTrial();
   const [loading, setLoading] = useState(null);
@@ -40,6 +42,7 @@ export function PricingPage() {
   const [showContactSalesModal, setShowContactSalesModal] = useState(false);
   const [contactSalesTier, setContactSalesTier] = useState('enterprise');
   const [pendingSubscription, setPendingSubscription] = useState(null);
+  const hasTrackedPageViewRef = useRef(false);
 
   // Check if we can go back (has history)
   const [canGoBack, setCanGoBack] = useState(true);
@@ -49,6 +52,18 @@ export function PricingPage() {
     const isNewTab = !window.opener && window.history.length <= 1;
     setCanGoBack(!isNewTab);
   }, []);
+
+  // Track pricing page view (conversion funnel event)
+  useEffect(() => {
+    if (!hasTrackedPageViewRef.current) {
+      trackInteraction('pricing_page_viewed', {
+        source: searchParams.get('source') || 'direct',
+        current_tier: user?.tier || 'anonymous',
+        is_trial_user: isOnTrial ? 'true' : 'false',
+      });
+      hasTrackedPageViewRef.current = true;
+    }
+  }, [searchParams, user?.tier, isOnTrial]);
 
   // Initialize billing period from sessionStorage or default to 'monthly'
   const [billingPeriod, setBillingPeriod] = useState(() => {
@@ -102,6 +117,13 @@ export function PricingPage() {
   }, [navigate]);
 
   const handleSubscribe = async (tier, billingPeriod = 'monthly') => {
+    // Track upgrade CTA click (conversion funnel event)
+    trackInteraction('upgrade_cta_clicked', {
+      current_tier: user?.tier || 'anonymous',
+      target_tier: tier,
+      billing_period: billingPeriod,
+    });
+
     // Free tier - just needs authentication, no payment
     if (tier === 'free') {
       if (!isAuthenticated) {
@@ -199,6 +221,12 @@ export function PricingPage() {
       }
 
       const { url } = await response.json();
+
+      // Track checkout started (conversion funnel event)
+      trackInteraction('checkout_started', {
+        tier,
+        billing_period: billingPeriod,
+      });
 
       // Redirect to Stripe Checkout
       window.location.href = url;

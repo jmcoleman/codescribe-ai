@@ -20,6 +20,7 @@ import * as batchesApi from '../services/batchesApi';
 import { analyzeProject } from '../services/graphApi';
 import { formatDateTime } from '../utils/formatters';
 import { hasFeature } from '../utils/tierFeatures';
+import { trackInteraction } from '../utils/analytics';
 
 // Rate limit delay between API calls (15 seconds to respect Claude API limits)
 const RATE_LIMIT_DELAY = 15000;
@@ -452,6 +453,9 @@ export function useBatchGeneration({
     setBannerDismissed(false);
     setCurrentlyGeneratingFile(null);
 
+    // Track batch start time for duration analytics
+    const batchStartTime = Date.now();
+
     // Run graph analysis BEFORE batch generation (Pro+ only)
     // This ensures the graph is ready for cross-file awareness during doc generation
     let graphId = null;
@@ -543,6 +547,10 @@ export function useBatchGeneration({
       }
 
       const file = filesToGenerate[i];
+
+      // Capture previous state for regeneration tracking
+      const isRegeneration = !!file.documentation;
+      const previousScore = file.qualityScore?.score ?? null;
 
       // Update progress state
       setBulkGenerationProgress({
@@ -640,9 +648,10 @@ export function useBatchGeneration({
 
         // Track successful file
         successCount++;
+        const newScore = result.qualityScore?.score || 0;
         successfulFiles.push({
           name: file.filename,
-          score: result.qualityScore?.score || 0,
+          score: newScore,
           grade: result.qualityScore?.grade || 'N/A',
           qualityScore: result.qualityScore,
           docType: file.docType || 'README',
@@ -652,6 +661,19 @@ export function useBatchGeneration({
           provider: result.metadata?.provider || 'claude',
           model: result.metadata?.model || 'unknown'
         });
+
+        // Track regeneration success rate (before/after score comparison)
+        if (isRegeneration && previousScore !== null) {
+          const improvement = newScore - previousScore;
+          trackInteraction('regeneration_complete', {
+            previous_score: previousScore,
+            new_score: newScore,
+            improvement: improvement,
+            improved: improvement > 0 ? 'true' : 'false',
+            doc_type: file.docType || 'README',
+            filename: file.filename,
+          });
+        }
 
       } catch (error) {
         console.error(`[useBatchGeneration] Failed to generate docs for ${file.filename}:`, error);
@@ -796,6 +818,22 @@ export function useBatchGeneration({
       generatedAt: batchGeneratedAt
     };
     setBulkGenerationSummary(summaryData);
+
+    // Track batch generation completion (analytics event)
+    const batchEndTime = Date.now();
+    const batchDuration = batchStartTime ? batchEndTime - batchStartTime : 0;
+    trackInteraction('batch_generation_complete', {
+      total_files: totalFiles,
+      success_count: successCount,
+      failed_count: failureCount,
+      skipped_count: skippedFiles.length,
+      avg_quality_score: avgQuality,
+      avg_grade: avgGrade || 'N/A',
+      doc_types: [...new Set(successfulFiles.map(f => f.docType))].join(','),
+      was_cancelled: wasCancelled ? 'true' : 'false',
+      duration_ms: batchDuration,
+      source: projectId ? 'github' : 'upload',
+    });
 
     if (failedFiles.length > 0) {
       setBulkGenerationErrors(failedFiles);

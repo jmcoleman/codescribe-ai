@@ -41,12 +41,12 @@ const adminSections = [
     available: true
   },
   {
-    id: 'trial-analytics',
-    title: 'Trial Analytics',
-    description: 'Trial conversion funnel, KPIs, and analytics',
+    id: 'analytics',
+    title: 'Analytics Dashboard',
+    description: 'Conversion funnel, business metrics, and usage patterns',
     icon: TrendingUp,
-    path: '/admin/trial-analytics',
-    available: false // Placeholder for future
+    path: '/admin/analytics',
+    available: true
   }
 ];
 

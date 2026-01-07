@@ -2,6 +2,27 @@ import { afterEach, beforeAll, afterAll, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 
+// Mock analytics module - must be before any component imports
+vi.mock('../utils/analytics', () => ({
+  trackDocGeneration: vi.fn(),
+  trackQualityScore: vi.fn(),
+  trackCodeInput: vi.fn(),
+  trackError: vi.fn(),
+  trackGenerationMode: vi.fn(),
+  trackInteraction: vi.fn(),
+  trackExampleUsage: vi.fn(),
+  trackFileUpload: vi.fn(),
+  trackOAuth: vi.fn(),
+  trackPerformance: vi.fn(),
+  trackBatch: vi.fn(),
+  setAnalyticsOptOut: vi.fn(),
+  setAnalyticsUserStatus: vi.fn(),
+  getSessionId: vi.fn(() => 'test-session-id'),
+  getSessionStart: vi.fn(() => Date.now()),
+  isReturningUser: vi.fn(() => false),
+  getSessionDuration: vi.fn(() => 0),
+}));
+
 // Cleanup after each test case (e.g. clearing jsdom)
 afterEach(() => {
   cleanup();

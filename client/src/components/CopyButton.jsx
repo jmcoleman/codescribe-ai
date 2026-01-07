@@ -23,6 +23,7 @@ import { Tooltip } from './Tooltip';
  * @param {string} size - Button size: 'sm' | 'md' | 'lg'
  * @param {string} variant - Button variant: 'ghost' | 'outline' | 'solid' | 'primary'
  * @param {boolean} showLabel - Show text label alongside icon
+ * @param {Function} onSuccess - Optional callback when copy succeeds (for analytics)
  */
 export function CopyButton({
   text,
@@ -31,7 +32,8 @@ export function CopyButton({
   variant = 'ghost',
   ariaLabel = 'Copy to clipboard',
   showLabel = false,
-  labelClassName = ''
+  labelClassName = '',
+  onSuccess = null
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -77,6 +79,11 @@ export function CopyButton({
       // Haptic feedback on supported devices
       if (navigator.vibrate) {
         navigator.vibrate(50);
+      }
+
+      // Call success callback (for analytics tracking)
+      if (onSuccess) {
+        onSuccess();
       }
     } catch (err) {
       console.error('Failed to copy text:', err);
@@ -188,7 +195,8 @@ export function CopyButton({
 export function CopyButtonWithText({
   text,
   className = '',
-  label = 'Copy'
+  label = 'Copy',
+  onSuccess = null
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -232,6 +240,11 @@ export function CopyButtonWithText({
 
       if (navigator.vibrate) {
         navigator.vibrate(50);
+      }
+
+      // Call success callback (for analytics tracking)
+      if (onSuccess) {
+        onSuccess();
       }
     } catch (err) {
       console.error('Failed to copy text:', err);

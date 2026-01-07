@@ -23,7 +23,7 @@ import { PriorityBannerSection } from './components/PriorityBannerSection';
 import { MobileTabBar } from './components/MobileTabBar';
 import { AppModals } from './components/AppModals';
 import { validateFile, getValidationErrorMessage, detectLanguageFromFilename } from './utils/fileValidation';
-import { trackCodeInput, trackFileUpload, trackExampleUsage, trackInteraction } from './utils/analytics';
+import { trackCodeInput, trackFileUpload, trackExampleUsage, trackInteraction, isReturningUser } from './utils/analytics';
 import { toastCompact, toastError } from './utils/toastWithHistory';
 import { toastDocGenerated } from './utils/toast';
 import { createTestDataLoader, exposeTestDataLoader, createSkeletonTestHelper, exposeSkeletonTestHelper } from './utils/testData';
@@ -105,6 +105,19 @@ function App() {
     }
   }, [prefsLayoutMode]);
 
+  // Track session start - once per session for funnel analytics
+  useEffect(() => {
+    const hasTrackedSession = sessionStorage.getItem('cs_session_tracked');
+    if (!hasTrackedSession) {
+      trackInteraction('session_start', {
+        is_returning_user: isReturningUser() ? 'true' : 'false',
+        referrer: document.referrer || 'direct',
+        landing_page: window.location.pathname,
+      });
+      sessionStorage.setItem('cs_session_tracked', 'true');
+    }
+  }, []);
+
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showQualityModal, setShowQualityModal] = useState(false);
   const [showSamplesModal, setShowSamplesModal] = useState(false);
@@ -177,6 +190,7 @@ function App() {
   const sidebarPanelRef = useRef(null); // For programmatically controlling sidebar panel size
   const prevFilesLengthRef = useRef(0); // Track previous files count to detect "all files deleted"
   const hasUserInteractedWithWorkspaceRef = useRef(false); // Track if user has selected/deselected files
+  const hasTrackedCodeInputRef = useRef(false); // Track if we've already tracked code input this session
 
   // Load saved sidebar panel sizes from localStorage
   const loadSidebarSizes = useCallback(() => {
@@ -1793,6 +1807,22 @@ function App() {
     await processFileUpload(file);
   };
 
+  // Handler for code changes in editor - tracks first meaningful code input
+  const handleCodeChange = useCallback((newCode) => {
+    setCode(newCode);
+
+    // Track first meaningful code input (user typing/pasting in editor)
+    // Only track if code is substantial and we haven't tracked yet
+    if (
+      !hasTrackedCodeInputRef.current &&
+      newCode.length > 50 &&
+      codeOrigin !== 'sample' // Don't track if user just loaded a sample
+    ) {
+      trackCodeInput('paste', newCode.length, language);
+      hasTrackedCodeInputRef.current = true;
+    }
+  }, [codeOrigin, language]);
+
   const handleGithubImport = () => {
     setShowGithubModal(true);
   };
@@ -2144,7 +2174,7 @@ function App() {
   const codePanel = useMemo(() => (
     <CodePanel
       code={code}
-      onChange={setCode}
+      onChange={handleCodeChange}
       filename={filename}
       language={language}
       onFileDrop={null}
@@ -2498,7 +2528,7 @@ function App() {
                       leftPanel={
                         <CodePanel
                           code={code}
-                          onChange={setCode}
+                          onChange={handleCodeChange}
                           filename={filename}
                           language={language}
                           onFileDrop={null}  // Disable drag-and-drop in multi-file mode - use sidebar instead
@@ -2590,7 +2620,7 @@ function App() {
                 mobileActiveTab === 'code' ? (
                   <CodePanel
                     code={code}
-                    onChange={setCode}
+                    onChange={handleCodeChange}
                     filename={filename}
                     language={language}
                     onFileDrop={handleFileDrop}
@@ -2638,7 +2668,7 @@ function App() {
                   leftPanel={
                     <CodePanel
                       code={code}
-                      onChange={setCode}
+                      onChange={handleCodeChange}
                       filename={filename}
                       language={language}
                       onFileDrop={handleFileDrop}

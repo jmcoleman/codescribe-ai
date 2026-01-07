@@ -32,7 +32,7 @@
  * />
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -227,6 +227,9 @@ export function BaseTable({
   // Internal expansion state
   const [expanded, setExpanded] = useState({});
 
+  // Ref for measuring column content widths
+  const tableContainerRef = useRef(null);
+
   // Column sizing state for resizing - use external state if provided, otherwise internal
   const [internalColumnSizing, setInternalColumnSizing] = useState({});
   const columnSizing = externalColumnSizing ?? internalColumnSizing;
@@ -236,6 +239,80 @@ export function BaseTable({
   const [internalColumnVisibility, setInternalColumnVisibility] = useState({});
   const columnVisibility = externalColumnVisibility ?? internalColumnVisibility;
   const setColumnVisibility = externalOnColumnVisibilityChange ?? setInternalColumnVisibility;
+
+  // Auto-fit column width to content on double-click (industry standard behavior)
+  const autoFitColumn = useCallback((columnId, columnIndex) => {
+    if (!tableContainerRef.current) return;
+
+    // Account for expand button column offset
+    const cellOffset = renderExpandedRow ? columnIndex + 1 : columnIndex;
+
+    // Create a hidden measurement container that's not constrained by grid
+    const measureContainer = document.createElement('div');
+    measureContainer.style.cssText = `
+      position: absolute;
+      visibility: hidden;
+      height: auto;
+      width: auto;
+      white-space: nowrap;
+      pointer-events: none;
+    `;
+    document.body.appendChild(measureContainer);
+
+    let maxWidth = 0;
+
+    // Helper to measure content width
+    const measureContent = (element) => {
+      if (!element) return 0;
+      // Clone the element to measure without constraints
+      const clone = element.cloneNode(true);
+      // Remove truncation classes and styles from clone
+      clone.style.overflow = 'visible';
+      clone.style.textOverflow = 'clip';
+      clone.style.whiteSpace = 'nowrap';
+      clone.style.maxWidth = 'none';
+      clone.style.width = 'auto';
+      // Also fix nested truncated elements
+      clone.querySelectorAll('.truncate').forEach(el => {
+        el.style.overflow = 'visible';
+        el.style.textOverflow = 'clip';
+        el.style.whiteSpace = 'nowrap';
+        el.style.maxWidth = 'none';
+      });
+      measureContainer.innerHTML = '';
+      measureContainer.appendChild(clone);
+      return measureContainer.offsetWidth;
+    };
+
+    // Measure header cell
+    const headerCells = tableContainerRef.current.querySelectorAll('[role="columnheader"]');
+    const headerCell = headerCells[cellOffset];
+    if (headerCell) {
+      maxWidth = Math.max(maxWidth, measureContent(headerCell));
+    }
+
+    // Measure body cells - find cells at the correct column index in each row
+    const rows = tableContainerRef.current.querySelectorAll('[role="rowgroup"]:last-child > div');
+    rows.forEach(row => {
+      const cells = row.querySelectorAll(':scope > [role="row"] > [role="cell"]');
+      const cell = cells[cellOffset];
+      if (cell) {
+        maxWidth = Math.max(maxWidth, measureContent(cell));
+      }
+    });
+
+    // Clean up measurement container
+    document.body.removeChild(measureContainer);
+
+    // Minimal buffer (content clone already includes cell padding)
+    const newSize = Math.max(maxWidth + 4, 50); // Minimum 50px
+
+    // Update column sizing
+    setColumnSizing(prev => ({
+      ...prev,
+      [columnId]: newSize,
+    }));
+  }, [renderExpandedRow, setColumnSizing]);
 
   // Build grid template columns dynamically based on column sizes
   const buildGridTemplateColumns = useCallback((table) => {
@@ -308,7 +385,7 @@ export function BaseTable({
     <div className={`bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden ${className}`}>
       <div className={`overflow-x-auto transition-opacity duration-200 ${isRefreshing ? 'opacity-50' : ''}`}>
         {/* Grid-based table */}
-        <div role="table" aria-label="Data table" className="w-full min-w-full">
+        <div ref={tableContainerRef} role="table" aria-label="Data table" className="w-full min-w-full">
           {/* Header */}
           <div
             role="rowgroup"
@@ -325,7 +402,7 @@ export function BaseTable({
                 {renderExpandedRow && (
                   <div role="columnheader" className="px-2 py-3"></div>
                 )}
-                {headerGroup.headers.map((header) => (
+                {headerGroup.headers.map((header, headerIndex) => (
                   <div
                     key={header.id}
                     role="columnheader"
@@ -338,14 +415,15 @@ export function BaseTable({
                         {flexRender(header.column.columnDef.header, header.getContext())}
                       </SortableHeader>
                     )}
-                    {/* Column resize handle */}
+                    {/* Column resize handle - double-click to auto-fit width */}
                     {enableColumnResizing && header.column.getCanResize() && (
                       <div
                         onMouseDown={header.getResizeHandler()}
                         onTouchStart={header.getResizeHandler()}
-                        onDoubleClick={() => header.column.resetSize()}
+                        onDoubleClick={() => autoFitColumn(header.column.id, headerIndex)}
                         className="absolute right-0 top-1/2 -translate-y-1/2 h-4 w-[3px] cursor-col-resize select-none touch-none rounded-full bg-slate-300 dark:bg-slate-600 opacity-0 hover:opacity-100 transition-opacity group-hover:opacity-50"
                         style={{ userSelect: 'none' }}
+                        title="Drag to resize, double-click to auto-fit"
                       />
                     )}
                   </div>
@@ -391,7 +469,7 @@ export function BaseTable({
                     </div>
                   )}
                   {row.getVisibleCells().map((cell) => (
-                    <div key={cell.id} role="cell" className="px-4 py-3">
+                    <div key={cell.id} role="cell" className="px-4 py-3 min-w-0 overflow-hidden">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </div>
                   ))}

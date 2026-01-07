@@ -1,5 +1,6 @@
 import { X, AlertCircle, ArrowRight } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
+import { trackInteraction } from '../utils/analytics';
 
 /**
  * Usage warning banner for 80-99% quota usage (soft limit)
@@ -43,6 +44,18 @@ export function UsageWarningBanner({
       setIsExiting(false);
     }
   }, [usage]);
+
+  // Track when warning banner is shown (conversion funnel event)
+  useEffect(() => {
+    if (usage && isVisible && !isExiting) {
+      trackInteraction('usage_warning_shown', {
+        percent_used: usage.percentage || Math.round(((usage.limit - usage.remaining) / usage.limit) * 100),
+        tier: currentTier,
+        docs_remaining: usage.remaining,
+        period: usage.period || 'monthly',
+      });
+    }
+  }, [usage, isVisible, isExiting, currentTier]);
 
   // Clean up timeout on unmount
   useEffect(() => {

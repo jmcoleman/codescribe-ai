@@ -20,6 +20,7 @@ import trialsRoutes from '../server/src/routes/trials.js';
 import graphRoutes from '../server/src/routes/graph.js';
 import projectsRoutes from '../server/src/routes/projects.js';
 import preferencesRoutes from '../server/src/routes/preferences.js';
+import analyticsRoutes from '../server/src/routes/analytics.js';
 import errorHandler from '../server/src/middleware/errorHandler.js';
 import '../server/src/config/passport.js'; // Initialize passport strategies
 
@@ -100,6 +101,7 @@ if (ENABLE_AUTH) {
   app.use('/api/projects', projectsRoutes); // Project management (Pro+ tier)
   app.use('/api/preferences', preferencesRoutes); // User preferences (cross-device sync)
 }
+app.use('/api/analytics', analyticsRoutes); // Analytics event tracking (public)
 app.use('/api/cron', cronRoutes);
 app.use('/api/migrate', migrateRoutes);
 

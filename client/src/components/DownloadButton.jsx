@@ -25,6 +25,7 @@ import { Tooltip } from './Tooltip';
  * @param {string} variant - Button variant: 'ghost' | 'outline' | 'solid'
  * @param {string} ariaLabel - Accessible label for screen readers
  * @param {boolean} showLabel - Show text label alongside icon
+ * @param {Function} onSuccess - Optional callback when download succeeds (for analytics)
  */
 export function DownloadButton({
   content,
@@ -35,7 +36,8 @@ export function DownloadButton({
   variant = 'ghost',
   ariaLabel = 'Export',
   showLabel = false,
-  labelClassName = ''
+  labelClassName = '',
+  onSuccess = null
 }) {
 
   const handleDownload = () => {
@@ -79,6 +81,12 @@ export function DownloadButton({
 
       // No success toast - browser's download notification provides sufficient feedback
       // We cannot reliably detect if user actually saved the file or canceled the dialog
+
+      // Call success callback (for analytics tracking)
+      // Note: This fires when download is initiated, not when user saves the file
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (err) {
       console.error('Failed to download file:', err);
       toastError('Unable to download file. Please try again.');

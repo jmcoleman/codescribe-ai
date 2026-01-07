@@ -17,6 +17,7 @@ import trialsRoutes from './routes/trials.js';
 import graphRoutes from './routes/graph.js';
 import projectsRoutes from './routes/projects.js';
 import preferencesRoutes from './routes/preferences.js';
+import analyticsRoutes from './routes/analytics.js';
 import errorHandler from './middleware/errorHandler.js';
 import securityHeaders from './middleware/securityHeaders.js';
 import { initializeDatabase, testConnection } from './db/connection.js';
@@ -131,6 +132,7 @@ if (ENABLE_AUTH) {
   app.use('/api/projects', projectsRoutes); // Project management (Pro+ tier)
   app.use('/api/preferences', preferencesRoutes); // User preferences (cross-device sync)
 }
+app.use('/api/analytics', analyticsRoutes); // Analytics event tracking (public)
 app.use('/api/cron', cronRoutes);
 app.use('/api/migrate', migrateRoutes);
 app.use('/api', apiRoutes);

@@ -1,5 +1,6 @@
 import { X, AlertTriangle, Zap, ArrowRight, Clock } from 'lucide-react';
 import { useEffect, useRef } from 'react';
+import { trackInteraction } from '../utils/analytics';
 
 /**
  * Usage limit modal for 100% quota reached (hard limit)
@@ -39,6 +40,17 @@ export function UsageLimitModal({
       upgradeButtonRef.current.focus();
     }
   }, [isOpen]);
+
+  // Track when limit modal is shown (conversion funnel event)
+  useEffect(() => {
+    if (isOpen) {
+      trackInteraction('usage_limit_hit', {
+        tier: currentTier,
+        limit_type: usage?.period || 'monthly',
+        limit: usage?.limit || 0,
+      });
+    }
+  }, [isOpen, currentTier, usage]);
 
   // Keyboard navigation - Esc to close
   useEffect(() => {

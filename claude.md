@@ -415,6 +415,9 @@ cd server && npm test 2>&1 | grep "Tests:"           # Backend counts
 
 **Files Updated:** 3 package.json, CHANGELOG.md, README.md, TODO.md, claude.md, docs/testing/README.md, SKIPPED-TESTS.md
 
+**Roadmap Ordering Convention:**
+In `docs/planning/roadmap/roadmap-data.json`, the "done" column phases array is ordered **newest first** (most recent release at top, oldest at bottom). When adding new releases, insert them at the **beginning** of the phases array, not the end. This ensures users see the latest features first when viewing the roadmap.
+
 ---
 
 ## 🎯 Project Status
@@ -467,23 +470,24 @@ codescribe-ai/
 
 ## 🔄 Version History
 
-**Current: v3.3.3** (December 12, 2025)
-- Private GitHub Repository Support
-- AES-256-GCM encryption for OAuth tokens
-- Per-user GitHub authentication for API requests
-- Private/Public badge in file tree header
-- Clickable "Public only" badge to connect GitHub
-- OAuth return-to flow (returns to Settings after enabling private access)
-- Private GitHub repos feature on pricing page
-- Reusable AppToaster component for Settings page
-- Recent repos show Lock/Globe icons for private/public
-- 3,693 tests (1,913 frontend, 1,780 backend)
-- Frontend: 1,913 passing, 54 skipped
-- Backend: 1,780 passing, 33 skipped
+**Current: v3.3.4** (January 6, 2026)
+- Admin Analytics Dashboard with Recharts (3 tabs: Funnel, Business, Usage)
+- Workflow Outcome Metrics: session tracking, conversion funnel, regeneration tracking
+- Conversion funnel: Sessions → Code Input → Generation → Copy/Download
+- Business metrics: signups, tier upgrades/downgrades, revenue trends
+- Usage patterns: doc types, quality scores, languages, origins
+- Regeneration success rate tracking (before/after score comparison)
+- Analytics opt-out fix: custom events respect user preference
+- Date range picker, "Exclude Internal" toggle, dark mode support
+- Server-side admin detection for accurate internal user filtering
+- 3,882 tests (2,044 frontend, 1,838 backend)
+- Frontend: 2,044 passing, 56 skipped
+- Backend: 1,838 passing, 33 skipped
 
 <details>
-<summary>Recent Releases (v2.9.0-v3.3.2) & Milestones</summary>
+<summary>Recent Releases (v2.9.0-v3.3.3) & Milestones</summary>
 
+**v3.3.3** (Dec 12, 2025): Private GitHub Repository Support - AES-256-GCM token encryption, per-user auth, private/public badges
 **v3.3.2** (Dec 10, 2025): Sidebar UX Polish - Apply dropdown, ProjectSelector graph status, toolbar grouping
 **v3.3.1** (Dec 10, 2025): Batch Generation & Mermaid Dark Mode Fixes - Race condition fixes, workspace stability
 **v3.3.0** (Dec 9, 2025): Graph Engine API & Project Analysis - Project Details page, graph stats, architecture diagrams
@@ -521,7 +525,7 @@ codescribe-ai/
 - **v1.21** (Oct 19): Production deployment, codescribe-ai.vercel.app
 
 Full history: [CHANGELOG.md](CHANGELOG.md)
-Last updated: December 11, 2025
+Last updated: January 6, 2026
 </details>
 
 ---

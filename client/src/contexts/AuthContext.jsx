@@ -10,6 +10,7 @@ import { API_URL } from '../config/api';
 import { STORAGE_KEYS, getStorageItem, setStorageItem, removeStorageItem, clearAppStorage } from '../constants/storage';
 import { clearWorkspaceLocalStorage } from '../hooks/useWorkspacePersistence';
 import { clearBatchSessionStorage } from '../hooks/useBatchGeneration';
+import { setAnalyticsOptOut, setAnalyticsUserStatus } from '../utils/analytics';
 
 const AuthContext = createContext(null);
 
@@ -49,6 +50,26 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     initializeAuth();
   }, []);
+
+  // Sync analytics opt-out state when user changes
+  useEffect(() => {
+    // When user is logged in, respect their analytics preference
+    // analytics_enabled: true = tracking allowed, false = opted out
+    // setAnalyticsOptOut: true = opted out, false = tracking allowed
+    if (user) {
+      setAnalyticsOptOut(user.analytics_enabled === false);
+
+      // Sync admin/override status for analytics filtering
+      // Events from admin users or users with tier overrides should be excluded from business metrics
+      const isAdmin = ['admin', 'support', 'super_admin'].includes(user.role);
+      const hasTierOverride = !!user.viewing_as_tier;
+      setAnalyticsUserStatus({ isAdmin, hasTierOverride });
+    } else {
+      // When logged out, reset to default (tracking allowed for anonymous)
+      setAnalyticsOptOut(false);
+      setAnalyticsUserStatus({ isAdmin: false, hasTierOverride: false });
+    }
+  }, [user]);
 
   /**
    * Initialize authentication state from stored token

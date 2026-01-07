@@ -1,5 +1,5 @@
 import { Sparkles, CheckCircle, AlertCircle, XCircle, ChevronDown, ChevronUp, MoreVertical, Download, Copy, RefreshCw, X, Network } from 'lucide-react';
-import { useState, useEffect, useRef, memo, useMemo } from 'react';
+import { useState, useEffect, useRef, memo, useMemo, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
@@ -11,6 +11,7 @@ import { DocPanelGeneratingSkeleton } from './SkeletonLoader';
 import { MermaidDiagram } from './MermaidDiagram';
 import { useTheme } from '../contexts/ThemeContext';
 import { formatDateTime } from '../utils/formatters';
+import { trackInteraction } from '../utils/analytics';
 
 // Custom Prism theme matching Monaco editor theme
 const codescribeLightTheme = {
@@ -371,6 +372,23 @@ export const DocPanel = memo(function DocPanel({
     }
   };
 
+  // Analytics tracking callbacks for copy/download actions
+  const handleCopySuccess = useCallback(() => {
+    const docTypeValue = qualityScore?.isBatchSummary ? 'batch-summary' : (qualityScore?.docType || docType || 'unknown');
+    trackInteraction('copy_docs', {
+      doc_type: docTypeValue,
+      content_length: documentation?.length || 0,
+    });
+  }, [qualityScore, docType, documentation]);
+
+  const handleDownloadSuccess = useCallback(() => {
+    const docTypeValue = qualityScore?.isBatchSummary ? 'batch-summary' : (qualityScore?.docType || docType || 'unknown');
+    trackInteraction('download_docs', {
+      doc_type: docTypeValue,
+      content_length: documentation?.length || 0,
+    });
+  }, [qualityScore, docType, documentation]);
+
   // Memoize ReactMarkdown components to prevent unnecessary re-renders
   const markdownComponents = useMemo(() => ({
     pre({ children }) {
@@ -582,6 +600,7 @@ export const DocPanel = memo(function DocPanel({
                   variant="outline"
                   ariaLabel="Export documentation"
                   showLabel={true}
+                  onSuccess={handleDownloadSuccess}
                 />
                 <CopyButton
                   text={documentation}
@@ -589,6 +608,7 @@ export const DocPanel = memo(function DocPanel({
                   variant="outline"
                   ariaLabel="Copy documentation"
                   showLabel={true}
+                  onSuccess={handleCopySuccess}
                 />
                 <Tooltip content="Clear documentation">
                   <button
@@ -612,6 +632,7 @@ export const DocPanel = memo(function DocPanel({
                   variant="outline"
                   ariaLabel="Export documentation"
                   showLabel={false}
+                  onSuccess={handleDownloadSuccess}
                 />
                 <CopyButton
                   text={documentation}
@@ -619,6 +640,7 @@ export const DocPanel = memo(function DocPanel({
                   variant="outline"
                   ariaLabel="Copy documentation"
                   showLabel={false}
+                  onSuccess={handleCopySuccess}
                 />
                 <Tooltip content="Clear documentation">
                   <button
@@ -664,6 +686,7 @@ export const DocPanel = memo(function DocPanel({
                         a.click();
                         URL.revokeObjectURL(url);
                         setShowMobileMenu(false);
+                        handleDownloadSuccess();
                       }}
                       className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-inset"
                       aria-label="Export documentation"
@@ -677,6 +700,7 @@ export const DocPanel = memo(function DocPanel({
                       onClick={() => {
                         navigator.clipboard.writeText(documentation);
                         setShowMobileMenu(false);
+                        handleCopySuccess();
                       }}
                       className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-inset"
                       aria-label="Copy documentation to clipboard"

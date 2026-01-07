@@ -17,6 +17,7 @@ import { sql } from '@vercel/postgres';
 import stripe, { STRIPE_WEBHOOK_SECRET, getTierFromPriceId } from '../config/stripe.js';
 import Subscription from '../models/Subscription.js';
 import User from '../models/User.js';
+import { trackCheckoutCompleted, trackTierUpgraded, trackSubscriptionCancelled } from '../utils/serverAnalytics.js';
 
 const router = express.Router();
 
@@ -119,6 +120,16 @@ async function handleCheckoutCompleted(session) {
   // Fetch full subscription details from Stripe
   const subscription = await stripe.subscriptions.retrieve(subscriptionId);
 
+  // Track checkout completion analytics event
+  const tier = getTierFromPriceId(subscription.items.data[0].price.id);
+  const billingPeriod = subscription.items.data[0].price.recurring?.interval === 'year' ? 'annual' : 'monthly';
+  trackCheckoutCompleted({
+    userId,
+    tier,
+    amount: session.amount_total,
+    billingPeriod,
+  });
+
   // Create subscription record in database
   await createOrUpdateSubscription(subscription, userId);
 }
@@ -186,6 +197,10 @@ async function handleSubscriptionDeleted(subscription) {
     return;
   }
 
+  // Get user's current tier for analytics
+  const user = await User.findById(userId);
+  const previousTier = user?.tier || 'unknown';
+
   // Update subscription status to canceled
   await Subscription.update(subscription.id, {
     status: 'canceled',
@@ -194,6 +209,13 @@ async function handleSubscriptionDeleted(subscription) {
 
   // Downgrade user to free tier
   await User.updateTier(userId, 'free');
+
+  // Track subscription cancellation analytics event
+  trackSubscriptionCancelled({
+    userId,
+    tier: previousTier,
+    reason: subscription.cancellation_details?.reason || 'unknown',
+  });
 
   console.log(`✅ User ${userId} downgraded to free tier`);
 }
@@ -455,9 +477,23 @@ async function createOrUpdateSubscription(stripeSubscription, userId, createdVia
   // Test/sandbox subscriptions (livemode=false) are recorded but don't upgrade tier
   if (['active', 'trialing'].includes(stripeSubscription.status)) {
     if (stripeSubscription.livemode === true) {
+      // Get user's current tier before updating for analytics
+      const user = await User.findById(userId);
+      const previousTier = user?.tier || 'free';
+
       // Production subscription - upgrade tier
       await User.updateTier(userId, tier);
       console.log(`✅ Updated user ${userId} tier to ${tier} (production subscription)`);
+
+      // Track tier upgrade analytics event (only if tier actually changed)
+      if (previousTier !== tier) {
+        trackTierUpgraded({
+          userId,
+          previousTier,
+          newTier: tier,
+          source: createdVia === 'app' ? 'stripe_checkout' : 'stripe_dashboard',
+        });
+      }
     } else {
       // Test/sandbox subscription - record but don't upgrade tier
       console.log(`⚠️  Test subscription (livemode=false) - tier unchanged for user ${userId}`);

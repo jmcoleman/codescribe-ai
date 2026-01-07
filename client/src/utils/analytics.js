@@ -5,13 +5,18 @@
  * performance metrics, and product insights.
  *
  * Privacy: All tracking is anonymous and respects user privacy.
- * No personal information is collected.
+ * No personal information is collected. Users can opt out via Settings > Privacy.
  *
  * NOTE: Analytics are only enabled in production to avoid performance
  * degradation during development.
  */
 
 import { track } from '@vercel/analytics';
+import { API_URL } from '../config/api';
+
+// ===========================================
+// PRODUCTION CHECK
+// ===========================================
 
 // Helper to check if we're in production
 // Use hostname check - most reliable method for Vercel deployments
@@ -19,15 +24,182 @@ const isProduction =
   window.location.hostname === 'codescribeai.com' ||
   window.location.hostname.includes('vercel.app');
 
-// Wrapper function that only tracks in production
-const trackEvent = (eventName, eventData) => {
-  if (isProduction) {
-    track(eventName, eventData);
-  } else {
-    // Log to console in development for debugging
-    console.debug(`[Analytics] ${eventName}:`, eventData);
+// ===========================================
+// ANALYTICS OPT-OUT SUPPORT
+// ===========================================
+
+// Module-level state for opt-out (updated by AuthContext when user changes)
+let analyticsOptedOut = false;
+
+/**
+ * Update the analytics opt-out state
+ * Called from AuthContext when user data changes
+ * @param {boolean} optedOut - Whether user has opted out of analytics
+ */
+export const setAnalyticsOptOut = (optedOut) => {
+  analyticsOptedOut = optedOut;
+};
+
+// ===========================================
+// ADMIN/OVERRIDE EXCLUSION SUPPORT
+// ===========================================
+
+// Module-level state for admin/override detection
+// These are flagged in events so they can be filtered in analytics queries
+let isAdminUser = false;
+let hasTierOverride = false;
+
+/**
+ * Update the admin/override status
+ * Called from AuthContext when user data changes
+ * @param {Object} status - Admin/override status
+ * @param {boolean} status.isAdmin - Whether user is admin/support role
+ * @param {boolean} status.hasTierOverride - Whether user has tier override active
+ */
+export const setAnalyticsUserStatus = ({ isAdmin, hasTierOverride: hasOverride }) => {
+  isAdminUser = isAdmin || false;
+  hasTierOverride = hasOverride || false;
+};
+
+/**
+ * Check if analytics is currently enabled
+ * Respects both production check and user opt-out preference
+ * @returns {boolean} Whether analytics tracking is enabled
+ */
+const isAnalyticsEnabled = () => {
+  if (!isProduction) return false;
+  if (analyticsOptedOut) return false;
+  return true;
+};
+
+// ===========================================
+// SESSION MANAGEMENT
+// ===========================================
+
+const SESSION_ID_KEY = 'cs_analytics_session_id';
+const SESSION_START_KEY = 'cs_analytics_session_start';
+const SESSION_COUNT_KEY = 'cs_analytics_session_count';
+
+/**
+ * Get or create a session ID for the current browser session
+ * Uses sessionStorage so it persists across page refreshes but clears on tab close
+ * @returns {string} The session ID (UUID)
+ */
+export const getSessionId = () => {
+  let sessionId = sessionStorage.getItem(SESSION_ID_KEY);
+  if (!sessionId) {
+    sessionId = crypto.randomUUID();
+    sessionStorage.setItem(SESSION_ID_KEY, sessionId);
+    sessionStorage.setItem(SESSION_START_KEY, Date.now().toString());
+
+    // Increment session count in localStorage for returning user detection
+    const sessionCount = parseInt(localStorage.getItem(SESSION_COUNT_KEY) || '0', 10);
+    localStorage.setItem(SESSION_COUNT_KEY, (sessionCount + 1).toString());
+  }
+  return sessionId;
+};
+
+/**
+ * Get the timestamp when the current session started
+ * @returns {number} Session start timestamp in milliseconds
+ */
+export const getSessionStart = () => {
+  return parseInt(sessionStorage.getItem(SESSION_START_KEY) || Date.now().toString(), 10);
+};
+
+/**
+ * Check if this is a returning user (has visited before)
+ * @returns {boolean} True if user has had more than one session
+ */
+export const isReturningUser = () => {
+  const sessionCount = parseInt(localStorage.getItem(SESSION_COUNT_KEY) || '0', 10);
+  return sessionCount > 1;
+};
+
+/**
+ * Get how long the current session has been active
+ * @returns {number} Session duration in milliseconds
+ */
+export const getSessionDuration = () => {
+  const start = getSessionStart();
+  return Date.now() - start;
+};
+
+/**
+ * Enhance event data with session context
+ * Includes admin/override flags for filtering in analytics queries
+ * @param {Object} data - Original event data
+ * @returns {Object} Event data with session context added
+ */
+const withSessionContext = (data) => ({
+  ...data,
+  session_id: getSessionId(),
+  is_returning_user: isReturningUser() ? 'true' : 'false',
+  session_duration_ms: getSessionDuration(),
+  // Admin/override flags for filtering - exclude from business metrics
+  is_internal: (isAdminUser || hasTierOverride) ? 'true' : 'false',
+  is_admin: isAdminUser ? 'true' : 'false',
+  has_tier_override: hasTierOverride ? 'true' : 'false',
+});
+
+// ===========================================
+// CORE TRACKING FUNCTION
+// ===========================================
+
+/**
+ * Send event to backend for admin dashboard
+ * Fires asynchronously without blocking
+ * @param {string} eventName - Event name
+ * @param {Object} eventData - Event data with session context
+ */
+const sendToBackend = async (eventName, eventData) => {
+  try {
+    const response = await fetch(`${API_URL}/api/analytics/track`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        eventName,
+        eventData,
+        sessionId: getSessionId(),
+      }),
+    });
+
+    if (!response.ok && !isProduction) {
+      console.warn(`[Analytics] Backend tracking failed: ${response.status}`);
+    }
+  } catch (e) {
+    // Network errors - log in dev mode, don't break the app
+    if (!isProduction) {
+      console.warn('[Analytics] Backend tracking network error:', e.message);
+    }
   }
 };
+
+/**
+ * Wrapper function that only tracks when analytics is enabled
+ * Sends to both Vercel Analytics and our backend for admin dashboard
+ * Respects production check and user opt-out preference
+ */
+const trackEvent = (eventName, eventData) => {
+  if (isAnalyticsEnabled()) {
+    // Send to Vercel Analytics
+    track(eventName, eventData);
+    // Also send to our backend for admin dashboard (fire and forget)
+    sendToBackend(eventName, eventData);
+  } else if (!isProduction) {
+    // Log to console in development for debugging
+    console.debug(`[Analytics] ${eventName}:`, eventData);
+    // Also send to backend in dev for testing the dashboard
+    sendToBackend(eventName, eventData);
+  }
+  // If opted out in production, silently skip (no logging, no backend)
+};
+
+// ===========================================
+// EVENT TRACKING FUNCTIONS
+// ===========================================
 
 /**
  * Track documentation generation events
@@ -39,13 +211,13 @@ const trackEvent = (eventName, eventData) => {
  * @param {string} params.language - Programming language detected
  */
 export const trackDocGeneration = ({ docType, success, duration, codeSize, language }) => {
-  trackEvent('doc_generation', {
+  trackEvent('doc_generation', withSessionContext({
     doc_type: docType,
     success: success ? 'true' : 'false',
     duration_ms: Math.round(duration),
     code_size_kb: Math.round(codeSize / 1024),
     language: language || 'unknown',
-  });
+  }));
 };
 
 /**
@@ -56,12 +228,12 @@ export const trackDocGeneration = ({ docType, success, duration, codeSize, langu
  * @param {string} params.docType - Type of documentation
  */
 export const trackQualityScore = ({ score, grade, docType }) => {
-  trackEvent('quality_score', {
+  trackEvent('quality_score', withSessionContext({
     score: Math.round(score),
     grade,
     doc_type: docType,
     score_range: getScoreRange(score),
-  });
+  }));
 };
 
 /**
@@ -71,11 +243,11 @@ export const trackQualityScore = ({ score, grade, docType }) => {
  * @param {string} language - Programming language
  */
 export const trackCodeInput = (method, codeSize, language) => {
-  trackEvent('code_input', {
+  trackEvent('code_input', withSessionContext({
     method,
     code_size_kb: Math.round(codeSize / 1024),
     language: language || 'unknown',
-  });
+  }));
 };
 
 /**
@@ -89,11 +261,11 @@ export const trackError = ({ errorType, errorMessage, context }) => {
   // Sanitize error message to avoid sending sensitive data
   const sanitizedMessage = sanitizeErrorMessage(errorMessage);
 
-  trackEvent('error', {
+  trackEvent('error', withSessionContext({
     error_type: errorType,
     error_message: sanitizedMessage,
     context,
-  });
+  }));
 };
 
 /**
@@ -102,10 +274,10 @@ export const trackError = ({ errorType, errorMessage, context }) => {
  * @param {number} duration - Time taken in milliseconds
  */
 export const trackGenerationMode = (mode, duration) => {
-  trackEvent('generation_mode', {
+  trackEvent('generation_mode', withSessionContext({
     mode,
     duration_ms: Math.round(duration),
-  });
+  }));
 };
 
 /**
@@ -114,10 +286,10 @@ export const trackGenerationMode = (mode, duration) => {
  * @param {Object} metadata - Additional metadata
  */
 export const trackInteraction = (action, metadata = {}) => {
-  trackEvent('user_interaction', {
+  trackEvent('user_interaction', withSessionContext({
     action,
     ...metadata,
-  });
+  }));
 };
 
 /**
@@ -125,9 +297,9 @@ export const trackInteraction = (action, metadata = {}) => {
  * @param {string} exampleName - Name of example used
  */
 export const trackExampleUsage = (exampleName) => {
-  trackEvent('example_usage', {
+  trackEvent('example_usage', withSessionContext({
     example_name: exampleName,
-  });
+  }));
 };
 
 /**
@@ -138,11 +310,11 @@ export const trackExampleUsage = (exampleName) => {
  * @param {boolean} params.success - Upload success
  */
 export const trackFileUpload = ({ fileType, fileSize, success }) => {
-  trackEvent('file_upload', {
+  trackEvent('file_upload', withSessionContext({
     file_type: fileType,
     file_size_kb: Math.round(fileSize / 1024),
     success: success ? 'true' : 'false',
-  });
+  }));
 };
 
 /**
@@ -170,7 +342,7 @@ export const trackOAuth = ({ provider, action, context, duration, errorType }) =
     eventData.error_type = errorType;
   }
 
-  trackEvent('oauth_flow', eventData);
+  trackEvent('oauth_flow', withSessionContext(eventData));
 };
 
 /**
@@ -181,11 +353,11 @@ export const trackOAuth = ({ provider, action, context, duration, errorType }) =
  * @param {number} params.totalTime - Total time (ms)
  */
 export const trackPerformance = ({ parseTime, generateTime, totalTime }) => {
-  trackEvent('performance', {
+  trackEvent('performance', withSessionContext({
     parse_time_ms: Math.round(parseTime),
     generate_time_ms: Math.round(generateTime),
     total_time_ms: Math.round(totalTime),
-  });
+  }));
 };
 
 // Helper functions

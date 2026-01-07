@@ -1,7 +1,7 @@
 {
   "name": "client",
   "private": true,
-  "version": "3.3.3",
+  "version": "3.3.4",
   "type": "module",
   "scripts": {
     "dev": "vite --config config/vite.config.js",
@@ -36,6 +36,7 @@
     "react-resizable-panels": "^3.0.6",
     "react-router-dom": "^7.9.4",
     "react-syntax-highlighter": "^15.6.6",
+    "recharts": "^3.6.0",
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1",
     "rollup-plugin-visualizer": "^6.0.5",

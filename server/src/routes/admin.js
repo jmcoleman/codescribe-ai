@@ -21,6 +21,7 @@ import {
   hasActiveOverride,
   getOverrideDetails
 } from '../utils/tierOverride.js';
+import { analyticsService } from '../services/analyticsService.js';
 
 const router = express.Router();
 
@@ -1412,6 +1413,363 @@ router.get('/generations/by-user', requireAuth, requireAdmin, async (req, res) =
     res.status(500).json({
       success: false,
       error: 'Failed to fetch generation data'
+    });
+  }
+});
+
+// ============================================================================
+// ANALYTICS DASHBOARD ENDPOINTS
+// ============================================================================
+
+/**
+ * GET /api/admin/analytics/funnel
+ * Get conversion funnel metrics
+ *
+ * Query params:
+ * - startDate: ISO date string (required)
+ * - endDate: ISO date string (required)
+ * - excludeInternal: boolean (default: true) - Exclude admin/override users
+ */
+router.get('/analytics/funnel', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { startDate, endDate, excludeInternal = 'true' } = req.query;
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({
+        success: false,
+        error: 'startDate and endDate are required',
+      });
+    }
+
+    const funnel = await analyticsService.getConversionFunnel({
+      startDate: new Date(startDate),
+      endDate: new Date(endDate),
+      excludeInternal: excludeInternal === 'true',
+    });
+
+    res.json({
+      success: true,
+      data: funnel,
+    });
+  } catch (error) {
+    console.error('[Admin] Get analytics funnel error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch funnel metrics',
+    });
+  }
+});
+
+/**
+ * GET /api/admin/analytics/business
+ * Get business metrics (signups, upgrades, revenue)
+ *
+ * Query params:
+ * - startDate: ISO date string (required)
+ * - endDate: ISO date string (required)
+ * - excludeInternal: boolean (default: true)
+ */
+router.get('/analytics/business', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { startDate, endDate, excludeInternal = 'true' } = req.query;
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({
+        success: false,
+        error: 'startDate and endDate are required',
+      });
+    }
+
+    const metrics = await analyticsService.getBusinessMetrics({
+      startDate: new Date(startDate),
+      endDate: new Date(endDate),
+      excludeInternal: excludeInternal === 'true',
+    });
+
+    res.json({
+      success: true,
+      data: metrics,
+    });
+  } catch (error) {
+    console.error('[Admin] Get analytics business error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch business metrics',
+    });
+  }
+});
+
+/**
+ * GET /api/admin/analytics/usage
+ * Get usage pattern metrics
+ *
+ * Query params:
+ * - startDate: ISO date string (required)
+ * - endDate: ISO date string (required)
+ * - excludeInternal: boolean (default: true)
+ */
+router.get('/analytics/usage', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { startDate, endDate, excludeInternal = 'true' } = req.query;
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({
+        success: false,
+        error: 'startDate and endDate are required',
+      });
+    }
+
+    const patterns = await analyticsService.getUsagePatterns({
+      startDate: new Date(startDate),
+      endDate: new Date(endDate),
+      excludeInternal: excludeInternal === 'true',
+    });
+
+    res.json({
+      success: true,
+      data: patterns,
+    });
+  } catch (error) {
+    console.error('[Admin] Get analytics usage error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch usage metrics',
+    });
+  }
+});
+
+/**
+ * GET /api/admin/analytics/timeseries
+ * Get time series data for a specific metric
+ *
+ * Query params:
+ * - metric: string (required) - sessions, generations, signups, revenue
+ * - interval: string (required) - day, week, month
+ * - startDate: ISO date string (required)
+ * - endDate: ISO date string (required)
+ * - excludeInternal: boolean (default: true)
+ */
+router.get('/analytics/timeseries', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { metric, interval, startDate, endDate, excludeInternal = 'true' } = req.query;
+
+    if (!metric || !interval || !startDate || !endDate) {
+      return res.status(400).json({
+        success: false,
+        error: 'metric, interval, startDate, and endDate are required',
+      });
+    }
+
+    const validMetrics = ['sessions', 'generations', 'signups', 'revenue'];
+    if (!validMetrics.includes(metric)) {
+      return res.status(400).json({
+        success: false,
+        error: `Invalid metric. Must be one of: ${validMetrics.join(', ')}`,
+      });
+    }
+
+    const validIntervals = ['day', 'week', 'month'];
+    if (!validIntervals.includes(interval)) {
+      return res.status(400).json({
+        success: false,
+        error: `Invalid interval. Must be one of: ${validIntervals.join(', ')}`,
+      });
+    }
+
+    const timeSeries = await analyticsService.getTimeSeries({
+      metric,
+      interval,
+      startDate: new Date(startDate),
+      endDate: new Date(endDate),
+      excludeInternal: excludeInternal === 'true',
+    });
+
+    res.json({
+      success: true,
+      data: timeSeries,
+    });
+  } catch (error) {
+    console.error('[Admin] Get analytics timeseries error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch time series data',
+    });
+  }
+});
+
+/**
+ * GET /api/admin/analytics/events
+ * Get raw analytics events with pagination and filtering
+ *
+ * Query params:
+ * - startDate: ISO date string (required)
+ * - endDate: ISO date string (required)
+ * - category: funnel | business | usage (optional)
+ * - eventName: string (optional)
+ * - excludeInternal: boolean (optional, default false)
+ * - page: number (optional, default 1)
+ * - limit: number (optional, default 50, max 100)
+ */
+router.get('/analytics/events', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const {
+      startDate,
+      endDate,
+      category,
+      eventName,
+      excludeInternal,
+      page = '1',
+      limit = '50',
+    } = req.query;
+
+    // Validate required params
+    if (!startDate || !endDate) {
+      return res.status(400).json({
+        success: false,
+        error: 'startDate and endDate are required',
+      });
+    }
+
+    // Parse and validate dates
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid date format',
+      });
+    }
+
+    // Parse pagination
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 50));
+
+    const result = await analyticsService.getEvents({
+      startDate: start,
+      endDate: end,
+      category: category || null,
+      eventName: eventName || null,
+      excludeInternal: excludeInternal === 'true',
+      page: pageNum,
+      limit: limitNum,
+    });
+
+    res.json({
+      success: true,
+      ...result,
+    });
+  } catch (error) {
+    console.error('[Admin] Get analytics events error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch events',
+    });
+  }
+});
+
+/**
+ * GET /api/admin/analytics/event-names
+ * Get distinct event names for filter dropdown
+ */
+router.get('/analytics/event-names', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const eventNames = await analyticsService.getEventNames();
+    res.json({
+      success: true,
+      eventNames,
+    });
+  } catch (error) {
+    console.error('[Admin] Get event names error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch event names',
+    });
+  }
+});
+
+/**
+ * GET /api/admin/analytics/events/export
+ * Export analytics events as CSV
+ *
+ * Query params same as /events endpoint
+ */
+router.get('/analytics/events/export', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const {
+      startDate,
+      endDate,
+      category,
+      eventName,
+      excludeInternal,
+    } = req.query;
+
+    // Validate required params
+    if (!startDate || !endDate) {
+      return res.status(400).json({
+        success: false,
+        error: 'startDate and endDate are required',
+      });
+    }
+
+    // Parse dates
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid date format',
+      });
+    }
+
+    // Fetch all events (up to 10000 for export)
+    const result = await analyticsService.getEvents({
+      startDate: start,
+      endDate: end,
+      category: category || null,
+      eventName: eventName || null,
+      excludeInternal: excludeInternal === 'true',
+      page: 1,
+      limit: 10000,
+    });
+
+    // Build CSV
+    const headers = ['Timestamp', 'Event Name', 'Category', 'Session ID', 'User ID', 'User Email', 'IP Address', 'Internal', 'Event Data'];
+    const rows = result.events.map((event) => [
+      event.createdAt.toISOString(),
+      event.eventName,
+      event.category,
+      event.sessionId || '',
+      event.userId || '',
+      event.userEmail || '',
+      event.ipAddress || '',
+      event.isInternal ? 'Yes' : 'No',
+      JSON.stringify(event.eventData),
+    ]);
+
+    // Escape CSV values
+    const escapeCSV = (value) => {
+      const str = String(value);
+      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+
+    const csv = [
+      headers.join(','),
+      ...rows.map((row) => row.map(escapeCSV).join(',')),
+    ].join('\n');
+
+    // Send as downloadable file
+    const filename = `analytics-events-${startDate.split('T')[0]}-to-${endDate.split('T')[0]}.csv`;
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(csv);
+  } catch (error) {
+    console.error('[Admin] Export analytics events error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to export events',
     });
   }
 });
