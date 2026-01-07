@@ -65,9 +65,9 @@
       "text": "codescribeai.com",
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
-    "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.31",
-    "footer": "v3.3.4 Complete · Analytics Dashboard + Workflow Metrics ✓ · Up Next: Project Architecture Document · VS Code Extension: Separate Repo",
-    "lastUpdated": "January 6, 2026"
+    "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.32",
+    "footer": "v3.3.5 Complete · Multi-Select Analytics + Campaign Trials ✓ · Up Next: Performance Analytics Tab · VS Code Extension: Separate Repo",
+    "lastUpdated": "January 7, 2026"
   },
   "columns": [
     {
@@ -76,6 +76,27 @@
       "title": "Completed",
       "subtitle": "Phase 1: Core Capabilities",
       "phases": [
+        {
+          "version": "v3.3.5",
+          "title": "Multi-Select Analytics & Campaign Trials",
+          "duration": "1 day",
+          "status": "✓ Complete",
+          "completedDate": "Jan 7, 2026",
+          "badge": "Analytics + Growth",
+          "features": [
+            "Multi-select event filter: Select multiple events simultaneously in Raw Events table",
+            "Select component: Portal rendering to escape overflow containers",
+            "Industry-standard multi-select UX: Pending selections applied on dropdown close",
+            "Performance metrics grouped: latency (TTFT, TPOT), throughput (tokens/sec), cache, LLM context",
+            "Campaign trials system: Auto-grant Pro trials during campaign periods",
+            "Campaign admin page: Create, manage, and track marketing campaigns",
+            "Environment-based campaign toggle (CAMPAIGN_AUTO_TRIAL env var)",
+            "Trial source tracking: 'auto-campaign' vs 'invite_code' attribution",
+            "User model: _created flag on findOrCreateByGithub for new vs existing users",
+            "Database migrations: campaigns table with usage tracking",
+            "49 new tests · 3,931 total (2,047 frontend, 1,884 backend)"
+          ]
+        },
         {
           "version": "v3.3.4",
           "title": "Admin Analytics Dashboard & Workflow Metrics",
@@ -910,6 +931,23 @@
       "subtitle": "Phase 3: Platform Infrastructure",
       "phases": [
         {
+          "version": "Analytics",
+          "title": "Performance Analytics Tab",
+          "duration": "0.5-1 day",
+          "status": "Up Next",
+          "badge": "Analytics Enhancement",
+          "features": [
+            "New Performance tab in admin analytics dashboard",
+            "Latency visualizations: TTFT (Time to First Token), TPOT, total generation time",
+            "Throughput charts: tokens/second by doc type, provider, model",
+            "Cache hit rate tracking with cost savings estimate",
+            "LLM provider/model breakdown with latency comparison",
+            "Time range filtering consistent with other analytics tabs",
+            "Dark mode support for all visualizations",
+            "Leverages grouped performance metrics from v3.3.5"
+          ]
+        },
+        {
           "version": "Epic 5.6",
           "title": "Project Architecture Document",
           "duration": "3-4 days",
@@ -944,25 +982,6 @@
             "Push to main → Queue doc regeneration (if configured)",
             "Webhook signature verification for security",
             "Shared by: Web app, VS Code extension, CI/CD integrations"
-          ]
-        },
-        {
-          "version": "Campaign",
-          "title": "Auto-Trial Campaign System",
-          "duration": "0.5 days",
-          "status": "Ready to Implement",
-          "badge": "Growth & Feedback",
-          "features": [
-            "Auto-grant Pro trial to all new signups during campaign period",
-            "Environment variable toggle (CAMPAIGN_AUTO_TRIAL=true/false)",
-            "Configurable trial duration (CAMPAIGN_TRIAL_DAYS, default 14)",
-            "Configurable trial tier (CAMPAIGN_TRIAL_TIER, default pro)",
-            "Optional campaign end date for auto-disable (CAMPAIGN_END_DATE)",
-            "Trial source tracking for analytics ('auto-campaign' vs 'invite_code')",
-            "Admin visibility endpoint for campaign status",
-            "Existing users covered via public invite code (no code changes)",
-            "Instant rollback: Set env var to false and redeploy",
-            "Spec: docs/planning/roadmap/AUTO-TRIAL-CAMPAIGN.md"
           ]
         }
       ]
