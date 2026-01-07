@@ -9,7 +9,7 @@
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { trackOAuth } from '../utils/analytics';
+import { trackOAuth, trackLogin } from '../utils/analytics';
 import { STORAGE_KEYS, getSessionItem, removeSessionItem, setStorageItem } from '../constants/storage';
 import { API_URL } from '../config/api';
 
@@ -64,6 +64,9 @@ export function AuthCallback() {
             context,
             duration,
           });
+
+          // Track login to associate session with user
+          trackLogin({ method: 'oauth_github' });
 
           // Clean up sessionStorage
           removeSessionItem(STORAGE_KEYS.OAUTH_START_TIME);

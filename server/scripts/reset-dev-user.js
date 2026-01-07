@@ -5,13 +5,13 @@
  *   npm run reset:user <email> [options]
  *
  * Examples:
- *   npm run reset:user john@example.com              # Delete user and all data
- *   npm run reset:user john@example.com --quotas-only # Reset quotas only
- *   npm run reset:user john@example.com --clear-docs  # Clear docs/batches + reset quotas
+ *   npm run reset:user john@example.com              # Reset quotas only (default, safe)
+ *   npm run reset:user john@example.com --clear-data # Full reset: docs, batches, analytics, quotas
+ *   npm run reset:user john@example.com --delete-user # Delete user and ALL data (destructive!)
  *
  * Options:
- *   --quotas-only    Only reset usage quotas, keep user account
- *   --clear-docs     Clear generated_documents and generation_batches for user, reset quotas
+ *   --clear-data     Clear docs, batches, analytics events, and reset quotas (keeps user account)
+ *   --delete-user    Delete user account and ALL related data (destructive!)
  *
  * ⚠️  WARNING: This script is for DEVELOPMENT only!
  *     Always verify you're connected to the DEV database before running.
@@ -36,23 +36,23 @@ const colors = {
 // Parse command line arguments
 const args = process.argv.slice(2);
 const email = args[0];
-const quotasOnly = args.includes('--quotas-only');
-const clearDocs = args.includes('--clear-docs');
+const deleteUser = args.includes('--delete-user');
+const clearData = args.includes('--clear-data');
 
 // Validate inputs
 if (!email) {
   console.error(`${colors.red}❌ Error: Email address is required${colors.reset}`);
   console.log(`\nUsage: npm run reset:user <email> [options]\n`);
   console.log(`Examples:`);
-  console.log(`  npm run reset:user john@example.com              ${colors.cyan}# Delete user and all data${colors.reset}`);
-  console.log(`  npm run reset:user john@example.com --quotas-only ${colors.cyan}# Reset quotas only${colors.reset}`);
-  console.log(`  npm run reset:user john@example.com --clear-docs  ${colors.cyan}# Clear docs/batches + reset quotas${colors.reset}`);
+  console.log(`  npm run reset:user john@example.com              ${colors.cyan}# Reset quotas only (default, safe)${colors.reset}`);
+  console.log(`  npm run reset:user john@example.com --clear-data  ${colors.cyan}# Full reset: docs, batches, analytics, quotas${colors.reset}`);
+  console.log(`  npm run reset:user john@example.com --delete-user ${colors.cyan}# Delete user and ALL data (destructive!)${colors.reset}`);
   process.exit(1);
 }
 
 // Validate mutually exclusive options
-if (quotasOnly && clearDocs) {
-  console.error(`${colors.red}❌ Error: --quotas-only and --clear-docs cannot be used together${colors.reset}`);
+if (deleteUser && clearData) {
+  console.error(`${colors.red}❌ Error: --delete-user and --clear-data cannot be used together${colors.reset}`);
   process.exit(1);
 }
 
@@ -70,11 +70,11 @@ if (dbUrl.includes('prod') || dbUrl.includes('production')) {
   process.exit(1);
 }
 
-const modeDescription = quotasOnly
-  ? 'Reset quotas only'
-  : clearDocs
-    ? 'Clear docs/batches + reset quotas'
-    : 'Delete user and all data';
+const modeDescription = deleteUser
+  ? 'DELETE USER and all data (destructive!)'
+  : clearData
+    ? 'Full reset: docs, batches, analytics, quotas'
+    : 'Reset quotas only (safe)';
 
 console.log(`${colors.cyan}${colors.bright}🗄️  Reset Dev User Data${colors.reset}\n`);
 console.log(`Email: ${colors.yellow}${email}${colors.reset}`);
@@ -110,11 +110,11 @@ try {
   `;
 
   const quotaCount = parseInt(quotasResult.rows[0].count);
-  const actionWord = quotasOnly ? 'reset' : clearDocs ? 'cleared/reset' : 'deleted';
+  const actionWord = deleteUser ? 'deleted' : clearData ? 'cleared/reset' : 'reset';
   console.log(`${colors.cyan}📊 Data to be ${actionWord}:${colors.reset}`);
   console.log(`   User quotas: ${quotaCount} record(s)`);
 
-  if (clearDocs || !quotasOnly) {
+  if (clearData || deleteUser) {
     const docsResult = await sql`
       SELECT COUNT(*) as count
       FROM generated_documents
@@ -125,41 +125,55 @@ try {
       FROM generation_batches
       WHERE user_id = ${user.id}
     `;
+    const analyticsResult = await sql`
+      SELECT COUNT(*) as count
+      FROM analytics_events
+      WHERE user_id = ${user.id}
+    `;
     const docCount = parseInt(docsResult.rows[0].count);
     const batchCount = parseInt(batchesResult.rows[0].count);
+    const analyticsCount = parseInt(analyticsResult.rows[0].count);
     console.log(`   Documents:   ${docCount} record(s)`);
     console.log(`   Batches:     ${batchCount} record(s)`);
+    console.log(`   Analytics:   ${analyticsCount} record(s)`);
   }
 
-  if (!quotasOnly && !clearDocs) {
-    const sessionsResult = await sql`
+  if (deleteUser) {
+    const auditResult = await sql`
       SELECT COUNT(*) as count
-      FROM sessions
-      WHERE sess->>'userId' = ${user.id}
+      FROM user_audit_log
+      WHERE user_id = ${user.id}
     `;
-    const sessionCount = parseInt(sessionsResult.rows[0].count);
-    console.log(`   Sessions:    ${sessionCount} record(s)`);
+    const auditCount = parseInt(auditResult.rows[0].count);
+    console.log(`   Audit logs:  ${auditCount} record(s)`);
     console.log(`   User:        1 record`);
   }
 
   console.log();
 
   // Step 3: Perform the deletion/reset
-  if (quotasOnly) {
-    // Reset quotas only
-    console.log(`${colors.yellow}⏳ Resetting quotas...${colors.reset}`);
+  if (deleteUser) {
+    // Delete user and all related data (destructive!)
+    console.log(`${colors.red}⏳ Deleting user and all related data...${colors.reset}`);
 
-    const deleteResult = await sql`
-      DELETE FROM user_quotas
+    // Delete audit logs first (foreign key to users)
+    const auditDeleteResult = await sql`
+      DELETE FROM user_audit_log
       WHERE user_id = ${user.id}
+    `;
+    console.log(`${colors.green}✅ Deleted ${auditDeleteResult.rowCount} audit log(s)${colors.reset}`);
+
+    // Delete user (cascades to user_quotas via ON DELETE CASCADE)
+    await sql`
+      DELETE FROM users
+      WHERE id = ${user.id}
       RETURNING *
     `;
 
-    console.log(`${colors.green}✅ Successfully reset ${deleteResult.rowCount} quota record(s)${colors.reset}`);
-    console.log(`\n${colors.cyan}ℹ️  Quotas will be recreated on next API request${colors.reset}`);
-  } else if (clearDocs) {
-    // Clear documents/batches and reset quotas (keep user account)
-    console.log(`${colors.yellow}⏳ Clearing documents and batches...${colors.reset}`);
+    console.log(`${colors.green}✅ Successfully deleted user and all related data${colors.reset}`);
+  } else if (clearData) {
+    // Clear documents/batches/analytics and reset quotas (keep user account)
+    console.log(`${colors.yellow}⏳ Clearing documents, batches, and analytics...${colors.reset}`);
 
     // Delete documents first (they reference batches)
     const docsResult = await sql`
@@ -177,6 +191,14 @@ try {
     `;
     console.log(`${colors.green}✅ Deleted ${batchesResult.rowCount} batch(es)${colors.reset}`);
 
+    // Delete analytics events
+    const analyticsDeleteResult = await sql`
+      DELETE FROM analytics_events
+      WHERE user_id = ${user.id}
+      RETURNING *
+    `;
+    console.log(`${colors.green}✅ Deleted ${analyticsDeleteResult.rowCount} analytics event(s)${colors.reset}`);
+
     // Reset quotas
     const quotasDeleteResult = await sql`
       DELETE FROM user_quotas
@@ -187,23 +209,17 @@ try {
 
     console.log(`\n${colors.cyan}ℹ️  User account preserved. Quotas will be recreated on next API request${colors.reset}`);
   } else {
-    // Delete user and all related data
-    console.log(`${colors.yellow}⏳ Deleting user and all related data...${colors.reset}`);
+    // Default: Reset quotas only (safe)
+    console.log(`${colors.yellow}⏳ Resetting quotas...${colors.reset}`);
 
-    // Delete sessions first (no foreign key, manual cleanup)
-    await sql`
-      DELETE FROM sessions
-      WHERE sess->>'userId' = ${user.id}
-    `;
-
-    // Delete user (cascades to user_quotas via ON DELETE CASCADE)
     const deleteResult = await sql`
-      DELETE FROM users
-      WHERE id = ${user.id}
+      DELETE FROM user_quotas
+      WHERE user_id = ${user.id}
       RETURNING *
     `;
 
-    console.log(`${colors.green}✅ Successfully deleted user and all related data${colors.reset}`);
+    console.log(`${colors.green}✅ Successfully reset ${deleteResult.rowCount} quota record(s)${colors.reset}`);
+    console.log(`\n${colors.cyan}ℹ️  User account preserved. Quotas will be recreated on next API request${colors.reset}`);
   }
 
   console.log(`\n${colors.green}${colors.bright}✨ Operation completed successfully!${colors.reset}\n`);

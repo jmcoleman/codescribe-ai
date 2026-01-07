@@ -6,7 +6,11 @@
 import passport from 'passport';
 import { Strategy as LocalStrategy } from 'passport-local';
 import { Strategy as GitHubStrategy } from 'passport-github2';
+import { sql } from '@vercel/postgres';
 import User from '../models/User.js';
+import Trial from '../models/Trial.js';
+import Campaign from '../models/Campaign.js';
+import { getActiveCampaign } from './campaign.js';
 
 /**
  * Local Strategy (Email/Password)
@@ -74,7 +78,44 @@ if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
             accessToken,  // Pass access token for storage (will be encrypted)
           });
 
-          console.log('[Passport] User found/created:', user.id);
+          console.log('[Passport] User found/created:', user.id, user._created ? '(new)' : '(existing)');
+
+          // If this is a newly created user, check for active campaign and grant trial
+          if (user._created) {
+            try {
+              const campaign = await getActiveCampaign();
+              if (campaign) {
+                // Check eligibility
+                const eligibility = await Trial.checkEligibility(user.id);
+                if (eligibility.eligible) {
+                  // Create trial
+                  const trial = await Trial.create({
+                    userId: user.id,
+                    inviteCodeId: null,
+                    trialTier: campaign.trial_tier,
+                    durationDays: campaign.trial_days,
+                    source: 'auto_campaign',
+                  });
+
+                  // Link to campaign
+                  await sql`
+                    UPDATE user_trials
+                    SET campaign_id = ${campaign.id}
+                    WHERE id = ${trial.id}
+                  `;
+
+                  // Increment signup count
+                  await Campaign.incrementSignups(campaign.id);
+
+                  console.log(`[Passport] Auto-granted ${campaign.trial_tier} trial to new GitHub user ${user.id} via campaign "${campaign.name}"`);
+                }
+              }
+            } catch (campaignError) {
+              // Don't fail OAuth if campaign grant fails
+              console.error('[Passport] Failed to grant campaign trial:', campaignError);
+            }
+          }
+
           return done(null, user);
         } catch (error) {
           console.error('[Passport] GitHub strategy error:', error);

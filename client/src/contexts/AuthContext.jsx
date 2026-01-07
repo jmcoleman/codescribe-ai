@@ -10,7 +10,7 @@ import { API_URL } from '../config/api';
 import { STORAGE_KEYS, getStorageItem, setStorageItem, removeStorageItem, clearAppStorage } from '../constants/storage';
 import { clearWorkspaceLocalStorage } from '../hooks/useWorkspacePersistence';
 import { clearBatchSessionStorage } from '../hooks/useBatchGeneration';
-import { setAnalyticsOptOut, setAnalyticsUserStatus } from '../utils/analytics';
+import { setAnalyticsOptOut, trackLogin, trackSignup } from '../utils/analytics';
 
 const AuthContext = createContext(null);
 
@@ -58,17 +58,12 @@ export function AuthProvider({ children }) {
     // setAnalyticsOptOut: true = opted out, false = tracking allowed
     if (user) {
       setAnalyticsOptOut(user.analytics_enabled === false);
-
-      // Sync admin/override status for analytics filtering
-      // Events from admin users or users with tier overrides should be excluded from business metrics
-      const isAdmin = ['admin', 'support', 'super_admin'].includes(user.role);
-      const hasTierOverride = !!user.viewing_as_tier;
-      setAnalyticsUserStatus({ isAdmin, hasTierOverride });
     } else {
       // When logged out, reset to default (tracking allowed for anonymous)
       setAnalyticsOptOut(false);
-      setAnalyticsUserStatus({ isAdmin: false, hasTierOverride: false });
     }
+    // Note: is_internal/is_admin/has_tier_override flags are now set server-side
+    // based on user role lookup for more accurate detection
   }, [user]);
 
   /**
@@ -159,6 +154,13 @@ export function AuthProvider({ children }) {
         // Update user state
         setUser(data.user);
 
+        // Track signup for analytics (associates session with user)
+        trackSignup({
+          method: 'email',
+          tier: data.user.tier || 'free',
+          hasTrial: !!data.user.trial_ends_at,
+        });
+
         return { success: true };
       }
 
@@ -197,6 +199,9 @@ export function AuthProvider({ children }) {
 
         // Update user state
         setUser(data.user);
+
+        // Track login for analytics (associates session with user)
+        trackLogin({ method: 'email' });
 
         return { success: true };
       }

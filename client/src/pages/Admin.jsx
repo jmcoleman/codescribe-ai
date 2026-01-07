@@ -11,17 +11,26 @@ import {
   Gift,
   Users,
   TrendingUp,
+  Megaphone,
   ChevronRight
 } from 'lucide-react';
 import { PageLayout } from '../components/PageLayout';
 
 const adminSections = [
   {
-    id: 'usage',
-    title: 'Usage Dashboard',
-    description: 'View anonymous vs authenticated usage statistics and activity',
-    icon: BarChart3,
-    path: '/admin/usage',
+    id: 'analytics',
+    title: 'Analytics Dashboard',
+    description: 'Conversion funnel, business metrics, and usage patterns',
+    icon: TrendingUp,
+    path: '/admin/analytics',
+    available: true
+  },
+  {
+    id: 'campaigns',
+    title: 'Campaigns',
+    description: 'Create and manage promotional campaigns for new user trials',
+    icon: Megaphone,
+    path: '/admin/campaigns',
     available: true
   },
   {
@@ -41,11 +50,11 @@ const adminSections = [
     available: true
   },
   {
-    id: 'analytics',
-    title: 'Analytics Dashboard',
-    description: 'Conversion funnel, business metrics, and usage patterns',
-    icon: TrendingUp,
-    path: '/admin/analytics',
+    id: 'usage',
+    title: 'Usage Dashboard',
+    description: 'View anonymous vs authenticated usage statistics and activity',
+    icon: BarChart3,
+    path: '/admin/usage',
     available: true
   }
 ];

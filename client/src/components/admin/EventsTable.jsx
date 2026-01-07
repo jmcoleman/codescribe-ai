@@ -24,12 +24,23 @@ import { useTableColumnSizing } from '../../hooks/useTableColumnSizing';
 const API_URL = import.meta.env.VITE_API_URL || '';
 
 // Category options for filter
+// Note: These align with EVENT_CATEGORIES in analyticsService.js
+// - funnel: Usage funnel events (session_start, code_input, generation_*, doc_copied/downloaded)
+// - business: Business conversion events (login, signup, tier_*, checkout, subscription)
+// - usage: Usage pattern events (doc_generation, quality_score, file_upload, error, etc.)
 const CATEGORY_OPTIONS = [
   { value: '', label: 'All Categories' },
-  { value: 'funnel', label: 'Funnel' },
-  { value: 'business', label: 'Business' },
-  { value: 'usage', label: 'Usage' },
+  { value: 'funnel', label: 'Usage Funnel' },
+  { value: 'business', label: 'Business Conversion' },
+  { value: 'usage', label: 'Usage Patterns' },
 ];
+
+// Category display labels (for badges)
+const CATEGORY_LABELS = {
+  funnel: 'Usage Funnel',
+  business: 'Business',
+  usage: 'Usage',
+};
 
 // Category badge component
 function CategoryBadge({ category }) {
@@ -41,7 +52,7 @@ function CategoryBadge({ category }) {
 
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${colorClasses[category] || colorClasses.usage}`}>
-      {category}
+      {CATEGORY_LABELS[category] || category}
     </span>
   );
 }
@@ -95,7 +106,7 @@ export function EventsTable({ startDate, endDate, excludeInternal = false }) {
   // Filter state
   const [eventNames, setEventNames] = useState([]);
   const [filterCategory, setFilterCategory] = useState('');
-  const [filterEventName, setFilterEventName] = useState('');
+  const [filterEventNames, setFilterEventNames] = useState([]); // Array for multi-select
 
   // Pagination state
   const [pagination, setPagination] = useState({ page: 1, limit: 50, total: 0, totalPages: 0 });
@@ -221,7 +232,7 @@ export function EventsTable({ startDate, endDate, excludeInternal = false }) {
       });
 
       if (filterCategory) params.append('category', filterCategory);
-      if (filterEventName) params.append('eventName', filterEventName);
+      if (filterEventNames.length > 0) params.append('eventNames', filterEventNames.join(','));
 
       const response = await fetch(`${API_URL}/api/admin/analytics/events?${params}`, {
         headers: { 'Authorization': `Bearer ${token}` },
@@ -248,7 +259,7 @@ export function EventsTable({ startDate, endDate, excludeInternal = false }) {
       setLoading(false);
       setIsRefreshing(false);
     }
-  }, [getToken, startDate, endDate, excludeInternal, filterCategory, filterEventName, pagination.limit]);
+  }, [getToken, startDate, endDate, excludeInternal, filterCategory, filterEventNames, pagination.limit]);
 
   // Handle CSV export
   const handleExport = useCallback(async () => {
@@ -266,7 +277,7 @@ export function EventsTable({ startDate, endDate, excludeInternal = false }) {
       });
 
       if (filterCategory) params.append('category', filterCategory);
-      if (filterEventName) params.append('eventName', filterEventName);
+      if (filterEventNames.length > 0) params.append('eventNames', filterEventNames.join(','));
 
       const response = await fetch(`${API_URL}/api/admin/analytics/events/export?${params}`, {
         headers: { 'Authorization': `Bearer ${token}` },
@@ -292,7 +303,7 @@ export function EventsTable({ startDate, endDate, excludeInternal = false }) {
     } finally {
       setExporting(false);
     }
-  }, [getToken, startDate, endDate, excludeInternal, filterCategory, filterEventName]);
+  }, [getToken, startDate, endDate, excludeInternal, filterCategory, filterEventNames]);
 
   // Initial load
   useEffect(() => {
@@ -307,7 +318,7 @@ export function EventsTable({ startDate, endDate, excludeInternal = false }) {
     } else {
       fetchData(1, false);
     }
-  }, [startDate, endDate, excludeInternal, filterCategory, filterEventName]);
+  }, [startDate, endDate, excludeInternal, filterCategory, filterEventNames]);
 
   // Handle page change
   const handlePageChange = (newPage) => {
@@ -319,14 +330,25 @@ export function EventsTable({ startDate, endDate, excludeInternal = false }) {
   // Clear filters
   const clearFilters = () => {
     setFilterCategory('');
-    setFilterEventName('');
+    setFilterEventNames([]);
   };
 
-  // Build event name options
+  // Build event name options with "All Events" at the top
   const eventNameOptions = [
     { value: '', label: 'All Events' },
-    ...eventNames.map(name => ({ value: name, label: name })),
+    ...eventNames.map(name => ({ value: name, label: name }))
   ];
+
+  // Handle event name filter changes - selecting "All Events" clears other selections
+  const handleEventNameFilterChange = (newValue) => {
+    // If "All Events" (empty string) was just selected, clear all selections
+    if (newValue.includes('') && !filterEventNames.includes('')) {
+      setFilterEventNames([]);
+    } else {
+      // Filter out empty string if user selected a specific event
+      setFilterEventNames(newValue.filter(v => v !== ''));
+    }
+  };
 
   // Header/filters section (shown for all states)
   const HeaderSection = () => (
@@ -372,14 +394,15 @@ export function EventsTable({ startDate, endDate, excludeInternal = false }) {
           ariaLabel="Filter by category"
         />
         <Select
-          value={filterEventName}
-          onChange={setFilterEventName}
+          value={filterEventNames}
+          onChange={handleEventNameFilterChange}
           placeholder="All Events"
           size="small"
           options={eventNameOptions}
           ariaLabel="Filter by event name"
+          multiple
         />
-        {(filterCategory || filterEventName) && (
+        {(filterCategory || filterEventNames.length > 0) && (
           <button
             onClick={clearFilters}
             className="px-3 py-1.5 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
@@ -404,13 +427,14 @@ export function EventsTable({ startDate, endDate, excludeInternal = false }) {
   }
 
   // Empty state with no filters
+  const hasFilters = filterCategory || filterEventNames.length > 0;
   const emptyStateProps = {
     icon: Database,
     title: 'No events found',
-    description: filterCategory || filterEventName
+    description: hasFilters
       ? 'No events match your filters.'
       : 'No events in this date range.',
-    action: (filterCategory || filterEventName) && (
+    action: hasFilters && (
       <button
         onClick={clearFilters}
         className="text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 font-medium"

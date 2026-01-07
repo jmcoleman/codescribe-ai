@@ -22,6 +22,8 @@ import {
   getOverrideDetails
 } from '../utils/tierOverride.js';
 import { analyticsService } from '../services/analyticsService.js';
+import Campaign from '../models/Campaign.js';
+import { clearCampaignCache, getCampaignStatus } from '../config/campaign.js';
 
 const router = express.Router();
 
@@ -1461,6 +1463,45 @@ router.get('/analytics/funnel', requireAuth, requireAdmin, async (req, res) => {
 });
 
 /**
+ * GET /api/admin/analytics/conversion-funnel
+ * Get business conversion funnel (Visitors → Signups → Trial → Paid)
+ *
+ * Query params:
+ * - startDate: ISO date string (required)
+ * - endDate: ISO date string (required)
+ * - excludeInternal: boolean (default: true)
+ */
+router.get('/analytics/conversion-funnel', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { startDate, endDate, excludeInternal = 'true' } = req.query;
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({
+        success: false,
+        error: 'startDate and endDate are required',
+      });
+    }
+
+    const funnel = await analyticsService.getBusinessConversionFunnel({
+      startDate: new Date(startDate),
+      endDate: new Date(endDate),
+      excludeInternal: excludeInternal === 'true',
+    });
+
+    res.json({
+      success: true,
+      data: funnel,
+    });
+  } catch (error) {
+    console.error('[Admin] Get conversion funnel error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch conversion funnel',
+    });
+  }
+});
+
+/**
  * GET /api/admin/analytics/business
  * Get business metrics (signups, upgrades, revenue)
  *
@@ -1605,7 +1646,7 @@ router.get('/analytics/timeseries', requireAuth, requireAdmin, async (req, res) 
  * - startDate: ISO date string (required)
  * - endDate: ISO date string (required)
  * - category: funnel | business | usage (optional)
- * - eventName: string (optional)
+ * - eventNames: comma-separated event names (optional, for multi-select filter)
  * - excludeInternal: boolean (optional, default false)
  * - page: number (optional, default 1)
  * - limit: number (optional, default 50, max 100)
@@ -1616,7 +1657,7 @@ router.get('/analytics/events', requireAuth, requireAdmin, async (req, res) => {
       startDate,
       endDate,
       category,
-      eventName,
+      eventNames,
       excludeInternal,
       page = '1',
       limit = '50',
@@ -1644,11 +1685,14 @@ router.get('/analytics/events', requireAuth, requireAdmin, async (req, res) => {
     const pageNum = Math.max(1, parseInt(page) || 1);
     const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 50));
 
+    // Parse eventNames from comma-separated string to array
+    const eventNameList = eventNames ? eventNames.split(',').filter(Boolean) : null;
+
     const result = await analyticsService.getEvents({
       startDate: start,
       endDate: end,
       category: category || null,
-      eventName: eventName || null,
+      eventNames: eventNameList,
       excludeInternal: excludeInternal === 'true',
       page: pageNum,
       limit: limitNum,
@@ -1699,7 +1743,7 @@ router.get('/analytics/events/export', requireAuth, requireAdmin, async (req, re
       startDate,
       endDate,
       category,
-      eventName,
+      eventNames,
       excludeInternal,
     } = req.query;
 
@@ -1721,12 +1765,15 @@ router.get('/analytics/events/export', requireAuth, requireAdmin, async (req, re
       });
     }
 
+    // Parse eventNames from comma-separated string to array
+    const eventNameList = eventNames ? eventNames.split(',').filter(Boolean) : null;
+
     // Fetch all events (up to 10000 for export)
     const result = await analyticsService.getEvents({
       startDate: start,
       endDate: end,
       category: category || null,
-      eventName: eventName || null,
+      eventNames: eventNameList,
       excludeInternal: excludeInternal === 'true',
       page: 1,
       limit: 10000,
@@ -1770,6 +1817,309 @@ router.get('/analytics/events/export', requireAuth, requireAdmin, async (req, re
     res.status(500).json({
       success: false,
       error: 'Failed to export events',
+    });
+  }
+});
+
+// ============================================================================
+// CAMPAIGN MANAGEMENT ROUTES
+// ============================================================================
+
+/**
+ * GET /api/admin/campaigns/status - Get current campaign status
+ * Returns the active campaign (if any) and its configuration
+ */
+router.get('/campaigns/status', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const status = await getCampaignStatus();
+    res.json({
+      success: true,
+      data: status,
+    });
+  } catch (error) {
+    console.error('[Admin] Get campaign status error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get campaign status',
+    });
+  }
+});
+
+/**
+ * GET /api/admin/campaigns - List all campaigns
+ * Query params: limit, offset, sortBy, sortOrder
+ */
+router.get('/campaigns', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const {
+      limit = '50',
+      offset = '0',
+      sortBy = 'created_at',
+      sortOrder = 'DESC',
+    } = req.query;
+
+    const result = await Campaign.list({
+      limit: Math.min(parseInt(limit, 10), 100),
+      offset: parseInt(offset, 10),
+      sortBy,
+      sortOrder,
+    });
+
+    res.json({
+      success: true,
+      data: result.campaigns,
+      total: result.total,
+    });
+  } catch (error) {
+    console.error('[Admin] List campaigns error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to list campaigns',
+    });
+  }
+});
+
+/**
+ * GET /api/admin/campaigns/:id - Get campaign details with stats
+ */
+router.get('/campaigns/:id', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const campaign = await Campaign.getStats(parseInt(id, 10));
+
+    if (!campaign) {
+      return res.status(404).json({
+        success: false,
+        error: 'Campaign not found',
+      });
+    }
+
+    res.json({
+      success: true,
+      data: campaign,
+    });
+  } catch (error) {
+    console.error('[Admin] Get campaign error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get campaign',
+    });
+  }
+});
+
+/**
+ * POST /api/admin/campaigns - Create a new campaign
+ * Body: { name, description, trialTier, trialDays, startsAt, endsAt, isActive }
+ */
+router.post('/campaigns', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const {
+      name,
+      description,
+      trialTier = 'pro',
+      trialDays = 14,
+      startsAt,
+      endsAt,
+      isActive = false,
+    } = req.body;
+
+    // Validation
+    if (!name || name.trim().length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Campaign name is required',
+      });
+    }
+
+    if (!['pro', 'team'].includes(trialTier)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Trial tier must be "pro" or "team"',
+      });
+    }
+
+    if (trialDays < 1 || trialDays > 90) {
+      return res.status(400).json({
+        success: false,
+        error: 'Trial days must be between 1 and 90',
+      });
+    }
+
+    const campaign = await Campaign.create({
+      name: name.trim(),
+      description: description?.trim() || null,
+      trialTier,
+      trialDays,
+      startsAt: startsAt ? new Date(startsAt) : new Date(),
+      endsAt: endsAt ? new Date(endsAt) : null,
+      isActive,
+      createdByUserId: req.user.id,
+    });
+
+    // Clear cache if activating a campaign
+    if (isActive) {
+      clearCampaignCache();
+    }
+
+    console.log(`[Admin] Campaign created: ${campaign.id} "${campaign.name}" by user ${req.user.id}`);
+
+    res.status(201).json({
+      success: true,
+      data: campaign,
+    });
+  } catch (error) {
+    console.error('[Admin] Create campaign error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to create campaign',
+    });
+  }
+});
+
+/**
+ * PUT /api/admin/campaigns/:id - Update a campaign
+ * Body: { name, description, trialTier, trialDays, startsAt, endsAt, isActive }
+ */
+router.put('/campaigns/:id', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+    // Validate trialTier if provided
+    if (updates.trialTier && !['pro', 'team'].includes(updates.trialTier)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Trial tier must be "pro" or "team"',
+      });
+    }
+
+    // Validate trialDays if provided
+    if (updates.trialDays !== undefined && (updates.trialDays < 1 || updates.trialDays > 90)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Trial days must be between 1 and 90',
+      });
+    }
+
+    // Parse dates if provided
+    if (updates.startsAt) {
+      updates.startsAt = new Date(updates.startsAt);
+    }
+    if (updates.endsAt) {
+      updates.endsAt = new Date(updates.endsAt);
+    }
+
+    const campaign = await Campaign.update(parseInt(id, 10), updates);
+
+    if (!campaign) {
+      return res.status(404).json({
+        success: false,
+        error: 'Campaign not found',
+      });
+    }
+
+    // Always clear cache on updates (active status might have changed)
+    clearCampaignCache();
+
+    console.log(`[Admin] Campaign updated: ${campaign.id} by user ${req.user.id}`);
+
+    res.json({
+      success: true,
+      data: campaign,
+    });
+  } catch (error) {
+    console.error('[Admin] Update campaign error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update campaign',
+    });
+  }
+});
+
+/**
+ * POST /api/admin/campaigns/:id/toggle - Toggle campaign active status
+ * Body: { isActive: boolean }
+ */
+router.post('/campaigns/:id/toggle', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isActive } = req.body;
+
+    if (typeof isActive !== 'boolean') {
+      return res.status(400).json({
+        success: false,
+        error: 'isActive must be a boolean',
+      });
+    }
+
+    const campaign = await Campaign.setActive(parseInt(id, 10), isActive);
+
+    if (!campaign) {
+      return res.status(404).json({
+        success: false,
+        error: 'Campaign not found',
+      });
+    }
+
+    // Clear cache when toggling
+    clearCampaignCache();
+
+    console.log(`[Admin] Campaign ${isActive ? 'activated' : 'deactivated'}: ${campaign.id} by user ${req.user.id}`);
+
+    res.json({
+      success: true,
+      data: campaign,
+    });
+  } catch (error) {
+    console.error('[Admin] Toggle campaign error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to toggle campaign',
+    });
+  }
+});
+
+/**
+ * DELETE /api/admin/campaigns/:id - Delete a campaign
+ * Only allows deletion if campaign has 0 signups
+ */
+router.delete('/campaigns/:id', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const campaignId = parseInt(id, 10);
+
+    // Check if campaign exists and has signups
+    const campaign = await Campaign.findById(campaignId);
+    if (!campaign) {
+      return res.status(404).json({
+        success: false,
+        error: 'Campaign not found',
+      });
+    }
+
+    if (campaign.signups_count > 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Cannot delete campaign with existing signups. Deactivate it instead.',
+      });
+    }
+
+    await Campaign.delete(campaignId);
+
+    // Clear cache
+    clearCampaignCache();
+
+    console.log(`[Admin] Campaign deleted: ${campaignId} by user ${req.user.id}`);
+
+    res.json({
+      success: true,
+      message: 'Campaign deleted',
+    });
+  } catch (error) {
+    console.error('[Admin] Delete campaign error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete campaign',
     });
   }
 });

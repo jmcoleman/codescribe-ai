@@ -207,7 +207,14 @@ router.post('/generate', optionalAuth, rateLimitBypass, apiLimiter, generationLi
 
     res.json(result);
   } catch (error) {
-    console.error('Generate error:', error);
+    // Log full error details including nested objects (Node.js truncates by default)
+    console.error('Generate error:', JSON.stringify({
+      message: error.message,
+      name: error.name,
+      status: error.status,
+      error: error.error,  // Anthropic API nests error details here
+      stack: error.stack?.split('\n').slice(0, 5).join('\n')
+    }, null, 2));
     res.status(500).json({
       error: 'Generation failed',
       message: error.message
@@ -347,7 +354,14 @@ router.post('/generate-stream', optionalAuth, rateLimitBypass, apiLimiter, gener
 
     res.end();
   } catch (error) {
-    console.error('Stream error:', error);
+    // Log full error details including nested objects (Node.js truncates by default)
+    console.error('Stream error:', JSON.stringify({
+      message: error.message,
+      name: error.name,
+      status: error.status,
+      error: error.error,  // Anthropic API nests error details here
+      stack: error.stack?.split('\n').slice(0, 5).join('\n')
+    }, null, 2));
     // Send structured error data so client can display appropriate error type
     // The standardizeError function adds: provider, errorType, statusCode, originalError
     const errorData = {

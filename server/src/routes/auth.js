@@ -25,8 +25,65 @@ import {
   CURRENT_TERMS_VERSION,
   CURRENT_PRIVACY_VERSION
 } from '../constants/legalVersions.js';
+import { getActiveCampaign } from '../config/campaign.js';
+import Trial from '../models/Trial.js';
+import Campaign from '../models/Campaign.js';
 
 const router = express.Router();
+
+// ============================================================================
+// Campaign Auto-Trial Helper
+// ============================================================================
+
+/**
+ * Grant auto-trial to a new user if an active campaign exists
+ * @param {number} userId - The newly created user's ID
+ * @returns {Promise<Object|null>} Created trial or null if no active campaign
+ */
+async function grantCampaignTrialIfActive(userId) {
+  try {
+    const campaign = await getActiveCampaign();
+    if (!campaign) {
+      return null;
+    }
+
+    // Check if user is eligible for trial (not already on trial)
+    const eligibility = await Trial.checkEligibility(userId);
+    if (!eligibility.eligible) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[Campaign] User ${userId} not eligible for auto-trial: ${eligibility.reason}`);
+      }
+      return null;
+    }
+
+    // Create the trial
+    const trial = await Trial.create({
+      userId,
+      inviteCodeId: null, // No invite code for campaign trials
+      trialTier: campaign.trial_tier,
+      durationDays: campaign.trial_days,
+      source: 'auto_campaign',
+    });
+
+    // Link trial to campaign (need to update with campaign_id)
+    await sql`
+      UPDATE user_trials
+      SET campaign_id = ${campaign.id}
+      WHERE id = ${trial.id}
+    `;
+
+    // Increment campaign signup count
+    await Campaign.incrementSignups(campaign.id);
+
+    console.log(`[Campaign] Auto-granted ${campaign.trial_tier} trial (${campaign.trial_days} days) to user ${userId} via campaign "${campaign.name}"`);
+
+    return trial;
+  } catch (error) {
+    // Don't fail signup if campaign trial fails - log and continue
+    console.error('[Campaign] Failed to grant auto-trial:', error);
+    return null;
+  }
+}
 
 // ============================================================================
 // Email Rate Limiting Configuration
@@ -200,6 +257,11 @@ router.post(
           // Don't fail signup if legal recording fails - log and continue
           console.error('[Auth] Failed to record legal acceptance:', legalError);
         }
+      }
+
+      // Grant auto-trial if active campaign exists (only for new signups without trial code)
+      if (!trialCode) {
+        await grantCampaignTrialIfActive(user.id);
       }
 
       // Migrate any anonymous usage from this IP to the new user account

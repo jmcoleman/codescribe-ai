@@ -15,7 +15,7 @@ export function useDocGeneration(onUsageUpdate) {
   const abortControllerRef = useRef(null);
 
   const generate = useCallback(async (code, docType, language, isDefaultCode = false, filename = 'untitled', options = {}) => {
-    const { graphId = null, projectId = null, filePath = null, testRetry = false } = options;
+    const { graphId = null, projectId = null, filePath = null, testRetry = false, origin = null, repo = null } = options;
     // Reset state
     setIsGenerating(true);
     setError(null);
@@ -33,6 +33,10 @@ export function useDocGeneration(onUsageUpdate) {
 
     // Track start time for performance metrics
     const startTime = performance.now();
+
+    // Track streaming performance metrics
+    let firstChunkTime = null; // For TTFT (Time to First Token)
+    let chunkCount = 0; // For output token estimation
 
     // Track generated documentation for return value
     let generatedDoc = '';
@@ -136,6 +140,11 @@ export function useDocGeneration(onUsageUpdate) {
             } else if (data.type === 'chunk') {
               // Clear retry status when we start receiving chunks
               setRetryStatus(null);
+              // Track TTFT on first chunk
+              if (firstChunkTime === null) {
+                firstChunkTime = performance.now();
+              }
+              chunkCount++;
               generatedDoc += data.content; // Track locally for return value
               setDocumentation(prev => prev + data.content);
             } else if (data.type === 'attribution') {
@@ -174,6 +183,13 @@ export function useDocGeneration(onUsageUpdate) {
                 duration,
                 codeSize: code.length,
                 language: language || 'unknown',
+                origin,
+                filename,
+                repo,
+                llm: data.metadata ? {
+                  provider: data.metadata.provider,
+                  model: data.metadata.model,
+                } : undefined,
               });
 
               // Track quality score
@@ -185,11 +201,42 @@ export function useDocGeneration(onUsageUpdate) {
                 });
               }
 
-              // Track performance
+              // Track performance with grouped metrics
+              const ttftMs = firstChunkTime ? firstChunkTime - startTime : null;
+              const streamingMs = firstChunkTime ? duration - ttftMs : null;
+              // TPOT = time between first and last token / number of tokens after the first
+              const tpotMs = (streamingMs && chunkCount > 1) ? streamingMs / (chunkCount - 1) : null;
+              const outputTokens = data.metadata?.outputTokens || chunkCount;
+              // Tokens per second = output tokens / streaming time in seconds
+              const tokensPerSecond = (outputTokens && streamingMs > 0) ? outputTokens / (streamingMs / 1000) : null;
+
               trackPerformance({
-                parseTime: 0, // Not tracked separately in current implementation
-                generateTime: duration,
-                totalTime: duration,
+                latency: {
+                  totalMs: duration,
+                  ttftMs,
+                  tpotMs,
+                  streamingMs,
+                },
+                throughput: {
+                  outputTokens,
+                  tokensPerSecond,
+                },
+                input: {
+                  tokens: data.metadata?.inputTokens,
+                  chars: code.length,
+                },
+                cache: data.metadata?.wasCached !== undefined ? {
+                  hit: data.metadata.wasCached,
+                  readTokens: data.metadata.cacheReadTokens,
+                } : undefined,
+                context: {
+                  docType,
+                  language: language || 'unknown',
+                },
+                llm: data.metadata ? {
+                  provider: data.metadata.provider,
+                  model: data.metadata.model,
+                } : undefined,
               });
 
               // Notify parent to refresh usage data
@@ -357,13 +404,31 @@ export function useDocGeneration(onUsageUpdate) {
         duration,
         codeSize: code.length,
         language: language || 'unknown',
+        origin,
+        filename,
+        repo,
+        llm: err.provider ? {
+          provider: err.provider,
+          model: err.model || 'unknown',
+        } : undefined,
       });
 
-      // Track error
+      // Track error with code input and LLM context
       trackError({
         errorType,
         errorMessage,
         context: 'doc_generation',
+        codeInput: {
+          filename,
+          language,
+          origin,
+          sizeKb: Math.round(code.length / 1024),
+          repo,
+        },
+        llm: err.provider ? {
+          provider: err.provider,
+          model: err.model || 'unknown',
+        } : undefined,
       });
 
       // Re-throw the error so batch generation can handle it

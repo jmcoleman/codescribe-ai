@@ -349,7 +349,8 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, onIm
         owner: repository.owner,
         repo: repository.repo,
         path: filePreview.path,
-        url: filePreview.url
+        url: filePreview.url,
+        isPrivate: repository.isPrivate
       }
     });
 

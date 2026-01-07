@@ -202,7 +202,7 @@ describeOrSkip('User Model', () => {
         email: 'github@example.com'
       });
 
-      expect(user).toEqual(mockUser);
+      expect(user).toEqual({ ...mockUser, _created: false });
       expect(sql).toHaveBeenCalledTimes(1);
     });
 
@@ -263,7 +263,7 @@ describeOrSkip('User Model', () => {
         email: 'newgithub@example.com'
       });
 
-      expect(user).toEqual(newUser);
+      expect(user).toEqual({ ...newUser, _created: true });
       expect(user.email_verified).toBe(true);
       expect(sql).toHaveBeenCalledTimes(3);
     });
@@ -300,7 +300,7 @@ describeOrSkip('User Model', () => {
         email: 'deleted@example.com'
       });
 
-      expect(user).toEqual(restoredUser);
+      expect(user).toEqual({ ...restoredUser, _created: false });
       expect(user.id).toBe(1);
       expect(user.github_id).toBe('gh123');
       // Should have called restoreAccount and findById
@@ -1188,7 +1188,7 @@ describeOrSkip('User Model', () => {
           accessToken: 'gho_test_token_123'
         });
 
-        expect(user).toEqual(newUser);
+        expect(user).toEqual({ ...newUser, _created: true });
         expect(sql).toHaveBeenCalledTimes(3);
       });
 
@@ -1215,7 +1215,7 @@ describeOrSkip('User Model', () => {
           accessToken: 'gho_new_token_456'
         });
 
-        expect(user).toEqual(existingUser);
+        expect(user).toEqual({ ...existingUser, _created: false });
         // Should call to update token on re-login
         expect(sql).toHaveBeenCalled();
       });
@@ -1239,7 +1239,7 @@ describeOrSkip('User Model', () => {
           // No accessToken provided
         });
 
-        expect(user).toEqual(existingUser);
+        expect(user).toEqual({ ...existingUser, _created: false });
       });
     });
   });

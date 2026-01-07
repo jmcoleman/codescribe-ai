@@ -15,10 +15,8 @@ vi.mock('@vercel/analytics', () => ({
 import { track } from '@vercel/analytics';
 import {
   setAnalyticsOptOut,
-  setAnalyticsUserStatus,
   getSessionId,
   getSessionStart,
-  isReturningUser,
   getSessionDuration,
   trackDocGeneration,
   trackInteraction,
@@ -36,7 +34,6 @@ describe('Analytics Utility', () => {
 
     // Reset module state by re-setting defaults
     setAnalyticsOptOut(false);
-    setAnalyticsUserStatus({ isAdmin: false, hasTierOverride: false });
   });
 
   afterEach(() => {
@@ -74,27 +71,6 @@ describe('Analytics Utility', () => {
       getSessionId(); // Initialize session
       const duration = getSessionDuration();
       expect(duration).toBeGreaterThanOrEqual(0);
-    });
-
-    it('increments session count in localStorage', () => {
-      expect(localStorage.getItem('cs_analytics_session_count')).toBeNull();
-
-      getSessionId(); // First session
-      expect(localStorage.getItem('cs_analytics_session_count')).toBe('1');
-    });
-
-    it('detects returning users', () => {
-      // First visit - not returning
-      expect(isReturningUser()).toBe(false);
-
-      // Simulate previous sessions
-      localStorage.setItem('cs_analytics_session_count', '3');
-      expect(isReturningUser()).toBe(true);
-    });
-
-    it('detects new users', () => {
-      localStorage.setItem('cs_analytics_session_count', '1');
-      expect(isReturningUser()).toBe(false);
     });
   });
 
@@ -139,77 +115,8 @@ describe('Analytics Utility', () => {
     });
   });
 
-  describe('Admin/Override Filtering', () => {
-    it('defaults to non-admin, no override', () => {
-      const consoleSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
-
-      trackInteraction('test_event', {});
-
-      // Check the logged data includes is_internal: 'false'
-      expect(consoleSpy).toHaveBeenCalled();
-      const loggedData = consoleSpy.mock.calls[0][1];
-      expect(loggedData.is_internal).toBe('false');
-      expect(loggedData.is_admin).toBe('false');
-      expect(loggedData.has_tier_override).toBe('false');
-
-      consoleSpy.mockRestore();
-    });
-
-    it('marks events from admin users', () => {
-      setAnalyticsUserStatus({ isAdmin: true, hasTierOverride: false });
-
-      const consoleSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
-      trackInteraction('test_event', {});
-
-      const loggedData = consoleSpy.mock.calls[0][1];
-      expect(loggedData.is_internal).toBe('true');
-      expect(loggedData.is_admin).toBe('true');
-      expect(loggedData.has_tier_override).toBe('false');
-
-      consoleSpy.mockRestore();
-    });
-
-    it('marks events from users with tier override', () => {
-      setAnalyticsUserStatus({ isAdmin: false, hasTierOverride: true });
-
-      const consoleSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
-      trackInteraction('test_event', {});
-
-      const loggedData = consoleSpy.mock.calls[0][1];
-      expect(loggedData.is_internal).toBe('true');
-      expect(loggedData.is_admin).toBe('false');
-      expect(loggedData.has_tier_override).toBe('true');
-
-      consoleSpy.mockRestore();
-    });
-
-    it('marks events from admin with tier override', () => {
-      setAnalyticsUserStatus({ isAdmin: true, hasTierOverride: true });
-
-      const consoleSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
-      trackInteraction('test_event', {});
-
-      const loggedData = consoleSpy.mock.calls[0][1];
-      expect(loggedData.is_internal).toBe('true');
-      expect(loggedData.is_admin).toBe('true');
-      expect(loggedData.has_tier_override).toBe('true');
-
-      consoleSpy.mockRestore();
-    });
-
-    it('resets status when user logs out', () => {
-      setAnalyticsUserStatus({ isAdmin: true, hasTierOverride: true });
-      setAnalyticsUserStatus({ isAdmin: false, hasTierOverride: false });
-
-      const consoleSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
-      trackInteraction('test_event', {});
-
-      const loggedData = consoleSpy.mock.calls[0][1];
-      expect(loggedData.is_internal).toBe('false');
-
-      consoleSpy.mockRestore();
-    });
-  });
+  // Note: Admin/Override filtering tests removed - these flags are now set
+  // server-side based on user role lookup for more accurate detection
 
   describe('Session Context in Events', () => {
     it('includes session context in all events', () => {
@@ -219,7 +126,6 @@ describe('Analytics Utility', () => {
 
       const loggedData = consoleSpy.mock.calls[0][1];
       expect(loggedData.session_id).toBeDefined();
-      expect(loggedData.is_returning_user).toBeDefined();
       expect(loggedData.session_duration_ms).toBeDefined();
       expect(loggedData.custom_field).toBe('value');
 
@@ -235,12 +141,84 @@ describe('Analytics Utility', () => {
         duration: 1000,
         codeSize: 500,
         language: 'javascript',
+        origin: 'sample',
+        filename: 'test.js',
+        llm: {
+          provider: 'openai',
+          model: 'gpt-4o',
+        },
       });
 
       const loggedData = consoleSpy.mock.calls[0][1];
       expect(loggedData.session_id).toBeDefined();
       expect(loggedData.doc_type).toBe('README');
       expect(loggedData.success).toBe('true');
+      // Code input attributes are grouped together
+      expect(loggedData.code_input).toBeDefined();
+      expect(loggedData.code_input.origin).toBe('sample');
+      expect(loggedData.code_input.filename).toBe('test.js');
+      expect(loggedData.code_input.language).toBe('javascript');
+      expect(loggedData.code_input.size_kb).toBe(0); // 500 bytes rounds to 0 KB
+      // LLM context
+      expect(loggedData.llm).toBeDefined();
+      expect(loggedData.llm.provider).toBe('openai');
+      expect(loggedData.llm.model).toBe('gpt-4o');
+
+      consoleSpy.mockRestore();
+    });
+
+    it('includes repo context for github origin in trackDocGeneration', () => {
+      const consoleSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
+
+      trackDocGeneration({
+        docType: 'API',
+        success: true,
+        duration: 2000,
+        codeSize: 1024,
+        language: 'typescript',
+        origin: 'github',
+        filename: 'service.ts',
+        repo: {
+          isPrivate: true,
+          name: 'myorg/myrepo',
+          branch: 'main',
+        },
+        llm: {
+          provider: 'claude',
+          model: 'claude-sonnet-4-5-20250514',
+        },
+      });
+
+      const loggedData = consoleSpy.mock.calls[0][1];
+      expect(loggedData.code_input.origin).toBe('github');
+      expect(loggedData.code_input.repo).toBeDefined();
+      expect(loggedData.code_input.repo.is_private).toBe(true);
+      expect(loggedData.code_input.repo.name).toBe('myorg/myrepo');
+      expect(loggedData.code_input.repo.branch).toBe('main');
+
+      consoleSpy.mockRestore();
+    });
+
+    it('does not include repo context for non-git origins', () => {
+      const consoleSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
+
+      trackDocGeneration({
+        docType: 'README',
+        success: true,
+        duration: 1000,
+        codeSize: 500,
+        language: 'javascript',
+        origin: 'paste',
+        filename: 'test.js',
+        repo: {
+          isPrivate: true,
+          name: 'myorg/myrepo',
+        },
+      });
+
+      const loggedData = consoleSpy.mock.calls[0][1];
+      expect(loggedData.code_input.origin).toBe('paste');
+      expect(loggedData.code_input.repo).toBeUndefined();
 
       consoleSpy.mockRestore();
     });
@@ -248,12 +226,14 @@ describe('Analytics Utility', () => {
     it('includes session context in trackCodeInput', () => {
       const consoleSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
 
-      trackCodeInput('paste', 1024, 'typescript');
+      trackCodeInput('paste', 1024, 'typescript', 'test.ts');
 
       const loggedData = consoleSpy.mock.calls[0][1];
       expect(loggedData.session_id).toBeDefined();
-      expect(loggedData.method).toBe('paste');
+      expect(loggedData.origin).toBe('paste');
       expect(loggedData.language).toBe('typescript');
+      expect(loggedData.filename).toBe('test.ts');
+      expect(loggedData.size_kb).toBe(1);
 
       consoleSpy.mockRestore();
     });
@@ -283,6 +263,39 @@ describe('Analytics Utility', () => {
       const loggedData = consoleSpy.mock.calls[0][1];
       expect(loggedData.session_id).toBeDefined();
       expect(loggedData.error_type).toBe('network');
+
+      consoleSpy.mockRestore();
+    });
+
+    it('includes code input and LLM context in trackError when provided', () => {
+      const consoleSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
+
+      trackError({
+        errorType: 'api',
+        errorMessage: 'Rate limit exceeded',
+        context: 'doc_generation',
+        codeInput: {
+          filename: 'app.js',
+          language: 'javascript',
+          origin: 'upload',
+          sizeKb: 5,
+        },
+        llm: {
+          provider: 'claude',
+          model: 'claude-sonnet-4-5-20250514',
+        },
+      });
+
+      const loggedData = consoleSpy.mock.calls[0][1];
+      expect(loggedData.error_type).toBe('api');
+      expect(loggedData.code_input).toBeDefined();
+      expect(loggedData.code_input.filename).toBe('app.js');
+      expect(loggedData.code_input.language).toBe('javascript');
+      expect(loggedData.code_input.origin).toBe('upload');
+      expect(loggedData.code_input.size_kb).toBe(5);
+      expect(loggedData.llm).toBeDefined();
+      expect(loggedData.llm.provider).toBe('claude');
+      expect(loggedData.llm.model).toBe('claude-sonnet-4-5-20250514');
 
       consoleSpy.mockRestore();
     });

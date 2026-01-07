@@ -210,8 +210,9 @@ describe('EventsTable', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText('funnel')).toBeInTheDocument();
-        expect(screen.getByText('usage')).toBeInTheDocument();
+        // CategoryBadge displays labels: 'Usage Funnel' for funnel, 'Usage' for usage
+        expect(screen.getByText('Usage Funnel')).toBeInTheDocument();
+        expect(screen.getByText('Usage')).toBeInTheDocument();
       });
     });
   });

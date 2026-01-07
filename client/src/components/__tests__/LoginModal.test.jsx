@@ -28,7 +28,8 @@ vi.mock('../../utils/toastWithHistory', () => ({
 vi.mock('../../utils/analytics', () => ({
   trackOAuth: vi.fn(),
   setAnalyticsOptOut: vi.fn(),
-  setAnalyticsUserStatus: vi.fn(),
+  trackLogin: vi.fn(),
+  trackSignup: vi.fn(),
   trackInteraction: vi.fn(),
 }));
 

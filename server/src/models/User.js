@@ -85,7 +85,8 @@ class User {
    * @param {string} githubId - GitHub user ID
    * @param {string} email - User email
    * @param {string} accessToken - GitHub OAuth access token (will be encrypted)
-   * @returns {Promise<Object>} User object with email_verified=true
+   * @returns {Promise<Object>} User object with email_verified=true and _created flag
+   *                            (_created=true if newly created, false if existing)
    */
   static async findOrCreateByGithub({ githubId, email, accessToken }) {
     // Encrypt the access token if provided and encryption is configured
@@ -131,7 +132,8 @@ class User {
           `;
         }
 
-        return restoredUser;
+        // Existing user (restored), not newly created
+        return { ...restoredUser, _created: false };
       }
 
       // Update the access token on re-login (tokens can change/refresh)
@@ -143,7 +145,8 @@ class User {
         `;
       }
 
-      return user;
+      // Existing user, not newly created
+      return { ...user, _created: false };
     }
 
     // Try to find by email and link GitHub account
@@ -179,7 +182,8 @@ class User {
         RETURNING id, email, github_id, tier, email_verified,
                   terms_accepted_at, terms_version_accepted, privacy_accepted_at, privacy_version_accepted, created_at
       `;
-      return updateResult.rows[0];
+      // Existing user (linked), not newly created
+      return { ...updateResult.rows[0], _created: false };
     }
 
     // Create new user with verified email
@@ -191,7 +195,8 @@ class User {
                 terms_accepted_at, terms_version_accepted, privacy_accepted_at, privacy_version_accepted, created_at
     `;
 
-    return createResult.rows[0];
+    // Newly created user
+    return { ...createResult.rows[0], _created: true };
   }
 
   /**

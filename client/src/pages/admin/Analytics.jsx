@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { API_URL } from '../../config/api';
+import { PageLayout } from '../../components/PageLayout';
 import DateRangePicker from '../../components/admin/DateRangePicker';
 import {
   ConversionFunnel,
@@ -33,9 +34,8 @@ import EventsTable from '../../components/admin/EventsTable';
 
 // Tabs for the dashboard
 const TABS = [
-  { id: 'funnel', label: 'Conversion Funnel', icon: TrendingUp },
-  { id: 'business', label: 'Business Metrics', icon: DollarSign },
   { id: 'usage', label: 'Usage Patterns', icon: BarChart3 },
+  { id: 'business', label: 'Business Metrics', icon: DollarSign },
   { id: 'events', label: 'Raw Events', icon: Database },
 ];
 
@@ -139,7 +139,7 @@ function ChartSection({ title, children, tableData, tableColumns }) {
  */
 export default function Analytics() {
   const { getToken } = useAuth();
-  const [activeTab, setActiveTab] = useState('funnel');
+  const [activeTab, setActiveTab] = useState('usage');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [excludeInternal, setExcludeInternal] = useState(true);
@@ -182,24 +182,36 @@ export default function Analytics() {
       // Fetch data based on active tab
       const headers = { 'Authorization': `Bearer ${token}` };
 
-      if (activeTab === 'funnel') {
-        const [funnelRes, sessionsRes] = await Promise.all([
+      if (activeTab === 'usage') {
+        // Fetch both usage patterns AND usage funnel data
+        const [usageRes, generationsRes, funnelRes, sessionsRes] = await Promise.all([
+          fetch(`${API_URL}/api/admin/analytics/usage?${params}`, { headers }),
+          fetch(`${API_URL}/api/admin/analytics/timeseries?${params}&metric=generations&interval=day`, { headers }),
           fetch(`${API_URL}/api/admin/analytics/funnel?${params}`, { headers }),
           fetch(`${API_URL}/api/admin/analytics/timeseries?${params}&metric=sessions&interval=day`, { headers }),
         ]);
 
-        if (!funnelRes.ok || !sessionsRes.ok) throw new Error('Failed to fetch funnel data');
+        if (!usageRes.ok || !funnelRes.ok) throw new Error('Failed to fetch usage data');
 
+        const usage = await usageRes.json();
+        const generations = await generationsRes.json();
         const funnel = await funnelRes.json();
         const sessions = await sessionsRes.json();
 
+        setUsageData(usage.data);
         setFunnelData(funnel.data);
-        setTimeSeriesData((prev) => ({ ...prev, sessions: sessions.data }));
+        setTimeSeriesData((prev) => ({
+          ...prev,
+          generations: generations.data,
+          sessions: sessions.data,
+        }));
       } else if (activeTab === 'business') {
-        const [businessRes, signupsRes, revenueRes] = await Promise.all([
+        // Fetch business metrics AND business conversion funnel
+        const [businessRes, signupsRes, revenueRes, conversionRes] = await Promise.all([
           fetch(`${API_URL}/api/admin/analytics/business?${params}`, { headers }),
           fetch(`${API_URL}/api/admin/analytics/timeseries?${params}&metric=signups&interval=day`, { headers }),
           fetch(`${API_URL}/api/admin/analytics/timeseries?${params}&metric=revenue&interval=day`, { headers }),
+          fetch(`${API_URL}/api/admin/analytics/conversion-funnel?${params}`, { headers }),
         ]);
 
         if (!businessRes.ok) throw new Error('Failed to fetch business data');
@@ -207,26 +219,17 @@ export default function Analytics() {
         const business = await businessRes.json();
         const signups = await signupsRes.json();
         const revenue = await revenueRes.json();
+        const conversion = conversionRes.ok ? await conversionRes.json() : { data: null };
 
-        setBusinessData(business.data);
+        setBusinessData({
+          ...business.data,
+          conversionFunnel: conversion.data,
+        });
         setTimeSeriesData((prev) => ({
           ...prev,
           signups: signups.data,
           revenue: revenue.data,
         }));
-      } else if (activeTab === 'usage') {
-        const [usageRes, generationsRes] = await Promise.all([
-          fetch(`${API_URL}/api/admin/analytics/usage?${params}`, { headers }),
-          fetch(`${API_URL}/api/admin/analytics/timeseries?${params}&metric=generations&interval=day`, { headers }),
-        ]);
-
-        if (!usageRes.ok) throw new Error('Failed to fetch usage data');
-
-        const usage = await usageRes.json();
-        const generations = await generationsRes.json();
-
-        setUsageData(usage.data);
-        setTimeSeriesData((prev) => ({ ...prev, generations: generations.data }));
       }
     } catch (err) {
       console.error('Analytics fetch error:', err);
@@ -242,7 +245,7 @@ export default function Analytics() {
   }, [fetchData]);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+    <PageLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-6">
@@ -337,67 +340,98 @@ export default function Analytics() {
           </div>
         )}
 
-        {/* Funnel Tab */}
-        {!loading && activeTab === 'funnel' && funnelData && (
-          <div className="space-y-6">
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <StatsCard
-                icon={Users}
-                label="Total Sessions"
-                value={formatNumber(funnelData.totalSessions)}
-                color="purple"
-              />
-              <StatsCard
-                icon={TrendingUp}
-                label="Completed Sessions"
-                value={formatNumber(funnelData.completedSessions)}
-                subValue="Users who copied/downloaded docs"
-                color="green"
-              />
-              <StatsCard
-                icon={BarChart3}
-                label="Overall Conversion"
-                value={formatPercent(funnelData.overallConversion)}
-                subValue="Session to completion rate"
-                color="blue"
-              />
-              <StatsCard
-                icon={TrendingUp}
-                label="Input to Generation"
-                value={formatPercent(funnelData.conversionRates?.code_input_to_generation_started || 0)}
-                subValue="Code input to generation start"
-                color="amber"
-              />
-            </div>
-
-            {/* Funnel Chart */}
-            <ChartSection title="Conversion Funnel">
-              <ConversionFunnel data={funnelData} isDark={isDark} height={350} />
-            </ChartSection>
-
-            {/* Sessions Trend */}
-            <ChartSection
-              title="Sessions Over Time"
-              tableData={timeSeriesData.sessions}
-              tableColumns={[
-                { key: 'date', label: 'Date', format: (d) => new Date(d).toLocaleDateString() },
-                { key: 'value', label: 'Sessions', format: formatNumber },
-              ]}
-            >
-              <TrendChart
-                data={timeSeriesData.sessions}
-                isDark={isDark}
-                height={250}
-                interval="day"
-              />
-            </ChartSection>
-          </div>
-        )}
-
         {/* Business Tab */}
         {!loading && activeTab === 'business' && businessData && (
           <div className="space-y-6">
+            {/* Business Conversion Funnel Section */}
+            {businessData.conversionFunnel && (
+              <>
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-2">
+                  Conversion Funnel
+                </h2>
+                <p className="text-sm text-slate-600 dark:text-slate-400 -mt-4">
+                  Track the path from visitor to paid customer
+                </p>
+
+                {/* Conversion Funnel Summary Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <StatsCard
+                    icon={Users}
+                    label="Visitors"
+                    value={formatNumber(businessData.conversionFunnel.stages?.visitors?.count || 0)}
+                    color="purple"
+                  />
+                  <StatsCard
+                    icon={Users}
+                    label="Signups"
+                    value={formatNumber(businessData.conversionFunnel.stages?.signups?.count || 0)}
+                    subValue={`${formatPercent(businessData.conversionFunnel.conversionRates?.visitor_to_signup || 0)} of visitors`}
+                    color="blue"
+                  />
+                  <StatsCard
+                    icon={TrendingUp}
+                    label="Trial Started"
+                    value={formatNumber(businessData.conversionFunnel.stages?.trials?.count || 0)}
+                    subValue={`${formatPercent(businessData.conversionFunnel.conversionRates?.signup_to_trial || 0)} of signups`}
+                    color="amber"
+                  />
+                  <StatsCard
+                    icon={DollarSign}
+                    label="Paid Conversion"
+                    value={formatNumber(businessData.conversionFunnel.stages?.paid?.count || 0)}
+                    subValue={`${formatPercent(businessData.conversionFunnel.conversionRates?.trial_to_paid || 0)} of trials`}
+                    color="green"
+                  />
+                </div>
+
+                {/* Conversion Funnel Chart */}
+                <ChartSection title="Business Conversion Funnel">
+                  <div className="space-y-4">
+                    {/* Funnel visualization as stacked bars */}
+                    {['visitors', 'signups', 'trials', 'paid'].map((stage, index) => {
+                      const stageData = businessData.conversionFunnel.stages?.[stage];
+                      const maxCount = businessData.conversionFunnel.stages?.visitors?.count || 1;
+                      const percentage = maxCount > 0 ? (stageData?.count / maxCount) * 100 : 0;
+                      const colors = ['bg-purple-500', 'bg-blue-500', 'bg-amber-500', 'bg-green-500'];
+                      const labels = ['Visitors', 'Signups', 'Trial Started', 'Paid'];
+
+                      return (
+                        <div key={stage} className="flex items-center gap-4">
+                          <div className="w-32 text-sm text-slate-600 dark:text-slate-400 text-right">
+                            {labels[index]}
+                          </div>
+                          <div className="flex-1 h-8 bg-slate-100 dark:bg-slate-700 rounded-lg overflow-hidden">
+                            <div
+                              className={`h-full ${colors[index]} transition-all duration-500 flex items-center justify-end pr-2`}
+                              style={{ width: `${Math.max(percentage, 2)}%` }}
+                            >
+                              <span className="text-xs font-medium text-white">
+                                {formatNumber(stageData?.count || 0)}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="w-16 text-sm text-slate-500 dark:text-slate-400">
+                            {formatPercent(percentage)}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">
+                    Overall conversion rate: <span className="font-semibold text-slate-900 dark:text-slate-100">{formatPercent(businessData.conversionFunnel.overallConversion)}</span> (visitor to paid)
+                  </div>
+                </ChartSection>
+              </>
+            )}
+
+            {/* Business Metrics Section */}
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-2 mt-8">
+              Business Metrics
+            </h2>
+            <p className="text-sm text-slate-600 dark:text-slate-400 -mt-4">
+              Key business performance indicators
+            </p>
+
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <StatsCard
@@ -483,6 +517,79 @@ export default function Analytics() {
         {/* Usage Tab */}
         {!loading && activeTab === 'usage' && usageData && (
           <div className="space-y-6">
+            {/* Usage Funnel Section */}
+            {funnelData && (
+              <>
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-2">
+                  Usage Funnel
+                </h2>
+                <p className="text-sm text-slate-600 dark:text-slate-400 -mt-4">
+                  Track how users progress through the product workflow
+                </p>
+
+                {/* Funnel Summary Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <StatsCard
+                    icon={Users}
+                    label="Total Sessions"
+                    value={formatNumber(funnelData.totalSessions)}
+                    color="purple"
+                  />
+                  <StatsCard
+                    icon={TrendingUp}
+                    label="Completed Sessions"
+                    value={formatNumber(funnelData.completedSessions)}
+                    subValue="Users who copied/downloaded docs"
+                    color="green"
+                  />
+                  <StatsCard
+                    icon={BarChart3}
+                    label="Overall Conversion"
+                    value={formatPercent(funnelData.overallConversion)}
+                    subValue="Session to completion rate"
+                    color="blue"
+                  />
+                  <StatsCard
+                    icon={TrendingUp}
+                    label="Input to Generation"
+                    value={formatPercent(funnelData.conversionRates?.code_input_to_generation_started || 0)}
+                    subValue="Code input to generation start"
+                    color="amber"
+                  />
+                </div>
+
+                {/* Funnel Chart */}
+                <ChartSection title="Usage Funnel">
+                  <ConversionFunnel data={funnelData} isDark={isDark} height={350} />
+                </ChartSection>
+
+                {/* Sessions Trend */}
+                <ChartSection
+                  title="Sessions Over Time"
+                  tableData={timeSeriesData.sessions}
+                  tableColumns={[
+                    { key: 'date', label: 'Date', format: (d) => new Date(d).toLocaleDateString() },
+                    { key: 'value', label: 'Sessions', format: formatNumber },
+                  ]}
+                >
+                  <TrendChart
+                    data={timeSeriesData.sessions}
+                    isDark={isDark}
+                    height={250}
+                    interval="day"
+                  />
+                </ChartSection>
+              </>
+            )}
+
+            {/* Usage Patterns Section */}
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-2 mt-8">
+              Usage Patterns
+            </h2>
+            <p className="text-sm text-slate-600 dark:text-slate-400 -mt-4">
+              Detailed breakdown of how the product is being used
+            </p>
+
             {/* Batch vs Single Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <StatsCard
@@ -605,6 +712,6 @@ export default function Analytics() {
           />
         )}
       </div>
-    </div>
+    </PageLayout>
   );
 }

@@ -23,7 +23,7 @@ import { PriorityBannerSection } from './components/PriorityBannerSection';
 import { MobileTabBar } from './components/MobileTabBar';
 import { AppModals } from './components/AppModals';
 import { validateFile, getValidationErrorMessage, detectLanguageFromFilename } from './utils/fileValidation';
-import { trackCodeInput, trackFileUpload, trackExampleUsage, trackInteraction, isReturningUser } from './utils/analytics';
+import { trackCodeInput, trackFileUpload, trackInteraction, trackSessionStart } from './utils/analytics';
 import { toastCompact, toastError } from './utils/toastWithHistory';
 import { toastDocGenerated } from './utils/toast';
 import { createTestDataLoader, exposeTestDataLoader, createSkeletonTestHelper, exposeSkeletonTestHelper } from './utils/testData';
@@ -106,16 +106,9 @@ function App() {
   }, [prefsLayoutMode]);
 
   // Track session start - once per session for funnel analytics
+  // Deduplication is handled internally by trackSessionStart
   useEffect(() => {
-    const hasTrackedSession = sessionStorage.getItem('cs_session_tracked');
-    if (!hasTrackedSession) {
-      trackInteraction('session_start', {
-        is_returning_user: isReturningUser() ? 'true' : 'false',
-        referrer: document.referrer || 'direct',
-        landing_page: window.location.pathname,
-      });
-      sessionStorage.setItem('cs_session_tracked', 'true');
-    }
+    trackSessionStart();
   }, []);
 
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -1107,10 +1100,19 @@ function App() {
       // Get file path for graph context (from sourceMetadata if available)
       const filePath = sourceMetadata?.source === 'github' ? sourceMetadata.path : null;
 
+      // Build repo context for git-based origins (github, gitlab, bitbucket)
+      const repoContext = sourceMetadata?.source === 'github' ? {
+        isPrivate: sourceMetadata.isPrivate || false,
+        name: sourceMetadata.repo || null,
+        branch: sourceMetadata.branch || null,
+      } : null;
+
       const result = await generate(code, docType, language, shouldCache, filename, {
         projectId: selectedProjectId, // For graph context lookup (FK to projects table)
         filePath, // For identifying file in the project graph
-        testRetry: testRetryMode // DEV ONLY: Simulate retry for testing UI
+        testRetry: testRetryMode, // DEV ONLY: Simulate retry for testing UI
+        origin: codeOrigin, // For analytics (sample, paste, upload, github)
+        repo: repoContext // For analytics (repo context for git-based origins)
       });
 
       // Reset test retry mode after generation
@@ -1561,7 +1563,7 @@ function App() {
         });
 
         // Track code input method
-        trackCodeInput('upload', data.file.content.length, detectedLanguage);
+        trackCodeInput('upload', data.file.content.length, detectedLanguage, data.file.name);
 
         // Clear loading state (no success toast needed - file appearing in editor is clear feedback)
         setIsUploading(false);
@@ -1818,10 +1820,10 @@ function App() {
       newCode.length > 50 &&
       codeOrigin !== 'sample' // Don't track if user just loaded a sample
     ) {
-      trackCodeInput('paste', newCode.length, language);
+      trackCodeInput('paste', newCode.length, language, filename);
       hasTrackedCodeInputRef.current = true;
     }
-  }, [codeOrigin, language]);
+  }, [codeOrigin, language, filename]);
 
   const handleGithubImport = () => {
     setShowGithubModal(true);
@@ -1839,7 +1841,8 @@ function App() {
         repo: `${metadata.owner}/${metadata.repo}`,
         path: metadata.path,
         sha: metadata.sha || null,
-        branch: metadata.branch || null
+        branch: metadata.branch || null,
+        isPrivate: metadata.isPrivate || false
       });
     } else {
       setSourceMetadata(null);
@@ -1963,9 +1966,9 @@ function App() {
 
     reset(); // Clear any existing documentation and quality score
 
-    // Track sample usage
-    trackExampleUsage(sample.title || sample.docType);
-    trackCodeInput('sample', sample.code.length, sample.language);
+    // Track sample usage (origin: 'sample' distinguishes from paste/upload/github)
+    const sampleFilename = `${sampleName}${extension}`;
+    trackCodeInput('sample', sample.code.length, sample.language, sampleFilename);
 
     // Use compact toast for quick, non-intrusive feedback
     toastCompact('Sample loaded successfully', 'success');

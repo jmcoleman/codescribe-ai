@@ -121,7 +121,8 @@ router.post('/track', analyticsLimiter, async (req, res) => {
         const jwt = await import('jsonwebtoken');
         const token = authHeader.substring(7);
         const decoded = jwt.default.verify(token, process.env.JWT_SECRET);
-        userId = decoded.userId;
+        // JWT uses 'sub' (standard) or 'id' for user ID
+        userId = decoded.sub || decoded.id;
       } catch (e) {
         // Invalid token - continue without user ID
       }

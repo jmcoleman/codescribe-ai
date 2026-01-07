@@ -27,6 +27,7 @@ import AdminUsage from './pages/AdminUsage.jsx'
 import InviteCodes from './pages/admin/InviteCodes.jsx'
 import TrialsAdmin from './pages/admin/Trials.jsx'
 import Analytics from './pages/admin/Analytics.jsx'
+import Campaigns from './pages/admin/Campaigns.jsx'
 import { TrialRedemption } from './pages/TrialRedemption.jsx'
 import { ErrorTest } from './components/ErrorTest.jsx'
 import { Projects } from './pages/Projects.jsx'
@@ -60,6 +61,7 @@ createRoot(document.getElementById('root')).render(
               <Route path="/admin/invite-codes" element={<InviteCodes />} />
               <Route path="/admin/trials" element={<TrialsAdmin />} />
               <Route path="/admin/analytics" element={<Analytics />} />
+              <Route path="/admin/campaigns" element={<Campaigns />} />
               <Route path="/trial" element={<TrialRedemption />} />
               {/* Project management routes (Pro+ feature) - not yet linked from main nav */}
               <Route path="/projects" element={<Projects />} />

@@ -19,6 +19,7 @@ const EVENT_CATEGORIES = {
   doc_downloaded: 'funnel',
 
   // Business events
+  login: 'business',
   signup: 'business',
   tier_upgrade: 'business',
   tier_downgrade: 'business',
@@ -33,6 +34,7 @@ const EVENT_CATEGORIES = {
   oauth_flow: 'usage',
   user_interaction: 'usage',
   error: 'usage',
+  performance: 'usage',
 };
 
 /**
@@ -71,20 +73,42 @@ export const analyticsService = {
     // Detect internal users by checking the user's role in the database
     // This ensures admin/support users are always excluded from business metrics
     let isInternalUser = isInternal;
-    if (userId && !isInternalUser) {
+    let userRole = null;
+    let viewingAsTier = null;
+
+    if (userId) {
       try {
         const userResult = await sql`
           SELECT role, viewing_as_tier FROM users WHERE id = ${userId}
         `;
         if (userResult.rows.length > 0) {
           const { role, viewing_as_tier } = userResult.rows[0];
+          // Check specific reasons for being internal
+          const isAdminRole = ['admin', 'support', 'super_admin'].includes(role);
+          if (isAdminRole) {
+            userRole = role; // Capture specific role (admin, support, super_admin)
+          }
+          if (viewing_as_tier) {
+            viewingAsTier = viewing_as_tier; // Capture which tier they're viewing as
+          }
           // Mark as internal if admin/support role OR if they have an active tier override
-          isInternalUser = ['admin', 'support', 'super_admin'].includes(role) || !!viewing_as_tier;
+          isInternalUser = isAdminRole || !!viewing_as_tier;
         }
       } catch (error) {
         // Don't fail event recording if user lookup fails
         console.error('[Analytics] User lookup failed:', error.message);
       }
+    }
+
+    // Add server-determined internal flags to event data for audit/debugging
+    // These are authoritative (unlike client-side flags which may be stale)
+    // Grouped under 'internal_user' for clarity
+    if (isInternalUser) {
+      eventData.internal_user = {
+        role: userRole, // admin, support, super_admin, or null if only tier override
+        has_tier_override: !!viewingAsTier, // boolean for easy filtering
+        viewing_as_tier: viewingAsTier, // pro, team, etc. or null if not overriding
+      };
     }
 
     try {
@@ -108,6 +132,23 @@ export const analyticsService = {
         )
         RETURNING id, created_at
       `;
+
+      // For login events, retroactively update ALL events from this session as internal
+      // This ensures pre-login events (session_start, code_input, etc.) are properly
+      // filtered when "Exclude Internal" is enabled
+      if (eventName === 'login' && sessionId && isInternalUser) {
+        try {
+          await sql`
+            UPDATE analytics_events
+            SET is_internal = TRUE
+            WHERE session_id = ${sessionId}
+              AND is_internal = FALSE
+          `;
+        } catch (updateError) {
+          // Don't fail the login event recording if update fails
+          console.error('[Analytics] Failed to update session is_internal:', updateError.message);
+        }
+      }
 
       return {
         id: result.rows[0].id,
@@ -223,6 +264,129 @@ export const analyticsService = {
   // ============================================================================
   // BUSINESS QUERIES
   // ============================================================================
+
+  /**
+   * Get business conversion funnel (Visitors → Signups → Trial → Paid)
+   * Different from usage funnel - this tracks the financial conversion path
+   * @param {Object} options - Query options
+   * @param {Date} options.startDate - Start of date range
+   * @param {Date} options.endDate - End of date range
+   * @param {boolean} [options.excludeInternal=true] - Exclude admin/override users
+   * @returns {Promise<Object>} Business conversion funnel data
+   */
+  async getBusinessConversionFunnel({ startDate, endDate, excludeInternal = true }) {
+    // Get unique visitors (session_start events)
+    let visitorResult;
+    if (excludeInternal) {
+      visitorResult = await sql`
+        SELECT COUNT(DISTINCT session_id) as count
+        FROM analytics_events
+        WHERE event_name = 'session_start'
+          AND created_at >= ${startDate}
+          AND created_at < ${endDate}
+          AND is_internal = FALSE
+      `;
+    } else {
+      visitorResult = await sql`
+        SELECT COUNT(DISTINCT session_id) as count
+        FROM analytics_events
+        WHERE event_name = 'session_start'
+          AND created_at >= ${startDate}
+          AND created_at < ${endDate}
+      `;
+    }
+
+    // Get signups
+    let signupResult;
+    if (excludeInternal) {
+      signupResult = await sql`
+        SELECT COUNT(*) as count
+        FROM analytics_events
+        WHERE event_name = 'signup'
+          AND created_at >= ${startDate}
+          AND created_at < ${endDate}
+          AND is_internal = FALSE
+      `;
+    } else {
+      signupResult = await sql`
+        SELECT COUNT(*) as count
+        FROM analytics_events
+        WHERE event_name = 'signup'
+          AND created_at >= ${startDate}
+          AND created_at < ${endDate}
+      `;
+    }
+
+    // Get trial starts (from user_trials table for accuracy)
+    let trialResult;
+    if (excludeInternal) {
+      trialResult = await sql`
+        SELECT COUNT(*) as count
+        FROM user_trials t
+        JOIN users u ON t.user_id = u.id
+        WHERE t.started_at >= ${startDate}
+          AND t.started_at < ${endDate}
+          AND u.role NOT IN ('admin', 'support', 'super_admin')
+          AND u.viewing_as_tier IS NULL
+      `;
+    } else {
+      trialResult = await sql`
+        SELECT COUNT(*) as count
+        FROM user_trials
+        WHERE started_at >= ${startDate}
+          AND started_at < ${endDate}
+      `;
+    }
+
+    // Get paid conversions (tier_upgrade to paid tiers or checkout_completed)
+    let paidResult;
+    if (excludeInternal) {
+      paidResult = await sql`
+        SELECT COUNT(*) as count
+        FROM analytics_events
+        WHERE (event_name = 'tier_upgrade' OR event_name = 'checkout_completed')
+          AND created_at >= ${startDate}
+          AND created_at < ${endDate}
+          AND is_internal = FALSE
+      `;
+    } else {
+      paidResult = await sql`
+        SELECT COUNT(*) as count
+        FROM analytics_events
+        WHERE (event_name = 'tier_upgrade' OR event_name = 'checkout_completed')
+          AND created_at >= ${startDate}
+          AND created_at < ${endDate}
+      `;
+    }
+
+    const visitors = parseInt(visitorResult.rows[0]?.count || 0);
+    const signups = parseInt(signupResult.rows[0]?.count || 0);
+    const trials = parseInt(trialResult.rows[0]?.count || 0);
+    const paid = parseInt(paidResult.rows[0]?.count || 0);
+
+    // Calculate conversion rates
+    const visitorToSignup = visitors > 0 ? Math.round((signups / visitors) * 1000) / 10 : 0;
+    const signupToTrial = signups > 0 ? Math.round((trials / signups) * 1000) / 10 : 0;
+    const trialToPaid = trials > 0 ? Math.round((paid / trials) * 1000) / 10 : 0;
+    const overallConversion = visitors > 0 ? Math.round((paid / visitors) * 1000) / 10 : 0;
+
+    return {
+      stages: {
+        visitors: { count: visitors, label: 'Visitors' },
+        signups: { count: signups, label: 'Signups' },
+        trials: { count: trials, label: 'Trial Started' },
+        paid: { count: paid, label: 'Paid Conversion' },
+      },
+      conversionRates: {
+        visitor_to_signup: visitorToSignup,
+        signup_to_trial: signupToTrial,
+        trial_to_paid: trialToPaid,
+      },
+      totalVisitors: visitors,
+      totalPaid: paid,
+      overallConversion,
+    };
+  },
 
   /**
    * Get business metrics (signups, upgrades, revenue)
@@ -428,69 +592,71 @@ export const analyticsService = {
     }
 
     // Get language breakdown (only successful generations)
+    // Language is nested under code_input for better organization
     let languages;
     if (excludeInternal) {
       languages = await sql`
         SELECT
-          event_data->>'language' as language,
+          event_data->'code_input'->>'language' as language,
           COUNT(*) as count
         FROM analytics_events
         WHERE event_name = 'doc_generation'
           AND event_data->>'success' = 'true'
-          AND event_data->>'language' IS NOT NULL
+          AND event_data->'code_input'->>'language' IS NOT NULL
           AND created_at >= ${startDate}
           AND created_at < ${endDate}
           AND is_internal = FALSE
-        GROUP BY event_data->>'language'
+        GROUP BY event_data->'code_input'->>'language'
         ORDER BY count DESC
         LIMIT 10
       `;
     } else {
       languages = await sql`
         SELECT
-          event_data->>'language' as language,
+          event_data->'code_input'->>'language' as language,
           COUNT(*) as count
         FROM analytics_events
         WHERE event_name = 'doc_generation'
           AND event_data->>'success' = 'true'
-          AND event_data->>'language' IS NOT NULL
+          AND event_data->'code_input'->>'language' IS NOT NULL
           AND created_at >= ${startDate}
           AND created_at < ${endDate}
-        GROUP BY event_data->>'language'
+        GROUP BY event_data->'code_input'->>'language'
         ORDER BY count DESC
         LIMIT 10
       `;
     }
 
     // Get origin breakdown (only successful generations)
+    // Origin is nested under code_input for better organization
     let origins;
     if (excludeInternal) {
       origins = await sql`
         SELECT
-          event_data->>'origin' as origin,
+          event_data->'code_input'->>'origin' as origin,
           COUNT(*) as count
         FROM analytics_events
         WHERE event_name = 'doc_generation'
           AND event_data->>'success' = 'true'
-          AND event_data->>'origin' IS NOT NULL
+          AND event_data->'code_input'->>'origin' IS NOT NULL
           AND created_at >= ${startDate}
           AND created_at < ${endDate}
           AND is_internal = FALSE
-        GROUP BY event_data->>'origin'
+        GROUP BY event_data->'code_input'->>'origin'
         ORDER BY count DESC
       `;
     } else {
       origins = await sql`
         SELECT
-          event_data->>'origin' as origin,
+          event_data->'code_input'->>'origin' as origin,
           COUNT(*) as count
         FROM analytics_events
         WHERE event_name = 'doc_generation'
           AND event_data->>'success' = 'true'
-          AND event_data->>'origin' IS NOT NULL
+          AND event_data->'code_input'->>'origin' IS NOT NULL
           AND created_at >= ${startDate}
           AND created_at < ${endDate}
-        GROUP BY event_data->>'origin'
+        GROUP BY event_data->'code_input'->>'origin'
         ORDER BY count DESC
       `;
     }
@@ -673,14 +839,15 @@ export const analyticsService = {
    * @param {Date} [options.startDate] - Start of date range
    * @param {Date} [options.endDate] - End of date range
    * @param {string} [options.category] - Filter by event category
-   * @param {string} [options.eventName] - Filter by event name
+   * @param {Array<string>} [options.eventNames] - Filter by event names (array for multi-select)
    * @param {boolean} [options.excludeInternal=false] - Exclude internal users
    * @param {number} [options.page=1] - Page number (1-indexed)
    * @param {number} [options.limit=50] - Events per page
    * @returns {Promise<Object>} { events: Array, total: number, page: number, totalPages: number }
    */
-  async getEvents({ startDate, endDate, category, eventName, excludeInternal = false, page = 1, limit = 50 }) {
+  async getEvents({ startDate, endDate, category, eventNames, excludeInternal = false, page = 1, limit = 50 }) {
     const offset = (page - 1) * limit;
+    const hasEventNames = eventNames && eventNames.length > 0;
 
     // Build WHERE conditions based on filters
     // We need separate queries for each filter combination due to @vercel/postgres limitations
@@ -688,7 +855,7 @@ export const analyticsService = {
     let events;
     let countResult;
 
-    if (category && eventName && excludeInternal) {
+    if (category && hasEventNames && excludeInternal) {
       events = await sql`
         SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id, ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
         FROM analytics_events ae
@@ -696,7 +863,7 @@ export const analyticsService = {
         WHERE ae.created_at >= ${startDate}
           AND ae.created_at < ${endDate}
           AND ae.event_category = ${category}
-          AND ae.event_name = ${eventName}
+          AND ae.event_name = ANY(${eventNames})
           AND ae.is_internal = FALSE
         ORDER BY ae.created_at DESC
         LIMIT ${limit} OFFSET ${offset}
@@ -707,10 +874,10 @@ export const analyticsService = {
         WHERE created_at >= ${startDate}
           AND created_at < ${endDate}
           AND event_category = ${category}
-          AND event_name = ${eventName}
+          AND event_name = ANY(${eventNames})
           AND is_internal = FALSE
       `;
-    } else if (category && eventName) {
+    } else if (category && hasEventNames) {
       events = await sql`
         SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id, ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
         FROM analytics_events ae
@@ -718,7 +885,7 @@ export const analyticsService = {
         WHERE ae.created_at >= ${startDate}
           AND ae.created_at < ${endDate}
           AND ae.event_category = ${category}
-          AND ae.event_name = ${eventName}
+          AND ae.event_name = ANY(${eventNames})
         ORDER BY ae.created_at DESC
         LIMIT ${limit} OFFSET ${offset}
       `;
@@ -728,7 +895,7 @@ export const analyticsService = {
         WHERE created_at >= ${startDate}
           AND created_at < ${endDate}
           AND event_category = ${category}
-          AND event_name = ${eventName}
+          AND event_name = ANY(${eventNames})
       `;
     } else if (category && excludeInternal) {
       events = await sql`
@@ -750,14 +917,14 @@ export const analyticsService = {
           AND event_category = ${category}
           AND is_internal = FALSE
       `;
-    } else if (eventName && excludeInternal) {
+    } else if (hasEventNames && excludeInternal) {
       events = await sql`
         SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id, ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
         FROM analytics_events ae
         LEFT JOIN users u ON ae.user_id = u.id
         WHERE ae.created_at >= ${startDate}
           AND ae.created_at < ${endDate}
-          AND ae.event_name = ${eventName}
+          AND ae.event_name = ANY(${eventNames})
           AND ae.is_internal = FALSE
         ORDER BY ae.created_at DESC
         LIMIT ${limit} OFFSET ${offset}
@@ -767,7 +934,7 @@ export const analyticsService = {
         FROM analytics_events
         WHERE created_at >= ${startDate}
           AND created_at < ${endDate}
-          AND event_name = ${eventName}
+          AND event_name = ANY(${eventNames})
           AND is_internal = FALSE
       `;
     } else if (category) {
@@ -788,14 +955,14 @@ export const analyticsService = {
           AND created_at < ${endDate}
           AND event_category = ${category}
       `;
-    } else if (eventName) {
+    } else if (hasEventNames) {
       events = await sql`
         SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id, ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
         FROM analytics_events ae
         LEFT JOIN users u ON ae.user_id = u.id
         WHERE ae.created_at >= ${startDate}
           AND ae.created_at < ${endDate}
-          AND ae.event_name = ${eventName}
+          AND ae.event_name = ANY(${eventNames})
         ORDER BY ae.created_at DESC
         LIMIT ${limit} OFFSET ${offset}
       `;
@@ -804,7 +971,7 @@ export const analyticsService = {
         FROM analytics_events
         WHERE created_at >= ${startDate}
           AND created_at < ${endDate}
-          AND event_name = ${eventName}
+          AND event_name = ANY(${eventNames})
       `;
     } else if (excludeInternal) {
       events = await sql`

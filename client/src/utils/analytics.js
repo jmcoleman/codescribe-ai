@@ -13,6 +13,7 @@
 
 import { track } from '@vercel/analytics';
 import { API_URL } from '../config/api';
+import { STORAGE_KEYS } from '../constants/storage';
 
 // ===========================================
 // PRODUCTION CHECK
@@ -40,26 +41,6 @@ export const setAnalyticsOptOut = (optedOut) => {
   analyticsOptedOut = optedOut;
 };
 
-// ===========================================
-// ADMIN/OVERRIDE EXCLUSION SUPPORT
-// ===========================================
-
-// Module-level state for admin/override detection
-// These are flagged in events so they can be filtered in analytics queries
-let isAdminUser = false;
-let hasTierOverride = false;
-
-/**
- * Update the admin/override status
- * Called from AuthContext when user data changes
- * @param {Object} status - Admin/override status
- * @param {boolean} status.isAdmin - Whether user is admin/support role
- * @param {boolean} status.hasTierOverride - Whether user has tier override active
- */
-export const setAnalyticsUserStatus = ({ isAdmin, hasTierOverride: hasOverride }) => {
-  isAdminUser = isAdmin || false;
-  hasTierOverride = hasOverride || false;
-};
 
 /**
  * Check if analytics is currently enabled
@@ -78,7 +59,7 @@ const isAnalyticsEnabled = () => {
 
 const SESSION_ID_KEY = 'cs_analytics_session_id';
 const SESSION_START_KEY = 'cs_analytics_session_start';
-const SESSION_COUNT_KEY = 'cs_analytics_session_count';
+const SESSION_TRACKED_KEY = 'cs_analytics_session_tracked';
 
 /**
  * Get or create a session ID for the current browser session
@@ -91,10 +72,8 @@ export const getSessionId = () => {
     sessionId = crypto.randomUUID();
     sessionStorage.setItem(SESSION_ID_KEY, sessionId);
     sessionStorage.setItem(SESSION_START_KEY, Date.now().toString());
-
-    // Increment session count in localStorage for returning user detection
-    const sessionCount = parseInt(localStorage.getItem(SESSION_COUNT_KEY) || '0', 10);
-    localStorage.setItem(SESSION_COUNT_KEY, (sessionCount + 1).toString());
+    // Reset tracked flag when new session starts (ensures session_start event fires)
+    sessionStorage.removeItem(SESSION_TRACKED_KEY);
   }
   return sessionId;
 };
@@ -108,15 +87,6 @@ export const getSessionStart = () => {
 };
 
 /**
- * Check if this is a returning user (has visited before)
- * @returns {boolean} True if user has had more than one session
- */
-export const isReturningUser = () => {
-  const sessionCount = parseInt(localStorage.getItem(SESSION_COUNT_KEY) || '0', 10);
-  return sessionCount > 1;
-};
-
-/**
  * Get how long the current session has been active
  * @returns {number} Session duration in milliseconds
  */
@@ -127,19 +97,16 @@ export const getSessionDuration = () => {
 
 /**
  * Enhance event data with session context
- * Includes admin/override flags for filtering in analytics queries
+ * Note: is_internal/is_admin/has_tier_override flags are set server-side
+ * based on user role lookup, which is more accurate than client-side detection
+ * (especially for events that fire before login like session_start).
  * @param {Object} data - Original event data
  * @returns {Object} Event data with session context added
  */
 const withSessionContext = (data) => ({
   ...data,
   session_id: getSessionId(),
-  is_returning_user: isReturningUser() ? 'true' : 'false',
   session_duration_ms: getSessionDuration(),
-  // Admin/override flags for filtering - exclude from business metrics
-  is_internal: (isAdminUser || hasTierOverride) ? 'true' : 'false',
-  is_admin: isAdminUser ? 'true' : 'false',
-  has_tier_override: hasTierOverride ? 'true' : 'false',
 });
 
 // ===========================================
@@ -154,11 +121,18 @@ const withSessionContext = (data) => ({
  */
 const sendToBackend = async (eventName, eventData) => {
   try {
+    // Include auth token if available to associate events with users
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+    const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     const response = await fetch(`${API_URL}/api/analytics/track`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify({
         eventName,
         eventData,
@@ -209,15 +183,48 @@ const trackEvent = (eventName, eventData) => {
  * @param {number} params.duration - Time taken in milliseconds
  * @param {number} params.codeSize - Size of input code in bytes
  * @param {string} params.language - Programming language detected
+ * @param {string} params.origin - Where code came from (sample, paste, upload, github, gitlab, bitbucket)
+ * @param {string} params.filename - Name of the file being documented
+ * @param {Object} [params.repo] - Repository context for git-based origins (optional)
+ * @param {boolean} [params.repo.isPrivate] - Whether the repo is private
+ * @param {string} [params.repo.name] - Repository name (owner/repo)
+ * @param {string} [params.repo.branch] - Branch name
+ * @param {Object} [params.llm] - LLM context (optional)
+ * @param {string} [params.llm.provider] - Provider (claude, openai)
+ * @param {string} [params.llm.model] - Model name
  */
-export const trackDocGeneration = ({ docType, success, duration, codeSize, language }) => {
-  trackEvent('doc_generation', withSessionContext({
+export const trackDocGeneration = ({ docType, success, duration, codeSize, language, origin, filename, repo, llm }) => {
+  const eventData = {
     doc_type: docType,
     success: success ? 'true' : 'false',
     duration_ms: Math.round(duration),
-    code_size_kb: Math.round(codeSize / 1024),
-    language: language || 'unknown',
-  }));
+    // Group code input attributes for easier management when adding project context
+    code_input: {
+      filename: filename || 'untitled',
+      language: language || 'unknown',
+      origin: origin || 'unknown',
+      size_kb: Math.round(codeSize / 1024),
+    },
+  };
+
+  // Add repo context for git-based origins (github, gitlab, bitbucket)
+  if (repo && origin && ['github', 'gitlab', 'bitbucket'].includes(origin)) {
+    eventData.code_input.repo = {
+      is_private: repo.isPrivate || false,
+      name: repo.name || 'unknown',
+      branch: repo.branch || null,
+    };
+  }
+
+  // Add LLM context if provided
+  if (llm) {
+    eventData.llm = {
+      provider: llm.provider || 'unknown',
+      model: llm.model || 'unknown',
+    };
+  }
+
+  trackEvent('doc_generation', withSessionContext(eventData));
 };
 
 /**
@@ -238,15 +245,17 @@ export const trackQualityScore = ({ score, grade, docType }) => {
 
 /**
  * Track code input method
- * @param {string} method - Input method (paste, upload, example)
+ * @param {string} origin - Input origin (paste, upload, sample, github)
  * @param {number} codeSize - Size of code in bytes
  * @param {string} language - Programming language
+ * @param {string} filename - Name of the file (optional)
  */
-export const trackCodeInput = (method, codeSize, language) => {
+export const trackCodeInput = (origin, codeSize, language, filename) => {
   trackEvent('code_input', withSessionContext({
-    method,
-    code_size_kb: Math.round(codeSize / 1024),
+    origin: origin || 'unknown',
+    size_kb: Math.round(codeSize / 1024),
     language: language || 'unknown',
+    filename: filename || 'untitled',
   }));
 };
 
@@ -256,16 +265,57 @@ export const trackCodeInput = (method, codeSize, language) => {
  * @param {string} params.errorType - Type of error (network, validation, api, server)
  * @param {string} params.errorMessage - Error message (sanitized)
  * @param {string} params.context - Where error occurred
+ * @param {Object} [params.codeInput] - Code input context (optional)
+ * @param {string} [params.codeInput.filename] - Filename
+ * @param {string} [params.codeInput.language] - Language
+ * @param {string} [params.codeInput.origin] - Origin (paste, upload, sample, github, gitlab, bitbucket)
+ * @param {number} [params.codeInput.sizeKb] - Size in KB
+ * @param {Object} [params.codeInput.repo] - Repository context for git-based origins (optional)
+ * @param {boolean} [params.codeInput.repo.isPrivate] - Whether the repo is private
+ * @param {string} [params.codeInput.repo.name] - Repository name (owner/repo)
+ * @param {string} [params.codeInput.repo.branch] - Branch name
+ * @param {Object} [params.llm] - LLM context (optional)
+ * @param {string} [params.llm.provider] - Provider (claude, openai)
+ * @param {string} [params.llm.model] - Model name
  */
-export const trackError = ({ errorType, errorMessage, context }) => {
+export const trackError = ({ errorType, errorMessage, context, codeInput, llm }) => {
   // Sanitize error message to avoid sending sensitive data
   const sanitizedMessage = sanitizeErrorMessage(errorMessage);
 
-  trackEvent('error', withSessionContext({
+  const eventData = {
     error_type: errorType,
     error_message: sanitizedMessage,
     context,
-  }));
+  };
+
+  // Add code input context if provided
+  if (codeInput) {
+    eventData.code_input = {
+      filename: codeInput.filename || 'untitled',
+      language: codeInput.language || 'unknown',
+      origin: codeInput.origin || 'unknown',
+      size_kb: codeInput.sizeKb || 0,
+    };
+
+    // Add repo context for git-based origins
+    if (codeInput.repo && codeInput.origin && ['github', 'gitlab', 'bitbucket'].includes(codeInput.origin)) {
+      eventData.code_input.repo = {
+        is_private: codeInput.repo.isPrivate || false,
+        name: codeInput.repo.name || 'unknown',
+        branch: codeInput.repo.branch || null,
+      };
+    }
+  }
+
+  // Add LLM context if provided
+  if (llm) {
+    eventData.llm = {
+      provider: llm.provider || 'unknown',
+      model: llm.model || 'unknown',
+    };
+  }
+
+  trackEvent('error', withSessionContext(eventData));
 };
 
 /**
@@ -292,13 +342,51 @@ export const trackInteraction = (action, metadata = {}) => {
   }));
 };
 
+
 /**
- * Track example usage
- * @param {string} exampleName - Name of example used
+ * Track session start for funnel analytics
+ * Called once per browser session (deduplication handled internally)
  */
-export const trackExampleUsage = (exampleName) => {
-  trackEvent('example_usage', withSessionContext({
-    example_name: exampleName,
+export const trackSessionStart = () => {
+  // Check if already tracked this session (prevents duplicates on HMR/remounts)
+  if (sessionStorage.getItem(SESSION_TRACKED_KEY)) {
+    return;
+  }
+
+  trackEvent('session_start', withSessionContext({
+    referrer: document.referrer || 'direct',
+    landing_page: window.location.pathname,
+  }));
+
+  // Mark session as tracked
+  sessionStorage.setItem(SESSION_TRACKED_KEY, 'true');
+};
+
+/**
+ * Track user login for associating sessions with users
+ * Called after successful email/password login
+ * @param {Object} params - Event parameters
+ * @param {string} params.method - Login method (email, oauth_github, oauth_google)
+ */
+export const trackLogin = ({ method = 'email' } = {}) => {
+  trackEvent('login', withSessionContext({
+    method,
+  }));
+};
+
+/**
+ * Track user signup for business metrics
+ * Called after successful account creation
+ * @param {Object} params - Event parameters
+ * @param {string} params.method - Signup method (email, oauth_github, oauth_google)
+ * @param {string} params.tier - Initial tier (free, pro, team)
+ * @param {boolean} params.hasTrial - Whether signup included a trial
+ */
+export const trackSignup = ({ method = 'email', tier = 'free', hasTrial = false } = {}) => {
+  trackEvent('signup', withSessionContext({
+    method,
+    tier,
+    has_trial: hasTrial ? 'true' : 'false',
   }));
 };
 
@@ -346,18 +434,113 @@ export const trackOAuth = ({ provider, action, context, duration, errorType }) =
 };
 
 /**
- * Track performance metrics
+ * Track performance metrics for LLM streaming
+ * Organized into logical groups: latency, throughput, input, cache, request, context, llm
+ *
  * @param {Object} params - Event parameters
- * @param {number} params.parseTime - Time to parse code (ms)
- * @param {number} params.generateTime - Time to generate docs (ms)
- * @param {number} params.totalTime - Total time (ms)
+ * @param {Object} params.latency - Latency metrics
+ * @param {number} params.latency.totalMs - Total end-to-end latency (ms)
+ * @param {number} [params.latency.ttftMs] - Time to First Token (ms)
+ * @param {number} [params.latency.tpotMs] - Time Per Output Token (ms) - avg inter-token latency
+ * @param {number} [params.latency.streamingMs] - Time spent streaming (total - ttft)
+ * @param {Object} [params.throughput] - Throughput metrics
+ * @param {number} [params.throughput.outputTokens] - Number of output tokens
+ * @param {number} [params.throughput.tokensPerSecond] - Output throughput rate
+ * @param {Object} [params.input] - Input metrics
+ * @param {number} [params.input.tokens] - Input token count
+ * @param {number} [params.input.chars] - Input character count
+ * @param {Object} [params.cache] - Prompt cache metrics (Claude)
+ * @param {boolean} [params.cache.hit] - Whether cache was used
+ * @param {number} [params.cache.readTokens] - Tokens read from cache
+ * @param {Object} [params.request] - Request metrics
+ * @param {number} [params.request.retryCount] - Number of retries before success
+ * @param {Object} [params.context] - Generation context
+ * @param {string} [params.context.docType] - Documentation type (README, JSDOC, etc.)
+ * @param {string} [params.context.language] - Programming language
+ * @param {Object} [params.llm] - LLM provider info
+ * @param {string} [params.llm.provider] - Provider name (claude, openai)
+ * @param {string} [params.llm.model] - Model name
  */
-export const trackPerformance = ({ parseTime, generateTime, totalTime }) => {
-  trackEvent('performance', withSessionContext({
-    parse_time_ms: Math.round(parseTime),
-    generate_time_ms: Math.round(generateTime),
-    total_time_ms: Math.round(totalTime),
-  }));
+export const trackPerformance = ({ latency, throughput, input, cache, request, context, llm }) => {
+  const eventData = {};
+
+  // Latency metrics (required)
+  if (latency) {
+    eventData.latency = {
+      total_ms: Math.round(latency.totalMs),
+    };
+    if (latency.ttftMs !== undefined) {
+      eventData.latency.ttft_ms = Math.round(latency.ttftMs);
+    }
+    if (latency.tpotMs !== undefined) {
+      eventData.latency.tpot_ms = Math.round(latency.tpotMs * 100) / 100; // 2 decimal places
+    }
+    if (latency.streamingMs !== undefined) {
+      eventData.latency.streaming_ms = Math.round(latency.streamingMs);
+    }
+  }
+
+  // Throughput metrics
+  if (throughput) {
+    eventData.throughput = {};
+    if (throughput.outputTokens !== undefined) {
+      eventData.throughput.output_tokens = throughput.outputTokens;
+    }
+    if (throughput.tokensPerSecond !== undefined) {
+      eventData.throughput.tokens_per_second = Math.round(throughput.tokensPerSecond * 10) / 10; // 1 decimal
+    }
+  }
+
+  // Input metrics
+  if (input) {
+    eventData.input = {};
+    if (input.tokens !== undefined) {
+      eventData.input.tokens = input.tokens;
+    }
+    if (input.chars !== undefined) {
+      eventData.input.chars = input.chars;
+    }
+  }
+
+  // Cache metrics (Claude prompt caching)
+  if (cache) {
+    eventData.cache = {};
+    if (cache.hit !== undefined) {
+      eventData.cache.hit = cache.hit;
+    }
+    if (cache.readTokens !== undefined) {
+      eventData.cache.read_tokens = cache.readTokens;
+    }
+  }
+
+  // Request metrics
+  if (request) {
+    eventData.request = {};
+    if (request.retryCount !== undefined) {
+      eventData.request.retry_count = request.retryCount;
+    }
+  }
+
+  // Context (doc type, language)
+  if (context) {
+    eventData.context = {};
+    if (context.docType) {
+      eventData.context.doc_type = context.docType;
+    }
+    if (context.language) {
+      eventData.context.language = context.language;
+    }
+  }
+
+  // LLM provider info
+  if (llm) {
+    eventData.llm = {
+      provider: llm.provider || 'unknown',
+      model: llm.model || 'unknown',
+    };
+  }
+
+  trackEvent('performance', withSessionContext(eventData));
 };
 
 // Helper functions
