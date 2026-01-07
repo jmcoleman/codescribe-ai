@@ -459,4 +459,219 @@ describe('AnalyticsService', () => {
       expect(result).toEqual([]);
     });
   });
+
+  // ============================================================================
+  // BUSINESS CONVERSION FUNNEL
+  // ============================================================================
+
+  describe('getBusinessConversionFunnel', () => {
+    const dateRange = {
+      startDate: new Date('2024-01-01'),
+      endDate: new Date('2024-01-31'),
+    };
+
+    it('should return business funnel with conversion rates', async () => {
+      // Visitors
+      sql.mockResolvedValueOnce({ rows: [{ count: '1000' }] });
+      // Signups
+      sql.mockResolvedValueOnce({ rows: [{ count: '100' }] });
+      // Trials
+      sql.mockResolvedValueOnce({ rows: [{ count: '50' }] });
+      // Paid
+      sql.mockResolvedValueOnce({ rows: [{ count: '20' }] });
+
+      const result = await analyticsService.getBusinessConversionFunnel(dateRange);
+
+      expect(result.stages.visitors.count).toBe(1000);
+      expect(result.stages.signups.count).toBe(100);
+      expect(result.stages.trials.count).toBe(50);
+      expect(result.stages.paid.count).toBe(20);
+      expect(result.conversionRates.visitor_to_signup).toBe(10);
+      expect(result.conversionRates.signup_to_trial).toBe(50);
+      expect(result.conversionRates.trial_to_paid).toBe(40);
+      expect(result.overallConversion).toBe(2);
+    });
+
+    it('should handle zero values without division errors', async () => {
+      sql.mockResolvedValue({ rows: [{ count: '0' }] });
+
+      const result = await analyticsService.getBusinessConversionFunnel(dateRange);
+
+      expect(result.totalVisitors).toBe(0);
+      expect(result.overallConversion).toBe(0);
+    });
+
+    it('should include internal users when excludeInternal is false', async () => {
+      sql.mockResolvedValue({ rows: [{ count: '10' }] });
+
+      await analyticsService.getBusinessConversionFunnel({ ...dateRange, excludeInternal: false });
+
+      expect(sql).toHaveBeenCalledTimes(4);
+    });
+  });
+
+  // ============================================================================
+  // EVENTS WITH MULTIPLE EVENT NAMES FILTER
+  // ============================================================================
+
+  describe('getEvents with eventNames array', () => {
+    const options = {
+      startDate: new Date('2024-01-01'),
+      endDate: new Date('2024-01-31'),
+      page: 1,
+      limit: 50,
+    };
+
+    it('should filter by multiple event names', async () => {
+      sql.mockResolvedValueOnce({ rows: [] });
+      sql.mockResolvedValueOnce({ rows: [{ total: '0' }] });
+
+      await analyticsService.getEvents({
+        ...options,
+        eventNames: ['session_start', 'code_input', 'generation_completed'],
+      });
+
+      expect(sql).toHaveBeenCalledTimes(2);
+    });
+
+    it('should filter by category and multiple event names', async () => {
+      sql.mockResolvedValueOnce({ rows: [] });
+      sql.mockResolvedValueOnce({ rows: [{ total: '0' }] });
+
+      await analyticsService.getEvents({
+        ...options,
+        category: 'funnel',
+        eventNames: ['session_start', 'code_input'],
+      });
+
+      expect(sql).toHaveBeenCalledTimes(2);
+    });
+
+    it('should filter by category, event names, and excludeInternal', async () => {
+      sql.mockResolvedValueOnce({ rows: [] });
+      sql.mockResolvedValueOnce({ rows: [{ total: '0' }] });
+
+      await analyticsService.getEvents({
+        ...options,
+        category: 'funnel',
+        eventNames: ['session_start'],
+        excludeInternal: true,
+      });
+
+      expect(sql).toHaveBeenCalledTimes(2);
+    });
+
+    it('should filter by event names and excludeInternal without category', async () => {
+      sql.mockResolvedValueOnce({ rows: [] });
+      sql.mockResolvedValueOnce({ rows: [{ total: '0' }] });
+
+      await analyticsService.getEvents({
+        ...options,
+        eventNames: ['doc_generation', 'batch_generation'],
+        excludeInternal: true,
+      });
+
+      expect(sql).toHaveBeenCalledTimes(2);
+    });
+
+    it('should filter by category and excludeInternal without event names', async () => {
+      sql.mockResolvedValueOnce({ rows: [] });
+      sql.mockResolvedValueOnce({ rows: [{ total: '0' }] });
+
+      await analyticsService.getEvents({
+        ...options,
+        category: 'usage',
+        excludeInternal: true,
+      });
+
+      expect(sql).toHaveBeenCalledTimes(2);
+    });
+
+    it('should filter by only event names without excludeInternal', async () => {
+      sql.mockResolvedValueOnce({ rows: [] });
+      sql.mockResolvedValueOnce({ rows: [{ total: '0' }] });
+
+      await analyticsService.getEvents({
+        ...options,
+        eventNames: ['signup', 'tier_upgrade'],
+      });
+
+      expect(sql).toHaveBeenCalledTimes(2);
+    });
+
+    it('should filter by only excludeInternal without category or event names', async () => {
+      sql.mockResolvedValueOnce({ rows: [] });
+      sql.mockResolvedValueOnce({ rows: [{ total: '0' }] });
+
+      await analyticsService.getEvents({
+        ...options,
+        excludeInternal: true,
+      });
+
+      expect(sql).toHaveBeenCalledTimes(2);
+    });
+
+    it('should handle empty eventNames array as no filter', async () => {
+      sql.mockResolvedValueOnce({ rows: [] });
+      sql.mockResolvedValueOnce({ rows: [{ total: '0' }] });
+
+      await analyticsService.getEvents({
+        ...options,
+        eventNames: [],
+      });
+
+      expect(sql).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  // ============================================================================
+  // USAGE PATTERNS EDGE CASES
+  // ============================================================================
+
+  describe('getUsagePatterns edge cases', () => {
+    const dateRange = {
+      startDate: new Date('2024-01-01'),
+      endDate: new Date('2024-01-31'),
+    };
+
+    it('should handle empty results for all queries', async () => {
+      sql.mockResolvedValue({ rows: [] });
+
+      const result = await analyticsService.getUsagePatterns(dateRange);
+
+      expect(result.docTypes).toEqual([]);
+      expect(result.qualityScores).toEqual([]);
+      expect(result.batchVsSingle).toEqual({ single: 0, batch: 0 });
+      expect(result.languages).toEqual([]);
+      expect(result.origins).toEqual([]);
+    });
+
+    it('should exclude internal when specified', async () => {
+      sql.mockResolvedValue({ rows: [] });
+
+      await analyticsService.getUsagePatterns({ ...dateRange, excludeInternal: true });
+
+      expect(sql).toHaveBeenCalled();
+    });
+  });
+
+  // ============================================================================
+  // TIME SERIES EDGE CASES
+  // ============================================================================
+
+  describe('getTimeSeries edge cases', () => {
+    const options = {
+      startDate: new Date('2024-01-01'),
+      endDate: new Date('2024-01-31'),
+      interval: 'day',
+    };
+
+    it('should exclude internal when specified', async () => {
+      sql.mockResolvedValue({ rows: [] });
+
+      await analyticsService.getTimeSeries({ ...options, metric: 'sessions', excludeInternal: true });
+
+      expect(sql).toHaveBeenCalled();
+    });
+  });
 });
