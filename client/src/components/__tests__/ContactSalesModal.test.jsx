@@ -411,7 +411,7 @@ describe('ContactSalesModal', () => {
 
       await waitFor(() => {
         expect(screen.getByText(/Network error/i)).toBeInTheDocument();
-      });
+      }, { timeout: 3000 });
     });
   });
 

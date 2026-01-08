@@ -9,6 +9,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.3.6] - 2026-01-08
+
+**Status:** ✅ Event Category Reclassification & Test Coverage
+
+**Summary:** Reclassified analytics event categories for better clarity and added comprehensive test coverage. The 'funnel' category was renamed to 'workflow' for semantic clarity, a new 'system' category was added for error/performance events, and 'usage_alert' was moved to the 'business' category as it relates to monetization triggers.
+
+### Changed
+
+- **Event Category Reclassification** ([server/src/services/analyticsService.js](server/src/services/analyticsService.js))
+  - Renamed 'funnel' category to 'workflow' for better semantic clarity
+  - Added 'system' category for error and performance events
+  - Moved 'usage_alert' from usage to business category (monetization trigger)
+  - Categories now: workflow, business, usage, system
+
+- **Frontend Category Updates** ([client/src/components/admin/EventsTable.jsx](client/src/components/admin/EventsTable.jsx))
+  - Updated CATEGORY_OPTIONS, CATEGORY_LABELS for new categories
+  - Added amber color styling for 'system' category badge
+
+### Added
+
+- **Database Migration 050** ([server/src/db/migrations/050-update-analytics-event-categories.sql](server/src/db/migrations/050-update-analytics-event-categories.sql))
+  - Updates CHECK constraint to reflect new categories
+  - Migrates existing 'funnel' events to 'workflow'
+
+- **Internal User Detection** ([server/src/services/analyticsService.js](server/src/services/analyticsService.js))
+  - recordEvent now detects admin roles and tier overrides from database
+  - Login events retroactively update session events as internal
+  - Added internal_user metadata to event data for audit/debugging
+
+- **trackTrial Method** ([server/src/services/analyticsService.js](server/src/services/analyticsService.js))
+  - Comprehensive trial lifecycle tracking (started, expired, converted)
+  - Supports duration_days, days_active, generations_used, days_to_convert attributes
+
+### Tests
+
+- 4,008 tests (2,047 frontend, 1,961 backend)
+- 100 skipped (67 frontend, 33 backend)
+- Added 15 new analyticsService tests:
+  - trackTrial method tests (started, expired, converted actions)
+  - Internal user detection tests (admin role, tier override, login session update)
+  - excludeInternal=false branch coverage for getConversionFunnel, getBusinessMetrics, getUsagePatterns
+- Services coverage: 91.05% statements, 85.64% branches, 94.22% functions
+
+---
+
 ## [3.3.5] - 2026-01-07
 
 **Status:** ✅ Multi-Select Analytics & Campaign Trials

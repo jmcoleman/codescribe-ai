@@ -783,6 +783,147 @@ describe('AnalyticsService', () => {
 
       expect(sql).toHaveBeenCalledTimes(2);
     });
+
+    it('should filter events by eventActions at application layer', async () => {
+      // Mock database returning events with different actions
+      sql.mockResolvedValueOnce({
+        rows: [
+          {
+            id: '1',
+            event_name: 'tier_change',
+            event_category: 'business',
+            session_id: 'sess-1',
+            user_id: 1,
+            ip_address: '127.0.0.1',
+            event_data: { action: 'upgrade', previous_tier: 'free', new_tier: 'pro' },
+            is_internal: false,
+            created_at: new Date('2024-01-15'),
+          },
+          {
+            id: '2',
+            event_name: 'tier_change',
+            event_category: 'business',
+            session_id: 'sess-2',
+            user_id: 2,
+            ip_address: '127.0.0.2',
+            event_data: { action: 'downgrade', previous_tier: 'pro', new_tier: 'free' },
+            is_internal: false,
+            created_at: new Date('2024-01-16'),
+          },
+          {
+            id: '3',
+            event_name: 'tier_change',
+            event_category: 'business',
+            session_id: 'sess-3',
+            user_id: 3,
+            ip_address: '127.0.0.3',
+            event_data: { action: 'cancel', previous_tier: 'pro' },
+            is_internal: false,
+            created_at: new Date('2024-01-17'),
+          },
+        ],
+      });
+      sql.mockResolvedValueOnce({ rows: [{ total: '3' }] });
+
+      const result = await analyticsService.getEvents({
+        ...options,
+        eventNames: ['tier_change'],
+        eventActions: {
+          tier_change: { actionField: 'action', actions: ['upgrade'] },
+        },
+      });
+
+      // Should filter to only upgrade actions
+      expect(result.events).toHaveLength(1);
+      expect(result.events[0].eventData.action).toBe('upgrade');
+    });
+
+    it('should handle eventActions with multiple actions', async () => {
+      sql.mockResolvedValueOnce({
+        rows: [
+          {
+            id: '1',
+            event_name: 'code_input',
+            event_category: 'workflow',
+            session_id: 'sess-1',
+            user_id: null,
+            ip_address: '127.0.0.1',
+            event_data: { origin: 'paste' },
+            is_internal: false,
+            created_at: new Date('2024-01-15'),
+          },
+          {
+            id: '2',
+            event_name: 'code_input',
+            event_category: 'workflow',
+            session_id: 'sess-2',
+            user_id: null,
+            ip_address: '127.0.0.2',
+            event_data: { origin: 'github' },
+            is_internal: false,
+            created_at: new Date('2024-01-16'),
+          },
+          {
+            id: '3',
+            event_name: 'code_input',
+            event_category: 'workflow',
+            session_id: 'sess-3',
+            user_id: null,
+            ip_address: '127.0.0.3',
+            event_data: { origin: 'upload' },
+            is_internal: false,
+            created_at: new Date('2024-01-17'),
+          },
+        ],
+      });
+      sql.mockResolvedValueOnce({ rows: [{ total: '3' }] });
+
+      const result = await analyticsService.getEvents({
+        ...options,
+        eventNames: ['code_input'],
+        eventActions: {
+          code_input: { actionField: 'origin', actions: ['paste', 'github'] },
+        },
+      });
+
+      // Should filter to paste and github origins
+      expect(result.events).toHaveLength(2);
+      const origins = result.events.map((e) => e.eventData.origin);
+      expect(origins).toContain('paste');
+      expect(origins).toContain('github');
+      expect(origins).not.toContain('upload');
+    });
+
+    it('should pass through events without action filters', async () => {
+      sql.mockResolvedValueOnce({
+        rows: [
+          {
+            id: '1',
+            event_name: 'session_start',
+            event_category: 'workflow',
+            session_id: 'sess-1',
+            user_id: null,
+            ip_address: '127.0.0.1',
+            event_data: {},
+            is_internal: false,
+            created_at: new Date('2024-01-15'),
+          },
+        ],
+      });
+      sql.mockResolvedValueOnce({ rows: [{ total: '1' }] });
+
+      const result = await analyticsService.getEvents({
+        ...options,
+        eventNames: ['session_start'],
+        eventActions: {
+          tier_change: { actionField: 'action', actions: ['upgrade'] },
+        },
+      });
+
+      // session_start has no action filter, should pass through
+      expect(result.events).toHaveLength(1);
+      expect(result.events[0].eventName).toBe('session_start');
+    });
   });
 
   // ============================================================================
@@ -1286,6 +1427,303 @@ describe('AnalyticsService', () => {
 
       // Should write header even with no data
       expect(mockRes.write).toHaveBeenCalled();
+    });
+  });
+
+  // ============================================================================
+  // TRACK TRIAL EVENTS
+  // ============================================================================
+
+  describe('trackTrial', () => {
+    beforeEach(() => {
+      const mockResult = {
+        rows: [{ id: 'uuid-trial', created_at: new Date() }],
+      };
+      sql.mockResolvedValue(mockResult);
+    });
+
+    it('should track trial started event with duration', async () => {
+      const result = await analyticsService.trackTrial({
+        action: 'started',
+        userId: 42,
+        source: 'invite_code',
+        tier: 'pro',
+        durationDays: 14,
+      });
+
+      expect(sql).toHaveBeenCalled();
+      expect(result).toHaveProperty('id', 'uuid-trial');
+      expect(result).toHaveProperty('eventName', 'trial');
+    });
+
+    it('should track trial expired event with usage stats', async () => {
+      await analyticsService.trackTrial({
+        action: 'expired',
+        userId: 42,
+        source: 'auto_campaign',
+        tier: 'pro',
+        daysActive: 14,
+        generationsUsed: 25,
+      });
+
+      expect(sql).toHaveBeenCalled();
+    });
+
+    it('should track trial converted event with conversion data', async () => {
+      await analyticsService.trackTrial({
+        action: 'converted',
+        userId: 42,
+        source: 'invite_code',
+        tier: 'pro',
+        daysActive: 10,
+        generationsUsed: 50,
+        daysToConvert: 10,
+      });
+
+      expect(sql).toHaveBeenCalled();
+    });
+
+    it('should default tier to pro when not specified', async () => {
+      await analyticsService.trackTrial({
+        action: 'started',
+        userId: 42,
+        source: 'invite_code',
+      });
+
+      expect(sql).toHaveBeenCalled();
+    });
+  });
+
+  // ============================================================================
+  // RECORD EVENT WITH INTERNAL USER DETECTION
+  // ============================================================================
+
+  describe('recordEvent internal user detection', () => {
+    it('should detect admin user and mark as internal', async () => {
+      // First call: user lookup returns admin role
+      sql.mockResolvedValueOnce({
+        rows: [{ role: 'admin', viewing_as_tier: null }],
+      });
+      // Second call: insert event
+      sql.mockResolvedValueOnce({
+        rows: [{ id: 'uuid-admin', created_at: new Date() }],
+      });
+
+      const result = await analyticsService.recordEvent(
+        'session_start',
+        { referrer: 'direct' },
+        { userId: 99, sessionId: 'sess-admin' }
+      );
+
+      expect(sql).toHaveBeenCalledTimes(2);
+      expect(result).toHaveProperty('id', 'uuid-admin');
+    });
+
+    it('should detect user with tier override and mark as internal', async () => {
+      // First call: user lookup returns tier override
+      sql.mockResolvedValueOnce({
+        rows: [{ role: 'user', viewing_as_tier: 'pro' }],
+      });
+      // Second call: insert event
+      sql.mockResolvedValueOnce({
+        rows: [{ id: 'uuid-override', created_at: new Date() }],
+      });
+
+      const result = await analyticsService.recordEvent(
+        'code_input',
+        { origin: 'paste' },
+        { userId: 100, sessionId: 'sess-override' }
+      );
+
+      expect(sql).toHaveBeenCalledTimes(2);
+      expect(result).toHaveProperty('id', 'uuid-override');
+    });
+
+    it('should handle user lookup failure gracefully', async () => {
+      // First call: user lookup fails
+      sql.mockRejectedValueOnce(new Error('Database unavailable'));
+      // Second call: insert event still succeeds
+      sql.mockResolvedValueOnce({
+        rows: [{ id: 'uuid-fallback', created_at: new Date() }],
+      });
+
+      const result = await analyticsService.recordEvent(
+        'session_start',
+        {},
+        { userId: 101, sessionId: 'sess-fallback' }
+      );
+
+      expect(result).toHaveProperty('id', 'uuid-fallback');
+    });
+
+    it('should update session events when internal user logs in', async () => {
+      // First call: user lookup returns admin role
+      sql.mockResolvedValueOnce({
+        rows: [{ role: 'admin', viewing_as_tier: null }],
+      });
+      // Second call: insert login event
+      sql.mockResolvedValueOnce({
+        rows: [{ id: 'uuid-login', created_at: new Date() }],
+      });
+      // Third call: update session events to internal
+      sql.mockResolvedValueOnce({ rowCount: 5 });
+
+      const result = await analyticsService.recordEvent(
+        'login',
+        { method: 'email' },
+        { userId: 102, sessionId: 'sess-login' }
+      );
+
+      expect(sql).toHaveBeenCalledTimes(3);
+      expect(result).toHaveProperty('id', 'uuid-login');
+    });
+
+    it('should handle session update failure gracefully on login', async () => {
+      // First call: user lookup returns admin
+      sql.mockResolvedValueOnce({
+        rows: [{ role: 'support', viewing_as_tier: null }],
+      });
+      // Second call: insert login event
+      sql.mockResolvedValueOnce({
+        rows: [{ id: 'uuid-login-2', created_at: new Date() }],
+      });
+      // Third call: update session fails
+      sql.mockRejectedValueOnce(new Error('Update failed'));
+
+      // Should not throw, error is logged and ignored
+      const result = await analyticsService.recordEvent(
+        'login',
+        { method: 'oauth' },
+        { userId: 103, sessionId: 'sess-login-2' }
+      );
+
+      expect(result).toHaveProperty('id', 'uuid-login-2');
+    });
+  });
+
+  // ============================================================================
+  // CONVERSION FUNNEL WITH EXCLUDE INTERNAL FALSE
+  // ============================================================================
+
+  describe('getConversionFunnel excludeInternal=false', () => {
+    const dateRange = {
+      startDate: new Date('2024-01-01'),
+      endDate: new Date('2024-01-31'),
+    };
+
+    it('should include all users when excludeInternal is false', async () => {
+      // funnel events without is_internal filter
+      sql.mockResolvedValueOnce({
+        rows: [
+          { event_name: 'session_start', unique_sessions: '150', total_events: '180' },
+          { event_name: 'code_input', unique_sessions: '100', total_events: '120' },
+        ],
+      });
+      // generation_started without is_internal filter
+      sql.mockResolvedValueOnce({
+        rows: [{ unique_sessions: '80', total_events: '90' }],
+      });
+      // generation_completed without is_internal filter
+      sql.mockResolvedValueOnce({
+        rows: [{ unique_sessions: '70', total_events: '75' }],
+      });
+
+      const result = await analyticsService.getConversionFunnel({
+        ...dateRange,
+        excludeInternal: false,
+      });
+
+      expect(sql).toHaveBeenCalledTimes(3);
+      expect(result.stages.session_start.sessions).toBe(150);
+      expect(result.stages.code_input.sessions).toBe(100);
+    });
+  });
+
+  // ============================================================================
+  // BUSINESS METRICS WITH EXCLUDE INTERNAL FALSE
+  // ============================================================================
+
+  describe('getBusinessMetrics excludeInternal=false', () => {
+    const dateRange = {
+      startDate: new Date('2024-01-01'),
+      endDate: new Date('2024-01-31'),
+    };
+
+    it('should include all users when excludeInternal is false', async () => {
+      // business events (no is_internal filter)
+      sql.mockResolvedValueOnce({
+        rows: [
+          { event_name: 'signup', count: '60', revenue_cents: '0' },
+          { event_name: 'checkout_completed', count: '10', revenue_cents: '99000' },
+        ],
+      });
+      // tier_change actions (no is_internal filter)
+      sql.mockResolvedValueOnce({
+        rows: [
+          { action: 'upgrade', count: '18' },
+          { action: 'downgrade', count: '3' },
+        ],
+      });
+      // tier breakdown (no is_internal filter)
+      sql.mockResolvedValueOnce({
+        rows: [
+          { tier: 'pro', count: '12' },
+          { tier: 'team', count: '6' },
+        ],
+      });
+
+      const result = await analyticsService.getBusinessMetrics({
+        ...dateRange,
+        excludeInternal: false,
+      });
+
+      expect(sql).toHaveBeenCalledTimes(3);
+      expect(result.signups).toBe(60);
+      expect(result.checkouts).toBe(10);
+      expect(result.tierUpgrades).toBe(18);
+    });
+  });
+
+  // ============================================================================
+  // USAGE PATTERNS WITH EXCLUDE INTERNAL FALSE
+  // ============================================================================
+
+  describe('getUsagePatterns excludeInternal=false', () => {
+    const dateRange = {
+      startDate: new Date('2024-01-01'),
+      endDate: new Date('2024-01-31'),
+    };
+
+    it('should include all users when excludeInternal is false', async () => {
+      // Doc types
+      sql.mockResolvedValueOnce({
+        rows: [{ doc_type: 'README', count: '100' }],
+      });
+      // Quality scores
+      sql.mockResolvedValueOnce({
+        rows: [{ grade: 'A', count: '50' }],
+      });
+      // Batch vs single
+      sql.mockResolvedValueOnce({
+        rows: [{ is_batch: true, count: '30' }, { is_batch: false, count: '70' }],
+      });
+      // Languages
+      sql.mockResolvedValueOnce({
+        rows: [{ language: 'javascript', count: '80' }],
+      });
+      // Origins
+      sql.mockResolvedValueOnce({
+        rows: [{ origin: 'paste', count: '60' }],
+      });
+
+      const result = await analyticsService.getUsagePatterns({
+        ...dateRange,
+        excludeInternal: false,
+      });
+
+      expect(sql).toHaveBeenCalledTimes(5);
+      expect(result.docTypes).toHaveLength(1);
+      expect(result.docTypes[0].type).toBe('README');
     });
   });
 });
