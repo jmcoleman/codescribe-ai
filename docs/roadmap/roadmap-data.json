@@ -65,8 +65,8 @@
       "text": "codescribeai.com",
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
-    "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.33",
-    "footer": "v3.3.6 Complete · Event Category Reclassification ✓ · Up Next: Performance Analytics Tab · VS Code Extension: Separate Repo",
+    "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.34",
+    "footer": "v3.3.7 Complete · Event Category Reclassification ✓ · Up Next: Performance Analytics Tab · VS Code Extension: Separate Repo",
     "lastUpdated": "January 8, 2026"
   },
   "columns": [
@@ -77,7 +77,7 @@
       "subtitle": "Phase 1: Core Capabilities",
       "phases": [
         {
-          "version": "v3.3.6",
+          "version": "v3.3.7",
           "title": "Event Category Reclassification & Test Coverage",
           "duration": "0.5 days",
           "status": "✓ Complete",
@@ -96,7 +96,7 @@
           ]
         },
         {
-          "version": "v3.3.5",
+          "version": "v3.3.6",
           "title": "Multi-Select Analytics & Campaign Trials",
           "duration": "1 day",
           "status": "✓ Complete",
@@ -113,7 +113,24 @@
             "Trial source tracking: 'auto-campaign' vs 'invite_code' attribution",
             "User model: _created flag on findOrCreateByGithub for new vs existing users",
             "Database migrations: campaigns table with usage tracking",
-            "49 new tests · 3,931 total (2,047 frontend, 1,884 backend)"
+            "49 new tests · 3,945 total (2,047 frontend, 1,898 backend)"
+          ]
+        },
+        {
+          "version": "v3.3.5",
+          "title": "Analytics Accuracy Hotfix",
+          "duration": "0.5 days",
+          "status": "✓ Complete",
+          "completedDate": "Jan 7, 2026",
+          "badge": "Bug Fix",
+          "features": [
+            "Fixed analytics dashboard to only count successful generations",
+            "Doc types breakdown: Now only shows successful generations",
+            "Top languages: Now only shows successful generations",
+            "Origins breakdown: Now only shows successful generations",
+            "Batch vs Single stats: Now only shows successful generations",
+            "Generations over time chart: Now only shows successful generations",
+            "Failed generations still tracked for error analysis"
           ]
         },
         {
