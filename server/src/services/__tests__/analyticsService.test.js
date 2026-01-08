@@ -470,30 +470,53 @@ describe('AnalyticsService', () => {
       endDate: new Date('2024-01-31'),
     };
 
-    it('should return business funnel with conversion rates', async () => {
+    it('should return business funnel with conversion rates and breakdowns', async () => {
       // Visitors
       sql.mockResolvedValueOnce({ rows: [{ count: '1000' }] });
+      // Engaged (used product)
+      sql.mockResolvedValueOnce({ rows: [{ count: '500' }] });
       // Signups
       sql.mockResolvedValueOnce({ rows: [{ count: '100' }] });
-      // Trials
-      sql.mockResolvedValueOnce({ rows: [{ count: '50' }] });
-      // Paid
-      sql.mockResolvedValueOnce({ rows: [{ count: '20' }] });
+      // Trials (with breakdown: campaign vs individual)
+      sql.mockResolvedValueOnce({ rows: [{ total: '50', campaign: '30', individual: '20' }] });
+      // Paid (with breakdown: via_trial vs direct)
+      sql.mockResolvedValueOnce({ rows: [{ total: '20', via_trial: '15', direct: '5' }] });
 
       const result = await analyticsService.getBusinessConversionFunnel(dateRange);
 
       expect(result.stages.visitors.count).toBe(1000);
+      expect(result.stages.engaged.count).toBe(500);
       expect(result.stages.signups.count).toBe(100);
+
+      // Trial stage with breakdown
       expect(result.stages.trials.count).toBe(50);
+      expect(result.stages.trials.breakdown.campaign.count).toBe(30);
+      expect(result.stages.trials.breakdown.individual.count).toBe(20);
+
+      // Paid stage with breakdown
       expect(result.stages.paid.count).toBe(20);
-      expect(result.conversionRates.visitor_to_signup).toBe(10);
+      expect(result.stages.paid.breakdown.viaTrial.count).toBe(15);
+      expect(result.stages.paid.breakdown.direct.count).toBe(5);
+
+      // Conversion rates
+      expect(result.conversionRates.visitor_to_engaged).toBe(50);
+      expect(result.conversionRates.engaged_to_signup).toBe(20);
       expect(result.conversionRates.signup_to_trial).toBe(50);
-      expect(result.conversionRates.trial_to_paid).toBe(40);
+      expect(result.conversionRates.trial_to_paid).toBe(30); // 15 (via trial) / 50 (trials) = 30%
+      expect(result.conversionRates.signup_to_paid).toBe(20); // 20 (total paid) / 100 (signups) = 20%
+      expect(result.conversionRates.signup_to_direct_paid).toBe(5); // 5 (direct) / 100 (signups) = 5%
       expect(result.overallConversion).toBe(2);
     });
 
     it('should handle zero values without division errors', async () => {
-      sql.mockResolvedValue({ rows: [{ count: '0' }] });
+      // Visitors, engaged, signups return 0
+      sql.mockResolvedValueOnce({ rows: [{ count: '0' }] });
+      sql.mockResolvedValueOnce({ rows: [{ count: '0' }] });
+      sql.mockResolvedValueOnce({ rows: [{ count: '0' }] });
+      // Trials with breakdown
+      sql.mockResolvedValueOnce({ rows: [{ total: '0', campaign: '0', individual: '0' }] });
+      // Paid with breakdown
+      sql.mockResolvedValueOnce({ rows: [{ total: '0', via_trial: '0', direct: '0' }] });
 
       const result = await analyticsService.getBusinessConversionFunnel(dateRange);
 
@@ -502,11 +525,16 @@ describe('AnalyticsService', () => {
     });
 
     it('should include internal users when excludeInternal is false', async () => {
-      sql.mockResolvedValue({ rows: [{ count: '10' }] });
+      sql.mockResolvedValueOnce({ rows: [{ count: '10' }] });
+      sql.mockResolvedValueOnce({ rows: [{ count: '10' }] });
+      sql.mockResolvedValueOnce({ rows: [{ count: '10' }] });
+      sql.mockResolvedValueOnce({ rows: [{ total: '10', campaign: '5', individual: '5' }] });
+      sql.mockResolvedValueOnce({ rows: [{ total: '10', via_trial: '8', direct: '2' }] });
 
       await analyticsService.getBusinessConversionFunnel({ ...dateRange, excludeInternal: false });
 
-      expect(sql).toHaveBeenCalledTimes(4);
+      // 5 queries: visitors, engaged, signups, trials, paid
+      expect(sql).toHaveBeenCalledTimes(5);
     });
   });
 
@@ -672,6 +700,459 @@ describe('AnalyticsService', () => {
       await analyticsService.getTimeSeries({ ...options, metric: 'sessions', excludeInternal: true });
 
       expect(sql).toHaveBeenCalled();
+    });
+  });
+
+  // ============================================================================
+  // PERFORMANCE METRICS
+  // ============================================================================
+
+  describe('getPerformanceMetrics', () => {
+    const dateRange = {
+      startDate: new Date('2024-01-01'),
+      endDate: new Date('2024-01-31'),
+    };
+
+    it('should return performance metrics with exclude internal', async () => {
+      // Mock all three queries (metrics, provider, model)
+      sql.mockResolvedValueOnce({
+        rows: [{
+          total_generations: '100',
+          avg_latency_ms: '1500',
+          median_latency_ms: '1200',
+          p95_latency_ms: '3500',
+          cached_count: '30',
+          total_input_tokens: '50000',
+          total_output_tokens: '75000',
+          total_latency_ms: '150000',
+        }],
+      });
+      sql.mockResolvedValueOnce({
+        rows: [
+          { provider: 'claude', count: '80', avg_latency_ms: '1400', cached_count: '25' },
+          { provider: 'openai', count: '20', avg_latency_ms: '1900', cached_count: '5' },
+        ],
+      });
+      sql.mockResolvedValueOnce({
+        rows: [
+          { model: 'claude-sonnet-4', count: '60', avg_latency_ms: '1300' },
+          { model: 'gpt-5', count: '40', avg_latency_ms: '1800' },
+        ],
+      });
+
+      const result = await analyticsService.getPerformanceMetrics(dateRange);
+
+      expect(sql).toHaveBeenCalledTimes(3);
+      expect(result.totalGenerations).toBe(100);
+      expect(result.avgLatencyMs).toBe(1500);
+      expect(result.medianLatencyMs).toBe(1200);
+      expect(result.p95LatencyMs).toBe(3500);
+      expect(result.cacheHitRate).toBe(30);
+      expect(result.totalInputTokens).toBe(50000);
+      expect(result.totalOutputTokens).toBe(75000);
+      expect(result.providerBreakdown).toHaveProperty('claude');
+      expect(result.providerBreakdown.claude.count).toBe(80);
+      expect(result.modelUsage).toHaveProperty('claude-sonnet-4');
+      expect(result.modelUsage['claude-sonnet-4'].count).toBe(60);
+    });
+
+    it('should handle empty results', async () => {
+      sql.mockResolvedValue({ rows: [{}] });
+
+      const result = await analyticsService.getPerformanceMetrics(dateRange);
+
+      expect(result.totalGenerations).toBe(0);
+      expect(result.avgLatencyMs).toBe(0);
+      expect(result.cacheHitRate).toBe(0);
+      expect(result.avgThroughput).toBe(0);
+    });
+
+    it('should include all users when excludeInternal is false', async () => {
+      sql.mockResolvedValue({ rows: [{}] });
+
+      await analyticsService.getPerformanceMetrics({ ...dateRange, excludeInternal: false });
+
+      expect(sql).toHaveBeenCalledTimes(3);
+    });
+
+    it('should calculate throughput correctly', async () => {
+      sql.mockResolvedValueOnce({
+        rows: [{
+          total_generations: '10',
+          avg_latency_ms: '1000',
+          median_latency_ms: '900',
+          p95_latency_ms: '2000',
+          cached_count: '2',
+          total_input_tokens: '5000',
+          total_output_tokens: '10000',
+          total_latency_ms: '10000', // 10 seconds total
+        }],
+      });
+      sql.mockResolvedValue({ rows: [] });
+
+      const result = await analyticsService.getPerformanceMetrics(dateRange);
+
+      // 10000 tokens / 10 seconds = 1000 tokens/sec
+      expect(result.avgThroughput).toBe(1000);
+    });
+  });
+
+  // ============================================================================
+  // PERFORMANCE TIME SERIES METRICS
+  // ============================================================================
+
+  describe('getTimeSeries performance metrics', () => {
+    const options = {
+      startDate: new Date('2024-01-01'),
+      endDate: new Date('2024-01-31'),
+      interval: 'day',
+    };
+
+    it('should return latency time series', async () => {
+      sql.mockResolvedValue({
+        rows: [
+          { date: new Date('2024-01-01'), value: '1500' },
+          { date: new Date('2024-01-02'), value: '1400' },
+          { date: new Date('2024-01-03'), value: '1600' },
+        ],
+      });
+
+      const result = await analyticsService.getTimeSeries({ ...options, metric: 'latency' });
+
+      expect(sql).toHaveBeenCalled();
+      expect(result.length).toBe(3);
+      expect(result[0]).toHaveProperty('date');
+      expect(result[0]).toHaveProperty('value');
+    });
+
+    it('should return cache hit rate time series', async () => {
+      sql.mockResolvedValue({
+        rows: [
+          { date: new Date('2024-01-01'), value: '25.5' },
+          { date: new Date('2024-01-02'), value: '30.0' },
+        ],
+      });
+
+      const result = await analyticsService.getTimeSeries({ ...options, metric: 'cache_hit_rate' });
+
+      expect(sql).toHaveBeenCalled();
+      expect(result.length).toBe(2);
+    });
+
+    it('should return throughput time series', async () => {
+      sql.mockResolvedValue({
+        rows: [
+          { date: new Date('2024-01-01'), value: '500' },
+          { date: new Date('2024-01-02'), value: '600' },
+        ],
+      });
+
+      const result = await analyticsService.getTimeSeries({ ...options, metric: 'throughput' });
+
+      expect(sql).toHaveBeenCalled();
+      expect(result.length).toBe(2);
+    });
+
+    it('should exclude internal users for performance metrics', async () => {
+      sql.mockResolvedValue({ rows: [] });
+
+      await analyticsService.getTimeSeries({ ...options, metric: 'latency', excludeInternal: true });
+
+      expect(sql).toHaveBeenCalled();
+    });
+
+    it('should include all users for performance metrics when excludeInternal is false', async () => {
+      sql.mockResolvedValue({ rows: [] });
+
+      await analyticsService.getTimeSeries({ ...options, metric: 'cache_hit_rate', excludeInternal: false });
+
+      expect(sql).toHaveBeenCalled();
+    });
+
+    it('should throw error for invalid metric', async () => {
+      await expect(
+        analyticsService.getTimeSeries({ ...options, metric: 'invalid_metric' })
+      ).rejects.toThrow('Invalid metric: invalid_metric');
+    });
+  });
+
+  // ============================================================================
+  // CSV EXPORT UTILITIES
+  // ============================================================================
+
+  describe('CSV Export utilities', () => {
+    describe('getNestedValue', () => {
+      it('should get top-level value', () => {
+        const obj = { foo: 'bar' };
+        expect(analyticsService.getNestedValue(obj, 'foo')).toBe('bar');
+      });
+
+      it('should get nested value', () => {
+        const obj = { latency: { ttft_ms: 100, total_ms: 500 } };
+        expect(analyticsService.getNestedValue(obj, 'latency.ttft_ms')).toBe(100);
+      });
+
+      it('should return undefined for missing path', () => {
+        const obj = { foo: 'bar' };
+        expect(analyticsService.getNestedValue(obj, 'missing')).toBeUndefined();
+      });
+
+      it('should return undefined for null object', () => {
+        expect(analyticsService.getNestedValue(null, 'foo')).toBeUndefined();
+      });
+
+      it('should return undefined for empty path', () => {
+        expect(analyticsService.getNestedValue({ foo: 'bar' }, '')).toBeUndefined();
+      });
+    });
+
+    describe('normalizeValue', () => {
+      it('should return empty string for null', () => {
+        expect(analyticsService.normalizeValue(null)).toBe('');
+      });
+
+      it('should return empty string for undefined', () => {
+        expect(analyticsService.normalizeValue(undefined)).toBe('');
+      });
+
+      it('should stringify boolean true', () => {
+        expect(analyticsService.normalizeValue(true)).toBe('true');
+      });
+
+      it('should stringify boolean false', () => {
+        expect(analyticsService.normalizeValue(false)).toBe('false');
+      });
+
+      it('should JSON stringify objects', () => {
+        expect(analyticsService.normalizeValue({ foo: 'bar' })).toBe('{"foo":"bar"}');
+      });
+
+      it('should convert numbers to string', () => {
+        expect(analyticsService.normalizeValue(42)).toBe('42');
+      });
+
+      it('should return strings as-is', () => {
+        expect(analyticsService.normalizeValue('hello')).toBe('hello');
+      });
+    });
+
+    describe('escapeCSV', () => {
+      it('should return simple value as-is', () => {
+        expect(analyticsService.escapeCSV('hello')).toBe('hello');
+      });
+
+      it('should quote value with comma', () => {
+        expect(analyticsService.escapeCSV('hello,world')).toBe('"hello,world"');
+      });
+
+      it('should quote value with newline', () => {
+        expect(analyticsService.escapeCSV('hello\nworld')).toBe('"hello\nworld"');
+      });
+
+      it('should escape quotes', () => {
+        expect(analyticsService.escapeCSV('say "hello"')).toBe('"say ""hello"""');
+      });
+
+      it('should handle carriage return', () => {
+        expect(analyticsService.escapeCSV('line1\rline2')).toBe('"line1\rline2"');
+      });
+    });
+
+    describe('FIXED_COLUMNS', () => {
+      it('should have expected columns', () => {
+        expect(analyticsService.FIXED_COLUMNS).toContain('id');
+        expect(analyticsService.FIXED_COLUMNS).toContain('event_name');
+        expect(analyticsService.FIXED_COLUMNS).toContain('event_category');
+        expect(analyticsService.FIXED_COLUMNS).toContain('session_id');
+        expect(analyticsService.FIXED_COLUMNS).toContain('user_id');
+        expect(analyticsService.FIXED_COLUMNS).toContain('user_email');
+        expect(analyticsService.FIXED_COLUMNS).toContain('created_at');
+      });
+    });
+
+    describe('EXPORT_LIMITS', () => {
+      it('should have max days of 90', () => {
+        expect(analyticsService.EXPORT_LIMITS.MAX_DAYS).toBe(90);
+      });
+
+      it('should have max rows of 100000', () => {
+        expect(analyticsService.EXPORT_LIMITS.MAX_ROWS).toBe(100000);
+      });
+
+      it('should have batch size of 1000', () => {
+        expect(analyticsService.EXPORT_LIMITS.BATCH_SIZE).toBe(1000);
+      });
+    });
+  });
+
+  describe('discoverEventSchema', () => {
+    const dateRange = {
+      startDate: new Date('2024-01-01'),
+      endDate: new Date('2024-01-31'),
+    };
+
+    it('should discover unique JSONB paths', async () => {
+      sql.mockResolvedValue({
+        rows: [
+          { path: 'doc_type' },
+          { path: 'latency.total_ms' },
+          { path: 'latency.ttft_ms' },
+          { path: 'success' },
+        ],
+      });
+
+      const result = await analyticsService.discoverEventSchema(dateRange);
+
+      expect(result).toEqual(['doc_type', 'latency.total_ms', 'latency.ttft_ms', 'success']);
+      expect(sql).toHaveBeenCalled();
+    });
+
+    it('should return empty array when no keys found', async () => {
+      sql.mockResolvedValue({ rows: [] });
+
+      const result = await analyticsService.discoverEventSchema(dateRange);
+
+      expect(result).toEqual([]);
+    });
+
+    it('should handle category filter', async () => {
+      sql.mockResolvedValue({ rows: [] });
+
+      await analyticsService.discoverEventSchema({ ...dateRange, category: 'funnel' });
+
+      expect(sql).toHaveBeenCalled();
+    });
+
+    it('should handle eventNames filter', async () => {
+      sql.mockResolvedValue({ rows: [] });
+
+      await analyticsService.discoverEventSchema({ ...dateRange, eventNames: ['session_start', 'code_input'] });
+
+      expect(sql).toHaveBeenCalled();
+    });
+
+    it('should handle excludeInternal filter', async () => {
+      sql.mockResolvedValue({ rows: [] });
+
+      await analyticsService.discoverEventSchema({ ...dateRange, excludeInternal: true });
+
+      expect(sql).toHaveBeenCalled();
+    });
+  });
+
+  describe('fetchEventBatch', () => {
+    const options = {
+      startDate: new Date('2024-01-01'),
+      endDate: new Date('2024-01-31'),
+      offset: 0,
+      limit: 1000,
+    };
+
+    it('should fetch batch of events', async () => {
+      sql.mockResolvedValue({
+        rows: [
+          {
+            id: 'uuid-1',
+            event_name: 'session_start',
+            event_category: 'funnel',
+            session_id: 'sess-1',
+            user_id: 1,
+            ip_address: '192.168.1.1',
+            event_data: { referrer: 'google' },
+            is_internal: false,
+            created_at: new Date('2024-01-15'),
+            user_email: 'test@example.com',
+          },
+        ],
+      });
+
+      const result = await analyticsService.fetchEventBatch(options);
+
+      expect(result.length).toBe(1);
+      expect(result[0].event_name).toBe('session_start');
+      expect(result[0].user_email).toBe('test@example.com');
+    });
+
+    it('should filter by category', async () => {
+      sql.mockResolvedValue({ rows: [] });
+
+      await analyticsService.fetchEventBatch({ ...options, category: 'funnel' });
+
+      expect(sql).toHaveBeenCalled();
+    });
+
+    it('should filter by eventNames', async () => {
+      sql.mockResolvedValue({ rows: [] });
+
+      await analyticsService.fetchEventBatch({ ...options, eventNames: ['session_start'] });
+
+      expect(sql).toHaveBeenCalled();
+    });
+
+    it('should exclude internal users', async () => {
+      sql.mockResolvedValue({ rows: [] });
+
+      await analyticsService.fetchEventBatch({ ...options, excludeInternal: true });
+
+      expect(sql).toHaveBeenCalled();
+    });
+  });
+
+  describe('streamEventsToCSV', () => {
+    const options = {
+      startDate: new Date('2024-01-01'),
+      endDate: new Date('2024-01-31'),
+    };
+
+    it('should write CSV header and rows', async () => {
+      // Mock schema discovery
+      sql.mockResolvedValueOnce({
+        rows: [{ path: 'doc_type' }, { path: 'success' }],
+      });
+      // Mock event batch
+      sql.mockResolvedValueOnce({
+        rows: [{
+          id: 'uuid-1',
+          event_name: 'doc_generation',
+          event_category: 'usage',
+          session_id: 'sess-1',
+          user_id: 1,
+          ip_address: '192.168.1.1',
+          event_data: { doc_type: 'README', success: true },
+          is_internal: false,
+          created_at: new Date('2024-01-15'),
+          user_email: 'test@example.com',
+        }],
+      });
+      // Mock empty batch (end of data)
+      sql.mockResolvedValueOnce({ rows: [] });
+
+      const mockRes = {
+        write: jest.fn(),
+      };
+
+      await analyticsService.streamEventsToCSV({ ...options, res: mockRes });
+
+      // Verify header was written
+      expect(mockRes.write).toHaveBeenCalledWith(expect.stringContaining('id,event_name,event_category'));
+      // Verify variant columns in header
+      expect(mockRes.write).toHaveBeenCalledWith(expect.stringContaining('v_doc_type,v_success'));
+      // Verify data row was written
+      expect(mockRes.write).toHaveBeenCalledWith(expect.stringContaining('uuid-1'));
+    });
+
+    it('should handle empty data', async () => {
+      sql.mockResolvedValueOnce({ rows: [] }); // No schema
+      sql.mockResolvedValueOnce({ rows: [] }); // No events
+
+      const mockRes = {
+        write: jest.fn(),
+      };
+
+      await analyticsService.streamEventsToCSV({ ...options, res: mockRes });
+
+      // Should write header even with no data
+      expect(mockRes.write).toHaveBeenCalled();
     });
   });
 });

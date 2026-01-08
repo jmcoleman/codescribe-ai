@@ -200,10 +200,13 @@ export const analyticsService = {
    */
   async getConversionFunnel({ startDate, endDate, excludeInternal = true }) {
     // Get counts for each funnel stage
-    // Use separate queries to avoid SQL fragment interpolation issues
-    let result;
+    // Query funnel events + derive generation stages from doc_generation events
+    // Doc copied/downloaded derived from user_interaction events with specific actions
+    let funnelResult, genStartedResult, genCompletedResult, docCopiedResult;
+
     if (excludeInternal) {
-      result = await sql`
+      // Get standard funnel events (session_start, code_input)
+      funnelResult = await sql`
         SELECT
           event_name,
           COUNT(DISTINCT session_id) as unique_sessions,
@@ -215,8 +218,46 @@ export const analyticsService = {
           AND is_internal = FALSE
         GROUP BY event_name
       `;
+
+      // Get generation_started from doc_generation (all attempts)
+      genStartedResult = await sql`
+        SELECT
+          COUNT(DISTINCT session_id) as unique_sessions,
+          COUNT(*) as total_events
+        FROM analytics_events
+        WHERE event_name = 'doc_generation'
+          AND created_at >= ${startDate}
+          AND created_at < ${endDate}
+          AND is_internal = FALSE
+      `;
+
+      // Get generation_completed from doc_generation where success = 'true'
+      genCompletedResult = await sql`
+        SELECT
+          COUNT(DISTINCT session_id) as unique_sessions,
+          COUNT(*) as total_events
+        FROM analytics_events
+        WHERE event_name = 'doc_generation'
+          AND event_data->>'success' = 'true'
+          AND created_at >= ${startDate}
+          AND created_at < ${endDate}
+          AND is_internal = FALSE
+      `;
+
+      // Get doc_copied from dedicated funnel events (doc_copied, doc_downloaded)
+      docCopiedResult = await sql`
+        SELECT
+          COUNT(DISTINCT session_id) as unique_sessions,
+          COUNT(*) as total_events
+        FROM analytics_events
+        WHERE event_name IN ('doc_copied', 'doc_downloaded')
+          AND created_at >= ${startDate}
+          AND created_at < ${endDate}
+          AND is_internal = FALSE
+      `;
     } else {
-      result = await sql`
+      // Get standard funnel events (session_start, code_input)
+      funnelResult = await sql`
         SELECT
           event_name,
           COUNT(DISTINCT session_id) as unique_sessions,
@@ -227,6 +268,40 @@ export const analyticsService = {
           AND created_at < ${endDate}
         GROUP BY event_name
       `;
+
+      // Get generation_started from doc_generation (all attempts)
+      genStartedResult = await sql`
+        SELECT
+          COUNT(DISTINCT session_id) as unique_sessions,
+          COUNT(*) as total_events
+        FROM analytics_events
+        WHERE event_name = 'doc_generation'
+          AND created_at >= ${startDate}
+          AND created_at < ${endDate}
+      `;
+
+      // Get generation_completed from doc_generation where success = 'true'
+      genCompletedResult = await sql`
+        SELECT
+          COUNT(DISTINCT session_id) as unique_sessions,
+          COUNT(*) as total_events
+        FROM analytics_events
+        WHERE event_name = 'doc_generation'
+          AND event_data->>'success' = 'true'
+          AND created_at >= ${startDate}
+          AND created_at < ${endDate}
+      `;
+
+      // Get doc_copied from dedicated funnel events (doc_copied, doc_downloaded)
+      docCopiedResult = await sql`
+        SELECT
+          COUNT(DISTINCT session_id) as unique_sessions,
+          COUNT(*) as total_events
+        FROM analytics_events
+        WHERE event_name IN ('doc_copied', 'doc_downloaded')
+          AND created_at >= ${startDate}
+          AND created_at < ${endDate}
+      `;
     }
 
     // Build funnel data with conversion rates
@@ -234,11 +309,25 @@ export const analyticsService = {
     const funnelData = {};
 
     stages.forEach((stage) => {
-      const row = result.rows.find((r) => r.event_name === stage);
-      funnelData[stage] = {
-        sessions: parseInt(row?.unique_sessions || 0),
-        events: parseInt(row?.total_events || 0),
-      };
+      if (stage === 'generation_started') {
+        // Use doc_generation count for generation_started
+        funnelData[stage] = {
+          sessions: parseInt(genStartedResult.rows[0]?.unique_sessions || 0),
+          events: parseInt(genStartedResult.rows[0]?.total_events || 0),
+        };
+      } else if (stage === 'generation_completed') {
+        // Use successful doc_generation count for generation_completed
+        funnelData[stage] = {
+          sessions: parseInt(genCompletedResult.rows[0]?.unique_sessions || 0),
+          events: parseInt(genCompletedResult.rows[0]?.total_events || 0),
+        };
+      } else {
+        const row = funnelResult.rows.find((r) => r.event_name === stage);
+        funnelData[stage] = {
+          sessions: parseInt(row?.unique_sessions || 0),
+          events: parseInt(row?.total_events || 0),
+        };
+      }
     });
 
     // Calculate conversion rates
@@ -266,8 +355,9 @@ export const analyticsService = {
   // ============================================================================
 
   /**
-   * Get business conversion funnel (Visitors → Signups → Trial → Paid)
+   * Get business conversion funnel (Visitors → Engaged → Signups → Trial → Paid)
    * Different from usage funnel - this tracks the financial conversion path
+   * "Engaged" = visitors who generated at least one doc (used the free tier)
    * @param {Object} options - Query options
    * @param {Date} options.startDate - Start of date range
    * @param {Date} options.endDate - End of date range
@@ -296,6 +386,30 @@ export const analyticsService = {
       `;
     }
 
+    // Get engaged visitors (sessions with at least one successful doc_generation)
+    // This represents users who actually tried the product (free tier usage)
+    let engagedResult;
+    if (excludeInternal) {
+      engagedResult = await sql`
+        SELECT COUNT(DISTINCT session_id) as count
+        FROM analytics_events
+        WHERE event_name = 'doc_generation'
+          AND event_data->>'success' = 'true'
+          AND created_at >= ${startDate}
+          AND created_at < ${endDate}
+          AND is_internal = FALSE
+      `;
+    } else {
+      engagedResult = await sql`
+        SELECT COUNT(DISTINCT session_id) as count
+        FROM analytics_events
+        WHERE event_name = 'doc_generation'
+          AND event_data->>'success' = 'true'
+          AND created_at >= ${startDate}
+          AND created_at < ${endDate}
+      `;
+    }
+
     // Get signups
     let signupResult;
     if (excludeInternal) {
@@ -317,11 +431,14 @@ export const analyticsService = {
       `;
     }
 
-    // Get trial starts (from user_trials table for accuracy)
+    // Get trial starts with breakdown by type (campaign vs individual)
     let trialResult;
     if (excludeInternal) {
       trialResult = await sql`
-        SELECT COUNT(*) as count
+        SELECT
+          COUNT(*) as total,
+          COUNT(*) FILTER (WHERE t.source = 'auto_campaign') as campaign,
+          COUNT(*) FILTER (WHERE t.source != 'auto_campaign') as individual
         FROM user_trials t
         JOIN users u ON t.user_id = u.id
         WHERE t.started_at >= ${startDate}
@@ -331,59 +448,120 @@ export const analyticsService = {
       `;
     } else {
       trialResult = await sql`
-        SELECT COUNT(*) as count
+        SELECT
+          COUNT(*) as total,
+          COUNT(*) FILTER (WHERE source = 'auto_campaign') as campaign,
+          COUNT(*) FILTER (WHERE source != 'auto_campaign') as individual
         FROM user_trials
         WHERE started_at >= ${startDate}
           AND started_at < ${endDate}
       `;
     }
 
-    // Get paid conversions (tier_upgrade to paid tiers or checkout_completed)
+    // Get paid conversions with breakdown (via trial vs direct)
+    // "Via Trial" = users who had a trial that converted
+    // "Direct" = users who paid without going through a trial
     let paidResult;
     if (excludeInternal) {
       paidResult = await sql`
-        SELECT COUNT(*) as count
-        FROM analytics_events
-        WHERE (event_name = 'tier_upgrade' OR event_name = 'checkout_completed')
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
-          AND is_internal = FALSE
+        SELECT
+          COUNT(*) as total,
+          COUNT(*) FILTER (WHERE EXISTS (
+            SELECT 1 FROM user_trials ut
+            WHERE ut.user_id = ae.user_id
+              AND ut.status = 'converted'
+              AND ut.converted_at >= ${startDate}
+              AND ut.converted_at < ${endDate}
+          )) as via_trial,
+          COUNT(*) FILTER (WHERE NOT EXISTS (
+            SELECT 1 FROM user_trials ut
+            WHERE ut.user_id = ae.user_id
+              AND ut.status = 'converted'
+          )) as direct
+        FROM analytics_events ae
+        WHERE (ae.event_name = 'tier_upgrade' OR ae.event_name = 'checkout_completed')
+          AND ae.created_at >= ${startDate}
+          AND ae.created_at < ${endDate}
+          AND ae.is_internal = FALSE
       `;
     } else {
       paidResult = await sql`
-        SELECT COUNT(*) as count
-        FROM analytics_events
-        WHERE (event_name = 'tier_upgrade' OR event_name = 'checkout_completed')
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
+        SELECT
+          COUNT(*) as total,
+          COUNT(*) FILTER (WHERE EXISTS (
+            SELECT 1 FROM user_trials ut
+            WHERE ut.user_id = ae.user_id
+              AND ut.status = 'converted'
+              AND ut.converted_at >= ${startDate}
+              AND ut.converted_at < ${endDate}
+          )) as via_trial,
+          COUNT(*) FILTER (WHERE NOT EXISTS (
+            SELECT 1 FROM user_trials ut
+            WHERE ut.user_id = ae.user_id
+              AND ut.status = 'converted'
+          )) as direct
+        FROM analytics_events ae
+        WHERE (ae.event_name = 'tier_upgrade' OR ae.event_name = 'checkout_completed')
+          AND ae.created_at >= ${startDate}
+          AND ae.created_at < ${endDate}
       `;
     }
 
     const visitors = parseInt(visitorResult.rows[0]?.count || 0);
+    const engaged = parseInt(engagedResult.rows[0]?.count || 0);
     const signups = parseInt(signupResult.rows[0]?.count || 0);
-    const trials = parseInt(trialResult.rows[0]?.count || 0);
-    const paid = parseInt(paidResult.rows[0]?.count || 0);
+
+    // Trial breakdown
+    const trialsTotal = parseInt(trialResult.rows[0]?.total || 0);
+    const trialsCampaign = parseInt(trialResult.rows[0]?.campaign || 0);
+    const trialsIndividual = parseInt(trialResult.rows[0]?.individual || 0);
+
+    // Paid breakdown
+    const paidTotal = parseInt(paidResult.rows[0]?.total || 0);
+    const paidViaTrial = parseInt(paidResult.rows[0]?.via_trial || 0);
+    const paidDirect = parseInt(paidResult.rows[0]?.direct || 0);
 
     // Calculate conversion rates
-    const visitorToSignup = visitors > 0 ? Math.round((signups / visitors) * 1000) / 10 : 0;
-    const signupToTrial = signups > 0 ? Math.round((trials / signups) * 1000) / 10 : 0;
-    const trialToPaid = trials > 0 ? Math.round((paid / trials) * 1000) / 10 : 0;
-    const overallConversion = visitors > 0 ? Math.round((paid / visitors) * 1000) / 10 : 0;
+    const visitorToEngaged = visitors > 0 ? Math.round((engaged / visitors) * 1000) / 10 : 0;
+    const engagedToSignup = engaged > 0 ? Math.round((signups / engaged) * 1000) / 10 : 0;
+    const signupToTrial = signups > 0 ? Math.round((trialsTotal / signups) * 1000) / 10 : 0;
+    const trialToPaid = trialsTotal > 0 ? Math.round((paidViaTrial / trialsTotal) * 1000) / 10 : 0;
+    const signupToPaid = signups > 0 ? Math.round((paidTotal / signups) * 1000) / 10 : 0; // Overall signup to paid (both paths)
+    const signupToDirectPaid = signups > 0 ? Math.round((paidDirect / signups) * 1000) / 10 : 0;
+    const overallConversion = visitors > 0 ? Math.round((paidTotal / visitors) * 1000) / 10 : 0;
 
     return {
       stages: {
         visitors: { count: visitors, label: 'Visitors' },
+        engaged: { count: engaged, label: 'Engaged' },
         signups: { count: signups, label: 'Signups' },
-        trials: { count: trials, label: 'Trial Started' },
-        paid: { count: paid, label: 'Paid Conversion' },
+        trials: {
+          count: trialsTotal,
+          label: 'Trial Started',
+          breakdown: {
+            campaign: { count: trialsCampaign, label: 'Campaign Trials' },
+            individual: { count: trialsIndividual, label: 'Individual Trials' },
+          },
+        },
+        paid: {
+          count: paidTotal,
+          label: 'Paid Conversion',
+          breakdown: {
+            viaTrial: { count: paidViaTrial, label: 'Via Trial' },
+            direct: { count: paidDirect, label: 'Direct' },
+          },
+        },
       },
       conversionRates: {
-        visitor_to_signup: visitorToSignup,
+        visitor_to_engaged: visitorToEngaged,
+        engaged_to_signup: engagedToSignup,
         signup_to_trial: signupToTrial,
         trial_to_paid: trialToPaid,
+        signup_to_paid: signupToPaid,
+        signup_to_direct_paid: signupToDirectPaid,
       },
       totalVisitors: visitors,
-      totalPaid: paid,
+      totalPaid: paidTotal,
       overallConversion,
     };
   },
@@ -629,11 +807,19 @@ export const analyticsService = {
 
     // Get origin breakdown (only successful generations)
     // Origin is nested under code_input for better organization
+    // GitHub origins are split into private vs public based on repo.is_private flag
     let origins;
     if (excludeInternal) {
       origins = await sql`
         SELECT
-          event_data->'code_input'->>'origin' as origin,
+          CASE
+            WHEN event_data->'code_input'->>'origin' = 'github'
+              AND (event_data->'code_input'->'repo'->>'is_private')::boolean = true
+            THEN 'github_private'
+            WHEN event_data->'code_input'->>'origin' = 'github'
+            THEN 'github_public'
+            ELSE event_data->'code_input'->>'origin'
+          END as origin,
           COUNT(*) as count
         FROM analytics_events
         WHERE event_name = 'doc_generation'
@@ -642,13 +828,20 @@ export const analyticsService = {
           AND created_at >= ${startDate}
           AND created_at < ${endDate}
           AND is_internal = FALSE
-        GROUP BY event_data->'code_input'->>'origin'
+        GROUP BY 1
         ORDER BY count DESC
       `;
     } else {
       origins = await sql`
         SELECT
-          event_data->'code_input'->>'origin' as origin,
+          CASE
+            WHEN event_data->'code_input'->>'origin' = 'github'
+              AND (event_data->'code_input'->'repo'->>'is_private')::boolean = true
+            THEN 'github_private'
+            WHEN event_data->'code_input'->>'origin' = 'github'
+            THEN 'github_public'
+            ELSE event_data->'code_input'->>'origin'
+          END as origin,
           COUNT(*) as count
         FROM analytics_events
         WHERE event_name = 'doc_generation'
@@ -656,7 +849,7 @@ export const analyticsService = {
           AND event_data->'code_input'->>'origin' IS NOT NULL
           AND created_at >= ${startDate}
           AND created_at < ${endDate}
-        GROUP BY event_data->'code_input'->>'origin'
+        GROUP BY 1
         ORDER BY count DESC
       `;
     }
@@ -813,6 +1006,192 @@ export const analyticsService = {
             WHERE event_name = 'checkout_completed'
               AND created_at >= ${startDate}
               AND created_at < ${endDate}
+            GROUP BY 1
+            ORDER BY date
+          `;
+        }
+        break;
+
+      // ========================================================================
+      // PERFORMANCE METRICS (from generated_documents table)
+      // ========================================================================
+
+      case 'latency':
+        // Average latency per interval from generated_documents
+        if (excludeInternal) {
+          result = await sql`
+            SELECT
+              DATE_TRUNC(${truncInterval}, gd.generated_at) as date,
+              ROUND(AVG(gd.latency_ms)) as value
+            FROM generated_documents gd
+            JOIN users u ON gd.user_id = u.id
+            WHERE gd.generated_at >= ${startDate}
+              AND gd.generated_at < ${endDate}
+              AND gd.deleted_at IS NULL
+              AND gd.latency_ms IS NOT NULL
+              AND u.role NOT IN ('admin', 'support', 'super_admin')
+              AND u.viewing_as_tier IS NULL
+            GROUP BY 1
+            ORDER BY date
+          `;
+        } else {
+          result = await sql`
+            SELECT
+              DATE_TRUNC(${truncInterval}, generated_at) as date,
+              ROUND(AVG(latency_ms)) as value
+            FROM generated_documents
+            WHERE generated_at >= ${startDate}
+              AND generated_at < ${endDate}
+              AND deleted_at IS NULL
+              AND latency_ms IS NOT NULL
+            GROUP BY 1
+            ORDER BY date
+          `;
+        }
+        break;
+
+      case 'cache_hit_rate':
+        // Cache hit rate per interval from generated_documents (percentage 0-100)
+        if (excludeInternal) {
+          result = await sql`
+            SELECT
+              DATE_TRUNC(${truncInterval}, gd.generated_at) as date,
+              ROUND(
+                (SUM(CASE WHEN gd.was_cached THEN 1 ELSE 0 END)::numeric / NULLIF(COUNT(*), 0)) * 100,
+                1
+              ) as value
+            FROM generated_documents gd
+            JOIN users u ON gd.user_id = u.id
+            WHERE gd.generated_at >= ${startDate}
+              AND gd.generated_at < ${endDate}
+              AND gd.deleted_at IS NULL
+              AND u.role NOT IN ('admin', 'support', 'super_admin')
+              AND u.viewing_as_tier IS NULL
+            GROUP BY 1
+            ORDER BY date
+          `;
+        } else {
+          result = await sql`
+            SELECT
+              DATE_TRUNC(${truncInterval}, generated_at) as date,
+              ROUND(
+                (SUM(CASE WHEN was_cached THEN 1 ELSE 0 END)::numeric / NULLIF(COUNT(*), 0)) * 100,
+                1
+              ) as value
+            FROM generated_documents
+            WHERE generated_at >= ${startDate}
+              AND generated_at < ${endDate}
+              AND deleted_at IS NULL
+            GROUP BY 1
+            ORDER BY date
+          `;
+        }
+        break;
+
+      case 'throughput':
+        // Token throughput (tokens/second) per interval from generated_documents
+        if (excludeInternal) {
+          result = await sql`
+            SELECT
+              DATE_TRUNC(${truncInterval}, gd.generated_at) as date,
+              ROUND(
+                SUM(gd.output_tokens)::numeric / NULLIF(SUM(gd.latency_ms) / 1000.0, 0),
+                1
+              ) as value
+            FROM generated_documents gd
+            JOIN users u ON gd.user_id = u.id
+            WHERE gd.generated_at >= ${startDate}
+              AND gd.generated_at < ${endDate}
+              AND gd.deleted_at IS NULL
+              AND gd.latency_ms IS NOT NULL
+              AND gd.latency_ms > 0
+              AND u.role NOT IN ('admin', 'support', 'super_admin')
+              AND u.viewing_as_tier IS NULL
+            GROUP BY 1
+            ORDER BY date
+          `;
+        } else {
+          result = await sql`
+            SELECT
+              DATE_TRUNC(${truncInterval}, generated_at) as date,
+              ROUND(
+                SUM(output_tokens)::numeric / NULLIF(SUM(latency_ms) / 1000.0, 0),
+                1
+              ) as value
+            FROM generated_documents
+            WHERE generated_at >= ${startDate}
+              AND generated_at < ${endDate}
+              AND deleted_at IS NULL
+              AND latency_ms IS NOT NULL
+              AND latency_ms > 0
+            GROUP BY 1
+            ORDER BY date
+          `;
+        }
+        break;
+
+      // ========================================================================
+      // LATENCY BREAKDOWN METRICS (from analytics_events - client-side captured)
+      // ========================================================================
+
+      case 'ttft':
+        // Time to First Token per interval from analytics_events
+        if (excludeInternal) {
+          result = await sql`
+            SELECT
+              DATE_TRUNC(${truncInterval}, created_at) as date,
+              ROUND(AVG((event_data->'latency'->>'ttft_ms')::numeric)) as value
+            FROM analytics_events
+            WHERE event_name = 'performance'
+              AND created_at >= ${startDate}
+              AND created_at < ${endDate}
+              AND is_internal = FALSE
+              AND event_data->'latency'->>'ttft_ms' IS NOT NULL
+            GROUP BY 1
+            ORDER BY date
+          `;
+        } else {
+          result = await sql`
+            SELECT
+              DATE_TRUNC(${truncInterval}, created_at) as date,
+              ROUND(AVG((event_data->'latency'->>'ttft_ms')::numeric)) as value
+            FROM analytics_events
+            WHERE event_name = 'performance'
+              AND created_at >= ${startDate}
+              AND created_at < ${endDate}
+              AND event_data->'latency'->>'ttft_ms' IS NOT NULL
+            GROUP BY 1
+            ORDER BY date
+          `;
+        }
+        break;
+
+      case 'streaming_time':
+        // Streaming time per interval from analytics_events
+        if (excludeInternal) {
+          result = await sql`
+            SELECT
+              DATE_TRUNC(${truncInterval}, created_at) as date,
+              ROUND(AVG((event_data->'latency'->>'streaming_ms')::numeric)) as value
+            FROM analytics_events
+            WHERE event_name = 'performance'
+              AND created_at >= ${startDate}
+              AND created_at < ${endDate}
+              AND is_internal = FALSE
+              AND event_data->'latency'->>'streaming_ms' IS NOT NULL
+            GROUP BY 1
+            ORDER BY date
+          `;
+        } else {
+          result = await sql`
+            SELECT
+              DATE_TRUNC(${truncInterval}, created_at) as date,
+              ROUND(AVG((event_data->'latency'->>'streaming_ms')::numeric)) as value
+            FROM analytics_events
+            WHERE event_name = 'performance'
+              AND created_at >= ${startDate}
+              AND created_at < ${endDate}
+              AND event_data->'latency'->>'streaming_ms' IS NOT NULL
             GROUP BY 1
             ORDER BY date
           `;
@@ -1032,6 +1411,238 @@ export const analyticsService = {
     };
   },
 
+  // ============================================================================
+  // PERFORMANCE METRICS (from generated_documents table)
+  // ============================================================================
+
+  /**
+   * Get detailed latency breakdown (TTFT, streaming, TPOT) from analytics_events
+   * This data is captured client-side during streaming and stored in event_data JSONB
+   *
+   * @param {Object} options - Query options
+   * @param {Date} options.startDate - Start of date range
+   * @param {Date} options.endDate - End of date range
+   * @param {boolean} [options.excludeInternal=true] - Exclude internal users
+   * @returns {Promise<Object>} Latency breakdown metrics
+   */
+  async getLatencyBreakdown({ startDate, endDate, excludeInternal = true }) {
+    let result;
+
+    if (excludeInternal) {
+      result = await sql`
+        SELECT
+          COUNT(*) as total_events,
+          ROUND(AVG((event_data->'latency'->>'total_ms')::numeric)) as avg_total_ms,
+          ROUND(AVG((event_data->'latency'->>'ttft_ms')::numeric)) as avg_ttft_ms,
+          ROUND(AVG((event_data->'latency'->>'streaming_ms')::numeric)) as avg_streaming_ms,
+          ROUND(AVG((event_data->'latency'->>'tpot_ms')::numeric)::numeric, 2) as avg_tpot_ms,
+          PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY (event_data->'latency'->>'ttft_ms')::numeric) as median_ttft_ms,
+          PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY (event_data->'latency'->>'ttft_ms')::numeric) as p95_ttft_ms
+        FROM analytics_events
+        WHERE event_name = 'performance'
+          AND created_at >= ${startDate}
+          AND created_at < ${endDate}
+          AND is_internal = FALSE
+          AND event_data->'latency'->>'ttft_ms' IS NOT NULL
+      `;
+    } else {
+      result = await sql`
+        SELECT
+          COUNT(*) as total_events,
+          ROUND(AVG((event_data->'latency'->>'total_ms')::numeric)) as avg_total_ms,
+          ROUND(AVG((event_data->'latency'->>'ttft_ms')::numeric)) as avg_ttft_ms,
+          ROUND(AVG((event_data->'latency'->>'streaming_ms')::numeric)) as avg_streaming_ms,
+          ROUND(AVG((event_data->'latency'->>'tpot_ms')::numeric)::numeric, 2) as avg_tpot_ms,
+          PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY (event_data->'latency'->>'ttft_ms')::numeric) as median_ttft_ms,
+          PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY (event_data->'latency'->>'ttft_ms')::numeric) as p95_ttft_ms
+        FROM analytics_events
+        WHERE event_name = 'performance'
+          AND created_at >= ${startDate}
+          AND created_at < ${endDate}
+          AND event_data->'latency'->>'ttft_ms' IS NOT NULL
+      `;
+    }
+
+    const data = result.rows[0] || {};
+
+    return {
+      totalEvents: parseInt(data.total_events || 0),
+      avgTotalMs: parseInt(data.avg_total_ms || 0),
+      avgTtftMs: parseInt(data.avg_ttft_ms || 0),
+      avgStreamingMs: parseInt(data.avg_streaming_ms || 0),
+      avgTpotMs: parseFloat(data.avg_tpot_ms || 0),
+      medianTtftMs: parseInt(data.median_ttft_ms || 0),
+      p95TtftMs: parseInt(data.p95_ttft_ms || 0),
+    };
+  },
+
+  /**
+   * Get performance metrics from generated_documents table
+   * @param {Object} options - Query options
+   * @param {Date} options.startDate - Start of date range
+   * @param {Date} options.endDate - End of date range
+   * @param {boolean} [options.excludeInternal=true] - Exclude admin/support users
+   * @returns {Promise<Object>} Performance metrics
+   */
+  async getPerformanceMetrics({ startDate, endDate, excludeInternal = true }) {
+    // Query generated_documents with optional internal user filtering
+    // Join with users table to filter admin/support users
+    let metricsResult;
+    let providerResult;
+    let modelResult;
+
+    if (excludeInternal) {
+      // Exclude admin/support users
+      metricsResult = await sql`
+        SELECT
+          COUNT(*) as total_generations,
+          ROUND(AVG(latency_ms)) as avg_latency_ms,
+          PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY latency_ms) as median_latency_ms,
+          PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY latency_ms) as p95_latency_ms,
+          SUM(CASE WHEN was_cached THEN 1 ELSE 0 END) as cached_count,
+          SUM(input_tokens) as total_input_tokens,
+          SUM(output_tokens) as total_output_tokens,
+          SUM(latency_ms) as total_latency_ms
+        FROM generated_documents gd
+        JOIN users u ON gd.user_id = u.id
+        WHERE gd.generated_at >= ${startDate}
+          AND gd.generated_at < ${endDate}
+          AND gd.deleted_at IS NULL
+          AND gd.latency_ms IS NOT NULL
+          AND u.role NOT IN ('admin', 'support', 'super_admin')
+          AND u.viewing_as_tier IS NULL
+      `;
+
+      providerResult = await sql`
+        SELECT
+          provider,
+          COUNT(*) as count,
+          ROUND(AVG(latency_ms)) as avg_latency_ms,
+          SUM(CASE WHEN was_cached THEN 1 ELSE 0 END) as cached_count
+        FROM generated_documents gd
+        JOIN users u ON gd.user_id = u.id
+        WHERE gd.generated_at >= ${startDate}
+          AND gd.generated_at < ${endDate}
+          AND gd.deleted_at IS NULL
+          AND gd.latency_ms IS NOT NULL
+          AND u.role NOT IN ('admin', 'support', 'super_admin')
+          AND u.viewing_as_tier IS NULL
+        GROUP BY provider
+        ORDER BY count DESC
+      `;
+
+      modelResult = await sql`
+        SELECT
+          model,
+          COUNT(*) as count,
+          ROUND(AVG(latency_ms)) as avg_latency_ms
+        FROM generated_documents gd
+        JOIN users u ON gd.user_id = u.id
+        WHERE gd.generated_at >= ${startDate}
+          AND gd.generated_at < ${endDate}
+          AND gd.deleted_at IS NULL
+          AND gd.latency_ms IS NOT NULL
+          AND u.role NOT IN ('admin', 'support', 'super_admin')
+          AND u.viewing_as_tier IS NULL
+        GROUP BY model
+        ORDER BY count DESC
+      `;
+    } else {
+      // Include all users
+      metricsResult = await sql`
+        SELECT
+          COUNT(*) as total_generations,
+          ROUND(AVG(latency_ms)) as avg_latency_ms,
+          PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY latency_ms) as median_latency_ms,
+          PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY latency_ms) as p95_latency_ms,
+          SUM(CASE WHEN was_cached THEN 1 ELSE 0 END) as cached_count,
+          SUM(input_tokens) as total_input_tokens,
+          SUM(output_tokens) as total_output_tokens,
+          SUM(latency_ms) as total_latency_ms
+        FROM generated_documents
+        WHERE generated_at >= ${startDate}
+          AND generated_at < ${endDate}
+          AND deleted_at IS NULL
+          AND latency_ms IS NOT NULL
+      `;
+
+      providerResult = await sql`
+        SELECT
+          provider,
+          COUNT(*) as count,
+          ROUND(AVG(latency_ms)) as avg_latency_ms,
+          SUM(CASE WHEN was_cached THEN 1 ELSE 0 END) as cached_count
+        FROM generated_documents
+        WHERE generated_at >= ${startDate}
+          AND generated_at < ${endDate}
+          AND deleted_at IS NULL
+          AND latency_ms IS NOT NULL
+        GROUP BY provider
+        ORDER BY count DESC
+      `;
+
+      modelResult = await sql`
+        SELECT
+          model,
+          COUNT(*) as count,
+          ROUND(AVG(latency_ms)) as avg_latency_ms
+        FROM generated_documents
+        WHERE generated_at >= ${startDate}
+          AND generated_at < ${endDate}
+          AND deleted_at IS NULL
+          AND latency_ms IS NOT NULL
+        GROUP BY model
+        ORDER BY count DESC
+      `;
+    }
+
+    const metrics = metricsResult.rows[0] || {};
+    const totalGenerations = parseInt(metrics.total_generations || 0);
+    const cachedCount = parseInt(metrics.cached_count || 0);
+    const totalInputTokens = parseInt(metrics.total_input_tokens || 0);
+    const totalOutputTokens = parseInt(metrics.total_output_tokens || 0);
+    const totalLatencyMs = parseInt(metrics.total_latency_ms || 0);
+
+    // Calculate throughput (tokens per second)
+    const avgThroughput = totalLatencyMs > 0
+      ? Math.round((totalOutputTokens / (totalLatencyMs / 1000)) * 10) / 10
+      : 0;
+
+    // Provider breakdown
+    const providerBreakdown = {};
+    for (const row of providerResult.rows) {
+      const providerCount = parseInt(row.count);
+      const providerCached = parseInt(row.cached_count || 0);
+      providerBreakdown[row.provider] = {
+        count: providerCount,
+        avgLatencyMs: parseInt(row.avg_latency_ms || 0),
+        cacheHitRate: providerCount > 0 ? Math.round((providerCached / providerCount) * 1000) / 10 : 0,
+      };
+    }
+
+    // Model usage
+    const modelUsage = {};
+    for (const row of modelResult.rows) {
+      modelUsage[row.model] = {
+        count: parseInt(row.count),
+        avgLatencyMs: parseInt(row.avg_latency_ms || 0),
+      };
+    }
+
+    return {
+      totalGenerations,
+      avgLatencyMs: parseInt(metrics.avg_latency_ms || 0),
+      medianLatencyMs: parseInt(metrics.median_latency_ms || 0),
+      p95LatencyMs: parseInt(metrics.p95_latency_ms || 0),
+      cacheHitRate: totalGenerations > 0 ? Math.round((cachedCount / totalGenerations) * 1000) / 10 : 0,
+      avgThroughput, // tokens/sec
+      totalInputTokens,
+      totalOutputTokens,
+      providerBreakdown,
+      modelUsage,
+    };
+  },
+
   /**
    * Get distinct event names (for filter dropdown)
    * @returns {Promise<Array<string>>} List of event names
@@ -1043,6 +1654,500 @@ export const analyticsService = {
       ORDER BY event_name
     `;
     return result.rows.map((row) => row.event_name);
+  },
+
+  // ============================================================================
+  // HIGH-PERFORMANCE CSV EXPORT WITH SCHEMA DISCOVERY
+  // ============================================================================
+
+  /**
+   * Export limits - industry best practice
+   */
+  EXPORT_LIMITS: {
+    MAX_DAYS: 90,
+    MAX_ROWS: 100000,
+    BATCH_SIZE: 1000,
+  },
+
+  /**
+   * Fixed columns that appear first in CSV export
+   */
+  FIXED_COLUMNS: [
+    'id',
+    'event_name',
+    'event_category',
+    'session_id',
+    'user_id',
+    'user_email',
+    'ip_address',
+    'is_internal',
+    'created_at',
+  ],
+
+  /**
+   * Discover all unique JSONB keys across matching events
+   * Pass 1 of two-pass schema discovery
+   *
+   * @param {Object} options - Query options
+   * @param {Date} options.startDate - Start of date range
+   * @param {Date} options.endDate - End of date range
+   * @param {string} [options.category] - Filter by event category
+   * @param {Array<string>} [options.eventNames] - Filter by event names
+   * @param {boolean} [options.excludeInternal=false] - Exclude internal users
+   * @returns {Promise<Array<string>>} Sorted list of unique JSONB paths
+   */
+  async discoverEventSchema({ startDate, endDate, category, eventNames, excludeInternal = false }) {
+    // Use recursive CTE to extract all unique JSONB keys (handles nested objects)
+    // Build WHERE clause dynamically based on filters
+    let result;
+    const hasEventNames = eventNames && eventNames.length > 0;
+
+    // We need to use different queries based on filter combinations
+    // due to @vercel/postgres parameterization limitations
+    if (category && hasEventNames && excludeInternal) {
+      result = await sql`
+        WITH RECURSIVE json_keys AS (
+          SELECT
+            key AS path,
+            value,
+            jsonb_typeof(value) AS value_type
+          FROM analytics_events, jsonb_each(event_data)
+          WHERE created_at >= ${startDate}
+            AND created_at < ${endDate}
+            AND event_category = ${category}
+            AND event_name = ANY(${eventNames})
+            AND is_internal = FALSE
+          UNION ALL
+          SELECT
+            parent.path || '.' || child.key AS path,
+            child.value,
+            jsonb_typeof(child.value) AS value_type
+          FROM json_keys parent, jsonb_each(parent.value) child
+          WHERE parent.value_type = 'object'
+        )
+        SELECT DISTINCT path
+        FROM json_keys
+        WHERE value_type != 'object'
+        ORDER BY path
+      `;
+    } else if (category && hasEventNames) {
+      result = await sql`
+        WITH RECURSIVE json_keys AS (
+          SELECT
+            key AS path,
+            value,
+            jsonb_typeof(value) AS value_type
+          FROM analytics_events, jsonb_each(event_data)
+          WHERE created_at >= ${startDate}
+            AND created_at < ${endDate}
+            AND event_category = ${category}
+            AND event_name = ANY(${eventNames})
+          UNION ALL
+          SELECT
+            parent.path || '.' || child.key AS path,
+            child.value,
+            jsonb_typeof(child.value) AS value_type
+          FROM json_keys parent, jsonb_each(parent.value) child
+          WHERE parent.value_type = 'object'
+        )
+        SELECT DISTINCT path
+        FROM json_keys
+        WHERE value_type != 'object'
+        ORDER BY path
+      `;
+    } else if (category && excludeInternal) {
+      result = await sql`
+        WITH RECURSIVE json_keys AS (
+          SELECT
+            key AS path,
+            value,
+            jsonb_typeof(value) AS value_type
+          FROM analytics_events, jsonb_each(event_data)
+          WHERE created_at >= ${startDate}
+            AND created_at < ${endDate}
+            AND event_category = ${category}
+            AND is_internal = FALSE
+          UNION ALL
+          SELECT
+            parent.path || '.' || child.key AS path,
+            child.value,
+            jsonb_typeof(child.value) AS value_type
+          FROM json_keys parent, jsonb_each(parent.value) child
+          WHERE parent.value_type = 'object'
+        )
+        SELECT DISTINCT path
+        FROM json_keys
+        WHERE value_type != 'object'
+        ORDER BY path
+      `;
+    } else if (hasEventNames && excludeInternal) {
+      result = await sql`
+        WITH RECURSIVE json_keys AS (
+          SELECT
+            key AS path,
+            value,
+            jsonb_typeof(value) AS value_type
+          FROM analytics_events, jsonb_each(event_data)
+          WHERE created_at >= ${startDate}
+            AND created_at < ${endDate}
+            AND event_name = ANY(${eventNames})
+            AND is_internal = FALSE
+          UNION ALL
+          SELECT
+            parent.path || '.' || child.key AS path,
+            child.value,
+            jsonb_typeof(child.value) AS value_type
+          FROM json_keys parent, jsonb_each(parent.value) child
+          WHERE parent.value_type = 'object'
+        )
+        SELECT DISTINCT path
+        FROM json_keys
+        WHERE value_type != 'object'
+        ORDER BY path
+      `;
+    } else if (category) {
+      result = await sql`
+        WITH RECURSIVE json_keys AS (
+          SELECT
+            key AS path,
+            value,
+            jsonb_typeof(value) AS value_type
+          FROM analytics_events, jsonb_each(event_data)
+          WHERE created_at >= ${startDate}
+            AND created_at < ${endDate}
+            AND event_category = ${category}
+          UNION ALL
+          SELECT
+            parent.path || '.' || child.key AS path,
+            child.value,
+            jsonb_typeof(child.value) AS value_type
+          FROM json_keys parent, jsonb_each(parent.value) child
+          WHERE parent.value_type = 'object'
+        )
+        SELECT DISTINCT path
+        FROM json_keys
+        WHERE value_type != 'object'
+        ORDER BY path
+      `;
+    } else if (hasEventNames) {
+      result = await sql`
+        WITH RECURSIVE json_keys AS (
+          SELECT
+            key AS path,
+            value,
+            jsonb_typeof(value) AS value_type
+          FROM analytics_events, jsonb_each(event_data)
+          WHERE created_at >= ${startDate}
+            AND created_at < ${endDate}
+            AND event_name = ANY(${eventNames})
+          UNION ALL
+          SELECT
+            parent.path || '.' || child.key AS path,
+            child.value,
+            jsonb_typeof(child.value) AS value_type
+          FROM json_keys parent, jsonb_each(parent.value) child
+          WHERE parent.value_type = 'object'
+        )
+        SELECT DISTINCT path
+        FROM json_keys
+        WHERE value_type != 'object'
+        ORDER BY path
+      `;
+    } else if (excludeInternal) {
+      result = await sql`
+        WITH RECURSIVE json_keys AS (
+          SELECT
+            key AS path,
+            value,
+            jsonb_typeof(value) AS value_type
+          FROM analytics_events, jsonb_each(event_data)
+          WHERE created_at >= ${startDate}
+            AND created_at < ${endDate}
+            AND is_internal = FALSE
+          UNION ALL
+          SELECT
+            parent.path || '.' || child.key AS path,
+            child.value,
+            jsonb_typeof(child.value) AS value_type
+          FROM json_keys parent, jsonb_each(parent.value) child
+          WHERE parent.value_type = 'object'
+        )
+        SELECT DISTINCT path
+        FROM json_keys
+        WHERE value_type != 'object'
+        ORDER BY path
+      `;
+    } else {
+      result = await sql`
+        WITH RECURSIVE json_keys AS (
+          SELECT
+            key AS path,
+            value,
+            jsonb_typeof(value) AS value_type
+          FROM analytics_events, jsonb_each(event_data)
+          WHERE created_at >= ${startDate}
+            AND created_at < ${endDate}
+          UNION ALL
+          SELECT
+            parent.path || '.' || child.key AS path,
+            child.value,
+            jsonb_typeof(child.value) AS value_type
+          FROM json_keys parent, jsonb_each(parent.value) child
+          WHERE parent.value_type = 'object'
+        )
+        SELECT DISTINCT path
+        FROM json_keys
+        WHERE value_type != 'object'
+        ORDER BY path
+      `;
+    }
+
+    return result.rows.map((row) => row.path);
+  },
+
+  /**
+   * Get nested value from object using dot notation path
+   * @param {Object} obj - Object to traverse
+   * @param {string} path - Dot-notation path (e.g., 'latency.ttft_ms')
+   * @returns {*} Value at path or undefined
+   */
+  getNestedValue(obj, path) {
+    if (!obj || !path) return undefined;
+    const parts = path.split('.');
+    let current = obj;
+    for (const part of parts) {
+      if (current === null || current === undefined) return undefined;
+      current = current[part];
+    }
+    return current;
+  },
+
+  /**
+   * Normalize value for CSV output
+   * @param {*} value - Value to normalize
+   * @returns {string} Normalized string value
+   */
+  normalizeValue(value) {
+    if (value === null || value === undefined) return '';
+    if (typeof value === 'boolean') return value ? 'true' : 'false';
+    if (typeof value === 'object') return JSON.stringify(value);
+    return String(value);
+  },
+
+  /**
+   * Escape CSV value (handle commas, quotes, newlines)
+   * @param {string} value - Value to escape
+   * @returns {string} Escaped value
+   */
+  escapeCSV(value) {
+    const str = String(value);
+    if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+      return `"${str.replace(/"/g, '""')}"`;
+    }
+    return str;
+  },
+
+  /**
+   * Fetch a batch of events for streaming export
+   * @param {Object} options - Query options
+   * @param {Date} options.startDate - Start of date range
+   * @param {Date} options.endDate - End of date range
+   * @param {string} [options.category] - Filter by category
+   * @param {Array<string>} [options.eventNames] - Filter by event names
+   * @param {boolean} [options.excludeInternal=false] - Exclude internal users
+   * @param {number} options.offset - Offset for pagination
+   * @param {number} options.limit - Batch size
+   * @returns {Promise<Array>} Batch of events
+   */
+  async fetchEventBatch({ startDate, endDate, category, eventNames, excludeInternal = false, offset, limit }) {
+    const hasEventNames = eventNames && eventNames.length > 0;
+
+    let result;
+    // Use different queries based on filter combinations
+    if (category && hasEventNames && excludeInternal) {
+      result = await sql`
+        SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id,
+               ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
+        FROM analytics_events ae
+        LEFT JOIN users u ON ae.user_id = u.id
+        WHERE ae.created_at >= ${startDate}
+          AND ae.created_at < ${endDate}
+          AND ae.event_category = ${category}
+          AND ae.event_name = ANY(${eventNames})
+          AND ae.is_internal = FALSE
+        ORDER BY ae.created_at DESC
+        LIMIT ${limit} OFFSET ${offset}
+      `;
+    } else if (category && hasEventNames) {
+      result = await sql`
+        SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id,
+               ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
+        FROM analytics_events ae
+        LEFT JOIN users u ON ae.user_id = u.id
+        WHERE ae.created_at >= ${startDate}
+          AND ae.created_at < ${endDate}
+          AND ae.event_category = ${category}
+          AND ae.event_name = ANY(${eventNames})
+        ORDER BY ae.created_at DESC
+        LIMIT ${limit} OFFSET ${offset}
+      `;
+    } else if (category && excludeInternal) {
+      result = await sql`
+        SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id,
+               ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
+        FROM analytics_events ae
+        LEFT JOIN users u ON ae.user_id = u.id
+        WHERE ae.created_at >= ${startDate}
+          AND ae.created_at < ${endDate}
+          AND ae.event_category = ${category}
+          AND ae.is_internal = FALSE
+        ORDER BY ae.created_at DESC
+        LIMIT ${limit} OFFSET ${offset}
+      `;
+    } else if (hasEventNames && excludeInternal) {
+      result = await sql`
+        SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id,
+               ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
+        FROM analytics_events ae
+        LEFT JOIN users u ON ae.user_id = u.id
+        WHERE ae.created_at >= ${startDate}
+          AND ae.created_at < ${endDate}
+          AND ae.event_name = ANY(${eventNames})
+          AND ae.is_internal = FALSE
+        ORDER BY ae.created_at DESC
+        LIMIT ${limit} OFFSET ${offset}
+      `;
+    } else if (category) {
+      result = await sql`
+        SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id,
+               ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
+        FROM analytics_events ae
+        LEFT JOIN users u ON ae.user_id = u.id
+        WHERE ae.created_at >= ${startDate}
+          AND ae.created_at < ${endDate}
+          AND ae.event_category = ${category}
+        ORDER BY ae.created_at DESC
+        LIMIT ${limit} OFFSET ${offset}
+      `;
+    } else if (hasEventNames) {
+      result = await sql`
+        SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id,
+               ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
+        FROM analytics_events ae
+        LEFT JOIN users u ON ae.user_id = u.id
+        WHERE ae.created_at >= ${startDate}
+          AND ae.created_at < ${endDate}
+          AND ae.event_name = ANY(${eventNames})
+        ORDER BY ae.created_at DESC
+        LIMIT ${limit} OFFSET ${offset}
+      `;
+    } else if (excludeInternal) {
+      result = await sql`
+        SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id,
+               ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
+        FROM analytics_events ae
+        LEFT JOIN users u ON ae.user_id = u.id
+        WHERE ae.created_at >= ${startDate}
+          AND ae.created_at < ${endDate}
+          AND ae.is_internal = FALSE
+        ORDER BY ae.created_at DESC
+        LIMIT ${limit} OFFSET ${offset}
+      `;
+    } else {
+      result = await sql`
+        SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id,
+               ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
+        FROM analytics_events ae
+        LEFT JOIN users u ON ae.user_id = u.id
+        WHERE ae.created_at >= ${startDate}
+          AND ae.created_at < ${endDate}
+        ORDER BY ae.created_at DESC
+        LIMIT ${limit} OFFSET ${offset}
+      `;
+    }
+
+    return result.rows;
+  },
+
+  /**
+   * Stream events to CSV with schema discovery
+   * Two-pass export: 1) discover schema, 2) stream rows
+   *
+   * @param {Object} options - Export options
+   * @param {Date} options.startDate - Start of date range
+   * @param {Date} options.endDate - End of date range
+   * @param {string} [options.category] - Filter by category
+   * @param {Array<string>} [options.eventNames] - Filter by event names
+   * @param {boolean} [options.excludeInternal=false] - Exclude internal users
+   * @param {Object} res - Express response object for streaming
+   * @returns {Promise<void>}
+   */
+  async streamEventsToCSV({ startDate, endDate, category, eventNames, excludeInternal = false, res }) {
+    const { MAX_ROWS, BATCH_SIZE } = this.EXPORT_LIMITS;
+
+    // Pass 1: Discover schema
+    const variantPaths = await this.discoverEventSchema({
+      startDate,
+      endDate,
+      category,
+      eventNames,
+      excludeInternal,
+    });
+
+    // Build CSV header
+    const fixedHeaders = this.FIXED_COLUMNS;
+    // Add 'v_' prefix to variant columns and replace dots with underscores
+    const variantHeaders = variantPaths.map((path) => `v_${path.replace(/\./g, '_')}`);
+    const allHeaders = [...fixedHeaders, ...variantHeaders];
+
+    // Write header
+    res.write(allHeaders.map((h) => this.escapeCSV(h)).join(',') + '\n');
+
+    // Pass 2: Stream rows with cursor pagination
+    let offset = 0;
+    let totalRows = 0;
+
+    while (totalRows < MAX_ROWS) {
+      const batch = await this.fetchEventBatch({
+        startDate,
+        endDate,
+        category,
+        eventNames,
+        excludeInternal,
+        offset,
+        limit: BATCH_SIZE,
+      });
+
+      if (batch.length === 0) break;
+
+      for (const event of batch) {
+        if (totalRows >= MAX_ROWS) break;
+
+        // Build row with fixed columns
+        const row = [
+          this.normalizeValue(event.id),
+          this.normalizeValue(event.event_name),
+          this.normalizeValue(event.event_category),
+          this.normalizeValue(event.session_id),
+          this.normalizeValue(event.user_id),
+          this.normalizeValue(event.user_email),
+          this.normalizeValue(event.ip_address),
+          event.is_internal ? 'Yes' : 'No',
+          event.created_at ? new Date(event.created_at).toISOString() : '',
+        ];
+
+        // Add variant columns from event_data
+        for (const path of variantPaths) {
+          const value = this.getNestedValue(event.event_data, path);
+          row.push(this.normalizeValue(value));
+        }
+
+        res.write(row.map((v) => this.escapeCSV(v)).join(',') + '\n');
+        totalRows++;
+      }
+
+      offset += BATCH_SIZE;
+    }
   },
 };
 

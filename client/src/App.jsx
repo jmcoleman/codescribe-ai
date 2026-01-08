@@ -106,9 +106,13 @@ function App() {
   }, [prefsLayoutMode]);
 
   // Track session start - once per session for funnel analytics
-  // Deduplication is handled internally by trackSessionStart
+  // Use ref to prevent React Strict Mode double-firing in dev
+  const sessionTrackedRef = useRef(false);
   useEffect(() => {
-    trackSessionStart();
+    if (!sessionTrackedRef.current) {
+      sessionTrackedRef.current = true;
+      trackSessionStart();
+    }
   }, []);
 
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -1817,9 +1821,12 @@ function App() {
     // Only track if code is substantial and we haven't tracked yet
     if (
       !hasTrackedCodeInputRef.current &&
-      newCode.length > 50 &&
-      codeOrigin !== 'sample' // Don't track if user just loaded a sample
+      newCode.length > 50
     ) {
+      // If user modified the sample code, update origin to 'paste'
+      if (codeOrigin === 'sample') {
+        setCodeOrigin('paste');
+      }
       trackCodeInput('paste', newCode.length, language, filename);
       hasTrackedCodeInputRef.current = true;
     }

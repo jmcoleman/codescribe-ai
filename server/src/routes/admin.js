@@ -1580,11 +1580,65 @@ router.get('/analytics/usage', requireAuth, requireAdmin, async (req, res) => {
 });
 
 /**
+ * GET /api/admin/analytics/performance
+ * Get LLM performance metrics (latency, cache hit rate, throughput)
+ *
+ * Query params:
+ * - startDate: ISO date string (required)
+ * - endDate: ISO date string (required)
+ * - excludeInternal: boolean (default: true)
+ */
+router.get('/analytics/performance', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { startDate, endDate, excludeInternal = 'true' } = req.query;
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({
+        success: false,
+        error: 'startDate and endDate are required',
+      });
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const excludeInternalBool = excludeInternal === 'true';
+
+    // Fetch both performance metrics and latency breakdown in parallel
+    const [metrics, latencyBreakdown] = await Promise.all([
+      analyticsService.getPerformanceMetrics({
+        startDate: start,
+        endDate: end,
+        excludeInternal: excludeInternalBool,
+      }),
+      analyticsService.getLatencyBreakdown({
+        startDate: start,
+        endDate: end,
+        excludeInternal: excludeInternalBool,
+      }),
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        ...metrics,
+        latencyBreakdown,
+      },
+    });
+  } catch (error) {
+    console.error('[Admin] Get analytics performance error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch performance metrics',
+    });
+  }
+});
+
+/**
  * GET /api/admin/analytics/timeseries
  * Get time series data for a specific metric
  *
  * Query params:
- * - metric: string (required) - sessions, generations, signups, revenue
+ * - metric: string (required) - sessions, generations, signups, revenue, latency, cache_hit_rate, throughput
  * - interval: string (required) - day, week, month
  * - startDate: ISO date string (required)
  * - endDate: ISO date string (required)
@@ -1601,7 +1655,7 @@ router.get('/analytics/timeseries', requireAuth, requireAdmin, async (req, res) 
       });
     }
 
-    const validMetrics = ['sessions', 'generations', 'signups', 'revenue'];
+    const validMetrics = ['sessions', 'generations', 'signups', 'revenue', 'latency', 'cache_hit_rate', 'throughput', 'ttft', 'streaming_time'];
     if (!validMetrics.includes(metric)) {
       return res.status(400).json({
         success: false,
@@ -1733,9 +1787,21 @@ router.get('/analytics/event-names', requireAuth, requireAdmin, async (req, res)
 
 /**
  * GET /api/admin/analytics/events/export
- * Export analytics events as CSV
+ * Export analytics events as CSV with schema discovery
  *
- * Query params same as /events endpoint
+ * Features:
+ * - Two-pass schema discovery (discovers all JSONB keys first)
+ * - Streaming I/O with cursor pagination (1000 rows/batch)
+ * - Flattened JSONB columns with 'v_' prefix
+ * - Max 100,000 rows, 90 days date range
+ * - UTF-8 encoding, standard CSV escaping
+ *
+ * Query params:
+ * - startDate: ISO date string (required)
+ * - endDate: ISO date string (required)
+ * - category: funnel | business | usage (optional)
+ * - eventNames: comma-separated event names (optional)
+ * - excludeInternal: boolean (optional, default false)
  */
 router.get('/analytics/events/export', requireAuth, requireAdmin, async (req, res) => {
   try {
@@ -1765,59 +1831,46 @@ router.get('/analytics/events/export', requireAuth, requireAdmin, async (req, re
       });
     }
 
+    // Validate date range (max 90 days)
+    const daysDiff = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+    if (daysDiff > analyticsService.EXPORT_LIMITS.MAX_DAYS) {
+      return res.status(400).json({
+        success: false,
+        error: `Date range exceeds maximum of ${analyticsService.EXPORT_LIMITS.MAX_DAYS} days. Please narrow your date range.`,
+      });
+    }
+
     // Parse eventNames from comma-separated string to array
     const eventNameList = eventNames ? eventNames.split(',').filter(Boolean) : null;
 
-    // Fetch all events (up to 10000 for export)
-    const result = await analyticsService.getEvents({
+    // Set streaming headers
+    const filename = `analytics-export-${start.toISOString().split('T')[0]}-to-${end.toISOString().split('T')[0]}.csv`;
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Transfer-Encoding', 'chunked');
+
+    // Stream the export with schema discovery
+    await analyticsService.streamEventsToCSV({
       startDate: start,
       endDate: end,
       category: category || null,
       eventNames: eventNameList,
       excludeInternal: excludeInternal === 'true',
-      page: 1,
-      limit: 10000,
+      res,
     });
 
-    // Build CSV
-    const headers = ['Timestamp', 'Event Name', 'Category', 'Session ID', 'User ID', 'User Email', 'IP Address', 'Internal', 'Event Data'];
-    const rows = result.events.map((event) => [
-      event.createdAt.toISOString(),
-      event.eventName,
-      event.category,
-      event.sessionId || '',
-      event.userId || '',
-      event.userEmail || '',
-      event.ipAddress || '',
-      event.isInternal ? 'Yes' : 'No',
-      JSON.stringify(event.eventData),
-    ]);
-
-    // Escape CSV values
-    const escapeCSV = (value) => {
-      const str = String(value);
-      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-        return `"${str.replace(/"/g, '""')}"`;
-      }
-      return str;
-    };
-
-    const csv = [
-      headers.join(','),
-      ...rows.map((row) => row.map(escapeCSV).join(',')),
-    ].join('\n');
-
-    // Send as downloadable file
-    const filename = `analytics-events-${startDate.split('T')[0]}-to-${endDate.split('T')[0]}.csv`;
-    res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-    res.send(csv);
+    res.end();
   } catch (error) {
     console.error('[Admin] Export analytics events error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to export events',
-    });
+    // If headers already sent, we can't send JSON error
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to export events',
+      });
+    } else {
+      res.end();
+    }
   }
 });
 

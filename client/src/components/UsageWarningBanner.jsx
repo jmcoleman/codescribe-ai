@@ -36,6 +36,7 @@ export function UsageWarningBanner({
   const [isVisible, setIsVisible] = useState(true);
   const [isExiting, setIsExiting] = useState(false);
   const dismissTimerRef = useRef(null);
+  const hasTrackedRef = useRef(false);
 
   // Reset visibility when usage changes
   useEffect(() => {
@@ -46,8 +47,10 @@ export function UsageWarningBanner({
   }, [usage]);
 
   // Track when warning banner is shown (conversion funnel event)
+  // Only fire once per component mount to avoid spam during streaming
   useEffect(() => {
-    if (usage && isVisible && !isExiting) {
+    if (usage && isVisible && !isExiting && !hasTrackedRef.current) {
+      hasTrackedRef.current = true;
       trackInteraction('usage_warning_shown', {
         percent_used: usage.percentage || Math.round(((usage.limit - usage.remaining) / usage.limit) * 100),
         tier: currentTier,

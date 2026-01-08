@@ -11,6 +11,15 @@ const jsxParser = acorn.Parser.extend(jsx());
  * @returns {Promise<Object>} Analysis results with functions, classes, exports, etc.
  */
 export async function parseCode(code, language) {
+  // Check for shebang to detect shell scripts that might be misidentified
+  // This handles cases where a .txt file or unknown extension contains a shell script
+  if (code && code.startsWith('#!')) {
+    const firstLine = code.split('\n')[0].toLowerCase();
+    if (firstLine.includes('bash') || firstLine.includes('sh') || firstLine.includes('zsh')) {
+      return basicAnalysis(code, 'bash');
+    }
+  }
+
   // Only use AST parsing for JavaScript/TypeScript
   if (language !== 'javascript' && language !== 'typescript') {
     return basicAnalysis(code, language);

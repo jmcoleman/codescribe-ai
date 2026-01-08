@@ -5,6 +5,7 @@
 
 export { default as ConversionFunnel } from './ConversionFunnel';
 export { default as TrendChart } from './TrendChart';
+export { default as MultiLineTrendChart } from './MultiLineTrendChart';
 export { default as ComparisonBar } from './ComparisonBar';
 export { default as ScoreDistribution } from './ScoreDistribution';
 export * from './chartTheme';

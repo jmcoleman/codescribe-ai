@@ -96,6 +96,16 @@ export const getSessionDuration = () => {
 };
 
 /**
+ * Reset the analytics session (call on logout)
+ * This ensures a new session starts when a different user logs in
+ */
+export const resetAnalyticsSession = () => {
+  sessionStorage.removeItem(SESSION_ID_KEY);
+  sessionStorage.removeItem(SESSION_START_KEY);
+  sessionStorage.removeItem(SESSION_TRACKED_KEY);
+};
+
+/**
  * Enhance event data with session context
  * Note: is_internal/is_admin/has_tier_override flags are set server-side
  * based on user role lookup, which is more accurate than client-side detection
@@ -342,6 +352,35 @@ export const trackInteraction = (action, metadata = {}) => {
   }));
 };
 
+/**
+ * Track doc copied (funnel event)
+ * Called when user copies generated documentation
+ * @param {Object} params - Event parameters
+ * @param {string} params.docType - Type of documentation copied
+ * @param {string} [params.filename] - Name of the file
+ */
+export const trackDocCopied = ({ docType, filename }) => {
+  trackEvent('doc_copied', withSessionContext({
+    doc_type: docType,
+    filename: filename || 'untitled',
+  }));
+};
+
+/**
+ * Track doc downloaded (funnel event)
+ * Called when user downloads generated documentation
+ * @param {Object} params - Event parameters
+ * @param {string} params.docType - Type of documentation downloaded
+ * @param {string} [params.filename] - Name of the file
+ * @param {string} [params.format] - Download format (md, txt, etc.)
+ */
+export const trackDocDownloaded = ({ docType, filename, format }) => {
+  trackEvent('doc_downloaded', withSessionContext({
+    doc_type: docType,
+    filename: filename || 'untitled',
+    format: format || 'md',
+  }));
+};
 
 /**
  * Track session start for funnel analytics

@@ -10,7 +10,7 @@ import { API_URL } from '../config/api';
 import { STORAGE_KEYS, getStorageItem, setStorageItem, removeStorageItem, clearAppStorage } from '../constants/storage';
 import { clearWorkspaceLocalStorage } from '../hooks/useWorkspacePersistence';
 import { clearBatchSessionStorage } from '../hooks/useBatchGeneration';
-import { setAnalyticsOptOut, trackLogin, trackSignup } from '../utils/analytics';
+import { setAnalyticsOptOut, trackLogin, trackSignup, resetAnalyticsSession, trackSessionStart } from '../utils/analytics';
 
 const AuthContext = createContext(null);
 
@@ -203,6 +203,10 @@ export function AuthProvider({ children }) {
         // Track login for analytics (associates session with user)
         trackLogin({ method: 'email' });
 
+        // Start a new session if this is a fresh login after logout
+        // (resetAnalyticsSession clears SESSION_TRACKED_KEY, allowing this to fire)
+        trackSessionStart();
+
         return { success: true };
       }
 
@@ -240,6 +244,9 @@ export function AuthProvider({ children }) {
 
       // Clear batch state from sessionStorage (prevents stale batch content on re-login)
       clearBatchSessionStorage();
+
+      // Reset analytics session so new user gets a fresh session
+      resetAnalyticsSession();
     } catch (err) {
       console.error('Logout error:', err);
     } finally {
