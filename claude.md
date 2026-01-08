@@ -470,14 +470,15 @@ codescribe-ai/
 
 ## 🔄 Version History
 
-**Current: v3.3.5** (January 6, 2026)
-- Analytics accuracy hotfix: exclude failed generations from metrics
-- Doc types, languages, origins, batch vs single now filter by success status
-- Generations over time chart only counts successful generations
-- Failed generations still tracked for error analysis
-- 3,882 tests (2,044 frontend, 1,838 backend)
-- Frontend: 2,044 passing, 56 skipped
-- Backend: 1,838 passing, 33 skipped
+**Current: v3.3.5** (January 7, 2026)
+- Multi-select event filter: Select multiple events in Raw Events table with Portal rendering
+- Grouped performance metrics: latency (TTFT, TPOT), throughput (tokens/sec), cache, LLM context
+- Campaign trials system: Auto-grant Pro trials during campaigns, admin management page
+- Auth tracking: trackLogin/trackSignup functions, User model _created flag
+- Analytics fix: exclude failed generations from metrics
+- 3,945 tests (2,047 frontend, 1,898 backend)
+- Frontend: 2,047 passing, 67 skipped
+- Backend: 1,898 passing, 33 skipped
 
 <details>
 <summary>Recent Releases (v2.9.0-v3.3.4) & Milestones</summary>
@@ -521,7 +522,7 @@ codescribe-ai/
 - **v1.21** (Oct 19): Production deployment, codescribe-ai.vercel.app
 
 Full history: [CHANGELOG.md](CHANGELOG.md)
-Last updated: January 6, 2026
+Last updated: January 7, 2026
 </details>
 
 ---

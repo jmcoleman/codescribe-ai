@@ -9,18 +9,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [3.3.5] - 2026-01-06
+## [3.3.5] - 2026-01-07
 
-**Status:** ✅ Analytics Accuracy Hotfix
+**Status:** ✅ Multi-Select Analytics & Campaign Trials
 
-**Summary:** Fixed analytics dashboard to only count successful generations. Previously, failed generation attempts (e.g., Anthropic API credit balance errors, rate limits) were incorrectly included in metrics.
+**Summary:** Added multi-select event filtering to analytics dashboard, restructured performance metrics for comprehensive LLM tracking, and implemented campaign trials system for marketing promotions. Also fixed analytics to exclude failed generations from metrics.
+
+### Added
+
+- **Multi-Select Event Filter** ([client/src/components/Select.jsx](client/src/components/Select.jsx))
+  - Select multiple events simultaneously in Raw Events table
+  - Portal rendering to escape overflow containers
+  - Industry-standard UX: pending selections applied on dropdown close
+  - "All Events" option to clear filter selections
+
+- **Grouped Performance Metrics** ([client/src/utils/analytics.js](client/src/utils/analytics.js))
+  - `latency`: totalMs, ttftMs (time to first token), tpotMs, streamingMs
+  - `throughput`: outputTokens, tokensPerSecond
+  - `input`: tokens, chars
+  - `cache`: hit, readTokens
+  - `context`: docType, language
+  - `llm`: provider, model
+
+- **Campaign Trials System** ([server/src/models/Campaign.js](server/src/models/Campaign.js))
+  - Auto-grant Pro trials during campaign periods
+  - Admin campaigns page for campaign management
+  - Environment-based toggle (CAMPAIGN_AUTO_TRIAL)
+  - Trial source tracking: 'auto-campaign' vs 'invite_code'
+  - Database migrations for campaigns table
+
+- **Auth Tracking** ([client/src/contexts/AuthContext.jsx](client/src/contexts/AuthContext.jsx))
+  - `trackLogin()` and `trackSignup()` analytics functions
+  - User model `_created` flag for new vs existing user detection
 
 ### Fixed
 
 - **Analytics: Exclude failed generations from metrics** ([server/src/services/analyticsService.js](server/src/services/analyticsService.js))
-  - `getUsagePatterns()` - Doc types, languages, origins, and batch vs single now filter by `success = 'true'`
-  - `getTimeSeries()` - Generations over time chart now only counts successful generations
-  - Failed generations are still tracked (useful for error analysis) but no longer inflate success metrics
+  - `getUsagePatterns()` - Doc types, languages, origins now filter by `success = 'true'`
+  - `getTimeSeries()` - Generations over time only counts successful generations
+
+### Tests
+
+- 3,945 tests (2,047 frontend, 1,898 backend)
+- 100 skipped (67 frontend, 33 backend)
+- Added 14 new analyticsService tests for multi-select filter combinations
+- Added getBusinessConversionFunnel test coverage
 
 ---
 
