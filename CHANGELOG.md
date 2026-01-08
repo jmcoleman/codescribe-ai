@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [3.3.6] - 2026-01-08
+## [3.3.7] - 2026-01-08
 
 **Status:** ✅ Event Category Reclassification & Test Coverage
 
