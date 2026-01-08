@@ -65,9 +65,9 @@
       "text": "codescribeai.com",
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
-    "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.32",
-    "footer": "v3.3.5 Complete · Multi-Select Analytics + Campaign Trials ✓ · Up Next: Performance Analytics Tab · VS Code Extension: Separate Repo",
-    "lastUpdated": "January 7, 2026"
+    "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.33",
+    "footer": "v3.3.6 Complete · Event Category Reclassification ✓ · Up Next: Performance Analytics Tab · VS Code Extension: Separate Repo",
+    "lastUpdated": "January 8, 2026"
   },
   "columns": [
     {
@@ -76,6 +76,25 @@
       "title": "Completed",
       "subtitle": "Phase 1: Core Capabilities",
       "phases": [
+        {
+          "version": "v3.3.6",
+          "title": "Event Category Reclassification & Test Coverage",
+          "duration": "0.5 days",
+          "status": "✓ Complete",
+          "completedDate": "Jan 8, 2026",
+          "badge": "Analytics Refinement",
+          "features": [
+            "Event category reclassification: Renamed 'funnel' to 'workflow' for clarity",
+            "New 'system' category: Groups error and performance events",
+            "Moved 'usage_alert' to business category: Better monetization tracking",
+            "Database migration 050: Updates CHECK constraint for new categories",
+            "Session internal flagging: Login events retroactively update session events as internal",
+            "trackTrial method: Comprehensive trial lifecycle tracking (started, expired, converted)",
+            "Test coverage improvements: Added 15 new analyticsService tests",
+            "Services coverage: 91.05% statements, 85.64% branches, 94.22% functions",
+            "CI coverage thresholds: All services thresholds now pass"
+          ]
+        },
         {
           "version": "v3.3.5",
           "title": "Multi-Select Analytics & Campaign Trials",
