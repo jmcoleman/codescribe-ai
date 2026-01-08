@@ -24,13 +24,15 @@ vi.mock('../../utils/toastWithHistory', () => ({
   toastWelcomeBack: vi.fn(),
 }));
 
-// Mock analytics
+// Mock analytics - must include all exports used by AuthContext
 vi.mock('../../utils/analytics', () => ({
   trackOAuth: vi.fn(),
   setAnalyticsOptOut: vi.fn(),
   trackLogin: vi.fn(),
   trackSignup: vi.fn(),
   trackInteraction: vi.fn(),
+  trackSessionStart: vi.fn(),
+  resetAnalyticsSession: vi.fn(),
 }));
 
 describe('LoginModal', () => {

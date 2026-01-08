@@ -11,7 +11,7 @@ import { DocPanelGeneratingSkeleton } from './SkeletonLoader';
 import { MermaidDiagram } from './MermaidDiagram';
 import { useTheme } from '../contexts/ThemeContext';
 import { formatDateTime } from '../utils/formatters';
-import { trackInteraction, trackDocCopied, trackDocDownloaded } from '../utils/analytics';
+import { trackDocExport } from '../utils/analytics';
 
 // Custom Prism theme matching Monaco editor theme
 const codescribeLightTheme = {
@@ -376,35 +376,23 @@ export const DocPanel = memo(function DocPanel({
   const handleCopySuccess = useCallback(() => {
     const docTypeValue = qualityScore?.isBatchSummary ? 'batch-summary' : (qualityScore?.docType || docType || 'unknown');
     const filenameValue = filename || 'untitled';
-    // Track as user interaction for engagement metrics
-    trackInteraction('copy_docs', {
-      doc_type: docTypeValue,
-      filename: filenameValue,
-      content_length: documentation?.length || 0,
-    });
-    // Also track as funnel event for conversion tracking
-    trackDocCopied({
+    trackDocExport({
+      action: 'copy',
       docType: docTypeValue,
       filename: filenameValue,
     });
-  }, [qualityScore, docType, documentation, filename]);
+  }, [qualityScore, docType, filename]);
 
   const handleDownloadSuccess = useCallback(() => {
     const docTypeValue = qualityScore?.isBatchSummary ? 'batch-summary' : (qualityScore?.docType || docType || 'unknown');
     const filenameValue = filename || 'untitled';
-    // Track as user interaction for engagement metrics
-    trackInteraction('download_docs', {
-      doc_type: docTypeValue,
-      filename: filenameValue,
-      content_length: documentation?.length || 0,
-    });
-    // Also track as funnel event for conversion tracking
-    trackDocDownloaded({
+    trackDocExport({
+      action: 'download',
       docType: docTypeValue,
       filename: filenameValue,
       format: 'md',
     });
-  }, [qualityScore, docType, documentation, filename]);
+  }, [qualityScore, docType, filename]);
 
   // Memoize ReactMarkdown components to prevent unnecessary re-renders
   const markdownComponents = useMemo(() => ({

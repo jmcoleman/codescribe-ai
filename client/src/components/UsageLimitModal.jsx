@@ -1,6 +1,6 @@
 import { X, AlertTriangle, Zap, ArrowRight, Clock } from 'lucide-react';
 import { useEffect, useRef } from 'react';
-import { trackInteraction } from '../utils/analytics';
+import { trackUsageAlert } from '../utils/analytics';
 
 /**
  * Usage limit modal for 100% quota reached (hard limit)
@@ -44,10 +44,13 @@ export function UsageLimitModal({
   // Track when limit modal is shown (conversion funnel event)
   useEffect(() => {
     if (isOpen) {
-      trackInteraction('usage_limit_hit', {
+      trackUsageAlert({
+        action: 'limit_hit',
         tier: currentTier,
-        limit_type: usage?.period || 'monthly',
+        percentUsed: 100,
+        remaining: 0,
         limit: usage?.limit || 0,
+        period: usage?.period,
       });
     }
   }, [isOpen, currentTier, usage]);

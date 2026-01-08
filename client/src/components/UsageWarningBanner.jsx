@@ -1,6 +1,6 @@
 import { X, AlertCircle, ArrowRight } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
-import { trackInteraction } from '../utils/analytics';
+import { trackUsageAlert } from '../utils/analytics';
 
 /**
  * Usage warning banner for 80-99% quota usage (soft limit)
@@ -51,11 +51,13 @@ export function UsageWarningBanner({
   useEffect(() => {
     if (usage && isVisible && !isExiting && !hasTrackedRef.current) {
       hasTrackedRef.current = true;
-      trackInteraction('usage_warning_shown', {
-        percent_used: usage.percentage || Math.round(((usage.limit - usage.remaining) / usage.limit) * 100),
+      trackUsageAlert({
+        action: 'warning_shown',
         tier: currentTier,
-        docs_remaining: usage.remaining,
-        period: usage.period || 'monthly',
+        percentUsed: usage.percentage || Math.round(((usage.limit - usage.remaining) / usage.limit) * 100),
+        remaining: usage.remaining,
+        limit: usage.limit,
+        period: usage.period,
       });
     }
   }, [usage, isVisible, isExiting, currentTier]);

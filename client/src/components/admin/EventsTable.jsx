@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Select } from '../Select';
+import { GroupedEventSelect } from './GroupedEventSelect';
 import { formatDateTime } from '../../utils/formatters';
 import { BaseTable } from '../BaseTable';
 import { useTableColumnSizing } from '../../hooks/useTableColumnSizing';
@@ -25,29 +26,33 @@ const API_URL = import.meta.env.VITE_API_URL || '';
 
 // Category options for filter
 // Note: These align with EVENT_CATEGORIES in analyticsService.js
-// - funnel: Usage funnel events (session_start, code_input, generation_*, doc_copied/downloaded)
-// - business: Business conversion events (login, signup, tier_*, checkout, subscription)
-// - usage: Usage pattern events (doc_generation, quality_score, file_upload, error, etc.)
+// - workflow: Core user workflow events (session_start, code_input, generation_*, doc_export)
+// - business: Business conversion events (login, signup, tier_*, checkout, usage_alert)
+// - usage: Usage pattern events (doc_generation, quality_score, oauth_flow, user_interaction)
+// - system: Infrastructure/technical events (error, performance)
 const CATEGORY_OPTIONS = [
   { value: '', label: 'All Categories' },
-  { value: 'funnel', label: 'Usage Funnel' },
-  { value: 'business', label: 'Business Conversion' },
-  { value: 'usage', label: 'Usage Patterns' },
+  { value: 'workflow', label: 'Workflow' },
+  { value: 'business', label: 'Business' },
+  { value: 'usage', label: 'Usage' },
+  { value: 'system', label: 'System' },
 ];
 
 // Category display labels (for badges)
 const CATEGORY_LABELS = {
-  funnel: 'Usage Funnel',
+  workflow: 'Workflow',
   business: 'Business',
   usage: 'Usage',
+  system: 'System',
 };
 
 // Category badge component
 function CategoryBadge({ category }) {
   const colorClasses = {
-    funnel: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+    workflow: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
     business: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
     usage: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
+    system: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
   };
 
   return (
@@ -97,16 +102,17 @@ export function EventsTable({ startDate, endDate, excludeInternal = false }) {
   const { columnSizing, onColumnSizingChange } = useTableColumnSizing('analytics_events');
 
   // Data state
-  const [events, setEvents] = useState([]);
+  const [tableEvents, setTableEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [exporting, setExporting] = useState(false);
 
   // Filter state
-  const [eventNames, setEventNames] = useState([]);
+  const [eventOptions, setEventOptions] = useState([]); // Events with actions from backend
   const [filterCategory, setFilterCategory] = useState('');
-  const [filterEventNames, setFilterEventNames] = useState([]); // Array for multi-select
+  // New grouped event filter state: { eventNames: [], eventActions: {} }
+  const [eventFilter, setEventFilter] = useState({ eventNames: [], eventActions: {} });
 
   // Pagination state
   const [pagination, setPagination] = useState({ page: 1, limit: 50, total: 0, totalPages: 0 });
@@ -187,7 +193,7 @@ export function EventsTable({ startDate, endDate, excludeInternal = false }) {
     );
   }, []);
 
-  // Fetch event names for dropdown
+  // Fetch events with actions for dropdown
   const fetchEventNames = useCallback(async () => {
     try {
       const token = getToken();
@@ -200,11 +206,12 @@ export function EventsTable({ startDate, endDate, excludeInternal = false }) {
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
-          setEventNames(data.eventNames || []);
+          // New format: data.events is array of { name, category, actions?, actionField? }
+          setEventOptions(data.events || []);
         }
       }
     } catch (err) {
-      console.error('Error fetching event names:', err);
+      console.error('Error fetching events:', err);
     }
   }, [getToken]);
 
@@ -232,7 +239,16 @@ export function EventsTable({ startDate, endDate, excludeInternal = false }) {
       });
 
       if (filterCategory) params.append('category', filterCategory);
-      if (filterEventNames.length > 0) params.append('eventNames', filterEventNames.join(','));
+
+      // Pass event names and action filters from the grouped filter
+      if (eventFilter.eventNames.length > 0) {
+        params.append('eventNames', eventFilter.eventNames.join(','));
+
+        // If there are action filters, pass them as JSON
+        if (Object.keys(eventFilter.eventActions).length > 0) {
+          params.append('eventActions', JSON.stringify(eventFilter.eventActions));
+        }
+      }
 
       const response = await fetch(`${API_URL}/api/admin/analytics/events?${params}`, {
         headers: { 'Authorization': `Bearer ${token}` },
@@ -244,7 +260,7 @@ export function EventsTable({ startDate, endDate, excludeInternal = false }) {
 
       const data = await response.json();
       if (data.success) {
-        setEvents(data.events || []);
+        setTableEvents(data.events || []);
         setPagination(prev => ({
           ...prev,
           page: data.page,
@@ -259,7 +275,7 @@ export function EventsTable({ startDate, endDate, excludeInternal = false }) {
       setLoading(false);
       setIsRefreshing(false);
     }
-  }, [getToken, startDate, endDate, excludeInternal, filterCategory, filterEventNames, pagination.limit]);
+  }, [getToken, startDate, endDate, excludeInternal, filterCategory, eventFilter, pagination.limit]);
 
   // Handle CSV export
   const handleExport = useCallback(async () => {
@@ -277,7 +293,9 @@ export function EventsTable({ startDate, endDate, excludeInternal = false }) {
       });
 
       if (filterCategory) params.append('category', filterCategory);
-      if (filterEventNames.length > 0) params.append('eventNames', filterEventNames.join(','));
+      if (eventFilter.eventNames.length > 0) {
+        params.append('eventNames', eventFilter.eventNames.join(','));
+      }
 
       const response = await fetch(`${API_URL}/api/admin/analytics/events/export?${params}`, {
         headers: { 'Authorization': `Bearer ${token}` },
@@ -303,7 +321,7 @@ export function EventsTable({ startDate, endDate, excludeInternal = false }) {
     } finally {
       setExporting(false);
     }
-  }, [getToken, startDate, endDate, excludeInternal, filterCategory, filterEventNames]);
+  }, [getToken, startDate, endDate, excludeInternal, filterCategory, eventFilter.eventNames]);
 
   // Initial load
   useEffect(() => {
@@ -318,7 +336,7 @@ export function EventsTable({ startDate, endDate, excludeInternal = false }) {
     } else {
       fetchData(1, false);
     }
-  }, [startDate, endDate, excludeInternal, filterCategory, filterEventNames]);
+  }, [startDate, endDate, excludeInternal, filterCategory, eventFilter]);
 
   // Handle page change
   const handlePageChange = (newPage) => {
@@ -330,25 +348,11 @@ export function EventsTable({ startDate, endDate, excludeInternal = false }) {
   // Clear filters
   const clearFilters = () => {
     setFilterCategory('');
-    setFilterEventNames([]);
+    setEventFilter({ eventNames: [], eventActions: {} });
   };
 
-  // Build event name options with "All Events" at the top
-  const eventNameOptions = [
-    { value: '', label: 'All Events' },
-    ...eventNames.map(name => ({ value: name, label: name }))
-  ];
-
-  // Handle event name filter changes - selecting "All Events" clears other selections
-  const handleEventNameFilterChange = (newValue) => {
-    // If "All Events" (empty string) was just selected, clear all selections
-    if (newValue.includes('') && !filterEventNames.includes('')) {
-      setFilterEventNames([]);
-    } else {
-      // Filter out empty string if user selected a specific event
-      setFilterEventNames(newValue.filter(v => v !== ''));
-    }
-  };
+  // Check if any event filter is active
+  const hasEventFilter = eventFilter.eventNames.length > 0;
 
   // Header/filters section (shown for all states)
   const HeaderSection = () => (
@@ -393,16 +397,15 @@ export function EventsTable({ startDate, endDate, excludeInternal = false }) {
           options={CATEGORY_OPTIONS}
           ariaLabel="Filter by category"
         />
-        <Select
-          value={filterEventNames}
-          onChange={handleEventNameFilterChange}
+        <GroupedEventSelect
+          events={eventOptions}
+          value={eventFilter}
+          onChange={setEventFilter}
           placeholder="All Events"
+          ariaLabel="Filter by event"
           size="small"
-          options={eventNameOptions}
-          ariaLabel="Filter by event name"
-          multiple
         />
-        {(filterCategory || filterEventNames.length > 0) && (
+        {(filterCategory || hasEventFilter) && (
           <button
             onClick={clearFilters}
             className="px-3 py-1.5 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
@@ -427,7 +430,7 @@ export function EventsTable({ startDate, endDate, excludeInternal = false }) {
   }
 
   // Empty state with no filters
-  const hasFilters = filterCategory || filterEventNames.length > 0;
+  const hasFilters = filterCategory || hasEventFilter;
   const emptyStateProps = {
     icon: Database,
     title: 'No events found',
@@ -448,7 +451,7 @@ export function EventsTable({ startDate, endDate, excludeInternal = false }) {
     <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
       <HeaderSection />
       <BaseTable
-        data={events}
+        data={tableEvents}
         columns={columns}
         isLoading={loading}
         isRefreshing={isRefreshing}

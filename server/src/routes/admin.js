@@ -1701,6 +1701,8 @@ router.get('/analytics/timeseries', requireAuth, requireAdmin, async (req, res) 
  * - endDate: ISO date string (required)
  * - category: funnel | business | usage (optional)
  * - eventNames: comma-separated event names (optional, for multi-select filter)
+ * - eventActions: JSON object for action filtering (optional)
+ *   Format: {"tier_change":{"actionField":"action","actions":["upgrade","downgrade"]}}
  * - excludeInternal: boolean (optional, default false)
  * - page: number (optional, default 1)
  * - limit: number (optional, default 50, max 100)
@@ -1712,6 +1714,7 @@ router.get('/analytics/events', requireAuth, requireAdmin, async (req, res) => {
       endDate,
       category,
       eventNames,
+      eventActions,
       excludeInternal,
       page = '1',
       limit = '50',
@@ -1742,11 +1745,25 @@ router.get('/analytics/events', requireAuth, requireAdmin, async (req, res) => {
     // Parse eventNames from comma-separated string to array
     const eventNameList = eventNames ? eventNames.split(',').filter(Boolean) : null;
 
+    // Parse eventActions from JSON string
+    let eventActionsParsed = null;
+    if (eventActions) {
+      try {
+        eventActionsParsed = JSON.parse(eventActions);
+      } catch {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid eventActions format - must be valid JSON',
+        });
+      }
+    }
+
     const result = await analyticsService.getEvents({
       startDate: start,
       endDate: end,
       category: category || null,
       eventNames: eventNameList,
+      eventActions: eventActionsParsed,
       excludeInternal: excludeInternal === 'true',
       page: pageNum,
       limit: limitNum,
@@ -1767,14 +1784,24 @@ router.get('/analytics/events', requireAuth, requireAdmin, async (req, res) => {
 
 /**
  * GET /api/admin/analytics/event-names
- * Get distinct event names for filter dropdown
+ * Get distinct event names with their actions for filter dropdown
+ *
+ * Response format:
+ * {
+ *   success: true,
+ *   events: [
+ *     { name: 'session_start', category: 'workflow' },
+ *     { name: 'tier_change', category: 'business', actionField: 'action', actions: ['upgrade', 'downgrade', 'cancel'] },
+ *     ...
+ *   ]
+ * }
  */
 router.get('/analytics/event-names', requireAuth, requireAdmin, async (req, res) => {
   try {
-    const eventNames = await analyticsService.getEventNames();
+    const events = await analyticsService.getEventNames();
     res.json({
       success: true,
-      eventNames,
+      events,
     });
   } catch (error) {
     console.error('[Admin] Get event names error:', error);

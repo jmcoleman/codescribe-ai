@@ -1069,7 +1069,7 @@ export default function Analytics() {
                         Based on {formatNumber(performanceData.latencyBreakdown.totalEvents)} streaming events.
                         TTFT = Time to First Token (API overhead). TPOT = Time Per Output Token (generation speed).
                       </span>
-                      <InfoTooltip content="TTFT: <500ms excellent • 500ms-1s good • 1-2s acceptable • >2s slow" />
+                      <InfoTooltip content="TTFT (time until streaming starts): <500ms excellent • 500ms-1s good • 1-2s acceptable • >2s slow. Throughput: >50 tok/s excellent • 30-50 good • <30 slow. Total generation scales with output (~30ms/token)." />
                     </p>
                   </div>
                 </ChartSection>

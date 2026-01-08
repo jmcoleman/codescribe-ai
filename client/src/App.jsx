@@ -23,7 +23,7 @@ import { PriorityBannerSection } from './components/PriorityBannerSection';
 import { MobileTabBar } from './components/MobileTabBar';
 import { AppModals } from './components/AppModals';
 import { validateFile, getValidationErrorMessage, detectLanguageFromFilename } from './utils/fileValidation';
-import { trackCodeInput, trackFileUpload, trackInteraction, trackSessionStart } from './utils/analytics';
+import { trackCodeInput, trackInteraction, trackSessionStart } from './utils/analytics';
 import { toastCompact, toastError } from './utils/toastWithHistory';
 import { toastDocGenerated } from './utils/toast';
 import { createTestDataLoader, exposeTestDataLoader, createSkeletonTestHelper, exposeSkeletonTestHelper } from './utils/testData';
@@ -1559,15 +1559,12 @@ function App() {
         // Detect language for analytics tracking
         const detectedLanguage = detectLanguageFromFilename(data.file.name);
 
-        // Track successful file upload
-        trackFileUpload({
+        // Track code input from upload
+        trackCodeInput('upload', data.file.content.length, detectedLanguage, data.file.name, {
           fileType: data.file.extension.toLowerCase().replace('.', ''),
           fileSize: file.size,
           success: true,
         });
-
-        // Track code input method
-        trackCodeInput('upload', data.file.content.length, detectedLanguage, data.file.name);
 
         // Clear loading state (no success toast needed - file appearing in editor is clear feedback)
         setIsUploading(false);
@@ -1666,7 +1663,7 @@ function App() {
       setIsUploading(false);
 
       // Track failed file upload
-      trackFileUpload({
+      trackCodeInput('upload', 0, 'unknown', file.name, {
         fileType: file.name.split('.').pop(),
         fileSize: file.size,
         success: false,
@@ -1860,12 +1857,12 @@ function App() {
       setFilename(fileName);
     }
 
-    // Track analytics
-    trackInteraction('github_file_loaded', {
+    // Track code input (consistent with upload, paste, sample)
+    trackCodeInput('github', fileCode.length, fileLang || detectLanguageFromFilename(fileName), fileName, {
       owner: metadata?.owner,
-      repo: metadata?.repo,
+      name: metadata?.repo,
       path: metadata?.path,
-      language: fileLang || detectLanguageFromFilename(fileName)
+      isPrivate: metadata?.isPrivate,
     });
 
     // Clear any previous documentation

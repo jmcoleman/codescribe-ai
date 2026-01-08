@@ -77,52 +77,37 @@ export const trackCheckoutCompleted = async ({ userId, tier, amount, billingPeri
 };
 
 /**
- * Track tier upgrade (webhook event)
+ * Track tier change (webhook event)
+ * Consolidated event for upgrades, downgrades, and cancellations
  * @param {Object} params - Event parameters
+ * @param {string} params.action - Action: 'upgrade', 'downgrade', or 'cancel'
  * @param {string} params.userId - User ID
  * @param {string} params.previousTier - Previous tier
- * @param {string} params.newTier - New tier
- * @param {string} params.source - Source of upgrade (e.g., 'stripe_webhook')
+ * @param {string} [params.newTier] - New tier (null for cancel)
+ * @param {string} [params.source] - Source of change (e.g., 'stripe_webhook', 'stripe_checkout')
+ * @param {string} [params.reason] - Cancellation reason (for cancel action)
  */
-export const trackTierUpgraded = async ({ userId, previousTier, newTier, source = 'stripe_webhook' }) => {
-  await trackServerEvent('tier_upgrade', {
-    user_id: userId,
-    previous_tier: previousTier,
-    new_tier: newTier,
-    source,
-  }, { userId });
-};
-
-/**
- * Track tier downgrade (webhook event)
- * @param {Object} params - Event parameters
- * @param {string} params.userId - User ID
- * @param {string} params.previousTier - Previous tier
- * @param {string} params.newTier - New tier
- * @param {string} params.source - Source of downgrade
- */
-export const trackTierDowngraded = async ({ userId, previousTier, newTier, source = 'stripe_webhook' }) => {
-  await trackServerEvent('tier_downgrade', {
-    user_id: userId,
-    previous_tier: previousTier,
-    new_tier: newTier,
-    source,
-  }, { userId });
-};
-
-/**
- * Track subscription cancelled (webhook event)
- * @param {Object} params - Event parameters
- * @param {string} params.userId - User ID
- * @param {string} params.tier - Tier being cancelled
- * @param {string} params.reason - Cancellation reason if available
- */
-export const trackSubscriptionCancelled = async ({ userId, tier, reason }) => {
-  await trackServerEvent('subscription_cancelled', {
-    user_id: userId,
-    tier,
-    reason: reason || 'unknown',
-  }, { userId });
+export const trackTierChange = async ({ action, userId, previousTier, newTier, source = 'stripe_webhook', reason }) => {
+  // Use the analyticsService helper for consistent event structure
+  try {
+    await analyticsService.trackTierChange({
+      action,
+      userId,
+      previousTier,
+      newTier,
+      source,
+      reason,
+    });
+  } catch (error) {
+    // Log error but don't fail - analytics shouldn't break business logic
+    console.error(JSON.stringify({
+      type: 'analytics_error',
+      event: 'tier_change',
+      action,
+      error: error.message,
+      timestamp: new Date().toISOString(),
+    }));
+  }
 };
 
 /**

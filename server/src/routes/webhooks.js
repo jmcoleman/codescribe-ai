@@ -17,7 +17,7 @@ import { sql } from '@vercel/postgres';
 import stripe, { STRIPE_WEBHOOK_SECRET, getTierFromPriceId } from '../config/stripe.js';
 import Subscription from '../models/Subscription.js';
 import User from '../models/User.js';
-import { trackCheckoutCompleted, trackTierUpgraded, trackSubscriptionCancelled } from '../utils/serverAnalytics.js';
+import { trackCheckoutCompleted, trackTierChange } from '../utils/serverAnalytics.js';
 
 const router = express.Router();
 
@@ -211,9 +211,10 @@ async function handleSubscriptionDeleted(subscription) {
   await User.updateTier(userId, 'free');
 
   // Track subscription cancellation analytics event
-  trackSubscriptionCancelled({
+  trackTierChange({
+    action: 'cancel',
     userId,
-    tier: previousTier,
+    previousTier,
     reason: subscription.cancellation_details?.reason || 'unknown',
   });
 
@@ -485,9 +486,14 @@ async function createOrUpdateSubscription(stripeSubscription, userId, createdVia
       await User.updateTier(userId, tier);
       console.log(`✅ Updated user ${userId} tier to ${tier} (production subscription)`);
 
-      // Track tier upgrade analytics event (only if tier actually changed)
+      // Track tier change analytics event (only if tier actually changed)
       if (previousTier !== tier) {
-        trackTierUpgraded({
+        // Determine if this is an upgrade or downgrade based on tier hierarchy
+        const tierOrder = { free: 0, pro: 1, team: 2 };
+        const action = tierOrder[tier] > tierOrder[previousTier] ? 'upgrade' : 'downgrade';
+
+        trackTierChange({
+          action,
           userId,
           previousTier,
           newTier: tier,

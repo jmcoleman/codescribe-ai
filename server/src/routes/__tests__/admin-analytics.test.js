@@ -425,7 +425,7 @@ describe('Admin Analytics API Endpoints', () => {
         {
           id: 'uuid-1',
           eventName: 'session_start',
-          category: 'funnel',
+          category: 'workflow',
           sessionId: 'sess-123',
           userId: null,
           userEmail: null,
@@ -513,7 +513,7 @@ describe('Admin Analytics API Endpoints', () => {
     it('should filter by category', async () => {
       mockRequest.query = {
         ...dateRange,
-        category: 'funnel',
+        category: 'workflow',
       };
 
       analyticsService.getEvents.mockResolvedValue(mockEventsData);
@@ -530,7 +530,7 @@ describe('Admin Analytics API Endpoints', () => {
 
       expect(analyticsService.getEvents).toHaveBeenCalledWith(
         expect.objectContaining({
-          category: 'funnel',
+          category: 'workflow',
         })
       );
     });
@@ -645,7 +645,7 @@ describe('Admin Analytics API Endpoints', () => {
       events: [
         {
           eventName: 'session_start',
-          category: 'funnel',
+          category: 'workflow',
           sessionId: 'sess-123',
           userId: null,
           userEmail: null,

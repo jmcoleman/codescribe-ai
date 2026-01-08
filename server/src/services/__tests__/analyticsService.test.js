@@ -40,7 +40,7 @@ describe('AnalyticsService', () => {
 
     it('should return true for valid business events', () => {
       expect(analyticsService.isValidEvent('signup')).toBe(true);
-      expect(analyticsService.isValidEvent('tier_upgrade')).toBe(true);
+      expect(analyticsService.isValidEvent('tier_change')).toBe(true);
       expect(analyticsService.isValidEvent('checkout_completed')).toBe(true);
     });
 
@@ -59,18 +59,23 @@ describe('AnalyticsService', () => {
 
   describe('getEventCategory', () => {
     it('should return funnel for funnel events', () => {
-      expect(analyticsService.getEventCategory('session_start')).toBe('funnel');
-      expect(analyticsService.getEventCategory('doc_copied')).toBe('funnel');
+      expect(analyticsService.getEventCategory('session_start')).toBe('workflow');
+      expect(analyticsService.getEventCategory('doc_export')).toBe('workflow');
     });
 
     it('should return business for business events', () => {
       expect(analyticsService.getEventCategory('signup')).toBe('business');
-      expect(analyticsService.getEventCategory('subscription_cancelled')).toBe('business');
+      expect(analyticsService.getEventCategory('tier_change')).toBe('business');
     });
 
     it('should return usage for usage events', () => {
       expect(analyticsService.getEventCategory('doc_generation')).toBe('usage');
-      expect(analyticsService.getEventCategory('error')).toBe('usage');
+      expect(analyticsService.getEventCategory('user_interaction')).toBe('usage');
+    });
+
+    it('should return system for system events', () => {
+      expect(analyticsService.getEventCategory('error')).toBe('system');
+      expect(analyticsService.getEventCategory('performance')).toBe('system');
     });
 
     it('should return null for invalid events', () => {
@@ -97,7 +102,7 @@ describe('AnalyticsService', () => {
       expect(sql).toHaveBeenCalled();
       expect(result).toHaveProperty('id', 'uuid-123');
       expect(result).toHaveProperty('eventName', 'session_start');
-      expect(result).toHaveProperty('category', 'funnel');
+      expect(result).toHaveProperty('category', 'workflow');
     });
 
     it('should throw error for invalid event name', async () => {
@@ -132,6 +137,66 @@ describe('AnalyticsService', () => {
   });
 
   // ============================================================================
+  // SERVER-SIDE EVENT HELPERS
+  // ============================================================================
+
+  describe('trackTierChange', () => {
+    beforeEach(() => {
+      const mockResult = {
+        rows: [{ id: 'uuid-tier', created_at: new Date() }],
+      };
+      sql.mockResolvedValue(mockResult);
+    });
+
+    it('should track upgrade event', async () => {
+      const result = await analyticsService.trackTierChange({
+        action: 'upgrade',
+        userId: 42,
+        previousTier: 'free',
+        newTier: 'pro',
+        source: 'stripe_checkout',
+      });
+
+      expect(sql).toHaveBeenCalled();
+      expect(result).toHaveProperty('id', 'uuid-tier');
+      expect(result).toHaveProperty('eventName', 'tier_change');
+    });
+
+    it('should track downgrade event', async () => {
+      await analyticsService.trackTierChange({
+        action: 'downgrade',
+        userId: 42,
+        previousTier: 'pro',
+        newTier: 'free',
+        source: 'stripe_webhook',
+      });
+
+      expect(sql).toHaveBeenCalled();
+    });
+
+    it('should track cancel event with reason', async () => {
+      await analyticsService.trackTierChange({
+        action: 'cancel',
+        userId: 42,
+        previousTier: 'pro',
+        reason: 'too_expensive',
+      });
+
+      expect(sql).toHaveBeenCalled();
+    });
+
+    it('should set new_tier to null for cancel action', async () => {
+      await analyticsService.trackTierChange({
+        action: 'cancel',
+        userId: 42,
+        previousTier: 'pro',
+      });
+
+      expect(sql).toHaveBeenCalled();
+    });
+  });
+
+  // ============================================================================
   // CONVERSION FUNNEL
   // ============================================================================
 
@@ -142,14 +207,21 @@ describe('AnalyticsService', () => {
     };
 
     it('should return funnel metrics with conversion rates', async () => {
-      sql.mockResolvedValue({
+      // First query: funnel events (session_start, code_input, doc_export)
+      sql.mockResolvedValueOnce({
         rows: [
           { event_name: 'session_start', unique_sessions: '100', total_events: '120' },
           { event_name: 'code_input', unique_sessions: '80', total_events: '90' },
-          { event_name: 'generation_started', unique_sessions: '60', total_events: '70' },
-          { event_name: 'generation_completed', unique_sessions: '55', total_events: '60' },
-          { event_name: 'doc_copied', unique_sessions: '40', total_events: '45' },
+          { event_name: 'doc_export', unique_sessions: '40', total_events: '45' },
         ],
+      });
+      // Second query: generation_started (from doc_generation)
+      sql.mockResolvedValueOnce({
+        rows: [{ unique_sessions: '60', total_events: '70' }],
+      });
+      // Third query: generation_completed (from doc_generation where success=true)
+      sql.mockResolvedValueOnce({
+        rows: [{ unique_sessions: '55', total_events: '60' }],
       });
 
       const result = await analyticsService.getConversionFunnel(dateRange);
@@ -157,6 +229,7 @@ describe('AnalyticsService', () => {
       expect(result).toHaveProperty('stages');
       expect(result.stages.session_start.sessions).toBe(100);
       expect(result.stages.code_input.sessions).toBe(80);
+      expect(result.stages.doc_export.sessions).toBe(40);
       expect(result).toHaveProperty('conversionRates');
       expect(result.conversionRates.session_start_to_code_input).toBe(80);
       expect(result.totalSessions).toBe(100);
@@ -165,7 +238,10 @@ describe('AnalyticsService', () => {
     });
 
     it('should handle empty data', async () => {
-      sql.mockResolvedValue({ rows: [] });
+      // Mock all 3 queries with empty results
+      sql.mockResolvedValueOnce({ rows: [] }); // funnel events
+      sql.mockResolvedValueOnce({ rows: [] }); // generation_started
+      sql.mockResolvedValueOnce({ rows: [] }); // generation_completed
 
       const result = await analyticsService.getConversionFunnel(dateRange);
 
@@ -175,12 +251,15 @@ describe('AnalyticsService', () => {
     });
 
     it('should exclude internal users when specified', async () => {
-      sql.mockResolvedValue({ rows: [] });
+      // Mock all 3 queries
+      sql.mockResolvedValueOnce({ rows: [] }); // funnel events
+      sql.mockResolvedValueOnce({ rows: [] }); // generation_started
+      sql.mockResolvedValueOnce({ rows: [] }); // generation_completed
 
       await analyticsService.getConversionFunnel({ ...dateRange, excludeInternal: true });
 
-      // Verify the SQL was called (we can't easily check the exact query)
-      expect(sql).toHaveBeenCalled();
+      // Verify the SQL was called (3 times for the 3 queries)
+      expect(sql).toHaveBeenCalledTimes(3);
     });
   });
 
@@ -195,38 +274,54 @@ describe('AnalyticsService', () => {
     };
 
     it('should return business metrics', async () => {
-      // First call for event counts
+      // First call for event counts (business category events)
       sql.mockResolvedValueOnce({
         rows: [
           { event_name: 'signup', count: '50', revenue_cents: '0' },
-          { event_name: 'tier_upgrade', count: '10', revenue_cents: '0' },
           { event_name: 'checkout_completed', count: '8', revenue_cents: '79200' },
         ],
       });
-      // Second call for tier breakdown
+      // Second call for tier_change action counts
       sql.mockResolvedValueOnce({
         rows: [
-          { tier: 'pro', count: '6' },
-          { tier: 'team', count: '4' },
+          { action: 'upgrade', count: '15' },
+          { action: 'downgrade', count: '2' },
+          { action: 'cancel', count: '1' },
+        ],
+      });
+      // Third call for tier breakdown
+      sql.mockResolvedValueOnce({
+        rows: [
+          { tier: 'pro', count: '10' },
+          { tier: 'team', count: '5' },
         ],
       });
 
       const result = await analyticsService.getBusinessMetrics(dateRange);
 
       expect(result.signups).toBe(50);
-      expect(result.tierUpgrades).toBe(10);
+      expect(result.tierUpgrades).toBe(15);
+      expect(result.tierDowngrades).toBe(2);
+      expect(result.cancellations).toBe(1);
       expect(result.checkouts).toBe(8);
       expect(result.revenueCents).toBe(79200);
-      expect(result.upgradesByTier).toEqual({ pro: 6, team: 4 });
+      expect(result.upgradesByTier).toEqual({ pro: 10, team: 5 });
     });
 
     it('should handle no data', async () => {
-      sql.mockResolvedValue({ rows: [] });
+      // First call for event counts
+      sql.mockResolvedValueOnce({ rows: [] });
+      // Second call for tier_change action counts
+      sql.mockResolvedValueOnce({ rows: [] });
+      // Third call for tier breakdown
+      sql.mockResolvedValueOnce({ rows: [] });
 
       const result = await analyticsService.getBusinessMetrics(dateRange);
 
       expect(result.signups).toBe(0);
       expect(result.tierUpgrades).toBe(0);
+      expect(result.tierDowngrades).toBe(0);
+      expect(result.cancellations).toBe(0);
       expect(result.revenueCents).toBe(0);
     });
   });
@@ -384,7 +479,7 @@ describe('AnalyticsService', () => {
           {
             id: 'uuid-1',
             event_name: 'session_start',
-            event_category: 'funnel',
+            event_category: 'workflow',
             session_id: 'sess-123',
             user_id: null,
             user_email: null,
@@ -412,7 +507,7 @@ describe('AnalyticsService', () => {
       sql.mockResolvedValueOnce({ rows: [] });
       sql.mockResolvedValueOnce({ rows: [{ total: '0' }] });
 
-      await analyticsService.getEvents({ ...options, category: 'funnel' });
+      await analyticsService.getEvents({ ...options, category: 'workflow' });
 
       expect(sql).toHaveBeenCalledTimes(2);
     });
@@ -437,10 +532,9 @@ describe('AnalyticsService', () => {
   });
 
   describe('getEventNames', () => {
-    it('should return list of distinct event names', async () => {
+    it('should return all events with actions plus events from database', async () => {
       sql.mockResolvedValue({
         rows: [
-          { event_name: 'code_input' },
           { event_name: 'doc_generation' },
           { event_name: 'session_start' },
         ],
@@ -448,15 +542,54 @@ describe('AnalyticsService', () => {
 
       const result = await analyticsService.getEventNames();
 
-      expect(result).toEqual(['code_input', 'doc_generation', 'session_start']);
+      // Should include all events with actions defined (even if not in DB)
+      // plus any additional events from the database
+      const eventNames = result.map((e) => e.name);
+
+      // All events with actions should be present
+      expect(eventNames).toContain('code_input');
+      expect(eventNames).toContain('doc_export');
+      expect(eventNames).toContain('usage_alert');
+      expect(eventNames).toContain('trial');
+      expect(eventNames).toContain('tier_change');
+      expect(eventNames).toContain('user_interaction');
+
+      // Events from DB should also be present
+      expect(eventNames).toContain('doc_generation');
+      expect(eventNames).toContain('session_start');
+
+      // Verify actions are included for events that have them
+      const codeInput = result.find((e) => e.name === 'code_input');
+      expect(codeInput.actions).toEqual(['paste', 'upload', 'sample', 'github']);
+      expect(codeInput.actionField).toBe('origin');
+
+      const tierChange = result.find((e) => e.name === 'tier_change');
+      expect(tierChange.actions).toEqual(['upgrade', 'downgrade', 'cancel']);
     });
 
-    it('should return empty array when no events', async () => {
+    it('should return events with actions even when database is empty', async () => {
       sql.mockResolvedValue({ rows: [] });
 
       const result = await analyticsService.getEventNames();
 
-      expect(result).toEqual([]);
+      // Should still return all events that have actions defined
+      const eventNames = result.map((e) => e.name);
+      expect(eventNames).toContain('code_input');
+      expect(eventNames).toContain('doc_export');
+      expect(eventNames).toContain('tier_change');
+      expect(eventNames).toContain('user_interaction');
+    });
+
+    it('should include unknown events from database', async () => {
+      sql.mockResolvedValue({
+        rows: [{ event_name: 'custom_event' }],
+      });
+
+      const result = await analyticsService.getEventNames();
+
+      const customEvent = result.find((e) => e.name === 'custom_event');
+      expect(customEvent).toBeDefined();
+      expect(customEvent.category).toBe('unknown');
     });
   });
 
@@ -568,7 +701,7 @@ describe('AnalyticsService', () => {
 
       await analyticsService.getEvents({
         ...options,
-        category: 'funnel',
+        category: 'workflow',
         eventNames: ['session_start', 'code_input'],
       });
 
@@ -581,7 +714,7 @@ describe('AnalyticsService', () => {
 
       await analyticsService.getEvents({
         ...options,
-        category: 'funnel',
+        category: 'workflow',
         eventNames: ['session_start'],
         excludeInternal: true,
       });
@@ -621,7 +754,7 @@ describe('AnalyticsService', () => {
 
       await analyticsService.getEvents({
         ...options,
-        eventNames: ['signup', 'tier_upgrade'],
+        eventNames: ['signup', 'tier_change'],
       });
 
       expect(sql).toHaveBeenCalledTimes(2);
@@ -1018,7 +1151,7 @@ describe('AnalyticsService', () => {
     it('should handle category filter', async () => {
       sql.mockResolvedValue({ rows: [] });
 
-      await analyticsService.discoverEventSchema({ ...dateRange, category: 'funnel' });
+      await analyticsService.discoverEventSchema({ ...dateRange, category: 'workflow' });
 
       expect(sql).toHaveBeenCalled();
     });
@@ -1054,7 +1187,7 @@ describe('AnalyticsService', () => {
           {
             id: 'uuid-1',
             event_name: 'session_start',
-            event_category: 'funnel',
+            event_category: 'workflow',
             session_id: 'sess-1',
             user_id: 1,
             ip_address: '192.168.1.1',
@@ -1076,7 +1209,7 @@ describe('AnalyticsService', () => {
     it('should filter by category', async () => {
       sql.mockResolvedValue({ rows: [] });
 
-      await analyticsService.fetchEventBatch({ ...options, category: 'funnel' });
+      await analyticsService.fetchEventBatch({ ...options, category: 'workflow' });
 
       expect(sql).toHaveBeenCalled();
     });

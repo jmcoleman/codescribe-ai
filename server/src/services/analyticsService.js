@@ -10,37 +10,77 @@ import { sql } from '@vercel/postgres';
  * Event name to category mapping
  */
 const EVENT_CATEGORIES = {
-  // Funnel events
-  session_start: 'funnel',
-  code_input: 'funnel',
-  generation_started: 'funnel',
-  generation_completed: 'funnel',
-  doc_copied: 'funnel',
-  doc_downloaded: 'funnel',
+  // Workflow events - core user workflow progression
+  session_start: 'workflow',
+  code_input: 'workflow',
+  generation_started: 'workflow',
+  generation_completed: 'workflow',
+  doc_export: 'workflow', // User exports documentation (action: copy/download)
 
-  // Business events
+  // Business events - monetization and conversion
   login: 'business',
   signup: 'business',
-  tier_upgrade: 'business',
-  tier_downgrade: 'business',
+  trial: 'business', // Trial lifecycle (action: started/expired/converted)
+  tier_change: 'business', // Subscription changes (action: upgrade/downgrade/cancel)
   checkout_completed: 'business',
-  subscription_cancelled: 'business',
+  usage_alert: 'business', // Quota warnings (action: warning_shown/limit_hit) - monetization trigger
 
-  // Usage events
+  // Usage events - product usage patterns
   doc_generation: 'usage',
   batch_generation: 'usage',
   quality_score: 'usage',
-  file_upload: 'usage',
   oauth_flow: 'usage',
   user_interaction: 'usage',
-  error: 'usage',
-  performance: 'usage',
+
+  // System events - infrastructure and technical metrics
+  error: 'system',
+  performance: 'system',
 };
 
 /**
  * Allowed event names for validation
  */
 const ALLOWED_EVENTS = new Set(Object.keys(EVENT_CATEGORIES));
+
+/**
+ * Events with action sub-types
+ * Maps event name to { actionField, actions }
+ * - actionField: The JSONB key containing the action (e.g., 'action', 'origin')
+ * - actions: Array of valid action values
+ */
+const EVENT_ACTIONS = {
+  code_input: {
+    actionField: 'origin',
+    actions: ['paste', 'upload', 'sample', 'github'],
+  },
+  doc_export: {
+    actionField: 'action',
+    actions: ['copy', 'download'],
+  },
+  usage_alert: {
+    actionField: 'action',
+    actions: ['warning_shown', 'limit_hit'],
+  },
+  trial: {
+    actionField: 'action',
+    actions: ['started', 'expired', 'converted'],
+  },
+  tier_change: {
+    actionField: 'action',
+    actions: ['upgrade', 'downgrade', 'cancel'],
+  },
+  user_interaction: {
+    actionField: 'action',
+    actions: [
+      'view_quality_breakdown',
+      'pricing_page_viewed',
+      'upgrade_cta_clicked',
+      'checkout_started',
+      'regeneration_complete',
+      'batch_generation_complete',
+    ],
+  },
+};
 
 /**
  * Analytics service for recording and querying events
@@ -187,6 +227,87 @@ export const analyticsService = {
   },
 
   // ============================================================================
+  // SERVER-SIDE EVENT HELPERS
+  // ============================================================================
+
+  /**
+   * Track trial lifecycle events (server-side)
+   * Called when trial starts, expires, or converts to paid
+   * @param {Object} params - Event parameters
+   * @param {string} params.action - Trial action: 'started', 'expired', 'converted'
+   * @param {number} params.userId - User ID
+   * @param {string} params.source - Trial source: 'campaign', 'invite', 'admin_grant', 'self_serve'
+   * @param {string} [params.tier] - Trial tier (usually 'pro')
+   * @param {number} [params.durationDays] - Trial duration in days (for 'started')
+   * @param {number} [params.daysActive] - Days the trial was active (for 'expired', 'converted')
+   * @param {number} [params.generationsUsed] - Generations used during trial (for 'expired', 'converted')
+   * @param {number} [params.daysToConvert] - Days from trial start to conversion (for 'converted')
+   * @returns {Promise<Object>} Created event
+   */
+  async trackTrial({ action, userId, source, tier, durationDays, daysActive, generationsUsed, daysToConvert }) {
+    const eventData = {
+      action,
+      source,
+      tier: tier || 'pro',
+    };
+
+    // Add action-specific attributes
+    if (action === 'started' && durationDays !== undefined) {
+      eventData.duration_days = durationDays;
+    }
+
+    if ((action === 'expired' || action === 'converted') && daysActive !== undefined) {
+      eventData.days_active = daysActive;
+    }
+
+    if ((action === 'expired' || action === 'converted') && generationsUsed !== undefined) {
+      eventData.generations_used = generationsUsed;
+    }
+
+    if (action === 'converted' && daysToConvert !== undefined) {
+      eventData.days_to_convert = daysToConvert;
+    }
+
+    return this.recordEvent('trial', eventData, { userId });
+  },
+
+  /**
+   * Track tier change events (server-side)
+   * Called when user upgrades, downgrades, or cancels subscription
+   * @param {Object} params - Event parameters
+   * @param {string} params.action - Tier change action: 'upgrade', 'downgrade', 'cancel'
+   * @param {number} params.userId - User ID
+   * @param {string} params.previousTier - Previous tier (e.g., 'free', 'pro', 'team')
+   * @param {string} [params.newTier] - New tier (null for cancel)
+   * @param {string} [params.source] - Source of change (e.g., 'stripe_checkout', 'stripe_webhook', 'admin')
+   * @param {string} [params.reason] - Cancellation reason (for 'cancel' action)
+   * @returns {Promise<Object>} Created event
+   */
+  async trackTierChange({ action, userId, previousTier, newTier, source, reason }) {
+    const eventData = {
+      action,
+      previous_tier: previousTier,
+    };
+
+    // Add new_tier for upgrade/downgrade, null for cancel
+    if (action === 'upgrade' || action === 'downgrade') {
+      eventData.new_tier = newTier;
+    } else if (action === 'cancel') {
+      eventData.new_tier = null;
+      if (reason) {
+        eventData.reason = reason;
+      }
+    }
+
+    // Add source if provided
+    if (source) {
+      eventData.source = source;
+    }
+
+    return this.recordEvent('tier_change', eventData, { userId });
+  },
+
+  // ============================================================================
   // FUNNEL QUERIES
   // ============================================================================
 
@@ -201,8 +322,7 @@ export const analyticsService = {
   async getConversionFunnel({ startDate, endDate, excludeInternal = true }) {
     // Get counts for each funnel stage
     // Query funnel events + derive generation stages from doc_generation events
-    // Doc copied/downloaded derived from user_interaction events with specific actions
-    let funnelResult, genStartedResult, genCompletedResult, docCopiedResult;
+    let funnelResult, genStartedResult, genCompletedResult;
 
     if (excludeInternal) {
       // Get standard funnel events (session_start, code_input)
@@ -212,7 +332,7 @@ export const analyticsService = {
           COUNT(DISTINCT session_id) as unique_sessions,
           COUNT(*) as total_events
         FROM analytics_events
-        WHERE event_category = 'funnel'
+        WHERE event_category = 'workflow'
           AND created_at >= ${startDate}
           AND created_at < ${endDate}
           AND is_internal = FALSE
@@ -243,27 +363,15 @@ export const analyticsService = {
           AND created_at < ${endDate}
           AND is_internal = FALSE
       `;
-
-      // Get doc_copied from dedicated funnel events (doc_copied, doc_downloaded)
-      docCopiedResult = await sql`
-        SELECT
-          COUNT(DISTINCT session_id) as unique_sessions,
-          COUNT(*) as total_events
-        FROM analytics_events
-        WHERE event_name IN ('doc_copied', 'doc_downloaded')
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
-          AND is_internal = FALSE
-      `;
     } else {
-      // Get standard funnel events (session_start, code_input)
+      // Get standard funnel events (session_start, code_input, doc_export)
       funnelResult = await sql`
         SELECT
           event_name,
           COUNT(DISTINCT session_id) as unique_sessions,
           COUNT(*) as total_events
         FROM analytics_events
-        WHERE event_category = 'funnel'
+        WHERE event_category = 'workflow'
           AND created_at >= ${startDate}
           AND created_at < ${endDate}
         GROUP BY event_name
@@ -291,21 +399,10 @@ export const analyticsService = {
           AND created_at >= ${startDate}
           AND created_at < ${endDate}
       `;
-
-      // Get doc_copied from dedicated funnel events (doc_copied, doc_downloaded)
-      docCopiedResult = await sql`
-        SELECT
-          COUNT(DISTINCT session_id) as unique_sessions,
-          COUNT(*) as total_events
-        FROM analytics_events
-        WHERE event_name IN ('doc_copied', 'doc_downloaded')
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
-      `;
     }
 
     // Build funnel data with conversion rates
-    const stages = ['session_start', 'code_input', 'generation_started', 'generation_completed', 'doc_copied'];
+    const stages = ['session_start', 'code_input', 'generation_started', 'generation_completed', 'doc_export'];
     const funnelData = {};
 
     stages.forEach((stage) => {
@@ -343,9 +440,9 @@ export const analyticsService = {
       stages: funnelData,
       conversionRates,
       totalSessions: funnelData.session_start?.sessions || 0,
-      completedSessions: funnelData.doc_copied?.sessions || 0,
+      completedSessions: funnelData.doc_export?.sessions || 0,
       overallConversion: funnelData.session_start?.sessions > 0
-        ? Math.round((funnelData.doc_copied?.sessions / funnelData.session_start?.sessions) * 1000) / 10
+        ? Math.round((funnelData.doc_export?.sessions / funnelData.session_start?.sessions) * 1000) / 10
         : 0,
     };
   },
@@ -479,7 +576,10 @@ export const analyticsService = {
               AND ut.status = 'converted'
           )) as direct
         FROM analytics_events ae
-        WHERE (ae.event_name = 'tier_upgrade' OR ae.event_name = 'checkout_completed')
+        WHERE (
+          ae.event_name = 'checkout_completed'
+          OR (ae.event_name = 'tier_change' AND ae.event_data->>'action' = 'upgrade')
+        )
           AND ae.created_at >= ${startDate}
           AND ae.created_at < ${endDate}
           AND ae.is_internal = FALSE
@@ -501,7 +601,10 @@ export const analyticsService = {
               AND ut.status = 'converted'
           )) as direct
         FROM analytics_events ae
-        WHERE (ae.event_name = 'tier_upgrade' OR ae.event_name = 'checkout_completed')
+        WHERE (
+          ae.event_name = 'checkout_completed'
+          OR (ae.event_name = 'tier_change' AND ae.event_data->>'action' = 'upgrade')
+        )
           AND ae.created_at >= ${startDate}
           AND ae.created_at < ${endDate}
       `;
@@ -614,7 +717,40 @@ export const analyticsService = {
       };
     });
 
-    // Get tier upgrade breakdown
+    // Get tier_change action counts (new consolidated event)
+    let tierChangeActions;
+    if (excludeInternal) {
+      tierChangeActions = await sql`
+        SELECT
+          event_data->>'action' as action,
+          COUNT(*) as count
+        FROM analytics_events
+        WHERE event_name = 'tier_change'
+          AND created_at >= ${startDate}
+          AND created_at < ${endDate}
+          AND is_internal = FALSE
+        GROUP BY event_data->>'action'
+      `;
+    } else {
+      tierChangeActions = await sql`
+        SELECT
+          event_data->>'action' as action,
+          COUNT(*) as count
+        FROM analytics_events
+        WHERE event_name = 'tier_change'
+          AND created_at >= ${startDate}
+          AND created_at < ${endDate}
+        GROUP BY event_data->>'action'
+      `;
+    }
+
+    // Map tier_change actions to metrics
+    const tierChangeMetrics = {};
+    tierChangeActions.rows.forEach((row) => {
+      tierChangeMetrics[row.action] = parseInt(row.count);
+    });
+
+    // Get tier upgrade breakdown by target tier
     let tierBreakdown;
     if (excludeInternal) {
       tierBreakdown = await sql`
@@ -622,7 +758,8 @@ export const analyticsService = {
           event_data->>'new_tier' as tier,
           COUNT(*) as count
         FROM analytics_events
-        WHERE event_name = 'tier_upgrade'
+        WHERE event_name = 'tier_change'
+          AND event_data->>'action' = 'upgrade'
           AND created_at >= ${startDate}
           AND created_at < ${endDate}
           AND is_internal = FALSE
@@ -634,7 +771,8 @@ export const analyticsService = {
           event_data->>'new_tier' as tier,
           COUNT(*) as count
         FROM analytics_events
-        WHERE event_name = 'tier_upgrade'
+        WHERE event_name = 'tier_change'
+          AND event_data->>'action' = 'upgrade'
           AND created_at >= ${startDate}
           AND created_at < ${endDate}
         GROUP BY event_data->>'new_tier'
@@ -643,10 +781,10 @@ export const analyticsService = {
 
     return {
       signups: metrics.signup?.count || 0,
-      tierUpgrades: metrics.tier_upgrade?.count || 0,
-      tierDowngrades: metrics.tier_downgrade?.count || 0,
+      tierUpgrades: tierChangeMetrics.upgrade || 0,
+      tierDowngrades: tierChangeMetrics.downgrade || 0,
       checkouts: metrics.checkout_completed?.count || 0,
-      cancellations: metrics.subscription_cancelled?.count || 0,
+      cancellations: tierChangeMetrics.cancel || 0,
       revenueCents: metrics.checkout_completed?.revenueCents || 0,
       upgradesByTier: tierBreakdown.rows.reduce((acc, row) => {
         acc[row.tier] = parseInt(row.count);
@@ -1214,19 +1352,23 @@ export const analyticsService = {
 
   /**
    * Get raw analytics events with pagination and filtering
+   * Supports filtering by event_name and optionally by action within event_data
+   *
    * @param {Object} options - Query options
    * @param {Date} [options.startDate] - Start of date range
    * @param {Date} [options.endDate] - End of date range
    * @param {string} [options.category] - Filter by event category
    * @param {Array<string>} [options.eventNames] - Filter by event names (array for multi-select)
+   * @param {Object} [options.eventActions] - Filter by actions: { eventName: { actionField: 'action', actions: ['upgrade'] } }
    * @param {boolean} [options.excludeInternal=false] - Exclude internal users
    * @param {number} [options.page=1] - Page number (1-indexed)
    * @param {number} [options.limit=50] - Events per page
    * @returns {Promise<Object>} { events: Array, total: number, page: number, totalPages: number }
    */
-  async getEvents({ startDate, endDate, category, eventNames, excludeInternal = false, page = 1, limit = 50 }) {
+  async getEvents({ startDate, endDate, category, eventNames, eventActions, excludeInternal = false, page = 1, limit = 50 }) {
     const offset = (page - 1) * limit;
     const hasEventNames = eventNames && eventNames.length > 0;
+    const hasEventActions = eventActions && Object.keys(eventActions).length > 0;
 
     // Build WHERE conditions based on filters
     // We need separate queries for each filter combination due to @vercel/postgres limitations
@@ -1388,22 +1530,51 @@ export const analyticsService = {
       `;
     }
 
-    const total = parseInt(countResult.rows[0]?.total || 0);
+    let total = parseInt(countResult.rows[0]?.total || 0);
+
+    // Map events to response format
+    let mappedEvents = events.rows.map((row) => ({
+      id: row.id,
+      eventName: row.event_name,
+      category: row.event_category,
+      sessionId: row.session_id,
+      userId: row.user_id,
+      userEmail: row.user_email,
+      ipAddress: row.ip_address,
+      eventData: row.event_data,
+      isInternal: row.is_internal,
+      createdAt: row.created_at,
+    }));
+
+    // Apply action filtering in application layer if eventActions is specified
+    // This handles cases where we need to filter by event_data action values
+    if (hasEventActions) {
+      mappedEvents = mappedEvents.filter((event) => {
+        const actionConfig = eventActions[event.eventName];
+        if (!actionConfig) {
+          // No action filter for this event type - include it
+          return true;
+        }
+        // Check if the event's action matches one of the selected actions
+        const eventActionValue = event.eventData?.[actionConfig.actionField];
+        return actionConfig.actions.includes(eventActionValue);
+      });
+
+      // Note: When action filtering is active, pagination may be slightly off
+      // because we're filtering post-query. For accurate counts, we'd need
+      // more complex SQL. This is acceptable for current scale.
+      // Adjust total to reflect filtered count (estimate based on this page)
+      if (mappedEvents.length < events.rows.length) {
+        // Some events were filtered out - adjust total estimate
+        const filterRatio = mappedEvents.length / Math.max(events.rows.length, 1);
+        total = Math.ceil(total * filterRatio);
+      }
+    }
+
     const totalPages = Math.ceil(total / limit);
 
     return {
-      events: events.rows.map((row) => ({
-        id: row.id,
-        eventName: row.event_name,
-        category: row.event_category,
-        sessionId: row.session_id,
-        userId: row.user_id,
-        userEmail: row.user_email,
-        ipAddress: row.ip_address,
-        eventData: row.event_data,
-        isInternal: row.is_internal,
-        createdAt: row.created_at,
-      })),
+      events: mappedEvents,
       total,
       page,
       limit,
@@ -1644,16 +1815,58 @@ export const analyticsService = {
   },
 
   /**
-   * Get distinct event names (for filter dropdown)
-   * @returns {Promise<Array<string>>} List of event names
+   * Get all event names with their actions (for filter dropdown)
+   * Returns all events that have actions defined, plus any additional events from the database
+   *
+   * @returns {Promise<Object>} { events: [{ name, category, actions?, actionField? }] }
    */
   async getEventNames() {
+    // Get events that exist in the database
     const result = await sql`
       SELECT DISTINCT event_name
       FROM analytics_events
       ORDER BY event_name
     `;
-    return result.rows.map((row) => row.event_name);
+    const dbEventNames = new Set(result.rows.map((row) => row.event_name));
+
+    // Start with all events that have actions defined (always show these)
+    const allEventNames = new Set(Object.keys(EVENT_ACTIONS));
+
+    // Add any additional events from the database
+    for (const name of dbEventNames) {
+      allEventNames.add(name);
+    }
+
+    // Build the events array
+    const events = Array.from(allEventNames)
+      .sort()
+      .map((eventName) => {
+        const category = EVENT_CATEGORIES[eventName] || 'unknown';
+        const actionConfig = EVENT_ACTIONS[eventName];
+
+        const event = {
+          name: eventName,
+          category,
+        };
+
+        // Add actions if this event has action sub-types
+        if (actionConfig) {
+          event.actionField = actionConfig.actionField;
+          event.actions = actionConfig.actions;
+        }
+
+        return event;
+      });
+
+    return events;
+  },
+
+  /**
+   * Get event actions configuration
+   * @returns {Object} EVENT_ACTIONS mapping
+   */
+  getEventActions() {
+    return EVENT_ACTIONS;
   },
 
   // ============================================================================

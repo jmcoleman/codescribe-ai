@@ -37,7 +37,7 @@ describe('EventsTable', () => {
       {
         id: '123e4567-e89b-12d3-a456-426614174000',
         eventName: 'session_start',
-        category: 'funnel',
+        category: 'workflow',
         sessionId: 'sess-123',
         userId: null,
         ipAddress: '192.168.1.1',
@@ -210,8 +210,8 @@ describe('EventsTable', () => {
       );
 
       await waitFor(() => {
-        // CategoryBadge displays labels: 'Usage Funnel' for funnel, 'Usage' for usage
-        expect(screen.getByText('Usage Funnel')).toBeInTheDocument();
+        // CategoryBadge displays labels: 'Workflow' for workflow, 'Usage' for usage
+        expect(screen.getByText('Workflow')).toBeInTheDocument();
         expect(screen.getByText('Usage')).toBeInTheDocument();
       });
     });

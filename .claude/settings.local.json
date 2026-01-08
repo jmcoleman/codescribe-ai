@@ -23,7 +23,8 @@
       "Bash(CI=true npm run test:ci:*)",
       "Bash(CI=true npm test:*)",
       "Bash(1)",
-      "Bash(npm run test:db:setup:*)"
+      "Bash(npm run test:db:setup:*)",
+      "Bash(npm run build:*)"
     ],
     "deny": [],
     "ask": []

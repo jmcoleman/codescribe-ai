@@ -259,14 +259,43 @@ export const trackQualityScore = ({ score, grade, docType }) => {
  * @param {number} codeSize - Size of code in bytes
  * @param {string} language - Programming language
  * @param {string} filename - Name of the file (optional)
+ * @param {Object} [metadata] - Additional metadata based on origin (optional)
+ * @param {string} [metadata.owner] - Repository owner (for git origins)
+ * @param {string} [metadata.name] - Repository name (for git origins)
+ * @param {string} [metadata.path] - File path in repository (for git origins)
+ * @param {boolean} [metadata.isPrivate] - Whether the repo is private (for git origins)
+ * @param {string} [metadata.fileType] - File extension (for upload origin)
+ * @param {number} [metadata.fileSize] - Original file size in bytes (for upload origin)
+ * @param {boolean} [metadata.success] - Upload success (for upload origin, defaults to true)
  */
-export const trackCodeInput = (origin, codeSize, language, filename) => {
-  trackEvent('code_input', withSessionContext({
+export const trackCodeInput = (origin, codeSize, language, filename, metadata) => {
+  const eventData = {
     origin: origin || 'unknown',
     size_kb: Math.round(codeSize / 1024),
     language: language || 'unknown',
     filename: filename || 'untitled',
-  }));
+  };
+
+  // Add repo context for git-based origins
+  if (metadata && origin && ['github', 'gitlab', 'bitbucket'].includes(origin)) {
+    eventData.repo = {
+      owner: metadata.owner,
+      name: metadata.name,
+      path: metadata.path,
+      is_private: metadata.isPrivate || false,
+    };
+  }
+
+  // Add file context for upload origin
+  if (metadata && origin === 'upload') {
+    eventData.file = {
+      type: metadata.fileType,
+      size_kb: metadata.fileSize ? Math.round(metadata.fileSize / 1024) : undefined,
+      success: metadata.success !== false, // defaults to true
+    };
+  }
+
+  trackEvent('code_input', withSessionContext(eventData));
 };
 
 /**
@@ -353,32 +382,47 @@ export const trackInteraction = (action, metadata = {}) => {
 };
 
 /**
- * Track doc copied (funnel event)
- * Called when user copies generated documentation
+ * Track doc export (funnel event)
+ * Called when user copies or downloads generated documentation
  * @param {Object} params - Event parameters
- * @param {string} params.docType - Type of documentation copied
+ * @param {string} params.action - Export action: 'copy' or 'download'
+ * @param {string} params.docType - Type of documentation exported
  * @param {string} [params.filename] - Name of the file
+ * @param {string} [params.format] - Download format (md, txt, etc.) - only for download action
  */
-export const trackDocCopied = ({ docType, filename }) => {
-  trackEvent('doc_copied', withSessionContext({
+export const trackDocExport = ({ action, docType, filename, format }) => {
+  const eventData = {
+    action,
     doc_type: docType,
     filename: filename || 'untitled',
-  }));
+  };
+
+  // Add format only for download action
+  if (action === 'download' && format) {
+    eventData.format = format;
+  }
+
+  trackEvent('doc_export', withSessionContext(eventData));
 };
 
 /**
- * Track doc downloaded (funnel event)
- * Called when user downloads generated documentation
+ * Track usage alert events (warning at 80%, limit hit at 100%)
  * @param {Object} params - Event parameters
- * @param {string} params.docType - Type of documentation downloaded
- * @param {string} [params.filename] - Name of the file
- * @param {string} [params.format] - Download format (md, txt, etc.)
+ * @param {string} params.action - Alert type: 'warning_shown' (80%) or 'limit_hit' (100%)
+ * @param {string} params.tier - User's current tier
+ * @param {number} [params.percentUsed] - Percentage of limit used
+ * @param {number} [params.remaining] - Docs remaining
+ * @param {number} [params.limit] - Total limit
+ * @param {string} [params.period] - Billing period (monthly, etc.)
  */
-export const trackDocDownloaded = ({ docType, filename, format }) => {
-  trackEvent('doc_downloaded', withSessionContext({
-    doc_type: docType,
-    filename: filename || 'untitled',
-    format: format || 'md',
+export const trackUsageAlert = ({ action, tier, percentUsed, remaining, limit, period }) => {
+  trackEvent('usage_alert', withSessionContext({
+    action,
+    tier,
+    percent_used: percentUsed,
+    docs_remaining: remaining,
+    limit,
+    period: period || 'monthly',
   }));
 };
 
@@ -426,21 +470,6 @@ export const trackSignup = ({ method = 'email', tier = 'free', hasTrial = false 
     method,
     tier,
     has_trial: hasTrial ? 'true' : 'false',
-  }));
-};
-
-/**
- * Track file upload
- * @param {Object} params - Event parameters
- * @param {string} params.fileType - File extension
- * @param {number} params.fileSize - File size in bytes
- * @param {boolean} params.success - Upload success
- */
-export const trackFileUpload = ({ fileType, fileSize, success }) => {
-  trackEvent('file_upload', withSessionContext({
-    file_type: fileType,
-    file_size_kb: Math.round(fileSize / 1024),
-    success: success ? 'true' : 'false',
   }));
 };
 
