@@ -1635,6 +1635,52 @@ export default function Analytics() {
                     color="purple"
                   />
                 </div>
+
+                {/* Error Breakdown Table */}
+                {performanceData.errorMetrics && performanceData.errorMetrics.topErrors && performanceData.errorMetrics.topErrors.length > 0 && (
+                  <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden mt-6">
+                    <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+                      <h3 className="text-md font-semibold text-slate-900 dark:text-slate-100">
+                        Error Breakdown
+                      </h3>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 italic">
+                        What types of errors are users encountering?
+                      </p>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead className="bg-slate-50 dark:bg-slate-900">
+                          <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                              Error Type
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                              Context
+                            </th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                              Count
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:border-slate-700">
+                          {performanceData.errorMetrics.topErrors.map((err, i) => (
+                            <tr key={i} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-slate-100">
+                                {err.errorType}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
+                                {err.context}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-semibold text-slate-900 dark:text-slate-100">
+                                {formatNumber(err.count)}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

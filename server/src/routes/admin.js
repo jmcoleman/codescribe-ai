@@ -1603,14 +1603,19 @@ router.get('/analytics/performance', requireAuth, requireAdmin, async (req, res)
     const end = new Date(endDate);
     const excludeInternalBool = excludeInternal === 'true';
 
-    // Fetch both performance metrics and latency breakdown in parallel
-    const [metrics, latencyBreakdown] = await Promise.all([
+    // Fetch performance metrics, latency breakdown, and error metrics in parallel
+    const [metrics, latencyBreakdown, errorMetrics] = await Promise.all([
       analyticsService.getPerformanceMetrics({
         startDate: start,
         endDate: end,
         excludeInternal: excludeInternalBool,
       }),
       analyticsService.getLatencyBreakdown({
+        startDate: start,
+        endDate: end,
+        excludeInternal: excludeInternalBool,
+      }),
+      analyticsService.getErrorMetrics({
         startDate: start,
         endDate: end,
         excludeInternal: excludeInternalBool,
@@ -1622,6 +1627,7 @@ router.get('/analytics/performance', requireAuth, requireAdmin, async (req, res)
       data: {
         ...metrics,
         latencyBreakdown,
+        errorMetrics,
       },
     });
   } catch (error) {

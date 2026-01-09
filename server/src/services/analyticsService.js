@@ -1815,6 +1815,94 @@ export const analyticsService = {
   },
 
   /**
+   * Get error metrics for a date range
+   * Returns total errors, error rate, and breakdown by error type and context
+   *
+   * @param {Object} params
+   * @param {Date} params.startDate - Start of date range
+   * @param {Date} params.endDate - End of date range
+   * @param {boolean} params.excludeInternal - Whether to exclude internal users (default: true)
+   * @returns {Promise<Object>} { totalErrors, errorRate, topErrors }
+   */
+  async getErrorMetrics({ startDate, endDate, excludeInternal = true }) {
+    let errorResult;
+
+    if (excludeInternal) {
+      errorResult = await sql`
+        SELECT
+          COUNT(*) as total_errors,
+          event_data->>'errorType' as error_type,
+          event_data->>'context' as context
+        FROM analytics_events ae
+        LEFT JOIN users u ON ae.user_id = u.id
+        WHERE ae.event_name = 'error'
+          AND ae.created_at >= ${startDate}
+          AND ae.created_at < ${endDate}
+          AND (u.id IS NULL OR (u.role NOT IN ('admin', 'support', 'super_admin') AND u.viewing_as_tier IS NULL))
+        GROUP BY error_type, context
+        ORDER BY COUNT(*) DESC
+        LIMIT 10
+      `;
+    } else {
+      errorResult = await sql`
+        SELECT
+          COUNT(*) as total_errors,
+          event_data->>'errorType' as error_type,
+          event_data->>'context' as context
+        FROM analytics_events
+        WHERE event_name = 'error'
+          AND created_at >= ${startDate}
+          AND created_at < ${endDate}
+        GROUP BY error_type, context
+        ORDER BY COUNT(*) DESC
+        LIMIT 10
+      `;
+    }
+
+    // Calculate total errors
+    const totalErrors = errorResult.rows.reduce((sum, r) => sum + parseInt(r.total_errors), 0);
+
+    // Calculate error rate (errors / total generations)
+    // Get total generations from generated_documents table
+    let generationsResult;
+    if (excludeInternal) {
+      generationsResult = await sql`
+        SELECT COUNT(*) as count
+        FROM generated_documents gd
+        JOIN users u ON gd.user_id = u.id
+        WHERE gd.generated_at >= ${startDate}
+          AND gd.generated_at < ${endDate}
+          AND gd.deleted_at IS NULL
+          AND u.role NOT IN ('admin', 'support', 'super_admin')
+          AND u.viewing_as_tier IS NULL
+      `;
+    } else {
+      generationsResult = await sql`
+        SELECT COUNT(*) as count
+        FROM generated_documents
+        WHERE generated_at >= ${startDate}
+          AND generated_at < ${endDate}
+          AND deleted_at IS NULL
+      `;
+    }
+    const generations = parseInt(generationsResult.rows[0]?.count || 0);
+    const errorRate = generations > 0 ? (totalErrors / generations) * 100 : 0;
+
+    // Format top errors
+    const topErrors = errorResult.rows.map(row => ({
+      errorType: row.error_type || 'Unknown',
+      context: row.context || 'Unknown',
+      count: parseInt(row.total_errors),
+    }));
+
+    return {
+      totalErrors,
+      errorRate,
+      topErrors,
+    };
+  },
+
+  /**
    * Get all event names with their actions (for filter dropdown)
    * Returns all events that have actions defined, plus any additional events from the database
    *
