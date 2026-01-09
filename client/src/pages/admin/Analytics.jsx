@@ -416,7 +416,7 @@ export default function Analytics() {
                 Analytics Dashboard
               </h1>
               <p className="text-sm text-slate-600 dark:text-slate-400">
-                Track conversion funnel, business metrics, and usage patterns
+                Understand user engagement, business growth, and product performance
               </p>
             </div>
 
@@ -951,6 +951,7 @@ export default function Analytics() {
               {/* Doc Types */}
               <ChartSection
                 title="Documentation Types"
+                question="What documentation types are most popular?"
                 tableData={usageData.docTypes}
                 tableColumns={[
                   { key: 'type', label: 'Doc Type' },
@@ -968,6 +969,7 @@ export default function Analytics() {
               {/* Quality Scores */}
               <ChartSection
                 title="Quality Score Distribution"
+                question="How good is the generated documentation?"
                 tableData={usageData.qualityScores}
                 tableColumns={[
                   { key: 'range', label: 'Score Range' },
@@ -980,6 +982,7 @@ export default function Analytics() {
               {/* Languages */}
               <ChartSection
                 title="Top Languages"
+                question="What programming languages are being documented?"
                 tableData={usageData.languages}
                 tableColumns={[
                   { key: 'language', label: 'Language' },
@@ -991,23 +994,6 @@ export default function Analytics() {
                   isDark={isDark}
                   height={250}
                   labelKey="language"
-                />
-              </ChartSection>
-
-              {/* Origins */}
-              <ChartSection
-                title="Code Origins"
-                tableData={usageData.origins}
-                tableColumns={[
-                  { key: 'origin', label: 'Origin' },
-                  { key: 'count', label: 'Count', format: formatNumber },
-                ]}
-              >
-                <ComparisonBar
-                  data={usageData.origins}
-                  isDark={isDark}
-                  height={250}
-                  labelKey="origin"
                 />
               </ChartSection>
             </div>
