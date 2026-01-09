@@ -2372,6 +2372,147 @@ export const analyticsService = {
       offset += BATCH_SIZE;
     }
   },
+
+  /**
+   * Get metric comparison between current and previous period
+   * @param {Object} options - Query options
+   * @param {string} options.metric - Metric name (sessions, signups, revenue, etc.)
+   * @param {Date} options.startDate - Current period start
+   * @param {Date} options.endDate - Current period end
+   * @param {boolean} [options.excludeInternal=true] - Exclude internal users
+   * @returns {Promise<Object>} { current, previous, change }
+   */
+  async getMetricComparison({ metric, startDate, endDate, excludeInternal = true }) {
+    // Calculate previous period (same duration, immediately prior)
+    const duration = endDate - startDate;
+    const prevEndDate = new Date(startDate);
+    const prevStartDate = new Date(startDate - duration);
+
+    // Helper to format date range for display
+    const formatDateRange = (start, end) => {
+      const opts = { month: 'short', day: 'numeric' };
+      return `${start.toLocaleDateString('en-US', opts)} - ${end.toLocaleDateString('en-US', opts)}`;
+    };
+
+    // Fetch metric value for a period
+    const getMetricValue = async (start, end) => {
+      const params = { startDate: start, endDate: end, excludeInternal };
+
+      switch (metric) {
+        case 'sessions': {
+          const data = await this.getUsagePatterns(params);
+          return data.totalSessions;
+        }
+        case 'signups': {
+          const data = await this.getBusinessMetrics(params);
+          return data.totalSignups;
+        }
+        case 'revenue': {
+          const data = await this.getBusinessMetrics(params);
+          return data.totalRevenue;
+        }
+        case 'generations': {
+          const data = await this.getPerformanceMetrics(params);
+          return data.totalGenerations;
+        }
+        case 'completed_sessions': {
+          const funnel = await this.getWorkflowConversionFunnel(params);
+          return funnel.stages?.generation_completed?.events || 0;
+        }
+        case 'avg_latency': {
+          const data = await this.getPerformanceMetrics(params);
+          return data.avgLatencyMs;
+        }
+        case 'cache_hit_rate': {
+          const data = await this.getPerformanceMetrics(params);
+          return data.cacheHitRate;
+        }
+        case 'throughput': {
+          const data = await this.getPerformanceMetrics(params);
+          return data.avgThroughput;
+        }
+        case 'errors': {
+          const result = await sql`
+            SELECT COUNT(*) as count
+            FROM analytics_events
+            WHERE event_name = 'error'
+              AND created_at >= ${start}
+              AND created_at < ${end}
+              ${excludeInternal ? sql`AND is_internal = FALSE` : sql``}
+          `;
+          return parseInt(result.rows[0]?.count || 0);
+        }
+        case 'error_rate': {
+          const errors = await sql`
+            SELECT COUNT(*) as count
+            FROM analytics_events
+            WHERE event_name = 'error'
+              AND created_at >= ${start}
+              AND created_at < ${end}
+              ${excludeInternal ? sql`AND is_internal = FALSE` : sql``}
+          `;
+          const funnel = await this.getWorkflowConversionFunnel(params);
+          const generations = funnel.stages?.generation_started?.events || 0;
+          const errorCount = parseInt(errors.rows[0]?.count || 0);
+          return generations > 0 ? (errorCount / generations) * 100 : 0;
+        }
+        default:
+          throw new Error(`Unknown metric: ${metric}`);
+      }
+    };
+
+    // Fetch both periods
+    const [current, previous] = await Promise.all([
+      getMetricValue(startDate, endDate),
+      getMetricValue(prevStartDate, prevEndDate),
+    ]);
+
+    // Calculate change
+    const change = previous > 0 ? ((current - previous) / previous) * 100 : 0;
+
+    return {
+      current: { value: current, period: formatDateRange(startDate, endDate) },
+      previous: { value: previous, period: formatDateRange(prevStartDate, prevEndDate) },
+      change: {
+        value: Math.abs(change),
+        percent: change,
+        direction: change > 0 ? 'up' : change < 0 ? 'down' : 'neutral',
+      },
+    };
+  },
+
+  /**
+   * Get bulk metric comparisons for multiple metrics
+   * @param {Object} options - Query options
+   * @param {Array<string>} options.metrics - Array of metric names
+   * @param {Date} options.startDate - Current period start
+   * @param {Date} options.endDate - Current period end
+   * @param {boolean} [options.excludeInternal=true] - Exclude internal users
+   * @returns {Promise<Object>} Map of metric names to comparison objects
+   */
+  async getBulkComparisons({ metrics, startDate, endDate, excludeInternal = true }) {
+    const comparisons = {};
+
+    // Fetch all comparisons in parallel
+    await Promise.all(
+      metrics.map(async (metric) => {
+        try {
+          comparisons[metric] = await this.getMetricComparison({
+            metric,
+            startDate,
+            endDate,
+            excludeInternal,
+          });
+        } catch (error) {
+          // If a metric fails, return null for that metric
+          console.error(`Failed to get comparison for metric ${metric}:`, error.message);
+          comparisons[metric] = null;
+        }
+      })
+    );
+
+    return comparisons;
+  },
 };
 
 export default analyticsService;

@@ -59,34 +59,6 @@ const TABS = [
   { id: 'events', label: 'Raw Events', icon: Database },
 ];
 
-// Questions that each tab answers (storytelling guidance)
-const TAB_QUESTIONS = {
-  business: [
-    "How many visitors are converting to paying customers?",
-    "What's our revenue trend?",
-    "Are signups growing or declining?",
-    "How effective are our trials at converting?"
-  ],
-  usage: [
-    "How engaged are users with the product?",
-    "Where is code coming from (GitHub, uploads, samples)?",
-    "What documentation types are most popular?",
-    "Are users completing their workflows?"
-  ],
-  performance: [
-    "Is the product fast enough?",
-    "Is prompt caching saving us money?",
-    "What's our error rate?",
-    "Which LLM provider performs best?"
-  ],
-  events: [
-    "What events are being tracked?",
-    "Which users are most active?",
-    "What event patterns exist in the data?",
-    "How can I debug analytics tracking?"
-  ]
-};
-
 /**
  * Format LLM provider name for display
  * Handles special casing like OpenAI, Claude, etc.
@@ -155,39 +127,24 @@ function InfoTooltip({ content }) {
 }
 
 /**
- * Guiding Questions Component
- * Displays key questions that a tab answers
+ * Chart Section Component with optional table toggle and guiding question
  */
-function GuidingQuestions({ questions }) {
-  return (
-    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-4 mb-6">
-      <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-2">
-        Questions this view answers:
-      </h3>
-      <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
-        {questions.map((q, i) => (
-          <li key={i} className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
-            <span className="text-purple-500">•</span>
-            {q}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-/**
- * Chart Section Component with optional table toggle
- */
-function ChartSection({ title, children, tableData, tableColumns }) {
+function ChartSection({ title, question, children, tableData, tableColumns }) {
   const [showTable, setShowTable] = useState(false);
 
   return (
     <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-          {title}
-        </h3>
+        <div>
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+            {title}
+          </h3>
+          {question && (
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 italic">
+              {question}
+            </p>
+          )}
+        </div>
         {tableData && tableData.length > 0 && (
           <button
             onClick={() => setShowTable(!showTable)}
@@ -473,16 +430,14 @@ export default function Analytics() {
         {/* Business Tab */}
         {!loading && activeTab === 'business' && businessData && (
           <div className="space-y-6">
-            <GuidingQuestions questions={TAB_QUESTIONS.business} />
-
             {/* Business Conversion Funnel Section */}
             {businessData.conversionFunnel && (
               <>
                 <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-2">
                   Conversion Funnel
                 </h2>
-                <p className="text-sm text-slate-600 dark:text-slate-400 -mt-4">
-                  Track the path from visitor to paid customer
+                <p className="text-sm text-slate-500 dark:text-slate-400 -mt-4 italic">
+                  How many visitors are converting to paying customers?
                 </p>
 
                 {/* Conversion Funnel Summary Cards */}
@@ -754,16 +709,14 @@ export default function Analytics() {
         {/* Usage Tab */}
         {!loading && activeTab === 'usage' && usageData && (
           <div className="space-y-6">
-            <GuidingQuestions questions={TAB_QUESTIONS.usage} />
-
             {/* Session Overview Section */}
             {funnelData && (
               <>
                 <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-2">
                   Session Overview
                 </h2>
-                <p className="text-sm text-slate-600 dark:text-slate-400 -mt-4">
-                  High-level engagement metrics for the selected period
+                <p className="text-sm text-slate-500 dark:text-slate-400 -mt-4 italic">
+                  How engaged are users with the product?
                 </p>
 
                 {/* Session Summary Cards */}
@@ -909,6 +862,7 @@ export default function Analytics() {
             {/* Generations Trend */}
             <ChartSection
               title="Generations Over Time"
+              question="Are users completing their workflows?"
               tableData={timeSeriesData.generations}
               tableColumns={[
                 { key: 'date', label: 'Date', format: (d) => new Date(d).toLocaleDateString() },
@@ -993,8 +947,6 @@ export default function Analytics() {
         {/* Performance Tab */}
         {!loading && activeTab === 'performance' && performanceData && (
           <div className="space-y-8">
-            <GuidingQuestions questions={TAB_QUESTIONS.performance} />
-
             {/* ================================================================
                 SECTION 1: Response Time - How fast are we generating docs?
                 ================================================================ */}
@@ -1005,8 +957,8 @@ export default function Analytics() {
                   Response Time
                   <InfoTooltip content="Excellent <3s • Good 3-8s • Acceptable 8-15s • Slow >15s" />
                 </h2>
-                <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                  How fast are documents being generated? Lower latency = better user experience.
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 italic">
+                  Is the product fast enough?
                 </p>
               </div>
 
@@ -1036,7 +988,10 @@ export default function Analytics() {
 
               {/* Latency Breakdown: TTFT vs Streaming */}
               {performanceData.latencyBreakdown && performanceData.latencyBreakdown.totalEvents > 0 && (
-                <ChartSection title="Latency Breakdown (Where Time is Spent)">
+                <ChartSection
+                  title="Latency Breakdown (Where Time is Spent)"
+                  question="Is prompt caching saving us money?"
+                >
                   <div className="space-y-4">
                     {/* Visual breakdown bar */}
                     <div className="space-y-2">
@@ -1422,15 +1377,11 @@ export default function Analytics() {
 
         {/* Raw Events Tab */}
         {activeTab === 'events' && (
-          <div className="space-y-6">
-            <GuidingQuestions questions={TAB_QUESTIONS.events} />
-
-            <EventsTable
-              startDate={dateRange.startDate}
-              endDate={dateRange.endDate}
-              excludeInternal={excludeInternal}
-            />
-          </div>
+          <EventsTable
+            startDate={dateRange.startDate}
+            endDate={dateRange.endDate}
+            excludeInternal={excludeInternal}
+          />
         )}
       </div>
     </PageLayout>
