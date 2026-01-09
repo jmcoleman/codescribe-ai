@@ -1,601 +1,423 @@
 
-# Workflow Outcome Metrics Implementation Plan
+# Workflow Outcome Metrics - Implementation Summary
 
-> **Purpose:** Implement analytics tracking to measure whether CodeScribe AI achieves its workflow outcomes as defined in the Workflow-First PRD.
+> **Purpose:** Documentation of analytics tracking implementation for measuring CodeScribe AI's workflow outcomes.
 >
-> **Estimated Effort:** 4-6 hours
-> **Priority:** High (Cannot evaluate business outcomes without this)
+> **Status:** ✅ **IMPLEMENTED** in v3.3.4 (January 6, 2026)
+> **Implementation:** Comprehensive analytics dashboard with conversion funnels, business metrics, and usage patterns
 
 ---
 
-## Problem Statement
+## Implementation Summary
 
-We have a comprehensive Workflow-First PRD defining 5 core workflows with measurable outcomes, but our current analytics implementation only tracks ~25% of the metrics needed to evaluate success.
+**Shipped in v3.3.4** - Complete analytics system with:
+- ✅ Session tracking with opt-out support
+- ✅ Conversion funnel visualization (5-stage funnel)
+- ✅ Business metrics dashboard (signups, upgrades, revenue)
+- ✅ Usage pattern analysis (doc types, quality scores, languages)
+- ✅ Admin analytics dashboard with Recharts visualizations
+- ✅ Database persistence for all events
+- ✅ Internal user filtering (exclude admin/support)
+- ✅ Date range filtering with presets
 
-**Current State:**
-- 8 custom Vercel Analytics events (basic coverage)
-- Database stores rich metadata (quality scores, batch stats)
-- No session tracking, no funnel tracking, no conversion metrics
-- **BUG:** Custom events in `analytics.js` don't respect user's analytics opt-out preference (only `AnalyticsWrapper.jsx` does)
-
-**Gap:** Cannot answer key business questions:
-- What is our Time-to-First-Value?
-- What % of users complete the paste → copy workflow?
-- What is our free-to-paid conversion rate?
-- Do users who regenerate get better scores?
-
----
-
-## Success Criteria
-
-After implementation, we can measure:
-
-| Metric | Target | Measurement |
-|--------|--------|-------------|
-| Time-to-First-Doc | < 3 min | Session start → first generation complete |
-| Workflow Completion Rate | > 60% | Users who paste code AND copy output |
-| Quality Score Distribution | > 85% score 80+ | Aggregated from quality_score events |
-| Free-to-Paid Conversion | > 5% | Limit hit → subscription created funnel |
-| Regeneration Success Rate | > 80% improve | Before/after score comparison |
+**Architecture Decisions:**
+- Used **action-based events** (e.g., `user_interaction` with action parameter) instead of creating dozens of event types
+- Dual-tracking: Vercel Analytics (web metrics) + PostgreSQL (admin dashboard)
+- Server-side tracking for webhooks (checkout, tier changes)
+- Automatic internal user detection (admin roles, tier overrides)
 
 ---
 
-## Implementation Phases
+## Current State (v3.3.4+)
 
-### Phase 1: Fix Analytics Opt-Out + Add Session Infrastructure (45 min)
+**Implemented Metrics:**
 
-**Goal:**
-1. **FIX BUG:** Ensure all custom events respect user's analytics opt-out preference
-2. Enable session-level tracking and returning user detection
+| Metric | Target | Implementation | Status |
+|--------|--------|----------------|--------|
+| Time-to-First-Doc | < 3 min | session_start → doc_generation (success) | ✅ Tracking |
+| Workflow Completion Rate | > 60% | code_input → doc_generation → doc_export | ✅ Funnel visualization |
+| Quality Score Distribution | > 85% score 80+ | quality_score events + histogram chart | ✅ Dashboard |
+| Free-to-Paid Conversion | > 5% | usage_alert → pricing_page_viewed → tier_change | ✅ Funnel tracking |
+| Regeneration Success Rate | > 80% improve | user_interaction (regeneration_complete) | ✅ Tracking |
 
-**Current Bug:** `analytics.js` custom events don't check `user.analytics_enabled`, only `isProduction`. This means opted-out users are still tracked via custom events.
+**Can Now Answer:**
+- ✅ What is our Time-to-First-Value? (Funnel tab: session → generation)
+- ✅ What % of users complete the paste → copy workflow? (Conversion funnel chart)
+- ✅ What is our free-to-paid conversion rate? (Business metrics tab)
+- ✅ Do users who regenerate get better scores? (Query regeneration_complete events)
+- ✅ What are most popular doc types? (Usage patterns tab)
+- ✅ What's our quality score distribution? (Score distribution histogram)
+
+---
+
+## Actual Implementation (v3.3.4)
+
+### Event Architecture
+
+**Core Design Decision:** Use **action-based events** instead of creating separate event types for each user action.
+
+| Event Type | Purpose | Action Parameter |
+|------------|---------|------------------|
+| `session_start` | Session entry point | N/A |
+| `code_input` | Code source tracking | origin: 'paste', 'upload', 'sample', 'github', 'gitlab', 'bitbucket' |
+| `doc_generation` | Generation tracking | success: 'true'/'false' |
+| `quality_score` | Quality measurement | score, grade, doc_type |
+| `doc_export` | Value capture | action: 'copy', 'download' |
+| `usage_alert` | Usage warnings | action: 'warning_shown', 'limit_hit' |
+| `user_interaction` | General interactions | action: 'pricing_page_viewed', 'upgrade_cta_clicked', 'checkout_started', 'regeneration_complete', 'batch_generation_complete', etc. |
+| `login` / `signup` | Auth events | method: 'email', 'oauth_github', 'oauth_google' |
+| `checkout_completed` | Server-side payment | Webhook event |
+| `tier_change` | Server-side tier changes | action: 'upgrade', 'downgrade', 'cancel' |
+| `error` | Error tracking | error_type, context |
+| `performance` | LLM metrics | latency, throughput, cache, llm |
+| `oauth_flow` | OAuth timing | action: 'initiated', 'redirect_started', 'completed', 'failed' |
+
+### Client-Side Implementation
 
 **File:** `client/src/utils/analytics.js`
 
+**Key Features:**
+- ✅ Analytics opt-out support (`setAnalyticsOptOut()`)
+- ✅ Session management (`getSessionId()`, `getSessionDuration()`)
+- ✅ Session context auto-injected (`withSessionContext()`)
+- ✅ Dual tracking: Vercel Analytics + Backend API
+- ✅ Development mode console logging
+- ✅ Event sanitization (remove API keys, tokens, emails)
+
+**Tracking Functions:**
 ```javascript
-// Add to analytics.js
+// Session & Auth
+trackSessionStart()
+trackLogin({ method })
+trackSignup({ method, tier, hasTrial })
 
-import { STORAGE_KEYS } from '../constants/storage';
+// Core workflow events
+trackCodeInput(origin, codeSize, language, filename, metadata)
+trackDocGeneration({ docType, success, duration, codeSize, language, origin, filename, repo, llm })
+trackQualityScore({ score, grade, docType })
+trackDocExport({ action, docType, filename, format, source })
 
-// ===========================================
-// ANALYTICS OPT-OUT SUPPORT
-// ===========================================
+// Conversion funnel
+trackUsageAlert({ action, tier, percentUsed, remaining, limit, period })
+trackInteraction(action, metadata) // Flexible for any interaction
 
-// Module-level state for opt-out (updated by React context)
-let analyticsOptedOut = false;
-
-/**
- * Update the analytics opt-out state
- * Called from AuthContext when user data changes
- * @param {boolean} optedOut - Whether user has opted out
- */
-export const setAnalyticsOptOut = (optedOut) => {
-  analyticsOptedOut = optedOut;
-};
-
-/**
- * Check if analytics is currently enabled
- * Respects both production check and user opt-out
- */
-const isAnalyticsEnabled = () => {
-  if (!isProduction) return false;
-  if (analyticsOptedOut) return false;
-  return true;
-};
-
-// Update trackEvent to use the new check
-const trackEvent = (eventName, eventData) => {
-  if (isAnalyticsEnabled()) {
-    track(eventName, eventData);
-  } else if (!isProduction) {
-    // Log to console in development for debugging
-    console.debug(`[Analytics] ${eventName}:`, eventData);
-  }
-  // If opted out in production, silently skip
-};
-
-// ===========================================
-// SESSION MANAGEMENT
-// ===========================================
-
-const SESSION_KEY = 'cs_session_id';
-const SESSION_START_KEY = 'cs_session_start';
-const SESSION_COUNT_KEY = 'cs_session_count';
-
-export const getSessionId = () => {
-  let sessionId = sessionStorage.getItem(SESSION_KEY);
-  if (!sessionId) {
-    sessionId = crypto.randomUUID();
-    sessionStorage.setItem(SESSION_KEY, sessionId);
-    sessionStorage.setItem(SESSION_START_KEY, Date.now().toString());
-
-    // Track session count in localStorage for returning user detection
-    const sessionCount = parseInt(localStorage.getItem(SESSION_COUNT_KEY) || '0', 10);
-    localStorage.setItem(SESSION_COUNT_KEY, (sessionCount + 1).toString());
-  }
-  return sessionId;
-};
-
-export const getSessionStart = () => {
-  return parseInt(sessionStorage.getItem(SESSION_START_KEY) || Date.now().toString(), 10);
-};
-
-export const isReturningUser = () => {
-  const sessionCount = parseInt(localStorage.getItem(SESSION_COUNT_KEY) || '0', 10);
-  return sessionCount > 1;
-};
-
-export const getSessionDuration = () => {
-  const start = getSessionStart();
-  return Date.now() - start;
-};
-
-// Enhance all track functions to include session context
-const withSessionContext = (data) => ({
-  ...data,
-  sessionId: getSessionId(),
-  isReturningUser: isReturningUser(),
-  sessionDurationMs: getSessionDuration(),
-});
+// Technical metrics
+trackError({ errorType, errorMessage, context, codeInput, llm })
+trackPerformance({ latency, throughput, input, cache, request, context, llm })
+trackOAuth({ provider, action, context, duration, errorType })
 ```
 
-**Update AuthContext to sync opt-out state:**
-
+**Session Context (Auto-Added):**
 ```javascript
-// In AuthContext.jsx - add to useEffect that handles user changes
-
-import { setAnalyticsOptOut } from '../utils/analytics';
-
-// When user changes, update analytics opt-out state
-useEffect(() => {
-  if (user) {
-    // User opted out if analytics_enabled is explicitly false
-    setAnalyticsOptOut(user.analytics_enabled === false);
-  } else {
-    // Anonymous users have analytics enabled by default
-    setAnalyticsOptOut(false);
-  }
-}, [user]);
+{
+  session_id: "uuid-v4",
+  session_duration_ms: 45230,
+  // Note: is_internal/is_admin flags set server-side via user lookup
+}
 ```
 
-**Update existing track functions to include session context:**
-```javascript
-export const trackDocGeneration = ({ docType, success, duration, codeSize, language }) => {
-  trackEvent('doc_generation', withSessionContext({
-    doc_type: docType,
-    success: success ? 'true' : 'false',
-    duration_ms: Math.round(duration),
-    code_size_kb: Math.round(codeSize / 1024),
-    language: language || 'unknown',
-  }));
-};
+### Server-Side Implementation
 
-// ... apply withSessionContext to all existing track functions
+**File:** `server/src/utils/serverAnalytics.js`
+
+**Key Features:**
+- ✅ Structured logging for Vercel log drains
+- ✅ Database persistence via `analyticsService`
+- ✅ Automatic internal user detection
+- ✅ Non-blocking (analytics errors don't break business logic)
+
+**Tracking Functions:**
+```javascript
+trackCheckoutCompleted({ userId, tier, amount, billingPeriod })
+trackTierChange({ action, userId, previousTier, newTier, source, reason })
+trackSignup({ userId, method })
 ```
 
----
+### Database Schema
 
-### Phase 2: Copy/Download Tracking (15 min)
+**Table:** `analytics_events` (Migration 046)
 
-**Goal:** Track value capture - when users copy or download documentation.
-
-**Files to modify:**
-- `client/src/components/CopyButton.jsx`
-- `client/src/components/DownloadButton.jsx`
-- `client/src/components/DocPanel.jsx` (for copy code blocks)
-
-**CopyButton.jsx changes:**
-```javascript
-import { trackInteraction } from '../utils/analytics';
-
-const handleCopy = async () => {
-  await navigator.clipboard.writeText(text);
-  setCopied(true);
-
-  // Track copy event
-  trackInteraction('copy_documentation', {
-    contentLength: text.length,
-    docType: docType, // Pass from parent
-    hasQualityScore: !!qualityScore,
-    qualityScore: qualityScore?.score,
-  });
-
-  setTimeout(() => setCopied(false), 2000);
-};
-```
-
-**DownloadButton.jsx changes:**
-```javascript
-import { trackInteraction } from '../utils/analytics';
-
-const handleDownload = () => {
-  // ... existing download logic
-
-  trackInteraction('download_documentation', {
-    format: format, // 'md', 'txt', 'zip'
-    fileCount: fileCount || 1,
-    docType: docType,
-    includesQualityReport: includesQualityReport,
-  });
-};
-```
-
----
-
-### Phase 3: Workflow Funnel Events (45 min)
-
-**Goal:** Track complete workflow funnels for each core workflow.
-
-#### Workflow 1: First Value Moment
-
-**Events to add:**
-
-| Event | Trigger | Location | Funnel Stage |
-|-------|---------|----------|--------------|
-| `session_start` | Page load (first time) | `App.jsx` or `analytics.js` init | Entry |
-| `code_input_start` | User starts typing/pasting | `CodePanel.jsx` | Engage |
-| `generation_started` | Click Generate | `useDocGeneration.js` | Commit |
-| `generation_complete` | Streaming finishes (score visible inline) | `useDocGeneration.js` | **Value Delivered** |
-| `documentation_copied` | Click copy | `CopyButton.jsx` | Value Captured |
-| `quality_breakdown_viewed` | Open quality modal (optional) | `QualityScore.jsx` | Engagement (not in funnel) |
-
-**App.jsx - Session start:**
-```javascript
-import { trackInteraction, getSessionId, isReturningUser } from './utils/analytics';
-
-useEffect(() => {
-  // Track session start once per session
-  const hasTrackedSession = sessionStorage.getItem('cs_session_tracked');
-  if (!hasTrackedSession) {
-    trackInteraction('session_start', {
-      isReturningUser: isReturningUser(),
-      referrer: document.referrer,
-      landingPage: window.location.pathname,
-    });
-    sessionStorage.setItem('cs_session_tracked', 'true');
-  }
-}, []);
-```
-
-**CodePanel.jsx - Code input tracking:**
-```javascript
-const handleCodeChange = (value) => {
-  setCode(value);
-
-  // Track first meaningful input (debounced)
-  if (value.length > 50 && !hasTrackedInput.current) {
-    trackInteraction('code_input_start', {
-      method: inputMethod, // 'typed', 'pasted', 'uploaded', 'github'
-      codeLength: value.length,
-    });
-    hasTrackedInput.current = true;
-  }
-};
-```
-
-#### Workflow 3: Regeneration Tracking
-
-**QualityScore.jsx or regeneration handler:**
-```javascript
-const handleRegenerate = async () => {
-  const previousScore = currentScore;
-
-  // ... regeneration logic
-
-  const newScore = result.qualityScore;
-
-  trackInteraction('regeneration_complete', {
-    previousScore: previousScore,
-    newScore: newScore,
-    improvement: newScore - previousScore,
-    improved: newScore > previousScore,
-    docType: docType,
-  });
-};
-```
-
----
-
-### Phase 4: Conversion Funnel (45 min)
-
-**Goal:** Track the complete free-to-paid conversion funnel.
-
-#### Events to add:
-
-| Event | Trigger | Location |
-|-------|---------|----------|
-| `usage_warning_shown` | 80% banner displayed | `UsageWarningBanner.jsx` |
-| `usage_limit_hit` | 100% modal displayed | `UsageLimitModal.jsx` |
-| `pricing_page_viewed` | Visit pricing page | `PricingPage.jsx` |
-| `upgrade_cta_clicked` | Click upgrade button | `PricingPage.jsx` |
-| `checkout_started` | Redirect to Stripe | `PricingPage.jsx` or checkout handler |
-| `checkout_completed` | Webhook received | `server/src/routes/webhooks.js` |
-| `tier_upgraded` | Subscription confirmed | `server/src/routes/webhooks.js` |
-
-**UsageWarningBanner.jsx:**
-```javascript
-useEffect(() => {
-  if (isVisible) {
-    trackInteraction('usage_warning_shown', {
-      percentUsed: percentUsed,
-      tier: currentTier,
-      docsRemaining: docsRemaining,
-    });
-  }
-}, [isVisible]);
-```
-
-**UsageLimitModal.jsx:**
-```javascript
-useEffect(() => {
-  if (isOpen) {
-    trackInteraction('usage_limit_hit', {
-      tier: currentTier,
-      limitType: limitType, // 'daily' or 'monthly'
-    });
-  }
-}, [isOpen]);
-```
-
-**PricingPage.jsx:**
-```javascript
-useEffect(() => {
-  trackInteraction('pricing_page_viewed', {
-    source: searchParams.get('source') || 'direct',
-    currentTier: user?.tier || 'anonymous',
-    isTrialUser: isTrialUser,
-  });
-}, []);
-
-const handleUpgradeClick = (targetTier) => {
-  trackInteraction('upgrade_cta_clicked', {
-    currentTier: user?.tier,
-    targetTier: targetTier,
-    billingPeriod: billingPeriod,
-  });
-
-  // ... proceed to checkout
-};
-```
-
-**Server-side webhook tracking (webhooks.js):**
-```javascript
-// Add server-side analytics helper
-import { trackServerEvent } from '../utils/serverAnalytics.js';
-
-// In checkout.session.completed handler:
-trackServerEvent('checkout_completed', {
-  userId: user.id,
-  tier: subscription.tier,
-  amount: session.amount_total,
-  billingPeriod: subscription.billing_period,
-});
-
-// In subscription tier change:
-trackServerEvent('tier_upgraded', {
-  userId: user.id,
-  previousTier: previousTier,
-  newTier: newTier,
-  source: 'stripe_webhook',
-});
-```
-
----
-
-### Phase 5: Batch Metrics Export (30 min)
-
-**Goal:** Export existing database batch metrics to analytics events.
-
-**useBatchGeneration.js - After batch completion:**
-```javascript
-const handleBatchComplete = (results) => {
-  const successCount = results.filter(r => r.success).length;
-  const avgScore = results
-    .filter(r => r.qualityScore)
-    .reduce((sum, r) => sum + r.qualityScore, 0) / successCount;
-
-  trackInteraction('batch_generation_complete', {
-    totalFiles: results.length,
-    successCount: successCount,
-    failedCount: results.length - successCount,
-    avgQualityScore: Math.round(avgScore),
-    docTypes: [...new Set(results.map(r => r.docType))],
-    source: batchSource, // 'github', 'upload', 'mixed'
-    durationMs: Date.now() - batchStartTime,
-  });
-};
-```
-
----
-
-### Phase 6: Server-Side Analytics Helper (30 min)
-
-**Goal:** Enable server-side event tracking for webhook events.
-
-**New file:** `server/src/utils/serverAnalytics.js`
-
-```javascript
-/**
- * Server-side analytics tracking
- * Sends events to a simple analytics endpoint or logs for processing
- */
-
-const ANALYTICS_ENABLED = process.env.NODE_ENV === 'production';
-
-export const trackServerEvent = async (eventName, data) => {
-  if (!ANALYTICS_ENABLED) {
-    console.log(`[Analytics] ${eventName}:`, data);
-    return;
-  }
-
-  try {
-    // Option 1: Log to stdout for Vercel log processing
-    console.log(JSON.stringify({
-      type: 'analytics_event',
-      event: eventName,
-      timestamp: new Date().toISOString(),
-      ...data,
-    }));
-
-    // Option 2: Send to analytics endpoint (if we add one)
-    // await fetch(ANALYTICS_ENDPOINT, {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ event: eventName, ...data }),
-    // });
-  } catch (error) {
-    console.error('[Analytics] Failed to track event:', error);
-  }
-};
-```
-
----
-
-## File Changes Summary
-
-| File | Changes | Est. Time |
-|------|---------|-----------|
-| `client/src/utils/analytics.js` | **FIX:** Add opt-out support, session tracking, withSessionContext | 45 min |
-| `client/src/contexts/AuthContext.jsx` | Sync analytics opt-out state when user changes | 5 min |
-| `client/src/components/CopyButton.jsx` | Add copy tracking | 5 min |
-| `client/src/components/DownloadButton.jsx` | Add download tracking | 5 min |
-| `client/src/App.jsx` | Session start event | 5 min |
-| `client/src/components/CodePanel.jsx` | Code input start tracking | 10 min |
-| `client/src/hooks/useDocGeneration.js` | Generation start/complete events | 10 min |
-| `client/src/components/QualityScore.jsx` | Quality viewed, regeneration tracking | 15 min |
-| `client/src/components/UsageWarningBanner.jsx` | Warning shown event | 5 min |
-| `client/src/components/UsageLimitModal.jsx` | Limit hit event | 5 min |
-| `client/src/pages/PricingPage.jsx` | Page view, CTA click events | 10 min |
-| `client/src/hooks/useBatchGeneration.js` | Batch complete metrics | 15 min |
-| `server/src/utils/serverAnalytics.js` | New file - server-side tracking | 15 min |
-| `server/src/routes/webhooks.js` | Checkout/upgrade events | 15 min |
-
-**Total: ~2.5 hours implementation + 1.5 hours testing = 4 hours**
-
----
-
-## Testing Plan
-
-### Unit Tests
-
-```javascript
-// analytics.test.js
-describe('Session Tracking', () => {
-  it('generates unique session ID', () => {
-    const id1 = getSessionId();
-    const id2 = getSessionId();
-    expect(id1).toBe(id2); // Same session
-  });
-
-  it('detects returning users', () => {
-    localStorage.setItem('cs_session_count', '3');
-    expect(isReturningUser()).toBe(true);
-  });
-
-  it('includes session context in events', () => {
-    const data = withSessionContext({ foo: 'bar' });
-    expect(data.sessionId).toBeDefined();
-    expect(data.isReturningUser).toBeDefined();
-  });
-});
-```
-
-### Integration Tests
-
-1. **First Value Funnel:**
-   - Load app → paste code → generate → copy
-   - Verify events: session_start → code_input_start → generation_started → generation_complete → documentation_copied
-
-2. **Conversion Funnel:**
-   - Hit usage limit → view pricing → click upgrade
-   - Verify events: usage_limit_hit → pricing_page_viewed → upgrade_cta_clicked
-
-3. **Regeneration:**
-   - Generate doc → regenerate → verify score comparison event
-
----
-
-## Analytics Dashboard Queries
-
-Once implemented, create Vercel Analytics dashboard with:
-
-### Time-to-First-Value
 ```sql
-SELECT
-  AVG(generation_complete_time - session_start_time) as avg_time_to_value
-FROM events
-WHERE event = 'generation_complete'
-  AND session_id IN (
-    SELECT session_id FROM events WHERE event = 'session_start'
+CREATE TABLE analytics_events (
+  id SERIAL PRIMARY KEY,
+  event_name VARCHAR(100) NOT NULL,
+  event_category VARCHAR(50),  -- 'workflow', 'business', 'usage', 'system'
+  event_data JSONB NOT NULL,
+  session_id VARCHAR(100),
+  user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  is_internal BOOLEAN DEFAULT false,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Indexes for dashboard queries
+CREATE INDEX idx_analytics_events_name ON analytics_events(event_name);
+CREATE INDEX idx_analytics_events_category ON analytics_events(event_category);
+CREATE INDEX idx_analytics_events_session ON analytics_events(session_id);
+CREATE INDEX idx_analytics_events_created ON analytics_events(created_at);
+CREATE INDEX idx_analytics_events_data ON analytics_events USING GIN(event_data);
+```
+
+### Analytics Service
+
+**File:** `server/src/services/analyticsService.js`
+
+**Methods:**
+- `recordEvent(eventName, data, context)` - Insert event with internal user detection
+- `getConversionFunnel({ startDate, endDate, excludeInternal })` - 5-stage funnel metrics
+- `getBusinessMetrics({ startDate, endDate, excludeInternal })` - Signups, upgrades, revenue
+- `getUsagePatterns({ startDate, endDate, excludeInternal })` - Doc types, languages, quality
+- `getTimeSeries({ metric, startDate, endDate, granularity, excludeInternal })` - Time series
+- `trackTierChange({ action, userId, previousTier, newTier, source, reason })` - Tier changes
+- `trackTrial({ action, userId, duration, metadata })` - Trial lifecycle tracking
+
+**Internal User Detection:**
+- Checks `users.role = 'admin'` or `subscriptions.tier_override IS NOT NULL`
+- Retroactively marks session events when user logs in
+- Enables "Exclude Internal" toggle in dashboard
+
+### Admin Dashboard
+
+**File:** `client/src/pages/admin/Analytics.jsx`
+
+**Three-Tab Layout:**
+
+1. **Funnel Tab**
+   - 5-stage conversion funnel visualization
+   - Sessions → Code Input → Generation Started → Generation Completed → Doc Export
+   - Breakdown charts showing:
+     - Code input sources (paste, upload, github, etc.)
+     - Doc export actions (copy vs download)
+   - Sessions over time trend chart
+
+2. **Business Tab**
+   - New signups trend
+   - Tier changes (upgrades vs downgrades vs cancellations)
+   - Revenue metrics (MRR, total revenue)
+
+3. **Usage Tab**
+   - Doc types breakdown (README, JSDoc, API, ARCHITECTURE)
+   - Quality score distribution histogram
+   - Batch vs single generation stats
+   - Top languages and code origins
+
+**Features:**
+- Date range picker with presets (Today, Last 7/30 days, This month, Custom)
+- "Exclude Internal" toggle
+- Dark mode support
+- Accessible "Show as Table" option for all charts
+- Recharts visualization library
+
+---
+
+## Implementation Files (v3.3.4)
+
+### Frontend Files
+
+| File | Implementation | Lines |
+|------|----------------|-------|
+| `client/src/utils/analytics.js` | Complete rewrite with opt-out, session tracking, 13 track functions | ~660 |
+| `client/src/contexts/AuthContext.jsx` | Added `setAnalyticsOptOut()` sync, `trackSessionStart()`, `trackLogin()`, `trackSignup()` | ~30 |
+| `client/src/components/DocPanel.jsx` | Added `trackDocExport()` for copy/download | ~10 |
+| `client/src/components/UsageWarningBanner.jsx` | Added `trackUsageAlert('warning_shown')` | ~8 |
+| `client/src/components/UsageLimitModal.jsx` | Added `trackUsageAlert('limit_hit')` | ~8 |
+| `client/src/components/PricingPage.jsx` | Added pricing_page_viewed, upgrade_cta_clicked, checkout_started | ~20 |
+| `client/src/hooks/useBatchGeneration.js` | Added regeneration_complete, batch_generation_complete | ~15 |
+| `client/src/pages/admin/Analytics.jsx` | **NEW** - Complete dashboard with 3 tabs | ~900 |
+| `client/src/components/admin/charts/*` | **NEW** - 5 chart components (Funnel, Trend, Comparison, Donut, Score Distribution) | ~600 |
+| `client/src/components/admin/DateRangePicker.jsx` | **NEW** - Date range selector with presets | ~150 |
+| `client/src/components/admin/EventsTable.jsx` | Event category badges, multi-select filter | ~50 |
+
+### Backend Files
+
+| File | Implementation | Lines |
+|------|----------------|-------|
+| `server/src/utils/serverAnalytics.js` | **NEW** - Server-side tracking for webhooks | ~125 |
+| `server/src/services/analyticsService.js` | **NEW** - Complete analytics service with 7 query methods | ~800 |
+| `server/src/routes/analytics.js` | **NEW** - 5 API endpoints for dashboard | ~200 |
+| `server/src/routes/webhooks.js` | Added `trackCheckoutCompleted()`, `trackTierChange()` | ~20 |
+| `server/src/db/migrations/046-*.sql` | **NEW** - analytics_events table | ~50 |
+| `server/src/db/migrations/050-*.sql` | **NEW** - Event category reclassification | ~30 |
+
+### Test Files
+
+| File | Tests Added | Lines |
+|------|-------------|-------|
+| `client/src/utils/__tests__/analytics.test.js` | Session tracking, opt-out, context injection | ~200 |
+| `server/src/services/__tests__/analyticsService.test.js` | **NEW** - 64 tests covering all service methods | ~1200 |
+| `server/src/routes/__tests__/admin-analytics.test.js` | **NEW** - API endpoint tests | ~300 |
+
+---
+
+## Dashboard Query Examples
+
+### 1. Time-to-First-Value
+```javascript
+// analyticsService.getConversionFunnel()
+const funnel = await pool.query(`
+  WITH sessions AS (
+    SELECT session_id, MIN(created_at) as session_start
+    FROM analytics_events
+    WHERE event_name = 'session_start'
+      AND created_at >= $1 AND created_at <= $2
+    GROUP BY session_id
+  ),
+  first_generation AS (
+    SELECT session_id, MIN(created_at) as first_gen
+    FROM analytics_events
+    WHERE event_name = 'doc_generation'
+      AND event_data->>'success' = 'true'
+    GROUP BY session_id
   )
-```
-
-### Workflow Completion Rate
-```sql
-SELECT
-  COUNT(DISTINCT CASE WHEN copied THEN session_id END) * 100.0 /
-  COUNT(DISTINCT session_id) as completion_rate
-FROM (
   SELECT
-    session_id,
-    MAX(CASE WHEN event = 'code_input_start' THEN 1 END) as started,
-    MAX(CASE WHEN event = 'documentation_copied' THEN 1 END) as copied
-  FROM events
-  GROUP BY session_id
-) funnel
-WHERE started = 1
+    AVG(EXTRACT(EPOCH FROM (fg.first_gen - s.session_start))) as avg_ttfv_seconds
+  FROM sessions s
+  JOIN first_generation fg ON s.session_id = fg.session_id
+`, [startDate, endDate]);
 ```
 
-### Conversion Funnel
-```sql
-SELECT
-  COUNT(DISTINCT CASE WHEN event = 'usage_limit_hit' THEN session_id END) as hit_limit,
-  COUNT(DISTINCT CASE WHEN event = 'pricing_page_viewed' THEN session_id END) as viewed_pricing,
-  COUNT(DISTINCT CASE WHEN event = 'upgrade_cta_clicked' THEN session_id END) as clicked_upgrade,
-  COUNT(DISTINCT CASE WHEN event = 'checkout_completed' THEN user_id END) as completed
-FROM events
-WHERE timestamp > NOW() - INTERVAL '30 days'
+### 2. Workflow Completion Rate
+```javascript
+// Already implemented in analyticsService.getConversionFunnel()
+{
+  sessions: 1250,              // Total sessions
+  code_input: 875,            // 70% entered code
+  generation_started: 830,     // 66% started generation
+  generation_completed: 780,   // 62% completed
+  doc_export: 710,            // 57% copied/downloaded
+  conversion_rate: 57%         // Sessions → Export
+}
+```
+
+### 3. Free-to-Paid Conversion
+```javascript
+// analyticsService.getBusinessMetrics()
+const conversion = await pool.query(`
+  WITH limits AS (
+    SELECT DISTINCT user_id
+    FROM analytics_events
+    WHERE event_name = 'usage_alert'
+      AND event_data->>'action' = 'limit_hit'
+      AND created_at >= $1
+  ),
+  upgrades AS (
+    SELECT DISTINCT user_id
+    FROM analytics_events
+    WHERE event_name = 'tier_change'
+      AND event_data->>'action' = 'upgrade'
+      AND created_at >= $1
+  )
+  SELECT
+    COUNT(DISTINCT l.user_id) as hit_limit,
+    COUNT(DISTINCT u.user_id) as upgraded,
+    ROUND(COUNT(DISTINCT u.user_id) * 100.0 / NULLIF(COUNT(DISTINCT l.user_id), 0), 2) as conversion_rate
+  FROM limits l
+  LEFT JOIN upgrades u ON l.user_id = u.user_id
+`, [startDate]);
+```
+
+### 4. Regeneration Success Rate
+```javascript
+// Query regeneration_complete events
+const regenerations = await pool.query(`
+  SELECT
+    COUNT(*) FILTER (WHERE (event_data->>'improved')::boolean = true) * 100.0 / COUNT(*) as success_rate,
+    AVG((event_data->>'improvement')::numeric) as avg_improvement
+  FROM analytics_events
+  WHERE event_name = 'user_interaction'
+    AND event_data->>'action' = 'regeneration_complete'
+    AND created_at >= $1
+`, [startDate]);
 ```
 
 ---
 
-## Rollout Plan
+## Testing Coverage
 
-### Phase 1: Development (Day 1)
-- [ ] Implement session tracking infrastructure
-- [ ] Add copy/download tracking
-- [ ] Test locally with console logging
+### Unit Tests (client/src/utils/__tests__/analytics.test.js)
+- ✅ Session ID generation and persistence
+- ✅ Session duration calculation
+- ✅ Analytics opt-out respects user preference
+- ✅ Session context auto-injection
+- ✅ Development mode console logging
+- ✅ Production mode Vercel Analytics + backend tracking
+- ✅ Error message sanitization
 
-### Phase 2: Core Funnels (Day 1)
-- [ ] Implement workflow funnel events
-- [ ] Implement conversion funnel events
-- [ ] Add server-side analytics helper
+### Integration Tests (server/src/services/__tests__/analyticsService.test.js)
+- ✅ recordEvent with user association
+- ✅ Internal user detection (admin role, tier override)
+- ✅ Conversion funnel queries with date filtering
+- ✅ Business metrics (signups, upgrades, downgrades)
+- ✅ Usage patterns (doc types, languages, quality scores)
+- ✅ Time series aggregation (daily/weekly)
+- ✅ Tier change tracking (upgrade, downgrade, cancel)
+- ✅ Trial lifecycle tracking (started, expired, converted)
+- ✅ Exclude internal filter (business metrics accuracy)
 
-### Phase 3: Testing (Day 1)
-- [ ] Write unit tests for analytics utilities
-- [ ] Manual testing of all event flows
-- [ ] Verify events in Vercel Analytics dev mode
-
-### Phase 4: Deploy & Monitor (Day 2)
-- [ ] Deploy to production
-- [ ] Monitor events in Vercel Analytics
-- [ ] Create dashboard queries
-- [ ] Document baseline metrics
+### API Tests (server/src/routes/__tests__/admin-analytics.test.js)
+- ✅ POST /api/analytics/track (public endpoint, rate limited)
+- ✅ GET /api/admin/analytics/funnel (admin only)
+- ✅ GET /api/admin/analytics/business (admin only)
+- ✅ GET /api/admin/analytics/usage (admin only)
+- ✅ GET /api/admin/analytics/timeseries (admin only)
 
 ---
 
-## Future Enhancements
+## Deployment & Rollout (Completed)
 
-1. **Analytics Dashboard Page** - Admin page showing key metrics
-2. **A/B Testing Infrastructure** - Experiment tracking
-3. **Cohort Analysis** - Track user cohorts over time
-4. **Funnel Visualization** - Visual funnel charts in admin
+### v3.3.4 Release (January 6, 2026)
+- ✅ Deployed analytics dashboard to production
+- ✅ Backend API endpoints live
+- ✅ Database migrations applied (046, 050)
+- ✅ Frontend event tracking active
+- ✅ Server-side webhook tracking active
+- ✅ Admin dashboard accessible at /admin/analytics
+
+### Post-Launch Monitoring
+- ✅ Events flowing to database (verified via admin dashboard)
+- ✅ Vercel Analytics receiving events
+- ✅ Internal user filtering working correctly
+- ✅ Date range filtering functional
+- ✅ All charts rendering with dark mode support
+
+---
+
+## Future Enhancements (Roadmap)
+
+### Already Implemented
+- ✅ **Analytics Dashboard** - Admin page with funnel/business/usage metrics (v3.3.4)
+- ✅ **Funnel Visualization** - Recharts-powered conversion funnel (v3.3.4)
+- ✅ **Internal User Filtering** - Exclude admin/support from business metrics (v3.3.4)
+
+### Planned
+- [ ] **A/B Testing Infrastructure** - Experiment tracking for feature flags
+- [ ] **Cohort Analysis** - Track user cohorts over time (weekly/monthly cohorts)
+- [ ] **Real-Time Dashboard** - WebSocket updates for live metrics
+- [ ] **Custom Event Explorer** - Query builder for ad-hoc analysis
+- [ ] **Automated Reporting** - Weekly/monthly email reports for stakeholders
+- [ ] **Anomaly Detection** - Alert on unusual patterns (conversion drops, error spikes)
 
 ---
 
 ## References
 
-- [Workflow-First PRD Template](../templates/WORKFLOW-FIRST-PRD-TEMPLATE.md)
-- [Workflow-First PRD Example](../templates/WORKFLOW-FIRST-PRD-EXAMPLE-CODESCRIBE.md)
-- [Vercel Analytics Docs](https://vercel.com/docs/analytics)
-- [Current Analytics Implementation](../../client/src/utils/analytics.js)
+### Documentation
+- [Workflow-First PRD Example](../templates/WORKFLOW-FIRST-PRD-EXAMPLE-CODESCRIBE.md) - Original workflow definitions
+- [WORKFLOW-EVENTING-FLOW.md](./WORKFLOW-EVENTING-FLOW.md) - Sequence diagrams for all 5 workflows
+- [Vercel Analytics Docs](https://vercel.com/docs/analytics) - Analytics platform documentation
+
+### Implementation Files
+- [client/src/utils/analytics.js](../../client/src/utils/analytics.js) - Frontend tracking (13 functions)
+- [server/src/utils/serverAnalytics.js](../../server/src/utils/serverAnalytics.js) - Server-side tracking
+- [server/src/services/analyticsService.js](../../server/src/services/analyticsService.js) - Database queries (7 methods)
+- [client/src/pages/admin/Analytics.jsx](../../client/src/pages/admin/Analytics.jsx) - Admin dashboard
+
+### Related Guides
+- [CHANGELOG.md](../../CHANGELOG.md) - See v3.3.4 release notes
+- [Admin Analytics Tests](../../server/src/routes/__tests__/admin-analytics.test.js) - API test examples
+- [Analytics Service Tests](../../server/src/services/__tests__/analyticsService.test.js) - Query test examples
+
+---
+
+**Document Status:** ✅ Updated (January 9, 2026)
+**Version:** Reflects v3.3.4+ implementation
+**Maintainer:** CodeScribe AI Team
