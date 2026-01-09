@@ -75,13 +75,28 @@ function formatProviderName(provider) {
 
 /**
  * Stats Card Component
+ * Displays a metric with optional comparison to previous period
  */
-function StatsCard({ icon: Icon, label, value, subValue, trend, color = 'purple', breakdown }) {
+function StatsCard({ icon: Icon, label, value, subValue, trend, comparison, color = 'purple', breakdown, invertTrend = false }) {
   const colorClasses = {
     purple: 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400',
     green: 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400',
     blue: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400',
     amber: 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400',
+  };
+
+  // Determine if change is positive/negative for display
+  // invertTrend: for metrics where down is good (latency, errors)
+  const getChangeColor = (direction) => {
+    if (direction === 'neutral') return 'text-slate-500 dark:text-slate-400';
+    const isGood = invertTrend ? direction === 'down' : direction === 'up';
+    return isGood ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
+  };
+
+  const getChangeIcon = (direction) => {
+    if (direction === 'up') return <TrendingUp className="w-3 h-3" />;
+    if (direction === 'down') return <TrendingUp className="w-3 h-3 rotate-180" />;
+    return null;
   };
 
   return (
@@ -107,6 +122,14 @@ function StatsCard({ icon: Icon, label, value, subValue, trend, color = 'purple'
       {subValue && (
         <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
           {subValue}
+        </div>
+      )}
+      {comparison && comparison.change && (
+        <div className={`mt-2 flex items-center gap-1 text-xs font-medium ${getChangeColor(comparison.change.direction)}`}>
+          {getChangeIcon(comparison.change.direction)}
+          <span>
+            {comparison.change.percent > 0 ? '+' : ''}{comparison.change.percent.toFixed(1)}% vs last period
+          </span>
         </div>
       )}
       {breakdown}
@@ -213,6 +236,7 @@ export default function Analytics() {
   const [usageData, setUsageData] = useState(null);
   const [performanceData, setPerformanceData] = useState(null);
   const [timeSeriesData, setTimeSeriesData] = useState({});
+  const [comparisons, setComparisons] = useState({});
 
   // Detect dark mode
   const isDark = useMemo(() => {
@@ -326,10 +350,52 @@ export default function Analytics() {
     }
   }, [getToken, dateRange, excludeInternal, activeTab]);
 
-  // Fetch data when dependencies change
+  /**
+   * Fetch period comparisons for key metrics
+   */
+  const fetchComparisons = useCallback(async () => {
+    try {
+      const token = await getToken();
+
+      // Define metrics to compare based on active tab
+      let metrics = [];
+      if (activeTab === 'usage') {
+        metrics = ['sessions', 'generations', 'completed_sessions'];
+      } else if (activeTab === 'business') {
+        metrics = ['signups', 'revenue'];
+      } else if (activeTab === 'performance') {
+        metrics = ['avg_latency', 'cache_hit_rate', 'throughput'];
+      }
+
+      if (metrics.length === 0) return;
+
+      const params = new URLSearchParams({
+        startDate: dateRange.startDate.toISOString(),
+        endDate: dateRange.endDate.toISOString(),
+        metrics: metrics.join(','),
+        excludeInternal: excludeInternal.toString(),
+      });
+
+      const response = await fetch(`${API_URL}/api/admin/analytics/comparisons?${params}`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch comparisons');
+
+      const data = await response.json();
+      setComparisons(data.data || {});
+    } catch (err) {
+      console.error('Comparisons fetch error:', err);
+      // Don't show error to user, comparisons are optional
+      setComparisons({});
+    }
+  }, [getToken, dateRange, excludeInternal, activeTab]);
+
+  // Fetch data and comparisons when dependencies change
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+    fetchComparisons();
+  }, [fetchData, fetchComparisons]);
 
   return (
     <PageLayout>
@@ -461,6 +527,7 @@ export default function Analytics() {
                     label="Signups"
                     value={formatPercent(businessData.conversionFunnel.conversionRates?.engaged_to_signup || 0)}
                     subValue={`${formatNumber(businessData.conversionFunnel.stages?.signups?.count || 0)} of ${formatNumber(businessData.conversionFunnel.stages?.engaged?.count || 0)} engaged`}
+                    comparison={comparisons.signups}
                     color="purple"
                   />
                   <StatsCard
@@ -725,6 +792,7 @@ export default function Analytics() {
                     icon={Activity}
                     label="Total Sessions"
                     value={formatNumber(funnelData.totalSessions)}
+                    comparison={comparisons.sessions}
                     color="purple"
                   />
                   <StatsCard
@@ -732,6 +800,7 @@ export default function Analytics() {
                     label="Completed Sessions"
                     value={formatNumber(funnelData.completedSessions)}
                     subValue="Sessions with copy/download"
+                    comparison={comparisons.completed_sessions}
                     color="purple"
                   />
                   <StatsCard
@@ -968,6 +1037,8 @@ export default function Analytics() {
                   label="Average Latency"
                   value={formatLatency(performanceData.avgLatencyMs)}
                   subValue="Mean response time"
+                  comparison={comparisons.avg_latency}
+                  invertTrend={true}
                   color="purple"
                 />
                 <StatsCard
@@ -1168,6 +1239,7 @@ export default function Analytics() {
                   label="Cache Hit Rate"
                   value={formatPercent(performanceData.cacheHitRate)}
                   subValue="Requests using cached prompts"
+                  comparison={comparisons.cache_hit_rate}
                   color="purple"
                 />
                 <StatsCard
@@ -1224,6 +1296,7 @@ export default function Analytics() {
                   label="Total Generations"
                   value={formatNumber(performanceData.totalGenerations)}
                   subValue="Documents generated in period"
+                  comparison={comparisons.generations}
                   color="purple"
                 />
                 <StatsCard
@@ -1231,6 +1304,7 @@ export default function Analytics() {
                   label="Avg Throughput"
                   value={`${formatNumber(performanceData.avgThroughput)} tok/s`}
                   subValue="Output tokens per second"
+                  comparison={comparisons.throughput}
                   color="purple"
                 />
               </div>
