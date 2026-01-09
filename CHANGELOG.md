@@ -9,6 +9,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.3.8] - 2026-01-08
+
+**Status:** ✅ Analytics Funnel Visualization Polish
+
+**Summary:** Improved readability and usability of Analytics funnel visualizations with better color contrast, fixed count visibility issues, and refined breakdown labels. All funnel bars now display counts with proper white-on-dark contrast, and bar widths are capped at 100% to prevent overflow.
+
+### Changed
+
+- **Funnel Visualization Improvements** ([client/src/pages/admin/Analytics.jsx](client/src/pages/admin/Analytics.jsx))
+  - Updated bar colors to darker shades (600-series in light mode, 500-series in dark mode) for better contrast
+  - Fixed count visibility: always display counts inside bars, no conditional logic
+  - Capped bar width at 100% to prevent overflow when percentages exceed 100%
+  - Simplified breakdown bar logic to always show counts
+  - Updated doc_export breakdown labels: 'Fresh Generation' → 'Generated', 'From Cache/History' → 'Cache/History'
+
+### Fixed
+
+- **Test Coverage** ([server/src/services/__tests__/analyticsService.test.js](server/src/services/__tests__/analyticsService.test.js))
+  - Updated analyticsService tests to mock all 6 queries in getConversionFunnel
+  - Added mocks for code_input breakdown query (by origin)
+  - Added mocks for doc_export fresh count query
+  - Added mocks for doc_export breakdown query (by source)
+  - Updated query count assertions from 3 to 6
+  - Added doc_export to funnel events mock data
+
+### Tests
+
+- 4,029 tests (2,067 frontend, 1,962 backend)
+- 100 skipped (67 frontend, 33 backend)
+- All tests passing (100% pass rate)
+
+---
+
 ## [3.3.7] - 2026-01-08
 
 **Status:** ✅ Event Category Reclassification & Test Coverage
