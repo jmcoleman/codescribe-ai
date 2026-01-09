@@ -33,6 +33,7 @@ import {
   FileText,
   Layers,
   Gauge,
+  ChevronDown,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { API_URL } from '../../config/api';
@@ -238,6 +239,21 @@ export default function Analytics() {
   const [timeSeriesData, setTimeSeriesData] = useState({});
   const [comparisons, setComparisons] = useState({});
   const [summaryData, setSummaryData] = useState(null);
+  const [summaryCollapsed, setSummaryCollapsed] = useState(() => {
+    // Load collapsed state from localStorage
+    const saved = localStorage.getItem('analytics-summary-collapsed');
+    return saved === 'true';
+  });
+  const [loadedTabs, setLoadedTabs] = useState(new Set([activeTab])); // Track which tabs have loaded data
+
+  // Save collapsed state to localStorage
+  const toggleSummary = useCallback(() => {
+    setSummaryCollapsed(prev => {
+      const newValue = !prev;
+      localStorage.setItem('analytics-summary-collapsed', newValue.toString());
+      return newValue;
+    });
+  }, []);
 
   // Detect dark mode
   const isDark = useMemo(() => {
@@ -247,8 +263,10 @@ export default function Analytics() {
   /**
    * Fetch data from API
    */
-  const fetchData = useCallback(async () => {
-    setLoading(true);
+  const fetchData = useCallback(async (showLoadingSpinner = true) => {
+    if (showLoadingSpinner) {
+      setLoading(true);
+    }
     setError(null);
 
     try {
@@ -347,7 +365,11 @@ export default function Analytics() {
       console.error('Analytics fetch error:', err);
       setError(err.message);
     } finally {
-      setLoading(false);
+      if (showLoadingSpinner) {
+        setLoading(false);
+      }
+      // Mark this tab as loaded
+      setLoadedTabs(prev => new Set([...prev, activeTab]));
     }
   }, [getToken, dateRange, excludeInternal, activeTab]);
 
@@ -419,12 +441,22 @@ export default function Analytics() {
     }
   }, [getToken, dateRange, excludeInternal]);
 
-  // Fetch data, comparisons, and summary when dependencies change
+  // Fetch data when date range or excludeInternal changes (full refresh with loading)
   useEffect(() => {
-    fetchData();
+    // Clear loaded tabs and refetch everything
+    setLoadedTabs(new Set([activeTab]));
+    fetchData(true); // Show loading spinner
     fetchComparisons();
     fetchSummary();
-  }, [fetchData, fetchComparisons, fetchSummary]);
+  }, [dateRange, excludeInternal]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Fetch data when tab changes (only if not already loaded, no loading spinner)
+  useEffect(() => {
+    if (!loadedTabs.has(activeTab) && activeTab !== 'events') {
+      fetchData(false); // Don't show loading spinner for tab switches
+      fetchComparisons();
+    }
+  }, [activeTab]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <PageLayout>
@@ -480,18 +512,31 @@ export default function Analytics() {
           </div>
         </div>
 
-        {/* Health at a Glance - Always visible summary */}
+        {/* Health at a Glance - Collapsible summary */}
         {summaryData && !loading && (
-          <div className="mb-6 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-slate-800 dark:to-slate-900 rounded-xl border border-purple-100 dark:border-slate-700 p-6">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
-              <Target className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-              Health at a Glance
-            </h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="mb-6 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+            {/* Header with collapse toggle */}
+            <button
+              onClick={toggleSummary}
+              className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-750 transition-colors rounded-t-lg"
+            >
+              <div className="flex items-center gap-2">
+                <Target className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                  Health at a Glance
+                </h2>
+              </div>
+              <ChevronDown className={`w-4 h-4 text-slate-500 dark:text-slate-400 transition-transform ${summaryCollapsed ? '-rotate-90' : ''}`} />
+            </button>
+
+            {/* Collapsible content */}
+            {!summaryCollapsed && (
+              <div className="px-4 pb-4 border-t border-slate-100 dark:border-slate-700">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 pt-3">
               {/* Business Health */}
-              <div className="bg-white dark:bg-slate-800 rounded-lg p-3 border border-slate-200 dark:border-slate-700">
-                <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Signups</div>
-                <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-1">
+              <div className="bg-slate-50 dark:bg-slate-900/50 rounded p-2 border border-slate-200 dark:border-slate-700">
+                <div className="text-xs text-slate-500 dark:text-slate-400 mb-0.5">Signups</div>
+                <div className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-0.5">
                   {formatNumber(summaryData.signups.value)}
                 </div>
                 {summaryData.signups.direction !== 'neutral' && (
@@ -506,9 +551,9 @@ export default function Analytics() {
                 )}
               </div>
 
-              <div className="bg-white dark:bg-slate-800 rounded-lg p-3 border border-slate-200 dark:border-slate-700">
-                <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Revenue</div>
-                <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-1">
+              <div className="bg-slate-50 dark:bg-slate-900/50 rounded p-2 border border-slate-200 dark:border-slate-700">
+                <div className="text-xs text-slate-500 dark:text-slate-400 mb-0.5">Revenue</div>
+                <div className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-0.5">
                   {formatCurrency(summaryData.revenue.value)}
                 </div>
                 {summaryData.revenue.direction !== 'neutral' && (
@@ -524,9 +569,9 @@ export default function Analytics() {
               </div>
 
               {/* Usage Health */}
-              <div className="bg-white dark:bg-slate-800 rounded-lg p-3 border border-slate-200 dark:border-slate-700">
-                <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Sessions</div>
-                <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-1">
+              <div className="bg-slate-50 dark:bg-slate-900/50 rounded p-2 border border-slate-200 dark:border-slate-700">
+                <div className="text-xs text-slate-500 dark:text-slate-400 mb-0.5">Sessions</div>
+                <div className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-0.5">
                   {formatNumber(summaryData.sessions.value)}
                 </div>
                 {summaryData.sessions.direction !== 'neutral' && (
@@ -541,9 +586,9 @@ export default function Analytics() {
                 )}
               </div>
 
-              <div className="bg-white dark:bg-slate-800 rounded-lg p-3 border border-slate-200 dark:border-slate-700">
-                <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Completion</div>
-                <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-1">
+              <div className="bg-slate-50 dark:bg-slate-900/50 rounded p-2 border border-slate-200 dark:border-slate-700">
+                <div className="text-xs text-slate-500 dark:text-slate-400 mb-0.5">Completion</div>
+                <div className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-0.5">
                   {formatPercent(summaryData.completionRate.value)}
                 </div>
                 {summaryData.completionRate.direction !== 'neutral' && (
@@ -559,9 +604,9 @@ export default function Analytics() {
               </div>
 
               {/* Performance Health */}
-              <div className="bg-white dark:bg-slate-800 rounded-lg p-3 border border-slate-200 dark:border-slate-700">
-                <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Latency</div>
-                <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-1">
+              <div className="bg-slate-50 dark:bg-slate-900/50 rounded p-2 border border-slate-200 dark:border-slate-700">
+                <div className="text-xs text-slate-500 dark:text-slate-400 mb-0.5">Latency</div>
+                <div className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-0.5">
                   {formatLatency(summaryData.avgLatency.value)}
                 </div>
                 {summaryData.avgLatency.direction !== 'neutral' && (
@@ -576,9 +621,9 @@ export default function Analytics() {
                 )}
               </div>
 
-              <div className="bg-white dark:bg-slate-800 rounded-lg p-3 border border-slate-200 dark:border-slate-700">
-                <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Errors</div>
-                <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-1">
+              <div className="bg-slate-50 dark:bg-slate-900/50 rounded p-2 border border-slate-200 dark:border-slate-700">
+                <div className="text-xs text-slate-500 dark:text-slate-400 mb-0.5">Errors</div>
+                <div className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-0.5">
                   {formatNumber(summaryData.errorCount.value)}
                 </div>
                 {summaryData.errorCount.direction !== 'neutral' && (
@@ -592,29 +637,38 @@ export default function Analytics() {
                   </div>
                 )}
               </div>
-            </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6 border-b border-slate-200 dark:border-slate-700 pb-2">
-          {TABS.map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  activeTab === tab.id
-                    ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                {tab.label}
-              </button>
-            );
-          })}
+        <div className="border-b border-slate-200 dark:border-slate-700 mb-6">
+          <nav className="flex -mb-px overflow-x-auto" aria-label="Analytics tabs">
+            {TABS.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`
+                    flex items-center gap-2 px-6 py-4 border-b-2 font-medium text-sm whitespace-nowrap transition-colors
+                    ${isActive
+                      ? 'border-purple-600 text-purple-600 dark:text-purple-400'
+                      : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600'
+                    }
+                  `}
+                  aria-current={isActive ? 'page' : undefined}
+                >
+                  <Icon className="w-5 h-5" aria-hidden="true" />
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
+          </nav>
         </div>
 
         {/* Error State */}
