@@ -50,6 +50,190 @@
 
 ---
 
+## Dashboard Architecture Overview
+
+CodeScribe AI has **three distinct dashboards** serving different stakeholders and use cases:
+
+### 1. UsageDashboard (`/usage`) - User-Facing Personal Quota Tracking
+
+**Route:** `/usage`
+**Access:** Authenticated users (view their own data only)
+**File:** `client/src/pages/UsageDashboard.jsx`
+
+**Purpose:** Personal quota transparency and upgrade conversion
+
+**Features:**
+- Real-time usage metrics (8/10 docs used)
+- Daily/monthly limits based on tier
+- Reset countdown with calendar integration
+- Color-coded status (green → yellow → orange → red at 80%/100%)
+- Contextual upgrade prompts based on usage patterns
+- Tier comparison cards
+- Trial status and expiration warnings
+
+**Data Source:** `GET /api/usage/current` (user-specific)
+
+**Business Value:**
+- Transparency → Trust → Conversions when users hit limits
+- Self-service upgrade path (reduces support load)
+- Trial-to-paid conversion optimization
+
+**Example Questions Answered:**
+- "How many docs can I generate today?"
+- "When does my quota reset?"
+- "What happens if I upgrade to Pro?"
+
+---
+
+### 2. AdminUsage (`/admin/usage`) - Operational Monitoring & Support
+
+**Route:** `/admin/usage`
+**Access:** Admin users only
+**File:** `client/src/pages/AdminUsage.jsx`
+
+**Purpose:** Individual user activity monitoring, troubleshooting, abuse prevention
+
+**Features:**
+- Generations by user table (sortable, filterable)
+- Recent generations table (last 50 across all users)
+- IP address tracking and grouping
+- User type filtering (anonymous vs authenticated)
+- Individual user generation history
+- Real-time activity monitoring
+
+**Data Source:** `GET /api/admin/usage-stats` (aggregated operational data)
+
+**Business Value:**
+- Support troubleshooting ("Why can't I generate docs?")
+- Abuse detection (suspicious IP patterns)
+- Quota enforcement verification
+- User audit trail for disputes
+
+**Example Questions Answered:**
+- "What did John Doe generate yesterday?"
+- "Is this IP address generating spam?"
+- "Which users hit their limits most often?"
+- "Show me all failed generations for user X"
+
+---
+
+### 3. Analytics Dashboard (`/admin/analytics`) - Business Intelligence & Product Insights
+
+**Route:** `/admin/analytics`
+**Access:** Admin users only
+**File:** `client/src/pages/admin/Analytics.jsx`
+
+**Purpose:** Aggregate product insights, workflow outcome measurement, strategic planning
+
+**Features (Three Tabs):**
+
+#### **Funnel Tab**
+- 5-stage conversion funnel (Sessions → Code Input → Generation → Completion → Export)
+- Breakdown charts:
+  - Code input sources (paste, upload, github, etc.)
+  - Doc export actions (copy vs download, fresh vs cached)
+- Sessions over time trend chart
+- Conversion rate calculations
+
+#### **Business Tab**
+- New signups trend (daily/weekly)
+- Tier changes (upgrades vs downgrades vs cancellations)
+- Revenue metrics (MRR, total revenue)
+- Free-to-paid conversion funnel
+
+#### **Usage Tab** ⚠️ *Different from AdminUsage*
+- **Doc types distribution:** "README: 65%, JSDoc: 20%, API: 10%, Architecture: 5%"
+- **Quality score histogram:** "78% of docs score 80+"
+- **Language breakdown:** "JavaScript: 45%, Python: 30%, TypeScript: 15%"
+- **Code origins:** "Paste: 60%, GitHub: 30%, Upload: 10%"
+- **Batch vs single stats:** "Average batch size: 8 files"
+
+**Data Source:** `GET /api/admin/analytics/{funnel,business,usage,timeseries}` (aggregated analytics_events)
+
+**Business Value:**
+- Product roadmap prioritization ("Should we improve Python support?")
+- Feature adoption tracking ("Are users using GitHub import?")
+- Quality target verification ("Are we hitting 80%+ quality scores?")
+- Workflow completion rate monitoring (PRD outcome validation)
+
+**Example Questions Answered:**
+- "What's our paste → copy conversion rate?" (Workflow 1 outcome)
+- "What % of users who hit limits actually upgrade?" (Workflow 4 outcome)
+- "Are batch generations growing in popularity?" (Workflow 2 adoption)
+- "What documentation types should we optimize?" (Product prioritization)
+
+---
+
+### Key Differences Summary
+
+| Dimension | UsageDashboard | AdminUsage | Analytics Dashboard |
+|-----------|----------------|------------|-------------------|
+| **Audience** | End users | Support/ops team | Product/leadership |
+| **Granularity** | Single user (self) | Individual user activity | Aggregate across all users |
+| **Time horizon** | Current period (month/day) | Real-time + historical | Trends (7/30 days, custom) |
+| **Primary question** | "How much can I use?" | "What did user X do?" | "How is the product performing?" |
+| **Action driven** | Upgrade decision | Troubleshoot, investigate | Prioritize, plan, optimize |
+| **Data structure** | User quota + usage | Raw generations table | Aggregated metrics + charts |
+| **Query complexity** | O(1) user lookup | O(1) indexed user/IP | O(N) aggregations across events |
+| **Update frequency** | Real-time | Real-time | Batch (daily rollups) |
+| **Typical use case** | "Should I upgrade?" | "Why can't user generate docs?" | "Should we prioritize TypeScript?" |
+
+---
+
+### Why Three Separate Dashboards?
+
+**Could we consolidate?** Not effectively. Here's why:
+
+1. **Different stakeholders with different mental models:**
+   - Users care about "my quota"
+   - Support cares about "what went wrong for this user"
+   - Product cares about "what are all users doing in aggregate"
+
+2. **Different performance characteristics:**
+   - UsageDashboard: Fast single-user query (<50ms)
+   - AdminUsage: Fast indexed lookups with filtering (<200ms)
+   - Analytics: Complex aggregations across millions of events (1-3s)
+
+3. **Different workflows:**
+   - UsageDashboard: Self-service quota awareness
+   - AdminUsage: Reactive troubleshooting
+   - Analytics: Proactive strategic planning
+
+4. **Different access patterns:**
+   - UsageDashboard: High frequency (every doc generation)
+   - AdminUsage: Medium frequency (when support tickets come in)
+   - Analytics: Low frequency (weekly/monthly reviews)
+
+---
+
+### Real-World Workflow Example
+
+**Scenario:** User emails support: "I can't generate Python docs anymore"
+
+**Step 1: AdminUsage** (`/admin/usage`)
+- Filter to user email
+- View "Generations by User" table
+- See last 10 attempts all failed with "SyntaxError: invalid Python"
+- Check IP address for abuse patterns (none found)
+- **Action:** Reply to user with specific error, ask for code sample
+
+**Step 2: Analytics Dashboard** (`/admin/analytics` → Usage tab)
+- Check "Top Languages" chart
+- Notice: Python generation success rate dropped from 95% → 75% this week
+- Check "Quality Score Distribution" → Python docs scoring lower than usual
+- Filter date range to last 7 days, see spike in Python errors
+- **Action:** File bug ticket "Python parser regression affecting 25% of Python generations"
+
+**Step 3: UsageDashboard** (User-facing)
+- User checks their `/usage` page
+- Sees "0/10 docs used today" (failed generations don't count against quota)
+- Sees "10 daily, 100 monthly" limits intact
+- **Result:** User understands their quota is safe while bug is being fixed
+
+**Outcome:** All three dashboards contributed to resolving the issue at different levels (individual support, product debugging, user reassurance).
+
+---
+
 ## Actual Implementation (v3.3.4)
 
 ### Event Architecture
