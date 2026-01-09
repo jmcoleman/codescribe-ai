@@ -1968,6 +1968,52 @@ router.get('/analytics/comparisons', requireAuth, requireAdmin, async (req, res)
   }
 });
 
+/**
+ * GET /api/admin/analytics/summary - Get summary metrics for Health at a Glance
+ * Returns key metrics with current values and period-over-period changes
+ */
+router.get('/analytics/summary', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { startDate, endDate, excludeInternal } = req.query;
+
+    // Validate required params
+    if (!startDate || !endDate) {
+      return res.status(400).json({
+        success: false,
+        error: 'startDate and endDate are required',
+      });
+    }
+
+    // Parse dates
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid date format',
+      });
+    }
+
+    // Fetch summary metrics
+    const summary = await analyticsService.getSummaryMetrics({
+      startDate: start,
+      endDate: end,
+      excludeInternal: excludeInternal !== 'false', // default true
+    });
+
+    res.json({
+      success: true,
+      data: summary,
+    });
+  } catch (error) {
+    console.error('[Admin] Get analytics summary error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch summary metrics',
+    });
+  }
+});
+
 // ============================================================================
 // CAMPAIGN MANAGEMENT ROUTES
 // ============================================================================

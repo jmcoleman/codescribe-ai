@@ -2513,6 +2513,85 @@ export const analyticsService = {
 
     return comparisons;
   },
+
+  /**
+   * Get summary metrics for Health at a Glance dashboard
+   * Returns key metrics with their current values and period-over-period changes
+   * @param {Object} params
+   * @param {Date} params.startDate - Start date for the period
+   * @param {Date} params.endDate - End date for the period
+   * @param {boolean} [params.excludeInternal=true] - Exclude internal test users
+   * @returns {Promise<Object>} Summary metrics with values and comparisons
+   */
+  async getSummaryMetrics({ startDate, endDate, excludeInternal = true }) {
+    try {
+      // Fetch all metrics in parallel for efficiency
+      const [
+        businessData,
+        funnelData,
+        performanceData,
+      ] = await Promise.all([
+        this.getBusinessMetrics({ startDate, endDate, excludeInternal }),
+        this.getFunnelData({ startDate, endDate, excludeInternal }),
+        this.getPerformanceMetrics({ startDate, endDate, excludeInternal }),
+      ]);
+
+      // Calculate completion rate (completed sessions / total sessions)
+      const totalSessions = funnelData.totalSessions || 0;
+      const completedSessions = funnelData.completedSessions || 0;
+      const completionRate = totalSessions > 0 ? (completedSessions / totalSessions) * 100 : 0;
+
+      // Calculate error count (started - completed generations)
+      const generationsStarted = funnelData.stages?.generation_started?.events || 0;
+      const generationsCompleted = funnelData.stages?.generation_completed?.events || 0;
+      const errorCount = generationsStarted - generationsCompleted;
+
+      // Get comparisons for key metrics
+      const comparisons = await this.getBulkComparisons({
+        metrics: ['signups', 'revenue', 'sessions', 'avg_latency', 'errors'],
+        startDate,
+        endDate,
+        excludeInternal,
+      });
+
+      // Build summary response
+      return {
+        signups: {
+          value: businessData.signups || 0,
+          change: comparisons.signups?.change?.percent || 0,
+          direction: comparisons.signups?.change?.direction || 'neutral',
+        },
+        revenue: {
+          value: businessData.revenueCents || 0,
+          change: comparisons.revenue?.change?.percent || 0,
+          direction: comparisons.revenue?.change?.direction || 'neutral',
+        },
+        sessions: {
+          value: totalSessions,
+          change: comparisons.sessions?.change?.percent || 0,
+          direction: comparisons.sessions?.change?.direction || 'neutral',
+        },
+        completionRate: {
+          value: completionRate,
+          change: 0, // TODO: Could calculate completion rate comparison if needed
+          direction: 'neutral',
+        },
+        avgLatency: {
+          value: performanceData.avgLatencyMs || 0,
+          change: comparisons.avg_latency?.change?.percent || 0,
+          direction: comparisons.avg_latency?.change?.direction || 'neutral',
+        },
+        errorCount: {
+          value: errorCount,
+          change: comparisons.errors?.change?.percent || 0,
+          direction: comparisons.errors?.change?.direction || 'neutral',
+        },
+      };
+    } catch (error) {
+      console.error('Failed to get summary metrics:', error);
+      throw error;
+    }
+  },
 };
 
 export default analyticsService;

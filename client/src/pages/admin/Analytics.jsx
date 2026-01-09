@@ -237,6 +237,7 @@ export default function Analytics() {
   const [performanceData, setPerformanceData] = useState(null);
   const [timeSeriesData, setTimeSeriesData] = useState({});
   const [comparisons, setComparisons] = useState({});
+  const [summaryData, setSummaryData] = useState(null);
 
   // Detect dark mode
   const isDark = useMemo(() => {
@@ -391,11 +392,39 @@ export default function Analytics() {
     }
   }, [getToken, dateRange, excludeInternal, activeTab]);
 
-  // Fetch data and comparisons when dependencies change
+  /**
+   * Fetch summary metrics for Health at a Glance
+   */
+  const fetchSummary = useCallback(async () => {
+    try {
+      const token = await getToken();
+      const params = new URLSearchParams({
+        startDate: dateRange.startDate.toISOString(),
+        endDate: dateRange.endDate.toISOString(),
+        excludeInternal: excludeInternal.toString(),
+      });
+
+      const response = await fetch(`${API_URL}/api/admin/analytics/summary?${params}`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch summary');
+
+      const data = await response.json();
+      setSummaryData(data.data || null);
+    } catch (err) {
+      console.error('Summary fetch error:', err);
+      // Don't show error to user, summary is optional
+      setSummaryData(null);
+    }
+  }, [getToken, dateRange, excludeInternal]);
+
+  // Fetch data, comparisons, and summary when dependencies change
   useEffect(() => {
     fetchData();
     fetchComparisons();
-  }, [fetchData, fetchComparisons]);
+    fetchSummary();
+  }, [fetchData, fetchComparisons, fetchSummary]);
 
   return (
     <PageLayout>
@@ -450,6 +479,122 @@ export default function Analytics() {
             </div>
           </div>
         </div>
+
+        {/* Health at a Glance - Always visible summary */}
+        {summaryData && !loading && (
+          <div className="mb-6 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-slate-800 dark:to-slate-900 rounded-xl border border-purple-100 dark:border-slate-700 p-6">
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
+              <Target className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              Health at a Glance
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              {/* Business Health */}
+              <div className="bg-white dark:bg-slate-800 rounded-lg p-3 border border-slate-200 dark:border-slate-700">
+                <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Signups</div>
+                <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-1">
+                  {formatNumber(summaryData.signups.value)}
+                </div>
+                {summaryData.signups.direction !== 'neutral' && (
+                  <div className={`flex items-center gap-1 text-xs ${
+                    summaryData.signups.direction === 'up'
+                      ? 'text-green-600 dark:text-green-400'
+                      : 'text-red-600 dark:text-red-400'
+                  }`}>
+                    {summaryData.signups.direction === 'up' ? <TrendingUp className="w-3 h-3" /> : <TrendingUp className="w-3 h-3 rotate-180" />}
+                    {Math.abs(summaryData.signups.change).toFixed(1)}%
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-white dark:bg-slate-800 rounded-lg p-3 border border-slate-200 dark:border-slate-700">
+                <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Revenue</div>
+                <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-1">
+                  {formatCurrency(summaryData.revenue.value)}
+                </div>
+                {summaryData.revenue.direction !== 'neutral' && (
+                  <div className={`flex items-center gap-1 text-xs ${
+                    summaryData.revenue.direction === 'up'
+                      ? 'text-green-600 dark:text-green-400'
+                      : 'text-red-600 dark:text-red-400'
+                  }`}>
+                    {summaryData.revenue.direction === 'up' ? <TrendingUp className="w-3 h-3" /> : <TrendingUp className="w-3 h-3 rotate-180" />}
+                    {Math.abs(summaryData.revenue.change).toFixed(1)}%
+                  </div>
+                )}
+              </div>
+
+              {/* Usage Health */}
+              <div className="bg-white dark:bg-slate-800 rounded-lg p-3 border border-slate-200 dark:border-slate-700">
+                <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Sessions</div>
+                <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-1">
+                  {formatNumber(summaryData.sessions.value)}
+                </div>
+                {summaryData.sessions.direction !== 'neutral' && (
+                  <div className={`flex items-center gap-1 text-xs ${
+                    summaryData.sessions.direction === 'up'
+                      ? 'text-green-600 dark:text-green-400'
+                      : 'text-red-600 dark:text-red-400'
+                  }`}>
+                    {summaryData.sessions.direction === 'up' ? <TrendingUp className="w-3 h-3" /> : <TrendingUp className="w-3 h-3 rotate-180" />}
+                    {Math.abs(summaryData.sessions.change).toFixed(1)}%
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-white dark:bg-slate-800 rounded-lg p-3 border border-slate-200 dark:border-slate-700">
+                <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Completion</div>
+                <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-1">
+                  {formatPercent(summaryData.completionRate.value)}
+                </div>
+                {summaryData.completionRate.direction !== 'neutral' && (
+                  <div className={`flex items-center gap-1 text-xs ${
+                    summaryData.completionRate.direction === 'up'
+                      ? 'text-green-600 dark:text-green-400'
+                      : 'text-red-600 dark:text-red-400'
+                  }`}>
+                    {summaryData.completionRate.direction === 'up' ? <TrendingUp className="w-3 h-3" /> : <TrendingUp className="w-3 h-3 rotate-180" />}
+                    {Math.abs(summaryData.completionRate.change).toFixed(1)}%
+                  </div>
+                )}
+              </div>
+
+              {/* Performance Health */}
+              <div className="bg-white dark:bg-slate-800 rounded-lg p-3 border border-slate-200 dark:border-slate-700">
+                <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Latency</div>
+                <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-1">
+                  {formatLatency(summaryData.avgLatency.value)}
+                </div>
+                {summaryData.avgLatency.direction !== 'neutral' && (
+                  <div className={`flex items-center gap-1 text-xs ${
+                    summaryData.avgLatency.direction === 'down'
+                      ? 'text-green-600 dark:text-green-400'
+                      : 'text-red-600 dark:text-red-400'
+                  }`}>
+                    {summaryData.avgLatency.direction === 'up' ? <TrendingUp className="w-3 h-3" /> : <TrendingUp className="w-3 h-3 rotate-180" />}
+                    {Math.abs(summaryData.avgLatency.change).toFixed(1)}%
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-white dark:bg-slate-800 rounded-lg p-3 border border-slate-200 dark:border-slate-700">
+                <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Errors</div>
+                <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-1">
+                  {formatNumber(summaryData.errorCount.value)}
+                </div>
+                {summaryData.errorCount.direction !== 'neutral' && (
+                  <div className={`flex items-center gap-1 text-xs ${
+                    summaryData.errorCount.direction === 'down'
+                      ? 'text-green-600 dark:text-green-400'
+                      : 'text-red-600 dark:text-red-400'
+                  }`}>
+                    {summaryData.errorCount.direction === 'up' ? <TrendingUp className="w-3 h-3" /> : <TrendingUp className="w-3 h-3 rotate-180" />}
+                    {Math.abs(summaryData.errorCount.change).toFixed(1)}%
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Tabs */}
         <div className="flex gap-2 mb-6 border-b border-slate-200 dark:border-slate-700 pb-2">
