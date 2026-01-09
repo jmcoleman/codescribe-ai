@@ -525,6 +525,7 @@ export const trackOAuth = ({ provider, action, context, duration, errorType }) =
  * @param {Object} [params.context] - Generation context
  * @param {string} [params.context.docType] - Documentation type (README, JSDOC, etc.)
  * @param {string} [params.context.language] - Programming language
+ * @param {string} [params.context.docName] - Document/file name
  * @param {Object} [params.llm] - LLM provider info
  * @param {string} [params.llm.provider] - Provider name (claude, openai)
  * @param {string} [params.llm.model] - Model name
@@ -589,7 +590,7 @@ export const trackPerformance = ({ latency, throughput, input, cache, request, c
     }
   }
 
-  // Context (doc type, language)
+  // Context (doc type, language, doc name)
   if (context) {
     eventData.context = {};
     if (context.docType) {
@@ -597,6 +598,9 @@ export const trackPerformance = ({ latency, throughput, input, cache, request, c
     }
     if (context.language) {
       eventData.context.language = context.language;
+    }
+    if (context.docName) {
+      eventData.context.doc_name = context.docName;
     }
   }
 

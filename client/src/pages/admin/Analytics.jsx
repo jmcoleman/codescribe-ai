@@ -44,6 +44,7 @@ import {
   ComparisonBar,
   ScoreDistribution,
   formatNumber,
+  formatLatency,
   formatCurrency,
   formatPercent,
 } from '../../components/admin/charts';
@@ -957,21 +958,21 @@ export default function Analytics() {
                 <StatsCard
                   icon={Clock}
                   label="Average Latency"
-                  value={`${formatNumber(performanceData.avgLatencyMs)} ms`}
+                  value={formatLatency(performanceData.avgLatencyMs)}
                   subValue="Mean response time"
                   color="purple"
                 />
                 <StatsCard
                   icon={Clock}
                   label="Median Latency"
-                  value={`${formatNumber(performanceData.medianLatencyMs)} ms`}
+                  value={formatLatency(performanceData.medianLatencyMs)}
                   subValue="50th percentile (typical)"
                   color="purple"
                 />
                 <StatsCard
                   icon={Clock}
                   label="P95 Latency"
-                  value={`${formatNumber(performanceData.p95LatencyMs)} ms`}
+                  value={formatLatency(performanceData.p95LatencyMs)}
                   subValue="Worst 5% of requests"
                   color="purple"
                 />
@@ -986,7 +987,7 @@ export default function Analytics() {
                       <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
                         <span className="font-medium">Average Total:</span>
                         <span className="font-semibold text-slate-900 dark:text-slate-100">
-                          {formatNumber(performanceData.latencyBreakdown.avgTotalMs)} ms
+                          {formatLatency(performanceData.latencyBreakdown.avgTotalMs)}
                         </span>
                       </div>
 
@@ -1005,13 +1006,13 @@ export default function Analytics() {
                                 className="bg-purple-400 dark:bg-purple-500 flex items-center justify-center text-xs font-medium text-white"
                                 style={{ width: `${ttftPct}%`, minWidth: ttftPct > 5 ? '60px' : '0' }}
                               >
-                                {ttftPct > 10 && `TTFT ${formatNumber(ttft)}ms`}
+                                {ttftPct > 10 && `TTFT ${formatLatency(ttft)}`}
                               </div>
                               <div
                                 className="bg-purple-600 dark:bg-purple-700 flex items-center justify-center text-xs font-medium text-white"
                                 style={{ width: `${streamingPct}%`, minWidth: streamingPct > 5 ? '60px' : '0' }}
                               >
-                                {streamingPct > 10 && `Streaming ${formatNumber(streaming)}ms`}
+                                {streamingPct > 10 && `Streaming ${formatLatency(streaming)}`}
                               </div>
                             </>
                           );
@@ -1023,14 +1024,14 @@ export default function Analytics() {
                         <div className="flex items-center gap-2">
                           <div className="w-3 h-3 rounded bg-purple-400 dark:bg-purple-500" />
                           <span className="text-slate-600 dark:text-slate-400">
-                            TTFT: <span className="font-medium text-slate-900 dark:text-slate-100">{formatNumber(performanceData.latencyBreakdown.avgTtftMs)} ms</span>
+                            TTFT: <span className="font-medium text-slate-900 dark:text-slate-100">{formatLatency(performanceData.latencyBreakdown.avgTtftMs)}</span>
                             <span className="text-slate-500 dark:text-slate-500 ml-1">(time to first token)</span>
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
                           <div className="w-3 h-3 rounded bg-purple-600 dark:bg-purple-700" />
                           <span className="text-slate-600 dark:text-slate-400">
-                            Streaming: <span className="font-medium text-slate-900 dark:text-slate-100">{formatNumber(performanceData.latencyBreakdown.avgStreamingMs)} ms</span>
+                            Streaming: <span className="font-medium text-slate-900 dark:text-slate-100">{formatLatency(performanceData.latencyBreakdown.avgStreamingMs)}</span>
                           </span>
                         </div>
                       </div>
@@ -1040,19 +1041,19 @@ export default function Analytics() {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-slate-200 dark:border-slate-700">
                       <div className="text-center">
                         <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                          {formatNumber(performanceData.latencyBreakdown.avgTtftMs)} ms
+                          {formatLatency(performanceData.latencyBreakdown.avgTtftMs)}
                         </div>
                         <div className="text-xs text-slate-500 dark:text-slate-400">Avg TTFT</div>
                       </div>
                       <div className="text-center">
                         <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                          {formatNumber(performanceData.latencyBreakdown.medianTtftMs)} ms
+                          {formatLatency(performanceData.latencyBreakdown.medianTtftMs)}
                         </div>
                         <div className="text-xs text-slate-500 dark:text-slate-400">Median TTFT</div>
                       </div>
                       <div className="text-center">
                         <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                          {formatNumber(performanceData.latencyBreakdown.p95TtftMs)} ms
+                          {formatLatency(performanceData.latencyBreakdown.p95TtftMs)}
                         </div>
                         <div className="text-xs text-slate-500 dark:text-slate-400">P95 TTFT</div>
                       </div>
@@ -1271,7 +1272,7 @@ export default function Analytics() {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-slate-600 dark:text-slate-400">Avg Latency</span>
-                          <span className="font-medium text-slate-900 dark:text-slate-100">{formatNumber(data.avgLatencyMs)} ms</span>
+                          <span className="font-medium text-slate-900 dark:text-slate-100">{formatLatency(data.avgLatencyMs)}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-slate-600 dark:text-slate-400">Cache Hit Rate</span>
@@ -1303,7 +1304,7 @@ export default function Analytics() {
                               <td className="py-2 px-3 text-slate-500 dark:text-slate-400 text-right">
                                 {formatPercent((data.count / performanceData.totalGenerations) * 100)}
                               </td>
-                              <td className="py-2 px-3 text-slate-900 dark:text-slate-100 text-right">{formatNumber(data.avgLatencyMs)} ms</td>
+                              <td className="py-2 px-3 text-slate-900 dark:text-slate-100 text-right">{formatLatency(data.avgLatencyMs)}</td>
                             </tr>
                           ))}
                         </tbody>

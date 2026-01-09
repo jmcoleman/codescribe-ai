@@ -90,6 +90,21 @@ export const formatNumber = (value) => {
 };
 
 /**
+ * Format latency in milliseconds to human-readable format
+ * - < 1000ms: show as "XXX ms"
+ * - >= 1000ms: show as "X.Xs" (seconds)
+ * @param {number} ms - Latency in milliseconds
+ * @returns {string} Formatted latency string
+ */
+export const formatLatency = (ms) => {
+  if (ms == null || isNaN(ms)) return '-';
+  if (ms >= 1000) {
+    return `${(ms / 1000).toFixed(1)}s`;
+  }
+  return `${Math.round(ms)} ms`;
+};
+
+/**
  * Format currency (1234 -> $12.34)
  * @param {number} cents - Amount in cents
  * @returns {string} Formatted currency string

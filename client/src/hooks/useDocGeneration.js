@@ -232,6 +232,7 @@ export function useDocGeneration(onUsageUpdate) {
                 context: {
                   docType,
                   language: language || 'unknown',
+                  docName: filename || 'untitled',
                 },
                 llm: data.metadata ? {
                   provider: data.metadata.provider,
