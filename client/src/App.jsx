@@ -82,8 +82,8 @@ function App() {
   const [code, setCode] = useState(() => getStorageItem(STORAGE_KEYS.EDITOR_CODE, DEFAULT_CODE));
   const [docType, setDocType] = useState(() => getStorageItem(STORAGE_KEYS.EDITOR_DOC_TYPE, 'README'));
   const [filename, setFilename] = useState(() => getStorageItem(STORAGE_KEYS.EDITOR_FILENAME, 'code.js'));
-  // Track where the code came from (valid: 'upload', 'github', 'paste', 'sample')
-  const [codeOrigin, setCodeOrigin] = useState('sample'); // Default code is a sample
+  // Track where the code came from (valid: 'upload', 'github', 'paste', 'sample', 'default')
+  const [codeOrigin, setCodeOrigin] = useState('default'); // Default pre-loaded code
   // Source metadata for reloadable origins (github, gitlab, bitbucket, etc.)
   // Structure: { source: 'github'|'gitlab'|etc, repo: string, path: string, sha?: string, branch?: string }
   const [sourceMetadata, setSourceMetadata] = useState(null);
@@ -188,6 +188,7 @@ function App() {
   const prevFilesLengthRef = useRef(0); // Track previous files count to detect "all files deleted"
   const hasUserInteractedWithWorkspaceRef = useRef(false); // Track if user has selected/deselected files
   const hasTrackedCodeInputRef = useRef(false); // Track if we've already tracked code input this session
+  const docGeneratedThisSessionRef = useRef(false); // Track if doc was generated in current session (vs loaded from cache)
 
   // Load saved sidebar panel sizes from localStorage
   const loadSidebarSizes = useCallback(() => {
@@ -423,7 +424,7 @@ function App() {
       // User logged out (not initial page load) - clear all UI state
       // Batch state clearing is handled separately after useBatchGeneration hook
       setCode(DEFAULT_CODE);
-      setCodeOrigin('sample'); // Default code is a sample
+      setCodeOrigin('default'); // Reset to default pre-loaded code
       setFilename('code.js');
       setDocType('README');
       // Clear documentation panel
@@ -684,6 +685,8 @@ function App() {
       setCodeOrigin(null);
       // Display the batch summary in the doc panel
       setDocumentation(batchSummary);
+      // Mark as loaded from history (not fresh generation)
+      docGeneratedThisSessionRef.current = false;
       setQualityScore({
         score: 0,
         grade: null,
@@ -838,6 +841,8 @@ function App() {
 
           // Set the documentation panel state
           setDocumentation(doc.documentation);
+          // Mark as loaded from history (not fresh generation)
+          docGeneratedThisSessionRef.current = false;
 
           // Set quality score with full structure
           if (doc.quality_score) {
@@ -902,6 +907,8 @@ function App() {
       // Sync documentation to DocPanel (overrides batch summary)
       if (activeFile.documentation) {
         setDocumentation(activeFile.documentation);
+        // Mark as loaded from workspace/history (not fresh generation)
+        docGeneratedThisSessionRef.current = false;
         setQualityScore(activeFile.qualityScore || null);
         // Also sync docType and filename for the panel title
         if (activeFile.docType) {
@@ -969,7 +976,7 @@ function App() {
           // User deleted all files (transition from files > 0 to files === 0)
           // Reset to default code
           setCode(DEFAULT_CODE);
-          setCodeOrigin('sample');
+          setCodeOrigin('default');
           setFilename('code.js');
           setDocumentation('');
           setQualityScore(null);
@@ -1015,6 +1022,8 @@ function App() {
     const savedDoc = getSessionItem(STORAGE_KEYS.EDITOR_DOCUMENTATION);
     if (savedDoc) {
       setDocumentation(savedDoc);
+      // Mark as loaded from cache (not fresh generation)
+      docGeneratedThisSessionRef.current = false;
     }
 
     // Restore quality score from sessionStorage
@@ -1094,6 +1103,16 @@ function App() {
     setShowConfirmationModal(false); // Close confirmation modal if open
     // Reset "doc panel cleared" flag since user is generating new content
     removeStorageItem(STORAGE_KEYS.DOC_PANEL_CLEARED);
+
+    // Track code input if we haven't yet (captures users generating with default/pre-loaded code)
+    if (!hasTrackedCodeInputRef.current) {
+      // User is generating with code that wasn't explicitly uploaded/pasted/selected
+      // This happens when: (1) Using default code, (2) Using persisted code from previous session
+      // Track as current origin (usually 'sample' for default code)
+      trackCodeInput(codeOrigin, code.length, language, filename);
+      hasTrackedCodeInputRef.current = true;
+    }
+
     try {
       // Check if code matches the default code or any example (for prompt caching optimization)
       // When cache hits, users benefit from 90% cost reduction!
@@ -1118,6 +1137,9 @@ function App() {
         origin: codeOrigin, // For analytics (sample, paste, upload, github)
         repo: repoContext // For analytics (repo context for git-based origins)
       });
+
+      // Mark that doc was freshly generated in this session (not loaded from cache/history)
+      docGeneratedThisSessionRef.current = true;
 
       // Reset test retry mode after generation
       if (testRetryMode) setTestRetryMode(false);
@@ -1989,7 +2011,7 @@ function App() {
 
     // Reset code to default placeholder
     setCode(defaultCode);
-    setCodeOrigin('sample'); // Cleared editor shows sample placeholder
+    setCodeOrigin('default'); // Cleared editor shows default placeholder
     // Reset filename to default (language will be derived automatically as 'javascript')
     setFilename(defaultFilename);
 
@@ -2065,7 +2087,7 @@ function App() {
       setQualityScore(null);
       setCode(DEFAULT_CODE); // Reset to default code when workspace is fully cleared
       setFilename('code.js');
-      setCodeOrigin('sample');
+      setCodeOrigin('default');
     }
   }, [multiFileState.selectedFileIds, multiFileState.files.length, removeFiles, setBulkGenerationSummary, setBatchSummaryMarkdown, setDocumentation, setQualityScore, setCode, setFilename, setCodeOrigin]);
 
@@ -2198,6 +2220,7 @@ function App() {
         documentation={documentation}
         qualityScore={qualityScore}
         isGenerating={isGenerating || testSkeletonMode}
+        isFreshGeneration={docGeneratedThisSessionRef.current}
         onViewBreakdown={handleViewBreakdown}
         onUpload={handleUpload}
         onGithubImport={handleGithubImport}
@@ -2550,6 +2573,7 @@ function App() {
                             documentation={documentation}
                             qualityScore={qualityScore}
                             isGenerating={isGenerating || testSkeletonMode}
+                            isFreshGeneration={docGeneratedThisSessionRef.current}
                             onViewBreakdown={handleViewBreakdown}
                             onUpload={handleUpload}
                             onGithubImport={handleGithubImport}
@@ -2642,6 +2666,7 @@ function App() {
                       documentation={documentation}
                       qualityScore={qualityScore}
                       isGenerating={isGenerating || testSkeletonMode}
+                      isFreshGeneration={docGeneratedThisSessionRef.current}
                       onViewBreakdown={handleViewBreakdown}
                       onUpload={handleUpload}
                       onGithubImport={handleGithubImport}
@@ -2691,6 +2716,7 @@ function App() {
                         documentation={documentation}
                         qualityScore={qualityScore}
                         isGenerating={isGenerating || testSkeletonMode}
+                        isFreshGeneration={docGeneratedThisSessionRef.current}
                         onViewBreakdown={handleViewBreakdown}
                         onUpload={handleUpload}
                         onGithubImport={handleGithubImport}

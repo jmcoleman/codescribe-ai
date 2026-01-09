@@ -401,6 +401,93 @@ export const analyticsService = {
       `;
     }
 
+    // Get code_input breakdown by origin
+    let codeInputBreakdownResult;
+    if (excludeInternal) {
+      codeInputBreakdownResult = await sql`
+        SELECT
+          event_data->>'origin' as origin,
+          COUNT(DISTINCT session_id) as unique_sessions,
+          COUNT(*) as total_events
+        FROM analytics_events
+        WHERE event_name = 'code_input'
+          AND created_at >= ${startDate}
+          AND created_at < ${endDate}
+          AND is_internal = FALSE
+        GROUP BY origin
+        ORDER BY COUNT(*) DESC
+      `;
+    } else {
+      codeInputBreakdownResult = await sql`
+        SELECT
+          event_data->>'origin' as origin,
+          COUNT(DISTINCT session_id) as unique_sessions,
+          COUNT(*) as total_events
+        FROM analytics_events
+        WHERE event_name = 'code_input'
+          AND created_at >= ${startDate}
+          AND created_at < ${endDate}
+        GROUP BY origin
+        ORDER BY COUNT(*) DESC
+      `;
+    }
+
+    // Get doc_export (fresh only for main funnel) + breakdown by source
+    let docExportResult, docExportBreakdownResult;
+    if (excludeInternal) {
+      // Fresh exports only for funnel progression
+      docExportResult = await sql`
+        SELECT
+          COUNT(DISTINCT session_id) as unique_sessions,
+          COUNT(*) as total_events
+        FROM analytics_events
+        WHERE event_name = 'doc_export'
+          AND event_data->>'source' = 'fresh'
+          AND created_at >= ${startDate}
+          AND created_at < ${endDate}
+          AND is_internal = FALSE
+      `;
+
+      // Breakdown by source (fresh vs cached)
+      docExportBreakdownResult = await sql`
+        SELECT
+          event_data->>'source' as source,
+          COUNT(DISTINCT session_id) as unique_sessions,
+          COUNT(*) as total_events
+        FROM analytics_events
+        WHERE event_name = 'doc_export'
+          AND created_at >= ${startDate}
+          AND created_at < ${endDate}
+          AND is_internal = FALSE
+        GROUP BY source
+        ORDER BY COUNT(*) DESC
+      `;
+    } else {
+      docExportResult = await sql`
+        SELECT
+          COUNT(DISTINCT session_id) as unique_sessions,
+          COUNT(*) as total_events
+        FROM analytics_events
+        WHERE event_name = 'doc_export'
+          AND event_data->>'source' = 'fresh'
+          AND created_at >= ${startDate}
+          AND created_at < ${endDate}
+      `;
+
+      docExportBreakdownResult = await sql`
+        SELECT
+          event_data->>'source' as source,
+          COUNT(DISTINCT session_id) as unique_sessions,
+          COUNT(*) as total_events
+        FROM analytics_events
+        WHERE event_name = 'doc_export'
+          AND created_at >= ${startDate}
+          AND created_at < ${endDate}
+        GROUP BY source
+        ORDER BY COUNT(*) DESC
+      `;
+    }
+
     // Build funnel data with conversion rates
     const stages = ['session_start', 'code_input', 'generation_started', 'generation_completed', 'doc_export'];
     const funnelData = {};
@@ -417,6 +504,37 @@ export const analyticsService = {
         funnelData[stage] = {
           sessions: parseInt(genCompletedResult.rows[0]?.unique_sessions || 0),
           events: parseInt(genCompletedResult.rows[0]?.total_events || 0),
+        };
+      } else if (stage === 'code_input') {
+        // Add origin breakdown for code_input
+        const row = funnelResult.rows.find((r) => r.event_name === stage);
+        const breakdown = {};
+        codeInputBreakdownResult.rows.forEach((originRow) => {
+          const origin = originRow.origin || 'unknown';
+          breakdown[origin] = {
+            sessions: parseInt(originRow.unique_sessions || 0),
+            count: parseInt(originRow.total_events || 0),
+          };
+        });
+        funnelData[stage] = {
+          sessions: parseInt(row?.unique_sessions || 0),
+          events: parseInt(row?.total_events || 0),
+          breakdown,
+        };
+      } else if (stage === 'doc_export') {
+        // Use fresh exports only for funnel + add source breakdown
+        const breakdown = {};
+        docExportBreakdownResult.rows.forEach((sourceRow) => {
+          const source = sourceRow.source || 'fresh';
+          breakdown[source] = {
+            sessions: parseInt(sourceRow.unique_sessions || 0),
+            count: parseInt(sourceRow.total_events || 0),
+          };
+        });
+        funnelData[stage] = {
+          sessions: parseInt(docExportResult.rows[0]?.unique_sessions || 0),
+          events: parseInt(docExportResult.rows[0]?.total_events || 0),
+          breakdown,
         };
       } else {
         const row = funnelResult.rows.find((r) => r.event_name === stage);

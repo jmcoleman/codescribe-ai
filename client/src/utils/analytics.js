@@ -389,12 +389,14 @@ export const trackInteraction = (action, metadata = {}) => {
  * @param {string} params.docType - Type of documentation exported
  * @param {string} [params.filename] - Name of the file
  * @param {string} [params.format] - Download format (md, txt, etc.) - only for download action
+ * @param {string} [params.source] - Export source: 'fresh' (just generated) or 'cached' (loaded from history/storage)
  */
-export const trackDocExport = ({ action, docType, filename, format }) => {
+export const trackDocExport = ({ action, docType, filename, format, source }) => {
   const eventData = {
     action,
     doc_type: docType,
     filename: filename || 'untitled',
+    source: source || 'fresh', // Default to 'fresh' for backward compatibility
   };
 
   // Add format only for download action

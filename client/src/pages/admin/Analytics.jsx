@@ -295,6 +295,44 @@ export default function Analytics() {
         const funnel = await funnelRes.json();
         const sessions = await sessionsRes.json();
 
+        // TEMP: Add mock breakdown data for testing visualization
+        if (funnel.data.stages) {
+          // Add mock origin breakdown to code_input
+          if (funnel.data.stages.code_input) {
+            const totalCodeInput = funnel.data.stages.code_input.sessions;
+
+            // Distribute proportionally: paste 32%, default 25%, sample 18%, github_public 12%, upload 8%, github_private 5%
+            const pasteCount = Math.round(totalCodeInput * 0.32);
+            const defaultCount = Math.round(totalCodeInput * 0.25);
+            const sampleCount = Math.round(totalCodeInput * 0.18);
+            const githubPublicCount = Math.round(totalCodeInput * 0.12);
+            const uploadCount = Math.round(totalCodeInput * 0.08);
+            // Remaining goes to github_private to ensure exact sum
+            const githubPrivateCount = totalCodeInput - (pasteCount + defaultCount + sampleCount + githubPublicCount + uploadCount);
+
+            funnel.data.stages.code_input.breakdown = {
+              paste: { sessions: pasteCount, count: pasteCount + 2 },
+              default: { sessions: defaultCount, count: defaultCount + 1 },
+              sample: { sessions: sampleCount, count: sampleCount + 3 },
+              github_public: { sessions: githubPublicCount, count: githubPublicCount + 1 },
+              upload: { sessions: uploadCount, count: uploadCount + 2 },
+              github_private: { sessions: githubPrivateCount, count: githubPrivateCount + 1 },
+            };
+          }
+
+          // Add mock source breakdown to doc_export
+          if (funnel.data.stages.doc_export) {
+            const totalExports = funnel.data.stages.doc_export.sessions;
+            const freshCount = Math.round(totalExports * 0.65); // 65% fresh
+            const cachedCount = totalExports - freshCount; // 35% cached (ensures exact sum)
+
+            funnel.data.stages.doc_export.breakdown = {
+              fresh: { sessions: freshCount, count: freshCount + 5 },
+              cached: { sessions: cachedCount, count: cachedCount + 3 },
+            };
+          }
+        }
+
         setUsageData(usage.data);
         setFunnelData(funnel.data);
         setTimeSeriesData((prev) => ({
@@ -771,7 +809,7 @@ export default function Analytics() {
                       const stageData = businessData.conversionFunnel.stages?.[stage];
                       const maxCount = businessData.conversionFunnel.stages?.visitors?.count || 1;
                       const percentage = maxCount > 0 ? (stageData?.count / maxCount) * 100 : 0;
-                      const colors = ['bg-purple-500', 'bg-indigo-500', 'bg-blue-500', 'bg-amber-500', 'bg-green-500'];
+                      const colors = ['bg-purple-600 dark:bg-purple-500', 'bg-indigo-600 dark:bg-indigo-500', 'bg-blue-600 dark:bg-blue-500', 'bg-amber-600 dark:bg-amber-500', 'bg-green-600 dark:bg-green-500'];
                       const labels = ['Visitors', 'Engaged (Used Product)', 'Signups', 'Trial Started', 'Paid'];
 
                       // Check if this stage has a breakdown
@@ -787,7 +825,7 @@ export default function Analytics() {
                             <div className="flex-1 h-8 bg-slate-100 dark:bg-slate-700 rounded-lg overflow-hidden">
                               <div
                                 className={`h-full ${colors[index]} transition-all duration-500 flex items-center justify-end pr-2`}
-                                style={{ width: `${Math.max(percentage, 2)}%` }}
+                                style={{ width: `${Math.min(Math.max(percentage, 2), 100)}%` }}
                               >
                                 <span className="text-xs font-medium text-white">
                                   {formatNumber(stageData?.count || 0)}
@@ -1030,6 +1068,188 @@ export default function Analytics() {
               </>
             )}
 
+            {/* Workflow Funnel Section */}
+            {funnelData && (
+              <>
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-2 mt-8">
+                  Workflow Funnel
+                </h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400 -mt-4 italic">
+                  How do users progress through the documentation workflow?
+                </p>
+
+                {/* Workflow Funnel Summary Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                  <StatsCard
+                    icon={Activity}
+                    label="Sessions Started"
+                    value={formatNumber(funnelData.stages?.session_start?.sessions || 0)}
+                    subValue={`${formatNumber(funnelData.stages?.session_start?.events || 0)} events`}
+                    color="purple"
+                  />
+                  <StatsCard
+                    icon={FileText}
+                    label="Code Input"
+                    value={formatPercent(funnelData.conversionRates?.session_start_to_code_input || 0)}
+                    subValue={`${formatNumber(funnelData.stages?.code_input?.sessions || 0)} of ${formatNumber(funnelData.stages?.session_start?.sessions || 0)} sessions`}
+                    color="purple"
+                  />
+                  <StatsCard
+                    icon={RefreshCw}
+                    label="Gen Started"
+                    value={formatPercent(funnelData.conversionRates?.code_input_to_generation_started || 0)}
+                    subValue={`${formatNumber(funnelData.stages?.generation_started?.sessions || 0)} of ${formatNumber(funnelData.stages?.code_input?.sessions || 0)} with input`}
+                    color="purple"
+                  />
+                  <StatsCard
+                    icon={CheckCircle}
+                    label="Gen Completed"
+                    value={formatPercent(funnelData.conversionRates?.generation_started_to_generation_completed || 0)}
+                    subValue={`${formatNumber(funnelData.stages?.generation_completed?.sessions || 0)} of ${formatNumber(funnelData.stages?.generation_started?.sessions || 0)} started`}
+                    color="purple"
+                  />
+                  <StatsCard
+                    icon={ArrowDownToLine}
+                    label="Copied/Downloaded"
+                    value={formatPercent(funnelData.conversionRates?.generation_completed_to_doc_export || 0)}
+                    subValue={`${formatNumber(funnelData.stages?.doc_export?.sessions || 0)} of ${formatNumber(funnelData.stages?.generation_completed?.sessions || 0)} completed`}
+                    color="purple"
+                  />
+                </div>
+
+                {/* Workflow Funnel Chart */}
+                <ChartSection
+                  title="Workflow Funnel Visualization"
+                  question="Where are users dropping off in the workflow?"
+                >
+                  <div className="space-y-4">
+                    {['session_start', 'code_input', 'generation_started', 'generation_completed', 'doc_export'].map((stage, index) => {
+                      const stageData = funnelData.stages?.[stage];
+                      const stages = ['session_start', 'code_input', 'generation_started', 'generation_completed', 'doc_export'];
+
+                      // Calculate stage-to-stage conversion percentage
+                      let percentage;
+                      if (index === 0) {
+                        // First stage is always 100%
+                        percentage = 100;
+                      } else {
+                        const previousStage = stages[index - 1];
+                        const previousCount = funnelData.stages?.[previousStage]?.sessions || 1;
+                        percentage = previousCount > 0 ? (stageData?.sessions / previousCount) * 100 : 0;
+                      }
+
+                      const colors = ['bg-purple-600 dark:bg-purple-500', 'bg-indigo-600 dark:bg-indigo-500', 'bg-blue-600 dark:bg-blue-500', 'bg-amber-600 dark:bg-amber-500', 'bg-green-600 dark:bg-green-500'];
+                      const labels = ['Sessions Started', 'Code Input', 'Generation Started', 'Generation Completed', 'Copied/Downloaded'];
+
+                      // Check if this stage has a breakdown (code_input has origin breakdown, doc_export has source breakdown)
+                      const hasBreakdown = stage === 'code_input' || stage === 'doc_export';
+                      const breakdown = stageData?.breakdown;
+
+                      return (
+                        <div key={stage}>
+                          <div className="flex items-center gap-4">
+                            <div className="w-40 text-sm text-slate-600 dark:text-slate-400 text-right">
+                              {labels[index]}
+                            </div>
+                            <div className="flex-1 h-8 bg-slate-100 dark:bg-slate-700 rounded-lg overflow-hidden relative">
+                              <div
+                                className={`h-full ${colors[index]} transition-all duration-500 flex items-center justify-end pr-2`}
+                                style={{ width: `${Math.min(Math.max(percentage, 2), 100)}%` }}
+                              >
+                                <span className="text-xs font-medium text-white">
+                                  {formatNumber(stageData?.sessions || 0)}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="w-16 text-sm text-slate-500 dark:text-slate-400">
+                              {formatPercent(percentage)}
+                            </div>
+                          </div>
+
+                          {/* Breakdown child bars (origin for code_input, source for doc_export) */}
+                          {hasBreakdown && breakdown && Object.keys(breakdown).length > 0 && (
+                            <div className="ml-44 mt-1 space-y-1">
+                              {Object.entries(breakdown)
+                                .sort((a, b) => {
+                                  // Custom sort: group github origins together, then by count
+                                  const order = ['paste', 'default', 'sample', 'github_public', 'github_private', 'upload', 'fresh', 'cached'];
+                                  const indexA = order.indexOf(a[0]);
+                                  const indexB = order.indexOf(b[0]);
+                                  if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+                                  if (indexA !== -1) return -1;
+                                  if (indexB !== -1) return 1;
+                                  return b[1].count - a[1].count; // Fallback to count
+                                })
+                                .map(([key, data]) => {
+                                  // Labels and icons for code_input origins
+                                  const originLabels = {
+                                    default: 'Default Code',
+                                    github_private: 'Private GitHub',
+                                    github_public: 'Public GitHub',
+                                    upload: 'Upload',
+                                    sample: 'Sample',
+                                    paste: 'Paste',
+                                  };
+                                  const originIcons = {
+                                    default: '⚙️',
+                                    github_private: '🔒',
+                                    github_public: '🌐',
+                                    upload: '📁',
+                                    sample: '📝',
+                                    paste: '📋',
+                                  };
+
+                                  // Labels and icons for doc_export sources
+                                  const sourceLabels = {
+                                    fresh: 'Generated',
+                                    cached: 'Cache/History',
+                                  };
+                                  const sourceIcons = {
+                                    fresh: '✨',
+                                    cached: '💾',
+                                  };
+
+                                  // Choose labels/icons based on stage
+                                  const label = stage === 'code_input'
+                                    ? (originLabels[key] || key)
+                                    : (sourceLabels[key] || key);
+                                  const icon = stage === 'code_input'
+                                    ? (originIcons[key] || '📄')
+                                    : (sourceIcons[key] || '📄');
+
+                                  const parentPercentage = (data.sessions / (stageData?.sessions || 1)) * 100;
+
+                                  return (
+                                    <div key={key} className="flex items-center gap-2">
+                                      <div className="w-32 text-xs text-slate-500 dark:text-slate-400 text-right">
+                                        {icon} {label}
+                                      </div>
+                                      <div className="flex-1 h-4 bg-slate-100 dark:bg-slate-700 rounded overflow-hidden relative">
+                                        <div
+                                          className="h-full bg-indigo-400 dark:bg-indigo-500 transition-all duration-500 flex items-center justify-end pr-1"
+                                          style={{ width: `${Math.min(Math.max(parentPercentage, data.sessions > 0 ? 1 : 0), 100)}%` }}
+                                        >
+                                          <span className="text-[10px] font-medium text-white">
+                                            {formatNumber(data.sessions)}
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <div className="w-12 text-xs text-slate-500 dark:text-slate-400">
+                                        {formatPercent(parentPercentage)}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </ChartSection>
+              </>
+            )}
+
             {/* User Retention Section */}
             {usageData.retentionMetrics && (
               <>
@@ -1089,6 +1309,7 @@ export default function Analytics() {
                 <div className="space-y-3">
                   {(() => {
                     const originLabels = {
+                      default: 'Default Code',
                       github_private: 'Private Repos',
                       github_public: 'Public Repos',
                       upload: 'Local Files',
@@ -1096,6 +1317,7 @@ export default function Analytics() {
                       paste: 'Pasted Code',
                     };
                     const originIcons = {
+                      default: '⚙️',
                       github_private: '🔒',
                       github_public: '🌐',
                       upload: '📁',

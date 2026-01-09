@@ -171,6 +171,7 @@ export const DocPanel = memo(function DocPanel({
   documentation,
   qualityScore = null,
   isGenerating = false,
+  isFreshGeneration = false,
   onViewBreakdown,
   onUpload,
   onGithubImport,
@@ -380,8 +381,9 @@ export const DocPanel = memo(function DocPanel({
       action: 'copy',
       docType: docTypeValue,
       filename: filenameValue,
+      source: isFreshGeneration ? 'fresh' : 'cached',
     });
-  }, [qualityScore, docType, filename]);
+  }, [qualityScore, docType, filename, isFreshGeneration]);
 
   const handleDownloadSuccess = useCallback(() => {
     const docTypeValue = qualityScore?.isBatchSummary ? 'batch-summary' : (qualityScore?.docType || docType || 'unknown');
@@ -391,8 +393,9 @@ export const DocPanel = memo(function DocPanel({
       docType: docTypeValue,
       filename: filenameValue,
       format: 'md',
+      source: isFreshGeneration ? 'fresh' : 'cached',
     });
-  }, [qualityScore, docType, filename]);
+  }, [qualityScore, docType, filename, isFreshGeneration]);
 
   // Memoize ReactMarkdown components to prevent unnecessary re-renders
   const markdownComponents = useMemo(() => ({
