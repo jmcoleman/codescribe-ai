@@ -835,8 +835,8 @@ export default function Analytics() {
             <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-2 mt-8">
               Code Sources
             </h2>
-            <p className="text-sm text-slate-600 dark:text-slate-400 -mt-4">
-              Where users are importing their code from
+            <p className="text-sm text-slate-500 dark:text-slate-400 -mt-4 italic">
+              Where are users importing their code from?
             </p>
 
             {/* Code Origin Breakdown */}
