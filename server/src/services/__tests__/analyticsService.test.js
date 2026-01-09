@@ -223,6 +223,24 @@ describe('AnalyticsService', () => {
       sql.mockResolvedValueOnce({
         rows: [{ unique_sessions: '55', total_events: '60' }],
       });
+      // Fourth query: code_input breakdown by origin
+      sql.mockResolvedValueOnce({
+        rows: [
+          { origin: 'paste', unique_sessions: '50', total_events: '55' },
+          { origin: 'upload', unique_sessions: '30', total_events: '35' },
+        ],
+      });
+      // Fifth query: doc_export fresh only count
+      sql.mockResolvedValueOnce({
+        rows: [{ unique_sessions: '40', total_events: '45' }],
+      });
+      // Sixth query: doc_export breakdown by source
+      sql.mockResolvedValueOnce({
+        rows: [
+          { source: 'fresh', unique_sessions: '25', total_events: '30' },
+          { source: 'cached', unique_sessions: '15', total_events: '15' },
+        ],
+      });
 
       const result = await analyticsService.getConversionFunnel(dateRange);
 
@@ -238,10 +256,13 @@ describe('AnalyticsService', () => {
     });
 
     it('should handle empty data', async () => {
-      // Mock all 3 queries with empty results
+      // Mock all 6 queries with empty results
       sql.mockResolvedValueOnce({ rows: [] }); // funnel events
       sql.mockResolvedValueOnce({ rows: [] }); // generation_started
       sql.mockResolvedValueOnce({ rows: [] }); // generation_completed
+      sql.mockResolvedValueOnce({ rows: [] }); // code_input breakdown
+      sql.mockResolvedValueOnce({ rows: [] }); // doc_export fresh only count
+      sql.mockResolvedValueOnce({ rows: [] }); // doc_export breakdown
 
       const result = await analyticsService.getConversionFunnel(dateRange);
 
@@ -251,15 +272,18 @@ describe('AnalyticsService', () => {
     });
 
     it('should exclude internal users when specified', async () => {
-      // Mock all 3 queries
+      // Mock all 6 queries
       sql.mockResolvedValueOnce({ rows: [] }); // funnel events
       sql.mockResolvedValueOnce({ rows: [] }); // generation_started
       sql.mockResolvedValueOnce({ rows: [] }); // generation_completed
+      sql.mockResolvedValueOnce({ rows: [] }); // code_input breakdown
+      sql.mockResolvedValueOnce({ rows: [] }); // doc_export fresh only count
+      sql.mockResolvedValueOnce({ rows: [] }); // doc_export breakdown
 
       await analyticsService.getConversionFunnel({ ...dateRange, excludeInternal: true });
 
-      // Verify the SQL was called (3 times for the 3 queries)
-      expect(sql).toHaveBeenCalledTimes(3);
+      // Verify the SQL was called (6 times for the 6 queries)
+      expect(sql).toHaveBeenCalledTimes(6);
     });
   });
 
@@ -1625,6 +1649,7 @@ describe('AnalyticsService', () => {
         rows: [
           { event_name: 'session_start', unique_sessions: '150', total_events: '180' },
           { event_name: 'code_input', unique_sessions: '100', total_events: '120' },
+          { event_name: 'doc_export', unique_sessions: '60', total_events: '65' },
         ],
       });
       // generation_started without is_internal filter
@@ -1635,13 +1660,31 @@ describe('AnalyticsService', () => {
       sql.mockResolvedValueOnce({
         rows: [{ unique_sessions: '70', total_events: '75' }],
       });
+      // code_input breakdown without is_internal filter
+      sql.mockResolvedValueOnce({
+        rows: [
+          { origin: 'paste', unique_sessions: '60', total_events: '70' },
+          { origin: 'upload', unique_sessions: '40', total_events: '50' },
+        ],
+      });
+      // doc_export fresh only count without is_internal filter
+      sql.mockResolvedValueOnce({
+        rows: [{ unique_sessions: '60', total_events: '65' }],
+      });
+      // doc_export breakdown without is_internal filter
+      sql.mockResolvedValueOnce({
+        rows: [
+          { source: 'fresh', unique_sessions: '35', total_events: '40' },
+          { source: 'cached', unique_sessions: '20', total_events: '20' },
+        ],
+      });
 
       const result = await analyticsService.getConversionFunnel({
         ...dateRange,
         excludeInternal: false,
       });
 
-      expect(sql).toHaveBeenCalledTimes(3);
+      expect(sql).toHaveBeenCalledTimes(6);
       expect(result.stages.session_start.sessions).toBe(150);
       expect(result.stages.code_input.sessions).toBe(100);
     });
