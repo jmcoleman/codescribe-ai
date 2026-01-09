@@ -1903,6 +1903,91 @@ export const analyticsService = {
   },
 
   /**
+   * Get retention metrics for a date range
+   * Returns new vs returning users and return rate
+   *
+   * @param {Object} params
+   * @param {Date} params.startDate - Start of date range
+   * @param {Date} params.endDate - End of date range
+   * @param {boolean} params.excludeInternal - Whether to exclude internal users (default: true)
+   * @returns {Promise<Object>} { newUsers, returningUsers, totalUsers, returnRate }
+   */
+  async getRetentionMetrics({ startDate, endDate, excludeInternal = true }) {
+    // Query for new vs returning users
+    // A user is "new" if their first session_start event is within the date range
+    // A user is "returning" if they had a session_start event BEFORE the date range
+    let userResult;
+
+    if (excludeInternal) {
+      userResult = await sql`
+        WITH period_users AS (
+          SELECT DISTINCT ae.user_id
+          FROM analytics_events ae
+          LEFT JOIN users u ON ae.user_id = u.id
+          WHERE ae.event_name = 'session_start'
+            AND ae.created_at >= ${startDate}
+            AND ae.created_at < ${endDate}
+            AND (u.id IS NULL OR (u.role NOT IN ('admin', 'support', 'super_admin') AND u.viewing_as_tier IS NULL))
+        ),
+        user_first_session AS (
+          SELECT
+            pu.user_id,
+            MIN(ae.created_at) as first_session_at
+          FROM period_users pu
+          JOIN analytics_events ae ON pu.user_id = ae.user_id
+          LEFT JOIN users u ON ae.user_id = u.id
+          WHERE ae.event_name = 'session_start'
+            AND (u.id IS NULL OR (u.role NOT IN ('admin', 'support', 'super_admin') AND u.viewing_as_tier IS NULL))
+          GROUP BY pu.user_id
+        )
+        SELECT
+          COUNT(*) as total_users,
+          COUNT(CASE WHEN first_session_at >= ${startDate} THEN 1 END) as new_users,
+          COUNT(CASE WHEN first_session_at < ${startDate} THEN 1 END) as returning_users
+        FROM user_first_session
+      `;
+    } else {
+      userResult = await sql`
+        WITH period_users AS (
+          SELECT DISTINCT user_id
+          FROM analytics_events
+          WHERE event_name = 'session_start'
+            AND created_at >= ${startDate}
+            AND created_at < ${endDate}
+        ),
+        user_first_session AS (
+          SELECT
+            pu.user_id,
+            MIN(ae.created_at) as first_session_at
+          FROM period_users pu
+          JOIN analytics_events ae ON pu.user_id = ae.user_id
+          WHERE ae.event_name = 'session_start'
+          GROUP BY pu.user_id
+        )
+        SELECT
+          COUNT(*) as total_users,
+          COUNT(CASE WHEN first_session_at >= ${startDate} THEN 1 END) as new_users,
+          COUNT(CASE WHEN first_session_at < ${startDate} THEN 1 END) as returning_users
+        FROM user_first_session
+      `;
+    }
+
+    const totalUsers = parseInt(userResult.rows[0]?.total_users || 0);
+    const newUsers = parseInt(userResult.rows[0]?.new_users || 0);
+    const returningUsers = parseInt(userResult.rows[0]?.returning_users || 0);
+
+    // Calculate return rate (% of users who are returning)
+    const returnRate = totalUsers > 0 ? (returningUsers / totalUsers) * 100 : 0;
+
+    return {
+      newUsers,
+      returningUsers,
+      totalUsers,
+      returnRate,
+    };
+  },
+
+  /**
    * Get all event names with their actions (for filter dropdown)
    * Returns all events that have actions defined, plus any additional events from the database
    *

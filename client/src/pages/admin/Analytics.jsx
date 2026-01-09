@@ -1030,6 +1030,51 @@ export default function Analytics() {
               </>
             )}
 
+            {/* User Journey / Retention Section */}
+            {usageData.retentionMetrics && (
+              <>
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-2 mt-8">
+                  User Journey & Retention
+                </h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400 -mt-4 italic">
+                  Are authenticated users returning to the product?
+                </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <StatsCard
+                    icon={UserPlus}
+                    label="New Users"
+                    value={formatNumber(usageData.retentionMetrics.newUsers || 0)}
+                    subValue={usageData.retentionMetrics.totalUsers > 0
+                      ? `${((usageData.retentionMetrics.newUsers / usageData.retentionMetrics.totalUsers) * 100).toFixed(1)}% of total`
+                      : '0% of total'
+                    }
+                    color="purple"
+                  />
+                  <StatsCard
+                    icon={Activity}
+                    label="Returning Users"
+                    value={formatNumber(usageData.retentionMetrics.returningUsers || 0)}
+                    subValue={usageData.retentionMetrics.totalUsers > 0
+                      ? `${((usageData.retentionMetrics.returningUsers / usageData.retentionMetrics.totalUsers) * 100).toFixed(1)}% of total`
+                      : '0% of total'
+                    }
+                    color="purple"
+                  />
+                  <StatsCard
+                    icon={TrendingUp}
+                    label="Return Rate"
+                    value={formatPercent(usageData.retentionMetrics.returnRate || 0)}
+                    subValue={`${formatNumber(usageData.retentionMetrics.returningUsers || 0)} of ${formatNumber(usageData.retentionMetrics.totalUsers || 0)} users returned`}
+                    color="purple"
+                  />
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                  Note: Metrics track authenticated users only. Anonymous users cannot be tracked across sessions.
+                </p>
+              </>
+            )}
+
             {/* Code Origin Section */}
             <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-2 mt-8">
               Code Sources

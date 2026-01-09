@@ -1560,15 +1560,30 @@ router.get('/analytics/usage', requireAuth, requireAdmin, async (req, res) => {
       });
     }
 
-    const patterns = await analyticsService.getUsagePatterns({
-      startDate: new Date(startDate),
-      endDate: new Date(endDate),
-      excludeInternal: excludeInternal === 'true',
-    });
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const excludeInternalBool = excludeInternal === 'true';
+
+    // Fetch usage patterns and retention metrics in parallel
+    const [patterns, retentionMetrics] = await Promise.all([
+      analyticsService.getUsagePatterns({
+        startDate: start,
+        endDate: end,
+        excludeInternal: excludeInternalBool,
+      }),
+      analyticsService.getRetentionMetrics({
+        startDate: start,
+        endDate: end,
+        excludeInternal: excludeInternalBool,
+      }),
+    ]);
 
     res.json({
       success: true,
-      data: patterns,
+      data: {
+        ...patterns,
+        retentionMetrics,
+      },
     });
   } catch (error) {
     console.error('[Admin] Get analytics usage error:', error);
