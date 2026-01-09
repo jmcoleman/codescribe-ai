@@ -1901,6 +1901,73 @@ router.get('/analytics/events/export', requireAuth, requireAdmin, async (req, re
   }
 });
 
+/**
+ * GET /api/admin/analytics/comparisons
+ * Get period-over-period comparisons for multiple metrics
+ *
+ * Query params:
+ * - startDate: ISO date string (required)
+ * - endDate: ISO date string (required)
+ * - metrics: comma-separated metric names (required)
+ * - excludeInternal: boolean (optional, default true)
+ *
+ * Supported metrics:
+ * - sessions, signups, revenue, generations, completed_sessions
+ * - avg_latency, cache_hit_rate, throughput
+ * - errors, error_rate
+ */
+router.get('/analytics/comparisons', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { startDate, endDate, metrics, excludeInternal } = req.query;
+
+    // Validate required params
+    if (!startDate || !endDate || !metrics) {
+      return res.status(400).json({
+        success: false,
+        error: 'startDate, endDate, and metrics are required',
+      });
+    }
+
+    // Parse dates
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid date format',
+      });
+    }
+
+    // Parse metrics from comma-separated string
+    const metricList = metrics.split(',').map(m => m.trim()).filter(Boolean);
+    if (metricList.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'At least one metric is required',
+      });
+    }
+
+    // Fetch comparisons
+    const comparisons = await analyticsService.getBulkComparisons({
+      metrics: metricList,
+      startDate: start,
+      endDate: end,
+      excludeInternal: excludeInternal !== 'false', // default true
+    });
+
+    res.json({
+      success: true,
+      data: comparisons,
+    });
+  } catch (error) {
+    console.error('[Admin] Get analytics comparisons error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch metric comparisons',
+    });
+  }
+});
+
 // ============================================================================
 // CAMPAIGN MANAGEMENT ROUTES
 // ============================================================================
