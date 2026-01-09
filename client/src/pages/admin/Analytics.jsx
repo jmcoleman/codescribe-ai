@@ -571,7 +571,10 @@ export default function Analytics() {
                 </div>
 
                 {/* Conversion Funnel Chart */}
-                <ChartSection title="Business Conversion Funnel">
+                <ChartSection
+                  title="Business Conversion Funnel"
+                  question="How do visitors progress through the conversion funnel?"
+                >
                   <div className="space-y-4">
                     {/* Funnel visualization as stacked bars */}
                     {['visitors', 'engaged', 'signups', 'trials', 'paid'].map((stage, index) => {
@@ -687,8 +690,8 @@ export default function Analytics() {
             <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-2 mt-8">
               Business Metrics
             </h2>
-            <p className="text-sm text-slate-600 dark:text-slate-400 -mt-4">
-              Key business performance indicators
+            <p className="text-sm text-slate-500 dark:text-slate-400 -mt-4 italic">
+              How is the business performing overall?
             </p>
 
             {/* Summary Cards */}
@@ -722,6 +725,7 @@ export default function Analytics() {
             {/* Signups Trend */}
             <ChartSection
               title="New Signups Over Time"
+              question="Are signups growing or declining?"
               tableData={timeSeriesData.signups}
               tableColumns={[
                 { key: 'date', label: 'Date', format: (d) => new Date(d).toLocaleDateString() },
@@ -740,6 +744,7 @@ export default function Analytics() {
             {/* Revenue Trend */}
             <ChartSection
               title="Revenue Over Time"
+              question="What's our revenue trend?"
               tableData={timeSeriesData.revenue}
               tableColumns={[
                 { key: 'date', label: 'Date', format: (d) => new Date(d).toLocaleDateString() },
@@ -758,7 +763,10 @@ export default function Analytics() {
 
             {/* Upgrades by Tier */}
             {businessData.upgradesByTier && Object.keys(businessData.upgradesByTier).length > 0 && (
-              <ChartSection title="Upgrades by Tier">
+              <ChartSection
+                title="Upgrades by Tier"
+                question="Which tiers are users upgrading to?"
+              >
                 <ComparisonBar
                   data={Object.entries(businessData.upgradesByTier).map(([tier, count]) => ({
                     name: tier.charAt(0).toUpperCase() + tier.slice(1),
@@ -1147,6 +1155,7 @@ export default function Analytics() {
 
               <ChartSection
                 title="Latency Trend (Total, TTFT, Streaming)"
+                question="How has response time changed over time?"
                 tableData={(() => {
                   // Combine latency, ttft, and streaming data by date for table view
                   const dataByDate = new Map();
@@ -1215,8 +1224,8 @@ export default function Analytics() {
                   <Zap className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                   Cost Efficiency
                 </h2>
-                <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                  Cache hits reduce API costs by ~90%. Higher cache rate = more savings.
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 italic">
+                  Are we saving money with prompt caching?
                 </p>
               </div>
 
@@ -1247,6 +1256,7 @@ export default function Analytics() {
 
               <ChartSection
                 title="Cache Hit Rate Trend"
+                question="Is caching improving over time?"
                 tableData={timeSeriesData.cacheHitRate}
                 tableColumns={[
                   { key: 'date', label: 'Date', format: (d) => new Date(d).toLocaleDateString() },
@@ -1272,8 +1282,8 @@ export default function Analytics() {
                   <Activity className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                   Throughput & Volume
                 </h2>
-                <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                  Processing capacity and total generation volume over time.
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 italic">
+                  How much generation capacity are we using?
                 </p>
               </div>
 
@@ -1298,6 +1308,7 @@ export default function Analytics() {
 
               <ChartSection
                 title="Throughput Trend"
+                question="Is throughput consistent over time?"
                 tableData={timeSeriesData.throughput}
                 tableColumns={[
                   { key: 'date', label: 'Date', format: (d) => new Date(d).toLocaleDateString() },
@@ -1324,8 +1335,8 @@ export default function Analytics() {
                     <Server className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                     Provider & Model Analysis
                   </h2>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                    Compare performance across different LLM providers and models.
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 italic">
+                    Which LLM providers and models perform best?
                   </p>
                 </div>
 
@@ -1357,7 +1368,10 @@ export default function Analytics() {
 
                 {/* Model breakdown table */}
                 {performanceData.modelUsage && Object.keys(performanceData.modelUsage).length > 0 && (
-                  <ChartSection title="Model Breakdown">
+                  <ChartSection
+                    title="Model Breakdown"
+                    question="What's the performance difference between models?"
+                  >
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead>
@@ -1397,8 +1411,8 @@ export default function Analytics() {
                     <AlertCircle className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                     Error Rate
                   </h2>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                    How reliable is document generation? Lower error rate = better reliability.
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 italic">
+                    How reliable is document generation?
                   </p>
                 </div>
 
