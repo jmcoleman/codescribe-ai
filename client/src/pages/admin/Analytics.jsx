@@ -1030,11 +1030,11 @@ export default function Analytics() {
               </>
             )}
 
-            {/* User Journey / Retention Section */}
+            {/* User Retention Section */}
             {usageData.retentionMetrics && (
               <>
                 <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-2 mt-8">
-                  User Journey & Retention
+                  User Retention
                 </h2>
                 <p className="text-sm text-slate-500 dark:text-slate-400 -mt-4 italic">
                   Are authenticated users returning to the product?
