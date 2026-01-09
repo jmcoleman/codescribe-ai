@@ -470,19 +470,19 @@ codescribe-ai/
 
 ## 🔄 Version History
 
-**Current: v3.3.5** (January 7, 2026)
-- Multi-select event filter: Select multiple events in Raw Events table with Portal rendering
-- Grouped performance metrics: latency (TTFT, TPOT), throughput (tokens/sec), cache, LLM context
-- Campaign trials system: Auto-grant Pro trials during campaigns, admin management page
-- Auth tracking: trackLogin/trackSignup functions, User model _created flag
-- Analytics fix: exclude failed generations from metrics
-- 3,945 tests (2,047 frontend, 1,898 backend)
-- Frontend: 2,047 passing, 67 skipped
-- Backend: 1,898 passing, 33 skipped
+**Current: v3.3.8** (January 8, 2026)
+- Analytics funnel visualization polish: Better color contrast, fixed count visibility, capped bar widths
+- Test fixes: Updated analyticsService tests to mock all 6 funnel queries
+- 4,029 tests (2,067 frontend, 1,962 backend)
+- Frontend: 2,067 passing, 67 skipped
+- Backend: 1,962 passing, 33 skipped
 
 <details>
-<summary>Recent Releases (v2.9.0-v3.3.4) & Milestones</summary>
+<summary>Recent Releases (v2.9.0-v3.3.7) & Milestones</summary>
 
+**v3.3.7** (Jan 8, 2026): Event Category Reclassification & Test Coverage - Renamed 'funnel' to 'workflow', added 'system' category, comprehensive test coverage
+**v3.3.6** (Jan 7, 2026): Admin Analytics Performance & UX - Event filters, enhanced user list, performance optimizations
+**v3.3.5** (Jan 7, 2026): Multi-select Event Filter & Campaign Trials - Portal rendering, grouped performance metrics, auth tracking
 **v3.3.4** (Jan 6, 2026): Admin Analytics Dashboard & Workflow Outcome Metrics - Recharts funnel/business/usage tabs, session tracking, conversion metrics
 **v3.3.3** (Dec 12, 2025): Private GitHub Repository Support - AES-256-GCM token encryption, per-user auth, private/public badges
 **v3.3.2** (Dec 10, 2025): Sidebar UX Polish - Apply dropdown, ProjectSelector graph status, toolbar grouping
