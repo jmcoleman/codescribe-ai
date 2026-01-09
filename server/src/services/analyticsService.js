@@ -1884,11 +1884,14 @@ export const analyticsService = {
 
   /**
    * Fixed columns that appear first in CSV export
+   * action/origin are promoted from event_data for easier filtering
    */
   FIXED_COLUMNS: [
     'id',
     'event_name',
     'event_category',
+    'action',      // Promoted: tier_change, trial, usage_alert, doc_export, user_interaction
+    'origin',      // Promoted: code_input (paste, upload, sample, github)
     'session_id',
     'user_id',
     'user_email',
@@ -2309,8 +2312,11 @@ export const analyticsService = {
 
     // Build CSV header
     const fixedHeaders = this.FIXED_COLUMNS;
+    // Exclude action/origin from variant paths (already promoted to fixed columns)
+    const promotedFields = ['action', 'origin'];
+    const filteredPaths = variantPaths.filter((path) => !promotedFields.includes(path));
     // Add 'v_' prefix to variant columns and replace dots with underscores
-    const variantHeaders = variantPaths.map((path) => `v_${path.replace(/\./g, '_')}`);
+    const variantHeaders = filteredPaths.map((path) => `v_${path.replace(/\./g, '_')}`);
     const allHeaders = [...fixedHeaders, ...variantHeaders];
 
     // Write header
@@ -2337,10 +2343,14 @@ export const analyticsService = {
         if (totalRows >= MAX_ROWS) break;
 
         // Build row with fixed columns
+        // Extract action/origin from event_data (promoted columns)
+        const eventData = event.event_data || {};
         const row = [
           this.normalizeValue(event.id),
           this.normalizeValue(event.event_name),
           this.normalizeValue(event.event_category),
+          this.normalizeValue(eventData.action),   // Promoted from event_data
+          this.normalizeValue(eventData.origin),   // Promoted from event_data
           this.normalizeValue(event.session_id),
           this.normalizeValue(event.user_id),
           this.normalizeValue(event.user_email),
@@ -2349,8 +2359,8 @@ export const analyticsService = {
           event.created_at ? new Date(event.created_at).toISOString() : '',
         ];
 
-        // Add variant columns from event_data
-        for (const path of variantPaths) {
+        // Add variant columns from event_data (excluding promoted fields)
+        for (const path of filteredPaths) {
           const value = this.getNestedValue(event.event_data, path);
           row.push(this.normalizeValue(value));
         }

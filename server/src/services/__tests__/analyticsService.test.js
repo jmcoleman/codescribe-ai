@@ -1237,10 +1237,18 @@ describe('AnalyticsService', () => {
         expect(analyticsService.FIXED_COLUMNS).toContain('id');
         expect(analyticsService.FIXED_COLUMNS).toContain('event_name');
         expect(analyticsService.FIXED_COLUMNS).toContain('event_category');
+        expect(analyticsService.FIXED_COLUMNS).toContain('action');  // Promoted from event_data
+        expect(analyticsService.FIXED_COLUMNS).toContain('origin');  // Promoted from event_data
         expect(analyticsService.FIXED_COLUMNS).toContain('session_id');
         expect(analyticsService.FIXED_COLUMNS).toContain('user_id');
         expect(analyticsService.FIXED_COLUMNS).toContain('user_email');
         expect(analyticsService.FIXED_COLUMNS).toContain('created_at');
+      });
+
+      it('should have action and origin after event_category', () => {
+        const idx = analyticsService.FIXED_COLUMNS.indexOf('event_category');
+        expect(analyticsService.FIXED_COLUMNS[idx + 1]).toBe('action');
+        expect(analyticsService.FIXED_COLUMNS[idx + 2]).toBe('origin');
       });
     });
 
