@@ -815,6 +815,7 @@ export default function Analytics() {
                 {/* Sessions Trend */}
                 <ChartSection
                   title="Sessions Over Time"
+                  question="What's the engagement trend over time?"
                   tableData={timeSeriesData.sessions}
                   tableColumns={[
                     { key: 'date', label: 'Date', format: (d) => new Date(d).toLocaleDateString() },
