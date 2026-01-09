@@ -27,7 +27,6 @@ import {
   Gift,
   CheckCircle,
   XCircle,
-  Target,
   Info,
   Percent,
   FileText,
@@ -473,9 +472,20 @@ export default function Analytics() {
 
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-                Analytics Dashboard
-              </h1>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                  Analytics Dashboard
+                </h1>
+                {summaryData && !loading && (
+                  <button
+                    onClick={toggleSummary}
+                    className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                    aria-label={summaryCollapsed ? "Show KPIs" : "Hide KPIs"}
+                  >
+                    <ChevronDown className={`w-5 h-5 text-slate-500 dark:text-slate-400 transition-transform ${summaryCollapsed ? '-rotate-90' : ''}`} />
+                  </button>
+                )}
+              </div>
               <p className="text-sm text-slate-600 dark:text-slate-400">
                 Understand user engagement, business growth, and product performance
               </p>
@@ -512,31 +522,14 @@ export default function Analytics() {
           </div>
         </div>
 
-        {/* Health at a Glance - Collapsible summary */}
-        {summaryData && !loading && (
-          <div className="mb-6 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
-            {/* Header with collapse toggle */}
-            <button
-              onClick={toggleSummary}
-              className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-750 transition-colors rounded-t-lg"
-            >
-              <div className="flex items-center gap-2">
-                <Target className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                  Health at a Glance
-                </h2>
-              </div>
-              <ChevronDown className={`w-4 h-4 text-slate-500 dark:text-slate-400 transition-transform ${summaryCollapsed ? '-rotate-90' : ''}`} />
-            </button>
-
-            {/* Collapsible content */}
-            {!summaryCollapsed && (
-              <div className="px-4 pb-4 border-t border-slate-100 dark:border-slate-700">
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 pt-3">
+        {/* KPIs Grid - Collapsible */}
+        {summaryData && !loading && !summaryCollapsed && (
+          <div className="mb-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
               {/* Business Health */}
-              <div className="bg-slate-50 dark:bg-slate-900/50 rounded p-2 border border-slate-200 dark:border-slate-700">
-                <div className="text-xs text-slate-500 dark:text-slate-400 mb-0.5">Signups</div>
-                <div className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-0.5">
+              <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
+                <div className="text-sm text-slate-600 dark:text-slate-400 mb-1">Signups</div>
+                <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
                   {formatNumber(summaryData.signups.value)}
                 </div>
                 {summaryData.signups.direction !== 'neutral' && (
@@ -551,9 +544,9 @@ export default function Analytics() {
                 )}
               </div>
 
-              <div className="bg-slate-50 dark:bg-slate-900/50 rounded p-2 border border-slate-200 dark:border-slate-700">
-                <div className="text-xs text-slate-500 dark:text-slate-400 mb-0.5">Revenue</div>
-                <div className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-0.5">
+              <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
+                <div className="text-sm text-slate-600 dark:text-slate-400 mb-1">Revenue</div>
+                <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
                   {formatCurrency(summaryData.revenue.value)}
                 </div>
                 {summaryData.revenue.direction !== 'neutral' && (
@@ -569,9 +562,9 @@ export default function Analytics() {
               </div>
 
               {/* Usage Health */}
-              <div className="bg-slate-50 dark:bg-slate-900/50 rounded p-2 border border-slate-200 dark:border-slate-700">
-                <div className="text-xs text-slate-500 dark:text-slate-400 mb-0.5">Sessions</div>
-                <div className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-0.5">
+              <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
+                <div className="text-sm text-slate-600 dark:text-slate-400 mb-1">Sessions</div>
+                <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
                   {formatNumber(summaryData.sessions.value)}
                 </div>
                 {summaryData.sessions.direction !== 'neutral' && (
@@ -586,9 +579,9 @@ export default function Analytics() {
                 )}
               </div>
 
-              <div className="bg-slate-50 dark:bg-slate-900/50 rounded p-2 border border-slate-200 dark:border-slate-700">
-                <div className="text-xs text-slate-500 dark:text-slate-400 mb-0.5">Completion</div>
-                <div className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-0.5">
+              <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
+                <div className="text-sm text-slate-600 dark:text-slate-400 mb-1">Completion</div>
+                <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
                   {formatPercent(summaryData.completionRate.value)}
                 </div>
                 {summaryData.completionRate.direction !== 'neutral' && (
@@ -604,9 +597,9 @@ export default function Analytics() {
               </div>
 
               {/* Performance Health */}
-              <div className="bg-slate-50 dark:bg-slate-900/50 rounded p-2 border border-slate-200 dark:border-slate-700">
-                <div className="text-xs text-slate-500 dark:text-slate-400 mb-0.5">Latency</div>
-                <div className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-0.5">
+              <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
+                <div className="text-sm text-slate-600 dark:text-slate-400 mb-1">Latency</div>
+                <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
                   {formatLatency(summaryData.avgLatency.value)}
                 </div>
                 {summaryData.avgLatency.direction !== 'neutral' && (
@@ -621,9 +614,9 @@ export default function Analytics() {
                 )}
               </div>
 
-              <div className="bg-slate-50 dark:bg-slate-900/50 rounded p-2 border border-slate-200 dark:border-slate-700">
-                <div className="text-xs text-slate-500 dark:text-slate-400 mb-0.5">Errors</div>
-                <div className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-0.5">
+              <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
+                <div className="text-sm text-slate-600 dark:text-slate-400 mb-1">Errors</div>
+                <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
                   {formatNumber(summaryData.errorCount.value)}
                 </div>
                 {summaryData.errorCount.direction !== 'neutral' && (
@@ -637,9 +630,7 @@ export default function Analytics() {
                   </div>
                 )}
               </div>
-                </div>
-              </div>
-            )}
+            </div>
           </div>
         )}
 
@@ -1011,7 +1002,7 @@ export default function Analytics() {
                     color="purple"
                   />
                   <StatsCard
-                    icon={Target}
+                    icon={CheckCircle}
                     label="Completion Rate"
                     value={formatPercent(funnelData.overallConversion)}
                     subValue="Sessions ending in copy/download"
