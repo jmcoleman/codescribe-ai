@@ -66,7 +66,7 @@
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
     "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.34",
-    "footer": "v3.3.7 Complete · Event Category Reclassification ✓ · Up Next: Performance Analytics Tab · VS Code Extension: Separate Repo",
+    "footer": "v3.3.8 Complete · Analytics Funnel Visualization Polish ✓ · Up Next: Project Architecture Document · VS Code Extension: Separate Repo",
     "lastUpdated": "January 8, 2026"
   },
   "columns": [
@@ -76,6 +76,43 @@
       "title": "Completed",
       "subtitle": "Phase 1: Core Capabilities",
       "phases": [
+        {
+          "version": "v3.3.8",
+          "title": "Analytics Funnel Visualization Polish",
+          "duration": "0.25 days",
+          "status": "✓ Complete",
+          "completedDate": "Jan 8, 2026",
+          "badge": "UX Polish",
+          "features": [
+            "Funnel bar color improvements: Darker shades (600-series light, 500-series dark) for better contrast",
+            "Fixed count visibility: All counts display as white text on dark bars, no conditional logic",
+            "Capped bar widths at 100%: Prevents overflow when percentages exceed 100%",
+            "Simplified breakdown bar logic: Always show counts inside bars",
+            "Updated doc_export labels: 'Fresh Generation' → 'Generated', 'From Cache/History' → 'Cache/History'",
+            "Test fixes: Updated analyticsService tests to mock all 6 getConversionFunnel queries",
+            "Test coverage: 4,029 tests (2,067 frontend, 1,962 backend), 100% pass rate"
+          ]
+        },
+        {
+          "version": "v3.3.6+",
+          "title": "Performance Analytics Tab",
+          "duration": "0.5 days",
+          "status": "✓ Complete",
+          "completedDate": "Jan 7, 2026",
+          "badge": "Analytics",
+          "features": [
+            "New Performance tab in admin analytics dashboard with comprehensive visualizations",
+            "Response Time section: Average, median, P95 latency with quality indicators",
+            "Latency breakdown: TTFT (Time to First Token), TPOT, streaming time visualizations",
+            "Throughput metrics: Tokens/second by doc type, provider, and model",
+            "Cache performance: Hit rate tracking with cost savings estimates",
+            "LLM provider comparison: Latency and throughput breakdown by provider/model",
+            "Time-series charts: Latency, cache hit rate, throughput trends over time",
+            "Time range filtering: Consistent with other analytics tabs (7d, 30d, 90d, custom)",
+            "Dark mode support: All visualizations adapt to theme",
+            "Leverages grouped performance metrics from v3.3.5 backend infrastructure"
+          ]
+        },
         {
           "version": "v3.3.7",
           "title": "Event Category Reclassification & Test Coverage",
@@ -966,23 +1003,6 @@
       "title": "Active",
       "subtitle": "Phase 3: Platform Infrastructure",
       "phases": [
-        {
-          "version": "Analytics",
-          "title": "Performance Analytics Tab",
-          "duration": "0.5-1 day",
-          "status": "Up Next",
-          "badge": "Analytics Enhancement",
-          "features": [
-            "New Performance tab in admin analytics dashboard",
-            "Latency visualizations: TTFT (Time to First Token), TPOT, total generation time",
-            "Throughput charts: tokens/second by doc type, provider, model",
-            "Cache hit rate tracking with cost savings estimate",
-            "LLM provider/model breakdown with latency comparison",
-            "Time range filtering consistent with other analytics tabs",
-            "Dark mode support for all visualizations",
-            "Leverages grouped performance metrics from v3.3.5"
-          ]
-        },
         {
           "version": "Epic 5.6",
           "title": "Project Architecture Document",
