@@ -2400,23 +2400,23 @@ export const analyticsService = {
 
       switch (metric) {
         case 'sessions': {
-          const data = await this.getUsagePatterns(params);
-          return data.totalSessions;
+          const funnel = await this.getConversionFunnel(params);
+          return funnel.totalSessions;
         }
         case 'signups': {
           const data = await this.getBusinessMetrics(params);
-          return data.totalSignups;
+          return data.signups;
         }
         case 'revenue': {
           const data = await this.getBusinessMetrics(params);
-          return data.totalRevenue;
+          return data.revenueCents;
         }
         case 'generations': {
           const data = await this.getPerformanceMetrics(params);
           return data.totalGenerations;
         }
         case 'completed_sessions': {
-          const funnel = await this.getWorkflowConversionFunnel(params);
+          const funnel = await this.getConversionFunnel(params);
           return funnel.stages?.generation_completed?.events || 0;
         }
         case 'avg_latency': {
@@ -2432,26 +2432,48 @@ export const analyticsService = {
           return data.avgThroughput;
         }
         case 'errors': {
-          const result = await sql`
-            SELECT COUNT(*) as count
-            FROM analytics_events
-            WHERE event_name = 'error'
-              AND created_at >= ${start}
-              AND created_at < ${end}
-              ${excludeInternal ? sql`AND is_internal = FALSE` : sql``}
-          `;
+          let result;
+          if (excludeInternal) {
+            result = await sql`
+              SELECT COUNT(*) as count
+              FROM analytics_events
+              WHERE event_name = 'error'
+                AND created_at >= ${start}
+                AND created_at < ${end}
+                AND is_internal = FALSE
+            `;
+          } else {
+            result = await sql`
+              SELECT COUNT(*) as count
+              FROM analytics_events
+              WHERE event_name = 'error'
+                AND created_at >= ${start}
+                AND created_at < ${end}
+            `;
+          }
           return parseInt(result.rows[0]?.count || 0);
         }
         case 'error_rate': {
-          const errors = await sql`
-            SELECT COUNT(*) as count
-            FROM analytics_events
-            WHERE event_name = 'error'
-              AND created_at >= ${start}
-              AND created_at < ${end}
-              ${excludeInternal ? sql`AND is_internal = FALSE` : sql``}
-          `;
-          const funnel = await this.getWorkflowConversionFunnel(params);
+          let errors;
+          if (excludeInternal) {
+            errors = await sql`
+              SELECT COUNT(*) as count
+              FROM analytics_events
+              WHERE event_name = 'error'
+                AND created_at >= ${start}
+                AND created_at < ${end}
+                AND is_internal = FALSE
+            `;
+          } else {
+            errors = await sql`
+              SELECT COUNT(*) as count
+              FROM analytics_events
+              WHERE event_name = 'error'
+                AND created_at >= ${start}
+                AND created_at < ${end}
+            `;
+          }
+          const funnel = await this.getConversionFunnel(params);
           const generations = funnel.stages?.generation_started?.events || 0;
           const errorCount = parseInt(errors.rows[0]?.count || 0);
           return generations > 0 ? (errorCount / generations) * 100 : 0;
@@ -2532,7 +2554,7 @@ export const analyticsService = {
         performanceData,
       ] = await Promise.all([
         this.getBusinessMetrics({ startDate, endDate, excludeInternal }),
-        this.getFunnelData({ startDate, endDate, excludeInternal }),
+        this.getConversionFunnel({ startDate, endDate, excludeInternal }),
         this.getPerformanceMetrics({ startDate, endDate, excludeInternal }),
       ]);
 
