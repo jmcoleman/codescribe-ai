@@ -144,7 +144,8 @@ sequenceDiagram
 ```
 
 **Key Funnel Stages:**
-1. **Entry:** `session_start` (100%)
+1. **Entry:** `session_start` (100%
+)
 2. **Engage:** `code_input` (~70% of sessions)
 3. **Commit:** `doc_generation` with success: 'false' (~66%)
 4. **Value Delivered:** `doc_generation` with success: 'true' + `quality_score` (~62%)

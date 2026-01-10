@@ -38,11 +38,15 @@ import { useAuth } from '../../contexts/AuthContext';
 import { API_URL } from '../../config/api';
 import { PageLayout } from '../../components/PageLayout';
 import DateRangePicker from '../../components/admin/DateRangePicker';
+import { STORAGE_KEYS, getSessionItem, setSessionItem } from '../../constants/storage';
 import {
   TrendChart,
   MultiLineTrendChart,
   ComparisonBar,
   ScoreDistribution,
+  LanguageSuccessChart,
+  DocTypeSuccessChart,
+  QualityHeatmap,
   formatNumber,
   formatLatency,
   formatCurrency,
@@ -219,7 +223,18 @@ export default function Analytics() {
   const [activeTab, setActiveTab] = useState('usage');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [excludeInternal, setExcludeInternal] = useState(true);
+
+  // Load saved excludeInternal preference from sessionStorage
+  const [excludeInternal, setExcludeInternal] = useState(() => {
+    const saved = getSessionItem(STORAGE_KEYS.ANALYTICS_EXCLUDE_INTERNAL);
+    if (saved !== null) {
+      return saved === 'true';
+    }
+    return true; // Default to excluding internal users
+  });
+
+  // Model filter for quality heatmap
+  const [selectedModel, setSelectedModel] = useState('all');
 
   // Default to last 30 days
   const [dateRange, setDateRange] = useState(() => {
@@ -276,13 +291,17 @@ export default function Analytics() {
         excludeInternal: excludeInternal.toString(),
       });
 
+      // Add model parameter for usage queries
+      const usageParams = new URLSearchParams(params);
+      usageParams.set('model', selectedModel);
+
       // Fetch data based on active tab
       const headers = { 'Authorization': `Bearer ${token}` };
 
       if (activeTab === 'usage') {
         // Fetch both usage patterns AND usage funnel data
         const [usageRes, generationsRes, funnelRes, sessionsRes] = await Promise.all([
-          fetch(`${API_URL}/api/admin/analytics/usage?${params}`, { headers }),
+          fetch(`${API_URL}/api/admin/analytics/usage?${usageParams}`, { headers }),
           fetch(`${API_URL}/api/admin/analytics/timeseries?${params}&metric=generations&interval=day`, { headers }),
           fetch(`${API_URL}/api/admin/analytics/funnel?${params}`, { headers }),
           fetch(`${API_URL}/api/admin/analytics/timeseries?${params}&metric=sessions&interval=day`, { headers }),
@@ -294,44 +313,6 @@ export default function Analytics() {
         const generations = await generationsRes.json();
         const funnel = await funnelRes.json();
         const sessions = await sessionsRes.json();
-
-        // TEMP: Add mock breakdown data for testing visualization
-        if (funnel.data.stages) {
-          // Add mock origin breakdown to code_input
-          if (funnel.data.stages.code_input) {
-            const totalCodeInput = funnel.data.stages.code_input.sessions;
-
-            // Distribute proportionally: paste 32%, default 25%, sample 18%, github_public 12%, upload 8%, github_private 5%
-            const pasteCount = Math.round(totalCodeInput * 0.32);
-            const defaultCount = Math.round(totalCodeInput * 0.25);
-            const sampleCount = Math.round(totalCodeInput * 0.18);
-            const githubPublicCount = Math.round(totalCodeInput * 0.12);
-            const uploadCount = Math.round(totalCodeInput * 0.08);
-            // Remaining goes to github_private to ensure exact sum
-            const githubPrivateCount = totalCodeInput - (pasteCount + defaultCount + sampleCount + githubPublicCount + uploadCount);
-
-            funnel.data.stages.code_input.breakdown = {
-              paste: { sessions: pasteCount, count: pasteCount + 2 },
-              default: { sessions: defaultCount, count: defaultCount + 1 },
-              sample: { sessions: sampleCount, count: sampleCount + 3 },
-              github_public: { sessions: githubPublicCount, count: githubPublicCount + 1 },
-              upload: { sessions: uploadCount, count: uploadCount + 2 },
-              github_private: { sessions: githubPrivateCount, count: githubPrivateCount + 1 },
-            };
-          }
-
-          // Add mock source breakdown to doc_export
-          if (funnel.data.stages.doc_export) {
-            const totalExports = funnel.data.stages.doc_export.sessions;
-            const freshCount = Math.round(totalExports * 0.65); // 65% fresh
-            const cachedCount = totalExports - freshCount; // 35% cached (ensures exact sum)
-
-            funnel.data.stages.doc_export.breakdown = {
-              fresh: { sessions: freshCount, count: freshCount + 5 },
-              cached: { sessions: cachedCount, count: cachedCount + 3 },
-            };
-          }
-        }
 
         setUsageData(usage.data);
         setFunnelData(funnel.data);
@@ -408,7 +389,7 @@ export default function Analytics() {
       // Mark this tab as loaded
       setLoadedTabs(prev => new Set([...prev, activeTab]));
     }
-  }, [getToken, dateRange, excludeInternal, activeTab]);
+  }, [getToken, dateRange, excludeInternal, activeTab, selectedModel]);
 
   /**
    * Fetch period comparisons for key metrics
@@ -494,6 +475,11 @@ export default function Analytics() {
       fetchComparisons();
     }
   }, [activeTab]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Save excludeInternal preference to sessionStorage
+  useEffect(() => {
+    setSessionItem(STORAGE_KEYS.ANALYTICS_EXCLUDE_INTERNAL, excludeInternal.toString());
+  }, [excludeInternal]);
 
   return (
     <PageLayout>
@@ -1011,72 +997,115 @@ export default function Analytics() {
 
         {/* Usage Tab */}
         {!loading && activeTab === 'usage' && usageData && (
-          <div className="space-y-6">
-            {/* Session Overview Section */}
-            {funnelData && (
-              <>
-                <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-2">
-                  Session Overview
+          <div className="space-y-8">
+            {/* ================================================================
+                GROUP 1: Traffic & Engagement
+                Who's using the product and how often?
+                ================================================================ */}
+            <div className="space-y-6">
+              <div className="border-b border-slate-200 dark:border-slate-700 pb-2">
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                  Traffic & Engagement
                 </h2>
-                <p className="text-sm text-slate-500 dark:text-slate-400 -mt-4 italic">
-                  How engaged are users with the product?
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 italic">
+                  Who's using the product and how often?
                 </p>
+              </div>
 
-                {/* Session Summary Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <StatsCard
-                    icon={Activity}
-                    label="Total Sessions"
-                    value={formatNumber(funnelData.totalSessions)}
-                    comparison={comparisons.sessions}
-                    color="purple"
-                  />
-                  <StatsCard
-                    icon={CheckCircle}
-                    label="Completed Sessions"
-                    value={formatNumber(funnelData.completedSessions)}
-                    subValue="Sessions with copy/download"
-                    comparison={comparisons.completed_sessions}
-                    color="purple"
-                  />
-                  <StatsCard
-                    icon={CheckCircle}
-                    label="Completion Rate"
-                    value={formatPercent(funnelData.overallConversion)}
-                    subValue="Sessions ending in copy/download"
-                    color="purple"
-                  />
+              {/* User Retention Metrics */}
+              {usageData.retentionMetrics && (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <StatsCard
+                      icon={UserPlus}
+                      label="New Users"
+                      value={formatNumber(usageData.retentionMetrics.newUsers || 0)}
+                      subValue={usageData.retentionMetrics.totalUsers > 0
+                        ? `${((usageData.retentionMetrics.newUsers / usageData.retentionMetrics.totalUsers) * 100).toFixed(1)}% of total`
+                        : '0% of total'
+                      }
+                      color="purple"
+                    />
+                    <StatsCard
+                      icon={Activity}
+                      label="Returning Users"
+                      value={formatNumber(usageData.retentionMetrics.returningUsers || 0)}
+                      subValue={usageData.retentionMetrics.totalUsers > 0
+                        ? `${((usageData.retentionMetrics.returningUsers / usageData.retentionMetrics.totalUsers) * 100).toFixed(1)}% of total`
+                        : '0% of total'
+                      }
+                      color="purple"
+                    />
+                    <StatsCard
+                      icon={TrendingUp}
+                      label="Return Rate"
+                      value={formatPercent(usageData.retentionMetrics.returnRate || 0)}
+                      subValue={`${formatNumber(usageData.retentionMetrics.returningUsers || 0)} of ${formatNumber(usageData.retentionMetrics.totalUsers || 0)} users returned`}
+                      color="purple"
+                    />
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 -mt-2">
+                    Note: Metrics track authenticated users only. Anonymous users cannot be tracked across sessions. Compared to immediately prior period of equal length.
+                  </p>
+                </>
+              )}
+
+              {/* Session and Generation Trends */}
+              {funnelData && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Sessions Trend */}
+                  <ChartSection
+                    title="Sessions Over Time"
+                    question="What's the engagement trend?"
+                    tableData={timeSeriesData.sessions}
+                    tableColumns={[
+                      { key: 'date', label: 'Date', format: (d) => new Date(d).toLocaleDateString() },
+                      { key: 'value', label: 'Sessions', format: formatNumber },
+                    ]}
+                  >
+                    <TrendChart
+                      data={timeSeriesData.sessions}
+                      isDark={isDark}
+                      height={250}
+                      interval="day"
+                    />
+                  </ChartSection>
+
+                  {/* Generations Trend */}
+                  <ChartSection
+                    title="Generations Over Time"
+                    question="Are users completing workflows?"
+                    tableData={timeSeriesData.generations}
+                    tableColumns={[
+                      { key: 'date', label: 'Date', format: (d) => new Date(d).toLocaleDateString() },
+                      { key: 'value', label: 'Generations', format: formatNumber },
+                    ]}
+                  >
+                    <TrendChart
+                      data={timeSeriesData.generations}
+                      isDark={isDark}
+                      height={250}
+                      interval="day"
+                    />
+                  </ChartSection>
                 </div>
+              )}
+            </div>
 
-                {/* Sessions Trend */}
-                <ChartSection
-                  title="Sessions Over Time"
-                  question="What's the engagement trend over time?"
-                  tableData={timeSeriesData.sessions}
-                  tableColumns={[
-                    { key: 'date', label: 'Date', format: (d) => new Date(d).toLocaleDateString() },
-                    { key: 'value', label: 'Sessions', format: formatNumber },
-                  ]}
-                >
-                  <TrendChart
-                    data={timeSeriesData.sessions}
-                    isDark={isDark}
-                    height={250}
-                    interval="day"
-                  />
-                </ChartSection>
-              </>
-            )}
-
-            {/* Workflow Funnel Section */}
+            {/* ================================================================
+                GROUP 2: Workflow Funnel
+                Where do users drop off in the documentation workflow?
+                ================================================================ */}
             {funnelData && (
-              <>
-                <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-2 mt-8">
-                  Workflow Funnel
-                </h2>
-                <p className="text-sm text-slate-500 dark:text-slate-400 -mt-4 italic">
-                  How do users progress through the documentation workflow?
-                </p>
+              <div className="space-y-6">
+                <div className="border-b border-slate-200 dark:border-slate-700 pb-2">
+                  <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                    Workflow Funnel
+                  </h2>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 italic">
+                    Where do users drop off in the documentation workflow?
+                  </p>
+                </div>
 
                 {/* Workflow Funnel Summary Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -1117,33 +1146,21 @@ export default function Analytics() {
                   />
                 </div>
 
-                {/* Workflow Funnel Chart */}
+                {/* Session Drop-off Analysis */}
                 <ChartSection
-                  title="Workflow Funnel Visualization"
-                  question="Where are users dropping off in the workflow?"
+                  title="Session Drop-off by Stage"
+                  question="Where are users abandoning the workflow?"
                 >
                   <div className="space-y-4">
                     {['session_start', 'code_input', 'generation_started', 'generation_completed', 'doc_export'].map((stage, index) => {
                       const stageData = funnelData.stages?.[stage];
-                      const stages = ['session_start', 'code_input', 'generation_started', 'generation_completed', 'doc_export'];
 
-                      // Calculate stage-to-stage conversion percentage
-                      let percentage;
-                      if (index === 0) {
-                        // First stage is always 100%
-                        percentage = 100;
-                      } else {
-                        const previousStage = stages[index - 1];
-                        const previousCount = funnelData.stages?.[previousStage]?.sessions || 1;
-                        percentage = previousCount > 0 ? (stageData?.sessions / previousCount) * 100 : 0;
-                      }
+                      // Calculate percentage relative to first stage (original sessions)
+                      const firstStageCount = funnelData.stages?.session_start?.sessions || 1;
+                      const percentage = firstStageCount > 0 ? ((stageData?.sessions || 0) / firstStageCount) * 100 : 0;
 
                       const colors = ['bg-purple-600 dark:bg-purple-500', 'bg-indigo-600 dark:bg-indigo-500', 'bg-blue-600 dark:bg-blue-500', 'bg-amber-600 dark:bg-amber-500', 'bg-green-600 dark:bg-green-500'];
                       const labels = ['Sessions Started', 'Code Input', 'Generation Started', 'Generation Completed', 'Copied/Downloaded'];
-
-                      // Check if this stage has a breakdown (code_input has origin breakdown, doc_export has source breakdown)
-                      const hasBreakdown = stage === 'code_input' || stage === 'doc_export';
-                      const breakdown = stageData?.breakdown;
 
                       return (
                         <div key={stage}>
@@ -1165,302 +1182,293 @@ export default function Analytics() {
                               {formatPercent(percentage)}
                             </div>
                           </div>
-
-                          {/* Breakdown child bars (origin for code_input, source for doc_export) */}
-                          {hasBreakdown && breakdown && Object.keys(breakdown).length > 0 && (
-                            <div className="ml-44 mt-1 space-y-1">
-                              {Object.entries(breakdown)
-                                .sort((a, b) => {
-                                  // Custom sort: group github origins together, then by count
-                                  const order = ['paste', 'default', 'sample', 'github_public', 'github_private', 'upload', 'fresh', 'cached'];
-                                  const indexA = order.indexOf(a[0]);
-                                  const indexB = order.indexOf(b[0]);
-                                  if (indexA !== -1 && indexB !== -1) return indexA - indexB;
-                                  if (indexA !== -1) return -1;
-                                  if (indexB !== -1) return 1;
-                                  return b[1].count - a[1].count; // Fallback to count
-                                })
-                                .map(([key, data]) => {
-                                  // Labels and icons for code_input origins
-                                  const originLabels = {
-                                    default: 'Default Code',
-                                    github_private: 'Private GitHub',
-                                    github_public: 'Public GitHub',
-                                    upload: 'Upload',
-                                    sample: 'Sample',
-                                    paste: 'Paste',
-                                  };
-                                  const originIcons = {
-                                    default: '⚙️',
-                                    github_private: '🔒',
-                                    github_public: '🌐',
-                                    upload: '📁',
-                                    sample: '📝',
-                                    paste: '📋',
-                                  };
-
-                                  // Labels and icons for doc_export sources
-                                  const sourceLabels = {
-                                    fresh: 'Generated',
-                                    cached: 'Cache/History',
-                                  };
-                                  const sourceIcons = {
-                                    fresh: '✨',
-                                    cached: '💾',
-                                  };
-
-                                  // Choose labels/icons based on stage
-                                  const label = stage === 'code_input'
-                                    ? (originLabels[key] || key)
-                                    : (sourceLabels[key] || key);
-                                  const icon = stage === 'code_input'
-                                    ? (originIcons[key] || '📄')
-                                    : (sourceIcons[key] || '📄');
-
-                                  const parentPercentage = (data.sessions / (stageData?.sessions || 1)) * 100;
-
-                                  return (
-                                    <div key={key} className="flex items-center gap-2">
-                                      <div className="w-32 text-xs text-slate-500 dark:text-slate-400 text-right">
-                                        {icon} {label}
-                                      </div>
-                                      <div className="flex-1 h-4 bg-slate-100 dark:bg-slate-700 rounded overflow-hidden relative">
-                                        <div
-                                          className="h-full bg-indigo-400 dark:bg-indigo-500 transition-all duration-500 flex items-center justify-end pr-1"
-                                          style={{ width: `${Math.min(Math.max(parentPercentage, data.sessions > 0 ? 1 : 0), 100)}%` }}
-                                        >
-                                          <span className="text-[10px] font-medium text-white">
-                                            {formatNumber(data.sessions)}
-                                          </span>
-                                        </div>
-                                      </div>
-                                      <div className="w-12 text-xs text-slate-500 dark:text-slate-400">
-                                        {formatPercent(parentPercentage)}
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                            </div>
-                          )}
                         </div>
                       );
                     })}
                   </div>
                 </ChartSection>
-              </>
+              </div>
             )}
 
-            {/* User Retention Section */}
-            {usageData.retentionMetrics && (
-              <>
-                <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-2 mt-8">
-                  User Retention
+            {/* ================================================================
+                GROUP 3: Input Patterns
+                What are users documenting?
+                ================================================================ */}
+            <div className="space-y-6">
+              <div className="border-b border-slate-200 dark:border-slate-700 pb-2">
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                  Input Patterns
                 </h2>
-                <p className="text-sm text-slate-500 dark:text-slate-400 -mt-4 italic">
-                  Are authenticated users returning to the product?
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 italic">
+                  What are users documenting?
                 </p>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <StatsCard
-                    icon={UserPlus}
-                    label="New Users"
-                    value={formatNumber(usageData.retentionMetrics.newUsers || 0)}
-                    subValue={usageData.retentionMetrics.totalUsers > 0
-                      ? `${((usageData.retentionMetrics.newUsers / usageData.retentionMetrics.totalUsers) * 100).toFixed(1)}% of total`
-                      : '0% of total'
-                    }
-                    color="purple"
-                  />
-                  <StatsCard
-                    icon={Activity}
-                    label="Returning Users"
-                    value={formatNumber(usageData.retentionMetrics.returningUsers || 0)}
-                    subValue={usageData.retentionMetrics.totalUsers > 0
-                      ? `${((usageData.retentionMetrics.returningUsers / usageData.retentionMetrics.totalUsers) * 100).toFixed(1)}% of total`
-                      : '0% of total'
-                    }
-                    color="purple"
-                  />
-                  <StatsCard
-                    icon={TrendingUp}
-                    label="Return Rate"
-                    value={formatPercent(usageData.retentionMetrics.returnRate || 0)}
-                    subValue={`${formatNumber(usageData.retentionMetrics.returningUsers || 0)} of ${formatNumber(usageData.retentionMetrics.totalUsers || 0)} users returned`}
-                    color="purple"
-                  />
-                </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                  Note: Metrics track authenticated users only. Anonymous users cannot be tracked across sessions.
-                </p>
-              </>
-            )}
-
-            {/* Code Origin Section */}
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-2 mt-8">
-              Code Sources
-            </h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400 -mt-4 italic">
-              Where are users importing their code from?
-            </p>
-
-            {/* Code Origin Breakdown */}
-            {usageData.origins && usageData.origins.length > 0 ? (
-              <div className="bg-white dark:bg-slate-800 rounded-lg p-4 border border-slate-200 dark:border-slate-700">
-                <div className="space-y-3">
-                  {(() => {
-                    const originLabels = {
-                      default: 'Default Code',
-                      github_private: 'Private Repos',
-                      github_public: 'Public Repos',
-                      upload: 'Local Files',
-                      sample: 'Sample Code',
-                      paste: 'Pasted Code',
-                    };
-                    const originIcons = {
-                      default: '⚙️',
-                      github_private: '🔒',
-                      github_public: '🌐',
-                      upload: '📁',
-                      sample: '📝',
-                      paste: '📋',
-                    };
-                    const total = usageData.origins.reduce((sum, o) => sum + o.count, 0);
-                    return usageData.origins.map((origin) => {
-                      const percent = total > 0 ? (origin.count / total) * 100 : 0;
-                      return (
-                        <div key={origin.origin} className="flex items-center gap-3">
-                          <span className="text-lg w-6">{originIcons[origin.origin] || '📄'}</span>
-                          <span className="text-sm text-slate-700 dark:text-slate-300 w-28">
-                            {originLabels[origin.origin] || origin.origin}
-                          </span>
-                          <div className="flex-1 bg-slate-200 dark:bg-slate-700 rounded-full h-4 overflow-hidden">
-                            <div
-                              className="bg-purple-500 h-full rounded-full transition-all duration-300"
-                              style={{ width: `${percent}%` }}
-                            />
-                          </div>
-                          <span className="text-sm font-medium text-slate-900 dark:text-slate-100 w-12 text-right">
-                            {origin.count}
-                          </span>
-                          <span className="text-sm text-slate-500 dark:text-slate-400 w-14 text-right">
-                            {formatPercent(percent)}
-                          </span>
-                        </div>
-                      );
-                    });
-                  })()}
-                </div>
               </div>
-            ) : (
-              <div className="bg-white dark:bg-slate-800 rounded-lg p-8 border border-slate-200 dark:border-slate-700 text-center text-slate-500 dark:text-slate-400">
-                No code origin data available for this period
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Code Input Methods */}
+                <div className="space-y-4">
+                  <h3 className="text-md font-medium text-slate-800 dark:text-slate-200">
+                    Code Input Methods
+                  </h3>
+                  {usageData.codeInputMethods && usageData.codeInputMethods.length > 0 ? (
+                    <div className="bg-white dark:bg-slate-800 rounded-lg p-4 border border-slate-200 dark:border-slate-700">
+                      <div className="space-y-3">
+                        {(() => {
+                          const originLabels = {
+                            default: 'Default Code',
+                            github_private: 'Private GitHub',
+                            github_public: 'Public GitHub',
+                            upload: 'File Upload',
+                            sample: 'Sample Code',
+                            paste: 'Paste Code',
+                          };
+                          const originIcons = {
+                            default: '⚙️',
+                            github_private: '🔒',
+                            github_public: '🌐',
+                            upload: '📁',
+                            sample: '📝',
+                            paste: '📋',
+                          };
+                          const total = usageData.codeInputMethods.reduce((sum, o) => sum + o.count, 0);
+                          return usageData.codeInputMethods.map((method) => {
+                            const percent = total > 0 ? (method.count / total) * 100 : 0;
+                            return (
+                              <div key={method.origin} className="flex items-center gap-3">
+                                <span className="text-lg w-6">{originIcons[method.origin] || '📄'}</span>
+                                <span className="text-sm text-slate-700 dark:text-slate-300 w-32">
+                                  {originLabels[method.origin] || method.origin}
+                                </span>
+                                <div className="flex-1 bg-slate-200 dark:bg-slate-700 rounded-full h-4 overflow-hidden">
+                                  <div
+                                    className="bg-purple-500 h-full rounded-full transition-all duration-300"
+                                    style={{ width: `${percent}%` }}
+                                  />
+                                </div>
+                                <span className="text-sm font-medium text-slate-900 dark:text-slate-100 w-12 text-right">
+                                  {method.count}
+                                </span>
+                                <span className="text-sm text-slate-500 dark:text-slate-400 w-14 text-right">
+                                  {formatPercent(percent)}
+                                </span>
+                              </div>
+                            );
+                          });
+                        })()}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-white dark:bg-slate-800 rounded-lg p-8 border border-slate-200 dark:border-slate-700 text-center text-slate-500 dark:text-slate-400">
+                      No code input data available
+                    </div>
+                  )}
+                </div>
+
+                {/* Top Languages */}
+                <ChartSection
+                  title="Top Languages"
+                  question="Which languages are users documenting?"
+                  tableData={usageData.languages}
+                  tableColumns={[
+                    { key: 'language', label: 'Language' },
+                    { key: 'successful', label: 'Successful', format: formatNumber },
+                    { key: 'failed', label: 'Failed', format: formatNumber },
+                    { key: 'total', label: 'Total', format: formatNumber },
+                    { key: 'successRate', label: 'Success Rate', format: (val) => formatPercent(val) },
+                  ]}
+                >
+                  <LanguageSuccessChart
+                    data={usageData.languages}
+                    isDark={isDark}
+                    height={300}
+                  />
+                </ChartSection>
               </div>
-            )}
-
-            {/* Generation Modes Section */}
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-2 mt-8">
-              Generation Modes
-            </h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400 -mt-4 italic">
-              Are users generating single files or batches?
-            </p>
-
-            {/* Batch vs Single Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <StatsCard
-                icon={FileText}
-                label="Single Generations"
-                value={formatNumber(usageData.batchVsSingle?.single || 0)}
-                color="purple"
-              />
-              <StatsCard
-                icon={Layers}
-                label="Batch Generations"
-                value={formatNumber(usageData.batchVsSingle?.batch || 0)}
-                color="purple"
-              />
-              <StatsCard
-                icon={Percent}
-                label="Batch Ratio"
-                value={formatPercent(
-                  usageData.batchVsSingle
-                    ? (usageData.batchVsSingle.batch /
-                        (usageData.batchVsSingle.batch + usageData.batchVsSingle.single || 1)) *
-                        100
-                    : 0
-                )}
-                subValue="Batch as % of all generations"
-                color="purple"
-              />
             </div>
 
-            {/* Generations Trend */}
-            <ChartSection
-              title="Generations Over Time"
-              question="Are users completing their workflows?"
-              tableData={timeSeriesData.generations}
-              tableColumns={[
-                { key: 'date', label: 'Date', format: (d) => new Date(d).toLocaleDateString() },
-                { key: 'value', label: 'Generations', format: formatNumber },
-              ]}
-            >
-              <TrendChart
-                data={timeSeriesData.generations}
-                isDark={isDark}
-                height={250}
-                interval="day"
-              />
-            </ChartSection>
+            {/* ================================================================
+                GROUP 4: Generation Outcomes
+                What gets generated and how?
+                ================================================================ */}
+            <div className="space-y-6">
+              <div className="border-b border-slate-200 dark:border-slate-700 pb-2">
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                  Generation Outcomes
+                </h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 italic">
+                  What gets generated and how?
+                </p>
+              </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Doc Types */}
-              <ChartSection
-                title="Documentation Types"
-                question="What documentation types are most popular?"
-                tableData={usageData.docTypes}
-                tableColumns={[
-                  { key: 'type', label: 'Doc Type' },
-                  { key: 'count', label: 'Count', format: formatNumber },
-                ]}
-              >
-                <ComparisonBar
-                  data={usageData.docTypes}
-                  isDark={isDark}
-                  height={250}
-                  labelKey="type"
+              {/* Batch vs Single Stats */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <StatsCard
+                  icon={FileText}
+                  label="Single Generations"
+                  value={formatNumber(usageData.batchVsSingle?.single || 0)}
+                  color="purple"
                 />
-              </ChartSection>
-
-              {/* Quality Scores */}
-              <ChartSection
-                title="Quality Score Distribution"
-                question="How good is the generated documentation?"
-                tableData={usageData.qualityScores}
-                tableColumns={[
-                  { key: 'range', label: 'Score Range' },
-                  { key: 'count', label: 'Count', format: formatNumber },
-                ]}
-              >
-                <ScoreDistribution data={usageData.qualityScores} isDark={isDark} height={250} />
-              </ChartSection>
-
-              {/* Languages */}
-              <ChartSection
-                title="Top Languages"
-                question="What programming languages are being documented?"
-                tableData={usageData.languages}
-                tableColumns={[
-                  { key: 'language', label: 'Language' },
-                  { key: 'count', label: 'Count', format: formatNumber },
-                ]}
-              >
-                <ComparisonBar
-                  data={usageData.languages}
-                  isDark={isDark}
-                  height={250}
-                  labelKey="language"
+                <StatsCard
+                  icon={Layers}
+                  label="Batch Generations"
+                  value={formatNumber(usageData.batchVsSingle?.batch || 0)}
+                  color="purple"
                 />
-              </ChartSection>
+                <StatsCard
+                  icon={Percent}
+                  label="Batch Ratio"
+                  value={formatPercent(
+                    usageData.batchVsSingle
+                      ? (usageData.batchVsSingle.batch /
+                          (usageData.batchVsSingle.batch + usageData.batchVsSingle.single || 1)) *
+                          100
+                      : 0
+                  )}
+                  subValue="Batch as % of all generations"
+                  color="purple"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Doc Types */}
+                <ChartSection
+                  title="Documentation Types"
+                  question="Which doc types are most used?"
+                  tableData={usageData.docTypes}
+                  tableColumns={[
+                    { key: 'type', label: 'Doc Type' },
+                    { key: 'successful', label: 'Successful', format: formatNumber },
+                    { key: 'failed', label: 'Failed', format: formatNumber },
+                    { key: 'total', label: 'Total', format: formatNumber },
+                    { key: 'successRate', label: 'Success Rate', format: (val) => formatPercent(val) },
+                  ]}
+                >
+                  <DocTypeSuccessChart
+                    data={usageData.docTypes}
+                    isDark={isDark}
+                    height={300}
+                  />
+                </ChartSection>
+
+                {/* Export Sources */}
+                <div className="space-y-4">
+                  <h3 className="text-md font-medium text-slate-800 dark:text-slate-200">
+                    Export Sources
+                  </h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 -mt-2 italic">
+                    Fresh vs. cached/history
+                  </p>
+                  {usageData.exportSources && usageData.exportSources.length > 0 ? (
+                    <div className="bg-white dark:bg-slate-800 rounded-lg p-4 border border-slate-200 dark:border-slate-700">
+                      <div className="space-y-3">
+                        {(() => {
+                          const sourceLabels = {
+                            fresh: 'Fresh Generation',
+                            cached: 'Cache/History',
+                          };
+                          const sourceIcons = {
+                            fresh: '✨',
+                            cached: '💾',
+                          };
+                          const total = usageData.exportSources.reduce((sum, s) => sum + s.count, 0);
+                          return usageData.exportSources.map((source) => {
+                            const percent = total > 0 ? (source.count / total) * 100 : 0;
+                            return (
+                              <div key={source.source} className="flex items-center gap-3">
+                                <span className="text-lg w-6">{sourceIcons[source.source] || '📄'}</span>
+                                <span className="text-sm text-slate-700 dark:text-slate-300 w-28">
+                                  {sourceLabels[source.source] || source.source}
+                                </span>
+                                <div className="flex-1 bg-slate-200 dark:bg-slate-700 rounded-full h-4 overflow-hidden">
+                                  <div
+                                    className="bg-green-500 h-full rounded-full transition-all duration-300"
+                                    style={{ width: `${percent}%` }}
+                                  />
+                                </div>
+                                <span className="text-sm font-medium text-slate-900 dark:text-slate-100 w-12 text-right">
+                                  {source.count}
+                                </span>
+                                <span className="text-sm text-slate-500 dark:text-slate-400 w-14 text-right">
+                                  {formatPercent(percent)}
+                                </span>
+                              </div>
+                            );
+                          });
+                        })()}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-white dark:bg-slate-800 rounded-lg p-8 border border-slate-200 dark:border-slate-700 text-center text-slate-500 dark:text-slate-400">
+                      No export source data available
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* ================================================================
+                GROUP 5: Quality Analysis
+                How good is the output?
+                ================================================================ */}
+            <div className="space-y-6">
+              <div className="border-b border-slate-200 dark:border-slate-700 pb-2">
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                  Quality Analysis
+                </h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 italic">
+                  How good is the output?
+                </p>
+              </div>
+
+              {/* Quality Score Analysis - Side by Side */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Quality Score Distribution */}
+                <ChartSection
+                  title="Quality Score Distribution"
+                  question="How good is the generated documentation?"
+                  tableData={usageData.qualityScores}
+                  tableColumns={[
+                    { key: 'range', label: 'Score Range' },
+                    { key: 'count', label: 'Count', format: formatNumber },
+                  ]}
+                >
+                  <ScoreDistribution data={usageData.qualityScores} isDark={isDark} height={250} />
+                </ChartSection>
+
+                {/* Quality Scores by Doc Type Heatmap */}
+                {usageData.qualityScoresByDocType && usageData.qualityScoresByDocType.length > 0 && (
+                  <ChartSection
+                    title="Quality Scores by Documentation Type"
+                    question="Which doc types consistently achieve high quality scores? Do certain models perform better for certain doc types?"
+                  >
+                    {/* Model Filter */}
+                    <div className="mb-4 flex items-center gap-3">
+                      <label
+                        htmlFor="model-filter"
+                        className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                      >
+                        Model:
+                      </label>
+                      <select
+                        id="model-filter"
+                        value={selectedModel}
+                        onChange={(e) => setSelectedModel(e.target.value)}
+                        className="px-3 py-1.5 text-sm rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      >
+                        <option value="all">All Models</option>
+                        <option value="claude">Claude</option>
+                        <option value="openai">OpenAI</option>
+                      </select>
+                    </div>
+
+                    <QualityHeatmap
+                      data={usageData.qualityScoresByDocType}
+                      isDark={isDark}
+                      height={300}
+                    />
+                  </ChartSection>
+                )}
+              </div>
             </div>
           </div>
         )}

@@ -198,6 +198,10 @@ export function useDocGeneration(onUsageUpdate) {
                   score: data.qualityScore.score,
                   grade: data.qualityScore.grade,
                   docType,
+                  llm: data.metadata ? {
+                    provider: data.metadata.provider,
+                    model: data.metadata.model,
+                  } : undefined,
                 });
               }
 

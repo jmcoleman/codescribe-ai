@@ -364,8 +364,8 @@ describe('AnalyticsService', () => {
       // Doc types
       sql.mockResolvedValueOnce({
         rows: [
-          { doc_type: 'README', count: '50' },
-          { doc_type: 'API', count: '30' },
+          { doc_type: 'README', successful: '45', failed: '5', total: '50' },
+          { doc_type: 'API', successful: '28', failed: '2', total: '30' },
         ],
       });
       // Quality scores
@@ -373,6 +373,13 @@ describe('AnalyticsService', () => {
         rows: [
           { score_range: '90-100', count: '20' },
           { score_range: '80-89', count: '40' },
+        ],
+      });
+      // Quality scores by doc type (heatmap)
+      sql.mockResolvedValueOnce({
+        rows: [
+          { doc_type: 'README', score_range: '90-100', count: '15' },
+          { doc_type: 'API', score_range: '80-89', count: '10' },
         ],
       });
       // Batch vs single
@@ -389,22 +396,36 @@ describe('AnalyticsService', () => {
           { language: 'python', count: '25' },
         ],
       });
-      // Origins
+      // Code Input Methods (replaces Origins)
       sql.mockResolvedValueOnce({
         rows: [
           { origin: 'paste', count: '50' },
           { origin: 'upload', count: '30' },
         ],
       });
+      // Export Sources
+      sql.mockResolvedValueOnce({
+        rows: [
+          { source: 'fresh', count: '60' },
+          { source: 'cached', count: '20' },
+        ],
+      });
 
       const result = await analyticsService.getUsagePatterns(dateRange);
 
       expect(result.docTypes).toHaveLength(2);
-      expect(result.docTypes[0]).toEqual({ type: 'README', count: 50 });
+      expect(result.docTypes[0]).toEqual({
+        type: 'README',
+        successful: 45,
+        failed: 5,
+        total: 50,
+        successRate: 90
+      });
       expect(result.qualityScores).toHaveLength(2);
       expect(result.batchVsSingle).toEqual({ single: 60, batch: 20 });
       expect(result.languages).toHaveLength(2);
-      expect(result.origins).toHaveLength(2);
+      expect(result.codeInputMethods).toHaveLength(2);
+      expect(result.exportSources).toHaveLength(2);
     });
   });
 
@@ -969,7 +990,8 @@ describe('AnalyticsService', () => {
       expect(result.qualityScores).toEqual([]);
       expect(result.batchVsSingle).toEqual({ single: 0, batch: 0 });
       expect(result.languages).toEqual([]);
-      expect(result.origins).toEqual([]);
+      expect(result.codeInputMethods).toEqual([]);
+      expect(result.exportSources).toEqual([]);
     });
 
     it('should exclude internal when specified', async () => {
@@ -1772,7 +1794,7 @@ describe('AnalyticsService', () => {
         excludeInternal: false,
       });
 
-      expect(sql).toHaveBeenCalledTimes(5);
+      expect(sql).toHaveBeenCalledTimes(7); // Updated: 5 original queries + 2 new (codeInputMethods, exportSources)
       expect(result.docTypes).toHaveLength(1);
       expect(result.docTypes[0].type).toBe('README');
     });

@@ -243,14 +243,27 @@ export const trackDocGeneration = ({ docType, success, duration, codeSize, langu
  * @param {number} params.score - Overall quality score (0-100)
  * @param {string} params.grade - Letter grade (A, B, C, D, F)
  * @param {string} params.docType - Type of documentation
+ * @param {Object} [params.llm] - LLM provider information
+ * @param {string} [params.llm.provider] - LLM provider (claude, openai, etc.)
+ * @param {string} [params.llm.model] - LLM model name
  */
-export const trackQualityScore = ({ score, grade, docType }) => {
-  trackEvent('quality_score', withSessionContext({
+export const trackQualityScore = ({ score, grade, docType, llm }) => {
+  const eventData = {
     score: Math.round(score),
     grade,
     doc_type: docType,
     score_range: getScoreRange(score),
-  }));
+  };
+
+  // Add LLM context if provided
+  if (llm) {
+    eventData.llm = {
+      provider: llm.provider || 'unknown',
+      model: llm.model || 'unknown',
+    };
+  }
+
+  trackEvent('quality_score', withSessionContext(eventData));
 };
 
 /**

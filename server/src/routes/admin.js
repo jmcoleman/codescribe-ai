@@ -1548,10 +1548,11 @@ router.get('/analytics/business', requireAuth, requireAdmin, async (req, res) =>
  * - startDate: ISO date string (required)
  * - endDate: ISO date string (required)
  * - excludeInternal: boolean (default: true)
+ * - model: string (optional) - Filter by LLM provider ('claude', 'openai', 'all')
  */
 router.get('/analytics/usage', requireAuth, requireAdmin, async (req, res) => {
   try {
-    const { startDate, endDate, excludeInternal = 'true' } = req.query;
+    const { startDate, endDate, excludeInternal = 'true', model = 'all' } = req.query;
 
     if (!startDate || !endDate) {
       return res.status(400).json({
@@ -1570,6 +1571,7 @@ router.get('/analytics/usage', requireAuth, requireAdmin, async (req, res) => {
         startDate: start,
         endDate: end,
         excludeInternal: excludeInternalBool,
+        model,
       }),
       analyticsService.getRetentionMetrics({
         startDate: start,
@@ -1715,7 +1717,7 @@ router.get('/analytics/timeseries', requireAuth, requireAdmin, async (req, res) 
 
 /**
  * GET /api/admin/analytics/events
- * Get raw analytics events with pagination and filtering
+ * Get raw analytics events with pagination, filtering, and sorting
  *
  * Query params:
  * - startDate: ISO date string (required)
@@ -1727,6 +1729,8 @@ router.get('/analytics/timeseries', requireAuth, requireAdmin, async (req, res) 
  * - excludeInternal: boolean (optional, default false)
  * - page: number (optional, default 1)
  * - limit: number (optional, default 50, max 100)
+ * - sortBy: string (optional, default 'createdAt') - Column to sort by
+ * - sortOrder: 'asc' | 'desc' (optional, default 'desc')
  */
 router.get('/analytics/events', requireAuth, requireAdmin, async (req, res) => {
   try {
@@ -1737,8 +1741,11 @@ router.get('/analytics/events', requireAuth, requireAdmin, async (req, res) => {
       eventNames,
       eventActions,
       excludeInternal,
+      userEmail,
       page = '1',
       limit = '50',
+      sortBy = 'createdAt',
+      sortOrder = 'desc',
     } = req.query;
 
     // Validate required params
@@ -1786,8 +1793,11 @@ router.get('/analytics/events', requireAuth, requireAdmin, async (req, res) => {
       eventNames: eventNameList,
       eventActions: eventActionsParsed,
       excludeInternal: excludeInternal === 'true',
+      userEmail: userEmail || null,
       page: pageNum,
       limit: limitNum,
+      sortBy,
+      sortOrder,
     });
 
     res.json({
@@ -1859,6 +1869,7 @@ router.get('/analytics/events/export', requireAuth, requireAdmin, async (req, re
       category,
       eventNames,
       excludeInternal,
+      userEmail,
     } = req.query;
 
     // Validate required params
@@ -1904,6 +1915,7 @@ router.get('/analytics/events/export', requireAuth, requireAdmin, async (req, re
       category: category || null,
       eventNames: eventNameList,
       excludeInternal: excludeInternal === 'true',
+      userEmail: userEmail || null,
       res,
     });
 

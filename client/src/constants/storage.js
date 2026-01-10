@@ -71,6 +71,10 @@ export const STORAGE_KEYS = {
   // Subscription Flow (sessionStorage - temporary subscription intent before verification)
   PENDING_SUBSCRIPTION: 'cs_sub_pending',
   BILLING_PERIOD: 'cs_sub_period',
+
+  // Admin Analytics Filters (sessionStorage - retain filters during session)
+  ANALYTICS_EVENTS_FILTERS: 'cs_admin_events_filters',
+  ANALYTICS_EXCLUDE_INTERNAL: 'cs_admin_exclude_internal',
 };
 
 /**

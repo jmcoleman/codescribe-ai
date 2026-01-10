@@ -18,9 +18,10 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { Select } from '../Select';
 import { GroupedEventSelect } from './GroupedEventSelect';
-import { formatDateTime } from '../../utils/formatters';
+import { formatDateTimeWithMs } from '../../utils/formatters';
 import { BaseTable } from '../BaseTable';
 import { useTableColumnSizing } from '../../hooks/useTableColumnSizing';
+import { STORAGE_KEYS, getSessionItem, setSessionItem } from '../../constants/storage';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
 
@@ -101,6 +102,21 @@ export function EventsTable({ startDate, endDate, excludeInternal = false }) {
   // Column sizing for resizable columns
   const { columnSizing, onColumnSizingChange } = useTableColumnSizing('analytics_events');
 
+  // Load saved filters from sessionStorage on mount
+  const loadSavedFilters = () => {
+    try {
+      const saved = getSessionItem(STORAGE_KEYS.ANALYTICS_EVENTS_FILTERS);
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (error) {
+      console.warn('Failed to load saved filters:', error);
+    }
+    return null;
+  };
+
+  const savedFilters = loadSavedFilters();
+
   // Data state
   const [tableEvents, setTableEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -108,28 +124,54 @@ export function EventsTable({ startDate, endDate, excludeInternal = false }) {
   const [error, setError] = useState(null);
   const [exporting, setExporting] = useState(false);
 
-  // Filter state
+  // Filter state (initialize from saved filters if available)
   const [eventOptions, setEventOptions] = useState([]); // Events with actions from backend
-  const [filterCategory, setFilterCategory] = useState('');
+  const [filterCategory, setFilterCategory] = useState(savedFilters?.filterCategory || '');
   // New grouped event filter state: { eventNames: [], eventActions: {} }
-  const [eventFilter, setEventFilter] = useState({ eventNames: [], eventActions: {} });
+  const [eventFilter, setEventFilter] = useState(savedFilters?.eventFilter || { eventNames: [], eventActions: {} });
+  const [filterEmailInput, setFilterEmailInput] = useState(savedFilters?.filterEmailInput || ''); // User input (immediate)
+  const [filterEmail, setFilterEmail] = useState(''); // Debounced value used for API calls
 
   // Pagination state
   const [pagination, setPagination] = useState({ page: 1, limit: 50, total: 0, totalPages: 0 });
 
+  // Sorting state (server-side)
+  const [sorting, setSorting] = useState([{ id: 'createdAt', desc: true }]);
+
   const isInitialMount = useRef(true);
+
+  // Save filters to sessionStorage when they change
+  useEffect(() => {
+    const filters = {
+      filterCategory,
+      eventFilter,
+      filterEmailInput,
+    };
+    setSessionItem(STORAGE_KEYS.ANALYTICS_EVENTS_FILTERS, JSON.stringify(filters));
+  }, [filterCategory, eventFilter, filterEmailInput]);
+
+  // Debounce email filter input (400ms delay)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilterEmail(filterEmailInput);
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [filterEmailInput]);
 
   // Define table columns
   const columns = useMemo(() => [
     {
       accessorKey: 'createdAt',
       header: 'Timestamp',
-      size: 180,
-      minSize: 120,
+      size: 220,
+      minSize: 180,
       cell: ({ row }) => (
         <div className="flex items-center gap-2 text-sm text-slate-900 dark:text-slate-100">
           <Clock className="w-4 h-4 text-slate-400 flex-shrink-0" />
-          {formatDateTime(row.original.createdAt)}
+          <span className="font-mono text-xs" title={row.original.createdAt}>
+            {formatDateTimeWithMs(row.original.createdAt)}
+          </span>
         </div>
       ),
     },
@@ -239,6 +281,14 @@ export function EventsTable({ startDate, endDate, excludeInternal = false }) {
       });
 
       if (filterCategory) params.append('category', filterCategory);
+      if (filterEmail) params.append('userEmail', filterEmail);
+
+      // Add sorting parameters
+      if (sorting.length > 0) {
+        const sort = sorting[0];
+        params.append('sortBy', sort.id);
+        params.append('sortOrder', sort.desc ? 'desc' : 'asc');
+      }
 
       // Pass event names and action filters from the grouped filter
       if (eventFilter.eventNames.length > 0) {
@@ -275,7 +325,7 @@ export function EventsTable({ startDate, endDate, excludeInternal = false }) {
       setLoading(false);
       setIsRefreshing(false);
     }
-  }, [getToken, startDate, endDate, excludeInternal, filterCategory, eventFilter, pagination.limit]);
+  }, [getToken, startDate, endDate, excludeInternal, filterCategory, filterEmail, eventFilter, pagination.limit, sorting]);
 
   // Handle CSV export
   const handleExport = useCallback(async () => {
@@ -293,6 +343,7 @@ export function EventsTable({ startDate, endDate, excludeInternal = false }) {
       });
 
       if (filterCategory) params.append('category', filterCategory);
+      if (filterEmail) params.append('userEmail', filterEmail);
       if (eventFilter.eventNames.length > 0) {
         params.append('eventNames', eventFilter.eventNames.join(','));
       }
@@ -321,14 +372,14 @@ export function EventsTable({ startDate, endDate, excludeInternal = false }) {
     } finally {
       setExporting(false);
     }
-  }, [getToken, startDate, endDate, excludeInternal, filterCategory, eventFilter.eventNames]);
+  }, [getToken, startDate, endDate, excludeInternal, filterCategory, filterEmail, eventFilter.eventNames]);
 
   // Initial load
   useEffect(() => {
     fetchEventNames();
   }, [fetchEventNames]);
 
-  // Fetch data on mount and when filters/dates change
+  // Fetch data on mount and when filters/dates/sorting change
   useEffect(() => {
     if (isInitialMount.current) {
       fetchData(1, true);
@@ -336,7 +387,7 @@ export function EventsTable({ startDate, endDate, excludeInternal = false }) {
     } else {
       fetchData(1, false);
     }
-  }, [startDate, endDate, excludeInternal, filterCategory, eventFilter]);
+  }, [fetchData]);
 
   // Handle page change
   const handlePageChange = (newPage) => {
@@ -348,6 +399,8 @@ export function EventsTable({ startDate, endDate, excludeInternal = false }) {
   // Clear filters
   const clearFilters = () => {
     setFilterCategory('');
+    setFilterEmailInput('');
+    setFilterEmail('');
     setEventFilter({ eventNames: [], eventActions: {} });
   };
 
@@ -355,7 +408,7 @@ export function EventsTable({ startDate, endDate, excludeInternal = false }) {
   const hasEventFilter = eventFilter.eventNames.length > 0;
 
   // Header/filters section (shown for all states)
-  const HeaderSection = () => (
+  const HeaderSection = useMemo(() => (
     <div className="p-6 border-b border-slate-200 dark:border-slate-700">
       <div className="flex items-center justify-between mb-4">
         <div>
@@ -405,7 +458,17 @@ export function EventsTable({ startDate, endDate, excludeInternal = false }) {
           ariaLabel="Filter by event"
           size="small"
         />
-        {(filterCategory || hasEventFilter) && (
+        <input
+          type="text"
+          value={filterEmailInput}
+          onChange={(e) => setFilterEmailInput(e.target.value)}
+          placeholder="Filter by user email..."
+          autoComplete="off"
+          className="px-3 py-1.5 text-sm border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder:text-slate-400 dark:placeholder:text-slate-500"
+          style={{ width: '200px' }}
+          aria-label="Filter by user email"
+        />
+        {(filterCategory || hasEventFilter || filterEmail) && (
           <button
             onClick={clearFilters}
             className="px-3 py-1.5 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
@@ -415,13 +478,13 @@ export function EventsTable({ startDate, endDate, excludeInternal = false }) {
         )}
       </div>
     </div>
-  );
+  ), [loading, pagination.total, isRefreshing, exporting, handleExport, filterCategory, eventFilter, filterEmailInput, hasEventFilter, filterEmail, clearFilters, eventOptions]);
 
   // Error state
   if (error && !loading) {
     return (
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-        <HeaderSection />
+        {HeaderSection}
         <div className="p-8 text-center text-red-600 dark:text-red-400">
           {error}
         </div>
@@ -430,7 +493,7 @@ export function EventsTable({ startDate, endDate, excludeInternal = false }) {
   }
 
   // Empty state with no filters
-  const hasFilters = filterCategory || hasEventFilter;
+  const hasFilters = filterCategory || hasEventFilter || filterEmail;
   const emptyStateProps = {
     icon: Database,
     title: 'No events found',
@@ -449,7 +512,7 @@ export function EventsTable({ startDate, endDate, excludeInternal = false }) {
 
   return (
     <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-      <HeaderSection />
+      {HeaderSection}
       <BaseTable
         data={tableEvents}
         columns={columns}
@@ -467,7 +530,9 @@ export function EventsTable({ startDate, endDate, excludeInternal = false }) {
         manualPagination={true}
         pagination={pagination}
         onPageChange={handlePageChange}
-        // No sorting (server provides default order)
+        // Server-side sorting
+        sorting={sorting}
+        onSortingChange={setSorting}
         manualSorting={true}
         // Remove the default wrapper styling since we have our own container
         className="!rounded-none !border-0 !shadow-none"

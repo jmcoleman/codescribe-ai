@@ -144,6 +144,59 @@ export function formatTime(dateInput) {
 }
 
 /**
+ * Format time with milliseconds
+ * Example: "3:45:23.456 PM"
+ *
+ * @param {string|Date} dateInput - Date string or Date object
+ * @returns {string} Formatted time with milliseconds
+ */
+export function formatTimeWithMs(dateInput) {
+  if (!dateInput) return 'N/A';
+
+  const date = new Date(dateInput);
+  const timePart = date.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true
+  });
+  const ms = date.getMilliseconds().toString().padStart(3, '0');
+
+  // Split time and AM/PM, insert milliseconds before AM/PM
+  const parts = timePart.split(' ');
+  if (parts.length === 2) {
+    // parts[0] = "3:45:23", parts[1] = "PM"
+    return `${parts[0]}.${ms} ${parts[1]}`;
+  }
+
+  // Fallback if format is unexpected
+  return `${timePart}.${ms}`;
+}
+
+/**
+ * Format a date with full date and time including milliseconds
+ * Example: "Dec 4, 2024 at 3:45:23.456 PM"
+ *
+ * @param {string|Date} dateInput - Date string or Date object
+ * @param {Object} options - Formatting options
+ * @param {boolean} options.includeAt - Include "at" between date and time (default: true)
+ * @returns {string} Formatted date and time with milliseconds
+ */
+export function formatDateTimeWithMs(dateInput, { includeAt = true } = {}) {
+  if (!dateInput) return 'N/A';
+
+  const date = new Date(dateInput);
+  const datePart = date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  });
+  const timePart = formatTimeWithMs(date);
+
+  return includeAt ? `${datePart} at ${timePart}` : `${datePart} ${timePart}`;
+}
+
+/**
  * Format a date for display in a compact format (no year if current year)
  * Example: "Dec 4" or "Dec 4, 2023"
  *

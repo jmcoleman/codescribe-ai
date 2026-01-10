@@ -921,37 +921,42 @@ export const analyticsService = {
    * @param {Date} options.startDate - Start of date range
    * @param {Date} options.endDate - End of date range
    * @param {boolean} [options.excludeInternal=true] - Exclude admin/override users
+   * @param {string} [options.model] - Filter by LLM model (optional, e.g., 'claude', 'openai', 'all')
    * @returns {Promise<Object>} Usage patterns
    */
-  async getUsagePatterns({ startDate, endDate, excludeInternal = true }) {
-    // Get doc type breakdown (only successful generations)
+  async getUsagePatterns({ startDate, endDate, excludeInternal = true, model = 'all' }) {
+    // Get doc type breakdown (successful and failed generations)
     let docTypes;
     if (excludeInternal) {
       docTypes = await sql`
         SELECT
           event_data->>'doc_type' as doc_type,
-          COUNT(*) as count
+          COUNT(CASE WHEN event_data->>'success' = 'true' THEN 1 END) as successful,
+          COUNT(CASE WHEN event_data->>'success' = 'false' THEN 1 END) as failed,
+          COUNT(*) as total
         FROM analytics_events
         WHERE event_name = 'doc_generation'
-          AND event_data->>'success' = 'true'
+          AND event_data->>'doc_type' IS NOT NULL
           AND created_at >= ${startDate}
           AND created_at < ${endDate}
           AND is_internal = FALSE
         GROUP BY event_data->>'doc_type'
-        ORDER BY count DESC
+        ORDER BY total DESC
       `;
     } else {
       docTypes = await sql`
         SELECT
           event_data->>'doc_type' as doc_type,
-          COUNT(*) as count
+          COUNT(CASE WHEN event_data->>'success' = 'true' THEN 1 END) as successful,
+          COUNT(CASE WHEN event_data->>'success' = 'false' THEN 1 END) as failed,
+          COUNT(*) as total
         FROM analytics_events
         WHERE event_name = 'doc_generation'
-          AND event_data->>'success' = 'true'
+          AND event_data->>'doc_type' IS NOT NULL
           AND created_at >= ${startDate}
           AND created_at < ${endDate}
         GROUP BY event_data->>'doc_type'
-        ORDER BY count DESC
+        ORDER BY total DESC
       `;
     }
 
@@ -996,6 +1001,118 @@ export const analyticsService = {
       `;
     }
 
+    // Get quality scores by doc type (heatmap data)
+    let qualityScoresByDocType;
+
+    // Need separate queries based on model filter and excludeInternal
+    if (model && model !== 'all') {
+      // Filter by specific model
+      if (excludeInternal) {
+        qualityScoresByDocType = await sql`
+          SELECT
+            qs.doc_type,
+            qs.score_range,
+            COUNT(*) as count
+          FROM (
+            SELECT
+              event_data->>'doc_type' as doc_type,
+              CASE
+                WHEN (event_data->>'score')::integer >= 90 THEN '90-100'
+                WHEN (event_data->>'score')::integer >= 80 THEN '80-89'
+                WHEN (event_data->>'score')::integer >= 70 THEN '70-79'
+                WHEN (event_data->>'score')::integer >= 60 THEN '60-69'
+                ELSE '0-59'
+              END as score_range
+            FROM analytics_events
+            WHERE event_name = 'quality_score'
+              AND created_at >= ${startDate}
+              AND created_at < ${endDate}
+              AND is_internal = FALSE
+              AND event_data->'llm'->>'provider' = ${model}
+          ) qs
+          GROUP BY qs.doc_type, qs.score_range
+          ORDER BY qs.doc_type, qs.score_range DESC
+        `;
+      } else {
+        qualityScoresByDocType = await sql`
+          SELECT
+            qs.doc_type,
+            qs.score_range,
+            COUNT(*) as count
+          FROM (
+            SELECT
+              event_data->>'doc_type' as doc_type,
+              CASE
+                WHEN (event_data->>'score')::integer >= 90 THEN '90-100'
+                WHEN (event_data->>'score')::integer >= 80 THEN '80-89'
+                WHEN (event_data->>'score')::integer >= 70 THEN '70-79'
+                WHEN (event_data->>'score')::integer >= 60 THEN '60-69'
+                ELSE '0-59'
+              END as score_range
+            FROM analytics_events
+            WHERE event_name = 'quality_score'
+              AND created_at >= ${startDate}
+              AND created_at < ${endDate}
+              AND event_data->'llm'->>'provider' = ${model}
+          ) qs
+          GROUP BY qs.doc_type, qs.score_range
+          ORDER BY qs.doc_type, qs.score_range DESC
+        `;
+      }
+    } else {
+      // All models
+      if (excludeInternal) {
+        qualityScoresByDocType = await sql`
+          SELECT
+            qs.doc_type,
+            qs.score_range,
+            COUNT(*) as count
+          FROM (
+            SELECT
+              event_data->>'doc_type' as doc_type,
+              CASE
+                WHEN (event_data->>'score')::integer >= 90 THEN '90-100'
+                WHEN (event_data->>'score')::integer >= 80 THEN '80-89'
+                WHEN (event_data->>'score')::integer >= 70 THEN '70-79'
+                WHEN (event_data->>'score')::integer >= 60 THEN '60-69'
+                ELSE '0-59'
+              END as score_range
+            FROM analytics_events
+            WHERE event_name = 'quality_score'
+              AND created_at >= ${startDate}
+              AND created_at < ${endDate}
+              AND is_internal = FALSE
+          ) qs
+          GROUP BY qs.doc_type, qs.score_range
+          ORDER BY qs.doc_type, qs.score_range DESC
+        `;
+      } else {
+        qualityScoresByDocType = await sql`
+          SELECT
+            qs.doc_type,
+            qs.score_range,
+            COUNT(*) as count
+          FROM (
+            SELECT
+              event_data->>'doc_type' as doc_type,
+              CASE
+                WHEN (event_data->>'score')::integer >= 90 THEN '90-100'
+                WHEN (event_data->>'score')::integer >= 80 THEN '80-89'
+                WHEN (event_data->>'score')::integer >= 70 THEN '70-79'
+                WHEN (event_data->>'score')::integer >= 60 THEN '60-69'
+                ELSE '0-59'
+              END as score_range
+            FROM analytics_events
+            WHERE event_name = 'quality_score'
+              AND created_at >= ${startDate}
+              AND created_at < ${endDate}
+          ) qs
+          GROUP BY qs.doc_type, qs.score_range
+          ORDER BY qs.doc_type, qs.score_range DESC
+        `;
+      }
+    }
+
     // Get batch vs single generation (only successful generations)
     let batchVsSingle;
     if (excludeInternal) {
@@ -1025,62 +1142,63 @@ export const analyticsService = {
       `;
     }
 
-    // Get language breakdown (only successful generations)
+    // Get language breakdown (successful and failed generations)
     // Language is nested under code_input for better organization
     let languages;
     if (excludeInternal) {
       languages = await sql`
         SELECT
           event_data->'code_input'->>'language' as language,
-          COUNT(*) as count
+          COUNT(CASE WHEN event_data->>'success' = 'true' THEN 1 END) as successful,
+          COUNT(CASE WHEN event_data->>'success' = 'false' THEN 1 END) as failed,
+          COUNT(*) as total
         FROM analytics_events
         WHERE event_name = 'doc_generation'
-          AND event_data->>'success' = 'true'
           AND event_data->'code_input'->>'language' IS NOT NULL
           AND created_at >= ${startDate}
           AND created_at < ${endDate}
           AND is_internal = FALSE
         GROUP BY event_data->'code_input'->>'language'
-        ORDER BY count DESC
+        ORDER BY total DESC
         LIMIT 10
       `;
     } else {
       languages = await sql`
         SELECT
           event_data->'code_input'->>'language' as language,
-          COUNT(*) as count
+          COUNT(CASE WHEN event_data->>'success' = 'true' THEN 1 END) as successful,
+          COUNT(CASE WHEN event_data->>'success' = 'false' THEN 1 END) as failed,
+          COUNT(*) as total
         FROM analytics_events
         WHERE event_name = 'doc_generation'
-          AND event_data->>'success' = 'true'
           AND event_data->'code_input'->>'language' IS NOT NULL
           AND created_at >= ${startDate}
           AND created_at < ${endDate}
         GROUP BY event_data->'code_input'->>'language'
-        ORDER BY count DESC
+        ORDER BY total DESC
         LIMIT 10
       `;
     }
 
-    // Get origin breakdown (only successful generations)
-    // Origin is nested under code_input for better organization
+    // Get code input method breakdown (ALL code_input events, not just successful generations)
+    // This shows user behavior and product-market fit: where are users trying to get code from?
     // GitHub origins are split into private vs public based on repo.is_private flag
-    let origins;
+    let codeInputMethods;
     if (excludeInternal) {
-      origins = await sql`
+      codeInputMethods = await sql`
         SELECT
           CASE
-            WHEN event_data->'code_input'->>'origin' = 'github'
-              AND (event_data->'code_input'->'repo'->>'is_private')::boolean = true
+            WHEN event_data->>'origin' = 'github'
+              AND (event_data->'repo'->>'is_private')::boolean = true
             THEN 'github_private'
-            WHEN event_data->'code_input'->>'origin' = 'github'
+            WHEN event_data->>'origin' = 'github'
             THEN 'github_public'
-            ELSE event_data->'code_input'->>'origin'
+            ELSE event_data->>'origin'
           END as origin,
           COUNT(*) as count
         FROM analytics_events
-        WHERE event_name = 'doc_generation'
-          AND event_data->>'success' = 'true'
-          AND event_data->'code_input'->>'origin' IS NOT NULL
+        WHERE event_name = 'code_input'
+          AND event_data->>'origin' IS NOT NULL
           AND created_at >= ${startDate}
           AND created_at < ${endDate}
           AND is_internal = FALSE
@@ -1088,21 +1206,20 @@ export const analyticsService = {
         ORDER BY count DESC
       `;
     } else {
-      origins = await sql`
+      codeInputMethods = await sql`
         SELECT
           CASE
-            WHEN event_data->'code_input'->>'origin' = 'github'
-              AND (event_data->'code_input'->'repo'->>'is_private')::boolean = true
+            WHEN event_data->>'origin' = 'github'
+              AND (event_data->'repo'->>'is_private')::boolean = true
             THEN 'github_private'
-            WHEN event_data->'code_input'->>'origin' = 'github'
+            WHEN event_data->>'origin' = 'github'
             THEN 'github_public'
-            ELSE event_data->'code_input'->>'origin'
+            ELSE event_data->>'origin'
           END as origin,
           COUNT(*) as count
         FROM analytics_events
-        WHERE event_name = 'doc_generation'
-          AND event_data->>'success' = 'true'
-          AND event_data->'code_input'->>'origin' IS NOT NULL
+        WHERE event_name = 'code_input'
+          AND event_data->>'origin' IS NOT NULL
           AND created_at >= ${startDate}
           AND created_at < ${endDate}
         GROUP BY 1
@@ -1110,15 +1227,76 @@ export const analyticsService = {
       `;
     }
 
+    // Get export source breakdown (fresh vs cached)
+    let exportSources;
+    if (excludeInternal) {
+      exportSources = await sql`
+        SELECT
+          event_data->>'source' as source,
+          COUNT(*) as count
+        FROM analytics_events
+        WHERE event_name = 'doc_export'
+          AND event_data->>'source' IS NOT NULL
+          AND created_at >= ${startDate}
+          AND created_at < ${endDate}
+          AND is_internal = FALSE
+        GROUP BY event_data->>'source'
+        ORDER BY count DESC
+      `;
+    } else {
+      exportSources = await sql`
+        SELECT
+          event_data->>'source' as source,
+          COUNT(*) as count
+        FROM analytics_events
+        WHERE event_name = 'doc_export'
+          AND event_data->>'source' IS NOT NULL
+          AND created_at >= ${startDate}
+          AND created_at < ${endDate}
+        GROUP BY event_data->>'source'
+        ORDER BY count DESC
+      `;
+    }
+
     return {
-      docTypes: docTypes.rows.map((r) => ({ type: r.doc_type, count: parseInt(r.count) })),
+      docTypes: docTypes.rows.map((r) => {
+        const successful = parseInt(r.successful || 0);
+        const failed = parseInt(r.failed || 0);
+        const total = parseInt(r.total || 0);
+        const successRate = total > 0 ? (successful / total) * 100 : 0;
+        return {
+          type: r.doc_type,
+          successful,
+          failed,
+          total,
+          successRate,
+        };
+      }),
       qualityScores: qualityScores.rows.map((r) => ({ range: r.score_range, count: parseInt(r.count) })),
+      qualityScoresByDocType: qualityScoresByDocType.rows.map((r) => ({
+        docType: r.doc_type,
+        scoreRange: r.score_range,
+        count: parseInt(r.count),
+      })),
       batchVsSingle: batchVsSingle.rows.reduce((acc, r) => {
         acc[r.type] = parseInt(r.count);
         return acc;
       }, { batch: 0, single: 0 }),
-      languages: languages.rows.map((r) => ({ language: r.language, count: parseInt(r.count) })),
-      origins: origins.rows.map((r) => ({ origin: r.origin, count: parseInt(r.count) })),
+      languages: languages.rows.map((r) => {
+        const successful = parseInt(r.successful || 0);
+        const failed = parseInt(r.failed || 0);
+        const total = parseInt(r.total || 0);
+        const successRate = total > 0 ? (successful / total) * 100 : 0;
+        return {
+          language: r.language,
+          successful,
+          failed,
+          total,
+          successRate,
+        };
+      }),
+      codeInputMethods: codeInputMethods?.rows?.map((r) => ({ origin: r.origin, count: parseInt(r.count) })) || [],
+      exportSources: exportSources?.rows?.map((r) => ({ source: r.source, count: parseInt(r.count) })) || [],
     };
   },
 
@@ -1479,14 +1657,31 @@ export const analyticsService = {
    * @param {Array<string>} [options.eventNames] - Filter by event names (array for multi-select)
    * @param {Object} [options.eventActions] - Filter by actions: { eventName: { actionField: 'action', actions: ['upgrade'] } }
    * @param {boolean} [options.excludeInternal=false] - Exclude internal users
+   * @param {string} [options.userEmail] - Filter by user email (partial case-insensitive match)
    * @param {number} [options.page=1] - Page number (1-indexed)
    * @param {number} [options.limit=50] - Events per page
    * @returns {Promise<Object>} { events: Array, total: number, page: number, totalPages: number }
    */
-  async getEvents({ startDate, endDate, category, eventNames, eventActions, excludeInternal = false, page = 1, limit = 50 }) {
+  async getEvents({ startDate, endDate, category, eventNames, eventActions, excludeInternal = false, userEmail, page = 1, limit = 50, sortBy = 'createdAt', sortOrder = 'desc' }) {
     const offset = (page - 1) * limit;
     const hasEventNames = eventNames && eventNames.length > 0;
     const hasEventActions = eventActions && Object.keys(eventActions).length > 0;
+    const hasUserEmail = userEmail && userEmail.trim().length > 0;
+
+    // Map frontend column IDs to database columns
+    const columnMap = {
+      'createdAt': 'ae.created_at',
+      'eventName': 'ae.event_name',
+      'category': 'ae.event_category',
+      'isInternal': 'ae.is_internal',
+      'sessionUser': 'ae.user_id', // Sort by user_id for session/user column
+    };
+
+    const dbColumn = columnMap[sortBy] || 'ae.created_at';
+    const order = sortOrder.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+
+    // Build email filter parameter for template literals
+    const emailFilterParam = hasUserEmail ? `%${userEmail}%` : null;
 
     // Build WHERE conditions based on filters
     // We need separate queries for each filter combination due to @vercel/postgres limitations
@@ -1495,157 +1690,334 @@ export const analyticsService = {
     let countResult;
 
     if (category && hasEventNames && excludeInternal) {
-      events = await sql`
-        SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id, ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
-        FROM analytics_events ae
-        LEFT JOIN users u ON ae.user_id = u.id
-        WHERE ae.created_at >= ${startDate}
-          AND ae.created_at < ${endDate}
-          AND ae.event_category = ${category}
-          AND ae.event_name = ANY(${eventNames})
-          AND ae.is_internal = FALSE
-        ORDER BY ae.created_at DESC
-        LIMIT ${limit} OFFSET ${offset}
-      `;
-      countResult = await sql`
-        SELECT COUNT(*) as total
-        FROM analytics_events
-        WHERE created_at >= ${startDate}
-          AND created_at < ${endDate}
-          AND event_category = ${category}
-          AND event_name = ANY(${eventNames})
-          AND is_internal = FALSE
-      `;
+      // Use template literal with dynamic ORDER BY
+      events = hasUserEmail
+        ? await sql`
+          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id, ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
+          FROM analytics_events ae
+          LEFT JOIN users u ON ae.user_id = u.id
+          WHERE ae.created_at >= ${startDate}
+            AND ae.created_at < ${endDate}
+            AND ae.event_category = ${category}
+            AND ae.event_name = ANY(${eventNames})
+            AND ae.is_internal = FALSE
+            AND u.email ILIKE ${emailFilterParam}
+          LIMIT ${limit} OFFSET ${offset}
+        `
+        : await sql`
+          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id, ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
+          FROM analytics_events ae
+          LEFT JOIN users u ON ae.user_id = u.id
+          WHERE ae.created_at >= ${startDate}
+            AND ae.created_at < ${endDate}
+            AND ae.event_category = ${category}
+            AND ae.event_name = ANY(${eventNames})
+            AND ae.is_internal = FALSE
+          LIMIT ${limit} OFFSET ${offset}
+        `;
+
+      countResult = hasUserEmail
+        ? await sql`
+          SELECT COUNT(*) as total
+          FROM analytics_events ae
+          LEFT JOIN users u ON ae.user_id = u.id
+          WHERE ae.created_at >= ${startDate}
+            AND ae.created_at < ${endDate}
+            AND ae.event_category = ${category}
+            AND ae.event_name = ANY(${eventNames})
+            AND ae.is_internal = FALSE
+            AND u.email ILIKE ${emailFilterParam}
+        `
+        : await sql`
+          SELECT COUNT(*) as total
+          FROM analytics_events
+          WHERE created_at >= ${startDate}
+            AND created_at < ${endDate}
+            AND event_category = ${category}
+            AND event_name = ANY(${eventNames})
+            AND is_internal = FALSE
+        `;
     } else if (category && hasEventNames) {
-      events = await sql`
-        SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id, ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
-        FROM analytics_events ae
-        LEFT JOIN users u ON ae.user_id = u.id
-        WHERE ae.created_at >= ${startDate}
-          AND ae.created_at < ${endDate}
-          AND ae.event_category = ${category}
-          AND ae.event_name = ANY(${eventNames})
-        ORDER BY ae.created_at DESC
-        LIMIT ${limit} OFFSET ${offset}
-      `;
-      countResult = await sql`
-        SELECT COUNT(*) as total
-        FROM analytics_events
-        WHERE created_at >= ${startDate}
-          AND created_at < ${endDate}
-          AND event_category = ${category}
-          AND event_name = ANY(${eventNames})
-      `;
+      events = hasUserEmail
+        ? await sql`
+          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id, ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
+          FROM analytics_events ae
+          LEFT JOIN users u ON ae.user_id = u.id
+          WHERE ae.created_at >= ${startDate}
+            AND ae.created_at < ${endDate}
+            AND ae.event_category = ${category}
+            AND ae.event_name = ANY(${eventNames})
+            AND u.email ILIKE ${emailFilterParam}
+          LIMIT ${limit} OFFSET ${offset}
+        `
+        : await sql`
+          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id, ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
+          FROM analytics_events ae
+          LEFT JOIN users u ON ae.user_id = u.id
+          WHERE ae.created_at >= ${startDate}
+            AND ae.created_at < ${endDate}
+            AND ae.event_category = ${category}
+            AND ae.event_name = ANY(${eventNames})
+          LIMIT ${limit} OFFSET ${offset}
+        `;
+
+      countResult = hasUserEmail
+        ? await sql`
+          SELECT COUNT(*) as total
+          FROM analytics_events ae
+          LEFT JOIN users u ON ae.user_id = u.id
+          WHERE ae.created_at >= ${startDate}
+            AND ae.created_at < ${endDate}
+            AND ae.event_category = ${category}
+            AND ae.event_name = ANY(${eventNames})
+            AND u.email ILIKE ${emailFilterParam}
+        `
+        : await sql`
+          SELECT COUNT(*) as total
+          FROM analytics_events
+          WHERE created_at >= ${startDate}
+            AND created_at < ${endDate}
+            AND event_category = ${category}
+            AND event_name = ANY(${eventNames})
+        `;
     } else if (category && excludeInternal) {
-      events = await sql`
-        SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id, ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
-        FROM analytics_events ae
-        LEFT JOIN users u ON ae.user_id = u.id
-        WHERE ae.created_at >= ${startDate}
-          AND ae.created_at < ${endDate}
-          AND ae.event_category = ${category}
-          AND ae.is_internal = FALSE
-        ORDER BY ae.created_at DESC
-        LIMIT ${limit} OFFSET ${offset}
-      `;
-      countResult = await sql`
-        SELECT COUNT(*) as total
-        FROM analytics_events
-        WHERE created_at >= ${startDate}
-          AND created_at < ${endDate}
-          AND event_category = ${category}
-          AND is_internal = FALSE
-      `;
+      events = hasUserEmail
+        ? await sql`
+          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id, ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
+          FROM analytics_events ae
+          LEFT JOIN users u ON ae.user_id = u.id
+          WHERE ae.created_at >= ${startDate}
+            AND ae.created_at < ${endDate}
+            AND ae.event_category = ${category}
+            AND ae.is_internal = FALSE
+            AND u.email ILIKE ${emailFilterParam}
+          LIMIT ${limit} OFFSET ${offset}
+        `
+        : await sql`
+          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id, ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
+          FROM analytics_events ae
+          LEFT JOIN users u ON ae.user_id = u.id
+          WHERE ae.created_at >= ${startDate}
+            AND ae.created_at < ${endDate}
+            AND ae.event_category = ${category}
+            AND ae.is_internal = FALSE
+          LIMIT ${limit} OFFSET ${offset}
+        `;
+
+      countResult = hasUserEmail
+        ? await sql`
+          SELECT COUNT(*) as total
+          FROM analytics_events ae
+          LEFT JOIN users u ON ae.user_id = u.id
+          WHERE ae.created_at >= ${startDate}
+            AND ae.created_at < ${endDate}
+            AND ae.event_category = ${category}
+            AND ae.is_internal = FALSE
+            AND u.email ILIKE ${emailFilterParam}
+        `
+        : await sql`
+          SELECT COUNT(*) as total
+          FROM analytics_events
+          WHERE created_at >= ${startDate}
+            AND created_at < ${endDate}
+            AND event_category = ${category}
+            AND is_internal = FALSE
+        `;
     } else if (hasEventNames && excludeInternal) {
-      events = await sql`
-        SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id, ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
-        FROM analytics_events ae
-        LEFT JOIN users u ON ae.user_id = u.id
-        WHERE ae.created_at >= ${startDate}
-          AND ae.created_at < ${endDate}
-          AND ae.event_name = ANY(${eventNames})
-          AND ae.is_internal = FALSE
-        ORDER BY ae.created_at DESC
-        LIMIT ${limit} OFFSET ${offset}
-      `;
-      countResult = await sql`
-        SELECT COUNT(*) as total
-        FROM analytics_events
-        WHERE created_at >= ${startDate}
-          AND created_at < ${endDate}
-          AND event_name = ANY(${eventNames})
-          AND is_internal = FALSE
-      `;
+      events = hasUserEmail
+        ? await sql`
+          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id, ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
+          FROM analytics_events ae
+          LEFT JOIN users u ON ae.user_id = u.id
+          WHERE ae.created_at >= ${startDate}
+            AND ae.created_at < ${endDate}
+            AND ae.event_name = ANY(${eventNames})
+            AND ae.is_internal = FALSE
+            AND u.email ILIKE ${emailFilterParam}
+          LIMIT ${limit} OFFSET ${offset}
+        `
+        : await sql`
+          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id, ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
+          FROM analytics_events ae
+          LEFT JOIN users u ON ae.user_id = u.id
+          WHERE ae.created_at >= ${startDate}
+            AND ae.created_at < ${endDate}
+            AND ae.event_name = ANY(${eventNames})
+            AND ae.is_internal = FALSE
+          LIMIT ${limit} OFFSET ${offset}
+        `;
+
+      countResult = hasUserEmail
+        ? await sql`
+          SELECT COUNT(*) as total
+          FROM analytics_events ae
+          LEFT JOIN users u ON ae.user_id = u.id
+          WHERE ae.created_at >= ${startDate}
+            AND ae.created_at < ${endDate}
+            AND ae.event_name = ANY(${eventNames})
+            AND ae.is_internal = FALSE
+            AND u.email ILIKE ${emailFilterParam}
+        `
+        : await sql`
+          SELECT COUNT(*) as total
+          FROM analytics_events
+          WHERE created_at >= ${startDate}
+            AND created_at < ${endDate}
+            AND event_name = ANY(${eventNames})
+            AND is_internal = FALSE
+        `;
     } else if (category) {
-      events = await sql`
-        SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id, ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
-        FROM analytics_events ae
-        LEFT JOIN users u ON ae.user_id = u.id
-        WHERE ae.created_at >= ${startDate}
-          AND ae.created_at < ${endDate}
-          AND ae.event_category = ${category}
-        ORDER BY ae.created_at DESC
-        LIMIT ${limit} OFFSET ${offset}
-      `;
-      countResult = await sql`
-        SELECT COUNT(*) as total
-        FROM analytics_events
-        WHERE created_at >= ${startDate}
-          AND created_at < ${endDate}
-          AND event_category = ${category}
-      `;
+      events = hasUserEmail
+        ? await sql`
+          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id, ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
+          FROM analytics_events ae
+          LEFT JOIN users u ON ae.user_id = u.id
+          WHERE ae.created_at >= ${startDate}
+            AND ae.created_at < ${endDate}
+            AND ae.event_category = ${category}
+            AND u.email ILIKE ${emailFilterParam}
+          LIMIT ${limit} OFFSET ${offset}
+        `
+        : await sql`
+          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id, ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
+          FROM analytics_events ae
+          LEFT JOIN users u ON ae.user_id = u.id
+          WHERE ae.created_at >= ${startDate}
+            AND ae.created_at < ${endDate}
+            AND ae.event_category = ${category}
+          LIMIT ${limit} OFFSET ${offset}
+        `;
+
+      countResult = hasUserEmail
+        ? await sql`
+          SELECT COUNT(*) as total
+          FROM analytics_events ae
+          LEFT JOIN users u ON ae.user_id = u.id
+          WHERE ae.created_at >= ${startDate}
+            AND ae.created_at < ${endDate}
+            AND ae.event_category = ${category}
+            AND u.email ILIKE ${emailFilterParam}
+        `
+        : await sql`
+          SELECT COUNT(*) as total
+          FROM analytics_events
+          WHERE created_at >= ${startDate}
+            AND created_at < ${endDate}
+            AND event_category = ${category}
+        `;
     } else if (hasEventNames) {
-      events = await sql`
-        SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id, ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
-        FROM analytics_events ae
-        LEFT JOIN users u ON ae.user_id = u.id
-        WHERE ae.created_at >= ${startDate}
-          AND ae.created_at < ${endDate}
-          AND ae.event_name = ANY(${eventNames})
-        ORDER BY ae.created_at DESC
-        LIMIT ${limit} OFFSET ${offset}
-      `;
-      countResult = await sql`
-        SELECT COUNT(*) as total
-        FROM analytics_events
-        WHERE created_at >= ${startDate}
-          AND created_at < ${endDate}
-          AND event_name = ANY(${eventNames})
-      `;
+      events = hasUserEmail
+        ? await sql`
+          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id, ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
+          FROM analytics_events ae
+          LEFT JOIN users u ON ae.user_id = u.id
+          WHERE ae.created_at >= ${startDate}
+            AND ae.created_at < ${endDate}
+            AND ae.event_name = ANY(${eventNames})
+            AND u.email ILIKE ${emailFilterParam}
+          LIMIT ${limit} OFFSET ${offset}
+        `
+        : await sql`
+          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id, ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
+          FROM analytics_events ae
+          LEFT JOIN users u ON ae.user_id = u.id
+          WHERE ae.created_at >= ${startDate}
+            AND ae.created_at < ${endDate}
+            AND ae.event_name = ANY(${eventNames})
+          LIMIT ${limit} OFFSET ${offset}
+        `;
+
+      countResult = hasUserEmail
+        ? await sql`
+          SELECT COUNT(*) as total
+          FROM analytics_events ae
+          LEFT JOIN users u ON ae.user_id = u.id
+          WHERE ae.created_at >= ${startDate}
+            AND ae.created_at < ${endDate}
+            AND ae.event_name = ANY(${eventNames})
+            AND u.email ILIKE ${emailFilterParam}
+        `
+        : await sql`
+          SELECT COUNT(*) as total
+          FROM analytics_events
+          WHERE created_at >= ${startDate}
+            AND created_at < ${endDate}
+            AND event_name = ANY(${eventNames})
+        `;
     } else if (excludeInternal) {
-      events = await sql`
-        SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id, ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
-        FROM analytics_events ae
-        LEFT JOIN users u ON ae.user_id = u.id
-        WHERE ae.created_at >= ${startDate}
-          AND ae.created_at < ${endDate}
-          AND ae.is_internal = FALSE
-        ORDER BY ae.created_at DESC
-        LIMIT ${limit} OFFSET ${offset}
-      `;
-      countResult = await sql`
-        SELECT COUNT(*) as total
-        FROM analytics_events
-        WHERE created_at >= ${startDate}
-          AND created_at < ${endDate}
-          AND is_internal = FALSE
-      `;
+      events = hasUserEmail
+        ? await sql`
+          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id, ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
+          FROM analytics_events ae
+          LEFT JOIN users u ON ae.user_id = u.id
+          WHERE ae.created_at >= ${startDate}
+            AND ae.created_at < ${endDate}
+            AND ae.is_internal = FALSE
+            AND u.email ILIKE ${emailFilterParam}
+          LIMIT ${limit} OFFSET ${offset}
+        `
+        : await sql`
+          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id, ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
+          FROM analytics_events ae
+          LEFT JOIN users u ON ae.user_id = u.id
+          WHERE ae.created_at >= ${startDate}
+            AND ae.created_at < ${endDate}
+            AND ae.is_internal = FALSE
+          LIMIT ${limit} OFFSET ${offset}
+        `;
+
+      countResult = hasUserEmail
+        ? await sql`
+          SELECT COUNT(*) as total
+          FROM analytics_events ae
+          LEFT JOIN users u ON ae.user_id = u.id
+          WHERE ae.created_at >= ${startDate}
+            AND ae.created_at < ${endDate}
+            AND ae.is_internal = FALSE
+            AND u.email ILIKE ${emailFilterParam}
+        `
+        : await sql`
+          SELECT COUNT(*) as total
+          FROM analytics_events
+          WHERE created_at >= ${startDate}
+            AND created_at < ${endDate}
+            AND is_internal = FALSE
+        `;
     } else {
-      events = await sql`
-        SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id, ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
-        FROM analytics_events ae
-        LEFT JOIN users u ON ae.user_id = u.id
-        WHERE ae.created_at >= ${startDate}
-          AND ae.created_at < ${endDate}
-        ORDER BY ae.created_at DESC
-        LIMIT ${limit} OFFSET ${offset}
-      `;
-      countResult = await sql`
-        SELECT COUNT(*) as total
-        FROM analytics_events
-        WHERE created_at >= ${startDate}
-          AND created_at < ${endDate}
-      `;
+      events = hasUserEmail
+        ? await sql`
+          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id, ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
+          FROM analytics_events ae
+          LEFT JOIN users u ON ae.user_id = u.id
+          WHERE ae.created_at >= ${startDate}
+            AND ae.created_at < ${endDate}
+            AND u.email ILIKE ${emailFilterParam}
+          LIMIT ${limit} OFFSET ${offset}
+        `
+        : await sql`
+          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id, ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
+          FROM analytics_events ae
+          LEFT JOIN users u ON ae.user_id = u.id
+          WHERE ae.created_at >= ${startDate}
+            AND ae.created_at < ${endDate}
+          LIMIT ${limit} OFFSET ${offset}
+        `;
+
+      countResult = hasUserEmail
+        ? await sql`
+          SELECT COUNT(*) as total
+          FROM analytics_events ae
+          LEFT JOIN users u ON ae.user_id = u.id
+          WHERE ae.created_at >= ${startDate}
+            AND ae.created_at < ${endDate}
+            AND u.email ILIKE ${emailFilterParam}
+        `
+        : await sql`
+          SELECT COUNT(*) as total
+          FROM analytics_events
+          WHERE created_at >= ${startDate}
+            AND created_at < ${endDate}
+        `;
     }
 
     let total = parseInt(countResult.rows[0]?.total || 0);
@@ -2032,29 +2404,42 @@ export const analyticsService = {
    */
   async getRetentionMetrics({ startDate, endDate, excludeInternal = true }) {
     // Query for new vs returning users
-    // A user is "new" if their first session_start event is within the date range
-    // A user is "returning" if they had a session_start event BEFORE the date range
+    // A user is "new" if their first authenticated session is within the date range
+    // A user is "returning" if they had an authenticated session BEFORE the date range
+    // Note: We look at session-level user_id (from ANY event in the session, not just session_start)
+    // because users can start anonymous and then log in
     let userResult;
 
     if (excludeInternal) {
       userResult = await sql`
-        WITH period_users AS (
-          SELECT DISTINCT ae.user_id
+        WITH period_sessions AS (
+          -- Get all sessions in the period with their user_id (from any event in the session)
+          SELECT DISTINCT
+            ae.session_id,
+            COALESCE(MAX(ae.user_id), NULL) as user_id
           FROM analytics_events ae
-          LEFT JOIN users u ON ae.user_id = u.id
-          WHERE ae.event_name = 'session_start'
-            AND ae.created_at >= ${startDate}
+          WHERE ae.created_at >= ${startDate}
             AND ae.created_at < ${endDate}
+            AND ae.session_id IS NOT NULL
+          GROUP BY ae.session_id
+        ),
+        period_users AS (
+          -- Filter to authenticated sessions and exclude internal users
+          SELECT DISTINCT ps.user_id
+          FROM period_sessions ps
+          LEFT JOIN users u ON ps.user_id = u.id
+          WHERE ps.user_id IS NOT NULL
             AND (u.id IS NULL OR (u.role NOT IN ('admin', 'support', 'super_admin') AND u.viewing_as_tier IS NULL))
         ),
         user_first_session AS (
+          -- Find the first authenticated session for each user (across all time)
           SELECT
             pu.user_id,
             MIN(ae.created_at) as first_session_at
           FROM period_users pu
           JOIN analytics_events ae ON pu.user_id = ae.user_id
           LEFT JOIN users u ON ae.user_id = u.id
-          WHERE ae.event_name = 'session_start'
+          WHERE ae.user_id IS NOT NULL
             AND (u.id IS NULL OR (u.role NOT IN ('admin', 'support', 'super_admin') AND u.viewing_as_tier IS NULL))
           GROUP BY pu.user_id
         )
@@ -2066,20 +2451,31 @@ export const analyticsService = {
       `;
     } else {
       userResult = await sql`
-        WITH period_users AS (
+        WITH period_sessions AS (
+          -- Get all sessions in the period with their user_id (from any event in the session)
+          SELECT DISTINCT
+            ae.session_id,
+            COALESCE(MAX(ae.user_id), NULL) as user_id
+          FROM analytics_events ae
+          WHERE ae.created_at >= ${startDate}
+            AND ae.created_at < ${endDate}
+            AND ae.session_id IS NOT NULL
+          GROUP BY ae.session_id
+        ),
+        period_users AS (
+          -- Filter to authenticated sessions only
           SELECT DISTINCT user_id
-          FROM analytics_events
-          WHERE event_name = 'session_start'
-            AND created_at >= ${startDate}
-            AND created_at < ${endDate}
+          FROM period_sessions
+          WHERE user_id IS NOT NULL
         ),
         user_first_session AS (
+          -- Find the first authenticated session for each user (across all time)
           SELECT
             pu.user_id,
             MIN(ae.created_at) as first_session_at
           FROM period_users pu
           JOIN analytics_events ae ON pu.user_id = ae.user_id
-          WHERE ae.event_name = 'session_start'
+          WHERE ae.user_id IS NOT NULL
           GROUP BY pu.user_id
         )
         SELECT
@@ -2203,27 +2599,57 @@ export const analyticsService = {
    * @param {boolean} [options.excludeInternal=false] - Exclude internal users
    * @returns {Promise<Array<string>>} Sorted list of unique JSONB paths
    */
-  async discoverEventSchema({ startDate, endDate, category, eventNames, excludeInternal = false }) {
+  async discoverEventSchema({ startDate, endDate, category, eventNames, excludeInternal = false, userEmail }) {
     // Use recursive CTE to extract all unique JSONB keys (handles nested objects)
     // Build WHERE clause dynamically based on filters
     let result;
     const hasEventNames = eventNames && eventNames.length > 0;
+    const hasUserEmail = userEmail && userEmail.trim().length > 0;
+    const emailFilterParam = hasUserEmail ? `%${userEmail}%` : null;
 
     // We need to use different queries based on filter combinations
     // due to @vercel/postgres parameterization limitations
     if (category && hasEventNames && excludeInternal) {
-      result = await sql`
-        WITH RECURSIVE json_keys AS (
-          SELECT
-            key AS path,
-            value,
-            jsonb_typeof(value) AS value_type
-          FROM analytics_events, jsonb_each(event_data)
-          WHERE created_at >= ${startDate}
-            AND created_at < ${endDate}
-            AND event_category = ${category}
-            AND event_name = ANY(${eventNames})
-            AND is_internal = FALSE
+      result = hasUserEmail
+        ? await sql`
+          WITH RECURSIVE json_keys AS (
+            SELECT
+              key AS path,
+              value,
+              jsonb_typeof(value) AS value_type
+            FROM analytics_events ae
+            LEFT JOIN users u ON ae.user_id = u.id, jsonb_each(ae.event_data)
+            WHERE ae.created_at >= ${startDate}
+              AND ae.created_at < ${endDate}
+              AND ae.event_category = ${category}
+              AND ae.event_name = ANY(${eventNames})
+              AND ae.is_internal = FALSE
+              AND u.email ILIKE ${emailFilterParam}
+            UNION ALL
+            SELECT
+              parent.path || '.' || child.key AS path,
+              child.value,
+              jsonb_typeof(child.value) AS value_type
+            FROM json_keys parent, jsonb_each(parent.value) child
+            WHERE parent.value_type = 'object'
+          )
+          SELECT DISTINCT path
+          FROM json_keys
+          WHERE value_type != 'object'
+          ORDER BY path
+        `
+        : await sql`
+          WITH RECURSIVE json_keys AS (
+            SELECT
+              key AS path,
+              value,
+              jsonb_typeof(value) AS value_type
+            FROM analytics_events, jsonb_each(event_data)
+            WHERE created_at >= ${startDate}
+              AND created_at < ${endDate}
+              AND event_category = ${category}
+              AND event_name = ANY(${eventNames})
+              AND is_internal = FALSE
           UNION ALL
           SELECT
             parent.path || '.' || child.key AS path,
@@ -2462,115 +2888,226 @@ export const analyticsService = {
    * @param {string} [options.category] - Filter by category
    * @param {Array<string>} [options.eventNames] - Filter by event names
    * @param {boolean} [options.excludeInternal=false] - Exclude internal users
+   * @param {string} [options.userEmail] - Filter by user email (partial case-insensitive match)
    * @param {number} options.offset - Offset for pagination
    * @param {number} options.limit - Batch size
    * @returns {Promise<Array>} Batch of events
    */
-  async fetchEventBatch({ startDate, endDate, category, eventNames, excludeInternal = false, offset, limit }) {
+  async fetchEventBatch({ startDate, endDate, category, eventNames, excludeInternal = false, userEmail, offset, limit }) {
     const hasEventNames = eventNames && eventNames.length > 0;
+    const hasUserEmail = userEmail && userEmail.trim().length > 0;
+    const emailFilterParam = hasUserEmail ? `%${userEmail}%` : null;
 
     let result;
     // Use different queries based on filter combinations
     if (category && hasEventNames && excludeInternal) {
-      result = await sql`
-        SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id,
-               ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
-        FROM analytics_events ae
-        LEFT JOIN users u ON ae.user_id = u.id
-        WHERE ae.created_at >= ${startDate}
-          AND ae.created_at < ${endDate}
-          AND ae.event_category = ${category}
-          AND ae.event_name = ANY(${eventNames})
-          AND ae.is_internal = FALSE
-        ORDER BY ae.created_at DESC
-        LIMIT ${limit} OFFSET ${offset}
-      `;
+      result = hasUserEmail
+        ? await sql`
+          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id,
+                 ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
+          FROM analytics_events ae
+          LEFT JOIN users u ON ae.user_id = u.id
+          WHERE ae.created_at >= ${startDate}
+            AND ae.created_at < ${endDate}
+            AND ae.event_category = ${category}
+            AND ae.event_name = ANY(${eventNames})
+            AND ae.is_internal = FALSE
+            AND u.email ILIKE ${emailFilterParam}
+          ORDER BY ae.created_at DESC
+          LIMIT ${limit} OFFSET ${offset}
+        `
+        : await sql`
+          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id,
+                 ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
+          FROM analytics_events ae
+          LEFT JOIN users u ON ae.user_id = u.id
+          WHERE ae.created_at >= ${startDate}
+            AND ae.created_at < ${endDate}
+            AND ae.event_category = ${category}
+            AND ae.event_name = ANY(${eventNames})
+            AND ae.is_internal = FALSE
+          ORDER BY ae.created_at DESC
+          LIMIT ${limit} OFFSET ${offset}
+        `;
     } else if (category && hasEventNames) {
-      result = await sql`
-        SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id,
-               ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
-        FROM analytics_events ae
-        LEFT JOIN users u ON ae.user_id = u.id
-        WHERE ae.created_at >= ${startDate}
-          AND ae.created_at < ${endDate}
-          AND ae.event_category = ${category}
-          AND ae.event_name = ANY(${eventNames})
-        ORDER BY ae.created_at DESC
-        LIMIT ${limit} OFFSET ${offset}
-      `;
+      result = hasUserEmail
+        ? await sql`
+          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id,
+                 ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
+          FROM analytics_events ae
+          LEFT JOIN users u ON ae.user_id = u.id
+          WHERE ae.created_at >= ${startDate}
+            AND ae.created_at < ${endDate}
+            AND ae.event_category = ${category}
+            AND ae.event_name = ANY(${eventNames})
+            AND u.email ILIKE ${emailFilterParam}
+          ORDER BY ae.created_at DESC
+          LIMIT ${limit} OFFSET ${offset}
+        `
+        : await sql`
+          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id,
+                 ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
+          FROM analytics_events ae
+          LEFT JOIN users u ON ae.user_id = u.id
+          WHERE ae.created_at >= ${startDate}
+            AND ae.created_at < ${endDate}
+            AND ae.event_category = ${category}
+            AND ae.event_name = ANY(${eventNames})
+          ORDER BY ae.created_at DESC
+          LIMIT ${limit} OFFSET ${offset}
+        `;
     } else if (category && excludeInternal) {
-      result = await sql`
-        SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id,
-               ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
-        FROM analytics_events ae
-        LEFT JOIN users u ON ae.user_id = u.id
-        WHERE ae.created_at >= ${startDate}
-          AND ae.created_at < ${endDate}
-          AND ae.event_category = ${category}
-          AND ae.is_internal = FALSE
-        ORDER BY ae.created_at DESC
-        LIMIT ${limit} OFFSET ${offset}
-      `;
+      result = hasUserEmail
+        ? await sql`
+          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id,
+                 ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
+          FROM analytics_events ae
+          LEFT JOIN users u ON ae.user_id = u.id
+          WHERE ae.created_at >= ${startDate}
+            AND ae.created_at < ${endDate}
+            AND ae.event_category = ${category}
+            AND ae.is_internal = FALSE
+            AND u.email ILIKE ${emailFilterParam}
+          ORDER BY ae.created_at DESC
+          LIMIT ${limit} OFFSET ${offset}
+        `
+        : await sql`
+          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id,
+                 ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
+          FROM analytics_events ae
+          LEFT JOIN users u ON ae.user_id = u.id
+          WHERE ae.created_at >= ${startDate}
+            AND ae.created_at < ${endDate}
+            AND ae.event_category = ${category}
+            AND ae.is_internal = FALSE
+          ORDER BY ae.created_at DESC
+          LIMIT ${limit} OFFSET ${offset}
+        `;
     } else if (hasEventNames && excludeInternal) {
-      result = await sql`
-        SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id,
-               ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
-        FROM analytics_events ae
-        LEFT JOIN users u ON ae.user_id = u.id
-        WHERE ae.created_at >= ${startDate}
-          AND ae.created_at < ${endDate}
-          AND ae.event_name = ANY(${eventNames})
-          AND ae.is_internal = FALSE
-        ORDER BY ae.created_at DESC
-        LIMIT ${limit} OFFSET ${offset}
-      `;
+      result = hasUserEmail
+        ? await sql`
+          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id,
+                 ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
+          FROM analytics_events ae
+          LEFT JOIN users u ON ae.user_id = u.id
+          WHERE ae.created_at >= ${startDate}
+            AND ae.created_at < ${endDate}
+            AND ae.event_name = ANY(${eventNames})
+            AND ae.is_internal = FALSE
+            AND u.email ILIKE ${emailFilterParam}
+          ORDER BY ae.created_at DESC
+          LIMIT ${limit} OFFSET ${offset}
+        `
+        : await sql`
+          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id,
+                 ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
+          FROM analytics_events ae
+          LEFT JOIN users u ON ae.user_id = u.id
+          WHERE ae.created_at >= ${startDate}
+            AND ae.created_at < ${endDate}
+            AND ae.event_name = ANY(${eventNames})
+            AND ae.is_internal = FALSE
+          ORDER BY ae.created_at DESC
+          LIMIT ${limit} OFFSET ${offset}
+        `;
     } else if (category) {
-      result = await sql`
-        SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id,
-               ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
-        FROM analytics_events ae
-        LEFT JOIN users u ON ae.user_id = u.id
-        WHERE ae.created_at >= ${startDate}
-          AND ae.created_at < ${endDate}
-          AND ae.event_category = ${category}
-        ORDER BY ae.created_at DESC
-        LIMIT ${limit} OFFSET ${offset}
-      `;
+      result = hasUserEmail
+        ? await sql`
+          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id,
+                 ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
+          FROM analytics_events ae
+          LEFT JOIN users u ON ae.user_id = u.id
+          WHERE ae.created_at >= ${startDate}
+            AND ae.created_at < ${endDate}
+            AND ae.event_category = ${category}
+            AND u.email ILIKE ${emailFilterParam}
+          ORDER BY ae.created_at DESC
+          LIMIT ${limit} OFFSET ${offset}
+        `
+        : await sql`
+          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id,
+                 ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
+          FROM analytics_events ae
+          LEFT JOIN users u ON ae.user_id = u.id
+          WHERE ae.created_at >= ${startDate}
+            AND ae.created_at < ${endDate}
+            AND ae.event_category = ${category}
+          ORDER BY ae.created_at DESC
+          LIMIT ${limit} OFFSET ${offset}
+        `;
     } else if (hasEventNames) {
-      result = await sql`
-        SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id,
-               ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
-        FROM analytics_events ae
-        LEFT JOIN users u ON ae.user_id = u.id
-        WHERE ae.created_at >= ${startDate}
-          AND ae.created_at < ${endDate}
-          AND ae.event_name = ANY(${eventNames})
-        ORDER BY ae.created_at DESC
-        LIMIT ${limit} OFFSET ${offset}
-      `;
+      result = hasUserEmail
+        ? await sql`
+          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id,
+                 ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
+          FROM analytics_events ae
+          LEFT JOIN users u ON ae.user_id = u.id
+          WHERE ae.created_at >= ${startDate}
+            AND ae.created_at < ${endDate}
+            AND ae.event_name = ANY(${eventNames})
+            AND u.email ILIKE ${emailFilterParam}
+          ORDER BY ae.created_at DESC
+          LIMIT ${limit} OFFSET ${offset}
+        `
+        : await sql`
+          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id,
+                 ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
+          FROM analytics_events ae
+          LEFT JOIN users u ON ae.user_id = u.id
+          WHERE ae.created_at >= ${startDate}
+            AND ae.created_at < ${endDate}
+            AND ae.event_name = ANY(${eventNames})
+          ORDER BY ae.created_at DESC
+          LIMIT ${limit} OFFSET ${offset}
+        `;
     } else if (excludeInternal) {
-      result = await sql`
-        SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id,
-               ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
-        FROM analytics_events ae
-        LEFT JOIN users u ON ae.user_id = u.id
-        WHERE ae.created_at >= ${startDate}
-          AND ae.created_at < ${endDate}
-          AND ae.is_internal = FALSE
-        ORDER BY ae.created_at DESC
-        LIMIT ${limit} OFFSET ${offset}
-      `;
+      result = hasUserEmail
+        ? await sql`
+          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id,
+                 ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
+          FROM analytics_events ae
+          LEFT JOIN users u ON ae.user_id = u.id
+          WHERE ae.created_at >= ${startDate}
+            AND ae.created_at < ${endDate}
+            AND ae.is_internal = FALSE
+            AND u.email ILIKE ${emailFilterParam}
+          ORDER BY ae.created_at DESC
+          LIMIT ${limit} OFFSET ${offset}
+        `
+        : await sql`
+          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id,
+                 ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
+          FROM analytics_events ae
+          LEFT JOIN users u ON ae.user_id = u.id
+          WHERE ae.created_at >= ${startDate}
+            AND ae.created_at < ${endDate}
+            AND ae.is_internal = FALSE
+          ORDER BY ae.created_at DESC
+          LIMIT ${limit} OFFSET ${offset}
+        `;
     } else {
-      result = await sql`
-        SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id,
-               ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
-        FROM analytics_events ae
-        LEFT JOIN users u ON ae.user_id = u.id
-        WHERE ae.created_at >= ${startDate}
-          AND ae.created_at < ${endDate}
-        ORDER BY ae.created_at DESC
-        LIMIT ${limit} OFFSET ${offset}
-      `;
+      result = hasUserEmail
+        ? await sql`
+          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id,
+                 ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
+          FROM analytics_events ae
+          LEFT JOIN users u ON ae.user_id = u.id
+          WHERE ae.created_at >= ${startDate}
+            AND ae.created_at < ${endDate}
+            AND u.email ILIKE ${emailFilterParam}
+          ORDER BY ae.created_at DESC
+          LIMIT ${limit} OFFSET ${offset}
+        `
+        : await sql`
+          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id,
+                 ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
+          FROM analytics_events ae
+          LEFT JOIN users u ON ae.user_id = u.id
+          WHERE ae.created_at >= ${startDate}
+            AND ae.created_at < ${endDate}
+          ORDER BY ae.created_at DESC
+          LIMIT ${limit} OFFSET ${offset}
+        `;
     }
 
     return result.rows;
@@ -2589,7 +3126,7 @@ export const analyticsService = {
    * @param {Object} res - Express response object for streaming
    * @returns {Promise<void>}
    */
-  async streamEventsToCSV({ startDate, endDate, category, eventNames, excludeInternal = false, res }) {
+  async streamEventsToCSV({ startDate, endDate, category, eventNames, excludeInternal = false, userEmail, res }) {
     const { MAX_ROWS, BATCH_SIZE } = this.EXPORT_LIMITS;
 
     // Pass 1: Discover schema
@@ -2599,6 +3136,7 @@ export const analyticsService = {
       category,
       eventNames,
       excludeInternal,
+      userEmail,
     });
 
     // Build CSV header
@@ -2624,6 +3162,7 @@ export const analyticsService = {
         category,
         eventNames,
         excludeInternal,
+        userEmail,
         offset,
         limit: BATCH_SIZE,
       });

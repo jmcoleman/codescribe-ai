@@ -9,6 +9,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.3.9] - 2026-01-09
+
+**Status:** ✅ Analytics Dashboard Reorganization & Quality Insights
+
+**Summary:** Reorganized the Analytics Usage tab to follow a clear user journey narrative with 5 logical groups, added model filtering to quality heatmap for comparing Claude vs OpenAI performance, and improved data handling with proper null checks.
+
+### Changed
+
+- **Usage Tab Reorganization** ([client/src/pages/admin/Analytics.jsx](client/src/pages/admin/Analytics.jsx))
+  - Restructured entire Usage tab into 5 user-journey-focused groups:
+    1. **Traffic & Engagement** - User retention metrics + session/generation trends side-by-side
+    2. **Workflow Funnel** - 5-stage conversion cards + drop-off visualization
+    3. **Input Patterns** - Code input methods + top languages side-by-side
+    4. **Generation Outcomes** - Batch stats + doc types + export sources side-by-side
+    5. **Quality Analysis** - Score distribution + heatmap by doc type side-by-side
+  - Each group has clear section header with guiding question
+  - Improved visual hierarchy with better spacing (space-y-6 within groups, space-y-8 between groups)
+  - Consolidated redundant sections (removed duplicate session overview cards)
+
+- **Quality Heatmap Model Filter** ([client/src/pages/admin/Analytics.jsx](client/src/pages/admin/Analytics.jsx))
+  - Added model dropdown filter: All Models, Claude, OpenAI
+  - Filter persists in session and updates heatmap data
+  - Enables comparison of quality scores across LLM providers per doc type
+  - Updated guiding question to highlight model comparison use case
+
+- **Backend Query Enhancements** ([server/src/services/analyticsService.js](server/src/services/analyticsService.js))
+  - Added `model` parameter to `getUsagePatterns` function
+  - Implemented 4 separate SQL queries for model filter combinations (model+exclude, model+include, all+exclude, all+include)
+  - Filters by `event_data->'llm'->>'provider'` field
+  - Added proper null checks for `codeInputMethods` and `exportSources` queries
+
+- **API Route Update** ([server/src/routes/admin.js](server/src/routes/admin.js))
+  - Added `model` query parameter to `/api/admin/analytics/usage` endpoint
+  - Defaults to 'all' for backward compatibility
+
+- **Analytics Event Tracking** ([client/src/utils/analytics.js](client/src/utils/analytics.js), [client/src/hooks/useDocGeneration.js](client/src/hooks/useDocGeneration.js))
+  - Updated `trackQualityScore` to accept optional `llm` parameter
+  - Pass LLM metadata (provider, model) when tracking quality scores
+  - Enables quality score analysis by LLM provider in admin dashboard
+
+### Fixed
+
+- **Test Updates** ([server/src/services/__tests__/analyticsService.test.js](server/src/services/__tests__/analyticsService.test.js))
+  - Updated test expectations from `origins` to `codeInputMethods` and `exportSources`
+  - Updated SQL call count from 5 to 7 (added 2 new queries)
+  - Added proper null checks to prevent undefined errors in edge cases
+
+### Tests
+
+- 4,013 tests (2,067 frontend, 1,946 backend)
+- 100 skipped (67 frontend, 33 backend)
+- 3,913 passing (97.5% pass rate)
+
+---
+
 ## [3.3.8] - 2026-01-08
 
 **Status:** ✅ Analytics Funnel Visualization Polish
