@@ -427,6 +427,179 @@ describe('AnalyticsService', () => {
       expect(result.codeInputMethods).toHaveLength(2);
       expect(result.exportSources).toHaveLength(2);
     });
+
+    it('should filter quality scores by model when model parameter is provided', async () => {
+      // Doc types
+      sql.mockResolvedValueOnce({
+        rows: [
+          { doc_type: 'README', successful: '20', failed: '2', total: '22' },
+        ],
+      });
+      // Quality scores
+      sql.mockResolvedValueOnce({
+        rows: [
+          { score_range: '90-100', count: '15' },
+        ],
+      });
+      // Quality scores by doc type (heatmap) - filtered by model
+      sql.mockResolvedValueOnce({
+        rows: [
+          { doc_type: 'README', score_range: '90-100', count: '15' },
+        ],
+      });
+      // Batch vs single
+      sql.mockResolvedValueOnce({
+        rows: [
+          { type: 'single', count: '20' },
+        ],
+      });
+      // Languages
+      sql.mockResolvedValueOnce({
+        rows: [
+          { language: 'javascript', count: '20' },
+        ],
+      });
+      // Code Input Methods
+      sql.mockResolvedValueOnce({
+        rows: [
+          { origin: 'paste', count: '20' },
+        ],
+      });
+      // Export Sources
+      sql.mockResolvedValueOnce({
+        rows: [
+          { source: 'fresh', count: '20' },
+        ],
+      });
+
+      const result = await analyticsService.getUsagePatterns({
+        ...dateRange,
+        model: 'claude',
+      });
+
+      expect(result.qualityScoresByDocType).toHaveLength(1);
+      expect(result.qualityScoresByDocType[0]).toEqual({
+        docType: 'README',
+        scoreRange: '90-100',
+        count: 15
+      });
+    });
+
+    it('should filter quality scores by model with excludeInternal=true', async () => {
+      // Doc types
+      sql.mockResolvedValueOnce({
+        rows: [
+          { doc_type: 'API', successful: '10', failed: '1', total: '11' },
+        ],
+      });
+      // Quality scores
+      sql.mockResolvedValueOnce({
+        rows: [
+          { score_range: '80-89', count: '8' },
+        ],
+      });
+      // Quality scores by doc type (heatmap) - filtered by model AND excludeInternal
+      sql.mockResolvedValueOnce({
+        rows: [
+          { doc_type: 'API', score_range: '80-89', count: '8' },
+        ],
+      });
+      // Batch vs single
+      sql.mockResolvedValueOnce({
+        rows: [
+          { type: 'batch', count: '10' },
+        ],
+      });
+      // Languages
+      sql.mockResolvedValueOnce({
+        rows: [
+          { language: 'python', count: '10' },
+        ],
+      });
+      // Code Input Methods
+      sql.mockResolvedValueOnce({
+        rows: [
+          { origin: 'github', count: '10' },
+        ],
+      });
+      // Export Sources
+      sql.mockResolvedValueOnce({
+        rows: [
+          { source: 'cached', count: '10' },
+        ],
+      });
+
+      const result = await analyticsService.getUsagePatterns({
+        ...dateRange,
+        model: 'openai',
+        excludeInternal: true,
+      });
+
+      expect(result.qualityScoresByDocType).toHaveLength(1);
+      expect(result.qualityScoresByDocType[0]).toEqual({
+        docType: 'API',
+        scoreRange: '80-89',
+        count: 8
+      });
+    });
+
+    it('should filter quality scores by model with excludeInternal=false', async () => {
+      // Doc types
+      sql.mockResolvedValueOnce({
+        rows: [
+          { doc_type: 'JSDOC', successful: '12', failed: '3', total: '15' },
+        ],
+      });
+      // Quality scores
+      sql.mockResolvedValueOnce({
+        rows: [
+          { score_range: '70-79', count: '10' },
+        ],
+      });
+      // Quality scores by doc type (heatmap) - filtered by model, excludeInternal=false
+      sql.mockResolvedValueOnce({
+        rows: [
+          { doc_type: 'JSDOC', score_range: '70-79', count: '10' },
+        ],
+      });
+      // Batch vs single
+      sql.mockResolvedValueOnce({
+        rows: [
+          { type: 'single', count: '12' },
+        ],
+      });
+      // Languages
+      sql.mockResolvedValueOnce({
+        rows: [
+          { language: 'typescript', count: '12' },
+        ],
+      });
+      // Code Input Methods
+      sql.mockResolvedValueOnce({
+        rows: [
+          { origin: 'upload', count: '12' },
+        ],
+      });
+      // Export Sources
+      sql.mockResolvedValueOnce({
+        rows: [
+          { source: 'fresh', count: '12' },
+        ],
+      });
+
+      const result = await analyticsService.getUsagePatterns({
+        ...dateRange,
+        model: 'claude',
+        excludeInternal: false,
+      });
+
+      expect(result.qualityScoresByDocType).toHaveLength(1);
+      expect(result.qualityScoresByDocType[0]).toEqual({
+        docType: 'JSDOC',
+        scoreRange: '70-79',
+        count: 10
+      });
+    });
   });
 
   // ============================================================================
@@ -503,6 +676,74 @@ describe('AnalyticsService', () => {
       await analyticsService.getTimeSeries({ ...options, metric: 'sessions', interval: 'month' });
 
       expect(sql).toHaveBeenCalledTimes(2);
+    });
+
+    it('should return sessions time series with excludeInternal=false', async () => {
+      sql.mockResolvedValue({
+        rows: [
+          { date: new Date('2024-01-01'), value: '15' },
+          { date: new Date('2024-01-02'), value: '20' },
+        ],
+      });
+
+      const result = await analyticsService.getTimeSeries({ ...options, metric: 'sessions', excludeInternal: false });
+
+      expect(result).toHaveLength(2);
+      expect(result[0].value).toBe(15);
+    });
+
+    it('should return generations time series with excludeInternal=false', async () => {
+      sql.mockResolvedValue({
+        rows: [
+          { date: new Date('2024-01-01'), value: '10' },
+        ],
+      });
+
+      const result = await analyticsService.getTimeSeries({ ...options, metric: 'generations', excludeInternal: false });
+
+      expect(result).toHaveLength(1);
+      expect(result[0].value).toBe(10);
+    });
+
+    it('should return signups time series with excludeInternal=false', async () => {
+      sql.mockResolvedValue({
+        rows: [
+          { date: new Date('2024-01-01'), value: '8' },
+        ],
+      });
+
+      const result = await analyticsService.getTimeSeries({ ...options, metric: 'signups', excludeInternal: false });
+
+      expect(result).toHaveLength(1);
+      expect(result[0].value).toBe(8);
+    });
+
+    it('should return revenue time series with excludeInternal=false', async () => {
+      sql.mockResolvedValue({
+        rows: [
+          { date: new Date('2024-01-01'), value: '10000' },
+        ],
+      });
+
+      const result = await analyticsService.getTimeSeries({ ...options, metric: 'revenue', excludeInternal: false });
+
+      expect(result).toHaveLength(1);
+      expect(result[0].value).toBe(10000);
+    });
+
+    it('should return latency time series with excludeInternal=false', async () => {
+      sql.mockResolvedValue({
+        rows: [
+          { date: new Date('2024-01-01'), value: '1200' },
+          { date: new Date('2024-01-02'), value: '1350' },
+        ],
+      });
+
+      const result = await analyticsService.getTimeSeries({ ...options, metric: 'latency', excludeInternal: false });
+
+      expect(result).toHaveLength(2);
+      expect(result[0].value).toBe(1200);
+      expect(result[1].value).toBe(1350);
     });
   });
 
