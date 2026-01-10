@@ -1054,33 +1054,14 @@ npm run test:e2e:headed       # With browser UI (for debugging)
 - GITHUB_TOKEN setup for production (5000/hr rate limit)
 - LLM_PROVIDER configuration documentation
 
-### 🚀 Future Development
+### 🚀 Upcoming Phases
 
-**Phase 2 - Payments & Core Features (v2.0.0-v2.7.1):**
-- ✅ Epic 2.1: Authentication & User Management (v2.0.0-v2.0.1) - **COMPLETE**
-- ✅ Epic 2.2: Tier System & Feature Flags (v2.1.0-v2.2.0) - **COMPLETE**
-- ✅ Epic 2.3: UX Enhancements & File Upload (v2.3.0) - **COMPLETE**
-- ✅ Epic 2.4: Payment Integration & Test Infrastructure (v2.4.0-v2.4.6) - **COMPLETE**
-- ✅ Epic 2.5: Legal Compliance (v2.5.0-v2.5.3) - **COMPLETE**
-- ✅ Epic 2.6: Usage Dashboard & Admin Tools (v2.6.0) - **COMPLETE**
-- ✅ Epic 2.7: Dark Mode & UI Enhancements (v2.7.0-v2.7.11) - **COMPLETE**
-
-**Phase 3 - Multi-File & Analytics (v3.3.9):**
-- Multi-file workspace with batch generation
-- Trial system with invite codes
-- Admin analytics dashboard (Usage, Performance, Business, Funnel tabs)
-- User journey-based analytics reorganization
-- Model comparison for quality insights
-- 4,029 tests (100% pass rate)
-
-**See Full Release History:** [CHANGELOG.md](CHANGELOG.md)
-
-**Upcoming Phases:**
 - **Phase 4:** Subscription Management (upgrade/downgrade flows, billing history)
 - **Phase 5:** Developer Tools (CLI, VS Code extension, API client)
 - **Phase 6:** Enterprise Readiness (SSO, audit logs, white-label, teams)
 
 📚 **Complete Roadmap:** [ROADMAP.md](docs/planning/roadmap/ROADMAP.md) | 🗺️ **Interactive Timeline:** [codescribe-ai/docs/roadmap/](https://jmcoleman.github.io/codescribe-ai/docs/roadmap/)
+📝 **Full Release History:** [CHANGELOG.md](CHANGELOG.md)
 
 ## Contributing
 
