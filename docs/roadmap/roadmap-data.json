@@ -65,9 +65,9 @@
       "text": "codescribeai.com",
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
-    "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.34",
-    "footer": "v3.3.8 Complete · Analytics Funnel Visualization Polish ✓ · Up Next: Project Architecture Document · VS Code Extension: Separate Repo",
-    "lastUpdated": "January 8, 2026"
+    "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.35",
+    "footer": "v3.3.9 Complete · Analytics Dashboard Reorganization & Quality Insights ✓ · Up Next: Project Architecture Document · VS Code Extension: Separate Repo",
+    "lastUpdated": "January 9, 2026"
   },
   "columns": [
     {
@@ -76,6 +76,23 @@
       "title": "Completed",
       "subtitle": "Phase 1: Core Capabilities",
       "phases": [
+        {
+          "version": "v3.3.9",
+          "title": "Analytics Dashboard Reorganization & Quality Insights",
+          "duration": "0.5 days",
+          "status": "✓ Complete",
+          "completedDate": "Jan 9, 2026",
+          "badge": "UX & Analytics",
+          "features": [
+            "Reorganized Usage tab into 5 user-journey-focused groups: Traffic & Engagement, Workflow Funnel, Input Patterns, Generation Outcomes, Quality Analysis",
+            "Added model filter dropdown (All Models, Claude, OpenAI) to quality heatmap for comparing LLM performance per doc type",
+            "Implemented 4 separate SQL queries for model filter combinations in backend",
+            "Enhanced analytics event tracking to capture LLM metadata (provider, model) for quality scores",
+            "Fixed null checks for codeInputMethods and exportSources in analyticsService",
+            "Converted sql.query() calls to proper Vercel postgres template literals (16 failing tests → 0 failing)",
+            "Test coverage: 4,029 tests (2,067 frontend, 1,962 backend), 100 skipped, 100% pass rate"
+          ]
+        },
         {
           "version": "v3.3.8",
           "title": "Analytics Funnel Visualization Polish",
