@@ -28,6 +28,7 @@ import {
 import { getActiveCampaign } from '../config/campaign.js';
 import Trial from '../models/Trial.js';
 import Campaign from '../models/Campaign.js';
+import { analyticsService } from '../services/analyticsService.js';
 
 const router = express.Router();
 
@@ -1102,6 +1103,21 @@ router.post(
       const updatedUser = await User.markEmailAsVerified(user.id);
 
       console.log(`Email verified for user: ${updatedUser.email}`);
+
+      // ✨ Track email verification event
+      try {
+        const daysFromSignup = (Date.now() - new Date(user.created_at).getTime()) / (1000 * 60 * 60 * 24);
+        await analyticsService.trackEvent('email_verified', {
+          verification_method: 'email_link',
+          days_to_verify: parseFloat(daysFromSignup.toFixed(2))
+        }, {
+          userId: user.id,
+          ipAddress: req.ip || req.socket.remoteAddress
+        });
+      } catch (analyticsError) {
+        // Don't fail verification if analytics fails
+        console.error('[Analytics] Failed to track email verification:', analyticsError);
+      }
 
       // If trial code provided, attempt to redeem it
       let trialActivated = false;

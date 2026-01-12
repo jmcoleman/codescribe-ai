@@ -1,0 +1,120 @@
+JANUARY 2026 CAMPAIGN - KPI DASHBOARD (14-DAY TRIAL),,,,,
+,,,,,
+CAMPAIGN HEADER,,,,,
+Campaign Name,January 2026 Pro Trial,,,,
+Campaign Duration,Jan 1-31 2026,,,,
+Trial Offer,14-Day Pro Trial,,,,
+Last Updated,=TODAY(),,,,
+,,,,,
+EXECUTIVE SUMMARY - KEY METRICS,,,,,
+Metric,Target,Actual,Variance,Status,Priority
+Total Signups,100,,"","=IF(C9>=C8,""✅ GOOD"",""🔴 MISS"")",P0
+Total API Cost,"$350",,"","=IF(C10<=C8,""✅ GOOD"",""🔴 OVER"")",P0
+Cost Per User,"$3.50",,"","=IF(C11<=C8,""✅ GOOD"",""🔴 HIGH"")",P1
+Conversions,12,,"","=IF(C12>=C8,""✅ GOOD"",""⚠️ LOW"")",P0
+Conversion Rate,12%,,"","=IF(C13>=C8,""✅ GOOD"",""⚠️ LOW"")",P0
+Year 1 Revenue,"$2,880",,"","=IF(C14>=C8,""✅ GOOD"",""⚠️ LOW"")",P1
+ROI,723%,,"","=IF(C15>=C8,""✅ GOOD"",""⚠️ LOW"")",P0
+Payback Period,0.7 mo,,"","=IF(C16<=C8,""✅ GOOD"",""⚠️ SLOW"")",P1
+,,,,,
+ACQUISITION METRICS,,,,,
+Metric,Target,Actual,Variance %,Status,Notes
+Weekly Signups (Avg),25,=C19,=(C19-B19)/B19,"=IF(ABS(D19)<0.15,""✅"",""⚠️"")",Target: 25/week
+Daily Signup Rate,3.3,=C20,=(C20-B20)/B20,"=IF(ABS(D20)<0.15,""✅"",""⚠️"")",100 users / 30 days
+Email Verification Rate,95%,=C21,=(C21-B21)/B21,"=IF(C21>=0.9,""✅"",""🔴"")",Industry: 90-95%
+Activation Rate (1+ gen),80%,=C22,=(C22-B22)/B22,"=IF(C22>=0.7,""✅"",""⚠️"")",First generation created
+Time to First Generation,<24hr,=C23,N/A,"=IF(C23<=1,""✅"",""⚠️"")",Speed to value
+,,,,,
+ENGAGEMENT METRICS,,,,,
+Metric,Target,Actual,Variance %,Status,Notes
+Engaged Users (10+ gens),40%,=C28,=(C28-B28)/B28,"=IF(C28>=0.3,""✅"",""⚠️"")",10+ generations
+Power Users (50+ gens),20%,=C29,=(C29-B29)/B29,"=IF(C29>=0.15,""✅"",""⚠️"")",50+ generations
+Avg Generations per User,70,=C30,=(C30-B30)/B30,"=IF(ABS(D30)<0.2,""✅"",""⚠️"")",During 14-day trial
+Trial Completion Rate,75%,=C31,=(C31-B31)/B31,"=IF(C31>=0.6,""✅"",""⚠️"")",Used full 14 days
+Daily Active Users (Avg),60,=C32,=(C32-B32)/B32,"=IF(ABS(D32)<0.2,""✅"",""⚠️"")",Active during trial
+,,,,,
+CONVERSION METRICS,,,,,
+Metric,Target,Actual,Variance %,Status,Notes
+Trial-to-Paid Conversion,12%,=C37,=(C37-B37)/B37,"=IF(C37>=0.1,""✅"",""⚠️"")",Industry: 10-15%
+Immediate Conversions (<14d),7,=C38,=(C38-B38)/B38,"=IF(ABS(D38)<0.3,""✅"",""⚠️"")",During trial period
+Post-Trial Conversions (15-30d),5,=C39,=(C39-B39)/B39,"=IF(ABS(D39)<0.3,""✅"",""⚠️"")",After trial ends
+CAC (Customer Acq Cost),"$29.17",=C40,=(C40-B40)/B40,"=IF(C40<100,""✅"",""🔴"")",Cost per conversion
+Time to Convert (Avg),18 days,=C41,=(C41-B41)/B41,"=IF(ABS(D41)<0.3,""✅"",""⚠️"")",Signup to paid
+,,,,,
+FINANCIAL METRICS,,,,,
+Metric,Target,Actual,Variance %,Status,Notes
+Total API Spend,"$350",=C46,=(C46-B46)/B46,"=IF(C46<=B46,""✅"",""🔴"")",Claude + OpenAI
+Claude API Spend,"$210",=C47,=(C47-B47)/B47,"=IF(C47<=B47,""✅"",""🔴"")",60% of total
+OpenAI API Spend,"$140",=C48,=(C48-B48)/B48,"=IF(C48<=B48,""✅"",""🔴"")",40% of total
+Cost per Generation,"$0.051",=C49,=(C49-B49)/B49,"=IF(ABS(D49)<0.1,""✅"",""⚠️"")",Blended rate
+Budget Utilization,100%,=C50,=(C50-B50)/B50,"=IF(C50<=1.1,""✅"",""🔴"")",Spend vs budget
+,,,,,
+REVENUE METRICS (Year 1),,,,,
+Metric,Target,Actual,Variance %,Status,Notes
+MRR (Month 1),"$240",=C55,=(C55-B55)/B55,"=IF(ABS(D55)<0.15,""✅"",""⚠️"")",12 users × $20/mo
+ARR,"$2,880",=C56,=(C56-B56)/B56,"=IF(ABS(D56)<0.15,""✅"",""⚠️"")",Annual run rate
+Total Revenue (12mo),"$2,400",=C57,=(C57-B57)/B57,"=IF(C57>=B57,""✅"",""⚠️"")",With 20% churn
+ARPU (Avg Rev per User),"$200",=C58,=(C58-B58)/B58,"=IF(C58>=150,""✅"",""⚠️"")",Year 1 average
+Gross Margin,100%,=C59,=(C59-B59)/B59,"=IF(C59>=0.95,""✅"",""⚠️"")",SaaS gross margin
+,,,,,
+UNIT ECONOMICS,,,,,
+Metric,Target,Actual,Variance %,Status,Notes
+LTV (Lifetime Value),"$600",=C64,=(C64-B64)/B64,"=IF(C64>=B64,""✅"",""⚠️"")",36-month projection
+CAC,"$29.17",=C65,=(C65-B65)/B65,"=IF(C65<=B65,""✅"",""🔴"")",$350 / 12 conversions
+LTV:CAC Ratio,20.6x,=C66,=(C66-B66)/B66,"=IF(C66>=3,""✅"",""🔴"")",Target: >3:1
+Payback Period,0.7 mo,=C67,=(C67-B67)/B67,"=IF(C67<=12,""✅"",""🔴"")",Months to recover CAC
+Gross Profit per Customer,"$571",=C68,=(C68-B68)/B68,"=IF(C68>=$600-$50,""✅"",""⚠️"")",LTV - CAC
+,,,,,
+RETENTION METRICS (12-Month Projection),,,,,
+Metric,Target,Actual,Variance %,Status,Notes
+Month 3 Retention,92%,=C73,=(C73-B73)/B73,"=IF(C73>=0.85,""✅"",""⚠️"")",Early retention
+Month 6 Retention,83%,=C74,=(C74-B74)/B74,"=IF(C74>=0.75,""✅"",""⚠️"")",Mid-year retention
+Month 12 Retention,67%,=C75,=(C75-B75)/B75,"=IF(C75>=0.6,""✅"",""⚠️"")",Annual retention
+Avg Monthly Churn,3%,=C76,=(C76-B76)/B76,"=IF(C76<=0.05,""✅"",""🔴"")",Target: <5%/month
+Annual Churn,33%,=C77,=(C77-B77)/B77,"=IF(C77<=0.4,""✅"",""🔴"")",Target: <40%/year
+,,,,,
+USAGE METRICS (DURING TRIAL),,,,,
+Metric,Target,Actual,Variance %,Status,Notes
+Avg Generations/User,70,=C82,=(C82-B82)/B82,"=IF(ABS(D82)<0.2,""✅"",""⚠️"")",14-day average
+Total Generations,"7,000",=C83,=(C83-B83)/B83,"=IF(ABS(D83)<0.2,""✅"",""⚠️"")",100 users × 70 gens
+Doc Type Mix - README,30%,=C84,=(C84-B84)/B84,"=IF(ABS(D84)<0.15,""✅"",""⚠️"")",Most popular
+Doc Type Mix - JSDOC,20%,=C85,=(C85-B85)/B85,"=IF(ABS(D85)<0.15,""✅"",""⚠️"")",Structured docs
+Doc Type Mix - API,20%,=C86,=(C86-B86)/B86,"=IF(ABS(D86)<0.15,""✅"",""⚠️"")",API documentation
+Doc Type Mix - Other,30%,=C87,=(C87-B87)/B87,"=IF(ABS(D87)<0.15,""✅"",""⚠️"")",ARCH + OPENAPI
+,,,,,
+COMPETITIVE BENCHMARKS,,,,,
+Metric,CodeScribe (Campaign),Industry Avg,Difference,Status,
+Trial-to-Paid Conversion,12%,8-10%,+2-4%,✅ Above,
+CAC,"$29.17",$50-100,-58%,✅ Better,
+LTV:CAC Ratio,20.6:1,5:1,+15.6,✅ Excellent,
+Payback Period,0.7 mo,6-12 mo,-83%,✅ Faster,
+Annual Churn,33%,30-40%,Similar,✅ Average,
+Activation Rate,80%,60-70%,+10-20%,✅ Above,
+,,,,,
+RISK INDICATORS,,,,,
+Risk Factor,Threshold,Current,Status,Mitigation,
+Daily Spend Spike,>$18/day,=C101,"=IF(C101<18,""🟢"",""🔴"")",Pause campaign if needed,
+Low Activation,<70%,=C102,"=IF(C102>=0.7,""🟢"",""🔴"")",Send activation emails,
+High Churn (Early),>10% month 1,=C103,"=IF(C103<0.1,""🟢"",""🔴"")",Improve onboarding,
+Budget Overrun,>110%,=C104,"=IF(C104<1.1,""🟢"",""🔴"")",Add budget or limit users,
+Low Conversion,<8%,=C105,"=IF(C105>=0.08,""🟢"",""🔴"")",Optimize pricing page,
+,,,,,
+ACTION ITEMS BY PRIORITY,,,,,
+Priority,Action,Owner,Due Date,Status,Impact
+P0,Load initial $350 API budget,Admin,Jan 1,Pending,Campaign launch
+P0,Activate campaign in admin UI,Admin,Jan 1,Pending,Start auto-trials
+P0,Monitor daily signup rate,Marketing,Daily,Pending,Hit 100 target
+P1,Send activation emails (non-activated),Product,Week 1,Pending,Boost activation
+P1,Trigger upgrade prompts (day 12),Product,Ongoing,Pending,Increase conversions
+P2,Survey power users,Product,Week 3,Pending,Gather feedback
+P2,Create case studies,Marketing,Month 2,Pending,Social proof
+,,,,,
+DAILY MONITORING CHECKLIST,,,,,
+Date,Signups,API Cost,Conversions,Notes,Status
+Jan 1,,,,Launch day,"=IF(B119>0,""✅"",""⏳"")"
+Jan 2,,,,"","=IF(B120>0,""✅"",""⏳"")"
+Jan 3,,,,"","=IF(B121>0,""✅"",""⏳"")"
+Jan 7,,,,Week 1 review,"=IF(B122>0,""✅"",""⏳"")"
+Jan 14,,,,Week 2 review,"=IF(B123>0,""✅"",""⏳"")"
+Jan 21,,,,Week 3 review,"=IF(B124>0,""✅"",""⏳"")"
+Jan 31,,,,Campaign ends,"=IF(B125>0,""✅"",""⏳"")"

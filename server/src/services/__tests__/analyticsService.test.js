@@ -896,6 +896,10 @@ describe('AnalyticsService', () => {
       sql.mockResolvedValueOnce({ rows: [{ count: '500' }] });
       // Signups
       sql.mockResolvedValueOnce({ rows: [{ count: '100' }] });
+      // Email verified
+      sql.mockResolvedValueOnce({ rows: [{ count: '80' }] });
+      // First generation (activated)
+      sql.mockResolvedValueOnce({ rows: [{ count: '60' }] });
       // Trials (with breakdown: campaign vs individual)
       sql.mockResolvedValueOnce({ rows: [{ total: '50', campaign: '30', individual: '20' }] });
       // Paid (with breakdown: via_trial vs direct)
@@ -928,7 +932,9 @@ describe('AnalyticsService', () => {
     });
 
     it('should handle zero values without division errors', async () => {
-      // Visitors, engaged, signups return 0
+      // Visitors, engaged, signups, emailVerified, firstGeneration return 0
+      sql.mockResolvedValueOnce({ rows: [{ count: '0' }] });
+      sql.mockResolvedValueOnce({ rows: [{ count: '0' }] });
       sql.mockResolvedValueOnce({ rows: [{ count: '0' }] });
       sql.mockResolvedValueOnce({ rows: [{ count: '0' }] });
       sql.mockResolvedValueOnce({ rows: [{ count: '0' }] });
@@ -947,13 +953,15 @@ describe('AnalyticsService', () => {
       sql.mockResolvedValueOnce({ rows: [{ count: '10' }] });
       sql.mockResolvedValueOnce({ rows: [{ count: '10' }] });
       sql.mockResolvedValueOnce({ rows: [{ count: '10' }] });
+      sql.mockResolvedValueOnce({ rows: [{ count: '10' }] });
+      sql.mockResolvedValueOnce({ rows: [{ count: '10' }] });
       sql.mockResolvedValueOnce({ rows: [{ total: '10', campaign: '5', individual: '5' }] });
       sql.mockResolvedValueOnce({ rows: [{ total: '10', via_trial: '8', direct: '2' }] });
 
       await analyticsService.getBusinessConversionFunnel({ ...dateRange, excludeInternal: false });
 
-      // 5 queries: visitors, engaged, signups, trials, paid
-      expect(sql).toHaveBeenCalledTimes(5);
+      // 7 queries: visitors, engaged, signups, emailVerified, firstGeneration, trials, paid
+      expect(sql).toHaveBeenCalledTimes(7);
     });
   });
 

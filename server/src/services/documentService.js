@@ -10,6 +10,7 @@
  */
 
 import { sql } from '@vercel/postgres';
+import { analyticsService } from './analyticsService.js';
 
 class DocumentService {
   /**
@@ -71,6 +72,43 @@ class DocumentService {
         )
         RETURNING id, generated_at
       `;
+
+      // ✨ Check if this is user's first generation (milestone tracking)
+      try {
+        const countResult = await sql`
+          SELECT COUNT(*) as total
+          FROM generated_documents
+          WHERE user_id = ${userId}
+            AND deleted_at IS NULL
+        `;
+
+        const totalGenerations = parseInt(countResult.rows[0].total);
+
+        // If this is the first generation, track the milestone
+        if (totalGenerations === 1) {
+          // Get user signup date to calculate time to first generation
+          const userResult = await sql`
+            SELECT created_at FROM users WHERE id = ${userId}
+          `;
+
+          if (userResult.rows.length > 0) {
+            const hoursFromSignup = (Date.now() - new Date(userResult.rows[0].created_at).getTime()) / (1000 * 60 * 60);
+
+            await analyticsService.trackEvent('first_generation', {
+              doc_type: docType,
+              hours_since_signup: parseFloat(hoursFromSignup.toFixed(2)),
+              origin: origin || 'upload'
+            }, {
+              userId
+            });
+
+            console.log(`[Analytics] First generation milestone for user ${userId}: ${docType} (${hoursFromSignup.toFixed(1)}h after signup)`);
+          }
+        }
+      } catch (analyticsError) {
+        // Don't fail document save if analytics fails
+        console.error('[Analytics] Failed to track first generation milestone:', analyticsError);
+      }
 
       return {
         documentId: result.rows[0].id,

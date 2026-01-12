@@ -1,6 +1,6 @@
 # Event Taxonomy Reference
 
-**Last Updated:** January 8, 2026 (v3.3.8)
+**Last Updated:** January 11, 2026 (v3.3.9)
 
 Complete reference for all analytics events in CodeScribe AI. Events are categorized into four main categories: Workflow, Business, Usage, and System.
 
@@ -60,6 +60,17 @@ Events that track the core user workflow from arriving at the site to exporting 
 - **Event Data:** See `doc_generation` event
 - **Use Case:** Track successful generations, calculate success rate
 
+### `first_generation`
+- **Category:** workflow
+- **Description:** User's first successful documentation generation (milestone event)
+- **Triggered:** After completing their first documentation generation
+- **Event Data:**
+  - `doc_type` (string): Type of first documentation generated (README, JSDoc, API, ARCHITECTURE, OPENAPI)
+  - `hours_since_signup` (number): Hours from signup to first generation
+  - `origin` (string): Generation source (upload, paste, github_public, github_private, sample, default)
+- **Use Case:** Track activation rate, time-to-value, conversion funnel optimization
+- **Campaign Tracking:** Key metric for trial campaign success - measures how quickly users reach first value moment
+
 ### `doc_export`
 - **Category:** workflow
 - **Description:** User exports generated documentation
@@ -102,6 +113,16 @@ Events that track monetization, conversion, and revenue-generating activities.
   - `initialTier` (string): Starting subscription tier (free, pro, enterprise)
   - `source` (string, optional): Signup source (invite_code, campaign, direct)
 - **Use Case:** Track new user acquisition, conversion from visitor to user
+
+### `email_verified`
+- **Category:** business
+- **Description:** User verifies their email address
+- **Triggered:** When user clicks verification link in email
+- **Event Data:**
+  - `verification_method` (string): Verification method (email_link)
+  - `days_to_verify` (number): Days from signup to email verification
+- **Use Case:** Track email verification rate, time-to-verification, activation funnel
+- **Campaign Tracking:** Key metric for trial campaign quality - measures user engagement and prevents spam signups
 
 ### `trial`
 - **Category:** business
@@ -375,6 +396,15 @@ await analyticsService.recordEvent('doc_export', {
 ### Recording Business Events
 
 ```javascript
+// Email verification
+await analyticsService.trackEvent('email_verified', {
+  verification_method: 'email_link',
+  days_to_verify: 0.5, // 12 hours
+}, {
+  userId: userId,
+  ipAddress: req.ip,
+});
+
 // Trial started
 await analyticsService.trackTrial({
   action: 'started',
@@ -403,6 +433,19 @@ await analyticsService.recordEvent('usage_alert', {
   generationsLimit: 10,
 }, {
   sessionId: sessionId,
+  userId: userId,
+});
+```
+
+### Recording Workflow Events
+
+```javascript
+// First generation milestone (automatic - tracked in documentService)
+await analyticsService.trackEvent('first_generation', {
+  doc_type: 'README',
+  hours_since_signup: 2.3,
+  origin: 'paste',
+}, {
   userId: userId,
 });
 ```
@@ -522,7 +565,8 @@ Return Event ID
 
 ---
 
-**Version:** 3.3.8
+**Version:** 3.3.9
 **Categories:** 4 (workflow, business, usage, system)
-**Total Events:** 17
-**Last Audit:** January 8, 2026
+**Total Events:** 19
+**Last Audit:** January 11, 2026
+**Recent Additions:** `email_verified`, `first_generation` (v3.3.9)

@@ -47,15 +47,28 @@ Track conversion and monetization milestones.
 |-------|---------|----------------|
 | `login` | User authenticates | `method` (email/github/google) |
 | `signup` | New account created | `method`, `tier`, `has_trial` |
+| `email_verified` | Email verification completed | `verification_method`, `days_to_verify` |
 | `trial` | Trial lifecycle event | `action`, `source`, `days_active`, `generations_used` |
 | `tier_change` | Subscription tier changed | `action`, `previous_tier`, `new_tier`, `reason`, `source` |
 | `checkout_completed` | Payment successful | `tier`, `amount_cents`, `billing_period` |
 
 ### Business Funnel Flow
 ```
-signup → trial (started) → tier_change (upgrade) OR trial (expired)
-                        → checkout_completed
+signup → email_verified → trial (started) → tier_change (upgrade) OR trial (expired)
+                                          → checkout_completed
 ```
+
+### `email_verified` (New in v3.3.9)
+
+**Category:** business (activation milestone)
+
+**Triggered:** When user clicks verification link in email
+
+**Attributes:**
+- `verification_method`: Always 'email_link' currently
+- `days_to_verify`: Days from signup to email verification
+
+**Use Case:** Track email verification rate and time, prevent spam signups in campaigns
 
 ---
 
@@ -100,6 +113,19 @@ Some events use an `action` field to distinguish sub-types.
 | `download` | Documentation downloaded as file |
 
 **Attributes:** `doc_type`, `filename`, `format` (for download)
+
+### `first_generation` (New in v3.3.9)
+
+**Category:** workflow (milestone event)
+
+**Triggered:** Automatically when user completes their first documentation generation
+
+**Attributes:**
+- `doc_type`: Type of first documentation (README, JSDoc, API, ARCHITECTURE, OPENAPI)
+- `hours_since_signup`: Time from account creation to first generation
+- `origin`: Generation source (upload, paste, github_public, github_private, sample)
+
+**Use Case:** Track activation rate and time-to-value for campaign optimization
 
 ### `trial` actions
 

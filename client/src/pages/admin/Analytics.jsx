@@ -33,6 +33,7 @@ import {
   Layers,
   Gauge,
   ChevronDown,
+  Mail,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { API_URL } from '../../config/api';
@@ -105,11 +106,11 @@ function StatsCard({ icon: Icon, label, value, subValue, trend, comparison, colo
 
   return (
     <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
-      <div className="flex items-center gap-3">
-        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${colorClasses[color]}`}>
+      <div className="flex items-start gap-3">
+        <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${colorClasses[color]}`}>
           <Icon className="w-5 h-5" />
         </div>
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
             {value}
           </div>
@@ -123,20 +124,21 @@ function StatsCard({ icon: Icon, label, value, subValue, trend, comparison, colo
           </div>
         )}
       </div>
+      {comparison && comparison.change && (
+        <div className={`mt-1 flex items-center gap-1 ${getChangeColor(comparison.change.direction)}`}>
+          {getChangeIcon(comparison.change.direction)}
+        </div>
+      )}
       {subValue && (
         <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
           {subValue}
         </div>
       )}
-      {comparison && comparison.change && (
-        <div className={`mt-2 flex items-center gap-1 text-xs font-medium ${getChangeColor(comparison.change.direction)}`}>
-          {getChangeIcon(comparison.change.direction)}
-          <span>
-            {comparison.change.percent > 0 ? '+' : ''}{comparison.change.percent.toFixed(1)}% vs last period
-          </span>
+      {breakdown && (
+        <div className="mt-2">
+          {breakdown}
         </div>
       )}
-      {breakdown}
     </div>
   );
 }
@@ -220,7 +222,13 @@ function ChartSection({ title, question, children, tableData, tableColumns }) {
  */
 export default function Analytics() {
   const { getToken } = useAuth();
-  const [activeTab, setActiveTab] = useState('usage');
+
+  // Load saved active tab from sessionStorage
+  const [activeTab, setActiveTab] = useState(() => {
+    const saved = getSessionItem(STORAGE_KEYS.ANALYTICS_ACTIVE_TAB);
+    return saved || 'usage'; // Default to 'usage' if not saved
+  });
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -238,6 +246,15 @@ export default function Analytics() {
 
   // Default to last 30 days
   const [dateRange, setDateRange] = useState(() => {
+    const end = new Date();
+    end.setDate(end.getDate() + 1);
+    const start = new Date();
+    start.setDate(start.getDate() - 30);
+    return { startDate: start, endDate: end };
+  });
+
+  // Campaign export dates (separate from main dashboard dateRange)
+  const [campaignExportDates, setCampaignExportDates] = useState(() => {
     const end = new Date();
     end.setDate(end.getDate() + 1);
     const start = new Date();
@@ -403,7 +420,7 @@ export default function Analytics() {
       if (activeTab === 'usage') {
         metrics = ['sessions', 'generations', 'completed_sessions'];
       } else if (activeTab === 'business') {
-        metrics = ['signups', 'revenue'];
+        metrics = ['visitors', 'engaged', 'signups', 'verified', 'activated', 'trials', 'paid', 'revenue'];
       } else if (activeTab === 'performance') {
         metrics = ['avg_latency', 'cache_hit_rate', 'throughput'];
       }
@@ -480,6 +497,11 @@ export default function Analytics() {
   useEffect(() => {
     setSessionItem(STORAGE_KEYS.ANALYTICS_EXCLUDE_INTERNAL, excludeInternal.toString());
   }, [excludeInternal]);
+
+  // Save active tab to sessionStorage
+  useEffect(() => {
+    setSessionItem(STORAGE_KEYS.ANALYTICS_ACTIVE_TAB, activeTab);
+  }, [activeTab]);
 
   return (
     <PageLayout>
@@ -717,70 +739,66 @@ export default function Analytics() {
                   Conversion Funnel
                 </h2>
                 <p className="text-sm text-slate-500 dark:text-slate-400 -mt-4 italic">
-                  How many visitors are converting to paying customers?
+                  How are conversion metrics trending compared to the prior period?
                 </p>
 
                 {/* Conversion Funnel Summary Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-7 gap-4">
                   <StatsCard
                     icon={Eye}
                     label="Visitors"
-                    value={formatNumber(businessData.conversionFunnel.stages?.visitors?.count || 0)}
-                    subValue="Unique sessions"
+                    value={comparisons.visitors?.change ? `${comparisons.visitors.change.percent > 0 ? '+' : ''}${comparisons.visitors.change.percent.toFixed(1)}%` : 'N/A'}
+                    subValue="vs prior period"
+                    comparison={comparisons.visitors}
                     color="purple"
                   />
                   <StatsCard
                     icon={Activity}
                     label="Engaged"
-                    value={formatPercent(businessData.conversionFunnel.conversionRates?.visitor_to_engaged || 0)}
-                    subValue={`${formatNumber(businessData.conversionFunnel.stages?.engaged?.count || 0)} of ${formatNumber(businessData.conversionFunnel.stages?.visitors?.count || 0)} visitors`}
+                    value={comparisons.engaged?.change ? `${comparisons.engaged.change.percent > 0 ? '+' : ''}${comparisons.engaged.change.percent.toFixed(1)}%` : 'N/A'}
+                    subValue="vs prior period"
+                    comparison={comparisons.engaged}
                     color="purple"
                   />
                   <StatsCard
                     icon={UserPlus}
                     label="Signups"
-                    value={formatPercent(businessData.conversionFunnel.conversionRates?.engaged_to_signup || 0)}
-                    subValue={`${formatNumber(businessData.conversionFunnel.stages?.signups?.count || 0)} of ${formatNumber(businessData.conversionFunnel.stages?.engaged?.count || 0)} engaged`}
+                    value={comparisons.signups?.change ? `${comparisons.signups.change.percent > 0 ? '+' : ''}${comparisons.signups.change.percent.toFixed(1)}%` : 'N/A'}
+                    subValue="vs prior period"
                     comparison={comparisons.signups}
                     color="purple"
                   />
                   <StatsCard
-                    icon={Gift}
-                    label="Trial Started"
-                    value={formatPercent(businessData.conversionFunnel.conversionRates?.signup_to_trial || 0)}
-                    subValue={`${formatNumber(businessData.conversionFunnel.stages?.trials?.count || 0)} of ${formatNumber(businessData.conversionFunnel.stages?.signups?.count || 0)} signups`}
+                    icon={Mail}
+                    label="Verified"
+                    value={comparisons.verified?.change ? `${comparisons.verified.change.percent > 0 ? '+' : ''}${comparisons.verified.change.percent.toFixed(1)}%` : 'N/A'}
+                    subValue="vs prior period"
+                    comparison={comparisons.verified}
                     color="purple"
-                    breakdown={
-                      businessData.conversionFunnel.stages?.trials?.breakdown && (
-                        <div className="flex gap-3 mt-2 pt-2 border-t border-slate-200 dark:border-slate-700 text-xs">
-                          <span className="text-slate-500 dark:text-slate-400">
-                            Campaign: <span className="font-medium text-slate-700 dark:text-slate-300">{formatNumber(businessData.conversionFunnel.stages.trials.breakdown.campaign?.count || 0)}</span>
-                          </span>
-                          <span className="text-slate-500 dark:text-slate-400">
-                            Individual: <span className="font-medium text-slate-700 dark:text-slate-300">{formatNumber(businessData.conversionFunnel.stages.trials.breakdown.individual?.count || 0)}</span>
-                          </span>
-                        </div>
-                      )
-                    }
+                  />
+                  <StatsCard
+                    icon={Zap}
+                    label="Activated"
+                    value={comparisons.activated?.change ? `${comparisons.activated.change.percent > 0 ? '+' : ''}${comparisons.activated.change.percent.toFixed(1)}%` : 'N/A'}
+                    subValue="vs prior period"
+                    comparison={comparisons.activated}
+                    color="purple"
+                  />
+                  <StatsCard
+                    icon={Gift}
+                    label="Trials"
+                    value={comparisons.trials?.change ? `${comparisons.trials.change.percent > 0 ? '+' : ''}${comparisons.trials.change.percent.toFixed(1)}%` : 'N/A'}
+                    subValue="vs prior period"
+                    comparison={comparisons.trials}
+                    color="purple"
                   />
                   <StatsCard
                     icon={DollarSign}
-                    label="Paid Conversion"
-                    value={formatPercent(businessData.conversionFunnel.conversionRates?.signup_to_paid || 0)}
-                    subValue={`${formatNumber(businessData.conversionFunnel.stages?.paid?.count || 0)} of ${formatNumber(businessData.conversionFunnel.stages?.signups?.count || 0)} signups`}
+                    label="Paid"
+                    value={comparisons.paid?.change ? `${comparisons.paid.change.percent > 0 ? '+' : ''}${comparisons.paid.change.percent.toFixed(1)}%` : 'N/A'}
+                    subValue="vs prior period"
+                    comparison={comparisons.paid}
                     color="purple"
-                    breakdown={
-                      businessData.conversionFunnel.stages?.paid?.breakdown && (
-                        <div className="flex gap-3 mt-2 pt-2 border-t border-slate-200 dark:border-slate-700 text-xs">
-                          <span className="text-slate-500 dark:text-slate-400">
-                            Via Trial: <span className="font-medium text-slate-700 dark:text-slate-300">{formatNumber(businessData.conversionFunnel.stages.paid.breakdown.viaTrial?.count || 0)}</span>
-                          </span>
-                          <span className="text-slate-500 dark:text-slate-400">
-                            Direct: <span className="font-medium text-slate-700 dark:text-slate-300">{formatNumber(businessData.conversionFunnel.stages.paid.breakdown.direct?.count || 0)}</span>
-                          </span>
-                        </div>
-                      )
-                    }
                   />
                 </div>
 
@@ -791,12 +809,12 @@ export default function Analytics() {
                 >
                   <div className="space-y-4">
                     {/* Funnel visualization as stacked bars */}
-                    {['visitors', 'engaged', 'signups', 'trials', 'paid'].map((stage, index) => {
+                    {['visitors', 'engaged', 'signups', 'emailVerified', 'activated', 'trials', 'paid'].map((stage, index) => {
                       const stageData = businessData.conversionFunnel.stages?.[stage];
                       const maxCount = businessData.conversionFunnel.stages?.visitors?.count || 1;
                       const percentage = maxCount > 0 ? (stageData?.count / maxCount) * 100 : 0;
-                      const colors = ['bg-purple-600 dark:bg-purple-500', 'bg-indigo-600 dark:bg-indigo-500', 'bg-blue-600 dark:bg-blue-500', 'bg-amber-600 dark:bg-amber-500', 'bg-green-600 dark:bg-green-500'];
-                      const labels = ['Visitors', 'Engaged (Used Product)', 'Signups', 'Trial Started', 'Paid'];
+                      const colors = ['bg-purple-600 dark:bg-purple-500', 'bg-indigo-600 dark:bg-indigo-500', 'bg-blue-600 dark:bg-blue-500', 'bg-cyan-600 dark:bg-cyan-500', 'bg-teal-600 dark:bg-teal-500', 'bg-amber-600 dark:bg-amber-500', 'bg-green-600 dark:bg-green-500'];
+                      const labels = ['Visitors', 'Engaged (Used Product)', 'Signups', 'Email Verified', 'Activated (First Doc)', 'Trial Started', 'Paid'];
 
                       // Check if this stage has a breakdown
                       const hasBreakdown = stage === 'trials' || stage === 'paid';
@@ -899,6 +917,179 @@ export default function Analytics() {
                 </ChartSection>
               </>
             )}
+
+            {/* Campaign Export Section */}
+            <div className="mt-8 p-6 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg">
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                Campaign Metrics Export
+              </h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                Export comprehensive campaign metrics including trial breakdowns, conversion rates, and cohort analysis for investor reporting.
+              </p>
+
+              <div className="flex items-end gap-4">
+                <div className="flex-1">
+                  <label htmlFor="export-start-date" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Start Date
+                  </label>
+                  <input
+                    type="date"
+                    id="export-start-date"
+                    value={campaignExportDates.startDate instanceof Date ? campaignExportDates.startDate.toISOString().split('T')[0] : campaignExportDates.startDate}
+                    onChange={(e) => {
+                      const newDate = new Date(e.target.value);
+                      setCampaignExportDates(prev => ({ ...prev, startDate: newDate }));
+                    }}
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-transparent"
+                  />
+                </div>
+
+                <div className="flex-1">
+                  <label htmlFor="export-end-date" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    End Date
+                  </label>
+                  <input
+                    type="date"
+                    id="export-end-date"
+                    value={campaignExportDates.endDate instanceof Date ? campaignExportDates.endDate.toISOString().split('T')[0] : campaignExportDates.endDate}
+                    onChange={(e) => {
+                      const newDate = new Date(e.target.value);
+                      setCampaignExportDates(prev => ({ ...prev, endDate: newDate }));
+                    }}
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-transparent"
+                  />
+                </div>
+
+                <button
+                  onClick={async () => {
+                    try {
+                      const token = getToken();
+                      if (!token) {
+                        console.error('No auth token available');
+                        return;
+                      }
+
+                      // Format dates as YYYY-MM-DD
+                      const startDateStr = campaignExportDates.startDate instanceof Date
+                        ? campaignExportDates.startDate.toISOString().split('T')[0]
+                        : campaignExportDates.startDate;
+                      const endDateStr = campaignExportDates.endDate instanceof Date
+                        ? campaignExportDates.endDate.toISOString().split('T')[0]
+                        : campaignExportDates.endDate;
+
+                      const response = await fetch(
+                        `${import.meta.env.VITE_API_URL}/api/admin/campaigns/export?startDate=${startDateStr}&endDate=${endDateStr}&campaignSource=auto_campaign`,
+                        {
+                          headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                          }
+                        }
+                      );
+
+                      if (!response.ok) {
+                        throw new Error(`Export failed: ${response.statusText}`);
+                      }
+
+                      const result = await response.json();
+                      const data = result.data;
+
+                      // Helper function to escape CSV fields
+                      const escapeCSV = (field) => {
+                        if (field == null) return '';
+                        const stringField = String(field);
+                        // If field contains comma, quote, or newline, wrap in quotes and escape existing quotes
+                        if (stringField.includes(',') || stringField.includes('"') || stringField.includes('\n')) {
+                          return `"${stringField.replace(/"/g, '""')}"`;
+                        }
+                        return stringField;
+                      };
+
+                      // Convert to CSV format
+                      const csvRows = [];
+
+                      // Campaign metadata section
+                      csvRows.push('CAMPAIGN METRICS EXPORT');
+                      csvRows.push('');
+                      csvRows.push('Campaign Information');
+                      if (data.campaign.name) {
+                        csvRows.push(`Campaign Name,${escapeCSV(data.campaign.name)}`);
+                      }
+                      csvRows.push(`Date Range,${escapeCSV(data.campaign.startDate + ' to ' + data.campaign.endDate)}`);
+                      if (data.campaign.trialTier) {
+                        const trialOffer = `${data.campaign.trialDays}-Day ${data.campaign.trialTier.charAt(0).toUpperCase() + data.campaign.trialTier.slice(1)} Trial`;
+                        csvRows.push(`Trial Offer,${escapeCSV(trialOffer)}`);
+                      }
+                      csvRows.push('');
+
+                      // Summary metrics section
+                      csvRows.push('Summary Metrics');
+                      csvRows.push(`Total Signups,${data.summary.total_signups}`);
+                      csvRows.push(`Email Verified,${data.summary.verified_users}`);
+                      csvRows.push(`Activated Users,${data.summary.activated_users}`);
+                      csvRows.push('');
+
+                      // Trial breakdown section
+                      csvRows.push('Trial Breakdown');
+                      csvRows.push('Trial Type,Trials Started,Conversions,Conversion Rate');
+                      csvRows.push(`Campaign Trials,${data.summary.trials_breakdown.campaign_trials.started},${data.summary.trials_breakdown.campaign_trials.converted},${data.summary.trials_breakdown.campaign_trials.conversion_rate}%`);
+                      csvRows.push(`Individual Trials,${data.summary.trials_breakdown.individual_trials.started},${data.summary.trials_breakdown.individual_trials.converted},${data.summary.trials_breakdown.individual_trials.conversion_rate}%`);
+                      csvRows.push(`Total Trials,${data.summary.trials_breakdown.total_trials.started},${data.summary.trials_breakdown.total_trials.converted},${data.summary.trials_breakdown.total_trials.conversion_rate}%`);
+                      csvRows.push('');
+
+                      // Campaign performance comparison
+                      csvRows.push('Campaign Performance');
+                      csvRows.push(`Campaign Lift,${data.summary.comparison.campaign_vs_individual.campaign_lift}`);
+                      csvRows.push(`Campaign Performs Better,${data.summary.comparison.campaign_vs_individual.campaign_performs_better ? 'Yes' : 'No'}`);
+                      csvRows.push('');
+
+                      // Individual trial sources breakdown
+                      if (data.summary.trials_breakdown.individual_trials.by_source && data.summary.trials_breakdown.individual_trials.by_source.length > 0) {
+                        csvRows.push('Individual Trial Sources');
+                        csvRows.push('Source,Trials Started,Conversions,Conversion Rate');
+                        data.summary.trials_breakdown.individual_trials.by_source.forEach(source => {
+                          const sourceName = source.source.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                          csvRows.push(`${escapeCSV(sourceName)},${source.trials_started},${source.conversions},${source.conversion_rate}%`);
+                        });
+                        csvRows.push('');
+                      }
+
+                      // Daily metrics section
+                      if (data.daily && data.daily.length > 0) {
+                        csvRows.push('Daily Breakdown');
+                        csvRows.push('Date,Signups,Verified');
+                        data.daily.forEach(day => {
+                          csvRows.push(`${day.date},${day.signups},${day.verified}`);
+                        });
+                      }
+
+                      // Create CSV blob and download
+                      const csvContent = csvRows.join('\n');
+                      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `campaign-export-${startDateStr}-to-${endDateStr}.csv`;
+                      document.body.appendChild(a);
+                      a.click();
+                      document.body.removeChild(a);
+                      URL.revokeObjectURL(url);
+
+                      console.log('[Campaign Export] Successfully exported campaign metrics as CSV');
+                    } catch (error) {
+                      console.error('[Campaign Export] Error:', error);
+                    }
+                  }}
+                  className="px-6 py-2 bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 text-white rounded-md transition-colors font-medium"
+                >
+                  Export Campaign Metrics
+                </button>
+              </div>
+
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-3">
+                Downloads a CSV file with trial breakdown (campaign vs individual), conversion rates, cohort analysis, and daily metrics. Opens directly in Excel or Google Sheets.
+              </p>
+            </div>
 
             {/* Business Metrics Section */}
             <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-2 mt-8">
@@ -1497,8 +1688,6 @@ export default function Analytics() {
                   label="Average Latency"
                   value={formatLatency(performanceData.avgLatencyMs)}
                   subValue="Mean response time"
-                  comparison={comparisons.avg_latency}
-                  invertTrend={true}
                   color="purple"
                 />
                 <StatsCard

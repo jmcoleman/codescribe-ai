@@ -46,6 +46,9 @@ sequenceDiagram
     DG->>AN: quality_score<br/>{score, grade, doc_type, score_range}
     DG->>AN: doc_generation<br/>{success: 'true', doc_type, duration_ms, code_input: {...}}
 
+    Note over DG,AN: 🎉 First Generation Milestone (if user's first doc)
+    DG->>AN: first_generation<br/>{doc_type, hours_since_signup, origin: 'paste'}
+
     U->>DP: Click "Copy"
     DP->>AN: doc_export<br/>{action: 'copy', doc_type, filename, source: 'fresh'}
 
@@ -94,8 +97,12 @@ sequenceDiagram
     STR->>WH: checkout.session.completed
     WH->>AN: checkout_completed<br/>{user_id, tier: 'pro', amount_cents: 2900, billing_period: 'monthly'}
 
-    WH->>WH: Update user.tier
+    WH->>WH: Update user.tier + send verification email
     WH->>AN: tier_change<br/>{action: 'upgrade', user_id, previous_tier: 'free', new_tier: 'pro'}
+
+    Note over WH,AN: Email Verification (for email signups)
+    U->>WH: Click verification link in email
+    WH->>AN: email_verified<br/>{verification_method: 'email_link', days_to_verify: 0.5}
 
     Note over U,AN: WORKFLOW 5: Returning User Session
 
@@ -112,7 +119,7 @@ sequenceDiagram
 
 **Business Outcome:** Eliminate Documentation Time Tax (< 3 min from paste to copy)
 
-**Implemented Events:** `session_start` → `code_input` → `doc_generation` (×2) → `quality_score` → `doc_export`
+**Implemented Events:** `session_start` → `code_input` → `doc_generation` (×2) → `quality_score` → `first_generation` → `doc_export`
 
 ```mermaid
 sequenceDiagram
@@ -137,6 +144,9 @@ sequenceDiagram
 
     DocGen->>Analytics: quality_score<br/>{score: 85, grade: 'B', doc_type: 'README', score_range: '80-89'}
 
+    Note over DocGen,Analytics: 🎉 First Generation Milestone (tracked automatically)
+    DocGen->>Analytics: first_generation<br/>{doc_type: 'README', hours_since_signup: 0.05, origin: 'paste'}
+
     User->>DocGen: Click "Copy Documentation"
     DocGen->>Analytics: doc_export<br/>{action: 'copy', doc_type: 'README', filename: 'README.md', source: 'fresh'}
 
@@ -144,12 +154,12 @@ sequenceDiagram
 ```
 
 **Key Funnel Stages:**
-1. **Entry:** `session_start` (100%
-)
+1. **Entry:** `session_start` (100%)
 2. **Engage:** `code_input` (~70% of sessions)
 3. **Commit:** `doc_generation` with success: 'false' (~66%)
 4. **Value Delivered:** `doc_generation` with success: 'true' + `quality_score` (~62%)
-5. **Value Captured:** `doc_export` action: 'copy' or 'download' (~57%)
+5. **Activation Milestone:** `first_generation` (~62% of new users - tracked once per user)
+6. **Value Captured:** `doc_export` action: 'copy' or 'download' (~57%)
 
 **Session Context (Auto-Added to All Events):**
 ```javascript
@@ -315,6 +325,7 @@ sequenceDiagram
 | 5. Start Checkout | `user_interaction` (checkout_started) | ~20% start checkout |
 | 6. Complete Payment | `checkout_completed` | ~15% complete |
 | 7. Tier Upgraded | `tier_change` (action: 'upgrade') | ~15% fully upgraded |
+| 8. Email Verified | `email_verified` (for email signups) | ~90% verify within 7 days |
 
 **Conversion Rate Calculation:**
 ```sql
@@ -489,15 +500,16 @@ Webhook events tracked via `serverAnalytics.js`:
 
 | Workflow | Events Implemented | Dashboard Visualization | Status |
 |----------|-------------------|------------------------|--------|
-| 1. First Value Moment | 5 events (session_start, code_input, doc_generation ×2, quality_score, doc_export) | Conversion funnel chart | ✅ Live |
+| 1. First Value Moment | 6 events (session_start, code_input, doc_generation ×2, quality_score, first_generation, doc_export) | Conversion funnel chart | ✅ Live |
 | 2. GitHub Import | 4 events (code_input, doc_generation ×N, user_interaction batch_complete, doc_export) | Code input breakdown, batch stats | ✅ Live |
 | 3. Quality Improvement | 3 events (quality_score, doc_generation, user_interaction regeneration_complete) | Quality score distribution | ✅ Live |
-| 4. Free-to-Paid | 7 events (usage_alert ×2, user_interaction ×3, checkout_completed, tier_change) | Business metrics tab | ✅ Live |
+| 4. Free-to-Paid | 8 events (usage_alert ×2, user_interaction ×3, checkout_completed, tier_change, email_verified) | Business metrics tab | ✅ Live |
 | 5. Returning User | 1 event (session_start) | Sessions over time trend | ✅ Live |
 
-**Total Events Implemented:** 13 unique event types, 20+ action variants
+**Total Events Implemented:** 15 unique event types, 20+ action variants
 
 **Shipped:** v3.3.4 (January 6, 2026)
+**Updated:** v3.3.9 (January 11, 2026) - Added `email_verified`, `first_generation`
 
 ---
 
@@ -587,6 +599,7 @@ describe('Event Tracking Integration', () => {
 
 ---
 
-**Document Status:** ✅ Complete - Reflects v3.3.4+ actual implementation
-**Last Updated:** January 9, 2026
+**Document Status:** ✅ Complete - Reflects v3.3.9 actual implementation
+**Last Updated:** January 11, 2026
+**Recent Changes:** Added `email_verified` (business), `first_generation` (workflow) for campaign tracking
 **Maintainer:** CodeScribe AI Team

@@ -109,6 +109,7 @@ AI-powered documentation generator with real-time streaming, quality scoring (0-
 | [RELEASE-QUICKSTART.md](docs/deployment/RELEASE-QUICKSTART.md) | Release process ⭐ | Two-phase process (prep vs. deploy), checklist, automation |
 | [VERCEL-DEPLOYMENT-GUIDE.md](docs/deployment/VERCEL-DEPLOYMENT-GUIDE.md) | Vercel deployment | Project setup, environment variables, custom domains |
 | [STRIPE-SETUP.md](docs/deployment/STRIPE-SETUP.md) | Payment processing | Stripe configuration, webhooks, test mode vs. production |
+| [STRIPE-PRODUCTION-SWITCH.md](docs/deployment/STRIPE-PRODUCTION-SWITCH.md) | Go-live guide ⭐ | Switch from sandbox to production, complete checklist, verification steps |
 | [STRIPE-TESTING-GUIDE.md](docs/deployment/STRIPE-TESTING-GUIDE.md) | Payment testing | Test scenarios, test card numbers, webhook testing |
 | [RESEND-SETUP.md](docs/deployment/RESEND-SETUP.md) | Email service | Resend API configuration, domain verification, templates |
 | [GITHUB-OAUTH-SETUP.md](docs/deployment/GITHUB-OAUTH-SETUP.md) | OAuth provider | GitHub App setup, credentials, callback URLs |
@@ -135,11 +136,22 @@ AI-powered documentation generator with real-time streaming, quality scoring (0-
 | [GITHUB-MULTI-FILE-IMPORT.md](docs/features/GITHUB-MULTI-FILE-IMPORT.md) | GitHub import ⭐ | Multi-file import from GitHub repos, tree browsing, file selection |
 | [ADD-NEW-DOC-TYPE.md](docs/guides/ADD-NEW-DOC-TYPE.md) | Extension guide | Adding new documentation types, prompt templates |
 
+### 👤 Admin Tools
+| Document | Use Case | Key Contents |
+|----------|----------|--------------|
+| [CAMPAIGN-MANAGEMENT-GUIDE.md](docs/admin/CAMPAIGN-MANAGEMENT-GUIDE.md) | Campaign management ⭐ | Creating trials campaigns, UI-based setup, monitoring, best practices |
+| [ADMIN-USAGE-STATS.md](docs/admin/ADMIN-USAGE-STATS.md) | Usage analytics | Admin dashboard, user stats, quota monitoring |
+
 ### 📋 Project Templates
 | Document | Use Case | Key Contents |
 |----------|----------|--------------|
 | [WORKFLOW-FIRST-PRD-TEMPLATE.md](docs/templates/WORKFLOW-FIRST-PRD-TEMPLATE.md) | New project PRD ⭐ | Meta prompt for workflow-first PRDs, outcome-based planning, anti-patterns to avoid |
 | [WORKFLOW-FIRST-PRD-EXAMPLE-CODESCRIBE.md](docs/templates/WORKFLOW-FIRST-PRD-EXAMPLE-CODESCRIBE.md) | PRD example ⭐ | Complete CodeScribe PRD demonstrating workflow-first approach, 5 core workflows |
+
+### 📢 Marketing & Launch
+| Document | Use Case | Key Contents |
+|----------|----------|--------------|
+| [VISUAL-ASSET-CREATION-PLAN.md](docs/marketing/VISUAL-ASSET-CREATION-PLAN.md) | Product launch assets ⭐ | Complete visual asset guide: 8 screenshots, demo video, GIFs, platform specs, timeline |
 
 ---
 
@@ -224,6 +236,7 @@ const response = await fetch(`${API_URL}/api/protected-endpoint`, {
 | Error Handling | ERROR-HANDLING-PATTERNS.md (app vs external API errors, 429 vs 503, email/Claude patterns) |
 | Subscription Flows | SUBSCRIPTION-FLOWS.md (unauthenticated signup, email/OAuth, billing periods) |
 | Subscriptions/Payments | SUBSCRIPTION-MANAGEMENT.md (upgrade/downgrade flows, proration, webhooks) |
+| Stripe Setup | STRIPE-SETUP.md (initial setup), STRIPE-PRODUCTION-SWITCH.md (go-live), STRIPE-TESTING-GUIDE.md (testing) |
 | Authentication | EMAIL-VERIFICATION-SYSTEM.md, PASSWORD-RESET-IMPLEMENTATION.md, PASSWORD-RESET-SETUP.md |
 | Security | JWT-AUTHENTICATION-SECURITY.md, EMAIL-RATE-LIMITING.md, FREEMIUM-API-PROTECTION.md, EMAIL-CONFIGURATION.md |
 | Deployment Setup | STRIPE-SETUP.md, RESEND-SETUP.md, GITHUB-OAUTH-SETUP.md, CUSTOM-DOMAIN-SETUP.md, DEPLOYMENT-CHECKLIST.md |
@@ -245,6 +258,9 @@ const response = await fetch(`${API_URL}/api/protected-endpoint`, {
 | New Project PRD | WORKFLOW-FIRST-PRD-TEMPLATE.md (meta prompt), WORKFLOW-FIRST-PRD-EXAMPLE-CODESCRIBE.md (example) |
 | Workflow Planning | WORKFLOW-FIRST-PRD-TEMPLATE.md (outcome-based planning, jobs-to-be-done, workflow diagrams) |
 | Analytics/Metrics | WORKFLOW-OUTCOME-METRICS-PLAN.md (session tracking, funnels, conversion metrics) |
+| Campaigns/Trials | CAMPAIGN-MANAGEMENT-GUIDE.md (UI-based campaign creation, trial management, monitoring) |
+| Admin Tools | CAMPAIGN-MANAGEMENT-GUIDE.md, ADMIN-USAGE-STATS.md |
+| Marketing/Launch | VISUAL-ASSET-CREATION-PLAN.md (screenshots, demo videos, GIFs, platform requirements) |
 
 ### 2. Best Practices
 - ✅ **Always cite sources:** Mention document name + file path
@@ -261,6 +277,8 @@ const response = await fetch(`${API_URL}/api/protected-endpoint`, {
 - **Skipped Tests:** SKIPPED-TESTS.md - Update on every release, quarterly review (15 frontend tests intentionally skipped)
 - **Error Handling:** ERROR-HANDLING-PATTERNS.md (app vs API errors, HTTP status codes) → ERROR-HANDLING-UX.md (UX patterns, priority system) → USAGE-PROMPTS.md (usage warnings/limits) → TOAST-SYSTEM.md (success toasts)
 - **Subscriptions:** SUBSCRIPTION-FLOWS.md (unauthenticated flow, sessionStorage) → SUBSCRIPTION-MANAGEMENT.md (upgrades, proration, webhooks)
+- **Stripe:** STRIPE-SETUP.md (initial integration) → STRIPE-TESTING-GUIDE.md (testing flows) → STRIPE-PRODUCTION-SWITCH.md (go-live)
+- **Campaigns:** CAMPAIGN-MANAGEMENT-GUIDE.md (UI-based setup, monitoring) → AUTO-TRIAL-CAMPAIGN.md (technical implementation)
 - **Accessibility:** ACCESSIBILITY-AUDIT.md (results) → SCREEN-READER-TESTING-GUIDE.md (procedures)
 - **Release Process:** RELEASE-QUICKSTART.md - Two-phase process (Phase 1: Prep for Release, Phase 2: Release Deployment)
 

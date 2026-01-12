@@ -15,11 +15,13 @@ const EVENT_CATEGORIES = {
   code_input: 'workflow',
   generation_started: 'workflow',
   generation_completed: 'workflow',
+  first_generation: 'workflow', // User's first successful generation (milestone)
   doc_export: 'workflow', // User exports documentation (action: copy/download)
 
   // Business events - monetization and conversion
   login: 'business',
   signup: 'business',
+  email_verified: 'business', // Email verification milestone
   trial: 'business', // Trial lifecycle (action: started/expired/converted)
   tier_change: 'business', // Subscription changes (action: upgrade/downgrade/cancel)
   checkout_completed: 'business',
@@ -646,6 +648,48 @@ export const analyticsService = {
       `;
     }
 
+    // Get email verified count (new milestone in v3.3.9)
+    let emailVerifiedResult;
+    if (excludeInternal) {
+      emailVerifiedResult = await sql`
+        SELECT COUNT(*) as count
+        FROM analytics_events
+        WHERE event_name = 'email_verified'
+          AND created_at >= ${startDate}
+          AND created_at < ${endDate}
+          AND is_internal = FALSE
+      `;
+    } else {
+      emailVerifiedResult = await sql`
+        SELECT COUNT(*) as count
+        FROM analytics_events
+        WHERE event_name = 'email_verified'
+          AND created_at >= ${startDate}
+          AND created_at < ${endDate}
+      `;
+    }
+
+    // Get first generation count (new activation milestone in v3.3.9)
+    let firstGenerationResult;
+    if (excludeInternal) {
+      firstGenerationResult = await sql`
+        SELECT COUNT(*) as count
+        FROM analytics_events
+        WHERE event_name = 'first_generation'
+          AND created_at >= ${startDate}
+          AND created_at < ${endDate}
+          AND is_internal = FALSE
+      `;
+    } else {
+      firstGenerationResult = await sql`
+        SELECT COUNT(*) as count
+        FROM analytics_events
+        WHERE event_name = 'first_generation'
+          AND created_at >= ${startDate}
+          AND created_at < ${endDate}
+      `;
+    }
+
     // Get trial starts with breakdown by type (campaign vs individual)
     let trialResult;
     if (excludeInternal) {
@@ -731,6 +775,8 @@ export const analyticsService = {
     const visitors = parseInt(visitorResult.rows[0]?.count || 0);
     const engaged = parseInt(engagedResult.rows[0]?.count || 0);
     const signups = parseInt(signupResult.rows[0]?.count || 0);
+    const emailVerified = parseInt(emailVerifiedResult.rows[0]?.count || 0);
+    const firstGeneration = parseInt(firstGenerationResult.rows[0]?.count || 0);
 
     // Trial breakdown
     const trialsTotal = parseInt(trialResult.rows[0]?.total || 0);
@@ -745,6 +791,9 @@ export const analyticsService = {
     // Calculate conversion rates
     const visitorToEngaged = visitors > 0 ? Math.round((engaged / visitors) * 1000) / 10 : 0;
     const engagedToSignup = engaged > 0 ? Math.round((signups / engaged) * 1000) / 10 : 0;
+    const signupToVerified = signups > 0 ? Math.round((emailVerified / signups) * 1000) / 10 : 0;
+    const verifiedToActivated = emailVerified > 0 ? Math.round((firstGeneration / emailVerified) * 1000) / 10 : 0;
+    const activatedToTrial = firstGeneration > 0 ? Math.round((trialsTotal / firstGeneration) * 1000) / 10 : 0;
     const signupToTrial = signups > 0 ? Math.round((trialsTotal / signups) * 1000) / 10 : 0;
     const trialToPaid = trialsTotal > 0 ? Math.round((paidViaTrial / trialsTotal) * 1000) / 10 : 0;
     const signupToPaid = signups > 0 ? Math.round((paidTotal / signups) * 1000) / 10 : 0; // Overall signup to paid (both paths)
@@ -756,6 +805,8 @@ export const analyticsService = {
         visitors: { count: visitors, label: 'Visitors' },
         engaged: { count: engaged, label: 'Engaged' },
         signups: { count: signups, label: 'Signups' },
+        emailVerified: { count: emailVerified, label: 'Email Verified' },
+        activated: { count: firstGeneration, label: 'Activated' },
         trials: {
           count: trialsTotal,
           label: 'Trial Started',
@@ -776,6 +827,9 @@ export const analyticsService = {
       conversionRates: {
         visitor_to_engaged: visitorToEngaged,
         engaged_to_signup: engagedToSignup,
+        signup_to_verified: signupToVerified,
+        verified_to_activated: verifiedToActivated,
+        activated_to_trial: activatedToTrial,
         signup_to_trial: signupToTrial,
         trial_to_paid: trialToPaid,
         signup_to_paid: signupToPaid,
@@ -3307,6 +3361,40 @@ export const analyticsService = {
           const generations = funnel.stages?.generation_started?.events || 0;
           const errorCount = parseInt(errors.rows[0]?.count || 0);
           return generations > 0 ? (errorCount / generations) * 100 : 0;
+        }
+        case 'visitors': {
+          const funnel = await this.getConversionFunnel(params);
+          return funnel.stages?.visitors?.count || 0;
+        }
+        case 'engaged': {
+          const funnel = await this.getConversionFunnel(params);
+          const visitors = funnel.stages?.visitors?.count || 0;
+          const engaged = funnel.stages?.engaged?.count || 0;
+          return visitors > 0 ? (engaged / visitors) * 100 : 0;
+        }
+        case 'verified': {
+          const funnel = await this.getConversionFunnel(params);
+          const signups = funnel.stages?.signups?.count || 0;
+          const verified = funnel.stages?.emailVerified?.count || 0;
+          return signups > 0 ? (verified / signups) * 100 : 0;
+        }
+        case 'activated': {
+          const funnel = await this.getConversionFunnel(params);
+          const verified = funnel.stages?.emailVerified?.count || 0;
+          const activated = funnel.stages?.activated?.count || 0;
+          return verified > 0 ? (activated / verified) * 100 : 0;
+        }
+        case 'trials': {
+          const funnel = await this.getConversionFunnel(params);
+          const activated = funnel.stages?.activated?.count || 0;
+          const trials = funnel.stages?.trials?.count || 0;
+          return activated > 0 ? (trials / activated) * 100 : 0;
+        }
+        case 'paid': {
+          const funnel = await this.getConversionFunnel(params);
+          const trials = funnel.stages?.trials?.count || 0;
+          const paid = funnel.stages?.paid?.count || 0;
+          return trials > 0 ? (paid / trials) * 100 : 0;
         }
         default:
           throw new Error(`Unknown metric: ${metric}`);

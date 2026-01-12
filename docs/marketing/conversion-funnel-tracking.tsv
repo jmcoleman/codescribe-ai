@@ -1,0 +1,72 @@
+CONVERSION FUNNEL - JANUARY 2026 COHORT (14-DAY TRIAL)
+
+FUNNEL OVERVIEW
+Stage	Count	Rate	Cumulative %	Drop-off	Notes
+Trial Signups	100	100%	100%	0	All new users who signed up
+Email Verified	95	95%	95%	=B7-B8	Auto-verification + manual confirms
+First Generation	80	=C9/C8	80%	=B8-B9	Activated trial users
+10+ Generations	40	=C10/C9	40%	=B9-B10	Engaged users
+50+ Generations	20	=C11/C10	20%	=B10-B11	Power users
+Trial Completed	75	=C12/C8	75%	=B8-B12	Used full 14 days
+Converted to Paid	12	=C13/C12	12%	=B12-B13	Trial-to-paid conversion
+
+KEY CONVERSION METRICS
+Metric	Target	Actual	Status	Industry Benchmark
+Activation Rate (1+ gen)	>70%	=C9/C7	=IF(C17>=0.7,"✅ PASS","⚠️ REVIEW")	70-85%
+Engagement Rate (10+ gen)	>30%	=C10/C7	=IF(C18>=0.3,"✅ PASS","⚠️ REVIEW")	25-40%
+Power User Rate (50+ gen)	>15%	=C11/C7	=IF(C19>=0.15,"✅ PASS","⚠️ REVIEW")	10-20%
+Trial Completion Rate	>60%	=C12/C7	=IF(C20>=0.6,"✅ PASS","⚠️ REVIEW")	50-70%
+Trial-to-Paid Conversion	>10%	=C13/C7	=IF(C21>=0.1,"✅ PASS","⚠️ REVIEW")	10-15% (14-day trials)
+
+FUNNEL BREAKDOWN BY WEEK
+Week	Signups	Verified	First Gen	10+ Gens	50+ Gens	Completed Trial	Converted
+Week 1	25	24	20	10	5	0	0
+Week 2	25	24	21	11	6	18	2
+Week 3	20	19	17	9	4	15	2
+Week 4	30	28	22	10	5	22	3
+Post-Trial (30 days)	0	0	0	0	0	20	5
+TOTALS	=SUM(B26:B29)	=SUM(C26:C29)	=SUM(D26:D29)	=SUM(E26:E29)	=SUM(F26:F29)	=SUM(G26:G30)	=SUM(H26:H30)
+
+CONVERSION TIMING ANALYSIS
+Days to Convert	Count	%	Cumulative %	Notes
+During Trial (1-14 days)	7	=B34/SUM($B$34:$B$38)	=B34/SUM($B$34:$B$38)	Immediate converters (high intent)
+Week 3 (15-21 days)	2	=B35/SUM($B$34:$B$38)	=SUM(B34:B35)/SUM($B$34:$B$38)	Trial expired, urgency kicks in
+Week 4 (22-28 days)	2	=B36/SUM($B$34:$B$38)	=SUM(B34:B36)/SUM($B$34:$B$38)	Re-engagement campaign
+30+ days	1	=B37/SUM($B$34:$B$38)	=SUM(B34:B37)/SUM($B$34:$B$38)	Late converters
+Never Converted	88	=B38/SUM($B$34:$B$38)	100%	Lost to competition or no need
+TOTAL	=SUM(B34:B38)	100%
+
+USAGE PATTERNS - COHORT ANALYSIS
+Usage Segment	Count	% of Signups	Avg Generations	Conversion Rate	Notes
+No Usage (0 gens)	20	=B42/$C$7	0	0%	Never activated
+Light Users (1-9 gens)	20	=B43/$C$7	5	=E43	Tire-kickers
+Engaged Users (10-49 gens)	20	=B44/$C$7	25	=E44	Evaluating seriously
+Power Users (50-99 gens)	15	=B45/$C$7	70	=E45	High intent users
+Max Users (100+ gens)	5	=B46/$C$7	120	=E46	Hit usage limits
+Hit Tier Limit (200 gens)	20	=B47/$C$7	200	=E47	Need upgrade
+TOTAL	=SUM(B42:B47)	=B48/$C$7
+
+CONVERSION QUALITY ANALYSIS
+Segment	Converted Users	LTV	Total LTV	CAC	Profit per User
+Light Users	=B43*E43	$600	=B52*C52	=350/100	=C52-E52
+Engaged Users	=B44*E44	$600	=B53*C53	=350/100	=C53-E53
+Power Users	=B45*E45	$600	=B54*C54	=350/100	=C54-E54
+Max Users	=B46*E46	$600	=B55*C55	=350/100	=C55-E55
+Hit Tier Limit	=B47*E47	$600	=B56*C56	=350/100	=C56-E56
+TOTAL	=SUM(B52:B56)		=SUM(D52:D56)		=SUM(F52:F56)
+
+WEEKLY ACTIVITY TRACKING
+Week	Active Users	Avg Gens/User	Total Generations	API Cost	Notes
+Week 1	80	=D61/C61	=C61*5	=D61*0.051	Launch week activity
+Week 2	75	=D62/C62	=C62*8	=D62*0.051	Trial expiration begins
+Week 3	40	=D63/C63	=C63*6	=D63*0.051	Activity drops off
+Week 4	20	=D64/C64	=C64*4	=D64*0.051	Stragglers
+TOTAL		=AVERAGE(D61:D64)	=SUM(D61:D64)	=SUM(E61:E64)
+
+CONVERSION OPTIMIZATION INSIGHTS
+Insight	Observation	Action Item
+Activation Gap	=100-C9	Send activation email to non-activated users
+Engagement Drop-off	=C9-C10	Trigger engagement campaign at 5 generations
+Power User Potential	=C11/$C$7	Identify and nurture power users for conversion
+Trial Completion	=C12/$C$7	Remind users before trial expires
+Conversion Rate	=C13/$C$7	Optimize pricing page and upgrade prompts

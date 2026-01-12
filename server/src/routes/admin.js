@@ -2106,6 +2106,268 @@ router.get('/campaigns', requireAuth, requireAdmin, async (req, res) => {
 });
 
 /**
+ * GET /api/admin/campaigns/export - Export campaign metrics with trial breakdown
+ * Query params: startDate (YYYY-MM-DD), endDate (YYYY-MM-DD), campaignSource (default: 'auto_campaign')
+ *
+ * Returns comprehensive campaign metrics including:
+ * - Trial breakdown (campaign vs individual trials)
+ * - Weekly aggregations
+ * - Cohort summary (signups, verified, activated, trials, conversions)
+ * - Spreadsheet-ready format
+ */
+router.get('/campaigns/export', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { startDate, endDate, campaignSource = 'auto_campaign' } = req.query;
+
+    // Validation
+    if (!startDate || !endDate) {
+      return res.status(400).json({
+        success: false,
+        error: 'startDate and endDate query parameters are required (YYYY-MM-DD format)',
+      });
+    }
+
+    // Parse and validate dates
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid date format. Use YYYY-MM-DD',
+      });
+    }
+
+    if (start >= end) {
+      return res.status(400).json({
+        success: false,
+        error: 'startDate must be before endDate',
+      });
+    }
+
+    // Get trial breakdown by source
+    const trialBreakdown = await sql`
+      SELECT
+        source,
+        COUNT(*) as trials_started,
+        COUNT(CASE WHEN status = 'converted' THEN 1 END) as conversions,
+        ROUND(COUNT(CASE WHEN status = 'converted' THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0), 2) as conversion_rate,
+        ROUND(AVG(CASE
+          WHEN status = 'converted'
+          THEN EXTRACT(EPOCH FROM (converted_at - started_at)) / 86400
+        END), 1) as avg_days_to_convert
+      FROM user_trials
+      WHERE started_at >= ${startDate}
+        AND started_at < ${endDate}
+      GROUP BY source
+      ORDER BY trials_started DESC
+    `;
+
+    // Separate campaign vs individual trials
+    const campaignTrials = trialBreakdown.rows.find(t => t.source === campaignSource) || {
+      source: campaignSource,
+      trials_started: '0',
+      conversions: '0',
+      conversion_rate: '0',
+      avg_days_to_convert: null
+    };
+
+    const individualTrials = trialBreakdown.rows.filter(t => t.source !== campaignSource);
+    const individualTrialsTotal = individualTrials.reduce((acc, trial) => ({
+      trials_started: acc.trials_started + parseInt(trial.trials_started),
+      conversions: acc.conversions + parseInt(trial.conversions)
+    }), { trials_started: 0, conversions: 0 });
+
+    const individualConversionRate = individualTrialsTotal.trials_started > 0
+      ? ((individualTrialsTotal.conversions / individualTrialsTotal.trials_started) * 100).toFixed(2)
+      : '0';
+
+    // Calculate campaign lift
+    const campaignLift = parseFloat(individualConversionRate) > 0
+      ? (((parseFloat(campaignTrials.conversion_rate) - parseFloat(individualConversionRate)) / parseFloat(individualConversionRate)) * 100).toFixed(1)
+      : null;
+
+    // Get cohort summary (signups, verified, activated in date range)
+    const cohortSummary = await sql`
+      SELECT
+        COUNT(*) as total_signups,
+        COUNT(CASE WHEN email_verified = true THEN 1 END) as verified_users,
+        COUNT(CASE WHEN
+          EXISTS (
+            SELECT 1 FROM generated_documents gd
+            WHERE gd.user_id = users.id AND gd.deleted_at IS NULL
+          )
+        THEN 1 END) as activated_users
+      FROM users
+      WHERE created_at >= ${startDate}
+        AND created_at < ${endDate}
+    `;
+
+    // Get daily breakdown for weekly aggregations
+    const dailyMetrics = await sql`
+      SELECT
+        DATE(created_at) as date,
+        COUNT(*) as signups,
+        COUNT(CASE WHEN email_verified = true THEN 1 END) as verified
+      FROM users
+      WHERE created_at >= ${startDate}
+        AND created_at < ${endDate}
+      GROUP BY DATE(created_at)
+      ORDER BY date
+    `;
+
+    // Get active campaign info (if exists) for campaign name
+    let campaignInfo = null;
+    try {
+      const campaignResult = await sql`
+        SELECT id, name, trial_tier, trial_days
+        FROM campaigns
+        WHERE is_active = TRUE
+          AND starts_at <= ${endDate}
+          AND (ends_at IS NULL OR ends_at >= ${startDate})
+        LIMIT 1
+      `;
+
+      if (campaignResult.rows.length > 0) {
+        campaignInfo = {
+          id: campaignResult.rows[0].id,
+          name: campaignResult.rows[0].name,
+          trialTier: campaignResult.rows[0].trial_tier,
+          trialDays: campaignResult.rows[0].trial_days
+        };
+      }
+    } catch (campaignError) {
+      console.log('[Campaign Export] No active campaign found or error fetching campaign');
+    }
+
+    // Build response
+    const totalTrials = parseInt(campaignTrials.trials_started) + individualTrialsTotal.trials_started;
+    const totalConversions = parseInt(campaignTrials.conversions) + individualTrialsTotal.conversions;
+    const totalConversionRate = totalTrials > 0
+      ? ((totalConversions / totalTrials) * 100).toFixed(2)
+      : '0';
+
+    const response = {
+      campaign: {
+        startDate,
+        endDate,
+        source: campaignSource,
+        ...(campaignInfo && {
+          id: campaignInfo.id,
+          name: campaignInfo.name,
+          trialTier: campaignInfo.trialTier,
+          trialDays: campaignInfo.trialDays
+        })
+      },
+
+      summary: {
+        total_signups: parseInt(cohortSummary.rows[0].total_signups),
+        verified_users: parseInt(cohortSummary.rows[0].verified_users),
+        activated_users: parseInt(cohortSummary.rows[0].activated_users),
+
+        trials_breakdown: {
+          campaign_trials: {
+            started: parseInt(campaignTrials.trials_started),
+            converted: parseInt(campaignTrials.conversions),
+            conversion_rate: parseFloat(campaignTrials.conversion_rate),
+            avg_days_to_convert: campaignTrials.avg_days_to_convert ? parseFloat(campaignTrials.avg_days_to_convert) : null,
+            source: campaignSource
+          },
+
+          individual_trials: {
+            started: individualTrialsTotal.trials_started,
+            converted: individualTrialsTotal.conversions,
+            conversion_rate: parseFloat(individualConversionRate),
+
+            by_source: individualTrials.map(trial => ({
+              source: trial.source,
+              trials_started: parseInt(trial.trials_started),
+              conversions: parseInt(trial.conversions),
+              conversion_rate: parseFloat(trial.conversion_rate),
+              avg_days_to_convert: trial.avg_days_to_convert ? parseFloat(trial.avg_days_to_convert) : null
+            }))
+          },
+
+          total_trials: {
+            started: totalTrials,
+            converted: totalConversions,
+            conversion_rate: parseFloat(totalConversionRate)
+          }
+        },
+
+        comparison: {
+          campaign_vs_individual: {
+            campaign_conversion_rate: parseFloat(campaignTrials.conversion_rate),
+            individual_conversion_rate: parseFloat(individualConversionRate),
+            campaign_lift: campaignLift ? `${campaignLift > 0 ? '+' : ''}${campaignLift}%` : 'N/A',
+            campaign_performs_better: parseFloat(campaignTrials.conversion_rate) > parseFloat(individualConversionRate)
+          },
+
+          trial_source_distribution: totalTrials > 0 ? {
+            campaign_percentage: ((parseInt(campaignTrials.trials_started) / totalTrials) * 100).toFixed(1),
+            individual_percentage: ((individualTrialsTotal.trials_started / totalTrials) * 100).toFixed(1)
+          } : {
+            campaign_percentage: '0',
+            individual_percentage: '0'
+          }
+        }
+      },
+
+      daily: dailyMetrics.rows.map(row => ({
+        date: row.date,
+        signups: parseInt(row.signups),
+        verified: parseInt(row.verified)
+      })),
+
+      spreadsheet_ready: {
+        trial_comparison: {
+          campaign_trials: {
+            started: parseInt(campaignTrials.trials_started),
+            converted: parseInt(campaignTrials.conversions),
+            conversion_rate: parseFloat(campaignTrials.conversion_rate)
+          },
+          individual_trials: {
+            started: individualTrialsTotal.trials_started,
+            converted: individualTrialsTotal.conversions,
+            conversion_rate: parseFloat(individualConversionRate)
+          },
+          total_trials: {
+            started: totalTrials,
+            converted: totalConversions,
+            conversion_rate: parseFloat(totalConversionRate)
+          },
+          campaign_lift: campaignLift
+        },
+
+        cohort_summary: {
+          signups: parseInt(cohortSummary.rows[0].total_signups),
+          verified: parseInt(cohortSummary.rows[0].verified_users),
+          activated: parseInt(cohortSummary.rows[0].activated_users),
+          verification_rate: cohortSummary.rows[0].total_signups > 0
+            ? ((cohortSummary.rows[0].verified_users / cohortSummary.rows[0].total_signups) * 100).toFixed(1)
+            : '0',
+          activation_rate: cohortSummary.rows[0].verified_users > 0
+            ? ((cohortSummary.rows[0].activated_users / cohortSummary.rows[0].verified_users) * 100).toFixed(1)
+            : '0'
+        }
+      }
+    };
+
+    res.json({
+      success: true,
+      data: response
+    });
+
+  } catch (error) {
+    console.error('[Admin] Campaign export error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to export campaign metrics'
+    });
+  }
+});
+
+/**
  * GET /api/admin/campaigns/:id - Get campaign details with stats
  */
 router.get('/campaigns/:id', requireAuth, requireAdmin, async (req, res) => {

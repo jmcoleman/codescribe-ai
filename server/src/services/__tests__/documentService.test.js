@@ -68,7 +68,10 @@ describe('DocumentService', () => {
         documentId: 'doc-123-uuid',
         savedAt: '2025-11-15T12:00:00Z'
       });
-      expect(sql).toHaveBeenCalledTimes(1);
+      // Note: saveDocument now makes 2+ SQL calls:
+      // 1. INSERT document
+      // 2. COUNT documents for first_generation milestone check
+      expect(sql).toHaveBeenCalled();
     });
 
     it('should save a document with optional GitHub metadata', async () => {
