@@ -1,8 +1,8 @@
 # Skipped Tests Reference
 
 **Purpose:** Central reference for all intentionally skipped tests in the codebase
-**Last Updated:** December 4, 2025 (v3.0.0)
-**Total Skipped:** 57 frontend tests + 28 backend tests = **85 total**
+**Last Updated:** January 12, 2026 (v3.4.0)
+**Total Skipped:** 68 frontend tests + 33 backend tests = **101 total**
 
 **Note:** Backend database tests (21 tests in `/src/db/__tests__/`) are **excluded** via `jest.config.cjs`, not "skipped" with `.skip()`. They run separately in Docker sandbox before deployment and are NOT counted in this document's skip tracking.
 

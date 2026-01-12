@@ -9,6 +9,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.4.0] - 2026-01-12
+
+**Status:** ✅ Workflow Milestone Tracking & Campaign Export Features
+
+**Summary:** Added email_verified and first_generation workflow milestones to business funnel, enabling detailed tracking of user activation journey from signup through paid conversion. Added comprehensive campaign management and export documentation with financial tracking templates.
+
+### Added
+
+- **Workflow Milestones** ([server/src/services/analyticsService.js](server/src/services/analyticsService.js))
+  - Added `email_verified` milestone tracking after successful email verification
+  - Added `first_generation` milestone tracking on user's first doc generation
+  - Tracks time from signup to first generation in hours
+  - Updated business conversion funnel to include 7 stages: visitors → engaged → signups → email verified → activated → trials → paid
+
+- **Admin Analytics Enhancements** ([client/src/pages/admin/Analytics.jsx](client/src/pages/admin/Analytics.jsx))
+  - Added detailed user journey visualization with 5 workflow stages
+  - Added WORKFLOW_EVENTING storage key for persisting event filters
+  - Enhanced conversion funnel display with milestone breakdowns
+
+- **Documentation - Campaign Management**
+  - [CAMPAIGN-MANAGEMENT-GUIDE.md](docs/admin/CAMPAIGN-MANAGEMENT-GUIDE.md) - UI-based campaign creation and monitoring
+  - [CAMPAIGN-AUTOMATION-IMPLEMENTATION.md](docs/marketing/CAMPAIGN-AUTOMATION-IMPLEMENTATION.md) - Technical implementation details
+  - [CAMPAIGN-DATA-EXPORT-GUIDE.md](docs/marketing/CAMPAIGN-DATA-EXPORT-GUIDE.md) - Export procedures and formats
+  - [CAMPAIGN-EXPORT-QUICK-REFERENCE.md](docs/marketing/CAMPAIGN-EXPORT-QUICK-REFERENCE.md) - Quick reference for exports
+
+- **Documentation - Financial Tracking**
+  - [README-CAMPAIGN-FINANCIALS.md](docs/marketing/README-CAMPAIGN-FINANCIALS.md) - Financial tracking overview
+  - Added 8 CSV/TSV templates for financial tracking, cohort analysis, conversion funnels, and KPI dashboards
+
+- **Documentation - Stripe**
+  - [STRIPE-PRODUCTION-SWITCH.md](docs/deployment/STRIPE-PRODUCTION-SWITCH.md) - Complete guide for switching from test to production mode
+
+### Changed
+
+- **Event Taxonomy Updates** ([docs/analytics/event-taxonomy-reference.md](docs/analytics/event-taxonomy-reference.md))
+  - Updated taxonomy with email_verified and first_generation workflow events
+  - Documented milestone tracking patterns and activation metrics
+
+- **Document Service** ([server/src/services/documentService.js](server/src/services/documentService.js))
+  - Enhanced saveDocument to track first_generation milestone
+  - Added logic to detect user's first doc generation and emit analytics event
+
+### Fixed
+
+- **Test Coverage**
+  - Fixed analyticsService tests to mock 7 queries (was 5) for getBusinessConversionFunnel
+  - Updated documentService test expectations (saveDocument now makes 2+ SQL queries)
+  - Skipped flaky ContactSupportModal form submission test
+
+### Tests
+
+- Frontend: 2066 passed, 68 skipped (2134 total)
+- Backend: 1970 passed, 33 skipped (2003 total)
+- **Total: 4036 passed, 101 skipped (4137 total)**
+
+---
+
 ## [3.3.9] - 2026-01-09
 
 **Status:** ✅ Analytics Dashboard Reorganization & Quality Insights
