@@ -65,9 +65,9 @@
       "text": "codescribeai.com",
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
-    "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.35",
-    "footer": "v3.3.9 Complete · Analytics Dashboard Reorganization & Quality Insights ✓ · Up Next: Project Architecture Document · VS Code Extension: Separate Repo",
-    "lastUpdated": "January 9, 2026"
+    "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.36",
+    "footer": "v3.4.0 Complete · Workflow Milestone Tracking & Campaign Export Features ✓ · Up Next: Project Architecture Document · VS Code Extension: Separate Repo",
+    "lastUpdated": "January 12, 2026"
   },
   "columns": [
     {
@@ -76,6 +76,25 @@
       "title": "Completed",
       "subtitle": "Phase 1: Core Capabilities",
       "phases": [
+        {
+          "version": "v3.4.0",
+          "title": "Workflow Milestone Tracking & Campaign Export Features",
+          "duration": "0.5 days",
+          "status": "✓ Complete",
+          "completedDate": "Jan 12, 2026",
+          "badge": "Analytics & Campaigns",
+          "features": [
+            "Added email_verified and first_generation workflow milestones to business conversion funnel",
+            "Enhanced saveDocument service to track first_generation milestone with hours_since_signup metric",
+            "Updated business funnel to 7 stages: visitors → engaged → signups → email verified → activated → trials → paid",
+            "Added WORKFLOW_EVENTING storage key for persisting event filters in Analytics UI",
+            "Created comprehensive campaign management documentation (CAMPAIGN-MANAGEMENT-GUIDE.md)",
+            "Added 11 campaign tracking and export guides with financial tracking templates (CSV/TSV formats)",
+            "Created STRIPE-PRODUCTION-SWITCH.md guide for switching from test to production mode",
+            "Fixed analyticsService tests to mock 7 queries (was 5) for getBusinessConversionFunnel",
+            "Test coverage: 4,137 tests (2,134 frontend, 2,003 backend), 101 skipped, 97.6% pass rate"
+          ]
+        },
         {
           "version": "v3.3.9",
           "title": "Analytics Dashboard Reorganization & Quality Insights",
