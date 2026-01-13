@@ -9,13 +9,13 @@
  * - View campaign performance metrics
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import {
   ArrowLeft,
   Plus,
-  Play,
-  Pause,
+  MoreVertical,
   Users,
   Calendar,
   Clock,
@@ -44,18 +44,22 @@ function StatusBadge({ campaign }) {
   let status, color, icon;
 
   if (!campaign.is_active) {
-    status = 'Inactive';
-    color = 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400';
-    icon = <XCircle className="w-3.5 h-3.5" />;
+    // Inactive campaigns - check if they ended or were manually deactivated
+    if (endsAt && now > endsAt) {
+      status = 'Ended';
+      color = 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400';
+      icon = <XCircle className="w-3.5 h-3.5" />;
+    } else {
+      status = 'Inactive';
+      color = 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400';
+      icon = <XCircle className="w-3.5 h-3.5" />;
+    }
   } else if (now < startsAt) {
     status = 'Scheduled';
-    color = 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+    color = 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400';
     icon = <Clock className="w-3.5 h-3.5" />;
-  } else if (endsAt && now > endsAt) {
-    status = 'Ended';
-    color = 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400';
-    icon = <XCircle className="w-3.5 h-3.5" />;
   } else {
+    // Active campaigns always show as Active (date checks are secondary)
     status = 'Active';
     color = 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
     icon = <CheckCircle className="w-3.5 h-3.5" />;
@@ -70,9 +74,231 @@ function StatusBadge({ campaign }) {
 }
 
 /**
+ * Delete Confirmation Modal
+ */
+function DeleteConfirmModal({ isOpen, onClose, campaign, onConfirm }) {
+  if (!isOpen || !campaign) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="relative bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
+        <div className="flex items-start gap-4 mb-4">
+          <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
+            <Trash2 className="w-6 h-6 text-red-600 dark:text-red-400" />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">
+              Delete Campaign
+            </h2>
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+              Are you sure you want to delete "{campaign.name}"? This action cannot be undone.
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 mb-6">
+          <p className="text-sm text-amber-800 dark:text-amber-200">
+            <strong>Warning:</strong> Deleting this campaign will permanently remove all campaign data and statistics.
+          </p>
+        </div>
+
+        <div className="flex gap-3 justify-end">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => {
+              onConfirm();
+              onClose();
+            }}
+            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium"
+          >
+            Delete Campaign
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Campaign Actions Menu
+ */
+function CampaignActions({ campaign, onEdit, onToggle, onDelete }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [position, setPosition] = useState({ top: 0, left: 0 });
+  const buttonRef = useRef(null);
+  const dropdownRef = useRef(null);
+
+  // Update dropdown position when opened
+  const updatePosition = useCallback(() => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setPosition({
+        top: rect.bottom + 4, // 4px gap below button
+        left: rect.right - 192, // Align right edge (192px = w-48)
+      });
+    }
+  }, []);
+
+  // Toggle dropdown
+  const toggleDropdown = (e) => {
+    e.stopPropagation();
+    if (!isOpen) {
+      updatePosition();
+    }
+    setIsOpen(!isOpen);
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleClickOutside = (e) => {
+      if (
+        buttonRef.current &&
+        !buttonRef.current.contains(e.target) &&
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen]);
+
+  // Close on Escape
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isOpen]);
+
+  // Update position on scroll/resize
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleReposition = () => updatePosition();
+    window.addEventListener('scroll', handleReposition, true);
+    window.addEventListener('resize', handleReposition);
+
+    return () => {
+      window.removeEventListener('scroll', handleReposition, true);
+      window.removeEventListener('resize', handleReposition);
+    };
+  }, [isOpen, updatePosition]);
+
+  const handleEdit = () => {
+    onEdit(campaign);
+    setIsOpen(false);
+  };
+
+  const handleToggle = () => {
+    onToggle(campaign);
+    setIsOpen(false);
+  };
+
+  const handleDelete = () => {
+    onDelete(campaign);
+    setIsOpen(false);
+  };
+
+  return (
+    <>
+      {/* Menu button */}
+      <button
+        ref={buttonRef}
+        type="button"
+        onClick={toggleDropdown}
+        className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+        aria-label="Campaign actions"
+        aria-expanded={isOpen}
+        aria-haspopup="true"
+      >
+        <MoreVertical className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+      </button>
+
+      {/* Dropdown menu - rendered as portal to avoid overflow clipping */}
+      {isOpen && createPortal(
+        <div
+          ref={dropdownRef}
+          className="fixed w-48 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg z-50 py-1"
+          style={{ top: `${position.top}px`, left: `${position.left}px` }}
+          role="menu"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Activate/Deactivate */}
+          <button
+            type="button"
+            onClick={handleToggle}
+            className="w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2 transition-colors duration-150"
+            role="menuitem"
+          >
+            {campaign.is_active ? (
+              <>
+                <XCircle className="w-4 h-4" />
+                Deactivate
+              </>
+            ) : (
+              <>
+                <CheckCircle className="w-4 h-4" />
+                Activate
+              </>
+            )}
+          </button>
+
+          {/* Edit */}
+          <button
+            type="button"
+            onClick={handleEdit}
+            className="w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2 transition-colors duration-150"
+            role="menuitem"
+          >
+            <Edit2 className="w-4 h-4" />
+            Edit
+          </button>
+
+          {/* Divider before destructive action */}
+          {campaign.signups_count === 0 && (
+            <>
+              <div className="border-t border-slate-200 dark:border-slate-700 my-1" />
+
+              {/* Delete - only show if no signups */}
+              <button
+                type="button"
+                onClick={handleDelete}
+                className="w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2 transition-colors duration-150"
+                role="menuitem"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete
+              </button>
+            </>
+          )}
+        </div>,
+        document.body
+      )}
+    </>
+  );
+}
+
+/**
  * Create/Edit Campaign Modal
  */
-function CampaignModal({ isOpen, onClose, campaign, onSave }) {
+function CampaignModal({ isOpen, onClose, campaign, onSave, existingCampaigns = [] }) {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -83,6 +309,7 @@ function CampaignModal({ isOpen, onClose, campaign, onSave }) {
     isActive: false,
   });
   const [saving, setSaving] = useState(false);
+  const [nameError, setNameError] = useState('');
 
   useEffect(() => {
     if (campaign) {
@@ -106,10 +333,45 @@ function CampaignModal({ isOpen, onClose, campaign, onSave }) {
         isActive: false,
       });
     }
+    // Clear error when modal opens/closes
+    setNameError('');
   }, [campaign, isOpen]);
+
+  // Check for duplicate campaign name
+  const checkDuplicateName = (name) => {
+    if (!name.trim()) {
+      setNameError('');
+      return false;
+    }
+
+    const trimmedName = name.trim();
+    const isDuplicate = existingCampaigns.some(
+      (c) => c.name.toLowerCase() === trimmedName.toLowerCase() && c.id !== campaign?.id
+    );
+
+    if (isDuplicate) {
+      setNameError('A campaign with this name already exists');
+      return true;
+    }
+
+    setNameError('');
+    return false;
+  };
+
+  const handleNameChange = (e) => {
+    const newName = e.target.value;
+    setFormData({ ...formData, name: newName });
+    checkDuplicateName(newName);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Check for duplicate name before submitting
+    if (checkDuplicateName(formData.name)) {
+      return;
+    }
+
     setSaving(true);
     try {
       await onSave(formData);
@@ -139,11 +401,18 @@ function CampaignModal({ isOpen, onClose, campaign, onSave }) {
             <input
               type="text"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
+              onChange={handleNameChange}
+              className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white ${
+                nameError
+                  ? 'border-red-500 dark:border-red-500'
+                  : 'border-slate-300 dark:border-slate-600'
+              }`}
               placeholder="e.g., January Pro Trial"
               required
             />
+            {nameError && (
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">{nameError}</p>
+            )}
           </div>
 
           <div>
@@ -238,8 +507,8 @@ function CampaignModal({ isOpen, onClose, campaign, onSave }) {
             </button>
             <button
               type="submit"
-              disabled={saving || !formData.name.trim()}
-              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg disabled:opacity-50"
+              disabled={saving || !formData.name.trim() || nameError}
+              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {saving ? 'Saving...' : campaign ? 'Save Changes' : 'Create Campaign'}
             </button>
@@ -260,6 +529,9 @@ export default function Campaigns() {
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletingCampaign, setDeletingCampaign] = useState(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const fetchCampaigns = useCallback(async () => {
     setLoading(true);
@@ -267,7 +539,11 @@ export default function Campaigns() {
     try {
       const token = await getToken();
       const response = await fetch(`${API_URL}/api/admin/campaigns`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+        },
       });
 
       if (!response.ok) throw new Error('Failed to fetch campaigns');
@@ -286,46 +562,17 @@ export default function Campaigns() {
     fetchCampaigns();
   }, [fetchCampaigns]);
 
-  const handleCreate = () => {
+  const handleCreate = useCallback(() => {
     setEditingCampaign(null);
     setShowModal(true);
-  };
+  }, []);
 
-  const handleEdit = (campaign) => {
+  const handleEdit = useCallback((campaign) => {
     setEditingCampaign(campaign);
     setShowModal(true);
-  };
+  }, []);
 
-  const handleSave = async (formData) => {
-    const token = await getToken();
-    const url = editingCampaign
-      ? `${API_URL}/api/admin/campaigns/${editingCampaign.id}`
-      : `${API_URL}/api/admin/campaigns`;
-    const method = editingCampaign ? 'PUT' : 'POST';
-
-    const response = await fetch(url, {
-      method,
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        ...formData,
-        startsAt: new Date(formData.startsAt).toISOString(),
-        endsAt: formData.endsAt ? new Date(formData.endsAt).toISOString() : null,
-      }),
-    });
-
-    if (!response.ok) {
-      const data = await response.json();
-      throw new Error(data.error || 'Failed to save campaign');
-    }
-
-    toast.success(editingCampaign ? 'Campaign updated' : 'Campaign created');
-    fetchCampaigns();
-  };
-
-  const handleToggle = async (campaign) => {
+  const handleToggle = useCallback(async (campaign) => {
     try {
       const token = await getToken();
       const response = await fetch(`${API_URL}/api/admin/campaigns/${campaign.id}/toggle`, {
@@ -339,19 +586,75 @@ export default function Campaigns() {
 
       if (!response.ok) throw new Error('Failed to toggle campaign');
 
+      // Immediately update local state for instant UI update
+      setCampaigns(prevCampaigns =>
+        prevCampaigns.map(c =>
+          c.id === campaign.id ? { ...c, is_active: !c.is_active } : c
+        )
+      );
+
       toast.success(campaign.is_active ? 'Campaign deactivated' : 'Campaign activated');
-      fetchCampaigns();
+
+      // Then refresh from server to ensure consistency
+      await fetchCampaigns();
     } catch (err) {
       toast.error(err.message);
     }
+  }, [getToken, fetchCampaigns]);
+
+  const handleDeleteClick = useCallback((campaign) => {
+    setDeletingCampaign(campaign);
+    setShowDeleteModal(true);
+  }, []);
+
+  const handleSave = async (formData) => {
+    try {
+      const token = await getToken();
+      const url = editingCampaign
+        ? `${API_URL}/api/admin/campaigns/${editingCampaign.id}`
+        : `${API_URL}/api/admin/campaigns`;
+      const method = editingCampaign ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...formData,
+          startsAt: new Date(formData.startsAt).toISOString(),
+          endsAt: formData.endsAt ? new Date(formData.endsAt).toISOString() : null,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        const errorMessage = data.error || 'Failed to save campaign';
+
+        // Show user-friendly message for duplicate name constraint
+        if (errorMessage.includes('unique') || errorMessage.includes('duplicate') || errorMessage.includes('already exists')) {
+          toast.error('A campaign with this name already exists');
+        } else {
+          toast.error(errorMessage);
+        }
+        throw new Error(errorMessage);
+      }
+
+      toast.success(editingCampaign ? 'Campaign updated' : 'Campaign created');
+      fetchCampaigns();
+    } catch (error) {
+      // Error already shown via toast, re-throw for modal handler
+      throw error;
+    }
   };
 
-  const handleDelete = async (campaign) => {
-    if (!confirm(`Delete campaign "${campaign.name}"? This cannot be undone.`)) return;
+  const handleDeleteConfirm = async () => {
+    if (!deletingCampaign) return;
 
     try {
       const token = await getToken();
-      const response = await fetch(`${API_URL}/api/admin/campaigns/${campaign.id}`, {
+      const response = await fetch(`${API_URL}/api/admin/campaigns/${deletingCampaign.id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -361,10 +664,16 @@ export default function Campaigns() {
         throw new Error(data.error || 'Failed to delete campaign');
       }
 
+      // Immediately remove from local state for instant UI update
+      setCampaigns(prevCampaigns => prevCampaigns.filter(c => c.id !== deletingCampaign.id));
       toast.success('Campaign deleted');
-      fetchCampaigns();
+
+      // Then refresh from server to ensure consistency
+      await fetchCampaigns();
     } catch (err) {
       toast.error(err.message);
+    } finally {
+      setDeletingCampaign(null);
     }
   };
 
@@ -393,11 +702,20 @@ export default function Campaigns() {
 
             <div className="flex items-center gap-3">
               <button
-                onClick={fetchCampaigns}
-                className="p-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+                onClick={async () => {
+                  setIsRefreshing(true);
+                  await fetchCampaigns();
+                  // Reset after animation completes (500ms from tailwind.config.js)
+                  setTimeout(() => setIsRefreshing(false), 500);
+                }}
+                disabled={loading}
+                className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
                 title="Refresh"
+                aria-label="Refresh campaigns"
               >
-                <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+                <RefreshCw
+                  className={`w-4 h-4 text-slate-600 dark:text-slate-400 ${isRefreshing ? 'animate-spin-once' : ''}`}
+                />
               </button>
               <button
                 onClick={handleCreate}
@@ -436,7 +754,7 @@ export default function Campaigns() {
             Loading campaigns...
           </div>
         ) : error ? (
-          <div className="text-center py-12 text-red-500">{error}</div>
+          <div className="text-center py-12 text-red-600 dark:text-red-400">{error}</div>
         ) : campaigns.length === 0 ? (
           <div className="text-center py-12">
             <Calendar className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
@@ -481,7 +799,7 @@ export default function Campaigns() {
                   <tr key={campaign.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
                     <td className="px-4 py-4">
                       <div>
-                        <p className="font-medium text-slate-900 dark:text-white">
+                        <p className="text-slate-900 dark:text-white">
                           {campaign.name}
                         </p>
                         {campaign.description && (
@@ -495,24 +813,23 @@ export default function Campaigns() {
                       <StatusBadge campaign={campaign} />
                     </td>
                     <td className="px-4 py-4">
-                      <span className="inline-flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-400">
-                        <span className="capitalize font-medium">{campaign.trial_tier}</span>
-                        <span className="text-slate-400 dark:text-slate-500">
-                          ({campaign.trial_days} days)
-                        </span>
+                      <span className="capitalize text-sm font-medium text-slate-600 dark:text-slate-400">
+                        {campaign.trial_tier}
                       </span>
                     </td>
                     <td className="px-4 py-4 text-sm text-slate-600 dark:text-slate-400">
                       <div>{formatDate(campaign.starts_at)}</div>
                       {campaign.ends_at && (
-                        <div className="text-slate-400 dark:text-slate-500">
-                          to {formatDate(campaign.ends_at)}
+                        <div>
+                          to {formatDate(campaign.ends_at)}{' '}
+                          <span className="text-slate-400 dark:text-slate-500">
+                            ({campaign.trial_days} days)
+                          </span>
                         </div>
                       )}
                     </td>
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-1.5">
-                        <Users className="w-4 h-4 text-slate-400" />
                         <span className="text-slate-900 dark:text-white font-medium">
                           {campaign.signups_count}
                         </span>
@@ -524,38 +841,13 @@ export default function Campaigns() {
                       </div>
                     </td>
                     <td className="px-4 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => handleToggle(campaign)}
-                          className={`p-1.5 rounded-lg transition-colors ${
-                            campaign.is_active
-                              ? 'text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/30'
-                              : 'text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30'
-                          }`}
-                          title={campaign.is_active ? 'Deactivate' : 'Activate'}
-                        >
-                          {campaign.is_active ? (
-                            <Pause className="w-4 h-4" />
-                          ) : (
-                            <Play className="w-4 h-4" />
-                          )}
-                        </button>
-                        <button
-                          onClick={() => handleEdit(campaign)}
-                          className="p-1.5 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg"
-                          title="Edit"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        {campaign.signups_count === 0 && (
-                          <button
-                            onClick={() => handleDelete(campaign)}
-                            className="p-1.5 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg"
-                            title="Delete"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        )}
+                      <div className="flex items-center justify-end">
+                        <CampaignActions
+                          campaign={campaign}
+                          onEdit={handleEdit}
+                          onToggle={handleToggle}
+                          onDelete={handleDeleteClick}
+                        />
                       </div>
                     </td>
                   </tr>
@@ -572,6 +864,18 @@ export default function Campaigns() {
         onClose={() => setShowModal(false)}
         campaign={editingCampaign}
         onSave={handleSave}
+        existingCampaigns={campaigns}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setDeletingCampaign(null);
+        }}
+        campaign={deletingCampaign}
+        onConfirm={handleDeleteConfirm}
       />
     </PageLayout>
   );
