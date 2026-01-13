@@ -65,8 +65,8 @@
       "text": "codescribeai.com",
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
-    "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.37",
-    "footer": "v3.4.1 Complete · Analytics Dashboard Workflow Metrics & UX Improvements ✓ · Up Next: Project Architecture Document · VS Code Extension: Separate Repo",
+    "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.38",
+    "footer": "v3.4.2 Complete · Campaign Export Bug Fix & Documentation ✓ · Up Next: Project Architecture Document · VS Code Extension: Separate Repo",
     "lastUpdated": "January 13, 2026"
   },
   "columns": [
@@ -77,6 +77,19 @@
       "subtitle": "Phase 1: Core Capabilities",
       "phases": [
         {
+          "version": "v3.4.2",
+          "title": "Campaign Export Fix & Google Sheets Integration",
+          "duration": "0.5 days",
+          "status": "✓ Complete",
+          "completedDate": "Jan 13, 2026",
+          "badge": "Admin Tools",
+          "features": [
+            "Fixed campaign export endpoint for admin analytics (resolved 500 errors blocking data access)",
+            "Added Google Sheets integration with Apps Script for one-click campaign data import",
+            "Added comprehensive setup guide with JWT token retrieval and troubleshooting"
+          ]
+        },
+        {
           "version": "v3.4.1",
           "title": "Analytics Dashboard Workflow Metrics & UX Improvements",
           "duration": "0.5 days",
@@ -84,14 +97,10 @@
           "completedDate": "Jan 13, 2026",
           "badge": "Analytics UX",
           "features": [
-            "Updated Workflow Funnel KPI cards to show period-over-period trend percentages (matching Business Metrics pattern)",
-            "Added backend comparison support for code_input and doc_export metrics in analyticsService",
-            "Standardized Code Input Methods and Export Sources charts using ChartSection component for consistent styling",
-            "Added total counts to Code Input Methods and Export Sources chart titles for better context",
-            "Added guiding question to Code Input Methods chart: 'How are users providing code for documentation?'",
-            "Implemented date range persistence in sessionStorage - selected range now persists across page refreshes",
-            "Fixed seed analytics script to generate data for both current and prior periods with correct 8-day ranges",
-            "All analytics charts now have consistent styling with titles and questions inside white card backgrounds"
+            "Workflow funnel cards now show period-over-period trend percentages for quick performance insights",
+            "Enhanced analytics tracking to include code input and document export workflow metrics",
+            "Consistent chart styling across dashboard with contextual totals and guiding questions",
+            "Date range selection now persists across page refreshes"
           ]
         },
         {
@@ -102,15 +111,10 @@
           "completedDate": "Jan 12, 2026",
           "badge": "Analytics & Campaigns",
           "features": [
-            "Added email_verified and first_generation workflow milestones to business conversion funnel",
-            "Enhanced saveDocument service to track first_generation milestone with hours_since_signup metric",
-            "Updated business funnel to 7 stages: visitors → engaged → signups → email verified → activated → trials → paid",
-            "Added WORKFLOW_EVENTING storage key for persisting event filters in Analytics UI",
-            "Created comprehensive campaign management documentation (CAMPAIGN-MANAGEMENT-GUIDE.md)",
-            "Added 11 campaign tracking and export guides with financial tracking templates (CSV/TSV formats)",
-            "Created STRIPE-PRODUCTION-SWITCH.md guide for switching from test to production mode",
-            "Fixed analyticsService tests to mock 7 queries (was 5) for getBusinessConversionFunnel",
-            "Test coverage: 4,137 tests (2,134 frontend, 2,003 backend), 101 skipped, 97.6% pass rate"
+            "Enhanced business funnel tracking with email verification and first generation milestones",
+            "7-stage conversion funnel: visitors → engaged → signups → email verified → activated → trials → paid",
+            "Comprehensive campaign management documentation with financial tracking templates",
+            "Added Stripe production switch guide for payment processing go-live"
           ]
         },
         {
@@ -121,13 +125,8 @@
           "completedDate": "Jan 9, 2026",
           "badge": "UX & Analytics",
           "features": [
-            "Reorganized Usage tab into 5 user-journey-focused groups: Traffic & Engagement, Workflow Funnel, Input Patterns, Generation Outcomes, Quality Analysis",
-            "Added model filter dropdown (All Models, Claude, OpenAI) to quality heatmap for comparing LLM performance per doc type",
-            "Implemented 4 separate SQL queries for model filter combinations in backend",
-            "Enhanced analytics event tracking to capture LLM metadata (provider, model) for quality scores",
-            "Fixed null checks for codeInputMethods and exportSources in analyticsService",
-            "Converted sql.query() calls to proper Vercel postgres template literals (16 failing tests → 0 failing)",
-            "Test coverage: 4,029 tests (2,067 frontend, 1,962 backend), 100 skipped, 100% pass rate"
+            "Reorganized analytics into 5 user-journey groups: Traffic & Engagement, Workflow Funnel, Input Patterns, Generation Outcomes, Quality Analysis",
+            "Added model filter to quality heatmap for comparing Claude vs OpenAI performance by document type"
           ]
         },
         {
@@ -138,13 +137,9 @@
           "completedDate": "Jan 8, 2026",
           "badge": "UX Polish",
           "features": [
-            "Funnel bar color improvements: Darker shades (600-series light, 500-series dark) for better contrast",
-            "Fixed count visibility: All counts display as white text on dark bars, no conditional logic",
-            "Capped bar widths at 100%: Prevents overflow when percentages exceed 100%",
-            "Simplified breakdown bar logic: Always show counts inside bars",
-            "Updated doc_export labels: 'Fresh Generation' → 'Generated', 'From Cache/History' → 'Cache/History'",
-            "Test fixes: Updated analyticsService tests to mock all 6 getConversionFunnel queries",
-            "Test coverage: 4,029 tests (2,067 frontend, 1,962 backend), 100% pass rate"
+            "Improved funnel chart readability with better color contrast and count visibility",
+            "Fixed overflow issues for percentages exceeding 100%",
+            "Clearer labels for document export sources"
           ]
         },
         {
@@ -155,35 +150,22 @@
           "completedDate": "Jan 7, 2026",
           "badge": "Analytics",
           "features": [
-            "New Performance tab in admin analytics dashboard with comprehensive visualizations",
-            "Response Time section: Average, median, P95 latency with quality indicators",
-            "Latency breakdown: TTFT (Time to First Token), TPOT, streaming time visualizations",
-            "Throughput metrics: Tokens/second by doc type, provider, and model",
-            "Cache performance: Hit rate tracking with cost savings estimates",
-            "LLM provider comparison: Latency and throughput breakdown by provider/model",
-            "Time-series charts: Latency, cache hit rate, throughput trends over time",
-            "Time range filtering: Consistent with other analytics tabs (7d, 30d, 90d, custom)",
-            "Dark mode support: All visualizations adapt to theme",
-            "Leverages grouped performance metrics from v3.3.5 backend infrastructure"
+            "New Performance tab showing response times, latency breakdown, and throughput metrics",
+            "Cache performance tracking with cost savings estimates",
+            "LLM provider comparison for latency and throughput",
+            "Time-series charts for tracking performance trends over time"
           ]
         },
         {
           "version": "v3.3.7",
-          "title": "Event Category Reclassification & Test Coverage",
+          "title": "Analytics Event Categorization",
           "duration": "0.5 days",
           "status": "✓ Complete",
           "completedDate": "Jan 8, 2026",
           "badge": "Analytics Refinement",
           "features": [
-            "Event category reclassification: Renamed 'funnel' to 'workflow' for clarity",
-            "New 'system' category: Groups error and performance events",
-            "Moved 'usage_alert' to business category: Better monetization tracking",
-            "Database migration 050: Updates CHECK constraint for new categories",
-            "Session internal flagging: Login events retroactively update session events as internal",
-            "trackTrial method: Comprehensive trial lifecycle tracking (started, expired, converted)",
-            "Test coverage improvements: Added 15 new analyticsService tests",
-            "Services coverage: 91.05% statements, 85.64% branches, 94.22% functions",
-            "CI coverage thresholds: All services thresholds now pass"
+            "Improved analytics event organization with clearer workflow and system categories",
+            "Enhanced trial lifecycle tracking for better conversion analysis"
           ]
         },
         {
@@ -194,17 +176,10 @@
           "completedDate": "Jan 7, 2026",
           "badge": "Analytics + Growth",
           "features": [
-            "Multi-select event filter: Select multiple events simultaneously in Raw Events table",
-            "Select component: Portal rendering to escape overflow containers",
-            "Industry-standard multi-select UX: Pending selections applied on dropdown close",
-            "Performance metrics grouped: latency (TTFT, TPOT), throughput (tokens/sec), cache, LLM context",
-            "Campaign trials system: Auto-grant Pro trials during campaign periods",
-            "Campaign admin page: Create, manage, and track marketing campaigns",
-            "Environment-based campaign toggle (CAMPAIGN_AUTO_TRIAL env var)",
-            "Trial source tracking: 'auto-campaign' vs 'invite_code' attribution",
-            "User model: _created flag on findOrCreateByGithub for new vs existing users",
-            "Database migrations: campaigns table with usage tracking",
-            "49 new tests · 3,945 total (2,047 frontend, 1,898 backend)"
+            "Multi-select event filtering in analytics dashboard for simultaneous event analysis",
+            "Grouped performance metrics for latency, throughput, and cache analysis",
+            "Automated Pro trial campaigns with admin management interface",
+            "Campaign attribution tracking for measuring trial source effectiveness"
           ]
         },
         {
@@ -215,13 +190,8 @@
           "completedDate": "Jan 7, 2026",
           "badge": "Bug Fix",
           "features": [
-            "Fixed analytics dashboard to only count successful generations",
-            "Doc types breakdown: Now only shows successful generations",
-            "Top languages: Now only shows successful generations",
-            "Origins breakdown: Now only shows successful generations",
-            "Batch vs Single stats: Now only shows successful generations",
-            "Generations over time chart: Now only shows successful generations",
-            "Failed generations still tracked for error analysis"
+            "Fixed analytics dashboard to accurately show only successful generations across all metrics",
+            "Failed generations still tracked separately for error analysis"
           ]
         },
         {
@@ -232,17 +202,14 @@
           "completedDate": "Jan 6, 2026",
           "badge": "Feature",
           "features": [
-            "Comprehensive admin analytics dashboard with 3 tabs (Funnel, Business, Usage)",
-            "Conversion funnel visualization: Sessions → Code Input → Generation → Copy/Download",
-            "Business metrics: signups, tier upgrades/downgrades, revenue trends",
-            "Usage patterns: doc types, quality scores, batch vs single, languages, origins",
-            "Workflow Outcome Metrics: session tracking, copy/download events, conversion funnel",
-            "Regeneration success rate tracking with before/after score comparison",
-            "Analytics opt-out fix: custom events now respect user privacy preference",
-            "Recharts-powered charts with dark mode support and accessibility",
-            "Date range picker with presets and 'Exclude Internal' toggle",
-            "Server-side admin detection for accurate internal user filtering",
-            "101 new tests · 3,882 total (2,044 frontend, 1,838 backend)"
+            "Comprehensive admin analytics dashboard with Funnel, Business, and Usage tabs",
+            "Conversion funnel visualization tracking user journey through documentation workflow",
+            "Business metrics tracking signups, tier changes, and revenue trends",
+            "Usage analytics for document types, quality scores, languages, and generation methods",
+            "Regeneration success rate tracking to measure quality improvements",
+            "Privacy-compliant analytics respecting user opt-out preferences",
+            "Dark mode support with accessible visualizations",
+            "Date range filtering with internal user exclusion option"
           ]
         },
         {
@@ -255,11 +222,10 @@
           "features": [
             "Access private GitHub repositories (Starter/Pro/Team tiers)",
             "One-click GitHub connection from 'Public only' badge",
-            "Private/Public repository badge in file tree header",
-            "Lock/Globe icons show private vs public repos in recent list",
+            "Private/Public repository indicators in file tree and recent list",
             "'Selected' filter to quickly find selected files in large repos",
             "Enhanced error messages guide users to connect GitHub",
-            "Secure OAuth token storage with AES-256-GCM encryption"
+            "Secure OAuth token storage"
           ]
         },
         {
@@ -270,12 +236,11 @@
           "completedDate": "Dec 10, 2025",
           "badge": "UX Polish",
           "features": [
-            "ProjectSelector two-line dropdown showing graph status (file count, expiration)",
-            "Apply doc type consolidated into dropdown menu (one-click workflow)",
-            "Toolbar visual grouping: Add button separated from selection actions",
-            "View project details link opens in new tab",
-            "Auto-deselect files after Apply doc type and Generate actions",
-            "Responsive toolbar with label hiding and flex-wrap for narrow widths"
+            "Project selector shows file count and analysis status at a glance",
+            "Apply doc type consolidated into dropdown for one-click workflow",
+            "Improved toolbar visual organization separating add from selection actions",
+            "Auto-deselect files after batch operations for cleaner workflow",
+            "Responsive toolbar adapts to narrow screen widths"
           ]
         },
         {
@@ -286,13 +251,11 @@
           "completedDate": "Dec 10, 2025",
           "badge": "Critical Fixes",
           "features": [
-            "Fixed batch cancel/regenerate race condition (guard + AbortController)",
-            "Fixed files disappearing from sidebar during batch operations",
-            "Fixed GitHub import localStorage format mismatch",
-            "Fixed empty code panel when deleting all workspace files",
-            "Fixed Mermaid diagram dark mode text readability (enforce theme palette)",
-            "Added single-file generating banner for UX consistency",
-            "3,638 tests (3,638 passing, 87 skipped)"
+            "Fixed batch operations to prevent files disappearing during cancel/regenerate",
+            "Fixed GitHub import file persistence issues",
+            "Fixed empty code panel when clearing workspace",
+            "Improved Mermaid diagram dark mode readability",
+            "Added generating banner for single-file operations"
           ]
         },
         {
@@ -303,35 +266,27 @@
           "completedDate": "Dec 9, 2025",
           "badge": "Bug Fixes",
           "features": [
-            "Fixed doc panel not clearing on logout (race condition with hasSeenUserRef)",
-            "Fixed unauthenticated user docs not persisting across page refresh",
-            "Fixed Mermaid diagram dark mode styling in code view",
-            "Improved usage limit messages with LLM retry visibility",
-            "Fixed workspace clear button to also clear code panel",
+            "Fixed doc panel clearing properly on logout",
+            "Fixed document persistence for unauthenticated users",
+            "Improved Mermaid diagram dark mode styling",
+            "Enhanced usage limit messages showing retry status",
+            "Workspace clear now properly clears code panel",
             "Bulk re-upload support for local files"
           ]
         },
         {
           "version": "v3.3.0",
-          "title": "Epic 5.4: Graph Engine API (Phase 1-4)",
+          "title": "Project Analysis & Architecture Diagrams",
           "duration": "2 weeks",
           "status": "✓ Complete",
           "completedDate": "Dec 9, 2025",
           "badge": "Platform Foundation",
           "features": [
-            "Server-side dependency graph service (graphService.js) with chunked processing",
-            "Cross-file analysis: imports, exports, functions, classes extraction",
-            "project_graphs table with 24h TTL (metadata only, SOC2 compliant)",
-            "API: /api/graph/analyze, /api/graph/:id, /api/graph/:id/context, /api/graph/:id/diagram",
-            "Projects entity with CRUD operations (projectService.js)",
-            "Link batches and workspace files to projects (project_id FK)",
-            "Denormalized project_name on generation_batches for query efficiency",
-            "Project selector in sidebar (desktop + mobile)",
-            "ProjectGraphInfo component: collapsible project header with graph stats",
-            "Project Details page: graph analysis section with stats, architecture diagram, file list",
-            "Clickable project links in History page and FileDetailsPanel",
-            "Graph context injection for enhanced documentation generation",
-            "On-demand Mermaid architecture diagrams from graph data"
+            "Cross-file dependency analysis for understanding project structure",
+            "Project selector to organize and switch between analyzed codebases",
+            "Project Details page showing architecture diagrams and analysis statistics",
+            "On-demand Mermaid architecture diagrams visualizing project structure",
+            "Clickable project links throughout interface for easy navigation"
           ]
         },
         {
@@ -342,13 +297,10 @@
           "completedDate": "Dec 8, 2025",
           "badge": "UX Enhancement",
           "features": [
-            "user_preferences table for cross-device sync (theme, layout, sidebar, project)",
-            "user_table_preferences table for per-table column sizing",
-            "PreferencesContext with localStorage cache and API sync",
-            "Debounced preference updates (300ms) for performance",
-            "Graceful fallback when API unavailable",
-            "Migration of theme_preference from users table",
-            "All preferences persist across logout/login and devices"
+            "Theme, layout, and sidebar preferences now sync across all devices",
+            "Table column sizing persists per-table across sessions",
+            "Selected project remembered across logout/login",
+            "Automatic sync with offline fallback for uninterrupted experience"
           ]
         },
         {
@@ -359,15 +311,13 @@
           "completedDate": "Dec 7, 2025",
           "badge": "UX & Fixes",
           "features": [
-            "Fixed trial users seeing Free tier usage limits instead of Pro",
-            "Fixed markdown code block rendering (extra backtick/spacing)",
-            "Fixed workspace file persistence with documentId linking",
-            "Starter tier: Added GitHub import and Generation History access",
-            "Pricing page: Removed redundant trial banner, compact toggle, neutral 'Base Plan' badge",
-            "History page: '(12 docs in 4 batches)' count display",
-            "Profile menu: Renamed 'History' to 'Generation History'",
-            "Batch summary links use document IDs for version tracking",
-            "3,449 tests (3,349 passing, 97 skipped)"
+            "Fixed trial users seeing correct Pro tier usage limits",
+            "Fixed markdown code block rendering issues",
+            "Fixed workspace file persistence",
+            "Starter tier now includes GitHub import and Generation History",
+            "Refined pricing page layout and tier labels",
+            "History page shows clearer batch and document counts",
+            "Generation History added to profile menu"
           ]
         },
         {
@@ -378,14 +328,12 @@
           "completedDate": "Dec 7, 2025",
           "badge": "Pro+ Feature",
           "features": [
-            "History page showing past generation batches (TanStack Table)",
-            "Batch rows with file count, quality scores, doc type",
-            "Reload past batches into workspace (one-click restore)",
-            "Search by filename, filter by grade and doc type",
-            "Tier-gated access: Pro+ only (Free/Starter see upgrade prompt)",
-            "Server-side pagination with configurable page size",
-            "Row expansion for multi-file batches",
-            "Column resizing with localStorage persistence"
+            "History page showing all past documentation generations",
+            "One-click restore of previous batches into workspace",
+            "Search by filename, filter by quality grade and document type",
+            "Pro+ exclusive feature with upgrade prompts for Free/Starter tiers",
+            "Expandable rows for multi-file batches",
+            "Resizable columns with persistent sizing"
           ]
         },
         {
@@ -396,11 +344,9 @@
           "completedDate": "Dec 7, 2025",
           "badge": "UX Fix",
           "features": [
-            "Fixed documentation lost on navigation (generate → navigate → return)",
-            "Single-file generation now persists to workspace sessionStorage",
-            "Logout effect only clears docs on actual logout (hasSeenUserRef)",
-            "15 new workspace persistence tests",
-            "3,440 tests (3,340 passing, 97 skipped)"
+            "Fixed documentation lost when navigating away and returning",
+            "Single-file generations now persist across navigation",
+            "Documents only cleared on actual logout"
           ]
         },
         {
@@ -475,10 +421,8 @@
             "Mixed batch support: 'Regenerate All' or 'New Files Only' options",
             "Batch summary with doc-type specific quality tables and criteria columns",
             "Batch cancellation with disabled 'Cancelling...' button and skipped files tracking",
-            "Quality scorer test coverage improved from 46% to 95% (69 new tests)",
             "35 new batch generation tests for summary document and tier attribution",
-            "Fixed enterprise tier attribution and workspace file deletion persistence",
-            "Total: 3,284 tests (3,199 passing, 85 skipped)"
+            "Fixed enterprise tier attribution and workspace file deletion persistence"
           ]
         },
         {
@@ -511,7 +455,7 @@
             "Added Google Gemini 3.0 Pro as third LLM provider (gemini.js adapter)",
             "Comprehensive LLM model selection analysis document (Claude, OpenAI, Gemini comparison)",
             "Cost analysis across all providers with 4 scenarios (baseline, JSDOC→GPT, all OpenAI, all Gemini 3.0)",
-            "Provider override configuration per doc type (docTypeConfig.js)",
+            "Provider override configuration per doc type",
             "JSDOC override to GPT-5.1 for 39% cost savings vs Claude",
             "Gemini 3.0 Pro as default (SWE-bench 76.2%, latest training data Jan 2025)",
             "Metadata capture for cost tracking (provider/model/tokens in database)",
@@ -547,7 +491,6 @@
             "Auto-scroll to top after single file generation completes",
             "Eliminated duplicate toast notifications (single file + batch)",
             "Fixed batch summary formatting with proper line breaks",
-            "Database migration 022: OPENAPI constraint support",
             "Test suite: 101 tests fixed (17 backend + 84 frontend)",
             "Total: 2,928 passing tests (1,717 frontend, 1,211 backend)"
           ]
@@ -568,7 +511,7 @@
             "Fixed privacy wording to clarify input code vs generated documentation storage",
             "Fixed legal links styling (removed breadcrumb-style ChevronRight icons)",
             "Fixed attribution watermark markdown formatting (removed nested bold)",
-            "Updated sample count from 8 to 13 examples",
+            "13 examples",
             "Added language validation tests for Kotlin, Swift, Dart, Shell, Apps Script"
           ]
         },
@@ -582,7 +525,7 @@
           "features": [
             "Resizable panels with VS Code-style draggable divider",
             "Panel constraints (30% min, 70% max)",
-            "Panel size persistence (localStorage)",
+            "Panel size persistence",
             "Keyboard accessible panel controls",
             "Arrow key navigation in AppearanceModal",
             "ESC key navigation on Pricing/Privacy/Terms pages",
@@ -786,7 +729,7 @@
           "version": "v2.5.3",
           "title": "Email System Overhaul",
           "duration": "2 days",
-          "status": "\u2713 Complete",
+          "status": "✓ Complete",
           "completedDate": "Nov 6, 2025",
           "features": [
             "7 branded email templates for all user communications",
@@ -800,7 +743,7 @@
           "version": "v2.5.2",
           "title": "User Data Rights & Restoration",
           "duration": "2.5 days",
-          "status": "\u2713 Complete",
+          "status": "✓ Complete",
           "completedDate": "Nov 4, 2025",
           "features": [
             "30-day account deletion grace period",
@@ -814,7 +757,7 @@
           "version": "v2.5.1",
           "title": "Settings Page & Privacy Controls",
           "duration": "1 day",
-          "status": "\u2713 Complete",
+          "status": "✓ Complete",
           "completedDate": "Nov 4, 2025",
           "features": [
             "Settings page with 4 tabs (Account, Privacy, Subscription, Danger Zone)",
@@ -829,7 +772,7 @@
           "version": "v2.5.0",
           "title": "Legal Compliance - Phase 1-2",
           "duration": "2 days",
-          "status": "\u2713 Complete",
+          "status": "✓ Complete",
           "completedDate": "Nov 3, 2025",
           "features": [
             "Terms of Service and Privacy Policy pages",
@@ -843,7 +786,7 @@
           "version": "v2.4.6",
           "title": "Help Modal & Billing UX",
           "duration": "1 day",
-          "status": "\u2713 Complete",
+          "status": "✓ Complete",
           "completedDate": "Nov 2, 2025",
           "features": [
             "Tabbed Help Modal (Quick Start, Quality Scores, FAQs)",
@@ -857,7 +800,7 @@
           "version": "v2.4.5",
           "title": "Refined Light Theme",
           "duration": "1 day",
-          "status": "\u2713 Complete",
+          "status": "✓ Complete",
           "completedDate": "Nov 2, 2025",
           "features": [
             "Custom Monaco Editor color theme with purple, green, and cyan accents",
@@ -871,7 +814,7 @@
           "version": "v2.4.4",
           "title": "Contact Sales & Email Fixes",
           "duration": "1 day",
-          "status": "\u2713 Complete",
+          "status": "✓ Complete",
           "completedDate": "Nov 2, 2025",
           "features": [
             "Contact Sales modal for Enterprise and Team inquiries",
@@ -885,7 +828,7 @@
           "version": "v2.4.3",
           "title": "Payment & Verification Fixes",
           "duration": "1 day",
-          "status": "\u2713 Complete",
+          "status": "✓ Complete",
           "completedDate": "Nov 1, 2025",
           "features": [
             "Fixed payment checkout flow in production",
@@ -897,7 +840,7 @@
           "version": "v2.4.2",
           "title": "Subscription Safety & Cost Optimization",
           "duration": "1 day",
-          "status": "\u2713 Complete",
+          "status": "✓ Complete",
           "completedDate": "Oct 31, 2025",
           "features": [
             "Test vs production subscription detection",
@@ -909,7 +852,7 @@
           "version": "v2.4.1",
           "title": "Email Rate Limiting & UI Polish",
           "duration": "1 day",
-          "status": "\u2713 Complete",
+          "status": "✓ Complete",
           "completedDate": "Oct 31, 2025",
           "features": [
             "Email rate limiting to prevent abuse",
@@ -921,7 +864,7 @@
           "version": "v2.4.0",
           "title": "Payment Integration (Epic 2.4)",
           "duration": "3 days",
-          "status": "\u2713 Complete",
+          "status": "✓ Complete",
           "completedDate": "Oct 31, 2025",
           "badge": "Test Mode",
           "features": [
@@ -936,7 +879,7 @@
           "version": "v2.3.0",
           "title": "UX Enhancements & File Upload (Epic 2.3)",
           "duration": "1 day",
-          "status": "\u2713 Complete",
+          "status": "✓ Complete",
           "completedDate": "Oct 29, 2025",
           "features": [
             "Drag-and-drop file upload with visual overlay",
@@ -950,7 +893,7 @@
           "version": "v2.1.0-v2.2.0",
           "title": "Tier System & Usage Limits (Epic 2.2)",
           "duration": "3 days",
-          "status": "\u2713 Complete",
+          "status": "✓ Complete",
           "completedDate": "Oct 27-29, 2025",
           "features": [
             "3-tier subscription system: Free (10 docs/month), Starter (50 docs), Pro (200 docs)",
@@ -964,7 +907,7 @@
           "version": "v2.0.0",
           "title": "Authentication & Database (Epic 2.1)",
           "duration": "5 days",
-          "status": "\u2713 Complete",
+          "status": "✓ Complete",
           "badge": "Phase 2 Started",
           "features": [
             "Email/password login and signup",
@@ -978,7 +921,7 @@
           "version": "v1.2.2",
           "title": "Mobile Enhancements",
           "duration": "1 day",
-          "status": "\u2713 Complete",
+          "status": "✓ Complete",
           "features": [
             "Improved mobile clipboard support",
             "Enhanced mobile accessibility",
@@ -989,7 +932,7 @@
           "version": "v1.2.1",
           "title": "UX Refinements",
           "duration": "0.5 days",
-          "status": "\u2713 Complete",
+          "status": "✓ Complete",
           "features": [
             "Improved panel layout consistency",
             "Refined download button behavior",
@@ -1000,7 +943,7 @@
           "version": "v1.2.0",
           "title": "Security & Quality",
           "duration": "2 days",
-          "status": "\u2713 Complete",
+          "status": "✓ Complete",
           "features": [
             "Secure API key handling",
             "Rate limiting to prevent abuse",
@@ -1012,7 +955,7 @@
           "version": "v1.2.0",
           "title": "Performance & Infrastructure",
           "duration": "3 days",
-          "status": "\u2713 Complete",
+          "status": "✓ Complete",
           "features": [
             "Production deployment with custom domain",
             "Fast page load times with optimized bundle size",
@@ -1024,7 +967,7 @@
           "version": "v1.2.0",
           "title": "WCAG AA Compliance",
           "duration": "2 days",
-          "status": "\u2713 Complete",
+          "status": "✓ Complete",
           "features": [
             "WCAG 2.1 AA compliance",
             "Full keyboard navigation",
@@ -1037,7 +980,7 @@
           "version": "v1.0.0",
           "title": "Web Application (MVP)",
           "duration": "5 days",
-          "status": "\u2713 Complete",
+          "status": "✓ Complete",
           "features": [
             "4 documentation types (README, JSDoc, API, ARCHITECTURE)",
             "Monaco Editor with syntax highlighting (24+ languages)",
@@ -1184,14 +1127,14 @@
             "CSS file support (.css, .scss, .sass, .less)",
             "HTML file support (.html, .htm)",
             "CSS-specific parser (selectors, custom properties, media queries, keyframes)",
-            "HTML-specific parser (structure, components, forms, accessibility features)",
+            "HTML-specific parser",
             "Design system documentation (color tokens, typography, spacing scales)",
             "Component library documentation (variants, states, usage patterns)",
-            "Template hierarchy documentation (page structure, component composition)",
+            "Template hierarchy documentation",
             "CSS/HTML-specific quality scoring criteria",
             "Accessibility audit integration (ARIA attributes, semantic HTML)",
             "Browser compatibility detection for CSS features",
-            "Documentation optimized for multi-file projects (design systems, component libraries)",
+            "Documentation optimized for multi-file projects",
             "Requires Epic 4.2 (multi-file support) for meaningful context"
           ]
         },
@@ -1240,7 +1183,6 @@
           "status": "Planned",
           "badge": "Pro+ Feature",
           "features": [
-            "Document ID-based links in batch summaries (replace filename-based #file: links with #doc: links)",
             "Read-only historical document view: When viewing old batch summary, clicking a file that has a newer version shows read-only view",
             "Historical version banner: 'Viewing historical version • A newer generation exists in workspace' with 'View current' action",
             "Batch list for workspace context: Shows all batches related to files currently in workspace",

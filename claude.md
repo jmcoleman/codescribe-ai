@@ -433,8 +433,23 @@ cd server && npm test 2>&1 | grep "Tests:"           # Backend counts
 
 **Files Updated:** 3 package.json, CHANGELOG.md, README.md, TODO.md, claude.md, docs/testing/README.md, SKIPPED-TESTS.md
 
-**Roadmap Ordering Convention:**
-In `docs/planning/roadmap/roadmap-data.json`, the "done" column phases array is ordered **newest first** (most recent release at top, oldest at bottom). When adding new releases, insert them at the **beginning** of the phases array, not the end. This ensures users see the latest features first when viewing the roadmap.
+**Roadmap Conventions:**
+
+*Ordering:* In `docs/planning/roadmap/roadmap-data.json`, the "done" column phases array is ordered **newest first** (most recent release at top, oldest at bottom). When adding new releases, insert them at the **beginning** of the phases array, not the end. This ensures users see the latest features first when viewing the roadmap.
+
+*Content:* All feature descriptions in roadmap-data.json must be **user-focused**, not technical. Focus on what users can do, not how it's implemented. The roadmap is for external visibility (users, stakeholders, investors).
+
+**❌ Avoid:** Component names, service names, test coverage stats, database details, storage keys, code patterns, implementation methods, file paths, SQL queries, API internals
+
+**✅ Include:** New capabilities, UX improvements, what users can accomplish, business impact, feature availability
+
+Examples:
+- ❌ "Implemented sessionStorage persistence for date range with ANALYTICS_DATE_RANGE storage key"
+- ✅ "Date range selection now persists across page refreshes"
+- ❌ "Added backend comparison support for code_input and doc_export metrics in analyticsService"
+- ✅ "Enhanced analytics dashboard with workflow trend metrics"
+- ❌ "Test coverage: 4,137 tests (2,134 frontend, 2,003 backend)"
+- ✅ (Omit entirely - not user-facing)
 
 ---
 
