@@ -2203,17 +2203,36 @@ router.get('/campaigns/export', requireAuth, requireAdmin, async (req, res) => {
         AND created_at < ${endDate}
     `;
 
-    // Get daily breakdown for weekly aggregations
+    // Get daily breakdown with origin type (direct, individual trial, or campaign name)
     const dailyMetrics = await sql`
+      WITH user_origins AS (
+        SELECT
+          u.id,
+          DATE(u.created_at) as date,
+          u.email_verified,
+          COALESCE(
+            c.name,
+            CASE
+              WHEN ut.id IS NULL THEN 'Direct'
+              WHEN ut.source = 'self_serve' AND ut.campaign_id IS NULL THEN 'Individual Trial'
+              ELSE 'Unknown'
+            END
+          ) as origin_type
+        FROM users u
+        LEFT JOIN user_trials ut ON u.id = ut.user_id
+        LEFT JOIN campaigns c ON ut.campaign_id = c.id
+        WHERE u.created_at >= ${startDate}
+          AND u.created_at < ${endDate}
+          AND u.role != 'admin'
+      )
       SELECT
-        DATE(created_at) as date,
+        date,
+        origin_type,
         COUNT(*) as signups,
         COUNT(CASE WHEN email_verified = true THEN 1 END) as verified
-      FROM users
-      WHERE created_at >= ${startDate}
-        AND created_at < ${endDate}
-      GROUP BY DATE(created_at)
-      ORDER BY date
+      FROM user_origins
+      GROUP BY date, origin_type
+      ORDER BY date, origin_type
     `;
 
     // ✨ NEW: Get time-to-value metrics
@@ -2294,28 +2313,69 @@ router.get('/campaigns/export', requireAuth, requireAdmin, async (req, res) => {
         END
     `;
 
-    // Get active campaign info (if exists) for campaign name
-    let campaignInfo = null;
+    // Get user list with origin type and key dates
+    const userList = await sql`
+      SELECT
+        u.email,
+        u.first_name,
+        u.last_name,
+        u.tier,
+        u.created_at,
+        u.email_verified,
+        u.email_verified_at,
+        COALESCE(
+          c.name,
+          CASE
+            WHEN ut.id IS NULL THEN 'Direct'
+            WHEN ut.source = 'self_serve' AND ut.campaign_id IS NULL THEN 'Individual Trial'
+            ELSE 'Unknown'
+          END
+        ) as origin_type,
+        ut.trial_tier,
+        ut.started_at as trial_started_at,
+        ut.ends_at as trial_ends_at,
+        ut.status as trial_status,
+        ut.converted_at as trial_converted_at,
+        first_gen.first_generation_at,
+        uq.monthly_count as usage_count
+      FROM users u
+      LEFT JOIN user_trials ut ON u.id = ut.user_id
+      LEFT JOIN campaigns c ON ut.campaign_id = c.id
+      LEFT JOIN (
+        SELECT user_id, MIN(created_at) as first_generation_at
+        FROM generated_documents
+        WHERE deleted_at IS NULL
+        GROUP BY user_id
+      ) first_gen ON u.id = first_gen.user_id
+      LEFT JOIN user_quotas uq ON u.id = uq.user_id
+      WHERE u.created_at >= ${startDate}
+        AND u.created_at < ${endDate}
+        AND u.role != 'admin'
+      ORDER BY u.created_at DESC
+    `;
+
+    // Get all campaigns active during this period
+    let campaignsInfo = [];
     try {
-      const campaignResult = await sql`
-        SELECT id, name, trial_tier, trial_days
+      const campaignsResult = await sql`
+        SELECT id, name, trial_tier, trial_days, starts_at, ends_at, is_active
         FROM campaigns
-        WHERE is_active = TRUE
-          AND starts_at <= ${endDate}
+        WHERE starts_at <= ${endDate}
           AND (ends_at IS NULL OR ends_at >= ${startDate})
-        LIMIT 1
+        ORDER BY starts_at DESC
       `;
 
-      if (campaignResult.rows.length > 0) {
-        campaignInfo = {
-          id: campaignResult.rows[0].id,
-          name: campaignResult.rows[0].name,
-          trialTier: campaignResult.rows[0].trial_tier,
-          trialDays: campaignResult.rows[0].trial_days
-        };
-      }
+      campaignsInfo = campaignsResult.rows.map(row => ({
+        id: row.id,
+        name: row.name,
+        trialTier: row.trial_tier,
+        trialDays: row.trial_days,
+        startsAt: row.starts_at,
+        endsAt: row.ends_at,
+        isActive: row.is_active
+      }));
     } catch (campaignError) {
-      console.log('[Campaign Export] No active campaign found or error fetching campaign');
+      console.log('[Campaign Export] Error fetching campaigns:', campaignError);
     }
 
     // Build response
@@ -2330,12 +2390,8 @@ router.get('/campaigns/export', requireAuth, requireAdmin, async (req, res) => {
         startDate,
         endDate,
         source: campaignSource,
-        ...(campaignInfo && {
-          id: campaignInfo.id,
-          name: campaignInfo.name,
-          trialTier: campaignInfo.trialTier,
-          trialDays: campaignInfo.trialDays
-        })
+        count: campaignsInfo.length,
+        campaigns: campaignsInfo
       },
 
       summary: {
@@ -2393,6 +2449,7 @@ router.get('/campaigns/export', requireAuth, requireAdmin, async (req, res) => {
 
       daily: dailyMetrics.rows.map(row => ({
         date: row.date,
+        origin_type: row.origin_type,
         signups: parseInt(row.signups),
         verified: parseInt(row.verified)
       })),
@@ -2427,6 +2484,14 @@ router.get('/campaigns/export', requireAuth, requireAdmin, async (req, res) => {
           activation_rate: cohortSummary.rows[0].verified_users > 0
             ? ((cohortSummary.rows[0].activated_users / cohortSummary.rows[0].verified_users) * 100).toFixed(1)
             : '0'
+        },
+
+        trial_funnel_summary: {
+          trials_started: totalTrials,
+          trials_converted: totalConversions,
+          conversion_rate: totalTrials > 0
+            ? ((totalConversions / totalTrials) * 100).toFixed(1)
+            : '0'
         }
       },
 
@@ -2460,7 +2525,26 @@ router.get('/campaigns/export', requireAuth, requireAdmin, async (req, res) => {
           power_users: parseInt(usageSegments.rows.find(r => r.segment === 'Power (50-99)')?.users || 0),
           max_users: parseInt(usageSegments.rows.find(r => r.segment === 'Max (100+)')?.users || 0)
         }
-      }
+      },
+
+      // User list with full details for filtering/export
+      user_list: userList.rows.map(row => ({
+        email: row.email,
+        first_name: row.first_name,
+        last_name: row.last_name,
+        tier: row.tier,
+        signup_date: row.created_at,
+        email_verified: row.email_verified,
+        email_verified_at: row.email_verified_at,
+        origin_type: row.origin_type,
+        trial_tier: row.trial_tier,
+        trial_started_at: row.trial_started_at,
+        trial_ends_at: row.trial_ends_at,
+        trial_status: row.trial_status,
+        trial_converted_at: row.trial_converted_at,
+        first_generation_at: row.first_generation_at,
+        usage_count: row.usage_count ? parseInt(row.usage_count) : 0
+      }))
     };
 
     res.json({

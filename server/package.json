@@ -31,6 +31,7 @@
     "llm:usage": "node scripts/check-llm-usage.js",
     "clear:analytics": "node -r dotenv/config src/scripts/clearAnalytics.js",
     "seed:analytics": "node -r dotenv/config src/scripts/seedAnalytics.js",
+    "seed:campaigns": "npm run reset:data && node -r dotenv/config src/scripts/seedCampaigns.js",
     "cleanup:testdata": "node cleanup-test-data.js",
     "test:db": "jest --config jest.config.db.cjs",
     "test:db:watch": "jest --config jest.config.db.cjs --watch",

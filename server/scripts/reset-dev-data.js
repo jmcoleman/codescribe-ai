@@ -42,7 +42,7 @@ if (dbUrl.includes('prod') || dbUrl.includes('production')) {
 }
 
 console.log(`${colors.cyan}${colors.bright}🗄️  Reset Dev Data${colors.reset}\n`);
-console.log(`Mode:  ${colors.yellow}Clear all docs/batches/analytics${colors.reset}`);
+console.log(`Mode:  ${colors.yellow}Clear all docs/batches/analytics/campaigns/trials${colors.reset}`);
 console.log(`DB:    ${colors.yellow}${dbUrl.substring(0, 50)}...${colors.reset}\n`);
 
 try {
@@ -50,35 +50,81 @@ try {
   const docsResult = await sql`SELECT COUNT(*) as count FROM generated_documents`;
   const batchesResult = await sql`SELECT COUNT(*) as count FROM generation_batches`;
   const analyticsResult = await sql`SELECT COUNT(*) as count FROM analytics_events`;
+  const trialsResult = await sql`SELECT COUNT(*) as count FROM user_trials`;
+  const campaignsResult = await sql`SELECT COUNT(*) as count FROM campaigns`;
+  const quotasResult = await sql`SELECT COUNT(*) as count FROM user_quotas`;
+  const auditResult = await sql`SELECT COUNT(*) as count FROM user_audit_log`;
+  const testUsersResult = await sql`
+    SELECT COUNT(*) as count FROM users
+    WHERE email LIKE 'campaign.user%@test.com'
+       OR email LIKE 'partner.user%@test.com'
+       OR email LIKE 'individual.user%@test.com'
+  `;
 
   const docCount = parseInt(docsResult.rows[0].count);
   const batchCount = parseInt(batchesResult.rows[0].count);
   const analyticsCount = parseInt(analyticsResult.rows[0].count);
+  const trialsCount = parseInt(trialsResult.rows[0].count);
+  const campaignsCount = parseInt(campaignsResult.rows[0].count);
+  const quotasCount = parseInt(quotasResult.rows[0].count);
+  const auditCount = parseInt(auditResult.rows[0].count);
+  const testUsersCount = parseInt(testUsersResult.rows[0].count);
 
   console.log(`${colors.cyan}📊 Current data:${colors.reset}`);
-  console.log(`   Documents:  ${docCount} record(s)`);
-  console.log(`   Batches:    ${batchCount} record(s)`);
-  console.log(`   Analytics:  ${analyticsCount} record(s)\n`);
+  console.log(`   Documents:      ${docCount} record(s)`);
+  console.log(`   Batches:        ${batchCount} record(s)`);
+  console.log(`   Analytics:      ${analyticsCount} record(s)`);
+  console.log(`   User Trials:    ${trialsCount} record(s)`);
+  console.log(`   Campaigns:      ${campaignsCount} record(s)`);
+  console.log(`   User Quotas:    ${quotasCount} record(s)`);
+  console.log(`   Audit Logs:     ${auditCount} record(s)`);
+  console.log(`   Test Users:     ${testUsersCount} record(s)\n`);
 
-  if (docCount === 0 && batchCount === 0 && analyticsCount === 0) {
+  if (docCount === 0 && batchCount === 0 && analyticsCount === 0 && trialsCount === 0 && campaignsCount === 0 && quotasCount === 0 && auditCount === 0 && testUsersCount === 0) {
     console.log(`${colors.yellow}⚠️  Nothing to clear - database is already clean${colors.reset}`);
     process.exit(0);
   }
 
-  // Step 2: Clear the data
+  // Step 2: Clear the data (order matters for foreign keys)
   console.log(`${colors.yellow}⏳ Clearing data...${colors.reset}`);
 
-  // Delete documents first (they reference batches via foreign key)
+  // Delete user audit logs (references users)
+  const auditDeleteResult = await sql`DELETE FROM user_audit_log RETURNING *`;
+  console.log(`${colors.green}✅ Deleted ${auditDeleteResult.rowCount} audit log(s)${colors.reset}`);
+
+  // Delete documents (references users and batches)
   const docsDeleteResult = await sql`DELETE FROM generated_documents RETURNING *`;
   console.log(`${colors.green}✅ Deleted ${docsDeleteResult.rowCount} document(s)${colors.reset}`);
 
-  // Delete batches
+  // Delete batches (references users)
   const batchesDeleteResult = await sql`DELETE FROM generation_batches RETURNING *`;
   console.log(`${colors.green}✅ Deleted ${batchesDeleteResult.rowCount} batch(es)${colors.reset}`);
 
-  // Delete analytics events
+  // Delete user trials (references users and campaigns)
+  const trialsDeleteResult = await sql`DELETE FROM user_trials RETURNING *`;
+  console.log(`${colors.green}✅ Deleted ${trialsDeleteResult.rowCount} user trial(s)${colors.reset}`);
+
+  // Delete user quotas (references users)
+  const quotasDeleteResult = await sql`DELETE FROM user_quotas RETURNING *`;
+  console.log(`${colors.green}✅ Deleted ${quotasDeleteResult.rowCount} user quota(s)${colors.reset}`);
+
+  // Delete campaigns
+  const campaignsDeleteResult = await sql`DELETE FROM campaigns RETURNING *`;
+  console.log(`${colors.green}✅ Deleted ${campaignsDeleteResult.rowCount} campaign(s)${colors.reset}`);
+
+  // Delete analytics events (references users)
   const analyticsDeleteResult = await sql`DELETE FROM analytics_events RETURNING *`;
   console.log(`${colors.green}✅ Deleted ${analyticsDeleteResult.rowCount} analytics event(s)${colors.reset}`);
+
+  // Delete test users (campaign seed test users)
+  const usersDeleteResult = await sql`
+    DELETE FROM users
+    WHERE email LIKE 'campaign.user%@test.com'
+       OR email LIKE 'partner.user%@test.com'
+       OR email LIKE 'individual.user%@test.com'
+    RETURNING *
+  `;
+  console.log(`${colors.green}✅ Deleted ${usersDeleteResult.rowCount} test user(s)${colors.reset}`);
 
   console.log(`\n${colors.green}${colors.bright}✨ Dev data cleared successfully!${colors.reset}\n`);
 

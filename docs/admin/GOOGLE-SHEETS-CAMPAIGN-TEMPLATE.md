@@ -4,6 +4,9 @@
 **Data Source:** `GET /api/admin/campaigns/export`
 **Last Updated:** January 13, 2026
 
+**Base Template:** The master Google Sheet template is stored at:
+https://docs.google.com/spreadsheets/d/1NfEyJYTy9QReSeS0CWUUwHUZUQ8LzBBWhVs9IwdqRtk/edit?usp=drive_link
+
 ---
 
 ## Quick Setup Guide
@@ -16,14 +19,16 @@
 
 ### Step 2: Set Up Sheets
 
-Create these 6 sheets (tabs) in your spreadsheet:
+Create these 8 sheets (tabs) in your spreadsheet:
 
 1. **Config** - API settings and import controls
 2. **Overview** - Campaign summary and key metrics
 3. **Trial Performance** - Campaign vs individual trial comparison
-4. **Cohort Funnel** - Signup to activation conversion funnel
-5. **Usage Segments** - User engagement breakdown
-6. **Daily Metrics** - Day-by-day signup/verification data
+4. **Cohort Funnel** - Signup to activation conversion funnel (all users)
+5. **Trial Funnel** - Trial-to-conversion funnel (trial users only)
+6. **Usage Segments** - User engagement breakdown
+7. **Daily Metrics** - Day-by-day signup/verification data by origin type
+8. **User List** - Complete user roster with origin type and activity details
 
 ### Step 3: Install Apps Script
 
@@ -183,25 +188,72 @@ Avg Time to First Gen      [5.8] hours    Median: [4.2] hours
 
 ### Sheet 6: Daily Metrics
 
-**Purpose:** Day-by-day signup and verification trends
+**Purpose:** Day-by-day signup and verification trends by origin type
 
-| A | B | C | D |
-|---|---|---|---|
-| **Date** | **Signups** | **Verified** | **Verification Rate** |
-| 2026-01-01 | 15 | 14 | =C2/B2 |
-| 2026-01-02 | 18 | 17 | =C3/B3 |
-| ... | ... | ... | ... |
-| | | | |
-| **Summary** | | | |
-| Total Signups | =SUM(B2:B32) | | |
-| Avg Daily Signups | =AVERAGE(B2:B32) | | |
-| Peak Day | =MAX(B2:B32) | Date: =INDEX(A:A,MATCH(MAX(B2:B32),B:B,0)) | |
-| Lowest Day | =MIN(B2:B32) | Date: =INDEX(A:A,MATCH(MIN(B2:B32),B:B,0)) | |
+| A | B | C | D | E |
+|---|---|---|---|---|
+| **Date** | **Origin Type** | **Signups** | **Verified** | **Verification Rate** |
+| 2026-01-01 | Direct | 5 | 4 | =D2/C2 |
+| 2026-01-01 | Individual Trial | 3 | 3 | =D3/C3 |
+| 2026-01-01 | Winter Launch Campaign | 10 | 9 | =D4/C4 |
+| 2026-01-02 | Direct | 8 | 7 | =D5/C5 |
+| ... | ... | ... | ... | ... |
+
+**Origin Types:**
+- **Direct:** Users who signed up without starting a trial
+- **Individual Trial:** Users who started a self-serve trial (not from a campaign)
+- **[Campaign Name]:** Users who started a trial from a specific campaign
+
+**Analysis Tips:**
+- Filter by Origin Type to see trends for specific sources
+- Create pivot table to compare origin types
+- Use SUMIF to calculate totals per origin type
 
 **Chart Recommendations:**
-1. Line chart: Daily signups trend (A2:B32)
-2. Line chart: Verification rate trend (A2:A32, D2:D32)
-3. Column chart: Signups vs verified (A2:C32)
+1. Stacked column chart: Daily signups by origin type (A:D)
+2. Line chart: Verification rate by origin type (filter data first)
+3. Pie chart: Total signups by origin type (aggregate data)
+
+### Sheet 7: User List
+
+**Purpose:** Complete roster of all users in the cohort with detailed activity
+
+| A | B | C | D | E | F | G | H | I | J | K | L | M | N |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| **Email** | **First Name** | **Last Name** | **Current Tier** | **Origin Type** | **Signup Date** | **Email Verified** | **Email Verified At** | **Trial Tier** | **Trial Status** | **Trial Started** | **Trial Converted** | **First Generation** | **Usage Count** |
+| user1@example.com | John | Doe | pro | Winter Launch Campaign | 2026-01-01 | Yes | 2026-01-01 | pro | converted | 2026-01-01 | 2026-01-05 | 2026-01-02 | 25 |
+| user2@example.com | Jane | Smith | free | Individual Trial | 2026-01-02 | Yes | 2026-01-02 | team | active | 2026-01-02 | - | 2026-01-03 | 12 |
+| user3@example.com | Bob | Johnson | free | Direct | 2026-01-03 | No | - | - | - | - | - | - | 0 |
+| ... | ... | ... | ... | ... | ... | ... | ... | ... | ... | ... | ... | ... | ... |
+
+**Column Descriptions:**
+- **Email:** User's email address
+- **First/Last Name:** User's name (if provided)
+- **Current Tier:** Current subscription tier (free, pro, team, business)
+- **Origin Type:** How they signed up (Direct, Individual Trial, or Campaign Name)
+- **Signup Date:** When they created their account
+- **Email Verified:** Whether they verified their email (Yes/No)
+- **Email Verified At:** When they verified (if applicable)
+- **Trial Tier:** Trial tier if they started a trial (pro, team, or -)
+- **Trial Status:** Trial status (active, expired, converted, or -)
+- **Trial Started:** When trial started (if applicable)
+- **Trial Converted:** When they converted to paid (if applicable)
+- **First Generation:** When they first generated documentation (if applicable)
+- **Usage Count:** Total documentation generations this period
+
+**Analysis Tips:**
+- **Filter by Origin Type** to get email lists for specific campaigns
+- **Sort by Usage Count** to find power users or at-risk users
+- **Filter by Email Verified = No** to identify verification drop-offs
+- **Filter by Trial Status = active** to find users currently in trial
+- **Export to CSV** for email marketing or user outreach
+
+**Use Cases:**
+1. **Campaign Attribution:** Filter by campaign name to get all users from that campaign
+2. **Email Lists:** Export filtered user emails for targeted email campaigns
+3. **Engagement Analysis:** Sort by usage count to identify highly engaged users
+4. **Conversion Analysis:** Filter converted trials to analyze successful conversion paths
+5. **Drop-off Investigation:** Find users who verified but never generated (activation gap)
 
 ---
 
@@ -248,8 +300,7 @@ function importCampaignData() {
   const ui = SpreadsheetApp.getUi();
 
   try {
-    // Update status
-    updateImportStatus('Importing...', 'In Progress');
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
 
     // Get config
     const config = getConfig();
@@ -259,21 +310,50 @@ function importCampaignData() {
       throw new Error('Missing required configuration. Please fill Config sheet.');
     }
 
-    // Fetch data from API
-    ui.alert('Fetching campaign data...');
+    // Step 1: Fetch data from API
+    ss.toast('Fetching campaign data from API...', '⏳ Step 1/7', 5);
+    updateImportStatus(new Date().toLocaleString(), '⏳ Fetching data from API...');
     const data = fetchCampaignData(config);
 
-    // Populate sheets
-    ui.alert('Populating sheets...');
+    // Step 2: Populate Overview
+    ss.toast('Populating Overview sheet...', '📊 Step 2/7', 3);
+    updateImportStatus(new Date().toLocaleString(), '📊 Populating Overview sheet...');
     populateOverview(data);
+
+    // Step 3: Populate Trial Performance
+    ss.toast('Populating Trial Performance sheet...', '📊 Step 3/7', 3);
+    updateImportStatus(new Date().toLocaleString(), '📊 Populating Trial Performance sheet...');
     populateTrialPerformance(data);
+
+    // Step 4: Populate Cohort Funnel
+    ss.toast('Populating Cohort Funnel sheet...', '📊 Step 4/7', 3);
+    updateImportStatus(new Date().toLocaleString(), '📊 Populating Cohort Funnel sheet...');
     populateCohortFunnel(data);
+
+    // Step 5: Populate Trial Funnel
+    ss.toast('Populating Trial Funnel sheet...', '📊 Step 5/7', 3);
+    updateImportStatus(new Date().toLocaleString(), '📊 Populating Trial Funnel sheet...');
+    populateTrialFunnel(data);
+
+    // Step 6: Populate Usage Segments
+    ss.toast('Populating Usage Segments sheet...', '📊 Step 6/7', 3);
+    updateImportStatus(new Date().toLocaleString(), '📊 Populating Usage Segments sheet...');
     populateUsageSegments(data);
+
+    // Step 7: Populate Daily Metrics
+    ss.toast('Populating Daily Metrics sheet...', '📊 Step 7/8', 3);
+    updateImportStatus(new Date().toLocaleString(), '📊 Populating Daily Metrics sheet...');
     populateDailyMetrics(data);
 
-    // Update status
+    // Step 8: Populate User List
+    ss.toast('Populating User List sheet...', '📊 Step 8/8', 3);
+    updateImportStatus(new Date().toLocaleString(), '📊 Populating User List sheet...');
+    populateUserList(data);
+
+    // Final status
     const timestamp = new Date().toLocaleString();
-    updateImportStatus(timestamp, 'Success');
+    updateImportStatus(timestamp, '✅ Success');
+    ss.toast('Campaign data imported successfully!', '✅ Import Complete', 5);
 
     ui.alert('Import Complete', 'Campaign data imported successfully!', ui.ButtonSet.OK);
 
@@ -352,48 +432,106 @@ function populateOverview(data) {
   const sheet = getOrCreateSheet('Overview');
   sheet.clear();
 
+  // Unfreeze columns (in case they were frozen previously)
+  sheet.setFrozenColumns(0);
+
   // Campaign info
   sheet.getRange('A1').setValue('CAMPAIGN INFORMATION').setFontWeight('bold').setFontSize(12);
-  sheet.getRange('A2:B2').setValues([['Campaign Name', data.campaign.name || 'N/A']]);
-  sheet.getRange('A3:B3').setValues([['Period', `${data.campaign.startDate} to ${data.campaign.endDate}`]]);
-  sheet.getRange('A4:B4').setValues([['Trial Tier', data.campaign.trialTier || 'N/A']]);
-  sheet.getRange('A5:B5').setValues([['Trial Duration', (data.campaign.trialDays || 'N/A') + ' days']]);
+  sheet.getRange('A2:B2').setValues([['Period', `${data.campaign.startDate} to ${data.campaign.endDate}`]]);
+
+  const campaignCount = data.campaign.count || 0;
+  const campaigns = data.campaign.campaigns || [];
+
+  if (campaignCount === 0) {
+    // No campaigns active during period
+    sheet.getRange('A3:B3').setValues([['Campaign Status', 'No Active Campaign']]);
+    sheet.getRange('A4:B4').setValues([['Note', 'All trials are individual/self-serve']]);
+  } else if (campaignCount === 1) {
+    // Single campaign - show details
+    const campaign = campaigns[0];
+    sheet.getRange('A3:B3').setValues([['Campaign Name', campaign.name]]);
+    sheet.getRange('A4:B4').setValues([['Trial Tier', campaign.trialTier]]);
+    sheet.getRange('A5:B5').setValues([['Trial Duration', campaign.trialDays + ' days']]);
+    sheet.getRange('A6:B6').setValues([['Status', campaign.isActive ? 'Active' : 'Inactive']]);
+  } else {
+    // Multiple campaigns - show count and note
+    sheet.getRange('A3:B3').setValues([['Campaign Status', `Multiple Campaigns (${campaignCount})`]]);
+    sheet.getRange('A4:B4').setValues([['Note', 'Use exact campaign dates for specific analysis']]);
+  }
+
+  // Campaigns Active During Period section
+  let nextRow = campaignCount === 1 ? 8 : 6;
+  sheet.getRange(`A${nextRow}`).setValue('CAMPAIGNS ACTIVE DURING PERIOD').setFontWeight('bold').setFontSize(12);
+  nextRow++;
+
+  if (campaigns.length > 0) {
+    sheet.getRange(`A${nextRow}:E${nextRow}`).setValues([['Campaign Name', 'Trial Tier', 'Days', 'Start Date', 'End Date']])
+      .setFontWeight('bold').setBackground('#6366f1').setFontColor('white');
+    nextRow++;
+
+    const campaignRows = campaigns.map(c => [
+      c.name,
+      c.trialTier,
+      c.trialDays,
+      new Date(c.startsAt).toISOString().split('T')[0],
+      c.endsAt ? new Date(c.endsAt).toISOString().split('T')[0] : 'Ongoing'
+    ]);
+
+    sheet.getRange(nextRow, 1, campaignRows.length, 5).setValues(campaignRows);
+    nextRow += campaignRows.length + 1;
+  } else {
+    sheet.getRange(`A${nextRow}`).setValue('No campaigns during this period').setFontStyle('italic');
+    nextRow += 2;
+  }
 
   // Key metrics
-  sheet.getRange('A7').setValue('KEY METRICS').setFontWeight('bold').setFontSize(12);
-  sheet.getRange('A8:D8').setValues([['Metric', 'Value', 'Metric', 'Value']]);
-  sheet.getRange('A9:D11').setValues([
+  sheet.getRange(`A${nextRow}`).setValue('KEY METRICS').setFontWeight('bold').setFontSize(12);
+  nextRow++;
+  sheet.getRange(nextRow, 1, 1, 4).setValues([['Metric', 'Value', 'Metric', 'Value']])
+    .setFontWeight('bold').setBackground('#6366f1').setFontColor('white');
+  nextRow++;
+  sheet.getRange(nextRow, 1, 3, 4).setValues([
     ['Total Signups', data.summary.total_signups, 'Verification Rate', data.spreadsheet_ready.cohort_summary.verification_rate + '%'],
     ['Email Verified', data.summary.verified_users, 'Activation Rate', data.spreadsheet_ready.cohort_summary.activation_rate + '%'],
     ['First Generation', data.summary.activated_users, '', '']
   ]);
+  nextRow += 4;
 
   // Trial performance
-  sheet.getRange('A13').setValue('TRIAL PERFORMANCE').setFontWeight('bold').setFontSize(12);
-  sheet.getRange('A14:D14').setValues([['Campaign Trials', '', 'Individual Trials', '']]);
-  sheet.getRange('A15:D17').setValues([
+  sheet.getRange(`A${nextRow}`).setValue('TRIAL PERFORMANCE').setFontWeight('bold').setFontSize(12);
+  nextRow++;
+  sheet.getRange(nextRow, 1, 1, 4).setValues([['Campaign Trials', '', 'Individual Trials', '']])
+    .setFontWeight('bold').setBackground('#6366f1').setFontColor('white');
+  nextRow++;
+  sheet.getRange(nextRow, 1, 3, 4).setValues([
     ['Started', data.spreadsheet_ready.trial_comparison.campaign_trials.started, 'Started', data.spreadsheet_ready.trial_comparison.individual_trials.started],
     ['Conversions', data.spreadsheet_ready.trial_comparison.campaign_trials.converted, 'Conversions', data.spreadsheet_ready.trial_comparison.individual_trials.converted],
     ['Conv. Rate', data.spreadsheet_ready.trial_comparison.campaign_trials.conversion_rate + '%', 'Conv. Rate', data.spreadsheet_ready.trial_comparison.individual_trials.conversion_rate + '%']
   ]);
-  sheet.getRange('A18:B18').setValues([['Campaign Lift', (data.spreadsheet_ready.trial_comparison.campaign_lift || 'N/A') + '%']]);
+  nextRow += 3;
+  sheet.getRange(nextRow, 1, 1, 2).setValues([['Campaign Lift', (data.spreadsheet_ready.trial_comparison.campaign_lift || 'N/A') + '%']]);
+  nextRow += 2;
 
   // Usage distribution
-  sheet.getRange('A20').setValue('USAGE DISTRIBUTION').setFontWeight('bold').setFontSize(12);
-  sheet.getRange('A21:C21').setValues([['Segment', 'Users', 'Percentage']]);
+  sheet.getRange(`A${nextRow}`).setValue('USAGE DISTRIBUTION').setFontWeight('bold').setFontSize(12);
+  nextRow++;
+  sheet.getRange(nextRow, 1, 1, 3).setValues([['Segment', 'Users', 'Percentage']])
+    .setFontWeight('bold').setBackground('#6366f1').setFontColor('white');
+  nextRow++;
 
   const segments = data.extended_metrics.usage_segments;
   if (segments && segments.length > 0) {
     const segmentData = segments.map(s => [s.segment, s.users, s.percentage + '%']);
-    sheet.getRange(22, 1, segmentData.length, 3).setValues(segmentData);
+    sheet.getRange(nextRow, 1, segmentData.length, 3).setValues(segmentData);
   }
 
   // Format
-  sheet.getRange('A1:D30').setFontFamily('Arial').setFontSize(10);
+  sheet.getRange('A1:E50').setFontFamily('Arial').setFontSize(10);
   sheet.setColumnWidth(1, 180);
   sheet.setColumnWidth(2, 120);
   sheet.setColumnWidth(3, 180);
   sheet.setColumnWidth(4, 120);
+  sheet.setColumnWidth(5, 120);
 }
 
 /**
@@ -403,30 +541,37 @@ function populateTrialPerformance(data) {
   const sheet = getOrCreateSheet('Trial Performance');
   sheet.clear();
 
+  // Unfreeze columns (in case they were frozen previously)
+  sheet.setFrozenColumns(0);
+
   const tc = data.spreadsheet_ready.trial_comparison;
 
   // Headers
   sheet.getRange('A1:D1').setValues([['Metric', 'Campaign Trials', 'Individual Trials', 'Total']])
-    .setFontWeight('bold').setBackground('#4285f4').setFontColor('white');
+    .setFontWeight('bold').setBackground('#6366f1').setFontColor('white');
 
   // Data
   sheet.getRange('A2:D5').setValues([
     ['Trials Started', tc.campaign_trials.started, tc.individual_trials.started, tc.total_trials.started],
     ['Conversions', tc.campaign_trials.converted, tc.individual_trials.converted, tc.total_trials.converted],
     ['Conversion Rate', tc.campaign_trials.conversion_rate / 100, tc.individual_trials.conversion_rate / 100, tc.total_trials.conversion_rate / 100],
-    ['Campaign Lift', tc.campaign_lift ? parseFloat(tc.campaign_lift) / 100 : null, '', '']
+    ['Campaign Lift', tc.campaign_lift ? parseFloat(tc.campaign_lift) / 100 : 'N/A', '', '']
   ]);
+
+  // Add note below data
+  sheet.getRange('A7:D7').merge().setValue('Note: Comparison of trial users only - campaign trials vs. individual/self-serve trials started during the period.')
+    .setFontStyle('italic').setFontSize(9).setWrap(true);
 
   // Format percentages
   sheet.getRange('B4:D4').setNumberFormat('0.00%');
   sheet.getRange('B5').setNumberFormat('0.00%');
 
-  // Named range for formulas
-  sheet.setName('TrialData');
-
   // Format
   sheet.setColumnWidth(1, 180);
   sheet.setColumnWidths(2, 3, 140);
+
+  // Freeze header row only
+  sheet.setFrozenRows(1);
 }
 
 /**
@@ -436,11 +581,14 @@ function populateCohortFunnel(data) {
   const sheet = getOrCreateSheet('Cohort Funnel');
   sheet.clear();
 
+  // Unfreeze columns before merging (in case they were frozen previously)
+  sheet.setFrozenColumns(0);
+
   const cohort = data.spreadsheet_ready.cohort_summary;
 
   // Headers
   sheet.getRange('A1:D1').setValues([['Stage', 'Users', 'Conversion Rate', '% of Signups']])
-    .setFontWeight('bold').setBackground('#34a853').setFontColor('white');
+    .setFontWeight('bold').setBackground('#6366f1').setFontColor('white');
 
   // Data
   const totalSignups = cohort.signups;
@@ -458,14 +606,60 @@ function populateCohortFunnel(data) {
     ['First Generation', activated, activatedFromVerified, activatedFromSignups]
   ]);
 
+  // Add note below data
+  sheet.getRange('A6:D6').merge().setValue('Note: Full acquisition funnel showing all users who signed up during the period, regardless of trial status.')
+    .setFontStyle('italic').setFontSize(9).setWrap(true);
+
   // Format percentages
   sheet.getRange('C2:D4').setNumberFormat('0.00%');
 
-  // Named range
-  sheet.setName('CohortData');
+  // Format
+  sheet.setColumnWidths(1, 4, 150);
+
+  // Freeze header row only (can't freeze columns when merging across them)
+  sheet.setFrozenRows(1);
+}
+
+/**
+ * Populate Trial Funnel sheet
+ */
+function populateTrialFunnel(data) {
+  const sheet = getOrCreateSheet('Trial Funnel');
+  sheet.clear();
+
+  // Unfreeze columns before merging (in case they were frozen previously)
+  sheet.setFrozenColumns(0);
+
+  const trial = data.spreadsheet_ready.trial_funnel_summary;
+
+  // Headers
+  sheet.getRange('A1:D1').setValues([['Stage', 'Users', 'Conversion Rate', '% of Trials Started']])
+    .setFontWeight('bold').setBackground('#6366f1').setFontColor('white');
+
+  // Data
+  const trialsStarted = trial.trials_started;
+  const trialsConverted = trial.trials_converted;
+
+  // Safe division to avoid #NUM! errors when no data
+  const conversionRate = trialsStarted > 0 ? trialsConverted / trialsStarted : 0;
+
+  sheet.getRange('A2:D3').setValues([
+    ['Trials Started', trialsStarted, trialsStarted > 0 ? 1.0 : 0, trialsStarted > 0 ? 1.0 : 0],
+    ['Converted to Paid', trialsConverted, conversionRate, conversionRate]
+  ]);
+
+  // Add note below data
+  sheet.getRange('A5:D5').merge().setValue('Note: Trial user funnel showing only users who started a trial during the period (campaign or individual).')
+    .setFontStyle('italic').setFontSize(9).setWrap(true);
+
+  // Format percentages
+  sheet.getRange('C2:D3').setNumberFormat('0.00%');
 
   // Format
   sheet.setColumnWidths(1, 4, 150);
+
+  // Freeze header row only (can't freeze columns when merging across them)
+  sheet.setFrozenRows(1);
 }
 
 /**
@@ -475,9 +669,12 @@ function populateUsageSegments(data) {
   const sheet = getOrCreateSheet('Usage Segments');
   sheet.clear();
 
+  // Unfreeze columns before merging (in case they were frozen previously)
+  sheet.setFrozenColumns(0);
+
   // Headers
   sheet.getRange('A1:C1').setValues([['Segment', 'Users', 'Percentage']])
-    .setFontWeight('bold').setBackground('#fbbc04').setFontColor('white');
+    .setFontWeight('bold').setBackground('#6366f1').setFontColor('white');
 
   // Data
   const segments = data.extended_metrics.usage_segments;
@@ -495,13 +692,18 @@ function populateUsageSegments(data) {
     sheet.getRange(totalRow, 1, 1, 3).setValues([
       ['TOTAL', `=SUM(B2:B${totalRow - 1})`, `=SUM(C2:C${totalRow - 1})`]
     ]).setFontWeight('bold').setBackground('#f4f4f4');
-  }
 
-  // Named range
-  sheet.setName('UsageData');
+    // Add note below totals
+    const noteRow = totalRow + 2;
+    sheet.getRange(`A${noteRow}:C${noteRow}`).merge().setValue('Note: Usage distribution for all users who signed up during the period (full acquisition cohort).')
+      .setFontStyle('italic').setFontSize(9).setWrap(true);
+  }
 
   // Format
   sheet.setColumnWidths(1, 3, 150);
+
+  // Freeze header row only (can't freeze columns when merging across them)
+  sheet.setFrozenRows(1);
 }
 
 /**
@@ -511,31 +713,97 @@ function populateDailyMetrics(data) {
   const sheet = getOrCreateSheet('Daily Metrics');
   sheet.clear();
 
+  // Unfreeze columns (in case they were frozen previously)
+  sheet.setFrozenColumns(0);
+
   // Headers
-  sheet.getRange('A1:D1').setValues([['Date', 'Signups', 'Verified', 'Verification Rate']])
-    .setFontWeight('bold').setBackground('#ea4335').setFontColor('white');
+  sheet.getRange('A1:E1').setValues([['Date', 'Origin Type', 'Signups', 'Verified', 'Verification Rate']])
+    .setFontWeight('bold').setBackground('#6366f1').setFontColor('white');
 
   // Data
   if (data.daily && data.daily.length > 0) {
     const dailyData = data.daily.map(d => [
-      d.date,
+      new Date(d.date),  // Convert string to Date object
+      d.origin_type,
       d.signups,
       d.verified,
       d.signups > 0 ? d.verified / d.signups : 0
     ]);
 
-    sheet.getRange(2, 1, dailyData.length, 4).setValues(dailyData);
+    sheet.getRange(2, 1, dailyData.length, 5).setValues(dailyData);
 
-    // Format
-    sheet.getRange(2, 4, dailyData.length, 1).setNumberFormat('0.00%');
+    // Format dates as YYYY-MM-DD
+    sheet.getRange(2, 1, dailyData.length, 1).setNumberFormat('yyyy-mm-dd');
+
+    // Format percentages
+    sheet.getRange(2, 5, dailyData.length, 1).setNumberFormat('0.00%');
   }
 
-  // Named range
-  sheet.setName('DailyData');
+  // Format
+  sheet.setColumnWidth(1, 120);  // Date
+  sheet.setColumnWidth(2, 200);  // Origin Type
+  sheet.setColumnWidths(3, 3, 100);  // Signups, Verified, Verification Rate
+
+  // Freeze header row only
+  sheet.setFrozenRows(1);
+}
+
+/**
+ * Populate User List sheet
+ */
+function populateUserList(data) {
+  const sheet = getOrCreateSheet('User List');
+  sheet.clear();
+
+  // Unfreeze columns (in case they were frozen previously)
+  sheet.setFrozenColumns(0);
+
+  // Headers
+  sheet.getRange('A1:N1').setValues([[
+    'Email', 'First Name', 'Last Name', 'Current Tier', 'Origin Type',
+    'Signup Date', 'Email Verified', 'Email Verified At',
+    'Trial Tier', 'Trial Status', 'Trial Started', 'Trial Converted',
+    'First Generation', 'Usage Count'
+  ]]).setFontWeight('bold').setBackground('#6366f1').setFontColor('white');
+
+  // Data
+  if (data.user_list && data.user_list.length > 0) {
+    const userData = data.user_list.map(u => [
+      u.email,
+      u.first_name || '',
+      u.last_name || '',
+      u.tier || 'free',
+      u.origin_type,
+      u.signup_date ? new Date(u.signup_date).toISOString().split('T')[0] : '',
+      u.email_verified ? 'Yes' : 'No',
+      u.email_verified_at ? new Date(u.email_verified_at).toISOString().split('T')[0] : '',
+      u.trial_tier || '-',
+      u.trial_status || '-',
+      u.trial_started_at ? new Date(u.trial_started_at).toISOString().split('T')[0] : '',
+      u.trial_converted_at ? new Date(u.trial_converted_at).toISOString().split('T')[0] : '',
+      u.first_generation_at ? new Date(u.first_generation_at).toISOString().split('T')[0] : '',
+      u.usage_count
+    ]);
+
+    sheet.getRange(2, 1, userData.length, 14).setValues(userData);
+
+    // Add summary row
+    const summaryRow = userData.length + 3;
+    sheet.getRange(`A${summaryRow}:B${summaryRow}`).setValues([['Total Users', userData.length]])
+      .setFontWeight('bold');
+  }
 
   // Format
-  sheet.setColumnWidth(1, 120);
-  sheet.setColumnWidths(2, 3, 100);
+  sheet.setColumnWidth(1, 200);  // Email
+  sheet.setColumnWidths(2, 3, 120);  // First/Last Name
+  sheet.setColumnWidth(4, 100);  // Current Tier
+  sheet.setColumnWidth(5, 180);  // Origin Type
+  sheet.setColumnWidths(6, 8, 120);  // Dates & verified columns
+  sheet.setColumnWidths(9, 5, 120);  // Trial columns
+  sheet.setColumnWidth(14, 100);  // Usage Count
+
+  // Freeze header row only
+  sheet.setFrozenRows(1);
 }
 
 /**
@@ -595,7 +863,7 @@ function setupSheets() {
   configSheet.setColumnWidth(2, 300);
 
   // Create empty sheets
-  const sheets = ['Overview', 'Trial Performance', 'Cohort Funnel', 'Usage Segments', 'Daily Metrics'];
+  const sheets = ['Overview', 'Trial Performance', 'Cohort Funnel', 'Trial Funnel', 'Usage Segments', 'Daily Metrics', 'User List'];
   sheets.forEach(name => {
     if (!ss.getSheetByName(name)) {
       ss.insertSheet(name);
@@ -617,7 +885,7 @@ function clearAllData() {
   );
 
   if (response === ui.Button.YES) {
-    const sheets = ['Overview', 'Trial Performance', 'Cohort Funnel', 'Usage Segments', 'Daily Metrics'];
+    const sheets = ['Overview', 'Trial Performance', 'Cohort Funnel', 'Trial Funnel', 'Usage Segments', 'Daily Metrics', 'User List'];
     const ss = SpreadsheetApp.getActiveSpreadsheet();
 
     sheets.forEach(name => {

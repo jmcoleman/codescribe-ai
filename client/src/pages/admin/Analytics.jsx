@@ -1067,13 +1067,26 @@ export default function Analytics() {
                       csvRows.push('CAMPAIGN METRICS EXPORT');
                       csvRows.push('');
                       csvRows.push('Campaign Information');
-                      if (data.campaign.name) {
-                        csvRows.push(`Campaign Name,${escapeCSV(data.campaign.name)}`);
-                      }
                       csvRows.push(`Date Range,${escapeCSV(data.campaign.startDate + ' to ' + data.campaign.endDate)}`);
-                      if (data.campaign.trialTier) {
-                        const trialOffer = `${data.campaign.trialDays}-Day ${data.campaign.trialTier.charAt(0).toUpperCase() + data.campaign.trialTier.slice(1)} Trial`;
-                        csvRows.push(`Trial Offer,${escapeCSV(trialOffer)}`);
+                      csvRows.push(`Campaign Source,${escapeCSV(data.campaign.source)}`);
+
+                      // Handle multiple campaigns
+                      if (data.campaign.campaigns && data.campaign.campaigns.length > 0) {
+                        csvRows.push(`Active Campaigns,${data.campaign.count}`);
+                        csvRows.push('');
+                        csvRows.push('Campaign,Trial Tier,Trial Days,Start Date,End Date,Status');
+                        data.campaign.campaigns.forEach(c => {
+                          csvRows.push([
+                            escapeCSV(c.name),
+                            escapeCSV(c.trialTier),
+                            c.trialDays,
+                            new Date(c.startsAt).toISOString().split('T')[0],
+                            c.endsAt ? new Date(c.endsAt).toISOString().split('T')[0] : 'Ongoing',
+                            c.isActive ? 'Active' : 'Inactive'
+                          ].join(','));
+                        });
+                      } else {
+                        csvRows.push(`Active Campaigns,None`);
                       }
                       csvRows.push('');
 
@@ -1112,9 +1125,9 @@ export default function Analytics() {
                       // Daily metrics section
                       if (data.daily && data.daily.length > 0) {
                         csvRows.push('Daily Breakdown');
-                        csvRows.push('Date,Signups,Verified');
+                        csvRows.push('Date,Origin Type,Signups,Verified');
                         data.daily.forEach(day => {
-                          csvRows.push(`${day.date},${day.signups},${day.verified}`);
+                          csvRows.push(`${day.date},${escapeCSV(day.origin_type || 'Unknown')},${day.signups},${day.verified}`);
                         });
                         csvRows.push('');
                       }
@@ -1170,6 +1183,27 @@ export default function Analytics() {
                         csvRows.push('');
                       }
 
+                      // ✨ NEW: User List
+                      if (data.user_list && data.user_list.length > 0) {
+                        csvRows.push('User List');
+                        csvRows.push('Email,First Name,Last Name,Current Tier,Origin Type,Signup Date,Email Verified,Trial Tier,Trial Status,Usage Count');
+                        data.user_list.forEach(user => {
+                          csvRows.push([
+                            escapeCSV(user.email),
+                            escapeCSV(user.first_name || ''),
+                            escapeCSV(user.last_name || ''),
+                            escapeCSV(user.tier || 'free'),
+                            escapeCSV(user.origin_type || 'Unknown'),
+                            user.signup_date ? new Date(user.signup_date).toISOString().split('T')[0] : '',
+                            user.email_verified ? 'Yes' : 'No',
+                            escapeCSV(user.trial_tier || '-'),
+                            escapeCSV(user.trial_status || '-'),
+                            user.usage_count || 0
+                          ].join(','));
+                        });
+                        csvRows.push('');
+                      }
+
                       // Create CSV blob and download
                       const csvContent = csvRows.join('\n');
                       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -1194,7 +1228,7 @@ export default function Analytics() {
               </div>
 
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-3">
-                Downloads a CSV file with trial breakdown (campaign vs individual), conversion rates, cohort analysis, daily metrics, <strong>time-to-value metrics</strong> (email verification, first generation), and <strong>usage segments</strong> (engagement levels). Opens directly in Excel or Google Sheets.
+                Downloads a CSV file with trial breakdown (campaign vs individual), conversion rates, cohort analysis, daily metrics by origin type, <strong>time-to-value metrics</strong> (email verification, first generation), <strong>usage segments</strong> (engagement levels), and <strong>complete user list</strong> with origin attribution. Opens directly in Excel or Google Sheets.
               </p>
             </div>
 
