@@ -418,7 +418,7 @@ export default function Analytics() {
       // Define metrics to compare based on active tab
       let metrics = [];
       if (activeTab === 'usage') {
-        metrics = ['sessions', 'generations', 'completed_sessions'];
+        metrics = ['sessions', 'code_input', 'generations', 'completed_sessions', 'doc_export'];
       } else if (activeTab === 'business') {
         metrics = ['visitors', 'engaged', 'signups', 'verified', 'activated', 'trials', 'paid', 'revenue'];
       } else if (activeTab === 'performance') {
@@ -484,6 +484,40 @@ export default function Analytics() {
     fetchComparisons();
     fetchSummary();
   }, [dateRange, excludeInternal]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Fetch only quality scores by doc type when model filter changes (no full page refresh)
+  useEffect(() => {
+    const fetchQualityScoresByDocType = async () => {
+      if (activeTab !== 'usage') return; // Only relevant for usage tab
+
+      try {
+        const token = await getToken();
+        const params = new URLSearchParams({
+          startDate: dateRange.startDate.toISOString(),
+          endDate: dateRange.endDate.toISOString(),
+          excludeInternal: excludeInternal.toString(),
+          model: selectedModel,
+        });
+
+        const response = await fetch(`${API_URL}/api/admin/analytics/usage?${params}`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          // Only update the qualityScoresByDocType data, not the entire usageData
+          setUsageData(prev => ({
+            ...prev,
+            qualityScoresByDocType: data.data.qualityScoresByDocType,
+          }));
+        }
+      } catch (err) {
+        console.error('Failed to fetch quality scores by doc type:', err);
+      }
+    };
+
+    fetchQualityScoresByDocType();
+  }, [selectedModel, getToken, dateRange, excludeInternal, activeTab]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch data when tab changes (only if not already loaded, no loading spinner)
   useEffect(() => {
@@ -1061,6 +1095,58 @@ export default function Analytics() {
                         data.daily.forEach(day => {
                           csvRows.push(`${day.date},${day.signups},${day.verified}`);
                         });
+                        csvRows.push('');
+                      }
+
+                      // ✨ NEW: Time-to-Value Metrics
+                      if (data.extended_metrics?.time_to_value) {
+                        csvRows.push('Time-to-Value Metrics');
+
+                        // Email verification timing
+                        const emailVerif = data.extended_metrics.time_to_value.email_verification;
+                        csvRows.push('Email Verification');
+                        csvRows.push(`Total Verified,${emailVerif.total_verified}`);
+                        if (emailVerif.avg_hours !== null) {
+                          csvRows.push(`Average Hours to Verify,${emailVerif.avg_hours}`);
+                          csvRows.push(`Average Days to Verify,${emailVerif.avg_days}`);
+                        }
+                        if (emailVerif.median_hours !== null) {
+                          csvRows.push(`Median Hours to Verify,${emailVerif.median_hours}`);
+                        }
+                        csvRows.push('');
+
+                        // First generation timing
+                        const firstGen = data.extended_metrics.time_to_value.first_generation;
+                        csvRows.push('First Generation');
+                        csvRows.push(`Total Activated Users,${firstGen.total_activated}`);
+                        if (firstGen.avg_hours !== null) {
+                          csvRows.push(`Average Hours to First Doc,${firstGen.avg_hours}`);
+                          csvRows.push(`Average Days to First Doc,${firstGen.avg_days}`);
+                        }
+                        if (firstGen.median_hours !== null) {
+                          csvRows.push(`Median Hours to First Doc,${firstGen.median_hours}`);
+                        }
+                        csvRows.push('');
+                      }
+
+                      // ✨ NEW: Usage Segment Breakdown
+                      if (data.extended_metrics?.usage_segments && data.extended_metrics.usage_segments.length > 0) {
+                        csvRows.push('Usage Segment Breakdown');
+                        csvRows.push('Segment,Users,Percentage');
+                        data.extended_metrics.usage_segments.forEach(segment => {
+                          csvRows.push(`${escapeCSV(segment.segment)},${segment.users},${segment.percentage}%`);
+                        });
+                        csvRows.push('');
+
+                        // Engagement summary
+                        const engagement = data.extended_metrics.engagement_summary;
+                        csvRows.push('Engagement Summary');
+                        csvRows.push(`No Usage,${engagement.no_usage}`);
+                        csvRows.push(`Light Users (1-9),${engagement.light_users}`);
+                        csvRows.push(`Engaged Users (10-49),${engagement.engaged_users}`);
+                        csvRows.push(`Power Users (50-99),${engagement.power_users}`);
+                        csvRows.push(`Max Users (100+),${engagement.max_users}`);
+                        csvRows.push('');
                       }
 
                       // Create CSV blob and download
@@ -1087,7 +1173,7 @@ export default function Analytics() {
               </div>
 
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-3">
-                Downloads a CSV file with trial breakdown (campaign vs individual), conversion rates, cohort analysis, and daily metrics. Opens directly in Excel or Google Sheets.
+                Downloads a CSV file with trial breakdown (campaign vs individual), conversion rates, cohort analysis, daily metrics, <strong>time-to-value metrics</strong> (email verification, first generation), and <strong>usage segments</strong> (engagement levels). Opens directly in Excel or Google Sheets.
               </p>
             </div>
 
@@ -1294,7 +1380,7 @@ export default function Analytics() {
                     Workflow Funnel
                   </h2>
                   <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 italic">
-                    Where do users drop off in the documentation workflow?
+                    How are workflow metrics trending compared to the prior period?
                   </p>
                 </div>
 
@@ -1303,36 +1389,41 @@ export default function Analytics() {
                   <StatsCard
                     icon={Activity}
                     label="Sessions Started"
-                    value={formatNumber(funnelData.stages?.session_start?.sessions || 0)}
-                    subValue={`${formatNumber(funnelData.stages?.session_start?.events || 0)} events`}
+                    value={comparisons.sessions?.change ? `${comparisons.sessions.change.percent > 0 ? '+' : ''}${comparisons.sessions.change.percent.toFixed(1)}%` : 'N/A'}
+                    subValue="vs prior period"
+                    comparison={comparisons.sessions}
                     color="purple"
                   />
                   <StatsCard
                     icon={FileText}
                     label="Code Input"
-                    value={formatPercent(funnelData.conversionRates?.session_start_to_code_input || 0)}
-                    subValue={`${formatNumber(funnelData.stages?.code_input?.sessions || 0)} of ${formatNumber(funnelData.stages?.session_start?.sessions || 0)} sessions`}
+                    value={comparisons.code_input?.change ? `${comparisons.code_input.change.percent > 0 ? '+' : ''}${comparisons.code_input.change.percent.toFixed(1)}%` : 'N/A'}
+                    subValue="vs prior period"
+                    comparison={comparisons.code_input}
                     color="purple"
                   />
                   <StatsCard
                     icon={RefreshCw}
                     label="Gen Started"
-                    value={formatPercent(funnelData.conversionRates?.code_input_to_generation_started || 0)}
-                    subValue={`${formatNumber(funnelData.stages?.generation_started?.sessions || 0)} of ${formatNumber(funnelData.stages?.code_input?.sessions || 0)} with input`}
+                    value={comparisons.generations?.change ? `${comparisons.generations.change.percent > 0 ? '+' : ''}${comparisons.generations.change.percent.toFixed(1)}%` : 'N/A'}
+                    subValue="vs prior period"
+                    comparison={comparisons.generations}
                     color="purple"
                   />
                   <StatsCard
                     icon={CheckCircle}
                     label="Gen Completed"
-                    value={formatPercent(funnelData.conversionRates?.generation_started_to_generation_completed || 0)}
-                    subValue={`${formatNumber(funnelData.stages?.generation_completed?.sessions || 0)} of ${formatNumber(funnelData.stages?.generation_started?.sessions || 0)} started`}
+                    value={comparisons.completed_sessions?.change ? `${comparisons.completed_sessions.change.percent > 0 ? '+' : ''}${comparisons.completed_sessions.change.percent.toFixed(1)}%` : 'N/A'}
+                    subValue="vs prior period"
+                    comparison={comparisons.completed_sessions}
                     color="purple"
                   />
                   <StatsCard
                     icon={ArrowDownToLine}
                     label="Copied/Downloaded"
-                    value={formatPercent(funnelData.conversionRates?.generation_completed_to_doc_export || 0)}
-                    subValue={`${formatNumber(funnelData.stages?.doc_export?.sessions || 0)} of ${formatNumber(funnelData.stages?.generation_completed?.sessions || 0)} completed`}
+                    value={comparisons.doc_export?.change ? `${comparisons.doc_export.change.percent > 0 ? '+' : ''}${comparisons.doc_export.change.percent.toFixed(1)}%` : 'N/A'}
+                    subValue="vs prior period"
+                    comparison={comparisons.doc_export}
                     color="purple"
                   />
                 </div>
@@ -1397,63 +1488,71 @@ export default function Analytics() {
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Code Input Methods */}
-                <div className="space-y-4">
-                  <h3 className="text-md font-medium text-slate-800 dark:text-slate-200">
-                    Code Input Methods
-                  </h3>
+                <ChartSection
+                  title={(() => {
+                    const total = usageData.codeInputMethods?.reduce((sum, o) => sum + o.count, 0) || 0;
+                    return (
+                      <span>
+                        Code Input Methods{' '}
+                        <span className="text-sm font-normal text-slate-500 dark:text-slate-400">
+                          ({formatNumber(total)} total)
+                        </span>
+                      </span>
+                    );
+                  })()}
+                  question="How are users providing code for documentation?"
+                >
                   {usageData.codeInputMethods && usageData.codeInputMethods.length > 0 ? (
-                    <div className="bg-white dark:bg-slate-800 rounded-lg p-4 border border-slate-200 dark:border-slate-700">
-                      <div className="space-y-3">
-                        {(() => {
-                          const originLabels = {
-                            default: 'Default Code',
-                            github_private: 'Private GitHub',
-                            github_public: 'Public GitHub',
-                            upload: 'File Upload',
-                            sample: 'Sample Code',
-                            paste: 'Paste Code',
-                          };
-                          const originIcons = {
-                            default: '⚙️',
-                            github_private: '🔒',
-                            github_public: '🌐',
-                            upload: '📁',
-                            sample: '📝',
-                            paste: '📋',
-                          };
-                          const total = usageData.codeInputMethods.reduce((sum, o) => sum + o.count, 0);
-                          return usageData.codeInputMethods.map((method) => {
-                            const percent = total > 0 ? (method.count / total) * 100 : 0;
-                            return (
-                              <div key={method.origin} className="flex items-center gap-3">
-                                <span className="text-lg w-6">{originIcons[method.origin] || '📄'}</span>
-                                <span className="text-sm text-slate-700 dark:text-slate-300 w-32">
-                                  {originLabels[method.origin] || method.origin}
-                                </span>
-                                <div className="flex-1 bg-slate-200 dark:bg-slate-700 rounded-full h-4 overflow-hidden">
-                                  <div
-                                    className="bg-purple-500 h-full rounded-full transition-all duration-300"
-                                    style={{ width: `${percent}%` }}
-                                  />
-                                </div>
-                                <span className="text-sm font-medium text-slate-900 dark:text-slate-100 w-12 text-right">
-                                  {method.count}
-                                </span>
-                                <span className="text-sm text-slate-500 dark:text-slate-400 w-14 text-right">
-                                  {formatPercent(percent)}
-                                </span>
+                    <div className="space-y-3">
+                      {(() => {
+                        const originLabels = {
+                          default: 'Default Code',
+                          github_private: 'Private GitHub',
+                          github_public: 'Public GitHub',
+                          upload: 'File Upload',
+                          sample: 'Sample Code',
+                          paste: 'Paste Code',
+                        };
+                        const originIcons = {
+                          default: '⚙️',
+                          github_private: '🔒',
+                          github_public: '🌐',
+                          upload: '📁',
+                          sample: '📝',
+                          paste: '📋',
+                        };
+                        const total = usageData.codeInputMethods.reduce((sum, o) => sum + o.count, 0);
+                        return usageData.codeInputMethods.map((method) => {
+                          const percent = total > 0 ? (method.count / total) * 100 : 0;
+                          return (
+                            <div key={method.origin} className="flex items-center gap-3">
+                              <span className="text-lg w-6">{originIcons[method.origin] || '📄'}</span>
+                              <span className="text-sm text-slate-700 dark:text-slate-300 w-32">
+                                {originLabels[method.origin] || method.origin}
+                              </span>
+                              <div className="flex-1 bg-slate-200 dark:bg-slate-700 rounded-full h-4 overflow-hidden">
+                                <div
+                                  className="bg-purple-500 h-full rounded-full transition-all duration-300"
+                                  style={{ width: `${percent}%` }}
+                                />
                               </div>
-                            );
-                          });
-                        })()}
-                      </div>
+                              <span className="text-sm font-medium text-slate-900 dark:text-slate-100 w-12 text-right">
+                                {method.count}
+                              </span>
+                              <span className="text-sm text-slate-500 dark:text-slate-400 w-14 text-right">
+                                {formatPercent(percent)}
+                              </span>
+                            </div>
+                          );
+                        });
+                      })()}
                     </div>
                   ) : (
-                    <div className="bg-white dark:bg-slate-800 rounded-lg p-8 border border-slate-200 dark:border-slate-700 text-center text-slate-500 dark:text-slate-400">
+                    <div className="text-center text-slate-500 dark:text-slate-400 py-8">
                       No code input data available
                     </div>
                   )}
-                </div>
+                </ChartSection>
 
                 {/* Top Languages */}
                 <ChartSection
@@ -1542,58 +1641,63 @@ export default function Analytics() {
                 </ChartSection>
 
                 {/* Export Sources */}
-                <div className="space-y-4">
-                  <h3 className="text-md font-medium text-slate-800 dark:text-slate-200">
-                    Export Sources
-                  </h3>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 -mt-2 italic">
-                    Fresh vs. cached/history
-                  </p>
+                <ChartSection
+                  title={(() => {
+                    const total = usageData.exportSources?.reduce((sum, s) => sum + s.count, 0) || 0;
+                    return (
+                      <span>
+                        Export Sources{' '}
+                        <span className="text-sm font-normal text-slate-500 dark:text-slate-400">
+                          ({formatNumber(total)} total)
+                        </span>
+                      </span>
+                    );
+                  })()}
+                  question="Are users exporting fresh docs or exporting from history?"
+                >
                   {usageData.exportSources && usageData.exportSources.length > 0 ? (
-                    <div className="bg-white dark:bg-slate-800 rounded-lg p-4 border border-slate-200 dark:border-slate-700">
-                      <div className="space-y-3">
-                        {(() => {
-                          const sourceLabels = {
-                            fresh: 'Fresh Generation',
-                            cached: 'Cache/History',
-                          };
-                          const sourceIcons = {
-                            fresh: '✨',
-                            cached: '💾',
-                          };
-                          const total = usageData.exportSources.reduce((sum, s) => sum + s.count, 0);
-                          return usageData.exportSources.map((source) => {
-                            const percent = total > 0 ? (source.count / total) * 100 : 0;
-                            return (
-                              <div key={source.source} className="flex items-center gap-3">
-                                <span className="text-lg w-6">{sourceIcons[source.source] || '📄'}</span>
-                                <span className="text-sm text-slate-700 dark:text-slate-300 w-28">
-                                  {sourceLabels[source.source] || source.source}
-                                </span>
-                                <div className="flex-1 bg-slate-200 dark:bg-slate-700 rounded-full h-4 overflow-hidden">
-                                  <div
-                                    className="bg-green-500 h-full rounded-full transition-all duration-300"
-                                    style={{ width: `${percent}%` }}
-                                  />
-                                </div>
-                                <span className="text-sm font-medium text-slate-900 dark:text-slate-100 w-12 text-right">
-                                  {source.count}
-                                </span>
-                                <span className="text-sm text-slate-500 dark:text-slate-400 w-14 text-right">
-                                  {formatPercent(percent)}
-                                </span>
+                    <div className="space-y-3">
+                      {(() => {
+                        const sourceLabels = {
+                          fresh: 'Fresh Generation',
+                          cached: 'Cache/History',
+                        };
+                        const sourceIcons = {
+                          fresh: '✨',
+                          cached: '💾',
+                        };
+                        const total = usageData.exportSources.reduce((sum, s) => sum + s.count, 0);
+                        return usageData.exportSources.map((source) => {
+                          const percent = total > 0 ? (source.count / total) * 100 : 0;
+                          return (
+                            <div key={source.source} className="flex items-center gap-3">
+                              <span className="text-lg w-6">{sourceIcons[source.source] || '📄'}</span>
+                              <span className="text-sm text-slate-700 dark:text-slate-300 w-28">
+                                {sourceLabels[source.source] || source.source}
+                              </span>
+                              <div className="flex-1 bg-slate-200 dark:bg-slate-700 rounded-full h-4 overflow-hidden">
+                                <div
+                                  className="bg-green-500 h-full rounded-full transition-all duration-300"
+                                  style={{ width: `${percent}%` }}
+                                />
                               </div>
-                            );
-                          });
-                        })()}
-                      </div>
+                              <span className="text-sm font-medium text-slate-900 dark:text-slate-100 w-12 text-right">
+                                {source.count}
+                              </span>
+                              <span className="text-sm text-slate-500 dark:text-slate-400 w-14 text-right">
+                                {formatPercent(percent)}
+                              </span>
+                            </div>
+                          );
+                        });
+                      })()}
                     </div>
                   ) : (
-                    <div className="bg-white dark:bg-slate-800 rounded-lg p-8 border border-slate-200 dark:border-slate-700 text-center text-slate-500 dark:text-slate-400">
+                    <div className="text-center text-slate-500 dark:text-slate-400 py-8">
                       No export source data available
                     </div>
                   )}
-                </div>
+                </ChartSection>
               </div>
             </div>
 

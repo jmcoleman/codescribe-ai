@@ -3303,6 +3303,14 @@ export const analyticsService = {
           const funnel = await this.getConversionFunnel(params);
           return funnel.stages?.generation_completed?.events || 0;
         }
+        case 'code_input': {
+          const funnel = await this.getConversionFunnel(params);
+          return funnel.stages?.code_input?.sessions || 0;
+        }
+        case 'doc_export': {
+          const funnel = await this.getConversionFunnel(params);
+          return funnel.stages?.doc_export?.sessions || 0;
+        }
         case 'avg_latency': {
           const data = await this.getPerformanceMetrics(params);
           return data.avgLatencyMs;

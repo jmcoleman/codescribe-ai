@@ -1945,7 +1945,7 @@ router.get('/analytics/events/export', requireAuth, requireAdmin, async (req, re
  * - excludeInternal: boolean (optional, default true)
  *
  * Supported metrics:
- * - sessions, signups, revenue, generations, completed_sessions
+ * - sessions, code_input, signups, revenue, generations, completed_sessions, doc_export
  * - avg_latency, cache_hit_rate, throughput
  * - errors, error_rate
  */
@@ -2216,6 +2216,78 @@ router.get('/campaigns/export', requireAuth, requireAdmin, async (req, res) => {
       ORDER BY date
     `;
 
+    // ✨ NEW: Get time-to-value metrics
+    const timeToValueMetrics = await sql`
+      SELECT
+        COUNT(CASE WHEN email_verified = true THEN 1 END) as total_verified,
+        ROUND(AVG(CASE
+          WHEN email_verified = true
+          THEN EXTRACT(EPOCH FROM (email_verified_at - created_at)) / 3600
+        END), 1) as avg_hours_to_verify,
+        ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (
+          ORDER BY CASE
+            WHEN email_verified = true
+            THEN EXTRACT(EPOCH FROM (email_verified_at - created_at)) / 3600
+          END
+        ), 1) as median_hours_to_verify,
+        COUNT(CASE WHEN EXISTS (
+          SELECT 1 FROM generated_documents gd
+          WHERE gd.user_id = users.id AND gd.deleted_at IS NULL
+        ) THEN 1 END) as total_activated
+      FROM users
+      WHERE created_at >= ${startDate}
+        AND created_at < ${endDate}
+        AND role != 'admin'
+    `;
+
+    // Get time to first generation
+    const timeToFirstGen = await sql`
+      SELECT
+        COUNT(DISTINCT u.id) as activated_users,
+        ROUND(AVG(EXTRACT(EPOCH FROM (first_gen.created_at - u.created_at)) / 3600), 1) as avg_hours_to_first_gen,
+        ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (
+          ORDER BY EXTRACT(EPOCH FROM (first_gen.created_at - u.created_at)) / 3600
+        ), 1) as median_hours_to_first_gen
+      FROM users u
+      JOIN (
+        SELECT user_id, MIN(created_at) as created_at
+        FROM generated_documents
+        WHERE deleted_at IS NULL
+        GROUP BY user_id
+      ) first_gen ON u.id = first_gen.user_id
+      WHERE u.created_at >= ${startDate}
+        AND u.created_at < ${endDate}
+        AND u.role != 'admin'
+    `;
+
+    // ✨ NEW: Get usage segment breakdown
+    const usageSegments = await sql`
+      SELECT
+        CASE
+          WHEN monthly_count = 0 THEN 'No Usage'
+          WHEN monthly_count BETWEEN 1 AND 9 THEN 'Light (1-9)'
+          WHEN monthly_count BETWEEN 10 AND 49 THEN 'Engaged (10-49)'
+          WHEN monthly_count BETWEEN 50 AND 99 THEN 'Power (50-99)'
+          WHEN monthly_count >= 100 THEN 'Max (100+)'
+        END as segment,
+        COUNT(*) as users,
+        ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 1) as percentage
+      FROM user_quotas uq
+      JOIN users u ON uq.user_id = u.id
+      WHERE u.created_at >= ${startDate}
+        AND u.created_at < ${endDate}
+        AND u.role != 'admin'
+      GROUP BY segment
+      ORDER BY
+        CASE segment
+          WHEN 'No Usage' THEN 1
+          WHEN 'Light (1-9)' THEN 2
+          WHEN 'Engaged (10-49)' THEN 3
+          WHEN 'Power (50-99)' THEN 4
+          WHEN 'Max (100+)' THEN 5
+        END
+    `;
+
     // Get active campaign info (if exists) for campaign name
     let campaignInfo = null;
     try {
@@ -2349,6 +2421,38 @@ router.get('/campaigns/export', requireAuth, requireAdmin, async (req, res) => {
           activation_rate: cohortSummary.rows[0].verified_users > 0
             ? ((cohortSummary.rows[0].activated_users / cohortSummary.rows[0].verified_users) * 100).toFixed(1)
             : '0'
+        }
+      },
+
+      // ✨ NEW: Extended metrics (time-to-value and usage segments)
+      extended_metrics: {
+        time_to_value: {
+          email_verification: {
+            total_verified: parseInt(timeToValueMetrics.rows[0].total_verified || 0),
+            avg_hours: timeToValueMetrics.rows[0].avg_hours_to_verify ? parseFloat(timeToValueMetrics.rows[0].avg_hours_to_verify) : null,
+            median_hours: timeToValueMetrics.rows[0].median_hours_to_verify ? parseFloat(timeToValueMetrics.rows[0].median_hours_to_verify) : null,
+            avg_days: timeToValueMetrics.rows[0].avg_hours_to_verify ? (parseFloat(timeToValueMetrics.rows[0].avg_hours_to_verify) / 24).toFixed(1) : null
+          },
+          first_generation: {
+            total_activated: parseInt(timeToFirstGen.rows[0]?.activated_users || 0),
+            avg_hours: timeToFirstGen.rows[0]?.avg_hours_to_first_gen ? parseFloat(timeToFirstGen.rows[0].avg_hours_to_first_gen) : null,
+            median_hours: timeToFirstGen.rows[0]?.median_hours_to_first_gen ? parseFloat(timeToFirstGen.rows[0].median_hours_to_first_gen) : null,
+            avg_days: timeToFirstGen.rows[0]?.avg_hours_to_first_gen ? (parseFloat(timeToFirstGen.rows[0].avg_hours_to_first_gen) / 24).toFixed(1) : null
+          }
+        },
+
+        usage_segments: usageSegments.rows.map(row => ({
+          segment: row.segment,
+          users: parseInt(row.users),
+          percentage: parseFloat(row.percentage)
+        })),
+
+        engagement_summary: {
+          no_usage: parseInt(usageSegments.rows.find(r => r.segment === 'No Usage')?.users || 0),
+          light_users: parseInt(usageSegments.rows.find(r => r.segment === 'Light (1-9)')?.users || 0),
+          engaged_users: parseInt(usageSegments.rows.find(r => r.segment === 'Engaged (10-49)')?.users || 0),
+          power_users: parseInt(usageSegments.rows.find(r => r.segment === 'Power (50-99)')?.users || 0),
+          max_users: parseInt(usageSegments.rows.find(r => r.segment === 'Max (100+)')?.users || 0)
         }
       }
     };
