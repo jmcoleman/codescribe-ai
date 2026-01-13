@@ -244,8 +244,21 @@ export default function Analytics() {
   // Model filter for quality heatmap
   const [selectedModel, setSelectedModel] = useState('all');
 
-  // Default to last 30 days
+  // Default to last 30 days (or restore from session)
   const [dateRange, setDateRange] = useState(() => {
+    const saved = getSessionItem(STORAGE_KEYS.ANALYTICS_DATE_RANGE);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return {
+          startDate: new Date(parsed.startDate),
+          endDate: new Date(parsed.endDate),
+        };
+      } catch (e) {
+        // If parsing fails, use default
+      }
+    }
+    // Default: last 30 days
     const end = new Date();
     end.setDate(end.getDate() + 1);
     const start = new Date();
@@ -536,6 +549,14 @@ export default function Analytics() {
   useEffect(() => {
     setSessionItem(STORAGE_KEYS.ANALYTICS_ACTIVE_TAB, activeTab);
   }, [activeTab]);
+
+  // Save date range to sessionStorage
+  useEffect(() => {
+    setSessionItem(STORAGE_KEYS.ANALYTICS_DATE_RANGE, JSON.stringify({
+      startDate: dateRange.startDate.toISOString(),
+      endDate: dateRange.endDate.toISOString(),
+    }));
+  }, [dateRange]);
 
   return (
     <PageLayout>

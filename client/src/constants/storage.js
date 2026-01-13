@@ -76,6 +76,7 @@ export const STORAGE_KEYS = {
   ANALYTICS_EVENTS_FILTERS: 'cs_admin_events_filters',
   ANALYTICS_EXCLUDE_INTERNAL: 'cs_admin_exclude_internal',
   ANALYTICS_ACTIVE_TAB: 'cs_admin_active_tab',
+  ANALYTICS_DATE_RANGE: 'cs_admin_date_range',
 };
 
 /**
