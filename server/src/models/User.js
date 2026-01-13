@@ -176,10 +176,11 @@ class User {
         UPDATE users
         SET github_id = ${githubId},
             email_verified = true,
+            email_verified_at = NOW(),
             github_access_token_encrypted = ${encryptedToken},
             updated_at = NOW()
         WHERE id = ${existingUser.id}
-        RETURNING id, email, github_id, tier, email_verified,
+        RETURNING id, email, github_id, tier, email_verified, email_verified_at,
                   terms_accepted_at, terms_version_accepted, privacy_accepted_at, privacy_version_accepted, created_at
       `;
       // Existing user (linked), not newly created
@@ -189,9 +190,9 @@ class User {
     // Create new user with verified email
     // (GitHub has already verified the email address)
     const createResult = await sql`
-      INSERT INTO users (email, github_id, tier, email_verified, github_access_token_encrypted)
-      VALUES (${email}, ${githubId}, 'free', true, ${encryptedToken})
-      RETURNING id, email, github_id, tier, email_verified,
+      INSERT INTO users (email, github_id, tier, email_verified, email_verified_at, github_access_token_encrypted)
+      VALUES (${email}, ${githubId}, 'free', true, NOW(), ${encryptedToken})
+      RETURNING id, email, github_id, tier, email_verified, email_verified_at,
                 terms_accepted_at, terms_version_accepted, privacy_accepted_at, privacy_version_accepted, created_at
     `;
 
@@ -514,11 +515,12 @@ class User {
     const result = await sql`
       UPDATE users
       SET email_verified = TRUE,
+          email_verified_at = NOW(),
           verification_token = NULL,
           verification_token_expires = NULL,
           updated_at = NOW()
       WHERE id = ${id}
-      RETURNING id, email, first_name, last_name, email_verified
+      RETURNING id, email, first_name, last_name, email_verified, email_verified_at
     `;
 
     return result.rows[0];

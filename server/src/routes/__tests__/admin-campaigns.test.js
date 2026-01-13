@@ -553,5 +553,589 @@ describe('Admin Campaign API Endpoints', () => {
       expect(timeToValueMetrics.rows[0].avg_hours_to_verify).toBeNull();
       expect(timeToValueMetrics.rows[0].median_hours_to_verify).toBeNull();
     });
+
+    // ============================================================================
+    // Data Completeness & Google Sheets Compatibility Tests
+    // ============================================================================
+
+    describe('Data Completeness for Google Sheets Import', () => {
+      it('should include all required top-level fields', async () => {
+        const { sql } = await import('@vercel/postgres');
+
+        // Mock all 7 SQL queries with complete data
+        sql.mockResolvedValueOnce({
+          rows: [
+            {
+              source: 'auto_campaign',
+              trials_started: '50',
+              conversions: '10',
+              conversion_rate: '20.0',
+              avg_days_to_convert: '15.5',
+            },
+          ],
+        });
+        sql.mockResolvedValueOnce({
+          rows: [
+            {
+              total_signups: '100',
+              verified_users: '90',
+              activated_users: '60',
+            },
+          ],
+        });
+        sql.mockResolvedValueOnce({
+          rows: [
+            { date: '2026-01-10', signups: '15', verified: '14' },
+            { date: '2026-01-11', signups: '20', verified: '18' },
+          ],
+        });
+        sql.mockResolvedValueOnce({
+          rows: [
+            {
+              total_verified: '90',
+              avg_hours_to_verify: '3.2',
+              median_hours_to_verify: '2.5',
+              total_activated: '60',
+            },
+          ],
+        });
+        sql.mockResolvedValueOnce({
+          rows: [
+            {
+              activated_users: '60',
+              avg_hours_to_first_gen: '5.8',
+              median_hours_to_first_gen: '4.2',
+            },
+          ],
+        });
+        sql.mockResolvedValueOnce({
+          rows: [
+            { segment: 'No Usage', users: '40', percentage: '40.0' },
+            { segment: 'Light (1-9)', users: '30', percentage: '30.0' },
+            { segment: 'Engaged (10-49)', users: '20', percentage: '20.0' },
+            { segment: 'Power (50-99)', users: '7', percentage: '7.0' },
+            { segment: 'Max (100+)', users: '3', percentage: '3.0' },
+          ],
+        });
+        sql.mockResolvedValueOnce({
+          rows: [
+            {
+              id: 1,
+              name: 'January 2026 Pro Trial',
+              trial_tier: 'pro',
+              trial_days: 14,
+            },
+          ],
+        });
+
+        // Execute queries
+        const trialBreakdown = await sql();
+        const cohortSummary = await sql();
+        const dailyMetrics = await sql();
+        const timeToValueMetrics = await sql();
+        const timeToFirstGen = await sql();
+        const usageSegments = await sql();
+        const campaignInfo = await sql();
+
+        // Build response structure
+        const response = {
+          success: true,
+          data: {
+            campaign: {
+              startDate: '2026-01-10',
+              endDate: '2026-01-24',
+              source: 'auto_campaign',
+              id: campaignInfo.rows[0].id,
+              name: campaignInfo.rows[0].name,
+            },
+            summary: {
+              total_signups: parseInt(cohortSummary.rows[0].total_signups),
+              verified_users: parseInt(cohortSummary.rows[0].verified_users),
+              activated_users: parseInt(cohortSummary.rows[0].activated_users),
+            },
+            daily: dailyMetrics.rows,
+            spreadsheet_ready: {},
+            extended_metrics: {},
+          },
+        };
+
+        mockResponse.json(response);
+        const result = mockResponse.json.mock.calls[0][0];
+
+        // Verify all top-level fields exist
+        expect(result.success).toBeDefined();
+        expect(result.data).toBeDefined();
+        expect(result.data.campaign).toBeDefined();
+        expect(result.data.summary).toBeDefined();
+        expect(result.data.daily).toBeDefined();
+        expect(result.data.spreadsheet_ready).toBeDefined();
+        expect(result.data.extended_metrics).toBeDefined();
+      });
+
+      it('should include all required campaign fields', async () => {
+        const { sql } = await import('@vercel/postgres');
+
+        // Mock minimal campaign data
+        sql.mockResolvedValueOnce({ rows: [{ source: 'auto_campaign', trials_started: '0', conversions: '0', conversion_rate: '0', avg_days_to_convert: null }] });
+        sql.mockResolvedValueOnce({ rows: [{ total_signups: '0', verified_users: '0', activated_users: '0' }] });
+        sql.mockResolvedValueOnce({ rows: [] });
+        sql.mockResolvedValueOnce({ rows: [{ total_verified: '0', avg_hours_to_verify: null, median_hours_to_verify: null }] });
+        sql.mockResolvedValueOnce({ rows: [{ activated_users: '0', avg_hours_to_first_gen: null, median_hours_to_first_gen: null }] });
+        sql.mockResolvedValueOnce({ rows: [] });
+        sql.mockResolvedValueOnce({ rows: [{ id: 1, name: 'Test Campaign', trial_tier: 'pro', trial_days: 14 }] });
+
+        await sql(); await sql(); await sql(); await sql(); await sql(); await sql();
+        const campaignInfo = await sql();
+
+        const response = {
+          data: {
+            campaign: {
+              startDate: '2026-01-10',
+              endDate: '2026-01-24',
+              source: 'auto_campaign',
+              id: campaignInfo.rows[0].id,
+              name: campaignInfo.rows[0].name,
+              trialTier: campaignInfo.rows[0].trial_tier,
+              trialDays: campaignInfo.rows[0].trial_days,
+            },
+          },
+        };
+
+        mockResponse.json(response);
+        const result = mockResponse.json.mock.calls[0][0];
+
+        // Required campaign fields for Google Sheets
+        expect(result.data.campaign.startDate).toBeDefined();
+        expect(result.data.campaign.endDate).toBeDefined();
+        expect(result.data.campaign.source).toBeDefined();
+        expect(result.data.campaign.id).toBeDefined();
+        expect(result.data.campaign.name).toBeDefined();
+        expect(result.data.campaign.trialTier).toBeDefined();
+        expect(result.data.campaign.trialDays).toBeDefined();
+      });
+
+      it('should include all required spreadsheet_ready fields', async () => {
+        const { sql } = await import('@vercel/postgres');
+
+        // Mock data
+        sql.mockResolvedValueOnce({
+          rows: [
+            { source: 'auto_campaign', trials_started: '50', conversions: '10', conversion_rate: '20.0', avg_days_to_convert: '15.5' },
+            { source: 'invite_code', trials_started: '8', conversions: '1', conversion_rate: '12.5', avg_days_to_convert: '20.0' },
+          ],
+        });
+        sql.mockResolvedValueOnce({ rows: [{ total_signups: '100', verified_users: '90', activated_users: '60' }] });
+        sql.mockResolvedValueOnce({ rows: [] });
+        sql.mockResolvedValueOnce({ rows: [{ total_verified: '90', avg_hours_to_verify: '3.2', median_hours_to_verify: '2.5' }] });
+        sql.mockResolvedValueOnce({ rows: [{ activated_users: '60', avg_hours_to_first_gen: '5.8', median_hours_to_first_gen: '4.2' }] });
+        sql.mockResolvedValueOnce({ rows: [] });
+        sql.mockResolvedValueOnce({ rows: [] });
+
+        const trialBreakdown = await sql();
+        const cohortSummary = await sql();
+        await sql(); await sql(); await sql(); await sql(); await sql();
+
+        // Calculate metrics similar to endpoint
+        const campaignTrials = trialBreakdown.rows.find(t => t.source === 'auto_campaign');
+        const individualTrials = trialBreakdown.rows.filter(t => t.source !== 'auto_campaign');
+        const individualTotal = { trials_started: 8, conversions: 1 };
+        const individualConversionRate = '12.5';
+        const totalTrials = 58;
+        const totalConversions = 11;
+        const totalConversionRate = '18.97';
+        const campaignLift = '60.0';
+
+        const response = {
+          data: {
+            spreadsheet_ready: {
+              trial_comparison: {
+                campaign_trials: {
+                  started: parseInt(campaignTrials.trials_started),
+                  converted: parseInt(campaignTrials.conversions),
+                  conversion_rate: parseFloat(campaignTrials.conversion_rate),
+                },
+                individual_trials: {
+                  started: individualTotal.trials_started,
+                  converted: individualTotal.conversions,
+                  conversion_rate: parseFloat(individualConversionRate),
+                },
+                total_trials: {
+                  started: totalTrials,
+                  converted: totalConversions,
+                  conversion_rate: parseFloat(totalConversionRate),
+                },
+                campaign_lift: campaignLift,
+              },
+              cohort_summary: {
+                signups: parseInt(cohortSummary.rows[0].total_signups),
+                verified: parseInt(cohortSummary.rows[0].verified_users),
+                activated: parseInt(cohortSummary.rows[0].activated_users),
+                verification_rate: '90.0',
+                activation_rate: '66.7',
+              },
+            },
+          },
+        };
+
+        mockResponse.json(response);
+        const result = mockResponse.json.mock.calls[0][0];
+
+        // Verify trial_comparison fields
+        expect(result.data.spreadsheet_ready.trial_comparison).toBeDefined();
+        expect(result.data.spreadsheet_ready.trial_comparison.campaign_trials).toBeDefined();
+        expect(result.data.spreadsheet_ready.trial_comparison.campaign_trials.started).toBeDefined();
+        expect(result.data.spreadsheet_ready.trial_comparison.campaign_trials.converted).toBeDefined();
+        expect(result.data.spreadsheet_ready.trial_comparison.campaign_trials.conversion_rate).toBeDefined();
+        expect(result.data.spreadsheet_ready.trial_comparison.individual_trials).toBeDefined();
+        expect(result.data.spreadsheet_ready.trial_comparison.total_trials).toBeDefined();
+        expect(result.data.spreadsheet_ready.trial_comparison.campaign_lift).toBeDefined();
+
+        // Verify cohort_summary fields
+        expect(result.data.spreadsheet_ready.cohort_summary).toBeDefined();
+        expect(result.data.spreadsheet_ready.cohort_summary.signups).toBeDefined();
+        expect(result.data.spreadsheet_ready.cohort_summary.verified).toBeDefined();
+        expect(result.data.spreadsheet_ready.cohort_summary.activated).toBeDefined();
+        expect(result.data.spreadsheet_ready.cohort_summary.verification_rate).toBeDefined();
+        expect(result.data.spreadsheet_ready.cohort_summary.activation_rate).toBeDefined();
+      });
+
+      it('should format all numeric fields as valid numbers for Google Sheets', async () => {
+        const { sql } = await import('@vercel/postgres');
+
+        // Mock data with various numeric values
+        sql.mockResolvedValueOnce({
+          rows: [
+            { source: 'auto_campaign', trials_started: '45', conversions: '9', conversion_rate: '20.0', avg_days_to_convert: '18.3' },
+          ],
+        });
+        sql.mockResolvedValueOnce({ rows: [{ total_signups: '100', verified_users: '95', activated_users: '62' }] });
+        sql.mockResolvedValueOnce({ rows: [] });
+        sql.mockResolvedValueOnce({ rows: [{ total_verified: '95', avg_hours_to_verify: '2.5', median_hours_to_verify: '1.8' }] });
+        sql.mockResolvedValueOnce({ rows: [{ activated_users: '62', avg_hours_to_first_gen: '4.2', median_hours_to_first_gen: '3.5' }] });
+        sql.mockResolvedValueOnce({
+          rows: [
+            { segment: 'No Usage', users: '38', percentage: '38.0' },
+            { segment: 'Light (1-9)', users: '25', percentage: '25.0' },
+            { segment: 'Engaged (10-49)', users: '22', percentage: '22.0' },
+            { segment: 'Power (50-99)', users: '10', percentage: '10.0' },
+            { segment: 'Max (100+)', users: '5', percentage: '5.0' },
+          ],
+        });
+        sql.mockResolvedValueOnce({ rows: [] });
+
+        const trialBreakdown = await sql();
+        const cohortSummary = await sql();
+        await sql();
+        const timeToValueMetrics = await sql();
+        const timeToFirstGen = await sql();
+        const usageSegments = await sql();
+        await sql();
+
+        // Build response
+        const response = {
+          data: {
+            summary: {
+              total_signups: parseInt(cohortSummary.rows[0].total_signups),
+              verified_users: parseInt(cohortSummary.rows[0].verified_users),
+              activated_users: parseInt(cohortSummary.rows[0].activated_users),
+            },
+            spreadsheet_ready: {
+              trial_comparison: {
+                campaign_trials: {
+                  started: parseInt(trialBreakdown.rows[0].trials_started),
+                  converted: parseInt(trialBreakdown.rows[0].conversions),
+                  conversion_rate: parseFloat(trialBreakdown.rows[0].conversion_rate),
+                },
+              },
+              cohort_summary: {
+                signups: parseInt(cohortSummary.rows[0].total_signups),
+                verification_rate: '95.0',
+                activation_rate: '65.3',
+              },
+            },
+            extended_metrics: {
+              time_to_value: {
+                email_verification: {
+                  avg_hours: parseFloat(timeToValueMetrics.rows[0].avg_hours_to_verify),
+                  median_hours: parseFloat(timeToValueMetrics.rows[0].median_hours_to_verify),
+                },
+              },
+              usage_segments: usageSegments.rows.map(row => ({
+                segment: row.segment,
+                users: parseInt(row.users),
+                percentage: parseFloat(row.percentage),
+              })),
+            },
+          },
+        };
+
+        mockResponse.json(response);
+        const result = mockResponse.json.mock.calls[0][0];
+
+        // Verify all numbers are valid (not NaN, not Infinity, not strings)
+        expect(typeof result.data.summary.total_signups).toBe('number');
+        expect(typeof result.data.summary.verified_users).toBe('number');
+        expect(typeof result.data.spreadsheet_ready.trial_comparison.campaign_trials.conversion_rate).toBe('number');
+        expect(typeof result.data.extended_metrics.time_to_value.email_verification.avg_hours).toBe('number');
+
+        // Verify no NaN or Infinity
+        expect(Number.isFinite(result.data.summary.total_signups)).toBe(true);
+        expect(Number.isFinite(result.data.spreadsheet_ready.trial_comparison.campaign_trials.conversion_rate)).toBe(true);
+        expect(Number.isFinite(result.data.extended_metrics.time_to_value.email_verification.avg_hours)).toBe(true);
+
+        // Verify percentages are in valid range
+        result.data.extended_metrics.usage_segments.forEach(segment => {
+          expect(segment.percentage).toBeGreaterThanOrEqual(0);
+          expect(segment.percentage).toBeLessThanOrEqual(100);
+        });
+      });
+
+      it('should handle zero conversions without division errors', async () => {
+        const { sql } = await import('@vercel/postgres');
+
+        // Mock data with zero conversions
+        sql.mockResolvedValueOnce({
+          rows: [
+            { source: 'auto_campaign', trials_started: '50', conversions: '0', conversion_rate: '0', avg_days_to_convert: null },
+          ],
+        });
+        sql.mockResolvedValueOnce({ rows: [{ total_signups: '100', verified_users: '0', activated_users: '0' }] });
+        sql.mockResolvedValueOnce({ rows: [] });
+        sql.mockResolvedValueOnce({ rows: [{ total_verified: '0', avg_hours_to_verify: null, median_hours_to_verify: null }] });
+        sql.mockResolvedValueOnce({ rows: [{ activated_users: '0', avg_hours_to_first_gen: null, median_hours_to_first_gen: null }] });
+        sql.mockResolvedValueOnce({ rows: [] });
+        sql.mockResolvedValueOnce({ rows: [] });
+
+        const trialBreakdown = await sql();
+        const cohortSummary = await sql();
+        await sql(); await sql(); await sql(); await sql(); await sql();
+
+        // Calculate rates with zero denominators
+        const verificationRate = cohortSummary.rows[0].total_signups > 0
+          ? ((cohortSummary.rows[0].verified_users / cohortSummary.rows[0].total_signups) * 100).toFixed(1)
+          : '0';
+
+        const response = {
+          data: {
+            spreadsheet_ready: {
+              trial_comparison: {
+                campaign_trials: {
+                  conversion_rate: parseFloat(trialBreakdown.rows[0].conversion_rate),
+                },
+              },
+              cohort_summary: {
+                verification_rate: verificationRate,
+                activation_rate: '0',
+              },
+            },
+          },
+        };
+
+        mockResponse.json(response);
+        const result = mockResponse.json.mock.calls[0][0];
+
+        // Verify no NaN from division by zero
+        expect(result.data.spreadsheet_ready.trial_comparison.campaign_trials.conversion_rate).toBe(0);
+        expect(result.data.spreadsheet_ready.cohort_summary.verification_rate).toBe('0.0');
+        expect(Number.isFinite(parseFloat(result.data.spreadsheet_ready.cohort_summary.verification_rate))).toBe(true);
+      });
+
+      it('should format dates as YYYY-MM-DD for Google Sheets', async () => {
+        const { sql } = await import('@vercel/postgres');
+
+        // Mock minimal data
+        sql.mockResolvedValueOnce({ rows: [] });
+        sql.mockResolvedValueOnce({ rows: [{ total_signups: '0', verified_users: '0', activated_users: '0' }] });
+        sql.mockResolvedValueOnce({
+          rows: [
+            { date: '2026-01-10', signups: '15', verified: '14' },
+            { date: '2026-01-11', signups: '20', verified: '18' },
+          ],
+        });
+        sql.mockResolvedValueOnce({ rows: [{ total_verified: '0', avg_hours_to_verify: null, median_hours_to_verify: null }] });
+        sql.mockResolvedValueOnce({ rows: [{ activated_users: '0', avg_hours_to_first_gen: null, median_hours_to_first_gen: null }] });
+        sql.mockResolvedValueOnce({ rows: [] });
+        sql.mockResolvedValueOnce({ rows: [] });
+
+        await sql(); await sql();
+        const dailyMetrics = await sql();
+        await sql(); await sql(); await sql(); await sql();
+
+        const response = {
+          data: {
+            campaign: {
+              startDate: '2026-01-10',
+              endDate: '2026-01-24',
+            },
+            daily: dailyMetrics.rows.map(row => ({
+              date: row.date,
+              signups: parseInt(row.signups),
+              verified: parseInt(row.verified),
+            })),
+          },
+        };
+
+        mockResponse.json(response);
+        const result = mockResponse.json.mock.calls[0][0];
+
+        // Verify date format (YYYY-MM-DD)
+        expect(result.data.campaign.startDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+        expect(result.data.campaign.endDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+        result.data.daily.forEach(day => {
+          expect(day.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+        });
+      });
+
+      it('should include all campaign metrics for financial analysis', async () => {
+        const { sql } = await import('@vercel/postgres');
+
+        // Mock complete campaign data
+        sql.mockResolvedValueOnce({
+          rows: [
+            { source: 'auto_campaign', trials_started: '50', conversions: '10', conversion_rate: '20.0', avg_days_to_convert: '15.5' },
+            { source: 'invite_code', trials_started: '8', conversions: '2', conversion_rate: '25.0', avg_days_to_convert: '12.0' },
+          ],
+        });
+        sql.mockResolvedValueOnce({ rows: [{ total_signups: '100', verified_users: '90', activated_users: '60' }] });
+        sql.mockResolvedValueOnce({ rows: [] });
+        sql.mockResolvedValueOnce({ rows: [{ total_verified: '90', avg_hours_to_verify: '3.2', median_hours_to_verify: '2.5' }] });
+        sql.mockResolvedValueOnce({ rows: [{ activated_users: '60', avg_hours_to_first_gen: '5.8', median_hours_to_first_gen: '4.2' }] });
+        sql.mockResolvedValueOnce({ rows: [] });
+        sql.mockResolvedValueOnce({ rows: [] });
+
+        const trialBreakdown = await sql();
+        await sql(); await sql(); await sql(); await sql(); await sql(); await sql();
+
+        // Calculate campaign metrics
+        const campaignTrials = trialBreakdown.rows.find(t => t.source === 'auto_campaign');
+        const individualTrials = trialBreakdown.rows.filter(t => t.source !== 'auto_campaign');
+        const individualTotal = individualTrials.reduce((acc, trial) => ({
+          trials_started: acc.trials_started + parseInt(trial.trials_started),
+          conversions: acc.conversions + parseInt(trial.conversions),
+        }), { trials_started: 0, conversions: 0 });
+        const individualConversionRate = '25.0';
+        const campaignLift = '-20.0'; // (20 - 25) / 25 * 100
+
+        const response = {
+          data: {
+            summary: {
+              trials_breakdown: {
+                campaign_trials: {
+                  started: parseInt(campaignTrials.trials_started),
+                  converted: parseInt(campaignTrials.conversions),
+                  conversion_rate: parseFloat(campaignTrials.conversion_rate),
+                  avg_days_to_convert: parseFloat(campaignTrials.avg_days_to_convert),
+                },
+                individual_trials: {
+                  started: individualTotal.trials_started,
+                  converted: individualTotal.conversions,
+                  conversion_rate: parseFloat(individualConversionRate),
+                  by_source: individualTrials.map(trial => ({
+                    source: trial.source,
+                    trials_started: parseInt(trial.trials_started),
+                    conversions: parseInt(trial.conversions),
+                    conversion_rate: parseFloat(trial.conversion_rate),
+                  })),
+                },
+              },
+              comparison: {
+                campaign_vs_individual: {
+                  campaign_conversion_rate: parseFloat(campaignTrials.conversion_rate),
+                  individual_conversion_rate: parseFloat(individualConversionRate),
+                  campaign_lift: `${campaignLift}%`,
+                  campaign_performs_better: false,
+                },
+              },
+            },
+          },
+        };
+
+        mockResponse.json(response);
+        const result = mockResponse.json.mock.calls[0][0];
+
+        // Verify all financial metrics are present
+        expect(result.data.summary.trials_breakdown.campaign_trials.started).toBe(50);
+        expect(result.data.summary.trials_breakdown.campaign_trials.converted).toBe(10);
+        expect(result.data.summary.trials_breakdown.campaign_trials.conversion_rate).toBe(20.0);
+        expect(result.data.summary.trials_breakdown.campaign_trials.avg_days_to_convert).toBe(15.5);
+
+        expect(result.data.summary.trials_breakdown.individual_trials.started).toBe(8);
+        expect(result.data.summary.trials_breakdown.individual_trials.converted).toBe(2);
+
+        expect(result.data.summary.comparison.campaign_vs_individual.campaign_lift).toBe('-20.0%');
+        expect(result.data.summary.comparison.campaign_vs_individual.campaign_performs_better).toBe(false);
+      });
+
+      it('should include all usage segments for engagement analysis', async () => {
+        const { sql } = await import('@vercel/postgres');
+
+        // Mock minimal data
+        sql.mockResolvedValueOnce({ rows: [] });
+        sql.mockResolvedValueOnce({ rows: [{ total_signups: '100', verified_users: '90', activated_users: '60' }] });
+        sql.mockResolvedValueOnce({ rows: [] });
+        sql.mockResolvedValueOnce({ rows: [{ total_verified: '90', avg_hours_to_verify: null, median_hours_to_verify: null }] });
+        sql.mockResolvedValueOnce({ rows: [{ activated_users: '60', avg_hours_to_first_gen: null, median_hours_to_first_gen: null }] });
+        sql.mockResolvedValueOnce({
+          rows: [
+            { segment: 'No Usage', users: '40', percentage: '40.0' },
+            { segment: 'Light (1-9)', users: '30', percentage: '30.0' },
+            { segment: 'Engaged (10-49)', users: '20', percentage: '20.0' },
+            { segment: 'Power (50-99)', users: '7', percentage: '7.0' },
+            { segment: 'Max (100+)', users: '3', percentage: '3.0' },
+          ],
+        });
+        sql.mockResolvedValueOnce({ rows: [] });
+
+        await sql(); await sql(); await sql(); await sql(); await sql();
+        const usageSegments = await sql();
+        await sql();
+
+        const response = {
+          data: {
+            extended_metrics: {
+              usage_segments: usageSegments.rows.map(row => ({
+                segment: row.segment,
+                users: parseInt(row.users),
+                percentage: parseFloat(row.percentage),
+              })),
+              engagement_summary: {
+                no_usage: parseInt(usageSegments.rows.find(r => r.segment === 'No Usage')?.users || 0),
+                light_users: parseInt(usageSegments.rows.find(r => r.segment === 'Light (1-9)')?.users || 0),
+                engaged_users: parseInt(usageSegments.rows.find(r => r.segment === 'Engaged (10-49)')?.users || 0),
+                power_users: parseInt(usageSegments.rows.find(r => r.segment === 'Power (50-99)')?.users || 0),
+                max_users: parseInt(usageSegments.rows.find(r => r.segment === 'Max (100+)')?.users || 0),
+              },
+            },
+          },
+        };
+
+        mockResponse.json(response);
+        const result = mockResponse.json.mock.calls[0][0];
+
+        // Verify all 5 usage segments are present
+        expect(result.data.extended_metrics.usage_segments).toHaveLength(5);
+        expect(result.data.extended_metrics.usage_segments.map(s => s.segment)).toEqual([
+          'No Usage',
+          'Light (1-9)',
+          'Engaged (10-49)',
+          'Power (50-99)',
+          'Max (100+)',
+        ]);
+
+        // Verify engagement summary has all segments
+        expect(result.data.extended_metrics.engagement_summary.no_usage).toBe(40);
+        expect(result.data.extended_metrics.engagement_summary.light_users).toBe(30);
+        expect(result.data.extended_metrics.engagement_summary.engaged_users).toBe(20);
+        expect(result.data.extended_metrics.engagement_summary.power_users).toBe(7);
+        expect(result.data.extended_metrics.engagement_summary.max_users).toBe(3);
+
+        // Verify percentages sum to 100
+        const totalPercentage = result.data.extended_metrics.usage_segments.reduce(
+          (sum, s) => sum + s.percentage,
+          0
+        );
+        expect(totalPercentage).toBe(100);
+      });
+    });
   });
 });

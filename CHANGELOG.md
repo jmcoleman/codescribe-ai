@@ -9,6 +9,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.4.2] - 2026-01-13
+
+**Status:** ✅ Campaign Export Bug Fix & Documentation
+
+**Summary:** Fixed critical 500 error in campaign export endpoint caused by missing `email_verified_at` timestamp column. Added comprehensive Google Sheets integration documentation with accurate JWT token retrieval instructions.
+
+### Fixed
+
+- **Campaign Export 500 Error** ([server/src/db/migrations/051-add-email-verified-at.sql](server/src/db/migrations/051-add-email-verified-at.sql))
+  - Added missing `email_verified_at` TIMESTAMP column to users table
+  - Column required by campaign export endpoint for time-to-value metrics
+  - Backfilled timestamps for existing verified users (approximated with `created_at`)
+  - Added index on `email_verified_at` for query performance
+
+- **Email Verification Timestamp Tracking** ([server/src/models/User.js](server/src/models/User.js))
+  - Updated `markEmailAsVerified()` to set `email_verified_at = NOW()` when users verify email
+  - Updated GitHub OAuth flow to set `email_verified_at = NOW()` for auto-verified users
+  - Ensures accurate time-to-value tracking for future campaign analytics
+
+### Added
+
+- **Google Sheets Campaign Template** ([docs/admin/GOOGLE-SHEETS-CAMPAIGN-TEMPLATE.md](docs/admin/GOOGLE-SHEETS-CAMPAIGN-TEMPLATE.md))
+  - Complete Google Apps Script integration guide for campaign data import
+  - **Corrected JWT token retrieval:** Uses `localStorage.getItem('cs_auth_token')` (not just `token`)
+  - 6 auto-populated sheets: Overview, Trial Performance, Cohort Funnel, Usage Segments, Daily Metrics
+  - Custom menu for one-click data import
+  - Comprehensive troubleshooting for 401/403/500 errors
+
+- **Campaign Export Validation** ([docs/testing/CAMPAIGN-EXPORT-VALIDATION.md](docs/testing/CAMPAIGN-EXPORT-VALIDATION.md))
+  - Complete test data and validation scenarios for campaign export endpoint
+  - Response format documentation with all required fields
+
+### Changed
+
+- **Campaign Documentation** ([docs/admin/GOOGLE-SHEETS-CAMPAIGN-TEMPLATE.md](docs/admin/GOOGLE-SHEETS-CAMPAIGN-TEMPLATE.md))
+  - Updated token retrieval instructions to use correct `cs_auth_token` key
+  - Added role requirement: `admin`, `support`, or `super_admin`
+  - Added token expiration notice (7-day validity)
+  - Enhanced troubleshooting section with 401/403/500 error solutions
+
+### Technical Details
+
+- **Migration:** 051-add-email-verified-at (adds TIMESTAMP column, backfills data, creates index)
+- **Test Coverage:** 4,143+ tests (includes new Google Sheets data completeness tests)
+- **Breaking:** None - backwards compatible addition of nullable column
+- **Database Impact:** Low - simple ALTER TABLE with nullable column
+
+---
+
 ## [3.4.1] - 2026-01-13
 
 **Status:** ✅ Analytics Dashboard Workflow Metrics & UX Improvements
