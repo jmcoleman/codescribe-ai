@@ -453,7 +453,7 @@ function populateCohortFunnel(data) {
   const activatedFromSignups = totalSignups > 0 ? activated / totalSignups : 0;
 
   sheet.getRange('A2:D4').setValues([
-    ['Signups', totalSignups, totalSignups > 0 ? 1.0 : 0, 1.0],
+    ['Signups', totalSignups, totalSignups > 0 ? 1.0 : 0, totalSignups > 0 ? 1.0 : 0],
     ['Email Verified', verified, verifiedRate, verifiedRate],
     ['First Generation', activated, activatedFromVerified, activatedFromSignups]
   ]);
