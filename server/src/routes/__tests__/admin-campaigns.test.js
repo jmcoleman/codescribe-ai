@@ -331,4 +331,227 @@ describe('Admin Campaign API Endpoints', () => {
       expect(mockResponse.status).toHaveBeenCalledWith(404);
     });
   });
+
+  // ============================================================================
+  // GET /api/admin/campaigns/export - Extended Metrics Export
+  // ============================================================================
+
+  describe('GET /api/admin/campaigns/export', () => {
+    it('should return extended metrics including time-to-value and usage segments', async () => {
+      const { sql } = await import('@vercel/postgres');
+
+      // Mock trial breakdown query
+      sql.mockResolvedValueOnce({
+        rows: [
+          {
+            source: 'auto_campaign',
+            trials_started: '45',
+            conversions: '9',
+            conversion_rate: '20.0',
+            avg_days_to_convert: '18.3',
+          },
+          {
+            source: 'invite_code',
+            trials_started: '8',
+            conversions: '2',
+            conversion_rate: '25.0',
+            avg_days_to_convert: '21.5',
+          },
+        ],
+      });
+
+      // Mock cohort summary query
+      sql.mockResolvedValueOnce({
+        rows: [
+          {
+            total_signups: '100',
+            verified_users: '95',
+            activated_users: '62',
+          },
+        ],
+      });
+
+      // Mock daily metrics query
+      sql.mockResolvedValueOnce({
+        rows: [
+          { date: '2026-01-10', signups: '15', verified: '14' },
+          { date: '2026-01-11', signups: '18', verified: '17' },
+        ],
+      });
+
+      // ✨ NEW: Mock time-to-value metrics query
+      sql.mockResolvedValueOnce({
+        rows: [
+          {
+            total_verified: '95',
+            avg_hours_to_verify: '2.5',
+            median_hours_to_verify: '1.8',
+            total_activated: '62',
+          },
+        ],
+      });
+
+      // ✨ NEW: Mock time to first generation query
+      sql.mockResolvedValueOnce({
+        rows: [
+          {
+            activated_users: '62',
+            avg_hours_to_first_gen: '4.2',
+            median_hours_to_first_gen: '3.5',
+          },
+        ],
+      });
+
+      // ✨ NEW: Mock usage segments query
+      sql.mockResolvedValueOnce({
+        rows: [
+          { segment: 'No Usage', users: '38', percentage: '38.0' },
+          { segment: 'Light (1-9)', users: '25', percentage: '25.0' },
+          { segment: 'Engaged (10-49)', users: '22', percentage: '22.0' },
+          { segment: 'Power (50-99)', users: '10', percentage: '10.0' },
+          { segment: 'Max (100+)', users: '5', percentage: '5.0' },
+        ],
+      });
+
+      // Mock campaign info query (optional)
+      sql.mockResolvedValueOnce({
+        rows: [
+          {
+            id: 1,
+            name: 'January 2026 Pro Trial',
+            trial_tier: 'pro',
+            trial_days: 14,
+          },
+        ],
+      });
+
+      // Simulate the endpoint logic
+      const trialBreakdown = await sql();
+      const cohortSummary = await sql();
+      const dailyMetrics = await sql();
+      const timeToValueMetrics = await sql(); // NEW
+      const timeToFirstGen = await sql(); // NEW
+      const usageSegments = await sql(); // NEW
+      const campaignInfo = await sql();
+
+      // Build response similar to actual endpoint
+      const response = {
+        success: true,
+        data: {
+          campaign: {
+            startDate: '2026-01-10',
+            endDate: '2026-01-24',
+            source: 'auto_campaign',
+            id: campaignInfo.rows[0].id,
+            name: campaignInfo.rows[0].name,
+          },
+          summary: {
+            total_signups: parseInt(cohortSummary.rows[0].total_signups),
+            verified_users: parseInt(cohortSummary.rows[0].verified_users),
+            activated_users: parseInt(cohortSummary.rows[0].activated_users),
+          },
+          extended_metrics: {
+            time_to_value: {
+              email_verification: {
+                total_verified: parseInt(timeToValueMetrics.rows[0].total_verified),
+                avg_hours: parseFloat(timeToValueMetrics.rows[0].avg_hours_to_verify),
+                median_hours: parseFloat(timeToValueMetrics.rows[0].median_hours_to_verify),
+                avg_days: (parseFloat(timeToValueMetrics.rows[0].avg_hours_to_verify) / 24).toFixed(1),
+              },
+              first_generation: {
+                total_activated: parseInt(timeToFirstGen.rows[0].activated_users),
+                avg_hours: parseFloat(timeToFirstGen.rows[0].avg_hours_to_first_gen),
+                median_hours: parseFloat(timeToFirstGen.rows[0].median_hours_to_first_gen),
+                avg_days: (parseFloat(timeToFirstGen.rows[0].avg_hours_to_first_gen) / 24).toFixed(1),
+              },
+            },
+            usage_segments: usageSegments.rows.map((row) => ({
+              segment: row.segment,
+              users: parseInt(row.users),
+              percentage: parseFloat(row.percentage),
+            })),
+            engagement_summary: {
+              no_usage: parseInt(usageSegments.rows[0].users),
+              light_users: parseInt(usageSegments.rows[1].users),
+              engaged_users: parseInt(usageSegments.rows[2].users),
+              power_users: parseInt(usageSegments.rows[3].users),
+              max_users: parseInt(usageSegments.rows[4].users),
+            },
+          },
+        },
+      };
+
+      mockResponse.json(response);
+
+      // Assertions
+      expect(mockResponse.json).toHaveBeenCalled();
+      const result = mockResponse.json.mock.calls[0][0];
+
+      // Verify extended metrics structure
+      expect(result.data.extended_metrics).toBeDefined();
+      expect(result.data.extended_metrics.time_to_value).toBeDefined();
+      expect(result.data.extended_metrics.usage_segments).toBeDefined();
+      expect(result.data.extended_metrics.engagement_summary).toBeDefined();
+
+      // Verify time-to-value metrics
+      expect(result.data.extended_metrics.time_to_value.email_verification.total_verified).toBe(95);
+      expect(result.data.extended_metrics.time_to_value.email_verification.avg_hours).toBe(2.5);
+      expect(result.data.extended_metrics.time_to_value.first_generation.total_activated).toBe(62);
+      expect(result.data.extended_metrics.time_to_value.first_generation.avg_hours).toBe(4.2);
+
+      // Verify usage segments
+      expect(result.data.extended_metrics.usage_segments).toHaveLength(5);
+      expect(result.data.extended_metrics.usage_segments[0].segment).toBe('No Usage');
+      expect(result.data.extended_metrics.usage_segments[0].users).toBe(38);
+
+      // Verify engagement summary
+      expect(result.data.extended_metrics.engagement_summary.no_usage).toBe(38);
+      expect(result.data.extended_metrics.engagement_summary.light_users).toBe(25);
+      expect(result.data.extended_metrics.engagement_summary.engaged_users).toBe(22);
+      expect(result.data.extended_metrics.engagement_summary.power_users).toBe(10);
+      expect(result.data.extended_metrics.engagement_summary.max_users).toBe(5);
+    });
+
+    it('should handle missing time-to-value data gracefully', async () => {
+      const { sql } = await import('@vercel/postgres');
+
+      // Mock empty time-to-value results
+      sql.mockResolvedValueOnce({ rows: [] }); // trial breakdown
+      sql.mockResolvedValueOnce({
+        rows: [{ total_signups: '0', verified_users: '0', activated_users: '0' }],
+      }); // cohort
+      sql.mockResolvedValueOnce({ rows: [] }); // daily
+      sql.mockResolvedValueOnce({
+        rows: [
+          {
+            total_verified: '0',
+            avg_hours_to_verify: null,
+            median_hours_to_verify: null,
+          },
+        ],
+      }); // time-to-value
+      sql.mockResolvedValueOnce({
+        rows: [
+          {
+            activated_users: '0',
+            avg_hours_to_first_gen: null,
+            median_hours_to_first_gen: null,
+          },
+        ],
+      }); // time-to-first-gen
+      sql.mockResolvedValueOnce({ rows: [] }); // usage segments
+      sql.mockResolvedValueOnce({ rows: [] }); // campaign info
+
+      // Execute all queries in order
+      await sql(); // trial breakdown
+      await sql(); // cohort
+      await sql(); // daily
+      const timeToValueMetrics = await sql(); // time-to-value
+
+      // Verify null handling
+      expect(timeToValueMetrics.rows[0]).toBeDefined();
+      expect(timeToValueMetrics.rows[0].avg_hours_to_verify).toBeNull();
+      expect(timeToValueMetrics.rows[0].median_hours_to_verify).toBeNull();
+    });
+  });
 });

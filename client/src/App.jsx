@@ -1587,6 +1587,7 @@ function App() {
           fileSize: file.size,
           success: true,
         });
+        hasTrackedCodeInputRef.current = true; // Mark as tracked to prevent duplicate tracking
 
         // Clear loading state (no success toast needed - file appearing in editor is clear feedback)
         setIsUploading(false);
@@ -1886,6 +1887,7 @@ function App() {
       path: metadata?.path,
       isPrivate: metadata?.isPrivate,
     });
+    hasTrackedCodeInputRef.current = true; // Mark as tracked to prevent duplicate tracking
 
     // Clear any previous documentation
     reset();
@@ -1995,6 +1997,7 @@ function App() {
     // Track sample usage (origin: 'sample' distinguishes from paste/upload/github)
     const sampleFilename = `${sampleName}${extension}`;
     trackCodeInput('sample', sample.code.length, sample.language, sampleFilename);
+    hasTrackedCodeInputRef.current = true; // Mark as tracked to prevent duplicate tracking
 
     // Use compact toast for quick, non-intrusive feedback
     toastCompact('Sample loaded successfully', 'success');
