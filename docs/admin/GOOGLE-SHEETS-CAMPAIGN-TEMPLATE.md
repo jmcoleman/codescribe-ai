@@ -383,8 +383,10 @@ function populateOverview(data) {
   sheet.getRange('A21:C21').setValues([['Segment', 'Users', 'Percentage']]);
 
   const segments = data.extended_metrics.usage_segments;
-  const segmentData = segments.map(s => [s.segment, s.users, s.percentage + '%']);
-  sheet.getRange(22, 1, segmentData.length, 3).setValues(segmentData);
+  if (segments && segments.length > 0) {
+    const segmentData = segments.map(s => [s.segment, s.users, s.percentage + '%']);
+    sheet.getRange(22, 1, segmentData.length, 3).setValues(segmentData);
+  }
 
   // Format
   sheet.getRange('A1:D30').setFontFamily('Arial').setFontSize(10);
@@ -474,18 +476,21 @@ function populateUsageSegments(data) {
 
   // Data
   const segments = data.extended_metrics.usage_segments;
-  const segmentData = segments.map(s => [s.segment, s.users, s.percentage / 100]);
 
-  sheet.getRange(2, 1, segmentData.length, 3).setValues(segmentData);
+  if (segments && segments.length > 0) {
+    const segmentData = segments.map(s => [s.segment, s.users, s.percentage / 100]);
 
-  // Format percentages
-  sheet.getRange(2, 3, segmentData.length, 1).setNumberFormat('0.00%');
+    sheet.getRange(2, 1, segmentData.length, 3).setValues(segmentData);
 
-  // Totals
-  const totalRow = segmentData.length + 2;
-  sheet.getRange(totalRow, 1, 1, 3).setValues([
-    ['TOTAL', `=SUM(B2:B${totalRow - 1})`, `=SUM(C2:C${totalRow - 1})`]
-  ]).setFontWeight('bold').setBackground('#f4f4f4');
+    // Format percentages
+    sheet.getRange(2, 3, segmentData.length, 1).setNumberFormat('0.00%');
+
+    // Totals
+    const totalRow = segmentData.length + 2;
+    sheet.getRange(totalRow, 1, 1, 3).setValues([
+      ['TOTAL', `=SUM(B2:B${totalRow - 1})`, `=SUM(C2:C${totalRow - 1})`]
+    ]).setFontWeight('bold').setBackground('#f4f4f4');
+  }
 
   // Named range
   sheet.setName('UsageData');
