@@ -2151,11 +2151,11 @@ router.get('/campaigns/export', requireAuth, requireAdmin, async (req, res) => {
         source,
         COUNT(*) as trials_started,
         COUNT(CASE WHEN status = 'converted' THEN 1 END) as conversions,
-        ROUND(COUNT(CASE WHEN status = 'converted' THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0), 2) as conversion_rate,
+        ROUND((COUNT(CASE WHEN status = 'converted' THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0))::NUMERIC, 2) as conversion_rate,
         ROUND(AVG(CASE
           WHEN status = 'converted'
           THEN EXTRACT(EPOCH FROM (converted_at - started_at)) / 86400
-        END), 1) as avg_days_to_convert
+        END)::NUMERIC, 1) as avg_days_to_convert
       FROM user_trials
       WHERE started_at >= ${startDate}
         AND started_at < ${endDate}
@@ -2223,13 +2223,13 @@ router.get('/campaigns/export', requireAuth, requireAdmin, async (req, res) => {
         ROUND(AVG(CASE
           WHEN email_verified = true
           THEN EXTRACT(EPOCH FROM (email_verified_at - created_at)) / 3600
-        END), 1) as avg_hours_to_verify,
+        END)::NUMERIC, 1) as avg_hours_to_verify,
         ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (
           ORDER BY CASE
             WHEN email_verified = true
             THEN EXTRACT(EPOCH FROM (email_verified_at - created_at)) / 3600
           END
-        ), 1) as median_hours_to_verify,
+        )::NUMERIC, 1) as median_hours_to_verify,
         COUNT(CASE WHEN EXISTS (
           SELECT 1 FROM generated_documents gd
           WHERE gd.user_id = users.id AND gd.deleted_at IS NULL
@@ -2244,10 +2244,10 @@ router.get('/campaigns/export', requireAuth, requireAdmin, async (req, res) => {
     const timeToFirstGen = await sql`
       SELECT
         COUNT(DISTINCT u.id) as activated_users,
-        ROUND(AVG(EXTRACT(EPOCH FROM (first_gen.created_at - u.created_at)) / 3600), 1) as avg_hours_to_first_gen,
+        ROUND(AVG(EXTRACT(EPOCH FROM (first_gen.created_at - u.created_at)) / 3600)::NUMERIC, 1) as avg_hours_to_first_gen,
         ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (
           ORDER BY EXTRACT(EPOCH FROM (first_gen.created_at - u.created_at)) / 3600
-        ), 1) as median_hours_to_first_gen
+        )::NUMERIC, 1) as median_hours_to_first_gen
       FROM users u
       JOIN (
         SELECT user_id, MIN(created_at) as created_at
@@ -2271,7 +2271,7 @@ router.get('/campaigns/export', requireAuth, requireAdmin, async (req, res) => {
           WHEN monthly_count >= 100 THEN 'Max (100+)'
         END as segment,
         COUNT(*) as users,
-        ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 1) as percentage
+        ROUND((COUNT(*) * 100.0 / SUM(COUNT(*)) OVER ())::NUMERIC, 1) as percentage
       FROM user_quotas uq
       JOIN users u ON uq.user_id = u.id
       WHERE u.created_at >= ${startDate}

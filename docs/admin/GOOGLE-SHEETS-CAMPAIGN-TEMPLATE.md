@@ -36,9 +36,12 @@ Create these 6 sheets (tabs) in your spreadsheet:
 ### Step 4: Configure API Access
 
 1. Go to **Config** sheet
-2. Enter your API token in cell B1
-3. Enter campaign dates in B2 and B3
-4. Enter campaign source in B4 (usually "auto_campaign")
+2. Enter API Base URL in cell B1:
+   - Production: `https://codescribeai.com/api` (default)
+   - Dev: `http://localhost:3000/api`
+3. Enter your API token in cell B2
+4. Enter campaign dates in B3 and B4
+5. Enter campaign source in B5 (usually "auto_campaign")
 
 ### Step 5: Run Import
 
@@ -56,6 +59,7 @@ Create these 6 sheets (tabs) in your spreadsheet:
 
 | A | B |
 |---|---|
+| API Base URL | https://codescribeai.com/api |
 | API Token | [YOUR_TOKEN_HERE] |
 | Start Date | 2026-01-01 |
 | End Date | 2026-01-31 |
@@ -64,10 +68,11 @@ Create these 6 sheets (tabs) in your spreadsheet:
 | Import Status | [Auto-filled] |
 
 **Named Ranges to Create:**
-- `ApiToken` → Config!B1
-- `StartDate` → Config!B2
-- `EndDate` → Config!B3
-- `CampaignSource` → Config!B4
+- `ApiBaseUrl` → Config!B1
+- `ApiToken` → Config!B2
+- `StartDate` → Config!B3
+- `EndDate` → Config!B4
+- `CampaignSource` → Config!B5
 
 ### Sheet 2: Overview
 
@@ -216,11 +221,10 @@ Copy this entire script into your Apps Script editor:
 
 // Configuration
 const CONFIG = {
-  API_BASE_URL: 'https://codescribeai.com/api',
-  // API_BASE_URL: 'http://localhost:3000/api', // For local testing
   ENDPOINTS: {
     EXPORT: '/admin/campaigns/export'
-  }
+  },
+  DEFAULT_API_BASE_URL: 'https://codescribeai.com/api'
 };
 
 /**
@@ -291,10 +295,11 @@ function getConfig() {
   }
 
   return {
-    apiToken: sheet.getRange('B1').getValue(),
-    startDate: formatDate(sheet.getRange('B2').getValue()),
-    endDate: formatDate(sheet.getRange('B3').getValue()),
-    campaignSource: sheet.getRange('B4').getValue() || 'auto_campaign'
+    apiBaseUrl: sheet.getRange('B1').getValue() || CONFIG.DEFAULT_API_BASE_URL,
+    apiToken: sheet.getRange('B2').getValue(),
+    startDate: formatDate(sheet.getRange('B3').getValue()),
+    endDate: formatDate(sheet.getRange('B4').getValue()),
+    campaignSource: sheet.getRange('B5').getValue() || 'auto_campaign'
   };
 }
 
@@ -304,8 +309,8 @@ function getConfig() {
 function updateImportStatus(timestamp, status) {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Config');
   if (sheet) {
-    sheet.getRange('B5').setValue(timestamp);
-    sheet.getRange('B6').setValue(status);
+    sheet.getRange('B6').setValue(timestamp);
+    sheet.getRange('B7').setValue(status);
   }
 }
 
@@ -313,7 +318,7 @@ function updateImportStatus(timestamp, status) {
  * Fetch campaign data from API
  */
 function fetchCampaignData(config) {
-  const url = `${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.EXPORT}?startDate=${config.startDate}&endDate=${config.endDate}&campaignSource=${config.campaignSource}`;
+  const url = `${config.apiBaseUrl}${CONFIG.ENDPOINTS.EXPORT}?startDate=${config.startDate}&endDate=${config.endDate}&campaignSource=${config.campaignSource}`;
 
   const options = {
     method: 'get',
@@ -565,7 +570,8 @@ function setupSheets() {
   }
 
   configSheet.clear();
-  configSheet.getRange('A1:B6').setValues([
+  configSheet.getRange('A1:B7').setValues([
+    ['API Base URL', 'https://codescribeai.com/api'],
     ['API Token', '[YOUR_TOKEN_HERE]'],
     ['Start Date', '2026-01-01'],
     ['End Date', '2026-01-31'],
@@ -574,7 +580,7 @@ function setupSheets() {
     ['Import Status', '']
   ]);
 
-  configSheet.getRange('A1:A6').setFontWeight('bold');
+  configSheet.getRange('A1:A7').setFontWeight('bold');
   configSheet.setColumnWidth(1, 150);
   configSheet.setColumnWidth(2, 300);
 
@@ -675,9 +681,12 @@ function refreshAllData() {
 1. Go back to your spreadsheet
 2. Click **Campaign → Setup Sheets** (creates all tabs)
 3. Go to **Config** sheet
-4. Paste your token in cell B1 (replace `[YOUR_TOKEN_HERE]`)
-5. Set campaign dates in B2 and B3 (YYYY-MM-DD format)
-6. Set campaign source in B4 (usually "auto_campaign")
+4. Set API Base URL in cell B1:
+   - Production: `https://codescribeai.com/api` (default)
+   - Dev: `http://localhost:3000/api`
+5. Paste your token in cell B2 (replace `[YOUR_TOKEN_HERE]`)
+6. Set campaign dates in B3 and B4 (YYYY-MM-DD format)
+7. Set campaign source in B5 (usually "auto_campaign")
 
 ### 3. Import Data
 
@@ -736,7 +745,7 @@ function refreshAllData() {
 ### Changing Date Range
 
 1. Go to **Config** sheet
-2. Update **Start Date** (B2) and **End Date** (B3)
+2. Update **Start Date** (B3) and **End Date** (B4)
 3. Click **Campaign → Import Campaign Data**
 4. New date range data will populate
 
@@ -805,7 +814,7 @@ Now data imports automatically every day!
 
 **Solution:** Invalid date format
 1. Dates must be YYYY-MM-DD format
-2. Check Config sheet cells B2 and B3
+2. Check Config sheet cells B3 and B4
 3. Example: 2026-01-01 (not 01/01/2026)
 
 ### Error: "API request failed (500)"
@@ -822,10 +831,11 @@ Now data imports automatically every day!
 ### Error: "Missing required configuration"
 
 **Solution:** Fill all Config sheet fields
-1. B1: API token (required)
-2. B2: Start date (required)
-3. B3: End date (required)
-4. B4: Campaign source (defaults to "auto_campaign")
+1. B1: API Base URL (defaults to "https://codescribeai.com/api")
+2. B2: API token (required)
+3. B3: Start date (required)
+4. B4: End date (required)
+5. B5: Campaign source (defaults to "auto_campaign")
 
 ### Data Not Updating
 
@@ -845,6 +855,24 @@ Now data imports automatically every day!
    - Click **Executions** (left sidebar)
    - Check for errors
 
+### Testing with Dev Environment
+
+**To test with local development server:**
+
+1. Start your local server (e.g., `cd server && npm run dev`)
+2. Verify server is running on `http://localhost:3000`
+3. Go to **Config** sheet in Google Sheets
+4. Change **API Base URL** (B1) to: `http://localhost:3000/api`
+5. Get a fresh token from your local dev instance:
+   - Open `http://localhost:5173` (or your local frontend URL)
+   - Log in as admin
+   - Open console: `localStorage.getItem('cs_auth_token')`
+   - Copy token
+6. Paste token in cell B2
+7. Click **Campaign → Import Campaign Data**
+
+**Note:** Dev tokens are separate from production tokens. Make sure to use the token from the same environment as your API Base URL.
+
 ---
 
 ## Advanced Features
@@ -863,7 +891,7 @@ You can fetch data for any date range:
 To track different trial sources separately:
 1. Import with `campaignSource = 'auto_campaign'`
 2. Save data to separate sheet
-3. Change Config B4 to `'invite_code_XYZ'`
+3. Change Config B5 to `'invite_code_XYZ'`
 4. Import again
 5. Compare results
 
