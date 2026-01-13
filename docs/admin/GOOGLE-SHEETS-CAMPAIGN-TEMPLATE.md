@@ -447,10 +447,15 @@ function populateCohortFunnel(data) {
   const verified = cohort.verified;
   const activated = cohort.activated;
 
+  // Safe division to avoid #NUM! errors when no data
+  const verifiedRate = totalSignups > 0 ? verified / totalSignups : 0;
+  const activatedFromVerified = verified > 0 ? activated / verified : 0;
+  const activatedFromSignups = totalSignups > 0 ? activated / totalSignups : 0;
+
   sheet.getRange('A2:D4').setValues([
-    ['Signups', totalSignups, 1.0, 1.0],
-    ['Email Verified', verified, verified / totalSignups, verified / totalSignups],
-    ['First Generation', activated, activated / verified, activated / totalSignups]
+    ['Signups', totalSignups, totalSignups > 0 ? 1.0 : 0, 1.0],
+    ['Email Verified', verified, verifiedRate, verifiedRate],
+    ['First Generation', activated, activatedFromVerified, activatedFromSignups]
   ]);
 
   // Format percentages
