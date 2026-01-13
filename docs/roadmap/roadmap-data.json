@@ -65,9 +65,9 @@
       "text": "codescribeai.com",
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
-    "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.38",
-    "footer": "v3.4.2 Complete · Campaign Export Bug Fix & Documentation ✓ · Up Next: Project Architecture Document · VS Code Extension: Separate Repo",
-    "lastUpdated": "January 13, 2026"
+    "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.39",
+    "footer": "v3.4.3 Complete · Campaign Management Enhancements & Analytics Improvements ✓ · Up Next: Project Architecture Document · VS Code Extension: Separate Repo",
+    "lastUpdated": "January 14, 2026"
   },
   "columns": [
     {
@@ -76,6 +76,24 @@
       "title": "Completed",
       "subtitle": "Phase 1: Core Capabilities",
       "phases": [
+        {
+          "version": "v3.4.3",
+          "title": "Campaign Management Enhancements & Analytics Improvements",
+          "duration": "1 day",
+          "status": "✓ Complete",
+          "completedDate": "Jan 14, 2026",
+          "badge": "Campaign Tools",
+          "features": [
+            "Campaign table with sortable columns and pagination for managing large campaigns",
+            "Export campaign user lists with comprehensive data including email, tier, trial status, and usage metrics",
+            "Track user origin (direct signups vs trial campaigns) for accurate attribution analysis",
+            "Google Sheets template with 8 analysis sheets: Overview, Trial Performance, Cohort Funnel, Trial Funnel, Usage Segments, Daily Metrics, User List, and Config",
+            "Dismissable active campaign banner that remembers your preference across sessions",
+            "Fixed analytics event sorting to reflect real-time filter changes",
+            "Fixed campaign metrics to show 0% instead of misleading 100% when no data exists",
+            "Enhanced Google Sheets error handling to prevent calculation errors on empty datasets"
+          ]
+        },
         {
           "version": "v3.4.2",
           "title": "Campaign Export Fix & Google Sheets Integration",
