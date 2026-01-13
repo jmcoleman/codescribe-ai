@@ -84,7 +84,7 @@ export function TrialBanner({ onUpgrade, onDismiss, hideUpgrade = false, hideDis
       aria-live="polite"
       className={`${bannerClasses} ${compact ? 'px-3 py-2' : 'p-4'}`}
     >
-      <div className={`flex items-center ${compact ? 'gap-2' : 'gap-3'}`}>
+      <div className={`flex items-start ${compact ? 'gap-2' : 'gap-3'}`}>
         {/* Icon */}
         {isUrgent ? (
           <Clock

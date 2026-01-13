@@ -97,9 +97,9 @@ export default function UnverifiedEmailBanner({ user, onDismiss }) {
       aria-live="polite"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex items-start justify-between gap-4">
           {/* Icon + Message */}
-          <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div className="flex items-start gap-3 flex-1 min-w-0">
             <div className="flex-shrink-0 w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center ring-2 ring-indigo-200">
               <Mail
                 className="w-4 h-4 text-indigo-600"

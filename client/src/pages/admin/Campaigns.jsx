@@ -9,7 +9,7 @@
  * - View campaign performance metrics
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import {
@@ -25,8 +25,10 @@ import {
   Edit2,
   CheckCircle,
   XCircle,
+  X,
 } from 'lucide-react';
 import { PageLayout } from '../../components/PageLayout';
+import { BaseTable } from '../../components/BaseTable';
 import { useAuth } from '../../contexts/AuthContext';
 import { formatDate, formatDateTime } from '../../utils/formatters';
 import toast from 'react-hot-toast';
@@ -532,6 +534,17 @@ export default function Campaigns() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletingCampaign, setDeletingCampaign] = useState(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [sorting, setSorting] = useState([{ id: 'starts_at', desc: true }]);
+  const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 0 });
+  const [dismissedBanners, setDismissedBanners] = useState(() => {
+    // Load dismissed banners from localStorage on mount
+    try {
+      const saved = localStorage.getItem('dismissedCampaignBanners');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
 
   const fetchCampaigns = useCallback(async () => {
     setLoading(true);
@@ -549,7 +562,15 @@ export default function Campaigns() {
       if (!response.ok) throw new Error('Failed to fetch campaigns');
 
       const data = await response.json();
-      setCampaigns(data.data || []);
+      const allCampaigns = data.data || [];
+      setCampaigns(allCampaigns);
+
+      // Update pagination
+      setPagination(prev => ({
+        ...prev,
+        total: allCampaigns.length,
+        totalPages: Math.ceil(allCampaigns.length / prev.limit),
+      }));
     } catch (err) {
       setError(err.message);
       toast.error('Failed to load campaigns');
@@ -677,6 +698,97 @@ export default function Campaigns() {
     }
   };
 
+  const handleDismissBanner = (campaignId) => {
+    const updated = { ...dismissedBanners, [campaignId]: true };
+    setDismissedBanners(updated);
+    localStorage.setItem('dismissedCampaignBanners', JSON.stringify(updated));
+  };
+
+  // Define table columns (memoized to prevent recreation on each render)
+  const columns = useMemo(() => [
+    {
+      accessorKey: 'name',
+      header: 'Campaign',
+      cell: ({ row }) => (
+        <div>
+          <p className="text-slate-900 dark:text-white">
+            {row.original.name}
+          </p>
+          {row.original.description && (
+            <p className="text-sm text-slate-500 dark:text-slate-400 truncate max-w-xs">
+              {row.original.description}
+            </p>
+          )}
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'is_active',
+      header: 'Status',
+      cell: ({ row }) => <StatusBadge campaign={row.original} />,
+      enableSorting: true,
+    },
+    {
+      accessorKey: 'trial_tier',
+      header: 'Trial',
+      cell: ({ row }) => (
+        <span className="capitalize text-sm font-medium text-slate-600 dark:text-slate-400">
+          {row.original.trial_tier}
+        </span>
+      ),
+      enableSorting: true,
+    },
+    {
+      accessorKey: 'starts_at',
+      header: 'Dates',
+      cell: ({ row }) => (
+        <div className="text-sm text-slate-600 dark:text-slate-400">
+          <div>{formatDate(row.original.starts_at)}</div>
+          {row.original.ends_at && (
+            <div>
+              to {formatDate(row.original.ends_at)}{' '}
+              <span className="text-slate-400 dark:text-slate-500">
+                ({row.original.trial_days} days)
+              </span>
+            </div>
+          )}
+        </div>
+      ),
+      enableSorting: true,
+    },
+    {
+      accessorKey: 'signups_count',
+      header: 'Signups',
+      cell: ({ row }) => (
+        <div className="flex items-center gap-1.5">
+          <span className="text-slate-900 dark:text-white font-medium">
+            {row.original.signups_count}
+          </span>
+          {row.original.conversions_count > 0 && (
+            <span className="text-green-600 dark:text-green-400 text-sm">
+              ({row.original.conversions_count} converted)
+            </span>
+          )}
+        </div>
+      ),
+      enableSorting: true,
+    },
+    {
+      id: 'actions',
+      header: 'Actions',
+      cell: ({ row }) => (
+        <div className="flex items-center justify-end">
+          <CampaignActions
+            campaign={row.original}
+            onEdit={handleEdit}
+            onToggle={handleToggle}
+            onDelete={handleDeleteClick}
+          />
+        </div>
+      ),
+    },
+  ], [handleEdit, handleToggle, handleDeleteClick]);
+
   return (
     <PageLayout>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -705,10 +817,9 @@ export default function Campaigns() {
                 onClick={async () => {
                   setIsRefreshing(true);
                   await fetchCampaigns();
-                  // Reset after animation completes (500ms from tailwind.config.js)
                   setTimeout(() => setIsRefreshing(false), 500);
                 }}
-                disabled={loading}
+                disabled={loading || isRefreshing}
                 className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
                 title="Refresh"
                 aria-label="Refresh campaigns"
@@ -729,132 +840,67 @@ export default function Campaigns() {
         </div>
 
         {/* Active Campaign Banner */}
-        {campaigns.some(c => c.is_active) && (
-          <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center">
-                <TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400" />
-              </div>
-              <div>
-                <p className="font-medium text-green-800 dark:text-green-200">
-                  Campaign Active
-                </p>
-                <p className="text-sm text-green-600 dark:text-green-400">
-                  {campaigns.find(c => c.is_active)?.name} - All new signups receive a{' '}
-                  {campaigns.find(c => c.is_active)?.trial_tier} trial
-                </p>
+        {(() => {
+          const activeCampaign = campaigns.find(c => c.is_active);
+          if (!activeCampaign || dismissedBanners[activeCampaign.id]) return null;
+
+          return (
+            <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center flex-shrink-0">
+                  <TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-green-800 dark:text-green-200">
+                    Campaign Active
+                  </p>
+                  <p className="text-sm text-green-600 dark:text-green-400">
+                    {activeCampaign.name} - All new signups receive a{' '}
+                    {activeCampaign.trial_tier} trial
+                  </p>
+                </div>
+                <button
+                  onClick={() => handleDismissBanner(activeCampaign.id)}
+                  className="p-1.5 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors flex-shrink-0"
+                  aria-label="Dismiss banner"
+                >
+                  <X className="w-4 h-4 text-green-600 dark:text-green-400" />
+                </button>
               </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Campaigns Table */}
-        {loading && campaigns.length === 0 ? (
-          <div className="text-center py-12 text-slate-500 dark:text-slate-400">
-            Loading campaigns...
-          </div>
-        ) : error ? (
+        {error ? (
           <div className="text-center py-12 text-red-600 dark:text-red-400">{error}</div>
-        ) : campaigns.length === 0 ? (
-          <div className="text-center py-12">
-            <Calendar className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
-            <p className="text-slate-600 dark:text-slate-400 mb-4">
-              No campaigns yet. Create one to auto-grant trials to new users.
-            </p>
-            <button
-              onClick={handleCreate}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg"
-            >
-              <Plus className="w-4 h-4" />
-              Create First Campaign
-            </button>
-          </div>
         ) : (
-          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                    Campaign
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                    Trial
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                    Dates
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                    Signups
-                  </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                {campaigns.map((campaign) => (
-                  <tr key={campaign.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                    <td className="px-4 py-4">
-                      <div>
-                        <p className="text-slate-900 dark:text-white">
-                          {campaign.name}
-                        </p>
-                        {campaign.description && (
-                          <p className="text-sm text-slate-500 dark:text-slate-400 truncate max-w-xs">
-                            {campaign.description}
-                          </p>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4">
-                      <StatusBadge campaign={campaign} />
-                    </td>
-                    <td className="px-4 py-4">
-                      <span className="capitalize text-sm font-medium text-slate-600 dark:text-slate-400">
-                        {campaign.trial_tier}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 text-sm text-slate-600 dark:text-slate-400">
-                      <div>{formatDate(campaign.starts_at)}</div>
-                      {campaign.ends_at && (
-                        <div>
-                          to {formatDate(campaign.ends_at)}{' '}
-                          <span className="text-slate-400 dark:text-slate-500">
-                            ({campaign.trial_days} days)
-                          </span>
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-slate-900 dark:text-white font-medium">
-                          {campaign.signups_count}
-                        </span>
-                        {campaign.conversions_count > 0 && (
-                          <span className="text-green-600 dark:text-green-400 text-sm">
-                            ({campaign.conversions_count} converted)
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 text-right">
-                      <div className="flex items-center justify-end">
-                        <CampaignActions
-                          campaign={campaign}
-                          onEdit={handleEdit}
-                          onToggle={handleToggle}
-                          onDelete={handleDeleteClick}
-                        />
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <BaseTable
+            data={campaigns}
+            columns={columns}
+            sorting={sorting}
+            onSortingChange={setSorting}
+            pagination={pagination}
+            onPageChange={(page) => setPagination(prev => ({ ...prev, page }))}
+            manualSorting={false}
+            manualPagination={false}
+            isLoading={loading}
+            isRefreshing={isRefreshing}
+            emptyState={{
+              icon: Calendar,
+              title: 'No campaigns yet',
+              description: 'Create one to auto-grant trials to new users.',
+              action: (
+                <button
+                  onClick={handleCreate}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg"
+                >
+                  <Plus className="w-4 h-4" />
+                  Create First Campaign
+                </button>
+              ),
+            }}
+          />
         )}
       </div>
 
