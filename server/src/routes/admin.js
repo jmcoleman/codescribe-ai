@@ -2262,21 +2262,27 @@ router.get('/campaigns/export', requireAuth, requireAdmin, async (req, res) => {
 
     // ✨ NEW: Get usage segment breakdown
     const usageSegments = await sql`
+      WITH segments AS (
+        SELECT
+          CASE
+            WHEN monthly_count = 0 THEN 'No Usage'
+            WHEN monthly_count BETWEEN 1 AND 9 THEN 'Light (1-9)'
+            WHEN monthly_count BETWEEN 10 AND 49 THEN 'Engaged (10-49)'
+            WHEN monthly_count BETWEEN 50 AND 99 THEN 'Power (50-99)'
+            WHEN monthly_count >= 100 THEN 'Max (100+)'
+          END as segment,
+          u.id as user_id
+        FROM user_quotas uq
+        JOIN users u ON uq.user_id = u.id
+        WHERE u.created_at >= ${startDate}
+          AND u.created_at < ${endDate}
+          AND u.role != 'admin'
+      )
       SELECT
-        CASE
-          WHEN monthly_count = 0 THEN 'No Usage'
-          WHEN monthly_count BETWEEN 1 AND 9 THEN 'Light (1-9)'
-          WHEN monthly_count BETWEEN 10 AND 49 THEN 'Engaged (10-49)'
-          WHEN monthly_count BETWEEN 50 AND 99 THEN 'Power (50-99)'
-          WHEN monthly_count >= 100 THEN 'Max (100+)'
-        END as segment,
+        segment,
         COUNT(*) as users,
         ROUND((COUNT(*) * 100.0 / SUM(COUNT(*)) OVER ())::NUMERIC, 1) as percentage
-      FROM user_quotas uq
-      JOIN users u ON uq.user_id = u.id
-      WHERE u.created_at >= ${startDate}
-        AND u.created_at < ${endDate}
-        AND u.role != 'admin'
+      FROM segments
       GROUP BY segment
       ORDER BY
         CASE segment
