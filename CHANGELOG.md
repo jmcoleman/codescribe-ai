@@ -9,6 +9,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.4.1] - 2026-01-13
+
+**Status:** ✅ Analytics Dashboard Workflow Metrics & UX Improvements
+
+**Summary:** Enhanced analytics dashboard with period-over-period trend metrics for workflow funnel KPIs, standardized chart styling, and improved user experience with date range persistence and comprehensive seed data for testing.
+
+### Added
+
+- **Workflow Funnel Trend Metrics** ([client/src/pages/admin/Analytics.jsx](client/src/pages/admin/Analytics.jsx))
+  - Updated Workflow Funnel KPI cards to show period-over-period trend percentages (e.g., "+12.5%", "-3.2%")
+  - Matches Business Metrics pattern with "vs prior period" subtext and trend indicators
+  - Cards now display percentage changes instead of duplicating raw numbers from chart below
+
+- **Backend Comparison Metrics** ([server/src/services/analyticsService.js](server/src/services/analyticsService.js))
+  - Added `code_input` metric support - returns unique sessions with code input events
+  - Added `doc_export` metric support - returns unique sessions with doc export events
+  - Updated comparison endpoint to fetch 5 workflow metrics: sessions, code_input, generations, completed_sessions, doc_export
+
+- **Chart Standardization** ([client/src/pages/admin/Analytics.jsx](client/src/pages/admin/Analytics.jsx))
+  - Converted Code Input Methods chart to use ChartSection component
+  - Converted Export Sources chart to use ChartSection component
+  - Added total counts to chart titles: "Code Input Methods (22 total)", "Export Sources (20 total)"
+  - Added guiding question to Code Input Methods: "How are users providing code for documentation?"
+  - All charts now have consistent styling with titles/questions inside white card backgrounds
+
+- **Date Range Persistence** ([client/src/constants/storage.js](client/src/constants/storage.js), [client/src/pages/admin/Analytics.jsx](client/src/pages/admin/Analytics.jsx))
+  - Added `ANALYTICS_DATE_RANGE` storage key for persisting selected date range
+  - Date range selection now saved to sessionStorage and restored on page refresh
+  - Prevents reset to default "Last 30 Days" when navigating away and returning
+
+- **Seed Analytics Improvements** ([server/src/scripts/seedAnalytics.js](server/src/scripts/seedAnalytics.js))
+  - Fixed seed script to generate data for both current AND prior periods
+  - Corrected date range calculations to match DateRangePicker's 8-day "Last 7 Days" window
+  - Current period: 7 days ago → tomorrow (8 days inclusive)
+  - Prior period: 15 days ago → 7 days ago (8 days inclusive)
+  - Enables proper testing of period-over-period comparisons with 0% baseline changes
+
+### Changed
+
+- **Analytics API Documentation** ([server/src/routes/admin.js](server/src/routes/admin.js))
+  - Updated comparisons endpoint documentation to include code_input and doc_export metrics
+  - Supported metrics now: sessions, code_input, signups, revenue, generations, completed_sessions, doc_export
+
+- **Workflow Funnel Section Header** ([client/src/pages/admin/Analytics.jsx](client/src/pages/admin/Analytics.jsx))
+  - Changed guiding question from "Where do users drop off?" to "How are workflow metrics trending compared to prior period?"
+  - Better reflects the new trend-based KPI cards
+
+### Technical Details
+
+- **Test Coverage:** 4,143 tests (2,069 frontend passing, 68 frontend skipped, 1 frontend failing timeout; 1,972 backend passing, 33 backend skipped)
+- **Files Modified:** 5 files (Analytics.jsx, analyticsService.js, admin.js, storage.js, seedAnalytics.js)
+- **LOC Changed:** ~400 lines (chart refactoring, trend display logic, date persistence)
+
+---
+
 ## [3.4.0] - 2026-01-12
 
 **Status:** ✅ Workflow Milestone Tracking & Campaign Export Features

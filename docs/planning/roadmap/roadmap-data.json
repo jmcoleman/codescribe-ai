@@ -65,9 +65,9 @@
       "text": "codescribeai.com",
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
-    "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.36",
-    "footer": "v3.4.0 Complete · Workflow Milestone Tracking & Campaign Export Features ✓ · Up Next: Project Architecture Document · VS Code Extension: Separate Repo",
-    "lastUpdated": "January 12, 2026"
+    "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.37",
+    "footer": "v3.4.1 Complete · Analytics Dashboard Workflow Metrics & UX Improvements ✓ · Up Next: Project Architecture Document · VS Code Extension: Separate Repo",
+    "lastUpdated": "January 13, 2026"
   },
   "columns": [
     {
@@ -76,6 +76,24 @@
       "title": "Completed",
       "subtitle": "Phase 1: Core Capabilities",
       "phases": [
+        {
+          "version": "v3.4.1",
+          "title": "Analytics Dashboard Workflow Metrics & UX Improvements",
+          "duration": "0.5 days",
+          "status": "✓ Complete",
+          "completedDate": "Jan 13, 2026",
+          "badge": "Analytics UX",
+          "features": [
+            "Updated Workflow Funnel KPI cards to show period-over-period trend percentages (matching Business Metrics pattern)",
+            "Added backend comparison support for code_input and doc_export metrics in analyticsService",
+            "Standardized Code Input Methods and Export Sources charts using ChartSection component for consistent styling",
+            "Added total counts to Code Input Methods and Export Sources chart titles for better context",
+            "Added guiding question to Code Input Methods chart: 'How are users providing code for documentation?'",
+            "Implemented date range persistence in sessionStorage - selected range now persists across page refreshes",
+            "Fixed seed analytics script to generate data for both current and prior periods with correct 8-day ranges",
+            "All analytics charts now have consistent styling with titles and questions inside white card backgrounds"
+          ]
+        },
         {
           "version": "v3.4.0",
           "title": "Workflow Milestone Tracking & Campaign Export Features",
