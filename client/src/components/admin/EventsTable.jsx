@@ -302,6 +302,7 @@ export function EventsTable({ startDate, endDate, excludeInternal = false }) {
 
       const response = await fetch(`${API_URL}/api/admin/analytics/events?${params}`, {
         headers: { 'Authorization': `Bearer ${token}` },
+        cache: 'no-store',
       });
 
       if (!response.ok) {
