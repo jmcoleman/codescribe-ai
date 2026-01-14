@@ -74,7 +74,8 @@ export function accountSuspendedTemplate({
         </p>
       </div>
 
-      ${contentBox('Reason for Suspension', `
+      ${sectionHeading('Reason for Suspension')}
+      ${contentBox(`
         <p style="color: #475569; font-size: 14px; line-height: 1.6; margin: 0; white-space: pre-wrap;">
           ${reason}
         </p>
@@ -217,7 +218,8 @@ export function trialGrantedByAdminTemplate({
         </p>
       </div>
 
-      ${contentBox('Trial Details', `
+      ${sectionHeading('Trial Details')}
+      ${contentBox(`
         <p style="color: #475569; font-size: 14px; line-height: 1.6; margin: 0;">
           <strong>Tier:</strong> ${tierDisplay}<br>
           <strong>Duration:</strong> ${durationDays} days<br>
