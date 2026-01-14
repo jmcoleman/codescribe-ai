@@ -151,7 +151,7 @@ describe('Migration 012: Add User Roles and Audit Logging', () => {
       expect(indexes).toContain('idx_user_audit_user_id');
       expect(indexes).toContain('idx_user_audit_field_name');
       expect(indexes).toContain('idx_user_audit_user_field');
-      expect(indexes).toContain('idx_user_audit_changed_by_id');
+      expect(indexes).toContain('idx_user_audit_changed_by');
       expect(indexes).toContain('idx_user_audit_changed_at');
       expect(indexes).toContain('idx_user_audit_user_email');
     });

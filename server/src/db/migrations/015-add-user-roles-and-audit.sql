@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS user_audit_log (
 CREATE INDEX idx_user_audit_user_id ON user_audit_log(user_id);
 CREATE INDEX idx_user_audit_field_name ON user_audit_log(field_name);
 CREATE INDEX idx_user_audit_user_field ON user_audit_log(user_id, field_name, changed_at DESC);
-CREATE INDEX idx_user_audit_changed_by_id ON user_audit_log(changed_by_id);
+CREATE INDEX idx_user_audit_changed_by ON user_audit_log(changed_by_id);
 CREATE INDEX idx_user_audit_changed_at ON user_audit_log(changed_at DESC);
 CREATE INDEX idx_user_audit_user_email ON user_audit_log(user_email); -- For orphaned records after deletion
 
