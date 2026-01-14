@@ -30,7 +30,7 @@ jest.mock('resend', () => {
 });
 
 // Now import emailService (after env vars and mock are set)
-import emailService, { sendPasswordResetEmail, sendVerificationEmail, sendContactSalesEmail, sendSupportEmail, sendTrialExpiringEmail, sendTrialExpiredEmail, sendTrialExtendedEmail, __resetResendClient } from '../emailService.js';
+import emailService, { sendPasswordResetEmail, sendVerificationEmail, sendContactSalesEmail, sendSupportEmail, sendTrialExpiringEmail, sendTrialExpiredEmail, sendTrialExtendedEmail, sendAccountSuspendedEmail, sendAccountUnsuspendedEmail, sendTrialGrantedByAdminEmail, __resetResendClient } from '../emailService.js';
 
 describe('Email Service', () => {
   beforeEach(() => {
@@ -2285,6 +2285,277 @@ describe('Email Service', () => {
       await sendTrialExtendedEmail(paramsWithoutReason);
 
       expect(mockSendEmail).toHaveBeenCalled();
+    });
+  });
+
+  // ============================================================================
+  // Account Suspended Emails
+  // ============================================================================
+  describe('sendAccountSuspendedEmail', () => {
+    const validParams = {
+      to: 'user@example.com',
+      userName: 'Test User',
+      reason: 'Terms of service violation',
+      suspendedUntil: '2026-02-14T00:00:00Z'
+    };
+
+    beforeEach(() => {
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_123' } });
+    });
+
+    it('should send email with correct recipient', async () => {
+      await sendAccountSuspendedEmail(validParams);
+
+      expect(mockSendEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: 'user@example.com'
+        })
+      );
+    });
+
+    it('should include correct subject line', async () => {
+      await sendAccountSuspendedEmail(validParams);
+
+      expect(mockSendEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          subject: 'Account Suspended - CodeScribe AI'
+        })
+      );
+    });
+
+    it('should include suspension reason in HTML', async () => {
+      await sendAccountSuspendedEmail(validParams);
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('Terms of service violation');
+    });
+
+    it('should include suspension date in HTML', async () => {
+      await sendAccountSuspendedEmail(validParams);
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('February');
+      expect(callArgs.html).toContain('2026');
+    });
+
+    it('should handle indefinite suspension (no suspendedUntil)', async () => {
+      await sendAccountSuspendedEmail({
+        ...validParams,
+        suspendedUntil: null
+      });
+
+      expect(mockSendEmail).toHaveBeenCalled();
+    });
+
+    it('should default userName to email prefix if not provided', async () => {
+      await sendAccountSuspendedEmail({
+        to: 'user@example.com',
+        reason: 'Test reason',
+        suspendedUntil: null
+      });
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('user');
+    });
+
+    it('should throw error when email fails to send', async () => {
+      mockSendEmail.mockRejectedValue(new Error('Send failed'));
+
+      await expect(
+        sendAccountSuspendedEmail(validParams)
+      ).rejects.toThrow('Failed to send account suspended email');
+    });
+
+    it('should handle rate limiting with 503 status', async () => {
+      const rateLimitError = new Error('Too many requests');
+      rateLimitError.statusCode = 429;
+      mockSendEmail.mockRejectedValue(rateLimitError);
+
+      await expect(
+        sendAccountSuspendedEmail(validParams)
+      ).rejects.toThrow('Email service is temporarily unavailable due to high demand');
+    });
+  });
+
+  // ============================================================================
+  // Account Unsuspended Emails
+  // ============================================================================
+  describe('sendAccountUnsuspendedEmail', () => {
+    const validParams = {
+      to: 'user@example.com',
+      userName: 'Test User'
+    };
+
+    beforeEach(() => {
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_123' } });
+    });
+
+    it('should send email with correct recipient', async () => {
+      await sendAccountUnsuspendedEmail(validParams);
+
+      expect(mockSendEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: 'user@example.com'
+        })
+      );
+    });
+
+    it('should include correct subject line', async () => {
+      await sendAccountUnsuspendedEmail(validParams);
+
+      expect(mockSendEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          subject: 'Account Restored - CodeScribe AI'
+        })
+      );
+    });
+
+    it('should include restoration message in HTML', async () => {
+      await sendAccountUnsuspendedEmail(validParams);
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('Welcome Back');
+      expect(callArgs.html).toContain('restored');
+    });
+
+    it('should default userName to email prefix if not provided', async () => {
+      await sendAccountUnsuspendedEmail({
+        to: 'user@example.com'
+      });
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('user');
+    });
+
+    it('should throw error when email fails to send', async () => {
+      mockSendEmail.mockRejectedValue(new Error('Send failed'));
+
+      await expect(
+        sendAccountUnsuspendedEmail(validParams)
+      ).rejects.toThrow('Failed to send account unsuspended email');
+    });
+
+    it('should handle rate limiting with 503 status', async () => {
+      const rateLimitError = new Error('Too many requests');
+      rateLimitError.statusCode = 429;
+      mockSendEmail.mockRejectedValue(rateLimitError);
+
+      await expect(
+        sendAccountUnsuspendedEmail(validParams)
+      ).rejects.toThrow('Email service is temporarily unavailable due to high demand');
+    });
+  });
+
+  // ============================================================================
+  // Trial Granted by Admin Emails
+  // ============================================================================
+  describe('sendTrialGrantedByAdminEmail', () => {
+    const validParams = {
+      to: 'user@example.com',
+      userName: 'Test User',
+      trialTier: 'pro',
+      durationDays: 14,
+      expiresAt: '2026-02-14T00:00:00Z'
+    };
+
+    beforeEach(() => {
+      mockSendEmail.mockResolvedValue({ data: { id: 'email_123' } });
+    });
+
+    it('should send email with correct recipient', async () => {
+      await sendTrialGrantedByAdminEmail(validParams);
+
+      expect(mockSendEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: 'user@example.com'
+        })
+      );
+    });
+
+    it('should include correct subject line for Pro tier', async () => {
+      await sendTrialGrantedByAdminEmail(validParams);
+
+      expect(mockSendEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          subject: 'Pro Trial Granted - CodeScribe AI'
+        })
+      );
+    });
+
+    it('should include correct subject line for Team tier', async () => {
+      await sendTrialGrantedByAdminEmail({
+        ...validParams,
+        trialTier: 'team'
+      });
+
+      expect(mockSendEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          subject: 'Team Trial Granted - CodeScribe AI'
+        })
+      );
+    });
+
+    it('should include trial details in HTML', async () => {
+      await sendTrialGrantedByAdminEmail(validParams);
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('Pro');
+      expect(callArgs.html).toContain('14');
+      expect(callArgs.html).toContain('February');
+    });
+
+    it('should default to pro tier if not specified', async () => {
+      await sendTrialGrantedByAdminEmail({
+        to: 'user@example.com',
+        durationDays: 14,
+        expiresAt: '2026-02-14T00:00:00Z'
+      });
+
+      expect(mockSendEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          subject: expect.stringContaining('Pro')
+        })
+      );
+    });
+
+    it('should default userName to email prefix if not provided', async () => {
+      await sendTrialGrantedByAdminEmail({
+        to: 'user@example.com',
+        trialTier: 'pro',
+        durationDays: 14,
+        expiresAt: '2026-02-14T00:00:00Z'
+      });
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('user');
+    });
+
+    it('should throw error when email fails to send', async () => {
+      mockSendEmail.mockRejectedValue(new Error('Send failed'));
+
+      await expect(
+        sendTrialGrantedByAdminEmail(validParams)
+      ).rejects.toThrow('Failed to send trial granted email');
+    });
+
+    it('should handle rate limiting with 503 status', async () => {
+      const rateLimitError = new Error('Too many requests');
+      rateLimitError.statusCode = 429;
+      mockSendEmail.mockRejectedValue(rateLimitError);
+
+      await expect(
+        sendTrialGrantedByAdminEmail(validParams)
+      ).rejects.toThrow('Email service is temporarily unavailable due to high demand');
+    });
+
+    it('should work with team tier', async () => {
+      await sendTrialGrantedByAdminEmail({
+        ...validParams,
+        trialTier: 'team'
+      });
+
+      const callArgs = mockSendEmail.mock.calls[0][0];
+      expect(callArgs.html).toContain('Team');
     });
   });
 });
