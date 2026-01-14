@@ -8,7 +8,7 @@ ALTER TABLE user_audit_log
   RENAME COLUMN changed_by_id TO changed_by;
 
 -- Rename index to match new column name
-DROP INDEX IF EXISTS idx_user_audit_changed_by;
+DROP INDEX IF EXISTS idx_user_audit_changed_by_id;
 CREATE INDEX idx_user_audit_changed_by ON user_audit_log(changed_by);
 
 -- Verify column was renamed

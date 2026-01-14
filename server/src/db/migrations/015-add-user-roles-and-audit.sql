@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS user_audit_log (
   id SERIAL PRIMARY KEY,
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
   user_email VARCHAR(255), -- Denormalized for retention after user deletion
-  changed_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  changed_by_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
   field_name VARCHAR(100) NOT NULL, -- 'role', 'email', 'first_name', 'last_name', 'tier', etc.
   old_value TEXT, -- Previous value (stored as text)
   new_value TEXT, -- New value (stored as text)
@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS user_audit_log (
 CREATE INDEX idx_user_audit_user_id ON user_audit_log(user_id);
 CREATE INDEX idx_user_audit_field_name ON user_audit_log(field_name);
 CREATE INDEX idx_user_audit_user_field ON user_audit_log(user_id, field_name, changed_at DESC);
-CREATE INDEX idx_user_audit_changed_by ON user_audit_log(changed_by);
+CREATE INDEX idx_user_audit_changed_by_id ON user_audit_log(changed_by_id);
 CREATE INDEX idx_user_audit_changed_at ON user_audit_log(changed_at DESC);
 CREATE INDEX idx_user_audit_user_email ON user_audit_log(user_email); -- For orphaned records after deletion
 
