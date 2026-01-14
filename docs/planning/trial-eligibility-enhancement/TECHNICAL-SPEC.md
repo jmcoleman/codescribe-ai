@@ -1043,10 +1043,12 @@ ALTER TABLE campaigns
 
 ## Related Documentation
 
-- **Trial System Overview**: [TIER-ARCHITECTURE.md](../architecture/TIER-ARCHITECTURE.md)
-- **Campaign Management**: [CAMPAIGN-MANAGEMENT-GUIDE.md](../admin/CAMPAIGN-MANAGEMENT-GUIDE.md)
-- **User Management**: [USER-MANAGEMENT-GUIDE.md](../admin/USER-MANAGEMENT-GUIDE.md)
-- **Admin Analytics**: [ADMIN-USAGE-STATS.md](../admin/ADMIN-USAGE-STATS.md)
+- **Workflow-First PRD**: [TRIAL-ELIGIBILITY-WF-PRD.md](./TRIAL-ELIGIBILITY-WF-PRD.md) - Business outcomes, user workflows, and acceptance criteria
+- **Analytics Optimization**: [ANALYTICS-OPTIMIZATION.md](./ANALYTICS-OPTIMIZATION.md) - Event tracking strategy (15 → 3 events)
+- **Trial System Overview**: [TIER-ARCHITECTURE.md](../../architecture/TIER-ARCHITECTURE.md)
+- **Campaign Management**: [CAMPAIGN-MANAGEMENT-GUIDE.md](../../admin/CAMPAIGN-MANAGEMENT-GUIDE.md)
+- **User Management**: [USER-MANAGEMENT-GUIDE.md](../../admin/USER-MANAGEMENT-GUIDE.md)
+- **Admin Analytics**: [ADMIN-USAGE-STATS.md](../../admin/ADMIN-USAGE-STATS.md)
 
 ---
 

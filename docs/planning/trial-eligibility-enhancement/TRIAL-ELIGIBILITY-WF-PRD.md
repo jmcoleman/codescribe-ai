@@ -7,6 +7,10 @@
 **Version:** 1.0
 **Last Updated:** January 14, 2026
 
+**Related Documents:**
+- [TECHNICAL-SPEC.md](./TECHNICAL-SPEC.md) - Technical implementation details and database schema
+- [ANALYTICS-OPTIMIZATION.md](./ANALYTICS-OPTIMIZATION.md) - Event tracking optimization (15 → 3 events)
+
 ---
 
 ## 🎯 Business Context
@@ -224,9 +228,9 @@ flowchart TD
 - [ ] Campaign launches without errors for valid configurations
 
 **Analytics Events:**
-- `campaign_created` (source: web, eligibility_type: new_users_only|allow_lapsed)
-- `eligibility_preview_viewed` (estimated_reach)
-- `campaign_launched` (campaign_id, target_tier, duration_days)
+- `campaign` (action: created, source: web, eligibility_type, target_tier, duration_days, allow_previous_trial_users, cooldown_days)
+- `campaign` (action: preview_viewed, campaign_id, estimated_reach)
+- `campaign` (action: launched, campaign_id, eligibility_type, target_tier, duration_days)
 
 ---
 
@@ -312,10 +316,10 @@ flowchart TD
 - [ ] Analytics tracks error code distribution (COOLDOWN_PERIOD most common)
 
 **Analytics Events:**
-- `trial_redemption_attempted` (code, campaign_id, user_eligibility_status)
-- `trial_redemption_succeeded` (trial_id, tier, source: campaign)
-- `trial_redemption_failed` (error_code, reason, has_previous_trial, days_since_last_trial)
-- `eligibility_error_viewed` (error_code, clicked_next_step)
+- `trial` (action: redemption_attempted, campaign_id, invite_code, eligibility_status, has_previous_trial)
+- `trial` (action: redemption_succeeded, source: campaign, tier, duration_days, campaign_id, invite_code)
+- `trial` (action: redemption_failed, error_code, has_previous_trial, days_since_last_trial, campaign_id, invite_code)
+- `eligibility_error` (error_code, campaign_id, invite_code, has_previous_trial, days_since_last_trial, days_until_eligible, clicked_next_step)
 
 ---
 
@@ -406,10 +410,9 @@ flowchart TD
 - [ ] Monthly audit review identifies zero cases of force-grant abuse
 
 **Analytics Events:**
-- `admin_trial_history_viewed` (user_id, trial_count)
-- `admin_grant_trial_attempted` (user_id, has_previous_trial)
-- `admin_grant_trial_forced` (user_id, override_reason_length, previous_trial_count)
-- `admin_grant_trial_succeeded` (user_id, tier, duration, forced: boolean)
+- `admin_action` (action: view_trial_history, target_user_id, trial_count)
+- `trial` (action: admin_grant_attempted, has_previous_trial, previous_trial_count)
+- `trial` (action: admin_grant_succeeded, forced: boolean, source: admin_grant|admin_grant_forced, tier, duration_days, override_reason, previous_trial_count, has_previous_trial)
 
 ---
 
@@ -497,10 +500,9 @@ flowchart TD
 - [ ] First-contact resolution rate: 85%+
 
 **Analytics Events:**
-- `support_eligibility_investigation_started` (user_id, ticket_id)
-- `support_diagnosis_completed` (diagnosis: cooldown|new_users_only|bug|other, investigation_time_seconds)
-- `support_resolution_action` (action: force_grant|inform_wait|inform_pricing|escalate)
-- `ticket_resolved` (resolution_time_minutes, required_force_grant: boolean)
+- `admin_action` (action: investigate_eligibility, target_user_id, ticket_id)
+- `admin_action` (action: diagnose_issue, target_user_id, ticket_id, diagnosis: cooldown|new_users_only|bug|other, investigation_time_seconds)
+- `admin_action` (action: resolve_ticket, target_user_id, ticket_id, resolution: force_grant|inform_wait|inform_pricing|escalate, resolution_time_minutes, required_force_grant: boolean)
 
 ---
 
@@ -709,35 +711,75 @@ Why it's best: Explains rule, shows countdown, provides alternatives.
 
 ### Event Tracking
 
+**Event Optimization:**
+Analytics events follow the established pattern of using event actions and metadata instead of creating separate events for each action. This reduces database growth by 80% (from 15 proposed events to 3 new events + 1 extended event).
+
+📋 **See:** [ANALYTICS-OPTIMIZATION.md](./ANALYTICS-OPTIMIZATION.md) for detailed rationale and implementation guide.
+
 **Phase 1 Events:**
 ```javascript
-analytics.track('admin_trial_history_viewed', {
-  user_id: 123,
-  trial_count: 1,
-  most_recent_trial_days_ago: 60
+// Admin views trial history
+analytics.track('admin_action', {
+  action: 'view_trial_history',
+  target_user_id: 123,
+  trial_count: 2
 });
 
-analytics.track('admin_grant_trial_forced', {
-  user_id: 123,
+// Admin force-grants trial
+analytics.track('trial', {
+  action: 'admin_grant_succeeded',
+  forced: true,
+  source: 'admin_grant_forced',
+  tier: 'pro',
+  duration_days: 14,
   override_reason: 'PREVIOUS_TRIAL_EXISTS',
-  justification_length: 85,
-  admin_id: 1
+  previous_trial_count: 1,
+  has_previous_trial: true
+});
+
+// Support resolves eligibility ticket
+analytics.track('admin_action', {
+  action: 'resolve_ticket',
+  target_user_id: 123,
+  ticket_id: 'SUP-5678',
+  resolution: 'force_grant',
+  resolution_time_minutes: 8,
+  required_force_grant: true
 });
 ```
 
 **Phase 2 Events:**
 ```javascript
-analytics.track('trial_redemption_failed', {
+// User redemption blocked by cooldown
+analytics.track('trial', {
+  action: 'redemption_failed',
   error_code: 'COOLDOWN_PERIOD',
-  days_remaining: 30,
-  campaign_id: 456,
-  clicked_pricing: true
+  has_previous_trial: true,
+  days_since_last_trial: 60,
+  campaign_id: 42,
+  invite_code: 'COMEBACK30'
 });
 
-analytics.track('campaign_created', {
+// User sees eligibility error
+analytics.track('eligibility_error', {
+  error_code: 'COOLDOWN_PERIOD',
+  campaign_id: 42,
+  invite_code: 'COMEBACK30',
+  has_previous_trial: true,
+  days_since_last_trial: 60,
+  days_until_eligible: 30,
+  clicked_next_step: 'pricing'
+});
+
+// Campaign launched
+analytics.track('campaign', {
+  action: 'launched',
+  campaign_id: 42,
   eligibility_type: 'allow_lapsed',
-  cooldown_days: 90,
-  estimated_reach: 500
+  target_tier: 'pro',
+  duration_days: 14,
+  allow_previous_trial_users: true,
+  cooldown_days: 90
 });
 ```
 

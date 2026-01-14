@@ -133,7 +133,7 @@ AI-powered documentation generator with real-time streaming, quality scoring (0-
 ### 📈 Features & Extensions
 | Document | Use Case | Key Contents |
 |----------|----------|--------------|
-| [Trial Eligibility PRD](docs/planning/trial-eligibility-enhancement/PRD.md) | Trial eligibility enhancement ⭐ | Workflow-first PRD: 4 workflows, 3-phase rollout, business outcomes, success metrics |
+| [Trial Eligibility WF PRD](docs/planning/trial-eligibility-enhancement/TRIAL-ELIGIBILITY-WF-PRD.md) | Trial eligibility enhancement ⭐ | Workflow-first PRD: 4 workflows, 3-phase rollout, business outcomes, success metrics |
 | [GITHUB-MULTI-FILE-IMPORT.md](docs/features/GITHUB-MULTI-FILE-IMPORT.md) | GitHub import ⭐ | Multi-file import from GitHub repos, tree browsing, file selection |
 | [ADD-NEW-DOC-TYPE.md](docs/guides/ADD-NEW-DOC-TYPE.md) | Extension guide | Adding new documentation types, prompt templates |
 
@@ -260,7 +260,7 @@ const response = await fetch(`${API_URL}/api/protected-endpoint`, {
 | New Project PRD | WORKFLOW-FIRST-PRD-TEMPLATE.md (meta prompt), WORKFLOW-FIRST-PRD-EXAMPLE-CODESCRIBE.md (example) |
 | Workflow Planning | WORKFLOW-FIRST-PRD-TEMPLATE.md (outcome-based planning, jobs-to-be-done, workflow diagrams) |
 | Analytics/Metrics | WORKFLOW-OUTCOME-METRICS-PLAN.md (session tracking, funnels, conversion metrics) |
-| Campaigns/Trials | CAMPAIGN-MANAGEMENT-GUIDE.md (UI-based setup, monitoring), TRIAL-ELIGIBILITY-ENHANCEMENT.md (eligibility rules, 3-phase plan) |
+| Campaigns/Trials | CAMPAIGN-MANAGEMENT-GUIDE.md (UI-based setup, monitoring), TRIAL-ELIGIBILITY-WF-PRD.md (workflow PRD, eligibility rules, 3-phase plan) |
 | Admin Tools | USER-MANAGEMENT-GUIDE.md (user management, suspension/deletion), CAMPAIGN-MANAGEMENT-GUIDE.md, ADMIN-USAGE-STATS.md |
 | Marketing/Launch | VISUAL-ASSET-CREATION-PLAN.md (screenshots, demo videos, GIFs, platform requirements) |
 
