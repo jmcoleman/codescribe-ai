@@ -306,10 +306,8 @@ describe('ContactSalesModal', () => {
       const submitButton = screen.getByRole('button', { name: /send message/i });
       await user.click(submitButton);
 
-      // Wait for loading state - check for "Sending..." text first to confirm render
-      await waitFor(() => {
-        expect(screen.getByText('Sending...')).toBeInTheDocument();
-      }, { timeout: 3000 });
+      // Wait for loading state - findByText has built-in retry logic
+      await screen.findByText('Sending...', {}, { timeout: 3000 });
 
       // Then verify button is disabled
       expect(submitButton).toBeDisabled();
