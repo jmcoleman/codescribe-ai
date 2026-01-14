@@ -133,7 +133,7 @@ AI-powered documentation generator with real-time streaming, quality scoring (0-
 ### 📈 Features & Extensions
 | Document | Use Case | Key Contents |
 |----------|----------|--------------|
-| [TRIAL-ELIGIBILITY-ENHANCEMENT.md](docs/features/TRIAL-ELIGIBILITY-ENHANCEMENT.md) | Trial eligibility rules ⭐ | 3-phase plan: admin force flag, campaign-level settings, advanced features |
+| [Trial Eligibility PRD](docs/planning/trial-eligibility-enhancement/PRD.md) | Trial eligibility enhancement ⭐ | Workflow-first PRD: 4 workflows, 3-phase rollout, business outcomes, success metrics |
 | [GITHUB-MULTI-FILE-IMPORT.md](docs/features/GITHUB-MULTI-FILE-IMPORT.md) | GitHub import ⭐ | Multi-file import from GitHub repos, tree browsing, file selection |
 | [ADD-NEW-DOC-TYPE.md](docs/guides/ADD-NEW-DOC-TYPE.md) | Extension guide | Adding new documentation types, prompt templates |
 
