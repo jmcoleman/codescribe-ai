@@ -328,10 +328,8 @@ describe('ContactSalesModal', () => {
       const submitButton = screen.getByRole('button', { name: /send message/i });
       await user.click(submitButton);
 
-      // Wait for loading state - check for "Sending..." text first to confirm render
-      await waitFor(() => {
-        expect(screen.getByText('Sending...')).toBeInTheDocument();
-      }, { timeout: 3000 });
+      // Wait for loading state - findByText has built-in retry logic
+      await screen.findByText('Sending...', {}, { timeout: 3000 });
 
       // Then verify submit button and inputs are disabled
       expect(submitButton).toBeDisabled();
@@ -354,10 +352,8 @@ describe('ContactSalesModal', () => {
       const submitButton = screen.getByRole('button', { name: /send message/i });
       await user.click(submitButton);
 
-      // Wait for loading state - first wait for "Sending..." text as confirmation
-      await waitFor(() => {
-        expect(screen.getByText('Sending...')).toBeInTheDocument();
-      }, { timeout: 3000 });
+      // Wait for loading state - findByText has built-in retry logic
+      await screen.findByText('Sending...', {}, { timeout: 3000 });
 
       // Then verify button is disabled
       expect(submitButton).toBeDisabled();
@@ -550,10 +546,8 @@ describe('ContactSalesModal', () => {
       const submitButton = screen.getByRole('button', { name: /send message/i });
       await user.click(submitButton);
 
-      // Wait for loading state - check for "Sending..." text first to confirm render
-      await waitFor(() => {
-        expect(screen.getByText('Sending...')).toBeInTheDocument();
-      }, { timeout: 3000 });
+      // Wait for loading state - findByText has built-in retry logic
+      await screen.findByText('Sending...', {}, { timeout: 3000 });
 
       // Verify button is disabled
       expect(submitButton).toBeDisabled();
