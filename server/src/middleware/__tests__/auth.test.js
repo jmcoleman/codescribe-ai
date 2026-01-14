@@ -36,6 +36,11 @@ describe('Auth Middleware', () => {
     const User = (await import('../../models/User.js')).default;
     User.findById = jest.fn();
 
+    // Reset the Trial mock
+    const Trial = (await import('../../models/Trial.js')).default;
+    Trial.findActiveByUserId = jest.fn().mockResolvedValue(null);
+    Trial.expire = jest.fn().mockResolvedValue(null);
+
     req = {
       headers: {},
       user: null,
@@ -159,6 +164,128 @@ describe('Auth Middleware', () => {
       expect(next).toHaveBeenCalled();
       expect(req.user.id).toBe(789); // JWT takes precedence
       expect(req.user.effectiveTier).toBe('team');
+    });
+
+    it('should reject suspended users', async () => {
+      const User = (await import('../../models/User.js')).default;
+      const mockUser = {
+        id: 123,
+        tier: 'free',
+        email: 'suspended@example.com',
+        suspended: true,
+        suspension_reason: 'Terms of service violation'
+      };
+      User.findById.mockResolvedValue(mockUser);
+
+      const token = jwt.sign({ sub: 123 }, process.env.JWT_SECRET, { expiresIn: '1h' });
+      req.headers.authorization = `Bearer ${token}`;
+
+      await requireAuth(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        error: 'Account suspended',
+        reason: 'Terms of service violation'
+      });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('should reject users scheduled for deletion', async () => {
+      const User = (await import('../../models/User.js')).default;
+      const deletionDate = new Date('2026-02-01');
+      const mockUser = {
+        id: 124,
+        tier: 'free',
+        email: 'scheduled@example.com',
+        deletion_scheduled_at: deletionDate
+      };
+      User.findById.mockResolvedValue(mockUser);
+
+      const token = jwt.sign({ sub: 124 }, process.env.JWT_SECRET, { expiresIn: '1h' });
+      req.headers.authorization = `Bearer ${token}`;
+
+      await requireAuth(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        error: 'Account scheduled for deletion',
+        deletion_date: deletionDate
+      });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('should reject deleted users', async () => {
+      const User = (await import('../../models/User.js')).default;
+      const mockUser = {
+        id: 125,
+        tier: 'free',
+        email: 'deleted@example.com',
+        deleted_at: new Date('2026-01-01')
+      };
+      User.findById.mockResolvedValue(mockUser);
+
+      const token = jwt.sign({ sub: 125 }, process.env.JWT_SECRET, { expiresIn: '1h' });
+      req.headers.authorization = `Bearer ${token}`;
+
+      await requireAuth(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        error: 'Account has been deleted'
+      });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('should handle expired trial detection', async () => {
+      const User = (await import('../../models/User.js')).default;
+      const TrialModule = await import('../../models/Trial.js');
+      const Trial = TrialModule.default;
+
+      const mockUser = { id: 126, tier: 'free', email: 'trial@example.com' };
+      const expiredTrial = {
+        id: 1,
+        user_id: 126,
+        ends_at: new Date('2026-01-01'), // Past date
+        status: 'active'
+      };
+
+      User.findById.mockResolvedValue(mockUser);
+      Trial.findActiveByUserId.mockResolvedValue(expiredTrial);
+      Trial.expire.mockResolvedValue(null);
+
+      const token = jwt.sign({ sub: 126 }, process.env.JWT_SECRET, { expiresIn: '1h' });
+      req.headers.authorization = `Bearer ${token}`;
+
+      await requireAuth(req, res, next);
+
+      expect(Trial.expire).toHaveBeenCalledWith(1);
+      expect(next).toHaveBeenCalled();
+      expect(req.user.activeTrial).toBeNull();
+      expect(req.user.isOnTrial).toBe(false);
+    });
+
+    it('should handle trial lookup errors gracefully', async () => {
+      const User = (await import('../../models/User.js')).default;
+      const TrialModule = await import('../../models/Trial.js');
+      const Trial = TrialModule.default;
+
+      const mockUser = { id: 127, tier: 'free', email: 'test@example.com' };
+
+      User.findById.mockResolvedValue(mockUser);
+      Trial.findActiveByUserId.mockRejectedValue(new Error('Database connection failed'));
+
+      const token = jwt.sign({ sub: 127 }, process.env.JWT_SECRET, { expiresIn: '1h' });
+      req.headers.authorization = `Bearer ${token}`;
+
+      // Should not throw, should continue with no trial
+      await requireAuth(req, res, next);
+
+      expect(next).toHaveBeenCalled();
+      expect(req.user.activeTrial).toBeNull();
+      expect(req.user.isOnTrial).toBe(false);
     });
 
   });
