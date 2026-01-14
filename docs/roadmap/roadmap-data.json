@@ -77,6 +77,24 @@
       "subtitle": "Phase 1: Core Capabilities",
       "phases": [
         {
+          "version": "v3.4.4",
+          "title": "User Management System",
+          "duration": "1 day",
+          "status": "✓ Complete",
+          "completedDate": "Jan 14, 2026",
+          "badge": "Admin Tools",
+          "features": [
+            "Comprehensive user management with search, filtering by tier, role, and account status",
+            "Separate account suspension (immediate lockout) from deletion scheduling (grace period)",
+            "Users can be both suspended and scheduled for deletion simultaneously",
+            "Administrative actions: edit roles, suspend/unsuspend accounts, grant trials, schedule deletion",
+            "Detailed audit logging tracks all administrative actions with justification requirements",
+            "Email notifications for account suspension, restoration, and deletion scheduling",
+            "Fixed-width status badges for consistent layout (Active, Suspended, Deleted, Deletion Scheduled)",
+            "Backend validation prevents admins from demoting their own role"
+          ]
+        },
+        {
           "version": "v3.4.3",
           "title": "Campaign Management Enhancements & Analytics Improvements",
           "duration": "1 day",
@@ -1018,6 +1036,23 @@
       "title": "Active",
       "subtitle": "Phase 3: Platform Infrastructure",
       "phases": [
+        {
+          "version": "v3.5.0",
+          "title": "Trial Eligibility Enhancement",
+          "duration": "8-11 hours",
+          "status": "In Progress",
+          "badge": "Re-engagement Growth",
+          "features": [
+            "View complete trial history for any user showing all past trials with dates, sources, and reasons",
+            "Grant second trials with admin force flag for win-back campaigns and customer support exceptions",
+            "Support agents can investigate trial eligibility before contacting users",
+            "Campaign-level eligibility settings allow re-engagement campaigns while preventing abuse",
+            "Lapsed users can redeem campaign codes for second trials when campaigns allow it",
+            "Flexible trial eligibility rules: strict one-per-lifetime, lenient with cooldowns, or hybrid approaches",
+            "Maintain trial quality and conversion rates while enabling growth initiatives",
+            "Track trial attribution accuracy showing which campaigns drive conversions"
+          ]
+        },
         {
           "version": "Epic 5.6",
           "title": "Project Architecture Document",
