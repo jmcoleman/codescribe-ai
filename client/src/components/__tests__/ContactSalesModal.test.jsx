@@ -407,9 +407,8 @@ describe('ContactSalesModal', () => {
       const submitButton = screen.getByRole('button', { name: /send message/i });
       await user.click(submitButton);
 
-      await waitFor(() => {
-        expect(screen.getByText(/Network error/i)).toBeInTheDocument();
-      }, { timeout: 3000 });
+      // Wait for error message to appear
+      await screen.findByText(/Network error/i, {}, { timeout: 3000 });
     });
   });
 
