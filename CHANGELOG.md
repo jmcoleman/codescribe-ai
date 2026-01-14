@@ -9,6 +9,129 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.4.4] - 2026-01-13
+
+**Status:** ✅ User Management & Account Suspension System
+
+**Summary:** Comprehensive user management system with separate suspension and deletion capabilities, role management, and full audit logging. Admins can now manage user accounts, suspend/unsuspend users, schedule deletion with grace periods, and grant trials.
+
+### Added
+
+- **User Management Page** ([client/src/pages/admin/Users.jsx](client/src/pages/admin/Users.jsx))
+  - Comprehensive user list with search, filtering, and sorting
+  - Real-time search by email or name (400ms debounce)
+  - Filter by tier, role, and status
+  - Pagination (50 users per page)
+  - Statistics dashboard (total, active, admin, trial users)
+  - Action menu for each user with role edit, suspension, deletion scheduling, and trial granting
+
+- **Account Suspension System** ([server/src/db/migrations/052-add-suspension-fields.sql](server/src/db/migrations/052-add-suspension-fields.sql))
+  - New `suspended` boolean field with default `false`
+  - `suspended_at` timestamp for suspension date tracking
+  - `suspension_reason` text field for accountability
+  - Separate from deletion scheduling - allows immediate account lockout with data preservation
+  - Database trigger automatically logs suspension changes to audit trail
+
+- **Suspension API Endpoints** ([server/src/routes/admin.js](server/src/routes/admin.js))
+  - `POST /api/admin/users/:userId/suspend` - Suspend account with reason (min 10 chars)
+  - `POST /api/admin/users/:userId/unsuspend` - Restore account with reason
+  - `POST /api/admin/users/:userId/schedule-deletion` - Schedule deletion with grace period (1-90 days, default 30)
+  - `POST /api/admin/users/:userId/cancel-deletion` - Cancel scheduled deletion
+  - All endpoints require admin/support/super_admin role and log to audit trail
+
+- **Auth Middleware Protection** ([server/src/middleware/auth.js](server/src/middleware/auth.js))
+  - Suspended users blocked at login with 403 error
+  - Returns `{ error: 'Account suspended', suspended: true, reason, contact }` response
+  - Frontend displays suspension notice with reason and support contact
+
+- **Status Badges** ([client/src/pages/admin/Users.jsx](client/src/pages/admin/Users.jsx):924-966)
+  - Active (green, 60px width)
+  - Suspended (amber, 90px width)
+  - Deletion Scheduled (red, 145px width) with countdown date
+  - Deleted (red, 70px width)
+  - Combined display: Users can have both Suspended + Deletion Scheduled badges simultaneously
+
+- **Comprehensive Testing**
+  - Backend: 31 passing tests ([server/src/routes/__tests__/admin-suspension-deletion.test.js](server/src/routes/__tests__/admin-suspension-deletion.test.js))
+    - Suspension/unsuspension flows
+    - Deletion scheduling/cancellation
+    - Audit log creation and queries
+    - Combined status scenarios
+    - Middleware integration
+  - Frontend: 17 passing tests ([client/src/pages/admin/__tests__/Users.simple.test.jsx](client/src/pages/admin/__tests__/Users.simple.test.jsx))
+    - Status badge logic
+    - API query parameters
+    - Form validation
+    - Badge width configuration
+
+- **User Management Documentation** ([docs/admin/USER-MANAGEMENT-GUIDE.md](docs/admin/USER-MANAGEMENT-GUIDE.md))
+  - Complete admin guide with workflows, best practices, and troubleshooting
+  - API endpoint documentation with request/response examples
+  - Database schema reference
+  - Security considerations and audit logging details
+
+- **Database Migration Updates**
+  - Migration 052: Add suspension fields (suspended, suspended_at, suspension_reason)
+  - Migration 053: Rename changed_by_id to changed_by in audit log for cleaner naming
+  - Migration 054: Add indexes for efficient suspension queries
+  - All migrations include rollback scripts
+
+### Changed
+
+- **Audit Log Column Naming** ([server/src/db/migrations/054-rename-audit-changed-by-column.sql](server/src/db/migrations/054-rename-audit-changed-by-column.sql))
+  - Renamed `changed_by_id` → `changed_by` for consistency with audit patterns
+  - Updated all references in User.js, admin.js, and test files
+  - Maintains foreign key relationship with ON DELETE SET NULL
+
+- **Users Table Status Logic**
+  - Status now computed from multiple fields (suspended, deletion_scheduled_at, deleted_at)
+  - SQL CASE statement for sorting: Active(1), Suspended(2), Scheduled(3), Deleted(4)
+  - Users API supports status filtering: active, suspended, scheduled, deleted, all
+
+- **Default Status Filter** ([client/src/pages/admin/Users.jsx](client/src/pages/admin/Users.jsx):1020)
+  - Changed from "active" to "all" for complete user visibility
+  - Admins can now see all user statuses by default
+
+- **Column Sizing** ([client/src/pages/admin/Users.jsx](client/src/pages/admin/Users.jsx):1391-1400)
+  - Status column width increased to 180px to accommodate badge display
+  - Status column now sortable with server-side CASE statement
+  - Badge widths optimized for content: Active(60px), Deleted(70px), Suspended(90px), Deletion Scheduled(145px)
+
+### Fixed
+
+- **Status Badge Display Issues**
+  - Fixed badge pill clipping due to BaseTable overflow-hidden
+  - Added specific width constraints per badge type (w-[60px], w-[70px], w-[90px], w-[145px])
+  - Centered text with `justify-center` for consistent alignment
+  - Added `whitespace-nowrap` to prevent text wrapping
+
+- **Search Input Styling** ([client/src/pages/admin/Users.jsx](client/src/pages/admin/Users.jsx):1733)
+  - Background color now matches Select dropdowns (bg-white dark:bg-slate-800)
+  - Consistent border styling with other filter controls
+
+### Security
+
+- **Admin-Only Access**: All user management endpoints require `requireAdmin` middleware
+- **Self-Protection**: Admins cannot demote their own role to 'user'
+- **Audit Logging**: All changes logged automatically to user_audit_log table via database trigger
+- **Reason Requirements**: All admin actions require justification (minimum 10 characters)
+- **Bearer Token Auth**: Never uses cookies, always Authorization header
+
+### Documentation
+
+- Added [USER-MANAGEMENT-GUIDE.md](docs/admin/USER-MANAGEMENT-GUIDE.md) to CLAUDE.md Admin Tools section
+- Updated question type mapping in CLAUDE.md to include user management reference
+- All admin workflows documented with best practices
+
+### Test Coverage
+
+- **Backend**: 2,034 tests (31 new for suspension/deletion)
+- **Frontend**: 2,151 tests (17 new for user management)
+- **Total**: 4,185 tests (48 new)
+- **Pass Rate**: 100% (all suspension/deletion tests passing)
+
+---
+
 ## [3.4.2] - 2026-01-13
 
 **Status:** ✅ Campaign Export Bug Fix & Documentation

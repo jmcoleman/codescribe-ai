@@ -109,7 +109,7 @@ describe('Admin Tier Override API Endpoints', () => {
       const mockAuditData = {
         user_id: mockRequest.user.id,
         user_email: mockRequest.user.email,
-        changed_by_id: mockRequest.user.id,
+        changed_by: mockRequest.user.id,
         field_name: 'tier_override',
         old_value: mockRequest.user.tier,
         new_value: JSON.stringify({
@@ -122,7 +122,7 @@ describe('Admin Tier Override API Endpoints', () => {
 
       expect(mockAuditData.field_name).toBe('tier_override');
       expect(mockAuditData.user_id).toBe(1);
-      expect(mockAuditData.changed_by_id).toBe(1);
+      expect(mockAuditData.changed_by).toBe(1);
     });
   });
 
@@ -170,7 +170,7 @@ describe('Admin Tier Override API Endpoints', () => {
       const mockAuditData = {
         user_id: mockRequest.user.id,
         user_email: mockRequest.user.email,
-        changed_by_id: mockRequest.user.id,
+        changed_by: mockRequest.user.id,
         field_name: 'tier_override_cleared',
         old_value: JSON.stringify({
           tier: mockRequest.user.viewing_as_tier,
@@ -261,7 +261,7 @@ describe('Admin Tier Override API Endpoints', () => {
           id: 1,
           user_id: 1,
           user_email: 'admin@test.com',
-          changed_by_id: 1,
+          changed_by: 1,
           field_name: 'tier_override',
           old_value: 'free',
           new_value: JSON.stringify({ targetTier: 'pro', reason: 'Testing', expiresAt: new Date().toISOString() }),
@@ -272,7 +272,7 @@ describe('Admin Tier Override API Endpoints', () => {
           id: 2,
           user_id: 1,
           user_email: 'admin@test.com',
-          changed_by_id: 1,
+          changed_by: 1,
           field_name: 'tier_override_cleared',
           old_value: JSON.stringify({ tier: 'pro', expiresAt: new Date().toISOString() }),
           new_value: 'free',
@@ -291,7 +291,7 @@ describe('Admin Tier Override API Endpoints', () => {
         oldValue: entry.old_value,
         newValue: entry.new_value,
         reason: entry.reason,
-        changedBy: entry.changed_by_id
+        changedBy: entry.changed_by
       }));
 
       expect(formattedLog).toHaveLength(2);
@@ -309,7 +309,7 @@ describe('Admin Tier Override API Endpoints', () => {
           old_value: 'free',
           new_value: JSON.stringify({ targetTier: 'pro' }),
           changed_at: new Date(),
-          changed_by_id: 1
+          changed_by: 1
         },
         {
           id: 2,
@@ -317,7 +317,7 @@ describe('Admin Tier Override API Endpoints', () => {
           old_value: JSON.stringify({ tier: 'pro' }),
           new_value: 'free',
           changed_at: new Date(),
-          changed_by_id: 1
+          changed_by: 1
         }
       ];
 

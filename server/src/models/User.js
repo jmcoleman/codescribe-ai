@@ -1018,7 +1018,7 @@ class User {
     let query;
     if (field_name) {
       query = sql`
-        SELECT id, user_id, user_email, changed_by_id, field_name,
+        SELECT id, user_id, user_email, changed_by, field_name,
                old_value, new_value, change_type, reason, changed_at, metadata
         FROM user_audit_log
         WHERE user_id = ${userId}
@@ -1028,7 +1028,7 @@ class User {
       `;
     } else {
       query = sql`
-        SELECT id, user_id, user_email, changed_by_id, field_name,
+        SELECT id, user_id, user_email, changed_by, field_name,
                old_value, new_value, change_type, reason, changed_at, metadata
         FROM user_audit_log
         WHERE user_id = ${userId}

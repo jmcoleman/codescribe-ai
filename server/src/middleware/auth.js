@@ -41,6 +41,32 @@ const requireAuth = async (req, res, next) => {
       });
     }
 
+    // Block access for suspended users
+    if (user.suspended) {
+      return res.status(403).json({
+        success: false,
+        error: 'Account suspended',
+        reason: user.suspension_reason || 'Your account has been suspended. Please contact support for more information.'
+      });
+    }
+
+    // Block access for users scheduled for deletion
+    if (user.deletion_scheduled_at) {
+      return res.status(403).json({
+        success: false,
+        error: 'Account scheduled for deletion',
+        deletion_date: user.deletion_scheduled_at
+      });
+    }
+
+    // Block access for deleted users
+    if (user.deleted_at) {
+      return res.status(403).json({
+        success: false,
+        error: 'Account has been deleted'
+      });
+    }
+
     // Fetch active trial for user (if any)
     let activeTrial = null;
     try {

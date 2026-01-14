@@ -14,7 +14,12 @@ import InviteCode from '../models/InviteCode.js';
 import Trial from '../models/Trial.js';
 import TrialEmailHistory from '../models/TrialEmailHistory.js';
 import trialService from '../services/trialService.js';
-import { sendTrialExtendedEmail } from '../services/emailService.js';
+import {
+  sendTrialExtendedEmail,
+  sendAccountSuspendedEmail,
+  sendAccountUnsuspendedEmail,
+  sendTrialGrantedByAdminEmail
+} from '../services/emailService.js';
 import {
   validateOverrideRequest,
   createOverridePayload,
@@ -425,7 +430,7 @@ router.post('/tier-override', requireAuth, requireAdmin, async (req, res) => {
       INSERT INTO user_audit_log (
         user_id,
         user_email,
-        changed_by_id,
+        changed_by,
         field_name,
         old_value,
         new_value,
@@ -509,7 +514,7 @@ router.post('/tier-override/clear', requireAuth, requireAdmin, async (req, res) 
       INSERT INTO user_audit_log (
         user_id,
         user_email,
-        changed_by_id,
+        changed_by,
         field_name,
         old_value,
         new_value,
@@ -2802,6 +2807,778 @@ router.delete('/campaigns/:id', requireAuth, requireAdmin, async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to delete campaign',
+    });
+  }
+});
+
+// ============================================================================
+// USER MANAGEMENT ROUTES
+// ============================================================================
+
+/**
+ * GET /api/admin/users - List all users with pagination and filtering
+ * Query params:
+ * - page: page number (default 1)
+ * - limit: items per page (default 50)
+ * - sortBy: column to sort by (default created_at)
+ * - sortOrder: asc or desc (default desc)
+ * - search: search by email, first_name, last_name
+ * - tier: filter by tier
+ * - role: filter by role
+ * - status: filter by account status (active, suspended, deleted)
+ */
+router.get('/users', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 50,
+      sortBy = 'created_at',
+      sortOrder = 'desc',
+      search = '',
+      tier = '',
+      role = '',
+      status = '' // no default - show all when not specified
+    } = req.query;
+
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    const offset = (pageNum - 1) * limitNum;
+
+    // Build WHERE conditions
+    const conditions = [];
+    const params = [];
+    let paramIndex = 1;
+
+    // Search filter (email, first_name, last_name)
+    if (search) {
+      conditions.push(`(
+        u.email ILIKE $${paramIndex} OR
+        u.first_name ILIKE $${paramIndex} OR
+        u.last_name ILIKE $${paramIndex}
+      )`);
+      params.push(`%${search}%`);
+      paramIndex++;
+    }
+
+    // Tier filter
+    if (tier && tier !== 'all') {
+      conditions.push(`u.tier = $${paramIndex}`);
+      params.push(tier);
+      paramIndex++;
+    }
+
+    // Role filter
+    if (role && role !== 'all') {
+      conditions.push(`u.role = $${paramIndex}`);
+      params.push(role);
+      paramIndex++;
+    }
+
+    // Status filter
+    if (status === 'active') {
+      conditions.push(`u.suspended = FALSE AND u.deletion_scheduled_at IS NULL AND u.deleted_at IS NULL`);
+    } else if (status === 'suspended') {
+      conditions.push(`u.suspended = TRUE AND u.deleted_at IS NULL`);
+    } else if (status === 'scheduled_for_deletion') {
+      conditions.push(`u.deletion_scheduled_at IS NOT NULL AND u.deleted_at IS NULL`);
+    } else if (status === 'deleted') {
+      conditions.push(`u.deleted_at IS NOT NULL`);
+    }
+    // 'all' status - no condition added
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    // Validate sortBy to prevent SQL injection
+    const allowedSortColumns = ['email', 'first_name', 'last_name', 'role', 'tier', 'created_at', 'total_generations', 'status'];
+    const sortColumn = allowedSortColumns.includes(sortBy) ? sortBy : 'created_at';
+    const sortDir = sortOrder.toLowerCase() === 'asc' ? 'ASC' : 'DESC';
+
+    // Get total count
+    const countQuery = `
+      SELECT COUNT(*) as total
+      FROM users u
+      ${whereClause}
+    `;
+    const countResult = await sql.query(countQuery, params);
+    const total = parseInt(countResult.rows[0].total, 10);
+    const totalPages = Math.ceil(total / limitNum);
+
+    // Build ORDER BY clause (handle status field specially)
+    const orderByClause = sortColumn === 'status'
+      ? `ORDER BY
+          CASE
+            WHEN u.deleted_at IS NOT NULL THEN 4
+            WHEN u.deletion_scheduled_at IS NOT NULL THEN 3
+            WHEN u.suspended = TRUE THEN 2
+            ELSE 1
+          END ${sortDir}`
+      : `ORDER BY u.${sortColumn} ${sortDir}`;
+
+    // Get users with trial information
+    const usersQuery = `
+      SELECT
+        u.id,
+        u.email,
+        u.first_name,
+        u.last_name,
+        u.role,
+        u.tier,
+        u.email_verified,
+        u.email_verified_at,
+        u.suspended,
+        u.suspended_at,
+        u.suspension_reason,
+        u.deletion_scheduled_at,
+        u.deleted_at,
+        u.total_generations,
+        u.created_at,
+        u.updated_at,
+        ut.id as trial_id,
+        ut.trial_tier,
+        ut.status as trial_status,
+        ut.ends_at as trial_ends_at
+      FROM users u
+      LEFT JOIN user_trials ut ON u.id = ut.user_id AND ut.status = 'active'
+      ${whereClause}
+      ${orderByClause}
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+    `;
+
+    const usersResult = await sql.query(usersQuery, [...params, limitNum, offset]);
+
+    res.json({
+      success: true,
+      data: usersResult.rows,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        totalPages
+      }
+    });
+  } catch (error) {
+    console.error('[Admin] Get users error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch users'
+    });
+  }
+});
+
+/**
+ * GET /api/admin/users/stats - Get user statistics for dashboard cards
+ */
+router.get('/users/stats', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const statsQuery = `
+      SELECT
+        COUNT(*) as total_users,
+        COUNT(*) FILTER (WHERE suspended = FALSE AND deletion_scheduled_at IS NULL AND deleted_at IS NULL) as active_users,
+        COUNT(*) FILTER (WHERE role IN ('admin', 'support', 'super_admin')) as admin_users,
+        COUNT(*) FILTER (WHERE suspended = TRUE AND deleted_at IS NULL) as suspended_users
+      FROM users
+    `;
+
+    const trialQuery = `
+      SELECT COUNT(DISTINCT user_id) as trial_users
+      FROM user_trials
+      WHERE status = 'active'
+    `;
+
+    const [statsResult, trialResult] = await Promise.all([
+      sql.query(statsQuery),
+      sql.query(trialQuery)
+    ]);
+
+    const stats = statsResult.rows[0];
+    const trialUsers = parseInt(trialResult.rows[0].trial_users, 10);
+
+    res.json({
+      success: true,
+      data: {
+        total_users: parseInt(stats.total_users, 10),
+        active_users: parseInt(stats.active_users, 10),
+        admin_users: parseInt(stats.admin_users, 10),
+        trial_users: trialUsers,
+        suspended_users: parseInt(stats.suspended_users, 10)
+      }
+    });
+  } catch (error) {
+    console.error('[Admin] Get user stats error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch user statistics'
+    });
+  }
+});
+
+/**
+ * PATCH /api/admin/users/:userId/role - Update user role
+ * Body: { role: 'user' | 'support' | 'admin' | 'super_admin', reason: string }
+ */
+router.patch('/users/:userId/role', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { role, reason } = req.body;
+
+    // Validation
+    if (!role || !ADMIN_ROLES.concat(['user']).includes(role)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid role. Must be one of: user, support, admin, super_admin'
+      });
+    }
+
+    if (!reason || reason.trim().length < 5) {
+      return res.status(400).json({
+        success: false,
+        error: 'Reason is required (minimum 5 characters)'
+      });
+    }
+
+    // Prevent admin from demoting themselves to user
+    if (parseInt(userId, 10) === req.user.id && role === 'user') {
+      return res.status(400).json({
+        success: false,
+        error: 'You cannot change your own role to "user". Ask another admin to do this.'
+      });
+    }
+
+    // Get current user
+    const user = await User.findById(parseInt(userId, 10));
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+
+    const oldRole = user.role;
+
+    // Update role
+    await sql.query(
+      `UPDATE users SET role = $1, updated_at = NOW() WHERE id = $2`,
+      [role, userId]
+    );
+
+    // Log to audit table (will be automatically logged by trigger, but we add reason to metadata)
+    await sql.query(
+      `INSERT INTO user_audit_log (user_id, user_email, field_name, old_value, new_value, change_type, changed_by, reason, metadata)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+      [
+        userId,
+        user.email,
+        'role',
+        oldRole,
+        role,
+        'update',
+        req.user.id,
+        reason.trim(),
+        JSON.stringify({ admin_email: req.user.email })
+      ]
+    );
+
+    console.log(`[Admin] User ${userId} role changed from ${oldRole} to ${role} by admin ${req.user.id}. Reason: ${reason}`);
+
+    // Return updated user
+    const updatedUser = await User.findById(parseInt(userId, 10));
+
+    res.json({
+      success: true,
+      data: updatedUser,
+      message: 'User role updated successfully'
+    });
+  } catch (error) {
+    console.error('[Admin] Update user role error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update user role'
+    });
+  }
+});
+
+/**
+ * POST /api/admin/users/:userId/suspend - Suspend user account
+ * Body: { reason: string, duration_days?: number }
+ */
+router.post('/users/:userId/suspend', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { reason } = req.body;
+
+    // Validation
+    if (!reason || reason.trim().length < 5) {
+      return res.status(400).json({
+        success: false,
+        error: 'Reason is required (minimum 5 characters)'
+      });
+    }
+
+    // Get user
+    const user = await User.findById(parseInt(userId, 10));
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+
+    // Check if already suspended
+    if (user.suspended) {
+      return res.status(400).json({
+        success: false,
+        error: 'User is already suspended'
+      });
+    }
+
+    // Suspend account (lock account, preserve data indefinitely)
+    await sql.query(
+      `UPDATE users
+       SET suspended = TRUE,
+           suspended_at = NOW(),
+           suspension_reason = $1,
+           updated_at = NOW()
+       WHERE id = $2`,
+      [reason.trim(), userId]
+    );
+
+    // Log to audit table
+    await sql.query(
+      `INSERT INTO user_audit_log (user_id, user_email, field_name, old_value, new_value, change_type, changed_by, reason, metadata)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+      [
+        userId,
+        user.email,
+        'suspended',
+        'false',
+        'true',
+        'update',
+        req.user.id,
+        reason.trim(),
+        JSON.stringify({
+          admin_email: req.user.email,
+          action: 'suspend'
+        })
+      ]
+    );
+
+    console.log(`[Admin] User ${userId} suspended by admin ${req.user.id}. Reason: ${reason}`);
+
+    // Send suspension email notification
+    try {
+      await sendAccountSuspendedEmail({
+        to: user.email,
+        userName: user.first_name || user.email.split('@')[0],
+        reason: reason.trim(),
+        suspendedUntil: null // No deletion date for pure suspension
+      });
+    } catch (emailError) {
+      console.error('[Admin] Failed to send suspension email:', emailError);
+      // Don't fail the request if email fails - suspension still succeeded
+    }
+
+    // Return updated user
+    const updatedUser = await User.findById(parseInt(userId, 10));
+
+    res.json({
+      success: true,
+      data: updatedUser,
+      message: 'User account suspended successfully'
+    });
+  } catch (error) {
+    console.error('[Admin] Suspend user error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to suspend user account'
+    });
+  }
+});
+
+/**
+ * POST /api/admin/users/:userId/unsuspend - Unsuspend user account
+ * Body: { reason: string }
+ */
+router.post('/users/:userId/unsuspend', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { reason } = req.body;
+
+    // Validation
+    if (!reason || reason.trim().length < 5) {
+      return res.status(400).json({
+        success: false,
+        error: 'Reason is required (minimum 5 characters)'
+      });
+    }
+
+    // Get user
+    const user = await User.findById(parseInt(userId, 10));
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+
+    // Check if suspended
+    if (!user.suspended) {
+      return res.status(400).json({
+        success: false,
+        error: 'User is not suspended'
+      });
+    }
+
+    // Unsuspend account (restore access)
+    await sql.query(
+      `UPDATE users
+       SET suspended = FALSE,
+           suspended_at = NULL,
+           suspension_reason = NULL,
+           updated_at = NOW()
+       WHERE id = $1`,
+      [userId]
+    );
+
+    // Log to audit table
+    await sql.query(
+      `INSERT INTO user_audit_log (user_id, user_email, field_name, old_value, new_value, change_type, changed_by, reason, metadata)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+      [
+        userId,
+        user.email,
+        'suspended',
+        'true',
+        'false',
+        'update',
+        req.user.id,
+        reason.trim(),
+        JSON.stringify({
+          admin_email: req.user.email,
+          action: 'unsuspend'
+        })
+      ]
+    );
+
+    console.log(`[Admin] User ${userId} unsuspended by admin ${req.user.id}. Reason: ${reason}`);
+
+    // Send unsuspension email notification
+    try {
+      await sendAccountUnsuspendedEmail({
+        to: user.email,
+        userName: user.first_name || user.email.split('@')[0]
+      });
+    } catch (emailError) {
+      console.error('[Admin] Failed to send unsuspension email:', emailError);
+      // Don't fail the request if email fails - unsuspension still succeeded
+    }
+
+    // Return updated user
+    const updatedUser = await User.findById(parseInt(userId, 10));
+
+    res.json({
+      success: true,
+      data: updatedUser,
+      message: 'User account unsuspended successfully'
+    });
+  } catch (error) {
+    console.error('[Admin] Unsuspend user error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to unsuspend user account'
+    });
+  }
+});
+
+/**
+ * POST /api/admin/users/:userId/grant-trial - Grant trial to user
+ * Body: { trial_tier: 'pro' | 'team', duration_days: number, reason: string }
+ */
+router.post('/users/:userId/grant-trial', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { trial_tier, duration_days, reason } = req.body;
+
+    // Validation
+    if (!trial_tier || !['pro', 'team'].includes(trial_tier)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid trial_tier. Must be "pro" or "team"'
+      });
+    }
+
+    if (!duration_days || duration_days < 1 || duration_days > 90) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid duration_days. Must be between 1 and 90'
+      });
+    }
+
+    if (!reason || reason.trim().length < 5) {
+      return res.status(400).json({
+        success: false,
+        error: 'Reason is required (minimum 5 characters)'
+      });
+    }
+
+    // Get user
+    const user = await User.findById(parseInt(userId, 10));
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+
+    // Check if user already has an active trial
+    const existingTrial = await Trial.findActiveByUserId(parseInt(userId, 10));
+    if (existingTrial) {
+      return res.status(400).json({
+        success: false,
+        error: 'User already has an active trial'
+      });
+    }
+
+    // Create trial
+    const startsAt = new Date();
+    const endsAt = new Date();
+    endsAt.setDate(endsAt.getDate() + parseInt(duration_days, 10));
+
+    const trial = await Trial.create({
+      user_id: parseInt(userId, 10),
+      trial_tier,
+      duration_days: parseInt(duration_days, 10),
+      started_at: startsAt,
+      ends_at: endsAt,
+      source: 'admin_grant',
+      status: 'active'
+    });
+
+    // Log action
+    await sql.query(
+      `INSERT INTO user_audit_log (user_id, user_email, field_name, old_value, new_value, change_type, changed_by, reason, metadata)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+      [
+        userId,
+        user.email,
+        'trial',
+        null,
+        trial_tier,
+        'update',
+        req.user.id,
+        reason.trim(),
+        JSON.stringify({
+          admin_email: req.user.email,
+          trial_tier,
+          duration_days: parseInt(duration_days, 10),
+          trial_id: trial.id,
+          action: 'grant_trial'
+        })
+      ]
+    );
+
+    console.log(`[Admin] Trial granted to user ${userId}: ${trial_tier} for ${duration_days} days by admin ${req.user.id}. Reason: ${reason}`);
+
+    // Send trial granted email notification
+    try {
+      await sendTrialGrantedByAdminEmail({
+        to: user.email,
+        userName: user.first_name || user.email.split('@')[0],
+        trialTier: trial_tier,
+        durationDays: parseInt(duration_days, 10),
+        expiresAt: endsAt
+      });
+    } catch (emailError) {
+      console.error('[Admin] Failed to send trial granted email:', emailError);
+      // Don't fail the request if email fails - trial grant still succeeded
+    }
+
+    res.json({
+      success: true,
+      data: trial,
+      message: 'Trial granted successfully'
+    });
+  } catch (error) {
+    console.error('[Admin] Grant trial error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to grant trial'
+    });
+  }
+});
+
+/**
+ * POST /api/admin/users/:userId/schedule-deletion - Schedule user account for deletion
+ * Body: { reason: string, duration_days?: number }
+ */
+router.post('/users/:userId/schedule-deletion', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { reason, duration_days } = req.body;
+
+    // Validation
+    if (!reason || reason.trim().length < 5) {
+      return res.status(400).json({
+        success: false,
+        error: 'Reason is required (minimum 5 characters)'
+      });
+    }
+
+    // Get user
+    const user = await User.findById(parseInt(userId, 10));
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+
+    // Check if already scheduled for deletion
+    if (user.deletion_scheduled_at) {
+      return res.status(400).json({
+        success: false,
+        error: 'User account is already scheduled for deletion'
+      });
+    }
+
+    // Calculate deletion date (duration_days or default 30 days)
+    const days = duration_days ? parseInt(duration_days, 10) : 30;
+    const deletionDate = new Date();
+    deletionDate.setDate(deletionDate.getDate() + days);
+
+    // Schedule deletion
+    await sql.query(
+      `UPDATE users
+       SET deletion_scheduled_at = $1,
+           deletion_reason = $2,
+           updated_at = NOW()
+       WHERE id = $3`,
+      [deletionDate, reason.trim(), userId]
+    );
+
+    // Log to audit table
+    await sql.query(
+      `INSERT INTO user_audit_log (user_id, user_email, field_name, old_value, new_value, change_type, changed_by, reason, metadata)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+      [
+        userId,
+        user.email,
+        'deletion_scheduled_at',
+        null,
+        deletionDate.toISOString(),
+        'update',
+        req.user.id,
+        reason.trim(),
+        JSON.stringify({
+          admin_email: req.user.email,
+          duration_days: days,
+          action: 'schedule_deletion'
+        })
+      ]
+    );
+
+    console.log(`[Admin] User ${userId} scheduled for deletion in ${days} days by admin ${req.user.id}. Reason: ${reason}`);
+
+    // TODO: Send deletion scheduled email notification (if we create a specific template for admin-initiated deletion)
+
+    // Return updated user
+    const updatedUser = await User.findById(parseInt(userId, 10));
+
+    res.json({
+      success: true,
+      data: updatedUser,
+      message: `Account scheduled for deletion in ${days} days`
+    });
+  } catch (error) {
+    console.error('[Admin] Schedule deletion error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to schedule account deletion'
+    });
+  }
+});
+
+/**
+ * POST /api/admin/users/:userId/cancel-deletion - Cancel scheduled deletion
+ * Body: { reason: string }
+ */
+router.post('/users/:userId/cancel-deletion', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { reason } = req.body;
+
+    // Validation
+    if (!reason || reason.trim().length < 5) {
+      return res.status(400).json({
+        success: false,
+        error: 'Reason is required (minimum 5 characters)'
+      });
+    }
+
+    // Get user
+    const user = await User.findById(parseInt(userId, 10));
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+
+    // Check if scheduled for deletion
+    if (!user.deletion_scheduled_at) {
+      return res.status(400).json({
+        success: false,
+        error: 'User account is not scheduled for deletion'
+      });
+    }
+
+    const oldDeletionDate = user.deletion_scheduled_at;
+
+    // Cancel deletion
+    await sql.query(
+      `UPDATE users
+       SET deletion_scheduled_at = NULL,
+           deletion_reason = NULL,
+           restore_token = NULL,
+           updated_at = NOW()
+       WHERE id = $1`,
+      [userId]
+    );
+
+    // Log to audit table
+    await sql.query(
+      `INSERT INTO user_audit_log (user_id, user_email, field_name, old_value, new_value, change_type, changed_by, reason, metadata)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+      [
+        userId,
+        user.email,
+        'deletion_scheduled_at',
+        oldDeletionDate.toISOString(),
+        null,
+        'update',
+        req.user.id,
+        reason.trim(),
+        JSON.stringify({
+          admin_email: req.user.email,
+          action: 'cancel_deletion'
+        })
+      ]
+    );
+
+    console.log(`[Admin] Deletion cancelled for user ${userId} by admin ${req.user.id}. Reason: ${reason}`);
+
+    // Return updated user
+    const updatedUser = await User.findById(parseInt(userId, 10));
+
+    res.json({
+      success: true,
+      data: updatedUser,
+      message: 'Deletion cancelled successfully'
+    });
+  } catch (error) {
+    console.error('[Admin] Cancel deletion error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to cancel deletion'
     });
   }
 });

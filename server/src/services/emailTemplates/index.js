@@ -22,3 +22,8 @@ export {
   trialExpiredNoticeTemplate,
   trialExtendedTemplate
 } from './trialReminders.js';
+export {
+  accountSuspendedTemplate,
+  accountUnsuspendedTemplate,
+  trialGrantedByAdminTemplate
+} from './accountActions.js';

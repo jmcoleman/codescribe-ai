@@ -151,8 +151,17 @@ export function Select({ options, value, onChange, placeholder = 'Select...', la
         </button>
 
         {/* Dropdown Menu with Portal */}
-        {isOpen && (
-          <Portal>
+        <Portal>
+          <Transition
+            as={Fragment}
+            show={isOpen}
+            enter="transition duration-[250ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
+            enterFrom="opacity-0 -translate-y-2"
+            enterTo="opacity-100 translate-y-0"
+            leave="transition duration-[200ms] ease-[cubic-bezier(0.4,0,1,1)]"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
             <ul
               ref={dropdownRef}
               role="listbox"
@@ -178,8 +187,8 @@ export function Select({ options, value, onChange, placeholder = 'Select...', la
                 );
               })}
             </ul>
-          </Portal>
-        )}
+          </Transition>
+        </Portal>
       </div>
     );
   }
@@ -225,7 +234,10 @@ export function Select({ options, value, onChange, placeholder = 'Select...', la
                 <Transition
                   as={Fragment}
                   show={open}
-                  leave="transition ease-in duration-100"
+                  enter="transition duration-[250ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
+                  enterFrom="opacity-0 -translate-y-2"
+                  enterTo="opacity-100 translate-y-0"
+                  leave="transition duration-[200ms] ease-[cubic-bezier(0.4,0,1,1)]"
                   leaveFrom="opacity-100"
                   leaveTo="opacity-0"
                 >

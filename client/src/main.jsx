@@ -26,6 +26,7 @@ import Admin from './pages/Admin.jsx'
 import AdminUsage from './pages/AdminUsage.jsx'
 import InviteCodes from './pages/admin/InviteCodes.jsx'
 import TrialsAdmin from './pages/admin/Trials.jsx'
+import UsersAdmin from './pages/admin/Users.jsx'
 import Analytics from './pages/admin/Analytics.jsx'
 import Campaigns from './pages/admin/Campaigns.jsx'
 import { TrialRedemption } from './pages/TrialRedemption.jsx'
@@ -60,6 +61,7 @@ createRoot(document.getElementById('root')).render(
               <Route path="/admin/usage" element={<AdminUsage />} />
               <Route path="/admin/invite-codes" element={<InviteCodes />} />
               <Route path="/admin/trials" element={<TrialsAdmin />} />
+              <Route path="/admin/users" element={<UsersAdmin />} />
               <Route path="/admin/analytics" element={<Analytics />} />
               <Route path="/admin/campaigns" element={<Campaigns />} />
               <Route path="/trial" element={<TrialRedemption />} />

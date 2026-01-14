@@ -42,6 +42,14 @@ const adminSections = [
     category: 'User Management',
     sections: [
       {
+        id: 'users',
+        title: 'User Management',
+        description: 'Manage users, roles, and accounts',
+        icon: Users,
+        path: '/admin/users',
+        available: true
+      },
+      {
         id: 'trials',
         title: 'Trial Management',
         description: 'View and manage user trials, extend or cancel trials',

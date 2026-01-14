@@ -18,7 +18,10 @@ import {
   finalDeletionWarningTemplate,
   trialExpiringReminderTemplate,
   trialExpiredNoticeTemplate,
-  trialExtendedTemplate
+  trialExtendedTemplate,
+  accountSuspendedTemplate,
+  accountUnsuspendedTemplate,
+  trialGrantedByAdminTemplate
 } from './emailTemplates/index.js';
 
 // Initialize Resend lazily - will be created when needed
@@ -843,6 +846,159 @@ export async function sendTrialExtendedEmail({ to, userName, trialTier = 'pro', 
   }
 }
 
+/**
+ * Send account suspended email
+ * @param {Object} params - Email parameters
+ * @param {string} params.to - Recipient email address
+ * @param {string} params.userName - User's name
+ * @param {string} params.reason - Reason for suspension
+ * @param {Date|string} params.suspendedUntil - Date when account will be deleted
+ * @returns {Promise<Object>} Send result
+ */
+export async function sendAccountSuspendedEmail({ to, userName, reason, suspendedUntil }) {
+  const emailData = {
+    from: FROM_EMAIL,
+    to,
+    subject: 'Account Suspended - CodeScribe AI',
+    html: accountSuspendedTemplate({
+      userName: userName || to.split('@')[0],
+      reason,
+      suspendedUntil,
+      environment: process.env.NODE_ENV,
+      clientUrl: CLIENT_URL
+    })
+  };
+
+  if (shouldMockEmails()) {
+    return await mockEmailSend(emailData);
+  }
+
+  const client = getResendClient();
+  if (!client) {
+    throw new Error('Email service not configured. Please set RESEND_API_KEY environment variable.');
+  }
+
+  try {
+    const result = await client.emails.send(emailData);
+    console.log('\n📧 [EMAIL SENT] Account Suspended');
+    console.log('  To:', emailData.to);
+    console.log('  Suspended Until:', suspendedUntil);
+    console.log('  Email ID:', result.data?.id);
+    return result;
+  } catch (error) {
+    console.error('Failed to send account suspended email:', error);
+    if (error.statusCode === 429 || error.message?.toLowerCase().includes('too many requests')) {
+      const customError = new Error('Email service is temporarily unavailable due to high demand. Please try again in a few minutes.');
+      customError.code = 'RESEND_RATE_LIMIT';
+      customError.statusCode = 503;
+      throw customError;
+    }
+    throw new Error('Failed to send account suspended email');
+  }
+}
+
+/**
+ * Send account unsuspended email
+ * @param {Object} params - Email parameters
+ * @param {string} params.to - Recipient email address
+ * @param {string} params.userName - User's name
+ * @returns {Promise<Object>} Send result
+ */
+export async function sendAccountUnsuspendedEmail({ to, userName }) {
+  const emailData = {
+    from: FROM_EMAIL,
+    to,
+    subject: 'Account Restored - CodeScribe AI',
+    html: accountUnsuspendedTemplate({
+      userName: userName || to.split('@')[0],
+      environment: process.env.NODE_ENV,
+      clientUrl: CLIENT_URL
+    })
+  };
+
+  if (shouldMockEmails()) {
+    return await mockEmailSend(emailData);
+  }
+
+  const client = getResendClient();
+  if (!client) {
+    throw new Error('Email service not configured. Please set RESEND_API_KEY environment variable.');
+  }
+
+  try {
+    const result = await client.emails.send(emailData);
+    console.log('\n📧 [EMAIL SENT] Account Unsuspended');
+    console.log('  To:', emailData.to);
+    console.log('  Email ID:', result.data?.id);
+    return result;
+  } catch (error) {
+    console.error('Failed to send account unsuspended email:', error);
+    if (error.statusCode === 429 || error.message?.toLowerCase().includes('too many requests')) {
+      const customError = new Error('Email service is temporarily unavailable due to high demand. Please try again in a few minutes.');
+      customError.code = 'RESEND_RATE_LIMIT';
+      customError.statusCode = 503;
+      throw customError;
+    }
+    throw new Error('Failed to send account unsuspended email');
+  }
+}
+
+/**
+ * Send trial granted by admin email
+ * @param {Object} params - Email parameters
+ * @param {string} params.to - Recipient email address
+ * @param {string} params.userName - User's name
+ * @param {string} params.trialTier - Trial tier (e.g., 'pro', 'team')
+ * @param {number} params.durationDays - Trial duration in days
+ * @param {Date|string} params.expiresAt - Trial expiration date
+ * @returns {Promise<Object>} Send result
+ */
+export async function sendTrialGrantedByAdminEmail({ to, userName, trialTier = 'pro', durationDays, expiresAt }) {
+  const tierDisplay = trialTier.charAt(0).toUpperCase() + trialTier.slice(1);
+
+  const emailData = {
+    from: FROM_EMAIL,
+    to,
+    subject: `${tierDisplay} Trial Granted - CodeScribe AI`,
+    html: trialGrantedByAdminTemplate({
+      userName: userName || to.split('@')[0],
+      trialTier,
+      durationDays,
+      expiresAt,
+      environment: process.env.NODE_ENV,
+      clientUrl: CLIENT_URL
+    })
+  };
+
+  if (shouldMockEmails()) {
+    return await mockEmailSend(emailData);
+  }
+
+  const client = getResendClient();
+  if (!client) {
+    throw new Error('Email service not configured. Please set RESEND_API_KEY environment variable.');
+  }
+
+  try {
+    const result = await client.emails.send(emailData);
+    console.log('\n📧 [EMAIL SENT] Trial Granted by Admin');
+    console.log('  To:', emailData.to);
+    console.log('  Trial Tier:', trialTier);
+    console.log('  Duration:', durationDays, 'days');
+    console.log('  Email ID:', result.data?.id);
+    return result;
+  } catch (error) {
+    console.error('Failed to send trial granted email:', error);
+    if (error.statusCode === 429 || error.message?.toLowerCase().includes('too many requests')) {
+      const customError = new Error('Email service is temporarily unavailable due to high demand. Please try again in a few minutes.');
+      customError.code = 'RESEND_RATE_LIMIT';
+      customError.statusCode = 503;
+      throw customError;
+    }
+    throw new Error('Failed to send trial granted email');
+  }
+}
+
 export default {
   sendPasswordResetEmail,
   sendVerificationEmail,
@@ -853,5 +1009,8 @@ export default {
   sendFinalDeletionWarningEmail,
   sendTrialExpiringEmail,
   sendTrialExpiredEmail,
-  sendTrialExtendedEmail
+  sendTrialExtendedEmail,
+  sendAccountSuspendedEmail,
+  sendAccountUnsuspendedEmail,
+  sendTrialGrantedByAdminEmail
 };

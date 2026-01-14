@@ -102,7 +102,7 @@ describe('Migration 012: Add User Roles and Audit Logging', () => {
       expect(columns).toContain('id');
       expect(columns).toContain('user_id');
       expect(columns).toContain('user_email');
-      expect(columns).toContain('changed_by_id');
+      expect(columns).toContain('changed_by');
       expect(columns).toContain('field_name');
       expect(columns).toContain('old_value');
       expect(columns).toContain('new_value');
