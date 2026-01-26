@@ -362,6 +362,152 @@ describe('ClaudeClient', () => {
     });
   });
 
+  describe('extractErrorMessage', () => {
+    it('should extract message from nested error structure', () => {
+      const error = new Error('400 {"type":"error","error":{"type":"invalid_request_error","message":"Invalid prompt format"}}');
+      const result = claudeClient.extractErrorMessage(error);
+      const parsed = JSON.parse(result);
+
+      expect(parsed.error).toBe('invalid_request_error');
+      expect(parsed.message).toBe('Invalid prompt format');
+    });
+
+    it('should extract message from flat error structure', () => {
+      const error = new Error('400 {"type":"invalid_request_error","message":"Rate limit exceeded"}');
+      const result = claudeClient.extractErrorMessage(error);
+      const parsed = JSON.parse(result);
+
+      expect(parsed.error).toBe('invalid_request_error');
+      expect(parsed.message).toBe('Rate limit exceeded');
+    });
+
+    it('should handle JSON parse errors gracefully', () => {
+      const error = new Error('400 {invalid json}');
+      const result = claudeClient.extractErrorMessage(error);
+
+      expect(result).toBe('400 {invalid json}');
+    });
+
+    it('should handle structured error object', () => {
+      const error = {
+        error: {
+          type: 'authentication_error',
+          message: 'Invalid API key'
+        }
+      };
+      const result = claudeClient.extractErrorMessage(error);
+      const parsed = JSON.parse(result);
+
+      expect(parsed.error).toBe('authentication_error');
+      expect(parsed.message).toBe('Invalid API key');
+    });
+
+    it('should return default message for errors without message or error object', () => {
+      const error = {};
+      const result = claudeClient.extractErrorMessage(error);
+
+      expect(result).toBe('An error occurred while generating documentation');
+    });
+
+    it('should return error message as-is if not JSON', () => {
+      const error = new Error('Simple error message');
+      const result = claudeClient.extractErrorMessage(error);
+
+      expect(result).toBe('Simple error message');
+    });
+  });
+
+  describe('Prompt Caching Options', () => {
+    const mockResponse = {
+      content: [{ text: 'Generated docs' }],
+    };
+
+    it('should include system prompt with caching in generate()', async () => {
+      mockAnthropicInstance.messages.create.mockResolvedValue(mockResponse);
+
+      await claudeClient.generate('User prompt', {
+        systemPrompt: 'You are a documentation expert'
+      });
+
+      const callArgs = mockAnthropicInstance.messages.create.mock.calls[0][0];
+      expect(callArgs.system).toEqual([{
+        type: 'text',
+        text: 'You are a documentation expert',
+        cache_control: { type: 'ephemeral', ttl: '1h' }
+      }]);
+    });
+
+    it('should include system prompt with caching in generateWithStreaming()', async () => {
+      const mockStream = (async function* () {
+        yield {
+          type: 'content_block_delta',
+          delta: { type: 'text_delta', text: 'test' },
+        };
+      })();
+      mockAnthropicInstance.messages.create.mockResolvedValue(mockStream);
+
+      await claudeClient.generateWithStreaming('User prompt', () => {}, {
+        systemPrompt: 'You are a documentation expert'
+      });
+
+      const callArgs = mockAnthropicInstance.messages.create.mock.calls[0][0];
+      expect(callArgs.system).toEqual([{
+        type: 'text',
+        text: 'You are a documentation expert',
+        cache_control: { type: 'ephemeral', ttl: '1h' }
+      }]);
+    });
+
+    it('should cache user message when cacheUserMessage is true in generate()', async () => {
+      mockAnthropicInstance.messages.create.mockResolvedValue(mockResponse);
+
+      await claudeClient.generate('Default code example', {
+        cacheUserMessage: true
+      });
+
+      const callArgs = mockAnthropicInstance.messages.create.mock.calls[0][0];
+      expect(callArgs.messages[0].content).toEqual([{
+        type: 'text',
+        text: 'Default code example',
+        cache_control: { type: 'ephemeral', ttl: '1h' }
+      }]);
+    });
+
+    it('should cache user message when cacheUserMessage is true in generateWithStreaming()', async () => {
+      const mockStream = (async function* () {
+        yield {
+          type: 'content_block_delta',
+          delta: { type: 'text_delta', text: 'test' },
+        };
+      })();
+      mockAnthropicInstance.messages.create.mockResolvedValue(mockStream);
+
+      await claudeClient.generateWithStreaming('Default code example', () => {}, {
+        cacheUserMessage: true
+      });
+
+      const callArgs = mockAnthropicInstance.messages.create.mock.calls[0][0];
+      expect(callArgs.messages[0].content).toEqual([{
+        type: 'text',
+        text: 'Default code example',
+        cache_control: { type: 'ephemeral', ttl: '1h' }
+      }]);
+    });
+
+    it('should use both systemPrompt and cacheUserMessage together', async () => {
+      mockAnthropicInstance.messages.create.mockResolvedValue(mockResponse);
+
+      await claudeClient.generate('Default code', {
+        systemPrompt: 'You are an expert',
+        cacheUserMessage: true
+      });
+
+      const callArgs = mockAnthropicInstance.messages.create.mock.calls[0][0];
+      expect(callArgs.system).toBeDefined();
+      expect(callArgs.messages[0].content[0].cache_control).toBeDefined();
+    });
+  });
+
   describe('Integration Scenarios', () => {
     it('should handle very long prompts', async () => {
       const longPrompt = 'a'.repeat(10000);
