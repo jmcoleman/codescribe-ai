@@ -15352,6 +15352,35 @@
           transform: rotate(360deg);
         }
       }
+    </style><style>
+      @keyframes slideIn {
+        from {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+      @keyframes slideOut {
+        from {
+          transform: translateX(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+      }
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
     </style></head>
 <body data-new-gr-c-s-check-loaded="14.1259.0" data-gr-ext-installed="">
   <div class="page">
@@ -15427,7 +15456,7 @@ Press D to toggle dark mode"></div>
             <div class="column-title">Planned Features</div>
             <div class="column-timeline">Phase 4: Developer Adoption Engine</div>
           </div>
-          <div class="column-body"><div class="phase-card"><div class="phase-header"><div class="phase-title">Project Architecture Document</div><div class="phase-version">Epic 5.6</div></div><ul class="feature-list"><li>Generate project-level ARCHITECTURE doc from graph metadata (not per-file)</li><li>Single LLM call with graph nodes/edges as input (low token usage)</li><li>Output: project structure, module organization, dependency flow, entry points</li><li>Embedded Mermaid architecture diagram</li><li>Listed as first entry in batch summary with link</li><li>Clickable from ProjectGraphInfo sidebar section</li><li>Stored on project_graphs table (architecture_doc column)</li><li>Quality scoring with ARCHITECTURE criteria</li><li>Regenerate button on Project Details page</li><li>Spec: docs/planning/PROJECT-ARCHITECTURE-DOC-SPEC.md</li></ul><div class="metric-badge">Leverages Graph Engine</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Diff Analyzer &amp; Webhook APIs</div><div class="phase-version">Epic 5.5</div></div><ul class="feature-list"><li>diffAnalyzer.js service for semantic diff parsing</li><li>Detect function changes, breaking changes, env var changes</li><li>API: POST /api/diff/analyze → suggested doc updates with priority</li><li>GitHub webhook endpoint: /api/github/webhook</li><li>GitLab webhook endpoint: /api/gitlab/webhook</li><li>PR opened → Analyze changes → Return suggested updates</li><li>Push to main → Queue doc regeneration (if configured)</li><li>Webhook signature verification for security</li><li>Shared by: Web app, VS Code extension, CI/CD integrations</li></ul><div class="metric-badge">Git Integration</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Enhanced Subscription UI</div><div class="phase-version">Epic 2.8</div></div><ul class="feature-list"><li>Enhanced subscription management UI components</li><li>SubscriptionCard component with tier details and usage stats</li><li>PlanChangeModal with visual comparison of tier features</li><li>CancellationModal with retention flow (feedback form, downgrade offer)</li><li>Subscription history view (past invoices, payment methods)</li><li>Email notifications for subscription lifecycle events</li><li>In-app notifications for billing issues and renewals</li><li>Note: Core upgrade/downgrade flows completed in Epic 2.4</li></ul><div class="metric-badge">Optional UX</div></div></div>
+          <div class="column-body"><div class="phase-card"><div class="phase-header"><div class="phase-title">HIPAA Compliance Edition</div><div class="phase-version">v3.6.0</div></div><ul class="feature-list"><li>Real-time PHI detection warns when code may contain protected health information before generating documentation</li><li>Sanitization guidance helps developers safely remove PHI from code samples</li><li>Comprehensive audit logging tracks all activity for HIPAA compliance with 7-year retention</li><li>Compliance dashboard provides administrators with instant visibility into usage patterns and PHI exposure risk</li><li>One-click audit report export for demonstrating compliance to auditors in minutes instead of weeks</li><li>Data encryption at rest with AES-256-GCM protects sensitive information</li><li>One-click encryption key rotation maintains security without downtime</li><li>Business Associate Agreement (BAA) support enables enterprise healthcare contracts</li><li>24-hour BAA turnaround time accelerates sales cycles for healthcare customers</li><li>Positions CodeScribe AI for enterprise healthcare market ($180K Year 1 ARR target)</li><li>Provides battle-tested foundation for Healthcare MCP Platform extraction</li></ul><div class="metric-badge">Healthcare Enterprise</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Project Architecture Document</div><div class="phase-version">Epic 5.6</div></div><ul class="feature-list"><li>Generate project-level ARCHITECTURE doc from graph metadata (not per-file)</li><li>Single LLM call with graph nodes/edges as input (low token usage)</li><li>Output: project structure, module organization, dependency flow, entry points</li><li>Embedded Mermaid architecture diagram</li><li>Listed as first entry in batch summary with link</li><li>Clickable from ProjectGraphInfo sidebar section</li><li>Stored on project_graphs table (architecture_doc column)</li><li>Quality scoring with ARCHITECTURE criteria</li><li>Regenerate button on Project Details page</li><li>Spec: docs/planning/PROJECT-ARCHITECTURE-DOC-SPEC.md</li></ul><div class="metric-badge">Leverages Graph Engine</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Diff Analyzer &amp; Webhook APIs</div><div class="phase-version">Epic 5.5</div></div><ul class="feature-list"><li>diffAnalyzer.js service for semantic diff parsing</li><li>Detect function changes, breaking changes, env var changes</li><li>API: POST /api/diff/analyze → suggested doc updates with priority</li><li>GitHub webhook endpoint: /api/github/webhook</li><li>GitLab webhook endpoint: /api/gitlab/webhook</li><li>PR opened → Analyze changes → Return suggested updates</li><li>Push to main → Queue doc regeneration (if configured)</li><li>Webhook signature verification for security</li><li>Shared by: Web app, VS Code extension, CI/CD integrations</li></ul><div class="metric-badge">Git Integration</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Enhanced Subscription UI</div><div class="phase-version">Epic 2.8</div></div><ul class="feature-list"><li>Enhanced subscription management UI components</li><li>SubscriptionCard component with tier details and usage stats</li><li>PlanChangeModal with visual comparison of tier features</li><li>CancellationModal with retention flow (feedback form, downgrade offer)</li><li>Subscription history view (past invoices, payment methods)</li><li>Email notifications for subscription lifecycle events</li><li>In-app notifications for billing issues and renewals</li><li>Note: Core upgrade/downgrade flows completed in Epic 2.4</li></ul><div class="metric-badge">Optional UX</div></div></div>
         </div>
 
         <!-- LATER Column -->
@@ -16558,6 +16587,26 @@ Press D to toggle dark mode"></div>
       "title": "Planned Features",
       "subtitle": "Phase 4: Developer Adoption Engine",
       "phases": [
+        {
+          "version": "v3.6.0",
+          "title": "HIPAA Compliance Edition",
+          "duration": "6 weeks",
+          "status": "Planned",
+          "badge": "Healthcare Enterprise",
+          "features": [
+            "Real-time PHI detection warns when code may contain protected health information before generating documentation",
+            "Sanitization guidance helps developers safely remove PHI from code samples",
+            "Comprehensive audit logging tracks all activity for HIPAA compliance with 7-year retention",
+            "Compliance dashboard provides administrators with instant visibility into usage patterns and PHI exposure risk",
+            "One-click audit report export for demonstrating compliance to auditors in minutes instead of weeks",
+            "Data encryption at rest with AES-256-GCM protects sensitive information",
+            "One-click encryption key rotation maintains security without downtime",
+            "Business Associate Agreement (BAA) support enables enterprise healthcare contracts",
+            "24-hour BAA turnaround time accelerates sales cycles for healthcare customers",
+            "Positions CodeScribe AI for enterprise healthcare market ($180K Year 1 ARR target)",
+            "Provides battle-tested foundation for Healthcare MCP Platform extraction"
+          ]
+        },
         {
           "version": "Epic 5.6",
           "title": "Project Architecture Document",
@@ -20048,6 +20097,44 @@ Press D to toggle dark mode"></div>
 	// ]]>
 </script>
 <!-- Code injected by live-server -->
+<script>
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					var parent = elem.parentElement || head;
+					parent.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					parent.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
+</script>
+<iframe id="jtrack-root" src="chrome-extension://aelljdlolpakdoeongoklpkheedfjkio/app.html" style="display: none;"></iframe><!-- Code injected by live-server -->
 <script>
 	// <![CDATA[  <-- For SVG support
 	if ('WebSocket' in window) {

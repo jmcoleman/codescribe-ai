@@ -1100,6 +1100,26 @@
       "subtitle": "Phase 4: Developer Adoption Engine",
       "phases": [
         {
+          "version": "v3.6.0",
+          "title": "HIPAA Compliance Edition",
+          "duration": "6 weeks",
+          "status": "Planned",
+          "badge": "Healthcare Enterprise",
+          "features": [
+            "Real-time PHI detection warns when code may contain protected health information before generating documentation",
+            "Sanitization guidance helps developers safely remove PHI from code samples",
+            "Comprehensive audit logging tracks all activity for HIPAA compliance with 7-year retention",
+            "Compliance dashboard provides administrators with instant visibility into usage patterns and PHI exposure risk",
+            "One-click audit report export for demonstrating compliance to auditors in minutes instead of weeks",
+            "Data encryption at rest with AES-256-GCM protects sensitive information",
+            "One-click encryption key rotation maintains security without downtime",
+            "Business Associate Agreement (BAA) support enables enterprise healthcare contracts",
+            "24-hour BAA turnaround time accelerates sales cycles for healthcare customers",
+            "Positions CodeScribe AI for enterprise healthcare market ($180K Year 1 ARR target)",
+            "Provides battle-tested foundation for Healthcare MCP Platform extraction"
+          ]
+        },
+        {
           "version": "Epic 5.6",
           "title": "Project Architecture Document",
           "duration": "3-4 days",
