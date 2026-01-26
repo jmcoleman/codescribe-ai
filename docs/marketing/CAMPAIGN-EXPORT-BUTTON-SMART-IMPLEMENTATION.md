@@ -1,4 +1,4 @@
-# Campaign Export Button - Smart Implementation
+# Trial Program Export Button - Smart Implementation
 
 ## 🎯 Problem
 The export button needs to know:
@@ -8,7 +8,7 @@ The export button needs to know:
 
 ---
 
-## ✅ Smart Solution: Auto-Detect Active Campaign
+## ✅ Smart Solution: Auto-Detect Active Trial Program
 
 ### Approach
 1. **Fetch active campaign** from database on page load
@@ -20,7 +20,7 @@ The export button needs to know:
 
 ## 🚀 Implementation
 
-### Step 1: Add Campaign Info to Admin Analytics API
+### Step 1: Add Trial Program Info to Admin Analytics API
 
 **File:** `server/src/routes/admin-analytics.js`
 
@@ -32,7 +32,7 @@ The export button needs to know:
  */
 router.get('/active-campaign', requireAuth, requireAdmin, async (req, res) => {
   try {
-    const campaign = await pool.query(`
+    const trialProgram = await pool.query(`
       SELECT
         id,
         name,
@@ -44,7 +44,7 @@ router.get('/active-campaign', requireAuth, requireAdmin, async (req, res) => {
         is_active,
         signups_count,
         conversions_count
-      FROM campaigns
+      FROM trial_programs
       WHERE is_active = true
         AND starts_at <= NOW()
         AND (ends_at IS NULL OR ends_at >= NOW())
@@ -52,11 +52,11 @@ router.get('/active-campaign', requireAuth, requireAdmin, async (req, res) => {
       LIMIT 1
     `);
 
-    if (campaign.rows.length === 0) {
+    if (trialProgram.rows.length === 0) {
       return res.json({ activeCampaign: null });
     }
 
-    res.json({ activeCampaign: campaign.rows[0] });
+    res.json({ activeCampaign: trialProgram.rows[0] });
 
   } catch (error) {
     console.error('[Admin Analytics] Error fetching active campaign:', error);
@@ -71,7 +71,7 @@ router.get('/active-campaign', requireAuth, requireAdmin, async (req, res) => {
  */
 router.get('/campaigns', requireAuth, requireAdmin, async (req, res) => {
   try {
-    const campaigns = await pool.query(`
+    const trialPrograms = await pool.query(`
       SELECT
         id,
         name,
@@ -91,11 +91,11 @@ router.get('/campaigns', requireAuth, requireAdmin, async (req, res) => {
             THEN 'ended'
           ELSE 'inactive'
         END as status
-      FROM campaigns
+      FROM trial_programs
       ORDER BY starts_at DESC
     `);
 
-    res.json({ campaigns: campaigns.rows });
+    res.json({ campaigns: trialPrograms.rows });
 
   } catch (error) {
     console.error('[Admin Analytics] Error fetching campaigns:', error);
@@ -106,7 +106,7 @@ router.get('/campaigns', requireAuth, requireAdmin, async (req, res) => {
 
 ---
 
-### Step 2: Smart Campaign Export Component
+### Step 2: Smart Trial Program Export Component
 
 **File:** `client/src/pages/admin/Analytics.jsx`
 
@@ -122,7 +122,7 @@ function CampaignExportSection() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [isExporting, setIsExporting] = useState(false);
-  const [showCampaignPicker, setShowCampaignPicker] = useState(false);
+  const [showTrialProgramPicker, setShowCampaignPicker] = useState(false);
 
   // Fetch active campaign on mount
   useEffect(() => {
@@ -144,12 +144,12 @@ function CampaignExportSection() {
 
       if (data.activeCampaign) {
         setActiveCampaign(data.activeCampaign);
-        setSelectedCampaignId(data.activeCampaign.id);
+        setSelectedCampaignId(data.activeTrialProgram.id);
 
         // Auto-populate dates from campaign
-        setStartDate(formatDate(data.activeCampaign.starts_at));
-        setEndDate(data.activeCampaign.ends_at
-          ? formatDate(data.activeCampaign.ends_at)
+        setStartDate(formatDate(data.activeTrialProgram.starts_at));
+        setEndDate(data.activeTrialProgram.ends_at
+          ? formatDate(data.activeTrialProgram.ends_at)
           : formatDate(new Date())
         );
       }
@@ -175,12 +175,12 @@ function CampaignExportSection() {
     }
   };
 
-  const handleCampaignSelect = (campaign) => {
-    setSelectedCampaignId(campaign.id);
-    setActiveCampaign(campaign);
-    setStartDate(formatDate(campaign.starts_at));
-    setEndDate(campaign.ends_at
-      ? formatDate(campaign.ends_at)
+  const handleCampaignSelect = (trialProgram) => {
+    setSelectedCampaignId(trialProgram.id);
+    setActiveCampaign(trialProgram);
+    setStartDate(formatDate(trialProgram.starts_at));
+    setEndDate(trialProgram.ends_at
+      ? formatDate(trialProgram.ends_at)
       : formatDate(new Date())
     );
     setShowCampaignPicker(false);
@@ -232,7 +232,7 @@ function CampaignExportSection() {
       const summary = formatSummaryForClipboard(exportData);
       navigator.clipboard.writeText(summary);
 
-      toast.success('Campaign metrics exported! Summary copied to clipboard.');
+      toast.success('Trial Program metrics exported! Summary copied to clipboard.');
 
     } catch (error) {
       console.error('Export error:', error);
@@ -258,9 +258,9 @@ function CampaignExportSection() {
 
   const formatSummaryForClipboard = (data) => {
     return `
-📊 CAMPAIGN EXPORT: ${data.campaign.name}
-Date Range: ${data.campaign.startDate} to ${data.campaign.endDate}
-${data.campaign.trial_tier ? `Trial: ${data.campaign.trial_tier} (${data.campaign.trial_days} days)` : ''}
+📊 CAMPAIGN EXPORT: ${data.trialProgram.name}
+Date Range: ${data.trialProgram.startDate} to ${data.trialProgram.endDate}
+${data.trialProgram.trial_tier ? `Trial: ${data.trialProgram.trial_tier} (${data.trialProgram.trial_days} days)` : ''}
 
 SUMMARY METRICS (paste into spreadsheet):
 Total Signups: ${data.summary.total_signups}
@@ -281,33 +281,33 @@ Full JSON exported to downloads folder.
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6">
-      <h2 className="text-lg font-semibold mb-4">Campaign Metrics Export</h2>
+      <h2 className="text-lg font-semibold mb-4">Trial Program Metrics Export</h2>
 
-      {/* Campaign Info Display */}
+      {/* Trial Program Info Display */}
       {activeCampaign ? (
         <div className="mb-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <h3 className="font-semibold text-purple-900">{activeCampaign.name}</h3>
+                <h3 className="font-semibold text-purple-900">{activeTrialProgram.name}</h3>
                 <span className="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-800 rounded">
                   Active
                 </span>
               </div>
-              {activeCampaign.description && (
-                <p className="text-sm text-gray-600 mb-2">{activeCampaign.description}</p>
+              {activeTrialProgram.description && (
+                <p className="text-sm text-gray-600 mb-2">{activeTrialProgram.description}</p>
               )}
               <div className="flex items-center gap-4 text-sm text-gray-700">
-                <span>Trial: {activeCampaign.trial_tier} ({activeCampaign.trial_days} days)</span>
-                <span>Signups: {activeCampaign.signups_count || 0}</span>
-                <span>Conversions: {activeCampaign.conversions_count || 0}</span>
+                <span>Trial: {activeTrialProgram.trial_tier} ({activeTrialProgram.trial_days} days)</span>
+                <span>Signups: {activeTrialProgram.signups_count || 0}</span>
+                <span>Conversions: {activeTrialProgram.conversions_count || 0}</span>
               </div>
             </div>
             <button
-              onClick={() => setShowCampaignPicker(!showCampaignPicker)}
+              onClick={() => setShowCampaignPicker(!showTrialProgramPicker)}
               className="text-sm text-purple-600 hover:text-purple-800 flex items-center gap-1"
             >
-              Change Campaign
+              Change Trial Program
               <ChevronDown className="w-4 h-4" />
             </button>
           </div>
@@ -315,43 +315,43 @@ Full JSON exported to downloads folder.
       ) : (
         <div className="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
           <p className="text-sm text-gray-600 mb-2">
-            No active campaign. Exporting custom date range.
+            No active trialProgram. Exporting custom date range.
           </p>
           <button
-            onClick={() => setShowCampaignPicker(!showCampaignPicker)}
+            onClick={() => setShowCampaignPicker(!showTrialProgramPicker)}
             className="text-sm text-purple-600 hover:text-purple-800 flex items-center gap-1"
           >
-            Select Campaign
+            Select Trial Program
             <ChevronDown className="w-4 h-4" />
           </button>
         </div>
       )}
 
-      {/* Campaign Picker Dropdown */}
-      {showCampaignPicker && (
+      {/* Trial Program Picker Dropdown */}
+      {showTrialProgramPicker && (
         <div className="mb-4 border border-gray-200 rounded-lg max-h-64 overflow-y-auto">
-          {allCampaigns.map((campaign) => (
+          {allCampaigns.map((trialProgram) => (
             <button
-              key={campaign.id}
-              onClick={() => handleCampaignSelect(campaign)}
+              key={trialProgram.id}
+              onClick={() => handleCampaignSelect(trialProgram)}
               className={`w-full text-left p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 ${
-                selectedCampaignId === campaign.id ? 'bg-purple-50' : ''
+                selectedCampaignId === trialProgram.id ? 'bg-purple-50' : ''
               }`}
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="font-medium">{campaign.name}</div>
+                  <div className="font-medium">{trialProgram.name}</div>
                   <div className="text-sm text-gray-600">
-                    {formatDate(campaign.starts_at)} to {campaign.ends_at ? formatDate(campaign.ends_at) : 'ongoing'}
+                    {formatDate(trialProgram.starts_at)} to {trialProgram.ends_at ? formatDate(trialProgram.ends_at) : 'ongoing'}
                   </div>
                 </div>
                 <span className={`px-2 py-0.5 text-xs font-medium rounded ${
-                  campaign.status === 'active' ? 'bg-green-100 text-green-800' :
-                  campaign.status === 'scheduled' ? 'bg-blue-100 text-blue-800' :
-                  campaign.status === 'ended' ? 'bg-gray-100 text-gray-800' :
+                  trialProgram.status === 'active' ? 'bg-green-100 text-green-800' :
+                  trialProgram.status === 'scheduled' ? 'bg-blue-100 text-blue-800' :
+                  trialProgram.status === 'ended' ? 'bg-gray-100 text-gray-800' :
                   'bg-gray-100 text-gray-600'
                 }`}>
-                  {campaign.status}
+                  {trialProgram.status}
                 </span>
               </div>
             </button>
@@ -394,12 +394,12 @@ Full JSON exported to downloads folder.
         {isExporting ? (
           <>
             <Loader2 className="w-5 h-5 animate-spin" />
-            Exporting Campaign Metrics...
+            Exporting Trial Program Metrics...
           </>
         ) : (
           <>
             <Download className="w-5 h-5" />
-            Export Campaign Metrics
+            Export Trial Program Metrics
           </>
         )}
       </button>
@@ -418,7 +418,7 @@ export default function Analytics() {
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-6">Analytics Dashboard</h1>
 
-      {/* ✨ NEW: Campaign Export Section */}
+      {/* ✨ NEW: Trial Program Export Section */}
       <div className="mb-8">
         <CampaignExportSection />
       </div>
@@ -442,44 +442,44 @@ export default function Analytics() {
 
 ### User Experience:
 
-**Scenario 1: Active Campaign Running**
+**Scenario 1: Active Trial Program Running**
 ```
 ┌─────────────────────────────────────────────────────┐
-│ Campaign Metrics Export                             │
+│ Trial Program Metrics Export                             │
 ├─────────────────────────────────────────────────────┤
 │ ┌─────────────────────────────────────────────────┐ │
 │ │ January 2026 Pro Trial          [Active]        │ │
 │ │ New Year promotion - gather feedback            │ │
 │ │ Trial: pro (14 days) | Signups: 87 | Conv: 9   │ │
-│ │                          [Change Campaign ▼]    │ │
+│ │                          [Change Trial Program ▼]    │ │
 │ └─────────────────────────────────────────────────┘ │
 │                                                     │
 │ Start Date: [2026-01-01]  End Date: [2026-01-31]  │
 │                                                     │
-│ [📊 Export Campaign Metrics]                       │
+│ [📊 Export Trial Program Metrics]                       │
 └─────────────────────────────────────────────────────┘
 ```
 
-**Scenario 2: No Active Campaign**
+**Scenario 2: No Active Trial Program**
 ```
 ┌─────────────────────────────────────────────────────┐
-│ Campaign Metrics Export                             │
+│ Trial Program Metrics Export                             │
 ├─────────────────────────────────────────────────────┤
 │ ┌─────────────────────────────────────────────────┐ │
-│ │ No active campaign. Exporting custom date range.│ │
-│ │ [Select Campaign ▼]                             │ │
+│ │ No active trialProgram. Exporting custom date range.│ │
+│ │ [Select Trial Program ▼]                             │ │
 │ └─────────────────────────────────────────────────┘ │
 │                                                     │
 │ Start Date: [________]  End Date: [________]       │
 │                                                     │
-│ [📊 Export Campaign Metrics]                       │
+│ [📊 Export Trial Program Metrics]                       │
 └─────────────────────────────────────────────────────┘
 ```
 
-**Scenario 3: Campaign Picker Open**
+**Scenario 3: Trial Program Picker Open**
 ```
 ┌─────────────────────────────────────────────────────┐
-│ Select Campaign:                                    │
+│ Select Trial Program:                                    │
 ├─────────────────────────────────────────────────────┤
 │ ┌─────────────────────────────────────────────────┐ │
 │ │ January 2026 Pro Trial          [Active]   ✓   │ │
@@ -488,7 +488,7 @@ export default function Analytics() {
 │ │ December 2025 Launch           [Ended]          │ │
 │ │ 2025-12-01 to 2025-12-31                        │ │
 │ ├─────────────────────────────────────────────────┤ │
-│ │ Q2 2026 Growth Campaign        [Scheduled]      │ │
+│ │ Q2 2026 Growth Trial Program        [Scheduled]      │ │
 │ │ 2026-04-01 to 2026-04-30                        │ │
 │ └─────────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────┘
@@ -508,7 +508,7 @@ export default function Analytics() {
    - Can manually adjust date range
    - Works even with no active campaign
 
-3. **Campaign Context**
+3. **Trial Program Context**
    - Shows which campaign you're exporting
    - Displays current signup/conversion counts
    - Color-coded status badges (Active/Scheduled/Ended)
@@ -516,7 +516,7 @@ export default function Analytics() {
 4. **Smart Filtering**
    - If campaign selected: filters by `user_trials.source = 'auto_campaign'`
    - If no campaign: exports all data in date range
-   - Campaign info included in exported JSON
+   - Trial Program info included in exported JSON
 
 5. **User Feedback**
    - Disabled state when dates missing
@@ -571,7 +571,7 @@ export default function Analytics() {
 
 **User just needs to:**
 1. Open `/admin/analytics`
-2. Click "Export Campaign Metrics"
+2. Click "Export Trial Program Metrics"
 3. Paste results into spreadsheet
 
 **No manual date entry needed if there's an active campaign!**

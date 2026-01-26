@@ -20,6 +20,7 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 jest.mock('../../models/InviteCode.js');
 jest.mock('../../models/Trial.js');
 jest.mock('../../models/User.js');
+jest.mock('../../models/TrialProgram.js');
 jest.mock('@vercel/postgres', () => ({
   sql: jest.fn().mockResolvedValue({ rows: [] })
 }));
@@ -27,6 +28,7 @@ jest.mock('@vercel/postgres', () => ({
 import { trialService } from '../trialService.js';
 import InviteCode from '../../models/InviteCode.js';
 import Trial from '../../models/Trial.js';
+import TrialProgram from '../../models/TrialProgram.js';
 import { sql } from '@vercel/postgres';
 
 describe('TrialService', () => {
@@ -119,6 +121,15 @@ describe('TrialService', () => {
         inviteCodeId: 1
       });
 
+      // Mock invite code lookup
+      InviteCode.findByCode.mockResolvedValue({
+        id: 1,
+        code: 'TEST-CODE',
+        trial_tier: 'pro',
+        duration_days: 14,
+        campaign: null // No campaign linkage
+      });
+
       // Mock code redemption
       InviteCode.redeem.mockResolvedValue({
         id: 1,
@@ -154,6 +165,17 @@ describe('TrialService', () => {
     });
 
     it('should throw error if user not eligible', async () => {
+      InviteCode.validate.mockResolvedValue({
+        valid: true
+      });
+
+      InviteCode.findByCode.mockResolvedValue({
+        id: 1,
+        code: 'CODE',
+        trial_tier: 'pro',
+        campaign: null
+      });
+
       Trial.checkEligibility.mockResolvedValue({
         eligible: false,
         reason: 'You have already used a trial'

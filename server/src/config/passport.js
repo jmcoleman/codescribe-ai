@@ -9,8 +9,8 @@ import { Strategy as GitHubStrategy } from 'passport-github2';
 import { sql } from '@vercel/postgres';
 import User from '../models/User.js';
 import Trial from '../models/Trial.js';
-import Campaign from '../models/Campaign.js';
-import { getActiveCampaign } from './campaign.js';
+import TrialProgram from '../models/TrialProgram.js';
+import { getActiveCampaign } from './trialProgram.js';
 
 /**
  * Local Strategy (Email/Password)
@@ -83,8 +83,8 @@ if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
           // If this is a newly created user, check for active campaign and grant trial
           if (user._created) {
             try {
-              const campaign = await getActiveCampaign();
-              if (campaign) {
+              const trialProgram = await getActiveCampaign();
+              if (trialProgram) {
                 // Check eligibility
                 const eligibility = await Trial.checkEligibility(user.id);
                 if (eligibility.eligible) {
@@ -92,22 +92,22 @@ if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
                   const trial = await Trial.create({
                     userId: user.id,
                     inviteCodeId: null,
-                    trialTier: campaign.trial_tier,
-                    durationDays: campaign.trial_days,
+                    trialTier: trialProgram.trial_tier,
+                    durationDays: trialProgram.trial_days,
                     source: 'auto_campaign',
                   });
 
                   // Link to campaign
                   await sql`
                     UPDATE user_trials
-                    SET campaign_id = ${campaign.id}
+                    SET trial_program_id = ${trialProgram.id}
                     WHERE id = ${trial.id}
                   `;
 
                   // Increment signup count
-                  await Campaign.incrementSignups(campaign.id);
+                  await TrialProgram.incrementSignups(trialProgram.id);
 
-                  console.log(`[Passport] Auto-granted ${campaign.trial_tier} trial to new GitHub user ${user.id} via campaign "${campaign.name}"`);
+                  console.log(`[Passport] Auto-granted ${trialProgram.trial_tier} trial to new GitHub user ${user.id} via campaign "${trialProgram.name}"`);
                 }
               }
             } catch (campaignError) {

@@ -6,6 +6,7 @@
 import InviteCode from '../models/InviteCode.js';
 import Trial from '../models/Trial.js';
 import User from '../models/User.js';
+import TrialProgram from '../models/TrialProgram.js';
 import { sql } from '@vercel/postgres';
 
 /**
@@ -54,31 +55,66 @@ export const trialService = {
    * @returns {Promise<Object>} Created trial with details
    */
   async redeemInviteCode(code, userId) {
-    // 1. Check user eligibility
-    const eligibility = await Trial.checkEligibility(userId);
-    if (!eligibility.eligible) {
-      throw new Error(eligibility.reason);
-    }
-
-    // 2. Validate invite code
+    // 1. Validate invite code first
     const validation = await InviteCode.validate(code);
     if (!validation.valid) {
       throw new Error(validation.reason);
     }
 
-    // 3. Redeem the invite code (increment usage)
+    // 2. Get the invite code to check for campaign linkage
+    const inviteCode = await InviteCode.findByCode(code);
+    if (!inviteCode) {
+      throw new Error('Invalid invite code');
+    }
+
+    // 3. Check eligibility with campaign-specific rules if applicable
+    let eligibility;
+    let campaignSettings = null;
+
+    // If invite code is linked to a campaign (via campaign string field), load campaign settings
+    if (inviteCode.campaign) {
+      // Try to find campaign by name
+      const trialPrograms = await TrialProgram.list({ limit: 1, offset: 0 });
+      const trialProgram = trialPrograms.trialPrograms.find(c => c.name === inviteCode.campaign);
+
+      // Only use campaign-specific eligibility settings if this is an invite-only trial program
+      // Auto-enroll programs always use strict eligibility (no previous trials allowed)
+      if (trialProgram && !trialProgram.auto_enroll && trialProgram.allow_previous_trial_users !== undefined) {
+        campaignSettings = {
+          allowPreviousTrialUsers: trialProgram.allow_previous_trial_users,
+          cooldownDays: trialProgram.cooldown_days || 0
+        };
+        eligibility = await Trial.checkEligibilityForProgram(userId, campaignSettings);
+      }
+    }
+
+    // Fall back to strict eligibility check if no campaign settings
+    // (includes auto-enroll programs and standalone invite codes)
+    if (!eligibility) {
+      eligibility = await Trial.checkEligibility(userId);
+    }
+
+    // Throw error with eligibility details if not eligible
+    if (!eligibility.eligible) {
+      const error = new Error(eligibility.reason);
+      error.code = eligibility.code;
+      error.details = eligibility;
+      throw error;
+    }
+
+    // 4. Redeem the invite code (increment usage)
     const redeemedCode = await InviteCode.redeem(code);
 
-    // 4. Create the trial
+    // 5. Create the trial
     const trial = await Trial.create({
       userId,
       inviteCodeId: redeemedCode.id,
       trialTier: redeemedCode.trial_tier,
       durationDays: redeemedCode.duration_days,
-      source: 'invite'
+      source: inviteCode.campaign ? 'campaign' : 'invite'
     });
 
-    // 5. Update user's trial_used_at timestamp
+    // 6. Update user's trial_used_at timestamp
     await sql`
       UPDATE users
       SET trial_used_at = NOW(),
@@ -91,7 +127,8 @@ export const trialService = {
       trialTier: trial.trial_tier,
       durationDays: trial.duration_days,
       startedAt: trial.started_at,
-      endsAt: trial.ends_at
+      endsAt: trial.ends_at,
+      eligibilityCode: eligibility.code
     };
   },
 

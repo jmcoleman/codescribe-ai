@@ -1,819 +1,470 @@
 # User Management Guide
 
-**Admin Tool**: Comprehensive user management for CodeScribe AI
-**Access**: Admin, Support, and Super Admin roles only
-**Location**: `/admin/users`
-**Version**: 3.4.3
+**Audience:** Admins and Support Team
+**Purpose:** How to manage users, grant trials, handle special cases
+**Last Updated:** January 14, 2026
 
 ---
 
-## Overview
+## Table of Contents
 
-The User Management page provides administrators with complete control over user accounts, including role management, account suspension, and deletion scheduling. All administrative actions are logged in the audit trail for accountability.
-
-### Key Features
-
-- **User List Management**: View, search, and filter all platform users
-- **Role Management**: Assign and modify user roles (user, support, admin, super_admin)
-- **Account Suspension**: Temporarily suspend accounts with reason tracking
-- **Deletion Scheduling**: Schedule account deletion with configurable grace periods
-- **Trial Management**: Grant trial access to users
-- **Audit Logging**: All actions automatically logged with timestamps and reasons
+1. [Grant Trial Workflow](#grant-trial-workflow)
+2. [Force Grant Feature](#force-grant-feature)
+3. [Trial History](#trial-history)
+4. [When to Use Force Grants](#when-to-use-force-grants)
+5. [Audit & Analytics](#audit--analytics)
+6. [Best Practices](#best-practices)
+7. [Troubleshooting](#troubleshooting)
 
 ---
 
-## User Statuses
+## Grant Trial Workflow
 
-The system tracks four distinct user statuses:
+### Standard Grant (Eligible Users)
 
-### 1. Active
-- Normal account state
-- User has full access to their tier features
-- No restrictions or scheduled actions
-
-### 2. Suspended
-- Account is temporarily blocked
-- User cannot log in or access any features
-- Auth middleware blocks suspended users at login
-- Can be reversed with unsuspension
-- Requires reason for accountability
-
-### 3. Deletion Scheduled
-- Account is scheduled for permanent deletion
-- User still has access until deletion date
-- Grace period: 1-90 days (default: 30 days)
-- Can be cancelled before deletion date
-- System displays countdown in user status
-
-### 4. Deleted
-- Account permanently deleted (tombstone record)
-- User data anonymized or removed per privacy policy
-- Cannot be reversed
-- Audit log preserved for compliance
-
-### Combined States
-Users can have both **Suspended** and **Deletion Scheduled** status simultaneously:
-- Account is immediately blocked (suspended)
-- AND scheduled for deletion after grace period
-- Allows immediate action while preserving data temporarily
-
----
-
-## User List Features
-
-### Search and Filtering
-
-**Search by Email or Name:**
-- Real-time search with 400ms debounce
-- Searches email, first_name, and last_name fields
-- Case-insensitive partial matching
-
-**Filter by Tier:**
-- All Tiers (default)
-- Free
-- Starter
-- Pro
-- Team
-- Enterprise
-
-**Filter by Role:**
-- All Roles (default)
-- User
-- Support
-- Admin
-- Super Admin
-
-**Filter by Status:**
-- All Statuses (default)
-- Active
-- Suspended
-- Deletion Scheduled
-- Deleted
-
-### Sorting
-
-Click column headers to sort by:
-- Email
-- Name (first_name)
-- Role
-- Tier
-- Status (Active → Suspended → Deletion Scheduled → Deleted)
-- Generations (total_generations)
-- Created date
-
-### Pagination
-
-- 50 users per page
-- Navigate with Previous/Next buttons
-- Displays total count and page number
-
----
-
-## Administrative Actions
-
-### Edit User Role
-
-**Access**: Admin, Support, Super Admin
-**Restrictions**: Admins cannot demote themselves to 'user'
+**When to Use:** User has never had a trial before and qualifies for the trialProgram.
 
 **Steps:**
-1. Click "Edit Role" in user actions menu
-2. Select new role from dropdown
-3. Enter reason (minimum 10 characters)
-4. Click "Update Role"
 
-**Roles:**
-- **User**: Standard user access
-- **Support**: Can view admin tools, manage user issues
-- **Admin**: Full administrative access
-- **Super Admin**: Highest access level (future use)
+1. Navigate to **Admin > Users**
+2. Find the user (search by email or name)
+3. Click **Grant Trial** button
+4. Fill in the modal:
+   - **Trial Tier:** Pro or Team
+   - **Duration:** 1-90 days (default: 14)
+   - **Reason:** Minimum 5 characters (e.g., "Customer request via support ticket #1234")
+5. Click **Grant Trial**
 
-**Audit Log:**
-- Field: `role`
-- Old value: Previous role
-- New value: New role
-- Changed by: Admin user ID
-- Reason: Required justification
+**Result:**
+- User receives trial immediately
+- Email notification sent
+- Analytics event: `trial.admin_grant_succeeded`
+- Audit log entry created
+- Source: `admin_grant`
 
-### Suspend Account
+**Example Reasons (Regular Grant):**
+- "Customer request via support ticket #1234"
+- "Sales demo for enterprise prospect"
+- "Apology for service outage"
+- "Partner referral program"
 
-**Access**: Admin, Support, Super Admin
-**Purpose**: Temporarily block account access
+---
+
+## Force Grant Feature
+
+### Overview
+
+The **force grant** feature allows admins to override eligibility checks and grant trials to users who have already used a trial. This is designed for exceptional cases only.
+
+### When Force Option Appears
+
+The force checkbox appears automatically when:
+- User has used a trial before, OR
+- User has an active trial, OR
+- User is blocked by campaign eligibility rules (cooldown, max trials)
+
+When you attempt a regular grant and the user is ineligible, the modal will:
+1. Show an **eligibility warning banner** with the specific reason
+2. Display the user's **trial history** (last 3 trials)
+3. Reveal the **Force grant trial** checkbox
+
+### Force Grant Requirements
+
+**Minimum Reason Length:** 20 characters (vs. 5 for regular grants)
+
+**Why?** Force grants bypass business rules and should only be used for exceptional cases. A detailed justification helps with:
+- Audit compliance
+- Pattern detection (are we forcing grants too often?)
+- Support ticket tracking
+- Business decision review
+
+**Example Reasons (Force Grant):**
+- "Urgent enterprise deal - CEO approved exception for key prospect (Acme Corp) - Ticket #5678"
+- "User experienced severe platform bug that consumed entire trial period - Compensation approved by Product Manager"
+- "VIP customer (lifetime value $50k+) requested second trial for new team members - Sales Director authorized"
+- "Partner program exception: User signed up before realizing partner discount available - Marketing approved"
+
+**Bad Reasons (Too Short/Vague):**
+- ❌ "Customer request" (11 chars, no context)
+- ❌ "Special case" (12 chars, vague)
+- ❌ "Sales approved" (14 chars, no details)
+
+### Force Grant Workflow
 
 **Steps:**
-1. Click "Suspend Account" in user actions menu
-2. Enter suspension reason (minimum 10 characters)
-3. Click "Suspend Account"
 
-**Effects:**
-- User immediately blocked from login
-- Sets `suspended = true`, `suspended_at = NOW()`, `suspension_reason`
-- Auth middleware returns 403 error on login attempts
+1. Attempt a regular grant (as above)
+2. If ineligible, modal shows:
+   - ⚠️ **Warning banner** with eligibility reason
+   - **Trial history** (last 3 trials with dates and sources)
+   - **Force checkbox** (unchecked by default)
+3. Review the trial history:
+   - How many trials has this user had?
+   - When did they end?
+   - Were any of them forced grants? (marked with ⚠️)
+4. Check the checkbox: **"Force grant trial (override eligibility check)"**
+5. Enter a **detailed reason** (minimum 20 characters)
+   - Include: ticket number, approver, business context
+6. Button text changes to **"Force Grant Trial"** (visual confirmation)
+7. Click **Force Grant Trial**
+
+**Result:**
+- Trial granted despite ineligibility
+- Source set to: `admin_grant_forced` (vs. `admin_grant`)
+- Analytics event includes:
+  - `forced: true`
+  - `override_reason: <eligibility reason that was bypassed>`
+  - `previous_trial_count: <number>`
+  - `has_previous_trial: true`
+- Audit log metadata includes:
+  - `forced: true`
+  - `override_reason: <reason>`
+  - `previous_trial_count: <number>`
 - Email notification sent to user
-- Status badge changes to "Suspended" (amber)
-
-**Audit Log:**
-- Field: `suspended`
-- Old value: `false`
-- New value: `true`
-- Reason: Suspension justification
-
-### Unsuspend Account
-
-**Access**: Admin, Support, Super Admin
-**Purpose**: Restore access to suspended account
-
-**Steps:**
-1. Click "Unsuspend Account" in user actions menu
-2. Enter unsuspension reason (minimum 10 characters)
-3. Click "Unsuspend Account"
-
-**Effects:**
-- User can log in immediately
-- Clears `suspended = false`, `suspended_at = null`, `suspension_reason = null`
-- Email notification sent to user
-- Status badge returns to "Active" (green)
-
-**Note**: Unsuspension does NOT affect deletion schedule. If account is also scheduled for deletion, that must be cancelled separately.
-
-**Audit Log:**
-- Field: `suspended`
-- Old value: `true`
-- New value: `false`
-- Reason: Unsuspension justification
-
-### Schedule Deletion
-
-**Access**: Admin, Support, Super Admin
-**Purpose**: Schedule account for permanent deletion with grace period
-
-**Steps:**
-1. Click "Schedule Deletion" in user actions menu
-2. Enter deletion reason (minimum 10 characters)
-3. Set grace period in days (1-90, default: 30)
-4. Click "Schedule Deletion"
-
-**Effects:**
-- Sets `deletion_scheduled_at` to future date
-- User retains access until deletion date
-- Status badge shows "Deletion Scheduled" (red) with date
-- Email notification sent to user
-- System cron job deletes account when date reached
-
-**Grace Period Guidelines:**
-- **7 days**: Standard account closure
-- **30 days**: Default for most cases
-- **60-90 days**: High-value accounts, compliance requirements
-
-**Audit Log:**
-- Field: `deletion_scheduled_at`
-- Old value: `null`
-- New value: Scheduled deletion date
-- Reason: Deletion justification
-
-### Cancel Deletion
-
-**Access**: Admin, Support, Super Admin
-**Purpose**: Cancel scheduled deletion before it occurs
-
-**Steps:**
-1. Click "Cancel Deletion" in user actions menu
-2. Enter cancellation reason (minimum 10 characters)
-3. Click "Cancel Deletion"
-
-**Effects:**
-- Clears `deletion_scheduled_at = null`
-- Account no longer scheduled for deletion
-- Status badge updates (removes "Deletion Scheduled")
-- Email notification sent to user
-
-**Note**: Cancel deletion does NOT unsuspend the account. If account is suspended, that must be handled separately.
-
-**Audit Log:**
-- Field: `deletion_scheduled_at`
-- Old value: Previous scheduled date
-- New value: `null`
-- Reason: Cancellation justification
-
-### Grant Trial
-
-**Access**: Admin, Support, Super Admin
-**Purpose**: Manually grant trial tier access to users
-
-**Steps:**
-1. Click "Grant Trial" in user actions menu
-2. Select trial tier (Pro or Team)
-3. Set duration in days (1-90)
-4. Enter reason (minimum 10 characters)
-5. Click "Grant Trial"
-
-**Effects:**
-- Creates entry in `user_trials` table with source='admin_grant'
-- User gains trial tier access immediately
-- Trial expires after duration
-- Email notification sent to user
-- Trial status shows in Users table
-
-**Validation:**
-- User cannot have multiple active trials
-- Duration must be 1-90 days
-
-**Audit Log:**
-- Trial creation logged separately in trial management system
-- Admin action tracked in admin activity log
+- Trial history shows ⚠️ indicator next to forced grants
 
 ---
 
-## Statistics Dashboard
+## Trial History
 
-The page displays four key metrics:
+### Viewing Trial History
 
-### Total Users
-- Count of all users in system
-- Includes active, suspended, and deleted accounts
-- Icon: Users (multiple people)
+**Access:** Automatically loaded when you open the Grant Trial modal for any user.
 
-### Active Users
-- Users with no suspension or deletion scheduled
-- Actively using the platform
-- Icon: CheckCircle (green checkmark)
+**What You See:**
+- Last 3 trials (most recent first)
+- For each trial:
+  - **Tier** (Pro/Team)
+  - **Source** (invite, campaign, admin_grant, admin_grant_forced)
+  - **Date range** (started_at to ends_at)
+  - **Forced indicator** (⚠️ if source includes "forced")
 
-### Admin Users
-- Count of users with admin/support/super_admin roles
-- Administrative staff monitoring
-- Icon: Shield (protection symbol)
+**Example Display:**
+```
+Trial History (Last 3):
+• Team (admin_grant_forced) - Dec 1, 2025 to Dec 31, 2025 ⚠️ Forced
+• Pro (trialProgram) - Jun 15, 2025 to Jun 29, 2025
+• Pro (invite) - Jan 10, 2025 to Jan 24, 2025
+```
 
-### Trial Users
-- Users currently on trial tier access
-- Includes admin-granted and campaign-based trials
-- Icon: Sparkles (premium feature indicator)
+**Full History API Endpoint:**
 
-**Refresh:** Click "Refresh" button to update stats and user list
+If you need to see all trials (not just last 3):
+
+```bash
+GET /api/admin/users/:userId/trial-history
+Authorization: Bearer <admin-token>
+```
+
+Response:
+```json
+{
+  "success": true,
+  "trials": [
+    {
+      "id": 1,
+      "trial_tier": "pro",
+      "source": "invite",
+      "status": "expired",
+      "started_at": "2025-01-10T00:00:00.000Z",
+      "ends_at": "2025-01-24T00:00:00.000Z",
+      "duration_days": 14,
+      "converted_at": null,
+      "converted_to_tier": null,
+      "created_at": "2025-01-10T00:00:00.000Z"
+    }
+  ]
+}
+```
+
+**Analytics Tracking:**
+
+When you view trial history, we track:
+- Event: `admin_action`
+- Metadata:
+  - `action: "view_trial_history"`
+  - `target_user_id: <user-id>`
+  - `trial_count: <number>`
+  - `is_internal: true`
 
 ---
 
-## Audit Trail
+## When to Use Force Grants
 
-All administrative actions are automatically logged to the `user_audit_log` table:
+### Decision Matrix
 
-### Logged Fields
-- `user_id`: Affected user
-- `user_email`: Denormalized email (preserved if user deleted)
-- `changed_by`: Admin who made the change
-- `field_name`: Which field changed (role, suspended, deletion_scheduled_at)
-- `old_value`: Previous value
-- `new_value`: New value
-- `reason`: Required justification
-- `changed_at`: Timestamp
-- `metadata`: Additional context (IP, user agent, etc.)
+| Scenario | Use Force? | Reason |
+|----------|------------|--------|
+| User never had a trial | ❌ No | Use regular grant (no force needed) |
+| User had trial 6 months ago, expired | ❌ No | User is likely eligible for re-engagement campaigns |
+| User had trial last week, wants another | ⚠️ Maybe | Only if urgent business reason (sales deal, VIP, bug compensation) |
+| User has active trial, wants different tier | ❌ No | User should cancel current trial first, or wait for it to expire |
+| User hit campaign trial limit (3 trials) | ⚠️ Maybe | Only if exceptional case (VIP, partner program, major bug) |
+| Sales team needs trial for enterprise demo | ✅ Yes (if user ineligible) | Business-critical, sales approved |
+| User experienced platform bug during trial | ✅ Yes | Compensation for poor experience, Product/Support approved |
+| VIP customer (high lifetime value) | ✅ Yes | Retention, executive approved |
+| Partner program exception | ✅ Yes | Marketing/Partnerships approved |
 
-### Viewing Audit Logs
+### Red Flags (When NOT to Force)
 
-**Per User:**
-1. Navigate to user's profile (future feature)
-2. View "Audit History" tab
-3. See chronological list of all changes
+❌ **Don't force grant if:**
+- User is abusing trials (multiple trials with no payment intent)
+- Reason is vague or lacks approval
+- You don't have business justification
+- User is attempting fraud (e.g., multiple accounts)
+- Request is from unverified source
 
-**System-Wide:**
-1. Admin Analytics page (future feature)
-2. Filter by field_name, changed_by, date range
-3. Export audit reports
+⚠️ **Warning Signs:**
+- User has 3+ forced grants in history
+- User has never paid despite 5+ trials
+- User requesting trials for "testing purposes" repeatedly
+- Same user requesting trials for "different team members" without verification
 
-### Audit Log Retention
-- Logs are permanent and cannot be deleted
-- ON DELETE RESTRICT: Cannot hard-delete users with audit history
-- Soft delete recommended (sets `deleted_at` timestamp)
+**Escalate to Leadership if:**
+- User has 2+ forced grants already
+- Request lacks clear business justification
+- You suspect fraud or abuse
+- Request involves financial compensation or legal concerns
+
+---
+
+## Audit & Analytics
+
+### What Gets Logged
+
+**Every trial grant (regular or forced) creates:**
+
+1. **Trial Record** (trials table)
+   - `user_id`, `trial_tier`, `duration_days`
+   - `source`: "admin_grant" or "admin_grant_forced"
+   - `started_at`, `ends_at`, `status`
+
+2. **Audit Log Entry** (user_audit_log table)
+   - `user_id`, `user_email`
+   - `field_name: "trial"`
+   - `old_value: null`, `new_value: <tier>`
+   - `change_type: "update"`
+   - `changed_by: <admin-user-id>`
+   - `reason: <your justification>`
+   - `metadata: { admin_email, trial_tier, duration_days, trial_id, action: "grant_trial", forced: true/false, override_reason: <eligibility reason if forced>, previous_trial_count: <number> }`
+
+3. **Analytics Event** (analytics_events table via analyticsService)
+   - `event_name: "trial"`
+   - `user_id: <target-user-id>`
+   - `metadata: { action: "admin_grant_succeeded", forced: true/false, source: "admin_grant" or "admin_grant_forced", tier, duration_days, override_reason: <if forced>, previous_trial_count: <if forced>, has_previous_trial: true/false, is_internal: true }`
+
+### Monitoring Force Grants
+
+**Query Example (PostgreSQL):**
+
+```sql
+-- Count force grants by admin in last 30 days
+SELECT
+  changed_by,
+  u.email as admin_email,
+  COUNT(*) as force_grant_count
+FROM user_audit_log ual
+LEFT JOIN users u ON u.id = ual.changed_by
+WHERE
+  ual.field_name = 'trial'
+  AND ual.metadata::jsonb->>'forced' = 'true'
+  AND ual.created_at >= NOW() - INTERVAL '30 days'
+GROUP BY changed_by, u.email
+ORDER BY force_grant_count DESC;
+```
+
+**Analytics Dashboard (Future):**
+
+We track force grants in analytics, which will power dashboards showing:
+- Force grant rate (% of total grants)
+- Top admins by force grants
+- Common override reasons
+- User abuse patterns (users with multiple forced grants)
+- Force grant trends over time
 
 ---
 
 ## Best Practices
 
-### Suspension Guidelines
+### 1. Always Check Trial History First
 
-**When to Suspend:**
-- Terms of Service violations
-- Suspicious activity (spam, abuse)
-- Account security compromise
-- Payment disputes requiring investigation
-- Temporary hold during compliance review
+Before granting any trial, review the user's history:
+- How many trials have they had?
+- When did they end?
+- Did they convert to paid?
+- Were any forced grants?
 
-**Reason Requirements:**
-- Be specific and factual
-- Include violation type or evidence
-- Reference support ticket if applicable
-- Avoid vague reasons like "bad user" or "spam"
+**Why?** Helps you identify:
+- Repeat trial users who never pay
+- Abuse patterns
+- Whether user qualifies for campaign vs. force grant
 
-**Good Example:**
-```
-Terms of Service violation - User sent 500+ spam emails to other users
-on 2025-01-13. Support ticket #1234. Email logs attached to ticket.
-```
+### 2. Document Your Reason Thoroughly
 
-**Bad Example:**
-```
-spam
-```
+**Include:**
+- Ticket number (if applicable)
+- Approver name and role (if applicable)
+- Business context (sales deal, bug compensation, VIP, etc.)
+- User account details (company name, deal size, etc.)
 
-### Deletion Scheduling Guidelines
+**Example:**
+"Enterprise deal with Acme Corp ($100k ARR) - Sales VP approved extended trial for technical evaluation - Ticket #5678"
 
-**When to Schedule Deletion:**
-- User requested account closure
-- Abandoned account cleanup (>2 years inactive)
-- GDPR/CCPA deletion requests (30-day minimum)
-- Persistent Terms violations after warnings
-- Fraudulent account detected
+### 3. Escalate Unusual Requests
 
-**Grace Period Selection:**
-- **7 days**: User-requested, no compliance concerns
-- **30 days**: Standard deletion, allows time for reconsideration
-- **60 days**: Business accounts, data backup requirements
-- **90 days**: Legal/compliance holds, investigation period
+**Escalate to Support Lead or Product Manager if:**
+- User has 2+ forced grants already
+- Request involves financial compensation
+- User is flagged for fraud or abuse
+- Request lacks clear business justification
+- You're uncertain whether to approve
 
-**Reason Requirements:**
-- Document deletion trigger (user request, policy, legal)
-- Include ticket/case number if applicable
-- Note any data retention requirements
-- Reference compliance framework if applicable
+### 4. Use Regular Campaigns When Possible
 
-**Good Example:**
-```
-User submitted account closure request via support ticket #5678 on 2025-01-13.
-No active subscriptions. 30-day grace period per standard policy.
-GDPR Article 17 (right to erasure) compliance.
-```
+**Instead of forcing grants, consider:**
+- Creating a re-engagement campaign with 90-day cooldown
+- Creating a partner program campaign with higher trial limits
+- Creating a VIP campaign for high-value customers
 
-### Role Management Guidelines
+**Why?** Campaigns are tracked separately and designed for specific user segments. Force grants should be truly exceptional.
 
-**Role Assignment:**
-- **User**: Default role, standard platform access
-- **Support**: Customer service team, can view (not edit) admin tools
-- **Admin**: Engineering/operations team, full access
-- **Super Admin**: Reserved for founders/executives, rarely used
+### 5. Review Force Grant Patterns Quarterly
 
-**Self-Demotion Protection:**
-- System prevents admins from demoting themselves to 'user'
-- Prevents accidental lockout
-- Requires another admin to change role if needed
+**Questions to Ask:**
+- Are we forcing grants too often?
+- Are certain admins forcing more than others?
+- Are users with forced grants converting to paid?
+- Do we need to adjust campaign eligibility rules?
 
-**Reason Requirements:**
-- Include reason for promotion/demotion
-- Reference HR approval if applicable
-- Note team/department assignment
-
-### Trial Granting Guidelines
-
-**When to Grant Trials:**
-- Customer support escalations (user experiencing tier limits)
-- Sales demos and proof-of-concept testing
-- Partnership/integration testing
-- Influencer/reviewer access
-- Bug reproduction requiring higher tier
-
-**Duration Selection:**
-- **7 days**: Quick testing, support troubleshooting
-- **14 days**: Sales demos, POC validation
-- **30 days**: Partnership testing, integration development
-- **60-90 days**: Long-term partnerships, strategic accounts
-
-**Reason Requirements:**
-- Include purpose and requestor
-- Reference support ticket or sales opportunity
-- Note expected trial outcome
-
----
-
-## Security Considerations
-
-### Admin-Only Access
-- All user management endpoints require `requireAdmin` middleware
-- Roles allowed: admin, support, super_admin
-- User role: 403 Forbidden
-
-### Self-Protection
-- Admins cannot demote their own role to 'user'
-- Prevents accidental lockout
-- System enforces this server-side (not just UI)
-
-### Audit Logging
-- All changes logged automatically via database trigger
-- Cannot be bypassed or disabled
-- Immutable audit trail for compliance
-
-### Reason Requirements
-- All destructive actions require justification
-- Minimum 10 characters enforced
-- Promotes accountability and documentation
-
-### Rate Limiting
-- Standard API rate limits apply
-- Prevents bulk suspension/deletion abuse
-- Monitor for unusual activity patterns
-
-### Authorization Checks
-- Bearer token authentication (not cookies)
-- Token must be valid and unexpired
-- User must have admin/support/super_admin role
-
----
-
-## Common Workflows
-
-### Workflow 1: Handle Terms of Service Violation
-
-1. **Investigate**: Review user activity, support tickets, logs
-2. **Document**: Gather evidence, create internal case
-3. **Suspend**: Click "Suspend Account" → Enter detailed reason
-4. **Notify**: System sends suspension email automatically
-5. **Monitor**: Wait for user appeal or resolution
-6. **Resolve**: Either unsuspend (if appeal approved) or schedule deletion (if violation confirmed)
-
-### Workflow 2: Process Account Closure Request
-
-1. **Verify**: Confirm user identity and closure request
-2. **Check**: Review active subscriptions (cancel if needed)
-3. **Schedule**: Click "Schedule Deletion" → 30-day grace period
-4. **Document**: Enter reason referencing support ticket
-5. **Notify**: System sends deletion confirmation email
-6. **Wait**: Grace period allows user to cancel if needed
-7. **Cleanup**: Cron job automatically deletes account after 30 days
-
-### Workflow 3: Grant Support Trial for Troubleshooting
-
-1. **Assess**: User reports Pro-tier feature issue
-2. **Grant**: Click "Grant Trial" → Pro tier, 7 days
-3. **Document**: Reason: "Support ticket #1234 - Reproducing API limit issue"
-4. **Test**: User tests Pro features with support team
-5. **Resolve**: Issue fixed or identified
-6. **Expire**: Trial expires automatically after 7 days
-
-### Workflow 4: Respond to User Appeal
-
-1. **Review**: User appeals suspension via support
-2. **Investigate**: Re-examine evidence and reason
-3. **Decide**: Approve or deny appeal
-4. **Unsuspend** (if approved): Click "Unsuspend Account" → Enter reason
-5. **Document**: Update support ticket with decision
-6. **Notify**: System sends unsuspension confirmation
-
-### Workflow 5: Emergency Account Lockout
-
-1. **Detect**: Security team identifies compromised account
-2. **Act Fast**: Click "Suspend Account" immediately
-3. **Document**: Reason: "Security incident #5678 - Compromised credentials"
-4. **Notify**: Contact user via alternate channel (phone, secondary email)
-5. **Secure**: User resets password, verifies identity
-6. **Restore**: Click "Unsuspend Account" after verification
-
----
-
-## Keyboard Shortcuts
-
-- **Search**: `/` (focus search input)
-- **Refresh**: `Ctrl/Cmd + R` (refresh data)
-- **Escape**: Close open modals
-- **Tab**: Navigate form fields
-- **Enter**: Submit focused form
+**Goal:** Keep force grants under 5% of total grants.
 
 ---
 
 ## Troubleshooting
 
-### Issue: Cannot find user in list
-**Solution:**
-- Check status filter (default is "All Statuses")
-- Verify spelling in search
-- Try searching by email instead of name
-- Check if user is deleted (switch to "Deleted" filter)
+### Issue: "User has already used a trial" but I need to grant one
 
-### Issue: "Unauthorized" error when trying to edit user
-**Solution:**
-- Verify you have admin/support role
-- Check if auth token is expired (logout and login)
-- Ensure you're not trying to demote your own account
+**Solution:** Use the force grant feature (see [Force Grant Feature](#force-grant-feature) above).
 
-### Issue: "User has audit history" error when trying to delete
-**Solution:**
-- User has audit log entries (ON DELETE RESTRICT)
-- Use soft delete instead (schedule deletion)
-- Contact database admin for hard delete if absolutely necessary
-
-### Issue: Suspension not blocking user login
-**Solution:**
-- Verify `suspended = true` in database
-- Check auth middleware is active (`requireAuth`)
-- Clear user's JWT token (they may have cached token)
-- Force logout on frontend by clearing localStorage
-
-### Issue: Stats not updating after action
-**Solution:**
-- Click "Refresh" button to reload stats
-- Check if action completed successfully (look for toast notification)
-- Verify database was updated (check audit log)
+**Steps:**
+1. Attempt regular grant
+2. Modal shows warning and force checkbox
+3. Check force checkbox
+4. Enter detailed reason (20+ chars)
+5. Click "Force Grant Trial"
 
 ---
 
-## API Endpoints
+### Issue: Force checkbox doesn't appear
 
-All endpoints require Bearer token authentication and admin/support/super_admin role.
+**Possible Causes:**
+1. User has never had a trial → No force needed, use regular grant
+2. JavaScript error in modal → Check browser console
+3. API response missing `canForce: true` → Check network tab
 
-### GET /api/admin/users
-**Purpose**: List users with pagination and filters
-
-**Query Parameters:**
-- `page` (integer, default: 1)
-- `limit` (integer, default: 50, max: 100)
-- `search` (string): Email or name search
-- `tier` (string): Filter by tier
-- `role` (string): Filter by role
-- `status` (string): active, suspended, scheduled, deleted, or all
-- `sortBy` (string): Column to sort by
-- `sortOrder` (string): asc or desc
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "id": 1,
-      "email": "user@example.com",
-      "first_name": "John",
-      "last_name": "Doe",
-      "role": "user",
-      "tier": "free",
-      "suspended": false,
-      "deleted_at": null,
-      "deletion_scheduled_at": null,
-      "email_verified": true,
-      "total_generations": 42,
-      "created_at": "2025-01-01T00:00:00Z"
-    }
-  ],
-  "pagination": {
-    "page": 1,
-    "limit": 50,
-    "total": 150,
-    "totalPages": 3
-  }
-}
-```
-
-### GET /api/admin/users/stats
-**Purpose**: Get user statistics for dashboard
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "total_users": 1000,
-    "active_users": 850,
-    "admin_users": 10,
-    "trial_users": 25
-  }
-}
-```
-
-### PATCH /api/admin/users/:userId/role
-**Purpose**: Update user role
-
-**Body:**
-```json
-{
-  "role": "admin",
-  "reason": "Promoted to admin for customer support team"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "user": {
-    "id": 1,
-    "email": "user@example.com",
-    "role": "admin",
-    "updated_at": "2025-01-13T00:00:00Z"
-  }
-}
-```
-
-### POST /api/admin/users/:userId/suspend
-**Purpose**: Suspend user account
-
-**Body:**
-```json
-{
-  "reason": "Terms of Service violation - spam activity"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "user": {
-    "id": 1,
-    "suspended": true,
-    "suspended_at": "2025-01-13T00:00:00Z",
-    "suspension_reason": "Terms of Service violation - spam activity"
-  }
-}
-```
-
-### POST /api/admin/users/:userId/unsuspend
-**Purpose**: Unsuspend user account
-
-**Body:**
-```json
-{
-  "reason": "Appeal approved - false positive spam detection"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "user": {
-    "id": 1,
-    "suspended": false,
-    "suspended_at": null,
-    "suspension_reason": null
-  }
-}
-```
-
-### POST /api/admin/users/:userId/schedule-deletion
-**Purpose**: Schedule account deletion
-
-**Body:**
-```json
-{
-  "reason": "User requested account closure via support ticket #1234",
-  "gracePeriodDays": 30
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "user": {
-    "id": 1,
-    "deletion_scheduled_at": "2025-02-12T00:00:00Z"
-  }
-}
-```
-
-### POST /api/admin/users/:userId/cancel-deletion
-**Purpose**: Cancel scheduled deletion
-
-**Body:**
-```json
-{
-  "reason": "User appeal approved - account restored"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "user": {
-    "id": 1,
-    "deletion_scheduled_at": null
-  }
-}
-```
-
-### POST /api/admin/users/:userId/grant-trial
-**Purpose**: Grant trial tier access
-
-**Body:**
-```json
-{
-  "trialTier": "pro",
-  "durationDays": 14,
-  "reason": "Support ticket #5678 - Testing Pro features for bug reproduction"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "trial": {
-    "id": 1,
-    "user_id": 1,
-    "tier": "pro",
-    "source": "admin_grant",
-    "started_at": "2025-01-13T00:00:00Z",
-    "expires_at": "2025-01-27T00:00:00Z"
-  }
-}
-```
+**Solution:**
+- If user is eligible, use regular grant (no force needed)
+- If user is ineligible but checkbox missing, check browser console for errors
+- Contact engineering if API response is malformed
 
 ---
 
-## Database Schema Reference
+### Issue: "Reason must be at least 20 characters" error
 
-### users table
-```sql
-id INTEGER PRIMARY KEY
-email VARCHAR(255) UNIQUE NOT NULL
-first_name VARCHAR(100)
-last_name VARCHAR(100)
-role VARCHAR(50) DEFAULT 'user' -- user, support, admin, super_admin
-tier VARCHAR(50) DEFAULT 'free'
-suspended BOOLEAN DEFAULT FALSE
-suspended_at TIMESTAMPTZ
-suspension_reason TEXT
-deletion_scheduled_at TIMESTAMPTZ
-deleted_at TIMESTAMPTZ
-email_verified BOOLEAN DEFAULT FALSE
-total_generations INTEGER DEFAULT 0
-created_at TIMESTAMPTZ DEFAULT NOW()
-updated_at TIMESTAMPTZ DEFAULT NOW()
-```
+**Cause:** You checked the force checkbox but your reason is too short.
 
-### user_audit_log table
-```sql
-id SERIAL PRIMARY KEY
-user_id INTEGER REFERENCES users(id) ON DELETE RESTRICT
-user_email VARCHAR(255) -- Denormalized
-changed_by INTEGER REFERENCES users(id) ON DELETE SET NULL
-field_name VARCHAR(100) -- role, suspended, deletion_scheduled_at, etc.
-old_value TEXT
-new_value TEXT
-change_type VARCHAR(50) DEFAULT 'update' -- update, delete, restore
-reason TEXT
-changed_at TIMESTAMPTZ DEFAULT NOW()
-metadata JSONB DEFAULT '{}'
-```
+**Solution:** Expand your reason to include:
+- Ticket number
+- Approver
+- Business context
+- User details
+
+**Example:**
+- ❌ "Sales approved" (14 chars)
+- ✅ "Sales VP approved trial for Acme Corp enterprise deal - Ticket #5678" (69 chars)
+
+---
+
+### Issue: User not receiving trial email
+
+**Possible Causes:**
+1. Email verification not completed
+2. Email bounced (invalid address)
+3. Email in spam folder
+4. Resend API failure
+
+**Solutions:**
+1. Check user's email verification status (Admin > Users > View Details)
+2. Check Resend dashboard for bounces/failures
+3. Ask user to check spam folder
+4. Resend trial email manually via Admin UI (future feature)
+
+**Temporary Workaround:**
+- Contact user directly with trial details
+- Confirm they can log in and see trial status in Usage page
+
+---
+
+### Issue: User says trial didn't start but grant succeeded
+
+**Debugging Steps:**
+
+1. **Verify trial record created:**
+   ```sql
+   SELECT * FROM trials WHERE user_id = <user-id> ORDER BY created_at DESC LIMIT 1;
+   ```
+
+2. **Check trial status:**
+   - `status: "active"` → Trial is active
+   - `status: "expired"` → Trial ended (check ends_at)
+   - `status: "converted"` → User already paid
+
+3. **Check user's tier:**
+   ```sql
+   SELECT id, email, tier, trial_tier, trial_ends_at FROM users WHERE id = <user-id>;
+   ```
+   - `trial_tier` should match granted tier
+   - `trial_ends_at` should be in the future
+
+4. **Check auth middleware:**
+   - Middleware attaches `isOnTrial`, `trialTier`, `effectiveTier` to user object
+   - Frontend reads from this data
+   - Ask user to log out and log back in (refreshes token)
+
+**Common Fix:**
+- User needs to log out and log back in to see trial (token needs refresh)
+- Trial may have been granted but user's session is stale
+
+---
+
+### Issue: Force grant failed with validation error
+
+**Possible Causes:**
+1. Reason too short (<20 chars)
+2. Invalid trial tier (not "pro" or "team")
+3. Invalid duration (not 1-90 days)
+4. User ID not found
+
+**Solution:**
+1. Check reason length
+2. Use only "pro" or "team" for tier
+3. Use duration between 1-90 days
+4. Verify user exists in database
+
+**If error persists:**
+- Check browser console for full error message
+- Check server logs for backend validation errors
+- Contact engineering if validation logic seems incorrect
 
 ---
 
 ## Related Documentation
 
-- **Campaign Management**: [CAMPAIGN-MANAGEMENT-GUIDE.md](./CAMPAIGN-MANAGEMENT-GUIDE.md)
-- **Trial System**: [Trial Architecture](../architecture/TIER-ARCHITECTURE.md)
-- **Admin Analytics**: [ADMIN-USAGE-STATS.md](./ADMIN-USAGE-STATS.md)
-- **Database Migrations**: [DB-MIGRATION-MANAGEMENT.md](../database/DB-MIGRATION-MANAGEMENT.md)
-- **Authentication**: [EMAIL-VERIFICATION-SYSTEM.md](../authentication/EMAIL-VERIFICATION-SYSTEM.md)
+- [Trial Program Management Guide](./CAMPAIGN-MANAGEMENT-GUIDE.md) - Creating and managing trial programs
+- [Admin Usage Stats](./ADMIN-USAGE-STATS.md) - Monitoring user activity and quotas
+- [Trial Eligibility WF PRD](../planning/trial-eligibility-enhancement/TRIAL-ELIGIBILITY-WF-PRD.md) - Product requirements and workflows
 
 ---
 
-## Version History
-
-- **v3.4.3** (2026-01-13): Initial user management system with suspension/deletion separation
-- Future: Bulk operations, user impersonation, advanced audit search
-
----
-
-## Support
-
-For issues or questions:
-- **Technical**: support@codescribeai.com
-- **Security**: security@codescribeai.com
-- **Documentation**: See [CLAUDE.md](../../CLAUDE.md) for full documentation index
+**Questions or Issues?**
+Contact the engineering team or refer to the troubleshooting section above.

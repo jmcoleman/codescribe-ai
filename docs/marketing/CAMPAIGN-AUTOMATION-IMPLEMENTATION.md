@@ -1,4 +1,4 @@
-# Campaign Metrics Automation - Implementation Plan
+# Trial Program Metrics Automation - Implementation Plan
 
 ## 🎯 Goal
 Eliminate manual SQL queries and provide one-click export of all campaign metrics for spreadsheet tracking.
@@ -16,7 +16,7 @@ Eliminate manual SQL queries and provide one-click export of all campaign metric
 ### What Gets Computed On-Demand (Export only)
 - ✅ Usage segments (10+, 50+, 100+ gens)
 - ✅ Cohort retention
-- ✅ Campaign attribution
+- ✅ Trial Program attribution
 - ✅ All aggregations
 
 **Result:** Minimal database growth, maximum automation.
@@ -103,7 +103,7 @@ async function handleGenerationSuccess(userId, docData) {
 
 ---
 
-### Change 3: Campaign Export API Endpoint
+### Change 3: Trial Program Export API Endpoint
 
 **File:** `server/src/routes/admin-analytics.js`
 
@@ -307,7 +307,7 @@ router.get('/campaign-export', requireAuth, requireAdmin, async (req, res) => {
     });
 
   } catch (error) {
-    console.error('[Campaign Export] Error:', error);
+    console.error('[Trial Program Export] Error:', error);
     res.status(500).json({ error: 'Failed to export campaign metrics' });
   }
 });
@@ -431,7 +431,7 @@ function CampaignExportButton({ startDate, endDate }) {
       ) : (
         <Download className="w-4 h-4" />
       )}
-      {isExporting ? 'Exporting...' : 'Export Campaign Metrics'}
+      {isExporting ? 'Exporting...' : 'Export Trial Program Metrics'}
     </button>
   );
 }
@@ -440,7 +440,7 @@ function CampaignExportButton({ startDate, endDate }) {
 function showExportModal(data) {
   const modalContent = `
 📊 CAMPAIGN METRICS EXPORT
-Campaign: ${data.campaign.startDate} to ${data.campaign.endDate}
+Trial Program: ${data.trialProgram.startDate} to ${data.trialProgram.endDate}
 
 SUMMARY:
 - Total Signups: ${data.summary.total_signups}
@@ -465,7 +465,7 @@ ${JSON.stringify(data.segments, null, 2)}
 
   // Show in modal or copy to clipboard
   navigator.clipboard.writeText(modalContent);
-  toast.success('Campaign metrics copied to clipboard!');
+  toast.success('Trial Program metrics copied to clipboard!');
 }
 
 // Helper: Download JSON
@@ -513,7 +513,7 @@ export default function Analytics() {
 |--------|------|---------------|--------|
 | 1. Email verification event | `server/src/routes/auth.js` | ~8 lines | 5 min |
 | 2. First generation milestone | `server/src/services/docGenerator.js` | ~15 lines | 10 min |
-| 3. Campaign export API | `server/src/routes/admin-analytics.js` | ~200 lines | 30 min |
+| 3. Trial Program export API | `server/src/routes/admin-analytics.js` | ~200 lines | 30 min |
 | 4. Export button UI | `client/src/pages/admin/Analytics.jsx` | ~80 lines | 20 min |
 | **TOTAL** | | **~300 lines** | **1 hour** |
 
@@ -538,7 +538,7 @@ Total: 17 minutes/week
 ```
 Monday morning campaign update:
 1. Open /admin/analytics (1 min)
-2. Click "Export Campaign Metrics" (1 min)
+2. Click "Export Trial Program Metrics" (1 min)
 3. Copy/paste JSON to spreadsheet (1 min)
 4. Check API provider dashboards (2 min) ← Still manual
 
@@ -614,7 +614,7 @@ Total: 5 minutes/week
 ## 🚀 Recommended: Implement This Week
 
 **Priority 1 (Critical for campaign):**
-- ✅ Change 3: Campaign export API (30 min)
+- ✅ Change 3: Trial Program export API (30 min)
 - ✅ Change 4: Export button UI (20 min)
 
 **Priority 2 (Nice to have):**
@@ -634,10 +634,10 @@ A: No. The export API computes these from `user_quotas.monthly_count` on-demand.
 A: Computed on-demand in the export API by querying `user_subscriptions.status = 'active'`. Update monthly.
 
 **Q: Can we auto-populate the spreadsheets?**
-A: Yes! Use Google Sheets API to push data directly, or use the JSON output with a simple script. But copy-paste is honestly faster for a 1-month campaign.
+A: Yes! Use Google Sheets API to push data directly, or use the JSON output with a simple script. But copy-paste is honestly faster for a 1-month trialProgram.
 
 **Q: What about API costs from Claude/OpenAI?**
-A: Still manual - need to check provider dashboards. Could add cost tracking events, but providers already have dashboards. Not worth the effort for 1 campaign.
+A: Still manual - need to check provider dashboards. Could add cost tracking events, but providers already have dashboards. Not worth the effort for 1 trialProgram.
 
 ---
 

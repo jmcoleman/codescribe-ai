@@ -1,15 +1,15 @@
 /**
- * Seed Campaign Data Script
+ * Seed Trial Program Data Script
  *
  * Populates test data for campaign analytics including:
- * 1. Auto-trial campaigns (Winter Launch Campaign, Partner Program)
+ * 1. Auto-trial programs (Winter Launch Trial Program, Partner Program)
  * 2. User trials (campaign vs individual/self-serve)
  * 3. Conversions and usage patterns
  * 4. Time-to-value metrics
  *
  * Database Schema:
- * - campaigns: Auto-trial campaigns (no invite codes)
- * - user_trials: Links to campaigns via campaign_id, source='auto_campaign' or 'self_serve'
+ * - campaigns: Auto-trial programs (no invite codes)
+ * - user_trials: Links to campaigns via trial_program_id, source='auto_campaign' or 'self_serve'
  * - trial_tier: Only 'pro' or 'team' allowed (not 'business')
  *
  * Usage: npm run seed:campaigns
@@ -45,26 +45,26 @@ const seedCampaigns = async () => {
     console.log(`📅 Date range: ${startDate.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]}\n`);
 
     // Step 1: Create campaigns
-    console.log('📋 Creating campaigns...');
+    console.log('📋 Creating trialPrograms...');
 
-    // Campaign 1: Winter Launch Campaign (active)
+    // Trial Program 1: Winter Launch Trial Program (active)
     const campaign1 = await sql`
-      INSERT INTO campaigns (
+      INSERT INTO trial_programs (
         name, trial_tier, trial_days,
         is_active, starts_at, ends_at
       )
       VALUES (
-        'Winter Launch Campaign - Test', 'pro', 14,
+        'Winter Launch Trial Program - Test', 'pro', 14,
         true, ${startDate}, ${endDate}
       )
       RETURNING id, name
     `;
 
-    console.log(`   ✓ Campaign 1: ${campaign1.rows[0].name} (ID: ${campaign1.rows[0].id})`);
+    console.log(`   ✓ Trial Program 1: ${campaign1.rows[0].name} (ID: ${campaign1.rows[0].id})`);
 
-    // Campaign 2: Partner Program
+    // Trial Program 2: Partner Program
     const campaign2 = await sql`
-      INSERT INTO campaigns (
+      INSERT INTO trial_programs (
         name, trial_tier, trial_days,
         is_active, starts_at, ends_at
       )
@@ -75,7 +75,7 @@ const seedCampaigns = async () => {
       RETURNING id, name
     `;
 
-    console.log(`   ✓ Campaign 2: ${campaign2.rows[0].name} (ID: ${campaign2.rows[0].id})\n`);
+    console.log(`   ✓ Trial Program 2: ${campaign2.rows[0].name} (ID: ${campaign2.rows[0].id})\n`);
 
     // Step 2: Create test users with trials
     console.log('👥 Creating test users with trials...');
@@ -83,8 +83,8 @@ const seedCampaigns = async () => {
     const hashedPassword = await bcrypt.hash('TestPassword123!', 10);
     const users = [];
 
-    // Campaign trial users (Winter Launch Campaign) - 15 users
-    console.log('   Creating 15 campaign trial users (Winter Launch Campaign)...');
+    // Trial Program trial users (Winter Launch Trial Program) - 15 users
+    console.log('   Creating 15 campaign trial users (Winter Launch Trial Program)...');
     const campaign1ConversionTarget = 6; // 6 out of 15 = 40% (deterministic)
     for (let i = 1; i <= 15; i++) {
       const signupDate = randomDateBetween(startDate, endDate);
@@ -96,9 +96,9 @@ const seedCampaigns = async () => {
           email_verified, email_verified_at, created_at
         )
         VALUES (
-          ${`campaign.user${i}@test.com`},
+          ${`trialProgram.user${i}@test.com`},
           ${hashedPassword},
-          ${`Campaign${i}`},
+          ${`Trial Program${i}`},
           'User',
           'free',
           true,
@@ -108,7 +108,7 @@ const seedCampaigns = async () => {
         RETURNING id, email, created_at, email_verified_at
       `;
 
-      users.push({ ...user.rows[0], campaign_id: campaign1.rows[0].id, isCampaign: true });
+      users.push({ ...user.rows[0], trial_program_id: campaign1.rows[0].id, isCampaign: true });
 
       // Create trial with deterministic conversion
       const trialStarted = addHours(emailVerifiedAt, Math.random() * 2); // Start trial 0-2 hours after verification
@@ -118,7 +118,7 @@ const seedCampaigns = async () => {
 
       await sql`
         INSERT INTO user_trials (
-          user_id, campaign_id, source, trial_tier, started_at, ends_at,
+          user_id, trial_program_id, source, trial_tier, started_at, ends_at,
           status, converted_at
         )
         VALUES (
@@ -141,7 +141,7 @@ const seedCampaigns = async () => {
       }
     }
 
-    // Campaign trial users (Partner Program) - 8 users
+    // Trial Program trial users (Partner Program) - 8 users
     console.log('   Creating 8 campaign trial users (Partner Program)...');
     const campaign2ConversionTarget = 4; // 4 out of 8 = 50% (deterministic)
     for (let i = 1; i <= 8; i++) {
@@ -166,7 +166,7 @@ const seedCampaigns = async () => {
         RETURNING id, email, created_at, email_verified_at
       `;
 
-      users.push({ ...user.rows[0], campaign_id: campaign2.rows[0].id, isCampaign: true });
+      users.push({ ...user.rows[0], trial_program_id: campaign2.rows[0].id, isCampaign: true });
 
       const trialStarted = addHours(emailVerifiedAt, Math.random() * 2);
       const shouldConvert = i <= campaign2ConversionTarget; // First 4 users convert (50%)
@@ -175,7 +175,7 @@ const seedCampaigns = async () => {
 
       await sql`
         INSERT INTO user_trials (
-          user_id, campaign_id, source, trial_tier, started_at, ends_at,
+          user_id, trial_program_id, source, trial_tier, started_at, ends_at,
           status, converted_at
         )
         VALUES (
@@ -222,7 +222,7 @@ const seedCampaigns = async () => {
         RETURNING id, email, created_at, email_verified_at
       `;
 
-      users.push({ ...user.rows[0], campaign_id: null, isCampaign: false });
+      users.push({ ...user.rows[0], trial_program_id: null, isCampaign: false });
 
       const trialStarted = addHours(emailVerifiedAt, Math.random() * 2);
       const shouldConvert = i <= individualConversionTarget; // First 2 users convert (20%, lower than campaigns)
@@ -232,7 +232,7 @@ const seedCampaigns = async () => {
 
       await sql`
         INSERT INTO user_trials (
-          user_id, campaign_id, source, trial_tier, started_at, ends_at,
+          user_id, trial_program_id, source, trial_tier, started_at, ends_at,
           status, converted_at
         )
         VALUES (
@@ -333,20 +333,20 @@ const seedCampaigns = async () => {
     console.log('   ✓ Created usage patterns for all users\n');
 
     // Step 4: Summary
-    console.log('📈 Campaign Seed Summary:\n');
+    console.log('📈 Trial Program Seed Summary:\n');
 
     const campaignTrialsWinter = await sql`
       SELECT COUNT(*) as count,
              COUNT(CASE WHEN status = 'converted' THEN 1 END) as conversions
       FROM user_trials
-      WHERE campaign_id = ${campaign1.rows[0].id}
+      WHERE trial_program_id = ${campaign1.rows[0].id}
     `;
 
     const campaignTrialsPartner = await sql`
       SELECT COUNT(*) as count,
              COUNT(CASE WHEN status = 'converted' THEN 1 END) as conversions
       FROM user_trials
-      WHERE campaign_id = ${campaign2.rows[0].id}
+      WHERE trial_program_id = ${campaign2.rows[0].id}
     `;
 
     const individualTrials = await sql`
@@ -374,12 +374,12 @@ const seedCampaigns = async () => {
       ORDER BY 1
     `;
 
-    console.log('Campaign Trials (Winter Launch Campaign):');
+    console.log('Trial Program Trials (Winter Launch Trial Program):');
     console.log(`   Trials: ${campaignTrialsWinter.rows[0].count}`);
     console.log(`   Conversions: ${campaignTrialsWinter.rows[0].conversions}`);
     console.log(`   Rate: ${((campaignTrialsWinter.rows[0].conversions / campaignTrialsWinter.rows[0].count) * 100).toFixed(1)}%\n`);
 
-    console.log('Campaign Trials (Partner Program):');
+    console.log('Trial Program Trials (Partner Program):');
     console.log(`   Trials: ${campaignTrialsPartner.rows[0].count}`);
     console.log(`   Conversions: ${campaignTrialsPartner.rows[0].conversions}`);
     console.log(`   Rate: ${((campaignTrialsPartner.rows[0].conversions / campaignTrialsPartner.rows[0].count) * 100).toFixed(1)}%\n`);
@@ -394,11 +394,11 @@ const seedCampaigns = async () => {
       console.log(`   ${seg.segment}: ${seg.users} users`);
     });
 
-    console.log('\n✅ Campaign seed complete!\n');
+    console.log('\n✅ Trial Program seed complete!\n');
     console.log('📝 Test with Google Sheets:');
     console.log(`   Start Date: ${startDate.toISOString().split('T')[0]}`);
     console.log(`   End Date: ${endDate.toISOString().split('T')[0]}`);
-    console.log(`   Campaign Source: auto_campaign\n`);
+    console.log(`   Trial Program Source: auto_campaign\n`);
 
   } catch (error) {
     console.error('❌ Seed error:', error);

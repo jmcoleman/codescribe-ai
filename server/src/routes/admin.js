@@ -27,8 +27,9 @@ import {
   getOverrideDetails
 } from '../utils/tierOverride.js';
 import { analyticsService } from '../services/analyticsService.js';
-import Campaign from '../models/Campaign.js';
-import { clearCampaignCache, getCampaignStatus } from '../config/campaign.js';
+import TrialProgram from '../models/TrialProgram.js';
+import { clearCampaignCache, getCampaignStatus } from '../config/trialProgram.js';
+import AdminAuditLog from '../models/AdminAuditLog.js';
 
 const router = express.Router();
 
@@ -2057,10 +2058,10 @@ router.get('/analytics/summary', requireAuth, requireAdmin, async (req, res) => 
 // ============================================================================
 
 /**
- * GET /api/admin/campaigns/status - Get current campaign status
- * Returns the active campaign (if any) and its configuration
+ * GET /api/admin/trial-programs/status - Get current trial program status
+ * Returns the active trial program (if any) and its configuration
  */
-router.get('/campaigns/status', requireAuth, requireAdmin, async (req, res) => {
+router.get('/trial-programs/status', requireAuth, requireAdmin, async (req, res) => {
   try {
     const status = await getCampaignStatus();
     res.json({
@@ -2068,19 +2069,19 @@ router.get('/campaigns/status', requireAuth, requireAdmin, async (req, res) => {
       data: status,
     });
   } catch (error) {
-    console.error('[Admin] Get campaign status error:', error);
+    console.error('[Admin] Get trial program status error:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to get campaign status',
+      error: 'Failed to get trial program status',
     });
   }
 });
 
 /**
- * GET /api/admin/campaigns - List all campaigns
+ * GET /api/admin/trial-programs - List all campaigns
  * Query params: limit, offset, sortBy, sortOrder
  */
-router.get('/campaigns', requireAuth, requireAdmin, async (req, res) => {
+router.get('/trial-programs', requireAuth, requireAdmin, async (req, res) => {
   try {
     const {
       limit = '50',
@@ -2089,7 +2090,7 @@ router.get('/campaigns', requireAuth, requireAdmin, async (req, res) => {
       sortOrder = 'DESC',
     } = req.query;
 
-    const result = await Campaign.list({
+    const result = await TrialProgram.list({
       limit: Math.min(parseInt(limit, 10), 100),
       offset: parseInt(offset, 10),
       sortBy,
@@ -2111,16 +2112,16 @@ router.get('/campaigns', requireAuth, requireAdmin, async (req, res) => {
 });
 
 /**
- * GET /api/admin/campaigns/export - Export campaign metrics with trial breakdown
+ * GET /api/admin/trial-programs/export - Export trial program metrics with trial breakdown
  * Query params: startDate (YYYY-MM-DD), endDate (YYYY-MM-DD), campaignSource (default: 'auto_campaign')
  *
- * Returns comprehensive campaign metrics including:
- * - Trial breakdown (campaign vs individual trials)
+ * Returns comprehensive trial program metrics including:
+ * - Trial breakdown (trial program vs individual trials)
  * - Weekly aggregations
  * - Cohort summary (signups, verified, activated, trials, conversions)
  * - Spreadsheet-ready format
  */
-router.get('/campaigns/export', requireAuth, requireAdmin, async (req, res) => {
+router.get('/trial-programs/export', requireAuth, requireAdmin, async (req, res) => {
   try {
     const { startDate, endDate, campaignSource = 'auto_campaign' } = req.query;
 
@@ -2219,13 +2220,13 @@ router.get('/campaigns/export', requireAuth, requireAdmin, async (req, res) => {
             c.name,
             CASE
               WHEN ut.id IS NULL THEN 'Direct'
-              WHEN ut.source = 'self_serve' AND ut.campaign_id IS NULL THEN 'Individual Trial'
+              WHEN ut.source = 'self_serve' AND ut.trial_program_id IS NULL THEN 'Individual Trial'
               ELSE 'Unknown'
             END
           ) as origin_type
         FROM users u
         LEFT JOIN user_trials ut ON u.id = ut.user_id
-        LEFT JOIN campaigns c ON ut.campaign_id = c.id
+        LEFT JOIN trial_programs c ON ut.trial_program_id = c.id
         WHERE u.created_at >= ${startDate}
           AND u.created_at < ${endDate}
           AND u.role != 'admin'
@@ -2332,7 +2333,7 @@ router.get('/campaigns/export', requireAuth, requireAdmin, async (req, res) => {
           c.name,
           CASE
             WHEN ut.id IS NULL THEN 'Direct'
-            WHEN ut.source = 'self_serve' AND ut.campaign_id IS NULL THEN 'Individual Trial'
+            WHEN ut.source = 'self_serve' AND ut.trial_program_id IS NULL THEN 'Individual Trial'
             ELSE 'Unknown'
           END
         ) as origin_type,
@@ -2345,7 +2346,7 @@ router.get('/campaigns/export', requireAuth, requireAdmin, async (req, res) => {
         uq.monthly_count as usage_count
       FROM users u
       LEFT JOIN user_trials ut ON u.id = ut.user_id
-      LEFT JOIN campaigns c ON ut.campaign_id = c.id
+      LEFT JOIN trial_programs c ON ut.trial_program_id = c.id
       LEFT JOIN (
         SELECT user_id, MIN(created_at) as first_generation_at
         FROM generated_documents
@@ -2359,18 +2360,18 @@ router.get('/campaigns/export', requireAuth, requireAdmin, async (req, res) => {
       ORDER BY u.created_at DESC
     `;
 
-    // Get all campaigns active during this period
-    let campaignsInfo = [];
+    // Get all trial programs active during this period
+    let trialProgramsInfo = [];
     try {
-      const campaignsResult = await sql`
+      const trialProgramsResult = await sql`
         SELECT id, name, trial_tier, trial_days, starts_at, ends_at, is_active
-        FROM campaigns
+        FROM trial_programs
         WHERE starts_at <= ${endDate}
           AND (ends_at IS NULL OR ends_at >= ${startDate})
         ORDER BY starts_at DESC
       `;
 
-      campaignsInfo = campaignsResult.rows.map(row => ({
+      trialProgramsInfo = trialProgramsResult.rows.map(row => ({
         id: row.id,
         name: row.name,
         trialTier: row.trial_tier,
@@ -2379,8 +2380,8 @@ router.get('/campaigns/export', requireAuth, requireAdmin, async (req, res) => {
         endsAt: row.ends_at,
         isActive: row.is_active
       }));
-    } catch (campaignError) {
-      console.log('[Campaign Export] Error fetching campaigns:', campaignError);
+    } catch (trialProgramError) {
+      console.log('[Trial Program Export] Error fetching trial programs:', trialProgramError);
     }
 
     // Build response
@@ -2391,12 +2392,12 @@ router.get('/campaigns/export', requireAuth, requireAdmin, async (req, res) => {
       : '0';
 
     const response = {
-      campaign: {
+      trialProgram: {
         startDate,
         endDate,
         source: campaignSource,
-        count: campaignsInfo.length,
-        campaigns: campaignsInfo
+        count: trialProgramsInfo.length,
+        trialPrograms: trialProgramsInfo
       },
 
       summary: {
@@ -2405,7 +2406,7 @@ router.get('/campaigns/export', requireAuth, requireAdmin, async (req, res) => {
         activated_users: parseInt(cohortSummary.rows[0].activated_users),
 
         trials_breakdown: {
-          campaign_trials: {
+          trial_program_trials: {
             started: parseInt(campaignTrials.trials_started),
             converted: parseInt(campaignTrials.conversions),
             conversion_rate: parseFloat(campaignTrials.conversion_rate),
@@ -2435,18 +2436,18 @@ router.get('/campaigns/export', requireAuth, requireAdmin, async (req, res) => {
         },
 
         comparison: {
-          campaign_vs_individual: {
-            campaign_conversion_rate: parseFloat(campaignTrials.conversion_rate),
+          trial_program_vs_individual: {
+            trial_program_conversion_rate: parseFloat(campaignTrials.conversion_rate),
             individual_conversion_rate: parseFloat(individualConversionRate),
-            campaign_lift: campaignLift ? `${campaignLift > 0 ? '+' : ''}${campaignLift}%` : 'N/A',
-            campaign_performs_better: parseFloat(campaignTrials.conversion_rate) > parseFloat(individualConversionRate)
+            trial_program_lift: campaignLift ? `${campaignLift > 0 ? '+' : ''}${campaignLift}%` : 'N/A',
+            trial_program_performs_better: parseFloat(campaignTrials.conversion_rate) > parseFloat(individualConversionRate)
           },
 
           trial_source_distribution: totalTrials > 0 ? {
-            campaign_percentage: ((parseInt(campaignTrials.trials_started) / totalTrials) * 100).toFixed(1),
+            trial_program_percentage: ((parseInt(campaignTrials.trials_started) / totalTrials) * 100).toFixed(1),
             individual_percentage: ((individualTrialsTotal.trials_started / totalTrials) * 100).toFixed(1)
           } : {
-            campaign_percentage: '0',
+            trial_program_percentage: '0',
             individual_percentage: '0'
           }
         }
@@ -2461,7 +2462,7 @@ router.get('/campaigns/export', requireAuth, requireAdmin, async (req, res) => {
 
       spreadsheet_ready: {
         trial_comparison: {
-          campaign_trials: {
+          trial_program_trials: {
             started: parseInt(campaignTrials.trials_started),
             converted: parseInt(campaignTrials.conversions),
             conversion_rate: parseFloat(campaignTrials.conversion_rate)
@@ -2476,7 +2477,7 @@ router.get('/campaigns/export', requireAuth, requireAdmin, async (req, res) => {
             converted: totalConversions,
             conversion_rate: parseFloat(totalConversionRate)
           },
-          campaign_lift: campaignLift
+          trial_program_lift: campaignLift
         },
 
         cohort_summary: {
@@ -2558,47 +2559,47 @@ router.get('/campaigns/export', requireAuth, requireAdmin, async (req, res) => {
     });
 
   } catch (error) {
-    console.error('[Admin] Campaign export error:', error);
+    console.error('[Admin] Trial Program export error:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to export campaign metrics'
+      error: 'Failed to export trial program metrics'
     });
   }
 });
 
 /**
- * GET /api/admin/campaigns/:id - Get campaign details with stats
+ * GET /api/admin/trial-programs/:id - Get trial program details with stats
  */
-router.get('/campaigns/:id', requireAuth, requireAdmin, async (req, res) => {
+router.get('/trial-programs/:id', requireAuth, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    const campaign = await Campaign.getStats(parseInt(id, 10));
+    const trialProgram = await TrialProgram.getStats(parseInt(id, 10));
 
-    if (!campaign) {
+    if (!trialProgram) {
       return res.status(404).json({
         success: false,
-        error: 'Campaign not found',
+        error: 'Trial Program not found',
       });
     }
 
     res.json({
       success: true,
-      data: campaign,
+      data: trialProgram,
     });
   } catch (error) {
-    console.error('[Admin] Get campaign error:', error);
+    console.error('[Admin] Get trial program error:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to get campaign',
+      error: 'Failed to get trial program',
     });
   }
 });
 
 /**
- * POST /api/admin/campaigns - Create a new campaign
- * Body: { name, description, trialTier, trialDays, startsAt, endsAt, isActive }
+ * POST /api/admin/trial-programs - Create a new trial program
+ * Body: { name, description, trialTier, trialDays, startsAt, endsAt, isActive, autoEnroll, allowPreviousTrialUsers, cooldownDays }
  */
-router.post('/campaigns', requireAuth, requireAdmin, async (req, res) => {
+router.post('/trial-programs', requireAuth, requireAdmin, async (req, res) => {
   try {
     const {
       name,
@@ -2608,13 +2609,16 @@ router.post('/campaigns', requireAuth, requireAdmin, async (req, res) => {
       startsAt,
       endsAt,
       isActive = false,
+      autoEnroll = false,
+      allowPreviousTrialUsers = false,
+      cooldownDays = 90,
     } = req.body;
 
     // Validation
     if (!name || name.trim().length === 0) {
       return res.status(400).json({
         success: false,
-        error: 'Campaign name is required',
+        error: 'Trial Program name is required',
       });
     }
 
@@ -2632,7 +2636,12 @@ router.post('/campaigns', requireAuth, requireAdmin, async (req, res) => {
       });
     }
 
-    const campaign = await Campaign.create({
+    // Auto-enroll trials don't use eligibility settings (only for invite-only)
+    // Force these to false/0 when auto-enroll is enabled
+    const finalAllowPreviousTrialUsers = autoEnroll ? false : allowPreviousTrialUsers;
+    const finalCooldownDays = autoEnroll ? 0 : cooldownDays;
+
+    const trialProgram = await TrialProgram.create({
       name: name.trim(),
       description: description?.trim() || null,
       trialTier,
@@ -2640,34 +2649,62 @@ router.post('/campaigns', requireAuth, requireAdmin, async (req, res) => {
       startsAt: startsAt ? new Date(startsAt) : new Date(),
       endsAt: endsAt ? new Date(endsAt) : null,
       isActive,
+      autoEnroll,
+      allowPreviousTrialUsers: finalAllowPreviousTrialUsers,
+      cooldownDays: finalCooldownDays,
       createdByUserId: req.user.id,
     });
 
-    // Clear cache if activating a campaign
+    // Clear cache if activating a trial program
     if (isActive) {
       clearCampaignCache();
     }
 
-    console.log(`[Admin] Campaign created: ${campaign.id} "${campaign.name}" by user ${req.user.id}`);
+    // Audit log
+    await AdminAuditLog.log({
+      adminUserId: req.user.id,
+      adminEmail: req.user.email,
+      action: 'create',
+      resourceType: 'trial_program',
+      resourceId: trialProgram.id,
+      resourceName: trialProgram.name,
+      oldValues: null,
+      newValues: {
+        name: trialProgram.name,
+        description: trialProgram.description,
+        trial_tier: trialProgram.trial_tier,
+        trial_days: trialProgram.trial_days,
+        starts_at: trialProgram.starts_at,
+        ends_at: trialProgram.ends_at,
+        is_active: trialProgram.is_active,
+        auto_enroll: trialProgram.auto_enroll,
+        allow_previous_trial_users: trialProgram.allow_previous_trial_users,
+        cooldown_days: trialProgram.cooldown_days,
+      },
+      reason: null,
+      metadata: {},
+    });
+
+    console.log(`[Admin] Trial Program created: ${trialProgram.id} "${trialProgram.name}" by user ${req.user.id}`);
 
     res.status(201).json({
       success: true,
-      data: campaign,
+      data: trialProgram,
     });
   } catch (error) {
-    console.error('[Admin] Create campaign error:', error);
+    console.error('[Admin] Create trial program error:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to create campaign',
+      error: 'Failed to create trial program',
     });
   }
 });
 
 /**
- * PUT /api/admin/campaigns/:id - Update a campaign
- * Body: { name, description, trialTier, trialDays, startsAt, endsAt, isActive }
+ * PUT /api/admin/trial-programs/:id - Update a trial program
+ * Body: { name, description, trialTier, trialDays, startsAt, endsAt, isActive, autoEnroll, allowPreviousTrialUsers, cooldownDays }
  */
-router.put('/campaigns/:id', requireAuth, requireAdmin, async (req, res) => {
+router.put('/trial-programs/:id', requireAuth, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
@@ -2696,38 +2733,85 @@ router.put('/campaigns/:id', requireAuth, requireAdmin, async (req, res) => {
       updates.endsAt = new Date(updates.endsAt);
     }
 
-    const campaign = await Campaign.update(parseInt(id, 10), updates);
-
-    if (!campaign) {
+    // Get old values for audit log
+    const oldTrialProgram = await TrialProgram.findById(parseInt(id, 10));
+    if (!oldTrialProgram) {
       return res.status(404).json({
         success: false,
-        error: 'Campaign not found',
+        error: 'Trial Program not found',
       });
     }
+
+    // Auto-enroll trials don't use eligibility settings (only for invite-only)
+    // If enabling auto-enroll OR if already auto-enroll, clear eligibility settings
+    const willBeAutoEnroll = updates.autoEnroll !== undefined ? updates.autoEnroll : oldTrialProgram.auto_enroll;
+    if (willBeAutoEnroll) {
+      // Force eligibility settings to false/0 when auto-enroll is enabled
+      updates.allowPreviousTrialUsers = false;
+      updates.cooldownDays = 0;
+    }
+
+    const trialProgram = await TrialProgram.update(parseInt(id, 10), updates);
 
     // Always clear cache on updates (active status might have changed)
     clearCampaignCache();
 
-    console.log(`[Admin] Campaign updated: ${campaign.id} by user ${req.user.id}`);
+    // Audit log
+    await AdminAuditLog.log({
+      adminUserId: req.user.id,
+      adminEmail: req.user.email,
+      action: 'update',
+      resourceType: 'trial_program',
+      resourceId: trialProgram.id,
+      resourceName: trialProgram.name,
+      oldValues: {
+        name: oldTrialProgram.name,
+        description: oldTrialProgram.description,
+        trial_tier: oldTrialProgram.trial_tier,
+        trial_days: oldTrialProgram.trial_days,
+        starts_at: oldTrialProgram.starts_at,
+        ends_at: oldTrialProgram.ends_at,
+        is_active: oldTrialProgram.is_active,
+        auto_enroll: oldTrialProgram.auto_enroll,
+        allow_previous_trial_users: oldTrialProgram.allow_previous_trial_users,
+        cooldown_days: oldTrialProgram.cooldown_days,
+      },
+      newValues: {
+        name: trialProgram.name,
+        description: trialProgram.description,
+        trial_tier: trialProgram.trial_tier,
+        trial_days: trialProgram.trial_days,
+        starts_at: trialProgram.starts_at,
+        ends_at: trialProgram.ends_at,
+        is_active: trialProgram.is_active,
+        auto_enroll: trialProgram.auto_enroll,
+        allow_previous_trial_users: trialProgram.allow_previous_trial_users,
+        cooldown_days: trialProgram.cooldown_days,
+      },
+      reason: null,
+      metadata: { updated_fields: Object.keys(updates) },
+    });
+
+    console.log(`[Admin] Trial Program updated: ${trialProgram.id} by user ${req.user.id}`);
 
     res.json({
       success: true,
-      data: campaign,
+      data: trialProgram,
     });
   } catch (error) {
-    console.error('[Admin] Update campaign error:', error);
+    console.error('[Admin] Update trial program error:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to update campaign',
+      error: 'Failed to update trial program',
     });
   }
 });
 
 /**
- * POST /api/admin/campaigns/:id/toggle - Toggle campaign active status
+ * POST /api/admin/trial-programs/:id/toggle - Toggle trial program active status
  * Body: { isActive: boolean }
  */
-router.post('/campaigns/:id/toggle', requireAuth, requireAdmin, async (req, res) => {
+router.post('/trial-programs/:id/toggle', requireAuth, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const { isActive } = req.body;
@@ -2739,74 +2823,211 @@ router.post('/campaigns/:id/toggle', requireAuth, requireAdmin, async (req, res)
       });
     }
 
-    const campaign = await Campaign.setActive(parseInt(id, 10), isActive);
-
-    if (!campaign) {
+    // Get old values for audit log
+    const oldTrialProgram = await TrialProgram.findById(parseInt(id, 10));
+    if (!oldTrialProgram) {
       return res.status(404).json({
         success: false,
-        error: 'Campaign not found',
+        error: 'Trial Program not found',
       });
     }
+
+    const trialProgram = await TrialProgram.setActive(parseInt(id, 10), isActive);
 
     // Clear cache when toggling
     clearCampaignCache();
 
-    console.log(`[Admin] Campaign ${isActive ? 'activated' : 'deactivated'}: ${campaign.id} by user ${req.user.id}`);
+    // Audit log
+    await AdminAuditLog.log({
+      adminUserId: req.user.id,
+      adminEmail: req.user.email,
+      action: isActive ? 'activate' : 'deactivate',
+      resourceType: 'trial_program',
+      resourceId: trialProgram.id,
+      resourceName: trialProgram.name,
+      oldValues: { is_active: oldTrialProgram.is_active },
+      newValues: { is_active: trialProgram.is_active },
+      reason: null,
+      metadata: {},
+    });
+
+    console.log(`[Admin] Trial Program ${isActive ? 'activated' : 'deactivated'}: ${trialProgram.id} by user ${req.user.id}`);
 
     res.json({
       success: true,
-      data: campaign,
+      data: trialProgram,
     });
   } catch (error) {
-    console.error('[Admin] Toggle campaign error:', error);
+    console.error('[Admin] Toggle trial program error:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to toggle campaign',
+      error: 'Failed to toggle trial program',
     });
   }
 });
 
 /**
- * DELETE /api/admin/campaigns/:id - Delete a campaign
- * Only allows deletion if campaign has 0 signups
+ * DELETE /api/admin/trial-programs/:id - Delete a trial program
+ * Only allows deletion if trial program has 0 signups
  */
-router.delete('/campaigns/:id', requireAuth, requireAdmin, async (req, res) => {
+router.delete('/trial-programs/:id', requireAuth, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    const campaignId = parseInt(id, 10);
+    const trialProgramId = parseInt(id, 10);
 
-    // Check if campaign exists and has signups
-    const campaign = await Campaign.findById(campaignId);
-    if (!campaign) {
+    // Check if trial program exists and has signups
+    const trialProgram = await TrialProgram.findById(trialProgramId);
+    if (!trialProgram) {
       return res.status(404).json({
         success: false,
-        error: 'Campaign not found',
+        error: 'Trial Program not found',
       });
     }
 
-    if (campaign.signups_count > 0) {
+    if (trialProgram.signups_count > 0) {
       return res.status(400).json({
         success: false,
-        error: 'Cannot delete campaign with existing signups. Deactivate it instead.',
+        error: 'Cannot delete trial program with existing signups. Deactivate it instead.',
       });
     }
 
-    await Campaign.delete(campaignId);
+    await TrialProgram.delete(trialProgramId);
 
     // Clear cache
     clearCampaignCache();
 
-    console.log(`[Admin] Campaign deleted: ${campaignId} by user ${req.user.id}`);
+    // Audit log
+    await AdminAuditLog.log({
+      adminUserId: req.user.id,
+      adminEmail: req.user.email,
+      action: 'delete',
+      resourceType: 'trial_program',
+      resourceId: trialProgramId,
+      resourceName: trialProgram.name,
+      oldValues: {
+        name: trialProgram.name,
+        description: trialProgram.description,
+        trial_tier: trialProgram.trial_tier,
+        trial_days: trialProgram.trial_days,
+        starts_at: trialProgram.starts_at,
+        ends_at: trialProgram.ends_at,
+        is_active: trialProgram.is_active,
+        auto_enroll: trialProgram.auto_enroll,
+        allow_previous_trial_users: trialProgram.allow_previous_trial_users,
+        cooldown_days: trialProgram.cooldown_days,
+        signups_count: trialProgram.signups_count,
+        conversions_count: trialProgram.conversions_count,
+      },
+      newValues: null,
+      reason: null,
+      metadata: {},
+    });
+
+    console.log(`[Admin] Trial Program deleted: ${trialProgramId} by user ${req.user.id}`);
 
     res.json({
       success: true,
-      message: 'Campaign deleted',
+      message: 'Trial Program deleted',
     });
   } catch (error) {
-    console.error('[Admin] Delete campaign error:', error);
+    console.error('[Admin] Delete trial program error:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to delete campaign',
+      error: 'Failed to delete trial program',
+    });
+  }
+});
+
+// ============================================================================
+// AUDIT LOG ROUTES
+// ============================================================================
+
+/**
+ * GET /api/admin/audit-logs - Get admin audit logs with filters
+ * Query params: resourceType, resourceId, adminUserId, action, limit, offset
+ */
+router.get('/audit-logs', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const {
+      resourceType,
+      resourceId,
+      adminUserId,
+      action,
+      limit = 50,
+      offset = 0,
+    } = req.query;
+
+    const result = await AdminAuditLog.list({
+      resourceType,
+      resourceId: resourceId ? parseInt(resourceId, 10) : null,
+      adminUserId: adminUserId ? parseInt(adminUserId, 10) : null,
+      action,
+      limit: parseInt(limit, 10),
+      offset: parseInt(offset, 10),
+    });
+
+    res.json({
+      success: true,
+      data: result.logs,
+      pagination: {
+        total: result.total,
+        limit: parseInt(limit, 10),
+        offset: parseInt(offset, 10),
+      },
+    });
+  } catch (error) {
+    console.error('[Admin] Get audit logs error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch audit logs',
+    });
+  }
+});
+
+/**
+ * GET /api/admin/audit-logs/resource/:resourceType/:resourceId - Get audit history for a specific resource
+ */
+router.get('/audit-logs/resource/:resourceType/:resourceId', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { resourceType, resourceId } = req.params;
+
+    const logs = await AdminAuditLog.getByResource(resourceType, parseInt(resourceId, 10));
+
+    res.json({
+      success: true,
+      data: logs,
+    });
+  } catch (error) {
+    console.error('[Admin] Get resource audit logs error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch resource audit logs',
+    });
+  }
+});
+
+/**
+ * GET /api/admin/audit-logs/stats - Get audit statistics
+ * Query params: startDate, endDate
+ */
+router.get('/audit-logs/stats', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    const stats = await AdminAuditLog.getStats({
+      startDate: startDate ? new Date(startDate) : null,
+      endDate: endDate ? new Date(endDate) : null,
+    });
+
+    res.json({
+      success: true,
+      data: stats,
+    });
+  } catch (error) {
+    console.error('[Admin] Get audit stats error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch audit statistics',
     });
   }
 });
@@ -3290,13 +3511,58 @@ router.post('/users/:userId/unsuspend', requireAuth, requireAdmin, async (req, r
 });
 
 /**
+ * GET /api/admin/users/:userId/trial-history - Get user's trial history
+ */
+router.get('/users/:userId/trial-history', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const trials = await Trial.findAllByUserId(parseInt(userId, 10));
+
+    // Track analytics
+    await analyticsService.track({
+      eventName: 'admin_action',
+      userId: req.user.id,
+      metadata: {
+        action: 'view_trial_history',
+        target_user_id: parseInt(userId, 10),
+        trial_count: trials.length,
+        is_internal: true
+      }
+    });
+
+    res.json({
+      success: true,
+      trials: trials.map(t => ({
+        id: t.id,
+        trial_tier: t.trial_tier,
+        source: t.source,
+        status: t.status,
+        started_at: t.started_at,
+        ends_at: t.ends_at,
+        duration_days: t.duration_days,
+        converted_at: t.converted_at,
+        converted_to_tier: t.converted_to_tier,
+        created_at: t.created_at
+      }))
+    });
+  } catch (error) {
+    console.error('[Admin] Trial history error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch trial history'
+    });
+  }
+});
+
+/**
  * POST /api/admin/users/:userId/grant-trial - Grant trial to user
- * Body: { trial_tier: 'pro' | 'team', duration_days: number, reason: string }
+ * Body: { trial_tier: 'pro' | 'team', duration_days: number, reason: string, force?: boolean }
  */
 router.post('/users/:userId/grant-trial', requireAuth, requireAdmin, async (req, res) => {
   try {
     const { userId } = req.params;
-    const { trial_tier, duration_days, reason } = req.body;
+    const { trial_tier, duration_days, reason, force } = req.body;
 
     // Validation
     if (!trial_tier || !['pro', 'team'].includes(trial_tier)) {
@@ -3313,10 +3579,11 @@ router.post('/users/:userId/grant-trial', requireAuth, requireAdmin, async (req,
       });
     }
 
-    if (!reason || reason.trim().length < 5) {
+    const minReasonLength = force ? 20 : 5;
+    if (!reason || reason.trim().length < minReasonLength) {
       return res.status(400).json({
         success: false,
-        error: 'Reason is required (minimum 5 characters)'
+        error: `Reason is required (minimum ${minReasonLength} characters${force ? ' for forced grants' : ''})`
       });
     }
 
@@ -3329,13 +3596,31 @@ router.post('/users/:userId/grant-trial', requireAuth, requireAdmin, async (req,
       });
     }
 
-    // Check if user already has an active trial
-    const existingTrial = await Trial.findActiveByUserId(parseInt(userId, 10));
-    if (existingTrial) {
+    // Check eligibility (same as campaigns)
+    const eligibility = await Trial.checkEligibility(parseInt(userId, 10));
+
+    if (!eligibility.eligible && !force) {
+      // Get trial history for context
+      const trialHistory = await Trial.findAllByUserId(parseInt(userId, 10));
+
       return res.status(400).json({
         success: false,
-        error: 'User already has an active trial'
+        error: eligibility.reason,
+        hasUsedTrial: true,
+        canForce: true,
+        trialHistory: trialHistory.map(t => ({
+          tier: t.trial_tier,
+          source: t.source,
+          startedAt: t.started_at,
+          endedAt: t.ends_at,
+          status: t.status
+        }))
       });
+    }
+
+    // If force=true, admin is overriding eligibility check
+    if (force && !eligibility.eligible) {
+      console.log(`[Admin] Force-granting trial to user ${userId} despite ineligibility. Admin: ${req.user.id}, Reason: ${reason}`);
     }
 
     // Create trial
@@ -3344,16 +3629,17 @@ router.post('/users/:userId/grant-trial', requireAuth, requireAdmin, async (req,
     endsAt.setDate(endsAt.getDate() + parseInt(duration_days, 10));
 
     const trial = await Trial.create({
-      user_id: parseInt(userId, 10),
-      trial_tier,
-      duration_days: parseInt(duration_days, 10),
-      started_at: startsAt,
-      ends_at: endsAt,
-      source: 'admin_grant',
-      status: 'active'
+      userId: parseInt(userId, 10),
+      trialTier: trial_tier,
+      durationDays: parseInt(duration_days, 10),
+      source: force ? 'admin_grant_forced' : 'admin_grant'
     });
 
-    // Log action
+    // Get previous trial count for analytics
+    const allTrials = await Trial.findAllByUserId(parseInt(userId, 10));
+    const previousTrialCount = allTrials.length - 1; // Subtract the one we just created
+
+    // Log action with force flag in metadata
     await sql.query(
       `INSERT INTO user_audit_log (user_id, user_email, field_name, old_value, new_value, change_type, changed_by, reason, metadata)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
@@ -3371,12 +3657,32 @@ router.post('/users/:userId/grant-trial', requireAuth, requireAdmin, async (req,
           trial_tier,
           duration_days: parseInt(duration_days, 10),
           trial_id: trial.id,
-          action: 'grant_trial'
+          action: 'grant_trial',
+          forced: force || false, // Track if this was forced
+          override_reason: force ? eligibility.reason : null,
+          previous_trial_count: previousTrialCount
         })
       ]
     );
 
-    console.log(`[Admin] Trial granted to user ${userId}: ${trial_tier} for ${duration_days} days by admin ${req.user.id}. Reason: ${reason}`);
+    // Track analytics
+    await analyticsService.track({
+      eventName: 'trial',
+      userId: parseInt(userId, 10),
+      metadata: {
+        action: 'admin_grant_succeeded',
+        forced: force || false,
+        source: force ? 'admin_grant_forced' : 'admin_grant',
+        tier: trial_tier,
+        duration_days: parseInt(duration_days, 10),
+        override_reason: force ? eligibility.reason : null,
+        previous_trial_count: previousTrialCount,
+        has_previous_trial: previousTrialCount > 0,
+        is_internal: true
+      }
+    });
+
+    console.log(`[Admin] Trial granted to user ${userId}: ${trial_tier} for ${duration_days} days by admin ${req.user.id}${force ? ' (FORCED)' : ''}. Reason: ${reason}`);
 
     // Send trial granted email notification
     try {

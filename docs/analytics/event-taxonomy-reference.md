@@ -69,7 +69,7 @@ Events that track the core user workflow from arriving at the site to exporting 
   - `hours_since_signup` (number): Hours from signup to first generation
   - `origin` (string): Generation source (upload, paste, github_public, github_private, sample, default)
 - **Use Case:** Track activation rate, time-to-value, conversion funnel optimization
-- **Campaign Tracking:** Key metric for trial campaign success - measures how quickly users reach first value moment
+- **Trial Program Tracking:** Key metric for trial campaign success - measures how quickly users reach first value moment
 
 ### `doc_export`
 - **Category:** workflow
@@ -122,7 +122,7 @@ Events that track monetization, conversion, and revenue-generating activities.
   - `verification_method` (string): Verification method (email_link)
   - `days_to_verify` (number): Days from signup to email verification
 - **Use Case:** Track email verification rate, time-to-verification, activation funnel
-- **Campaign Tracking:** Key metric for trial campaign quality - measures user engagement and prevents spam signups
+- **Trial Program Tracking:** Key metric for trial campaign quality - measures user engagement and prevents spam signups
 
 ### `trial`
 - **Category:** business

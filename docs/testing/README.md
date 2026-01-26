@@ -30,7 +30,7 @@
     - Middleware Tests: 14 rateLimitBypass tests (2 skipped after debug logging cleanup)
     - Graph Engine: graph analysis, project dependencies, architecture generation
     - Private Repo Tests: 55 tests (encryption 14, User model 15, GitHubService 13, API routes 13)
-    - Campaign Tests: Campaign model, admin routes, config validation
+    - Trial Program Tests: Trial Program model, admin routes, config validation
     - Analytics Tests: getConversionFunnel with 6 query mocks, getBusinessConversionFunnel, multi-select eventNames filter combinations
     - **Pass Rate:** 98.4% (1,972 passing, 33 skipped, 0 failures)
   - **Database:** 37 migration tests (Docker sandbox + Neon dev validation)

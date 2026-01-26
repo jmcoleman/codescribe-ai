@@ -1,10 +1,10 @@
-# January 2026 Campaign - Spreadsheet Setup Guide
+# January 2026 Trial Program - Spreadsheet Setup Guide
 
 ## 📋 Overview
 
-This guide explains how to set up and use the campaign financial tracking spreadsheets for your January 2026 Pro Trial campaign.
+This guide explains how to set up and use the campaign financial tracking spreadsheets for your January 2026 Pro Trial trialProgram.
 
-**Campaign Details:**
+**Trial Program Details:**
 - **Trial Offer:** 14-Day Pro Trial
 - **Expected Signups:** 100 users
 - **Budget:** $350 ($210 Claude + $140 OpenAI)
@@ -35,7 +35,7 @@ All files are located in `/docs/marketing/` with both TSV and CSV formats:
 1. **Create New Spreadsheet**
    ```
    File → New → Spreadsheet
-   Name it: "January 2026 Campaign Financials"
+   Name it: "January 2026 Trial Program Financials"
    ```
 
 2. **Import Files**
@@ -64,7 +64,7 @@ All files are located in `/docs/marketing/` with both TSV and CSV formats:
 1. **Create New Workbook**
    ```
    File → New → Blank Workbook
-   Save as: "January 2026 Campaign Financials.xlsx"
+   Save as: "January 2026 Trial Program Financials.xlsx"
    ```
 
 2. **Import Files**
@@ -363,7 +363,7 @@ Take Action on Red Flags
 ### Weekly Investor Email Template
 
 ```
-Subject: January 2026 Campaign - Week [X] Update
+Subject: January 2026 Trial Program - Week [X] Update
 
 Hi [Investor Name],
 
@@ -400,7 +400,7 @@ Best,
 
 ### Monthly Board Deck Slides
 
-**Slide 1: Campaign Overview**
+**Slide 1: Trial Program Overview**
 - Use Executive Summary table
 - Highlight: ROI, LTV:CAC, Payback Period
 
@@ -570,7 +570,7 @@ Use these spreadsheets to track campaign success:
 ## 📚 Additional Resources
 
 **Related Documentation:**
-- Campaign Management Guide: `/docs/admin/CAMPAIGN-MANAGEMENT-GUIDE.md`
+- Trial Program Management Guide: `/docs/admin/CAMPAIGN-MANAGEMENT-GUIDE.md`
 - Analytics Plan: `/docs/planning/WORKFLOW-OUTCOME-METRICS-PLAN.md`
 - Admin Dashboard: `/admin/analytics`
 
@@ -630,4 +630,4 @@ Use these spreadsheets to track campaign success:
 
 **Last Updated:** January 2026
 **Maintained By:** Product Team
-**Version:** 1.0 (14-Day Trial Campaign)
+**Version:** 1.0 (14-Day Trial Trial Program)

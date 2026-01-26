@@ -690,13 +690,13 @@ export const analyticsService = {
       `;
     }
 
-    // Get trial starts with breakdown by type (campaign vs individual)
+    // Get trial starts with breakdown by type (trial program vs individual)
     let trialResult;
     if (excludeInternal) {
       trialResult = await sql`
         SELECT
           COUNT(*) as total,
-          COUNT(*) FILTER (WHERE t.source = 'auto_campaign') as campaign,
+          COUNT(*) FILTER (WHERE t.source = 'auto_campaign') as trial_program,
           COUNT(*) FILTER (WHERE t.source != 'auto_campaign') as individual
         FROM user_trials t
         JOIN users u ON t.user_id = u.id
@@ -709,7 +709,7 @@ export const analyticsService = {
       trialResult = await sql`
         SELECT
           COUNT(*) as total,
-          COUNT(*) FILTER (WHERE source = 'auto_campaign') as campaign,
+          COUNT(*) FILTER (WHERE source = 'auto_campaign') as trial_program,
           COUNT(*) FILTER (WHERE source != 'auto_campaign') as individual
         FROM user_trials
         WHERE started_at >= ${startDate}
@@ -780,7 +780,7 @@ export const analyticsService = {
 
     // Trial breakdown
     const trialsTotal = parseInt(trialResult.rows[0]?.total || 0);
-    const trialsCampaign = parseInt(trialResult.rows[0]?.campaign || 0);
+    const trialsTrialProgram = parseInt(trialResult.rows[0]?.trial_program || 0);
     const trialsIndividual = parseInt(trialResult.rows[0]?.individual || 0);
 
     // Paid breakdown
@@ -811,7 +811,7 @@ export const analyticsService = {
           count: trialsTotal,
           label: 'Trial Started',
           breakdown: {
-            campaign: { count: trialsCampaign, label: 'Campaign Trials' },
+            trialProgram: { count: trialsTrialProgram, label: 'Trial Program Trials' },
             individual: { count: trialsIndividual, label: 'Individual Trials' },
           },
         },

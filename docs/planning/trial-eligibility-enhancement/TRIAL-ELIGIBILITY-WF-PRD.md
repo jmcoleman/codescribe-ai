@@ -28,12 +28,12 @@
 **Cost of Inaction:**
 - Lost re-activation opportunities: ~30% of trial users churn without trying new features
 - Support burden: 15-20% of trial-related tickets are eligibility issues
-- Inconsistent rules: Campaign trials are strict (one per lifetime), but admin-granted trials are lenient (only block active trials)
+- Inconsistent rules: Trial Program trials are strict (one per lifetime), but admin-granted trials are lenient (only block active trials)
 - Growth strategy limited: Cannot run seasonal promotions, tier-upgrade campaigns, or win-back initiatives
 
 ### Target Outcome
 
-Enable growth team to re-engage lapsed users with flexible trial campaigns while preventing abuse, reducing support burden by 50%, and maintaining trial conversion quality.
+Enable growth team to re-engage lapsed users with flexible trial programs while preventing abuse, reducing support burden by 50%, and maintaining trial conversion quality.
 
 ### Value Proposition
 
@@ -75,9 +75,9 @@ Enable growth team to re-engage lapsed users with flexible trial campaigns while
 
 ## 👤 User Personas & Jobs-to-Be-Done
 
-### Persona 1: Growth Lead (Campaign Manager)
+### Persona 1: Growth Lead (Trial Program Manager)
 
-**Context:** Responsible for user acquisition and re-engagement campaigns. Needs to hit quarterly MAU and conversion targets. Currently limited to "new users only" campaigns, missing re-activation opportunities.
+**Context:** Responsible for user acquisition and re-engagement trialPrograms. Needs to hit quarterly MAU and conversion targets. Currently limited to "new users only" campaigns, missing re-activation opportunities.
 
 **Core Job:** When planning quarterly campaigns, I want to target lapsed users with trial offers, so I can re-activate churned users and improve LTV.
 
@@ -158,13 +158,13 @@ Enable growth team to re-engage lapsed users with flexible trial campaigns while
 
 ## 🔄 Core Workflows
 
-### Workflow 1: Admin Creates Re-Engagement Campaign
+### Workflow 1: Admin Creates Re-Engagement Trial Program
 
 **Phase:** 2 (Future)
 **Business Outcome Served:** Outcome 1 (Enable Re-Engagement Growth)
 **Trigger:** Growth lead plans quarterly campaign targeting lapsed users
 **Actor:** Growth Lead (Admin persona)
-**End State:** Campaign created with flexible eligibility rules, ready for launch
+**End State:** Trial Program created with flexible eligibility rules, ready for launch
 
 **Journey Map:**
 ```
@@ -185,18 +185,18 @@ Enable growth team to re-engage lapsed users with flexible trial campaigns while
 
 | Step | User Intent | System Response | Success Signal | Failure Recovery |
 |------|-------------|-----------------|----------------|------------------|
-| 1 | "I want to create a lapsed user campaign" | Navigate to Campaigns → Create Campaign | Campaign form opens | Redirect from /admin if lost |
+| 1 | "I want to create a lapsed user campaign" | Navigate to Campaigns → Create Trial Program | Trial Program form opens | Redirect from /admin if lost |
 | 2 | "Allow users who tried 90+ days ago" | Toggle "Allow previous trial users" + Set cooldown=90 | Eligibility preview shows rules | Validation error if cooldown invalid |
 | 3 | "Preview who's eligible" | Click "Preview Eligibility" | Shows estimate: ~500 users eligible | Error if database query fails |
 | 4 | "Set trial tier and duration" | Select Team tier, 30 days | Preview updates with tier info | Validation: duration 1-90 days |
-| 5 | "Generate campaign codes" | Click "Create Campaign" | Campaign created, codes generated | Show validation errors inline |
+| 5 | "Generate campaign codes" | Click "Create Trial Program" | Trial Program created, codes generated | Show validation errors inline |
 | 6 | "Monitor redemptions" | View campaign dashboard | Real-time redemption count | Refresh button if stale |
 
 **Workflow Diagram:**
 ```mermaid
 flowchart TD
-    A[Growth Lead Opens Campaigns] --> B{Create New Campaign}
-    B --> C[Enter Campaign Details]
+    A[Growth Lead Opens Campaigns] --> B{Create New Trial Program}
+    B --> C[Enter Trial Program Details]
     C --> D[Configure Eligibility Rules]
     D --> E{Allow Previous Trial Users?}
     E -->|No| F[New Users Only]
@@ -205,36 +205,36 @@ flowchart TD
     H --> I[Preview Eligible Audience]
     I --> J{Audience Size OK?}
     J -->|Too Small| D
-    J -->|Good| K[Generate Campaign Codes]
-    K --> L[Launch Campaign]
+    J -->|Good| K[Generate Trial Program Codes]
+    K --> L[Launch Trial Program]
     L --> M[Monitor Redemptions]
-    M --> N[✓ Campaign Active]
+    M --> N[✓ trial program active]
 
     style N fill:#10b981,color:#fff
     style F fill:#f59e0b,color:#fff
 ```
 
 **Capabilities Required:**
-- Campaign creation UI with eligibility settings section
+- Trial Program creation UI with eligibility settings section
 - Real-time eligibility preview query (estimate eligible users)
 - Eligibility rule validation (cooldown 0-365 days, max trials 1-10)
-- Campaign templates (New User, Re-Engagement, Seasonal)
+- Trial Program templates (New User, Re-Engagement, Seasonal)
 - Database: Add columns `allow_previous_trial_users`, `cooldown_days`, `max_trials_per_user` to campaigns table
 
 **Acceptance Criteria:**
 - [ ] Growth lead completes campaign creation in < 5 minutes
 - [ ] Eligibility preview shows estimate within 10% of actual redemptions
 - [ ] 90%+ of campaigns use one of three templates (New User, 90-Day Lapsed, 180-Day Lapsed)
-- [ ] Campaign launches without errors for valid configurations
+- [ ] Trial Program launches without errors for valid configurations
 
 **Analytics Events:**
 - `campaign` (action: created, source: web, eligibility_type, target_tier, duration_days, allow_previous_trial_users, cooldown_days)
-- `campaign` (action: preview_viewed, campaign_id, estimated_reach)
-- `campaign` (action: launched, campaign_id, eligibility_type, target_tier, duration_days)
+- `campaign` (action: preview_viewed, trial_program_id, estimated_reach)
+- `campaign` (action: launched, trial_program_id, eligibility_type, target_tier, duration_days)
 
 ---
 
-### Workflow 2: Lapsed User Redeems Campaign Code
+### Workflow 2: Lapsed User Redeems Trial Program Code
 
 **Phase:** 2 (Future)
 **Business Outcome Served:** Outcome 1 (Re-Engagement Growth), Outcome 2 (Reduce Support Burden)
@@ -268,12 +268,12 @@ flowchart TD
 | 4b | **Eligible**: Previous trial 100+ days ago, campaign allows lapsed | Create trial, activate immediately | "Welcome back! Trial activated" | Retry on network error |
 | 4c | **Ineligible**: Active trial exists | Show error: "You already have an active trial" | User sees trial status + expiry date | Link to /usage page |
 | 4d | **Ineligible**: Previous trial <90 days ago, campaign requires 90-day cooldown | Show error: "Trial available in X days" | User sees countdown + pricing link | Link to /pricing for immediate access |
-| 4e | **Ineligible**: Campaign is new-users-only, user has expired trial | Show error: "This campaign is for new users only" | User sees support contact link | Link to /contact for exceptions |
+| 4e | **Ineligible**: Trial Program is new-users-only, user has expired trial | Show error: "This campaign is for new users only" | User sees support contact link | Link to /contact for exceptions |
 
 **Workflow Diagram:**
 ```mermaid
 flowchart TD
-    A[User Receives Campaign Code] --> B[Navigate to /trial]
+    A[User Receives Trial Program Code] --> B[Navigate to /trial]
     B --> C{Authenticated?}
     C -->|No| D[Login/Signup]
     C -->|Yes| E[Enter Code]
@@ -284,7 +284,7 @@ flowchart TD
     G -->|Valid| I{Check User Eligibility}
     I --> J{Has Active Trial?}
     J -->|Yes| K[❌ Show Error: Active Trial Exists]
-    J -->|No| L{Campaign Allows Previous Users?}
+    J -->|No| L{Trial Program Allows Previous Users?}
     L -->|No New Users Only| M{Has Previous Trial?}
     M -->|Yes| N[❌ Show Error: New Users Only]
     M -->|No| O[✓ Create Trial]
@@ -303,7 +303,7 @@ flowchart TD
 
 **Capabilities Required:**
 - Enhanced eligibility validation in `trialService.redeemInviteCode()`
-- Campaign-specific eligibility checks (`Trial.checkEligibilityForCampaign()`)
+- Trial Program-specific eligibility checks (`Trial.checkEligibilityForProgram()`)
 - Detailed error messages with error codes (NEW_USERS_ONLY, COOLDOWN_PERIOD, etc.)
 - Error UI components with clear next steps
 - Trial history query for context
@@ -316,10 +316,10 @@ flowchart TD
 - [ ] Analytics tracks error code distribution (COOLDOWN_PERIOD most common)
 
 **Analytics Events:**
-- `trial` (action: redemption_attempted, campaign_id, invite_code, eligibility_status, has_previous_trial)
-- `trial` (action: redemption_succeeded, source: campaign, tier, duration_days, campaign_id, invite_code)
-- `trial` (action: redemption_failed, error_code, has_previous_trial, days_since_last_trial, campaign_id, invite_code)
-- `eligibility_error` (error_code, campaign_id, invite_code, has_previous_trial, days_since_last_trial, days_until_eligible, clicked_next_step)
+- `trial` (action: redemption_attempted, trial_program_id, invite_code, eligibility_status, has_previous_trial)
+- `trial` (action: redemption_succeeded, source: campaign, tier, duration_days, trial_program_id, invite_code)
+- `trial` (action: redemption_failed, error_code, has_previous_trial, days_since_last_trial, trial_program_id, invite_code)
+- `eligibility_error` (error_code, trial_program_id, invite_code, has_previous_trial, days_since_last_trial, days_until_eligible, clicked_next_step)
 
 ---
 
@@ -445,10 +445,10 @@ flowchart TD
 |------|-------------|-----------------|----------------|------------------|
 | 1 | "User asks: Why can't I use COMEBACK30?" | Search user in /admin/users | User record appears | Try alternate email/ID |
 | 2 | "Check trial history" | Click user → View Trial History | Shows: Pro trial 60 days ago, source=invite | "No history" if new user |
-| 3 | "Understand campaign rules" | Navigate to Campaigns → Find COMEBACK30 | Campaign details: allows lapsed, 90-day cooldown | Search by code if not visible |
-| 4 | "Diagnose issue" | Compare: User trial 60 days ago < Campaign requires 90 days | Diagnosis: "User in cooldown period" | Document findings in ticket |
+| 3 | "Understand campaign rules" | Navigate to Campaigns → Find COMEBACK30 | Trial Program details: allows lapsed, 90-day cooldown | Search by code if not visible |
+| 4 | "Diagnose issue" | Compare: User trial 60 days ago < Trial Program requires 90 days | Diagnosis: "User in cooldown period" | Document findings in ticket |
 | 5a | **Issue**: Cooldown period | Respond: "Code available in 30 days, or upgrade now at /pricing" | User understands wait time | Offer discount code as alternative |
-| 5b | **Issue**: Campaign is new-users-only | Respond: "Campaign for new users only. See /pricing for paid plans." | User understands restriction | Escalate to manager for exception |
+| 5b | **Issue**: Trial Program is new-users-only | Respond: "Trial Program for new users only. See /pricing for paid plans." | User understands restriction | Escalate to manager for exception |
 | 5c | **Issue**: Bug/system error | Force-grant trial with reason: "System error, code should work" | User gets trial, issue documented | Log bug for engineering team |
 | 6 | "Document resolution" | Add note to ticket with diagnosis + action | Ticket closed, searchable for future | Template response for common issues |
 
@@ -461,10 +461,10 @@ flowchart TD
     D -->|No| E[Check Code Validity]
     E -->|Invalid Code| F[❌ Inform: Code Invalid/Expired]
     E -->|Valid Code| G[❓ Bug: Should Work, Force Grant]
-    D -->|Yes| H[Check Campaign Rules]
-    H --> I{Campaign Allows Lapsed?}
-    I -->|No| J[❌ Inform: New Users Only Campaign]
-    J --> K[Offer: View Pricing or Wait for Next Campaign]
+    D -->|Yes| H[Check Trial Program Rules]
+    H --> I{Trial Program Allows Lapsed?}
+    I -->|No| J[❌ Inform: New Users Only Trial Program]
+    J --> K[Offer: View Pricing or Wait for Next Trial Program]
     I -->|Yes| L[Check Cooldown Period]
     L --> M{Past Cooldown?}
     M -->|Yes| G
@@ -486,7 +486,7 @@ flowchart TD
 
 **Capabilities Required:**
 - Trial history visibility (same as Workflow 3)
-- Campaign details lookup by code
+- Trial Program details lookup by code
 - Eligibility diagnosis tool (compare user history to campaign rules)
 - Templated responses for common scenarios
 - Force-grant capability (same as Workflow 3)
@@ -565,7 +565,7 @@ Why it's best: Explains rule, shows countdown, provides alternatives.
 ```
 ⚠️ This user has already used a trial
    • Pro trial: 60 days ago (invite code: NEWUSER14)
-   • Campaign requires 90-day cooldown
+   • Trial Program requires 90-day cooldown
 
    [✓] Force grant trial (override eligibility check)
 
@@ -633,7 +633,7 @@ Why it's best: Explains rule, shows countdown, provides alternatives.
 
 ---
 
-### Phase 2: Campaign-Level Eligibility 🎯 **FUTURE (v3.6.0)**
+### Phase 2: Trial Program-Level Eligibility 🎯 **FUTURE (v3.6.0)**
 
 **Business Priority:** HIGH
 **Effort:** 6-8 hours
@@ -642,17 +642,17 @@ Why it's best: Explains rule, shows countdown, provides alternatives.
 **Outcomes Delivered:**
 - Outcome 1 (Re-Engagement Growth): Enable lapsed user campaigns
 - Outcome 2 (Support Burden): Self-serve redemption = -50% total tickets
-- Outcome 4 (Attribution): Campaign source + eligibility context
+- Outcome 4 (Attribution): Trial Program source + eligibility context
 
 **Workflows Enabled:**
-- ✅ Workflow 1: Admin Creates Re-Engagement Campaign (complete)
-- ✅ Workflow 2: Lapsed User Redeems Campaign Code (complete)
+- ✅ Workflow 1: Admin Creates Re-Engagement Trial Program (complete)
+- ✅ Workflow 2: Lapsed User Redeems Trial Program Code (complete)
 
 **Technical Deliverables:**
 - Database: Migration adding `allow_previous_trial_users`, `cooldown_days`, `max_trials_per_user` to campaigns table
-- Backend: `Trial.checkEligibilityForCampaign()` method
+- Backend: `Trial.checkEligibilityForProgram()` method
 - Backend: Enhanced `trialService.redeemInviteCode()` with campaign rules
-- Frontend: Campaign creation UI with eligibility settings
+- Frontend: Trial Program creation UI with eligibility settings
 - Frontend: Enhanced error messages with eligibility codes
 - Tests: 20 new test cases for campaign eligibility matrix
 
@@ -756,14 +756,14 @@ analytics.track('trial', {
   error_code: 'COOLDOWN_PERIOD',
   has_previous_trial: true,
   days_since_last_trial: 60,
-  campaign_id: 42,
+  trial_program_id: 42,
   invite_code: 'COMEBACK30'
 });
 
 // User sees eligibility error
 analytics.track('eligibility_error', {
   error_code: 'COOLDOWN_PERIOD',
-  campaign_id: 42,
+  trial_program_id: 42,
   invite_code: 'COMEBACK30',
   has_previous_trial: true,
   days_since_last_trial: 60,
@@ -771,10 +771,10 @@ analytics.track('eligibility_error', {
   clicked_next_step: 'pricing'
 });
 
-// Campaign launched
+// Trial Program launched
 analytics.track('campaign', {
   action: 'launched',
-  campaign_id: 42,
+  trial_program_id: 42,
   eligibility_type: 'allow_lapsed',
   target_tier: 'pro',
   duration_days: 14,
@@ -812,9 +812,9 @@ analytics.track('campaign', {
 - Escalation: Admins with >20 force-grants/month reviewed by manager
 
 **Phase 2 Audit Trail:**
-- Campaign eligibility changes logged (who changed rules, when, why)
+- Trial Program eligibility changes logged (who changed rules, when, why)
 - User redemption attempts tracked (success + all failure reasons)
-- Campaign ROI dashboard (redemptions, conversions, cost-per-trial)
+- Trial Program ROI dashboard (redemptions, conversions, cost-per-trial)
 
 ---
 
@@ -836,7 +836,7 @@ analytics.track('campaign', {
 
 ### Phase 2 Test Matrix
 
-| User State | Campaign Type | Cooldown | Expected Result | Error Code |
+| User State | Trial Program Type | Cooldown | Expected Result | Error Code |
 |------------|---------------|----------|-----------------|------------|
 | Never tried | New users only | N/A | ✅ Eligible | - |
 | Active trial | Any | N/A | ❌ Blocked | ACTIVE_TRIAL_EXISTS |
@@ -848,7 +848,7 @@ analytics.track('campaign', {
 **Edge Cases:**
 - User redeems code the day cooldown expires (90 days exactly)
 - Admin creates campaign with 0-day cooldown (should allow immediate re-trial)
-- Campaign switches from "new users only" to "allow lapsed" mid-flight
+- Trial Program switches from "new users only" to "allow lapsed" mid-flight
 - User has trial from different tier (Pro trial, redeeming Team campaign)
 
 ---
@@ -914,7 +914,7 @@ analytics.track('campaign', {
 
 **Pre-Launch:**
 - [ ] Database migration tested in staging (eligibility columns)
-- [ ] Campaign creation UI tested with 3 eligibility configurations
+- [ ] Trial Program creation UI tested with 3 eligibility configurations
 - [ ] Error messages reviewed by UX team
 - [ ] Growth team trained on campaign eligibility (1-hour workshop)
 - [ ] 5 beta campaigns created for soft launch
@@ -928,7 +928,7 @@ analytics.track('campaign', {
 **Full Launch (Week 3+):**
 - [ ] Launch first external re-engagement campaign
 - [ ] Daily monitoring: Redemption rate, error rate, conversion funnel
-- [ ] Weekly growth sync: Campaign performance review
+- [ ] Weekly growth sync: Trial Program performance review
 - [ ] Document learnings, iterate on eligibility rules
 
 ---
@@ -996,11 +996,11 @@ analytics.track('campaign', {
 
 ### Phase 2 Complete When:
 
-- [ ] All 6 acceptance criteria met for Workflow 1 (Create Campaign)
+- [ ] All 6 acceptance criteria met for Workflow 1 (Create Trial Program)
 - [ ] All 7 acceptance criteria met for Workflow 2 (Redeem Code)
 - [ ] 20 test cases pass (campaign eligibility matrix)
 - [ ] Growth team launches first re-engagement campaign
-- [ ] Campaign achieves 15%+ redemption rate
+- [ ] Trial Program achieves 15%+ redemption rate
 - [ ] Support tickets reduce by 50% (50 → 25/month)
 - [ ] Trial-to-paid conversion maintains 18%+
 
@@ -1009,7 +1009,7 @@ analytics.track('campaign', {
 ## 📖 Related Documentation
 
 - **Trial System Overview**: [TIER-ARCHITECTURE.md](../../architecture/TIER-ARCHITECTURE.md)
-- **Campaign Management**: [CAMPAIGN-MANAGEMENT-GUIDE.md](../../admin/CAMPAIGN-MANAGEMENT-GUIDE.md)
+- **Trial Program Management**: [CAMPAIGN-MANAGEMENT-GUIDE.md](../../admin/CAMPAIGN-MANAGEMENT-GUIDE.md)
 - **User Management**: [USER-MANAGEMENT-GUIDE.md](../../admin/USER-MANAGEMENT-GUIDE.md)
 - **Admin Analytics**: [ADMIN-USAGE-STATS.md](../../admin/ADMIN-USAGE-STATS.md)
 - **Workflow-First PRD Template**: [WORKFLOW-FIRST-PRD-TEMPLATE.md](../../templates/WORKFLOW-FIRST-PRD-TEMPLATE.md)

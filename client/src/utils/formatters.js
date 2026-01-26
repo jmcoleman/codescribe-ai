@@ -97,12 +97,26 @@ export function formatDateTime(dateInput, { includeAt = true } = {}) {
  * Example: "Dec 4, 2024"
  *
  * @param {string|Date} dateInput - Date string or Date object
+ * @param {Object} options - Formatting options
+ * @param {boolean} options.utc - Treat as UTC date without timezone conversion (default: false)
  * @returns {string} Formatted date
  */
-export function formatDate(dateInput) {
+export function formatDate(dateInput, { utc = false } = {}) {
   if (!dateInput) return 'N/A';
 
-  return new Date(dateInput).toLocaleDateString('en-US', {
+  const date = new Date(dateInput);
+
+  // For date-only values (like campaign start/end dates), use UTC to avoid timezone shifts
+  if (utc) {
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      timeZone: 'UTC'
+    });
+  }
+
+  return date.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric'

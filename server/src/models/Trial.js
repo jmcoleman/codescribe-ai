@@ -480,6 +480,100 @@ class Trial {
 
     return { eligible: false, reason: 'You have already used a trial' };
   }
+
+  /**
+   * Check eligibility with campaign-specific rules
+   * @param {number} userId - User ID
+   * @param {Object} campaignSettings - Trial Program eligibility settings
+   * @param {boolean} [campaignSettings.allowPreviousTrialUsers=false] - Allow users with expired trials
+   * @param {number} [campaignSettings.cooldownDays=0] - Minimum days since last trial ended
+   * @param {number} [campaignSettings.maxTrialsPerUser=1] - Max trials per user lifetime
+   * @returns {Promise<Object>} Eligibility status with detailed reason
+   */
+  static async checkEligibilityForProgram(userId, campaignSettings = {}) {
+    const {
+      allowPreviousTrialUsers = false,
+      cooldownDays = 0
+    } = campaignSettings;
+
+    // System-wide lifetime trial limit (from environment variable)
+    const MAX_TRIALS_PER_USER_LIFETIME = parseInt(process.env.MAX_TRIALS_PER_USER_LIFETIME || '3', 10);
+
+    // 1. Check for active trial (always blocks)
+    const activeTrial = await this.findActiveByUserId(userId);
+    if (activeTrial) {
+      return {
+        eligible: false,
+        reason: 'You already have an active trial',
+        code: 'ACTIVE_TRIAL_EXISTS',
+        activeTrial: {
+          tier: activeTrial.trial_tier,
+          endsAt: activeTrial.ends_at
+        }
+      };
+    }
+
+    // 2. Get all previous trials
+    const allTrials = await this.findAllByUserId(userId);
+
+    // 3. No previous trials - always eligible
+    if (allTrials.length === 0) {
+      return {
+        eligible: true,
+        reason: null,
+        code: 'NEW_USER'
+      };
+    }
+
+    // 4. Check lifetime trial limit (system-wide)
+    if (allTrials.length >= MAX_TRIALS_PER_USER_LIFETIME) {
+      return {
+        eligible: false,
+        reason: `Maximum trial limit reached (${MAX_TRIALS_PER_USER_LIFETIME} trial${MAX_TRIALS_PER_USER_LIFETIME > 1 ? 's' : ''} per user)`,
+        code: 'MAX_TRIALS_REACHED',
+        trialCount: allTrials.length
+      };
+    }
+
+    // 5. Trial Program doesn't allow previous trial users
+    if (!allowPreviousTrialUsers) {
+      return {
+        eligible: false,
+        reason: 'This campaign is only available to new trial users',
+        code: 'NEW_USERS_ONLY',
+        trialCount: allTrials.length,
+        lastTrialEndedAt: allTrials[0].ends_at
+      };
+    }
+
+    // 6. Check cooldown period
+    const lastTrial = allTrials[0]; // Already sorted by DESC
+    const lastTrialEnd = new Date(lastTrial.ends_at);
+    const now = new Date();
+    const daysSinceLastTrial = Math.floor((now - lastTrialEnd) / (1000 * 60 * 60 * 24));
+
+    if (daysSinceLastTrial < cooldownDays) {
+      const daysRemaining = cooldownDays - daysSinceLastTrial;
+      return {
+        eligible: false,
+        reason: `Trial available again in ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''}`,
+        code: 'COOLDOWN_PERIOD',
+        daysRemaining,
+        daysSinceLastTrial,
+        lastTrialEndedAt: lastTrial.ends_at
+      };
+    }
+
+    // 7. All checks passed
+    return {
+      eligible: true,
+      reason: null,
+      code: 'ELIGIBLE_RETURNING_USER',
+      trialCount: allTrials.length,
+      daysSinceLastTrial,
+      lastTrialEndedAt: lastTrial.ends_at
+    };
+  }
 }
 
 export default Trial;

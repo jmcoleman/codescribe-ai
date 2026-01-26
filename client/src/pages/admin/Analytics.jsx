@@ -266,7 +266,7 @@ export default function Analytics() {
     return { startDate: start, endDate: end };
   });
 
-  // Campaign export dates (separate from main dashboard dateRange)
+  // Trial Program export dates (separate from main dashboard dateRange)
   const [campaignExportDates, setCampaignExportDates] = useState(() => {
     const end = new Date();
     end.setDate(end.getDate() + 1);
@@ -906,7 +906,7 @@ export default function Analytics() {
                                 return (
                                   <>
                                     <div className="flex items-center gap-2">
-                                      <div className="w-24 text-xs text-slate-500 dark:text-slate-400 text-right">Campaign</div>
+                                      <div className="w-24 text-xs text-slate-500 dark:text-slate-400 text-right">Trial Program</div>
                                       <div className="flex-1 h-4 bg-slate-100 dark:bg-slate-700 rounded overflow-hidden">
                                         <div
                                           className="h-full bg-amber-400 dark:bg-amber-500 transition-all duration-500 flex items-center justify-end pr-1"
@@ -973,10 +973,10 @@ export default function Analytics() {
               </>
             )}
 
-            {/* Campaign Export Section */}
+            {/* Trial Program Export Section */}
             <div className="mt-8 p-6 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg">
               <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
-                Campaign Metrics Export
+                Trial Program Metrics Export
               </h3>
               <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
                 Export comprehensive campaign metrics including trial breakdowns, conversion rates, and cohort analysis for investor reporting.
@@ -1033,7 +1033,7 @@ export default function Analytics() {
                         : campaignExportDates.endDate;
 
                       const response = await fetch(
-                        `${import.meta.env.VITE_API_URL}/api/admin/campaigns/export?startDate=${startDateStr}&endDate=${endDateStr}&campaignSource=auto_campaign`,
+                        `${import.meta.env.VITE_API_URL}/api/admin/trial-programs/export?startDate=${startDateStr}&endDate=${endDateStr}&campaignSource=auto_campaign`,
                         {
                           headers: {
                             'Authorization': `Bearer ${token}`,
@@ -1063,19 +1063,19 @@ export default function Analytics() {
                       // Convert to CSV format
                       const csvRows = [];
 
-                      // Campaign metadata section
+                      // Trial Program metadata section
                       csvRows.push('CAMPAIGN METRICS EXPORT');
                       csvRows.push('');
-                      csvRows.push('Campaign Information');
-                      csvRows.push(`Date Range,${escapeCSV(data.campaign.startDate + ' to ' + data.campaign.endDate)}`);
-                      csvRows.push(`Campaign Source,${escapeCSV(data.campaign.source)}`);
+                      csvRows.push('Trial Program Information');
+                      csvRows.push(`Date Range,${escapeCSV(data.trialProgram.startDate + ' to ' + data.trialProgram.endDate)}`);
+                      csvRows.push(`Trial Program Source,${escapeCSV(data.trialProgram.source)}`);
 
                       // Handle multiple campaigns
-                      if (data.campaign.campaigns && data.campaign.campaigns.length > 0) {
-                        csvRows.push(`Active Campaigns,${data.campaign.count}`);
+                      if (data.trialProgram.campaigns && data.trialProgram.trialPrograms.length > 0) {
+                        csvRows.push(`Active Campaigns,${data.trialProgram.count}`);
                         csvRows.push('');
-                        csvRows.push('Campaign,Trial Tier,Trial Days,Start Date,End Date,Status');
-                        data.campaign.campaigns.forEach(c => {
+                        csvRows.push('Trial Program,Trial Tier,Trial Days,Start Date,End Date,Status');
+                        data.trialProgram.trialPrograms.forEach(c => {
                           csvRows.push([
                             escapeCSV(c.name),
                             escapeCSV(c.trialTier),
@@ -1100,15 +1100,15 @@ export default function Analytics() {
                       // Trial breakdown section
                       csvRows.push('Trial Breakdown');
                       csvRows.push('Trial Type,Trials Started,Conversions,Conversion Rate');
-                      csvRows.push(`Campaign Trials,${data.summary.trials_breakdown.campaign_trials.started},${data.summary.trials_breakdown.campaign_trials.converted},${data.summary.trials_breakdown.campaign_trials.conversion_rate}%`);
+                      csvRows.push(`Trial Program Trials,${data.summary.trials_breakdown.campaign_trials.started},${data.summary.trials_breakdown.campaign_trials.converted},${data.summary.trials_breakdown.campaign_trials.conversion_rate}%`);
                       csvRows.push(`Individual Trials,${data.summary.trials_breakdown.individual_trials.started},${data.summary.trials_breakdown.individual_trials.converted},${data.summary.trials_breakdown.individual_trials.conversion_rate}%`);
                       csvRows.push(`Total Trials,${data.summary.trials_breakdown.total_trials.started},${data.summary.trials_breakdown.total_trials.converted},${data.summary.trials_breakdown.total_trials.conversion_rate}%`);
                       csvRows.push('');
 
-                      // Campaign performance comparison
-                      csvRows.push('Campaign Performance');
-                      csvRows.push(`Campaign Lift,${data.summary.comparison.campaign_vs_individual.campaign_lift}`);
-                      csvRows.push(`Campaign Performs Better,${data.summary.comparison.campaign_vs_individual.campaign_performs_better ? 'Yes' : 'No'}`);
+                      // Trial Program performance comparison
+                      csvRows.push('Trial Program Performance');
+                      csvRows.push(`Trial Program Lift,${data.summary.comparison.campaign_vs_individual.campaign_lift}`);
+                      csvRows.push(`Trial Program Performs Better,${data.summary.comparison.campaign_vs_individual.campaign_performs_better ? 'Yes' : 'No'}`);
                       csvRows.push('');
 
                       // Individual trial sources breakdown
@@ -1216,14 +1216,14 @@ export default function Analytics() {
                       document.body.removeChild(a);
                       URL.revokeObjectURL(url);
 
-                      console.log('[Campaign Export] Successfully exported campaign metrics as CSV');
+                      console.log('[Trial Program Export] Successfully exported campaign metrics as CSV');
                     } catch (error) {
-                      console.error('[Campaign Export] Error:', error);
+                      console.error('[Trial Program Export] Error:', error);
                     }
                   }}
                   className="px-6 py-2 bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 text-white rounded-md transition-colors font-medium"
                 >
-                  Export Campaign Metrics
+                  Export Trial Program Metrics
                 </button>
               </div>
 

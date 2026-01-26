@@ -1,4 +1,4 @@
-# Auto-Trial Campaign Plan
+# Auto-Trial Trial Program Plan
 
 ## Overview
 Automatically grant Pro tier trial access to all new signups during a promotional campaign period. This enables gathering product feedback from users with full feature access.
@@ -16,7 +16,7 @@ CAMPAIGN_TRIAL_DAYS=14
 # Trial tier to grant (default: pro)
 CAMPAIGN_TRIAL_TIER=pro
 
-# Optional: Campaign end date (ISO format) - auto-disables after this date
+# Optional: Trial Program end date (ISO format) - auto-disables after this date
 CAMPAIGN_END_DATE=2025-02-01T00:00:00Z
 ```
 
@@ -57,7 +57,7 @@ if (isCampaignActive()) {
     campaignConfig.trialDays,
     'auto-campaign' // source for tracking
   );
-  console.log(`[Campaign] Auto-granted ${campaignConfig.trialTier} trial to user ${newUser.id}`);
+  console.log(`[Trial Program] Auto-granted ${campaignConfig.trialTier} trial to user ${newUser.id}`);
 }
 ```
 
@@ -105,7 +105,7 @@ if (isCampaignActive()) {
 
 ## Deployment Checklist
 
-### To Activate Campaign
+### To Activate Trial Program
 1. Add environment variables to Vercel:
    - `CAMPAIGN_AUTO_TRIAL=true`
    - `CAMPAIGN_TRIAL_DAYS=14` (or desired duration)
@@ -114,7 +114,7 @@ if (isCampaignActive()) {
 2. Deploy changes
 3. Verify with test signup
 
-### To Deactivate Campaign
+### To Deactivate Trial Program
 **Option A:** Set `CAMPAIGN_AUTO_TRIAL=false` in Vercel and redeploy
 
 **Option B:** Let `CAMPAIGN_END_DATE` pass (auto-disables)

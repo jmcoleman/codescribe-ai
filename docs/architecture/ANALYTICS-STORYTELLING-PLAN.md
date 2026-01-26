@@ -30,7 +30,7 @@ Enhance the analytics dashboard to tell a clear story about the data through:
 Beyond the original plan, these analytics improvements were implemented:
 
 - **Conversion Funnel Enhancements**
-  - Trial breakdown: Campaign vs Individual sources
+  - Trial breakdown: Trial Program vs Individual sources
   - Paid breakdown: Via Trial vs Direct conversions
   - `signup_to_paid` overall conversion rate metric
   - Percentage-first KPI display with counts as supporting text

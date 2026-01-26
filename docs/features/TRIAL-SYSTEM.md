@@ -28,7 +28,7 @@ The trial system allows admins to invite users to experience Pro features for a 
    - **Duration**: Number of days (default 14)
    - **Max Uses**: How many users can redeem this code (default 1)
    - **Valid Until**: Optional expiration date for the code itself
-   - **Campaign**: Optional tracking label (e.g., "beta-launch", "twitter-promo")
+   - **Trial Program**: Optional tracking label (e.g., "beta-launch", "twitter-promo")
    - **Notes**: Internal notes
 4. Click "Create"
 5. The invite link is automatically copied to your clipboard

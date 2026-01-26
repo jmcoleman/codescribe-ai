@@ -16,6 +16,7 @@ export function TrialProvider({ children }) {
   const { user, refreshUser, isAuthenticated } = useAuth();
   const [isRedeeming, setIsRedeeming] = useState(false);
   const [redeemError, setRedeemError] = useState(null);
+  const [eligibilityError, setEligibilityError] = useState(null);
 
   /**
    * Derive trial status from user object
@@ -91,6 +92,7 @@ export function TrialProvider({ children }) {
 
     setIsRedeeming(true);
     setRedeemError(null);
+    setEligibilityError(null);
 
     try {
       const token = getStorageItem(STORAGE_KEYS.AUTH_TOKEN);
@@ -106,7 +108,19 @@ export function TrialProvider({ children }) {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to redeem code');
+        // Check if this is an eligibility error with structured data
+        if (data.code && data.details) {
+          setEligibilityError({
+            errorCode: data.code,
+            error: data.error || 'Eligibility check failed',
+            details: data.details
+          });
+        }
+
+        const error = new Error(data.error || 'Failed to redeem code');
+        error.code = data.code;
+        error.details = data.details;
+        throw error;
       }
 
       // Refresh user data to get updated trial info
@@ -158,6 +172,7 @@ export function TrialProvider({ children }) {
    */
   const clearRedeemError = useCallback(() => {
     setRedeemError(null);
+    setEligibilityError(null);
   }, []);
 
   const value = useMemo(() => ({
@@ -176,6 +191,7 @@ export function TrialProvider({ children }) {
     // UI state
     isRedeeming,
     redeemError,
+    eligibilityError,
     clearRedeemError
   }), [
     trialStatus,
@@ -184,6 +200,7 @@ export function TrialProvider({ children }) {
     fetchTrialStatus,
     isRedeeming,
     redeemError,
+    eligibilityError,
     clearRedeemError
   ]);
 

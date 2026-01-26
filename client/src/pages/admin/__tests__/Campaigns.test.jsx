@@ -8,7 +8,7 @@ import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { renderWithTheme as render } from '../../../__tests__/utils/renderWithTheme';
-import Campaigns from '../Campaigns';
+import TrialPrograms from '../TrialPrograms';
 
 // Helper to find menu items in portal (rendered to document.body)
 const findMenuItemInPortal = async (name) => {
@@ -63,7 +63,7 @@ describe('Campaigns Admin Page', () => {
   const renderCampaigns = () => {
     return render(
       <MemoryRouter>
-        <Campaigns />
+        <TrialPrograms />
       </MemoryRouter>
     );
   };
@@ -76,6 +76,7 @@ describe('Campaigns Admin Page', () => {
       trial_tier: 'pro',
       trial_days: 14,
       is_active: true,
+      auto_enroll: true,
       starts_at: '2026-01-01T00:00:00Z',
       ends_at: '2026-12-31T23:59:59Z',
       signups_count: 50,
@@ -83,11 +84,12 @@ describe('Campaigns Admin Page', () => {
     },
     {
       id: 2,
-      name: 'Test Campaign',
+      name: 'Test Trial Program',
       description: null,
       trial_tier: 'team',
       trial_days: 30,
       is_active: false,
+      auto_enroll: false,
       starts_at: '2026-02-01T00:00:00Z',
       ends_at: '2026-12-31T23:59:59Z',
       signups_count: 0,
@@ -108,8 +110,8 @@ describe('Campaigns Admin Page', () => {
 
       renderCampaigns();
 
-      expect(screen.getByRole('heading', { name: /trial campaigns/i })).toBeInTheDocument();
-      expect(screen.getByText(/manage auto-trial campaigns/i)).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /trial programs/i })).toBeInTheDocument();
+      expect(screen.getByText(/manage trial programs/i)).toBeInTheDocument();
     });
 
     it('should show loading state initially', () => {
@@ -122,7 +124,7 @@ describe('Campaigns Admin Page', () => {
 
       // BaseTable shows a spinning icon during loading (no text to assert)
       // Just verify the page title is rendered
-      expect(screen.getByRole('heading', { name: /trial campaigns/i })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /trial programs/i })).toBeInTheDocument();
     });
 
     it('should display campaigns after loading', async () => {
@@ -135,7 +137,7 @@ describe('Campaigns Admin Page', () => {
 
       await waitFor(() => {
         expect(screen.getByText('January Pro Trial')).toBeInTheDocument();
-        expect(screen.getByText('Test Campaign')).toBeInTheDocument();
+        expect(screen.getByText('Test Trial Program')).toBeInTheDocument();
       });
     });
 
@@ -148,8 +150,8 @@ describe('Campaigns Admin Page', () => {
       renderCampaigns();
 
       await waitFor(() => {
-        expect(screen.getByText(/no campaigns yet/i)).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /create first campaign/i })).toBeInTheDocument();
+        expect(screen.getByText(/no trial programs yet/i)).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /create first trial program/i })).toBeInTheDocument();
       });
     });
 
@@ -211,7 +213,7 @@ describe('Campaigns Admin Page', () => {
   // ACTIVE CAMPAIGN BANNER
   // ============================================================================
 
-  describe('Active Campaign Banner', () => {
+  describe('Active Trial Program Banner', () => {
     it('should show banner when a campaign is active', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
@@ -221,7 +223,7 @@ describe('Campaigns Admin Page', () => {
       renderCampaigns();
 
       await waitFor(() => {
-        expect(screen.getByText('Campaign Active')).toBeInTheDocument();
+        expect(screen.getByText('Active auto-enroll trial program')).toBeInTheDocument();
         expect(screen.getByText(/all new signups receive a/i)).toBeInTheDocument();
       });
     });
@@ -240,7 +242,7 @@ describe('Campaigns Admin Page', () => {
         expect(screen.getByText('January Pro Trial')).toBeInTheDocument();
       });
 
-      expect(screen.queryByText('Campaign Active')).not.toBeInTheDocument();
+      expect(screen.queryByText('Active auto-enroll trial program')).not.toBeInTheDocument();
     });
   });
 
@@ -248,7 +250,7 @@ describe('Campaigns Admin Page', () => {
   // CAMPAIGN TABLE
   // ============================================================================
 
-  describe('Campaign Table', () => {
+  describe('Trial Program Table', () => {
     it('should display trial tier and duration', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
@@ -294,7 +296,7 @@ describe('Campaigns Admin Page', () => {
       });
 
       // Open first campaign menu (has signups) - should NOT have Delete
-      const actionButtons = screen.getAllByLabelText('Campaign actions');
+      const actionButtons = screen.getAllByLabelText('Trial Program actions');
       await user.click(actionButtons[0]);
 
       // Delete should not be in the menu (check in portal)
@@ -319,8 +321,8 @@ describe('Campaigns Admin Page', () => {
   // CREATE CAMPAIGN
   // ============================================================================
 
-  describe('Create Campaign', () => {
-    it('should open modal when clicking New Campaign', async () => {
+  describe('Create Trial Program', () => {
+    it('should open modal when clicking New Trial Program', async () => {
       const user = userEvent.setup();
 
       mockFetch.mockResolvedValueOnce({
@@ -331,12 +333,12 @@ describe('Campaigns Admin Page', () => {
       renderCampaigns();
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /create first campaign/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /create first trial program/i })).toBeInTheDocument();
       });
 
-      await user.click(screen.getByRole('button', { name: /create first campaign/i }));
+      await user.click(screen.getByRole('button', { name: /create first trial program/i }));
 
-      expect(screen.getByRole('heading', { name: /create campaign/i })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /create trial program/i })).toBeInTheDocument();
       expect(screen.getByPlaceholderText(/january pro trial/i)).toBeInTheDocument();
     });
 
@@ -350,7 +352,7 @@ describe('Campaigns Admin Page', () => {
         })
         .mockResolvedValueOnce({
           ok: true,
-          json: () => Promise.resolve({ id: 1, name: 'New Campaign' }),
+          json: () => Promise.resolve({ id: 1, name: 'New Trial Program' }),
         })
         .mockResolvedValueOnce({
           ok: true,
@@ -360,20 +362,20 @@ describe('Campaigns Admin Page', () => {
       renderCampaigns();
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /create first campaign/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /create first trial program/i })).toBeInTheDocument();
       });
 
-      await user.click(screen.getByRole('button', { name: /create first campaign/i }));
+      await user.click(screen.getByRole('button', { name: /create first trial program/i }));
 
-      await user.type(screen.getByPlaceholderText(/january pro trial/i), 'New Campaign');
-      await user.click(screen.getByRole('button', { name: /create campaign/i }));
+      await user.type(screen.getByPlaceholderText(/january pro trial/i), 'New Trial Program');
+      await user.click(screen.getByRole('button', { name: /save/i }));
 
       await waitFor(() => {
         expect(mockFetch).toHaveBeenCalledWith(
-          expect.stringContaining('/api/admin/campaigns'),
+          expect.stringContaining('/api/admin/trial-programs'),
           expect.objectContaining({
             method: 'POST',
-            body: expect.stringContaining('New Campaign'),
+            body: expect.stringContaining('New Trial Program'),
           })
         );
       });
@@ -384,8 +386,8 @@ describe('Campaigns Admin Page', () => {
   // TOGGLE CAMPAIGN
   // ============================================================================
 
-  describe('Toggle Campaign', () => {
-    it.skip('should toggle campaign active status', async () => {
+  describe('Toggle Trial Program', () => {
+    it.skip('should toggle trial program active status', async () => {
       const user = userEvent.setup();
 
       mockFetch
@@ -409,7 +411,7 @@ describe('Campaigns Admin Page', () => {
       });
 
       // Open the actions menu for the first campaign
-      const actionButtons = screen.getAllByLabelText('Campaign actions');
+      const actionButtons = screen.getAllByLabelText('Trial Program actions');
       await user.click(actionButtons[0]);
 
       // Click Deactivate in the menu (check portal)
@@ -418,7 +420,7 @@ describe('Campaigns Admin Page', () => {
 
       await waitFor(() => {
         expect(mockFetch).toHaveBeenCalledWith(
-          expect.stringContaining('/api/admin/campaigns/1/toggle'),
+          expect.stringContaining('/api/admin/trial-programs/1/toggle'),
           expect.objectContaining({
             method: 'POST',
             body: expect.stringContaining('false'),
@@ -432,7 +434,7 @@ describe('Campaigns Admin Page', () => {
   // DELETE CAMPAIGN
   // ============================================================================
 
-  describe('Delete Campaign', () => {
+  describe('Delete Trial Program', () => {
     it.skip('should delete campaign after confirmation', async () => {
       const user = userEvent.setup();
 
@@ -453,11 +455,11 @@ describe('Campaigns Admin Page', () => {
       renderCampaigns();
 
       await waitFor(() => {
-        expect(screen.getByText('Test Campaign')).toBeInTheDocument();
+        expect(screen.getByText('Test Trial Program')).toBeInTheDocument();
       });
 
-      // Open the actions menu for the second campaign (Test Campaign with 0 signups)
-      const actionButtons = screen.getAllByLabelText('Campaign actions');
+      // Open the actions menu for the second campaign (Test Trial Program with 0 signups)
+      const actionButtons = screen.getAllByLabelText('Trial Program actions');
       await user.click(actionButtons[1]);
 
       // Click Delete in the menu (check portal)
@@ -466,14 +468,14 @@ describe('Campaigns Admin Page', () => {
 
       await waitFor(() => {
         expect(mockFetch).toHaveBeenCalledWith(
-          expect.stringContaining('/api/admin/campaigns/2'),
+          expect.stringContaining('/api/admin/trial-programs/2'),
           expect.objectContaining({
             method: 'DELETE',
           })
         );
       });
 
-      expect(toast.success).toHaveBeenCalledWith('Campaign deleted');
+      expect(toast.success).toHaveBeenCalledWith('Trial Program deleted');
     });
 
     it.skip('should not delete campaign if confirmation is cancelled', async () => {
@@ -488,11 +490,11 @@ describe('Campaigns Admin Page', () => {
       renderCampaigns();
 
       await waitFor(() => {
-        expect(screen.getByText('Test Campaign')).toBeInTheDocument();
+        expect(screen.getByText('Test Trial Program')).toBeInTheDocument();
       });
 
       // Open the actions menu for the second campaign
-      const actionButtons = screen.getAllByLabelText('Campaign actions');
+      const actionButtons = screen.getAllByLabelText('Trial Program actions');
       await user.click(actionButtons[1]);
 
       // Click Delete in the menu (check portal)
@@ -507,7 +509,7 @@ describe('Campaigns Admin Page', () => {
   // EDIT CAMPAIGN
   // ============================================================================
 
-  describe('Edit Campaign', () => {
+  describe('Edit Trial Program', () => {
     it.skip('should open modal with campaign data when editing', async () => {
       const user = userEvent.setup();
 
@@ -523,7 +525,7 @@ describe('Campaigns Admin Page', () => {
       });
 
       // Open the actions menu for the first campaign
-      const actionButtons = screen.getAllByLabelText('Campaign actions');
+      const actionButtons = screen.getAllByLabelText('Trial Program actions');
       await user.click(actionButtons[0]);
 
       // Click Edit in the menu (check portal)
@@ -561,7 +563,7 @@ describe('Campaigns Admin Page', () => {
         expect(screen.getByText('January Pro Trial')).toBeInTheDocument();
       });
 
-      const refreshButton = screen.getByTitle('Refresh');
+      const refreshButton = screen.getByRole('button', { name: /refresh/i });
       await user.click(refreshButton);
 
       expect(mockFetch).toHaveBeenCalledTimes(2);

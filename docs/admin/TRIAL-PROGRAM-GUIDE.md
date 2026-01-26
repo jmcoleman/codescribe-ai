@@ -1,8 +1,8 @@
-# Campaign Management Guide
+# Trial Program Management Guide
 
 ## Overview
 
-CodeScribe's Campaign system allows admins to automatically grant Pro or Team tier trials to all new signups during promotional periods. Campaigns are fully managed through the Admin UI with no code changes required.
+CodeScribe's Trial Program system allows admins to automatically grant Pro or Team tier trials to all new signups during promotional periods. Campaigns are fully managed through the Admin UI with no code changes required.
 
 **Use Cases:**
 - Product launch promotions
@@ -16,25 +16,25 @@ CodeScribe's Campaign system allows admins to automatically grant Pro or Team ti
 ## Prerequisites
 
 - Admin account access
-- Access to `/admin/campaigns` page
+- Access to `/admin/trial-programs` page
 - Understanding of your tier structure (Free/Pro/Team)
 
 ---
 
-## Creating a Campaign
+## Creating a Trial Program
 
 ### Step 1: Navigate to Campaigns
 
 1. Log into your admin account
 2. Go to `/admin` dashboard
-3. Click **"Campaigns"** in the admin menu
-4. Or navigate directly to `/admin/campaigns`
+3. Click **"Trial Programs"** in the admin menu
+4. Or navigate directly to `/admin/trial-programs`
 
-### Step 2: Click "New Campaign"
+### Step 2: Click "New Trial Program"
 
-Click the **"+ New Campaign"** button in the top-right corner.
+Click the **"+ New Trial Program"** button in the top-right corner.
 
-### Step 3: Configure Campaign Settings
+### Step 3: Configure Trial Program Settings
 
 Fill in the campaign form:
 
@@ -42,7 +42,7 @@ Fill in the campaign form:
 
 | Field | Description | Example |
 |-------|-------------|---------|
-| **Campaign Name** | Internal name for tracking | "January 2026 Pro Trial" |
+| **Trial Program Name** | Internal name for tracking | "January 2026 Pro Trial" |
 | **Trial Tier** | Tier to grant (Pro or Team) | Pro |
 | **Trial Days** | Duration of trial access | 14 (or 7, 21, 30, etc.) |
 | **Start Date** | When campaign begins | 2026-01-10 |
@@ -53,13 +53,13 @@ Fill in the campaign form:
 |-------|-------------|---------|
 | **Description** | Internal notes/context | "All new signups get Pro access through January 2026" |
 | **End Date** | When campaign auto-expires | 2026-01-31 |
-| **Activate immediately** | Check to make campaign active now | ✓ |
+| **Activate immediately** | Check to make trial program active now | ✓ |
 
 ### Step 4: Save and Activate
 
-1. Click **"Create Campaign"**
+1. Click **"Create Trial Program"**
 2. If "Activate immediately" was checked, the campaign starts instantly
-3. A green banner confirms: "Campaign Active - All new signups receive a [tier] trial"
+3. A green banner confirms: "trial program active - All new signups receive a [tier] trial"
 
 ---
 
@@ -69,8 +69,8 @@ When a campaign is active:
 
 ✅ **Auto-granting:** Every new signup (email or OAuth) automatically receives the configured trial
 ✅ **Attribution tracking:** All trials are tagged with `source: 'auto-campaign'` for analytics
-✅ **Usage counting:** Campaign tracks signup count and conversion metrics
-✅ **Auto-expiration:** Campaign automatically becomes inactive after the end date (if set)
+✅ **Usage counting:** Trial Program tracks signup count and conversion metrics
+✅ **Auto-expiration:** Trial Program automatically becomes inactive after the end date (if set)
 ✅ **Single active limit:** System ensures only one campaign can be active at a time
 
 **Important:** Campaigns only affect NEW signups. Existing users are not affected.
@@ -79,13 +79,13 @@ When a campaign is active:
 
 ## Managing Active Campaigns
 
-### Viewing Campaign Status
+### Viewing Trial Program Status
 
 The Campaigns page displays:
 
 | Column | Information |
 |--------|-------------|
-| **Campaign** | Name and description |
+| **Trial Program** | Name and description |
 | **Status** | Active / Scheduled / Ended / Inactive |
 | **Trial** | Tier and duration (e.g., "Pro (14 days)") |
 | **Dates** | Start and end dates |
@@ -95,10 +95,10 @@ The Campaigns page displays:
 
 | Badge | Meaning |
 |-------|---------|
-| 🟢 **Active** | Campaign is running, granting trials to new signups |
-| 🔵 **Scheduled** | Campaign starts in the future (not yet active) |
-| 🟡 **Ended** | Campaign end date has passed (no longer granting trials) |
-| ⚫ **Inactive** | Campaign manually deactivated |
+| 🟢 **Active** | Trial Program is running, granting trials to new signups |
+| 🔵 **Scheduled** | Trial Program starts in the future (not yet active) |
+| 🟡 **Ended** | Trial Program end date has passed (no longer granting trials) |
+| ⚫ **Inactive** | Trial Program manually deactivated |
 
 ### Quick Actions
 
@@ -143,11 +143,11 @@ Activate immediately: ✓
 
 **Result:** Every signup during Feb 15-22 gets 7 days of Team access
 
-### Example 3: Scheduled Future Campaign
+### Example 3: Scheduled Future Trial Program
 **Goal:** Prepare campaign for next month, activate later
 
 ```
-Name: "Q2 Growth Campaign"
+Name: "Q2 Growth Trial Program"
 Description: "Scheduled for April 1 start"
 Trial Tier: Pro
 Trial Days: 14
@@ -156,11 +156,11 @@ End Date: 2026-04-30
 Activate immediately: ✗ (leave unchecked)
 ```
 
-**Result:** Campaign shows as "Scheduled" until April 1, then auto-activates
+**Result:** Trial Program shows as "Scheduled" until April 1, then auto-activates
 
 ---
 
-## Monitoring Campaign Performance
+## Monitoring Trial Program Performance
 
 ### Real-Time Metrics
 
@@ -172,14 +172,14 @@ Track these metrics in the Campaigns table:
 
 **Enhanced Metrics (v3.3.9):**
 
-Use the Campaign Export button to get additional metrics:
+Use the Trial Program Export button to get additional metrics:
 
 4. **Email Verification Rate** - % of signups who verified email
 5. **Time to Verify** - Average hours/days from signup to verification
 6. **Activation Rate** - % who completed first generation
 7. **Time to First Value** - Average hours from signup to first doc
-8. **Campaign Lift** - Campaign conversion vs individual trial conversion
-9. **Trial Source Distribution** - Campaign trials vs organic trials %
+8. **Trial Program Lift** - Trial Program conversion vs individual trial conversion
+9. **Trial Source Distribution** - Trial Program trials vs organic trials %
 
 ### Detailed Analytics
 
@@ -214,25 +214,25 @@ CodeScribe automatically tracks key campaign milestones:
 signup → email_verified → first_generation → trial (auto-campaign) → conversion
 ```
 
-### Export Campaign Data
+### Export Trial Program Data
 
 **New in v3.3.9:** Automated campaign metrics export with trial breakdown!
 
 To analyze campaign performance:
 
 1. Navigate to `/admin/analytics` → **Business** tab
-2. Scroll to the **"Campaign Metrics Export"** section
+2. Scroll to the **"Trial Program Metrics Export"** section
 3. Select date range (auto-filled with current dashboard dates)
-4. Click **"Export Campaign Metrics"** button
+4. Click **"Export Trial Program Metrics"** button
 5. Download JSON file with comprehensive metrics
 
 **What's Included in Export:**
 
 ✅ **Trial Breakdown:**
-- Campaign trials (auto_campaign source) - independently tracked
+- Trial Program trials (auto_campaign source) - independently tracked
 - Individual trials (invite codes, admin grants, self-serve) - separately tracked
 - Total trials combined
-- Campaign performance comparison and lift calculation
+- Trial Program performance comparison and lift calculation
 
 ✅ **Cohort Analysis:**
 - Total signups in date range
@@ -260,7 +260,7 @@ To analyze campaign performance:
 
 ## Best Practices
 
-### Campaign Duration
+### Trial Program Duration
 
 | Duration | Best For |
 |----------|----------|
@@ -283,28 +283,28 @@ To analyze campaign performance:
 - **Expiration reminder** - Send reminder before trial ends
 - **Conversion prompt** - Offer upgrade discount before expiration
 
-### Campaign Naming Conventions
+### Trial Program Naming Conventions
 
 Use descriptive names for easy tracking:
 
 - `[Month] [Year] [Tier] [Purpose]` - "January 2026 Pro Promotion"
 - `[Event] [Tier] Launch` - "Product Hunt Pro Launch"
-- `Q[X] [Year] [Strategy]` - "Q2 2026 Growth Campaign"
+- `Q[X] [Year] [Strategy]` - "Q2 2026 Growth Trial Program"
 
 ---
 
 ## Troubleshooting
 
-### Campaign Not Granting Trials
+### Trial Program Not Granting Trials
 
 **Symptoms:** New signups not receiving trials
 
 **Check:**
-1. ✅ Campaign status is "Active" (green badge)
+1. ✅ Trial Program status is "Active" (green badge)
 2. ✅ Current date is between Start Date and End Date
 3. ✅ Only ONE campaign is active (system enforces this)
 4. ✅ User is NEW signup (existing users not affected)
-5. ✅ Check server logs for `[Campaign] Auto-granted` messages
+5. ✅ Check server logs for `[Trial Program] Auto-granted` messages
 
 **Resolution:**
 - Click "Refresh" button to reload campaign data
@@ -322,9 +322,9 @@ Use descriptive names for easy tracking:
 2. Then activate new campaign (click Play)
 3. Or set new campaign to start AFTER current campaign ends
 
-### Campaign Ended Early
+### Trial Program Ended Early
 
-**Symptoms:** Campaign shows "Ended" status before end date
+**Symptoms:** Trial Program shows "Ended" status before end date
 
 **Check:**
 1. Verify end date is correct (may have been misconfigured)
@@ -340,7 +340,7 @@ Use descriptive names for easy tracking:
 **Symptoms:** Signups column shows 0 despite new signups
 
 **Possible Causes:**
-- Campaign not active during signup
+- Trial Program not active during signup
 - Users signing up before start date or after end date
 - Database tracking issue
 
@@ -352,7 +352,7 @@ Use descriptive names for easy tracking:
 
 ---
 
-## Campaign Lifecycle
+## Trial Program Lifecycle
 
 ### States and Transitions
 
@@ -362,9 +362,9 @@ Created → Scheduled → Active → Ended
           Inactive ←──┴────────┘
 ```
 
-1. **Created** - Campaign saved but not activated
-2. **Scheduled** - Campaign set to start in future
-3. **Active** - Campaign running, granting trials
+1. **Created** - Trial Program saved but not activated
+2. **Scheduled** - Trial Program set to start in future
+3. **Active** - Trial Program running, granting trials
 4. **Ended** - End date passed, no longer granting trials
 5. **Inactive** - Manually paused by admin
 
@@ -372,7 +372,7 @@ Created → Scheduled → Active → Ended
 
 | Action | Effect | Reversible? |
 |--------|--------|-------------|
-| Activate | Makes campaign active, starts granting trials | Yes (can pause) |
+| Activate | Makes trial program active, starts granting trials | Yes (can pause) |
 | Deactivate | Stops granting trials to new signups | Yes (can reactivate) |
 | Edit | Updates campaign settings | Yes (can edit again) |
 | Delete | Removes campaign entirely | No (only if 0 signups) |
@@ -415,19 +415,19 @@ This enables campaign-specific analytics and ROI tracking.
 
 ### API Endpoints
 
-Campaign management uses these authenticated admin routes:
+Trial Program management uses these authenticated admin routes:
 
-- `GET /api/admin/campaigns` - List all campaigns
-- `POST /api/admin/campaigns` - Create new campaign
-- `PUT /api/admin/campaigns/:id` - Update campaign
-- `POST /api/admin/campaigns/:id/toggle` - Activate/deactivate
-- `DELETE /api/admin/campaigns/:id` - Delete campaign
+- `GET /api/admin/trial-programs` - List all campaigns
+- `POST /api/admin/trial-programs` - Create new campaign
+- `PUT /api/admin/trial-programs/:id` - Update campaign
+- `POST /api/admin/trial-programs/:id/toggle` - Activate/deactivate
+- `DELETE /api/admin/trial-programs/:id` - Delete campaign
 
 ---
 
 ## Security Considerations
 
-- **Admin-only access** - Campaign routes require admin role
+- **Admin-only access** - Trial Program routes require admin role
 - **Single active campaign** - Prevents abuse/conflicts
 - **Attribution tracking** - Audit trail for all granted trials
 - **Signup verification** - Only applies to verified new users
@@ -438,14 +438,14 @@ Campaign management uses these authenticated admin routes:
 ## Related Documentation
 
 - [Trial System](../features/TRIAL-SYSTEM.md) - Overall trial system architecture
-- [Admin Analytics](../architecture/WORKFLOW-OUTCOME-METRICS-PLAN.md) - Campaign performance tracking
+- [Admin Analytics](../architecture/WORKFLOW-OUTCOME-METRICS-PLAN.md) - Trial Program performance tracking
 - [Admin Dashboard](./ADMIN-USAGE-STATS.md) - General admin features
 
 ---
 
 ## Quick Reference
 
-### Campaign Creation Checklist
+### Trial Program Creation Checklist
 
 - [ ] Define campaign goal and target audience
 - [ ] Choose trial tier (Pro or Team)
@@ -460,11 +460,11 @@ Campaign management uses these authenticated admin routes:
 - [ ] Monitor signup count increases
 - [ ] Track conversion metrics
 
-### Campaign End Checklist
+### Trial Program End Checklist
 
 - [ ] Review final signup count
 - [ ] Calculate conversion rate
-- [ ] **Export campaign metrics** via Admin Analytics → Business → Campaign Export button
+- [ ] **Export campaign metrics** via Admin Analytics → Business → Trial Program Export button
 - [ ] Review trial breakdown (campaign vs individual trials)
 - [ ] Calculate campaign lift and ROI
 - [ ] Check email verification and activation rates
@@ -477,15 +477,15 @@ Campaign management uses these authenticated admin routes:
 
 ---
 
-## Campaign Export API (New in v3.3.9)
+## Trial Program Export API (New in v3.3.9)
 
 ### Automated Metrics Endpoint
 
-**Endpoint:** `GET /api/admin/campaigns/export`
+**Endpoint:** `GET /api/admin/trial-programs/export`
 
 **Query Parameters:**
-- `startDate` (required) - Campaign start date (YYYY-MM-DD)
-- `endDate` (required) - Campaign end date (YYYY-MM-DD)
+- `startDate` (required) - Trial Program start date (YYYY-MM-DD)
+- `endDate` (required) - Trial Program end date (YYYY-MM-DD)
 - `campaignSource` (optional) - Source filter (default: 'auto_campaign')
 
 **Response Includes:**
@@ -498,7 +498,7 @@ Campaign management uses these authenticated admin routes:
 - Spreadsheet-ready format
 
 **Access via UI:**
-- Admin Analytics → Business tab → "Campaign Metrics Export" section
+- Admin Analytics → Business tab → "Trial Program Metrics Export" section
 - Pre-filled with current dashboard date range
 - One-click JSON download
 

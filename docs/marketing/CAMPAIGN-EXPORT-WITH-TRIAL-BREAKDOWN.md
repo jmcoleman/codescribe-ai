@@ -1,8 +1,8 @@
-# Campaign Export - Trial Source Breakdown
+# Trial Program Export - Trial Source Breakdown
 
 ## 🎯 Goal
 Show campaign trials AND individual trials separately in the same export, so you can compare:
-- Campaign performance (auto-campaign trials)
+- Trial Program performance (auto-campaign trials)
 - Baseline performance (invite codes, admin grants, self-serve)
 - Total performance (all trials combined)
 
@@ -166,7 +166,7 @@ router.get('/campaign-export', requireAuth, requireAdmin, async (req, res) => {
           }
         },
 
-        // ✨ NEW: Campaign performance comparison
+        // ✨ NEW: Trial Program performance comparison
         comparison: {
           campaign_vs_individual: {
             campaign_conversion_rate: parseFloat(campaignTrials.conversion_rate),
@@ -211,7 +211,7 @@ router.get('/campaign-export', requireAuth, requireAdmin, async (req, res) => {
     });
 
   } catch (error) {
-    console.error('[Campaign Export] Error:', error);
+    console.error('[Trial Program Export] Error:', error);
     res.status(500).json({ error: 'Failed to export campaign metrics' });
   }
 });
@@ -237,9 +237,9 @@ function TrialBreakdownPreview({ data }) {
       <h3 className="font-semibold text-sm mb-3">Trial Source Breakdown</h3>
 
       <div className="grid grid-cols-3 gap-3">
-        {/* Campaign Trials */}
+        {/* Trial Program Trials */}
         <div className="bg-purple-50 border border-purple-200 rounded p-3">
-          <div className="text-xs text-purple-600 font-medium mb-1">Campaign Trials</div>
+          <div className="text-xs text-purple-600 font-medium mb-1">Trial Program Trials</div>
           <div className="text-2xl font-bold text-purple-900">{campaign_trials.started}</div>
           <div className="text-xs text-purple-700 mt-1">
             {campaign_trials.converted} converted ({campaign_trials.conversion_rate}%)
@@ -265,11 +265,11 @@ function TrialBreakdownPreview({ data }) {
         </div>
       </div>
 
-      {/* Campaign Lift */}
+      {/* Trial Program Lift */}
       {comparison?.campaign_vs_individual && (
         <div className="mt-3 p-2 bg-white rounded border border-gray-200">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600">Campaign Performance Lift:</span>
+            <span className="text-gray-600">Trial Program Performance Lift:</span>
             <span className={`font-semibold ${
               comparison.campaign_vs_individual.campaign_performs_better
                 ? 'text-green-600'
@@ -279,7 +279,7 @@ function TrialBreakdownPreview({ data }) {
             </span>
           </div>
           <div className="text-xs text-gray-500 mt-1">
-            Campaign trials converting at {comparison.campaign_vs_individual.campaign_conversion_rate}%
+            Trial Program trials converting at {comparison.campaign_vs_individual.campaign_conversion_rate}%
             vs {comparison.campaign_vs_individual.individual_conversion_rate}% for individual trials
           </div>
         </div>
@@ -342,14 +342,14 @@ With the trial breakdown, your spreadsheets get cleaner data:
 ### **Conversion Funnel Sheet:**
 ```
 TRIAL BREAKDOWN:
-Campaign Trials (auto_campaign):    45 started,  9 converted (20.0%)
+Trial Program Trials (auto_campaign):    45 started,  9 converted (20.0%)
 Individual Trials:                   12 started,  2 converted (16.67%)
   ├─ Invite Codes:                    8 started,  2 converted (25.0%)
   ├─ Admin Grants:                    2 started,  0 converted (0%)
   └─ Self-Serve:                      2 started,  0 converted (0%)
 TOTAL TRIALS:                        57 started, 11 converted (19.3%)
 
-Campaign Lift: +20%
+Trial Program Lift: +20%
 ```
 
 ### **KPI Dashboard Sheet:**
@@ -365,23 +365,23 @@ Avg Days to Convert                18.3          21.5     19.1
 
 ## 🎯 Use Cases
 
-### 1. **Measure Campaign Effectiveness**
+### 1. **Measure Trial Program Effectiveness**
 ```
-Campaign conversion: 20%
+Trial Program conversion: 20%
 Baseline conversion: 16.67%
-Campaign lift: +20%
+Trial Program lift: +20%
 
-✅ Campaign is performing better than baseline!
+✅ Trial Program is performing better than baseline!
 ```
 
-### 2. **Calculate True Campaign ROI**
+### 2. **Calculate True Trial Program ROI**
 ```
-Campaign cost: $350
-Campaign conversions: 9
+Trial Program cost: $350
+Trial Program conversions: 9
 Cost per conversion: $38.89
 
 Individual conversions: 2 (would have happened anyway)
-Campaign-specific conversions: 9
+Trial Program-specific conversions: 9
 True campaign ROI: Based on incremental 9 conversions
 ```
 
@@ -392,7 +392,7 @@ Invite code trials: 8 (14% of trials)
 Admin grant trials: 2 (3.5% of trials)
 Self-serve trials: 2 (3.5% of trials)
 
-✅ Campaign is dominant trial source this month
+✅ Trial Program is dominant trial source this month
 ```
 
 ### 4. **Track Baseline Growth**
@@ -409,14 +409,14 @@ December individual trials: 12
 ## ✅ What You Get
 
 ### **Always Available:**
-- ✅ Campaign trial metrics (if campaign exists)
+- ✅ Trial Program trial metrics (if campaign exists)
 - ✅ Individual trial metrics (always)
 - ✅ Total trial metrics (combined)
 - ✅ Trial source breakdown (invite codes, admin grants, etc.)
-- ✅ Campaign performance comparison
-- ✅ Campaign lift calculation
+- ✅ Trial Program performance comparison
+- ✅ Trial Program lift calculation
 
-### **Even Without a Campaign:**
+### **Even Without a Trial Program:**
 ```json
 {
   "trials_breakdown": {
@@ -447,11 +447,11 @@ December individual trials: 12
 ## 📊 Summary
 
 **Yes, the export now shows:**
-- ✅ Campaign trials independently
+- ✅ Trial Program trials independently
 - ✅ Individual trials independently
 - ✅ Total trials (combined)
 - ✅ Trial source breakdown (invite code, admin grant, self-serve)
-- ✅ Campaign vs baseline comparison
+- ✅ Trial Program vs baseline comparison
 - ✅ Performance lift calculation
 
 **This lets you answer:**

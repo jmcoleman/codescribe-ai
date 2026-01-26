@@ -900,8 +900,8 @@ describe('AnalyticsService', () => {
       sql.mockResolvedValueOnce({ rows: [{ count: '80' }] });
       // First generation (activated)
       sql.mockResolvedValueOnce({ rows: [{ count: '60' }] });
-      // Trials (with breakdown: campaign vs individual)
-      sql.mockResolvedValueOnce({ rows: [{ total: '50', campaign: '30', individual: '20' }] });
+      // Trials (with breakdown: trialProgram vs individual)
+      sql.mockResolvedValueOnce({ rows: [{ total: '50', trial_program: '30', individual: '20' }] });
       // Paid (with breakdown: via_trial vs direct)
       sql.mockResolvedValueOnce({ rows: [{ total: '20', via_trial: '15', direct: '5' }] });
 
@@ -913,7 +913,7 @@ describe('AnalyticsService', () => {
 
       // Trial stage with breakdown
       expect(result.stages.trials.count).toBe(50);
-      expect(result.stages.trials.breakdown.campaign.count).toBe(30);
+      expect(result.stages.trials.breakdown.trialProgram.count).toBe(30);
       expect(result.stages.trials.breakdown.individual.count).toBe(20);
 
       // Paid stage with breakdown

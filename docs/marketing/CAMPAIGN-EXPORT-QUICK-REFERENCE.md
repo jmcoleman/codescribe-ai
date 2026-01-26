@@ -1,15 +1,15 @@
-# Campaign Export - Quick Reference for Spreadsheets
+# Trial Program Export - Quick Reference for Spreadsheets
 
 ## 📥 What Gets Exported
 
-When you click "Export Campaign Metrics" in Admin Analytics → Business tab, you get a CSV file that opens directly in Excel or Google Sheets with:
+When you click "Export Trial Program Metrics" in Admin Analytics → Business tab, you get a CSV file that opens directly in Excel or Google Sheets with:
 
 ### CSV Structure
 
 The CSV file contains the following sections (already formatted for spreadsheets):
 
-**Section 1: Campaign Information**
-- Campaign Name (if active campaign exists)
+**Section 1: Trial Program Information**
+- Trial Program Name (if active campaign exists)
 - Date Range
 - Trial Offer (tier and duration)
 
@@ -21,13 +21,13 @@ The CSV file contains the following sections (already formatted for spreadsheets
 **Section 3: Trial Breakdown**
 | Trial Type | Trials Started | Conversions | Conversion Rate |
 |------------|---------------|-------------|-----------------|
-| Campaign Trials | 45 | 9 | 20.0% |
+| Trial Program Trials | 45 | 9 | 20.0% |
 | Individual Trials | 12 | 2 | 16.67% |
 | Total Trials | 57 | 11 | 19.3% |
 
-**Section 4: Campaign Performance**
-- Campaign Lift (e.g., "+20%")
-- Campaign Performs Better (Yes/No)
+**Section 4: Trial Program Performance**
+- Trial Program Lift (e.g., "+20%")
+- Trial Program Performs Better (Yes/No)
 
 **Section 5: Individual Trial Sources** (if available)
 | Source | Trials Started | Conversions | Conversion Rate |
@@ -58,16 +58,16 @@ The CSV file contains the following sections (already formatted for spreadsheets
 
 ### For Google Sheets / Excel
 
-**Campaign Info Section (Top of spreadsheet):**
+**Trial Program Info Section (Top of spreadsheet):**
 
 | Spreadsheet Cell | JSON Path | Example Value |
 |------------------|-----------|---------------|
-| Campaign Name | `campaign.name` | "January 2026 Pro Trial" |
-| Start Date | `campaign.startDate` | 2026-01-10 |
-| End Date | `campaign.endDate` | 2026-01-24 |
+| Trial Program Name | `trialProgram.name` | "January 2026 Pro Trial" |
+| Start Date | `trialProgram.startDate` | 2026-01-10 |
+| End Date | `trialProgram.endDate` | 2026-01-24 |
 | Duration (days) | Calculate: `endDate - startDate` | 14 |
-| Trial Tier | `campaign.trialTier` | Pro |
-| Trial Days | `campaign.trialDays` | 14 |
+| Trial Tier | `trialProgram.trialTier` | Pro |
+| Trial Days | `trialProgram.trialDays` | 14 |
 
 **Signup Metrics:**
 
@@ -83,23 +83,23 @@ The CSV file contains the following sections (already formatted for spreadsheets
 
 | Metric | JSON Path | Example |
 |--------|-----------|---------|
-| Campaign Trials Started | `summary.trials_breakdown.campaign_trials.started` | 45 |
-| Campaign Conversions | `summary.trials_breakdown.campaign_trials.converted` | 9 |
-| Campaign Conversion Rate | `summary.trials_breakdown.campaign_trials.conversion_rate` | 20.0% |
+| Trial Program Trials Started | `summary.trials_breakdown.campaign_trials.started` | 45 |
+| Trial Program Conversions | `summary.trials_breakdown.campaign_trials.converted` | 9 |
+| Trial Program Conversion Rate | `summary.trials_breakdown.campaign_trials.conversion_rate` | 20.0% |
 | Individual Trials Started | `summary.trials_breakdown.individual_trials.started` | 12 |
 | Individual Conversions | `summary.trials_breakdown.individual_trials.converted` | 2 |
 | Individual Conversion Rate | `summary.trials_breakdown.individual_trials.conversion_rate` | 16.67% |
-| **Campaign Lift** | `summary.comparison.campaign_vs_individual.campaign_lift` | **+20%** |
+| **Trial Program Lift** | `summary.comparison.campaign_vs_individual.campaign_lift` | **+20%** |
 
 ---
 
 ## 🔄 Weekly Update Workflow
 
-### During Campaign (Weekly)
+### During Trial Program (Weekly)
 
 1. **Monday morning:** Export metrics with cumulative date range
    ```
-   Start: Campaign start date (2026-01-10)
+   Start: Trial Program start date (2026-01-10)
    End: Today (2026-01-17)
    ```
 
@@ -113,7 +113,7 @@ The CSV file contains the following sections (already formatted for spreadsheets
    campaign-export-week1-2026-01-10-to-2026-01-17.json
    ```
 
-### End of Campaign (Final Export)
+### End of Trial Program (Final Export)
 
 1. **Export full date range:**
    ```
@@ -140,9 +140,9 @@ The CSV file contains the following sections (already formatted for spreadsheets
 ### Financial Model Header
 
 ```
-CAMPAIGN: {campaign.name}
-Period: {campaign.startDate} to {campaign.endDate} ({duration} days)
-Trial Offer: {campaign.trialDays}-Day {campaign.trialTier} Trial
+CAMPAIGN: {trialProgram.name}
+Period: {trialProgram.startDate} to {trialProgram.endDate} ({duration} days)
+Trial Offer: {trialProgram.trialDays}-Day {trialProgram.trialTier} Trial
 Last Export: {today's date}
 ```
 
@@ -157,7 +157,7 @@ Last Export: 2026-01-25
 ### Trial Performance Table
 
 ```
-Metric                  Campaign  Individual  Total   Lift
+Metric                  Trial Program  Individual  Total   Lift
 Trials Started          45        12          57      -
 Conversions             9         2           11      -
 Conversion Rate         20.0%     16.67%      19.3%   +20%
@@ -165,7 +165,7 @@ Avg Days to Convert     18.3      21.5        19.1    -
 ```
 
 **Auto-populate from JSON:**
-- Campaign Trials: `summary.trials_breakdown.campaign_trials.*`
+- Trial Program Trials: `summary.trials_breakdown.campaign_trials.*`
 - Individual Trials: `summary.trials_breakdown.individual_trials.*`
 - Total: `summary.trials_breakdown.total_trials.*`
 - Lift: `summary.comparison.campaign_vs_individual.campaign_lift`
@@ -176,9 +176,9 @@ Avg Days to Convert     18.3      21.5        19.1    -
 
 **What investors want to see:**
 
-1. **Campaign Identity**
-   - Name: `campaign.name`
-   - Date Range: `campaign.startDate` - `campaign.endDate`
+1. **Trial Program Identity**
+   - Name: `trialProgram.name`
+   - Date Range: `trialProgram.startDate` - `trialProgram.endDate`
 
 2. **Signup Funnel**
    - Signups: `summary.total_signups`
@@ -186,22 +186,22 @@ Avg Days to Convert     18.3      21.5        19.1    -
    - Activated %: `(activated_users / verified_users) * 100`
 
 3. **Trial Performance**
-   - Campaign conversion: `trials_breakdown.campaign_trials.conversion_rate`
+   - Trial Program conversion: `trials_breakdown.campaign_trials.conversion_rate`
    - Baseline conversion: `trials_breakdown.individual_trials.conversion_rate`
-   - **Campaign Lift**: `comparison.campaign_vs_individual.campaign_lift` ← KEY METRIC!
+   - **Trial Program Lift**: `comparison.campaign_vs_individual.campaign_lift` ← KEY METRIC!
 
 4. **Quality Indicators**
    - Email verification rate (high = quality signups)
    - Activation rate (high = product-market fit)
-   - Campaign outperforms baseline (yes/no)
+   - Trial Program outperforms baseline (yes/no)
 
 ---
 
 ## ✅ Checklist: After Every Export
 
 **Immediate (2 min):**
-- [ ] Campaign name captured: `campaign.name`
-- [ ] Date range captured: `campaign.startDate` to `campaign.endDate`
+- [ ] Trial Program name captured: `trialProgram.name`
+- [ ] Date range captured: `trialProgram.startDate` to `trialProgram.endDate`
 - [ ] Total signups recorded: `summary.total_signups`
 - [ ] JSON file renamed and saved
 
@@ -212,7 +212,7 @@ Avg Days to Convert     18.3      21.5        19.1    -
 
 **Final Export (15 min):**
 - [ ] All 5 spreadsheets updated from final export
-- [ ] Campaign lift calculated and highlighted
+- [ ] Trial Program lift calculated and highlighted
 - [ ] Archive JSON + spreadsheets in campaign folder
 - [ ] Screenshots saved from Admin UI
 - [ ] Ready for investor presentation
@@ -229,7 +229,7 @@ campaign-export-week2-{start}-to-{end}.json
 
 **Final export:**
 ```
-campaign-export-FINAL-{campaign.name}-{start}-to-{end}.json
+campaign-export-FINAL-{trialProgram.name}-{start}-to-{end}.json
 ```
 
 **Example:**

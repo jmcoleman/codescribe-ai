@@ -1,4 +1,4 @@
-# Campaign Export Impact Analysis - Trial Eligibility Enhancement
+# Trial Program Export Impact Analysis - Trial Eligibility Enhancement
 
 **Date:** January 14, 2026
 **Status:** ✅ No Breaking Changes, Optional Enhancements Identified
@@ -13,11 +13,11 @@
 
 ---
 
-## Current Campaign Export System
+## Current Trial Program Export System
 
-### 1. Campaign Export Endpoint
+### 1. Trial Program Export Endpoint
 
-**Endpoint:** `GET /api/admin/campaigns/export`
+**Endpoint:** `GET /api/admin/trial-programs/export`
 **Location:** `server/src/routes/admin.js:2123-2340`
 
 **Current Data Sources:**
@@ -37,10 +37,10 @@ WHERE created_at BETWEEN startDate AND endDate
 SELECT date, origin_type, signups, verified
 FROM users u
 LEFT JOIN user_trials ut ON u.id = ut.user_id
-LEFT JOIN campaigns c ON ut.campaign_id = c.id
+LEFT JOIN trial_programs c ON ut.trial_program_id = c.id
 ```
 
-**Key Observation:** The export does NOT currently SELECT any columns from the `campaigns` table except using `c.name` for origin labeling. It only uses `campaign_id` as a join key.
+**Key Observation:** The export does NOT currently SELECT any columns from the `campaigns` table except using `c.name` for origin labeling. It only uses `trial_program_id` as a join key.
 
 ### 2. Google Sheets Template
 
@@ -49,8 +49,8 @@ LEFT JOIN campaigns c ON ut.campaign_id = c.id
 
 **8 Sheets:**
 1. Config - API settings
-2. Overview - Campaign summary
-3. Trial Performance - Campaign vs individual trial comparison
+2. Overview - Trial Program summary
+3. Trial Performance - Trial Program vs individual trial comparison
 4. Cohort Funnel - Signup to activation conversion
 5. Trial Funnel - Trial-to-conversion
 6. Usage Segments - User engagement
@@ -58,7 +58,7 @@ LEFT JOIN campaigns c ON ut.campaign_id = c.id
 8. User List - Complete user roster
 
 **Expected Fields:**
-- Campaign name, tier, duration, period
+- Trial Program name, tier, duration, period
 - Trial counts by source
 - Conversion rates
 - Signup/verification metrics
@@ -80,7 +80,7 @@ LEFT JOIN campaigns c ON ut.campaign_id = c.id
 - Force-granted trials still appear in trial breakdown by source
 - No breaking changes to CSV or Google Sheets
 
-### Phase 2: Campaign-Level Eligibility Settings
+### Phase 2: Trial Program-Level Eligibility Settings
 
 **Database Changes (Proposed):**
 ```sql
@@ -94,8 +94,8 @@ ADD COLUMN max_trials_per_user INTEGER DEFAULT 1
 
 **Impact on Existing Queries:** ✅ **NO BREAKING CHANGES**
 - Adding columns to `campaigns` table is backward compatible
-- Existing `SELECT * FROM campaigns` queries will include new columns (but nothing currently does SELECT *)
-- Existing join queries using `campaign_id` are unaffected
+- Existing `SELECT * FROM trial_programs` queries will include new columns (but nothing currently does SELECT *)
+- Existing join queries using `trial_program_id` are unaffected
 - Default values ensure backward compatibility for existing campaigns
 
 **Impact on Google Sheets:** ✅ **NO BREAKING CHANGES**
@@ -107,7 +107,7 @@ ADD COLUMN max_trials_per_user INTEGER DEFAULT 1
 
 ## Compatibility Analysis
 
-### 1. Campaign Export Endpoint
+### 1. Trial Program Export Endpoint
 
 **Current Behavior:**
 ```javascript
@@ -156,7 +156,7 @@ Add eligibility context to user list:
 
 ## Recommended Enhancements (Phase 2)
 
-### Enhancement 1: Add Eligibility Fields to Campaign Export
+### Enhancement 1: Add Eligibility Fields to Trial Program Export
 
 **Goal:** Help admins understand campaign eligibility rules when analyzing performance.
 
@@ -185,8 +185,8 @@ const campaignConfig = await sql`
   SELECT name, trial_tier, trial_days,
          allow_previous_trial_users, cooldown_days, max_trials_per_user,
          is_active, starts_at, ends_at
-  FROM campaigns
-  WHERE name = ${campaignName}  // or however campaign is identified
+  FROM trial_programs
+  WHERE name = ${trialProgramName}  // or however campaign is identified
 `;
 ```
 
@@ -213,7 +213,7 @@ SELECT
   ...,
   ut.status as trial_status,
   CASE
-    WHEN NOT campaign.allow_previous_trial_users AND EXISTS (
+    WHEN NOT trialProgram.allow_previous_trial_users AND EXISTS (
       SELECT 1 FROM user_trials ut2
       WHERE ut2.user_id = u.id
         AND ut2.id != ut.id
@@ -221,13 +221,13 @@ SELECT
     ELSE true
   END as eligible_for_campaign,
   CASE
-    WHEN NOT campaign.allow_previous_trial_users THEN 'Has previous trial'
-    WHEN days_since_last_trial < campaign.cooldown_days THEN 'In cooldown period'
+    WHEN NOT trialProgram.allow_previous_trial_users THEN 'Has previous trial'
+    WHEN days_since_last_trial < trialProgram.cooldown_days THEN 'In cooldown period'
     ELSE NULL
   END as ineligibility_reason,
   CASE
-    WHEN days_since_last_trial < campaign.cooldown_days
-    THEN campaign.cooldown_days - days_since_last_trial
+    WHEN days_since_last_trial < trialProgram.cooldown_days
+    THEN trialProgram.cooldown_days - days_since_last_trial
     ELSE NULL
   END as days_until_eligible
 ```
@@ -271,7 +271,7 @@ SELECT
 ```bash
 # Test existing export continues to work
 curl -H "Authorization: Bearer $TOKEN" \
-  "https://codescribeai.com/api/admin/campaigns/export?startDate=2026-01-01&endDate=2026-01-31"
+  "https://codescribeai.com/api/admin/trial-programs/export?startDate=2026-01-01&endDate=2026-01-31"
 
 # Verify response structure unchanged
 jq '.campaignTrials, .individualTrials, .cohortSummary' response.json
@@ -408,4 +408,4 @@ ADD COLUMN max_trials_per_user INTEGER DEFAULT 1;
 - [TECHNICAL-SPEC.md](./TECHNICAL-SPEC.md) - Technical implementation details
 - [ANALYTICS-OPTIMIZATION.md](./ANALYTICS-OPTIMIZATION.md) - Event tracking strategy
 - [GOOGLE-SHEETS-CAMPAIGN-TEMPLATE.md](../../admin/GOOGLE-SHEETS-CAMPAIGN-TEMPLATE.md) - Current template
-- [CAMPAIGN-MANAGEMENT-GUIDE.md](../../admin/CAMPAIGN-MANAGEMENT-GUIDE.md) - Campaign admin guide
+- [CAMPAIGN-MANAGEMENT-GUIDE.md](../../admin/CAMPAIGN-MANAGEMENT-GUIDE.md) - Trial Program admin guide

@@ -25,15 +25,15 @@ import {
   CURRENT_TERMS_VERSION,
   CURRENT_PRIVACY_VERSION
 } from '../constants/legalVersions.js';
-import { getActiveCampaign } from '../config/campaign.js';
+import { getActiveCampaign } from '../config/trialProgram.js';
 import Trial from '../models/Trial.js';
-import Campaign from '../models/Campaign.js';
+import TrialProgram from '../models/TrialProgram.js';
 import { analyticsService } from '../services/analyticsService.js';
 
 const router = express.Router();
 
 // ============================================================================
-// Campaign Auto-Trial Helper
+// Trial Program Auto-Trial Helper
 // ============================================================================
 
 /**
@@ -43,7 +43,7 @@ const router = express.Router();
  */
 async function grantCampaignTrialIfActive(userId) {
   try {
-    const campaign = await getActiveCampaign();
+    const trialProgram = await getActiveCampaign();
     if (!campaign) {
       return null;
     }
@@ -52,7 +52,7 @@ async function grantCampaignTrialIfActive(userId) {
     const eligibility = await Trial.checkEligibility(userId);
     if (!eligibility.eligible) {
       if (process.env.NODE_ENV === 'development') {
-        console.log(`[Campaign] User ${userId} not eligible for auto-trial: ${eligibility.reason}`);
+        console.log(`[Trial Program] User ${userId} not eligible for auto-trial: ${eligibility.reason}`);
       }
       return null;
     }
@@ -61,27 +61,27 @@ async function grantCampaignTrialIfActive(userId) {
     const trial = await Trial.create({
       userId,
       inviteCodeId: null, // No invite code for campaign trials
-      trialTier: campaign.trial_tier,
-      durationDays: campaign.trial_days,
+      trialTier: trialProgram.trial_tier,
+      durationDays: trialProgram.trial_days,
       source: 'auto_campaign',
     });
 
-    // Link trial to campaign (need to update with campaign_id)
+    // Link trial to campaign (need to update with trial_program_id)
     await sql`
       UPDATE user_trials
-      SET campaign_id = ${campaign.id}
+      SET trial_program_id = ${trialProgram.id}
       WHERE id = ${trial.id}
     `;
 
     // Increment campaign signup count
-    await Campaign.incrementSignups(campaign.id);
+    await TrialProgram.incrementSignups(trialProgram.id);
 
-    console.log(`[Campaign] Auto-granted ${campaign.trial_tier} trial (${campaign.trial_days} days) to user ${userId} via campaign "${campaign.name}"`);
+    console.log(`[Trial Program] Auto-granted ${trialProgram.trial_tier} trial (${trialProgram.trial_days} days) to user ${userId} via campaign "${trialProgram.name}"`);
 
     return trial;
   } catch (error) {
     // Don't fail signup if campaign trial fails - log and continue
-    console.error('[Campaign] Failed to grant auto-trial:', error);
+    console.error('[Trial Program] Failed to grant auto-trial:', error);
     return null;
   }
 }

@@ -1,4 +1,4 @@
-# Campaign Export to Analytics-Ready Spreadsheet Guide
+# Trial Program Export to Analytics-Ready Spreadsheet Guide
 
 ## 🎯 Overview
 
@@ -37,10 +37,10 @@ The campaign export endpoint now includes:
 
 | Planning Doc Metric | Export Field | Status |
 |---------------------|--------------|--------|
-| **Campaign Identity** | | |
-| Campaign name | `campaign.name` | ✅ Auto |
-| Campaign dates | `campaign.startDate`, `campaign.endDate` | ✅ Auto |
-| Trial offer | `campaign.trialTier`, `campaign.trialDays` | ✅ Auto |
+| **Trial Program Identity** | | |
+| Trial Program name | `trialProgram.name` | ✅ Auto |
+| Trial Program dates | `trialProgram.startDate`, `trialProgram.endDate` | ✅ Auto |
+| Trial offer | `trialProgram.trialTier`, `trialProgram.trialDays` | ✅ Auto |
 | **Signup Funnel** | | |
 | Total signups | `summary.total_signups` | ✅ Auto |
 | Email verified | `summary.verified_users` | ✅ Auto |
@@ -48,10 +48,10 @@ The campaign export endpoint now includes:
 | Activated users | `summary.activated_users` | ✅ Auto |
 | Activation rate | `spreadsheet_ready.cohort_summary.activation_rate` | ✅ Auto |
 | **Trial Performance** | | |
-| Campaign trials | `summary.trials_breakdown.campaign_trials.*` | ✅ Auto |
+| Trial Program trials | `summary.trials_breakdown.campaign_trials.*` | ✅ Auto |
 | Individual trials | `summary.trials_breakdown.individual_trials.*` | ✅ Auto |
 | Trial source breakdown | `summary.trials_breakdown.individual_trials.by_source[]` | ✅ Auto |
-| Campaign lift | `summary.comparison.campaign_vs_individual.campaign_lift` | ✅ Auto |
+| Trial Program lift | `summary.comparison.campaign_vs_individual.campaign_lift` | ✅ Auto |
 | **Time-to-Value** ⭐ NEW | | |
 | Avg hours to verify email | `extended_metrics.time_to_value.email_verification.avg_hours` | ✅ Auto |
 | Median hours to verify | `extended_metrics.time_to_value.email_verification.median_hours` | ✅ Auto |
@@ -80,17 +80,17 @@ The campaign export endpoint now includes:
 
 **Steps:**
 1. Navigate to `/admin/analytics` → **Business** tab
-2. Scroll to "Campaign Metrics Export" section
+2. Scroll to "Trial Program Metrics Export" section
 3. Set date range (start/end dates)
-4. Click **"Export Campaign Metrics"** button
+4. Click **"Export Trial Program Metrics"** button
 5. CSV downloads with ALL metrics (including extended)
 
 **What's Included in CSV:**
 ```
-✅ Campaign Information (name, dates, trial offer)
+✅ Trial Program Information (name, dates, trial offer)
 ✅ Summary Metrics (signups, verified, activated)
 ✅ Trial Breakdown (campaign vs individual, by source)
-✅ Campaign Performance (lift, comparison)
+✅ Trial Program Performance (lift, comparison)
 ✅ Daily Breakdown (day-by-day signups/verified)
 ✅ ⭐ Time-to-Value Metrics (hours to verify, hours to first doc)
 ✅ ⭐ Usage Segments (5 engagement levels with counts & percentages)
@@ -108,7 +108,7 @@ The campaign export endpoint now includes:
 
 **Option B: Import to Existing Sheet**
 1. Open master tracking spreadsheet
-2. Create tab: "Campaign Export Raw Data"
+2. Create tab: "Trial Program Export Raw Data"
 3. File → Import → Replace current sheet
 
 **Result:** All sections imported with clear headers
@@ -125,14 +125,14 @@ The campaign export endpoint now includes:
 
 ```javascript
 /**
- * CodeScribe Campaign Analytics Automation v3.4.1
+ * CodeScribe Trial Program Analytics Automation v3.4.1
  * Automatically processes CSV export and generates financial models
  * NEW: Includes extended metrics (time-to-value, usage segments)
  */
 
 // Configuration
 const CONFIG = {
-  RAW_DATA_SHEET: 'Campaign Export Raw Data',
+  RAW_DATA_SHEET: 'Trial Program Export Raw Data',
   FINANCIAL_MODEL_SHEET: 'Financial Model',
   INVESTOR_SUMMARY_SHEET: 'Investor Summary',
   PRO_MONTHLY_PRICE: 10,
@@ -142,7 +142,7 @@ const CONFIG = {
 
 function onOpen() {
   const ui = SpreadsheetApp.getUi();
-  ui.createMenu('📊 Campaign Analytics')
+  ui.createMenu('📊 Trial Program Analytics')
     .addItem('🔄 Refresh All Calculations', 'refreshAllCalculations')
     .addItem('📈 Generate Financial Model', 'generateFinancialModel')
     .addItem('📋 Update Investor Summary', 'updateInvestorSummary')
@@ -169,8 +169,8 @@ function parseCampaignData() {
     const label = String(data[i][0] || '').trim();
     const value = data[i][1];
 
-    // Campaign info
-    if (label === 'Campaign Name') metrics.campaignName = value;
+    // Trial Program info
+    if (label === 'Trial Program Name') metrics.trialProgramName = value;
     if (label === 'Date Range') {
       const dates = String(value).split(' to ');
       metrics.startDate = dates[0];
@@ -190,7 +190,7 @@ function parseCampaignData() {
     if (label === 'Activated Users') metrics.activatedUsers = parseInt(value);
 
     // Trial breakdown
-    if (label === 'Campaign Trials') {
+    if (label === 'Trial Program Trials') {
       metrics.campaignTrialsStarted = parseInt(data[i][1]);
       metrics.campaignConversions = parseInt(data[i][2]);
       metrics.campaignConversionRate = parseFloat(data[i][3]);
@@ -200,8 +200,8 @@ function parseCampaignData() {
       metrics.individualConversions = parseInt(data[i][2]);
     }
 
-    // Campaign lift
-    if (label === 'Campaign Lift') metrics.campaignLift = value;
+    // Trial Program lift
+    if (label === 'Trial Program Lift') metrics.campaignLift = value;
 
     // ✨ NEW: Time-to-value metrics
     if (label === 'Average Hours to Verify') metrics.avgHoursToVerify = parseFloat(value);
@@ -236,8 +236,8 @@ function generateFinancialModel() {
   const headers = [
     ['CAMPAIGN FINANCIAL MODEL'],
     [''],
-    ['Campaign Overview'],
-    ['Campaign Name', metrics.campaignName],
+    ['Trial Program Overview'],
+    ['Trial Program Name', metrics.trialProgramName],
     ['Date Range', `${metrics.startDate} to ${metrics.endDate}`],
     ['Duration (days)', calculateDuration(metrics.startDate, metrics.endDate)],
     ['Trial Offer', `${metrics.trialDays}-Day ${capitalize(metrics.trialTier)} Trial`],
@@ -249,10 +249,10 @@ function generateFinancialModel() {
     ['Activated Users', metrics.activatedUsers, formatPercent(metrics.activatedUsers / metrics.emailVerified)],
     [''],
 
-    ['Trial Performance', 'Campaign', 'Individual', 'Total'],
+    ['Trial Performance', 'Trial Program', 'Individual', 'Total'],
     ['Trials Started', metrics.campaignTrialsStarted, metrics.individualTrialsStarted, metrics.campaignTrialsStarted + metrics.individualTrialsStarted],
     ['Conversions', metrics.campaignConversions, metrics.individualConversions, metrics.campaignConversions + metrics.individualConversions],
-    ['Campaign Lift', '', '', metrics.campaignLift],
+    ['Trial Program Lift', '', '', metrics.campaignLift],
     [''],
 
     ['⭐ Time-to-Value Metrics', 'Value', 'Unit'],
@@ -280,7 +280,7 @@ function generateFinancialModel() {
     ['ROI Calculation', '', '← Input costs below'],
     ['Marketing Cost', '', '← Manual input'],
     ['API Cost', '', '← Manual input'],
-    ['Total Campaign Cost', '=SUM(B41:B42)', 'Auto-calculated'],
+    ['Total Trial Program Cost', '=SUM(B41:B42)', 'Auto-calculated'],
     ['Payback Period (months)', '=IF(B36>0,B43/B36,"")', 'Auto-calculated'],
     ['12-Month ROI', '=IF(B43>0,(B36*12-B43)/B43,"")', 'Auto-calculated'],
   ];
@@ -304,16 +304,16 @@ function updateInvestorSummary() {
   const summary = [
     ['CAMPAIGN PERFORMANCE SUMMARY'],
     [''],
-    [metrics.campaignName, '', `${metrics.startDate} to ${metrics.endDate}`],
+    [metrics.trialProgramName, '', `${metrics.startDate} to ${metrics.endDate}`],
     [''],
 
     ['KEY METRICS'],
-    ['Total Signups', 'Conv Rate', 'Campaign Lift', 'Verification Rate'],
+    ['Total Signups', 'Conv Rate', 'Trial Program Lift', 'Verification Rate'],
     [metrics.totalSignups, formatPercent(metrics.campaignConversionRate / 100), metrics.campaignLift, formatPercent(metrics.emailVerified / metrics.totalSignups)],
     [''],
 
     ['FINANCIAL IMPACT'],
-    ['Monthly MRR', 'Campaign Cost', 'Payback (months)'],
+    ['Monthly MRR', 'Trial Program Cost', 'Payback (months)'],
     [`$${monthlyMRR}`, 'Enter costs →', 'Auto-calc'],
     [''],
 
@@ -326,7 +326,7 @@ function updateInvestorSummary() {
     [''],
 
     ['INSIGHTS'],
-    [`• Campaign lift: ${metrics.campaignLift}`],
+    [`• Trial Program lift: ${metrics.campaignLift}`],
     [`• ${metrics.campaignConversions} paying customers from campaign`],
     [`• $${monthlyMRR}/month recurring revenue`],
   ];
@@ -390,11 +390,11 @@ function formatInvestorSummarySheet(sheet) {
 }
 ```
 
-3. **Save the script:** Click save icon, name it "Campaign Analytics Automation"
+3. **Save the script:** Click save icon, name it "Trial Program Analytics Automation"
 
 4. **Reload spreadsheet:** Close script editor, refresh sheet
 
-5. **Verify:** You'll see new menu: **📊 Campaign Analytics**
+5. **Verify:** You'll see new menu: **📊 Trial Program Analytics**
 
 ---
 
@@ -402,8 +402,8 @@ function formatInvestorSummarySheet(sheet) {
 
 **After Each CSV Import:**
 
-1. Import CSV to "Campaign Export Raw Data" tab
-2. Click: `📊 Campaign Analytics` → `🔄 Refresh All Calculations`
+1. Import CSV to "Trial Program Export Raw Data" tab
+2. Click: `📊 Trial Program Analytics` → `🔄 Refresh All Calculations`
 3. **Done!** Script automatically:
    - ✅ Parses all CSV data (including extended metrics)
    - ✅ Creates Financial Model with all calculations
@@ -451,11 +451,11 @@ function formatInvestorSummarySheet(sheet) {
 ### One-Time Setup
 - [x] Extended Metrics API deployed (v3.4.1+)
 - [ ] Google Apps Script installed
-- [ ] "Campaign Analytics" menu appears
+- [ ] "Trial Program Analytics" menu appears
 - [ ] Test run successful
 
 ### Per Export
-- [x] Campaign data exported (includes extended metrics)
+- [x] Trial Program data exported (includes extended metrics)
 - [x] CSV imported to Google Sheets
 - [x] Automation script run
 - [ ] Marketing costs entered
@@ -465,14 +465,14 @@ function formatInvestorSummarySheet(sheet) {
 - [x] All metrics calculated
 
 ### Data Completeness (100% Automated)
-- [x] Campaign identity
+- [x] Trial Program identity
 - [x] Signup funnel
 - [x] Trial breakdown & lift
 - [x] Time-to-value metrics ⭐
 - [x] Usage segments ⭐
 - [x] Daily breakdown
 - [x] Revenue projections
-- [ ] Campaign costs (manual: marketing + API)
+- [ ] Trial Program costs (manual: marketing + API)
 
 ---
 
@@ -507,8 +507,8 @@ function formatInvestorSummarySheet(sheet) {
 ```csv
 CAMPAIGN METRICS EXPORT
 
-Campaign Information
-Campaign Name,January 2026 Pro Trial
+Trial Program Information
+Trial Program Name,January 2026 Pro Trial
 Date Range,2026-01-10 to 2026-01-24
 Trial Offer,14-Day Pro Trial
 
@@ -519,12 +519,12 @@ Activated Users,62
 
 Trial Breakdown
 Trial Type,Trials Started,Conversions,Conversion Rate
-Campaign Trials,45,9,20.0%
+Trial Program Trials,45,9,20.0%
 Individual Trials,12,2,16.67%
 Total Trials,57,11,19.3%
 
-Campaign Performance
-Campaign Lift,+20%
+Trial Program Performance
+Trial Program Lift,+20%
 
 ⭐ Time-to-Value Metrics
 Email Verification
@@ -570,8 +570,8 @@ Date,Signups,Verified
 - [WORKFLOW-OUTCOME-METRICS-PLAN.md](../planning/WORKFLOW-OUTCOME-METRICS-PLAN.md)
 
 **API Endpoint:**
-- `GET /api/admin/campaigns/export?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD`
-- Returns: Campaign data + extended metrics (time-to-value, usage segments)
+- `GET /api/admin/trial-programs/export?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD`
+- Returns: Trial Program data + extended metrics (time-to-value, usage segments)
 
 **Questions?**
 - Script not working: Verify sheet name matches CONFIG

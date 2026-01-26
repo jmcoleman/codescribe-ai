@@ -46,7 +46,7 @@ class InviteCode {
    * @param {number|null} options.maxUses - Max redemptions (null = unlimited)
    * @param {Date|null} options.validUntil - Code expiry date (null = no expiry)
    * @param {string} options.source - Origin: admin, sales, marketing, partner
-   * @param {string|null} options.campaign - Campaign identifier
+   * @param {string|null} options.campaign - Trial Program identifier
    * @param {string|null} options.notes - Admin notes
    * @param {number|null} options.createdByUserId - Admin user ID
    * @returns {Promise<Object>} Created invite code
@@ -382,7 +382,7 @@ class InviteCode {
 
     return {
       ...result.rows[0],
-      byCampaign: byCampaign.rows
+      byCampaign: byTrialProgram.rows
     };
   }
 

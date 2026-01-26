@@ -1,12 +1,12 @@
-# Campaign Export Data Validation
+# Trial Program Export Data Validation
 
 **Created:** January 12, 2026
-**Test Suite:** `server/src/routes/__tests__/admin-campaigns.test.js`
+**Test Suite:** `server/src/routes/__tests__/admin-trialPrograms.test.js`
 **Status:** ✅ All 25 tests passing
 
 ## Overview
 
-Comprehensive test suite validating that the campaign export endpoint (`GET /api/admin/campaigns/export`) generates complete, correctly formatted data ready for Google Sheets import.
+Comprehensive test suite validating that the campaign export endpoint (`GET /api/admin/trial-programs/export`) generates complete, correctly formatted data ready for Google Sheets import.
 
 ## What's Been Validated
 
@@ -15,13 +15,13 @@ Comprehensive test suite validating that the campaign export endpoint (`GET /api
 **Top-Level Fields** (Test line 562)
 - ✅ `success` flag
 - ✅ `data` object with all required sections:
-  - `campaign` - Campaign metadata
+  - `campaign` - Trial Program metadata
   - `summary` - High-level metrics
   - `daily` - Daily breakdown array
   - `spreadsheet_ready` - Flattened data optimized for spreadsheets
   - `extended_metrics` - Time-to-value and usage segments
 
-**Campaign Fields** (Test line 675)
+**Trial Program Fields** (Test line 675)
 All required for tracking campaign performance:
 - ✅ `startDate` (YYYY-MM-DD format)
 - ✅ `endDate` (YYYY-MM-DD format)
@@ -58,7 +58,7 @@ Optimized structure for direct Google Sheets import:
 
 **Date Fields** (Test line 943)
 - ✅ All dates formatted as `YYYY-MM-DD`
-- ✅ Campaign start/end dates
+- ✅ Trial Program start/end dates
 - ✅ Daily metrics dates
 - ✅ Regex validation: `/^\d{4}-\d{2}-\d{2}$/`
 
@@ -68,19 +68,19 @@ Optimized structure for direct Google Sheets import:
 - ✅ Zero activated users → `'0.0'` activation rate
 - ✅ All zero-denominator cases handled gracefully
 
-### 3. Campaign Metrics for Financial Analysis ✅
+### 3. Trial Program Metrics for Financial Analysis ✅
 
 **Trial Breakdown** (Test line 989)
-Campaign trials vs individual trials comparison:
+Trial Program trials vs individual trials comparison:
 - ✅ Trials started count
 - ✅ Conversions count
 - ✅ Conversion rate (%)
 - ✅ Average days to convert
 - ✅ By-source breakdown for individual trials
 
-**Campaign Performance Comparison:**
-- ✅ Campaign conversion rate vs individual rate
-- ✅ Campaign lift calculation: `((campaign - individual) / individual) * 100`
+**Trial Program Performance Comparison:**
+- ✅ Trial Program conversion rate vs individual rate
+- ✅ Trial Program lift calculation: `((campaign - individual) / individual) * 100`
 - ✅ `campaign_performs_better` boolean flag
 - ✅ Negative lift handled correctly (e.g., -20.0%)
 
@@ -125,13 +125,13 @@ The endpoint returns JSON, which can be imported to Google Sheets using:
 
 **Option 2: Google Sheets IMPORTDATA** (if hosted)
 ```
-=IMPORTDATA("https://api.codescribeai.com/admin/campaigns/export?startDate=2026-01-01&endDate=2026-01-31")
+=IMPORTDATA("https://api.codescribeai.com/admin/trial-programs/export?startDate=2026-01-01&endDate=2026-01-31")
 ```
 
 **Option 3: Google Apps Script**
 ```javascript
 function importCampaignData() {
-  const url = 'https://api.codescribeai.com/admin/campaigns/export?startDate=2026-01-01&endDate=2026-01-31';
+  const url = 'https://api.codescribeai.com/admin/trial-programs/export?startDate=2026-01-01&endDate=2026-01-31';
   const response = UrlFetchApp.fetch(url, {
     headers: { 'Authorization': 'Bearer YOUR_TOKEN' }
   });
@@ -155,7 +155,7 @@ function importCampaignData() {
 
 **Total Tests:** 25 (all passing)
 
-**Campaign Export Tests:**
+**Trial Program Export Tests:**
 - 2 existing tests (extended metrics, null handling)
 - **8 new data completeness tests** ✨
 
@@ -173,7 +173,7 @@ function importCampaignData() {
 
 ### API Request
 ```bash
-GET /api/admin/campaigns/export?startDate=2026-01-01&endDate=2026-01-31&campaignSource=auto_campaign
+GET /api/admin/trial-programs/export?startDate=2026-01-01&endDate=2026-01-31&campaignSource=auto_campaign
 Authorization: Bearer YOUR_ADMIN_TOKEN
 ```
 
@@ -256,22 +256,22 @@ Authorization: Bearer YOUR_ADMIN_TOKEN
 
 ### Recommended Spreadsheet Structure
 
-**Sheet 1: Campaign Overview**
+**Sheet 1: Trial Program Overview**
 | Field | Value |
 |-------|-------|
-| Campaign Name | =ImportedData.campaign.name |
-| Start Date | =ImportedData.campaign.startDate |
-| End Date | =ImportedData.campaign.endDate |
-| Trial Tier | =ImportedData.campaign.trialTier |
-| Trial Days | =ImportedData.campaign.trialDays |
+| Trial Program Name | =ImportedData.trialProgram.name |
+| Start Date | =ImportedData.trialProgram.startDate |
+| End Date | =ImportedData.trialProgram.endDate |
+| Trial Tier | =ImportedData.trialProgram.trialTier |
+| Trial Days | =ImportedData.trialProgram.trialDays |
 
 **Sheet 2: Trial Performance**
-| Metric | Campaign Trials | Individual Trials | Total |
+| Metric | Trial Program Trials | Individual Trials | Total |
 |--------|-----------------|-------------------|-------|
 | Started | 50 | 8 | 58 |
 | Converted | 10 | 2 | 12 |
 | Conversion Rate | 20.0% | 25.0% | 20.69% |
-| Campaign Lift | -20.0% | - | - |
+| Trial Program Lift | -20.0% | - | - |
 
 **Sheet 3: Cohort Funnel**
 | Stage | Count | Rate |
@@ -315,9 +315,9 @@ Authorization: Bearer YOUR_ADMIN_TOKEN
 
 ## Related Documentation
 
-- **Test File:** `server/src/routes/__tests__/admin-campaigns.test.js` (lines 557-1141)
+- **Test File:** `server/src/routes/__tests__/admin-trialPrograms.test.js` (lines 557-1141)
 - **Endpoint Implementation:** `server/src/routes/admin.js` (lines 2118-2472)
-- **Campaign Management Guide:** `docs/admin/CAMPAIGN-MANAGEMENT-GUIDE.md`
+- **Trial Program Management Guide:** `docs/admin/CAMPAIGN-MANAGEMENT-GUIDE.md`
 
 ---
 

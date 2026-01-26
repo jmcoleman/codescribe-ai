@@ -1,6 +1,6 @@
 # Trial Eligibility Enhancement
 
-**Feature**: Campaign-Level Trial Eligibility Settings
+**Feature**: Trial Program-Level Trial Eligibility Settings
 **Status**: 📋 Planning
 **Priority**: Medium
 **Estimated Effort**: 8-12 hours
@@ -12,7 +12,7 @@
 
 ### Current Inconsistency
 
-**Campaign Trials (via invite codes):**
+**Trial Program Trials (via invite codes):**
 - ❌ Blocks users with ANY previous trial (expired or active)
 - Policy: **ONE TRIAL PER USER LIFETIME** (strict)
 - Location: `server/src/models/Trial.js:457-482` (`checkEligibility()`)
@@ -383,7 +383,7 @@ router.get('/users/:userId/trial-history', requireAuth, requireAdmin, async (req
 
 ---
 
-### Phase 2: Campaign-Level Eligibility Settings 🎯 **FUTURE RELEASE**
+### Phase 2: Trial Program-Level Eligibility Settings 🎯 **FUTURE RELEASE**
 **Goal:** Enable re-engagement campaigns with flexible eligibility rules
 **Effort:** 6-8 hours
 **Dependencies:** Phase 1 complete
@@ -400,13 +400,13 @@ ALTER TABLE campaigns
   ADD COLUMN max_trials_per_user INTEGER DEFAULT 1;
 
 -- Add comment explaining fields
-COMMENT ON COLUMN campaigns.allow_previous_trial_users IS
+COMMENT ON COLUMN trialPrograms.allow_previous_trial_users IS
   'If TRUE, users with expired trials can participate. If FALSE, only new trial users eligible.';
 
-COMMENT ON COLUMN campaigns.cooldown_days IS
+COMMENT ON COLUMN trialPrograms.cooldown_days IS
   'Minimum days required since last trial ended. Only applies if allow_previous_trial_users=TRUE.';
 
-COMMENT ON COLUMN campaigns.max_trials_per_user IS
+COMMENT ON COLUMN trialPrograms.max_trials_per_user IS
   'Maximum number of trials a user can receive from ANY campaign (lifetime). Default 1.';
 
 -- Index for eligibility queries
@@ -423,10 +423,10 @@ CREATE INDEX idx_campaigns_eligibility ON campaigns(allow_previous_trial_users, 
 /**
  * Check eligibility with campaign-specific rules
  * @param {number} userId - User ID
- * @param {Object} campaignSettings - Campaign eligibility settings
+ * @param {Object} campaignSettings - Trial Program eligibility settings
  * @returns {Promise<Object>} Eligibility status with detailed reason
  */
-static async checkEligibilityForCampaign(userId, campaignSettings = {}) {
+static async checkEligibilityForProgram(userId, campaignSettings = {}) {
   const {
     allowPreviousTrialUsers = false,
     cooldownDays = 0,
@@ -465,7 +465,7 @@ static async checkEligibilityForCampaign(userId, campaignSettings = {}) {
     };
   }
 
-  // 5. Campaign doesn't allow previous trial users
+  // 5. Trial Program doesn't allow previous trial users
   if (!allowPreviousTrialUsers) {
     return {
       eligible: false,
@@ -503,9 +503,9 @@ static async checkEligibilityForCampaign(userId, campaignSettings = {}) {
 }
 ```
 
-**2. Update Campaign Model**
+**2. Update TrialProgram Model**
 
-`server/src/models/Campaign.js`:
+`server/src/models/TrialProgram.js`:
 
 ```javascript
 /**
@@ -525,7 +525,7 @@ static async findByCampaignCode(campaignCode) {
       c.status,
       c.starts_at,
       c.ends_at
-    FROM campaigns c
+    FROM trial_programs c
     WHERE c.campaign_code = ${campaignCode.toUpperCase()}
     LIMIT 1
   `;
@@ -553,13 +553,13 @@ async redeemInviteCode(code, userId) {
 
   // 2. Get campaign (if invite code belongs to a campaign)
   let campaignSettings = null;
-  if (inviteCode.campaign_id) {
-    const campaign = await Campaign.findById(inviteCode.campaign_id);
-    if (campaign) {
+  if (inviteCode.trial_program_id) {
+    const trialProgram = await TrialProgram.findById(inviteCode.trial_program_id);
+    if (trialProgram) {
       campaignSettings = {
-        allowPreviousTrialUsers: campaign.allow_previous_trial_users,
-        cooldownDays: campaign.cooldown_days,
-        maxTrialsPerUser: campaign.max_trials_per_user
+        allowPreviousTrialUsers: trialProgram.allow_previous_trial_users,
+        cooldownDays: trialProgram.cooldown_days,
+        maxTrialsPerUser: trialProgram.max_trials_per_user
       };
     }
   }
@@ -567,7 +567,7 @@ async redeemInviteCode(code, userId) {
   // 3. Check eligibility with campaign-specific rules
   let eligibility;
   if (campaignSettings) {
-    eligibility = await Trial.checkEligibilityForCampaign(userId, campaignSettings);
+    eligibility = await Trial.checkEligibilityForProgram(userId, campaignSettings);
   } else {
     // Legacy invite codes (not part of campaign) use strict rules
     eligibility = await Trial.checkEligibility(userId);
@@ -586,7 +586,7 @@ async redeemInviteCode(code, userId) {
     inviteCodeId: inviteCode.id,
     trialTier: inviteCode.trial_tier,
     durationDays: inviteCode.duration_days,
-    source: inviteCode.campaign_id ? 'campaign' : 'invite'
+    source: inviteCode.trial_program_id ? 'campaign' : 'invite'
   });
 
   // 5. Redeem invite code
@@ -612,9 +612,9 @@ async redeemInviteCode(code, userId) {
 
 #### Frontend Changes
 
-**1. Campaign Creation UI**
+**1. Trial Program Creation UI**
 
-`client/src/pages/admin/Campaigns.jsx`:
+`client/src/pages/admin/TrialPrograms.jsx`:
 
 ```jsx
 <FormSection title="Eligibility Rules">
@@ -764,9 +764,9 @@ function EligibilityError({ error, errorCode, details }) {
 }
 ```
 
-#### Campaign Templates
+#### Trial Program Templates
 
-**Template 1: New User Campaign**
+**Template 1: New User Trial Program**
 ```javascript
 {
   name: "New User Welcome",
@@ -780,7 +780,7 @@ function EligibilityError({ error, errorCode, details }) {
 }
 ```
 
-**Template 2: Re-Engagement Campaign (90-Day Cooldown)**
+**Template 2: Re-Engagement Trial Program (90-Day Cooldown)**
 ```javascript
 {
   name: "Come Back Special",
@@ -812,7 +812,7 @@ function EligibilityError({ error, errorCode, details }) {
 
 **Test Matrix:**
 
-| User State | Campaign Type | Cooldown | Expected Result |
+| User State | Trial Program Type | Cooldown | Expected Result |
 |------------|---------------|----------|-----------------|
 | Never tried | New users only | N/A | ✅ Eligible |
 | Active trial | Any | N/A | ❌ Blocked |
@@ -1022,7 +1022,7 @@ ALTER TABLE campaigns
 
 ### Current Issues
 
-1. **Inconsistent validation**: Campaign vs admin trials have different rules
+1. **Inconsistent validation**: Trial Program vs admin trials have different rules
    - **Fixed in Phase 1** ✅
 
 2. **No trial history visibility**: Admins can't see why user is ineligible
@@ -1046,7 +1046,7 @@ ALTER TABLE campaigns
 - **Workflow-First PRD**: [TRIAL-ELIGIBILITY-WF-PRD.md](./TRIAL-ELIGIBILITY-WF-PRD.md) - Business outcomes, user workflows, and acceptance criteria
 - **Analytics Optimization**: [ANALYTICS-OPTIMIZATION.md](./ANALYTICS-OPTIMIZATION.md) - Event tracking strategy (15 → 3 events)
 - **Trial System Overview**: [TIER-ARCHITECTURE.md](../../architecture/TIER-ARCHITECTURE.md)
-- **Campaign Management**: [CAMPAIGN-MANAGEMENT-GUIDE.md](../../admin/CAMPAIGN-MANAGEMENT-GUIDE.md)
+- **Trial Program Management**: [CAMPAIGN-MANAGEMENT-GUIDE.md](../../admin/CAMPAIGN-MANAGEMENT-GUIDE.md)
 - **User Management**: [USER-MANAGEMENT-GUIDE.md](../../admin/USER-MANAGEMENT-GUIDE.md)
 - **Admin Analytics**: [ADMIN-USAGE-STATS.md](../../admin/ADMIN-USAGE-STATS.md)
 
@@ -1066,12 +1066,12 @@ ALTER TABLE campaigns
 - [ ] Update USER-MANAGEMENT-GUIDE.md
 - [ ] Add force flag best practices documentation
 
-### Phase 2: Campaign Eligibility Settings 🎯
+### Phase 2: Trial Program Eligibility Settings 🎯
 - [ ] Create database migration for campaign eligibility fields
-- [ ] Add `checkEligibilityForCampaign()` method to Trial model
-- [ ] Update Campaign model with eligibility getters
+- [ ] Add `checkEligibilityForProgram()` method to Trial model
+- [ ] Update Trial Program model with eligibility getters
 - [ ] Update trialService redemption logic
-- [ ] Add eligibility settings to Campaign creation UI
+- [ ] Add eligibility settings to Trial Program creation UI
 - [ ] Add eligibility preview component
 - [ ] Update TrialRedemption error handling
 - [ ] Create detailed error messages per eligibility code

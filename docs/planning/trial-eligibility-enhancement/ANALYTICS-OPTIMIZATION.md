@@ -91,7 +91,7 @@ trial: { action: 'started' | 'expired' | 'converted' }
   has_previous_trial: boolean,
 
   // Phase 2 fields
-  campaign_id: number?,         // For campaign redemptions
+  trial_program_id: number?,         // For campaign redemptions
   invite_code: string?,         // For code redemptions
   error_code: string?,          // For failed redemptions
   eligibility_status: string?,  // For attempted redemptions
@@ -119,7 +119,7 @@ trial: {
   source: 'campaign',
   tier: 'pro',
   duration_days: 14,
-  campaign_id: 42,
+  trial_program_id: 42,
   invite_code: 'COMEBACK30'
 }
 
@@ -129,7 +129,7 @@ trial: {
   error_code: 'COOLDOWN_PERIOD',
   has_previous_trial: true,
   days_since_last_trial: 60,
-  campaign_id: 42,
+  trial_program_id: 42,
   invite_code: 'COMEBACK30'
 }
 ```
@@ -206,15 +206,15 @@ admin_action: {
 Tracks campaign management lifecycle.
 
 **Actions:**
-- `created` - Campaign created by growth lead
+- `created` - Trial Program created by growth lead
 - `preview_viewed` - Eligibility preview checked
-- `launched` - Campaign activated
+- `launched` - Trial Program activated
 
 **Metadata fields:**
 ```javascript
 {
   action: 'created' | 'preview_viewed' | 'launched',
-  campaign_id: number,
+  trial_program_id: number,
   source: 'web',                    // Future: 'api', 'cli'
   eligibility_type: 'new_users_only' | 'allow_lapsed' | 'all_users',
   target_tier: 'pro' | 'team',
@@ -231,7 +231,7 @@ Tracks campaign management lifecycle.
 // Growth lead creates re-engagement campaign
 campaign: {
   action: 'created',
-  campaign_id: 42,
+  trial_program_id: 42,
   source: 'web',
   eligibility_type: 'allow_lapsed',
   target_tier: 'pro',
@@ -243,14 +243,14 @@ campaign: {
 // Growth lead previews reach estimate
 campaign: {
   action: 'preview_viewed',
-  campaign_id: 42,
+  trial_program_id: 42,
   estimated_reach: 1247
 }
 
-// Campaign goes live
+// Trial Program goes live
 campaign: {
   action: 'launched',
-  campaign_id: 42,
+  trial_program_id: 42,
   eligibility_type: 'allow_lapsed',
   target_tier: 'pro',
   duration_days: 14
@@ -267,7 +267,7 @@ Tracks when users see eligibility errors and their actions.
 ```javascript
 {
   error_code: 'COOLDOWN_PERIOD' | 'NEW_USERS_ONLY' | 'MAX_TRIALS_REACHED' | 'ACTIVE_TRIAL_EXISTS',
-  campaign_id: number?,
+  trial_program_id: number?,
   invite_code: string?,
   has_previous_trial: boolean,
   days_since_last_trial: number?,
@@ -281,7 +281,7 @@ Tracks when users see eligibility errors and their actions.
 // User sees cooldown error
 eligibility_error: {
   error_code: 'COOLDOWN_PERIOD',
-  campaign_id: 42,
+  trial_program_id: 42,
   invite_code: 'COMEBACK30',
   has_previous_trial: true,
   days_since_last_trial: 60,
@@ -291,7 +291,7 @@ eligibility_error: {
 // User clicks "View Pricing" from error
 eligibility_error: {
   error_code: 'COOLDOWN_PERIOD',
-  campaign_id: 42,
+  trial_program_id: 42,
   clicked_next_step: 'pricing'
 }
 ```
@@ -414,16 +414,16 @@ await analyticsService.recordAdminAction('resolve_ticket', supportId, {
 
 // User hits cooldown error (Phase 2)
 await analyticsService.recordEligibilityError('COOLDOWN_PERIOD', userId, {
-  campaign_id: 42,
+  trial_program_id: 42,
   invite_code: 'COMEBACK30',
   has_previous_trial: true,
   days_since_last_trial: 60,
   days_until_eligible: 30
 });
 
-// Campaign launched (Phase 2)
+// Trial Program launched (Phase 2)
 await analyticsService.recordCampaignAction('launched', adminId, {
-  campaign_id: 42,
+  trial_program_id: 42,
   eligibility_type: 'allow_lapsed',
   target_tier: 'pro',
   duration_days: 14

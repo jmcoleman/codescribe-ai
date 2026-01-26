@@ -183,6 +183,18 @@ GITHUB_TOKEN=ghp_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 
 # ============================================================================
+# TRIAL SYSTEM (Optional - has sensible defaults)
+# ============================================================================
+
+# Maximum Trials Per User (Lifetime)
+# Value: Integer 1-10 (default: 3)
+# Used for: System-wide lifetime trial limit across all campaigns
+# ⚠️ OPTIONAL: Has sensible default of 3
+# This is a global setting that applies to all campaigns
+MAX_TRIALS_PER_USER_LIFETIME=3
+
+
+# ============================================================================
 # RATE LIMITING (Optional - has sensible defaults)
 # ============================================================================
 
@@ -332,6 +344,14 @@ CRON_SECRET=LOCAL_DEV_CRON_SECRET_DIFFERENT_FROM_PROD
 
 ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
 CLIENT_URL=http://localhost:5173
+
+
+# ============================================================================
+# TRIAL SYSTEM (Optional - has sensible defaults)
+# ============================================================================
+
+# Default is 3, can override for testing
+# MAX_TRIALS_PER_USER_LIFETIME=3
 
 
 # ============================================================================
@@ -515,6 +535,33 @@ openssl rand -base64 32
 
 ---
 
+### Trial System Variables
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `MAX_TRIALS_PER_USER_LIFETIME` | ⚠️ Optional | 3 | System-wide lifetime trial limit (all campaigns) |
+
+**Purpose:**
+- Controls how many trials a single user can receive across their lifetime
+- Applies globally to all campaigns (not per-campaign)
+- Range: 1-10 (recommended: 3)
+
+**Why this matters:**
+- Prevents trial abuse (users creating multiple accounts for unlimited trials)
+- Balances user growth with revenue protection
+- Can be adjusted based on business needs
+
+**When to change:**
+- **Lower to 1**: More restrictive (only one trial ever, for "new users only" campaigns)
+- **Keep at 3** (recommended): Standard SaaS practice
+- **Raise to 5-10**: More permissive (for re-engagement campaigns, VIP users)
+
+**Related documentation:**
+- [USER-MANAGEMENT-GUIDE.md](../admin/USER-MANAGEMENT-GUIDE.md) - Force grant trials for exceptions
+- [CAMPAIGN-MANAGEMENT-GUIDE.md](../admin/CAMPAIGN-MANAGEMENT-GUIDE.md) - Trial Program eligibility settings
+
+---
+
 ### Rate Limiting Variables
 
 | Variable | Required | Default | Description |
@@ -620,11 +667,13 @@ npm run db:test
 | `EMAIL_FROM` | noreply@ | preview@ | dev@ | Manual |
 | `SESSION_SECRET` | unique | unique | unique | `openssl rand -base64 32` |
 | `CRON_SECRET` | unique | unique | unique | `openssl rand -base64 32` |
+| `MAX_TRIALS_PER_USER_LIFETIME` | ⚠️ | ⚠️ | ⚠️ | Manual (default: 3) |
 | `ALLOWED_ORIGINS` | codescribeai.com | (dynamic) | localhost | Manual |
 | `CLIENT_URL` | codescribeai.com | (dynamic) | localhost:5173 | Manual |
 
 **Legend:**
 - ✅ = Required
+- ⚠️ = Optional (has default value)
 - (auto) = Auto-injected by Vercel integration
 - (dynamic) = Vercel sets based on deployment URL
 

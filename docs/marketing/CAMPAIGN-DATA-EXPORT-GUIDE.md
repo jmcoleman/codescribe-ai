@@ -1,4 +1,4 @@
-# Campaign Data Export Guide
+# Trial Program Data Export Guide
 
 ## 🎯 Quick Answer: How to Get Data for Spreadsheets
 
@@ -26,7 +26,7 @@ Date Range: Jan 1-31, 2026
 #### **Conversion Funnel Tab** → For Funnel Tracking
 | Metric | Where to Find | Copy to Spreadsheet |
 |--------|---------------|---------------------|
-| Campaign Trials | Funnel → "Campaign Trials" count | Funnel → Trial Signups |
+| Trial Program Trials | Funnel → "Trial Program Trials" count | Funnel → Trial Signups |
 | Paid Conversions | Funnel → "Paid" count | Funnel → Converted to Paid |
 | Conversion Rate | Auto-calculated in funnel | Funnel → Trial-to-Paid |
 
@@ -69,7 +69,7 @@ GET /api/admin/analytics/events/export?startDate=2026-01-01&endDate=2026-01-31&c
 
 For metrics not in the dashboard, use these queries:
 
-### **Campaign Signups (with trial attribution)**
+### **Trial Program Signups (with trial attribution)**
 ```sql
 -- All signups from January campaign
 SELECT
@@ -236,7 +236,7 @@ async function exportCampaignMetrics() {
   `, [CAMPAIGN_START, CAMPAIGN_END]);
 
   // Export to CSV
-  console.log('Campaign Metrics Export\n');
+  console.log('Trial Program Metrics Export\n');
   console.log('SIGNUPS:');
   console.table(signups.rows);
   console.log('\nACTIVATIONS:');
@@ -307,7 +307,7 @@ function CampaignExportButton({ startDate, endDate }) {
 
   return (
     <button onClick={handleExport} className="btn-primary">
-      📊 Export Campaign Metrics
+      📊 Export Trial Program Metrics
     </button>
   );
 }
@@ -356,7 +356,7 @@ router.get('/campaign-export', requireAuth, requireAdmin, async (req, res) => {
 **What you can get NOW (no code changes):**
 - ✅ Signups, trials, conversions (from Admin Dashboard)
 - ✅ Revenue (from Admin Dashboard)
-- ✅ Campaign attribution (from `user_trials` table)
+- ✅ Trial Program attribution (from `user_trials` table)
 - ✅ CSV export of raw events
 
 **What needs SQL queries (5-10 min/week):**
@@ -371,7 +371,7 @@ router.get('/campaign-export', requireAuth, requireAdmin, async (req, res) => {
 **Recommended Next Step:**
 1. Use Admin Dashboard for weekly signups/conversions tracking
 2. Run SQL queries weekly for activation/engagement metrics
-3. (Optional) Add "Export Campaign Metrics" button to Admin UI for one-click export
+3. (Optional) Add "Export Trial Program Metrics" button to Admin UI for one-click export
 
 **Time Required:**
 - Current setup: 10 min/week

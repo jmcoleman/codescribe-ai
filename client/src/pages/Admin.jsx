@@ -67,10 +67,10 @@ const adminSections = [
       },
       {
         id: 'campaigns',
-        title: 'Campaigns',
+        title: 'Trial Programs',
         description: 'Create and manage promotional campaigns for new user trials',
         icon: Megaphone,
-        path: '/admin/campaigns',
+        path: '/admin/trial-programs',
         available: true
       }
     ]

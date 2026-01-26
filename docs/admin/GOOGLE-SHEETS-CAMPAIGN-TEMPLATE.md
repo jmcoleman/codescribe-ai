@@ -1,7 +1,7 @@
-# Google Sheets Campaign Export Template
+# Google Sheets Trial Program Export Template
 
 **Purpose:** Import and visualize CodeScribe AI campaign performance data
-**Data Source:** `GET /api/admin/campaigns/export`
+**Data Source:** `GET /api/admin/trial-programs/export`
 **Last Updated:** January 13, 2026
 
 **Base Template:** The master Google Sheet template is stored at:
@@ -15,15 +15,15 @@ https://docs.google.com/spreadsheets/d/1NfEyJYTy9QReSeS0CWUUwHUZUQ8LzBBWhVs9Iwdq
 
 1. Go to [Google Sheets](https://sheets.google.com)
 2. Click "Blank" to create new spreadsheet
-3. Name it "CodeScribe Campaign Analytics"
+3. Name it "CodeScribe Trial Program Analytics"
 
 ### Step 2: Set Up Sheets
 
 Create these 8 sheets (tabs) in your spreadsheet:
 
 1. **Config** - API settings and import controls
-2. **Overview** - Campaign summary and key metrics
-3. **Trial Performance** - Campaign vs individual trial comparison
+2. **Overview** - Trial Program summary and key metrics
+3. **Trial Performance** - Trial Program vs individual trial comparison
 4. **Cohort Funnel** - Signup to activation conversion funnel (all users)
 5. **Trial Funnel** - Trial-to-conversion funnel (trial users only)
 6. **Usage Segments** - User engagement breakdown
@@ -36,7 +36,7 @@ Create these 8 sheets (tabs) in your spreadsheet:
 2. Delete default `myFunction()` code
 3. Copy the script from Section 3 below
 4. Click **Save** (disk icon)
-5. Name project "Campaign Import"
+5. Name project "Trial Program Import"
 
 ### Step 4: Configure API Access
 
@@ -50,7 +50,7 @@ Create these 8 sheets (tabs) in your spreadsheet:
 
 ### Step 5: Run Import
 
-1. In Google Sheets, click **Campaign → Import Campaign Data** from menu
+1. In Google Sheets, click **Trial Program → Import Trial Program Data** from menu
 2. Authorize the script (first time only)
 3. Data will populate automatically
 
@@ -68,7 +68,7 @@ Create these 8 sheets (tabs) in your spreadsheet:
 | API Token | [YOUR_TOKEN_HERE] |
 | Start Date | 2026-01-01 |
 | End Date | 2026-01-31 |
-| Campaign Source | auto_campaign |
+| Trial Program Source | auto_campaign |
 | Last Import | [Auto-filled] |
 | Import Status | [Auto-filled] |
 
@@ -85,8 +85,8 @@ Create these 8 sheets (tabs) in your spreadsheet:
 
 ```
 A                          B              C                D
-Campaign Name              [Imported]
-Campaign Period            [Start] to [End]
+Trial Program Name              [Imported]
+Trial Program Period            [Start] to [End]
 Trial Tier                 [Pro/Business]
 Trial Duration             [14/30] days
 
@@ -96,10 +96,10 @@ Email Verified             [90]           Activation Rate     [66.7%]
 First Generation           [60]
 
 TRIAL PERFORMANCE
-Campaign Trials Started    [50]           Individual Trials   [8]
-Campaign Conversions       [10]           Individual Conv.    [2]
-Campaign Conv. Rate        [20.0%]        Individual Rate     [25.0%]
-Campaign Lift              [-20.0%]
+Trial Program Trials Started    [50]           Individual Trials   [8]
+Trial Program Conversions       [10]           Individual Conv.    [2]
+Trial Program Conv. Rate        [20.0%]        Individual Rate     [25.0%]
+Trial Program Lift              [-20.0%]
 
 USAGE DISTRIBUTION
 No Usage                   [40] (40.0%)
@@ -119,18 +119,18 @@ Avg Time to First Gen      [5.8] hours    Median: [4.2] hours
 
 | A | B | C | D |
 |---|---|---|---|
-| **Metric** | **Campaign Trials** | **Individual Trials** | **Total** |
+| **Metric** | **Trial Program Trials** | **Individual Trials** | **Total** |
 | Trials Started | =TrialData!B2 | =TrialData!C2 | =TrialData!D2 |
 | Conversions | =TrialData!B3 | =TrialData!C3 | =TrialData!D3 |
 | Conversion Rate | =B3/B2 | =C3/C2 | =D3/D2 |
 | Avg Days to Convert | =TrialData!B4 | =TrialData!C4 | - |
 | | | | |
-| **Campaign Performance** | | | |
-| Campaign Lift | =TrialData!B6 | | |
+| **Trial Program Performance** | | | |
+| Trial Program Lift | =TrialData!B6 | | |
 | Performs Better? | =IF(B3/B2>C3/C2,"YES","NO") | | |
 | | | | |
 | **Revenue Impact** (if conversion = paid) | | | |
-| Campaign Value | =B3*49 | | (assume $49/month) |
+| Trial Program Value | =B3*49 | | (assume $49/month) |
 | Individual Value | =C3*49 | | |
 | Additional Revenue | =(B3-C3)*49 | | |
 
@@ -195,14 +195,14 @@ Avg Time to First Gen      [5.8] hours    Median: [4.2] hours
 | **Date** | **Origin Type** | **Signups** | **Verified** | **Verification Rate** |
 | 2026-01-01 | Direct | 5 | 4 | =D2/C2 |
 | 2026-01-01 | Individual Trial | 3 | 3 | =D3/C3 |
-| 2026-01-01 | Winter Launch Campaign | 10 | 9 | =D4/C4 |
+| 2026-01-01 | Winter Launch Trial Program | 10 | 9 | =D4/C4 |
 | 2026-01-02 | Direct | 8 | 7 | =D5/C5 |
 | ... | ... | ... | ... | ... |
 
 **Origin Types:**
 - **Direct:** Users who signed up without starting a trial
 - **Individual Trial:** Users who started a self-serve trial (not from a campaign)
-- **[Campaign Name]:** Users who started a trial from a specific campaign
+- **[Trial Program Name]:** Users who started a trial from a specific campaign
 
 **Analysis Tips:**
 - Filter by Origin Type to see trends for specific sources
@@ -221,7 +221,7 @@ Avg Time to First Gen      [5.8] hours    Median: [4.2] hours
 | A | B | C | D | E | F | G | H | I | J | K | L | M | N |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | **Email** | **First Name** | **Last Name** | **Current Tier** | **Origin Type** | **Signup Date** | **Email Verified** | **Email Verified At** | **Trial Tier** | **Trial Status** | **Trial Started** | **Trial Converted** | **First Generation** | **Usage Count** |
-| user1@example.com | John | Doe | pro | Winter Launch Campaign | 2026-01-01 | Yes | 2026-01-01 | pro | converted | 2026-01-01 | 2026-01-05 | 2026-01-02 | 25 |
+| user1@example.com | John | Doe | pro | Winter Launch Trial Program | 2026-01-01 | Yes | 2026-01-01 | pro | converted | 2026-01-01 | 2026-01-05 | 2026-01-02 | 25 |
 | user2@example.com | Jane | Smith | free | Individual Trial | 2026-01-02 | Yes | 2026-01-02 | team | active | 2026-01-02 | - | 2026-01-03 | 12 |
 | user3@example.com | Bob | Johnson | free | Direct | 2026-01-03 | No | - | - | - | - | - | - | 0 |
 | ... | ... | ... | ... | ... | ... | ... | ... | ... | ... | ... | ... | ... | ... |
@@ -230,7 +230,7 @@ Avg Time to First Gen      [5.8] hours    Median: [4.2] hours
 - **Email:** User's email address
 - **First/Last Name:** User's name (if provided)
 - **Current Tier:** Current subscription tier (free, pro, team, business)
-- **Origin Type:** How they signed up (Direct, Individual Trial, or Campaign Name)
+- **Origin Type:** How they signed up (Direct, Individual Trial, or Trial Program Name)
 - **Signup Date:** When they created their account
 - **Email Verified:** Whether they verified their email (Yes/No)
 - **Email Verified At:** When they verified (if applicable)
@@ -249,7 +249,7 @@ Avg Time to First Gen      [5.8] hours    Median: [4.2] hours
 - **Export to CSV** for email marketing or user outreach
 
 **Use Cases:**
-1. **Campaign Attribution:** Filter by campaign name to get all users from that campaign
+1. **Trial Program Attribution:** Filter by campaign name to get all users from that campaign
 2. **Email Lists:** Export filtered user emails for targeted email campaigns
 3. **Engagement Analysis:** Sort by usage count to identify highly engaged users
 4. **Conversion Analysis:** Filter converted trials to analyze successful conversion paths
@@ -265,7 +265,7 @@ Copy this entire script into your Apps Script editor:
 
 ```javascript
 /**
- * CodeScribe Campaign Export - Google Sheets Integration
+ * CodeScribe Trial Program Export - Google Sheets Integration
  *
  * This script fetches campaign data from CodeScribe API and populates
  * a formatted Google Sheet with analytics and visualizations.
@@ -274,7 +274,7 @@ Copy this entire script into your Apps Script editor:
 // Configuration
 const CONFIG = {
   ENDPOINTS: {
-    EXPORT: '/admin/campaigns/export'
+    EXPORT: '/admin/trial-programs/export'
   },
   DEFAULT_API_BASE_URL: 'https://codescribeai.com/api'
 };
@@ -284,8 +284,8 @@ const CONFIG = {
  */
 function onOpen() {
   const ui = SpreadsheetApp.getUi();
-  ui.createMenu('Campaign')
-    .addItem('Import Campaign Data', 'importCampaignData')
+  ui.createMenu('Trial Program')
+    .addItem('Import Trial Program Data', 'importCampaignData')
     .addItem('Refresh All Data', 'refreshAllData')
     .addSeparator()
     .addItem('Clear All Data', 'clearAllData')
@@ -353,9 +353,9 @@ function importCampaignData() {
     // Final status
     const timestamp = new Date().toLocaleString();
     updateImportStatus(timestamp, '✅ Success');
-    ss.toast('Campaign data imported successfully!', '✅ Import Complete', 5);
+    ss.toast('Trial Program data imported successfully!', '✅ Import Complete', 5);
 
-    ui.alert('Import Complete', 'Campaign data imported successfully!', ui.ButtonSet.OK);
+    ui.alert('Import Complete', 'Trial Program data imported successfully!', ui.ButtonSet.OK);
 
   } catch (error) {
     updateImportStatus(new Date().toLocaleString(), 'Failed: ' + error.message);
@@ -435,27 +435,27 @@ function populateOverview(data) {
   // Unfreeze columns (in case they were frozen previously)
   sheet.setFrozenColumns(0);
 
-  // Campaign info
+  // Trial Program info
   sheet.getRange('A1').setValue('CAMPAIGN INFORMATION').setFontWeight('bold').setFontSize(12);
-  sheet.getRange('A2:B2').setValues([['Period', `${data.campaign.startDate} to ${data.campaign.endDate}`]]);
+  sheet.getRange('A2:B2').setValues([['Period', `${data.trialProgram.startDate} to ${data.trialProgram.endDate}`]]);
 
-  const campaignCount = data.campaign.count || 0;
-  const campaigns = data.campaign.campaigns || [];
+  const campaignCount = data.trialProgram.count || 0;
+  const trialPrograms = data.trialProgram.trialPrograms || [];
 
   if (campaignCount === 0) {
-    // No campaigns active during period
-    sheet.getRange('A3:B3').setValues([['Campaign Status', 'No Active Campaign']]);
+    // No trial programs active during period
+    sheet.getRange('A3:B3').setValues([['Trial Program Status', 'No Active Trial Program']]);
     sheet.getRange('A4:B4').setValues([['Note', 'All trials are individual/self-serve']]);
   } else if (campaignCount === 1) {
     // Single campaign - show details
-    const campaign = campaigns[0];
-    sheet.getRange('A3:B3').setValues([['Campaign Name', campaign.name]]);
-    sheet.getRange('A4:B4').setValues([['Trial Tier', campaign.trialTier]]);
-    sheet.getRange('A5:B5').setValues([['Trial Duration', campaign.trialDays + ' days']]);
-    sheet.getRange('A6:B6').setValues([['Status', campaign.isActive ? 'Active' : 'Inactive']]);
+    const trialProgram = trialPrograms[0];
+    sheet.getRange('A3:B3').setValues([['Trial Program Name', trialProgram.name]]);
+    sheet.getRange('A4:B4').setValues([['Trial Tier', trialProgram.trialTier]]);
+    sheet.getRange('A5:B5').setValues([['Trial Duration', trialProgram.trialDays + ' days']]);
+    sheet.getRange('A6:B6').setValues([['Status', trialProgram.isActive ? 'Active' : 'Inactive']]);
   } else {
     // Multiple campaigns - show count and note
-    sheet.getRange('A3:B3').setValues([['Campaign Status', `Multiple Campaigns (${campaignCount})`]]);
+    sheet.getRange('A3:B3').setValues([['Trial Program Status', `Multiple Campaigns (${campaignCount})`]]);
     sheet.getRange('A4:B4').setValues([['Note', 'Use exact campaign dates for specific analysis']]);
   }
 
@@ -464,12 +464,12 @@ function populateOverview(data) {
   sheet.getRange(`A${nextRow}`).setValue('CAMPAIGNS ACTIVE DURING PERIOD').setFontWeight('bold').setFontSize(12);
   nextRow++;
 
-  if (campaigns.length > 0) {
-    sheet.getRange(`A${nextRow}:E${nextRow}`).setValues([['Campaign Name', 'Trial Tier', 'Days', 'Start Date', 'End Date']])
+  if (trialPrograms.length > 0) {
+    sheet.getRange(`A${nextRow}:E${nextRow}`).setValues([['Trial Program Name', 'Trial Tier', 'Days', 'Start Date', 'End Date']])
       .setFontWeight('bold').setBackground('#6366f1').setFontColor('white');
     nextRow++;
 
-    const campaignRows = campaigns.map(c => [
+    const campaignRows = trialPrograms.map(c => [
       c.name,
       c.trialTier,
       c.trialDays,
@@ -480,7 +480,7 @@ function populateOverview(data) {
     sheet.getRange(nextRow, 1, campaignRows.length, 5).setValues(campaignRows);
     nextRow += campaignRows.length + 1;
   } else {
-    sheet.getRange(`A${nextRow}`).setValue('No campaigns during this period').setFontStyle('italic');
+    sheet.getRange(`A${nextRow}`).setValue('No trial programs during this period').setFontStyle('italic');
     nextRow += 2;
   }
 
@@ -500,16 +500,16 @@ function populateOverview(data) {
   // Trial performance
   sheet.getRange(`A${nextRow}`).setValue('TRIAL PERFORMANCE').setFontWeight('bold').setFontSize(12);
   nextRow++;
-  sheet.getRange(nextRow, 1, 1, 4).setValues([['Campaign Trials', '', 'Individual Trials', '']])
+  sheet.getRange(nextRow, 1, 1, 4).setValues([['Trial Program Trials', '', 'Individual Trials', '']])
     .setFontWeight('bold').setBackground('#6366f1').setFontColor('white');
   nextRow++;
   sheet.getRange(nextRow, 1, 3, 4).setValues([
-    ['Started', data.spreadsheet_ready.trial_comparison.campaign_trials.started, 'Started', data.spreadsheet_ready.trial_comparison.individual_trials.started],
-    ['Conversions', data.spreadsheet_ready.trial_comparison.campaign_trials.converted, 'Conversions', data.spreadsheet_ready.trial_comparison.individual_trials.converted],
-    ['Conv. Rate', data.spreadsheet_ready.trial_comparison.campaign_trials.conversion_rate + '%', 'Conv. Rate', data.spreadsheet_ready.trial_comparison.individual_trials.conversion_rate + '%']
+    ['Started', data.spreadsheet_ready.trial_comparison.trial_program_trials.started, 'Started', data.spreadsheet_ready.trial_comparison.individual_trials.started],
+    ['Conversions', data.spreadsheet_ready.trial_comparison.trial_program_trials.converted, 'Conversions', data.spreadsheet_ready.trial_comparison.individual_trials.converted],
+    ['Conv. Rate', data.spreadsheet_ready.trial_comparison.trial_program_trials.conversion_rate + '%', 'Conv. Rate', data.spreadsheet_ready.trial_comparison.individual_trials.conversion_rate + '%']
   ]);
   nextRow += 3;
-  sheet.getRange(nextRow, 1, 1, 2).setValues([['Campaign Lift', (data.spreadsheet_ready.trial_comparison.campaign_lift || 'N/A') + '%']]);
+  sheet.getRange(nextRow, 1, 1, 2).setValues([['Trial Program Lift', (data.spreadsheet_ready.trial_comparison.trial_program_lift || 'N/A') + '%']]);
   nextRow += 2;
 
   // Usage distribution
@@ -547,15 +547,15 @@ function populateTrialPerformance(data) {
   const tc = data.spreadsheet_ready.trial_comparison;
 
   // Headers
-  sheet.getRange('A1:D1').setValues([['Metric', 'Campaign Trials', 'Individual Trials', 'Total']])
+  sheet.getRange('A1:D1').setValues([['Metric', 'Trial Program Trials', 'Individual Trials', 'Total']])
     .setFontWeight('bold').setBackground('#6366f1').setFontColor('white');
 
   // Data
   sheet.getRange('A2:D5').setValues([
-    ['Trials Started', tc.campaign_trials.started, tc.individual_trials.started, tc.total_trials.started],
-    ['Conversions', tc.campaign_trials.converted, tc.individual_trials.converted, tc.total_trials.converted],
-    ['Conversion Rate', tc.campaign_trials.conversion_rate / 100, tc.individual_trials.conversion_rate / 100, tc.total_trials.conversion_rate / 100],
-    ['Campaign Lift', tc.campaign_lift ? parseFloat(tc.campaign_lift) / 100 : 'N/A', '', '']
+    ['Trials Started', tc.trial_program_trials.started, tc.individual_trials.started, tc.total_trials.started],
+    ['Conversions', tc.trial_program_trials.converted, tc.individual_trials.converted, tc.total_trials.converted],
+    ['Conversion Rate', tc.trial_program_trials.conversion_rate / 100, tc.individual_trials.conversion_rate / 100, tc.total_trials.conversion_rate / 100],
+    ['Trial Program Lift', tc.trial_program_lift ? parseFloat(tc.trial_program_lift) / 100 : 'N/A', '', '']
   ]);
 
   // Add note below data
@@ -853,7 +853,7 @@ function setupSheets() {
     ['API Token', '[YOUR_TOKEN_HERE]'],
     ['Start Date', '2026-01-01'],
     ['End Date', '2026-01-31'],
-    ['Campaign Source', 'auto_campaign'],
+    ['Trial Program Source', 'auto_campaign'],
     ['Last Import', ''],
     ['Import Status', '']
   ]);
@@ -926,21 +926,21 @@ function refreshAllData() {
 **Create Spreadsheet:**
 1. Go to [Google Sheets](https://sheets.google.com)
 2. Click **Blank**
-3. Name: "CodeScribe Campaign Analytics"
+3. Name: "CodeScribe Trial Program Analytics"
 
 **Install Script:**
 1. Click **Extensions → Apps Script**
 2. Delete default code
 3. Paste the Apps Script code from above
 4. Click **Save** (💾 icon)
-5. Name project: "Campaign Import"
+5. Name project: "Trial Program Import"
 
 **First Run Authorization:**
 1. In Apps Script editor, select `onOpen` from dropdown
 2. Click **Run** (▶️ icon)
 3. Click **Review Permissions**
 4. Choose your Google account
-5. Click **Advanced → Go to Campaign Import (unsafe)**
+5. Click **Advanced → Go to Trial Program Import (unsafe)**
 6. Click **Allow**
 
 ### 2. Configure API Access
@@ -957,7 +957,7 @@ function refreshAllData() {
 
 **Configure Sheet:**
 1. Go back to your spreadsheet
-2. Click **Campaign → Setup Sheets** (creates all tabs)
+2. Click **Trial Program → Setup Sheets** (creates all tabs)
 3. Go to **Config** sheet
 4. Set API Base URL in cell B1:
    - Production: `https://codescribeai.com/api` (default)
@@ -968,7 +968,7 @@ function refreshAllData() {
 
 ### 3. Import Data
 
-1. Click **Campaign → Import Campaign Data** from menu
+1. Click **Trial Program → Import Trial Program Data** from menu
 2. Click **Allow** if prompted for permissions
 3. Wait for "Fetching campaign data..." message
 4. Wait for "Import Complete" message
@@ -981,7 +981,7 @@ function refreshAllData() {
 2. Select A1:C3 (headers + campaign/individual rows)
 3. Click **Insert → Chart**
 4. Chart type: **Column chart**
-5. Title: "Campaign vs Individual Trial Performance"
+5. Title: "Trial Program vs Individual Trial Performance"
 
 **Cohort Funnel Chart:**
 1. Go to **Cohort Funnel** sheet
@@ -1008,15 +1008,15 @@ function refreshAllData() {
 
 ## Usage Guide
 
-### Importing New Campaign Data
+### Importing New Trial Program Data
 
 **Method 1: Menu (Recommended)**
-1. Click **Campaign → Import Campaign Data**
+1. Click **Trial Program → Import Trial Program Data**
 2. Wait for completion message
 3. All sheets update automatically
 
 **Method 2: Refresh Data**
-1. Click **Campaign → Refresh All Data**
+1. Click **Trial Program → Refresh All Data**
 2. Confirms before overwriting
 3. Useful for updating existing import
 
@@ -1024,14 +1024,14 @@ function refreshAllData() {
 
 1. Go to **Config** sheet
 2. Update **Start Date** (B3) and **End Date** (B4)
-3. Click **Campaign → Import Campaign Data**
+3. Click **Trial Program → Import Trial Program Data**
 4. New date range data will populate
 
 ### Comparing Multiple Campaigns
 
 **Option 1: Duplicate Spreadsheet**
 1. Click **File → Make a copy**
-2. Name: "Campaign [Month] [Year]"
+2. Name: "Trial Program [Month] [Year]"
 3. Update Config dates
 4. Import new data
 
@@ -1062,7 +1062,7 @@ Now data imports automatically every day!
 
 ### Error: "Config sheet not found"
 
-**Solution:** Click **Campaign → Setup Sheets** to create all required sheets
+**Solution:** Click **Trial Program → Setup Sheets** to create all required sheets
 
 ### Error: "API request failed (401)"
 
@@ -1113,12 +1113,12 @@ Now data imports automatically every day!
 2. B2: API token (required)
 3. B3: Start date (required)
 4. B4: End date (required)
-5. B5: Campaign source (defaults to "auto_campaign")
+5. B5: Trial Program source (defaults to "auto_campaign")
 
 ### Data Not Updating
 
 **Solutions:**
-1. Click **Campaign → Refresh All Data**
+1. Click **Trial Program → Refresh All Data**
 2. Check "Last Import" in Config sheet
 3. Verify API token is valid
 4. Check date range is correct
@@ -1147,7 +1147,7 @@ Now data imports automatically every day!
    - Open console: `localStorage.getItem('cs_auth_token')`
    - Copy token
 6. Paste token in cell B2
-7. Click **Campaign → Import Campaign Data**
+7. Click **Trial Program → Import Trial Program Data**
 
 **Note:** Dev tokens are separate from production tokens. Make sure to use the token from the same environment as your API Base URL.
 
@@ -1164,7 +1164,7 @@ You can fetch data for any date range:
 - Quarter: 3-month range
 - Year: January 1 to December 31
 
-### Multiple Campaign Sources
+### Multiple Trial Program Sources
 
 To track different trial sources separately:
 1. Import with `campaignSource = 'auto_campaign'`
@@ -1194,7 +1194,7 @@ Add revenue calculations:
 ### Endpoint
 
 ```
-GET https://codescribeai.com/api/admin/campaigns/export
+GET https://codescribeai.com/api/admin/trial-programs/export
 ```
 
 ### Query Parameters
@@ -1221,8 +1221,8 @@ See `CAMPAIGN-EXPORT-VALIDATION.md` for complete response structure.
 ## Support
 
 **Documentation:**
-- Campaign Export Validation: `/docs/testing/CAMPAIGN-EXPORT-VALIDATION.md`
-- Campaign Management Guide: `/docs/admin/CAMPAIGN-MANAGEMENT-GUIDE.md`
+- Trial Program Export Validation: `/docs/testing/CAMPAIGN-EXPORT-VALIDATION.md`
+- Trial Program Management Guide: `/docs/admin/CAMPAIGN-MANAGEMENT-GUIDE.md`
 
 **Issues:**
 If you encounter problems:

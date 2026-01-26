@@ -1,11 +1,11 @@
 /**
- * Campaign Configuration
+ * Trial Program Configuration
  *
  * Database-driven campaign configuration for auto-trial grants.
  * Campaigns are managed via the admin UI - no code changes needed.
  */
 
-import Campaign from '../models/Campaign.js';
+import TrialProgram from '../models/TrialProgram.js';
 
 // Cache for active campaign (refreshed on each check)
 let cachedCampaign = null;
@@ -28,11 +28,11 @@ export async function getActiveCampaign() {
 
   // Fetch from database
   try {
-    cachedCampaign = await Campaign.getActive();
+    cachedCampaign = await TrialProgram.getActive();
     cacheTimestamp = now;
     return cachedCampaign;
   } catch (error) {
-    console.error('[Campaign] Error fetching active campaign:', error);
+    console.error('[Trial Program] Error fetching active campaign:', error);
     // On error, return cached value if we have one, otherwise null
     return cachedCampaign;
   }
@@ -44,8 +44,8 @@ export async function getActiveCampaign() {
  * @returns {Promise<boolean>} True if a campaign is active
  */
 export async function isCampaignActive() {
-  const campaign = await getActiveCampaign();
-  return campaign !== null;
+  const trialProgram = await getActiveCampaign();
+  return trialProgram !== null;
 }
 
 /**
@@ -59,22 +59,22 @@ export function clearCampaignCache() {
 /**
  * Get campaign status for admin visibility
  *
- * @returns {Promise<Object>} Campaign status
+ * @returns {Promise<Object>} Trial Program status
  */
 export async function getCampaignStatus() {
-  const campaign = await getActiveCampaign();
+  const trialProgram = await getActiveCampaign();
 
   return {
-    active: campaign !== null,
-    campaign: campaign ? {
-      id: campaign.id,
-      name: campaign.name,
-      tier: campaign.trial_tier,
-      days: campaign.trial_days,
-      startsAt: campaign.starts_at,
-      endsAt: campaign.ends_at,
-      signupsCount: campaign.signups_count,
-      conversionsCount: campaign.conversions_count,
+    active: trialProgram !== null,
+    trialProgram: trialProgram ? {
+      id: trialProgram.id,
+      name: trialProgram.name,
+      tier: trialProgram.trial_tier,
+      days: trialProgram.trial_days,
+      startsAt: trialProgram.starts_at,
+      endsAt: trialProgram.ends_at,
+      signupsCount: trialProgram.signups_count,
+      conversionsCount: trialProgram.conversions_count,
     } : null,
   };
 }

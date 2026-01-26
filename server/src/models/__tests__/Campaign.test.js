@@ -1,5 +1,5 @@
 /**
- * Unit tests for Campaign model
+ * Unit tests for Trial Program model
  * Tests campaign CRUD operations, active campaign retrieval, and statistics
  *
  * Pattern 11: ES Modules vs CommonJS (see TEST-PATTERNS-GUIDE.md)
@@ -7,17 +7,17 @@
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 
-// Mock @vercel/postgres BEFORE importing Campaign
+// Mock @vercel/postgres BEFORE importing Trial Program
 jest.mock('@vercel/postgres', () => ({
   sql: Object.assign(jest.fn(), {
     query: jest.fn(),
   }),
 }));
 
-import Campaign from '../Campaign.js';
+import TrialProgram from '../TrialProgram.js';
 import { sql } from '@vercel/postgres';
 
-describe('Campaign Model', () => {
+describe('TrialProgram Model', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -30,7 +30,7 @@ describe('Campaign Model', () => {
     it('should create a campaign with default values', async () => {
       const mockCampaign = {
         id: 1,
-        name: 'Test Campaign',
+        name: 'Test Trial Program',
         description: null,
         trial_tier: 'pro',
         trial_days: 14,
@@ -42,10 +42,10 @@ describe('Campaign Model', () => {
 
       sql.mockResolvedValue({ rows: [mockCampaign] });
 
-      const result = await Campaign.create({ name: 'Test Campaign' });
+      const result = await TrialProgram.create({ name: 'Test Trial Program' });
 
       expect(sql).toHaveBeenCalled();
-      expect(result.name).toBe('Test Campaign');
+      expect(result.name).toBe('Test Trial Program');
       expect(result.trial_tier).toBe('pro');
       expect(result.trial_days).toBe(14);
     });
@@ -61,7 +61,7 @@ describe('Campaign Model', () => {
 
       sql.mockResolvedValue({ rows: [mockCampaign] });
 
-      const result = await Campaign.create({
+      const result = await TrialProgram.create({
         name: 'Team Trial',
         trialTier: 'team',
         trialDays: 30,
@@ -75,14 +75,14 @@ describe('Campaign Model', () => {
       const endsAt = new Date('2024-12-31T23:59:59Z');
       const mockCampaign = {
         id: 3,
-        name: 'Holiday Campaign',
+        name: 'Holiday Trial Program',
         ends_at: endsAt.toISOString(),
       };
 
       sql.mockResolvedValue({ rows: [mockCampaign] });
 
-      const result = await Campaign.create({
-        name: 'Holiday Campaign',
+      const result = await TrialProgram.create({
+        name: 'Holiday Trial Program',
         endsAt,
       });
 
@@ -92,7 +92,7 @@ describe('Campaign Model', () => {
     it('should throw error if database fails', async () => {
       sql.mockRejectedValue(new Error('Database error'));
 
-      await expect(Campaign.create({ name: 'Test' })).rejects.toThrow('Database error');
+      await expect(TrialProgram.create({ name: 'Test' })).rejects.toThrow('Database error');
     });
   });
 
@@ -102,10 +102,10 @@ describe('Campaign Model', () => {
 
   describe('findById', () => {
     it('should return campaign when found', async () => {
-      const mockCampaign = { id: 1, name: 'Test Campaign' };
+      const mockCampaign = { id: 1, name: 'Test Trial Program' };
       sql.mockResolvedValue({ rows: [mockCampaign] });
 
-      const result = await Campaign.findById(1);
+      const result = await TrialProgram.findById(1);
 
       expect(result).toEqual(mockCampaign);
     });
@@ -113,7 +113,7 @@ describe('Campaign Model', () => {
     it('should return null when not found', async () => {
       sql.mockResolvedValue({ rows: [] });
 
-      const result = await Campaign.findById(999);
+      const result = await TrialProgram.findById(999);
 
       expect(result).toBeNull();
     });
@@ -127,14 +127,14 @@ describe('Campaign Model', () => {
     it('should return active campaign within date range', async () => {
       const mockCampaign = {
         id: 1,
-        name: 'Active Campaign',
+        name: 'Active Trial Program',
         is_active: true,
         starts_at: new Date(Date.now() - 86400000).toISOString(),
         ends_at: new Date(Date.now() + 86400000).toISOString(),
       };
       sql.mockResolvedValue({ rows: [mockCampaign] });
 
-      const result = await Campaign.getActive();
+      const result = await TrialProgram.getActive();
 
       expect(result).toEqual(mockCampaign);
       expect(result.is_active).toBe(true);
@@ -143,7 +143,7 @@ describe('Campaign Model', () => {
     it('should return null when no active campaign', async () => {
       sql.mockResolvedValue({ rows: [] });
 
-      const result = await Campaign.getActive();
+      const result = await TrialProgram.getActive();
 
       expect(result).toBeNull();
     });
@@ -151,13 +151,13 @@ describe('Campaign Model', () => {
     it('should return campaign with null ends_at (indefinite)', async () => {
       const mockCampaign = {
         id: 1,
-        name: 'Indefinite Campaign',
+        name: 'Indefinite Trial Program',
         is_active: true,
         ends_at: null,
       };
       sql.mockResolvedValue({ rows: [mockCampaign] });
 
-      const result = await Campaign.getActive();
+      const result = await TrialProgram.getActive();
 
       expect(result.ends_at).toBeNull();
     });
@@ -170,14 +170,14 @@ describe('Campaign Model', () => {
   describe('list', () => {
     it('should return campaigns with default pagination', async () => {
       const mockCampaigns = [
-        { id: 1, name: 'Campaign 1' },
-        { id: 2, name: 'Campaign 2' },
+        { id: 1, name: 'Trial Program 1' },
+        { id: 2, name: 'Trial Program 2' },
       ];
 
       sql.query.mockResolvedValue({ rows: mockCampaigns });
       sql.mockResolvedValue({ rows: [{ total: '2' }] });
 
-      const result = await Campaign.list();
+      const result = await TrialProgram.list();
 
       expect(result.campaigns).toHaveLength(2);
       expect(result.total).toBe(2);
@@ -188,7 +188,7 @@ describe('Campaign Model', () => {
       sql.query.mockResolvedValue({ rows: [] });
       sql.mockResolvedValue({ rows: [{ total: '0' }] });
 
-      await Campaign.list({ sortBy: 'name', sortOrder: 'ASC' });
+      await TrialProgram.list({ sortBy: 'name', sortOrder: 'ASC' });
 
       expect(sql.query).toHaveBeenCalledWith(
         expect.stringContaining('ORDER BY name ASC'),
@@ -201,7 +201,7 @@ describe('Campaign Model', () => {
       sql.mockResolvedValue({ rows: [{ total: '0' }] });
 
       // Malicious sortBy should default to created_at
-      await Campaign.list({ sortBy: 'DROP TABLE; --' });
+      await TrialProgram.list({ sortBy: 'DROP TABLE; --' });
 
       expect(sql.query).toHaveBeenCalledWith(
         expect.stringContaining('ORDER BY created_at'),
@@ -219,7 +219,7 @@ describe('Campaign Model', () => {
       const mockCampaign = { id: 1, name: 'Updated Name' };
       sql.query.mockResolvedValue({ rows: [mockCampaign] });
 
-      const result = await Campaign.update(1, { name: 'Updated Name' });
+      const result = await TrialProgram.update(1, { name: 'Updated Name' });
 
       expect(result.name).toBe('Updated Name');
     });
@@ -233,7 +233,7 @@ describe('Campaign Model', () => {
       };
       sql.query.mockResolvedValue({ rows: [mockCampaign] });
 
-      const result = await Campaign.update(1, {
+      const result = await TrialProgram.update(1, {
         name: 'Updated',
         trialTier: 'team',
         trialDays: 30,
@@ -246,7 +246,7 @@ describe('Campaign Model', () => {
     it('should return null if campaign not found', async () => {
       sql.query.mockResolvedValue({ rows: [] });
 
-      const result = await Campaign.update(999, { name: 'Test' });
+      const result = await TrialProgram.update(999, { name: 'Test' });
 
       expect(result).toBeNull();
     });
@@ -261,7 +261,7 @@ describe('Campaign Model', () => {
       const mockCampaign = { id: 1, is_active: true };
       sql.mockResolvedValue({ rows: [mockCampaign] });
 
-      const result = await Campaign.setActive(1, true);
+      const result = await TrialProgram.setActive(1, true);
 
       expect(result.is_active).toBe(true);
     });
@@ -270,7 +270,7 @@ describe('Campaign Model', () => {
       const mockCampaign = { id: 1, is_active: false };
       sql.mockResolvedValue({ rows: [mockCampaign] });
 
-      const result = await Campaign.setActive(1, false);
+      const result = await TrialProgram.setActive(1, false);
 
       expect(result.is_active).toBe(false);
     });
@@ -284,7 +284,7 @@ describe('Campaign Model', () => {
     it('should call sql to increment signups', async () => {
       sql.mockResolvedValue({ rows: [] });
 
-      await Campaign.incrementSignups(1);
+      await TrialProgram.incrementSignups(1);
 
       expect(sql).toHaveBeenCalled();
     });
@@ -294,7 +294,7 @@ describe('Campaign Model', () => {
     it('should call sql to increment conversions', async () => {
       sql.mockResolvedValue({ rows: [] });
 
-      await Campaign.incrementConversions(1);
+      await TrialProgram.incrementConversions(1);
 
       expect(sql).toHaveBeenCalled();
     });
@@ -308,7 +308,7 @@ describe('Campaign Model', () => {
     it('should return true when campaign deleted', async () => {
       sql.mockResolvedValue({ rows: [{ id: 1 }] });
 
-      const result = await Campaign.delete(1);
+      const result = await TrialProgram.delete(1);
 
       expect(result).toBe(true);
     });
@@ -316,7 +316,7 @@ describe('Campaign Model', () => {
     it('should return false when campaign not found', async () => {
       sql.mockResolvedValue({ rows: [] });
 
-      const result = await Campaign.delete(999);
+      const result = await TrialProgram.delete(999);
 
       expect(result).toBe(false);
     });
@@ -328,7 +328,7 @@ describe('Campaign Model', () => {
 
   describe('getStats', () => {
     it('should return campaign with trial statistics', async () => {
-      const mockCampaign = { id: 1, name: 'Test Campaign' };
+      const mockCampaign = { id: 1, name: 'Test Trial Program' };
       const mockStats = {
         total_trials: '10',
         active_trials: '5',
@@ -340,16 +340,16 @@ describe('Campaign Model', () => {
       sql.mockResolvedValueOnce({ rows: [mockCampaign] });
       sql.mockResolvedValueOnce({ rows: [mockStats] });
 
-      const result = await Campaign.getStats(1);
+      const result = await TrialProgram.getStats(1);
 
-      expect(result.name).toBe('Test Campaign');
+      expect(result.name).toBe('Test Trial Program');
       expect(result.trialStats).toEqual(mockStats);
     });
 
     it('should return null when campaign not found', async () => {
       sql.mockResolvedValue({ rows: [] });
 
-      const result = await Campaign.getStats(999);
+      const result = await TrialProgram.getStats(999);
 
       expect(result).toBeNull();
     });

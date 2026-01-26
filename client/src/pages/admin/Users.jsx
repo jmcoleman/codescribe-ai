@@ -28,7 +28,9 @@ import {
   Gift,
   Ban,
   CheckSquare,
-  MoreVertical
+  MoreVertical,
+  AlertTriangle,
+  Clock
 } from 'lucide-react';
 import { PageLayout } from '../../components/PageLayout';
 import { Select } from '../../components/Select';
@@ -496,16 +498,51 @@ function GrantTrialModal({ isOpen, onClose, user, onGrant }) {
   const [trialTier, setTrialTier] = useState('pro');
   const [durationDays, setDurationDays] = useState(14);
   const [reason, setReason] = useState('');
+  const [force, setForce] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [trialHistory, setTrialHistory] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [eligibilityWarning, setEligibilityWarning] = useState(null);
+  const [showForceOption, setShowForceOption] = useState(false);
   const [errors, setErrors] = useState({ reason: '' });
   const modalRef = useRef(null);
   const trialTierSelectRef = useRef(null);
   const reasonInputRef = useRef(null);
 
+  // Fetch trial history when modal opens
+  useEffect(() => {
+    if (isOpen && user) {
+      fetchTrialHistory();
+    }
+  }, [isOpen, user]);
+
+  const fetchTrialHistory = async () => {
+    if (!user) return;
+
+    setLoadingHistory(true);
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${API_URL}/api/admin/users/${user.id}/trial-history`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+      if (data.success) {
+        setTrialHistory(data.trials || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch trial history:', error);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
   // Validation functions
   const validateReason = (value) => {
+    const minLength = force ? 20 : 5;
     if (!value.trim()) return 'Reason is required';
-    if (value.trim().length < 5) return 'Reason must be at least 5 characters';
+    if (value.trim().length < minLength) {
+      return `Reason must be at least ${minLength} characters${force ? ' for forced grants' : ''}`;
+    }
     return '';
   };
 
@@ -581,16 +618,34 @@ function GrantTrialModal({ isOpen, onClose, user, onGrant }) {
 
     setLoading(true);
     try {
-      await onGrant(user.id, trialTier, durationDays, reason.trim());
+      // Call onGrant with force flag
+      const result = await onGrant(user.id, trialTier, durationDays, reason.trim(), force);
+
+      // If result indicates ineligibility (not forced), show warning and force option
+      if (result && result.hasUsedTrial && result.canForce && !force) {
+        setEligibilityWarning(result.error);
+        setTrialHistory(result.trialHistory || []);
+        setShowForceOption(true);
+        setLoading(false);
+        return;
+      }
+
+      // Success - close modal and reset
       onClose();
       setReason('');
       setTrialTier('pro');
       setDurationDays(14);
+      setForce(false);
+      setShowForceOption(false);
+      setEligibilityWarning(null);
       setErrors({ reason: '' });
     } catch (error) {
       // Error handled by parent
-    } finally {
       setLoading(false);
+    } finally {
+      if (!eligibilityWarning) {
+        setLoading(false);
+      }
     }
   };
 
@@ -623,6 +678,51 @@ function GrantTrialModal({ isOpen, onClose, user, onGrant }) {
             <p className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">User</p>
             <p className="text-sm text-slate-600 dark:text-slate-400 truncate">{user.email}</p>
           </div>
+
+          {/* Trial History Section */}
+          {!loadingHistory && trialHistory.length > 0 && (
+            <div className="mb-4 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-200 dark:border-slate-700">
+              <div className="flex items-center gap-2 mb-2">
+                <Clock className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+                <p className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                  Trial History ({trialHistory.length})
+                </p>
+              </div>
+              <div className="space-y-2 max-h-32 overflow-y-auto">
+                {trialHistory.slice(0, 3).map((trial, idx) => (
+                  <div key={trial.id || idx} className="text-xs text-slate-600 dark:text-slate-400">
+                    • <span className="font-medium capitalize">{trial.trial_tier}</span> ({trial.source}) -{' '}
+                    {formatDate(trial.started_at)} to {formatDate(trial.ends_at)}
+                    {trial.source.includes('forced') && (
+                      <span className="ml-1 text-amber-600 dark:text-amber-400">⚠️ Forced</span>
+                    )}
+                  </div>
+                ))}
+                {trialHistory.length > 3 && (
+                  <p className="text-xs text-slate-500 dark:text-slate-500 italic">
+                    +{trialHistory.length - 3} more
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Eligibility Warning */}
+          {eligibilityWarning && showForceOption && (
+            <div className="mb-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-amber-800 dark:text-amber-200 mb-1">
+                    {eligibilityWarning}
+                  </p>
+                  <p className="text-xs text-amber-700 dark:text-amber-300">
+                    This user has already used a trial. You can force grant if needed (requires detailed justification).
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div ref={trialTierSelectRef}>
@@ -672,6 +772,25 @@ function GrantTrialModal({ isOpen, onClose, user, onGrant }) {
               )}
             </div>
 
+            {/* Force Grant Checkbox - Only show when eligibility check fails */}
+            {showForceOption && (
+              <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+                <input
+                  type="checkbox"
+                  id="force-grant"
+                  checked={force}
+                  onChange={(e) => setForce(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 text-purple-600 bg-white border-amber-300 rounded focus:ring-2 focus:ring-purple-500"
+                />
+                <label htmlFor="force-grant" className="flex-1 text-sm text-amber-800 dark:text-amber-200">
+                  <span className="font-medium">Force grant trial (override eligibility check)</span>
+                  <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
+                    ⚠️ Only use this for exceptional cases with strong justification (minimum 20 characters).
+                  </p>
+                </label>
+              </div>
+            )}
+
             <div className="flex gap-3 pt-2">
               <button
                 type="button"
@@ -690,6 +809,8 @@ function GrantTrialModal({ isOpen, onClose, user, onGrant }) {
                     <RefreshCw className="w-4 h-4 animate-spin" />
                     Granting...
                   </>
+                ) : force ? (
+                  'Force Grant Trial'
                 ) : (
                   'Grant Trial'
                 )}
@@ -1264,7 +1385,7 @@ export default function UsersAdmin() {
   };
 
   // Handle grant trial
-  const handleGrantTrial = async (userId, trialTier, durationDays, reason) => {
+  const handleGrantTrial = async (userId, trialTier, durationDays, reason, force = false) => {
     try {
       const token = getToken();
       const response = await fetch(`${API_URL}/api/admin/users/${userId}/grant-trial`, {
@@ -1273,17 +1394,25 @@ export default function UsersAdmin() {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ trial_tier: trialTier, duration_days: durationDays, reason })
+        body: JSON.stringify({ trial_tier: trialTier, duration_days: durationDays, reason, force })
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const data = await response.json();
+        // Check if this is an eligibility issue that can be forced
+        if (data.hasUsedTrial && data.canForce && !force) {
+          // Return the eligibility data to the modal
+          return data;
+        }
+
         throw new Error(data.error || 'Failed to grant trial');
       }
 
-      toast.success('Trial granted successfully');
+      toast.success(`Trial granted successfully${force ? ' (forced)' : ''}`);
       fetchUsers(pagination.page, true);
       fetchStats();
+      return data;
     } catch (err) {
       toast.error(err.message);
       throw err;

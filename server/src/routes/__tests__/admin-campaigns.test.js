@@ -1,14 +1,14 @@
 /**
- * Tests for Admin Campaign API Endpoints
+ * Tests for Admin Trial Program API Endpoints
  *
  * Tests campaign management endpoints:
- * - GET /api/admin/campaigns/status
- * - GET /api/admin/campaigns
- * - GET /api/admin/campaigns/:id
- * - POST /api/admin/campaigns
- * - PUT /api/admin/campaigns/:id
- * - POST /api/admin/campaigns/:id/toggle
- * - DELETE /api/admin/campaigns/:id
+ * - GET /api/admin/trial-programs/status
+ * - GET /api/admin/trial-programs
+ * - GET /api/admin/trial-programs/:id
+ * - POST /api/admin/trial-programs
+ * - PUT /api/admin/trial-programs/:id
+ * - POST /api/admin/trial-programs/:id/toggle
+ * - DELETE /api/admin/trial-programs/:id
  *
  * Pattern 11: ES Modules - mock BEFORE importing (see TEST-PATTERNS-GUIDE.md)
  */
@@ -31,7 +31,7 @@ jest.mock('@vercel/postgres', () => ({
   sql: jest.fn(),
 }));
 
-jest.mock('../../models/Campaign.js', () => ({
+jest.mock('../../models/TrialProgram.js', () => ({
   default: {
     create: mockCreate,
     findById: mockFindById,
@@ -43,12 +43,12 @@ jest.mock('../../models/Campaign.js', () => ({
   },
 }));
 
-jest.mock('../../config/campaign.js', () => ({
+jest.mock('../../config/trialProgram.js', () => ({
   getCampaignStatus: mockGetCampaignStatus,
   clearCampaignCache: mockClearCampaignCache,
 }));
 
-describe('Admin Campaign API Endpoints', () => {
+describe('Admin Trial Program API Endpoints', () => {
   let mockRequest;
   let mockResponse;
 
@@ -74,16 +74,16 @@ describe('Admin Campaign API Endpoints', () => {
   });
 
   // ============================================================================
-  // GET /api/admin/campaigns/status
+  // GET /api/admin/trial-programs/status
   // ============================================================================
 
-  describe('GET /api/admin/campaigns/status', () => {
+  describe('GET /api/admin/trial-programs/status', () => {
     it('should return active campaign status', async () => {
       const mockStatus = {
         active: true,
-        campaign: {
+        trialProgram: {
           id: 1,
-          name: 'Test Campaign',
+          name: 'Test Trial Program',
           tier: 'pro',
           days: 14,
         },
@@ -101,7 +101,7 @@ describe('Admin Campaign API Endpoints', () => {
     it('should return inactive status when no campaign', async () => {
       mockGetCampaignStatus.mockResolvedValue({
         active: false,
-        campaign: null,
+        trialProgram: null,
       });
 
       const status = await mockGetCampaignStatus();
@@ -109,29 +109,29 @@ describe('Admin Campaign API Endpoints', () => {
 
       expect(mockResponse.json).toHaveBeenCalledWith({
         active: false,
-        campaign: null,
+        trialProgram: null,
       });
     });
   });
 
   // ============================================================================
-  // GET /api/admin/campaigns
+  // GET /api/admin/trial-programs
   // ============================================================================
 
-  describe('GET /api/admin/campaigns', () => {
+  describe('GET /api/admin/trial-programs', () => {
     it('should return list of campaigns', async () => {
       const mockCampaigns = {
         campaigns: [
-          { id: 1, name: 'Campaign 1' },
-          { id: 2, name: 'Campaign 2' },
+          { id: 1, name: 'Trial Program 1' },
+          { id: 2, name: 'Trial Program 2' },
         ],
         total: 2,
       };
       mockList.mockResolvedValue(mockCampaigns);
 
       // Simulate route handler
-      const campaigns = await mockList({});
-      mockResponse.json(campaigns);
+      const trialPrograms = await mockList({});
+      mockResponse.json(trialPrograms);
 
       expect(mockList).toHaveBeenCalled();
       expect(mockResponse.json).toHaveBeenCalledWith(mockCampaigns);
@@ -153,16 +153,16 @@ describe('Admin Campaign API Endpoints', () => {
   });
 
   // ============================================================================
-  // GET /api/admin/campaigns/:id
+  // GET /api/admin/trial-programs/:id
   // ============================================================================
 
-  describe('GET /api/admin/campaigns/:id', () => {
+  describe('GET /api/admin/trial-programs/:id', () => {
     it('should return campaign by ID', async () => {
-      const mockCampaign = { id: 1, name: 'Test Campaign' };
+      const mockCampaign = { id: 1, name: 'Test Trial Program' };
       mockFindById.mockResolvedValue(mockCampaign);
 
-      const campaign = await mockFindById(1);
-      mockResponse.json(campaign);
+      const trialProgram = await mockFindById(1);
+      mockResponse.json(trialProgram);
 
       expect(mockFindById).toHaveBeenCalledWith(1);
       expect(mockResponse.json).toHaveBeenCalledWith(mockCampaign);
@@ -171,9 +171,9 @@ describe('Admin Campaign API Endpoints', () => {
     it('should return 404 when campaign not found', async () => {
       mockFindById.mockResolvedValue(null);
 
-      const campaign = await mockFindById(999);
-      if (!campaign) {
-        mockResponse.status(404).json({ error: 'Campaign not found' });
+      const trialProgram = await mockFindById(999);
+      if (!trialProgram) {
+        mockResponse.status(404).json({ error: 'Trial Program not found' });
       }
 
       expect(mockResponse.status).toHaveBeenCalledWith(404);
@@ -181,33 +181,33 @@ describe('Admin Campaign API Endpoints', () => {
   });
 
   // ============================================================================
-  // POST /api/admin/campaigns
+  // POST /api/admin/trial-programs
   // ============================================================================
 
-  describe('POST /api/admin/campaigns', () => {
+  describe('POST /api/admin/trial-programs', () => {
     it('should create a new campaign', async () => {
       const mockCampaign = {
         id: 1,
-        name: 'New Campaign',
+        name: 'New Trial Program',
         trial_tier: 'pro',
         trial_days: 14,
       };
       mockCreate.mockResolvedValue(mockCampaign);
 
       mockRequest.body = {
-        name: 'New Campaign',
+        name: 'New Trial Program',
         trialTier: 'pro',
         trialDays: 14,
       };
 
-      const campaign = await mockCreate({
+      const trialProgram = await mockCreate({
         ...mockRequest.body,
         createdByUserId: mockRequest.user.id,
       });
-      mockResponse.status(201).json(campaign);
+      mockResponse.status(201).json(trialProgram);
 
       expect(mockCreate).toHaveBeenCalledWith(
-        expect.objectContaining({ name: 'New Campaign', createdByUserId: 1 })
+        expect.objectContaining({ name: 'New Trial Program', createdByUserId: 1 })
       );
       expect(mockResponse.status).toHaveBeenCalledWith(201);
     });
@@ -216,7 +216,7 @@ describe('Admin Campaign API Endpoints', () => {
       mockRequest.body = { trialTier: 'pro' };
 
       if (!mockRequest.body.name) {
-        mockResponse.status(400).json({ error: 'Campaign name is required' });
+        mockResponse.status(400).json({ error: 'Trial Program name is required' });
       }
 
       expect(mockResponse.status).toHaveBeenCalledWith(400);
@@ -224,31 +224,31 @@ describe('Admin Campaign API Endpoints', () => {
   });
 
   // ============================================================================
-  // PUT /api/admin/campaigns/:id
+  // PUT /api/admin/trial-programs/:id
   // ============================================================================
 
-  describe('PUT /api/admin/campaigns/:id', () => {
+  describe('PUT /api/admin/trial-programs/:id', () => {
     it('should update campaign', async () => {
-      const mockCampaign = { id: 1, name: 'Updated Campaign' };
+      const mockCampaign = { id: 1, name: 'Updated Trial Program' };
       mockUpdate.mockResolvedValue(mockCampaign);
 
       mockRequest.params = { id: '1' };
-      mockRequest.body = { name: 'Updated Campaign' };
+      mockRequest.body = { name: 'Updated Trial Program' };
 
-      const campaign = await mockUpdate(1, mockRequest.body);
+      const trialProgram = await mockUpdate(1, mockRequest.body);
       mockClearCampaignCache();
-      mockResponse.json(campaign);
+      mockResponse.json(trialProgram);
 
-      expect(mockUpdate).toHaveBeenCalledWith(1, { name: 'Updated Campaign' });
+      expect(mockUpdate).toHaveBeenCalledWith(1, { name: 'Updated Trial Program' });
       expect(mockClearCampaignCache).toHaveBeenCalled();
     });
 
     it('should return 404 when campaign not found', async () => {
       mockUpdate.mockResolvedValue(null);
 
-      const campaign = await mockUpdate(999, { name: 'Test' });
-      if (!campaign) {
-        mockResponse.status(404).json({ error: 'Campaign not found' });
+      const trialProgram = await mockUpdate(999, { name: 'Test' });
+      if (!trialProgram) {
+        mockResponse.status(404).json({ error: 'Trial Program not found' });
       }
 
       expect(mockResponse.status).toHaveBeenCalledWith(404);
@@ -256,10 +256,10 @@ describe('Admin Campaign API Endpoints', () => {
   });
 
   // ============================================================================
-  // POST /api/admin/campaigns/:id/toggle
+  // POST /api/admin/trial-programs/:id/toggle
   // ============================================================================
 
-  describe('POST /api/admin/campaigns/:id/toggle', () => {
+  describe('POST /api/admin/trial-programs/:id/toggle', () => {
     it('should activate a campaign', async () => {
       const mockCampaign = { id: 1, is_active: true };
       mockSetActive.mockResolvedValue(mockCampaign);
@@ -267,9 +267,9 @@ describe('Admin Campaign API Endpoints', () => {
       mockRequest.params = { id: '1' };
       mockRequest.body = { isActive: true };
 
-      const campaign = await mockSetActive(1, true);
+      const trialProgram = await mockSetActive(1, true);
       mockClearCampaignCache();
-      mockResponse.json(campaign);
+      mockResponse.json(trialProgram);
 
       expect(mockSetActive).toHaveBeenCalledWith(1, true);
       expect(mockClearCampaignCache).toHaveBeenCalled();
@@ -279,24 +279,24 @@ describe('Admin Campaign API Endpoints', () => {
       const mockCampaign = { id: 1, is_active: false };
       mockSetActive.mockResolvedValue(mockCampaign);
 
-      const campaign = await mockSetActive(1, false);
-      mockResponse.json(campaign);
+      const trialProgram = await mockSetActive(1, false);
+      mockResponse.json(trialProgram);
 
       expect(mockSetActive).toHaveBeenCalledWith(1, false);
     });
   });
 
   // ============================================================================
-  // DELETE /api/admin/campaigns/:id
+  // DELETE /api/admin/trial-programs/:id
   // ============================================================================
 
-  describe('DELETE /api/admin/campaigns/:id', () => {
+  describe('DELETE /api/admin/trial-programs/:id', () => {
     it('should delete campaign when no signups', async () => {
       mockFindById.mockResolvedValue({ id: 1, signups_count: 0 });
       mockDelete.mockResolvedValue(true);
 
-      const campaign = await mockFindById(1);
-      if (campaign.signups_count > 0) {
+      const trialProgram = await mockFindById(1);
+      if (trialProgram.signups_count > 0) {
         mockResponse.status(400).json({ error: 'Cannot delete campaign with signups' });
       } else {
         await mockDelete(1);
@@ -311,8 +311,8 @@ describe('Admin Campaign API Endpoints', () => {
     it('should prevent deletion when campaign has signups', async () => {
       mockFindById.mockResolvedValue({ id: 1, signups_count: 5 });
 
-      const campaign = await mockFindById(1);
-      if (campaign.signups_count > 0) {
+      const trialProgram = await mockFindById(1);
+      if (trialProgram.signups_count > 0) {
         mockResponse.status(400).json({ error: 'Cannot delete campaign with signups' });
       }
 
@@ -323,9 +323,9 @@ describe('Admin Campaign API Endpoints', () => {
     it('should return 404 when campaign not found', async () => {
       mockFindById.mockResolvedValue(null);
 
-      const campaign = await mockFindById(999);
-      if (!campaign) {
-        mockResponse.status(404).json({ error: 'Campaign not found' });
+      const trialProgram = await mockFindById(999);
+      if (!trialProgram) {
+        mockResponse.status(404).json({ error: 'Trial Program not found' });
       }
 
       expect(mockResponse.status).toHaveBeenCalledWith(404);
@@ -333,10 +333,10 @@ describe('Admin Campaign API Endpoints', () => {
   });
 
   // ============================================================================
-  // GET /api/admin/campaigns/export - Extended Metrics Export
+  // GET /api/admin/trial-programs/export - Extended Metrics Export
   // ============================================================================
 
-  describe('GET /api/admin/campaigns/export', () => {
+  describe('GET /api/admin/trial-programs/export', () => {
     it('should return extended metrics including time-to-value and usage segments', async () => {
       const { sql } = await import('@vercel/postgres');
 
@@ -438,7 +438,7 @@ describe('Admin Campaign API Endpoints', () => {
       const response = {
         success: true,
         data: {
-          campaign: {
+          trialProgram: {
             startDate: '2026-01-10',
             endDate: '2026-01-24',
             source: 'auto_campaign',
@@ -641,7 +641,7 @@ describe('Admin Campaign API Endpoints', () => {
         const response = {
           success: true,
           data: {
-            campaign: {
+            trialProgram: {
               startDate: '2026-01-10',
               endDate: '2026-01-24',
               source: 'auto_campaign',
@@ -665,7 +665,7 @@ describe('Admin Campaign API Endpoints', () => {
         // Verify all top-level fields exist
         expect(result.success).toBeDefined();
         expect(result.data).toBeDefined();
-        expect(result.data.campaign).toBeDefined();
+        expect(result.data.trialProgram).toBeDefined();
         expect(result.data.summary).toBeDefined();
         expect(result.data.daily).toBeDefined();
         expect(result.data.spreadsheet_ready).toBeDefined();
@@ -682,14 +682,14 @@ describe('Admin Campaign API Endpoints', () => {
         sql.mockResolvedValueOnce({ rows: [{ total_verified: '0', avg_hours_to_verify: null, median_hours_to_verify: null }] });
         sql.mockResolvedValueOnce({ rows: [{ activated_users: '0', avg_hours_to_first_gen: null, median_hours_to_first_gen: null }] });
         sql.mockResolvedValueOnce({ rows: [] });
-        sql.mockResolvedValueOnce({ rows: [{ id: 1, name: 'Test Campaign', trial_tier: 'pro', trial_days: 14 }] });
+        sql.mockResolvedValueOnce({ rows: [{ id: 1, name: 'Test Trial Program', trial_tier: 'pro', trial_days: 14 }] });
 
         await sql(); await sql(); await sql(); await sql(); await sql(); await sql();
         const campaignInfo = await sql();
 
         const response = {
           data: {
-            campaign: {
+            trialProgram: {
               startDate: '2026-01-10',
               endDate: '2026-01-24',
               source: 'auto_campaign',
@@ -705,13 +705,13 @@ describe('Admin Campaign API Endpoints', () => {
         const result = mockResponse.json.mock.calls[0][0];
 
         // Required campaign fields for Google Sheets
-        expect(result.data.campaign.startDate).toBeDefined();
-        expect(result.data.campaign.endDate).toBeDefined();
-        expect(result.data.campaign.source).toBeDefined();
-        expect(result.data.campaign.id).toBeDefined();
-        expect(result.data.campaign.name).toBeDefined();
-        expect(result.data.campaign.trialTier).toBeDefined();
-        expect(result.data.campaign.trialDays).toBeDefined();
+        expect(result.data.trialProgram.startDate).toBeDefined();
+        expect(result.data.trialProgram.endDate).toBeDefined();
+        expect(result.data.trialProgram.source).toBeDefined();
+        expect(result.data.trialProgram.id).toBeDefined();
+        expect(result.data.trialProgram.name).toBeDefined();
+        expect(result.data.trialProgram.trialTier).toBeDefined();
+        expect(result.data.trialProgram.trialDays).toBeDefined();
       });
 
       it('should include all required spreadsheet_ready fields', async () => {
@@ -749,7 +749,7 @@ describe('Admin Campaign API Endpoints', () => {
           data: {
             spreadsheet_ready: {
               trial_comparison: {
-                campaign_trials: {
+                trial_program_trials: {
                   started: parseInt(campaignTrials.trials_started),
                   converted: parseInt(campaignTrials.conversions),
                   conversion_rate: parseFloat(campaignTrials.conversion_rate),
@@ -764,7 +764,7 @@ describe('Admin Campaign API Endpoints', () => {
                   converted: totalConversions,
                   conversion_rate: parseFloat(totalConversionRate),
                 },
-                campaign_lift: campaignLift,
+                trial_program_lift: campaignLift,
               },
               cohort_summary: {
                 signups: parseInt(cohortSummary.rows[0].total_signups),
@@ -782,13 +782,13 @@ describe('Admin Campaign API Endpoints', () => {
 
         // Verify trial_comparison fields
         expect(result.data.spreadsheet_ready.trial_comparison).toBeDefined();
-        expect(result.data.spreadsheet_ready.trial_comparison.campaign_trials).toBeDefined();
-        expect(result.data.spreadsheet_ready.trial_comparison.campaign_trials.started).toBeDefined();
-        expect(result.data.spreadsheet_ready.trial_comparison.campaign_trials.converted).toBeDefined();
-        expect(result.data.spreadsheet_ready.trial_comparison.campaign_trials.conversion_rate).toBeDefined();
+        expect(result.data.spreadsheet_ready.trial_comparison.trial_program_trials).toBeDefined();
+        expect(result.data.spreadsheet_ready.trial_comparison.trial_program_trials.started).toBeDefined();
+        expect(result.data.spreadsheet_ready.trial_comparison.trial_program_trials.converted).toBeDefined();
+        expect(result.data.spreadsheet_ready.trial_comparison.trial_program_trials.conversion_rate).toBeDefined();
         expect(result.data.spreadsheet_ready.trial_comparison.individual_trials).toBeDefined();
         expect(result.data.spreadsheet_ready.trial_comparison.total_trials).toBeDefined();
-        expect(result.data.spreadsheet_ready.trial_comparison.campaign_lift).toBeDefined();
+        expect(result.data.spreadsheet_ready.trial_comparison.trial_program_lift).toBeDefined();
 
         // Verify cohort_summary fields
         expect(result.data.spreadsheet_ready.cohort_summary).toBeDefined();
@@ -841,7 +841,7 @@ describe('Admin Campaign API Endpoints', () => {
             },
             spreadsheet_ready: {
               trial_comparison: {
-                campaign_trials: {
+                trial_program_trials: {
                   started: parseInt(trialBreakdown.rows[0].trials_started),
                   converted: parseInt(trialBreakdown.rows[0].conversions),
                   conversion_rate: parseFloat(trialBreakdown.rows[0].conversion_rate),
@@ -875,12 +875,12 @@ describe('Admin Campaign API Endpoints', () => {
         // Verify all numbers are valid (not NaN, not Infinity, not strings)
         expect(typeof result.data.summary.total_signups).toBe('number');
         expect(typeof result.data.summary.verified_users).toBe('number');
-        expect(typeof result.data.spreadsheet_ready.trial_comparison.campaign_trials.conversion_rate).toBe('number');
+        expect(typeof result.data.spreadsheet_ready.trial_comparison.trial_program_trials.conversion_rate).toBe('number');
         expect(typeof result.data.extended_metrics.time_to_value.email_verification.avg_hours).toBe('number');
 
         // Verify no NaN or Infinity
         expect(Number.isFinite(result.data.summary.total_signups)).toBe(true);
-        expect(Number.isFinite(result.data.spreadsheet_ready.trial_comparison.campaign_trials.conversion_rate)).toBe(true);
+        expect(Number.isFinite(result.data.spreadsheet_ready.trial_comparison.trial_program_trials.conversion_rate)).toBe(true);
         expect(Number.isFinite(result.data.extended_metrics.time_to_value.email_verification.avg_hours)).toBe(true);
 
         // Verify percentages are in valid range
@@ -919,7 +919,7 @@ describe('Admin Campaign API Endpoints', () => {
           data: {
             spreadsheet_ready: {
               trial_comparison: {
-                campaign_trials: {
+                trial_program_trials: {
                   conversion_rate: parseFloat(trialBreakdown.rows[0].conversion_rate),
                 },
               },
@@ -935,7 +935,7 @@ describe('Admin Campaign API Endpoints', () => {
         const result = mockResponse.json.mock.calls[0][0];
 
         // Verify no NaN from division by zero
-        expect(result.data.spreadsheet_ready.trial_comparison.campaign_trials.conversion_rate).toBe(0);
+        expect(result.data.spreadsheet_ready.trial_comparison.trial_program_trials.conversion_rate).toBe(0);
         expect(result.data.spreadsheet_ready.cohort_summary.verification_rate).toBe('0.0');
         expect(Number.isFinite(parseFloat(result.data.spreadsheet_ready.cohort_summary.verification_rate))).toBe(true);
       });
@@ -963,7 +963,7 @@ describe('Admin Campaign API Endpoints', () => {
 
         const response = {
           data: {
-            campaign: {
+            trialProgram: {
               startDate: '2026-01-10',
               endDate: '2026-01-24',
             },
@@ -979,8 +979,8 @@ describe('Admin Campaign API Endpoints', () => {
         const result = mockResponse.json.mock.calls[0][0];
 
         // Verify date format (YYYY-MM-DD)
-        expect(result.data.campaign.startDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-        expect(result.data.campaign.endDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+        expect(result.data.trialProgram.startDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+        expect(result.data.trialProgram.endDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
         result.data.daily.forEach(day => {
           expect(day.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
         });
@@ -1020,7 +1020,7 @@ describe('Admin Campaign API Endpoints', () => {
           data: {
             summary: {
               trials_breakdown: {
-                campaign_trials: {
+                trial_program_trials: {
                   started: parseInt(campaignTrials.trials_started),
                   converted: parseInt(campaignTrials.conversions),
                   conversion_rate: parseFloat(campaignTrials.conversion_rate),
@@ -1039,11 +1039,11 @@ describe('Admin Campaign API Endpoints', () => {
                 },
               },
               comparison: {
-                campaign_vs_individual: {
-                  campaign_conversion_rate: parseFloat(campaignTrials.conversion_rate),
+                trial_program_vs_individual: {
+                  trial_program_conversion_rate: parseFloat(campaignTrials.conversion_rate),
                   individual_conversion_rate: parseFloat(individualConversionRate),
-                  campaign_lift: `${campaignLift}%`,
-                  campaign_performs_better: false,
+                  trial_program_lift: `${campaignLift}%`,
+                  trial_program_performs_better: false,
                 },
               },
             },
@@ -1054,16 +1054,16 @@ describe('Admin Campaign API Endpoints', () => {
         const result = mockResponse.json.mock.calls[0][0];
 
         // Verify all financial metrics are present
-        expect(result.data.summary.trials_breakdown.campaign_trials.started).toBe(50);
-        expect(result.data.summary.trials_breakdown.campaign_trials.converted).toBe(10);
-        expect(result.data.summary.trials_breakdown.campaign_trials.conversion_rate).toBe(20.0);
-        expect(result.data.summary.trials_breakdown.campaign_trials.avg_days_to_convert).toBe(15.5);
+        expect(result.data.summary.trials_breakdown.trial_program_trials.started).toBe(50);
+        expect(result.data.summary.trials_breakdown.trial_program_trials.converted).toBe(10);
+        expect(result.data.summary.trials_breakdown.trial_program_trials.conversion_rate).toBe(20.0);
+        expect(result.data.summary.trials_breakdown.trial_program_trials.avg_days_to_convert).toBe(15.5);
 
         expect(result.data.summary.trials_breakdown.individual_trials.started).toBe(8);
         expect(result.data.summary.trials_breakdown.individual_trials.converted).toBe(2);
 
-        expect(result.data.summary.comparison.campaign_vs_individual.campaign_lift).toBe('-20.0%');
-        expect(result.data.summary.comparison.campaign_vs_individual.campaign_performs_better).toBe(false);
+        expect(result.data.summary.comparison.trial_program_vs_individual.trial_program_lift).toBe('-20.0%');
+        expect(result.data.summary.comparison.trial_program_vs_individual.trial_program_performs_better).toBe(false);
       });
 
       it('should include all usage segments for engagement analysis', async () => {

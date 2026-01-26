@@ -509,7 +509,7 @@ export default function InviteCodes() {
         </div>
         {invite.campaign && (
           <div>
-            <p className="text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wide mb-1">Campaign</p>
+            <p className="text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wide mb-1">Trial Program</p>
             <p className="text-slate-700 dark:text-slate-300">{invite.campaign}</p>
           </div>
         )}
@@ -660,7 +660,7 @@ export default function InviteCodes() {
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                    Campaign (optional)
+                    Trial Program (optional)
                   </label>
                   <input
                     type="text"

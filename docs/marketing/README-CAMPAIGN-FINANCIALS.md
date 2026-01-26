@@ -1,4 +1,4 @@
-# January 2026 Campaign Financial Tracking - Quick Start
+# January 2026 Trial Program Financial Tracking - Quick Start
 
 ## 📦 What's Included
 
@@ -30,7 +30,7 @@ This package contains everything you need to track and analyze your January 2026
 
 ```
 1. Go to sheets.google.com
-2. Create new spreadsheet: "January 2026 Campaign"
+2. Create new spreadsheet: "January 2026 Trial Program"
 3. For each file:
    - File → Import → Upload
    - Select file (start with january-2026-campaign-financials.tsv)
@@ -56,7 +56,7 @@ This package contains everything you need to track and analyze your January 2026
 
 ---
 
-## 📋 Campaign Summary (14-Day Trial)
+## 📋 Trial Program Summary (14-Day Trial)
 
 ### Key Assumptions
 
@@ -347,9 +347,9 @@ AND cancelled_at BETWEEN '2026-02-01' AND '2026-03-01';
    - [ ] Bookmark the Dashboard sheet
    - [ ] Set calendar reminder for weekly updates
 
-2. **Before Campaign Launch (Jan 1):**
+2. **Before Trial Program Launch (Jan 1):**
    - [ ] Load $350 API budget ($210 Claude + $140 OpenAI)
-   - [ ] Activate campaign in /admin/campaigns
+   - [ ] Activate campaign in /admin/trial-programs
    - [ ] Test with dummy signup
    - [ ] Confirm tracking works
 
@@ -382,7 +382,7 @@ You now have:
 
 ---
 
-**Campaign Details:**
+**Trial Program Details:**
 - **Start:** January 1, 2026
 - **End:** January 31, 2026
 - **Trial:** 14-Day Pro Trial
@@ -411,5 +411,5 @@ docs/marketing/
 ```
 
 **Last Updated:** January 2026
-**Version:** 1.0 (14-Day Trial Campaign)
+**Version:** 1.0 (14-Day Trial Trial Program)
 **Maintained By:** Product & Finance Teams
