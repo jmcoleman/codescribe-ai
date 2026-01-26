@@ -10,8 +10,6 @@
 
 import { analyticsService } from '../services/analyticsService.js';
 
-const ANALYTICS_ENABLED = process.env.NODE_ENV === 'production';
-
 /**
  * Track a server-side analytics event
  * In production, logs structured JSON for log processing.
@@ -33,7 +31,7 @@ export const trackServerEvent = async (eventName, data = {}, context = {}) => {
   };
 
   // Log for Vercel log drains
-  if (ANALYTICS_ENABLED) {
+  if (process.env.NODE_ENV === 'production') {
     console.log(JSON.stringify(event));
   } else {
     console.log(`[Analytics] ${eventName}:`, data);
