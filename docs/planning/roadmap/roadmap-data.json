@@ -66,8 +66,8 @@
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
     "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.39",
-    "footer": "v3.4.3 Complete · Campaign Management Enhancements & Analytics Improvements ✓ · Up Next: Project Architecture Document · VS Code Extension: Separate Repo",
-    "lastUpdated": "January 14, 2026"
+    "footer": "v3.5.0 Complete · Trial Programs Refactoring & Enhanced Eligibility System ✓ · Up Next: Project Architecture Document · VS Code Extension: Separate Repo",
+    "lastUpdated": "January 25, 2026"
   },
   "columns": [
     {
@@ -76,6 +76,25 @@
       "title": "Completed",
       "subtitle": "Phase 1: Core Capabilities",
       "phases": [
+        {
+          "version": "v3.5.0",
+          "title": "Trial Programs & Enhanced Eligibility System",
+          "duration": "2 days",
+          "status": "✓ Complete",
+          "completedDate": "Jan 25, 2026",
+          "badge": "Trial System",
+          "features": [
+            "Trial Programs replace Campaigns with clearer terminology and expanded capabilities",
+            "Flexible eligibility rules per trial program (new users only, returning users with cooldown, or open to all)",
+            "Administrators can configure cooldown periods between trials (0-365 days)",
+            "System-wide lifetime trial limit configurable via environment variable",
+            "Auto-enrollment option for trial programs to automatically grant trials to new signups",
+            "Enhanced admin grant interface shows user trial history and eligibility status",
+            "Force grant capability for administrators to override eligibility rules with justification",
+            "Contextual error messages explain why users aren't eligible and suggest next steps",
+            "Audit logging tracks all administrative grant decisions with full context"
+          ]
+        },
         {
           "version": "v3.4.4",
           "title": "User Management System",

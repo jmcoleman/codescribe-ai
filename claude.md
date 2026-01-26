@@ -505,12 +505,15 @@ codescribe-ai/
 
 ## 🔄 Version History
 
-**Current: v3.4.0** (January 12, 2026)
-- Workflow milestone tracking: email_verified and first_generation events added to business funnel
-- Campaign export features: comprehensive documentation with financial tracking templates
-- Test coverage: 4,137 tests (2,134 frontend, 2,003 backend)
-- Frontend: 2,066 passing, 68 skipped
-- Backend: 1,970 passing, 33 skipped
+**Current: v3.5.0** (January 25, 2026)
+- Trial Programs refactoring: Campaigns renamed to Trial Programs with enhanced eligibility system
+- Flexible eligibility rules: new users only, returning users with cooldown, or open to all
+- System-wide trial limits configurable via MAX_TRIALS_PER_USER_LIFETIME environment variable
+- Auto-enrollment capabilities for trial programs on new user signups
+- Enhanced admin controls: force grants with justification, trial history display
+- Test coverage: 4,186 tests (2,106 frontend, 2,080 backend)
+- Frontend: 2,106 passing, 73 skipped
+- Backend: 2,080 passing, 33 skipped
 
 <details>
 <summary>Recent Releases (v2.9.0-v3.3.9) & Milestones</summary>
@@ -559,7 +562,7 @@ codescribe-ai/
 - **v1.21** (Oct 19): Production deployment, codescribe-ai.vercel.app
 
 Full history: [CHANGELOG.md](CHANGELOG.md)
-Last updated: January 7, 2026
+Last updated: January 25, 2026
 </details>
 
 ---

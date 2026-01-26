@@ -9,6 +9,142 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.5.0] - 2026-01-25
+
+**Status:** ✅ Trial Programs Refactoring & Enhanced Eligibility System
+
+**Summary:** Major refactoring to rename Campaigns to Trial Programs with enhanced eligibility rules, flexible cooldown periods, and improved administrator controls. This release adds system-wide trial limits, auto-enrollment capabilities, and contextual eligibility error handling.
+
+### Breaking Changes
+
+- **Database Schema**: Renamed `campaigns` table to `trial_programs`
+  - Renamed `campaign_id` → `trial_program_id` in `user_trials` table
+  - Changed `campaign` (string) → `trial_program_id` (FK) in `invite_codes` table
+  - All migrations include rollback instructions
+
+- **API Endpoints**: Updated all campaign endpoints
+  - `/api/admin/campaigns` → `/api/admin/trial-programs`
+  - All campaign-related routes now use `/trial-programs` path
+
+- **Frontend Routes**: Updated admin navigation
+  - `/admin/campaigns` → `/admin/trial-programs`
+  - Component renamed: `Campaigns.jsx` → `TrialPrograms.jsx`
+
+### Added
+
+- **Trial Programs Model** ([server/src/models/TrialProgram.js](server/src/models/TrialProgram.js))
+  - Renamed from Campaign model with improved terminology
+  - New `auto_enroll` field for automatic trial grants on signup
+  - Enhanced eligibility settings per program
+
+- **Enhanced Eligibility System** ([server/src/models/Trial.js](server/src/models/Trial.js):485-570)
+  - `Trial.checkEligibilityForProgram()` method with flexible rules
+  - Program-specific settings: `allow_previous_trial_users`, `cooldown_days`
+  - System-wide lifetime trial limit via `MAX_TRIALS_PER_USER_LIFETIME` env var (default: 3)
+  - Returns 6 eligibility codes: `NEW_USER`, `ELIGIBLE_RETURNING_USER`, `ACTIVE_TRIAL_EXISTS`, `NEW_USERS_ONLY`, `COOLDOWN_PERIOD`, `MAX_TRIALS_REACHED`
+
+- **EligibilityError Component** ([client/src/components/trial/EligibilityError.jsx](client/src/components/trial/EligibilityError.jsx))
+  - Contextual error messages for 4 error scenarios
+  - Dynamic content based on error details (days remaining, trial count, etc.)
+  - Actionable CTAs (View Pricing, Contact Support, View Trial Status)
+  - Accessible design with icons and semantic colors
+
+- **Admin Grant Enhancements** ([client/src/pages/admin/Users.jsx](client/src/pages/admin/Users.jsx):260-450)
+  - Trial history display showing last 3 trials
+  - Eligibility warning banner when user is ineligible
+  - Force grant checkbox for overriding eligibility rules
+  - Dynamic reason validation (20 chars for forced, 5 for regular)
+  - Trial history API integration
+
+- **Database Migrations** (7 new migrations)
+  - Migration 055: Add campaign eligibility settings (`allow_previous_trial_users`, `cooldown_days`)
+  - Migration 056: Remove `max_trials_per_user` column (now system-wide env var)
+  - Migration 057: Rename `campaigns` → `trial_programs` with FK updates
+  - Migration 058: Update campaign trigger for new table name
+  - Migration 059: Rename campaign constraint
+  - Migration 060: Add `auto_enroll` boolean field to trial_programs
+  - Migration 061: Create `admin_audit_log` table for administrative actions
+
+- **Admin Audit Log** ([server/src/models/AdminAuditLog.js](server/src/models/AdminAuditLog.js))
+  - Dedicated audit logging for admin actions
+  - Tracks action type, target user, admin user, metadata, and timestamps
+  - Integration with trial grant and user management workflows
+
+- **Comprehensive Testing**
+  - Backend: 35+ new eligibility tests ([server/src/models/__tests__/Trial-eligibility.test.js](server/src/models/__tests__/Trial-eligibility.test.js))
+  - Backend: Force grant tests ([server/src/routes/__tests__/admin-grant-trial-force.test.js](server/src/routes/__tests__/admin-grant-trial-force.test.js))
+  - Frontend: 24 EligibilityError component tests ([client/src/components/trial/__tests__/EligibilityError.test.jsx](client/src/components/trial/__tests__/EligibilityError.test.jsx))
+  - Updated Campaigns.test.jsx → TrialPrograms.test.jsx (14 tests)
+  - All tests passing: 2,106 frontend + 2,080 backend = 4,186 total
+
+### Changed
+
+- **Terminology Clarification**
+  - "Campaign" → "Trial Program" throughout codebase
+  - Better reflects the concept: a trial program is a structured offering users can enroll in
+  - Updated 24 documentation files with new terminology
+
+- **Trial Limits Architecture**
+  - Moved from per-campaign `max_trials_per_user` to system-wide `MAX_TRIALS_PER_USER_LIFETIME`
+  - Configurable via environment variable (1-10, default: 3)
+  - Simpler administration, consistent across all trial programs
+
+- **Trial Program Configuration** ([client/src/pages/admin/TrialPrograms.jsx](client/src/pages/admin/TrialPrograms.jsx):450-650)
+  - Eligibility settings section in create/edit modal
+  - "Allow previous trial users" checkbox
+  - Cooldown days input (0-365 days)
+  - "Who Can Redeem" rules summary
+  - Removed per-program max trials input
+
+- **Trial Context** ([client/src/contexts/TrialContext.jsx](client/src/contexts/TrialContext.jsx))
+  - Captures `eligibilityError` from API responses
+  - Extracts `errorCode` and `details` for EligibilityError component
+  - Exports `eligibilityError` state for UI integration
+
+### Fixed
+
+- **InviteCode Variable Bug** ([server/src/models/InviteCode.js](server/src/models/InviteCode.js):74)
+  - Fixed incorrect variable reference: `${trialProgram}` → `${campaign}`
+  - Prevented SQL errors in invite code creation
+
+- **Timezone Issues in Tests** ([client/src/components/trial/__tests__/EligibilityError.test.jsx](client/src/components/trial/__tests__/EligibilityError.test.jsx))
+  - Changed test dates from midnight UTC to noon UTC
+  - Prevents timezone conversion issues in date formatting
+
+- **Test Selector Updates** ([client/src/pages/admin/__tests__/Campaigns.test.jsx](client/src/pages/admin/__tests__/Campaigns.test.jsx))
+  - Updated banner text: "Active auto-enroll trial program"
+  - Changed button selector to role-based (Save button)
+  - Added `auto_enroll` field to mock data
+
+### Documentation
+
+- **New Documentation**
+  - [IMPLEMENTATION-STATUS.md](IMPLEMENTATION-STATUS.md): Detailed implementation tracking
+  - [docs/admin/TRIAL-PROGRAM-GUIDE.md](docs/admin/TRIAL-PROGRAM-GUIDE.md): Renamed from CAMPAIGN-MANAGEMENT-GUIDE.md
+
+- **Updated Documentation**
+  - [docs/admin/USER-MANAGEMENT-GUIDE.md](docs/admin/USER-MANAGEMENT-GUIDE.md): Force grant workflow
+  - [docs/deployment/VERCEL-ENVIRONMENT-VARIABLES.md](docs/deployment/VERCEL-ENVIRONMENT-VARIABLES.md): MAX_TRIALS_PER_USER_LIFETIME env var
+  - 22 additional docs updated with Trial Program terminology
+
+### Database
+
+- All 7 migrations applied and validated on Neon dev database
+- Migration 055: 81ms execution time
+- Migration 056: 45ms execution time
+- Migration 057: 118ms execution time
+- Migrations 058-061: <50ms each
+- Full rollback instructions included in each migration
+
+### Test Coverage
+
+- Frontend: 2,106 tests passing, 73 skipped (80 test files)
+- Backend: 2,080 tests passing, 33 skipped (71 test files)
+- Total: 4,186 tests passing across entire application
+- 0 failing tests
+
+---
+
 ## [3.4.4] - 2026-01-13
 
 **Status:** ✅ User Management & Account Suspension System
