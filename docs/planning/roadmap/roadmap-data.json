@@ -1059,7 +1059,8 @@
           "version": "v3.5.0",
           "title": "Trial Eligibility Enhancement",
           "duration": "8-11 hours",
-          "status": "In Progress",
+          "status": "✓ Complete",
+          "completedDate": "Jan 25, 2026",
           "badge": "Re-engagement Growth",
           "features": [
             "View complete trial history for any user showing all past trials with dates, sources, and reasons",
@@ -1072,6 +1073,32 @@
             "Track trial attribution accuracy showing which campaigns drive conversions"
           ]
         },
+        {
+          "version": "Epic 2.7",
+          "title": "Production Launch",
+          "duration": "1-2 days",
+          "status": "Planned",
+          "badge": "Payment Processing",
+          "features": [
+            "Replace test Stripe keys with live keys",
+            "Update webhook endpoints to production URLs",
+            "Verify Stripe business account",
+            "Test live checkout flow with real payment",
+            "Custom branded email receipt templates (override Stripe defaults)",
+            "Invoice PDF customization with CodeScribe AI branding",
+            "Store Stripe receipt URLs only (no PII in database)",
+            "Display Stripe-hosted receipts via API links",
+            "Monitor first live transactions"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "next",
+      "label": "Next",
+      "title": "Planned Features",
+      "subtitle": "Phase 4: Developer Adoption Engine",
+      "phases": [
         {
           "version": "Epic 5.6",
           "title": "Project Architecture Document",
@@ -1107,33 +1134,6 @@
             "Push to main → Queue doc regeneration (if configured)",
             "Webhook signature verification for security",
             "Shared by: Web app, VS Code extension, CI/CD integrations"
-          ]
-        }
-      ]
-    },
-    {
-      "id": "next",
-      "label": "Next",
-      "title": "Planned Features",
-      "subtitle": "Phase 4: Developer Adoption Engine",
-      "phases": [
-        {
-          "version": "Epic 2.7",
-          "title": "Production Launch (Post-LLC)",
-          "duration": "1-2 days",
-          "status": "Planned",
-          "badge": "Jan 14+ 2026",
-          "features": [
-            "Replace test Stripe keys with live keys",
-            "Update webhook endpoints to production URLs",
-            "Verify Stripe business account (requires LLC EIN + bank account)",
-            "Test live checkout flow with real payment",
-            "Custom branded email receipt templates (override Stripe defaults)",
-            "Invoice PDF customization with CodeScribe AI branding",
-            "Store Stripe receipt URLs only (no PII in database)",
-            "Display Stripe-hosted receipts via API links",
-            "Monitor first live transactions",
-            "Deploy AFTER Georgia LLC formation (Jan 2-3) and Stripe business verification (Jan 11-13)"
           ]
         },
         {
