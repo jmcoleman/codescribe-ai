@@ -15323,6 +15323,35 @@
           transform: rotate(360deg);
         }
       }
+    </style><style>
+      @keyframes slideIn {
+        from {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+      @keyframes slideOut {
+        from {
+          transform: translateX(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+      }
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
     </style></head>
 <body data-new-gr-c-s-check-loaded="14.1259.0" data-gr-ext-installed="">
   <div class="page">
@@ -15388,7 +15417,7 @@ Press D to toggle dark mode"></div>
             <div class="column-title">Active</div>
             <div class="column-timeline">Phase 3: Platform Infrastructure</div>
           </div>
-          <div class="column-body"><div class="phase-card"><div class="phase-header"><div class="phase-title">Trial Eligibility Enhancement</div><div class="phase-version">v3.5.0</div></div><ul class="feature-list"><li>View complete trial history for any user showing all past trials with dates, sources, and reasons</li><li>Grant second trials with admin force flag for win-back campaigns and customer support exceptions</li><li>Support agents can investigate trial eligibility before contacting users</li><li>Campaign-level eligibility settings allow re-engagement campaigns while preventing abuse</li><li>Lapsed users can redeem campaign codes for second trials when campaigns allow it</li><li>Flexible trial eligibility rules: strict one-per-lifetime, lenient with cooldowns, or hybrid approaches</li><li>Maintain trial quality and conversion rates while enabling growth initiatives</li><li>Track trial attribution accuracy showing which campaigns drive conversions</li></ul><div class="metric-badge">Re-engagement Growth</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Project Architecture Document</div><div class="phase-version">Epic 5.6</div></div><ul class="feature-list"><li>Generate project-level ARCHITECTURE doc from graph metadata (not per-file)</li><li>Single LLM call with graph nodes/edges as input (low token usage)</li><li>Output: project structure, module organization, dependency flow, entry points</li><li>Embedded Mermaid architecture diagram</li><li>Listed as first entry in batch summary with link</li><li>Clickable from ProjectGraphInfo sidebar section</li><li>Stored on project_graphs table (architecture_doc column)</li><li>Quality scoring with ARCHITECTURE criteria</li><li>Regenerate button on Project Details page</li><li>Spec: docs/planning/PROJECT-ARCHITECTURE-DOC-SPEC.md</li></ul><div class="metric-badge">Leverages Graph Engine</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Diff Analyzer &amp; Webhook APIs</div><div class="phase-version">Epic 5.5</div></div><ul class="feature-list"><li>diffAnalyzer.js service for semantic diff parsing</li><li>Detect function changes, breaking changes, env var changes</li><li>API: POST /api/diff/analyze → suggested doc updates with priority</li><li>GitHub webhook endpoint: /api/github/webhook</li><li>GitLab webhook endpoint: /api/gitlab/webhook</li><li>PR opened → Analyze changes → Return suggested updates</li><li>Push to main → Queue doc regeneration (if configured)</li><li>Webhook signature verification for security</li><li>Shared by: Web app, VS Code extension, CI/CD integrations</li></ul><div class="metric-badge">Git Integration</div></div></div>
+          <div class="column-body"><div class="phase-card"><div class="phase-header"><div class="phase-title">Trial Eligibility Enhancement</div><div class="phase-version">v3.5.0</div></div><ul class="feature-list"><li>View complete trial history for any user showing all past trials with dates, sources, and reasons</li><li>Grant second trials with admin force flag for win-back campaigns and customer support exceptions</li><li>Support agents can investigate trial eligibility before contacting users</li><li>Campaign-level eligibility settings allow re-engagement campaigns while preventing abuse</li><li>Lapsed users can redeem campaign codes for second trials when campaigns allow it</li><li>Flexible trial eligibility rules: strict one-per-lifetime, lenient with cooldowns, or hybrid approaches</li><li>Maintain trial quality and conversion rates while enabling growth initiatives</li><li>Track trial attribution accuracy showing which campaigns drive conversions</li></ul><div class="metric-badge">Re-engagement Growth</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Production Launch</div><div class="phase-version">Epic 2.7</div></div><ul class="feature-list"><li>Replace test Stripe keys with live keys</li><li>Update webhook endpoints to production URLs</li><li>Verify Stripe business account</li><li>Test live checkout flow with real payment</li><li>Custom branded email receipt templates (override Stripe defaults)</li><li>Invoice PDF customization with CodeScribe AI branding</li><li>Store Stripe receipt URLs only (no PII in database)</li><li>Display Stripe-hosted receipts via API links</li><li>Monitor first live transactions</li></ul><div class="metric-badge">Payment Processing</div></div></div>
         </div>
 
         <!-- NEXT Column -->
@@ -15398,7 +15427,7 @@ Press D to toggle dark mode"></div>
             <div class="column-title">Planned Features</div>
             <div class="column-timeline">Phase 4: Developer Adoption Engine</div>
           </div>
-          <div class="column-body"><div class="phase-card"><div class="phase-header"><div class="phase-title">Production Launch (Post-LLC)</div><div class="phase-version">Epic 2.7</div></div><ul class="feature-list"><li>Replace test Stripe keys with live keys</li><li>Update webhook endpoints to production URLs</li><li>Verify Stripe business account (requires LLC EIN + bank account)</li><li>Test live checkout flow with real payment</li><li>Custom branded email receipt templates (override Stripe defaults)</li><li>Invoice PDF customization with CodeScribe AI branding</li><li>Store Stripe receipt URLs only (no PII in database)</li><li>Display Stripe-hosted receipts via API links</li><li>Monitor first live transactions</li><li>Deploy AFTER Georgia LLC formation (Jan 2-3) and Stripe business verification (Jan 11-13)</li></ul><div class="metric-badge">Jan 14+ 2026</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Enhanced Subscription UI</div><div class="phase-version">Epic 2.8</div></div><ul class="feature-list"><li>Enhanced subscription management UI components</li><li>SubscriptionCard component with tier details and usage stats</li><li>PlanChangeModal with visual comparison of tier features</li><li>CancellationModal with retention flow (feedback form, downgrade offer)</li><li>Subscription history view (past invoices, payment methods)</li><li>Email notifications for subscription lifecycle events</li><li>In-app notifications for billing issues and renewals</li><li>Note: Core upgrade/downgrade flows completed in Epic 2.4</li></ul><div class="metric-badge">Optional UX</div></div></div>
+          <div class="column-body"><div class="phase-card"><div class="phase-header"><div class="phase-title">Project Architecture Document</div><div class="phase-version">Epic 5.6</div></div><ul class="feature-list"><li>Generate project-level ARCHITECTURE doc from graph metadata (not per-file)</li><li>Single LLM call with graph nodes/edges as input (low token usage)</li><li>Output: project structure, module organization, dependency flow, entry points</li><li>Embedded Mermaid architecture diagram</li><li>Listed as first entry in batch summary with link</li><li>Clickable from ProjectGraphInfo sidebar section</li><li>Stored on project_graphs table (architecture_doc column)</li><li>Quality scoring with ARCHITECTURE criteria</li><li>Regenerate button on Project Details page</li><li>Spec: docs/planning/PROJECT-ARCHITECTURE-DOC-SPEC.md</li></ul><div class="metric-badge">Leverages Graph Engine</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Diff Analyzer &amp; Webhook APIs</div><div class="phase-version">Epic 5.5</div></div><ul class="feature-list"><li>diffAnalyzer.js service for semantic diff parsing</li><li>Detect function changes, breaking changes, env var changes</li><li>API: POST /api/diff/analyze → suggested doc updates with priority</li><li>GitHub webhook endpoint: /api/github/webhook</li><li>GitLab webhook endpoint: /api/gitlab/webhook</li><li>PR opened → Analyze changes → Return suggested updates</li><li>Push to main → Queue doc regeneration (if configured)</li><li>Webhook signature verification for security</li><li>Shared by: Web app, VS Code extension, CI/CD integrations</li></ul><div class="metric-badge">Git Integration</div></div><div class="phase-card"><div class="phase-header"><div class="phase-title">Enhanced Subscription UI</div><div class="phase-version">Epic 2.8</div></div><ul class="feature-list"><li>Enhanced subscription management UI components</li><li>SubscriptionCard component with tier details and usage stats</li><li>PlanChangeModal with visual comparison of tier features</li><li>CancellationModal with retention flow (feedback form, downgrade offer)</li><li>Subscription history view (past invoices, payment methods)</li><li>Email notifications for subscription lifecycle events</li><li>In-app notifications for billing issues and renewals</li><li>Note: Core upgrade/downgrade flows completed in Epic 2.4</li></ul><div class="metric-badge">Optional UX</div></div></div>
         </div>
 
         <!-- LATER Column -->
@@ -16489,7 +16518,8 @@ Press D to toggle dark mode"></div>
           "version": "v3.5.0",
           "title": "Trial Eligibility Enhancement",
           "duration": "8-11 hours",
-          "status": "In Progress",
+          "status": "✓ Complete",
+          "completedDate": "Jan 25, 2026",
           "badge": "Re-engagement Growth",
           "features": [
             "View complete trial history for any user showing all past trials with dates, sources, and reasons",
@@ -16502,6 +16532,32 @@ Press D to toggle dark mode"></div>
             "Track trial attribution accuracy showing which campaigns drive conversions"
           ]
         },
+        {
+          "version": "Epic 2.7",
+          "title": "Production Launch",
+          "duration": "1-2 days",
+          "status": "Planned",
+          "badge": "Payment Processing",
+          "features": [
+            "Replace test Stripe keys with live keys",
+            "Update webhook endpoints to production URLs",
+            "Verify Stripe business account",
+            "Test live checkout flow with real payment",
+            "Custom branded email receipt templates (override Stripe defaults)",
+            "Invoice PDF customization with CodeScribe AI branding",
+            "Store Stripe receipt URLs only (no PII in database)",
+            "Display Stripe-hosted receipts via API links",
+            "Monitor first live transactions"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "next",
+      "label": "Next",
+      "title": "Planned Features",
+      "subtitle": "Phase 4: Developer Adoption Engine",
+      "phases": [
         {
           "version": "Epic 5.6",
           "title": "Project Architecture Document",
@@ -16537,33 +16593,6 @@ Press D to toggle dark mode"></div>
             "Push to main → Queue doc regeneration (if configured)",
             "Webhook signature verification for security",
             "Shared by: Web app, VS Code extension, CI/CD integrations"
-          ]
-        }
-      ]
-    },
-    {
-      "id": "next",
-      "label": "Next",
-      "title": "Planned Features",
-      "subtitle": "Phase 4: Developer Adoption Engine",
-      "phases": [
-        {
-          "version": "Epic 2.7",
-          "title": "Production Launch (Post-LLC)",
-          "duration": "1-2 days",
-          "status": "Planned",
-          "badge": "Jan 14+ 2026",
-          "features": [
-            "Replace test Stripe keys with live keys",
-            "Update webhook endpoints to production URLs",
-            "Verify Stripe business account (requires LLC EIN + bank account)",
-            "Test live checkout flow with real payment",
-            "Custom branded email receipt templates (override Stripe defaults)",
-            "Invoice PDF customization with CodeScribe AI branding",
-            "Store Stripe receipt URLs only (no PII in database)",
-            "Display Stripe-hosted receipts via API links",
-            "Monitor first live transactions",
-            "Deploy AFTER Georgia LLC formation (Jan 2-3) and Stripe business verification (Jan 11-13)"
           ]
         },
         {
@@ -20019,6 +20048,44 @@ Press D to toggle dark mode"></div>
 	// ]]>
 </script>
 <!-- Code injected by live-server -->
+<script>
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					var parent = elem.parentElement || head;
+					parent.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					parent.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
+</script>
+<iframe id="jtrack-root" src="chrome-extension://aelljdlolpakdoeongoklpkheedfjkio/app.html" style="display: none;"></iframe><!-- Code injected by live-server -->
 <script>
 	// <![CDATA[  <-- For SVG support
 	if ('WebSocket' in window) {
