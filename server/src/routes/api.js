@@ -13,6 +13,8 @@ import { requireAuth, optionalAuth } from '../middleware/auth.js';
 import githubService from '../services/githubService.js';
 import { getDocTypeOptions } from '../prompts/docTypeConfig.js';
 import graphService from '../services/graphService.js';
+import { logActivity } from '../services/auditLogger.js';
+import { detectPHI } from '../services/phiDetector.js';
 
 const router = express.Router();
 
@@ -157,6 +159,8 @@ router.get('/', (req, res) => {
 
 // Generate documentation (non-streaming)
 router.post('/generate', optionalAuth, rateLimitBypass, apiLimiter, generationLimiter, checkUsage(), async (req, res) => {
+  const startTime = Date.now();
+
   try {
     const { code, docType, language, isDefaultCode, filename, graphId, projectId, filePath } = req.body;
 
@@ -205,8 +209,50 @@ router.post('/generate', optionalAuth, rateLimitBypass, apiLimiter, generationLi
       console.error('[Usage] Failed to increment usage:', usageError);
     }
 
+    // Detect PHI in code for audit logging
+    const phiDetection = detectPHI(code);
+
+    // Audit log successful generation (async, non-blocking)
+    const durationMs = Date.now() - startTime;
+    logActivity({
+      req,
+      user: req.user,
+      action: 'code_generation',
+      resourceType: 'documentation',
+      inputCode: code,
+      containsPotentialPhi: phiDetection.containsPHI,
+      phiScore: phiDetection.score,
+      success: true,
+      durationMs,
+      metadata: {
+        doc_type: docType || 'README',
+        language: language || 'javascript',
+        code_length: code.length,
+        user_tier: req.user?.effectiveTier || 'free',
+        has_graph_context: !!graphContext,
+        phi_confidence: phiDetection.confidence,
+      },
+    });
+
     res.json(result);
   } catch (error) {
+    // Audit log failed generation (async, non-blocking)
+    const durationMs = Date.now() - startTime;
+    logActivity({
+      req,
+      user: req.user,
+      action: 'code_generation',
+      resourceType: 'documentation',
+      success: false,
+      error: error,
+      durationMs,
+      metadata: {
+        doc_type: req.body.docType || 'README',
+        language: req.body.language || 'javascript',
+        code_length: req.body.code?.length || 0,
+      },
+    });
+
     // Log full error details including nested objects (Node.js truncates by default)
     console.error('Generate error:', JSON.stringify({
       message: error.message,
@@ -224,6 +270,8 @@ router.post('/generate', optionalAuth, rateLimitBypass, apiLimiter, generationLi
 
 // Generate documentation (streaming SSE)
 router.post('/generate-stream', optionalAuth, rateLimitBypass, apiLimiter, generationLimiter, checkUsage(), async (req, res) => {
+  const startTime = Date.now();
+
   try {
     const { code, docType, language, isDefaultCode, filename, graphId, projectId, filePath, testRetry } = req.body;
 
@@ -352,8 +400,50 @@ router.post('/generate-stream', optionalAuth, rateLimitBypass, apiLimiter, gener
       metadata: result.metadata
     })}\n\n`);
 
+    // Detect PHI in code for audit logging
+    const phiDetection = detectPHI(req.body.code);
+
+    // Audit log successful streaming generation (async, non-blocking)
+    const durationMs = Date.now() - startTime;
+    logActivity({
+      req,
+      user: req.user,
+      action: 'code_generation_stream',
+      resourceType: 'documentation',
+      inputCode: req.body.code,
+      containsPotentialPhi: phiDetection.containsPHI,
+      phiScore: phiDetection.score,
+      success: true,
+      durationMs,
+      metadata: {
+        doc_type: req.body.docType || 'README',
+        language: req.body.language || 'javascript',
+        code_length: req.body.code?.length || 0,
+        user_tier: userTier,
+        has_graph_context: !!graphContext,
+        phi_confidence: phiDetection.confidence,
+      },
+    });
+
     res.end();
   } catch (error) {
+    // Audit log failed streaming generation (async, non-blocking)
+    const durationMs = Date.now() - startTime;
+    logActivity({
+      req,
+      user: req.user,
+      action: 'code_generation_stream',
+      resourceType: 'documentation',
+      success: false,
+      error: error,
+      durationMs,
+      metadata: {
+        doc_type: req.body.docType || 'README',
+        language: req.body.language || 'javascript',
+        code_length: req.body.code?.length || 0,
+      },
+    });
+
     // Log full error details including nested objects (Node.js truncates by default)
     console.error('Stream error:', JSON.stringify({
       message: error.message,
@@ -412,7 +502,9 @@ const upload = multer({
   }
 });
 
-router.post('/upload', apiLimiter, (req, res) => {
+router.post('/upload', optionalAuth, apiLimiter, (req, res) => {
+  const startTime = Date.now();
+
   upload.single('file')(req, res, async (err) => {
     try {
       // Handle multer errors
@@ -477,6 +569,30 @@ router.post('/upload', apiLimiter, (req, res) => {
         });
       }
 
+      // Detect PHI in uploaded content for audit logging
+      const phiDetection = detectPHI(content);
+
+      // Audit log successful upload (async, non-blocking)
+      const durationMs = Date.now() - startTime;
+      logActivity({
+        req,
+        user: req.user,
+        action: 'code_upload',
+        resourceType: 'file',
+        inputCode: content,
+        containsPotentialPhi: phiDetection.containsPHI,
+        phiScore: phiDetection.score,
+        success: true,
+        durationMs,
+        metadata: {
+          filename: req.file.originalname,
+          file_size: req.file.size,
+          extension: path.extname(req.file.originalname),
+          content_length: content.length,
+          phi_confidence: phiDetection.confidence,
+        },
+      });
+
       res.json({
         success: true,
         file: {
@@ -489,6 +605,22 @@ router.post('/upload', apiLimiter, (req, res) => {
         }
       });
     } catch (error) {
+      // Audit log failed upload (async, non-blocking)
+      const durationMs = Date.now() - startTime;
+      logActivity({
+        req,
+        user: req.user,
+        action: 'code_upload',
+        resourceType: 'file',
+        success: false,
+        error: error,
+        durationMs,
+        metadata: {
+          filename: req.file?.originalname || 'unknown',
+          file_size: req.file?.size || 0,
+        },
+      });
+
       res.status(400).json({
         success: false,
         error: 'Upload failed',

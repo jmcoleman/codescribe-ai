@@ -12,7 +12,8 @@ import {
   Users,
   TrendingUp,
   Megaphone,
-  ChevronRight
+  ChevronRight,
+  Shield
 } from 'lucide-react';
 import { PageLayout } from '../components/PageLayout';
 
@@ -34,6 +35,14 @@ const adminSections = [
         description: 'View anonymous vs authenticated usage statistics and activity',
         icon: BarChart3,
         path: '/admin/usage',
+        available: true
+      },
+      {
+        id: 'compliance',
+        title: 'HIPAA Compliance',
+        description: 'Audit logs, PHI detection monitoring, and compliance reporting',
+        icon: Shield,
+        path: '/admin/compliance',
         available: true
       }
     ]

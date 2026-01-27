@@ -66,8 +66,8 @@
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
     "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.40",
-    "footer": "v3.5.1 Complete · GitHub Private Repos & Progressive Loading ✓ · Up Next: Project Architecture Document · VS Code Extension: Separate Repo",
-    "lastUpdated": "January 26, 2026"
+    "footer": "v3.5.2 Complete · HIPAA Documentation & Email Setup ✓ · Up Next: Project Architecture Document · VS Code Extension: Separate Repo",
+    "lastUpdated": "January 27, 2026"
   },
   "columns": [
     {
@@ -76,6 +76,25 @@
       "title": "Completed",
       "subtitle": "Phase 1: Core Capabilities",
       "phases": [
+        {
+          "version": "v3.5.2",
+          "title": "Enterprise Healthcare HIPAA Compliance",
+          "duration": "3 days",
+          "status": "✓ Complete",
+          "completedDate": "Jan 27, 2026",
+          "badge": "Enterprise",
+          "features": [
+            "New Enterprise Healthcare subscription tier for healthcare organizations requiring HIPAA compliance",
+            "Comprehensive audit logging tracks all user actions with 7-year retention exceeding HIPAA requirements",
+            "Automated PHI detection scans code for 10 types of protected health information before processing",
+            "Real-time alerts warn users when potential PHI is detected with detailed risk assessment",
+            "Admin compliance dashboard provides oversight of all audit logs with filtering and CSV export",
+            "AES-256 encryption protects sensitive data at rest including user emails and access tokens",
+            "Business Associate Agreement template and legal documentation ready for attorney review",
+            "Email support configured for BAA inquiries at baa-requests@codescribeai.com",
+            "Complete HIPAA documentation hub with guides for engineering, sales, legal, and compliance teams"
+          ]
+        },
         {
           "version": "v3.5.1",
           "title": "GitHub Private Repos & Progressive Loading",
@@ -1120,22 +1139,16 @@
       "phases": [
         {
           "version": "v3.6.0",
-          "title": "HIPAA Compliance Edition",
-          "duration": "6 weeks",
+          "title": "Encryption Key Rotation",
+          "duration": "3-4 days",
           "status": "Planned",
-          "badge": "Healthcare Enterprise",
+          "badge": "Security Enhancement",
           "features": [
-            "Real-time PHI detection warns when code may contain protected health information before generating documentation",
-            "Sanitization guidance helps developers safely remove PHI from code samples",
-            "Comprehensive audit logging tracks all activity for HIPAA compliance with 7-year retention",
-            "Compliance dashboard provides administrators with instant visibility into usage patterns and PHI exposure risk",
-            "One-click audit report export for demonstrating compliance to auditors in minutes instead of weeks",
-            "Data encryption at rest with AES-256-GCM protects sensitive information",
-            "One-click encryption key rotation maintains security without downtime",
-            "Business Associate Agreement (BAA) support enables enterprise healthcare contracts",
-            "24-hour BAA turnaround time accelerates sales cycles for healthcare customers",
-            "Positions CodeScribe AI for enterprise healthcare market ($180K Year 1 ARR target)",
-            "Provides battle-tested foundation for Healthcare MCP Platform extraction"
+            "One-click encryption key rotation automates security best practices without system downtime",
+            "Automated re-encryption of existing data with new keys maintains data integrity",
+            "Key rotation history and audit trail for compliance documentation",
+            "Configurable rotation schedules (manual, 90-day, annual) based on security policies",
+            "Note: Core HIPAA compliance completed in v3.5.2 with AES-256-GCM encryption"
           ]
         },
         {
@@ -1377,15 +1390,16 @@
         },
         {
           "version": "Epic 6.2",
-          "title": "Audit Logs & Compliance",
-          "duration": "3-4 days",
+          "title": "GDPR Tools & SOC 2 Certification",
+          "duration": "2-3 days",
           "status": "Future",
+          "badge": "Builds on v3.5.2",
           "features": [
-            "Comprehensive audit logging",
-            "Log export (CSV, JSON formats)",
-            "GDPR compliance tools",
-            "SOC 2 Type II preparation",
-            "Retention policies and data lifecycle"
+            "GDPR-specific data portability with JSON export format for user data",
+            "Right to be forgotten automation with cascading deletion workflows",
+            "SOC 2 Type II audit preparation documentation and controls",
+            "SOC 2 compliance controls implementation and monitoring",
+            "Note: Core audit logging, CSV export, and retention policies completed in v3.5.2"
           ]
         },
         {
@@ -1498,12 +1512,11 @@
             "Calendly integration for Enterprise/Team sales",
             "Gmail 'Send As' setup for sales@codescribeai.com replies",
             "Documentation history and saved projects",
-            "GitHub repository integration",
             "Multi-language support (i18n for UI)",
             "Advanced Mermaid diagram auto-generation",
             "Changelog generation from git history",
             "Team collaboration features",
-            "Advanced analytics and monitoring"
+            "Enhanced analytics beyond current admin dashboard (heatmaps, cohort analysis, predictive modeling)"
           ]
         }
       ]

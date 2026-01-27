@@ -21,6 +21,8 @@ import graphRoutes from '../server/src/routes/graph.js';
 import projectsRoutes from '../server/src/routes/projects.js';
 import preferencesRoutes from '../server/src/routes/preferences.js';
 import analyticsRoutes from '../server/src/routes/analytics.js';
+import complianceRoutes from '../server/src/routes/compliance.js';
+import phiRoutes from '../server/src/routes/phi.js';
 import errorHandler from '../server/src/middleware/errorHandler.js';
 import '../server/src/config/passport.js'; // Initialize passport strategies
 
@@ -93,6 +95,7 @@ if (ENABLE_AUTH) {
   app.use('/api/contact', contactRoutes);
   app.use('/api/legal', legalRoutes);
   app.use('/api/admin', adminRoutes); // Admin routes (requires auth + admin email)
+  app.use('/api/admin', complianceRoutes); // HIPAA compliance audit logging (admin-only)
   app.use('/api/documents', documentsRoutes); // Document persistence routes
   app.use('/api/workspace', workspaceRoutes); // Workspace file management (tier-gated)
   app.use('/api/batches', batchesRoutes); // Batch history and ZIP export
@@ -102,6 +105,7 @@ if (ENABLE_AUTH) {
   app.use('/api/preferences', preferencesRoutes); // User preferences (cross-device sync)
 }
 app.use('/api/analytics', analyticsRoutes); // Analytics event tracking (public)
+app.use('/api/phi', phiRoutes); // PHI detection (public)
 app.use('/api/cron', cronRoutes);
 app.use('/api/migrate', migrateRoutes);
 

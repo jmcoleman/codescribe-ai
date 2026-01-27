@@ -9,6 +9,119 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.5.2] - 2026-01-27
+
+**Status:** ✅ Enterprise Healthcare HIPAA Compliance Complete
+
+**Summary:** Implemented complete HIPAA compliance system for Enterprise Healthcare subscription tier with 5 major features (224 tests). All features production-ready with audit logging, PHI detection, encryption, compliance dashboard, and BAA documentation. Supports healthcare organizations requiring Business Associate Agreements.
+
+### Added
+
+- **Feature 1: Audit Logging System** ([server/src/services/auditLogger.js](server/src/services/auditLogger.js), 54 tests)
+  - 7-year retention (exceeds HIPAA 6-year requirement)
+  - SHA-256 hashing of input code (no plaintext storage)
+  - Comprehensive logging: all API calls, logins, PHI access with timestamps and metadata
+  - Admin-only access with JWT authentication
+  - CSV export for compliance reporting
+  - Database: `audit_logs` table with indexes for performance
+  - Routes: GET `/api/admin/audit-logs` (query/filter), `/api/admin/audit-logs/export` (CSV), `/api/admin/audit-logs/stats`
+
+- **Feature 2: PHI Detection System** ([server/src/services/phiDetector.js](server/src/services/phiDetector.js), 65 tests)
+  - Detects 10 PHI types: SSN, MRN, DOB, Email, Phone, Health Keywords, Insurance IDs, Addresses, Patient Names, Health Plan Numbers
+  - Risk scoring: High (20+), Medium (10-19), Low (1-9), None (0)
+  - Real-time alerts before code processing with detailed detection results
+  - Pattern matching with healthcare-specific regular expressions
+  - Integrated with audit logging for automatic PHI event tracking
+  - Frontend warnings display detected PHI types and risk levels
+
+- **Feature 3: Encryption at Rest** ([server/src/services/encryption.js](server/src/services/encryption.js), 68 tests)
+  - AES-256-GCM encryption for sensitive data (user emails, OAuth tokens, audit logs)
+  - In-transit: TLS 1.2+ for all connections
+  - Database: Neon PostgreSQL with AES-256 encryption
+  - Key management: Stored in Vercel environment secrets with rotation support
+  - Helper functions: `encryptFields()`, `decryptFields()` for model-level encryption
+  - Encrypted columns: `email_encrypted`, `github_access_token_encrypted`, sensitive audit log fields
+
+- **Feature 4: Compliance Dashboard** ([client/src/pages/Admin/Compliance.jsx](client/src/pages/Admin/Compliance.jsx), 37 tests)
+  - Admin-only UI at `/admin/compliance` with real-time statistics
+  - Displays: total logs, PHI detections, success rate, unique users, date range
+  - Date range filtering: 7/30/90 days or custom date picker
+  - Multi-filter support: action type, PHI status, risk level, user email
+  - Risk level color coding: High (red), Medium (amber), Low (yellow), None (slate)
+  - CSV export with comprehensive audit data
+  - Pagination support (50 logs per page)
+
+- **Feature 5: BAA Documentation** ([docs/hipaa/legal/](docs/hipaa/legal/))
+  - 25-page Business Associate Agreement template ([BAA-READINESS.md](docs/hipaa/legal/BAA-READINESS.md), ~25,000 words)
+  - Incident Response Plan with 6-phase process ([INCIDENT-RESPONSE-PLAN.md](docs/hipaa/legal/INCIDENT-RESPONSE-PLAN.md), ~15,000 words)
+  - HIPAA Breach Notification procedures with templates ([BREACH-NOTIFICATION-PROCEDURE.md](docs/hipaa/legal/BREACH-NOTIFICATION-PROCEDURE.md), ~12,000 words)
+  - Subprocessor BAA verification checklist ([SUBPROCESSOR-BAA-LIST.md](docs/hipaa/legal/SUBPROCESSOR-BAA-LIST.md), ~6,000 words)
+  - Enterprise Healthcare tier documentation ([ENTERPRISE-HEALTHCARE-TIER.md](docs/hipaa/enterprise/ENTERPRISE-HEALTHCARE-TIER.md), ~4,000 words)
+  - Enterprise offering prerequisites guide ([ENTERPRISE-OFFERING-PREREQUISITES.md](docs/hipaa/enterprise/ENTERPRISE-OFFERING-PREREQUISITES.md))
+  - All documents marked "Draft - Requires Attorney Review" with legal disclaimers
+
+- **HIPAA Documentation Hub** ([docs/hipaa/](docs/hipaa/))
+  - All HIPAA docs consolidated from 4 scattered locations into single organized directory
+  - Clear structure: planning/, features/, legal/, enterprise/ subdirectories
+  - Navigation README for quick access by role (engineering, sales, legal, compliance)
+  - 15 markdown files totaling ~62,000 words of HIPAA documentation
+  - Updated all cross-references to reflect new consolidated paths
+
+- **Email Configuration**
+  - Configured `baa-requests@codescribeai.com` via Namecheap forwarding for BAA inquiries
+  - Updated Gmail filters to organize sales@, support@, and baa-requests@ emails
+  - Updated deployment guides with complete email setup instructions
+
+- **Enterprise Healthcare Subscription Tier**
+  - New tier for healthcare organizations requiring HIPAA compliance and BAA execution
+  - Already listed on pricing page at [codescribeai.com/pricing](https://codescribeai.com/pricing)
+  - Target customers: Hospitals, clinics, health plans, healthcare clearinghouses, business associates
+  - Pricing: Contact Sales model with custom quotes based on users/volume
+  - Included: BAA execution, up to 10 users, 50K API calls/month, priority support, 99.9% uptime SLA
+  - Prerequisites before first customer: Subprocessor BAA verification (Vercel, Neon, Anthropic), attorney review, insurance verification
+
+- **Technical Infrastructure**
+  - Database: `audit_logs` table with 7-year retention, encrypted sensitive fields
+  - Middleware: `requireAdmin` for compliance routes, `tierGate` for feature access control
+  - Feature flags: `ENTERPRISE_HEALTHCARE` tier detection in subscription system
+  - Admin routes: `/admin/compliance` dashboard, `/api/admin/audit-logs` API
+  - Frontend components: Compliance dashboard, PHI warning modals, admin navigation
+
+### Fixed
+
+- **Audit Logging Tests** ([server/src/routes/__tests__/api-audit.integration.test.js](server/src/routes/__tests__/api-audit.integration.test.js))
+  - Fixed 8 failing API audit integration tests by properly mocking rate limiter middleware
+  - Fixed 1 failing AuditLog model test by improving test specificity for duration calculations
+  - All 2,279 backend tests now passing (0 failures)
+
+### Documentation
+
+- Created comprehensive HIPAA compliance documentation hub ([docs/hipaa/](docs/hipaa/))
+  - Feature completion docs for all 5 HIPAA features with implementation details
+  - Legal templates: BAA, Incident Response, Breach Notification, Subprocessor verification
+  - Enterprise offering docs: tier overview, sales prerequisites, pricing, SLA
+  - Planning docs: Workflow PRD, implementation plan
+- Updated EMAIL-FORWARDING-SETUP.md with baa-requests@ email configuration
+- Updated RESEND-SETUP.md with complete email address table and usage notes
+- Created docs/hipaa/README.md as central navigation guide for different roles
+
+### Testing
+
+**HIPAA Feature Tests (224 tests added, 100% passing):**
+- Audit Logging: 54 tests (27 backend services, 27 frontend components)
+- PHI Detection: 65 tests (pattern matching, risk scoring, integration)
+- Encryption: 68 tests (AES-256-GCM, field encryption, key management)
+- Compliance Dashboard: 37 tests (UI components, filtering, CSV export)
+- Total HIPAA: 224 tests
+
+**Overall Test Coverage:**
+- **Frontend:** 2,162 passing, 76 skipped (2,238 total)
+- **Backend:** 2,279 passing, 33 skipped (2,312 total)
+- **Total:** 4,441 passing, 109 skipped (4,550 total)
+- **Pass Rate:** 97.6%
+
+---
+
 ## [3.5.1] - 2026-01-26
 
 **Status:** ✅ GitHub Private Repos & Progressive Loading

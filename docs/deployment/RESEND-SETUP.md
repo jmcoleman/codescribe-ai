@@ -95,17 +95,19 @@ These are **sender addresses** configured via Resend for automated application e
 - Users **cannot reply** to these addresses
 - Setup covered in this guide (Steps 5-11)
 
-### Inbound Email (Customer Support - Email Forwarding)
-This is a **contact address** for customer support:
+### Inbound Email (Customer Contact - Email Forwarding)
+These are **contact addresses** for customer inquiries:
 
 | Email Address | Purpose | Setup Required |
 |---------------|---------|----------------|
-| `support@codescribeai.com` | Customer inquiries, help requests | Email forwarding (Namecheap or Google Workspace) |
+| `sales@codescribeai.com` | Sales inquiries (Enterprise/Team tiers) | Email forwarding (Namecheap or Google Workspace) |
+| `support@codescribeai.com` | Customer support, help requests | Email forwarding (Namecheap or Google Workspace) |
+| `baa-requests@codescribeai.com` | HIPAA/BAA inquiries (Enterprise Healthcare) | Email forwarding (Namecheap or Google Workspace) |
 
 **How it works:**
-- Appears as `mailto:` link in email templates
-- Receives customer replies and inquiries
-- Requires separate email hosting/forwarding setup
+- Appear as `mailto:` links in email templates and documentation
+- Receive customer inquiries and manual requests
+- Require separate email hosting/forwarding setup
 - See [Inbound Email Setup](#inbound-email-setup-support) below
 
 **Key Distinction:**
@@ -114,22 +116,32 @@ This is a **contact address** for customer support:
 
 ---
 
-## Inbound Email Setup (support@)
+## Inbound Email Setup (sales@, support@, baa-requests@)
 
-The `support@codescribeai.com` address is referenced in email templates as a customer contact point:
+These addresses are referenced in the application and documentation as customer contact points:
 
+**support@codescribeai.com:**
 ```javascript
 // From server/src/services/emailService.js
 Need help? Contact us at <a href="mailto:support@codescribeai.com">support@codescribeai.com</a>
 ```
 
-**Important:** Resend is **outbound-only** (sending emails). To receive emails at `support@codescribeai.com`, you need a separate email hosting or forwarding solution.
+**sales@codescribeai.com:**
+- Used in Contact Sales form (`/pricing` page)
+- Environment variable: `SALES_EMAIL`
+
+**baa-requests@codescribeai.com:**
+- Referenced in HIPAA documentation (`docs/hipaa/`)
+- For Business Associate Agreement inquiries
+- No environment variable needed (receive-only)
+
+**Important:** Resend is **outbound-only** (sending emails). To receive emails at these addresses, you need a separate email hosting or forwarding solution.
 
 ---
 
 ### Option A: Email Forwarding via Namecheap (Free, Recommended) ⭐ **CURRENT SETUP**
 
-Forward `support@codescribeai.com` to your personal Gmail/Outlook account.
+Forward `sales@`, `support@`, and `baa-requests@codescribeai.com` to your personal Gmail/Outlook account.
 
 **Benefits:**
 - ✅ Free (included with domain registration)
@@ -153,17 +165,33 @@ Forward `support@codescribeai.com` to your personal Gmail/Outlook account.
    - Scroll down to find **"Redirect Email"** section
    - This is where email forwarding is configured
 
-3. **Configure Forwarding Rule**
+3. **Configure Forwarding Rules**
+
+   **Add all three forwarders:**
+
+   a. **Sales Forwarder:**
    - Click **"ADD FORWARDER"** button
-   - **Alias:** `support` (creates support@codescribeai.com)
+   - **Alias:** `sales` (creates sales@codescribeai.com)
    - **Forward To:** Your personal email (e.g., `jenni.m.coleman@gmail.com`)
    - Click **"Save"** or **"Add"**
 
+   b. **Support Forwarder:**
+   - Click **"ADD FORWARDER"** button
+   - **Alias:** `support` (creates support@codescribeai.com)
+   - **Forward To:** Your personal email (same as above)
+   - Click **"Save"** or **"Add"**
+
+   c. **BAA Requests Forwarder:**
+   - Click **"ADD FORWARDER"** button
+   - **Alias:** `baa-requests` (creates baa-requests@codescribeai.com)
+   - **Forward To:** Your personal email (same as above)
+   - Click **"Save"** or **"Add"**
+
 4. **Activate Forwarding (Important!)**
-   - Check your destination email inbox for a confirmation email from Namecheap
+   - Check your destination email inbox for confirmation emails from Namecheap (you'll receive 3 emails, one for each forwarder)
    - Subject will be something like "Confirm Email Forwarding"
-   - **Click the confirmation link** to activate the forwarding
-   - Forwarding will NOT work until you confirm!
+   - **Click the confirmation link in each email** to activate the forwarding
+   - Forwarding will NOT work until you confirm all three!
 
 5. **Set Mail Settings to Email Forwarding Mode**
    - Go to **Advanced DNS** tab
@@ -173,9 +201,12 @@ Forward `support@codescribeai.com` to your personal Gmail/Outlook account.
    - **Important:** Switching to "Custom MX" will disable email forwarding!
 
 6. **Verify Forwarding**
-   - Send a test email to `support@codescribeai.com`
+   - Send test emails to all three addresses:
+     - `sales@codescribeai.com`
+     - `support@codescribeai.com`
+     - `baa-requests@codescribeai.com`
    - Check your personal inbox (and spam folder)
-   - Expected delivery time: 1-5 minutes
+   - Expected delivery time: 1-5 minutes each
 
 6. **Optional: Set Up "Send As" in Gmail (Recommended)**
 

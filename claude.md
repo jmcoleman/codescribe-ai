@@ -12,7 +12,7 @@
 AI-powered documentation generator with real-time streaming, quality scoring (0-100), and WCAG 2.1 AA compliance.
 
 **Key Metrics:**
-- 3,440 tests (3,340 passing, 97 skipped, 0 failing) | 97.2% pass rate | 95.45% middleware coverage
+- 4,550 tests (4,441 passing, 109 skipped, 0 failing) | 97.6% pass rate | 95.45% middleware coverage
 - Lighthouse: 75/100 performance (+67%), 100/100 accessibility
 - Bundle: 78KB gzipped (-85% reduction)
 - Accessibility: 95/100 score, 0 axe violations
@@ -509,20 +509,23 @@ codescribe-ai/
 
 ## 🔄 Version History
 
-**Current: v3.5.1** (January 26, 2026)
-- GitHub private repository support for authenticated users with OAuth
-- Progressive loading: first 100 repos in 1-2s, remaining load in background
-- Organization detection routes to correct API for private org repos
-- Field-level error validation for 404s instead of intrusive banners
-- Repository limits: unauthenticated (300 max), authenticated (5000 max)
-- Pagination API with page/per_page parameters
-- Test coverage: 4,332 tests (2,103 frontend, 2,120 backend)
-- Frontend: 2,103 passing, 76 skipped
-- Backend: 2,120 passing, 33 skipped
+**Current: v3.5.2** (January 27, 2026) - Enterprise Healthcare HIPAA Compliance
+- **5 HIPAA Features Complete (224 tests):**
+  1. Audit Logging (54 tests): 7-year retention, SHA-256 hashing, CSV export, admin dashboard
+  2. PHI Detection (65 tests): 10 PHI types, risk scoring, real-time alerts
+  3. Encryption at Rest (68 tests): AES-256-GCM for emails/tokens/logs, Neon database encryption
+  4. Compliance Dashboard (37 tests): Admin UI, multi-filter support, risk color coding, pagination
+  5. BAA Documentation (legal docs): 25-page BAA template, incident response, breach notification
+- Enterprise Healthcare subscription tier for healthcare organizations requiring BAA execution
+- HIPAA documentation hub consolidated into docs/hipaa/ (15 files, ~62,000 words)
+- Email forwarding for sales@, support@, baa-requests@codescribeai.com
+- Fixed 9 failing audit tests (rate limiter mocking + test specificity)
+- Test coverage: 4,550 tests (4,441 passing, 109 skipped, 0 failing, 97.6% pass rate)
 
 <details>
-<summary>Recent Releases (v2.9.0-v3.5.0) & Milestones</summary>
+<summary>Recent Releases (v2.9.0-v3.5.1) & Milestones</summary>
 
+**v3.5.1** (Jan 26, 2026): GitHub Private Repos & Progressive Loading - Private repo access, progressive loading, pagination API, field-level errors
 **v3.5.0** (Jan 25, 2026): Trial Programs & Enhanced Eligibility System - Renamed Campaigns to Trial Programs, flexible eligibility rules, auto-enrollment, force grants
 **v3.4.4** (Jan 14, 2026): User Management System - Account suspension/deletion, admin controls, audit logging
 **v3.4.3** (Jan 14, 2026): Campaign Management Enhancements - Sortable tables, export, attribution tracking

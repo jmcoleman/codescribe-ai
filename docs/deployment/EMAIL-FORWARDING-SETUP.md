@@ -1,7 +1,7 @@
 # Email Forwarding Setup - Namecheap
 
-**Purpose:** Configure email forwarding for sales@codescribeai.com and support@codescribeai.com
-**Required For:** Contact Sales functionality & Support inquiries
+**Purpose:** Configure email forwarding for sales@, support@, and baa-requests@codescribeai.com
+**Required For:** Contact Sales functionality, Support inquiries & HIPAA/BAA requests
 **Time Required:** 5-10 minutes
 **Cost:** FREE (included with domain registration)
 
@@ -9,15 +9,16 @@
 
 ## Overview
 
-Both sales and support emails are sent TO your domain via Resend. To receive these emails, we forward them to your personal email address using Namecheap's free email forwarding.
+Sales, support, and BAA request emails are sent TO your domain via Resend or used as contact points in documentation. To receive these emails, we forward them to your personal email address using Namecheap's free email forwarding.
 
 **Email Addresses:**
 - **sales@codescribeai.com** - Contact Sales form (Enterprise/Team tier inquiries)
 - **support@codescribeai.com** - Support inquiries (in transactional emails)
+- **baa-requests@codescribeai.com** - HIPAA Business Associate Agreement inquiries (Enterprise Healthcare tier)
 
 **Flow:**
 ```
-App/Email → Resend API → sales/support@codescribeai.com → Namecheap Forwarding → Your Gmail
+App/Email → Resend API → sales/support/baa-requests@codescribeai.com → Namecheap Forwarding → Your Gmail
 ```
 
 ---
@@ -28,8 +29,9 @@ App/Email → Resend API → sales/support@codescribeai.com → Namecheap Forwar
 - [ ] Go to Advanced DNS → Mail Settings
 - [ ] Add forwarder: `sales` → Your Gmail
 - [ ] Add forwarder: `support` → Your Gmail
+- [ ] Add forwarder: `baa-requests` → Your Gmail
 - [ ] Verify MX records are present
-- [ ] Test both emails by sending test messages
+- [ ] Test all three emails by sending test messages
 - [ ] (Optional) Set up Gmail filters for organization
 
 **Time Required:** 5-10 minutes total
@@ -57,9 +59,9 @@ App/Email → Resend API → sales/support@codescribeai.com → Namecheap Forwar
    - **Forward to** column (e.g., "jenni.m.coleman@gmail.com")
    - **ADD FORWARDER** button (red button at bottom)
 
-### 3. Add Email Forwarder for Sales
+### 3. Add Email Forwarders
 
-**Note:** If you see `support@codescribeai.com` already configured in the list, that's correct! We just need to add `sales@` following the same pattern.
+**Note:** If you see `support@codescribeai.com` already configured in the list, that's correct! We just need to add `sales@` and `baa-requests@` following the same pattern.
 
 **Add Sales Forwarder:**
 1. Click the **"ADD FORWARDER"** button (red button at bottom of the table)
@@ -68,10 +70,19 @@ App/Email → Resend API → sales/support@codescribeai.com → Namecheap Forwar
    - **Forward To:** Your personal Gmail address (same one used for support@)
 3. Click **"Add Forwarder"** or **"Save"**
 
+**Add BAA Requests Forwarder:**
+1. Click the **"ADD FORWARDER"** button again
+2. Fill in the form:
+   - **Alias:** `baa-requests` (this creates baa-requests@codescribeai.com)
+   - **Forward To:** Your personal Gmail address (same one used for support@)
+3. Click **"Add Forwarder"** or **"Save"**
+4. **Important:** Check your Gmail for the confirmation email from Namecheap and click the confirmation link to activate
+
 **Result:**
 - sales@codescribeai.com will forward to your Gmail inbox
 - support@codescribeai.com continues working as before
-- Both email addresses now active and ready to receive inquiries
+- baa-requests@codescribeai.com will forward to your Gmail inbox
+- All three email addresses now active and ready to receive inquiries
 
 ### 4. Verify DNS Records
 
@@ -104,7 +115,7 @@ If not present:
 
 ### Quick Test
 
-Test both email addresses to verify forwarding works:
+Test all three email addresses to verify forwarding works:
 
 1. **Test Sales Email:**
    ```
@@ -122,8 +133,16 @@ Test both email addresses to verify forwarding works:
    Body: Testing support@ forwarding
    ```
 
-3. **Verify Receipt:**
-   - Check your Gmail inbox (both emails should arrive)
+3. **Test BAA Requests Email:**
+   ```
+   To: baa-requests@codescribeai.com
+   From: Your personal email or another account
+   Subject: Test BAA Requests Forwarding
+   Body: Testing baa-requests@ forwarding
+   ```
+
+4. **Verify Receipt:**
+   - Check your Gmail inbox (all three emails should arrive)
    - Look in Spam folder if not in inbox
    - Emails should arrive within 1-2 minutes each
 
@@ -175,15 +194,30 @@ Organize sales and support emails with Gmail filters:
    - ✅ Never send it to Spam
    - Click "Create filter"
 
+**Filter 3 - BAA Requests:**
+
+1. **Create Gmail Filter:**
+   - Click the search bar dropdown
+   - **To:** baa-requests@codescribeai.com
+   - Click "Create filter"
+
+2. **Apply Actions:**
+   - ✅ Apply label: "CodeScribe/BAA Requests"
+   - ✅ Never send it to Spam
+   - ✅ Star it (important for HIPAA compliance inquiries)
+   - ✅ Mark as important
+   - Click "Create filter"
+
 **Benefits:**
 - All inquiries automatically labeled and organized
 - Easy to find and track by type
 - Never miss an inquiry
+- BAA requests flagged as high priority
 - Clean inbox organization with nested labels
 
 ### Priority Inbox (Optional)
 
-Add both "CodeScribe/Sales" and "CodeScribe/Support" labels to your Gmail Priority Inbox for instant notifications.
+Add "CodeScribe/Sales", "CodeScribe/Support", and "CodeScribe/BAA Requests" labels to your Gmail Priority Inbox for instant notifications.
 
 ---
 
@@ -233,6 +267,7 @@ You can add more forwarders for different purposes:
 | **noreply@mail.codescribeai.com** | Sending | All transactional emails (via Resend) | ✅ Configured |
 | **sales@codescribeai.com** | Forwarding | Contact Sales form inquiries | ✅ Configured (this guide) |
 | **support@codescribeai.com** | Forwarding | Support link in emails | ✅ Configured (this guide) |
+| **baa-requests@codescribeai.com** | Forwarding | HIPAA/BAA inquiries (Enterprise Healthcare) | ✅ Configured (this guide) |
 
 ### Where Each Email is Used
 
@@ -252,22 +287,32 @@ You can add more forwarders for different purposes:
 - User support inquiries
 - General help requests
 
+**baa-requests@codescribeai.com** (Receiving only):
+- Business Associate Agreement (BAA) inquiries
+- HIPAA compliance questions
+- Enterprise Healthcare tier legal/compliance requests
+- Referenced in HIPAA documentation (`docs/hipaa/`)
+
 ---
 
 ## Environment Variables
 
-No environment variables needed! The email address is hardcoded in the contact sales email function:
+**For sales@ and support@:**
 
-**File:** `server/src/services/emailService.js`
-```javascript
-to: 'sales@codescribeai.com',
+These use environment variables in `server/.env`:
+
+```env
+SALES_EMAIL=sales@codescribeai.com
+SUPPORT_EMAIL=support@codescribeai.com
 ```
 
-To change the destination email, you would need to:
-1. Either: Update the forwarding rule in Namecheap
-2. Or: Change the hardcoded address in the code (not recommended)
+**For baa-requests@:**
 
-**Recommendation:** Keep using email forwarding for flexibility.
+No environment variable needed! This email is only referenced in documentation as a contact point, not used for automated sending. It's a receive-only address for manual HIPAA/BAA inquiries.
+
+**To change destination emails:**
+1. **Recommended:** Update the forwarding rule in Namecheap (no code changes needed)
+2. **Alternative:** Change the environment variables in `.env` (requires server restart)
 
 ---
 

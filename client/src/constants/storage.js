@@ -80,6 +80,9 @@ export const STORAGE_KEYS = {
   ANALYTICS_EXCLUDE_INTERNAL: 'cs_admin_exclude_internal',
   ANALYTICS_ACTIVE_TAB: 'cs_admin_active_tab',
   ANALYTICS_DATE_RANGE: 'cs_admin_date_range',
+
+  // Admin Compliance Filters (sessionStorage - retain filters during session)
+  COMPLIANCE_DATE_RANGE: 'cs_admin_compliance_date_range',
 };
 
 /**

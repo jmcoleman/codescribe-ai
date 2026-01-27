@@ -18,6 +18,8 @@ import graphRoutes from './routes/graph.js';
 import projectsRoutes from './routes/projects.js';
 import preferencesRoutes from './routes/preferences.js';
 import analyticsRoutes from './routes/analytics.js';
+import complianceRoutes from './routes/compliance.js';
+import phiRoutes from './routes/phi.js';
 import errorHandler from './middleware/errorHandler.js';
 import securityHeaders from './middleware/securityHeaders.js';
 import { initializeDatabase, testConnection } from './db/connection.js';
@@ -124,6 +126,7 @@ if (ENABLE_AUTH) {
   app.use('/api/contact', contactRoutes);
   app.use('/api/legal', legalRoutes);
   app.use('/api/admin', adminRoutes); // Admin routes (requires auth + admin email)
+  app.use('/api/admin', complianceRoutes); // HIPAA compliance audit logging (admin-only)
   app.use('/api/documents', documentsRoutes); // Document persistence routes
   app.use('/api/workspace', workspaceRoutes); // Workspace file management (tier-gated)
   app.use('/api/batches', batchesRoutes); // Batch history and ZIP export
@@ -133,6 +136,7 @@ if (ENABLE_AUTH) {
   app.use('/api/preferences', preferencesRoutes); // User preferences (cross-device sync)
 }
 app.use('/api/analytics', analyticsRoutes); // Analytics event tracking (public)
+app.use('/api/phi', phiRoutes); // PHI detection (public)
 app.use('/api/cron', cronRoutes);
 app.use('/api/migrate', migrateRoutes);
 app.use('/api', apiRoutes);

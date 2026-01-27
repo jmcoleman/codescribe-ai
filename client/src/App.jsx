@@ -20,6 +20,7 @@ import { useTierOverride } from './hooks/useTierOverride';
 import { useBatchGeneration } from './hooks/useBatchGeneration';
 import UnverifiedEmailBanner from './components/UnverifiedEmailBanner';
 import { PriorityBannerSection } from './components/PriorityBannerSection';
+import { PHIWarningBanner } from './components/PHIWarningBanner';
 import { MobileTabBar } from './components/MobileTabBar';
 import { AppModals } from './components/AppModals';
 import { validateFile, getValidationErrorMessage, detectLanguageFromFilename } from './utils/fileValidation';
@@ -137,6 +138,9 @@ function App() {
   const [uploadError, setUploadError] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [testSkeletonMode, setTestSkeletonMode] = useState(false);
+  const [phiDetection, setPhiDetection] = useState(null); // PHI detection results
+  const [showPhiWarning, setShowPhiWarning] = useState(false); // Show PHI warning banner
+  const phiCheckTimeoutRef = useRef(null); // Debounce PHI detection
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [isMobileView, setIsMobileView] = useState(() => window.innerWidth < 1024);
   const [mobileActiveTab, setMobileActiveTab] = useState('code'); // 'code' or 'doc' (mobile only, not persisted)
@@ -1064,6 +1068,66 @@ function App() {
     }
   }, [isMobileView, isGenerating]);
 
+  /**
+   * Detect potential PHI in code
+   * Debounced to avoid excessive API calls
+   */
+  const detectPHI = useCallback(async (codeToScan) => {
+    // Only scan if code is substantial (>50 chars to avoid noise)
+    if (!codeToScan || codeToScan.length < 50) {
+      setPhiDetection(null);
+      setShowPhiWarning(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/api/phi/detect`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ code: codeToScan }),
+      });
+
+      if (!response.ok) {
+        console.error('[App] PHI detection failed:', response.statusText);
+        return;
+      }
+
+      const result = await response.json();
+      if (result.success && result.data) {
+        setPhiDetection(result.data);
+        setShowPhiWarning(result.data.containsPHI);
+      }
+    } catch (error) {
+      console.error('[App] PHI detection error:', error);
+      // Silently fail - don't block user workflow
+    }
+  }, []);
+
+  /**
+   * Debounced PHI detection on code change
+   * Only runs when code changes and user stops typing for 1 second
+   */
+  useEffect(() => {
+    // Clear existing timeout
+    if (phiCheckTimeoutRef.current) {
+      clearTimeout(phiCheckTimeoutRef.current);
+    }
+
+    // Debounce PHI check (1 second after typing stops)
+    phiCheckTimeoutRef.current = setTimeout(() => {
+      detectPHI(code);
+    }, 1000);
+
+    // Cleanup on unmount
+    return () => {
+      if (phiCheckTimeoutRef.current) {
+        clearTimeout(phiCheckTimeoutRef.current);
+      }
+    };
+  }, [code, detectPHI]);
+
   const handleGenerate = async () => {
     if (code.trim()) {
       // Check usage quota first
@@ -1071,6 +1135,14 @@ function App() {
         // Show usage limit modal (100% limit reached)
         setShowUsageLimitModal(true);
         return;
+      }
+
+      // Check for PHI - warn user but don't block
+      // User must explicitly confirm they've verified no real PHI before proceeding
+      if (phiDetection?.containsPHI && showPhiWarning) {
+        // Scroll to top to ensure banner is visible
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return; // Wait for user to dismiss warning or confirm
       }
 
       // Check line count and file size
@@ -1968,6 +2040,24 @@ function App() {
     }
   };
 
+  /**
+   * Handler for dismissing PHI warning banner
+   * User can edit code to remove PHI or dismiss if false positive
+   */
+  const handleDismissPhiWarning = () => {
+    setShowPhiWarning(false);
+  };
+
+  /**
+   * Handler for proceeding with generation despite PHI warning
+   * User confirms they've verified no real PHI exists
+   */
+  const handleProceedWithPhi = async () => {
+    setShowPhiWarning(false);
+    // Proceed with generation now that user has confirmed
+    await performGeneration();
+  };
+
   const handleLoadSample = (sample) => {
     setCode(sample.code);
     setCodeOrigin('sample'); // Code is from a sample
@@ -2440,6 +2530,17 @@ function App() {
           onUpgrade={handleUpgradeClick}
         />
 
+        {/* PHI Warning Banner - Shows when potential PHI detected */}
+        {showPhiWarning && phiDetection && (
+          <div className="px-4 pt-4">
+            <PHIWarningBanner
+              phiDetection={phiDetection}
+              onDismiss={handleDismissPhiWarning}
+              onProceed={handleProceedWithPhi}
+            />
+          </div>
+        )}
+
         <MobileTabBar
           activeTab={mobileActiveTab}
           onTabChange={setMobileActiveTab}
@@ -2554,6 +2655,17 @@ function App() {
                     onUpgrade={handleUpgradeClick}
                   />
 
+                  {/* PHI Warning Banner - Shows when potential PHI detected */}
+                  {showPhiWarning && phiDetection && (
+                    <div className="px-4 pt-4">
+                      <PHIWarningBanner
+                        phiDetection={phiDetection}
+                        onDismiss={handleDismissPhiWarning}
+                        onProceed={handleProceedWithPhi}
+                      />
+                    </div>
+                  )}
+
                   {/* Layout Views: Split | Code Only | Doc Only */}
                   <div className="flex-1 min-h-0 transition-all duration-300">
                     <SplitPanel
@@ -2627,6 +2739,17 @@ function App() {
               }}
               onUpgrade={handleUpgradeClick}
             />
+
+            {/* PHI Warning Banner - Shows when potential PHI detected */}
+            {showPhiWarning && phiDetection && (
+              <div className="px-4 pt-4">
+                <PHIWarningBanner
+                  phiDetection={phiDetection}
+                  onDismiss={handleDismissPhiWarning}
+                  onProceed={handleProceedWithPhi}
+                />
+              </div>
+            )}
 
             {/* Control Bar */}
             <ControlBar
