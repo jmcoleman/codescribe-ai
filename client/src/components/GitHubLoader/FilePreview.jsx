@@ -3,10 +3,39 @@
  * Shows file content preview with metadata
  */
 
+import { useState, useEffect, useRef } from 'react';
 import { Loader2, FileCode, ExternalLink, AlertTriangle } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
 import { isFileSupported } from '../../services/githubService';
+import { ViewModeToggle } from '../ViewModeToggle';
+import { STORAGE_KEYS, getStorageItem, setStorageItem } from '../../constants/storage';
 
 export function FilePreview({ file, loading, repository }) {
+  const [viewMode, setViewMode] = useState(() => {
+    // Load from localStorage, default to 'raw'
+    return getStorageItem(STORAGE_KEYS.VIEW_MODE_FILE_PREVIEW, 'raw');
+  });
+
+  // Persist viewMode to localStorage
+  useEffect(() => {
+    setStorageItem(STORAGE_KEYS.VIEW_MODE_FILE_PREVIEW, viewMode);
+  }, [viewMode]);
+
+  // Detect if file is markdown
+  const isMarkdown = file?.name && /\.(md|markdown)$/i.test(file.name);
+
+  // Track previous file path to detect actual changes
+  const previousFilePathRef = useRef(file?.path);
+
+  // Reset to raw view when file path actually changes (not just prop update)
+  useEffect(() => {
+    if (previousFilePathRef.current !== file?.path) {
+      setViewMode('raw');
+      previousFilePathRef.current = file?.path;
+    }
+  }, [file?.path]);
   if (loading) {
     return (
       <div className="h-full flex items-center justify-center">
@@ -35,8 +64,6 @@ export function FilePreview({ file, loading, repository }) {
   }
 
   const lines = file.content.split('\n');
-  const previewLines = lines.slice(0, 50); // Show first 50 lines
-  const hasMore = lines.length > 50;
 
   // Check if file is too large (100KB limit)
   const MAX_FILE_SIZE = 100 * 1024; // 100KB
@@ -66,17 +93,24 @@ export function FilePreview({ file, loading, repository }) {
               </span>
             </p>
           </div>
-          <a
-            href={file.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors flex-shrink-0 ml-4"
-          >
-            <span>Open in GitHub</span>
-            <ExternalLink className="w-3.5 h-3.5" />
-          </a>
+          <div className="flex items-center gap-2 flex-shrink-0 ml-4">
+            <a
+              href={file.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+            >
+              <span>Open in GitHub</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          </div>
         </div>
       </div>
+
+      {/* View Mode Toggle - Sub-header (only for markdown files) */}
+      {isMarkdown && !fileSupport.isBinary && (
+        <ViewModeToggle viewMode={viewMode} onViewModeChange={setViewMode} />
+      )}
 
       {/* Error Warnings - Priority: Unsupported > Too Large */}
       {isUnsupported ? (
@@ -125,11 +159,29 @@ export function FilePreview({ file, loading, repository }) {
               </p>
             </div>
           </div>
+        ) : isMarkdown && viewMode === 'rendered' ? (
+          <div className="bg-white dark:bg-slate-900 h-full">
+            <style>{`
+              /* Override prose inline code styling for better dark mode contrast */
+              .dark .prose :where(code):not(:where([class~="not-prose"] *)) {
+                background-color: rgb(30 41 59); /* slate-800 */
+                color: rgb(165 243 252); /* cyan-200 */
+              }
+            `}</style>
+            <div className="prose prose-slate dark:prose-invert max-w-none px-6 pt-0 pb-6">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                rehypePlugins={[rehypeRaw]}
+              >
+                {file.content}
+              </ReactMarkdown>
+            </div>
+          </div>
         ) : (
           <div className="bg-white dark:bg-slate-900 h-full">
             <pre className="p-4 text-xs font-mono leading-relaxed">
               <code className="text-slate-800 dark:text-slate-200">
-                {previewLines.map((line, index) => (
+                {lines.map((line, index) => (
                   <div key={index} className="hover:bg-slate-100 dark:hover:bg-slate-800 -mx-4 px-4">
                     <span className="inline-block w-12 text-right pr-4 text-slate-400 dark:text-slate-600 select-none">
                       {index + 1}
@@ -139,13 +191,6 @@ export function FilePreview({ file, loading, repository }) {
                 ))}
               </code>
             </pre>
-            {hasMore && (
-              <div className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 px-4 py-1.5 text-center">
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">
-                  ... {lines.length - 50} more lines
-                </p>
-              </div>
-            )}
           </div>
         )}
       </div>

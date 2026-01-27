@@ -9,6 +9,130 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.5.1] - 2026-01-26
+
+**Status:** ✅ GitHub Private Repos & Progressive Loading
+
+**Summary:** Enhanced GitHub integration with private repository support, progressive loading for large organizations, and improved error handling with field-level validation. This release dramatically improves performance when browsing large organizations (like Google or Microsoft) by showing first 100 repositories in 1-2 seconds while remaining repos load in background.
+
+### Added
+
+- **Private Repository Support** ([server/src/services/githubService.js](server/src/services/githubService.js):550-651)
+  - Authenticated user detection routes to `listForAuthenticatedUser()` API for private repo access
+  - Organization detection routes to `listForOrg()` API for private org repos user has access to
+  - Proper API endpoint selection based on owner type (authenticated user, organization, other user)
+  - Private/public repository badges in UI
+
+- **Progressive Loading with Pagination** ([server/src/services/githubService.js](server/src/services/githubService.js):550-651, [client/src/components/GitHubLoader/GitHubLoadModal.jsx](client/src/components/GitHubLoader/GitHubLoadModal.jsx):321-381)
+  - Fetch and display first 100 repositories immediately (1-2 seconds)
+  - Continue loading remaining pages in background
+  - Live updates as new repositories arrive
+  - Background loading indicator shows progress
+  - Dramatically improved UX for large organizations (Google: 2000 repos, was 15-25s, now 1-2s initial + background)
+
+- **Pagination API Support** ([server/src/routes/api.js](server/src/routes/api.js):1247-1309)
+  - New query parameters: `page` (default: 1), `per_page` (default: 100, max: 100)
+  - Returns pagination metadata: `page`, `perPage`, `count`, `hasMore`
+  - GET `/api/github/owners/:owner/repos?page=1&per_page=100`
+
+- **Field-Level Error Validation** ([client/src/components/GitHubLoader/SmartInput.jsx](client/src/components/GitHubLoader/SmartInput.jsx):11-139, [client/src/components/GitHubLoader/GitHubLoadModal.jsx](client/src/components/GitHubLoader/GitHubLoadModal.jsx):300-366)
+  - 404 "not found" errors show as inline field errors below input
+  - Other errors (403, 429, 5xx) show as error banners
+  - Field errors clear automatically when user starts typing
+  - Less intrusive UX for simple typos
+
+- **Open in GitHub Links** ([client/src/components/GitHubLoader/GitHubLoadModal.jsx](client/src/components/GitHubLoader/GitHubLoadModal.jsx):1437-1446, [client/src/components/GitHubLoader/FileTree.jsx](client/src/components/GitHubLoader/FileTree.jsx):227-236)
+  - Quick access to GitHub from repository list (opens owner/org profile)
+  - Quick access to GitHub from file tree header (opens repository page with current branch)
+  - Branch-aware URLs automatically update when switching branches
+  - Consistent styling with "GitHub" label on larger screens, icon-only on mobile
+  - Purple hover effect matching app theme
+
+- **Markdown File Preview Toggle** ([client/src/components/GitHubLoader/FilePreview.jsx](client/src/components/GitHubLoader/FilePreview.jsx):15-38)
+  - Raw/Rendered toggle for markdown files (.md, .markdown)
+  - Rendered view uses ReactMarkdown with GitHub Flavored Markdown support
+  - View mode persists to localStorage across sessions
+  - Automatically resets to raw view when selecting a new file
+  - Enhanced dark mode styling for inline code blocks
+
+- **Recent Repositories Dropdown** ([client/src/components/GitHubLoader/GitHubLoadModal.jsx](client/src/components/GitHubLoader/GitHubLoadModal.jsx):600-605, 640-678, 908-918, 1380-1407)
+  - Chrome-style autocomplete dropdown appears on input focus
+  - Shows recently accessed repositories and files
+  - Real-time filtering as you type
+  - Private/public repository badges
+  - Quick access to previously loaded repos
+  - Automatic cleanup of duplicate entries
+
+- **File Extension Filtering** ([client/src/components/GitHubLoader/FileTree.jsx](client/src/components/GitHubLoader/FileTree.jsx):39, 145-150, 348-370)
+  - Include/Exclude filter modes for file extensions
+  - Type extensions in search (e.g., ".js .ts") or use filter panel
+  - Visual indicators: Filter icon for include mode, FilterX icon for exclude mode
+  - Auto-expand filter panel when extensions detected in search
+  - Badge shows active extension count
+  - Filters integrate with multi-select and search
+
+- **Optimized Branch Switching** ([client/src/components/GitHubLoader/GitHubLoadModal.jsx](client/src/components/GitHubLoader/GitHubLoadModal.jsx):460-496, [client/src/components/GitHubLoader/FileTree.jsx](client/src/components/GitHubLoader/FileTree.jsx):237-247, [server/src/services/githubService.js](server/src/services/githubService.js):200-242)
+  - Branch name updates immediately when clicked for instant feedback
+  - Spinner appears in place of branch icon (no layout shift)
+  - Only fetches tree data, skips unnecessary repository metadata fetch
+  - Preserves repository header and filters during switch (no flashing)
+  - Smooth opacity transition on tree during load
+  - Automatic rollback to previous branch on error
+
+- **Repository Limit Enforcement** ([client/src/components/GitHubLoader/GitHubLoadModal.jsx](client/src/components/GitHubLoader/GitHubLoadModal.jsx):350)
+  - Unauthenticated users limited to 300 repositories (3 pages) to preserve server quota
+  - Authenticated users can fetch up to 5000 repositories (50 pages)
+  - Clear messaging when limit is reached
+
+- **Comprehensive Testing** (7 new backend tests)
+  - Pagination parameter validation ([server/src/services/__tests__/githubService.test.js](server/src/services/__tests__/githubService.test.js):263-402)
+  - Authenticated user repository fetching
+  - Organization repository fetching
+  - Public repository fetching for unauthenticated users
+  - hasMore flag logic based on page fullness
+  - Private repository inclusion in responses
+  - API endpoint routing logic ([server/src/routes/__tests__/github-api.test.js](server/src/routes/__tests__/github-api.test.js):171-268)
+
+### Changed
+
+- **GitHub Repository Fetching**
+  - Replaced all-at-once fetching with progressive pagination
+  - Changed from iterator pattern to direct page requests
+  - Backend now accepts `page` and `perPage` parameters
+  - Frontend service updated to pass pagination parameters
+
+- **Branch Switching Performance**
+  - Optimized to only fetch tree data (skips repository metadata)
+  - Immediate UI update with branch name change
+  - Smooth loading state with in-place spinner (no layout shift)
+  - Preserves repository header and filters (no flashing)
+  - Automatic error recovery reverts to previous branch
+
+- **Error Handling Strategy**
+  - Separated field-level errors (404) from system errors (403, 429, 5xx)
+  - Added `fieldError` state separate from `error` (banner) state
+  - SmartInput component accepts `fieldError` prop for inline display
+
+- **Performance**
+  - Large organizations (2000+ repos): 15-25s → 1-2s initial + background
+  - Branch switching: Full page reload → Instant with smooth transition
+  - User can start browsing immediately instead of waiting for all repos
+  - Background loading doesn't block UI interaction
+
+### Test Coverage
+
+- **Frontend:** 2,103 passing, 76 skipped (2,179 total)
+- **Backend:** 2,120 passing, 33 skipped (2,153 total)
+- **Total:** 4,223 passing, 109 skipped (4,332 total)
+
+### Files Changed
+
+- Backend: `server/src/services/githubService.js`, `server/src/routes/api.js`
+- Frontend: `client/src/services/githubService.js`, `client/src/components/GitHubLoader/GitHubLoadModal.jsx`, `client/src/components/GitHubLoader/SmartInput.jsx`, `client/src/components/GitHubLoader/FileTree.jsx`, `client/src/components/GitHubLoader/FilePreview.jsx`
+- Tests: `server/src/services/__tests__/githubService.test.js`, `server/src/routes/__tests__/github-api.test.js`
+
+---
+
 ## [3.5.0] - 2026-01-25
 
 **Status:** ✅ Trial Programs Refactoring & Enhanced Eligibility System

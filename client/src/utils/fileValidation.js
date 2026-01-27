@@ -225,6 +225,12 @@ export function detectLanguageFromFilename(filename) {
     'zsh': 'bash',
     'gs': 'javascript', // Google Apps Script
     'txt': 'javascript', // Plain text defaults to javascript
+    // Markup and config files (added for GitHub multi-file support)
+    'html': 'html',
+    'htm': 'html',
+    'json': 'json',
+    'md': 'markdown',
+    'markdown': 'markdown',
   };
 
   return languageMap[extension] || 'javascript'; // Default to javascript if unknown

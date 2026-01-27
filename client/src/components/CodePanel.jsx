@@ -1,11 +1,16 @@
 import { lazy, Suspense, useState, useRef, useEffect } from 'react';
 import { Sparkles, Zap, Loader2, Upload, RefreshCw, BookOpen, MoreVertical, Copy, Download } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
 import { CopyButton } from './CopyButton';
 import { DownloadButton } from './DownloadButton';
 import { Tooltip } from './Tooltip';
+import { ViewModeToggle } from './ViewModeToggle';
 import { useTheme } from '../contexts/ThemeContext';
 import { getLanguageDisplayName } from '../constants/languages';
 import { sanitizeFilename } from '../utils/fileValidation';
+import { STORAGE_KEYS, getStorageItem, setStorageItem } from '../constants/storage';
 
 // Get scrollbar width from CSS variable
 const getScrollbarWidth = () => {
@@ -45,7 +50,30 @@ export function CodePanel({
   const [isDragging, setIsDragging] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [viewMode, setViewMode] = useState(() => {
+    // Load from localStorage, default to 'raw'
+    return getStorageItem(STORAGE_KEYS.VIEW_MODE_CODE, 'raw');
+  });
   const mobileMenuRef = useRef(null);
+
+  // Persist viewMode to localStorage
+  useEffect(() => {
+    setStorageItem(STORAGE_KEYS.VIEW_MODE_CODE, viewMode);
+  }, [viewMode]);
+
+  // Detect if file is markdown
+  const isMarkdown = filename && /\.(md|markdown)$/i.test(filename);
+
+  // Track previous filename to detect actual changes
+  const previousFilenameRef = useRef(filename);
+
+  // Reset to raw view when filename actually changes (not just prop update)
+  useEffect(() => {
+    if (previousFilenameRef.current !== filename) {
+      setViewMode('raw');
+      previousFilenameRef.current = filename;
+    }
+  }, [filename]);
 
   // Count lines, characters, and calculate file size
   const lines = code.split('\n').length;
@@ -405,7 +433,12 @@ export function CodePanel({
         </div>
       </div>
 
-      {/* Monaco Editor - Lazy loaded */}
+      {/* View Mode Toggle - Sub-header (only for markdown files) */}
+      {isMarkdown && code && (
+        <ViewModeToggle viewMode={viewMode} onViewModeChange={setViewMode} />
+      )}
+
+      {/* Monaco Editor or Markdown Preview */}
       <div
         className="flex-1 min-h-0 overflow-hidden relative"
         style={{
@@ -414,36 +447,59 @@ export function CodePanel({
           textRendering: 'optimizeLegibility',
         }}
       >
-        <div className="absolute inset-0">
-          <Suspense fallback={<EditorLoadingFallback />}>
-            <LazyMonacoEditor
-              height="100%"
-              language={language}
-              value={code}
-              onChange={onChange}
-              options={{
-                minimap: { enabled: false },
-                fontSize: 13,
-                fontFamily: 'JetBrains Mono, monospace',
-                lineNumbers: 'on',
-                scrollBeyondLastLine: false,
-                readOnly,
-                automaticLayout: true,
-                padding: { top: 24, bottom: 16 },
-                ariaLabel: readOnly ? 'Code editor, read-only' : 'Code editor, type or paste your code here',
-                bracketPairColorization: { enabled: false }, // Disable bracket colorization
-                scrollbar: {
-                  vertical: 'visible',
-                  horizontal: 'visible',
-                  useShadows: false,
-                  verticalScrollbarSize: getScrollbarWidth(),
-                  horizontalScrollbarSize: getScrollbarWidth(),
-                },
-              }}
-              theme={effectiveTheme === 'dark' ? 'codescribe-dark' : 'codescribe-light'}
-            />
-          </Suspense>
-        </div>
+        {isMarkdown && viewMode === 'rendered' ? (
+          /* Markdown Preview */
+          <div className="absolute inset-0 overflow-y-auto bg-white dark:bg-slate-900">
+            <style>{`
+              /* Override prose inline code styling for better dark mode contrast */
+              .dark .prose :where(code):not(:where([class~="not-prose"] *)) {
+                background-color: rgb(30 41 59); /* slate-800 */
+                color: rgb(165 243 252); /* cyan-200 */
+              }
+            `}</style>
+            <div className="prose prose-slate dark:prose-invert max-w-none px-6 pt-0 pb-6">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                rehypePlugins={[rehypeRaw]}
+              >
+                {code}
+              </ReactMarkdown>
+            </div>
+          </div>
+        ) : (
+          /* Monaco Editor */
+          <div className="absolute inset-0">
+            <Suspense fallback={<EditorLoadingFallback />}>
+              <LazyMonacoEditor
+                height="100%"
+                language={language}
+                value={code}
+                onChange={onChange}
+                options={{
+                  minimap: { enabled: false },
+                  fontSize: 13,
+                  fontFamily: 'JetBrains Mono, monospace',
+                  lineNumbers: 'on',
+                  scrollBeyondLastLine: false,
+                  readOnly,
+                  automaticLayout: true,
+                  padding: { top: 8, bottom: 16 },
+                  ariaLabel: readOnly ? 'Code editor, read-only' : 'Code editor, type or paste your code here',
+                  bracketPairColorization: { enabled: false }, // Disable bracket colorization
+                  unusualLineTerminators: 'off', // Silently accept unusual line terminators from various sources
+                  scrollbar: {
+                    vertical: 'visible',
+                    horizontal: 'visible',
+                    useShadows: false,
+                    verticalScrollbarSize: getScrollbarWidth(),
+                    horizontalScrollbarSize: getScrollbarWidth(),
+                  },
+                }}
+                theme={effectiveTheme === 'dark' ? 'codescribe-dark' : 'codescribe-light'}
+              />
+            </Suspense>
+          </div>
+        )}
       </div>
 
       {/* Footer */}

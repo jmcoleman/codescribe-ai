@@ -33,6 +33,9 @@ export const STORAGE_KEYS = {
   LAYOUT_MODE: 'cs_ui_layout', // 'split' | 'code' | 'doc'
   // Note: Table column sizes use cs_ui_tbl_cols_{tableId} via useTableColumnSizing hook
   HISTORY_COLUMN_VISIBILITY: 'cs_ui_hist_cols', // History table column visibility state
+  VIEW_MODE_CODE: 'cs_ui_view_code', // 'raw' | 'rendered' for CodePanel markdown preview
+  VIEW_MODE_FILE_PREVIEW: 'cs_ui_view_file', // 'raw' | 'rendered' for FilePreview markdown preview
+  VIEW_MODE_DOC: 'cs_ui_view_doc', // 'raw' | 'rendered' for DocPanel markdown preview
 
   // Editor State (localStorage - persists code/docs across refreshes)
   // Privacy-sensitive: cs_ed_code, cs_ed_doc, cs_ed_score are user-scoped

@@ -200,9 +200,17 @@ class GitHubService {
   async fetchTree(owner, repo, ref = null, userToken = null) {
     try {
       const client = this.getClientForUser(userToken);
-      // First, get the repository to get the default branch if ref not provided
-      const repoInfo = await client.rest.repos.get({ owner, repo });
-      const branch = ref || repoInfo.data.default_branch;
+
+      let branch;
+      let repoInfo = null;
+
+      // Only fetch repository metadata if we need the default branch
+      if (!ref) {
+        repoInfo = await client.rest.repos.get({ owner, repo });
+        branch = repoInfo.data.default_branch;
+      } else {
+        branch = ref;
+      }
 
       // Get the tree recursively
       const response = await client.rest.git.getTree({
@@ -224,17 +232,23 @@ class GitHubService {
       // Build hierarchical structure
       const tree = this.buildTreeStructure(items);
 
-      return {
+      const result = {
         owner,
         repo,
         branch,
         tree,
         truncated: response.data.truncated,
-        totalItems: items.length,
-        stars: repoInfo.data.stargazers_count,
-        description: repoInfo.data.description,
-        isPrivate: repoInfo.data.private
+        totalItems: items.length
       };
+
+      // Only include metadata if we fetched it
+      if (repoInfo) {
+        result.stars = repoInfo.data.stargazers_count;
+        result.description = repoInfo.data.description;
+        result.isPrivate = repoInfo.data.private;
+      }
+
+      return result;
     } catch (error) {
       throw this.normalizeError(error);
     }
@@ -425,6 +439,223 @@ class GitHubService {
    */
   validateUrl(input) {
     return this.parseGitHubUrl(input) !== null;
+  }
+
+  /**
+   * Fetch organizations the authenticated user belongs to
+   * @param {string} userToken - User's GitHub OAuth token (optional - returns empty if not provided)
+   * @returns {Promise<Array>} List of organizations with name, login, avatar, and description
+   */
+  async fetchUserOrganizations(userToken) {
+    if (!userToken) {
+      // Can't determine user's organizations without their token
+      return [];
+    }
+
+    try {
+      const client = this.getClientForUser(userToken);
+      const response = await client.rest.orgs.listForAuthenticatedUser({
+        per_page: 100 // Most users have fewer than 100 orgs
+      });
+
+      return response.data.map(org => ({
+        login: org.login,
+        name: org.login, // Display name (same as login for orgs)
+        avatarUrl: org.avatar_url,
+        description: org.description,
+        type: 'organization'
+      }));
+    } catch (error) {
+      throw this.normalizeError(error);
+    }
+  }
+
+  /**
+   * Fetch repositories for the authenticated user
+   * @param {string} userToken - User's GitHub OAuth token (optional - returns empty if not provided)
+   * @returns {Promise<Array>} List of repositories with metadata
+   */
+  async fetchUserRepositories(userToken) {
+    if (!userToken) {
+      // Can't determine user's repositories without their token
+      return [];
+    }
+
+    try {
+      const client = this.getClientForUser(userToken);
+
+      // Get authenticated user info first to get their login
+      const userResponse = await client.rest.users.getAuthenticated();
+      const userLogin = userResponse.data.login;
+
+      // Fetch repos owned by the user (not org repos or forks from orgs)
+      const response = await client.rest.repos.listForAuthenticatedUser({
+        affiliation: 'owner', // Only repos the user owns
+        per_page: 100,
+        sort: 'full_name',
+        direction: 'asc'
+      });
+
+      // Filter to only repos where owner is the user (exclude org repos)
+      const userRepos = response.data.filter(repo => repo.owner.login === userLogin);
+
+      return userRepos.map(repo => ({
+        name: repo.name,
+        fullName: repo.full_name,
+        owner: repo.owner.login,
+        description: repo.description,
+        isPrivate: repo.private,
+        defaultBranch: repo.default_branch,
+        updatedAt: repo.updated_at,
+        language: repo.language,
+        stars: repo.stargazers_count,
+        htmlUrl: repo.html_url
+      }));
+    } catch (error) {
+      throw this.normalizeError(error);
+    }
+  }
+
+  /**
+   * Fetch repositories for a specific organization
+   * @param {string} org - Organization login name
+   * @param {string} userToken - User's GitHub OAuth token (optional - uses server token for public repos if not provided)
+   * @returns {Promise<Array>} List of repositories with metadata
+   */
+  async fetchOrganizationRepositories(org, userToken) {
+    // User token is optional - will fall back to server token via getClientForUser()
+    // With server token: only public repos are returned
+    // With user token: public + private repos the user has access to
+
+    try {
+      const client = this.getClientForUser(userToken);
+      const response = await client.rest.repos.listForOrg({
+        org,
+        per_page: 100,
+        sort: 'full_name',
+        direction: 'asc',
+        type: 'all' // Include public and private repos the user has access to
+      });
+
+      return response.data.map(repo => ({
+        name: repo.name,
+        fullName: repo.full_name,
+        owner: repo.owner.login,
+        description: repo.description,
+        isPrivate: repo.private,
+        defaultBranch: repo.default_branch,
+        updatedAt: repo.updated_at,
+        language: repo.language,
+        stars: repo.stargazers_count,
+        htmlUrl: repo.html_url
+      }));
+    } catch (error) {
+      throw this.normalizeError(error);
+    }
+  }
+
+  /**
+   * Fetch repositories for any owner (user or organization) with pagination support
+   * Automatically detects whether the owner is a user or org and uses the appropriate API
+   * @param {string} owner - GitHub username or organization name
+   * @param {string} userToken - User's GitHub OAuth token (optional - uses server token for public repos if not provided)
+   * @param {number} page - Page number (1-indexed, default: 1)
+   * @param {number} perPage - Results per page (default: 100, max: 100)
+   * @returns {Promise<Object>} Paginated list of repositories with metadata
+   */
+  async fetchOwnerRepositories(owner, userToken, page = 1, perPage = 100) {
+    try {
+      const client = this.getClientForUser(userToken);
+      const isAuthenticated = !!userToken;
+
+      // Validate pagination params
+      const validPage = Math.max(1, parseInt(page) || 1);
+      const validPerPage = Math.min(100, Math.max(1, parseInt(perPage) || 100));
+
+      // Check if owner is the authenticated user and if it's an org
+      let isAuthenticatedUser = false;
+      let isOrganization = false;
+
+      if (isAuthenticated) {
+        try {
+          const { data: authenticatedUser } = await client.rest.users.getAuthenticated();
+          isAuthenticatedUser = authenticatedUser.login.toLowerCase() === owner.toLowerCase();
+        } catch (err) {
+          console.warn('[GitHub] Failed to get authenticated user:', err.message);
+        }
+      }
+
+      // Check if the owner is an organization (not a user)
+      try {
+        const { data: ownerData } = await client.rest.users.getByUsername({ username: owner });
+        isOrganization = ownerData.type === 'Organization';
+      } catch (err) {
+        // If we can't fetch owner data, assume it's a user
+        console.warn('[GitHub] Failed to get owner type for:', owner, err.message);
+      }
+
+      // Route to appropriate endpoint based on owner type
+      let response;
+
+      if (isAuthenticatedUser) {
+        // Fetching authenticated user's own repos (includes private)
+        response = await client.rest.repos.listForAuthenticatedUser({
+          per_page: validPerPage,
+          page: validPage,
+          sort: 'full_name',
+          direction: 'asc',
+          affiliation: 'owner' // Only repos owned by the user (includes both public and private)
+        });
+      } else if (isOrganization) {
+        // Fetching organization repos (includes private repos user has access to when authenticated)
+        response = await client.rest.repos.listForOrg({
+          org: owner,
+          per_page: validPerPage,
+          page: validPage,
+          sort: 'full_name',
+          direction: 'asc',
+          type: 'all' // Includes public and private repos the authenticated user has access to
+        });
+      } else {
+        // Fetching another user's repos (public only)
+        response = await client.rest.repos.listForUser({
+          username: owner,
+          per_page: validPerPage,
+          page: validPage,
+          sort: 'full_name',
+          direction: 'asc',
+          type: 'all'
+        });
+      }
+
+      const repos = response.data;
+
+      // Check if there are more pages by looking at response headers or data length
+      // If we got a full page, there might be more
+      const hasMore = repos.length === validPerPage;
+
+      return {
+        repositories: repos.map(repo => ({
+          name: repo.name,
+          fullName: repo.full_name,
+          owner: repo.owner.login,
+          description: repo.description,
+          isPrivate: repo.private,
+          defaultBranch: repo.default_branch,
+          updatedAt: repo.updated_at,
+          language: repo.language,
+          stars: repo.stargazers_count,
+          htmlUrl: repo.html_url
+        })),
+        page: validPage,
+        perPage: validPerPage,
+        hasMore,
+        isAuthenticated,
+        count: repos.length
+      };
+    } catch (error) {
+      throw this.normalizeError(error);
+    }
   }
 }
 

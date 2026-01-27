@@ -7,6 +7,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { CopyButton } from './CopyButton';
 import { DownloadButton } from './DownloadButton';
 import { Tooltip } from './Tooltip';
+import { ViewModeToggle } from './ViewModeToggle';
 import { DocPanelGeneratingSkeleton } from './SkeletonLoader';
 import { MermaidDiagram } from './MermaidDiagram';
 import { useTheme } from '../contexts/ThemeContext';
@@ -215,6 +216,17 @@ export const DocPanel = memo(function DocPanel({
   // Error details toggle state
   const [showErrorDetails, setShowErrorDetails] = useState(false);
 
+  // View mode state (rendered or raw markdown)
+  const [viewMode, setViewMode] = useState(() => {
+    // Load from localStorage, default to 'rendered'
+    return getStorageItem(STORAGE_KEYS.VIEW_MODE_DOC, 'rendered');
+  });
+
+  // Persist viewMode to localStorage
+  useEffect(() => {
+    setStorageItem(STORAGE_KEYS.VIEW_MODE_DOC, viewMode);
+  }, [viewMode]);
+
   // Track mermaid diagram counter to ensure unique IDs
   const mermaidCounterRef = useRef(0);
 
@@ -237,6 +249,17 @@ export const DocPanel = memo(function DocPanel({
   // Reset counter when documentation changes (new generation)
   useEffect(() => {
     mermaidCounterRef.current = 0;
+  }, [documentation]);
+
+  // Track previous documentation to detect actual changes
+  const previousDocumentationRef = useRef(documentation);
+
+  // Reset to rendered view when documentation actually changes (not just prop update)
+  useEffect(() => {
+    if (previousDocumentationRef.current !== documentation) {
+      setViewMode('rendered');
+      previousDocumentationRef.current = documentation;
+    }
   }, [documentation]);
 
   // Track when generation completes (isGenerating changes from true to false)
@@ -496,7 +519,7 @@ export const DocPanel = memo(function DocPanel({
           </div>
         </div>
       ) : (
-        <code className="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-cyan-300 px-1 py-0.5 rounded text-[13px] font-mono" {...props}>
+        <code className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-cyan-200 px-1 py-0.5 rounded text-[13px] font-mono" {...props}>
           {children}
         </code>
       );
@@ -736,6 +759,11 @@ export const DocPanel = memo(function DocPanel({
           )}
         </div>
       </div>
+
+      {/* View Mode Toggle - Sub-header (only when documentation exists) */}
+      {documentation && (
+        <ViewModeToggle viewMode={viewMode} onViewModeChange={setViewMode} />
+      )}
 
       {/* Batch Summary Banner - Shows Final Summary Only (Pro+ tier only) */}
       {canUseBatchProcessing && bulkGenerationSummary && (
@@ -1087,7 +1115,7 @@ export const DocPanel = memo(function DocPanel({
       {/* Body - Documentation Content */}
       <div
         ref={contentRef}
-        className="flex-1 min-h-0 overflow-y-auto px-4 py-3 bg-white dark:bg-slate-900"
+        className="flex-1 min-h-0 overflow-y-auto px-4 pt-0 pb-3 bg-white dark:bg-slate-900"
         onClick={(e) => {
           // Find the closest anchor element (handles clicks on nested elements like <strong>)
           const link = e.target.closest('a');
@@ -1221,15 +1249,34 @@ export const DocPanel = memo(function DocPanel({
               }
             `}</style>
 
-            <div className="prose prose-slate dark:prose-invert max-w-none [&>*:first-child]:mt-0">
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                rehypePlugins={[rehypeRaw]}
-                components={markdownComponents}
-              >
-                {documentation}
-              </ReactMarkdown>
-            </div>
+            {viewMode === 'raw' ? (
+              /* Raw markdown view with line numbers */
+              <div className="bg-white dark:bg-slate-900 font-mono text-xs leading-relaxed">
+                <pre className="p-4">
+                  <code className="text-slate-800 dark:text-slate-200">
+                    {documentation.split('\n').map((line, index) => (
+                      <div key={index} className="hover:bg-slate-100 dark:hover:bg-slate-800 -mx-4 px-4">
+                        <span className="inline-block w-12 text-right pr-4 text-slate-400 dark:text-slate-600 select-none">
+                          {index + 1}
+                        </span>
+                        <span>{line || ' '}</span>
+                      </div>
+                    ))}
+                  </code>
+                </pre>
+              </div>
+            ) : (
+              /* Rendered markdown view */
+              <div className="prose prose-slate dark:prose-invert max-w-none [&>*:first-child]:mt-0">
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  rehypePlugins={[rehypeRaw]}
+                  components={markdownComponents}
+                >
+                  {documentation}
+                </ReactMarkdown>
+              </div>
+            )}
           </>
         ) : (
           <div

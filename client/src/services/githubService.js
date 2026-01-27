@@ -162,6 +162,7 @@ export function validateGitHubUrl(input) {
 
   // Check for basic patterns
   const patterns = [
+    /^[a-zA-Z0-9-]+$/, // owner only (e.g., "facebook", "vercel")
     /^[\w-]+\/[\w.-]+\/.+(@[\w.-]+)?$/, // owner/repo/path[@ref]
     /^[\w-]+\/[\w.-]+(@[\w.-]+)?$/, // owner/repo[@ref]
     /github\.com\/[\w-]+\/[\w.-]+/, // github.com URLs
@@ -217,17 +218,57 @@ export function addRecentFile(file, userId = null) {
     console.log('[addRecentFile] Called with file:', file, 'userId:', userId);
     const recent = getRecentFiles(userId);
 
-    // For repo entries (isRepo: true), check if this repo already exists
-    // If it does, don't add a duplicate - just keep the existing entry
+    // For repo entries (isRepo: true), remove ALL entries (repo + file) for this owner/repo
+    // This prevents duplicates when browsing a repo after loading individual files from it
     if (file.isRepo) {
-      const existingRepoIndex = recent.findIndex(f => f.isRepo && f.owner === file.owner && f.repo === file.repo);
-      if (existingRepoIndex !== -1) {
-        console.log('[addRecentFile] Repo already exists in recent, skipping:', `${file.owner}/${file.repo}`);
-        return; // Skip adding duplicate repo
+      const filtered = recent.filter(f => !(f.owner === file.owner && f.repo === file.repo));
+      console.log('[addRecentFile] Repo entry - removing all existing entries for:', `${file.owner}/${file.repo}`);
+
+      // Add to beginning, preserving all properties
+      const newEntry = {
+        owner: file.owner,
+        repo: file.repo,
+        path: file.path,
+        name: file.name,
+        language: file.language,
+        timestamp: new Date().toISOString()
+      };
+
+      // Include repo-specific properties if present
+      if (file.isRepo) {
+        newEntry.isRepo = true;
+        if (file.fileCount) {
+          newEntry.fileCount = file.fileCount;
+        }
       }
+
+      // Include private repo flag if present
+      if (file.isPrivate !== undefined) {
+        newEntry.isPrivate = file.isPrivate;
+      }
+
+      filtered.unshift(newEntry);
+
+      // Keep only last 15
+      const limited = filtered.slice(0, 15);
+      console.log('[addRecentFile] Saving limited list:', limited);
+
+      // Save to user-scoped key or fallback to legacy
+      if (userId) {
+        const key = getGitHubRecentKey(userId);
+        console.log('[addRecentFile] Saving to user-scoped key:', key);
+        if (key) {
+          localStorage.setItem(key, JSON.stringify(limited));
+          console.log('[addRecentFile] Saved successfully');
+        }
+      } else {
+        console.log('[addRecentFile] Saving to legacy key');
+        localStorage.setItem('github_recent_files', JSON.stringify(limited));
+      }
+      return;
     }
 
-    // Remove duplicates (for file entries, match on path + owner + repo)
+    // For file entries, remove duplicates (match on path + owner + repo)
     const filtered = recent.filter(f => f.path !== file.path || f.owner !== file.owner || f.repo !== file.repo);
 
     // Add to beginning, preserving all properties
@@ -255,8 +296,8 @@ export function addRecentFile(file, userId = null) {
 
     filtered.unshift(newEntry);
 
-    // Keep only last 5
-    const limited = filtered.slice(0, 5);
+    // Keep only last 15
+    const limited = filtered.slice(0, 15);
     console.log('[addRecentFile] Saving limited list:', limited);
 
     // Save to user-scoped key or fallback to legacy
@@ -307,8 +348,8 @@ export function isBinaryFile(filename) {
 }
 
 /**
- * Code-only extensions that can have documentation generated
- * Excludes: markdown, config files, plain text, styles, markup
+ * Extensions that can have documentation generated
+ * Includes code files, markup with embedded code, configs, and documentation
  */
 const CODE_EXTENSIONS = [
   // JavaScript/TypeScript
@@ -342,7 +383,11 @@ const CODE_EXTENSIONS = [
   // Frameworks
   'vue', 'svelte',
   // Other languages
-  'r', 'm', 'dart', 'lua', 'perl', 'pl'
+  'r', 'm', 'dart', 'lua', 'perl', 'pl',
+  // Markup/Config (useful context for documentation)
+  'html', 'htm', // HTML with embedded JS/CSS
+  'json', // Config files, schemas, data
+  'md', 'markdown' // Documentation, READMEs, architecture docs
 ];
 
 /**
@@ -451,6 +496,64 @@ export function isFileSupported(filename) {
 }
 
 /**
+ * Clean up duplicate entries in recent files
+ * If there are both repo and file entries for the same owner/repo, keep only the repo entry
+ * @param {number|string} userId - User ID for scoping (optional)
+ */
+export function cleanupDuplicateRecentFiles(userId = null) {
+  try {
+    const recent = getRecentFiles(userId);
+    if (recent.length === 0) return;
+
+    // Group entries by owner/repo
+    const grouped = new Map();
+
+    recent.forEach(entry => {
+      const key = `${entry.owner}/${entry.repo}`;
+      if (!grouped.has(key)) {
+        grouped.set(key, []);
+      }
+      grouped.get(key).push(entry);
+    });
+
+    // For each owner/repo group, keep only the repo entry if it exists, otherwise keep the most recent file entry
+    const cleaned = [];
+    grouped.forEach((entries) => {
+      // Prefer repo entries over file entries
+      const repoEntry = entries.find(e => e.isRepo);
+      if (repoEntry) {
+        cleaned.push(repoEntry);
+      } else {
+        // Keep the most recent file entry (they're already sorted by timestamp)
+        cleaned.push(entries[0]);
+      }
+    });
+
+    // Sort by timestamp (most recent first)
+    cleaned.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+    // Save cleaned list (keep last 15)
+    const limited = cleaned.slice(0, 15);
+
+    if (userId) {
+      const key = getGitHubRecentKey(userId);
+      if (key) {
+        localStorage.setItem(key, JSON.stringify(limited));
+      }
+    } else {
+      localStorage.setItem('github_recent_files', JSON.stringify(limited));
+    }
+
+    console.log('[cleanupDuplicateRecentFiles] Cleaned up duplicates:', {
+      before: recent.length,
+      after: limited.length
+    });
+  } catch (error) {
+    console.error('Failed to cleanup duplicate recent files:', error);
+  }
+}
+
+/**
  * Clear recent files
  */
 export function clearRecentFiles(userId = null) {
@@ -467,4 +570,127 @@ export function clearRecentFiles(userId = null) {
   } catch (error) {
     console.error('Failed to clear recent files:', error);
   }
+}
+
+/**
+ * Fetch organizations for authenticated user
+ * Works with or without GitHub OAuth (returns empty array if no OAuth)
+ * @returns {Promise<Object>} Object with organizations array and requiresGitHub flag
+ */
+export async function fetchUserOrganizations() {
+  const response = await fetch(`${API_URL}/api/github/user/orgs`, {
+    method: 'GET',
+    headers: getAuthHeaders()
+  });
+
+  if (!response.ok) {
+    let errorMessage = 'Failed to fetch organizations';
+    try {
+      const error = await response.json();
+      errorMessage = error.message || errorMessage;
+    } catch {
+      const text = await response.text().catch(() => '');
+      if (text) errorMessage = text;
+    }
+    throw new Error(errorMessage);
+  }
+
+  const data = await response.json();
+  return {
+    organizations: data.organizations,
+    requiresGitHub: data.requiresGitHub || false
+  };
+}
+
+/**
+ * Fetch repositories for authenticated user
+ * Works with or without GitHub OAuth (returns empty array if no OAuth)
+ * @returns {Promise<Object>} Object with repositories array and requiresGitHub flag
+ */
+export async function fetchUserRepositories() {
+  const response = await fetch(`${API_URL}/api/github/user/repos`, {
+    method: 'GET',
+    headers: getAuthHeaders()
+  });
+
+  if (!response.ok) {
+    let errorMessage = 'Failed to fetch repositories';
+    try {
+      const error = await response.json();
+      errorMessage = error.message || errorMessage;
+    } catch {
+      const text = await response.text().catch(() => '');
+      if (text) errorMessage = text;
+    }
+    throw new Error(errorMessage);
+  }
+
+  const data = await response.json();
+  return {
+    repositories: data.repositories,
+    requiresGitHub: data.requiresGitHub || false
+  };
+}
+
+/**
+ * Fetch repositories for a specific organization
+ * Requires GitHub OAuth authentication
+ * @param {string} org - Organization login name
+ * @returns {Promise<Array>} List of organization repositories
+ */
+export async function fetchOrganizationRepositories(org) {
+  const response = await fetch(`${API_URL}/api/github/orgs/${encodeURIComponent(org)}/repos`, {
+    method: 'GET',
+    headers: getAuthHeaders()
+  });
+
+  if (!response.ok) {
+    let errorMessage = 'Failed to fetch organization repositories';
+    try {
+      const error = await response.json();
+      errorMessage = error.message || errorMessage;
+    } catch {
+      const text = await response.text().catch(() => '');
+      if (text) errorMessage = text;
+    }
+    throw new Error(errorMessage);
+  }
+
+  const data = await response.json();
+  return data.repositories;
+}
+
+/**
+ * Fetch repositories for any owner (user or organization) with pagination
+ * Automatically detects whether the owner is a user or org
+ * @param {string} owner - GitHub username or organization name
+ * @param {number} page - Page number (1-indexed, default: 1)
+ * @param {number} perPage - Results per page (default: 100, max: 100)
+ * @returns {Promise<{repositories: Array, page: number, perPage: number, count: number, hasMore: boolean, isAuthenticated: boolean}>} Repository data with pagination metadata
+ */
+export async function fetchOwnerRepositories(owner, page = 1, perPage = 100) {
+  const queryParams = new URLSearchParams({
+    page: page.toString(),
+    per_page: perPage.toString()
+  });
+
+  const response = await fetch(`${API_URL}/api/github/owners/${encodeURIComponent(owner)}/repos?${queryParams}`, {
+    method: 'GET',
+    headers: getAuthHeaders()
+  });
+
+  if (!response.ok) {
+    let errorMessage = 'Failed to fetch repositories';
+    try {
+      const error = await response.json();
+      errorMessage = error.message || errorMessage;
+    } catch {
+      const text = await response.text().catch(() => '');
+      if (text) errorMessage = text;
+    }
+    throw new Error(errorMessage);
+  }
+
+  const data = await response.json();
+  return data; // Return full response with pagination metadata
 }

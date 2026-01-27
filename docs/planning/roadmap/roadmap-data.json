@@ -65,9 +65,9 @@
       "text": "codescribeai.com",
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
-    "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.39",
-    "footer": "v3.5.0 Complete · Trial Programs Refactoring & Enhanced Eligibility System ✓ · Up Next: Project Architecture Document · VS Code Extension: Separate Repo",
-    "lastUpdated": "January 25, 2026"
+    "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.40",
+    "footer": "v3.5.1 Complete · GitHub Private Repos & Progressive Loading ✓ · Up Next: Project Architecture Document · VS Code Extension: Separate Repo",
+    "lastUpdated": "January 26, 2026"
   },
   "columns": [
     {
@@ -76,6 +76,25 @@
       "title": "Completed",
       "subtitle": "Phase 1: Core Capabilities",
       "phases": [
+        {
+          "version": "v3.5.1",
+          "title": "GitHub Private Repos & Progressive Loading",
+          "duration": "1 day",
+          "status": "✓ Complete",
+          "completedDate": "Jan 26, 2026",
+          "badge": "GitHub UX",
+          "features": [
+            "Access and import code from private GitHub repositories with your authenticated account",
+            "Browse private repositories from organizations you belong to",
+            "Large organizations load instantly with hundreds or thousands of repositories appearing within seconds",
+            "Recent repositories dropdown provides quick access to previously viewed projects",
+            "Markdown files display with formatted preview alongside raw code view",
+            "Filter files by extension to focus on specific code types or exclude unwanted files",
+            "Helpful inline error messages appear when repositories are not found",
+            "Open any repository or branch directly in GitHub with one click",
+            "Branch switching happens instantly without page refreshes or flickering"
+          ]
+        },
         {
           "version": "v3.5.0",
           "title": "Trial Programs & Enhanced Eligibility System",

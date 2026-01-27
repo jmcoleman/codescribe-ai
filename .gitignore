@@ -44,6 +44,10 @@ server/.env*
 # Private folder (strategic planning, financial docs, sensitive content)
 private/
 
+# Planning - keep roadmap public, everything else private
+docs/planning/*
+!docs/planning/roadmap/
+
 # Playwright test artifacts
 client/test-results/
 client/playwright-report/

@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { X, AlertCircle, Github, Loader2, File, Clock, ChevronDown, ChevronRight, Sparkles, Zap, ExternalLink, FolderGit2, FolderTree, Eye, Lock, Unlock, Link2, Globe } from 'lucide-react';
+import { X, AlertCircle, Github, Loader2, File, ChevronDown, ChevronRight, Sparkles, Zap, ExternalLink, FolderTree, Eye, Lock, Globe, Search } from 'lucide-react';
 import { SmartInput } from './SmartInput';
 import { FileTree } from './FileTree';
 import { FilePreview } from './FilePreview';
@@ -22,23 +22,36 @@ import { STORAGE_KEYS, getWorkspaceKey } from '../../constants/storage';
 export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, onImportErrors, defaultDocType = 'README' }) {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [loadingBranchSwitch, setLoadingBranchSwitch] = useState(false);
+  const [error, setError] = useState(null); // Banner errors (403, 429, 5xx)
+  const [fieldError, setFieldError] = useState(null); // Field-level errors (404 not found)
   const [filePreviewError, setFilePreviewError] = useState(null);
   const [repository, setRepository] = useState(null);
   const [branches, setBranches] = useState([]);
+
+  // Owner repository list state (when user enters just an owner like "facebook")
+  const [ownerName, setOwnerName] = useState(null);
+  const [ownerRepositories, setOwnerRepositories] = useState([]);
+  const [ownerRepoMetadata, setOwnerRepoMetadata] = useState({ hasMore: false, total: 0, isAuthenticated: false });
+  const [loadingOwnerRepos, setLoadingOwnerRepos] = useState(false);
+  const [loadingMoreRepos, setLoadingMoreRepos] = useState(false); // Background loading indicator
+  const [repoSearchTerm, setRepoSearchTerm] = useState('');
+  const [repoCurrentPage, setRepoCurrentPage] = useState(1);
+  const REPOS_PER_PAGE = 20;
   const [selectedFile, setSelectedFile] = useState(null);
   const [filePreview, setFilePreview] = useState(null);
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [recentFiles, setRecentFiles] = useState([]);
   const [expandedPaths, setExpandedPaths] = useState(new Set());
-  const [recentFilesExpanded, setRecentFilesExpanded] = useState(false);
+  const [showRecentDropdown, setShowRecentDropdown] = useState(false);
+  const [showGitHubBanner, setShowGitHubBanner] = useState(true);
 
   // Multi-select state (always enabled for Pro+, disabled for Free/Starter)
   const [selectedFiles, setSelectedFiles] = useState(new Set());
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   const [showProHint, setShowProHint] = useState(true); // Dismissable Pro feature hint
   const lastSelectedFileRef = useRef(null); // Track last selected file for shift-click range selection
-  const [extensionFilters, setExtensionFilters] = useState([]); // Extension filter for file tree
+  const [extensionFilters, setExtensionFilters] = useState({ extensions: [], mode: 'include' }); // Extension filter for file tree
 
   // Batch import state
   const [importing, setImporting] = useState(false);
@@ -90,6 +103,8 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, onIm
   useEffect(() => {
     if (isOpen) {
       console.log('[GitHubLoadModal] Loading recent files for user:', user?.id);
+      // Clean up any duplicate entries first
+      githubService.cleanupDuplicateRecentFiles(user?.id);
       setRecentFiles(githubService.getRecentFiles(user?.id));
 
       // Fetch workspace files if user has batch processing
@@ -212,6 +227,21 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, onIm
   const handleLoadRepository = async () => {
     if (!input.trim()) return;
 
+    // Close recent dropdown when submitting
+    setShowRecentDropdown(false);
+
+    // Check if input is just an owner (e.g., "facebook", "vercel") without repo
+    // Owner format: alphanumeric, hyphens, no slashes or dots suggesting URL
+    const trimmedInput = input.trim();
+    const isOwnerOnly = /^[a-zA-Z0-9-]+$/.test(trimmedInput) && !trimmedInput.includes('/') && !trimmedInput.includes('.');
+
+    if (isOwnerOnly) {
+      // User entered just an owner - fetch their repos
+      await handleLoadOwnerRepositories(trimmedInput);
+      return;
+    }
+
+    // Otherwise, treat as full repo path or URL
     setLoading(true);
     setError(null);
     setRepository(null);
@@ -219,8 +249,11 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, onIm
     setSelectedFile(null);
     setFilePreview(null);
     setExpandedPaths(new Set()); // Reset expanded paths
-    setExtensionFilters([]); // Reset extension filters
+    setExtensionFilters({ extensions: [], mode: 'include' }); // Reset extension filters
     setSelectedFiles(new Set()); // Clear file selection when changing repos
+    setOwnerRepositories([]); // Clear owner repo list
+    setOwnerRepoMetadata({ hasMore: false, total: 0, isAuthenticated: false });
+    setOwnerName(null);
 
     try {
       // Parse the input
@@ -238,6 +271,22 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, onIm
       // Auto-expand all folders by default for easier navigation
       setExpandedPaths(getAllFolderPaths(repo.tree));
 
+      // Add repository to recent (for browsing before loading files)
+      console.log('[GitHubLoadModal] Adding repo to recent (browsing):', `${repo.owner}/${repo.repo}`);
+      const codeFileCount = getAllCodeFiles(repo.tree).length;
+      githubService.addRecentFile({
+        owner: repo.owner,
+        repo: repo.repo,
+        path: '', // Empty path indicates this is a repo-level entry
+        name: `${repo.owner}/${repo.repo}`,
+        language: 'repository',
+        isRepo: true,
+        fileCount: codeFileCount,
+        isPrivate: repo.isPrivate
+      }, user?.id);
+      // Update recent files state immediately
+      setRecentFiles(githubService.getRecentFiles(user?.id));
+
       // If a file was specified in the URL, auto-select it
       if (parsed.type === 'file' && parsed.path) {
         // Find the file in the tree
@@ -250,17 +299,160 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, onIm
     } catch (err) {
       console.error('Failed to load repository:', err);
 
-      // Enhance error message for "not found" errors when user doesn't have private repo access
-      let errorMessage = err.message;
-      if (!user?.has_github_private_access && (
-        err.message.includes('not found') ||
-        err.message.includes('Not Found') ||
-        err.message.includes('private')
-      )) {
-        errorMessage = 'Repository not found. If this is a private repository, click the "Public only" badge above to connect your GitHub account.';
+      // Check if this is a 404 "not found" error
+      const isNotFound = err.message.includes('not found') || err.message.includes('Not Found');
+
+      if (isNotFound) {
+        // Show as inline field error (less intrusive for typos)
+        let message = 'Repository not found. Check the spelling or verify it exists.';
+        if (!user?.has_github_private_access && err.message.includes('private')) {
+          message = 'Repository not found. If this is a private repository, connect your GitHub account to access it.';
+        }
+        setFieldError(message);
+        setError(null); // Clear banner error
+      } else {
+        // Show other errors (rate limit, forbidden, server errors) as banner
+        setError(err.message);
+        setFieldError(null);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle loading repositories for a specific owner/org with progressive pagination
+  const handleLoadOwnerRepositories = async (owner) => {
+    setLoadingOwnerRepos(true);
+    setError(null);
+    setRepository(null);
+    setBranches([]);
+    setSelectedFile(null);
+    setFilePreview(null);
+    setOwnerRepositories([]);
+    setOwnerRepoMetadata({ hasMore: false, total: 0, isAuthenticated: false });
+    setOwnerName(owner);
+    setRepoSearchTerm('');
+
+    try {
+      // Fetch first page immediately (100 repos in ~1-2 seconds)
+      const firstPage = await githubService.fetchOwnerRepositories(owner, 1, 100);
+
+      // Show first page results immediately
+      setOwnerRepositories(firstPage.repositories);
+      setOwnerRepoMetadata({
+        hasMore: firstPage.hasMore,
+        total: firstPage.count,
+        isAuthenticated: firstPage.isAuthenticated
+      });
+      setLoadingOwnerRepos(false); // Stop loading spinner after first page
+
+      // Check for empty results
+      if (firstPage.repositories.length === 0) {
+        setError(`No public repositories found for "${owner}". Try connecting your GitHub account to access private repositories.`);
+        return;
       }
 
-      setError(errorMessage);
+      // Continue fetching remaining pages in background
+      if (firstPage.hasMore) {
+        setLoadingMoreRepos(true); // Show background loading indicator
+        let currentPage = 2;
+        let hasMorePages = true;
+
+        // Limit unauthenticated users to 3 pages (300 repos) to preserve server quota
+        const maxPages = firstPage.isAuthenticated ? 50 : 3;
+
+        while (hasMorePages && currentPage <= maxPages) {
+          try {
+            const nextPage = await githubService.fetchOwnerRepositories(owner, currentPage, 100);
+
+            // Append new repos to existing list
+            setOwnerRepositories(prev => [...prev, ...nextPage.repositories]);
+            setOwnerRepoMetadata(prev => ({
+              ...prev,
+              hasMore: nextPage.hasMore && currentPage < maxPages, // Update hasMore based on limit
+              total: prev.total + nextPage.count
+            }));
+
+            hasMorePages = nextPage.hasMore;
+            currentPage++;
+          } catch (err) {
+            console.error('[GitHub] Failed to load page', currentPage, ':', err);
+            // Continue with what we have - don't fail the entire operation
+            break;
+          }
+        }
+
+        setLoadingMoreRepos(false); // Background loading complete
+      }
+
+    } catch (err) {
+      console.error('Failed to load repositories:', err);
+
+      // Check if this is a 404 "not found" error
+      const isNotFound = err.message.includes('not found') || err.message.includes('Not Found');
+
+      if (isNotFound) {
+        // Show as inline field error
+        setFieldError(`User or organization "${owner}" not found. Check the spelling or verify it exists.`);
+        setError(null);
+      } else {
+        // Show other errors as banner
+        setError(err.message);
+        setFieldError(null);
+      }
+      setOwnerName(null);
+      setLoadingOwnerRepos(false);
+    }
+  };
+
+  // Handle selecting a repository from the owner's repo list
+  const handleOwnerRepoSelect = async (repo) => {
+    // Clear owner repo list and load the selected repository
+    setOwnerRepositories([]);
+    setOwnerName(null);
+    setInput(`${repo.owner}/${repo.name}`); // Update input to show full repo path
+
+    setLoading(true);
+    setError(null);
+    setRepository(null);
+    setBranches([]);
+    setSelectedFile(null);
+    setFilePreview(null);
+    setExpandedPaths(new Set());
+    setExtensionFilters({ extensions: [], mode: 'include' });
+    setSelectedFiles(new Set());
+
+    try {
+      // Fetch the repository tree and branches in parallel
+      const [repoData, branchesData] = await Promise.all([
+        githubService.fetchTree(repo.owner, repo.name, repo.defaultBranch),
+        githubService.fetchBranches(repo.owner, repo.name)
+      ]);
+
+      setRepository(repoData);
+      setBranches(branchesData);
+
+      // Auto-expand all folders by default for easier navigation
+      setExpandedPaths(getAllFolderPaths(repoData.tree));
+
+      // Add repository to recent (for browsing before loading files)
+      console.log('[GitHubLoadModal] Adding repo to recent (from owner list):', `${repoData.owner}/${repoData.repo}`);
+      const codeFileCount = getAllCodeFiles(repoData.tree).length;
+      githubService.addRecentFile({
+        owner: repoData.owner,
+        repo: repoData.repo,
+        path: '', // Empty path indicates this is a repo-level entry
+        name: `${repoData.owner}/${repoData.repo}`,
+        language: 'repository',
+        isRepo: true,
+        fileCount: codeFileCount,
+        isPrivate: repoData.isPrivate
+      }, user?.id);
+      // Update recent files state immediately
+      setRecentFiles(githubService.getRecentFiles(user?.id));
+    } catch (err) {
+      console.error('Failed to load repository:', err);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -269,24 +461,46 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, onIm
   const handleBranchChange = async (newBranch) => {
     if (!repository || newBranch === repository.branch) return;
 
-    setLoading(true);
+    // Save previous branch for potential rollback
+    const previousBranch = repository.branch;
+
+    // Immediately update the branch name in the UI
+    setRepository({
+      ...repository,
+      branch: newBranch
+    });
+
+    setLoadingBranchSwitch(true);
     setError(null);
     setSelectedFile(null);
     setFilePreview(null);
-    setExtensionFilters([]); // Reset extension filters
+    setExtensionFilters({ extensions: [], mode: 'include' }); // Reset extension filters
     setSelectedFiles(new Set()); // Clear file selection when changing branches
 
     try {
-      // Refetch the tree with the new branch
-      const repo = await githubService.fetchTree(repository.owner, repository.repo, newBranch);
-      setRepository(repo);
+      // Only fetch the tree, not the full repository metadata
+      const treeData = await githubService.fetchTree(repository.owner, repository.repo, newBranch);
+
+      // Update repository state with new tree, preserving existing metadata
+      setRepository(prev => ({
+        ...prev,
+        tree: treeData.tree,
+        truncated: treeData.truncated,
+        totalItems: treeData.totalItems
+      }));
+
       // Auto-expand all folders by default for easier navigation
-      setExpandedPaths(getAllFolderPaths(repo.tree));
+      setExpandedPaths(getAllFolderPaths(treeData.tree));
     } catch (err) {
       console.error('Failed to switch branch:', err);
       setError(err.message);
+      // Revert to previous branch on error
+      setRepository(prev => ({
+        ...prev,
+        branch: previousBranch
+      }));
     } finally {
-      setLoading(false);
+      setLoadingBranchSwitch(false);
     }
   };
 
@@ -364,6 +578,8 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, onIm
       language: filePreview.language,
       isPrivate: repository.isPrivate
     }, user?.id);
+    // Update recent files state immediately
+    setRecentFiles(githubService.getRecentFiles(user?.id));
 
     // Show success toast
     toastSuccess(`Loaded ${filePreview.name} from ${repository.owner}/${repository.repo}`);
@@ -372,11 +588,63 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, onIm
     onClose();
   };
 
+  // Input change handler - clear field error when user types
+  const handleInputChange = (value) => {
+    setInput(value);
+    // Clear field error when user starts typing
+    if (fieldError) {
+      setFieldError(null);
+    }
+  };
+
+  // Input focus handler - show recent repos dropdown (Chrome-style)
+  const handleInputFocus = () => {
+    if (recentFiles.length > 0 && !repository && !loading && !loadingOwnerRepos) {
+      setShowRecentDropdown(true);
+    }
+  };
+
+  // Input blur handler - hide dropdown with delay to allow clicking items
+  const handleInputBlur = (e) => {
+    // Delay to allow clicking dropdown items before it closes
+    setTimeout(() => {
+      setShowRecentDropdown(false);
+    }, 200);
+  };
+
+  // Input clear handler - clear everything (dropdown shows only on focus)
+  const handleInputClear = () => {
+    setOwnerRepositories([]);
+    setOwnerRepoMetadata({ hasMore: false, total: 0, isAuthenticated: false });
+    setOwnerName(null);
+    setRepoCurrentPage(1);
+    setRepository(null);
+    setBranches([]);
+    setSelectedFile(null);
+    setFilePreview(null);
+    setSelectedFiles(new Set());
+    setExpandedPaths(new Set());
+    setFieldError(null); // Clear field error when input is cleared
+    setExtensionFilters({ extensions: [], mode: 'include' });
+    // Don't auto-show dropdown - let focus handler do that
+  };
+
+  // Watch for input changes - if cleared manually (backspace), trigger same clear behavior
+  useEffect(() => {
+    if (input.trim() === '' && repository) {
+      // Input was manually cleared (backspaced to empty), clear everything
+      handleInputClear();
+    }
+  }, [input]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleRecentFileClick = async (recent) => {
     setInput(`${recent.owner}/${recent.repo}`);
     setLoading(true);
     setError(null);
-    setRecentFilesExpanded(false); // Collapse after selection
+    setShowRecentDropdown(false); // Hide dropdown after selection
+    setOwnerRepositories([]); // Clear owner repo list
+    setOwnerRepoMetadata({ hasMore: false, total: 0, isAuthenticated: false });
+    setOwnerName(null);
     setSelectedFiles(new Set()); // Clear file selection when changing repos
 
     try {
@@ -392,6 +660,22 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, onIm
       // Auto-expand all folders by default for easier navigation
       setExpandedPaths(getAllFolderPaths(repo.tree));
 
+      // Update repository in recent (moves to top if already present)
+      console.log('[GitHubLoadModal] Updating repo in recent (from recent click):', `${repo.owner}/${repo.repo}`);
+      const codeFileCount = getAllCodeFiles(repo.tree).length;
+      githubService.addRecentFile({
+        owner: repo.owner,
+        repo: repo.repo,
+        path: '', // Empty path indicates this is a repo-level entry
+        name: `${repo.owner}/${repo.repo}`,
+        language: 'repository',
+        isRepo: true,
+        fileCount: codeFileCount,
+        isPrivate: repo.isPrivate
+      }, user?.id);
+      // Update recent files state immediately
+      setRecentFiles(githubService.getRecentFiles(user?.id));
+
       const file = findFileInTree(repo.tree, recent.path);
       if (file) {
         handleFileSelect(file, repo);
@@ -406,7 +690,7 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, onIm
         err.message.includes('Not Found') ||
         err.message.includes('private')
       )) {
-        errorMessage = 'Repository not found. If this is a private repository, click the "Public only" badge above to connect your GitHub account.';
+        errorMessage = 'Repository not found. If this is a private repository, connect your GitHub account using the banner above to access it.';
       }
 
       setError(errorMessage);
@@ -530,10 +814,14 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, onIm
     let allFiles = getAllCodeFiles(repository.tree);
 
     // Apply extension filter if any extensions are selected
-    if (extensionFilters.length > 0) {
+    if (extensionFilters.extensions.length > 0) {
       allFiles = allFiles.filter(file => {
         const ext = file.name.split('.').pop()?.toLowerCase();
-        return extensionFilters.includes(ext);
+        if (extensionFilters.mode === 'include') {
+          return extensionFilters.extensions.includes(ext);
+        } else {
+          return !extensionFilters.extensions.includes(ext);
+        }
       });
     }
 
@@ -602,15 +890,59 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, onIm
     let files = getAllCodeFiles(repository.tree);
 
     // Apply extension filter if any extensions are selected
-    if (extensionFilters.length > 0) {
+    if (extensionFilters.extensions.length > 0) {
       files = files.filter(file => {
         const ext = file.name.split('.').pop()?.toLowerCase();
-        return extensionFilters.includes(ext);
+        if (extensionFilters.mode === 'include') {
+          return extensionFilters.extensions.includes(ext);
+        } else {
+          return !extensionFilters.extensions.includes(ext);
+        }
       });
     }
 
     return files.length;
   }, [repository?.tree, extensionFilters]);
+
+  // Filter recent repos based on input value (Chrome-style filtering)
+  const filteredRecentRepos = useMemo(() => {
+    if (!input.trim()) return recentFiles;
+
+    const searchLower = input.toLowerCase().trim();
+    return recentFiles.filter(recent => {
+      const fullName = `${recent.owner}/${recent.repo}`.toLowerCase();
+      return fullName.includes(searchLower) ||
+             recent.owner.toLowerCase().includes(searchLower) ||
+             recent.repo.toLowerCase().includes(searchLower);
+    });
+  }, [recentFiles, input]);
+
+  // Filter and paginate owner repositories
+  const { filteredOwnerRepos, paginatedRepos, totalPages, startIndex, endIndex } = useMemo(() => {
+    const filtered = ownerRepositories.filter(repo =>
+      !repoSearchTerm ||
+      repo.name.toLowerCase().includes(repoSearchTerm.toLowerCase()) ||
+      repo.description?.toLowerCase().includes(repoSearchTerm.toLowerCase())
+    );
+
+    const total = Math.ceil(filtered.length / REPOS_PER_PAGE);
+    const start = (repoCurrentPage - 1) * REPOS_PER_PAGE;
+    const end = start + REPOS_PER_PAGE;
+    const paginated = filtered.slice(start, end);
+
+    return {
+      filteredOwnerRepos: filtered,
+      paginatedRepos: paginated,
+      totalPages: total,
+      startIndex: start + 1,
+      endIndex: Math.min(end, filtered.length)
+    };
+  }, [ownerRepositories, repoSearchTerm, repoCurrentPage, REPOS_PER_PAGE]);
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    setRepoCurrentPage(1);
+  }, [repoSearchTerm]);
 
   // Batch import handler
   const handleBatchImport = async (filePaths = null) => {
@@ -867,6 +1199,8 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, onIm
           fileCount: successCount, // Track how many files were imported
           isPrivate: repository.isPrivate
         }, user?.id);
+        // Update recent files state immediately
+        setRecentFiles(githubService.getRecentFiles(user?.id));
 
         // Notify parent to refresh workspace
         if (onFilesLoad) {
@@ -948,33 +1282,6 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, onIm
             <h2 id="github-modal-title" className="text-lg font-semibold text-slate-900 dark:text-white">
               Import from GitHub
             </h2>
-            {/* Private repo access indicator */}
-            {user?.has_github_private_access ? (
-              <span
-                className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
-                title="You can access your private repositories"
-              >
-                <Unlock className="w-3 h-3" />
-                <span className="hidden sm:inline">Private repos</span>
-              </span>
-            ) : (
-              <button
-                type="button"
-                onClick={() => {
-                  // Redirect to GitHub OAuth to enable private repo access
-                  window.location.href = `${import.meta.env.VITE_API_URL}/api/auth/github`;
-                }}
-                className="group inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 hover:bg-purple-100 hover:text-purple-700 dark:hover:bg-purple-900/30 dark:hover:text-purple-400 transition-colors cursor-pointer"
-                title="Click to connect GitHub for private repository access"
-              >
-                <Lock className="w-3 h-3 group-hover:hidden" />
-                <Link2 className="w-3 h-3 hidden group-hover:block" />
-                <span className="hidden sm:inline">
-                  <span className="group-hover:hidden">Public only</span>
-                  <span className="hidden group-hover:inline">Connect GitHub</span>
-                </span>
-              </button>
-            )}
           </div>
           <button
             onClick={onClose}
@@ -985,6 +1292,69 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, onIm
           </button>
         </div>
 
+        {/* GitHub Connection Banner - Only show for users without GitHub OAuth */}
+        {!repository && !user?.has_github_private_access && showGitHubBanner && (
+          <div className="mx-4 mt-3">
+            <div className="relative p-4 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800">
+              {/* Dismiss button - top right corner */}
+              <button
+                type="button"
+                onClick={() => setShowGitHubBanner(false)}
+                className="absolute top-3 right-3 text-blue-400 dark:text-blue-500 hover:text-blue-600 dark:hover:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-md p-1 transition-colors"
+                aria-label="Dismiss banner"
+              >
+                <X className="h-4 w-4" />
+              </button>
+
+              {/* Content - Horizontal layout: Icon + Text (left) | Button (right) */}
+              <div className="flex items-start gap-4 pr-8">
+                {/* Icon */}
+                <div className="flex-shrink-0">
+                  <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
+                  </svg>
+                </div>
+
+                {/* Text content */}
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-1">
+                    Limited access without GitHub connection
+                  </h3>
+                  <p className="text-xs text-blue-800 dark:text-blue-200 leading-relaxed">
+                    Currently viewing public repositories only, limited to 300 per organization. Connect your GitHub account to access private repositories and browse unlimited.
+                  </p>
+                </div>
+
+                {/* CTA Button - Right side, bottom aligned */}
+                <div className="flex-shrink-0 hidden sm:block self-end">
+                  <a
+                    href={`${import.meta.env.VITE_API_URL}/api/auth/github?returnTo=${encodeURIComponent(window.location.pathname)}`}
+                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors shadow-sm whitespace-nowrap"
+                  >
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
+                    </svg>
+                    Connect GitHub
+                  </a>
+                </div>
+              </div>
+
+              {/* Mobile: Button below on small screens */}
+              <div className="sm:hidden mt-3 pl-9">
+                <a
+                  href={`${import.meta.env.VITE_API_URL}/api/auth/github?returnTo=${encodeURIComponent(window.location.pathname)}`}
+                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors shadow-sm"
+                >
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
+                  </svg>
+                  Connect GitHub
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Error Banner - Compact */}
         {error && !repository && !loading && (
           <div className="px-4 pt-3 pb-1">
@@ -992,66 +1362,51 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, onIm
           </div>
         )}
 
-        {/* Input Section - Compact, hide recent files when repository is loaded */}
+        {/* Input Section - Unified smart input */}
         <div className={`${error && !repository && !loading ? 'px-4 pb-4 pt-0' : 'px-4 py-3'} border-b border-slate-200 dark:border-slate-700`}>
-          <SmartInput
-            ref={smartInputRef}
-            value={input}
-            onChange={setInput}
-            onSubmit={handleLoadRepository}
-            loading={loading}
-          />
+          <div className="relative">
+            <SmartInput
+              ref={smartInputRef}
+              value={input}
+              onChange={handleInputChange}
+              onSubmit={handleLoadRepository}
+              onFocus={handleInputFocus}
+              onBlur={handleInputBlur}
+              onClear={handleInputClear}
+              loading={loading || loadingOwnerRepos}
+              fieldError={fieldError}
+            />
 
-          {/* Recent Files - Only show when no repository is loaded */}
-          {!repository && recentFiles.length > 0 && (
-            <div className="mt-3">
-              <button
-                type="button"
-                onClick={() => setRecentFilesExpanded(!recentFilesExpanded)}
-                className="flex items-center gap-1.5 mb-1.5 w-full hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md px-1 py-1 -mx-1 transition-colors"
-                aria-expanded={recentFilesExpanded}
-                aria-controls="recent-files-list"
-              >
-                {recentFilesExpanded ? (
-                  <ChevronDown className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
-                ) : (
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
-                )}
-                <Clock className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
-                <p className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                  Recent Repos ({recentFiles.length})
-                </p>
-              </button>
-              {recentFilesExpanded && (
-                <div id="recent-files-list" className="flex flex-col gap-0.5">
-                  {recentFiles.map((recent, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleRecentFileClick(recent)}
-                      disabled={loading}
-                      className="group flex items-center gap-2 px-2 py-1 text-sm text-left rounded-md hover:enabled:bg-slate-100 dark:hover:enabled:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      {recent.isPrivate ? (
-                        <Lock className="w-3.5 h-3.5 flex-shrink-0 text-slate-500 dark:text-slate-400 group-hover:enabled:text-slate-600 dark:group-hover:enabled:text-slate-300 transition-colors" />
-                      ) : (
-                        <Globe className="w-3.5 h-3.5 flex-shrink-0 text-slate-400 dark:text-slate-500 group-hover:enabled:text-slate-600 dark:group-hover:enabled:text-slate-300 transition-colors" />
-                      )}
-                      <div className="flex-1 min-w-0 flex items-baseline gap-2">
-                        <span className="text-slate-700 dark:text-slate-200 font-medium truncate">
-                          {recent.owner}/{recent.repo}
+            {/* Recent Repos Dropdown - Chrome-style auto-show on focus */}
+            {showRecentDropdown && filteredRecentRepos.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 z-10 max-h-64 overflow-y-auto">
+                {filteredRecentRepos.map((recent, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleRecentFileClick(recent)}
+                    disabled={loading}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors first:rounded-t-lg last:rounded-b-lg"
+                  >
+                    {recent.isPrivate ? (
+                      <Lock className="w-3.5 h-3.5 flex-shrink-0 text-amber-500 dark:text-amber-400" />
+                    ) : (
+                      <Globe className="w-3.5 h-3.5 flex-shrink-0 text-slate-400" />
+                    )}
+                    <div className="flex-1 min-w-0 flex items-baseline gap-2">
+                      <span className="text-sm text-slate-700 dark:text-slate-200 font-medium truncate">
+                        {recent.owner}/{recent.repo}
+                      </span>
+                      {recent.isRepo && recent.fileCount && (
+                        <span className="text-xs text-slate-500 dark:text-slate-400 flex-shrink-0">
+                          ({recent.fileCount} file{recent.fileCount !== 1 ? 's' : ''})
                         </span>
-                        {recent.isRepo && recent.fileCount && (
-                          <span className="text-xs text-slate-500 dark:text-slate-400 flex-shrink-0">
-                            ({recent.fileCount} file{recent.fileCount !== 1 ? 's' : ''})
-                          </span>
-                        )}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Mobile Tabs - Only visible on mobile when repository is loaded */}
@@ -1088,7 +1443,161 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, onIm
 
         {/* Content Area */}
         <div className="flex-1 overflow-hidden flex flex-col">
-          {loading ? (
+          {loadingOwnerRepos ? (
+            <div className="h-full flex items-center justify-center">
+              <div className="text-center">
+                <Loader2 className="w-12 h-12 text-purple-600 dark:text-purple-400 animate-spin mx-auto mb-4" />
+                <p className="text-slate-600 dark:text-slate-400">Loading repositories...</p>
+              </div>
+            </div>
+          ) : ownerRepositories.length > 0 ? (
+            <div className="h-full flex flex-col px-4 py-3">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                      Repositories for <span className="text-purple-600 dark:text-purple-400">{ownerName}</span>
+                    </p>
+                    <a
+                      href={`https://github.com/${ownerName}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 px-2 py-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-xs text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+                      title={`View ${ownerName} on GitHub`}
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">GitHub</span>
+                    </a>
+                    {loadingMoreRepos && (
+                      <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        <span>Loading more...</span>
+                      </div>
+                    )}
+                  </div>
+                  {filteredOwnerRepos.length > 0 && (
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      Showing {startIndex}-{endIndex} of {filteredOwnerRepos.length}{loadingMoreRepos ? '+' : ''}{ownerRepoMetadata.hasMore && !ownerRepoMetadata.isAuthenticated && filteredOwnerRepos.length >= 300 ? '+ (limited to 300 public)' : ''} repositories
+                    </p>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setInput('');
+                    handleInputClear();
+                  }}
+                  className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 flex-shrink-0"
+                >
+                  Clear
+                </button>
+              </div>
+
+              {/* Search repos */}
+              {ownerRepositories.length > 5 && (
+                <div className="relative mb-3">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <input
+                    type="text"
+                    value={repoSearchTerm}
+                    onChange={(e) => setRepoSearchTerm(e.target.value)}
+                    placeholder="Search repositories..."
+                    className="w-full pl-9 pr-4 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-purple-500 dark:focus:border-purple-500 focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 transition-colors"
+                  />
+                </div>
+              )}
+
+              {/* Repository list */}
+              <div className="flex-1 overflow-y-auto space-y-1.5">
+                {paginatedRepos.map((repo) => (
+                  <button
+                    key={repo.fullName}
+                    type="button"
+                    onClick={() => handleOwnerRepoSelect(repo)}
+                    className="w-full flex items-start gap-2 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-purple-300 dark:hover:border-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors text-left"
+                  >
+                    <div className="flex-shrink-0 pt-0.5">
+                      {repo.isPrivate ? (
+                        <Lock className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
+                      ) : (
+                        <Globe className="w-3.5 h-3.5 text-slate-400" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-medium text-slate-900 dark:text-white truncate">
+                          {repo.name}
+                        </span>
+                        {repo.language && (
+                          <span className="text-xs text-slate-500 dark:text-slate-400">
+                            {repo.language}
+                          </span>
+                        )}
+                      </div>
+                      {repo.description && (
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-1">
+                          {repo.description}
+                        </p>
+                      )}
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" />
+                  </button>
+                ))}
+              </div>
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="mt-3 flex items-center justify-between border-t border-slate-200 dark:border-slate-700 pt-3">
+                  <button
+                    type="button"
+                    onClick={() => setRepoCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={repoCurrentPage === 1}
+                    className="px-3 py-1.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Previous
+                  </button>
+
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                      .filter(page => {
+                        // Show first, last, current, and adjacent pages
+                        return page === 1 ||
+                               page === totalPages ||
+                               Math.abs(page - repoCurrentPage) <= 1;
+                      })
+                      .map((page, idx, arr) => (
+                        <div key={page} className="flex items-center">
+                          {/* Add ellipsis for gaps */}
+                          {idx > 0 && page > arr[idx - 1] + 1 && (
+                            <span className="px-2 text-slate-400">...</span>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => setRepoCurrentPage(page)}
+                            className={`min-w-[32px] px-2 py-1 text-sm font-medium rounded transition-colors ${
+                              page === repoCurrentPage
+                                ? 'bg-purple-600 text-white'
+                                : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        </div>
+                      ))}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setRepoCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={repoCurrentPage === totalPages}
+                    className="px-3 py-1.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : loading ? (
             <div className="h-full flex items-center justify-center">
               <div className="text-center">
                 <Loader2 className="w-12 h-12 text-purple-600 dark:text-purple-400 animate-spin mx-auto mb-4" />
@@ -1144,6 +1653,7 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, onIm
                   onCollapseAll={handleCollapseAll}
                   branches={branches}
                   onBranchChange={handleBranchChange}
+                  loadingBranchSwitch={loadingBranchSwitch}
                   multiSelectMode={canUseBatchProcessing}
                   selectedFiles={selectedFiles}
                   onToggleFileSelection={canUseBatchProcessing ? handleToggleFileSelection : undefined}
@@ -1151,7 +1661,7 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, onIm
                   onSelectAll={canUseBatchProcessing ? handleSelectAllFiles : undefined}
                   supportedFileCount={supportedFileCount}
                   maxFiles={maxFiles}
-                  onExtensionFiltersChange={setExtensionFilters}
+                  onExtensionFiltersChange={(extensions, mode) => setExtensionFilters({ extensions, mode })}
                   searchInputRef={fileTreeSearchRef}
                 />
               </div>

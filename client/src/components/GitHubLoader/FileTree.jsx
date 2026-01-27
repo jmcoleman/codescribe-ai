@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { ChevronRight, ChevronDown, Folder, FolderOpen, File, GitBranch, Search, AlertCircle, CheckSquare, X, Filter, Lock, Globe } from 'lucide-react';
+import { ChevronRight, ChevronDown, Folder, FolderOpen, File, GitBranch, Search, AlertCircle, CheckSquare, X, Filter, FilterX, Lock, Globe, Check, ExternalLink, Loader2 } from 'lucide-react';
 import { Listbox } from '@headlessui/react';
 import { isFileSupported, isCodeFile } from '../../services/githubService';
 
@@ -20,6 +20,7 @@ export function FileTree({
   onCollapseAll,
   branches,
   onBranchChange,
+  loadingBranchSwitch = false,
   // Multi-select props
   multiSelectMode = false,
   selectedFiles = new Set(),
@@ -35,6 +36,8 @@ export function FileTree({
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
+  const [filterMode, setFilterMode] = useState('include'); // 'include' or 'exclude'
+  const [filterPanelExpanded, setFilterPanelExpanded] = useState(false);
   const selectedFileRef = useRef(null);
 
   // Reset "show selected only" filter when no files are selected
@@ -136,8 +139,17 @@ export function FileTree({
           // Apply extension filters if any are in the search
           if (extensions.length > 0) {
             const fileExt = item.name.split('.').pop()?.toLowerCase();
-            if (!extensions.includes(fileExt)) {
-              return acc;
+
+            // Include mode: only show files with selected extensions
+            // Exclude mode: hide files with selected extensions
+            if (filterMode === 'include') {
+              if (!extensions.includes(fileExt)) {
+                return acc;
+              }
+            } else { // exclude mode
+              if (extensions.includes(fileExt)) {
+                return acc;
+              }
             }
           }
 
@@ -158,12 +170,20 @@ export function FileTree({
   // Also parse for the extension filters to pass to parent for Select All
   const { extensions: parsedExtensions } = parseSearchTerm(searchTerm);
 
-  // Sync parsed extensions to parent when they change (for Select All to respect)
+  // Sync parsed extensions and mode to parent when they change (for Select All to respect)
   useEffect(() => {
     if (onExtensionFiltersChange) {
-      onExtensionFiltersChange(parsedExtensions);
+      onExtensionFiltersChange(parsedExtensions, filterMode);
     }
-  }, [searchTerm]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [searchTerm, filterMode]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto-expand filter panel when extensions are typed in search or filters are active
+  useEffect(() => {
+    if (parsedExtensions.length > 0) {
+      // Auto-expand when user types extensions like ".js" in search
+      setFilterPanelExpanded(true);
+    }
+  }, [parsedExtensions.length]);
 
   // Compute available extensions from ALL code files (not the filtered tree)
   // so the dropdown always shows all available options
@@ -196,23 +216,41 @@ export function FileTree({
             </h3>
             {/* Private/Public badge */}
             <span
-              className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400 flex-shrink-0"
+              className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400 flex-shrink-0"
               title={repository.isPrivate ? "Private repository" : "Public repository"}
             >
-              {repository.isPrivate ? <Lock className="w-3 h-3" /> : <Globe className="w-3 h-3" />}
+              {repository.isPrivate ? <Lock className="w-3.5 h-3.5" /> : <Globe className="w-3.5 h-3.5" />}
               <span className="hidden sm:inline">{repository.isPrivate ? 'Private' : 'Public'}</span>
             </span>
           </div>
           <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 flex-shrink-0">
+            <a
+              href={`https://github.com/${repository.owner}/${repository.repo}/tree/${repository.branch}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 px-2 py-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+              title={`Open repository in GitHub (${repository.branch} branch)`}
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">GitHub</span>
+            </a>
             {branches && branches.length > 0 ? (
               <Listbox value={repository.branch} onChange={onBranchChange}>
                 <div className="relative">
-                  <Listbox.Button className="flex items-center gap-1 px-1.5 py-0.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                    <GitBranch className="w-3 h-3" />
-                    <span className="text-xs">{repository.branch}</span>
-                    <ChevronDown className="w-2.5 h-2.5" />
+                  <Listbox.Button
+                    className="flex items-center gap-1 px-2 py-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors max-w-[200px]"
+                    title={repository.branch}
+                    disabled={loadingBranchSwitch}
+                  >
+                    {loadingBranchSwitch ? (
+                      <Loader2 className="w-3.5 h-3.5 flex-shrink-0 animate-spin text-purple-600 dark:text-purple-400" />
+                    ) : (
+                      <GitBranch className="w-3.5 h-3.5 flex-shrink-0" />
+                    )}
+                    <span className="text-xs truncate">{repository.branch}</span>
+                    <ChevronDown className="w-3.5 h-3.5 flex-shrink-0" />
                   </Listbox.Button>
-                  <Listbox.Options className="absolute right-0 mt-1 w-48 max-h-60 overflow-auto rounded-lg bg-white dark:bg-slate-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10 py-1">
+                  <Listbox.Options className="absolute right-0 mt-1 w-64 max-h-60 overflow-auto rounded-lg bg-white dark:bg-slate-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10 py-1">
                     {branches.map((branch) => (
                       <Listbox.Option
                         key={branch.name}
@@ -224,6 +262,7 @@ export function FileTree({
                               : 'text-slate-900 dark:text-slate-100'
                           }`
                         }
+                        title={branch.name}
                       >
                         {({ selected }) => (
                           <>
@@ -243,42 +282,98 @@ export function FileTree({
                 </div>
               </Listbox>
             ) : (
-              <div className="flex items-center gap-1">
-                <GitBranch className="w-3 h-3" />
-                <span className="text-xs">{repository.branch}</span>
+              <div className="flex items-center gap-1 px-2 py-1" title={repository.branch}>
+                <GitBranch className="w-3.5 h-3.5" />
+                <span className="text-xs truncate max-w-[200px]">{repository.branch}</span>
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Search - Compact */}
+      {/* Search */}
       <div className="px-3 py-2 border-b border-slate-200 dark:border-slate-700">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             ref={searchInputRef}
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Filter files or .ext..."
-            className="w-full pl-8 pr-8 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-purple-500 dark:focus:border-purple-500 focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 transition-colors"
+            className="w-full pl-9 pr-16 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-purple-500 dark:focus:border-purple-500 focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 transition-colors"
           />
+          {/* Filter icon - shows active state with color and icon variant */}
+          {availableExtensions.length > 1 && (
+            <button
+              type="button"
+              onClick={() => setFilterPanelExpanded(!filterPanelExpanded)}
+              className={`absolute ${searchTerm ? 'right-9' : 'right-2'} top-1/2 -translate-y-1/2 p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors ${
+                parsedExtensions.length > 0
+                  ? 'text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300'
+                  : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+              }`}
+              aria-label={filterPanelExpanded ? 'Hide filters' : 'Show filters'}
+              title={
+                parsedExtensions.length > 0
+                  ? `${filterMode === 'exclude' ? 'Hiding' : 'Showing'} ${parsedExtensions.length} extension${parsedExtensions.length !== 1 ? 's' : ''}`
+                  : 'Filter by extension'
+              }
+            >
+              {parsedExtensions.length > 0 && filterMode === 'exclude' ? (
+                <FilterX className="w-3.5 h-3.5" />
+              ) : (
+                <Filter className="w-3.5 h-3.5" />
+              )}
+            </button>
+          )}
           {searchTerm && (
             <button
               type="button"
               onClick={() => setSearchTerm('')}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
               aria-label="Clear search"
             >
-              <X className="w-3 h-3" />
+              <X className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
 
-        {/* Extension Pills - Clickable to add to search */}
-        {availableExtensions.length > 1 && (
-          <div className="flex flex-wrap gap-1 mt-2">
+        {/* Extension Filter Panel - Collapsible */}
+        {availableExtensions.length > 1 && filterPanelExpanded && (
+          <div className="mt-2">
+            {/* Filter Mode Toggle */}
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xs text-slate-600 dark:text-slate-400">Filter:</span>
+              <div className="inline-flex rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setFilterMode('include')}
+                  className={`px-2 py-1 text-xs font-medium rounded-l-lg transition-colors ${
+                    filterMode === 'include'
+                      ? 'bg-slate-700 dark:bg-slate-300 text-white dark:text-slate-900'
+                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'
+                  }`}
+                  title="Show only files with selected extensions"
+                >
+                  Show
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFilterMode('exclude')}
+                  className={`px-2 py-1 text-xs font-medium rounded-r-lg transition-colors ${
+                    filterMode === 'exclude'
+                      ? 'bg-slate-700 dark:bg-slate-300 text-white dark:text-slate-900'
+                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'
+                  }`}
+                  title="Hide files with selected extensions"
+                >
+                  Hide
+                </button>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-1">
             {availableExtensions.map((ext) => {
               // Check if this extension is currently in the search term
               const isActive = searchTerm.split(',').map(s => s.trim().toLowerCase()).includes(`.${ext}`);
@@ -305,19 +400,55 @@ export function FileTree({
                       setSearchTerm(newTerm);
                     }
                   }}
-                  className={`px-1.5 py-0.5 text-[10px] font-medium rounded transition-colors ${
+                  className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
                     isActive
-                      ? 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-700'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:border-purple-300 dark:hover:border-purple-600 hover:text-purple-600 dark:hover:text-purple-400'
+                      ? 'bg-slate-700 dark:bg-slate-300 text-white dark:text-slate-900 border border-slate-700 dark:border-slate-300'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:text-slate-700 dark:hover:text-slate-300'
                   }`}
                 >
                   .{ext}
                 </button>
               );
             })}
+            </div>
           </div>
         )}
       </div>
+
+      {/* Tree Controls Toolbar - Always visible */}
+      {(onExpandAll || onCollapseAll) && (
+        <div className="px-3 py-1.5 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
+              Tree
+            </span>
+            <div className="flex items-center gap-1">
+              {onExpandAll && (
+                <button
+                  type="button"
+                  onClick={onExpandAll}
+                  className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors"
+                  title="Expand all folders"
+                >
+                  <FolderOpen className="w-3.5 h-3.5" />
+                  <span>Expand All</span>
+                </button>
+              )}
+              {onCollapseAll && (
+                <button
+                  type="button"
+                  onClick={onCollapseAll}
+                  className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors"
+                  title="Collapse all folders"
+                >
+                  <Folder className="w-3.5 h-3.5" />
+                  <span>Collapse All</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Selection Status Bar (multi-select mode only) */}
       {multiSelectMode && (
@@ -339,7 +470,7 @@ export function FileTree({
                   }`}
                   title={showSelectedOnly ? 'Show all files' : 'Show only selected files'}
                 >
-                  <Filter className="w-3 h-3" />
+                  <Filter className="w-3.5 h-3.5" />
                   <span>{showSelectedOnly ? 'All' : 'Selected'}</span>
                 </button>
               )}
@@ -350,7 +481,7 @@ export function FileTree({
                   className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded transition-colors"
                   title={`Select all ${supportedFileCount} code files${maxFiles > 0 && supportedFileCount > maxFiles ? ` (limited to ${maxFiles})` : ''}`}
                 >
-                  <CheckSquare className="w-3 h-3" />
+                  <CheckSquare className="w-3.5 h-3.5" />
                   <span>All ({Math.min(supportedFileCount, maxFiles || supportedFileCount)})</span>
                 </button>
               )}
@@ -364,31 +495,8 @@ export function FileTree({
                   className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded transition-colors"
                   title="Clear selection"
                 >
-                  <X className="w-3 h-3" />
+                  <X className="w-3.5 h-3.5" />
                   <span>Clear</span>
-                </button>
-              )}
-              {/* Expand/Collapse buttons */}
-              {onExpandAll && (
-                <button
-                  type="button"
-                  onClick={onExpandAll}
-                  className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded transition-colors"
-                  title="Expand all folders"
-                >
-                  <FolderOpen className="w-3 h-3" />
-                  <span>Expand</span>
-                </button>
-              )}
-              {onCollapseAll && (
-                <button
-                  type="button"
-                  onClick={onCollapseAll}
-                  className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded transition-colors"
-                  title="Collapse all folders"
-                >
-                  <Folder className="w-3 h-3" />
-                  <span>Collapse</span>
                 </button>
               )}
             </div>
@@ -397,7 +505,7 @@ export function FileTree({
       )}
 
       {/* Tree - Maximized for height */}
-      <div className="flex-1 overflow-y-auto px-3 py-2">
+      <div className={`flex-1 overflow-y-auto px-3 py-2 transition-opacity duration-200 ${loadingBranchSwitch ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
         {filteredTree.length === 0 ? (
           <div className="text-center py-8 text-slate-500 dark:text-slate-400 text-sm">
             {showSelectedOnly && searchTerm

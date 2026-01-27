@@ -382,7 +382,7 @@ class InviteCode {
 
     return {
       ...result.rows[0],
-      byCampaign: byTrialProgram.rows
+      byCampaign: byCampaign.rows
     };
   }
 

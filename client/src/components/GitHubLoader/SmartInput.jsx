@@ -4,11 +4,11 @@
  */
 
 import { useState, useRef, useImperativeHandle, forwardRef } from 'react';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle, X } from 'lucide-react';
 import { Button } from '../Button';
 import { validateGitHubUrl } from '../../services/githubService';
 
-export const SmartInput = forwardRef(function SmartInput({ value, onChange, onSubmit, loading }, ref) {
+export const SmartInput = forwardRef(function SmartInput({ value, onChange, onSubmit, loading, onFocus, onBlur, onClear, fieldError }, ref) {
   const [touched, setTouched] = useState(false);
   const inputRef = useRef(null);
 
@@ -20,11 +20,12 @@ export const SmartInput = forwardRef(function SmartInput({ value, onChange, onSu
   }));
 
   const isValid = value.trim() === '' || validateGitHubUrl(value);
-  const showError = touched && !isValid && value.trim() !== '';
+  const showValidationError = touched && !isValid && value.trim() !== '';
+  const showError = showValidationError || !!fieldError;
 
   const handleChange = (newValue) => {
     onChange(newValue);
-    // Clear touched state when user starts typing (encouraging feedback)
+    // Clear touched state and field error when user starts typing
     if (touched) {
       setTouched(false);
     }
@@ -51,7 +52,7 @@ export const SmartInput = forwardRef(function SmartInput({ value, onChange, onSu
   return (
     <div>
       <label htmlFor="github-url-input" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-        GitHub URL or repository
+        GitHub username, organization, or repository
       </label>
       <form onSubmit={handleSubmit} className="flex gap-2">
         <div className="flex-1 relative">
@@ -61,11 +62,15 @@ export const SmartInput = forwardRef(function SmartInput({ value, onChange, onSu
             type="text"
             value={value}
             onChange={(e) => handleChange(e.target.value)}
-            onBlur={() => setTouched(true)}
+            onFocus={onFocus}
+            onBlur={(e) => {
+              setTouched(true);
+              if (onBlur) onBlur(e);
+            }}
             onKeyDown={handleKeyDown}
-            placeholder="owner/repo/file.js or paste any GitHub URL (file URLs auto-select)"
+            placeholder="owner, owner/repo, or paste any GitHub URL"
             autoComplete="off"
-            className={`w-full px-4 py-2.5 rounded-lg border ${
+            className={`w-full pl-4 pr-10 py-2.5 rounded-lg border ${
               showError
                 ? 'border-red-300 dark:border-red-700 focus:border-red-500 dark:focus:border-red-500 focus:ring-red-500'
                 : 'border-slate-300 dark:border-slate-600 focus:border-purple-500 dark:focus:border-purple-500 focus:ring-purple-500'
@@ -78,11 +83,25 @@ export const SmartInput = forwardRef(function SmartInput({ value, onChange, onSu
             aria-invalid={showError}
             aria-describedby={showError ? 'github-url-error' : undefined}
           />
-          {loading && (
+          {loading ? (
             <div className="absolute right-3 top-1/2 -translate-y-1/2">
               <Loader2 className="w-5 h-5 text-purple-600 dark:text-purple-400 animate-spin" />
             </div>
-          )}
+          ) : value.trim() ? (
+            <button
+              type="button"
+              onClick={() => {
+                onChange('');
+                if (onClear) onClear();
+                // Keep input focused after clearing
+                inputRef.current?.focus();
+              }}
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+              aria-label="Clear input"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          ) : null}
         </div>
         <Button
           type="submit"
@@ -94,16 +113,25 @@ export const SmartInput = forwardRef(function SmartInput({ value, onChange, onSu
         </Button>
       </form>
 
-      {/* Client Validation Error - Field-level pattern (simple text, no banner) */}
+      {/* Field-level errors (validation or server 404) */}
       {showError && (
         <div id="github-url-error" className="mt-1.5 text-sm text-red-600 dark:text-red-400" role="alert">
-          <p className="font-medium">Invalid GitHub URL</p>
-          <p className="mt-1">Please use one of these formats:</p>
-          <ul className="mt-1 space-y-0.5 text-xs font-mono ml-2">
-            <li>• owner/repo</li>
-            <li>• github.com/owner/repo/blob/main/file.js</li>
-            <li>• https://github.com/owner/repo</li>
-          </ul>
+          {fieldError ? (
+            // Server-side field error (e.g., 404 not found)
+            <p className="font-medium">{fieldError}</p>
+          ) : (
+            // Client-side validation error
+            <>
+              <p className="font-medium">Invalid format</p>
+              <p className="mt-1">Please use one of these formats:</p>
+              <ul className="mt-1 space-y-0.5 text-xs font-mono ml-2">
+                <li>• owner (e.g., facebook)</li>
+                <li>• owner/repo</li>
+                <li>• github.com/owner/repo</li>
+                <li>• https://github.com/owner/repo/blob/main/file.js</li>
+              </ul>
+            </>
+          )}
         </div>
       )}
     </div>

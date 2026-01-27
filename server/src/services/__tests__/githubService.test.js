@@ -260,6 +260,350 @@ describe('GitHubService', () => {
     });
   });
 
+  describe('fetchOwnerRepositories - Progressive Loading', () => {
+    it('should fetch first page of repositories for authenticated user', async () => {
+      const userToken = 'gho_user_token';
+      const mockAuthUser = {
+        data: {
+          login: 'testuser'
+        }
+      };
+      const mockRepos = {
+        data: Array(100).fill(null).map((_, i) => ({
+          name: `repo-${i}`,
+          full_name: `testuser/repo-${i}`,
+          owner: { login: 'testuser' },
+          description: `Test repo ${i}`,
+          private: i % 2 === 0,
+          default_branch: 'main',
+          updated_at: '2025-01-26T00:00:00Z',
+          language: 'JavaScript',
+          stargazers_count: i * 10,
+          html_url: `https://github.com/testuser/repo-${i}`
+        }))
+      };
+
+      const mockClient = {
+        rest: {
+          users: {
+            getAuthenticated: jest.fn().mockResolvedValue(mockAuthUser),
+            getByUsername: jest.fn().mockResolvedValue({
+              data: { type: 'User' }
+            })
+          },
+          repos: {
+            listForAuthenticatedUser: jest.fn().mockResolvedValue(mockRepos)
+          }
+        }
+      };
+
+      githubService.getClientForUser = jest.fn().mockReturnValue(mockClient);
+
+      const result = await githubService.fetchOwnerRepositories('testuser', userToken, 1, 100);
+
+      expect(result.repositories).toHaveLength(100);
+      expect(result.page).toBe(1);
+      expect(result.perPage).toBe(100);
+      expect(result.hasMore).toBe(true);
+      expect(result.isAuthenticated).toBe(true);
+      expect(mockClient.rest.repos.listForAuthenticatedUser).toHaveBeenCalledWith({
+        per_page: 100,
+        page: 1,
+        sort: 'full_name',
+        direction: 'asc',
+        affiliation: 'owner'
+      });
+    });
+
+    it('should fetch organization repos for authenticated user', async () => {
+      const userToken = 'gho_user_token';
+      const mockAuthUser = {
+        data: {
+          login: 'testuser'
+        }
+      };
+      const mockOwnerData = {
+        data: {
+          type: 'Organization'
+        }
+      };
+      const mockRepos = {
+        data: Array(100).fill(null).map((_, i) => ({
+          name: `org-repo-${i}`,
+          full_name: `google/org-repo-${i}`,
+          owner: { login: 'google' },
+          description: `Org repo ${i}`,
+          private: i % 3 === 0,
+          default_branch: 'main',
+          updated_at: '2025-01-26T00:00:00Z',
+          language: 'TypeScript',
+          stargazers_count: i * 100,
+          html_url: `https://github.com/google/org-repo-${i}`
+        }))
+      };
+
+      const mockClient = {
+        rest: {
+          users: {
+            getAuthenticated: jest.fn().mockResolvedValue(mockAuthUser),
+            getByUsername: jest.fn().mockResolvedValue(mockOwnerData)
+          },
+          repos: {
+            listForOrg: jest.fn().mockResolvedValue(mockRepos)
+          }
+        }
+      };
+
+      githubService.getClientForUser = jest.fn().mockReturnValue(mockClient);
+
+      const result = await githubService.fetchOwnerRepositories('google', userToken, 1, 100);
+
+      expect(result.repositories).toHaveLength(100);
+      expect(result.isAuthenticated).toBe(true);
+      expect(mockClient.rest.repos.listForOrg).toHaveBeenCalledWith({
+        org: 'google',
+        per_page: 100,
+        page: 1,
+        sort: 'full_name',
+        direction: 'asc',
+        type: 'all'
+      });
+    });
+
+    it('should fetch public repos for unauthenticated user', async () => {
+      const mockOwnerData = {
+        data: {
+          type: 'User'
+        }
+      };
+      const mockRepos = {
+        data: Array(100).fill(null).map((_, i) => ({
+          name: `public-repo-${i}`,
+          full_name: `facebook/public-repo-${i}`,
+          owner: { login: 'facebook' },
+          description: `Public repo ${i}`,
+          private: false,
+          default_branch: 'main',
+          updated_at: '2025-01-26T00:00:00Z',
+          language: 'Python',
+          stargazers_count: i * 50,
+          html_url: `https://github.com/facebook/public-repo-${i}`
+        }))
+      };
+
+      const mockClient = {
+        rest: {
+          users: {
+            getByUsername: jest.fn().mockResolvedValue(mockOwnerData)
+          },
+          repos: {
+            listForUser: jest.fn().mockResolvedValue(mockRepos)
+          }
+        }
+      };
+
+      githubService.getClientForUser = jest.fn().mockReturnValue(mockClient);
+
+      const result = await githubService.fetchOwnerRepositories('facebook', null, 1, 100);
+
+      expect(result.repositories).toHaveLength(100);
+      expect(result.isAuthenticated).toBe(false);
+      expect(mockClient.rest.repos.listForUser).toHaveBeenCalledWith({
+        username: 'facebook',
+        per_page: 100,
+        page: 1,
+        sort: 'full_name',
+        direction: 'asc',
+        type: 'all'
+      });
+    });
+
+    it('should handle pagination parameters correctly', async () => {
+      const mockOwnerData = {
+        data: {
+          type: 'User'
+        }
+      };
+      const mockRepos = {
+        data: Array(50).fill(null).map((_, i) => ({
+          name: `repo-${i}`,
+          full_name: `owner/repo-${i}`,
+          owner: { login: 'owner' },
+          description: '',
+          private: false,
+          default_branch: 'main',
+          updated_at: '2025-01-26T00:00:00Z',
+          language: 'JavaScript',
+          stargazers_count: 0,
+          html_url: `https://github.com/owner/repo-${i}`
+        }))
+      };
+
+      const mockClient = {
+        rest: {
+          users: {
+            getByUsername: jest.fn().mockResolvedValue(mockOwnerData)
+          },
+          repos: {
+            listForUser: jest.fn().mockResolvedValue(mockRepos)
+          }
+        }
+      };
+
+      githubService.getClientForUser = jest.fn().mockReturnValue(mockClient);
+
+      const result = await githubService.fetchOwnerRepositories('owner', null, 2, 50);
+
+      expect(result.page).toBe(2);
+      expect(result.perPage).toBe(50);
+      expect(result.count).toBe(50);
+      expect(result.hasMore).toBe(true); // Full page = more might exist
+      expect(mockClient.rest.repos.listForUser).toHaveBeenCalledWith({
+        username: 'owner',
+        per_page: 50,
+        page: 2,
+        sort: 'full_name',
+        direction: 'asc',
+        type: 'all'
+      });
+    });
+
+    it('should set hasMore to false when fewer results than perPage', async () => {
+      const mockOwnerData = {
+        data: {
+          type: 'User'
+        }
+      };
+      const mockRepos = {
+        data: Array(25).fill(null).map((_, i) => ({
+          name: `repo-${i}`,
+          full_name: `owner/repo-${i}`,
+          owner: { login: 'owner' },
+          description: '',
+          private: false,
+          default_branch: 'main',
+          updated_at: '2025-01-26T00:00:00Z',
+          language: 'JavaScript',
+          stargazers_count: 0,
+          html_url: `https://github.com/owner/repo-${i}`
+        }))
+      };
+
+      const mockClient = {
+        rest: {
+          users: {
+            getByUsername: jest.fn().mockResolvedValue(mockOwnerData)
+          },
+          repos: {
+            listForUser: jest.fn().mockResolvedValue(mockRepos)
+          }
+        }
+      };
+
+      githubService.getClientForUser = jest.fn().mockReturnValue(mockClient);
+
+      const result = await githubService.fetchOwnerRepositories('owner', null, 3, 100);
+
+      expect(result.count).toBe(25);
+      expect(result.hasMore).toBe(false); // Less than full page = no more
+    });
+
+    it('should validate and clamp pagination parameters', async () => {
+      const mockOwnerData = {
+        data: {
+          type: 'User'
+        }
+      };
+      const mockRepos = {
+        data: []
+      };
+
+      const mockClient = {
+        rest: {
+          users: {
+            getByUsername: jest.fn().mockResolvedValue(mockOwnerData)
+          },
+          repos: {
+            listForUser: jest.fn().mockResolvedValue(mockRepos)
+          }
+        }
+      };
+
+      githubService.getClientForUser = jest.fn().mockReturnValue(mockClient);
+
+      // Test invalid page (should default to 1)
+      const result1 = await githubService.fetchOwnerRepositories('owner', null, 0, 100);
+      expect(result1.page).toBe(1);
+
+      // Test perPage > 100 (should clamp to 100)
+      const result2 = await githubService.fetchOwnerRepositories('owner', null, 1, 200);
+      expect(result2.perPage).toBe(100);
+
+      // Test negative perPage (should default to 1)
+      const result3 = await githubService.fetchOwnerRepositories('owner', null, 1, -10);
+      expect(result3.perPage).toBe(1);
+    });
+
+    it('should include private repos in response for authenticated users', async () => {
+      const userToken = 'gho_user_token';
+      const mockAuthUser = {
+        data: {
+          login: 'testuser'
+        }
+      };
+      const mockRepos = {
+        data: [
+          {
+            name: 'public-repo',
+            full_name: 'testuser/public-repo',
+            owner: { login: 'testuser' },
+            description: 'Public',
+            private: false,
+            default_branch: 'main',
+            updated_at: '2025-01-26T00:00:00Z',
+            language: 'JavaScript',
+            stargazers_count: 10,
+            html_url: 'https://github.com/testuser/public-repo'
+          },
+          {
+            name: 'private-repo',
+            full_name: 'testuser/private-repo',
+            owner: { login: 'testuser' },
+            description: 'Private',
+            private: true,
+            default_branch: 'main',
+            updated_at: '2025-01-26T00:00:00Z',
+            language: 'TypeScript',
+            stargazers_count: 5,
+            html_url: 'https://github.com/testuser/private-repo'
+          }
+        ]
+      };
+
+      const mockClient = {
+        rest: {
+          users: {
+            getAuthenticated: jest.fn().mockResolvedValue(mockAuthUser),
+            getByUsername: jest.fn().mockResolvedValue({
+              data: { type: 'User' }
+            })
+          },
+          repos: {
+            listForAuthenticatedUser: jest.fn().mockResolvedValue(mockRepos)
+          }
+        }
+      };
+
+      githubService.getClientForUser = jest.fn().mockReturnValue(mockClient);
+
+      const result = await githubService.fetchOwnerRepositories('testuser', userToken, 1, 100);
+
+      expect(result.repositories).toHaveLength(2);
+      expect(result.repositories[0].isPrivate).toBe(false);
+      expect(result.repositories[1].isPrivate).toBe(true);
+    });
+  });
+
   describe('Error handling', () => {
     it('should normalize 404 errors for private repos', async () => {
       const mockClient = {

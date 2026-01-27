@@ -2,14 +2,14 @@
 
 **Project:** CodeScribe AI - Intelligent Code Documentation Generator
 **Testing Status:** ✅ Comprehensive Coverage Across 3 Frameworks
-**Last Updated:** January 25, 2026 (v3.5.0)
+**Last Updated:** January 26, 2026 (v3.5.1)
 
 ---
 
 ## 📊 Quick Stats
 
-- **Total Tests:** 4,186 tests (4,186 passing, 106 skipped, 0 failures)
-  - **Frontend:** 2,106 tests | 73 skipped (Vitest + React Testing Library)
+- **Total Tests:** 4,332 tests (4,223 passing, 109 skipped, 0 failures)
+  - **Frontend:** 2,103 tests | 76 skipped (Vitest + React Testing Library)
     - Component Tests: All components with dark mode variants tested (including AppearanceModal, SamplesModal)
     - GitHub Loader: FileTree, TreeNode, GitHubLoadModal integration tests
     - Dark Mode Tests: 106+ tests (ThemeContext with 3-state cycling, ThemeToggle, all components, integration)
@@ -19,8 +19,8 @@
     - Batch Generation: 35 tests (useBatchGeneration hook - buildAttribution, generateBatchSummaryDocument)
     - Settings: AccountTab (36 tests - profile, password, data export, GitHub status fetch)
     - Analytics: EventsTable multi-select filter, Select Portal tests
-    - **Pass Rate:** 100% (2,106 passing, 73 skipped, 0 failures)
-  - **Backend:** 2,080 tests | 33 skipped (Jest + Supertest)
+    - **Pass Rate:** 100% (2,103 passing, 76 skipped, 0 failures)
+  - **Backend:** 2,120 tests | 33 skipped (Jest + Supertest)
     - Unit Tests: Services, models, utilities, middleware (emailService, requireTermsAcceptance, tierGate, rateLimitBypass, githubService)
     - LLM Provider Tests: 69 tests (llmService, config, utils, adapters for Claude/OpenAI/Gemini)
     - Integration Tests: Prompt quality, API contracts, authentication, tier system, contact sales/support, legal endpoints
@@ -32,17 +32,17 @@
     - Private Repo Tests: 55 tests (encryption 14, User model 15, GitHubService 13, API routes 13)
     - Trial Program Tests: Trial Program model, admin routes, config validation
     - Analytics Tests: getConversionFunnel with 6 query mocks, getBusinessConversionFunnel, multi-select eventNames filter combinations
-    - **Pass Rate:** 100% (2,080 passing, 33 skipped, 0 failures)
+    - **Pass Rate:** 100% (2,120 passing, 33 skipped, 0 failures)
   - **Database:** 37 migration tests (Docker sandbox + Neon dev validation)
     - Migration-010: 14 tests (terms/privacy acceptance tracking)
     - Migration-011: 10 tests (analytics_enabled column + index)
     - Migration-017: 13 tests (total_generations column with triggers)
   - **E2E:** 10 tests (Playwright - file upload flow)
-- **Pass Rate:** 100% (4,186/4,186 total tests passing, 106 skipped, 0 failures) ✅
+- **Pass Rate:** 97.5% (4,223/4,332 total tests passing, 109 skipped, 0 failures) ✅
 - **Backend Coverage:** 82.38% statements, 70.11% branches, 82.54% lines, 85%+ functions (CI passing)
 - **Test Execution Time:** Frontend ~20.2s, Backend ~12.2s, Database ~0.3s, E2E ~45s
 - **Coverage Target:** 90% ✅ EXCEEDED (96.71% middleware statements, 93.49% middleware branches)
-- **Recent Updates:** Trial Programs Refactoring & Enhanced Eligibility System (January 25, 2026 - v3.5.0)
+- **Recent Updates:** GitHub Private Repos & Progressive Loading (January 26, 2026 - v3.5.1)
 
 ---
 

@@ -1139,6 +1139,245 @@ router.post('/github/branches', optionalAuth, apiLimiter, async (req, res) => {
 });
 
 /**
+ * Fetch organizations for authenticated user
+ * GET /api/github/user/orgs
+ * Returns: List of organizations the user belongs to
+ *
+ * Works with GitHub OAuth users. Returns empty array for email/password users.
+ */
+router.get('/github/user/orgs', requireAuth, apiLimiter, async (req, res) => {
+  try {
+    // Get user's GitHub token (optional - if not present, return empty array)
+    const userGitHubToken = await User.getGitHubToken(req.user.id);
+
+    if (!userGitHubToken) {
+      // User doesn't have GitHub OAuth - return empty array
+      // (Can't determine user's orgs without their GitHub token)
+      return res.json({
+        success: true,
+        organizations: [],
+        requiresGitHub: true // Flag to indicate GitHub OAuth needed for full experience
+      });
+    }
+
+    const organizations = await githubService.fetchUserOrganizations(userGitHubToken);
+
+    res.json({
+      success: true,
+      organizations
+    });
+  } catch (error) {
+    console.error('[GitHub] Fetch organizations error:', error);
+
+    if (error.message.includes('authentication required')) {
+      return res.status(401).json({
+        error: 'Authentication required',
+        message: error.message
+      });
+    }
+
+    if (error.message.includes('rate limit')) {
+      return res.status(429).json({
+        error: 'Rate limit exceeded',
+        message: error.message
+      });
+    }
+
+    res.status(500).json({
+      error: 'Failed to fetch organizations',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * Fetch repositories for authenticated user
+ * GET /api/github/user/repos
+ * Returns: List of user's personal repositories (not org repos)
+ *
+ * Works with GitHub OAuth users. Returns empty array for email/password users.
+ */
+router.get('/github/user/repos', requireAuth, apiLimiter, async (req, res) => {
+  try {
+    // Get user's GitHub token (optional - if not present, return empty array)
+    const userGitHubToken = await User.getGitHubToken(req.user.id);
+
+    if (!userGitHubToken) {
+      // User doesn't have GitHub OAuth - return empty array
+      // (Can't determine user's repos without their GitHub token)
+      return res.json({
+        success: true,
+        repositories: [],
+        requiresGitHub: true // Flag to indicate GitHub OAuth needed for full experience
+      });
+    }
+
+    const repositories = await githubService.fetchUserRepositories(userGitHubToken);
+
+    res.json({
+      success: true,
+      repositories
+    });
+  } catch (error) {
+    console.error('[GitHub] Fetch user repositories error:', error);
+
+    if (error.message.includes('authentication required')) {
+      return res.status(401).json({
+        error: 'Authentication required',
+        message: error.message
+      });
+    }
+
+    if (error.message.includes('rate limit')) {
+      return res.status(429).json({
+        error: 'Rate limit exceeded',
+        message: error.message
+      });
+    }
+
+    res.status(500).json({
+      error: 'Failed to fetch repositories',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * Fetch repositories for any owner (user or organization) with pagination
+ * GET /api/github/owners/:owner/repos?page=1&per_page=100
+ * Params: owner - GitHub username or organization name
+ * Query: page (default: 1), per_page (default: 100, max: 100)
+ * Returns: Paginated list of repositories for the specified owner
+ *
+ * Works with or without GitHub OAuth. Without OAuth, shows only public repos.
+ * Automatically detects whether owner is a user or organization.
+ *
+ * Performance: Returns single page immediately (~1-2s) instead of fetching all repos.
+ * Recommended usage: Fetch page 1 first, then continue fetching subsequent pages in background.
+ */
+router.get('/github/owners/:owner/repos', optionalAuth, apiLimiter, async (req, res) => {
+  try {
+    const { owner } = req.params;
+    const { page = 1, per_page = 100 } = req.query;
+
+    // Validation
+    if (!owner) {
+      return res.status(400).json({
+        error: 'Invalid request',
+        message: 'Owner name is required'
+      });
+    }
+
+    // Get user's GitHub token (optional - falls back to server token for public repos)
+    const userGitHubToken = req.user?.id ? await User.getGitHubToken(req.user.id) : null;
+
+    const result = await githubService.fetchOwnerRepositories(owner, userGitHubToken, page, per_page);
+
+    res.json({
+      success: true,
+      owner,
+      repositories: result.repositories,
+      page: result.page,
+      perPage: result.perPage,
+      count: result.count,
+      hasMore: result.hasMore,
+      isAuthenticated: result.isAuthenticated,
+      usingServerToken: !userGitHubToken // Indicate if using server token (public repos only)
+    });
+  } catch (error) {
+    console.error('[GitHub] Fetch owner repositories error:', error);
+
+    if (error.message.includes('authentication required')) {
+      return res.status(401).json({
+        error: 'Authentication required',
+        message: error.message
+      });
+    }
+
+    if (error.message.includes('not found')) {
+      return res.status(404).json({
+        error: 'Not found',
+        message: `User or organization "${req.params.owner}" not found on GitHub. Please check the name and try again.`
+      });
+    }
+
+    if (error.message.includes('rate limit')) {
+      return res.status(429).json({
+        error: 'Rate limit exceeded',
+        message: error.message
+      });
+    }
+
+    res.status(500).json({
+      error: 'Failed to fetch repositories',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * Fetch repositories for a specific organization
+ * GET /api/github/orgs/:org/repos
+ * Params: org - Organization login name
+ * Returns: List of organization repositories the user has access to
+ *
+ * Works with or without GitHub OAuth. Without OAuth, shows only public repos.
+ */
+router.get('/github/orgs/:org/repos', requireAuth, apiLimiter, async (req, res) => {
+  try {
+    const { org } = req.params;
+
+    // Validation
+    if (!org) {
+      return res.status(400).json({
+        error: 'Invalid request',
+        message: 'Organization name is required'
+      });
+    }
+
+    // Get user's GitHub token (optional - falls back to server token for public repos)
+    const userGitHubToken = await User.getGitHubToken(req.user.id);
+
+    const repositories = await githubService.fetchOrganizationRepositories(org, userGitHubToken);
+
+    res.json({
+      success: true,
+      organization: org,
+      repositories,
+      usingServerToken: !userGitHubToken // Indicate if using server token (public repos only)
+    });
+  } catch (error) {
+    console.error('[GitHub] Fetch organization repositories error:', error);
+
+    if (error.message.includes('authentication required')) {
+      return res.status(401).json({
+        error: 'Authentication required',
+        message: error.message
+      });
+    }
+
+    if (error.message.includes('not found')) {
+      return res.status(404).json({
+        error: 'Not found',
+        message: 'Organization not found or you do not have access'
+      });
+    }
+
+    if (error.message.includes('rate limit')) {
+      return res.status(429).json({
+        error: 'Rate limit exceeded',
+        message: error.message
+      });
+    }
+
+    res.status(500).json({
+      error: 'Failed to fetch organization repositories',
+      message: error.message
+    });
+  }
+});
+
+/**
  * Fetch multiple files in batch with parallel processing
  * POST /api/github/files-batch
  * Body: { owner: string, repo: string, paths: string[], branch: string }

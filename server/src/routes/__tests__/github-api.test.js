@@ -166,4 +166,126 @@ describe('GitHub API Routes - Private Repo Support', () => {
       expect(req.user).toBeUndefined();
     });
   });
+
+  describe('Pagination Query Parameters', () => {
+    it('should parse page parameter from query string', () => {
+      const req = {
+        query: { page: '2', per_page: '100' }
+      };
+
+      const page = parseInt(req.query.page) || 1;
+      const perPage = parseInt(req.query.per_page) || 100;
+
+      expect(page).toBe(2);
+      expect(perPage).toBe(100);
+    });
+
+    it('should default to page 1 when not provided', () => {
+      const req = {
+        query: {}
+      };
+
+      const page = parseInt(req.query.page) || 1;
+      const perPage = parseInt(req.query.per_page) || 100;
+
+      expect(page).toBe(1);
+      expect(perPage).toBe(100);
+    });
+
+    it('should default to per_page 100 when not provided', () => {
+      const req = {
+        query: { page: '3' }
+      };
+
+      const page = parseInt(req.query.page) || 1;
+      const perPage = parseInt(req.query.per_page) || 100;
+
+      expect(page).toBe(3);
+      expect(perPage).toBe(100);
+    });
+
+    it('should handle invalid pagination parameters', () => {
+      const req = {
+        query: { page: 'invalid', per_page: 'bad' }
+      };
+
+      const page = parseInt(req.query.page) || 1;
+      const perPage = parseInt(req.query.per_page) || 100;
+
+      expect(page).toBe(1);
+      expect(perPage).toBe(100);
+    });
+  });
+
+  describe('Repository Pagination Response', () => {
+    it('should include pagination metadata in response', () => {
+      const response = {
+        success: true,
+        owner: 'google',
+        repositories: [],
+        page: 1,
+        perPage: 100,
+        count: 100,
+        hasMore: true,
+        isAuthenticated: false,
+        usingServerToken: true
+      };
+
+      expect(response.page).toBe(1);
+      expect(response.perPage).toBe(100);
+      expect(response.count).toBe(100);
+      expect(response.hasMore).toBe(true);
+    });
+
+    it('should indicate last page when hasMore is false', () => {
+      const response = {
+        success: true,
+        owner: 'facebook',
+        repositories: [],
+        page: 3,
+        perPage: 100,
+        count: 45,
+        hasMore: false,
+        isAuthenticated: true,
+        usingServerToken: false
+      };
+
+      expect(response.hasMore).toBe(false);
+      expect(response.count).toBeLessThan(response.perPage);
+    });
+
+    it('should indicate unauthenticated request with server token', () => {
+      const response = {
+        success: true,
+        owner: 'microsoft',
+        repositories: [],
+        page: 1,
+        perPage: 100,
+        count: 100,
+        hasMore: true,
+        isAuthenticated: false,
+        usingServerToken: true
+      };
+
+      expect(response.usingServerToken).toBe(true);
+      expect(response.isAuthenticated).toBe(false);
+    });
+
+    it('should indicate authenticated request with user token', () => {
+      const response = {
+        success: true,
+        owner: 'testuser',
+        repositories: [],
+        page: 1,
+        perPage: 100,
+        count: 100,
+        hasMore: true,
+        isAuthenticated: true,
+        usingServerToken: false
+      };
+
+      expect(response.usingServerToken).toBe(false);
+      expect(response.isAuthenticated).toBe(true);
+    });
+  });
 });

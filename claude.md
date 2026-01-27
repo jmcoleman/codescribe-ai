@@ -72,7 +72,8 @@ AI-powered documentation generator with real-time streaming, quality scoring (0-
 | [COLOR-REFERENCE.md](docs/design/theming/COLOR-REFERENCE.md) | Color quick reference | Complete color table for both themes, usage guidelines, semantic colors |
 | [TOAST-SYSTEM.md](docs/components/TOAST-SYSTEM.md) | Toast notifications | 20+ utilities, 6 custom toasts, a11y support |
 | [MERMAID-DIAGRAMS.md](docs/components/MERMAID-DIAGRAMS.md) | Diagram patterns | Brand theming, React integration, troubleshooting |
-| [ERROR-HANDLING-UX.md](docs/components/ERROR-HANDLING-UX.md) | Error UX | Banners vs modals, animations (250ms/200ms), a11y, priority system |
+| [BANNER-PATTERNS.md](docs/components/BANNER-PATTERNS.md) | Banner visual design ⭐ | Info/promo/error/warning banners, CTA layouts, desktop vs mobile, animations |
+| [ERROR-HANDLING-UX.md](docs/components/ERROR-HANDLING-UX.md) | Error handling decisions ⭐ | When to use banners vs inline validation vs modals, field validation timing, focus management |
 | [USAGE-PROMPTS.md](docs/components/USAGE-PROMPTS.md) | Usage warnings & limits | 80% banner, 100% modal, dynamic multipliers, simulator |
 | [COPYBUTTON.md](docs/components/COPYBUTTON.md) | Copy-to-clipboard | Variants, animation timeline, best practices |
 | [SELECT-USAGE.md](docs/components/SELECT-USAGE.md) | Dropdown component | Headless UI patterns, keyboard nav, a11y |
@@ -253,7 +254,10 @@ const response = await fetch(`${API_URL}/api/protected-endpoint`, {
 | Test Fixes/Patterns | TEST-PATTERNS-GUIDE.md (11 patterns, 6 insights, frontend + backend) |
 | Skipped Tests | SKIPPED-TESTS.md (56 tests documented, quarterly review schedule) |
 | Accessibility | ACCESSIBILITY-AUDIT.md, SCREEN-READER-TESTING-GUIDE.md |
-| Components | TOAST-SYSTEM.md, ERROR-HANDLING-UX.md, USAGE-PROMPTS.md, COPYBUTTON.md, MULTI-FILE-SIDEBAR-UX.md, etc. |
+| Banner Design | BANNER-PATTERNS.md (visual design: info/promo/error/warning, CTA layouts, animations) |
+| Error Handling UX | ERROR-HANDLING-UX.md (decision framework: banners vs inline vs modals, validation timing) |
+| Form Validation | ERROR-HANDLING-UX.md (on-submit validation, real-time exceptions, focus management) |
+| Components | TOAST-SYSTEM.md, BANNER-PATTERNS.md, ERROR-HANDLING-UX.md, USAGE-PROMPTS.md, COPYBUTTON.md, MULTI-FILE-SIDEBAR-UX.md, etc. |
 | Versions | Run `npm run versions`, VERSION-CHECKER.md |
 | Database | DB-NAMING-STANDARDS.md, DB-MIGRATION-MANAGEMENT.md, USAGE-QUOTA-SYSTEM.md, PRODUCTION-DB-SETUP.md |
 | Release/Deployment | RELEASE-QUICKSTART.md (prep for release vs. deploy), VERCEL-DEPLOYMENT-GUIDE.md |
@@ -277,7 +281,7 @@ const response = await fetch(`${API_URL}/api/protected-endpoint`, {
 - **Testing:** Testing README (overview) → COMPONENT-TEST-COVERAGE.md (details) → frontend-testing-guide.md (patterns) → TEST-PATTERNS-GUIDE.md (fixes & patterns) → SKIPPED-TESTS.md (maintenance)
 - **Test Debugging:** TEST-PATTERNS-GUIDE.md (10 patterns, 6 insights) for fixing auth tests, mocking, validation
 - **Skipped Tests:** SKIPPED-TESTS.md - Update on every release, quarterly review (15 frontend tests intentionally skipped)
-- **Error Handling:** ERROR-HANDLING-PATTERNS.md (app vs API errors, HTTP status codes) → ERROR-HANDLING-UX.md (UX patterns, priority system) → USAGE-PROMPTS.md (usage warnings/limits) → TOAST-SYSTEM.md (success toasts)
+- **Error Handling:** ERROR-HANDLING-PATTERNS.md (app vs API errors, HTTP status codes) → ERROR-HANDLING-UX.md (decision framework: banners vs inline vs modals) → BANNER-PATTERNS.md (visual design: all banner types, layouts, animations) → USAGE-PROMPTS.md (usage warnings/limits) → TOAST-SYSTEM.md (success toasts)
 - **Subscriptions:** SUBSCRIPTION-FLOWS.md (unauthenticated flow, sessionStorage) → SUBSCRIPTION-MANAGEMENT.md (upgrades, proration, webhooks)
 - **Stripe:** STRIPE-SETUP.md (initial integration) → STRIPE-TESTING-GUIDE.md (testing flows) → STRIPE-PRODUCTION-SWITCH.md (go-live)
 - **Campaigns:** CAMPAIGN-MANAGEMENT-GUIDE.md (UI-based setup, monitoring) → AUTO-TRIAL-CAMPAIGN.md (technical implementation)
@@ -505,19 +509,26 @@ codescribe-ai/
 
 ## 🔄 Version History
 
-**Current: v3.5.0** (January 25, 2026)
-- Trial Programs refactoring: Campaigns renamed to Trial Programs with enhanced eligibility system
-- Flexible eligibility rules: new users only, returning users with cooldown, or open to all
-- System-wide trial limits configurable via MAX_TRIALS_PER_USER_LIFETIME environment variable
-- Auto-enrollment capabilities for trial programs on new user signups
-- Enhanced admin controls: force grants with justification, trial history display
-- Test coverage: 4,186 tests (2,106 frontend, 2,080 backend)
-- Frontend: 2,106 passing, 73 skipped
-- Backend: 2,080 passing, 33 skipped
+**Current: v3.5.1** (January 26, 2026)
+- GitHub private repository support for authenticated users with OAuth
+- Progressive loading: first 100 repos in 1-2s, remaining load in background
+- Organization detection routes to correct API for private org repos
+- Field-level error validation for 404s instead of intrusive banners
+- Repository limits: unauthenticated (300 max), authenticated (5000 max)
+- Pagination API with page/per_page parameters
+- Test coverage: 4,332 tests (2,103 frontend, 2,120 backend)
+- Frontend: 2,103 passing, 76 skipped
+- Backend: 2,120 passing, 33 skipped
 
 <details>
-<summary>Recent Releases (v2.9.0-v3.3.9) & Milestones</summary>
+<summary>Recent Releases (v2.9.0-v3.5.0) & Milestones</summary>
 
+**v3.5.0** (Jan 25, 2026): Trial Programs & Enhanced Eligibility System - Renamed Campaigns to Trial Programs, flexible eligibility rules, auto-enrollment, force grants
+**v3.4.4** (Jan 14, 2026): User Management System - Account suspension/deletion, admin controls, audit logging
+**v3.4.3** (Jan 14, 2026): Campaign Management Enhancements - Sortable tables, export, attribution tracking
+**v3.4.2** (Jan 13, 2026): Campaign Export Fix & Google Sheets Integration
+**v3.4.1** (Jan 10, 2026): Analytics Dashboard Workflow Metrics & UX Improvements
+**v3.4.0** (Jan 9, 2026): Analytics Dashboard Launch - Admin analytics with funnel visualization
 **v3.3.9** (Jan 9, 2026): Analytics Dashboard Reorganization - Reorganized Usage tab into 5 user-journey groups, added model filtering
 **v3.3.8** (Jan 8, 2026): Analytics Funnel Polish - Better color contrast, fixed count visibility, capped bar widths
 **v3.3.7** (Jan 8, 2026): Event Category Reclassification & Test Coverage - Renamed 'funnel' to 'workflow', added 'system' category, comprehensive test coverage
@@ -562,7 +573,7 @@ codescribe-ai/
 - **v1.21** (Oct 19): Production deployment, codescribe-ai.vercel.app
 
 Full history: [CHANGELOG.md](CHANGELOG.md)
-Last updated: January 25, 2026
+Last updated: January 26, 2026
 </details>
 
 ---

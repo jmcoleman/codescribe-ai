@@ -442,10 +442,18 @@ function CampaignModal({ isOpen, onClose, campaign, onSave, existingCampaigns = 
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div className="relative bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-md w-full max-h-[90vh] flex flex-col">
-        <div className="px-6 pt-6 pb-4 border-b border-slate-200 dark:border-slate-700">
+        <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-slate-200 dark:border-slate-700">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
             {campaign ? 'Edit Trial Program' : 'Create Trial Program'}
           </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+            aria-label="Close modal"
+          >
+            <X className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+          </button>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
