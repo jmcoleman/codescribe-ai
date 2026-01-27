@@ -8,7 +8,7 @@
 
 ## 📊 Quick Stats
 
-- **Total Tests:** 4,550 tests (4,441 passing, 109 skipped, 0 failures)
+- **Total Tests:** 4,550 tests (4,407 passing, 143 skipped, 0 failures)
   - **Frontend:** 2,238 tests | 76 skipped (Vitest + React Testing Library)
     - Component Tests: All components with dark mode variants tested (including AppearanceModal, SamplesModal)
     - GitHub Loader: FileTree, TreeNode, GitHubLoadModal integration tests
@@ -20,7 +20,7 @@
     - Settings: AccountTab (36 tests - profile, password, data export, GitHub status fetch)
     - Analytics: EventsTable multi-select filter, Select Portal tests
     - **Pass Rate:** 100% (2,162 passing, 76 skipped, 0 failures)
-  - **Backend:** 2,312 tests | 33 skipped (Jest + Supertest)
+  - **Backend:** 2,312 tests | 67 skipped (Jest + Supertest)
     - Unit Tests: Services, models, utilities, middleware (emailService, requireTermsAcceptance, tierGate, rateLimitBypass, githubService)
     - LLM Provider Tests: 69 tests (llmService, config, utils, adapters for Claude/OpenAI/Gemini)
     - Integration Tests: Prompt quality, API contracts, authentication, tier system, contact sales/support, legal endpoints
@@ -32,18 +32,19 @@
     - Private Repo Tests: 55 tests (encryption 14, User model 15, GitHubService 13, API routes 13)
     - Trial Program Tests: Trial Program model, admin routes, config validation
     - Analytics Tests: getConversionFunnel with 6 query mocks, getBusinessConversionFunnel, multi-select eventNames filter combinations
-    - **HIPAA Compliance Tests: 224 tests (100% passing)**
-      - Audit Logging: 54 tests (auditLogger service, AuditLog model, API routes, CSV export)
-      - PHI Detection: 65 tests (phiDetector service, pattern matching, risk scoring, integration)
-      - Encryption: 68 tests (encryption service, AES-256-GCM, field encryption, User model integration)
-      - Compliance Dashboard: 37 tests (Compliance.jsx UI, filtering, pagination, admin access)
-    - **Pass Rate:** 100% (2,279 passing, 33 skipped, 0 failures)
+    - **HIPAA Compliance Tests: 224 tests (191 unit/service tests passing, 33 integration tests skipped)**
+      - Audit Logging: 54 tests (27 service tests, 27 integration tests - 25 skipped)
+      - PHI Detection: 65 tests (all service/unit tests passing)
+      - Encryption: 68 tests (all unit tests passing)
+      - Compliance Dashboard: 37 tests (all frontend component tests passing)
+      - Integration tests (33 skipped): Run separately with `npm run test:db` in Docker
+    - **Pass Rate:** 100% (2,245 passing, 67 skipped, 0 failures)
   - **Database:** 37 migration tests (Docker sandbox + Neon dev validation)
     - Migration-010: 14 tests (terms/privacy acceptance tracking)
     - Migration-011: 10 tests (analytics_enabled column + index)
     - Migration-017: 13 tests (total_generations column with triggers)
   - **E2E:** 10 tests (Playwright - file upload flow)
-- **Pass Rate:** 97.6% (4,441/4,550 total tests passing, 109 skipped, 0 failures) ✅
+- **Pass Rate:** 96.9% (4,407/4,550 total tests passing, 143 skipped, 0 failures) ✅
 - **Backend Coverage:** 82.38% statements, 70.11% branches, 82.54% lines, 85%+ functions (CI passing)
 - **Test Execution Time:** Frontend ~20.2s, Backend ~12.2s, Database ~0.3s, E2E ~45s
 - **Coverage Target:** 90% ✅ EXCEEDED (96.71% middleware statements, 93.49% middleware branches)

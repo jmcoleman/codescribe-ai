@@ -1,8 +1,8 @@
 # Skipped Tests Reference
 
 **Purpose:** Central reference for all intentionally skipped tests in the codebase
-**Last Updated:** January 12, 2026 (v3.4.0)
-**Total Skipped:** 68 frontend tests + 33 backend tests = **101 total**
+**Last Updated:** January 27, 2026 (v3.5.2)
+**Total Skipped:** 76 frontend tests + 61 backend tests = **137 total**
 
 **Note:** Backend database tests (21 tests in `/src/db/__tests__/`) are **excluded** via `jest.config.cjs`, not "skipped" with `.skip()`. They run separately in Docker sandbox before deployment and are NOT counted in this document's skip tracking.
 
@@ -25,12 +25,13 @@
 | Focus Trap Edge Cases | useFocusTrap | 1 | ✅ None | jsdom limitations |
 | Focus Restoration | QualityScore | 1 | ✅ None | jsdom limitations |
 | Restore Account Tests | RestoreAccount | 1 | ✅ None | Email rate limiting timing issues |
-| **Backend Tests** | | **28** | | |
+| **Backend Tests** | | **61** | | |
+| HIPAA Audit Log Integration | models, routes | 33 | ✅ None | Requires Docker test database (run with npm run test:db) |
 | GitHub OAuth Integration | tests/integration | 21 | ✅ None | Complex Passport.js mocking (feature works in production) |
 | Password Change Tests | tests/integration | 5 | ✅ None | Jest mocking issues with @vercel/postgres tagged template literals |
 | Debug Logging Tests | rateLimitBypass | 2 | ✅ None | Console logging removed in cleanup (v2.7.10) |
 
-**Total Skipped:** 85 tests (57 frontend, 28 backend)
+**Total Skipped:** 137 tests (76 frontend, 61 backend)
 
 **Deployment Impact:** ✅ **NONE** - All skipped tests are intentional and documented
 
@@ -432,6 +433,124 @@ Focus restoration works correctly in production:
 
 ### Production Impact
 ✅ **NONE** - Focus restoration works in real browsers
+
+---
+
+## 🔵 Backend: HIPAA Audit Log Integration (33 tests)
+
+### Status: ✅ **REQUIRES DOCKER TEST DATABASE**
+
+### Files
+1. `server/src/models/__tests__/AuditLog.integration.test.js` (25 tests)
+2. `server/src/routes/__tests__/api-audit.integration.test.js` (8 tests)
+
+### Test Suites
+**AuditLog Model (Integration) - Line 11:**
+- `describe.skip('AuditLog Model (Integration)', () => {`
+- Tests HIPAA-compliant audit logging functionality using dev database
+- Requires real PostgreSQL connection to test audit log storage and querying
+
+**API Audit Logging (Integration) - Line 37:**
+- `describe.skip('API Audit Logging (Integration)', () => {`
+- Tests that audit logs are created when using API endpoints
+- Requires real database connection and migrations (062-create-audit-log.sql)
+
+### Skipped Tests Breakdown
+
+**AuditLog Model Tests (25):**
+1. log() - should create an audit log entry in database
+2. log() - should handle errors gracefully and return null
+3. log() - should store metadata as JSONB
+4. log() - should allow null user_id for anonymous actions
+5. log() - should enforce PHI score range constraint (0-100)
+6. getAuditLogs() - should retrieve audit logs with default pagination
+7. getAuditLogs() - should filter by action type
+8. getAuditLogs() - should filter by risk level (high)
+9. getAuditLogs() - should filter by risk level (medium)
+10. getAuditLogs() - should filter by success status
+11. getAuditLogs() - should support pagination
+12. getAuditLogs() - should filter by date range
+13. getAuditLogs() - should filter by PHI presence
+14. getStats() - should return comprehensive statistics
+15. getStats() - should calculate average duration
+16. getStats() - should filter stats by date range
+17. getActivityByAction() - should group activity by action type
+18. getActivityByAction() - should include PHI counts
+19. getActivityByAction() - should calculate average duration per action
+20. getTopUsers() - should return top users by activity
+21. getTopUsers() - should include PHI event counts
+22. getTopUsers() - should include high-risk event counts
+23. getTopUsers() - should respect limit parameter
+24. getTopUsers() - should order by total events descending
+25. Foreign Key Behavior - should set user_id to NULL when user is deleted but retain email
+
+**API Audit Logging Tests (8):**
+1. POST /api/generate - should create audit log on successful generation
+2. POST /api/generate - should create audit log on failed generation
+3. POST /api/generate-stream - should create audit log on successful streaming generation
+4. POST /api/upload - should create audit log on successful file upload
+5. Audit Log Data Integrity - should hash input code (not store plaintext)
+6. Audit Log Data Integrity - should include request metadata (IP, user agent)
+7. Audit Log Data Integrity - should track duration in milliseconds
+8. Audit Log Metadata - should include doc_type and language in metadata
+9. Audit Log Metadata - should include user_tier in metadata
+
+### Why Skipped
+
+**Requires real database connection:** These are true integration tests that need:
+- PostgreSQL database with audit_logs table (migration 062)
+- Real database connection via @vercel/postgres
+- User creation and audit log insertion
+
+**Error when run in CI:**
+```
+NeonDbError: Error connecting to database: fetch failed
+```
+
+**Not suitable for mocking:** Per TEST-PATTERNS-GUIDE.md Pattern 12, these tests validate:
+- Database schema constraints (PHI score 0-100)
+- Foreign key behavior (ON DELETE SET NULL)
+- JSONB metadata storage
+- Database indexes and query performance
+- Multi-filter audit log queries
+
+### When to Run
+
+**Docker Test Database:**
+```bash
+cd server
+npm run test:db:setup    # Start Docker PostgreSQL
+npm run test:db          # Run all database tests (including these)
+npm run test:db:teardown # Stop Docker
+```
+
+**Pre-Deployment Validation:**
+- Run before deploying HIPAA compliance features
+- Verify audit_logs table schema is correct
+- Test AuditLog model methods against real database
+- Validate API routes create audit logs correctly
+
+### When to Unskip
+
+**Option 1: Convert to unit tests with mocks (NOT RECOMMENDED)**
+- Would lose validation of database schema
+- Would not catch foreign key issues
+- Would not test real JSONB storage
+- Defeats purpose of integration testing
+
+**Option 2: Keep as integration tests (RECOMMENDED)**
+- Run with `npm run test:db` before deployment
+- Part of HIPAA compliance validation workflow
+- Ensures audit logs meet 7-year retention requirements
+- Tests real database behavior, not mocked behavior
+
+### Documentation
+- [HIPAA Implementation Status](../../hipaa/HIPAA-IMPLEMENTATION-STATUS.md) - Feature 1 overview
+- [Feature 1: Audit Logging](../../hipaa/features/FEATURE-1-AUDIT-LOGGING-COMPLETE.md) - Complete spec
+- [DB Migration Management](../../database/DB-MIGRATION-MANAGEMENT.md) - Test database setup
+
+### Production Impact
+✅ **NONE** - Feature works in production, tests validate database behavior
 
 ---
 

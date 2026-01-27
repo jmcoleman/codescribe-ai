@@ -820,8 +820,8 @@ See [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) for complete
 
 ### 📊 Testing & Quality
 
-**Comprehensive Test Coverage: 4,550 Tests** (4,441 passing, 109 skipped, 97.6% pass rate)
-- **Backend Tests**: 2,312 tests (2,279 passing, 33 skipped, 0 failures) - Jest + Supertest
+**Comprehensive Test Coverage: 4,550 Tests** (4,407 passing, 143 skipped, 96.9% pass rate)
+- **Backend Tests**: 2,312 tests (2,245 passing, 67 skipped, 0 failures) - Jest + Supertest
   - Service layer: qualityScorer, claudeClient, codeParser, docGenerator, emailService, githubService
   - LLM provider tests: 69 tests (llmService, config, utils, adapters)
   - Authentication: 102 tests (auth middleware, user model, OAuth flows)
@@ -951,7 +951,7 @@ npm run test:e2e:headed       # With browser UI (for debugging)
 
 **Quality Metrics:**
 - **4,029 tests** (2,067 frontend, 1,962 backend) - 100% pass rate
-- **Backend coverage:** (2,279 passing, 33 skipped)
+- **Backend coverage:** (2,245 passing, 67 skipped)
 - **Frontend coverage:** 100% critical paths (2,162 passing, 76 skipped)
 - **Database:** 14 migration tests (Docker sandbox + Neon dev validation)
 

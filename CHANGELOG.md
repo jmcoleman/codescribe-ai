@@ -89,10 +89,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **Audit Logging Tests** ([server/src/routes/__tests__/api-audit.integration.test.js](server/src/routes/__tests__/api-audit.integration.test.js))
-  - Fixed 8 failing API audit integration tests by properly mocking rate limiter middleware
-  - Fixed 1 failing AuditLog model test by improving test specificity for duration calculations
-  - All 2,279 backend tests now passing (0 failures)
+- **Audit Logging Tests**
+  - Fixed 9 failing tests during development (8 API integration, 1 model test)
+  - Converted 33 database integration tests to `.skip()` - run separately with `npm run test:db` in Docker
+  - Updated SKIPPED-TESTS.md with comprehensive documentation of integration test patterns
+  - All 2,245 backend unit tests now passing (0 failures, 67 skipped)
 
 ### Documentation
 
@@ -116,8 +117,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Overall Test Coverage:**
 - **Frontend:** 2,162 passing, 76 skipped (2,238 total)
-- **Backend:** 2,279 passing, 33 skipped (2,312 total)
-- **Total:** 4,441 passing, 109 skipped (4,550 total)
+- **Backend:** 2,245 passing, 67 skipped (2,312 total) - 33 integration tests run separately with `npm run test:db`
+- **Total:** 4,407 passing, 143 skipped (4,550 total)
 - **Pass Rate:** 97.6%
 
 ---

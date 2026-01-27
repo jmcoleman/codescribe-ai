@@ -12,7 +12,7 @@
 AI-powered documentation generator with real-time streaming, quality scoring (0-100), and WCAG 2.1 AA compliance.
 
 **Key Metrics:**
-- 4,550 tests (4,441 passing, 109 skipped, 0 failing) | 97.6% pass rate | 95.45% middleware coverage
+- 4,550 tests (4,407 passing, 143 skipped, 0 failing) | 96.9% pass rate | 95.45% middleware coverage
 - Lighthouse: 75/100 performance (+67%), 100/100 accessibility
 - Bundle: 78KB gzipped (-85% reduction)
 - Accessibility: 95/100 score, 0 axe violations
@@ -520,7 +520,8 @@ codescribe-ai/
 - HIPAA documentation hub consolidated into docs/hipaa/ (15 files, ~62,000 words)
 - Email forwarding for sales@, support@, baa-requests@codescribeai.com
 - Fixed 9 failing audit tests (rate limiter mocking + test specificity)
-- Test coverage: 4,550 tests (4,441 passing, 109 skipped, 0 failing, 97.6% pass rate)
+- Test coverage: 4,550 tests (4,407 passing, 143 skipped, 0 failing, 96.9% pass rate)
+- Note: 33 HIPAA audit log integration tests run separately with `npm run test:db` in Docker
 
 <details>
 <summary>Recent Releases (v2.9.0-v3.5.1) & Milestones</summary>
