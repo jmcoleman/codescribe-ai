@@ -105,7 +105,10 @@ describe('Campaigns Admin Page', () => {
     it('should render page title and description', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({ data: [] }),
+        json: () => Promise.resolve({
+          data: [],
+          pagination: { page: 1, limit: 25, total: 0, totalPages: 0 }
+        }),
       });
 
       renderCampaigns();
@@ -117,7 +120,10 @@ describe('Campaigns Admin Page', () => {
     it('should show loading state initially', () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({ data: [] }),
+        json: () => Promise.resolve({
+          data: [],
+          pagination: { page: 1, limit: 25, total: 0, totalPages: 0 }
+        }),
       });
 
       renderCampaigns();
@@ -130,7 +136,10 @@ describe('Campaigns Admin Page', () => {
     it('should display campaigns after loading', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({ data: mockCampaigns }),
+        json: () => Promise.resolve({
+          data: mockCampaigns,
+          pagination: { page: 1, limit: 25, total: mockCampaigns.length, totalPages: 1 }
+        }),
       });
 
       renderCampaigns();
@@ -144,7 +153,10 @@ describe('Campaigns Admin Page', () => {
     it('should show empty state when no campaigns', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({ data: [] }),
+        json: () => Promise.resolve({
+          data: [],
+          pagination: { page: 1, limit: 25, total: 0, totalPages: 0 }
+        }),
       });
 
       renderCampaigns();
@@ -183,7 +195,10 @@ describe('Campaigns Admin Page', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({ data: [activeCampaign] }),
+        json: () => Promise.resolve({
+          data: [activeCampaign],
+          pagination: { page: 1, limit: 25, total: 1, totalPages: 1 }
+        }),
       });
 
       renderCampaigns();
@@ -198,7 +213,10 @@ describe('Campaigns Admin Page', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({ data: [inactiveCampaign] }),
+        json: () => Promise.resolve({
+          data: [inactiveCampaign],
+          pagination: { page: 1, limit: 25, total: 1, totalPages: 1 }
+        }),
       });
 
       renderCampaigns();
@@ -217,7 +235,10 @@ describe('Campaigns Admin Page', () => {
     it('should show banner when a campaign is active', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({ data: mockCampaigns }),
+        json: () => Promise.resolve({
+          data: mockCampaigns,
+          pagination: { page: 1, limit: 25, total: mockCampaigns.length, totalPages: 1 }
+        }),
       });
 
       renderCampaigns();
@@ -233,7 +254,10 @@ describe('Campaigns Admin Page', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({ data: inactiveCampaigns }),
+        json: () => Promise.resolve({
+          data: inactiveCampaigns,
+          pagination: { page: 1, limit: 25, total: inactiveCampaigns.length, totalPages: 1 }
+        }),
       });
 
       renderCampaigns();
@@ -254,7 +278,10 @@ describe('Campaigns Admin Page', () => {
     it('should display trial tier and duration', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({ data: mockCampaigns }),
+        json: () => Promise.resolve({
+          data: mockCampaigns,
+          pagination: { page: 1, limit: 25, total: mockCampaigns.length, totalPages: 1 }
+        }),
       });
 
       renderCampaigns();
@@ -270,7 +297,10 @@ describe('Campaigns Admin Page', () => {
     it('should display signup counts', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({ data: mockCampaigns }),
+        json: () => Promise.resolve({
+          data: mockCampaigns,
+          pagination: { page: 1, limit: 25, total: mockCampaigns.length, totalPages: 1 }
+        }),
       });
 
       renderCampaigns();
@@ -286,7 +316,10 @@ describe('Campaigns Admin Page', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({ data: mockCampaigns }),
+        json: () => Promise.resolve({
+          data: mockCampaigns,
+          pagination: { page: 1, limit: 25, total: mockCampaigns.length, totalPages: 1 }
+        }),
       });
 
       renderCampaigns();
@@ -327,7 +360,10 @@ describe('Campaigns Admin Page', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({ data: [] }),
+        json: () => Promise.resolve({
+          data: [],
+          pagination: { page: 1, limit: 25, total: 0, totalPages: 0 }
+        }),
       });
 
       renderCampaigns();
@@ -348,7 +384,10 @@ describe('Campaigns Admin Page', () => {
       mockFetch
         .mockResolvedValueOnce({
           ok: true,
-          json: () => Promise.resolve({ data: [] }),
+          json: () => Promise.resolve({
+          data: [],
+          pagination: { page: 1, limit: 25, total: 0, totalPages: 0 }
+        }),
         })
         .mockResolvedValueOnce({
           ok: true,
@@ -356,7 +395,10 @@ describe('Campaigns Admin Page', () => {
         })
         .mockResolvedValueOnce({
           ok: true,
-          json: () => Promise.resolve({ data: [] }),
+          json: () => Promise.resolve({
+          data: [],
+          pagination: { page: 1, limit: 25, total: 0, totalPages: 0 }
+        }),
         });
 
       renderCampaigns();
@@ -393,7 +435,10 @@ describe('Campaigns Admin Page', () => {
       mockFetch
         .mockResolvedValueOnce({
           ok: true,
-          json: () => Promise.resolve({ data: mockCampaigns }),
+          json: () => Promise.resolve({
+          data: mockCampaigns,
+          pagination: { page: 1, limit: 25, total: mockCampaigns.length, totalPages: 1 }
+        }),
         })
         .mockResolvedValueOnce({
           ok: true,
@@ -401,7 +446,10 @@ describe('Campaigns Admin Page', () => {
         })
         .mockResolvedValueOnce({
           ok: true,
-          json: () => Promise.resolve({ data: mockCampaigns }),
+          json: () => Promise.resolve({
+          data: mockCampaigns,
+          pagination: { page: 1, limit: 25, total: mockCampaigns.length, totalPages: 1 }
+        }),
         });
 
       renderCampaigns();
@@ -441,7 +489,10 @@ describe('Campaigns Admin Page', () => {
       mockFetch
         .mockResolvedValueOnce({
           ok: true,
-          json: () => Promise.resolve({ data: mockCampaigns }),
+          json: () => Promise.resolve({
+          data: mockCampaigns,
+          pagination: { page: 1, limit: 25, total: mockCampaigns.length, totalPages: 1 }
+        }),
         })
         .mockResolvedValueOnce({
           ok: true,
@@ -449,7 +500,10 @@ describe('Campaigns Admin Page', () => {
         })
         .mockResolvedValueOnce({
           ok: true,
-          json: () => Promise.resolve({ data: [] }),
+          json: () => Promise.resolve({
+          data: [],
+          pagination: { page: 1, limit: 25, total: 0, totalPages: 0 }
+        }),
         });
 
       renderCampaigns();
@@ -484,7 +538,10 @@ describe('Campaigns Admin Page', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({ data: mockCampaigns }),
+        json: () => Promise.resolve({
+          data: mockCampaigns,
+          pagination: { page: 1, limit: 25, total: mockCampaigns.length, totalPages: 1 }
+        }),
       });
 
       renderCampaigns();
@@ -515,7 +572,10 @@ describe('Campaigns Admin Page', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({ data: mockCampaigns }),
+        json: () => Promise.resolve({
+          data: mockCampaigns,
+          pagination: { page: 1, limit: 25, total: mockCampaigns.length, totalPages: 1 }
+        }),
       });
 
       renderCampaigns();
@@ -550,11 +610,17 @@ describe('Campaigns Admin Page', () => {
       mockFetch
         .mockResolvedValueOnce({
           ok: true,
-          json: () => Promise.resolve({ data: mockCampaigns }),
+          json: () => Promise.resolve({
+          data: mockCampaigns,
+          pagination: { page: 1, limit: 25, total: mockCampaigns.length, totalPages: 1 }
+        }),
         })
         .mockResolvedValueOnce({
           ok: true,
-          json: () => Promise.resolve({ data: mockCampaigns }),
+          json: () => Promise.resolve({
+          data: mockCampaigns,
+          pagination: { page: 1, limit: 25, total: mockCampaigns.length, totalPages: 1 }
+        }),
         });
 
       renderCampaigns();

@@ -715,6 +715,8 @@ export default function TrialsAdmin() {
           onSortingChange={handleSortingChange}
           pagination={pagination}
           onPageChange={handlePageChange}
+          manualSorting={true}
+          manualPagination={true}
           isLoading={loading}
           isRefreshing={isRefreshing}
           renderExpandedRow={renderExpandedRow}

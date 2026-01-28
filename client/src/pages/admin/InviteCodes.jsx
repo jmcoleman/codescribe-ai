@@ -951,6 +951,8 @@ export default function InviteCodes() {
                 onSortingChange={handleSortingChange}
                 pagination={pagination}
                 onPageChange={handlePageChange}
+                manualSorting={true}
+                manualPagination={true}
                 isLoading={loading}
                 isRefreshing={isRefreshing}
                 renderExpandedRow={renderExpandedRow}

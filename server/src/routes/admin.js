@@ -2079,20 +2079,24 @@ router.get('/trial-programs/status', requireAuth, requireAdmin, async (req, res)
 
 /**
  * GET /api/admin/trial-programs - List all campaigns
- * Query params: limit, offset, sortBy, sortOrder
+ * Query params: page, limit, sortBy, sortOrder
  */
 router.get('/trial-programs', requireAuth, requireAdmin, async (req, res) => {
   try {
     const {
-      limit = '50',
-      offset = '0',
+      page = '1',
+      limit = '25',
       sortBy = 'created_at',
       sortOrder = 'DESC',
     } = req.query;
 
+    const pageNum = parseInt(page, 10);
+    const limitNum = Math.min(parseInt(limit, 10), 100);
+    const offset = (pageNum - 1) * limitNum;
+
     const result = await TrialProgram.list({
-      limit: Math.min(parseInt(limit, 10), 100),
-      offset: parseInt(offset, 10),
+      limit: limitNum,
+      offset,
       sortBy,
       sortOrder,
     });
@@ -2100,7 +2104,12 @@ router.get('/trial-programs', requireAuth, requireAdmin, async (req, res) => {
     res.json({
       success: true,
       data: result.campaigns,
-      total: result.total,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total: result.total,
+        totalPages: Math.ceil(result.total / limitNum)
+      }
     });
   } catch (error) {
     console.error('[Admin] List campaigns error:', error);

@@ -741,10 +741,12 @@ export default function Campaigns() {
     }
   });
 
-  const fetchTrialPrograms = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const fetchTrialPrograms = useCallback(async (page = pagination.page, showRefreshing = false) => {
     try {
+      if (showRefreshing) setIsRefreshing(true);
+      else setLoading(true);
+      setError(null);
+
       const token = await getToken();
 
       // Don't fetch if no token (user logged out)
@@ -753,7 +755,17 @@ export default function Campaigns() {
         return;
       }
 
-      const response = await fetch(`${API_URL}/api/admin/trial-programs`, {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: pagination.limit.toString(),
+      });
+
+      if (sorting.length > 0) {
+        params.append('sortBy', sorting[0].id);
+        params.append('sortOrder', sorting[0].desc ? 'DESC' : 'ASC');
+      }
+
+      const response = await fetch(`${API_URL}/api/admin/trial-programs?${params}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Cache-Control': 'no-cache',
@@ -771,15 +783,15 @@ export default function Campaigns() {
       }
 
       const data = await response.json();
-      const allTrialPrograms = data.data || [];
-      setTrialPrograms(allTrialPrograms);
+      setTrialPrograms(data.data || []);
 
-      // Update pagination
-      setPagination(prev => ({
-        ...prev,
-        total: allTrialPrograms.length,
-        totalPages: Math.ceil(allTrialPrograms.length / prev.limit),
-      }));
+      // Update pagination from server response
+      setPagination({
+        page: data.pagination.page,
+        limit: data.pagination.limit,
+        total: data.pagination.total,
+        totalPages: data.pagination.totalPages,
+      });
     } catch (err) {
       // Only show error if not a network/auth issue
       if (err.message !== 'Failed to fetch campaigns' || err.status !== 401) {
@@ -788,12 +800,31 @@ export default function Campaigns() {
       }
     } finally {
       setLoading(false);
+      setIsRefreshing(false);
     }
-  }, [getToken]);
+  }, [getToken, pagination.limit, sorting]);
 
+  // Initial load
   useEffect(() => {
-    fetchTrialPrograms();
-  }, [fetchTrialPrograms]);
+    fetchTrialPrograms(1);
+  }, []);
+
+  // Refetch on sorting change
+  useEffect(() => {
+    if (!loading) {
+      fetchTrialPrograms(1, true);
+    }
+  }, [sorting]);
+
+  // Handle page change
+  const handlePageChange = (newPage) => {
+    fetchTrialPrograms(newPage, true);
+  };
+
+  // Handle sorting change
+  const handleSortingChange = (newSorting) => {
+    setSorting(newSorting);
+  };
 
   // Clear dismissed banners when the active auto-enroll trial program changes
   useEffect(() => {
@@ -1114,11 +1145,11 @@ export default function Campaigns() {
             data={trialPrograms}
             columns={columns}
             sorting={sorting}
-            onSortingChange={setSorting}
+            onSortingChange={handleSortingChange}
             pagination={pagination}
-            onPageChange={(page) => setPagination(prev => ({ ...prev, page }))}
-            manualSorting={false}
-            manualPagination={false}
+            onPageChange={handlePageChange}
+            manualSorting={true}
+            manualPagination={true}
             enableColumnResizing={true}
             isLoading={loading}
             isRefreshing={isRefreshing}
