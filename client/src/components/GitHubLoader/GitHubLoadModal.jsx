@@ -11,6 +11,7 @@ import { FilePreview } from './FilePreview';
 import { ImportErrorList } from './ImportErrorList';
 import { Button } from '../Button';
 import { ErrorBanner } from '../ErrorBanner';
+import { Pagination } from '../Pagination';
 import * as githubService from '../../services/githubService';
 import { isFileSupported, isCodeFile } from '../../services/githubService';
 import { toastSuccess, toastInfo, toastWarning, toastError } from '../../utils/toast';
@@ -1381,6 +1382,57 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, onIm
           </div>
         )}
 
+        {/* Private Repos Upgrade Banner - Show when GitHub is connected but tier doesn't allow private repos */}
+        {!repository && user?.has_github_private_access && !hasFeature(user, 'privateGitHubRepos') && showGitHubBanner && (
+          <div className="mx-4 mt-3">
+            <div className="relative p-4 rounded-lg bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 border border-purple-200 dark:border-purple-800">
+              <button
+                type="button"
+                onClick={() => setShowGitHubBanner(false)}
+                className="absolute top-3 right-3 text-purple-400 dark:text-purple-500 hover:text-purple-600 dark:hover:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-md p-1 transition-colors"
+                aria-label="Dismiss banner"
+              >
+                <X className="h-4 w-4" />
+              </button>
+
+              <div className="flex items-start gap-4 pr-8">
+                <div className="flex-shrink-0">
+                  <Lock className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm font-semibold text-purple-900 dark:text-purple-100 mb-1">
+                    Upgrade to access private repositories
+                  </h3>
+                  <p className="text-xs text-purple-800 dark:text-purple-200 leading-relaxed">
+                    Your GitHub account is connected, but private repository access requires a Pro plan or higher.
+                  </p>
+                </div>
+
+                <div className="flex-shrink-0 hidden sm:block self-end">
+                  <a
+                    href="/pricing"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition-colors shadow-sm whitespace-nowrap"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    Upgrade to Pro
+                  </a>
+                </div>
+              </div>
+
+              <div className="sm:hidden mt-3 pl-9">
+                <a
+                  href="/pricing"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition-colors shadow-sm"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Upgrade to Pro
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Error Banner - Compact */}
         {error && !repository && !loading && (
           <div className="px-4 pt-3 pb-1">
@@ -1572,56 +1624,11 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, onIm
               </div>
 
               {/* Pagination Controls */}
-              {totalPages > 1 && (
-                <div className="mt-3 flex items-center justify-between border-t border-slate-200 dark:border-slate-700 pt-3">
-                  <button
-                    type="button"
-                    onClick={() => setRepoCurrentPage(p => Math.max(1, p - 1))}
-                    disabled={repoCurrentPage === 1}
-                    className="px-3 py-1.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    Previous
-                  </button>
-
-                  <div className="flex items-center gap-1">
-                    {Array.from({ length: totalPages }, (_, i) => i + 1)
-                      .filter(page => {
-                        // Show first, last, current, and adjacent pages
-                        return page === 1 ||
-                               page === totalPages ||
-                               Math.abs(page - repoCurrentPage) <= 1;
-                      })
-                      .map((page, idx, arr) => (
-                        <div key={page} className="flex items-center">
-                          {/* Add ellipsis for gaps */}
-                          {idx > 0 && page > arr[idx - 1] + 1 && (
-                            <span className="px-2 text-slate-400">...</span>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => setRepoCurrentPage(page)}
-                            className={`min-w-[32px] px-2 py-1 text-sm font-medium rounded transition-colors ${
-                              page === repoCurrentPage
-                                ? 'bg-purple-600 text-white'
-                                : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                            }`}
-                          >
-                            {page}
-                          </button>
-                        </div>
-                      ))}
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setRepoCurrentPage(p => Math.min(totalPages, p + 1))}
-                    disabled={repoCurrentPage === totalPages}
-                    className="px-3 py-1.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    Next
-                  </button>
-                </div>
-              )}
+              <Pagination
+                currentPage={repoCurrentPage}
+                totalPages={totalPages}
+                onPageChange={setRepoCurrentPage}
+              />
             </div>
           ) : loading ? (
             <div className="h-full flex items-center justify-center">

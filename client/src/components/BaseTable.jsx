@@ -45,11 +45,10 @@ import {
   ArrowUp,
   ArrowDown,
   ArrowUpDown,
-  ChevronLeft,
-  ChevronRight,
   ChevronDown,
   RefreshCw,
 } from 'lucide-react';
+import { Pagination } from './Pagination';
 
 /**
  * Sortable Header Component
@@ -79,76 +78,6 @@ function SortableHeader({ column, children }) {
   );
 }
 
-/**
- * Pagination Component
- */
-function Pagination({ pagination, onPageChange, totalItems }) {
-  const { page, limit, totalPages } = pagination;
-
-  if (totalPages <= 1) return null;
-
-  const startItem = (page - 1) * limit + 1;
-  const endItem = Math.min(page * limit, totalItems);
-
-  // Calculate visible page numbers
-  const getPageNumbers = () => {
-    const pages = [];
-    const maxVisible = 5;
-
-    if (totalPages <= maxVisible) {
-      for (let i = 1; i <= totalPages; i++) pages.push(i);
-    } else if (page <= 3) {
-      for (let i = 1; i <= maxVisible; i++) pages.push(i);
-    } else if (page >= totalPages - 2) {
-      for (let i = totalPages - maxVisible + 1; i <= totalPages; i++) pages.push(i);
-    } else {
-      for (let i = page - 2; i <= page + 2; i++) pages.push(i);
-    }
-
-    return pages;
-  };
-
-  return (
-    <div className="px-4 py-3 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between">
-      <div className="text-sm text-slate-600 dark:text-slate-400">
-        Showing {startItem} to {endItem} of {totalItems}
-      </div>
-      <div className="flex items-center gap-2">
-        <button
-          onClick={() => onPageChange(page - 1)}
-          disabled={page === 1}
-          className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          aria-label="Previous page"
-        >
-          <ChevronLeft className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-        </button>
-        <div className="flex items-center gap-1">
-          {getPageNumbers().map((pageNum) => (
-            <button
-              key={pageNum}
-              onClick={() => onPageChange(pageNum)}
-              className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
-                page === pageNum
-                  ? 'bg-purple-600 dark:bg-purple-700 text-white'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
-              }`}
-            >
-              {pageNum}
-            </button>
-          ))}
-        </div>
-        <button
-          onClick={() => onPageChange(page + 1)}
-          disabled={page === totalPages}
-          className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          aria-label="Next page"
-        >
-          <ChevronRight className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-        </button>
-      </div>
-    </div>
-  );
-}
 
 /**
  * Empty State Component
@@ -195,7 +124,7 @@ export function BaseTable({
   manualSorting = true,
 
   // Pagination (server-side)
-  pagination = { page: 1, limit: 10, total: 0, totalPages: 0 },
+  pagination = { page: 1, limit: 25, total: 0, totalPages: 0 },
   onPageChange,
   manualPagination = true,
 
@@ -389,7 +318,7 @@ export function BaseTable({
           {/* Header */}
           <div
             role="rowgroup"
-            className="bg-slate-50 dark:bg-slate-700/50"
+            className="sticky top-0 z-10 bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700"
           >
             {table.getHeaderGroups().map((headerGroup) => (
               <div
@@ -498,13 +427,23 @@ export function BaseTable({
       </div>
 
       {/* Pagination */}
-      {manualPagination && onPageChange && (
+      {manualPagination && onPageChange ? (
         <Pagination
-          pagination={pagination}
+          currentPage={pagination.page}
+          totalPages={pagination.totalPages}
           onPageChange={onPageChange}
           totalItems={pagination.total}
+          limit={pagination.limit}
         />
-      )}
+      ) : !manualPagination && data.length > 0 ? (
+        <Pagination
+          currentPage={table.getState().pagination.pageIndex + 1}
+          totalPages={table.getPageCount()}
+          onPageChange={(page) => table.setPageIndex(page - 1)}
+          totalItems={data.length}
+          limit={table.getState().pagination.pageSize}
+        />
+      ) : null}
     </div>
   );
 }
