@@ -239,7 +239,7 @@ export default function Compliance() {
   });
 
   const [pagination, setPagination] = useState({
-    limit: 50,
+    limit: 25,
     offset: 0,
   });
 

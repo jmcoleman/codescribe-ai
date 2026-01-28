@@ -234,7 +234,7 @@ export default function TrialsAdmin() {
   // Pagination
   const [pagination, setPagination] = useState({
     page: 1,
-    limit: 20,
+    limit: 25,
     total: 0,
     totalPages: 0
   });

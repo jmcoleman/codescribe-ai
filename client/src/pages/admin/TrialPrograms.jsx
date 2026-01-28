@@ -730,7 +730,7 @@ export default function Campaigns() {
   const [deletingTrialProgram, setDeletingCampaign] = useState(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [sorting, setSorting] = useState([{ id: 'starts_at', desc: true }]);
-  const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 0 });
+  const [pagination, setPagination] = useState({ page: 1, limit: 25, total: 0, totalPages: 0 });
   const [dismissedBanners, setDismissedBanners] = useState(() => {
     // Load dismissed banners from localStorage on mount
     try {

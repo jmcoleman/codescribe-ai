@@ -135,7 +135,7 @@ export default function InviteCodes() {
   const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, code: null }); // Delete confirmation modal
 
   // Pagination, sorting, and filtering state
-  const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 0 });
+  const [pagination, setPagination] = useState({ page: 1, limit: 25, total: 0, totalPages: 0 });
   const [sorting, setSorting] = useState([{ id: 'created_at', desc: true }]);
   const [filterStatus, setFilterStatus] = useState('');
   const [filterTier, setFilterTier] = useState('');
