@@ -231,8 +231,8 @@ describe('EventsTable', () => {
         expect(screen.getByText('session_start')).toBeInTheDocument();
       });
 
-      // Filter label should be present
-      expect(screen.getByText('Filter:')).toBeInTheDocument();
+      // Filter label should be present (from FilterBar component)
+      expect(screen.getByText('Filters:')).toBeInTheDocument();
     });
   });
 
@@ -247,7 +247,7 @@ describe('EventsTable', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText('Export CSV')).toBeInTheDocument();
+        expect(screen.getByLabelText('Export CSV')).toBeInTheDocument();
       });
     });
 
@@ -281,7 +281,7 @@ describe('EventsTable', () => {
       );
 
       await waitFor(() => {
-        const exportButton = screen.getByText('Export CSV').closest('button');
+        const exportButton = screen.getByLabelText('Export CSV');
         expect(exportButton).toBeDisabled();
       });
     });
