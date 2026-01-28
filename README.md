@@ -36,7 +36,6 @@ Transform code into comprehensive, professional documentation in seconds using A
 - [Quality Scoring](#quality-scoring)
 - [Product Decisions & PM Thinking](#product-decisions--pm-thinking)
 - [Key Implementation Highlights](#key-implementation-highlights)
-- [Development Status](#development-status)
 - [Contributing](#contributing)
 - [License](#license)
 - [Author](#author)
@@ -821,248 +820,35 @@ See [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) for complete
 
 ### 📊 Testing & Quality
 
-**Comprehensive Test Coverage: 4,550 Tests** (4,406 passing, 144 skipped, 96.9% pass rate)
-- **Backend Tests**: 2,312 tests (2,245 passing, 67 skipped, 0 failures) - Jest + Supertest
-  - Service layer: qualityScorer, claudeClient, codeParser, docGenerator, emailService, githubService
-  - LLM provider tests: 69 tests (llmService, config, utils, adapters)
-  - Authentication: 102 tests (auth middleware, user model, OAuth flows)
-  - Settings: 26 integration tests (profile, email, password, preferences)
-  - Database migrations: 50 tests (naming, checksums, ordering, migration 011)
-  - Contact Sales & Support: 73 tests (email sending, tier validation, name resolution, templates, attachments)
-  - Password reset: 25 tests (email verification, token validation, security)
-  - User deletion & restoration: 64 tests (GitHub OAuth restoration, email/password restoration)
-  - Integration: file upload, quality scoring, prompt quality, settings API
-  - Mermaid generation tests
-  - **Coverage**: 82.38% statements, 70.11% branches, 82.54% lines, 85%+ functions
-  - **Pass Rate**: 98.1% (1,724 passing, 33 skipped, 0 failures)
-- **Frontend Tests**: 2,238 tests (2,161 passing, 77 skipped, 0 failures) - Vitest + React Testing Library
-  - Component tests with accessibility checks (18/18 components tested)
-  - GitHub Loader: FileTree, TreeNode, GitHubLoadModal integration
-  - Authentication UI: SignupModal, LoginModal, ForgotPasswordModal, ResetPasswordModal
-  - Settings UI: AccountTab, AppearanceTab, PrivacyTab, SubscriptionTab, DangerZoneTab, AnalyticsWrapper
-  - Contact & Support Modals: ContactSalesModal (25 tests), ContactSupportModal (12 tests)
-  - Usage Dashboard: 30 tests (usage cards, progress bars, tier badges, refresh, accessibility)
-  - Legal Pages: 20 tests (PrivacyPolicy, TermsOfService - rendering, navigation, accessibility)
-  - Theme System: ThemeContext (auto/light/dark modes), AppearanceTab, Dark Mode integration
-  - Integration tests for App workflows
-  - Mermaid diagram rendering tests
-  - Toast notification system tests (33 tests)
-  - **Coverage**: 100% critical user paths
-  - **Pass Rate**: 97.3% (1,913 passing, 54 skipped, 0 failures)
-- **E2E Tests**: 10 tests across 5 browsers (Playwright)
-  - Cross-browser validation (Chromium, Firefox, WebKit, Chrome, Edge)
-  - File upload + generate workflows
-  - **Pass Rate**: 100% (10/10 tests passing)
-- **Overall Pass Rate**: 100% passing (4,406/4,406 tests passing, 144 intentionally skipped, 0 failures)
+**4,550 Tests** — 4,406 passing, 144 skipped, 0 failures (96.9% pass rate)
+
+| Layer | Tests | Framework | Coverage |
+|-------|-------|-----------|----------|
+| Backend | 2,312 (2,245 passing, 67 skipped) | Jest + Supertest | 82.38% statements, 70.11% branches |
+| Frontend | 2,238 (2,161 passing, 77 skipped) | Vitest + React Testing Library | 100% critical paths, 18/18 components |
+| E2E | 10 (5 browsers) | Playwright | Chromium, Firefox, WebKit, Chrome, Edge |
 
 **Running Tests:**
 ```bash
-# Frontend tests (from client/)
-npm test              # Run all tests once (1,401 tests)
-npm run test:ui       # Interactive UI mode
+# Frontend (from client/)
+npm test              # Run all tests
 npm run test:coverage # Generate coverage report
 
-# Backend tests (from server/)
-npm test              # Run all tests (878 tests, includes 21 skipped database tests)
-npm run test:watch    # Watch mode for development
+# Backend (from server/)
+npm test              # Run all tests
 npm run test:coverage # Generate coverage report with thresholds
 
-# Database tests (from server/ - requires Docker PostgreSQL on port 5433)
-npm run test:db:setup # Start test database container
-npm run test:db       # Run database tests (21 tests)
+# Database (from server/ — requires Docker PostgreSQL on port 5433)
+npm run test:db:setup    # Start test database container
+npm run test:db          # Run database tests
 npm run test:db:teardown # Stop test database container
 
-# E2E tests (from client/)
-npm run test:e2e              # All browsers (10 tests)
-npm run test:e2e:chromium     # Chromium only
-npm run test:e2e:firefox      # Firefox only
-npm run test:e2e:webkit       # WebKit (Safari) only
-npm run test:e2e:chrome       # Chrome only
-npm run test:e2e:edge         # Edge only
-npm run test:e2e:headed       # With browser UI (for debugging)
+# E2E (from client/)
+npm run test:e2e         # All browsers
+npm run test:e2e:headed  # With browser UI (for debugging)
 ```
 
-**Test Documentation Hub:**
-
-📚 **[Testing README](docs/testing/README.md)** - Complete testing documentation index with:
-- Quick Stats: 4,550 tests (2,238 frontend, 2,312 backend)
-- Testing Layers: Unit, Integration, Database, E2E
-- Database Testing Workflow: Docker setup, migrations, CI exclusion
-- Pre-Deployment Checklists: With/without database changes
-- Comprehensive Test Documentation Index: 12+ specialized test docs
-
-## Development Status
-
-**Current Phase:** Phase 3 - Analytics & Admin Tools
-**Production Status:** 🚀 **LIVE** at [codescribeai.com](https://codescribeai.com)
-**Last Updated:** January 28, 2026 (v3.5.3 - Analytics Infrastructure & Admin Dashboard Polish)
-
-### Phase Summary
-
-- **Phase 1.0 (Oct 11-16, 2025):** ✅ Core MVP features, streaming, quality scoring, testing
-- **Phase 1.5 (Oct 16-19, 2025):** ✅ WCAG 2.1 AA compliance, production deployment, analytics
-- **Phase 2 - Epic 2.1 (Oct 20-28, 2025):** ✅ Authentication & user management
-- **Phase 2 - Epic 2.2 (Oct 28-29, 2025):** ✅ Usage tracking & quota system backend
-- **Phase 2 - Epic 2.3 (Oct 29, 2025):** ✅ UX enhancements & file upload improvements
-- **Phase 2 - Epic 2.4 (Oct 31-Nov 2, 2025):** ✅ Payment integration & contact sales
-- **Phase 2 - Epic 2.5 (Nov 2-6, 2025):** ✅ Legal compliance (Terms, Privacy, Settings)
-- **Phase 2 - Epic 2.6 (Nov 5-7, 2025):** ✅ Usage Dashboard & Admin Tools
-  - Modern usage analytics dashboard with daily/monthly tracking
-  - Admin-only dashboard with global metrics & CSV export
-  - Critical bug fixes (authentication, SQL, migration preservation)
-- **Phase 2 - Epic 2.7 (Nov 8-9, 2025):** ✅ Dark Mode & UI Enhancements
-  - Complete dark mode implementation with theme persistence
-  - Custom Monaco & Prism syntax highlighting themes
-  - ThemeContext with localStorage and system preference detection
-  - 106 dark mode tests + critical ErrorBoundary fixes
-  - 2,385 tests (2,335 passing, 50 skipped, 100% pass rate)
-- **Phase 2 - Epic 4.1 (Nov 14, 2025):** ✅ GitHub Repository Integration (v2.7.9)
-  - GitHub repository file loader with tree browsing and preview
-  - Branch switching dropdown in file tree header
-  - Smart folder/file navigation with auto-scroll
-  - Public repository support via GitHub API
-  - Multi-provider LLM architecture (Claude + OpenAI)
-  - 2,529 tests (2,475 passing, 54 skipped, 97.9% pass rate)
-- **Phase 2 - UX Refinements (Nov 14, 2025):** ✅ Mermaid Diagram Improvements (v2.7.10)
-  - Auto-show Mermaid diagrams when generation completes (no manual button clicks)
-  - ER diagram theming with brand colors (indigo-600, purple-600)
-  - Amber warning colors for diagram errors (better UX than red)
-  - Quality modal default tab to "Criteria Breakdown"
-- **Phase 2 - UX Polish (Nov 15, 2025):** ✅ Theme Selection & Multi-File Design (v2.7.11)
-  - Appearance modal for unauthenticated users (GitHub-style theme switcher)
-  - 3-state theme cycling (Light → Dark → Auto → Light)
-  - Enhanced DocPanel empty state with clickable GitHub import button
-  - Smooth HelpModal tab transitions (200ms) following design system
-  - Mermaid error suppression (suppressErrors: true prevents bomb icons)
-  - Multi-file sidebar UX design document (comprehensive 5-week roadmap for v2.8.0)
-  - Doc Type label added to dropdown for accessibility
-  - 2,477 tests (2,421 passing, 56 skipped, 97.8% pass rate)
-- **Phase 2 - Next Epic:** 📋 Epic 2.8 - Subscription Management UI (Customer Portal, upgrade/downgrade flows)
-
-### ✅ Phase 1.0 & 1.5 Complete (Oct 11-19, 2025)
-
-**Core Features:**
-- AI-powered documentation generation with Claude Sonnet 4.5
-- Real-time streaming (SSE), quality scoring (0-100), AST code analysis
-- Monaco Editor, Mermaid diagrams, Toast notifications, Error handling
-- WCAG 2.1 AA accessibility (95/100, 0 violations)
-- Performance optimization: 45 → 75 Lighthouse score (+67%), 78KB bundle (-85%)
-- Privacy-first analytics with Vercel Analytics
-- Production deployment with CI/CD (GitHub Actions)
-
-**Quality Metrics:**
-- **4,029 tests** (2,067 frontend, 1,962 backend) - 100% pass rate
-- **Backend coverage:** (2,245 passing, 67 skipped)
-- **Frontend coverage:** 100% critical paths (2,162 passing, 76 skipped)
-- **Database:** 14 migration tests (Docker sandbox + Neon dev validation)
-
-### ✅ Phase 2 - Epic 2.6 Complete (Nov 5-7, 2025)
-
-**Usage Dashboard & Admin Tools:**
-- **Modern Usage Analytics Dashboard** (/usage)
-  - Daily and monthly usage tracking with visual progress bars
-  - Color-coded status indicators (Normal/High Usage/At Limit)
-  - Reset countdown timers with absolute dates
-  - Tier upgrade prompts with dynamic multipliers
-  - Refresh button with loading animations
-  - Quick action cards (Pricing, Settings, Documentation)
-  - Fully responsive layout (desktop grid, mobile stacked)
-
-- **Admin Dashboard** (/admin/usage)
-  - Role-based access control (admin email whitelist)
-  - Global metrics (total users, generations, active subscriptions)
-  - Tier distribution breakdown with percentages
-  - Recent activity table with user details
-  - Export to CSV functionality
-  - Real-time data refresh
-
-**Critical Bug Fixes:**
-- **Authentication Fix:** Added `credentials: 'include'` for session cookie transmission
-- **SQL Period Matching:** Changed from range (<=) to exact match (=) for accurate quota tracking
-- **Migration Preservation:** Added GREATEST() for last_reset_date to preserve daily counts during anonymous-to-authenticated migration
-- **UI Improvements:** RefreshCw icon, banner repositioning, compact tier badge
-
-**Testing & Quality:**
-- 22 new/updated tests (useUsageTracking, Usage model, UsageDashboard, LegalPages)
-- 2 test fixes for flaky timing and text matching issues
-- Updated documentation (CHANGELOG, ROADMAP, TODO, README)
-
-### ✅ Phase 2 - Epic 2.7 Complete (Nov 8-9, 2025)
-
-**Dark Mode & UI Enhancements:**
-- **Theme System**
-  - ThemeContext with React Context API for global state
-  - ThemeToggle component with smooth transitions
-  - Persistent localStorage with system preference detection
-  - Defensive error handling for browser APIs
-
-- **Dark Mode Styling**
-  - Comprehensive Tailwind dark: variants (13 components)
-  - Custom Monaco Editor dark theme (Neon Cyberpunk)
-  - Custom Prism syntax highlighting matching Monaco
-  - Mermaid diagram dark theme enhancements
-  - Consistent slate backgrounds with purple accents
-
-- **Critical Fixes**
-  - ErrorBoundary dark mode detection and styling
-  - Horizontal scrolling for long stack traces
-  - AdminUsage AlertCircle icon import fix
-  - Manual testing route (/test-error) for verification
-
-**Testing & Quality:**
-- **2,385 tests** (2,335 passing, 50 skipped) - 100% pass rate
-- 106 new dark mode tests (ThemeContext, ThemeToggle, components, integration)
-- 3 critical test fixes (ContactSupportModal, DocPanel, UsageLimitModal)
-- Updated documentation (CHANGELOG, ERROR-HANDLING-TESTS.md, ROADMAP)
-
-### ✅ Phase 2 - Epic 4.1 Complete (Nov 14, 2025)
-
-**GitHub Repository Integration (v2.7.9):**
-- **GitHub File Loader**
-  - Load public GitHub repositories via URL
-  - Tree-based file browser with folder expansion
-  - File preview with syntax highlighting
-  - Branch switching dropdown (matches GitHub UX)
-  - Auto-scroll to selected files in tree
-  - Smart error handling (404, rate limits, network errors)
-
-- **Multi-Provider LLM Architecture (v2.7.8)**
-  - Config-driven provider switching (Claude, OpenAI)
-  - Simplified adapter-based architecture (~650 lines)
-  - Provider metadata in API responses
-  - Environment-based provider selection
-  - 69 LLM service tests (100% backward compatible)
-
-**Technical Implementation:**
-- 4 new GitHubLoader components (Modal, FileTree, TreeNode, FilePreview)
-- 2 GitHub service files (backend + frontend)
-- 4 new API routes (tree, branches, file, raw file)
-- Headless UI Listbox for branch dropdown
-- Parallel fetching for branches + tree
-- Jest ESM transformation for @octokit packages
-
-**Testing & Quality:**
-- **2,529 tests** (2,475 passing, 54 skipped) - 97.9% pass rate
-- 69 LLM service tests (llmService, adapters, config, utils)
-- Updated ControlBar tests for GitHub button visibility
-- Backend: 82.38% statements, 70.11% branches
-- Frontend: 100% critical paths
-- All existing tests pass (100% backward compatible)
-
-**Documentation & Deployment:**
-- Created GITHUB-API-SCALING.md scaling guide
-- Updated Vercel deployment guides with new env vars
-- GITHUB_TOKEN setup for production (5000/hr rate limit)
-- LLM_PROVIDER configuration documentation
-
-### 🚀 Upcoming Phases
-
-- **Phase 4:** Subscription Management (upgrade/downgrade flows, billing history)
-- **Phase 5:** Developer Tools (CLI, VS Code extension, API client)
-- **Phase 6:** Enterprise Readiness (SSO, audit logs, white-label, teams)
-
-📚 **Complete Roadmap:** [ROADMAP.md](docs/planning/roadmap/ROADMAP.md) | 🗺️ **Interactive Timeline:** [codescribe-ai/docs/roadmap/](https://jmcoleman.github.io/codescribe-ai/docs/roadmap/)
-📝 **Full Release History:** [CHANGELOG.md](CHANGELOG.md)
+📚 **[Testing README](docs/testing/README.md)** — full testing index, database workflow, pre-deployment checklists, and 12+ specialized test docs.
 
 ## Contributing
 
