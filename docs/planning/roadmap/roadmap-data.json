@@ -65,8 +65,8 @@
       "text": "codescribeai.com",
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
-    "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.40",
-    "footer": "v3.5.3 Complete · Pricing Restructure to 4-Tier Model ✓ · GitHub Import Fix ✓ · Up Next: Dynamic Trial Configuration",
+    "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.41",
+    "footer": "v3.5.4 Complete · Admin Table UX Consistency ✓ · Chart Improvements ✓ · Server-Side Pagination ✓",
     "lastUpdated": "January 28, 2026"
   },
   "columns": [
@@ -76,6 +76,27 @@
       "title": "Completed",
       "subtitle": "Phase 1: Core Capabilities",
       "phases": [
+        {
+          "version": "v3.5.4",
+          "title": "Admin Table UX Consistency & Analytics Chart Improvements",
+          "duration": "1 day",
+          "status": "✓ Complete",
+          "completedDate": "Jan 28, 2026",
+          "badge": "UX Polish",
+          "features": [
+            "All Analytics Performance tab charts now support table view toggle for easier data analysis",
+            "Created specialized chart wrapper components reducing repetitive code from 20 lines to 8 lines per chart",
+            "Standardized filter pattern across all admin tables with consistent horizontal layout and clear filters button",
+            "Export buttons redesigned as icon-only secondary actions for cleaner table headers",
+            "Refresh buttons standardized to consistent size and placement across all admin tables",
+            "Server-side pagination implemented for all admin tables improving performance with large datasets",
+            "Pagination now displays total item counts and handles empty states gracefully",
+            "Sticky table headers maintain visibility when scrolling long data lists",
+            "Default pagination increased to 25 rows per page for better data density",
+            "Shared Pagination component ensures consistent navigation across admin interface",
+            "GitHub rate limiting decoupled from subscription tier enabling flexible token management"
+          ]
+        },
         {
           "version": "v3.5.3",
           "title": "Analytics Infrastructure & Admin Dashboard Polish",
