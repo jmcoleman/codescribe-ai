@@ -9,6 +9,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.5.4] - 2026-01-28
+
+**Summary:** Admin table UX consistency improvements and analytics chart enhancements. Standardized filter patterns, export buttons, and refresh functionality across all admin tables. Added table view toggles to all Performance tab charts and created specialized chart wrapper components to reduce code repetition.
+
+### Added
+
+- **ChartSections.jsx component** with 7 specialized chart wrapper components:
+  - `TrendChartSection`, `MultiLineTrendChartSection`, `FunnelChartSection`
+  - `BarChartSection`, `SuccessChartSection`, `DistributionChartSection`, `HeatmapChartSection`
+  - Reduces chart code from ~20 lines to ~8 lines per chart instance
+  - Centralizes table data transformation and column definitions
+- **FilterBar.jsx component** for consistent filter UI across admin tables
+  - Horizontal wrap layout with Filter icon and "Filters:" label
+  - "Clear filters" button (shows when any filter is active)
+  - Standard Select component usage with portal rendering
+- Table view toggle to all Analytics Performance tab charts (Latency Trend, Cache Hit Rate Trend, Throughput Trend)
+- Table data for Latency Breakdown chart showing 6 performance metrics
+- **UI-STANDARDS.md** documentation for button labeling conventions
+
+### Changed
+
+- Export buttons redesigned as icon-only secondary actions (no purple primary styling)
+- Export buttons reordered to appear before refresh buttons in table headers
+- Refresh button icons standardized to w-5 h-5 across all admin tables
+- Filter patterns standardized across Users, Trials, Compliance, InviteCodes, EventsTable pages
+- Select dropdowns now use portal rendering to prevent page scroll on open
+- Compliance page export button moved from page header to Audit Logs table header
+- BaseTable component now accepts title/description/onRefresh props for consistent table headers
+- Business Conversion Funnel chart height increased from 350px to 450px to prevent overflow
+- Latency Breakdown chart height optimized to 280px for proper table view display
+
+### Fixed
+
+- MultiLineTrendChartSection now properly merges dates from all series for table generation
+- Pagination "Showing X to Y of Z" now handles zero items gracefully (displays "No items")
+- BaseTable now shows header with refresh button even when data is empty
+- Select dropdown scroll jump issue resolved via portal rendering and scroll position preservation
+- Removed unused `isDark` parameters from FunnelChartSection and HeatmapChartSection
+- EventsTable refresh button now calls correct `fetchData` function instead of non-existent `fetchEvents`
+
+### Tests
+
+- Updated EventsTable tests for icon-only export button (use getByLabelText instead of getByText)
+- Updated filter label test from "Filter:" to "Filters:" to match FilterBar component
+- **Test Coverage:** 4,406 passing, 144 skipped, 0 failing (4,550 total tests)
+  - Frontend: 2,161 passing, 77 skipped (2,238 total)
+  - Backend: 2,245 passing, 67 skipped (2,312 total)
+
+---
+
 ## [3.5.3] - 2026-01-28
 
 **Summary:** Pricing restructure to 4-tier model (Free/$49/$199/Custom), GitHub import background loading fix, server-side analytics capture, HIPAA Compliance dashboard stabilization, and admin dashboard UX consistency pass.

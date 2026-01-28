@@ -559,7 +559,19 @@ codescribe-ai/
 
 ## 🔄 Version History
 
-**Current: v3.5.3** (January 28, 2026) - Analytics Infrastructure & Admin Dashboard Polish
+**Current: v3.5.4** (January 28, 2026) - Admin Table UX Consistency & Analytics Chart Improvements
+- **Admin table standardization:** Consistent filter patterns (FilterBar component), export buttons redesigned as icon-only secondary actions, refresh buttons standardized to w-5 h-5
+- **Analytics chart enhancements:** Table view toggles added to all Performance tab charts (Latency Trend, Cache Hit Rate, Throughput Trend, Latency Breakdown)
+- **Chart wrapper components:** Created ChartSections.jsx with 7 specialized wrappers reducing code from ~20 lines to ~8 lines per chart
+- **Server-side pagination:** Implemented across all admin tables (Users, Trials, InviteCodes, TrialPrograms, EventsTable, Compliance)
+- **UX improvements:** Sticky headers, 25-row pagination default, shared Pagination component, portal-rendered Select dropdowns preventing scroll jump
+- **Chart fixes:** Business Conversion Funnel overflow (450px height), MultiLineTrendChartSection date merging, Latency Breakdown height optimization (280px)
+- Test coverage: 4,550 tests (4,406 passing, 144 skipped, 0 failing)
+
+<details>
+<summary>Recent Releases (v3.5.3-v2.9.0) & Milestones</summary>
+
+**v3.5.3** (January 28, 2026) - Analytics Infrastructure & Admin Dashboard Polish
 - **Pricing restructure to profitable 4-tier model:** Free/$49/$199/Custom
   - Starter tier repurposed as programmatic-only trial/beta tier (not purchasable)
   - Pro: $49/month (38% margin), Team: $199/month for 5 users (66% margin at $39.80/user)
@@ -572,9 +584,6 @@ codescribe-ai/
 - **Shared `useDateRange` hook:** Consistent date range state, persistence, and API serialization across all admin pages
 - **Select dropdown scroll fix:** Portal-rendered Headless UI options no longer cause page scroll on open
 - Test coverage: 4,550 tests (4,406 passing, 144 skipped, 0 failing)
-
-<details>
-<summary>Recent Releases (v2.9.0-v3.5.2) & Milestones</summary>
 
 **v3.5.2** (Jan 27, 2026): Enterprise Healthcare HIPAA Compliance - 5 HIPAA features (224 tests), audit logging, PHI detection, encryption, compliance dashboard, BAA docs
 **v3.5.1** (Jan 26, 2026): GitHub Private Repos & Progressive Loading - Private repo access, progressive loading, pagination API, field-level errors
