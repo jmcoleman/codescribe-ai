@@ -66,8 +66,8 @@
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
     "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.40",
-    "footer": "v3.5.2 Complete · HIPAA Documentation & Email Setup ✓ · Up Next: Project Architecture Document · VS Code Extension: Separate Repo",
-    "lastUpdated": "January 27, 2026"
+    "footer": "v3.5.3 Complete · Pricing Restructure to 4-Tier Model ✓ · GitHub Import Fix ✓ · Up Next: Dynamic Trial Configuration",
+    "lastUpdated": "January 28, 2026"
   },
   "columns": [
     {
@@ -76,6 +76,28 @@
       "title": "Completed",
       "subtitle": "Phase 1: Core Capabilities",
       "phases": [
+        {
+          "version": "v3.5.3",
+          "title": "Analytics Infrastructure & Admin Dashboard Polish",
+          "duration": "2 days",
+          "status": "✓ Complete",
+          "completedDate": "Jan 28, 2026",
+          "badge": "Platform Reliability",
+          "features": [
+            "Simplified pricing from 5 tiers to 4 purchasable tiers (Free, Pro $49, Team $199, Enterprise $750+) for clearer value proposition",
+            "All paid tiers now profitable with 38% Pro margin, 66% Team margin, and 63% Enterprise margin",
+            "Team tier optimized to 5 users at $39.80/user for competitive team pricing",
+            "Annual pricing offers 17% discount across all paid tiers for improved retention",
+            "Fixed GitHub import race condition where selecting a repo during background loading would cause the file tree to disappear",
+            "Doc generation and quality score events now captured server-side so all API consumers are tracked automatically",
+            "Analytics endpoint secured with dedicated API key authentication for reliable data collection",
+            "HIPAA Compliance dashboard fully operational with date range filtering, audit log browsing, and CSV export",
+            "Date range selection now persists consistently across all admin dashboards",
+            "Admin dashboards (Analytics, HIPAA Compliance, Usage) aligned with consistent headers, card styling, and navigation",
+            "Filter dropdowns across admin pages use standard component for uniform appearance and keyboard accessibility",
+            "Fixed dropdown scroll jump when opening filter selects on long pages"
+          ]
+        },
         {
           "version": "v3.5.2",
           "title": "Enterprise Healthcare HIPAA Compliance",
@@ -1203,6 +1225,40 @@
             "Email notifications for subscription lifecycle events",
             "In-app notifications for billing issues and renewals",
             "Note: Core upgrade/downgrade flows completed in Epic 2.4"
+          ]
+        },
+        {
+          "version": "v3.7.0",
+          "title": "Dynamic Trial Configuration",
+          "duration": "3-4 days",
+          "status": "Planned",
+          "badge": "Growth Infrastructure",
+          "features": [
+            "Configure trial features without code deployment using database-driven settings",
+            "Test different trial configurations with A/B testing framework",
+            "Create custom trial experiences for partner programs with unique feature combinations",
+            "Adjust trial duration and limits per campaign for optimization",
+            "Override trial features for specific campaigns (beta access, partner perks)",
+            "Real-time trial configuration changes without system restarts",
+            "Campaign-level feature flag management interface",
+            "Note: Builds on programmatic Starter tier from v3.5.2 pricing update"
+          ]
+        },
+        {
+          "version": "v3.8.0",
+          "title": "Trial Analytics Dashboard",
+          "duration": "4-5 days",
+          "status": "Planned",
+          "badge": "Data-Driven Growth",
+          "features": [
+            "Trial funnel visualization showing signup to conversion journey",
+            "Cohort analysis comparing conversion rates across different trial campaigns",
+            "Feature usage heatmaps revealing which trial features drive conversions",
+            "Time-to-first-doc metrics identifying engagement patterns",
+            "Conversion prediction scores using ML to forecast trial outcomes",
+            "Campaign comparison dashboard for optimizing trial strategies",
+            "Days-to-conversion analysis showing optimal trial duration",
+            "Export trial analytics data for external reporting and analysis"
           ]
         }
       ]
