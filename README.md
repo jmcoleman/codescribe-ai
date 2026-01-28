@@ -514,7 +514,7 @@ For a complete navigation guide with descriptions of all documentation, see **[D
 
 **Development & Testing:**
 - **[Dev Guide](docs/planning/mvp/05-Dev-Guide.md)** - Implementation guide with code examples
-- **[Testing Hub](docs/testing/README.md)** - 4,186 tests (4,186 passing, 106 skipped), coverage reports, test patterns
+- **[Testing Hub](docs/testing/README.md)** - 4,550 tests (4,406 passing, 144 skipped), coverage reports, test patterns
 - **[Test Fixes Guide](docs/testing/TEST-PATTERNS-GUIDE.md)** - Testing patterns & best practices
 
 **Design & UX:**
@@ -539,6 +539,7 @@ For a complete navigation guide with descriptions of all documentation, see **[D
 - **Vite 7** - Lightning-fast build tool and dev server
 - **Tailwind CSS 3.4** - Utility-first CSS framework
 - **Monaco Editor** - VS Code's editor in the browser
+- **Headless UI** - Accessible dropdown/listbox components (Select filters, branch switching)
 - **react-markdown** - Safe markdown rendering with GitHub Flavored Markdown (GFM)
 - **react-syntax-highlighter** - Code syntax highlighting in documentation
 - **Mermaid.js** - Interactive diagram rendering (flowcharts, sequence diagrams, etc.)
@@ -553,6 +554,8 @@ For a complete navigation guide with descriptions of all documentation, see **[D
 - **Node.js 22** - JavaScript runtime (v22.19.0)
 - **Express 5** - Minimalist web framework
 - **Multi-LLM Provider Architecture** - Anthropic Claude Sonnet 4.5, OpenAI GPT-5.1, Google Gemini 3.0 Pro with intelligent routing per doc type
+- **Neon Postgres** (`@vercel/postgres`) - Serverless database for authentication, usage tracking, and audit logging
+- **Resend** - Email delivery for verification, password reset, and notifications
 - **Acorn** - JavaScript AST parser for code analysis
 - **Multer** - File upload middleware with validation
 - **express-rate-limit** - Rate limiting middleware (10 requests/min per IP)
@@ -563,7 +566,7 @@ For a complete navigation guide with descriptions of all documentation, see **[D
 - **Server-Sent Events (SSE)** - Real-time streaming with chunked responses
 - **RESTful API** - Standard HTTP endpoints with comprehensive error handling
 - **Service Layer Pattern** - Clean separation of concerns (services, routes, middleware)
-- **No Database** - Stateless, privacy-focused design (code never persisted)
+- **Privacy-First Data Model** - Code processed in memory only, never persisted; database stores only auth, usage quotas, and audit logs
 - **Rate Limiting** - Smart throttling with retry-after headers
 - **Error Middleware** - Centralized error handling and logging
 
@@ -818,7 +821,7 @@ See [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) for complete
 
 ### 📊 Testing & Quality
 
-**Comprehensive Test Coverage: 4,550 Tests** (4,407 passing, 143 skipped, 96.9% pass rate)
+**Comprehensive Test Coverage: 4,550 Tests** (4,406 passing, 144 skipped, 96.9% pass rate)
 - **Backend Tests**: 2,312 tests (2,245 passing, 67 skipped, 0 failures) - Jest + Supertest
   - Service layer: qualityScorer, claudeClient, codeParser, docGenerator, emailService, githubService
   - LLM provider tests: 69 tests (llmService, config, utils, adapters)
@@ -832,7 +835,7 @@ See [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) for complete
   - Mermaid generation tests
   - **Coverage**: 82.38% statements, 70.11% branches, 82.54% lines, 85%+ functions
   - **Pass Rate**: 98.1% (1,724 passing, 33 skipped, 0 failures)
-- **Frontend Tests**: 2,238 tests (2,162 passing, 76 skipped, 0 failures) - Vitest + React Testing Library
+- **Frontend Tests**: 2,238 tests (2,161 passing, 77 skipped, 0 failures) - Vitest + React Testing Library
   - Component tests with accessibility checks (18/18 components tested)
   - GitHub Loader: FileTree, TreeNode, GitHubLoadModal integration
   - Authentication UI: SignupModal, LoginModal, ForgotPasswordModal, ResetPasswordModal
@@ -850,7 +853,7 @@ See [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) for complete
   - Cross-browser validation (Chromium, Firefox, WebKit, Chrome, Edge)
   - File upload + generate workflows
   - **Pass Rate**: 100% (10/10 tests passing)
-- **Overall Pass Rate**: 100% passing (4,186/4,186 tests passing, 106 intentionally skipped, 0 failures)
+- **Overall Pass Rate**: 100% passing (4,406/4,406 tests passing, 144 intentionally skipped, 0 failures)
 
 **Running Tests:**
 ```bash
@@ -882,7 +885,7 @@ npm run test:e2e:headed       # With browser UI (for debugging)
 **Test Documentation Hub:**
 
 📚 **[Testing README](docs/testing/README.md)** - Complete testing documentation index with:
-- Quick Stats: 4,186 tests (2,106 frontend, 2,080 backend)
+- Quick Stats: 4,550 tests (2,238 frontend, 2,312 backend)
 - Testing Layers: Unit, Integration, Database, E2E
 - Database Testing Workflow: Docker setup, migrations, CI exclusion
 - Pre-Deployment Checklists: With/without database changes
@@ -892,7 +895,7 @@ npm run test:e2e:headed       # With browser UI (for debugging)
 
 **Current Phase:** Phase 3 - Analytics & Admin Tools
 **Production Status:** 🚀 **LIVE** at [codescribeai.com](https://codescribeai.com)
-**Last Updated:** January 27, 2026 (v3.5.2 - Enterprise Healthcare HIPAA Compliance)
+**Last Updated:** January 28, 2026 (v3.5.3 - Analytics Infrastructure & Admin Dashboard Polish)
 
 ### Phase Summary
 
