@@ -11,6 +11,45 @@
  */
 
 export const TIER_FEATURES = {
+  // TRIAL/BETA TIER: Not available for purchase, only granted programmatically
+  // Use for: Auto-trials, beta programs, partner programs, A/B testing
+  // Configure features independently of production tiers
+  starter: {
+    // Volume Limits (trial tier - between Free and Pro)
+    maxFileSize: 500_000,               // 500KB - larger files
+    dailyGenerations: 20,               // ~100/month for trial use
+    monthlyGenerations: 100,            // Trial cap (between Free 10 and Pro 200)
+
+    // All Free Features
+    documentTypes: ['README', 'JSDOC', 'API', 'ARCHITECTURE'],
+    streaming: true,
+    qualityScoring: true,
+    monacoEditor: true,
+    fileUpload: true,
+    codeParser: true,
+    mermaidDiagrams: true,
+    markdownExport: true,
+
+    // Trial Feature Access (show premium value)
+    builtInApiCredits: true,            // Show server API benefits
+    priorityQueue: true,                // Show priority processing
+    privateGitHubRepos: true,           // Show premium GitHub access
+
+    // Hold Back Advanced Features (upgrade incentive)
+    batchProcessing: false,             // Single file only (upgrade to Pro)
+    customTemplates: false,             // Default templates only
+    exportFormats: ['markdown'],        // Only markdown
+    apiAccess: false,                   // Web UI only (Team+ feature)
+
+    // Support (trial tier)
+    support: 'email',                   // Email support during trial
+    sla: null,                          // No formal SLA
+
+    // Deployment
+    selfHosted: true,                   // Can self-host
+    whiteLabel: false,                  // CodeScribe branding required
+  },
+
   free: {
     // Volume Limits (Primary conversion driver)
     maxFileSize: 100_000,              // 100KB - typical single file
@@ -36,6 +75,7 @@ export const TIER_FEATURES = {
     customTemplates: false,             // Default templates only (Phase 4 Epic 4.3)
     exportFormats: ['markdown'],        // Only markdown (HTML/PDF in Phase 4)
     apiAccess: false,                   // Web UI only (Team+ feature)
+    privateGitHubRepos: false,          // Public repos only (Pro+ feature)
 
     // Support
     support: 'community',               // GitHub Discussions, Discord
@@ -46,45 +86,10 @@ export const TIER_FEATURES = {
     whiteLabel: false,                  // CodeScribe branding required
   },
 
-  starter: {
-    // Volume Limits (5x free tier - convenience tier)
-    maxFileSize: 500_000,               // 500KB - larger files
-    dailyGenerations: 10,               // ~50/month for regular use
-    monthlyGenerations: 50,             // Hard monthly cap (5x Free)
-
-    // All Free Features
-    documentTypes: ['README', 'JSDOC', 'API', 'ARCHITECTURE'],
-    streaming: true,
-    qualityScoring: true,
-    monacoEditor: true,
-    fileUpload: true,
-    codeParser: true,
-    mermaidDiagrams: true,
-    markdownExport: true,
-
-    // Soft Features (Marketing differentiators - same as Free technically)
-    builtInApiCredits: true,            // Soft feature: Uses server API key (same as Free)
-    priorityQueue: true,                // Soft feature: Flag only (same speed in v2.1)
-
-    // Hard Limitations (Same as Free)
-    batchProcessing: false,             // Single file only (Phase 3 Epic 3.3)
-    customTemplates: false,             // Default templates only (Phase 4 Epic 4.3)
-    exportFormats: ['markdown'],        // Only markdown (HTML/PDF in Phase 4)
-    apiAccess: false,                   // Web UI only (Team+ feature)
-
-    // Support (Upgrade from Free)
-    support: 'email',                   // Email support, 48hr response
-    sla: null,                          // No formal SLA
-
-    // Deployment
-    selfHosted: true,                   // Still can self-host
-    whiteLabel: false,                  // CodeScribe branding required
-  },
-
   pro: {
-    // Volume Limits (20x free tier - perfect for active developers)
+    // Volume Limits (20x free tier - entry-level professional tier at $49/month)
     maxFileSize: 1_000_000,             // 1MB - multiple files or large projects
-    dailyGenerations: 50,               // ~200/month for daily use
+    dailyGenerations: 40,               // ~200/month for daily use
     monthlyGenerations: 200,            // Hard monthly cap (20x Free)
 
     // All Starter Features
@@ -111,6 +116,7 @@ export const TIER_FEATURES = {
     // Team+ Features (Not in Pro)
     apiAccess: false,                   // Reserved for Team+
     versionHistory: false,              // Reserved for Team+
+    privateGitHubRepos: true,           // Private GitHub repos (Pro+ feature)
 
     // Support (Upgrade from Starter)
     support: 'email',                   // Email support, 24hr response (faster than Starter)
@@ -126,7 +132,7 @@ export const TIER_FEATURES = {
     maxFileSize: 5_000_000,             // 5MB - large codebases
     dailyGenerations: 250,              // ~1,000/month shared
     monthlyGenerations: 1000,           // Shared team quota (100x free tier)
-    maxUsers: 10,                       // Team size limit
+    maxUsers: 5,                        // Team size limit
 
     // All Pro Features
     documentTypes: ['README', 'JSDOC', 'API', 'ARCHITECTURE'],
@@ -154,6 +160,7 @@ export const TIER_FEATURES = {
     slackIntegration: true,             // Notifications to Slack
     githubIntegration: true,            // Auto-doc on PR merge
     cicdIntegration: true,              // GitHub Actions, GitLab CI
+    privateGitHubRepos: true,           // Private GitHub repos (Pro+ feature)
 
     // Support
     support: 'priority-email',          // Email support, 24hr priority (business hours)
@@ -195,6 +202,7 @@ export const TIER_FEATURES = {
     slackIntegration: true,
     githubIntegration: true,
     cicdIntegration: true,
+    privateGitHubRepos: true,           // Private GitHub repos (Pro+ feature)
 
     // Enterprise Additions (Compliance + Control)
     ssoSaml: true,                      // Single Sign-On
@@ -228,28 +236,30 @@ export const TIER_PRICING = {
     description: '10 docs/month OR self-hosted unlimited',
   },
   starter: {
-    price: 12,
-    period: 'month',
-    annual: 120,                        // 2 months free
-    description: '50 docs/month, built-in API credits, priority queue',
+    // Trial/Beta tier - NOT AVAILABLE FOR PURCHASE
+    // Only granted via: auto-trials, campaigns, beta programs, admin grants
+    price: null,
+    period: null,
+    description: 'Trial tier (100 docs/month, premium features for evaluation)',
+    notes: 'Programmatic-only tier for trials and beta testing',
   },
   pro: {
-    price: 29,
+    price: 49,
     period: 'month',
-    annual: 290,                        // 2 months free
-    description: '200 docs/month, batch processing, custom templates, export formats',
+    annual: 492,                        // 17% savings ($41/month)
+    description: '200 docs/month, multi-file, batch processing, private repos',
   },
   team: {
-    price: 99,
+    price: 199,
     period: 'month',
-    annual: 990,                        // 2 months free
-    description: '1,000 docs/month, 10 users, team workspace, integrations',
+    annual: 1980,                       // 17% savings ($165/month)
+    description: '1,000 docs/month, 5 users, team workspace, integrations',
   },
   enterprise: {
     price: null,                        // Custom pricing
     period: null,
-    description: 'Unlimited docs, SSO, SLA, white-label, dedicated support',
-    startingAt: 500,                    // Starting monthly price for sales page
+    description: 'Unlimited docs, HIPAA compliance, BAA, audit logging, dedicated support',
+    startingAt: 750,                    // Starting monthly price for sales page
   },
 };
 
@@ -286,8 +296,9 @@ export const getUpgradePath = (currentTier, feature) => {
   const currentIndex = tierOrder.indexOf(currentTier);
 
   // Find first tier with feature that's higher than current
+  // Skip starter if not programmatic tier (only show purchasable tiers)
   const upgradeTier = tiersWithFeature.find(tier =>
-    tierOrder.indexOf(tier) > currentIndex
+    tierOrder.indexOf(tier) > currentIndex && tier !== 'starter'
   );
 
   return {
@@ -295,6 +306,20 @@ export const getUpgradePath = (currentTier, feature) => {
     recommendedUpgrade: upgradeTier,
     pricing: upgradeTier ? TIER_PRICING[upgradeTier] : null,
   };
+};
+
+/**
+ * Helper: Check if tier is programmatic-only (not purchasable)
+ */
+export const isProgrammaticTier = (tier) => {
+  return tier === 'starter'; // Only starter is programmatic-only
+};
+
+/**
+ * Helper: Get all purchasable tiers (exclude programmatic tiers)
+ */
+export const getPurchasableTiers = () => {
+  return Object.keys(TIER_FEATURES).filter(tier => !isProgrammaticTier(tier));
 };
 
 /**

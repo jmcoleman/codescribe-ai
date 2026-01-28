@@ -351,14 +351,12 @@ To enable authentication features, set `ENABLE_AUTH=true` and configure addition
 | `STRIPE_SECRET_KEY` | Stripe secret key (test mode: `sk_test_...`, live mode: `sk_live_...`) |
 | `STRIPE_PUBLISHABLE_KEY` | Stripe publishable key (test mode: `pk_test_...`, live mode: `pk_live_...`) |
 | `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret (get from Stripe Dashboard → Webhooks) |
-| `STRIPE_PRICE_STARTER_MONTHLY` | Price ID for Starter tier monthly ($12/mo) |
-| `STRIPE_PRICE_STARTER_ANNUAL` | Price ID for Starter tier annual ($120/yr) |
-| `STRIPE_PRICE_PRO_MONTHLY` | Price ID for Pro tier monthly ($29/mo) |
-| `STRIPE_PRICE_PRO_ANNUAL` | Price ID for Pro tier annual ($288/yr) |
-| `STRIPE_PRICE_TEAM_MONTHLY` | Price ID for Team tier monthly ($99/mo) |
-| `STRIPE_PRICE_TEAM_ANNUAL` | Price ID for Team tier annual ($984/yr) |
-| `STRIPE_SUCCESS_URL` | Redirect URL after successful payment (e.g., `http://localhost:5173/payment/success`) |
-| `STRIPE_CANCEL_URL` | Redirect URL when payment is cancelled (e.g., `http://localhost:5173/pricing`) |
+| `STRIPE_PRICE_PRO_MONTHLY` | Price ID for Pro tier monthly ($49/mo) |
+| `STRIPE_PRICE_PRO_ANNUAL` | Price ID for Pro tier annual ($492/yr) |
+| `STRIPE_PRICE_TEAM_MONTHLY` | Price ID for Team tier monthly ($199/mo) |
+| `STRIPE_PRICE_TEAM_ANNUAL` | Price ID for Team tier annual ($1,980/yr) |
+| `STRIPE_SUCCESS_URL` | *(local dev only)* Redirect after payment — auto-resolved via `VERCEL_URL` in Vercel |
+| `STRIPE_CANCEL_URL` | *(local dev only)* Redirect on cancel — auto-resolved via `VERCEL_URL` in Vercel |
 
 > **Stripe Environment Modes:**
 > - **`sandbox` (default):** Uses Stripe test mode with test cards and test price IDs. No real charges.
@@ -414,14 +412,12 @@ STRIPE_ENV=sandbox  # Use 'sandbox' for testing (default), 'production' for live
 STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key
 STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_publishable_key
 STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
-STRIPE_PRICE_STARTER_MONTHLY=price_xxxxx
-STRIPE_PRICE_STARTER_ANNUAL=price_xxxxx
 STRIPE_PRICE_PRO_MONTHLY=price_xxxxx
 STRIPE_PRICE_PRO_ANNUAL=price_xxxxx
 STRIPE_PRICE_TEAM_MONTHLY=price_xxxxx
 STRIPE_PRICE_TEAM_ANNUAL=price_xxxxx
-STRIPE_SUCCESS_URL=http://localhost:5173/payment/success
-STRIPE_CANCEL_URL=http://localhost:5173/pricing
+STRIPE_SUCCESS_URL=http://localhost:5173/payment/success  # local dev only
+STRIPE_CANCEL_URL=http://localhost:5173/pricing           # local dev only
 
 # OAuth (optional)
 GITHUB_CLIENT_ID=Iv1.your-client-id
@@ -675,26 +671,28 @@ Grading scale: A (90+), B (80-89), C (70-79), D (60-69), F (<60)
 
 ### 🎯 Monetization Strategy (Phase 2 Planning)
 
-**Tier Structure:**
+**Tier Structure (4-tier model):**
 
 | Tier | Price | Quota | Target User |
 |------|-------|-------|-------------|
 | **Free** | $0/mo | 3 docs/day, 10/month | Hobbyists, portfolio projects |
-| **Starter** | $12/mo | 50 docs/day, 1,500/month | Solo developers, consultants |
-| **Pro** | $29/mo | 200 docs/day, 6,000/month | Small teams (2-5 devs) |
-| **Team** | $99/mo | 1,000 docs/day, 30,000/month | Development teams (5-20 devs) |
+| **Pro** | $49/mo ($41 annual) | 40 docs/day, 200/month | Individual professionals |
+| **Team** | $199/mo ($165 annual) | 250 docs/day, 1,000/month | Teams up to 5 members |
+| **Enterprise** | Custom ($750+) | Unlimited | Healthcare/HIPAA organizations |
+
+> **Note:** Starter tier exists in the backend as a programmatic-only trial/beta tier (not purchasable). Used for auto-trials, partner programs, and A/B testing.
 
 **Pricing Rationale:**
-- **Free tier** - Generous enough to validate product, restrictive enough to drive conversions
-- **Starter** - Anchored to Netflix pricing ($12) for individual affordability
-- **Pro** - Positioned for small teams (cheaper than hiring a technical writer)
-- **Team** - Enterprise-lite pricing with volume economics
+- **Free tier** - 10 docs/month drives adoption; daily limit (3/day) prevents abuse
+- **Pro** - Entry professional tier at $49, 38% gross margin, competitive vs. Mintlify ($120) and ReadMe ($99)
+- **Team** - $39.80/user for 5 members, 66% gross margin, includes collaboration features
+- **Enterprise** - HIPAA compliance justifies premium, 63% gross margin
 
 **Key Metrics to Track:**
-- Free → Paid conversion rate (target: 3-5%)
-- Monthly Active Users (MAU) per tier
-- Average docs per user (engagement proxy)
-- Churn rate by tier (quality signal)
+- Free → Pro conversion rate (target: 5-10%)
+- Pro → Team upgrade rate (target: 10-20%)
+- Average revenue per paying customer (target: $60+)
+- Churn rate by tier (target: <5% monthly)
 
 ### 🧪 Quality Gate: Testing Strategy
 

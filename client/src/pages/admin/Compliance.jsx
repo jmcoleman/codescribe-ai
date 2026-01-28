@@ -25,8 +25,10 @@ import { useAuth } from '../../contexts/AuthContext';
 import { API_URL } from '../../config/api';
 import { PageLayout } from '../../components/PageLayout';
 import DateRangePicker from '../../components/admin/DateRangePicker';
-import { STORAGE_KEYS, getSessionItem, setSessionItem } from '../../constants/storage';
+import { STORAGE_KEYS } from '../../constants/storage';
+import { useDateRange } from '../../hooks/useDateRange';
 import { formatNumber, formatPercent } from '../../components/admin/charts';
+import { Select } from '../../components/Select';
 import { Tooltip } from '../../components/Tooltip';
 
 // Risk level colors
@@ -57,6 +59,28 @@ const RISK_COLORS = {
   },
 };
 
+const ACTION_OPTIONS = [
+  { value: '', label: 'All Actions' },
+  { value: 'code_generation', label: 'Code Generation' },
+  { value: 'file_upload', label: 'File Upload' },
+  { value: 'login', label: 'Login' },
+  { value: 'logout', label: 'Logout' },
+];
+
+const PHI_OPTIONS = [
+  { value: '', label: 'All' },
+  { value: 'true', label: 'Yes' },
+  { value: 'false', label: 'No' },
+];
+
+const RISK_OPTIONS = [
+  { value: '', label: 'All Levels' },
+  { value: 'high', label: 'High' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'low', label: 'Low' },
+  { value: 'none', label: 'None' },
+];
+
 /**
  * Stats Card Component
  */
@@ -69,7 +93,7 @@ function StatsCard({ icon: Icon, label, value, subValue, color = 'purple', descr
   };
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-lg shadow p-6 border border-slate-200 dark:border-slate-700">
+    <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700">
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
@@ -205,25 +229,7 @@ export default function Compliance() {
   const [error, setError] = useState(null);
 
   // Filters
-  const [dateRange, setDateRange] = useState(() => {
-    const stored = getSessionItem(STORAGE_KEYS.COMPLIANCE_DATE_RANGE);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        return {
-          startDate: parsed.startDate ? new Date(parsed.startDate) : null,
-          endDate: parsed.endDate ? new Date(parsed.endDate) : null,
-        };
-      } catch {
-        return { startDate: null, endDate: null };
-      }
-    }
-    // Default: Last 30 days
-    const end = new Date();
-    const start = new Date();
-    start.setDate(start.getDate() - 30);
-    return { startDate: start, endDate: end };
-  });
+  const { dateRange, setDateRange } = useDateRange(STORAGE_KEYS.COMPLIANCE_DATE_RANGE);
 
   const [filters, setFilters] = useState({
     action: '',
@@ -236,11 +242,6 @@ export default function Compliance() {
     limit: 50,
     offset: 0,
   });
-
-  // Persist date range
-  useEffect(() => {
-    setSessionItem(STORAGE_KEYS.COMPLIANCE_DATE_RANGE, JSON.stringify(dateRange));
-  }, [dateRange]);
 
   // Fetch audit logs and stats
   const fetchData = useCallback(async () => {
@@ -259,12 +260,8 @@ export default function Compliance() {
         offset: pagination.offset.toString(),
       });
 
-      if (dateRange.startDate) {
-        params.append('startDate', dateRange.startDate.toISOString());
-      }
-      if (dateRange.endDate) {
-        params.append('endDate', dateRange.endDate.toISOString());
-      }
+      params.append('startDate', dateRange.startDate.toISOString());
+      params.append('endDate', dateRange.endDate.toISOString());
       if (filters.action) {
         params.append('action', filters.action);
       }
@@ -293,9 +290,9 @@ export default function Compliance() {
       }
 
       const data = await response.json();
-      setLogs(data.data.logs);
-      setTotal(data.data.total);
-      setStats(data.data.stats);
+      setLogs(data.data.logs || []);
+      setTotal(data.data.total || 0);
+      setStats(data.data.stats || null);
     } catch (err) {
       console.error('Error fetching compliance data:', err);
       setError(err.message);
@@ -318,12 +315,8 @@ export default function Compliance() {
 
       // Build query params (same as fetch but no pagination)
       const params = new URLSearchParams();
-      if (dateRange.startDate) {
-        params.append('startDate', dateRange.startDate.toISOString());
-      }
-      if (dateRange.endDate) {
-        params.append('endDate', dateRange.endDate.toISOString());
-      }
+      params.append('startDate', dateRange.startDate.toISOString());
+      params.append('endDate', dateRange.endDate.toISOString());
       if (filters.action) {
         params.append('action', filters.action);
       }
@@ -390,12 +383,12 @@ export default function Compliance() {
         <div className="mb-8">
           <Link
             to="/admin"
-            className="inline-flex items-center text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 mb-4"
+            className="inline-flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 mb-4"
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
+            <ArrowLeft className="h-4 w-4" />
             Back to Admin
           </Link>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h1 className="text-3xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
                 <Shield className="h-8 w-8 text-purple-600" />
@@ -405,13 +398,16 @@ export default function Compliance() {
                 Audit logs, PHI detection monitoring, and compliance reporting
               </p>
             </div>
-            <button
-              onClick={handleExport}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors"
-            >
-              <Download className="h-4 w-4" />
-              Export CSV
-            </button>
+            <div className="flex items-center gap-4">
+              <DateRangePicker startDate={dateRange.startDate} endDate={dateRange.endDate} onChange={handleDateRangeChange} />
+              <button
+                onClick={handleExport}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors"
+              >
+                <Download className="h-4 w-4" />
+                Export CSV
+              </button>
+            </div>
           </div>
         </div>
 
@@ -427,11 +423,6 @@ export default function Compliance() {
             </div>
           </div>
         )}
-
-        {/* Date Range Picker */}
-        <div className="mb-6">
-          <DateRangePicker dateRange={dateRange} onChange={handleDateRangeChange} />
-        </div>
 
         {/* Stats Cards */}
         {stats && (
@@ -470,70 +461,43 @@ export default function Compliance() {
         )}
 
         {/* Filters */}
-        <div className="bg-white dark:bg-slate-800 rounded-lg shadow p-6 border border-slate-200 dark:border-slate-700 mb-6">
+        <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700 mb-6">
           <div className="flex items-center gap-2 mb-4">
             <Filter className="h-5 w-5 text-slate-600 dark:text-slate-400" />
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Filters</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                Action
-              </label>
-              <select
-                value={filters.action}
-                onChange={(e) => handleFilterChange('action', e.target.value)}
-                className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-white"
-              >
-                <option value="">All Actions</option>
-                <option value="code_generation">Code Generation</option>
-                <option value="file_upload">File Upload</option>
-                <option value="login">Login</option>
-                <option value="logout">Logout</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                PHI Present
-              </label>
-              <select
-                value={filters.containsPhi}
-                onChange={(e) => handleFilterChange('containsPhi', e.target.value)}
-                className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-white"
-              >
-                <option value="">All</option>
-                <option value="true">Yes</option>
-                <option value="false">No</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                Risk Level
-              </label>
-              <select
-                value={filters.riskLevel}
-                onChange={(e) => handleFilterChange('riskLevel', e.target.value)}
-                className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-white"
-              >
-                <option value="">All Levels</option>
-                <option value="high">High</option>
-                <option value="medium">Medium</option>
-                <option value="low">Low</option>
-                <option value="none">None</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                User Email
-              </label>
-              <input
-                type="text"
-                value={filters.userEmail}
-                onChange={(e) => handleFilterChange('userEmail', e.target.value)}
-                placeholder="user@example.com"
-                className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-white placeholder-slate-400"
-              />
-            </div>
+          <div className="flex flex-wrap items-end gap-3">
+            <Select
+              value={filters.action}
+              onChange={(val) => handleFilterChange('action', val)}
+              placeholder="All Actions"
+              options={ACTION_OPTIONS}
+              ariaLabel="Filter by action"
+            />
+            <Select
+              value={filters.containsPhi}
+              onChange={(val) => handleFilterChange('containsPhi', val)}
+              placeholder="All"
+              options={PHI_OPTIONS}
+              ariaLabel="Filter by PHI presence"
+            />
+            <Select
+              value={filters.riskLevel}
+              onChange={(val) => handleFilterChange('riskLevel', val)}
+              placeholder="All Levels"
+              options={RISK_OPTIONS}
+              ariaLabel="Filter by risk level"
+            />
+            <input
+              type="text"
+              value={filters.userEmail}
+              onChange={(e) => handleFilterChange('userEmail', e.target.value)}
+              placeholder="Filter by user email..."
+              autoComplete="off"
+              className="px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder:text-slate-400 dark:placeholder:text-slate-500"
+              style={{ width: '200px' }}
+              aria-label="Filter by user email"
+            />
           </div>
           <div className="mt-4 flex justify-end">
             <button
@@ -546,7 +510,7 @@ export default function Compliance() {
         </div>
 
         {/* Audit Logs Table */}
-        <div className="bg-white dark:bg-slate-800 rounded-lg shadow border border-slate-200 dark:border-slate-700">
+        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
           <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Audit Logs</h2>
@@ -559,7 +523,7 @@ export default function Compliance() {
               </button>
             </div>
             <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-              Showing {logs.length} of {formatNumber(total)} total logs
+              Showing {(logs || []).length} of {formatNumber(total)} total logs
             </p>
           </div>
           <AuditLogTable logs={logs} loading={loading} />

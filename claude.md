@@ -12,7 +12,7 @@
 AI-powered documentation generator with real-time streaming, quality scoring (0-100), and WCAG 2.1 AA compliance.
 
 **Key Metrics:**
-- 4,550 tests (4,407 passing, 143 skipped, 0 failing) | 96.9% pass rate | 95.45% middleware coverage
+- 4,550 tests (4,406 passing, 144 skipped, 0 failing) | 96.9% pass rate | 95.45% middleware coverage
 - Lighthouse: 75/100 performance (+67%), 100/100 accessibility
 - Bundle: 78KB gzipped (-85% reduction)
 - Accessibility: 95/100 score, 0 axe violations
@@ -329,6 +329,30 @@ const response = await fetch(`${API_URL}/api/protected-endpoint`, {
 ✅ **Always require** explicit Close button click
 **Why:** Users need time to read confirmations. Industry standard (Stripe, Gmail, Slack).
 
+### Select/Dropdown Pattern: Always Use `<Select>` Component
+❌ **Never use native `<select>` elements** in admin dashboards or filter UIs
+✅ **Always use** the custom `<Select>` component from `src/components/Select.jsx`
+
+```jsx
+import { Select } from '../../components/Select';
+
+const OPTIONS = [
+  { value: '', label: 'All Items' },
+  { value: 'foo', label: 'Foo' },
+  { value: 'bar', label: 'Bar' },
+];
+
+<Select
+  value={currentValue}
+  onChange={(val) => setValue(val)}
+  placeholder="All Items"
+  options={OPTIONS}
+  ariaLabel="Filter by item"
+/>
+```
+
+**Why:** Consistent styling (white bg, chevron, purple hover/focus), Headless UI accessibility (keyboard nav, ARIA), Portal-rendered dropdown escapes overflow containers, dark mode support built in. Native `<select>` renders with browser-default chrome that breaks visual consistency.
+
 ---
 
 ## 🚀 Quick Commands
@@ -509,23 +533,24 @@ codescribe-ai/
 
 ## 🔄 Version History
 
-**Current: v3.5.2** (January 27, 2026) - Enterprise Healthcare HIPAA Compliance
-- **5 HIPAA Features Complete (224 tests):**
-  1. Audit Logging (54 tests): 7-year retention, SHA-256 hashing, CSV export, admin dashboard
-  2. PHI Detection (65 tests): 10 PHI types, risk scoring, real-time alerts
-  3. Encryption at Rest (68 tests): AES-256-GCM for emails/tokens/logs, Neon database encryption
-  4. Compliance Dashboard (37 tests): Admin UI, multi-filter support, risk color coding, pagination
-  5. BAA Documentation (legal docs): 25-page BAA template, incident response, breach notification
-- Enterprise Healthcare subscription tier for healthcare organizations requiring BAA execution
-- HIPAA documentation hub consolidated into docs/hipaa/ (15 files, ~62,000 words)
-- Email forwarding for sales@, support@, baa-requests@codescribeai.com
-- Fixed 9 failing audit tests (rate limiter mocking + test specificity)
-- Test coverage: 4,550 tests (4,407 passing, 143 skipped, 0 failing, 96.9% pass rate)
-- Note: 33 HIPAA audit log integration tests run separately with `npm run test:db` in Docker
+**Current: v3.5.3** (January 28, 2026) - Analytics Infrastructure & Admin Dashboard Polish
+- **Pricing restructure to profitable 4-tier model:** Free/$49/$199/Custom
+  - Starter tier repurposed as programmatic-only trial/beta tier (not purchasable)
+  - Pro: $49/month (38% margin), Team: $199/month for 5 users (66% margin at $39.80/user)
+  - Enterprise: $750+/month starting with HIPAA compliance (63% margin)
+- **GitHub import background loading fix:** Background repo pagination stops when user selects a repo
+- **Server-side analytics:** `doc_generation` and `quality_score` events captured in generate routes, fire-and-forget; `performance` (TTFT) remains client-side
+- **Analytics API key auth:** `X-Analytics-Key` header secures analytics endpoint for server-to-server collection
+- **HIPAA Compliance dashboard stabilized:** Fixed 3 crashes (DateRangePicker props, undefined logs, dropdown alignment)
+- **Admin dashboard UX consistency:** Aligned headers, card styling (`rounded-xl`, no shadow), back buttons, and outer padding across Analytics, Compliance, Usage
+- **Shared `useDateRange` hook:** Consistent date range state, persistence, and API serialization across all admin pages
+- **Select dropdown scroll fix:** Portal-rendered Headless UI options no longer cause page scroll on open
+- Test coverage: 4,550 tests (4,406 passing, 144 skipped, 0 failing)
 
 <details>
-<summary>Recent Releases (v2.9.0-v3.5.1) & Milestones</summary>
+<summary>Recent Releases (v2.9.0-v3.5.2) & Milestones</summary>
 
+**v3.5.2** (Jan 27, 2026): Enterprise Healthcare HIPAA Compliance - 5 HIPAA features (224 tests), audit logging, PHI detection, encryption, compliance dashboard, BAA docs
 **v3.5.1** (Jan 26, 2026): GitHub Private Repos & Progressive Loading - Private repo access, progressive loading, pagination API, field-level errors
 **v3.5.0** (Jan 25, 2026): Trial Programs & Enhanced Eligibility System - Renamed Campaigns to Trial Programs, flexible eligibility rules, auto-enrollment, force grants
 **v3.4.4** (Jan 14, 2026): User Management System - Account suspension/deletion, admin controls, audit logging

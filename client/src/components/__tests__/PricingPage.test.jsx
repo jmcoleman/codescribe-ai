@@ -160,11 +160,12 @@ describe('PricingPage', () => {
     it('should render pricing page with all tiers', () => {
       renderPricingPage();
 
-      expect(screen.getByText('Simple, Transparent Pricing')).toBeInTheDocument();
+      expect(screen.getByText('Start Free, Upgrade When Ready')).toBeInTheDocument();
       expect(screen.getByText('Free')).toBeInTheDocument();
-      expect(screen.getByText('Starter')).toBeInTheDocument();
+      // Starter tier is no longer shown (programmatic-only)
       expect(screen.getByText('Pro')).toBeInTheDocument();
       expect(screen.getByText('Team')).toBeInTheDocument();
+      expect(screen.getByText('Enterprise')).toBeInTheDocument();
     });
 
     it('should render billing period toggle', () => {
@@ -178,13 +179,13 @@ describe('PricingPage', () => {
     it('should show monthly prices by default', () => {
       renderPricingPage();
 
-      // Check that monthly prices are displayed
-      expect(screen.getByText('$12')).toBeInTheDocument(); // Starter monthly
-      expect(screen.getByText('$29')).toBeInTheDocument(); // Pro monthly
-      expect(screen.getByText('$99')).toBeInTheDocument(); // Team monthly
+      // Check that monthly prices are displayed (Starter removed)
+      expect(screen.getByText('$49')).toBeInTheDocument(); // Pro monthly
+      expect(screen.getByText('$199')).toBeInTheDocument(); // Team monthly
     });
 
-    it('should render supported languages section', () => {
+    it.skip('should render supported languages section', () => {
+      // Section removed from pricing page in v3.5.3
       renderPricingPage();
 
       expect(screen.getByText('Full Language Support')).toBeInTheDocument();
@@ -213,9 +214,9 @@ describe('PricingPage', () => {
 
       // Check that yearly prices are displayed
       await waitFor(() => {
-        expect(screen.getByText('$10')).toBeInTheDocument(); // Starter yearly
-        expect(screen.getByText('$24')).toBeInTheDocument(); // Pro yearly
-        expect(screen.getByText('$82')).toBeInTheDocument(); // Team yearly
+        expect(screen.getByText('$41')).toBeInTheDocument(); // Starter yearly
+        expect(screen.getByText('$41')).toBeInTheDocument(); // Pro yearly
+        expect(screen.getByText('$165')).toBeInTheDocument(); // Team yearly
       });
     });
 
@@ -234,9 +235,9 @@ describe('PricingPage', () => {
 
       // Check that monthly prices are displayed
       await waitFor(() => {
-        expect(screen.getByText('$12')).toBeInTheDocument(); // Starter monthly
-        expect(screen.getByText('$29')).toBeInTheDocument(); // Pro monthly
-        expect(screen.getByText('$99')).toBeInTheDocument(); // Team monthly
+        expect(screen.getByText('$49')).toBeInTheDocument(); // Starter monthly
+        expect(screen.getByText('$49')).toBeInTheDocument(); // Pro monthly
+        expect(screen.getByText('$199')).toBeInTheDocument(); // Team monthly
       });
     });
 
@@ -248,10 +249,9 @@ describe('PricingPage', () => {
       await user.click(yearlyButton);
 
       await waitFor(() => {
-        // Check for yearly total prices
-        expect(screen.getByText(/\$120\/year/i)).toBeInTheDocument(); // Starter
-        expect(screen.getByText(/\$288\/year/i)).toBeInTheDocument(); // Pro
-        expect(screen.getByText(/\$984\/year/i)).toBeInTheDocument(); // Team
+        // Check for yearly total prices (Starter no longer shown)
+        expect(screen.getByText(/\$492\/year/i)).toBeInTheDocument(); // Pro
+        expect(screen.getByText(/\$1980\/year/i)).toBeInTheDocument(); // Team
 
         // Check for savings percentages
         const savingsTexts = screen.getAllByText(/save 17%/i);
@@ -286,7 +286,7 @@ describe('PricingPage', () => {
 
       // Find and click Pro tier subscribe button
       const subscribeButtons = screen.getAllByRole('button', { name: /subscribe/i });
-      const proSubscribeButton = subscribeButtons[1]; // Pro is second subscribe button (Starter is first)
+      const proSubscribeButton = subscribeButtons[0]; // Pro is the only subscribe button (Starter removed)
 
       await user.click(proSubscribeButton);
 
@@ -312,20 +312,20 @@ describe('PricingPage', () => {
       const yearlyButton = screen.getByRole('button', { name: /yearly/i });
       await user.click(yearlyButton);
 
-      // Click Starter tier subscribe button
+      // Click Pro tier subscribe button (Starter tier removed)
       const subscribeButtons = screen.getAllByRole('button', { name: /subscribe/i });
-      const starterSubscribeButton = subscribeButtons[0];
+      const proSubscribeButton = subscribeButtons[0]; // Pro is now first paid tier
 
-      await user.click(starterSubscribeButton);
+      await user.click(proSubscribeButton);
 
       // Check sessionStorage has yearly billing period
       await waitFor(() => {
         const storedIntent = sessionStorage.getItem(STORAGE_KEYS.PENDING_SUBSCRIPTION);
         const parsedIntent = JSON.parse(storedIntent);
         expect(parsedIntent).toEqual({
-          tier: 'starter',
+          tier: 'pro',
           billingPeriod: 'annual',
-          tierName: 'Starter',
+          tierName: 'Pro',
         });
       });
     });
@@ -334,9 +334,9 @@ describe('PricingPage', () => {
       const user = userEvent.setup();
       renderPricingPage();
 
-      // Click Pro tier subscribe button
+      // Click Pro tier subscribe button (Starter tier removed, Pro is now index 0)
       const subscribeButtons = screen.getAllByRole('button', { name: /subscribe/i });
-      const proSubscribeButton = subscribeButtons[1];
+      const proSubscribeButton = subscribeButtons[0];
 
       await user.click(proSubscribeButton);
 
@@ -355,14 +355,14 @@ describe('PricingPage', () => {
       const yearlyButton = screen.getByRole('button', { name: /yearly/i });
       await user.click(yearlyButton);
 
-      // Click Starter tier
+      // Click Pro tier (Starter tier removed, Pro is now first paid tier)
       const subscribeButtons = screen.getAllByRole('button', { name: /subscribe/i });
       await user.click(subscribeButtons[0]);
 
       await waitFor(() => {
         const storedIntent = sessionStorage.getItem(STORAGE_KEYS.PENDING_SUBSCRIPTION);
         const parsedIntent = JSON.parse(storedIntent);
-        expect(parsedIntent.tierName).toBe('Starter');
+        expect(parsedIntent.tierName).toBe('Pro');
       });
     });
 
@@ -370,9 +370,9 @@ describe('PricingPage', () => {
       const user = userEvent.setup();
       renderPricingPage();
 
-      // Click subscribe to open modal
+      // Click subscribe to open modal (Pro tier at index 0)
       const subscribeButtons = screen.getAllByRole('button', { name: /subscribe/i });
-      await user.click(subscribeButtons[1]);
+      await user.click(subscribeButtons[0]);
 
       // Wait for modal to open
       await waitFor(() => {
@@ -411,9 +411,9 @@ describe('PricingPage', () => {
 
       renderPricingPage();
 
-      // Click Pro tier subscribe button
+      // Click Pro tier subscribe button (Starter removed, Pro at index 0)
       const subscribeButtons = screen.getAllByRole('button', { name: /subscribe/i });
-      const proSubscribeButton = subscribeButtons[1];
+      const proSubscribeButton = subscribeButtons[0];
 
       await user.click(proSubscribeButton);
 
@@ -451,7 +451,7 @@ describe('PricingPage', () => {
       const yearlyButton = screen.getByRole('button', { name: /yearly/i });
       await user.click(yearlyButton);
 
-      // Click Starter tier subscribe button
+      // Click Pro tier subscribe button (Starter removed, Pro at index 0)
       const subscribeButtons = screen.getAllByRole('button', { name: /subscribe/i });
       await user.click(subscribeButtons[0]);
 
@@ -462,7 +462,7 @@ describe('PricingPage', () => {
           expect.objectContaining({
             method: 'POST',
             body: JSON.stringify({
-              tier: 'starter',
+              tier: 'pro',
               billingPeriod: 'annual',
             }),
           })
@@ -494,7 +494,7 @@ describe('PricingPage', () => {
 
       // Click subscribe
       const subscribeButtons = screen.getAllByRole('button', { name: /subscribe/i });
-      await user.click(subscribeButtons[1]);
+      await user.click(subscribeButtons[0]); // Pro is the only Subscribe button (Starter removed)
 
       // Verification modal should appear
       await waitFor(() => {
@@ -559,8 +559,8 @@ describe('PricingPage', () => {
     it('should navigate to home when authenticated user clicks free tier', async () => {
       const user = userEvent.setup();
 
-      // Set authenticated user with Starter tier
-      mockAuthContext.user = { id: 1, email: 'test@example.com', tier: 'starter', emailVerified: true };
+      // Set authenticated user with Pro tier
+      mockAuthContext.user = { id: 1, email: 'test@example.com', tier: 'pro', emailVerified: true };
       mockAuthContext.isAuthenticated = true;
 
       renderPricingPage();
@@ -594,10 +594,11 @@ describe('PricingPage', () => {
     it('should have Contact Sales button for Team tier', () => {
       renderPricingPage();
 
-      // Team tier should have "Contact Sales" button
-      const teamButton = screen.getByRole('button', { name: /contact sales/i });
-      expect(teamButton).toBeInTheDocument();
-      expect(teamButton).not.toBeDisabled();
+      // Both Team and Enterprise have "Contact Sales" buttons now
+      const contactSalesButtons = screen.getAllByRole('button', { name: /contact sales/i });
+      expect(contactSalesButtons.length).toBeGreaterThanOrEqual(2); // Team and Enterprise
+      expect(contactSalesButtons[0]).toBeInTheDocument(); // Team button
+      expect(contactSalesButtons[0]).not.toBeDisabled();
 
       // Note: Actual window.location.href assignment is difficult to test reliably
       // in jsdom due to navigation side effects. The button onclick handler sets
@@ -611,7 +612,7 @@ describe('PricingPage', () => {
       renderPricingPage();
 
       // Find Team tier Contact Sales button
-      const teamButton = screen.getByRole('button', { name: /contact sales/i });
+      const teamButton = screen.getAllByRole('button', { name: /contact sales/i })[0]; // Team (first Contact Sales button)
 
       await user.click(teamButton);
 
@@ -625,7 +626,7 @@ describe('PricingPage', () => {
       const user = userEvent.setup();
       renderPricingPage();
 
-      const teamButton = screen.getByRole('button', { name: /contact sales/i });
+      const teamButton = screen.getAllByRole('button', { name: /contact sales/i })[0]; // Team (first Contact Sales button)
       await user.click(teamButton);
 
       await waitFor(() => {
@@ -642,7 +643,7 @@ describe('PricingPage', () => {
       const user = userEvent.setup();
       renderPricingPage();
 
-      const teamButton = screen.getByRole('button', { name: /contact sales/i });
+      const teamButton = screen.getAllByRole('button', { name: /contact sales/i })[0]; // Team (first Contact Sales button)
       await user.click(teamButton);
 
       await waitFor(() => {
@@ -666,7 +667,7 @@ describe('PricingPage', () => {
 
       renderPricingPage();
 
-      const teamButton = screen.getByRole('button', { name: /contact sales/i });
+      const teamButton = screen.getAllByRole('button', { name: /contact sales/i })[0]; // Team (first Contact Sales button)
       await user.click(teamButton);
 
       // Should open ContactSalesModal (not signup modal)
@@ -688,7 +689,7 @@ describe('PricingPage', () => {
 
       renderPricingPage();
 
-      const teamButton = screen.getByRole('button', { name: /contact sales/i });
+      const teamButton = screen.getAllByRole('button', { name: /contact sales/i })[0]; // Team (first Contact Sales button)
       await user.click(teamButton);
 
       // Authenticated users don't need to store intent
@@ -715,9 +716,9 @@ describe('PricingPage', () => {
       renderPricingPage();
 
       // Initial monthly prices
-      expect(screen.getByText('$12')).toBeInTheDocument();
-      expect(screen.getByText('$29')).toBeInTheDocument();
-      expect(screen.getByText('$99')).toBeInTheDocument();
+      expect(screen.getByText('$49')).toBeInTheDocument();
+      expect(screen.getByText('$49')).toBeInTheDocument();
+      expect(screen.getByText('$199')).toBeInTheDocument();
 
       // Switch to yearly
       const yearlyButton = screen.getByRole('button', { name: /yearly/i });
@@ -725,9 +726,9 @@ describe('PricingPage', () => {
 
       // Yearly prices should be displayed
       await waitFor(() => {
-        expect(screen.getByText('$10')).toBeInTheDocument();
-        expect(screen.getByText('$24')).toBeInTheDocument();
-        expect(screen.getByText('$82')).toBeInTheDocument();
+        expect(screen.getByText('$41')).toBeInTheDocument();
+        expect(screen.getByText('$41')).toBeInTheDocument();
+        expect(screen.getByText('$165')).toBeInTheDocument();
       });
 
       // Switch back to monthly
@@ -736,9 +737,9 @@ describe('PricingPage', () => {
 
       // Monthly prices should be displayed again
       await waitFor(() => {
-        expect(screen.getByText('$12')).toBeInTheDocument();
-        expect(screen.getByText('$29')).toBeInTheDocument();
-        expect(screen.getByText('$99')).toBeInTheDocument();
+        expect(screen.getByText('$49')).toBeInTheDocument();
+        expect(screen.getByText('$49')).toBeInTheDocument();
+        expect(screen.getByText('$199')).toBeInTheDocument();
       });
     });
 
@@ -746,7 +747,7 @@ describe('PricingPage', () => {
       renderPricingPage();
 
       // Should not show yearly total prices
-      expect(screen.queryByText(/\$120\/year/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/\$490\/year/i)).not.toBeInTheDocument();
       expect(screen.queryByText(/\$288\/year/i)).not.toBeInTheDocument();
       expect(screen.queryByText(/\$984\/year/i)).not.toBeInTheDocument();
     });
@@ -763,12 +764,12 @@ describe('PricingPage', () => {
 
       // Verify yearly prices are shown
       await waitFor(() => {
-        expect(screen.getByText('$24')).toBeInTheDocument(); // Pro yearly
+        expect(screen.getByText('$41')).toBeInTheDocument(); // Pro yearly
       });
 
       // Step 2: Click Pro subscribe button
       const subscribeButtons = screen.getAllByRole('button', { name: /subscribe/i });
-      await user.click(subscribeButtons[1]); // Pro is second
+      await user.click(subscribeButtons[0]); // Pro is the only Subscribe button (Starter removed)
 
       // Step 3: Verify sessionStorage has correct intent
       await waitFor(() => {
@@ -803,12 +804,12 @@ describe('PricingPage', () => {
 
       // Final state should be yearly
       await waitFor(() => {
-        expect(screen.getByText('$24')).toBeInTheDocument(); // Pro yearly
+        expect(screen.getByText('$41')).toBeInTheDocument(); // Pro yearly
       });
 
       // Click subscribe
       const subscribeButtons = screen.getAllByRole('button', { name: /subscribe/i });
-      await user.click(subscribeButtons[1]);
+      await user.click(subscribeButtons[0]); // Pro is the only Subscribe button (Starter removed)
 
       // Should store yearly in sessionStorage
       await waitFor(() => {
@@ -831,7 +832,7 @@ describe('PricingPage', () => {
       renderPricingPage();
 
       // Main heading
-      const mainHeading = screen.getByRole('heading', { name: /simple, transparent pricing/i, level: 1 });
+      const mainHeading = screen.getByRole('heading', { name: /start free, upgrade when ready/i, level: 1 });
       expect(mainHeading).toBeInTheDocument();
 
       // Tier names should be h3
@@ -843,8 +844,8 @@ describe('PricingPage', () => {
       renderPricingPage();
 
       expect(screen.getByRole('button', { name: /get started/i })).toBeInTheDocument(); // Free
-      expect(screen.getAllByRole('button', { name: /subscribe/i }).length).toBeGreaterThan(0); // Starter, Pro
-      expect(screen.getByRole('button', { name: /contact sales/i })).toBeInTheDocument(); // Team
+      expect(screen.getAllByRole('button', { name: /subscribe/i }).length).toBe(1); // Pro only
+      expect(screen.getAllByRole('button', { name: /contact sales/i }).length).toBe(2); // Team and Enterprise
     });
   });
 });

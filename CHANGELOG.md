@@ -9,6 +9,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.5.3] - 2026-01-28
+
+**Summary:** Pricing restructure to 4-tier model (Free/$49/$199/Custom), GitHub import background loading fix, server-side analytics capture, HIPAA Compliance dashboard stabilization, and admin dashboard UX consistency pass.
+
+### Added
+
+- Programmatic trial tier strategy: Starter tier repurposed as auto-trial, beta, partner, and A/B testing infrastructure (not purchasable)
+- Helper functions for tier management: `isProgrammaticTier()`, `getPurchasableTiers()` with upgrade path logic that skips programmatic tiers
+- Trial tier feature configuration: 100 docs/month, private repos access, email support - optimized for showing premium value during evaluation
+- Programmatic Tier Strategy PRD documenting 4 workflows with economics and ROI analysis
+- Roadmap entries for Dynamic Trial Configuration (v3.7.0) and Trial Analytics Dashboard (v3.8.0)
+- Server-side analytics event capture for `doc_generation` and `quality_score` in both streaming and non-streaming generate routes — fire-and-forget so events never block responses
+- Analytics API key authentication (`X-Analytics-Key` header) replacing rate limiter for reliable server-to-server event collection
+- Shared `useDateRange` hook (`client/src/hooks/useDateRange.js`) for consistent date range state, sessionStorage persistence, and API-ready serialization across all admin dashboards
+- CLAUDE.md guideline: always use `<Select>` component for dropdowns, never native `<select>` elements
+
+### Changed
+
+- **Pricing restructure:** Moved from unprofitable 5-tier to profitable 4-tier model
+  - Removed Starter ($12/month) as purchasable tier - repurposed for trials only
+  - Pro tier: $29 → $49/month ($41/month annual) — 38% gross margin
+  - Team tier: $99 → $199/month ($165/month annual), reduced from 10 to 5 users — 66% gross margin at $39.80/user
+  - Enterprise: $750+/month starting price with HIPAA compliance — 63% gross margin
+- Pricing page heading updated from "Simple, Transparent Pricing" to "Start Free, Upgrade When Ready"
+- Pro tier daily generation limit: 50 → 40 (aligns with 200 monthly cap)
+- Updated pricing page grid from 5-column to 4-column layout
+- Updated unit economics model: all paid tiers now profitable, 70% overall margin at scale
+- Stripe checkout URLs now auto-resolve via `VERCEL_URL` per deployment — no longer need `STRIPE_SUCCESS_URL`/`STRIPE_CANCEL_URL` in Vercel env vars
+- Updated README, deployment checklist, and Stripe docs to reflect 4-tier pricing and dynamic URL resolution
+- Moved `doc_generation` and `quality_score` analytics tracking from client to server — `performance` (TTFT) remains client-side
+- Admin dashboard headers standardized: consistent `text-3xl` titles, responsive flex layout, unified back button styling across Analytics, HIPAA Compliance, and Usage
+- Admin dashboard card styling unified: `rounded-xl` with no shadow, consistent border and padding
+- HIPAA Compliance filter dropdowns swapped from native `<select>` to `<Select>` component matching Analytics dashboard
+- Updated analytics documentation (WORKFLOW-OUTCOME-METRICS-PLAN.md, WORKFLOW-EVENTING-FLOW.md) to reflect server-side event architecture
+
+### Fixed
+
+- **GitHub import background loading race condition:** When browsing an org's repos and clicking one while background pagination was still loading, the repo list would re-populate and clear the loaded file tree. Background loading now stops immediately when a user selects a repository.
+- Fixed failing tier pricing tests to reflect 4-tier structure
+- **HIPAA Compliance dashboard crash:** DateRangePicker received props as single object instead of spread `startDate`/`endDate`, causing `toISOString` on undefined
+- **HIPAA Compliance dashboard crash:** Audit logs API returning undefined `data.logs` overwrote initial empty array, causing `.length` on undefined in render
+- **DateRangePicker dropdown misalignment:** Dropdown menu anchored to right edge (`right-0`) while trigger button aligned left — changed to `left-0`
+- **Select dropdown scroll jump:** Opening a filter Select on long pages caused browser to scroll to bottom because Headless UI auto-focused the Portal-rendered options list appended to end of `<body>` — now preserves and restores scroll position
+
+---
+
 ## [3.5.2] - 2026-01-27
 
 **Status:** ✅ Enterprise Healthcare HIPAA Compliance Complete

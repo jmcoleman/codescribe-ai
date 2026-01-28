@@ -2,14 +2,14 @@
 
 **Project:** CodeScribe AI - Intelligent Code Documentation Generator
 **Testing Status:** ✅ Comprehensive Coverage Across 3 Frameworks
-**Last Updated:** January 27, 2026 (v3.5.2)
+**Last Updated:** January 28, 2026 (v3.5.3)
 
 ---
 
 ## 📊 Quick Stats
 
-- **Total Tests:** 4,550 tests (4,407 passing, 143 skipped, 0 failures)
-  - **Frontend:** 2,238 tests | 76 skipped (Vitest + React Testing Library)
+- **Total Tests:** 4,550 tests (4,406 passing, 144 skipped, 0 failures)
+  - **Frontend:** 2,238 tests | 77 skipped (Vitest + React Testing Library)
     - Component Tests: All components with dark mode variants tested (including AppearanceModal, SamplesModal)
     - GitHub Loader: FileTree, TreeNode, GitHubLoadModal integration tests
     - Dark Mode Tests: 106+ tests (ThemeContext with 3-state cycling, ThemeToggle, all components, integration)
@@ -19,7 +19,7 @@
     - Batch Generation: 35 tests (useBatchGeneration hook - buildAttribution, generateBatchSummaryDocument)
     - Settings: AccountTab (36 tests - profile, password, data export, GitHub status fetch)
     - Analytics: EventsTable multi-select filter, Select Portal tests
-    - **Pass Rate:** 100% (2,162 passing, 76 skipped, 0 failures)
+    - **Pass Rate:** 100% (2,161 passing, 77 skipped, 0 failures)
   - **Backend:** 2,312 tests | 67 skipped (Jest + Supertest)
     - Unit Tests: Services, models, utilities, middleware (emailService, requireTermsAcceptance, tierGate, rateLimitBypass, githubService)
     - LLM Provider Tests: 69 tests (llmService, config, utils, adapters for Claude/OpenAI/Gemini)

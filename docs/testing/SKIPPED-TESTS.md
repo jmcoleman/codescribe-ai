@@ -1,8 +1,8 @@
 # Skipped Tests Reference
 
 **Purpose:** Central reference for all intentionally skipped tests in the codebase
-**Last Updated:** January 27, 2026 (v3.5.2)
-**Total Skipped:** 76 frontend tests + 61 backend tests = **137 total**
+**Last Updated:** January 28, 2026 (v3.5.3)
+**Total Skipped:** 77 frontend tests + 67 backend tests = **144 total**
 
 **Note:** Backend database tests (21 tests in `/src/db/__tests__/`) are **excluded** via `jest.config.cjs`, not "skipped" with `.skip()`. They run separately in Docker sandbox before deployment and are NOT counted in this document's skip tracking.
 
@@ -12,7 +12,7 @@
 
 | Category | Location | Count | Impact | Reason |
 |----------|----------|-------|--------|--------|
-| **Frontend Tests** | | **33** | | |
+| **Frontend Tests** | | **34** | | |
 | GitHub Import Feature | ControlBar | 6 | ✅ None | Feature not implemented (Phase 3) |
 | Focus Management Tests | SamplesModal | 4 | ✅ None | jsdom limitations |
 | Timing-Dependent Tests | CopyButton | 4 | ✅ None | Prevent flaky CI/CD |
@@ -25,13 +25,14 @@
 | Focus Trap Edge Cases | useFocusTrap | 1 | ✅ None | jsdom limitations |
 | Focus Restoration | QualityScore | 1 | ✅ None | jsdom limitations |
 | Restore Account Tests | RestoreAccount | 1 | ✅ None | Email rate limiting timing issues |
-| **Backend Tests** | | **61** | | |
+| Removed UI Section Test | PricingPage | 1 | ✅ None | Languages section removed in v3.5.3 pricing restructure |
+| **Backend Tests** | | **67** | | |
 | HIPAA Audit Log Integration | models, routes | 33 | ✅ None | Requires Docker test database (run with npm run test:db) |
 | GitHub OAuth Integration | tests/integration | 21 | ✅ None | Complex Passport.js mocking (feature works in production) |
 | Password Change Tests | tests/integration | 5 | ✅ None | Jest mocking issues with @vercel/postgres tagged template literals |
 | Debug Logging Tests | rateLimitBypass | 2 | ✅ None | Console logging removed in cleanup (v2.7.10) |
 
-**Total Skipped:** 137 tests (76 frontend, 61 backend)
+**Total Skipped:** 144 tests (77 frontend, 67 backend)
 
 **Deployment Impact:** ✅ **NONE** - All skipped tests are intentional and documented
 

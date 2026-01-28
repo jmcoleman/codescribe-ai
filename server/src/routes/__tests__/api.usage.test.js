@@ -219,7 +219,7 @@ describe('Usage and Tier API Endpoints', () => {
       expect(res.body.tier).toBe('pro');
       expect(res.body.features.batchProcessing).toBe(true);
       expect(res.body.features.customTemplates).toBe(true);
-      expect(res.body.limits.dailyGenerations).toBe(50);
+      expect(res.body.limits.dailyGenerations).toBe(40);
       expect(res.body.limits.monthlyGenerations).toBe(200);
     });
   });
@@ -268,14 +268,16 @@ describe('Usage and Tier API Endpoints', () => {
         .get('/api/tiers')
         .expect(200);
 
+      // Starter is programmatic-only, not purchasable
       const starterTier = res.body.tiers.find(t => t.id === 'starter');
-      expect(starterTier.price).toBe(12);
-      expect(starterTier.period).toBe('month');
-      expect(starterTier.annual).toBe(120);
+      expect(starterTier.price).toBeNull();
+      expect(starterTier.period).toBeNull();
+      expect(starterTier.description).toContain('Trial tier');
 
       const proTier = res.body.tiers.find(t => t.id === 'pro');
-      expect(proTier.price).toBe(29);
+      expect(proTier.price).toBe(49);
       expect(proTier.period).toBe('month');
+      expect(proTier.annual).toBe(492);
     });
 
     it('should include all tier features', async () => {

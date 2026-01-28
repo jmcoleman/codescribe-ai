@@ -18,6 +18,7 @@ sequenceDiagram
     participant Auth as AuthContext
     participant CP as CodePanel
     participant DG as useDocGeneration
+    participant API as Generate<br/>Routes
     participant QS as QualityScore
     participant DP as DocPanel
     participant GH as GitHub<br/>Integration
@@ -39,12 +40,15 @@ sequenceDiagram
     CP->>AN: code_input<br/>{origin: 'paste', size_kb, language, filename}
 
     U->>DG: Click "Generate"
-    DG->>AN: doc_generation<br/>{success: 'false', doc_type, duration_ms, code_input: {...}}
-    Note over DG: Streaming begins
+    DG->>API: POST /api/generate-stream
+    Note over API: Streaming begins
 
-    DG->>DG: Stream completes
-    DG->>AN: quality_score<br/>{score, grade, doc_type, score_range}
-    DG->>AN: doc_generation<br/>{success: 'true', doc_type, duration_ms, code_input: {...}}
+    API->>AN: doc_generation<br/>{success: 'true', doc_type, duration_ms, code_input: {...}, llm: {...}}
+    API->>AN: quality_score<br/>{score, grade, doc_type, llm: {...}}
+    Note over API,AN: Server-side: auto-captured for all callers
+
+    DG->>AN: performance<br/>{latency: {ttftMs, streamingMs}, throughput: {...}}
+    Note over DG,AN: Client-side: TTFT + streaming metrics
 
     Note over DG,AN: 🎉 First Generation Milestone (if user's first doc)
     DG->>AN: first_generation<br/>{doc_type, hours_since_signup, origin: 'paste'}
@@ -60,8 +64,9 @@ sequenceDiagram
     U->>BG: Click "Generate All" (10 files)
     loop For each file
         BG->>DG: Generate documentation
-        DG->>AN: doc_generation<br/>{success: 'true', origin: 'github', repo: {...}}
-        DG->>AN: quality_score<br/>{score, grade, doc_type}
+        DG->>API: POST /api/generate-stream
+        API->>AN: doc_generation<br/>{success: 'true', doc_type, code_input: {...}, llm: {...}}
+        API->>AN: quality_score<br/>{score, grade, doc_type}
     end
 
     BG->>AN: user_interaction<br/>{action: 'batch_generation_complete',<br/>total_files: 10, success_count: 10, avg_quality_score: 82}
@@ -110,7 +115,7 @@ sequenceDiagram
     Auth->>AN: session_start<br/>{referrer: 'direct', landing_page: '/'}
     Note over AN: Session ID rotates, duration resets
 
-    Note over AN: Legend:<br/>All events respect analytics_enabled opt-out<br/>Session context auto-included: session_id, session_duration_ms<br/>Server events logged + persisted to analytics_events table
+    Note over AN: Legend:<br/>Client events respect analytics_enabled opt-out<br/>Server events (doc_generation, quality_score) always captured<br/>Session context auto-included for client events<br/>All events persisted to analytics_events table
 ```
 
 ---
@@ -119,7 +124,7 @@ sequenceDiagram
 
 **Business Outcome:** Eliminate Documentation Time Tax (< 3 min from paste to copy)
 
-**Implemented Events:** `session_start` → `code_input` → `doc_generation` (×2) → `quality_score` → `first_generation` → `doc_export`
+**Implemented Events:** `session_start` → `code_input` → `doc_generation` (server) → `quality_score` (server) → `performance` (client) → `first_generation` → `doc_export`
 
 ```mermaid
 sequenceDiagram
@@ -127,6 +132,7 @@ sequenceDiagram
     participant AuthContext
     participant CodePanel
     participant DocGen
+    participant API as Generate Routes
     participant Analytics
 
     User->>AuthContext: Land on codescribeai.com
@@ -136,13 +142,17 @@ sequenceDiagram
     CodePanel->>Analytics: code_input<br/>{origin: 'paste', size_kb: 1, language: 'javascript', filename: 'untitled'}
 
     User->>DocGen: Click "Generate" (README)
-    DocGen->>Analytics: doc_generation<br/>{success: 'false', doc_type: 'README', duration_ms: 0,<br/>code_input: {filename, language: 'javascript', origin: 'paste', size_kb: 1}}
+    DocGen->>API: POST /api/generate-stream
 
-    DocGen->>DocGen: Stream documentation via SSE (2.3s)
+    API->>API: Stream documentation via SSE (2.3s)
 
-    DocGen->>Analytics: doc_generation<br/>{success: 'true', doc_type: 'README', duration_ms: 2341,<br/>code_input: {...}, llm: {provider: 'claude', model: 'claude-sonnet-4-5-...'}}
+    API->>Analytics: doc_generation<br/>{success: 'true', doc_type: 'README', duration_ms: 2341,<br/>code_input: {language: 'javascript', size_kb: 1, filename}, llm: {provider: 'claude', model: '...'}}
 
-    DocGen->>Analytics: quality_score<br/>{score: 85, grade: 'B', doc_type: 'README', score_range: '80-89'}
+    API->>Analytics: quality_score<br/>{score: 85, grade: 'B', doc_type: 'README',<br/>llm: {provider: 'claude', model: '...'}}
+    Note over API,Analytics: Server-side: captured for all callers (app, CLI, API)
+
+    DocGen->>Analytics: performance<br/>{latency: {totalMs: 2341, ttftMs: 450, streamingMs: 1891},<br/>throughput: {outputTokens: 520, tokensPerSecond: 275}}
+    Note over DocGen,Analytics: Client-side: TTFT + streaming metrics
 
     Note over DocGen,Analytics: 🎉 First Generation Milestone (tracked automatically)
     DocGen->>Analytics: first_generation<br/>{doc_type: 'README', hours_since_signup: 0.05, origin: 'paste'}
@@ -156,8 +166,8 @@ sequenceDiagram
 **Key Funnel Stages:**
 1. **Entry:** `session_start` (100%)
 2. **Engage:** `code_input` (~70% of sessions)
-3. **Commit:** `doc_generation` with success: 'false' (~66%)
-4. **Value Delivered:** `doc_generation` with success: 'true' + `quality_score` (~62%)
+3. **Commit:** User clicks Generate (~66%)
+4. **Value Delivered:** `doc_generation` (success: 'true') + `quality_score` — server-side (~62%)
 5. **Activation Milestone:** `first_generation` (~62% of new users - tracked once per user)
 6. **Value Captured:** `doc_export` action: 'copy' or 'download' (~57%)
 
@@ -176,13 +186,14 @@ sequenceDiagram
 
 **Business Outcome:** Documentation Coverage (80%+ of codebase documented)
 
-**Implemented Events:** `code_input` (origin: 'github') → `doc_generation` (×N) → `user_interaction` (batch_generation_complete) → `doc_export` (download)
+**Implemented Events:** `code_input` (origin: 'github') → `doc_generation` (server, ×N) → `quality_score` (server, ×N) → `user_interaction` (batch_generation_complete) → `doc_export` (download)
 
 ```mermaid
 sequenceDiagram
     participant User
     participant GitHubImport
     participant BatchGen
+    participant API as Generate Routes
     participant Analytics
 
     User->>GitHubImport: Enter repo URL: facebook/react
@@ -197,9 +208,9 @@ sequenceDiagram
     User->>BatchGen: Click "Generate All"
 
     loop For each file (10 files)
-        BatchGen->>Analytics: doc_generation<br/>{success: 'true', doc_type: 'README', origin: 'github',<br/>code_input: {repo: {...}}, llm: {...}}
-
-        BatchGen->>Analytics: quality_score<br/>{score: 78-88, grade: 'B'/'A', doc_type: 'README'}
+        BatchGen->>API: POST /api/generate-stream
+        API->>Analytics: doc_generation<br/>{success: 'true', doc_type: 'README',<br/>code_input: {...}, llm: {...}}
+        API->>Analytics: quality_score<br/>{score: 78-88, grade: 'B'/'A', doc_type: 'README'}
     end
 
     BatchGen->>Analytics: user_interaction<br/>{action: 'batch_generation_complete', total_files: 10,<br/>success_count: 10, failed_count: 0, avg_quality_score: 82,<br/>doc_types: ['README'], source: 'github', duration_ms: 45000}
@@ -228,20 +239,19 @@ sequenceDiagram
 sequenceDiagram
     participant User
     participant DocGen
+    participant API as Generate Routes
     participant Analytics
 
-    DocGen->>Analytics: quality_score<br/>{score: 65, grade: 'D', doc_type: 'README', score_range: '60-69'}
+    API->>Analytics: quality_score<br/>{score: 65, grade: 'D', doc_type: 'README'}
 
     User->>DocGen: View score breakdown (modal)
     Note over User: Sees weak categories:<br/>Installation (10/15)<br/>Usage Examples (12/20)
 
     User->>DocGen: Click "Regenerate"
+    DocGen->>API: POST /api/generate-stream
 
-    DocGen->>DocGen: Generate new version with AI
-
-    DocGen->>Analytics: doc_generation<br/>{success: 'true', doc_type: 'README', duration_ms: 2800, ...}
-
-    DocGen->>Analytics: quality_score<br/>{score: 82, grade: 'B', doc_type: 'README', score_range: '80-89'}
+    API->>Analytics: doc_generation<br/>{success: 'true', doc_type: 'README', duration_ms: 2800, ...}
+    API->>Analytics: quality_score<br/>{score: 82, grade: 'B', doc_type: 'README'}
 
     DocGen->>Analytics: user_interaction<br/>{action: 'regeneration_complete', doc_type: 'README',<br/>previous_score: 65, new_score: 82,<br/>improvement: +17, improved: true}
 
@@ -412,9 +422,9 @@ FROM user_sessions
 
 ## Event Metadata Schema
 
-### Client-Side Events (Vercel Analytics + Backend)
+### Client-Side Events (via `/api/analytics/track`, API key authenticated)
 
-All events automatically include session context via `withSessionContext()`:
+UX events that only exist in the browser — session, interactions, export, performance metrics:
 
 ```javascript
 {
@@ -427,6 +437,12 @@ All events automatically include session context via `withSessionContext()`:
   session_id: "550e8400-e29b-41d4-a716-446655440000",
   session_duration_ms: 45230,
 
+  // Auth header (optional, for user association)
+  // Authorization: Bearer <jwt>
+
+  // API key header (required)
+  // X-Analytics-Key: ak_...
+
   // Timestamp (auto-added by analytics platform)
   timestamp: "2026-01-09T10:23:45.123Z"
 
@@ -435,9 +451,29 @@ All events automatically include session context via `withSessionContext()`:
 }
 ```
 
-### Server-Side Events (Database Only)
+### Server-Side Events — Generate Routes (Database Only)
 
-Webhook events tracked via `serverAnalytics.js`:
+`doc_generation` and `quality_score` are captured directly in the route handlers, fire-and-forget:
+
+```javascript
+// In /api/generate and /api/generate-stream route handlers:
+analyticsService.recordEvent('doc_generation', {
+  doc_type: 'README',
+  success: 'true',
+  duration_ms: 2341,
+  code_input: { language: 'javascript', size_kb: 1, filename: 'utils.js' },
+  llm: { provider: 'claude', model: 'claude-sonnet-4-5-...' },
+}, {
+  userId: req.user?.id || null,  // Associates with user if authenticated
+  ipAddress: req.ip,              // Tracks anonymous callers too
+});
+```
+
+> **Why server-side?** Ensures all callers are captured — the app, CLI tools, future API consumers. No dependency on frontend code firing a separate tracking call.
+
+### Server-Side Events — Webhooks (Database Only)
+
+Payment/tier events tracked via `serverAnalytics.js`:
 
 ```javascript
 {
@@ -498,13 +534,13 @@ Webhook events tracked via `serverAnalytics.js`:
 
 ## Implementation Status
 
-| Workflow | Events Implemented | Dashboard Visualization | Status |
-|----------|-------------------|------------------------|--------|
-| 1. First Value Moment | 6 events (session_start, code_input, doc_generation ×2, quality_score, first_generation, doc_export) | Conversion funnel chart | ✅ Live |
-| 2. GitHub Import | 4 events (code_input, doc_generation ×N, user_interaction batch_complete, doc_export) | Code input breakdown, batch stats | ✅ Live |
-| 3. Quality Improvement | 3 events (quality_score, doc_generation, user_interaction regeneration_complete) | Quality score distribution | ✅ Live |
-| 4. Free-to-Paid | 8 events (usage_alert ×2, user_interaction ×3, checkout_completed, tier_change, email_verified) | Business metrics tab | ✅ Live |
-| 5. Returning User | 1 event (session_start) | Sessions over time trend | ✅ Live |
+| Workflow | Events Implemented | Origin | Dashboard Visualization | Status |
+|----------|-------------------|--------|------------------------|--------|
+| 1. First Value Moment | session_start, code_input, doc_generation, quality_score, performance, first_generation, doc_export | Mixed (doc_generation + quality_score = server; rest = client) | Conversion funnel chart | ✅ Live |
+| 2. GitHub Import | code_input, doc_generation ×N, quality_score ×N, user_interaction batch_complete, doc_export | Mixed (doc_generation + quality_score = server; rest = client) | Code input breakdown, batch stats | ✅ Live |
+| 3. Quality Improvement | quality_score, doc_generation, user_interaction regeneration_complete | Mixed (doc_generation + quality_score = server; rest = client) | Quality score distribution | ✅ Live |
+| 4. Free-to-Paid | usage_alert ×2, user_interaction ×3, checkout_completed, tier_change, email_verified | Client + webhooks | Business metrics tab | ✅ Live |
+| 5. Returning User | session_start | Client | Sessions over time trend | ✅ Live |
 
 **Total Events Implemented:** 15 unique event types, 20+ action variants
 
@@ -599,7 +635,6 @@ describe('Event Tracking Integration', () => {
 
 ---
 
-**Document Status:** ✅ Complete - Reflects v3.3.9 actual implementation
-**Last Updated:** January 11, 2026
-**Recent Changes:** Added `email_verified` (business), `first_generation` (workflow) for campaign tracking
+**Document Status:** ✅ Updated — January 28, 2026
+**Version:** Reflects v3.5.3 — `doc_generation` + `quality_score` moved to server-side (generate routes); `performance` stays client-side (TTFT); analytics endpoint uses API key auth
 **Maintainer:** CodeScribe AI Team

@@ -1,47 +1,30 @@
 /**
  * Analytics Routes
- * Public endpoint for frontend event tracking
+ * Internal endpoint for frontend event tracking
  *
- * Security: Rate limited, validates event names
+ * Security: API key authentication, validates event names
  */
 
 import express from 'express';
-import rateLimit from 'express-rate-limit';
 import { analyticsService } from '../services/analyticsService.js';
 
 const router = express.Router();
 
 /**
- * Rate limiter for analytics tracking
- * 100 events per minute per IP (generous but prevents abuse)
+ * Validate analytics API key
+ * Ensures only the app itself can submit events (blocks external spam)
+ * while still allowing anonymous users to track without a JWT
  */
-const analyticsLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 100,
-  message: {
-    error: 'Rate limit exceeded',
-    message: 'Too many analytics events. Please slow down.',
-    retryAfter: 60,
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-  handler: (req, res) => {
-    // Log rate limit hits for monitoring
-    console.error(JSON.stringify({
-      type: 'analytics_tracking_error',
-      error_type: 'rate_limit',
-      error_message: 'Rate limit exceeded for analytics tracking',
-      ip_address: req.ip,
-      timestamp: new Date().toISOString(),
-    }));
-
-    res.status(429).json({
-      error: 'Rate limit exceeded',
-      message: 'Too many analytics events. Please slow down.',
-      retryAfter: 60,
+const requireAnalyticsKey = (req, res, next) => {
+  const key = req.headers['x-analytics-key'];
+  if (!key || key !== process.env.ANALYTICS_API_KEY) {
+    return res.status(401).json({
+      success: false,
+      error: 'Unauthorized',
     });
-  },
-});
+  }
+  next();
+};
 
 /**
  * Extract client IP address from request
@@ -77,7 +60,7 @@ const getClientIP = (req) => {
  *
  * Note: User ID is extracted from Bearer token if provided
  */
-router.post('/track', analyticsLimiter, async (req, res) => {
+router.post('/track', requireAnalyticsKey, async (req, res) => {
   try {
     const { eventName, eventData = {}, sessionId } = req.body;
 

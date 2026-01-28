@@ -76,8 +76,8 @@
 - [x] ✅ `STRIPE_PRICE_PRO_ANNUAL` (price ID from Stripe dashboard)
 - [x] ✅ `STRIPE_PRICE_TEAM_MONTHLY` (price ID from Stripe dashboard)
 - [x] ✅ `STRIPE_PRICE_TEAM_ANNUAL` (price ID from Stripe dashboard)
-- [x] ✅ `STRIPE_SUCCESS_URL` (https://codescribeai.com/payment/success)
-- [x] ✅ `STRIPE_CANCEL_URL` (https://codescribeai.com/pricing)
+- [x] ✅ ~~`STRIPE_SUCCESS_URL`~~ — **Not needed in Vercel** (auto-resolved via `VERCEL_URL`)
+- [x] ✅ ~~`STRIPE_CANCEL_URL`~~ — **Not needed in Vercel** (auto-resolved via `VERCEL_URL`)
 
 #### Frontend Configuration
 - [x] ✅ `VITE_ENABLE_AUTH=true` (enable authentication features)

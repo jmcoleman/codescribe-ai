@@ -8,13 +8,14 @@ import { checkUsage, incrementUsage, requireFeature } from '../middleware/tierGa
 import Usage from '../models/Usage.js';
 import User from '../models/User.js';
 import emailService from '../services/emailService.js';
-import { TIER_FEATURES, TIER_PRICING } from '../config/tiers.js';
+import { TIER_FEATURES, TIER_PRICING, hasFeature } from '../config/tiers.js';
 import { requireAuth, optionalAuth } from '../middleware/auth.js';
 import githubService from '../services/githubService.js';
 import { getDocTypeOptions } from '../prompts/docTypeConfig.js';
 import graphService from '../services/graphService.js';
 import { logActivity } from '../services/auditLogger.js';
 import { detectPHI } from '../services/phiDetector.js';
+import { analyticsService } from '../services/analyticsService.js';
 
 const router = express.Router();
 
@@ -234,6 +235,39 @@ router.post('/generate', optionalAuth, rateLimitBypass, apiLimiter, generationLi
       },
     });
 
+    // Server-side analytics (fire-and-forget, works for all callers including API consumers)
+    analyticsService.recordEvent('doc_generation', {
+      doc_type: docType || 'README',
+      success: 'true',
+      duration_ms: durationMs,
+      code_input: {
+        language: language || 'javascript',
+        size_kb: Math.round(code.length / 1024),
+        filename: filename || 'untitled',
+      },
+      llm: result.metadata ? {
+        provider: result.metadata.provider || 'unknown',
+        model: result.metadata.model || 'unknown',
+      } : undefined,
+    }, {
+      userId: req.user?.id || null,
+      ipAddress: req.ip || req.socket?.remoteAddress || 'unknown',
+    }).catch(() => {});
+
+    if (result.qualityScore) {
+      analyticsService.recordEvent('quality_score', {
+        score: result.qualityScore.score,
+        grade: result.qualityScore.grade,
+        doc_type: docType || 'README',
+        llm: result.metadata ? {
+          provider: result.metadata.provider || 'unknown',
+          model: result.metadata.model || 'unknown',
+        } : undefined,
+      }, {
+        userId: req.user?.id || null,
+      }).catch(() => {});
+    }
+
     res.json(result);
   } catch (error) {
     // Audit log failed generation (async, non-blocking)
@@ -252,6 +286,21 @@ router.post('/generate', optionalAuth, rateLimitBypass, apiLimiter, generationLi
         code_length: req.body.code?.length || 0,
       },
     });
+
+    // Server-side analytics for failed generation
+    analyticsService.recordEvent('doc_generation', {
+      doc_type: req.body.docType || 'README',
+      success: 'false',
+      duration_ms: durationMs,
+      code_input: {
+        language: req.body.language || 'javascript',
+        size_kb: Math.round((req.body.code?.length || 0) / 1024),
+        filename: req.body.filename || 'untitled',
+      },
+    }, {
+      userId: req.user?.id || null,
+      ipAddress: req.ip || req.socket?.remoteAddress || 'unknown',
+    }).catch(() => {});
 
     // Log full error details including nested objects (Node.js truncates by default)
     console.error('Generate error:', JSON.stringify({
@@ -425,6 +474,39 @@ router.post('/generate-stream', optionalAuth, rateLimitBypass, apiLimiter, gener
       },
     });
 
+    // Server-side analytics (fire-and-forget, works for all callers including API consumers)
+    analyticsService.recordEvent('doc_generation', {
+      doc_type: req.body.docType || 'README',
+      success: 'true',
+      duration_ms: durationMs,
+      code_input: {
+        language: req.body.language || 'javascript',
+        size_kb: Math.round((req.body.code?.length || 0) / 1024),
+        filename: req.body.filename || 'untitled',
+      },
+      llm: result.metadata ? {
+        provider: result.metadata.provider || 'unknown',
+        model: result.metadata.model || 'unknown',
+      } : undefined,
+    }, {
+      userId: req.user?.id || null,
+      ipAddress: req.ip || req.socket?.remoteAddress || 'unknown',
+    }).catch(() => {});
+
+    if (result.qualityScore) {
+      analyticsService.recordEvent('quality_score', {
+        score: result.qualityScore.score,
+        grade: result.qualityScore.grade,
+        doc_type: req.body.docType || 'README',
+        llm: result.metadata ? {
+          provider: result.metadata.provider || 'unknown',
+          model: result.metadata.model || 'unknown',
+        } : undefined,
+      }, {
+        userId: req.user?.id || null,
+      }).catch(() => {});
+    }
+
     res.end();
   } catch (error) {
     // Audit log failed streaming generation (async, non-blocking)
@@ -443,6 +525,21 @@ router.post('/generate-stream', optionalAuth, rateLimitBypass, apiLimiter, gener
         code_length: req.body.code?.length || 0,
       },
     });
+
+    // Server-side analytics for failed streaming generation
+    analyticsService.recordEvent('doc_generation', {
+      doc_type: req.body.docType || 'README',
+      success: 'false',
+      duration_ms: durationMs,
+      code_input: {
+        language: req.body.language || 'javascript',
+        size_kb: Math.round((req.body.code?.length || 0) / 1024),
+        filename: req.body.filename || 'untitled',
+      },
+    }, {
+      userId: req.user?.id || null,
+      ipAddress: req.ip || req.socket?.remoteAddress || 'unknown',
+    }).catch(() => {});
 
     // Log full error details including nested objects (Node.js truncates by default)
     console.error('Stream error:', JSON.stringify({
@@ -1077,9 +1174,10 @@ router.post('/github/file', optionalAuth, apiLimiter, async (req, res) => {
       });
     }
 
-    // Get user's GitHub token if authenticated (for private repo access)
+    // Get user's GitHub token if authenticated AND has privateGitHubRepos feature
+    // Free tier users fall back to server token (public repos only)
     let userGitHubToken = null;
-    if (req.user?.id) {
+    if (req.user?.id && hasFeature(req.user.effectiveTier || 'free', 'privateGitHubRepos')) {
       userGitHubToken = await User.getGitHubToken(req.user.id);
     }
 
@@ -1155,9 +1253,10 @@ router.post('/github/tree', optionalAuth, apiLimiter, async (req, res) => {
       });
     }
 
-    // Get user's GitHub token if authenticated (for private repo access)
+    // Get user's GitHub token if authenticated AND has privateGitHubRepos feature
+    // Free tier users fall back to server token (public repos only)
     let userGitHubToken = null;
-    if (req.user?.id) {
+    if (req.user?.id && hasFeature(req.user.effectiveTier || 'free', 'privateGitHubRepos')) {
       userGitHubToken = await User.getGitHubToken(req.user.id);
     }
 
@@ -1226,9 +1325,10 @@ router.post('/github/branches', optionalAuth, apiLimiter, async (req, res) => {
       });
     }
 
-    // Get user's GitHub token if authenticated (for private repo access)
+    // Get user's GitHub token if authenticated AND has privateGitHubRepos feature
+    // Free tier users fall back to server token (public repos only)
     let userGitHubToken = null;
-    if (req.user?.id) {
+    if (req.user?.id && hasFeature(req.user.effectiveTier || 'free', 'privateGitHubRepos')) {
       userGitHubToken = await User.getGitHubToken(req.user.id);
     }
 
@@ -1276,8 +1376,9 @@ router.post('/github/branches', optionalAuth, apiLimiter, async (req, res) => {
  * Returns: List of organizations the user belongs to
  *
  * Works with GitHub OAuth users. Returns empty array for email/password users.
+ * Requires Starter+ tier (privateGitHubRepos feature)
  */
-router.get('/github/user/orgs', requireAuth, apiLimiter, async (req, res) => {
+router.get('/github/user/orgs', requireAuth, requireFeature('privateGitHubRepos'), apiLimiter, async (req, res) => {
   try {
     // Get user's GitHub token (optional - if not present, return empty array)
     const userGitHubToken = await User.getGitHubToken(req.user.id);
@@ -1328,8 +1429,9 @@ router.get('/github/user/orgs', requireAuth, apiLimiter, async (req, res) => {
  * Returns: List of user's personal repositories (not org repos)
  *
  * Works with GitHub OAuth users. Returns empty array for email/password users.
+ * Requires Starter+ tier (privateGitHubRepos feature)
  */
-router.get('/github/user/repos', requireAuth, apiLimiter, async (req, res) => {
+router.get('/github/user/repos', requireAuth, requireFeature('privateGitHubRepos'), apiLimiter, async (req, res) => {
   try {
     // Get user's GitHub token (optional - if not present, return empty array)
     const userGitHubToken = await User.getGitHubToken(req.user.id);
@@ -1400,8 +1502,12 @@ router.get('/github/owners/:owner/repos', optionalAuth, apiLimiter, async (req, 
       });
     }
 
-    // Get user's GitHub token (optional - falls back to server token for public repos)
-    const userGitHubToken = req.user?.id ? await User.getGitHubToken(req.user.id) : null;
+    // Get user's GitHub token if authenticated AND has privateGitHubRepos feature
+    // Free tier users fall back to server token (public repos only)
+    let userGitHubToken = null;
+    if (req.user?.id && hasFeature(req.user.effectiveTier || 'free', 'privateGitHubRepos')) {
+      userGitHubToken = await User.getGitHubToken(req.user.id);
+    }
 
     const result = await githubService.fetchOwnerRepositories(owner, userGitHubToken, page, per_page);
 
@@ -1467,8 +1573,12 @@ router.get('/github/orgs/:org/repos', requireAuth, apiLimiter, async (req, res) 
       });
     }
 
-    // Get user's GitHub token (optional - falls back to server token for public repos)
-    const userGitHubToken = await User.getGitHubToken(req.user.id);
+    // Get user's GitHub token if they have privateGitHubRepos feature
+    // Free tier users fall back to server token (public repos only)
+    let userGitHubToken = null;
+    if (hasFeature(req.user.effectiveTier || 'free', 'privateGitHubRepos')) {
+      userGitHubToken = await User.getGitHubToken(req.user.id);
+    }
 
     const repositories = await githubService.fetchOrganizationRepositories(org, userGitHubToken);
 

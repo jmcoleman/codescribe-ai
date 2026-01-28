@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import { API_URL } from '../config/api.js';
-import { trackDocGeneration, trackQualityScore, trackError, trackPerformance } from '../utils/analytics.js';
+import { trackError, trackPerformance } from '../utils/analytics.js';
 import { useAuth } from '../contexts/AuthContext.jsx';
 
 export function useDocGeneration(onUsageUpdate) {
@@ -31,12 +31,10 @@ export function useDocGeneration(onUsageUpdate) {
     // Create new AbortController for this request
     abortControllerRef.current = new AbortController();
 
-    // Track start time for performance metrics
+    // Track start time for client-side performance metrics (TTFT, streaming duration)
     const startTime = performance.now();
-
-    // Track streaming performance metrics
-    let firstChunkTime = null; // For TTFT (Time to First Token)
-    let chunkCount = 0; // For output token estimation
+    let firstChunkTime = null;
+    let chunkCount = 0;
 
     // Track generated documentation for return value
     let generatedDoc = '';
@@ -140,7 +138,6 @@ export function useDocGeneration(onUsageUpdate) {
             } else if (data.type === 'chunk') {
               // Clear retry status when we start receiving chunks
               setRetryStatus(null);
-              // Track TTFT on first chunk
               if (firstChunkTime === null) {
                 firstChunkTime = performance.now();
               }
@@ -175,73 +172,24 @@ export function useDocGeneration(onUsageUpdate) {
               setQualityScore(data.qualityScore);
               setIsGenerating(false);
 
-              // Track successful generation
+              // Track client-side performance metrics (TTFT, streaming duration)
               const duration = performance.now() - startTime;
-              trackDocGeneration({
-                docType,
-                success: true,
-                duration,
-                codeSize: code.length,
-                language: language || 'unknown',
-                origin,
-                filename,
-                repo,
-                llm: data.metadata ? {
-                  provider: data.metadata.provider,
-                  model: data.metadata.model,
-                } : undefined,
-              });
-
-              // Track quality score
-              if (data.qualityScore) {
-                trackQualityScore({
-                  score: data.qualityScore.score,
-                  grade: data.qualityScore.grade,
-                  docType,
-                  llm: data.metadata ? {
-                    provider: data.metadata.provider,
-                    model: data.metadata.model,
-                  } : undefined,
-                });
-              }
-
-              // Track performance with grouped metrics
               const ttftMs = firstChunkTime ? firstChunkTime - startTime : null;
               const streamingMs = firstChunkTime ? duration - ttftMs : null;
-              // TPOT = time between first and last token / number of tokens after the first
               const tpotMs = (streamingMs && chunkCount > 1) ? streamingMs / (chunkCount - 1) : null;
               const outputTokens = data.metadata?.outputTokens || chunkCount;
-              // Tokens per second = output tokens / streaming time in seconds
               const tokensPerSecond = (outputTokens && streamingMs > 0) ? outputTokens / (streamingMs / 1000) : null;
 
               trackPerformance({
-                latency: {
-                  totalMs: duration,
-                  ttftMs,
-                  tpotMs,
-                  streamingMs,
-                },
-                throughput: {
-                  outputTokens,
-                  tokensPerSecond,
-                },
-                input: {
-                  tokens: data.metadata?.inputTokens,
-                  chars: code.length,
-                },
+                latency: { totalMs: duration, ttftMs, tpotMs, streamingMs },
+                throughput: { outputTokens, tokensPerSecond },
+                input: { tokens: data.metadata?.inputTokens, chars: code.length },
                 cache: data.metadata?.wasCached !== undefined ? {
                   hit: data.metadata.wasCached,
                   readTokens: data.metadata.cacheReadTokens,
                 } : undefined,
-                context: {
-                  docType,
-                  language: language || 'unknown',
-                  docName: filename || 'untitled',
-                },
-                llm: data.metadata ? {
-                  provider: data.metadata.provider,
-                  model: data.metadata.model,
-                } : undefined,
+                context: { docType, language: language || 'unknown', docName: filename || 'untitled' },
+                llm: data.metadata ? { provider: data.metadata.provider, model: data.metadata.model } : undefined,
               });
 
               // Notify parent to refresh usage data
@@ -400,23 +348,6 @@ export function useDocGeneration(onUsageUpdate) {
 
       setError(JSON.stringify(errorObject));
       setIsGenerating(false);
-
-      // Track failed generation
-      const duration = performance.now() - startTime;
-      trackDocGeneration({
-        docType,
-        success: false,
-        duration,
-        codeSize: code.length,
-        language: language || 'unknown',
-        origin,
-        filename,
-        repo,
-        llm: err.provider ? {
-          provider: err.provider,
-          model: err.model || 'unknown',
-        } : undefined,
-      });
 
       // Track error with code input and LLM context
       trackError({

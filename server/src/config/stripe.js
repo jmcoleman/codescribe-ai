@@ -64,9 +64,14 @@ export const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 /**
  * Success and cancel URLs for Stripe Checkout
  */
+// Resolve base URL: explicit env vars → VERCEL_URL (auto-set per deployment) → CLIENT_URL fallback
+const baseUrl = process.env.STRIPE_SUCCESS_URL
+  ? null // explicit URLs set, skip base resolution
+  : (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : process.env.CLIENT_URL);
+
 export const CHECKOUT_URLS = {
-  success: process.env.STRIPE_SUCCESS_URL || `${process.env.CLIENT_URL}/payment/success`,
-  cancel: process.env.STRIPE_CANCEL_URL || `${process.env.CLIENT_URL}/pricing`,
+  success: process.env.STRIPE_SUCCESS_URL || `${baseUrl}/payment/success`,
+  cancel: process.env.STRIPE_CANCEL_URL || `${baseUrl}/pricing`,
 };
 
 /**

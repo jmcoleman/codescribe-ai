@@ -140,7 +140,7 @@ export default function AdminUsage() {
   if (loading) {
     return (
       <PageLayout showGradient={false} className="bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-950">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-center">
               <RefreshCw className="w-8 h-8 text-purple-600 dark:text-purple-400 animate-spin mx-auto mb-4" />
@@ -155,7 +155,7 @@ export default function AdminUsage() {
   if (error) {
     return (
       <PageLayout showGradient={false} className="bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-950">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-center">
               <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -178,12 +178,12 @@ export default function AdminUsage() {
 
   return (
     <PageLayout showGradient={false} className="bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-950">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-6">
           <button
             onClick={() => navigate('/admin')}
-            className="inline-flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:text-purple-400 transition-colors group mb-3"
+            className="inline-flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors group mb-4"
           >
             <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" aria-hidden="true" />
             <span className="font-medium">Back to Admin</span>
@@ -260,7 +260,7 @@ export default function AdminUsage() {
           <>
             {/* Overall Summary */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 animate-fadeIn">
-              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 shadow-sm">
+              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 border border-transparent dark:border-purple-400 rounded-lg flex items-center justify-center">
                     <Users className="w-5 h-5 text-purple-600 dark:text-purple-400" />
@@ -272,7 +272,7 @@ export default function AdminUsage() {
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 shadow-sm">
+              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 border border-transparent dark:border-purple-400 rounded-lg flex items-center justify-center">
                     <FileText className="w-5 h-5 text-purple-600 dark:text-purple-400" />
@@ -284,7 +284,7 @@ export default function AdminUsage() {
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 shadow-sm">
+              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 border border-transparent dark:border-purple-400 rounded-lg flex items-center justify-center">
                     <Clock className="w-5 h-5 text-purple-600 dark:text-purple-400" />
@@ -300,7 +300,7 @@ export default function AdminUsage() {
             {/* Comparison Cards */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
               {/* Anonymous Users Card */}
-              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
+              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 border border-transparent dark:border-purple-400 rounded-lg flex items-center justify-center">
                     <Globe className="w-5 h-5 text-purple-600 dark:text-purple-400" />
@@ -328,7 +328,7 @@ export default function AdminUsage() {
               </div>
 
               {/* Authenticated Users Card */}
-              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
+              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 border border-transparent dark:border-purple-400 rounded-lg flex items-center justify-center">
                     <Users className="w-5 h-5 text-purple-600 dark:text-purple-400" />
@@ -360,7 +360,7 @@ export default function AdminUsage() {
           <>
             {/* Single User Type View */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
+              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 border border-transparent dark:border-purple-400 rounded-lg flex items-center justify-center">
                     {userTypeFilter === 'anonymous' ? (
@@ -382,7 +382,7 @@ export default function AdminUsage() {
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
+              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 border border-transparent dark:border-purple-400 rounded-lg flex items-center justify-center">
                     <FileText className="w-5 h-5 text-purple-600 dark:text-purple-400" />
@@ -398,7 +398,7 @@ export default function AdminUsage() {
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
+              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 border border-transparent dark:border-purple-400 rounded-lg flex items-center justify-center">
                     <Clock className="w-5 h-5 text-purple-600 dark:text-purple-400" />
@@ -420,7 +420,7 @@ export default function AdminUsage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Top Users (Anonymous IPs and/or Authenticated Users) */}
-          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
             <div className="p-6 border-b border-slate-200 dark:border-slate-700">
               <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
                 {userTypeFilter === 'anonymous' ? 'Top IPs (This Period)' :

@@ -38,6 +38,7 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, onIm
   const [repoSearchTerm, setRepoSearchTerm] = useState('');
   const [repoCurrentPage, setRepoCurrentPage] = useState(1);
   const REPOS_PER_PAGE = 20;
+  const backgroundLoadingRef = useRef({ shouldContinue: true }); // Control background repo loading
   const [selectedFile, setSelectedFile] = useState(null);
   const [filePreview, setFilePreview] = useState(null);
   const [loadingPreview, setLoadingPreview] = useState(false);
@@ -242,6 +243,10 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, onIm
     }
 
     // Otherwise, treat as full repo path or URL
+    // Stop any background repo loading
+    backgroundLoadingRef.current.shouldContinue = false;
+    setLoadingMoreRepos(false);
+
     setLoading(true);
     setError(null);
     setRepository(null);
@@ -322,6 +327,9 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, onIm
 
   // Handle loading repositories for a specific owner/org with progressive pagination
   const handleLoadOwnerRepositories = async (owner) => {
+    // Reset background loading control (allow new search to proceed)
+    backgroundLoadingRef.current.shouldContinue = true;
+
     setLoadingOwnerRepos(true);
     setError(null);
     setRepository(null);
@@ -361,9 +369,15 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, onIm
         // Limit unauthenticated users to 3 pages (300 repos) to preserve server quota
         const maxPages = firstPage.isAuthenticated ? 50 : 3;
 
-        while (hasMorePages && currentPage <= maxPages) {
+        while (hasMorePages && currentPage <= maxPages && backgroundLoadingRef.current.shouldContinue) {
           try {
             const nextPage = await githubService.fetchOwnerRepositories(owner, currentPage, 100);
+
+            // Check again after async operation - user may have navigated away
+            if (!backgroundLoadingRef.current.shouldContinue) {
+              console.log('[GitHub] Background loading cancelled - user selected a repo');
+              break;
+            }
 
             // Append new repos to existing list
             setOwnerRepositories(prev => [...prev, ...nextPage.repositories]);
@@ -407,6 +421,10 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, onIm
 
   // Handle selecting a repository from the owner's repo list
   const handleOwnerRepoSelect = async (repo) => {
+    // Stop background loading immediately
+    backgroundLoadingRef.current.shouldContinue = false;
+    setLoadingMoreRepos(false);
+
     // Clear owner repo list and load the selected repository
     setOwnerRepositories([]);
     setOwnerName(null);
@@ -614,6 +632,10 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, onIm
 
   // Input clear handler - clear everything (dropdown shows only on focus)
   const handleInputClear = () => {
+    // Stop any background repo loading
+    backgroundLoadingRef.current.shouldContinue = false;
+    setLoadingMoreRepos(false);
+
     setOwnerRepositories([]);
     setOwnerRepoMetadata({ hasMore: false, total: 0, isAuthenticated: false });
     setOwnerName(null);
@@ -638,6 +660,10 @@ export function GitHubLoadModal({ isOpen, onClose, onFileLoad, onFilesLoad, onIm
   }, [input]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleRecentFileClick = async (recent) => {
+    // Stop any background repo loading
+    backgroundLoadingRef.current.shouldContinue = false;
+    setLoadingMoreRepos(false);
+
     setInput(`${recent.owner}/${recent.repo}`);
     setLoading(true);
     setError(null);

@@ -68,6 +68,7 @@ const formatDate = (date) => {
  * @returns {string} YYYY-MM-DD format
  */
 const formatInputDate = (date) => {
+  if (!date) return '';
   return date.toISOString().split('T')[0];
 };
 
@@ -159,7 +160,7 @@ export default function DateRangePicker({ startDate, endDate, onChange }) {
           />
 
           {/* Dropdown */}
-          <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 z-50">
+          <div className="absolute left-0 mt-2 w-64 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 z-50">
             <div className="p-2">
               {PRESETS.map((preset) => (
                 <button

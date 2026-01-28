@@ -240,21 +240,21 @@ CodeScribe AI has **three distinct dashboards** serving different stakeholders a
 
 **Core Design Decision:** Use **action-based events** instead of creating separate event types for each user action.
 
-| Event Type | Purpose | Action Parameter |
-|------------|---------|------------------|
-| `session_start` | Session entry point | N/A |
-| `code_input` | Code source tracking | origin: 'paste', 'upload', 'sample', 'github', 'gitlab', 'bitbucket' |
-| `doc_generation` | Generation tracking | success: 'true'/'false' |
-| `quality_score` | Quality measurement | score, grade, doc_type |
-| `doc_export` | Value capture | action: 'copy', 'download' |
-| `usage_alert` | Usage warnings | action: 'warning_shown', 'limit_hit' |
-| `user_interaction` | General interactions | action: 'pricing_page_viewed', 'upgrade_cta_clicked', 'checkout_started', 'regeneration_complete', 'batch_generation_complete', etc. |
-| `login` / `signup` | Auth events | method: 'email', 'oauth_github', 'oauth_google' |
-| `checkout_completed` | Server-side payment | Webhook event |
-| `tier_change` | Server-side tier changes | action: 'upgrade', 'downgrade', 'cancel' |
-| `error` | Error tracking | error_type, context |
-| `performance` | LLM metrics | latency, throughput, cache, llm |
-| `oauth_flow` | OAuth timing | action: 'initiated', 'redirect_started', 'completed', 'failed' |
+| Event Type | Origin | Purpose | Action Parameter |
+|------------|--------|---------|------------------|
+| `session_start` | Client | Session entry point | N/A |
+| `code_input` | Client | Code source tracking | origin: 'paste', 'upload', 'sample', 'github', 'gitlab', 'bitbucket' |
+| `doc_generation` | **Server** | Generation tracking (auto-captured in generate routes) | success: 'true'/'false' |
+| `quality_score` | **Server** | Quality measurement (auto-captured in generate routes) | score, grade, doc_type |
+| `doc_export` | Client | Value capture | action: 'copy', 'download' |
+| `usage_alert` | Client | Usage warnings | action: 'warning_shown', 'limit_hit' |
+| `user_interaction` | Client | General interactions | action: 'pricing_page_viewed', 'upgrade_cta_clicked', 'checkout_started', 'regeneration_complete', 'batch_generation_complete', etc. |
+| `login` / `signup` | Client | Auth events | method: 'email', 'oauth_github', 'oauth_google' |
+| `checkout_completed` | Server | Payment webhook | Webhook event |
+| `tier_change` | Server | Tier changes | action: 'upgrade', 'downgrade', 'cancel' |
+| `error` | Client | Error tracking | error_type, context |
+| `performance` | Client | LLM metrics (TTFT, streaming duration) | latency, throughput, cache, llm |
+| `oauth_flow` | Client | OAuth timing | action: 'initiated', 'redirect_started', 'completed', 'failed' |
 
 ### Client-Side Implementation
 
@@ -275,10 +275,8 @@ trackSessionStart()
 trackLogin({ method })
 trackSignup({ method, tier, hasTrial })
 
-// Core workflow events
+// Core workflow events (client-only)
 trackCodeInput(origin, codeSize, language, filename, metadata)
-trackDocGeneration({ docType, success, duration, codeSize, language, origin, filename, repo, llm })
-trackQualityScore({ score, grade, docType })
 trackDocExport({ action, docType, filename, format, source })
 
 // Conversion funnel
@@ -287,9 +285,11 @@ trackInteraction(action, metadata) // Flexible for any interaction
 
 // Technical metrics
 trackError({ errorType, errorMessage, context, codeInput, llm })
-trackPerformance({ latency, throughput, input, cache, request, context, llm })
+trackPerformance({ latency, throughput, input, cache, request, context, llm }) // Client-side: TTFT, streaming duration
 trackOAuth({ provider, action, context, duration, errorType })
 ```
+
+> **Note:** `doc_generation` and `quality_score` are tracked **server-side** in the generate route handlers — see Server-Side section below. This ensures all callers (app, CLI, API consumers) are captured automatically.
 
 **Session Context (Auto-Added):**
 ```javascript
@@ -302,19 +302,39 @@ trackOAuth({ provider, action, context, duration, errorType })
 
 ### Server-Side Implementation
 
-**File:** `server/src/utils/serverAnalytics.js`
+**Files:**
+- `server/src/utils/serverAnalytics.js` — Webhook event tracking
+- `server/src/routes/api.js` — Generation route tracking (fire-and-forget)
 
 **Key Features:**
 - ✅ Structured logging for Vercel log drains
 - ✅ Database persistence via `analyticsService`
 - ✅ Automatic internal user detection
 - ✅ Non-blocking (analytics errors don't break business logic)
+- ✅ `doc_generation` + `quality_score` tracked in both `/api/generate` and `/api/generate-stream`
+- ✅ Captures all callers automatically (app, CLI, future API consumers)
 
-**Tracking Functions:**
+**Webhook Tracking Functions (`serverAnalytics.js`):**
 ```javascript
 trackCheckoutCompleted({ userId, tier, amount, billingPeriod })
 trackTierChange({ action, userId, previousTier, newTier, source, reason })
 trackSignup({ userId, method })
+```
+
+**Generate Route Tracking (`api.js`):**
+```javascript
+// Fired on success + failure in both /generate and /generate-stream
+analyticsService.recordEvent('doc_generation', {
+  doc_type, success, duration_ms,
+  code_input: { language, size_kb, filename },
+  llm: { provider, model },
+}, { userId, ipAddress });
+
+// Fired on success only
+analyticsService.recordEvent('quality_score', {
+  score, grade, doc_type,
+  llm: { provider, model },
+}, { userId });
 ```
 
 ### Database Schema
@@ -538,7 +558,7 @@ const regenerations = await pool.query(`
 - ✅ Exclude internal filter (business metrics accuracy)
 
 ### API Tests (server/src/routes/__tests__/admin-analytics.test.js)
-- ✅ POST /api/analytics/track (public endpoint, rate limited)
+- ✅ POST /api/analytics/track (internal endpoint, API key authenticated)
 - ✅ GET /api/admin/analytics/funnel (admin only)
 - ✅ GET /api/admin/analytics/business (admin only)
 - ✅ GET /api/admin/analytics/usage (admin only)
@@ -602,6 +622,6 @@ const regenerations = await pool.query(`
 
 ---
 
-**Document Status:** ✅ Updated (January 9, 2026)
-**Version:** Reflects v3.3.4+ implementation
+**Document Status:** ✅ Updated (January 28, 2026)
+**Version:** Reflects v3.5.3 — doc_generation + quality_score moved to server-side; analytics endpoint switched from rate limiting to API key auth
 **Maintainer:** CodeScribe AI Team

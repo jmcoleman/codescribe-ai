@@ -198,9 +198,15 @@ export function Select({ options, value, onChange, placeholder = 'Select...', la
     <div className={`relative ${className}`}>
       <Listbox value={value} onChange={onChange}>
         {({ open }) => {
-          // Update position when dropdown opens
+          // Update position when dropdown opens, restoring scroll
+          // because Headless UI auto-focuses the Portal-rendered options
+          // which causes the browser to scroll to the end of <body>
           if (open) {
-            setTimeout(updateDropdownPosition, 0);
+            const scrollY = window.scrollY;
+            setTimeout(() => {
+              updateDropdownPosition();
+              window.scrollTo({ top: scrollY, behavior: 'instant' });
+            }, 0);
           }
 
           return (

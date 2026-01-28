@@ -40,6 +40,7 @@ import { API_URL } from '../../config/api';
 import { PageLayout } from '../../components/PageLayout';
 import DateRangePicker from '../../components/admin/DateRangePicker';
 import { STORAGE_KEYS, getSessionItem, setSessionItem } from '../../constants/storage';
+import { useDateRange } from '../../hooks/useDateRange';
 import {
   TrendChart,
   MultiLineTrendChart,
@@ -245,26 +246,7 @@ export default function Analytics() {
   const [selectedModel, setSelectedModel] = useState('all');
 
   // Default to last 30 days (or restore from session)
-  const [dateRange, setDateRange] = useState(() => {
-    const saved = getSessionItem(STORAGE_KEYS.ANALYTICS_DATE_RANGE);
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        return {
-          startDate: new Date(parsed.startDate),
-          endDate: new Date(parsed.endDate),
-        };
-      } catch (e) {
-        // If parsing fails, use default
-      }
-    }
-    // Default: last 30 days
-    const end = new Date();
-    end.setDate(end.getDate() + 1);
-    const start = new Date();
-    start.setDate(start.getDate() - 30);
-    return { startDate: start, endDate: end };
-  });
+  const { dateRange, setDateRange } = useDateRange(STORAGE_KEYS.ANALYTICS_DATE_RANGE);
 
   // Trial Program export dates (separate from main dashboard dateRange)
   const [campaignExportDates, setCampaignExportDates] = useState(() => {
@@ -550,14 +532,6 @@ export default function Analytics() {
     setSessionItem(STORAGE_KEYS.ANALYTICS_ACTIVE_TAB, activeTab);
   }, [activeTab]);
 
-  // Save date range to sessionStorage
-  useEffect(() => {
-    setSessionItem(STORAGE_KEYS.ANALYTICS_DATE_RANGE, JSON.stringify({
-      startDate: dateRange.startDate.toISOString(),
-      endDate: dateRange.endDate.toISOString(),
-    }));
-  }, [dateRange]);
-
   return (
     <PageLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -574,7 +548,7 @@ export default function Analytics() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
                   Analytics Dashboard
                 </h1>
                 {summaryData && !loading && (

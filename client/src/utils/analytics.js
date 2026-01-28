@@ -134,6 +134,7 @@ const sendToBackend = async (eventName, eventData) => {
     // Include auth token if available to associate events with users
     const headers = {
       'Content-Type': 'application/json',
+      'X-Analytics-Key': import.meta.env.VITE_ANALYTICS_API_KEY,
     };
     const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
     if (token) {

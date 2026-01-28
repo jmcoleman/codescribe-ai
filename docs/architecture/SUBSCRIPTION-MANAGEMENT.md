@@ -436,7 +436,7 @@ STRIPE_PRICE_STARTER_MONTHLY=price_xxx
 STRIPE_PRICE_PRO_MONTHLY=price_xxx
 STRIPE_PRICE_TEAM_MONTHLY=price_xxx
 
-# URLs
+# URLs (local dev only — Vercel auto-resolves via VERCEL_URL)
 STRIPE_SUCCESS_URL=http://localhost:5173/payment/success
 STRIPE_CANCEL_URL=http://localhost:5173/pricing
 CLIENT_URL=http://localhost:5173
