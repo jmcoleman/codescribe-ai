@@ -1502,25 +1502,30 @@ router.get('/github/owners/:owner/repos', optionalAuth, apiLimiter, async (req, 
       });
     }
 
-    // Get user's GitHub token if authenticated AND has privateGitHubRepos feature
-    // Free tier users fall back to server token (public repos only)
+    // Always fetch user's GitHub token when available (benefits authenticated rate limit: 5000/hr vs 60/hr)
     let userGitHubToken = null;
-    if (req.user?.id && hasFeature(req.user.effectiveTier || 'free', 'privateGitHubRepos')) {
+    if (req.user?.id) {
       userGitHubToken = await User.getGitHubToken(req.user.id);
     }
 
+    const canAccessPrivate = hasFeature(req.user?.effectiveTier || 'free', 'privateGitHubRepos');
     const result = await githubService.fetchOwnerRepositories(owner, userGitHubToken, page, per_page);
+
+    // Filter out private repos for users without the privateGitHubRepos feature
+    const repositories = canAccessPrivate
+      ? result.repositories
+      : result.repositories.filter(repo => !repo.isPrivate);
 
     res.json({
       success: true,
       owner,
-      repositories: result.repositories,
+      repositories,
       page: result.page,
       perPage: result.perPage,
-      count: result.count,
+      count: repositories.length,
       hasMore: result.hasMore,
       isAuthenticated: result.isAuthenticated,
-      usingServerToken: !userGitHubToken // Indicate if using server token (public repos only)
+      usingServerToken: !userGitHubToken
     });
   } catch (error) {
     console.error('[GitHub] Fetch owner repositories error:', error);
