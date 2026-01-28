@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { PageLayout } from '../../components/PageLayout';
 import { Select } from '../../components/Select';
+import { FilterBar } from '../../components/FilterBar';
 import { ConfirmationModal } from '../../components/ConfirmationModal';
 import { CopyButton } from '../../components/CopyButton';
 import { BaseTable } from '../../components/BaseTable';
@@ -578,23 +579,13 @@ export default function InviteCodes() {
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => fetchCodes(pagination.page, true)}
-                disabled={isRefreshing}
-                className="inline-flex items-center gap-2 px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
-              >
-                <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                Refresh
-              </button>
-              <button
-                onClick={() => setShowCreateForm(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-700 dark:hover:bg-purple-800 dark:active:bg-purple-900 text-white rounded-lg font-medium transition-colors shadow-lg shadow-purple-600/20 dark:shadow-purple-900/30"
-              >
-                <Plus className="w-4 h-4" />
-                Create Code
-              </button>
-            </div>
+            <button
+              onClick={() => setShowCreateForm(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-700 dark:hover:bg-purple-800 dark:active:bg-purple-900 text-white rounded-lg font-medium transition-colors shadow-lg shadow-purple-600/20 dark:shadow-purple-900/30"
+            >
+              <Plus className="w-4 h-4" />
+              New Invite Code
+            </button>
           </div>
         </div>
 
@@ -870,20 +861,17 @@ export default function InviteCodes() {
 
         {/* Filters */}
         {!loading && !error && (
-          <div className="mb-4 flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2">
-              {isRefreshing ? (
-                <RefreshCw className="w-4 h-4 text-purple-600 dark:text-purple-400 animate-spin" />
-              ) : (
-                <Filter className="w-4 h-4 text-slate-400" />
-              )}
-              <span className="text-sm text-slate-600 dark:text-slate-400">Filters:</span>
-            </div>
+          <FilterBar
+            hasActiveFilters={filterStatus || filterTier}
+            onClearFilters={() => {
+              setFilterStatus('');
+              setFilterTier('');
+            }}
+          >
             <Select
               value={filterStatus}
               onChange={setFilterStatus}
               placeholder="All Statuses"
-              size="small"
               options={[
                 { value: '', label: 'All Statuses' },
                 { value: 'active', label: 'Active' },
@@ -897,7 +885,6 @@ export default function InviteCodes() {
               value={filterTier}
               onChange={setFilterTier}
               placeholder="All Tiers"
-              size="small"
               options={[
                 { value: '', label: 'All Tiers' },
                 { value: 'pro', label: 'Pro' },
@@ -906,18 +893,7 @@ export default function InviteCodes() {
               ]}
               ariaLabel="Filter by tier"
             />
-            {(filterStatus || filterTier) && (
-              <button
-                onClick={() => {
-                  setFilterStatus('');
-                  setFilterTier('');
-                }}
-                className="px-3 py-1.5 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-              >
-                Clear filters
-              </button>
-            )}
-          </div>
+          </FilterBar>
         )}
 
         {/* Codes Table */}
@@ -939,12 +915,15 @@ export default function InviteCodes() {
                     className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-700 dark:hover:bg-purple-800 dark:active:bg-purple-900 text-white rounded-lg font-medium transition-colors shadow-lg shadow-purple-600/20 dark:shadow-purple-900/30"
                   >
                     <Plus className="w-4 h-4" />
-                    Create Code
+                    Create First Invite Code
                   </button>
                 </div>
               </div>
             ) : (
               <BaseTable
+                title="Invite Codes"
+                description={`${pagination.total} total codes`}
+                onRefresh={() => fetchCodes(pagination.page, false)}
                 data={codes}
                 columns={columns}
                 sorting={sorting}
@@ -966,7 +945,7 @@ export default function InviteCodes() {
                         setFilterStatus('');
                         setFilterTier('');
                       }}
-                      className="text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 font-medium"
+                      className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 font-medium"
                     >
                       Clear filters
                     </button>

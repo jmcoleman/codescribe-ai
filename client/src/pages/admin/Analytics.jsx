@@ -44,16 +44,22 @@ import { useDateRange } from '../../hooks/useDateRange';
 import {
   TrendChart,
   MultiLineTrendChart,
-  ComparisonBar,
-  ScoreDistribution,
-  LanguageSuccessChart,
-  DocTypeSuccessChart,
   QualityHeatmap,
   formatNumber,
   formatLatency,
   formatCurrency,
   formatPercent,
 } from '../../components/admin/charts';
+import {
+  ChartSection,
+  TrendChartSection,
+  MultiLineTrendChartSection,
+  FunnelChartSection,
+  BarChartSection,
+  SuccessChartSection,
+  DistributionChartSection,
+  HeatmapChartSection,
+} from '../../components/admin/ChartSections';
 import EventsTable from '../../components/admin/EventsTable';
 import { Tooltip } from '../../components/Tooltip';
 
@@ -156,67 +162,6 @@ function InfoTooltip({ content }) {
   );
 }
 
-/**
- * Chart Section Component with optional table toggle and guiding question
- */
-function ChartSection({ title, question, children, tableData, tableColumns }) {
-  const [showTable, setShowTable] = useState(false);
-
-  return (
-    <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-            {title}
-          </h3>
-          {question && (
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 italic">
-              {question}
-            </p>
-          )}
-        </div>
-        {tableData && tableData.length > 0 && (
-          <button
-            onClick={() => setShowTable(!showTable)}
-            className="flex items-center gap-1 text-sm text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
-          >
-            {showTable ? <ChartBar className="w-4 h-4" /> : <Table className="w-4 h-4" />}
-            {showTable ? 'Show Chart' : 'Show Table'}
-          </button>
-        )}
-      </div>
-
-      {showTable && tableData ? (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-700">
-                {tableColumns.map((col) => (
-                  <th key={col.key} className="text-left py-2 px-3 text-slate-600 dark:text-slate-400 font-medium">
-                    {col.label}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {tableData.map((row, i) => (
-                <tr key={i} className="border-b border-slate-100 dark:border-slate-700/50">
-                  {tableColumns.map((col) => (
-                    <td key={col.key} className="py-2 px-3 text-slate-900 dark:text-slate-100">
-                      {col.format ? col.format(row[col.key]) : row[col.key]}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        children
-      )}
-    </div>
-  );
-}
 
 /**
  * Main Analytics Dashboard Component
@@ -587,11 +532,24 @@ export default function Analytics() {
               />
 
               <button
-                onClick={fetchData}
+                onClick={async () => {
+                  if (activeTab === 'events') {
+                    // For Raw Events tab, only refresh KPIs (EventsTable has its own refresh)
+                    setLoading(true);
+                    await fetchSummary();
+                    setLoading(false);
+                  } else {
+                    // For other tabs, refresh everything
+                    fetchData(true);
+                    fetchComparisons();
+                    fetchSummary();
+                  }
+                }}
                 disabled={loading}
                 className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
+                aria-label="Refresh data"
               >
-                <RefreshCw className={`w-4 h-4 text-slate-600 dark:text-slate-400 ${loading ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`w-5 h-5 text-slate-600 dark:text-slate-400 ${loading ? 'animate-spin' : ''}`} />
               </button>
             </div>
           </div>
@@ -709,6 +667,13 @@ export default function Analytics() {
           </div>
         )}
 
+        {/* Loading State - For Raw Events tab only (above tabs) */}
+        {loading && activeTab === 'events' && (
+          <div className="flex items-center justify-center py-12">
+            <RefreshCw className="w-8 h-8 text-slate-600 dark:text-slate-400 animate-spin" />
+          </div>
+        )}
+
         {/* Tabs */}
         <div className="border-b border-slate-200 dark:border-slate-700 mb-6">
           <nav className="flex -mb-px overflow-x-auto" aria-label="Analytics tabs">
@@ -751,10 +716,10 @@ export default function Analytics() {
           </div>
         )}
 
-        {/* Loading State */}
-        {loading && (
+        {/* Loading State - For other tabs (below tabs) */}
+        {loading && activeTab !== 'events' && (
           <div className="flex items-center justify-center py-12">
-            <RefreshCw className="w-8 h-8 text-purple-600 animate-spin" />
+            <RefreshCw className="w-8 h-8 text-slate-600 dark:text-slate-400 animate-spin" />
           </div>
         )}
 
@@ -835,6 +800,28 @@ export default function Analytics() {
                 <ChartSection
                   title="Business Conversion Funnel"
                   question="How do visitors progress through the conversion funnel?"
+                  height={450}
+                  tableData={businessData.conversionFunnel.stages ? Object.entries(businessData.conversionFunnel.stages).map(([stage, data]) => ({
+                    stage,
+                    count: data.count,
+                    percentage: ((data.count / (businessData.conversionFunnel.stages.visitors?.count || 1)) * 100),
+                  })) : []}
+                  tableColumns={[
+                    { key: 'stage', label: 'Stage', format: (val) => {
+                      const labels = {
+                        visitors: 'Visitors',
+                        engaged: 'Engaged (Used Product)',
+                        signups: 'Signups',
+                        emailVerified: 'Email Verified',
+                        activated: 'Activated (First Doc)',
+                        trials: 'Trial Started',
+                        paid: 'Paid',
+                      };
+                      return labels[val] || val;
+                    }},
+                    { key: 'count', label: 'Count', format: formatNumber },
+                    { key: 'percentage', label: '% of Visitors', format: (val) => formatPercent(val) },
+                  ]}
                 >
                   <div className="space-y-4">
                     {/* Funnel visualization as stacked bars */}
@@ -1243,60 +1230,44 @@ export default function Analytics() {
             </div>
 
             {/* Signups Trend */}
-            <ChartSection
+            <TrendChartSection
               title="New Signups Over Time"
               question="Are signups growing or declining?"
-              tableData={timeSeriesData.signups}
-              tableColumns={[
-                { key: 'date', label: 'Date', format: (d) => new Date(d).toLocaleDateString() },
-                { key: 'value', label: 'Signups', format: formatNumber },
-              ]}
-            >
-              <TrendChart
-                data={timeSeriesData.signups}
-                isDark={isDark}
-                height={250}
-                interval="day"
-                color={isDark ? '#4ade80' : '#22c55e'}
-              />
-            </ChartSection>
+              data={timeSeriesData.signups}
+              valueLabel="Signups"
+              isDark={isDark}
+              color={isDark ? '#4ade80' : '#22c55e'}
+            />
 
             {/* Revenue Trend */}
-            <ChartSection
+            <TrendChartSection
               title="Revenue Over Time"
               question="What's our revenue trend?"
-              tableData={timeSeriesData.revenue}
-              tableColumns={[
-                { key: 'date', label: 'Date', format: (d) => new Date(d).toLocaleDateString() },
-                { key: 'value', label: 'Revenue', format: formatCurrency },
-              ]}
-            >
-              <TrendChart
-                data={timeSeriesData.revenue}
-                isDark={isDark}
-                height={250}
-                interval="day"
-                valueType="currency"
-                color={isDark ? '#60a5fa' : '#3b82f6'}
-              />
-            </ChartSection>
+              data={timeSeriesData.revenue}
+              valueLabel="Revenue"
+              valueType="currency"
+              isDark={isDark}
+              color={isDark ? '#60a5fa' : '#3b82f6'}
+            />
 
             {/* Upgrades by Tier */}
             {businessData.upgradesByTier && Object.keys(businessData.upgradesByTier).length > 0 && (
-              <ChartSection
+              <BarChartSection
                 title="Upgrades by Tier"
                 question="Which tiers are users upgrading to?"
-              >
-                <ComparisonBar
-                  data={Object.entries(businessData.upgradesByTier).map(([tier, count]) => ({
-                    name: tier.charAt(0).toUpperCase() + tier.slice(1),
-                    value: count,
-                  }))}
-                  isDark={isDark}
-                  height={200}
-                  horizontal={false}
-                />
-              </ChartSection>
+                data={Object.entries(businessData.upgradesByTier).map(([tier, count]) => ({
+                  name: tier,
+                  count,
+                }))}
+                itemLabels={{
+                  starter: 'Starter',
+                  pro: 'Pro',
+                  team: 'Team',
+                  enterprise: 'Enterprise',
+                }}
+                isDark={isDark}
+                horizontal={false}
+              />
             )}
           </div>
         )}
@@ -1360,40 +1331,22 @@ export default function Analytics() {
               {funnelData && (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Sessions Trend */}
-                  <ChartSection
+                  <TrendChartSection
                     title="Sessions Over Time"
                     question="What's the engagement trend?"
-                    tableData={timeSeriesData.sessions}
-                    tableColumns={[
-                      { key: 'date', label: 'Date', format: (d) => new Date(d).toLocaleDateString() },
-                      { key: 'value', label: 'Sessions', format: formatNumber },
-                    ]}
-                  >
-                    <TrendChart
-                      data={timeSeriesData.sessions}
-                      isDark={isDark}
-                      height={250}
-                      interval="day"
-                    />
-                  </ChartSection>
+                    data={timeSeriesData.sessions}
+                    valueLabel="Sessions"
+                    isDark={isDark}
+                  />
 
                   {/* Generations Trend */}
-                  <ChartSection
+                  <TrendChartSection
                     title="Generations Over Time"
                     question="Are users completing workflows?"
-                    tableData={timeSeriesData.generations}
-                    tableColumns={[
-                      { key: 'date', label: 'Date', format: (d) => new Date(d).toLocaleDateString() },
-                      { key: 'value', label: 'Generations', format: formatNumber },
-                    ]}
-                  >
-                    <TrendChart
-                      data={timeSeriesData.generations}
-                      isDark={isDark}
-                      height={250}
-                      interval="day"
-                    />
-                  </ChartSection>
+                    data={timeSeriesData.generations}
+                    valueLabel="Generations"
+                    isDark={isDark}
+                  />
                 </div>
               )}
             </div>
@@ -1461,6 +1414,26 @@ export default function Analytics() {
                 <ChartSection
                   title="Session Drop-off by Stage"
                   question="Where are users abandoning the workflow?"
+                  height={250}
+                  tableData={funnelData.stages ? Object.entries(funnelData.stages).map(([stage, data]) => ({
+                    stage,
+                    sessions: data.sessions,
+                    percentage: ((data.sessions / (funnelData.stages.session_start?.sessions || 1)) * 100),
+                  })) : []}
+                  tableColumns={[
+                    { key: 'stage', label: 'Stage', format: (val) => {
+                      const labels = {
+                        session_start: 'Sessions Started',
+                        code_input: 'Code Input',
+                        generation_started: 'Generation Started',
+                        generation_completed: 'Generation Completed',
+                        doc_export: 'Copied/Downloaded',
+                      };
+                      return labels[val] || val;
+                    }},
+                    { key: 'sessions', label: 'Sessions', format: formatNumber },
+                    { key: 'percentage', label: '% of Total', format: (val) => formatPercent(val) },
+                  ]}
                 >
                   <div className="space-y-4">
                     {['session_start', 'code_input', 'generation_started', 'generation_completed', 'doc_export'].map((stage, index) => {
@@ -1530,6 +1503,30 @@ export default function Analytics() {
                     );
                   })()}
                   question="How are users providing code for documentation?"
+                  height={200}
+                  tableData={usageData.codeInputMethods?.map((method) => {
+                    const total = usageData.codeInputMethods.reduce((sum, o) => sum + o.count, 0);
+                    return {
+                      origin: method.origin,
+                      count: method.count,
+                      percentage: total > 0 ? (method.count / total) * 100 : 0,
+                    };
+                  }) || []}
+                  tableColumns={[
+                    { key: 'origin', label: 'Input Method', format: (val) => {
+                      const labels = {
+                        default: 'Default Code',
+                        github_private: 'Private GitHub',
+                        github_public: 'Public GitHub',
+                        upload: 'File Upload',
+                        sample: 'Sample Code',
+                        paste: 'Paste Code',
+                      };
+                      return labels[val] || val;
+                    }},
+                    { key: 'count', label: 'Count', format: formatNumber },
+                    { key: 'percentage', label: 'Percentage', format: (val) => formatPercent(val) },
+                  ]}
                 >
                   {usageData.codeInputMethods && usageData.codeInputMethods.length > 0 ? (
                     <div className="space-y-3">
@@ -1584,24 +1581,14 @@ export default function Analytics() {
                 </ChartSection>
 
                 {/* Top Languages */}
-                <ChartSection
+                <SuccessChartSection
                   title="Top Languages"
                   question="Which languages are users documenting?"
-                  tableData={usageData.languages}
-                  tableColumns={[
-                    { key: 'language', label: 'Language' },
-                    { key: 'successful', label: 'Successful', format: formatNumber },
-                    { key: 'failed', label: 'Failed', format: formatNumber },
-                    { key: 'total', label: 'Total', format: formatNumber },
-                    { key: 'successRate', label: 'Success Rate', format: (val) => formatPercent(val) },
-                  ]}
-                >
-                  <LanguageSuccessChart
-                    data={usageData.languages}
-                    isDark={isDark}
-                    height={300}
-                  />
-                </ChartSection>
+                  data={usageData.languages}
+                  itemKey="language"
+                  chartType="language"
+                  isDark={isDark}
+                />
               </div>
             </div>
 
@@ -1650,24 +1637,14 @@ export default function Analytics() {
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Doc Types */}
-                <ChartSection
+                <SuccessChartSection
                   title="Documentation Types"
                   question="Which doc types are most used?"
-                  tableData={usageData.docTypes}
-                  tableColumns={[
-                    { key: 'type', label: 'Doc Type' },
-                    { key: 'successful', label: 'Successful', format: formatNumber },
-                    { key: 'failed', label: 'Failed', format: formatNumber },
-                    { key: 'total', label: 'Total', format: formatNumber },
-                    { key: 'successRate', label: 'Success Rate', format: (val) => formatPercent(val) },
-                  ]}
-                >
-                  <DocTypeSuccessChart
-                    data={usageData.docTypes}
-                    isDark={isDark}
-                    height={300}
-                  />
-                </ChartSection>
+                  data={usageData.docTypes}
+                  itemKey="type"
+                  chartType="docType"
+                  isDark={isDark}
+                />
 
                 {/* Export Sources */}
                 <ChartSection
@@ -1683,6 +1660,26 @@ export default function Analytics() {
                     );
                   })()}
                   question="Are users exporting fresh docs or exporting from history?"
+                  height={150}
+                  tableData={usageData.exportSources?.map((source) => {
+                    const total = usageData.exportSources.reduce((sum, s) => sum + s.count, 0);
+                    return {
+                      source: source.source,
+                      count: source.count,
+                      percentage: total > 0 ? (source.count / total) * 100 : 0,
+                    };
+                  }) || []}
+                  tableColumns={[
+                    { key: 'source', label: 'Export Source', format: (val) => {
+                      const labels = {
+                        fresh: 'Fresh Generation',
+                        cached: 'Cache/History',
+                      };
+                      return labels[val] || val;
+                    }},
+                    { key: 'count', label: 'Count', format: formatNumber },
+                    { key: 'percentage', label: 'Percentage', format: (val) => formatPercent(val) },
+                  ]}
                 >
                   {usageData.exportSources && usageData.exportSources.length > 0 ? (
                     <div className="space-y-3">
@@ -1747,23 +1744,19 @@ export default function Analytics() {
               {/* Quality Score Analysis - Side by Side */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Quality Score Distribution */}
-                <ChartSection
+                <DistributionChartSection
                   title="Quality Score Distribution"
                   question="How good is the generated documentation?"
-                  tableData={usageData.qualityScores}
-                  tableColumns={[
-                    { key: 'range', label: 'Score Range' },
-                    { key: 'count', label: 'Count', format: formatNumber },
-                  ]}
-                >
-                  <ScoreDistribution data={usageData.qualityScores} isDark={isDark} height={250} />
-                </ChartSection>
+                  data={usageData.qualityScores}
+                  isDark={isDark}
+                />
 
                 {/* Quality Scores by Doc Type Heatmap */}
                 {usageData.qualityScoresByDocType && usageData.qualityScoresByDocType.length > 0 && (
-                  <ChartSection
+                  <HeatmapChartSection
                     title="Quality Scores by Documentation Type"
-                    question="Which doc types consistently achieve high quality scores? Do certain models perform better for certain doc types?"
+                    question="How do quality scores vary by doc type and model?"
+                    data={usageData.qualityScoresByDocType}
                   >
                     {/* Model Filter */}
                     <div className="mb-4 flex items-center gap-3">
@@ -1790,7 +1783,7 @@ export default function Analytics() {
                       isDark={isDark}
                       height={300}
                     />
-                  </ChartSection>
+                  </HeatmapChartSection>
                 )}
               </div>
             </div>
@@ -1844,6 +1837,19 @@ export default function Analytics() {
                 <ChartSection
                   title="Latency Breakdown (Where Time is Spent)"
                   question="Is prompt caching saving us money?"
+                  height={280}
+                  tableData={[
+                    { metric: 'Average TTFT', value: performanceData.latencyBreakdown.avgTtftMs },
+                    { metric: 'Median TTFT', value: performanceData.latencyBreakdown.medianTtftMs },
+                    { metric: 'P95 TTFT', value: performanceData.latencyBreakdown.p95TtftMs },
+                    { metric: 'Average Streaming', value: performanceData.latencyBreakdown.avgStreamingMs },
+                    { metric: 'Average Total', value: performanceData.latencyBreakdown.avgTotalMs },
+                    { metric: 'Average TPOT', value: performanceData.latencyBreakdown.avgTpotMs },
+                  ]}
+                  tableColumns={[
+                    { key: 'metric', label: 'Metric' },
+                    { key: 'value', label: 'Time (ms)', format: (v) => formatNumber(v) },
+                  ]}
                 >
                   <div className="space-y-4">
                     {/* Visual breakdown bar */}
@@ -1940,66 +1946,28 @@ export default function Analytics() {
                 </ChartSection>
               )}
 
-              <ChartSection
+              <MultiLineTrendChartSection
                 title="Latency Trend (Total, TTFT, Streaming)"
                 question="How has response time changed over time?"
-                tableData={(() => {
-                  // Combine latency, ttft, and streaming data by date for table view
-                  const dataByDate = new Map();
-                  (timeSeriesData.latency || []).forEach(item => {
-                    dataByDate.set(item.date, { ...dataByDate.get(item.date), date: item.date, totalMs: item.value });
-                  });
-                  (timeSeriesData.ttft || []).forEach(item => {
-                    dataByDate.set(item.date, { ...dataByDate.get(item.date), date: item.date, ttftMs: item.value });
-                  });
-                  (timeSeriesData.streamingTime || []).forEach(item => {
-                    dataByDate.set(item.date, { ...dataByDate.get(item.date), date: item.date, streamingMs: item.value });
-                  });
-                  return Array.from(dataByDate.values()).sort((a, b) => new Date(b.date) - new Date(a.date));
-                })()}
-                tableColumns={[
-                  { key: 'date', label: 'Date', format: (d) => new Date(d).toLocaleDateString() },
-                  { key: 'totalMs', label: 'Total (ms)', format: (v) => v ? formatNumber(v) : '-' },
-                  { key: 'ttftMs', label: 'TTFT (ms)', format: (v) => v ? formatNumber(v) : '-' },
-                  { key: 'streamingMs', label: 'Streaming (ms)', format: (v) => v ? formatNumber(v) : '-' },
+                series={[
+                  {
+                    name: 'Total Latency',
+                    data: timeSeriesData.latency || [],
+                    valueType: 'latency',
+                  },
+                  {
+                    name: 'Time to First Token',
+                    data: timeSeriesData.ttft || [],
+                    valueType: 'latency',
+                  },
+                  {
+                    name: 'Streaming Time',
+                    data: timeSeriesData.streamingTime || [],
+                    valueType: 'latency',
+                  },
                 ]}
-              >
-                {(timeSeriesData.ttft?.length > 0 || timeSeriesData.streamingTime?.length > 0) ? (
-                  <MultiLineTrendChart
-                    series={[
-                      {
-                        key: 'total',
-                        label: 'Total Latency',
-                        data: timeSeriesData.latency,
-                        color: isDark ? '#a855f7' : '#9333ea',
-                      },
-                      {
-                        key: 'ttft',
-                        label: 'Time to First Token',
-                        data: timeSeriesData.ttft,
-                        color: isDark ? '#c084fc' : '#a855f7',
-                      },
-                      {
-                        key: 'streaming',
-                        label: 'Streaming Time',
-                        data: timeSeriesData.streamingTime,
-                        color: isDark ? '#e9d5ff' : '#c084fc',
-                      },
-                    ]}
-                    isDark={isDark}
-                    height={250}
-                    interval="day"
-                  />
-                ) : (
-                  <TrendChart
-                    data={timeSeriesData.latency}
-                    isDark={isDark}
-                    height={200}
-                    interval="day"
-                    color={isDark ? '#a855f7' : '#9333ea'}
-                  />
-                )}
-              </ChartSection>
+                isDark={isDark}
+              />
             </div>
 
             {/* ================================================================
@@ -2041,23 +2009,15 @@ export default function Analytics() {
                 />
               </div>
 
-              <ChartSection
+              <TrendChartSection
                 title="Cache Hit Rate Trend"
                 question="Is caching improving over time?"
-                tableData={timeSeriesData.cacheHitRate}
-                tableColumns={[
-                  { key: 'date', label: 'Date', format: (d) => new Date(d).toLocaleDateString() },
-                  { key: 'value', label: 'Cache Hit Rate (%)', format: (v) => formatPercent(v) },
-                ]}
-              >
-                <TrendChart
-                  data={timeSeriesData.cacheHitRate}
-                  isDark={isDark}
-                  height={200}
-                  interval="day"
-                  color={isDark ? '#a855f7' : '#9333ea'}
-                />
-              </ChartSection>
+                data={timeSeriesData.cacheHitRate}
+                valueLabel="Cache Hit Rate"
+                valueType="percent"
+                isDark={isDark}
+                height={200}
+              />
             </div>
 
             {/* ================================================================
@@ -2093,23 +2053,14 @@ export default function Analytics() {
                 />
               </div>
 
-              <ChartSection
+              <TrendChartSection
                 title="Throughput Trend"
                 question="Is throughput consistent over time?"
-                tableData={timeSeriesData.throughput}
-                tableColumns={[
-                  { key: 'date', label: 'Date', format: (d) => new Date(d).toLocaleDateString() },
-                  { key: 'value', label: 'Throughput (tok/s)', format: formatNumber },
-                ]}
-              >
-                <TrendChart
-                  data={timeSeriesData.throughput}
-                  isDark={isDark}
-                  height={200}
-                  interval="day"
-                  color={isDark ? '#a855f7' : '#9333ea'}
-                />
-              </ChartSection>
+                data={timeSeriesData.throughput}
+                valueLabel="Throughput (tok/s)"
+                isDark={isDark}
+                height={200}
+              />
             </div>
 
             {/* ================================================================

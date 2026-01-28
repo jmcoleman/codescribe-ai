@@ -143,7 +143,7 @@ export function Select({ options, value, onChange, placeholder = 'Select...', la
             {getMultiDisplayText()}
           </span>
           <ChevronDown
-            className={`w-4 h-4 text-slate-600 dark:text-slate-400 transition-transform flex-shrink-0 ${
+            className={`w-4 h-4 text-slate-600 dark:text-slate-400 transition-transform duration-200 ease-out flex-shrink-0 ${
               isOpen ? 'rotate-180' : ''
             }`}
             aria-hidden="true"
@@ -228,7 +228,7 @@ export function Select({ options, value, onChange, placeholder = 'Select...', la
                   {getDisplayText()}
                 </span>
                 <ChevronDown
-                  className={`w-4 h-4 text-slate-600 dark:text-slate-400 transition-transform flex-shrink-0 ${
+                  className={`w-4 h-4 text-slate-600 dark:text-slate-400 transition-transform duration-200 ease-out flex-shrink-0 ${
                     open ? 'rotate-180' : ''
                   }`}
                   aria-hidden="true"

@@ -34,6 +34,7 @@ import {
 } from 'lucide-react';
 import { PageLayout } from '../../components/PageLayout';
 import { Select } from '../../components/Select';
+import { FilterBar } from '../../components/FilterBar';
 import { ConfirmationModal } from '../../components/ConfirmationModal';
 import { BaseTable } from '../../components/BaseTable';
 import { useAuth } from '../../contexts/AuthContext';
@@ -1767,27 +1768,13 @@ export default function UsersAdmin() {
         </div>
 
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-              User Management
-            </h1>
-            <p className="text-slate-600 dark:text-slate-400 text-sm">
-              Manage users, roles, and accounts
-            </p>
-          </div>
-
-          <button
-            onClick={() => {
-              fetchUsers(pagination.page, true);
-              fetchStats();
-            }}
-            disabled={isRefreshing}
-            className="inline-flex items-center gap-2 px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
-          >
-            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            Refresh
-          </button>
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+            User Management
+          </h1>
+          <p className="text-slate-600 dark:text-slate-400 text-sm">
+            Manage users, roles, and accounts
+          </p>
         </div>
 
         {/* Stats Cards */}
@@ -1852,51 +1839,58 @@ export default function UsersAdmin() {
         )}
 
         {/* Filters */}
-        <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4 mb-6">
-          <div className="flex flex-col gap-4">
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Search by email or name..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-10 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-
-            {/* Filter Dropdowns */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <Select
-                value={tierFilter}
-                onChange={setTierFilter}
-                options={tierOptions}
-                size="normal"
-              />
-              <Select
-                value={roleFilter}
-                onChange={setRoleFilter}
-                options={roleOptions}
-                size="normal"
-              />
-              <Select
-                value={statusFilter}
-                onChange={setStatusFilter}
-                options={statusOptions}
-                size="normal"
-              />
-            </div>
+        <FilterBar
+          hasActiveFilters={searchQuery || tierFilter !== 'all' || roleFilter !== 'all' || statusFilter !== 'all'}
+          onClearFilters={() => {
+            setSearchQuery('');
+            setTierFilter('all');
+            setRoleFilter('all');
+            setStatusFilter('all');
+          }}
+        >
+          {/* Search */}
+          <div className="relative" style={{ width: '200px' }}>
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search users..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-10 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
-        </div>
+
+          {/* Filter Dropdowns */}
+          <Select
+            value={tierFilter}
+            onChange={setTierFilter}
+            options={tierOptions}
+            placeholder="All Tiers"
+            ariaLabel="Filter by tier"
+          />
+          <Select
+            value={roleFilter}
+            onChange={setRoleFilter}
+            options={roleOptions}
+            placeholder="All Roles"
+            ariaLabel="Filter by role"
+          />
+          <Select
+            value={statusFilter}
+            onChange={setStatusFilter}
+            options={statusOptions}
+            placeholder="All Statuses"
+            ariaLabel="Filter by status"
+          />
+        </FilterBar>
 
         {/* Error State */}
         {error && (
@@ -1907,6 +1901,12 @@ export default function UsersAdmin() {
 
         {/* Users Table */}
         <BaseTable
+          title="Users"
+          description={`${pagination.total} total users`}
+          onRefresh={() => {
+            fetchUsers(pagination.page, true);
+            fetchStats();
+          }}
           data={users}
           columns={columns}
           sorting={sorting}

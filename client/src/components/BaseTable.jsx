@@ -145,6 +145,11 @@ export function BaseTable({
   // Table instance callback (for external access to table instance)
   onTableReady,
 
+  // Header (optional)
+  title,
+  description,
+  onRefresh,
+
   // States
   isLoading = false,
   isRefreshing = false,
@@ -301,17 +306,37 @@ export function BaseTable({
     );
   }
 
-  // Empty state
-  if (data.length === 0) {
-    return (
-      <div className={`bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden ${className}`}>
-        <EmptyState {...emptyState} />
-      </div>
-    );
-  }
-
   return (
     <div className={`bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden ${className}`}>
+      {/* Optional Header */}
+      {title && (
+        <div className="p-6 border-b border-slate-200 dark:border-slate-700">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{title}</h2>
+              {description && (
+                <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">{description}</p>
+              )}
+            </div>
+            {onRefresh && (
+              <button
+                onClick={onRefresh}
+                disabled={isRefreshing}
+                className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                aria-label="Refresh data"
+              >
+                <RefreshCw className={`w-5 h-5 text-slate-600 dark:text-slate-400 ${isRefreshing ? 'animate-spin' : ''}`} />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Empty state */}
+      {data.length === 0 ? (
+        <EmptyState {...emptyState} />
+      ) : (
+
       <div className={`overflow-x-auto transition-opacity duration-200 ${isRefreshing ? 'opacity-50' : ''}`}>
         {/* Grid-based table */}
         <div ref={tableContainerRef} role="table" aria-label="Data table" className="w-full min-w-full">
@@ -425,6 +450,7 @@ export function BaseTable({
           </div>
         </div>
       </div>
+      )}
 
       {/* Pagination */}
       {manualPagination && onPageChange ? (

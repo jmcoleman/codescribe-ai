@@ -65,7 +65,7 @@ export function ControlBar({
                 >
                   <Plus className="w-4 h-4" aria-hidden="true" />
                   <span>{isUploading ? 'Uploading...' : 'Add Code'}</span>
-                  <ChevronDown className={`w-4 h-4 transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden="true" />
+                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ease-out ${open ? 'rotate-180' : ''}`} aria-hidden="true" />
                 </HeadlessMenu.Button>
 
                 <HeadlessMenu.Items className="absolute left-0 z-10 mt-2 w-56 origin-top-left rounded-lg bg-white dark:bg-slate-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none border border-slate-200 dark:border-slate-700">

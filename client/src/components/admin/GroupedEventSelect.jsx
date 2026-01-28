@@ -34,7 +34,7 @@ export function GroupedEventSelect({
   onChange,
   placeholder = 'All Events',
   ariaLabel = 'Filter by event',
-  size = 'small',
+  size = 'normal',
 }) {
   const buttonRef = useRef(null);
   const dropdownRef = useRef(null);
@@ -249,7 +249,7 @@ export function GroupedEventSelect({
       >
         <span className="flex-1 text-left truncate">{getDisplayText()}</span>
         <ChevronDown
-          className={`w-4 h-4 text-slate-600 dark:text-slate-400 transition-transform flex-shrink-0 ${
+          className={`w-4 h-4 text-slate-600 dark:text-slate-400 transition-transform duration-200 ease-out flex-shrink-0 ${
             isOpen ? 'rotate-180' : ''
           }`}
           aria-hidden="true"

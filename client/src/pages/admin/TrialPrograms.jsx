@@ -20,7 +20,6 @@ import {
   Calendar,
   Clock,
   TrendingUp,
-  RefreshCw,
   Trash2,
   Edit2,
   CheckCircle,
@@ -29,6 +28,8 @@ import {
 } from 'lucide-react';
 import { PageLayout } from '../../components/PageLayout';
 import { BaseTable } from '../../components/BaseTable';
+import { Select } from '../../components/Select';
+import { FilterBar } from '../../components/FilterBar';
 import { useAuth } from '../../contexts/AuthContext';
 import { formatDate, formatDateTime } from '../../utils/formatters';
 import toast from 'react-hot-toast';
@@ -731,6 +732,9 @@ export default function Campaigns() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [sorting, setSorting] = useState([{ id: 'starts_at', desc: true }]);
   const [pagination, setPagination] = useState({ page: 1, limit: 25, total: 0, totalPages: 0 });
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [enrollmentFilter, setEnrollmentFilter] = useState('all');
+  const [tierFilter, setTierFilter] = useState('all');
   const [dismissedBanners, setDismissedBanners] = useState(() => {
     // Load dismissed banners from localStorage on mount
     try {
@@ -963,6 +967,52 @@ export default function Campaigns() {
     localStorage.setItem('dismissedCampaignBanners', JSON.stringify(updated));
   };
 
+  // Clear filters
+  const clearFilters = () => {
+    setStatusFilter('all');
+    setEnrollmentFilter('all');
+    setTierFilter('all');
+  };
+
+  // Filter trial programs based on selected filters
+  const filteredTrialPrograms = useMemo(() => {
+    return trialPrograms.filter(program => {
+      const now = new Date();
+      const startsAt = new Date(program.starts_at);
+      const endsAt = program.ends_at ? new Date(program.ends_at) : null;
+
+      // Determine status
+      let status;
+      if (!program.is_active) {
+        status = endsAt && now > endsAt ? 'ended' : 'inactive';
+      } else if (now < startsAt) {
+        status = 'scheduled';
+      } else {
+        status = 'active';
+      }
+
+      // Apply status filter
+      if (statusFilter !== 'all' && status !== statusFilter) {
+        return false;
+      }
+
+      // Apply enrollment filter
+      if (enrollmentFilter !== 'all') {
+        const enrollment = program.auto_enroll ? 'auto' : 'invite';
+        if (enrollment !== enrollmentFilter) {
+          return false;
+        }
+      }
+
+      // Apply tier filter
+      if (tierFilter !== 'all' && program.trial_tier !== tierFilter) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [trialPrograms, statusFilter, enrollmentFilter, tierFilter]);
+
   // Define table columns (memoized to prevent recreation on each render)
   const columns = useMemo(() => [
     {
@@ -1081,27 +1131,13 @@ export default function Campaigns() {
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
-              <button
-                onClick={async () => {
-                  setIsRefreshing(true);
-                  await fetchTrialPrograms();
-                  setTimeout(() => setIsRefreshing(false), 500);
-                }}
-                disabled={isRefreshing}
-                className="inline-flex items-center gap-2 px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
-              >
-                <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                Refresh
-              </button>
-              <button
-                onClick={handleCreate}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium"
-              >
-                <Plus className="w-4 h-4" />
-                New Trial Program
-              </button>
-            </div>
+            <button
+              onClick={handleCreate}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium"
+            >
+              <Plus className="w-4 h-4" />
+              New Trial Program
+            </button>
           </div>
         </div>
 
@@ -1137,12 +1173,60 @@ export default function Campaigns() {
           );
         })()}
 
+        {/* Filters */}
+        <FilterBar
+          hasActiveFilters={statusFilter !== 'all' || enrollmentFilter !== 'all' || tierFilter !== 'all'}
+          onClearFilters={clearFilters}
+        >
+          <Select
+            value={statusFilter}
+            onChange={setStatusFilter}
+            placeholder="All Statuses"
+            options={[
+              { value: 'all', label: 'All Statuses' },
+              { value: 'active', label: 'Active' },
+              { value: 'inactive', label: 'Inactive' },
+              { value: 'scheduled', label: 'Scheduled' },
+              { value: 'ended', label: 'Ended' }
+            ]}
+            ariaLabel="Filter by status"
+          />
+
+          <Select
+            value={enrollmentFilter}
+            onChange={setEnrollmentFilter}
+            placeholder="All Enrollment"
+            options={[
+              { value: 'all', label: 'All Enrollment' },
+              { value: 'auto', label: 'Auto-enroll' },
+              { value: 'invite', label: 'Invite-only' }
+            ]}
+            ariaLabel="Filter by enrollment type"
+          />
+
+          <Select
+            value={tierFilter}
+            onChange={setTierFilter}
+            placeholder="All Tiers"
+            options={[
+              { value: 'all', label: 'All Tiers' },
+              { value: 'pro', label: 'Pro' },
+              { value: 'team', label: 'Team' },
+              { value: 'enterprise', label: 'Enterprise' }
+            ]}
+            ariaLabel="Filter by tier"
+          />
+        </FilterBar>
+
         {/* Campaigns Table */}
         {error ? (
           <div className="text-center py-12 text-red-600 dark:text-red-400">{error}</div>
         ) : (
           <BaseTable
-            data={trialPrograms}
+            title="Trial Programs"
+            description={`${pagination.total} total programs`}
+            onRefresh={() => fetchTrialPrograms(pagination.page, true)}
+            data={filteredTrialPrograms}
             columns={columns}
             sorting={sorting}
             onSortingChange={handleSortingChange}
@@ -1155,8 +1239,12 @@ export default function Campaigns() {
             isRefreshing={isRefreshing}
             emptyState={{
               icon: Calendar,
-              title: 'No trial programs yet',
-              description: 'Create one to auto-grant trials to new users.',
+              title: statusFilter !== 'all' || enrollmentFilter !== 'all' || tierFilter !== 'all'
+                ? 'No matching trial programs'
+                : 'No trial programs yet',
+              description: statusFilter !== 'all' || enrollmentFilter !== 'all' || tierFilter !== 'all'
+                ? 'Try adjusting your filters'
+                : 'Create one to auto-grant trials to new users.',
               action: (
                 <button
                   onClick={handleCreate}

@@ -239,7 +239,7 @@ export function ProjectModal({
                     <span className={selectedProject ? 'text-slate-900 dark:text-slate-100' : 'text-slate-500 dark:text-slate-400'}>
                       {selectedProject ? selectedProject.name : 'Select a project...'}
                     </span>
-                    <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ease-out ${isDropdownOpen ? 'rotate-180' : ''}`} />
                   </button>
 
                   {/* Dropdown menu */}

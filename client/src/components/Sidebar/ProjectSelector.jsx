@@ -321,7 +321,7 @@ export function ProjectSelector({
           </span>
           <span className="flex items-center gap-1.5">
             {renderStatusBadge()}
-            <ChevronDown className={`${iconSize} text-slate-400 flex-shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown className={`${iconSize} text-slate-400 flex-shrink-0 transition-transform duration-200 ease-out ${isOpen ? 'rotate-180' : ''}`} />
           </span>
         </button>
 

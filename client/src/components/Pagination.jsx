@@ -37,7 +37,11 @@ export function Pagination({ currentPage, totalPages, onPageChange, totalItems, 
     <div className="px-4 py-3 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between">
       {totalItems != null && limit != null ? (
         <div className="text-sm text-slate-600 dark:text-slate-400">
-          Showing {(currentPage - 1) * limit + 1} to {Math.min(currentPage * limit, totalItems)} of {totalItems}
+          {totalItems === 0 ? (
+            'No items'
+          ) : (
+            <>Showing {(currentPage - 1) * limit + 1} to {Math.min(currentPage * limit, totalItems)} of {totalItems}</>
+          )}
         </div>
       ) : (
         <div />

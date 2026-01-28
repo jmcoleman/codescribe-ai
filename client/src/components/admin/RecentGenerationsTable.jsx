@@ -164,9 +164,14 @@ export function RecentGenerationsTable() {
               Recent document generations ({pagination.total} total)
             </p>
           </div>
-          {isRefreshing && (
-            <RefreshCw className="w-5 h-5 text-purple-600 dark:text-purple-400 animate-spin" />
-          )}
+          <button
+            onClick={() => fetchData(pagination.page, false)}
+            disabled={isRefreshing}
+            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            aria-label="Refresh data"
+          >
+            <RefreshCw className={`w-5 h-5 text-slate-600 dark:text-slate-400 ${isRefreshing ? 'animate-spin' : ''}`} />
+          </button>
         </div>
 
         {/* Filters */}
@@ -179,7 +184,6 @@ export function RecentGenerationsTable() {
             value={filterDocType}
             onChange={setFilterDocType}
             placeholder="All Doc Types"
-            size="small"
             options={[
               { value: '', label: 'All Doc Types' },
               { value: 'README', label: 'README' },

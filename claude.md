@@ -67,6 +67,7 @@ AI-powered documentation generator with real-time streaming, quality scoring (0-
 ### 🎨 Design & Components
 | Document | Use Case | Key Contents |
 |----------|----------|--------------|
+| [UI-STANDARDS.md](docs/design/UI-STANDARDS.md) | UI text & button conventions ⭐ | Button labeling (New/Create/Add), filter patterns, empty states, color usage, quick reference |
 | [07-Figma-Guide.md](docs/planning/mvp/07-Figma-Guide.md) | Design system | Colors (purple/indigo/slate), typography, 8 components, UI patterns |
 | [brand-palette-unified.html](docs/design/theming/brand-palette-unified.html) | Unified color palette ⭐ | Interactive palette with light+dark themes, click-to-copy hex codes, WCAG AA |
 | [COLOR-REFERENCE.md](docs/design/theming/COLOR-REFERENCE.md) | Color quick reference | Complete color table for both themes, usage guidelines, semantic colors |
@@ -234,7 +235,7 @@ const response = await fetch(`${API_URL}/api/protected-endpoint`, {
 | Planning/Scope | PRD, Epics |
 | Implementation | Dev Guide, Master Prompt |
 | API/Endpoints | API Reference |
-| Design/UI | Figma Guide, Unified Brand Palette, COLOR-REFERENCE.md |
+| Design/UI | UI-STANDARDS.md (button labels, text conventions), Figma Guide, Unified Brand Palette, COLOR-REFERENCE.md |
 | Architecture | ARCHITECTURE-OVERVIEW.md (visual), ARCHITECTURE.md (technical) |
 | Error Handling | ERROR-HANDLING-PATTERNS.md (app vs external API errors, 429 vs 503, email/Claude patterns) |
 | Subscription Flows | SUBSCRIPTION-FLOWS.md (unauthenticated signup, email/OAuth, billing periods) |
@@ -352,6 +353,31 @@ const OPTIONS = [
 ```
 
 **Why:** Consistent styling (white bg, chevron, purple hover/focus), Headless UI accessibility (keyboard nav, ARIA), Portal-rendered dropdown escapes overflow containers, dark mode support built in. Native `<select>` renders with browser-default chrome that breaks visual consistency.
+
+### Button Labeling Standards
+**Follow industry standard patterns** (GitHub, Linear, Stripe, Notion) - see [UI-STANDARDS.md](docs/design/UI-STANDARDS.md)
+
+**Primary buttons:** Use "New [Noun]" (e.g., "New Project", "New Invite Code")
+**Modal titles:** Use "Create [Noun]" (e.g., "Create Project")
+**Submit buttons:** Use "Create [Noun]" (e.g., "Create Project")
+**Empty states:** Use "Create First [Noun]" (e.g., "Create First Project")
+**Exception:** Use "Add" only for imports/uploads (e.g., "Add Code" for file upload)
+
+```jsx
+✅ Correct:
+<button><Plus /> New Project</button>              // Primary button
+<h2>Create Project</h2>                            // Modal title
+<button type="submit">Create Project</button>      // Submit button
+<button>Create First Project</button>              // Empty state
+<button>Add Code</button>                          // Import/upload
+
+❌ Incorrect:
+<button>Create Project</button>                    // Primary (should be "New")
+<button>Add Project</button>                       // Creating new (should be "New")
+<button type="submit">New Project</button>         // Submit (should be "Create")
+```
+
+**Why:** Industry standard pattern. Concise "New" for buttons, formal "Create" for forms. "Add" only for bringing in existing items. Consistent across GitHub, Linear, Stripe, Notion.
 
 ---
 

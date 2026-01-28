@@ -10,7 +10,6 @@ import {
   Shield,
   FileText,
   Download,
-  Filter,
   RefreshCw,
   AlertCircle,
   CheckCircle,
@@ -29,7 +28,9 @@ import { STORAGE_KEYS } from '../../constants/storage';
 import { useDateRange } from '../../hooks/useDateRange';
 import { formatNumber, formatPercent } from '../../components/admin/charts';
 import { Select } from '../../components/Select';
+import { FilterBar } from '../../components/FilterBar';
 import { Tooltip } from '../../components/Tooltip';
+import { Pagination } from '../../components/Pagination';
 
 // Risk level colors
 const RISK_COLORS = {
@@ -376,6 +377,10 @@ export default function Compliance() {
     setPagination({ ...pagination, offset: 0 });
   };
 
+  const handlePageChange = (page) => {
+    setPagination({ ...pagination, offset: (page - 1) * pagination.limit });
+  };
+
   return (
     <PageLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -398,16 +403,7 @@ export default function Compliance() {
                 Audit logs, PHI detection monitoring, and compliance reporting
               </p>
             </div>
-            <div className="flex items-center gap-4">
-              <DateRangePicker startDate={dateRange.startDate} endDate={dateRange.endDate} onChange={handleDateRangeChange} />
-              <button
-                onClick={handleExport}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors"
-              >
-                <Download className="h-4 w-4" />
-                Export CSV
-              </button>
-            </div>
+            <DateRangePicker startDate={dateRange.startDate} endDate={dateRange.endDate} onChange={handleDateRangeChange} />
           </div>
         </div>
 
@@ -461,72 +457,83 @@ export default function Compliance() {
         )}
 
         {/* Filters */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700 mb-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Filter className="h-5 w-5 text-slate-600 dark:text-slate-400" />
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Filters</h2>
-          </div>
-          <div className="flex flex-wrap items-end gap-3">
-            <Select
-              value={filters.action}
-              onChange={(val) => handleFilterChange('action', val)}
-              placeholder="All Actions"
-              options={ACTION_OPTIONS}
-              ariaLabel="Filter by action"
-            />
-            <Select
-              value={filters.containsPhi}
-              onChange={(val) => handleFilterChange('containsPhi', val)}
-              placeholder="All"
-              options={PHI_OPTIONS}
-              ariaLabel="Filter by PHI presence"
-            />
-            <Select
-              value={filters.riskLevel}
-              onChange={(val) => handleFilterChange('riskLevel', val)}
-              placeholder="All Levels"
-              options={RISK_OPTIONS}
-              ariaLabel="Filter by risk level"
-            />
-            <input
-              type="text"
-              value={filters.userEmail}
-              onChange={(e) => handleFilterChange('userEmail', e.target.value)}
-              placeholder="Filter by user email..."
-              autoComplete="off"
-              className="px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder:text-slate-400 dark:placeholder:text-slate-500"
-              style={{ width: '200px' }}
-              aria-label="Filter by user email"
-            />
-          </div>
-          <div className="mt-4 flex justify-end">
-            <button
-              onClick={clearFilters}
-              className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-            >
-              Clear Filters
-            </button>
-          </div>
-        </div>
+        <FilterBar
+          hasActiveFilters={filters.action || filters.containsPhi || filters.riskLevel || filters.userEmail}
+          onClearFilters={clearFilters}
+        >
+          <Select
+            value={filters.action}
+            onChange={(val) => handleFilterChange('action', val)}
+            placeholder="All Actions"
+            options={ACTION_OPTIONS}
+            ariaLabel="Filter by action"
+          />
+          <Select
+            value={filters.containsPhi}
+            onChange={(val) => handleFilterChange('containsPhi', val)}
+            placeholder="All"
+            options={PHI_OPTIONS}
+            ariaLabel="Filter by PHI presence"
+          />
+          <Select
+            value={filters.riskLevel}
+            onChange={(val) => handleFilterChange('riskLevel', val)}
+            placeholder="All Levels"
+            options={RISK_OPTIONS}
+            ariaLabel="Filter by risk level"
+          />
+          <input
+            type="text"
+            value={filters.userEmail}
+            onChange={(e) => handleFilterChange('userEmail', e.target.value)}
+            placeholder="Filter by user email..."
+            autoComplete="off"
+            className="px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder:text-slate-400 dark:placeholder:text-slate-500"
+            style={{ width: '200px' }}
+            aria-label="Filter by user email"
+          />
+        </FilterBar>
 
         {/* Audit Logs Table */}
         <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
           <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Audit Logs</h2>
-              <button
-                onClick={fetchData}
-                disabled={loading}
-                className="p-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-50"
-              >
-                <RefreshCw className={`h-5 w-5 ${loading ? 'animate-spin' : ''}`} />
-              </button>
+              <div>
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Audit Logs</h2>
+                {total > 0 && (
+                  <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                    Showing {(logs || []).length} of {formatNumber(total)} total logs
+                  </p>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleExport}
+                  disabled={total === 0}
+                  className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  aria-label="Export CSV"
+                >
+                  <Download className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+                </button>
+                <button
+                  onClick={fetchData}
+                  disabled={loading}
+                  className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  aria-label="Refresh data"
+                >
+                  <RefreshCw className={`w-5 h-5 text-slate-600 dark:text-slate-400 ${loading ? 'animate-spin' : ''}`} />
+                </button>
+              </div>
             </div>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-              Showing {(logs || []).length} of {formatNumber(total)} total logs
-            </p>
           </div>
           <AuditLogTable logs={logs} loading={loading} />
+          <Pagination
+            currentPage={Math.floor(pagination.offset / pagination.limit) + 1}
+            totalPages={Math.ceil(total / pagination.limit)}
+            onPageChange={handlePageChange}
+            totalItems={total}
+            limit={pagination.limit}
+          />
         </div>
       </div>
     </PageLayout>

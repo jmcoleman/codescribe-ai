@@ -18,7 +18,6 @@ import {
   Users,
   Clock,
   AlertCircle,
-  Filter,
   Sparkles,
   TrendingUp,
   XCircle,
@@ -29,6 +28,7 @@ import {
 } from 'lucide-react';
 import { PageLayout } from '../../components/PageLayout';
 import { Select } from '../../components/Select';
+import { FilterBar } from '../../components/FilterBar';
 import { ConfirmationModal } from '../../components/ConfirmationModal';
 import { BaseTable } from '../../components/BaseTable';
 import { useAuth } from '../../contexts/AuthContext';
@@ -581,24 +581,13 @@ export default function TrialsAdmin() {
         </div>
 
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-              Trial Management
-            </h1>
-            <p className="text-slate-600 dark:text-slate-400 text-sm">
-              View and manage user trials
-            </p>
-          </div>
-
-          <button
-            onClick={() => fetchTrials(pagination.page, true)}
-            disabled={isRefreshing}
-            className="inline-flex items-center gap-2 px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
-          >
-            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            Refresh
-          </button>
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+            Trial Management
+          </h1>
+          <p className="text-slate-600 dark:text-slate-400 text-sm">
+            View and manage user trials
+          </p>
         </div>
 
         {/* Analytics Cards */}
@@ -663,39 +652,42 @@ export default function TrialsAdmin() {
         )}
 
         {/* Filters */}
-        <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4 mb-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            {/* Search */}
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Search by email, name, or invite code..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-10 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-
-            {/* Status Filter */}
-            <div className="w-full sm:w-48">
-              <Select
-                value={statusFilter}
-                onChange={setStatusFilter}
-                options={statusOptions}
-                icon={<Filter className="w-4 h-4" />}
-              />
-            </div>
+        <FilterBar
+          hasActiveFilters={searchQuery || statusFilter !== 'all'}
+          onClearFilters={() => {
+            setSearchQuery('');
+            setStatusFilter('all');
+          }}
+        >
+          {/* Search */}
+          <div className="relative" style={{ width: '200px' }}>
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search trials..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-10 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
-        </div>
+
+          {/* Status Filter */}
+          <Select
+            value={statusFilter}
+            onChange={setStatusFilter}
+            options={statusOptions}
+            placeholder="All Statuses"
+            ariaLabel="Filter by status"
+          />
+        </FilterBar>
 
         {/* Error State */}
         {error && (
@@ -709,6 +701,9 @@ export default function TrialsAdmin() {
 
         {/* Trials Table */}
         <BaseTable
+          title="Trials"
+          description={`${pagination.total} total trials`}
+          onRefresh={() => fetchTrials(pagination.page, true)}
           data={filteredTrials}
           columns={columns}
           sorting={sorting}
