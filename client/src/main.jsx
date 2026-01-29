@@ -34,6 +34,7 @@ import { TrialRedemption } from './pages/TrialRedemption.jsx'
 import { ErrorTest } from './components/ErrorTest.jsx'
 import { Projects } from './pages/Projects.jsx'
 import { ProjectDetails } from './pages/ProjectDetails.jsx'
+import { LoggedOut } from './pages/LoggedOut.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -46,6 +47,7 @@ createRoot(document.getElementById('root')).render(
           <WorkspaceProvider>
             <Routes>
               <Route path="/" element={<App />} />
+              <Route path="/logged-out" element={<LoggedOut />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/restore-account" element={<RestoreAccount />} />

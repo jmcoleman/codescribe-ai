@@ -78,6 +78,7 @@ export const STORAGE_KEYS = {
   // Admin Analytics Filters (sessionStorage - retain filters during session)
   ANALYTICS_EVENTS_FILTERS: 'cs_admin_events_filters',
   ANALYTICS_EXCLUDE_INTERNAL: 'cs_admin_exclude_internal',
+  ANALYTICS_EXCLUDE_ANONYMOUS: 'cs_admin_exclude_anonymous',
   ANALYTICS_ACTIVE_TAB: 'cs_admin_active_tab',
   ANALYTICS_DATE_RANGE: 'cs_admin_date_range',
 

@@ -24,7 +24,7 @@ import { PHIWarningBanner } from './components/PHIWarningBanner';
 import { MobileTabBar } from './components/MobileTabBar';
 import { AppModals } from './components/AppModals';
 import { validateFile, getValidationErrorMessage, detectLanguageFromFilename } from './utils/fileValidation';
-import { trackCodeInput, trackInteraction, trackSessionStart } from './utils/analytics';
+import { trackCodeInput, trackInteraction, trackSessionStart, getSessionId } from './utils/analytics';
 import { toastCompact, toastError } from './utils/toastWithHistory';
 import { toastDocGenerated } from './utils/toast';
 import { createTestDataLoader, exposeTestDataLoader, createSkeletonTestHelper, exposeSkeletonTestHelper } from './utils/testData';
@@ -454,6 +454,16 @@ function App() {
       setShowSupportModal(true);
     }
   }, [user]);
+
+  // Open login modal if ?login=true URL param is present
+  useEffect(() => {
+    if (searchParams.get('login') === 'true' && !isAuthenticated) {
+      // Remove the param from URL
+      setSearchParams({});
+      // Open login modal
+      headerRef.current?.openLoginModal();
+    }
+  }, [searchParams, isAuthenticated, setSearchParams]);
 
   // Persist editor code to localStorage whenever it changes (user-scoped for privacy)
   useEffect(() => {
@@ -1311,6 +1321,7 @@ function App() {
     const token = await getToken();
     const headers = {
       'Content-Type': 'application/json',
+      'X-Session-Id': getSessionId(), // Pass session ID for server-side analytics
     };
 
     if (token) {

@@ -3,7 +3,7 @@
  * Admin-only dashboard for viewing conversion funnel, business metrics, and usage patterns
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -176,16 +176,27 @@ export default function Analytics() {
   });
 
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false); // For in-place refreshes (exclusion changes)
   const [error, setError] = useState(null);
+  const isInitialMount = useRef(true);
 
-  // Load saved excludeInternal preference from sessionStorage
-  const [excludeInternal, setExcludeInternal] = useState(() => {
-    const saved = getSessionItem(STORAGE_KEYS.ANALYTICS_EXCLUDE_INTERNAL);
-    if (saved !== null) {
-      return saved === 'true';
-    }
-    return true; // Default to excluding internal users
+  // Exclusion filters state - multi-select for internal/anonymous users
+  const [exclusions, setExclusions] = useState(() => {
+    const savedInternal = getSessionItem(STORAGE_KEYS.ANALYTICS_EXCLUDE_INTERNAL);
+    const savedAnonymous = getSessionItem(STORAGE_KEYS.ANALYTICS_EXCLUDE_ANONYMOUS);
+
+    return {
+      internal: savedInternal !== null ? savedInternal === 'true' : true, // Default exclude
+      anonymous: savedAnonymous !== null ? savedAnonymous === 'true' : true, // Default exclude
+    };
   });
+
+  // Exclusion dropdown open/close state
+  const [exclusionDropdownOpen, setExclusionDropdownOpen] = useState(false);
+  const exclusionDropdownRef = useRef(null);
+
+  // Temporary exclusions state for dropdown (only applied when dropdown closes)
+  const [tempExclusions, setTempExclusions] = useState(exclusions);
 
   // Model filter for quality heatmap
   const [selectedModel, setSelectedModel] = useState('all');
@@ -234,9 +245,11 @@ export default function Analytics() {
   /**
    * Fetch data from API
    */
-  const fetchData = useCallback(async (showLoadingSpinner = true) => {
+  const fetchData = useCallback(async (showLoadingSpinner = true, isRefresh = false) => {
     if (showLoadingSpinner) {
       setLoading(true);
+    } else if (isRefresh) {
+      setRefreshing(true);
     }
     setError(null);
 
@@ -245,7 +258,8 @@ export default function Analytics() {
       const params = new URLSearchParams({
         startDate: dateRange.startDate.toISOString(),
         endDate: dateRange.endDate.toISOString(),
-        excludeInternal: excludeInternal.toString(),
+        excludeInternal: exclusions.internal.toString(),
+        excludeAnonymous: exclusions.anonymous.toString(),
       });
 
       // Add model parameter for usage queries
@@ -343,10 +357,13 @@ export default function Analytics() {
       if (showLoadingSpinner) {
         setLoading(false);
       }
+      if (isRefresh) {
+        setRefreshing(false);
+      }
       // Mark this tab as loaded
       setLoadedTabs(prev => new Set([...prev, activeTab]));
     }
-  }, [getToken, dateRange, excludeInternal, activeTab, selectedModel]);
+  }, [getToken, dateRange, exclusions, activeTab, selectedModel]);
 
   /**
    * Fetch period comparisons for key metrics
@@ -371,7 +388,8 @@ export default function Analytics() {
         startDate: dateRange.startDate.toISOString(),
         endDate: dateRange.endDate.toISOString(),
         metrics: metrics.join(','),
-        excludeInternal: excludeInternal.toString(),
+        excludeInternal: exclusions.internal.toString(),
+        excludeAnonymous: exclusions.anonymous.toString(),
       });
 
       const response = await fetch(`${API_URL}/api/admin/analytics/comparisons?${params}`, {
@@ -387,7 +405,7 @@ export default function Analytics() {
       // Don't show error to user, comparisons are optional
       setComparisons({});
     }
-  }, [getToken, dateRange, excludeInternal, activeTab]);
+  }, [getToken, dateRange, exclusions, activeTab]);
 
   /**
    * Fetch summary metrics for Health at a Glance
@@ -398,7 +416,8 @@ export default function Analytics() {
       const params = new URLSearchParams({
         startDate: dateRange.startDate.toISOString(),
         endDate: dateRange.endDate.toISOString(),
-        excludeInternal: excludeInternal.toString(),
+        excludeInternal: exclusions.internal.toString(),
+        excludeAnonymous: exclusions.anonymous.toString(),
       });
 
       const response = await fetch(`${API_URL}/api/admin/analytics/summary?${params}`, {
@@ -414,16 +433,29 @@ export default function Analytics() {
       // Don't show error to user, summary is optional
       setSummaryData(null);
     }
-  }, [getToken, dateRange, excludeInternal]);
+  }, [getToken, dateRange, exclusions]);
 
-  // Fetch data when date range or excludeInternal changes (full refresh with loading)
+  // Fetch data when date range or exclusions change
   useEffect(() => {
     // Clear loaded tabs and refetch everything
     setLoadedTabs(new Set([activeTab]));
-    fetchData(true); // Show loading spinner
-    fetchComparisons();
-    fetchSummary();
-  }, [dateRange, excludeInternal]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    if (isInitialMount.current) {
+      // Initial page load - show full loading spinner
+      isInitialMount.current = false;
+      fetchData(true); // Show loading spinner
+      fetchComparisons();
+      fetchSummary();
+    } else if (activeTab === 'events') {
+      // For Raw Events tab, only refresh summary (EventsTable handles its own refresh)
+      fetchSummary();
+    } else {
+      // For other tabs, do in-place refresh without unmounting content
+      fetchData(false, true); // isRefresh = true
+      fetchComparisons();
+      fetchSummary();
+    }
+  }, [dateRange, exclusions]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch only quality scores by doc type when model filter changes (no full page refresh)
   useEffect(() => {
@@ -435,7 +467,8 @@ export default function Analytics() {
         const params = new URLSearchParams({
           startDate: dateRange.startDate.toISOString(),
           endDate: dateRange.endDate.toISOString(),
-          excludeInternal: excludeInternal.toString(),
+          excludeInternal: exclusions.internal.toString(),
+          excludeAnonymous: exclusions.anonymous.toString(),
           model: selectedModel,
         });
 
@@ -457,7 +490,7 @@ export default function Analytics() {
     };
 
     fetchQualityScoresByDocType();
-  }, [selectedModel, getToken, dateRange, excludeInternal, activeTab]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selectedModel, getToken, dateRange, exclusions, activeTab]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch data when tab changes (only if not already loaded, no loading spinner)
   useEffect(() => {
@@ -467,10 +500,29 @@ export default function Analytics() {
     }
   }, [activeTab]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Save excludeInternal preference to sessionStorage
+  // Save exclusion preferences to sessionStorage
   useEffect(() => {
-    setSessionItem(STORAGE_KEYS.ANALYTICS_EXCLUDE_INTERNAL, excludeInternal.toString());
-  }, [excludeInternal]);
+    setSessionItem(STORAGE_KEYS.ANALYTICS_EXCLUDE_INTERNAL, exclusions.internal.toString());
+    setSessionItem(STORAGE_KEYS.ANALYTICS_EXCLUDE_ANONYMOUS, exclusions.anonymous.toString());
+  }, [exclusions]);
+
+  // Handle click outside exclusion dropdown to close it and apply changes
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (exclusionDropdownRef.current && !exclusionDropdownRef.current.contains(event.target)) {
+        setExclusionDropdownOpen(false);
+        // Apply temp exclusions when dropdown closes
+        setExclusions(tempExclusions);
+      }
+    };
+
+    if (exclusionDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [exclusionDropdownOpen, tempExclusions]);
 
   // Save active tab to sessionStorage
   useEffect(() => {
@@ -496,15 +548,13 @@ export default function Analytics() {
                 <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
                   Analytics Dashboard
                 </h1>
-                {summaryData && !loading && (
-                  <button
-                    onClick={toggleSummary}
-                    className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-                    aria-label={summaryCollapsed ? "Show KPIs" : "Hide KPIs"}
-                  >
-                    <ChevronDown className={`w-5 h-5 text-slate-500 dark:text-slate-400 transition-transform ${summaryCollapsed ? '-rotate-90' : ''}`} />
-                  </button>
-                )}
+                <button
+                  onClick={toggleSummary}
+                  className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                  aria-label={summaryCollapsed ? "Show KPIs" : "Hide KPIs"}
+                >
+                  <ChevronDown className={`w-5 h-5 text-slate-500 dark:text-slate-400 transition-transform ${summaryCollapsed ? '-rotate-90' : ''}`} />
+                </button>
               </div>
               <p className="text-sm text-slate-600 dark:text-slate-400">
                 Understand user engagement, business growth, and product performance
@@ -512,18 +562,61 @@ export default function Analytics() {
             </div>
 
             <div className="flex items-center gap-4">
-              {/* Exclude Internal Toggle */}
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={excludeInternal}
-                  onChange={(e) => setExcludeInternal(e.target.checked)}
-                  className="h-4 w-4 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 checked:bg-slate-600 dark:checked:bg-slate-500 checked:border-slate-600 dark:checked:border-slate-500 focus:ring-0 focus:ring-offset-0"
-                />
-                <span className="text-slate-600 dark:text-slate-400">
-                  Exclude internal users
-                </span>
-              </label>
+              {/* Exclusion Filter - Multi-select */}
+              <div className="relative">
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="text-slate-600 dark:text-slate-400">Exclude:</span>
+                  <div className="relative inline-block" ref={exclusionDropdownRef}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!exclusionDropdownOpen) {
+                          // Initialize temp state when opening dropdown
+                          setTempExclusions(exclusions);
+                        } else {
+                          // Apply temp exclusions when closing via button click
+                          setExclusions(tempExclusions);
+                        }
+                        setExclusionDropdownOpen(!exclusionDropdownOpen);
+                      }}
+                      className="flex items-center justify-between gap-2 px-3 py-1.5 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors w-[200px]"
+                    >
+                      <span className="text-slate-700 dark:text-slate-300 truncate">
+                        {exclusions.internal && exclusions.anonymous ? 'Internal, Anonymous' :
+                         exclusions.internal ? 'Internal users' :
+                         exclusions.anonymous ? 'Anonymous users' :
+                         'None'}
+                      </span>
+                      <ChevronDown className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                    </button>
+                    {exclusionDropdownOpen && (
+                      <div className="absolute left-0 mt-1 w-56 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg z-50"
+                    >
+                      <div className="p-2">
+                        <label className="flex items-center gap-2 px-2 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-700 rounded cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={tempExclusions.internal}
+                            onChange={(e) => setTempExclusions(prev => ({ ...prev, internal: e.target.checked }))}
+                            className="h-4 w-4 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 checked:bg-purple-600 dark:checked:bg-purple-500 checked:border-purple-600 dark:checked:border-purple-500 focus:ring-2 focus:ring-purple-500 focus:ring-offset-0"
+                          />
+                          <span className="text-sm text-slate-700 dark:text-slate-300">Internal users</span>
+                        </label>
+                        <label className="flex items-center gap-2 px-2 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-700 rounded cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={tempExclusions.anonymous}
+                            onChange={(e) => setTempExclusions(prev => ({ ...prev, anonymous: e.target.checked }))}
+                            className="h-4 w-4 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 checked:bg-purple-600 dark:checked:bg-purple-500 checked:border-purple-600 dark:checked:border-purple-500 focus:ring-2 focus:ring-purple-500 focus:ring-offset-0"
+                          />
+                          <span className="text-sm text-slate-700 dark:text-slate-300">Anonymous users</span>
+                        </label>
+                      </div>
+                    </div>
+                    )}
+                  </div>
+                </div>
+              </div>
 
               <DateRangePicker
                 startDate={dateRange.startDate}
@@ -555,17 +648,19 @@ export default function Analytics() {
           </div>
         </div>
 
-        {/* KPIs Grid - Collapsible */}
-        {summaryData && !loading && !summaryCollapsed && (
+        {/* KPIs Grid - Collapsible - Always show structure */}
+        {!summaryCollapsed && (
           <div className="mb-6">
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
               {/* Business Health */}
               <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
                 <div className="text-sm text-slate-600 dark:text-slate-400 mb-1">Signups</div>
                 <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
-                  {formatNumber(summaryData.signups.value)}
+                  {summaryData ? formatNumber(summaryData.signups.value) : (
+                    <div className="h-8 w-16 bg-slate-100 dark:bg-slate-700/50 animate-pulse rounded"></div>
+                  )}
                 </div>
-                {summaryData.signups.direction !== 'neutral' && (
+                {summaryData && summaryData.signups.direction !== 'neutral' && (
                   <div className={`flex items-center gap-1 text-xs ${
                     summaryData.signups.direction === 'up'
                       ? 'text-green-600 dark:text-green-400'
@@ -580,9 +675,11 @@ export default function Analytics() {
               <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
                 <div className="text-sm text-slate-600 dark:text-slate-400 mb-1">Revenue</div>
                 <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
-                  {formatCurrency(summaryData.revenue.value)}
+                  {summaryData ? formatCurrency(summaryData.revenue.value) : (
+                    <div className="h-8 w-20 bg-slate-100 dark:bg-slate-700/50 animate-pulse rounded"></div>
+                  )}
                 </div>
-                {summaryData.revenue.direction !== 'neutral' && (
+                {summaryData && summaryData.revenue.direction !== 'neutral' && (
                   <div className={`flex items-center gap-1 text-xs ${
                     summaryData.revenue.direction === 'up'
                       ? 'text-green-600 dark:text-green-400'
@@ -598,9 +695,11 @@ export default function Analytics() {
               <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
                 <div className="text-sm text-slate-600 dark:text-slate-400 mb-1">Sessions</div>
                 <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
-                  {formatNumber(summaryData.sessions.value)}
+                  {summaryData ? formatNumber(summaryData.sessions.value) : (
+                    <div className="h-8 w-16 bg-slate-100 dark:bg-slate-700/50 animate-pulse rounded"></div>
+                  )}
                 </div>
-                {summaryData.sessions.direction !== 'neutral' && (
+                {summaryData && summaryData.sessions.direction !== 'neutral' && (
                   <div className={`flex items-center gap-1 text-xs ${
                     summaryData.sessions.direction === 'up'
                       ? 'text-green-600 dark:text-green-400'
@@ -615,9 +714,11 @@ export default function Analytics() {
               <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
                 <div className="text-sm text-slate-600 dark:text-slate-400 mb-1">Completion</div>
                 <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
-                  {formatPercent(summaryData.completionRate.value)}
+                  {summaryData ? formatPercent(summaryData.completionRate.value) : (
+                    <div className="h-8 w-16 bg-slate-100 dark:bg-slate-700/50 animate-pulse rounded"></div>
+                  )}
                 </div>
-                {summaryData.completionRate.direction !== 'neutral' && (
+                {summaryData && summaryData.completionRate.direction !== 'neutral' && (
                   <div className={`flex items-center gap-1 text-xs ${
                     summaryData.completionRate.direction === 'up'
                       ? 'text-green-600 dark:text-green-400'
@@ -633,9 +734,11 @@ export default function Analytics() {
               <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
                 <div className="text-sm text-slate-600 dark:text-slate-400 mb-1">Latency</div>
                 <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
-                  {formatLatency(summaryData.avgLatency.value)}
+                  {summaryData ? formatLatency(summaryData.avgLatency.value) : (
+                    <div className="h-8 w-20 bg-slate-100 dark:bg-slate-700/50 animate-pulse rounded"></div>
+                  )}
                 </div>
-                {summaryData.avgLatency.direction !== 'neutral' && (
+                {summaryData && summaryData.avgLatency.direction !== 'neutral' && (
                   <div className={`flex items-center gap-1 text-xs ${
                     summaryData.avgLatency.direction === 'down'
                       ? 'text-green-600 dark:text-green-400'
@@ -650,9 +753,11 @@ export default function Analytics() {
               <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
                 <div className="text-sm text-slate-600 dark:text-slate-400 mb-1">Errors</div>
                 <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
-                  {formatNumber(summaryData.errorCount.value)}
+                  {summaryData ? formatNumber(summaryData.errorCount.value) : (
+                    <div className="h-8 w-12 bg-slate-100 dark:bg-slate-700/50 animate-pulse rounded"></div>
+                  )}
                 </div>
-                {summaryData.errorCount.direction !== 'neutral' && (
+                {summaryData && summaryData.errorCount.direction !== 'neutral' && (
                   <div className={`flex items-center gap-1 text-xs ${
                     summaryData.errorCount.direction === 'down'
                       ? 'text-green-600 dark:text-green-400'
@@ -725,7 +830,16 @@ export default function Analytics() {
 
         {/* Business Tab */}
         {!loading && activeTab === 'business' && businessData && (
-          <div className="space-y-6">
+          <div className="space-y-6 relative">
+            {/* Refreshing overlay */}
+            {refreshing && (
+              <div className="absolute inset-0 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm z-10 flex items-start justify-center pt-8">
+                <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg px-4 py-2 flex items-center gap-2">
+                  <RefreshCw className="w-4 h-4 text-purple-600 dark:text-purple-400 animate-spin" />
+                  <span className="text-sm text-slate-700 dark:text-slate-300">Refreshing data...</span>
+                </div>
+              </div>
+            )}
             {/* Business Conversion Funnel Section */}
             {businessData.conversionFunnel && (
               <>
@@ -1274,7 +1388,16 @@ export default function Analytics() {
 
         {/* Usage Tab */}
         {!loading && activeTab === 'usage' && usageData && (
-          <div className="space-y-8">
+          <div className="space-y-8 relative">
+            {/* Refreshing overlay */}
+            {refreshing && (
+              <div className="absolute inset-0 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm z-10 flex items-start justify-center pt-8">
+                <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg px-4 py-2 flex items-center gap-2">
+                  <RefreshCw className="w-4 h-4 text-purple-600 dark:text-purple-400 animate-spin" />
+                  <span className="text-sm text-slate-700 dark:text-slate-300">Refreshing data...</span>
+                </div>
+              </div>
+            )}
             {/* ================================================================
                 GROUP 1: Traffic & Engagement
                 Who's using the product and how often?
@@ -1792,7 +1915,16 @@ export default function Analytics() {
 
         {/* Performance Tab */}
         {!loading && activeTab === 'performance' && performanceData && (
-          <div className="space-y-8">
+          <div className="space-y-8 relative">
+            {/* Refreshing overlay */}
+            {refreshing && (
+              <div className="absolute inset-0 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm z-10 flex items-start justify-center pt-8">
+                <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg px-4 py-2 flex items-center gap-2">
+                  <RefreshCw className="w-4 h-4 text-purple-600 dark:text-purple-400 animate-spin" />
+                  <span className="text-sm text-slate-700 dark:text-slate-300">Refreshing data...</span>
+                </div>
+              </div>
+            )}
             {/* ================================================================
                 SECTION 1: Response Time - How fast are we generating docs?
                 ================================================================ */}
@@ -2239,7 +2371,8 @@ export default function Analytics() {
           <EventsTable
             startDate={dateRange.startDate}
             endDate={dateRange.endDate}
-            excludeInternal={excludeInternal}
+            excludeInternal={exclusions.internal}
+            excludeAnonymous={exclusions.anonymous}
           />
         )}
       </div>

@@ -250,9 +250,12 @@ router.post('/generate', optionalAuth, rateLimitBypass, apiLimiter, generationLi
         model: result.metadata.model || 'unknown',
       } : undefined,
     }, {
+      sessionId: req.headers['x-session-id'] || null,
       userId: req.user?.id || null,
       ipAddress: req.ip || req.socket?.remoteAddress || 'unknown',
-    }).catch(() => {});
+    }).catch((error) => {
+      console.error('[DEBUG] doc_generation analytics error:', error);
+    });
 
     if (result.qualityScore) {
       analyticsService.recordEvent('quality_score', {
@@ -264,8 +267,11 @@ router.post('/generate', optionalAuth, rateLimitBypass, apiLimiter, generationLi
           model: result.metadata.model || 'unknown',
         } : undefined,
       }, {
+        sessionId: req.headers['x-session-id'] || null,
         userId: req.user?.id || null,
-      }).catch(() => {});
+      }).catch((error) => {
+        console.error('[DEBUG] quality_score analytics error:', error);
+      });
     }
 
     res.json(result);
@@ -298,6 +304,7 @@ router.post('/generate', optionalAuth, rateLimitBypass, apiLimiter, generationLi
         filename: req.body.filename || 'untitled',
       },
     }, {
+      sessionId: req.headers['x-session-id'] || null,
       userId: req.user?.id || null,
       ipAddress: req.ip || req.socket?.remoteAddress || 'unknown',
     }).catch(() => {});
@@ -489,6 +496,7 @@ router.post('/generate-stream', optionalAuth, rateLimitBypass, apiLimiter, gener
         model: result.metadata.model || 'unknown',
       } : undefined,
     }, {
+      sessionId: req.headers['x-session-id'] || null,
       userId: req.user?.id || null,
       ipAddress: req.ip || req.socket?.remoteAddress || 'unknown',
     }).catch(() => {});
@@ -503,6 +511,7 @@ router.post('/generate-stream', optionalAuth, rateLimitBypass, apiLimiter, gener
           model: result.metadata.model || 'unknown',
         } : undefined,
       }, {
+        sessionId: req.headers['x-session-id'] || null,
         userId: req.user?.id || null,
       }).catch(() => {});
     }
@@ -537,6 +546,7 @@ router.post('/generate-stream', optionalAuth, rateLimitBypass, apiLimiter, gener
         filename: req.body.filename || 'untitled',
       },
     }, {
+      sessionId: req.headers['x-session-id'] || null,
       userId: req.user?.id || null,
       ipAddress: req.ip || req.socket?.remoteAddress || 'unknown',
     }).catch(() => {});

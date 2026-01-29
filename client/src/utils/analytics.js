@@ -113,9 +113,9 @@ export const resetAnalyticsSession = () => {
  * @param {Object} data - Original event data
  * @returns {Object} Event data with session context added
  */
+// Add session duration to event data (session_id is sent separately in request body)
 const withSessionContext = (data) => ({
   ...data,
-  session_id: getSessionId(),
   session_duration_ms: getSessionDuration(),
 });
 
@@ -447,6 +447,13 @@ export const trackUsageAlert = ({ action, tier, percentUsed, remaining, limit, p
  * Called once per browser session (deduplication handled internally)
  */
 export const trackSessionStart = () => {
+  // Skip tracking if user just logged out (prevents session inflation)
+  // The cs_logged_out flag is set on the /logged-out page and cleared when user
+  // explicitly clicks "Continue" or "Log back in"
+  if (sessionStorage.getItem('cs_logged_out')) {
+    return;
+  }
+
   // Check if already tracked this session (prevents duplicates on HMR/remounts)
   if (sessionStorage.getItem(SESSION_TRACKED_KEY)) {
     return;
@@ -471,6 +478,14 @@ export const trackLogin = ({ method = 'email' } = {}) => {
   trackEvent('login', withSessionContext({
     method,
   }));
+};
+
+/**
+ * Track user logout for session duration analysis
+ * Called before user logs out
+ */
+export const trackLogout = () => {
+  trackEvent('logout', withSessionContext({}));
 };
 
 /**

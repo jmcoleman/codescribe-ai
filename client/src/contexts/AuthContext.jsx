@@ -10,7 +10,7 @@ import { API_URL } from '../config/api';
 import { STORAGE_KEYS, getStorageItem, setStorageItem, removeStorageItem, clearAppStorage } from '../constants/storage';
 import { clearWorkspaceLocalStorage } from '../hooks/useWorkspacePersistence';
 import { clearBatchSessionStorage } from '../hooks/useBatchGeneration';
-import { setAnalyticsOptOut, trackLogin, trackSignup, resetAnalyticsSession, trackSessionStart } from '../utils/analytics';
+import { setAnalyticsOptOut, trackLogin, trackLogout, trackSignup, resetAnalyticsSession, trackSessionStart } from '../utils/analytics';
 
 const AuthContext = createContext(null);
 
@@ -245,6 +245,9 @@ export function AuthProvider({ children }) {
       // Clear batch state from sessionStorage (prevents stale batch content on re-login)
       clearBatchSessionStorage();
 
+      // Track logout before resetting session (captures session duration)
+      trackLogout();
+
       // Reset analytics session so new user gets a fresh session
       resetAnalyticsSession();
     } catch (err) {
@@ -255,6 +258,10 @@ export function AuthProvider({ children }) {
 
       setUser(null);
       setError(null);
+
+      // Redirect to logged-out page to prevent session inflation
+      // This prevents automatic session_start tracking when user lands back on home page
+      window.location.href = '/logged-out';
     }
   };
 

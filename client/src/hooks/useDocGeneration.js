@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import { API_URL } from '../config/api.js';
-import { trackError, trackPerformance } from '../utils/analytics.js';
+import { trackError, trackPerformance, getSessionId } from '../utils/analytics.js';
 import { useAuth } from '../contexts/AuthContext.jsx';
 
 export function useDocGeneration(onUsageUpdate) {
@@ -46,6 +46,7 @@ export function useDocGeneration(onUsageUpdate) {
       const token = getToken();
       const headers = {
         'Content-Type': 'application/json',
+        'X-Session-Id': getSessionId(), // Pass session ID for server-side analytics
       };
 
       // Add Authorization header if user is authenticated

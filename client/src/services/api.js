@@ -1,4 +1,5 @@
 import { API_URL } from '../config/api.js';
+import { getSessionId } from '../utils/analytics.js';
 
 class RateLimitError extends Error {
   constructor(message, retryAfter) {
@@ -10,7 +11,10 @@ class RateLimitError extends Error {
 }
 
 export async function generateDocumentation(code, docType, language, token = null, filename = 'untitled') {
-  const headers = { 'Content-Type': 'application/json' };
+  const headers = {
+    'Content-Type': 'application/json',
+    'X-Session-Id': getSessionId(), // Pass session ID for server-side analytics
+  };
 
   // Add Authorization header if token is provided
   if (token) {

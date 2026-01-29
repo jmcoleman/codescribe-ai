@@ -96,7 +96,7 @@ function SessionUserCell({ event }) {
   );
 }
 
-export function EventsTable({ startDate, endDate, excludeInternal = false }) {
+export function EventsTable({ startDate, endDate, excludeInternal = false, excludeAnonymous = false }) {
   const { getToken } = useAuth();
 
   // Column sizing for resizable columns
@@ -227,8 +227,22 @@ export function EventsTable({ startDate, endDate, excludeInternal = false }) {
           <pre className="p-3 bg-slate-100 dark:bg-slate-800 rounded-lg overflow-x-auto text-xs font-mono text-slate-700 dark:text-slate-300">
             {JSON.stringify(event.eventData, null, 2)}
           </pre>
-          <div className="mt-3 text-xs text-slate-500 dark:text-slate-400">
-            <span className="font-medium">Event ID:</span> {event.id}
+          <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-xs text-slate-500 dark:text-slate-400">
+            <div>
+              <span className="font-medium">Event ID:</span> {event.id}
+            </div>
+            <div>
+              <span className="font-medium">Session ID:</span> {event.sessionId || <span className="text-slate-400 dark:text-slate-500">None</span>}
+            </div>
+            <div>
+              <span className="font-medium">User ID:</span> {event.userId || <span className="text-slate-400 dark:text-slate-500">Anonymous</span>}
+            </div>
+            <div>
+              <span className="font-medium">IP Address:</span> {event.ipAddress || <span className="text-slate-400 dark:text-slate-500">Unknown</span>}
+            </div>
+            <div className="col-span-2">
+              <span className="font-medium">Created At:</span> {new Date(event.createdAt).toLocaleString()}
+            </div>
           </div>
         </div>
       </div>
@@ -278,6 +292,7 @@ export function EventsTable({ startDate, endDate, excludeInternal = false }) {
         page: page.toString(),
         limit: pagination.limit.toString(),
         excludeInternal: excludeInternal.toString(),
+        excludeAnonymous: excludeAnonymous.toString(),
       });
 
       if (filterCategory) params.append('category', filterCategory);
@@ -326,7 +341,7 @@ export function EventsTable({ startDate, endDate, excludeInternal = false }) {
       setLoading(false);
       setIsRefreshing(false);
     }
-  }, [getToken, startDate, endDate, excludeInternal, filterCategory, filterEmail, eventFilter, pagination.limit, sorting]);
+  }, [getToken, startDate, endDate, excludeInternal, excludeAnonymous, filterCategory, filterEmail, eventFilter, pagination.limit, sorting]);
 
   // Handle CSV export
   const handleExport = useCallback(async () => {
@@ -341,6 +356,7 @@ export function EventsTable({ startDate, endDate, excludeInternal = false }) {
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
         excludeInternal: excludeInternal.toString(),
+        excludeAnonymous: excludeAnonymous.toString(),
       });
 
       if (filterCategory) params.append('category', filterCategory);
@@ -373,7 +389,7 @@ export function EventsTable({ startDate, endDate, excludeInternal = false }) {
     } finally {
       setExporting(false);
     }
-  }, [getToken, startDate, endDate, excludeInternal, filterCategory, filterEmail, eventFilter.eventNames]);
+  }, [getToken, startDate, endDate, excludeInternal, excludeAnonymous, filterCategory, filterEmail, eventFilter.eventNames]);
 
   // Initial load
   useEffect(() => {

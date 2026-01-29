@@ -20,6 +20,7 @@ const EVENT_CATEGORIES = {
 
   // Business events - monetization and conversion
   login: 'business',
+  logout: 'business',
   signup: 'business',
   email_verified: 'business', // Email verification milestone
   trial: 'business', // Trial lifecycle (action: started/expired/converted)
@@ -125,16 +126,16 @@ export const analyticsService = {
         `;
         if (userResult.rows.length > 0) {
           const { role, viewing_as_tier } = userResult.rows[0];
-          // Check specific reasons for being internal
+          // Check if user has admin/support role
           const isAdminRole = ['admin', 'support', 'super_admin'].includes(role);
           if (isAdminRole) {
             userRole = role; // Capture specific role (admin, support, super_admin)
           }
           if (viewing_as_tier) {
-            viewingAsTier = viewing_as_tier; // Capture which tier they're viewing as
+            viewingAsTier = viewing_as_tier; // Capture which tier they're viewing as (for audit/debugging)
           }
-          // Mark as internal if admin/support role OR if they have an active tier override
-          isInternalUser = isAdminRole || !!viewing_as_tier;
+          // Mark as internal if admin/support role (only admins can use tier override)
+          isInternalUser = isAdminRole;
         }
       } catch (error) {
         // Don't fail event recording if user lookup fails
@@ -175,22 +176,10 @@ export const analyticsService = {
         RETURNING id, created_at
       `;
 
-      // For login events, retroactively update ALL events from this session as internal
-      // This ensures pre-login events (session_start, code_input, etc.) are properly
-      // filtered when "Exclude Internal" is enabled
-      if (eventName === 'login' && sessionId && isInternalUser) {
-        try {
-          await sql`
-            UPDATE analytics_events
-            SET is_internal = TRUE
-            WHERE session_id = ${sessionId}
-              AND is_internal = FALSE
-          `;
-        } catch (updateError) {
-          // Don't fail the login event recording if update fails
-          console.error('[Analytics] Failed to update session is_internal:', updateError.message);
-        }
-      }
+      // Note: Event data is immutable - we do NOT retroactively update is_internal or user_id
+      // for other events in this session. Session classification (authenticated vs anonymous,
+      // internal vs external) happens at query time. This preserves audit trail and allows
+      // flexible analysis.
 
       return {
         id: result.rows[0].id,
@@ -321,174 +310,157 @@ export const analyticsService = {
    * @param {boolean} [options.excludeInternal=true] - Exclude admin/override users
    * @returns {Promise<Object>} Funnel metrics
    */
-  async getConversionFunnel({ startDate, endDate, excludeInternal = true }) {
-    // Get counts for each funnel stage
-    // Query funnel events + derive generation stages from doc_generation events
-    let funnelResult, genStartedResult, genCompletedResult;
+  async getConversionFunnel({ startDate, endDate, excludeInternal = true, excludeAnonymous = false }) {
+    // Classify sessions at query time (immutable event data, flexible analysis)
+    // - Authenticated sessions: sessions with login/signup events
+    // - Internal sessions: sessions with login/signup events where is_internal = TRUE
+    // - Anonymous sessions: sessions without login/signup events
 
-    if (excludeInternal) {
-      // Get standard funnel events (session_start, code_input)
-      funnelResult = await sql`
-        SELECT
-          event_name,
-          COUNT(DISTINCT session_id) as unique_sessions,
-          COUNT(*) as total_events
+    const baseQuery = `
+      WITH authenticated_sessions AS (
+        -- Sessions that eventually logged in or signed up (check full history, not just date range)
+        SELECT DISTINCT session_id
         FROM analytics_events
-        WHERE event_category = 'workflow'
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
-          AND is_internal = FALSE
-        GROUP BY event_name
-      `;
+        WHERE event_name IN ('login', 'signup')
+          AND session_id IS NOT NULL
+      ),
+      internal_sessions AS (
+        -- Sessions where user logged in as admin/support (check full history, not just date range)
+        SELECT DISTINCT session_id
+        FROM analytics_events
+        WHERE event_name IN ('login', 'signup')
+          AND session_id IS NOT NULL
+          AND is_internal = TRUE
+      )
+    `;
 
-      // Get generation_started from doc_generation (all attempts)
-      genStartedResult = await sql`
-        SELECT
-          COUNT(DISTINCT session_id) as unique_sessions,
-          COUNT(*) as total_events
-        FROM analytics_events
-        WHERE event_name = 'doc_generation'
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
-          AND is_internal = FALSE
+    // Build filter conditions based on exclude flags
+    let sessionFilter = '';
+    if (excludeInternal && excludeAnonymous) {
+      // Only authenticated, non-internal sessions
+      sessionFilter = `
+        AND ae.session_id IN (SELECT session_id FROM authenticated_sessions)
+        AND ae.session_id NOT IN (SELECT session_id FROM internal_sessions)
       `;
-
-      // Get generation_completed from doc_generation where success = 'true'
-      genCompletedResult = await sql`
-        SELECT
-          COUNT(DISTINCT session_id) as unique_sessions,
-          COUNT(*) as total_events
-        FROM analytics_events
-        WHERE event_name = 'doc_generation'
-          AND event_data->>'success' = 'true'
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
-          AND is_internal = FALSE
+    } else if (excludeInternal) {
+      // Exclude internal sessions (keep authenticated + anonymous)
+      sessionFilter = `
+        AND ae.session_id NOT IN (SELECT session_id FROM internal_sessions)
       `;
-    } else {
-      // Get standard funnel events (session_start, code_input, doc_export)
-      funnelResult = await sql`
-        SELECT
-          event_name,
-          COUNT(DISTINCT session_id) as unique_sessions,
-          COUNT(*) as total_events
-        FROM analytics_events
-        WHERE event_category = 'workflow'
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
-        GROUP BY event_name
-      `;
-
-      // Get generation_started from doc_generation (all attempts)
-      genStartedResult = await sql`
-        SELECT
-          COUNT(DISTINCT session_id) as unique_sessions,
-          COUNT(*) as total_events
-        FROM analytics_events
-        WHERE event_name = 'doc_generation'
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
-      `;
-
-      // Get generation_completed from doc_generation where success = 'true'
-      genCompletedResult = await sql`
-        SELECT
-          COUNT(DISTINCT session_id) as unique_sessions,
-          COUNT(*) as total_events
-        FROM analytics_events
-        WHERE event_name = 'doc_generation'
-          AND event_data->>'success' = 'true'
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
+    } else if (excludeAnonymous) {
+      // Only authenticated sessions (internal + non-internal)
+      sessionFilter = `
+        AND ae.session_id IN (SELECT session_id FROM authenticated_sessions)
       `;
     }
+    // If neither flag is set, no filter (include all sessions)
+
+    // Get standard funnel events (session_start, code_input, doc_export)
+    const queryText1 = baseQuery + `
+      SELECT
+        event_name,
+        COUNT(DISTINCT session_id) as unique_sessions,
+        COUNT(DISTINCT CASE WHEN ae.session_id IN (SELECT session_id FROM authenticated_sessions) THEN user_id END) as unique_users,
+        COUNT(*) as total_events
+      FROM analytics_events ae
+      WHERE event_category = 'workflow'
+        AND created_at >= $1
+        AND created_at < $2
+        ${sessionFilter}
+      GROUP BY event_name
+    `;
+
+    const params1 = [startDate, endDate];
+    const funnelResult = await sql.query(queryText1, params1);
+
+    // Get generation_started from doc_generation (all attempts)
+    const queryText2 = baseQuery + `
+      SELECT
+        COUNT(DISTINCT session_id) as unique_sessions,
+        COUNT(DISTINCT CASE WHEN ae.session_id IN (SELECT session_id FROM authenticated_sessions) THEN user_id END) as unique_users,
+        COUNT(*) as total_events
+      FROM analytics_events ae
+      WHERE event_name = 'doc_generation'
+        AND created_at >= $1
+        AND created_at < $2
+        ${sessionFilter}
+    `;
+
+    const params2 = [startDate, endDate];
+    const genStartedResult = await sql.query(queryText2, params2);
+
+    // Get generation_completed from doc_generation where success = 'true'
+    const queryText3 = baseQuery + `
+      SELECT
+        COUNT(DISTINCT session_id) as unique_sessions,
+        COUNT(DISTINCT CASE WHEN ae.session_id IN (SELECT session_id FROM authenticated_sessions) THEN user_id END) as unique_users,
+        COUNT(*) as total_events
+      FROM analytics_events ae
+      WHERE event_name = 'doc_generation'
+        AND event_data->>'success' = 'true'
+        AND created_at >= $1
+        AND created_at < $2
+        ${sessionFilter}
+    `;
+
+    const params3 = [startDate, endDate];
+    const genCompletedResult = await sql.query(queryText3, params3);
 
     // Get code_input breakdown by origin
-    let codeInputBreakdownResult;
-    if (excludeInternal) {
-      codeInputBreakdownResult = await sql`
-        SELECT
-          event_data->>'origin' as origin,
-          COUNT(DISTINCT session_id) as unique_sessions,
-          COUNT(*) as total_events
-        FROM analytics_events
-        WHERE event_name = 'code_input'
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
-          AND is_internal = FALSE
-        GROUP BY origin
-        ORDER BY COUNT(*) DESC
-      `;
-    } else {
-      codeInputBreakdownResult = await sql`
-        SELECT
-          event_data->>'origin' as origin,
-          COUNT(DISTINCT session_id) as unique_sessions,
-          COUNT(*) as total_events
-        FROM analytics_events
-        WHERE event_name = 'code_input'
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
-        GROUP BY origin
-        ORDER BY COUNT(*) DESC
-      `;
-    }
+    const queryText4 = baseQuery + `
+      SELECT
+        event_data->>'origin' as origin,
+        COUNT(DISTINCT session_id) as unique_sessions,
+        COUNT(DISTINCT CASE WHEN ae.session_id IN (SELECT session_id FROM authenticated_sessions) THEN user_id END) as unique_users,
+        COUNT(*) as total_events
+      FROM analytics_events ae
+      WHERE event_name = 'code_input'
+        AND created_at >= $1
+        AND created_at < $2
+        ${sessionFilter}
+      GROUP BY event_data->>'origin'
+      ORDER BY COUNT(*) DESC
+    `;
 
-    // Get doc_export (fresh only for main funnel) + breakdown by source
-    let docExportResult, docExportBreakdownResult;
-    if (excludeInternal) {
-      // Fresh exports only for funnel progression
-      docExportResult = await sql`
-        SELECT
-          COUNT(DISTINCT session_id) as unique_sessions,
-          COUNT(*) as total_events
-        FROM analytics_events
-        WHERE event_name = 'doc_export'
-          AND event_data->>'source' = 'fresh'
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
-          AND is_internal = FALSE
-      `;
+    const params4 = [startDate, endDate];
+    const codeInputBreakdownResult = await sql.query(queryText4, params4);
 
-      // Breakdown by source (fresh vs cached)
-      docExportBreakdownResult = await sql`
-        SELECT
-          event_data->>'source' as source,
-          COUNT(DISTINCT session_id) as unique_sessions,
-          COUNT(*) as total_events
-        FROM analytics_events
-        WHERE event_name = 'doc_export'
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
-          AND is_internal = FALSE
-        GROUP BY source
-        ORDER BY COUNT(*) DESC
-      `;
-    } else {
-      docExportResult = await sql`
-        SELECT
-          COUNT(DISTINCT session_id) as unique_sessions,
-          COUNT(*) as total_events
-        FROM analytics_events
-        WHERE event_name = 'doc_export'
-          AND event_data->>'source' = 'fresh'
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
-      `;
+    // Get doc_export (fresh only for main funnel)
+    // Fresh exports only for funnel progression
+    const queryText5 = baseQuery + `
+      SELECT
+        COUNT(DISTINCT session_id) as unique_sessions,
+        COUNT(DISTINCT CASE WHEN ae.session_id IN (SELECT session_id FROM authenticated_sessions) THEN user_id END) as unique_users,
+        COUNT(*) as total_events
+      FROM analytics_events ae
+      WHERE event_name = 'doc_export'
+        AND event_data->>'source' = 'fresh'
+        AND created_at >= $1
+        AND created_at < $2
+        ${sessionFilter}
+    `;
 
-      docExportBreakdownResult = await sql`
-        SELECT
-          event_data->>'source' as source,
-          COUNT(DISTINCT session_id) as unique_sessions,
-          COUNT(*) as total_events
-        FROM analytics_events
-        WHERE event_name = 'doc_export'
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
-        GROUP BY source
-        ORDER BY COUNT(*) DESC
-      `;
-    }
+    const params5 = [startDate, endDate];
+    const docExportResult = await sql.query(queryText5, params5);
+
+    // Breakdown by source (fresh vs cached)
+    const queryText6 = baseQuery + `
+      SELECT
+        event_data->>'source' as source,
+        COUNT(DISTINCT session_id) as unique_sessions,
+        COUNT(DISTINCT CASE WHEN ae.session_id IN (SELECT session_id FROM authenticated_sessions) THEN user_id END) as unique_users,
+        COUNT(*) as total_events
+      FROM analytics_events ae
+      WHERE event_name = 'doc_export'
+        AND created_at >= $1
+        AND created_at < $2
+        ${sessionFilter}
+      GROUP BY event_data->>'source'
+      ORDER BY COUNT(*) DESC
+    `;
+
+    const params6 = [startDate, endDate];
+    const docExportBreakdownResult = await sql.query(queryText6, params6);
 
     // Build funnel data with conversion rates
     const stages = ['session_start', 'code_input', 'generation_started', 'generation_completed', 'doc_export'];
@@ -499,12 +471,14 @@ export const analyticsService = {
         // Use doc_generation count for generation_started
         funnelData[stage] = {
           sessions: parseInt(genStartedResult.rows[0]?.unique_sessions || 0),
+          users: parseInt(genStartedResult.rows[0]?.unique_users || 0),
           events: parseInt(genStartedResult.rows[0]?.total_events || 0),
         };
       } else if (stage === 'generation_completed') {
         // Use successful doc_generation count for generation_completed
         funnelData[stage] = {
           sessions: parseInt(genCompletedResult.rows[0]?.unique_sessions || 0),
+          users: parseInt(genCompletedResult.rows[0]?.unique_users || 0),
           events: parseInt(genCompletedResult.rows[0]?.total_events || 0),
         };
       } else if (stage === 'code_input') {
@@ -515,11 +489,13 @@ export const analyticsService = {
           const origin = originRow.origin || 'unknown';
           breakdown[origin] = {
             sessions: parseInt(originRow.unique_sessions || 0),
+            users: parseInt(originRow.unique_users || 0),
             count: parseInt(originRow.total_events || 0),
           };
         });
         funnelData[stage] = {
           sessions: parseInt(row?.unique_sessions || 0),
+          users: parseInt(row?.unique_users || 0),
           events: parseInt(row?.total_events || 0),
           breakdown,
         };
@@ -530,11 +506,13 @@ export const analyticsService = {
           const source = sourceRow.source || 'fresh';
           breakdown[source] = {
             sessions: parseInt(sourceRow.unique_sessions || 0),
+            users: parseInt(sourceRow.unique_users || 0),
             count: parseInt(sourceRow.total_events || 0),
           };
         });
         funnelData[stage] = {
           sessions: parseInt(docExportResult.rows[0]?.unique_sessions || 0),
+          users: parseInt(docExportResult.rows[0]?.unique_users || 0),
           events: parseInt(docExportResult.rows[0]?.total_events || 0),
           breakdown,
         };
@@ -542,6 +520,7 @@ export const analyticsService = {
         const row = funnelResult.rows.find((r) => r.event_name === stage);
         funnelData[stage] = {
           sessions: parseInt(row?.unique_sessions || 0),
+          users: parseInt(row?.unique_users || 0),
           events: parseInt(row?.total_events || 0),
         };
       }
@@ -560,9 +539,14 @@ export const analyticsService = {
       stages: funnelData,
       conversionRates,
       totalSessions: funnelData.session_start?.sessions || 0,
+      totalUsers: funnelData.session_start?.users || 0,
       completedSessions: funnelData.doc_export?.sessions || 0,
-      overallConversion: funnelData.session_start?.sessions > 0
+      completedUsers: funnelData.doc_export?.users || 0,
+      overallConversionSessions: funnelData.session_start?.sessions > 0
         ? Math.round((funnelData.doc_export?.sessions / funnelData.session_start?.sessions) * 1000) / 10
+        : 0,
+      overallConversionUsers: funnelData.session_start?.users > 0
+        ? Math.round((funnelData.doc_export?.users / funnelData.session_start?.users) * 1000) / 10
         : 0,
     };
   },
@@ -581,196 +565,198 @@ export const analyticsService = {
    * @param {boolean} [options.excludeInternal=true] - Exclude admin/override users
    * @returns {Promise<Object>} Business conversion funnel data
    */
-  async getBusinessConversionFunnel({ startDate, endDate, excludeInternal = true }) {
+  async getBusinessConversionFunnel({ startDate, endDate, excludeInternal = true, excludeAnonymous = false }) {
     // Get unique visitors (session_start events)
-    let visitorResult;
+    let queryText1 = `
+      SELECT COUNT(DISTINCT session_id) as count
+      FROM analytics_events
+    `;
+
+    const conditions1 = [
+      `event_name = 'session_start'`,
+      `created_at >= $1`,
+      `created_at < $2`
+    ];
+    const params1 = [startDate, endDate];
+
     if (excludeInternal) {
-      visitorResult = await sql`
-        SELECT COUNT(DISTINCT session_id) as count
-        FROM analytics_events
-        WHERE event_name = 'session_start'
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
-          AND is_internal = FALSE
-      `;
-    } else {
-      visitorResult = await sql`
-        SELECT COUNT(DISTINCT session_id) as count
-        FROM analytics_events
-        WHERE event_name = 'session_start'
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
-      `;
+      conditions1.push(`is_internal = FALSE`);
     }
+
+    if (excludeAnonymous) {
+      conditions1.push(`user_id IS NOT NULL`);
+    }
+
+    queryText1 += ' WHERE ' + conditions1.join(' AND ');
+
+    const visitorResult = await sql.query(queryText1, params1);
 
     // Get engaged visitors (sessions with at least one successful doc_generation)
     // This represents users who actually tried the product (free tier usage)
-    let engagedResult;
+    let queryText2 = `
+      SELECT COUNT(DISTINCT session_id) as count
+      FROM analytics_events
+    `;
+
+    const conditions2 = [
+      `event_name = 'doc_generation'`,
+      `event_data->>'success' = 'true'`,
+      `created_at >= $1`,
+      `created_at < $2`
+    ];
+    const params2 = [startDate, endDate];
+
     if (excludeInternal) {
-      engagedResult = await sql`
-        SELECT COUNT(DISTINCT session_id) as count
-        FROM analytics_events
-        WHERE event_name = 'doc_generation'
-          AND event_data->>'success' = 'true'
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
-          AND is_internal = FALSE
-      `;
-    } else {
-      engagedResult = await sql`
-        SELECT COUNT(DISTINCT session_id) as count
-        FROM analytics_events
-        WHERE event_name = 'doc_generation'
-          AND event_data->>'success' = 'true'
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
-      `;
+      conditions2.push(`is_internal = FALSE`);
     }
+
+    if (excludeAnonymous) {
+      conditions2.push(`user_id IS NOT NULL`);
+    }
+
+    queryText2 += ' WHERE ' + conditions2.join(' AND ');
+
+    const engagedResult = await sql.query(queryText2, params2);
 
     // Get signups
-    let signupResult;
+    let queryText3 = `
+      SELECT COUNT(*) as count
+      FROM analytics_events
+    `;
+
+    const conditions3 = [
+      `event_name = 'signup'`,
+      `created_at >= $1`,
+      `created_at < $2`
+    ];
+    const params3 = [startDate, endDate];
+
     if (excludeInternal) {
-      signupResult = await sql`
-        SELECT COUNT(*) as count
-        FROM analytics_events
-        WHERE event_name = 'signup'
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
-          AND is_internal = FALSE
-      `;
-    } else {
-      signupResult = await sql`
-        SELECT COUNT(*) as count
-        FROM analytics_events
-        WHERE event_name = 'signup'
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
-      `;
+      conditions3.push(`is_internal = FALSE`);
     }
+
+    if (excludeAnonymous) {
+      conditions3.push(`user_id IS NOT NULL`);
+    }
+
+    queryText3 += ' WHERE ' + conditions3.join(' AND ');
+
+    const signupResult = await sql.query(queryText3, params3);
 
     // Get email verified count (new milestone in v3.3.9)
-    let emailVerifiedResult;
+    let queryText4 = `
+      SELECT COUNT(*) as count
+      FROM analytics_events
+    `;
+
+    const conditions4 = [
+      `event_name = 'email_verified'`,
+      `created_at >= $1`,
+      `created_at < $2`
+    ];
+    const params4 = [startDate, endDate];
+
     if (excludeInternal) {
-      emailVerifiedResult = await sql`
-        SELECT COUNT(*) as count
-        FROM analytics_events
-        WHERE event_name = 'email_verified'
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
-          AND is_internal = FALSE
-      `;
-    } else {
-      emailVerifiedResult = await sql`
-        SELECT COUNT(*) as count
-        FROM analytics_events
-        WHERE event_name = 'email_verified'
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
-      `;
+      conditions4.push(`is_internal = FALSE`);
     }
+
+    if (excludeAnonymous) {
+      conditions4.push(`user_id IS NOT NULL`);
+    }
+
+    queryText4 += ' WHERE ' + conditions4.join(' AND ');
+
+    const emailVerifiedResult = await sql.query(queryText4, params4);
 
     // Get first generation count (new activation milestone in v3.3.9)
-    let firstGenerationResult;
+    let queryText5 = `
+      SELECT COUNT(*) as count
+      FROM analytics_events
+    `;
+
+    const conditions5 = [
+      `event_name = 'first_generation'`,
+      `created_at >= $1`,
+      `created_at < $2`
+    ];
+    const params5 = [startDate, endDate];
+
     if (excludeInternal) {
-      firstGenerationResult = await sql`
-        SELECT COUNT(*) as count
-        FROM analytics_events
-        WHERE event_name = 'first_generation'
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
-          AND is_internal = FALSE
-      `;
-    } else {
-      firstGenerationResult = await sql`
-        SELECT COUNT(*) as count
-        FROM analytics_events
-        WHERE event_name = 'first_generation'
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
-      `;
+      conditions5.push(`is_internal = FALSE`);
     }
 
-    // Get trial starts with breakdown by type (trial program vs individual)
-    let trialResult;
-    if (excludeInternal) {
-      trialResult = await sql`
-        SELECT
-          COUNT(*) as total,
-          COUNT(*) FILTER (WHERE t.source = 'auto_campaign') as trial_program,
-          COUNT(*) FILTER (WHERE t.source != 'auto_campaign') as individual
-        FROM user_trials t
-        JOIN users u ON t.user_id = u.id
-        WHERE t.started_at >= ${startDate}
-          AND t.started_at < ${endDate}
-          AND u.role NOT IN ('admin', 'support', 'super_admin')
-          AND u.viewing_as_tier IS NULL
-      `;
-    } else {
-      trialResult = await sql`
-        SELECT
-          COUNT(*) as total,
-          COUNT(*) FILTER (WHERE source = 'auto_campaign') as trial_program,
-          COUNT(*) FILTER (WHERE source != 'auto_campaign') as individual
-        FROM user_trials
-        WHERE started_at >= ${startDate}
-          AND started_at < ${endDate}
-      `;
+    if (excludeAnonymous) {
+      conditions5.push(`user_id IS NOT NULL`);
     }
+
+    queryText5 += ' WHERE ' + conditions5.join(' AND ');
+
+    const firstGenerationResult = await sql.query(queryText5, params5);
+
+    // Get trial starts with breakdown by type (trial program vs individual)
+    let queryText6 = `
+      SELECT
+        COUNT(*) as total,
+        COUNT(*) FILTER (WHERE t.source = 'auto_campaign') as trial_program,
+        COUNT(*) FILTER (WHERE t.source != 'auto_campaign') as individual
+      FROM user_trials t
+      JOIN users u ON t.user_id = u.id
+    `;
+
+    const conditions6 = [
+      `t.started_at >= $1`,
+      `t.started_at < $2`
+    ];
+    const params6 = [startDate, endDate];
+
+    if (excludeInternal) {
+      conditions6.push(`u.role NOT IN ('admin', 'support', 'super_admin')`);
+      conditions6.push(`u.viewing_as_tier IS NULL`);
+    }
+
+    queryText6 += ' WHERE ' + conditions6.join(' AND ');
+
+    const trialResult = await sql.query(queryText6, params6);
 
     // Get paid conversions with breakdown (via trial vs direct)
     // "Via Trial" = users who had a trial that converted
     // "Direct" = users who paid without going through a trial
-    let paidResult;
+    let queryText7 = `
+      SELECT
+        COUNT(*) as total,
+        COUNT(*) FILTER (WHERE EXISTS (
+          SELECT 1 FROM user_trials ut
+          WHERE ut.user_id = ae.user_id
+            AND ut.status = 'converted'
+            AND ut.converted_at >= $1
+            AND ut.converted_at < $2
+        )) as via_trial,
+        COUNT(*) FILTER (WHERE NOT EXISTS (
+          SELECT 1 FROM user_trials ut
+          WHERE ut.user_id = ae.user_id
+            AND ut.status = 'converted'
+        )) as direct
+      FROM analytics_events ae
+    `;
+
+    const conditions7 = [
+      `(ae.event_name = 'checkout_completed' OR (ae.event_name = 'tier_change' AND ae.event_data->>'action' = 'upgrade'))`,
+      `ae.created_at >= $1`,
+      `ae.created_at < $2`
+    ];
+    const params7 = [startDate, endDate];
+
     if (excludeInternal) {
-      paidResult = await sql`
-        SELECT
-          COUNT(*) as total,
-          COUNT(*) FILTER (WHERE EXISTS (
-            SELECT 1 FROM user_trials ut
-            WHERE ut.user_id = ae.user_id
-              AND ut.status = 'converted'
-              AND ut.converted_at >= ${startDate}
-              AND ut.converted_at < ${endDate}
-          )) as via_trial,
-          COUNT(*) FILTER (WHERE NOT EXISTS (
-            SELECT 1 FROM user_trials ut
-            WHERE ut.user_id = ae.user_id
-              AND ut.status = 'converted'
-          )) as direct
-        FROM analytics_events ae
-        WHERE (
-          ae.event_name = 'checkout_completed'
-          OR (ae.event_name = 'tier_change' AND ae.event_data->>'action' = 'upgrade')
-        )
-          AND ae.created_at >= ${startDate}
-          AND ae.created_at < ${endDate}
-          AND ae.is_internal = FALSE
-      `;
-    } else {
-      paidResult = await sql`
-        SELECT
-          COUNT(*) as total,
-          COUNT(*) FILTER (WHERE EXISTS (
-            SELECT 1 FROM user_trials ut
-            WHERE ut.user_id = ae.user_id
-              AND ut.status = 'converted'
-              AND ut.converted_at >= ${startDate}
-              AND ut.converted_at < ${endDate}
-          )) as via_trial,
-          COUNT(*) FILTER (WHERE NOT EXISTS (
-            SELECT 1 FROM user_trials ut
-            WHERE ut.user_id = ae.user_id
-              AND ut.status = 'converted'
-          )) as direct
-        FROM analytics_events ae
-        WHERE (
-          ae.event_name = 'checkout_completed'
-          OR (ae.event_name = 'tier_change' AND ae.event_data->>'action' = 'upgrade')
-        )
-          AND ae.created_at >= ${startDate}
-          AND ae.created_at < ${endDate}
-      `;
+      conditions7.push(`ae.is_internal = FALSE`);
     }
+
+    if (excludeAnonymous) {
+      conditions7.push(`ae.user_id IS NOT NULL`);
+    }
+
+    queryText7 += ' WHERE ' + conditions7.join(' AND ');
+
+    const paidResult = await sql.query(queryText7, params7);
 
     const visitors = parseInt(visitorResult.rows[0]?.count || 0);
     const engaged = parseInt(engagedResult.rows[0]?.count || 0);
@@ -849,37 +835,36 @@ export const analyticsService = {
    * @param {boolean} [options.excludeInternal=true] - Exclude admin/override users
    * @returns {Promise<Object>} Business metrics
    */
-  async getBusinessMetrics({ startDate, endDate, excludeInternal = true }) {
-    // Get event counts - use separate queries based on excludeInternal
-    let result;
+  async getBusinessMetrics({ startDate, endDate, excludeInternal = true, excludeAnonymous = false }) {
+    // Get event counts
+    let queryText1 = `
+      SELECT
+        event_name,
+        COUNT(*) as count,
+        SUM(CASE WHEN event_data->>'amount_cents' IS NOT NULL
+            THEN (event_data->>'amount_cents')::integer ELSE 0 END) as revenue_cents
+      FROM analytics_events
+    `;
+
+    const conditions1 = [
+      `event_category = 'business'`,
+      `created_at >= $1`,
+      `created_at < $2`
+    ];
+    const params1 = [startDate, endDate];
+
     if (excludeInternal) {
-      result = await sql`
-        SELECT
-          event_name,
-          COUNT(*) as count,
-          SUM(CASE WHEN event_data->>'amount_cents' IS NOT NULL
-              THEN (event_data->>'amount_cents')::integer ELSE 0 END) as revenue_cents
-        FROM analytics_events
-        WHERE event_category = 'business'
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
-          AND is_internal = FALSE
-        GROUP BY event_name
-      `;
-    } else {
-      result = await sql`
-        SELECT
-          event_name,
-          COUNT(*) as count,
-          SUM(CASE WHEN event_data->>'amount_cents' IS NOT NULL
-              THEN (event_data->>'amount_cents')::integer ELSE 0 END) as revenue_cents
-        FROM analytics_events
-        WHERE event_category = 'business'
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
-        GROUP BY event_name
-      `;
+      conditions1.push(`is_internal = FALSE`);
     }
+
+    if (excludeAnonymous) {
+      conditions1.push(`user_id IS NOT NULL`);
+    }
+
+    queryText1 += ' WHERE ' + conditions1.join(' AND ');
+    queryText1 += ' GROUP BY event_name';
+
+    const result = await sql.query(queryText1, params1);
 
     const metrics = {};
     result.rows.forEach((row) => {
@@ -890,31 +875,32 @@ export const analyticsService = {
     });
 
     // Get tier_change action counts (new consolidated event)
-    let tierChangeActions;
+    let queryText2 = `
+      SELECT
+        event_data->>'action' as action,
+        COUNT(*) as count
+      FROM analytics_events
+    `;
+
+    const conditions2 = [
+      `event_name = 'tier_change'`,
+      `created_at >= $1`,
+      `created_at < $2`
+    ];
+    const params2 = [startDate, endDate];
+
     if (excludeInternal) {
-      tierChangeActions = await sql`
-        SELECT
-          event_data->>'action' as action,
-          COUNT(*) as count
-        FROM analytics_events
-        WHERE event_name = 'tier_change'
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
-          AND is_internal = FALSE
-        GROUP BY event_data->>'action'
-      `;
-    } else {
-      tierChangeActions = await sql`
-        SELECT
-          event_data->>'action' as action,
-          COUNT(*) as count
-        FROM analytics_events
-        WHERE event_name = 'tier_change'
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
-        GROUP BY event_data->>'action'
-      `;
+      conditions2.push(`is_internal = FALSE`);
     }
+
+    if (excludeAnonymous) {
+      conditions2.push(`user_id IS NOT NULL`);
+    }
+
+    queryText2 += ' WHERE ' + conditions2.join(' AND ');
+    queryText2 += ` GROUP BY event_data->>'action'`;
+
+    const tierChangeActions = await sql.query(queryText2, params2);
 
     // Map tier_change actions to metrics
     const tierChangeMetrics = {};
@@ -923,33 +909,33 @@ export const analyticsService = {
     });
 
     // Get tier upgrade breakdown by target tier
-    let tierBreakdown;
+    let queryText3 = `
+      SELECT
+        event_data->>'new_tier' as tier,
+        COUNT(*) as count
+      FROM analytics_events
+    `;
+
+    const conditions3 = [
+      `event_name = 'tier_change'`,
+      `event_data->>'action' = 'upgrade'`,
+      `created_at >= $1`,
+      `created_at < $2`
+    ];
+    const params3 = [startDate, endDate];
+
     if (excludeInternal) {
-      tierBreakdown = await sql`
-        SELECT
-          event_data->>'new_tier' as tier,
-          COUNT(*) as count
-        FROM analytics_events
-        WHERE event_name = 'tier_change'
-          AND event_data->>'action' = 'upgrade'
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
-          AND is_internal = FALSE
-        GROUP BY event_data->>'new_tier'
-      `;
-    } else {
-      tierBreakdown = await sql`
-        SELECT
-          event_data->>'new_tier' as tier,
-          COUNT(*) as count
-        FROM analytics_events
-        WHERE event_name = 'tier_change'
-          AND event_data->>'action' = 'upgrade'
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
-        GROUP BY event_data->>'new_tier'
-      `;
+      conditions3.push(`is_internal = FALSE`);
     }
+
+    if (excludeAnonymous) {
+      conditions3.push(`user_id IS NOT NULL`);
+    }
+
+    queryText3 += ' WHERE ' + conditions3.join(' AND ');
+    queryText3 += ` GROUP BY event_data->>'new_tier'`;
+
+    const tierBreakdown = await sql.query(queryText3, params3);
 
     return {
       signups: metrics.signup?.count || 0,
@@ -978,339 +964,290 @@ export const analyticsService = {
    * @param {string} [options.model] - Filter by LLM model (optional, e.g., 'claude', 'openai', 'all')
    * @returns {Promise<Object>} Usage patterns
    */
-  async getUsagePatterns({ startDate, endDate, excludeInternal = true, model = 'all' }) {
+  async getUsagePatterns({ startDate, endDate, excludeInternal = true, excludeAnonymous = false, model = 'all' }) {
     // Get doc type breakdown (successful and failed generations)
-    let docTypes;
+    let queryText = `
+      SELECT
+        event_data->>'doc_type' as doc_type,
+        COUNT(CASE WHEN event_data->>'success' = 'true' THEN 1 END) as successful,
+        COUNT(CASE WHEN event_data->>'success' = 'false' THEN 1 END) as failed,
+        COUNT(*) as total
+      FROM analytics_events
+    `;
+
+    const conditions = [
+      `event_name = 'doc_generation'`,
+      `event_data->>'doc_type' IS NOT NULL`,
+      `created_at >= $1`,
+      `created_at < $2`
+    ];
+    const params = [startDate, endDate];
+
     if (excludeInternal) {
-      docTypes = await sql`
-        SELECT
-          event_data->>'doc_type' as doc_type,
-          COUNT(CASE WHEN event_data->>'success' = 'true' THEN 1 END) as successful,
-          COUNT(CASE WHEN event_data->>'success' = 'false' THEN 1 END) as failed,
-          COUNT(*) as total
-        FROM analytics_events
-        WHERE event_name = 'doc_generation'
-          AND event_data->>'doc_type' IS NOT NULL
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
-          AND is_internal = FALSE
-        GROUP BY event_data->>'doc_type'
-        ORDER BY total DESC
-      `;
-    } else {
-      docTypes = await sql`
-        SELECT
-          event_data->>'doc_type' as doc_type,
-          COUNT(CASE WHEN event_data->>'success' = 'true' THEN 1 END) as successful,
-          COUNT(CASE WHEN event_data->>'success' = 'false' THEN 1 END) as failed,
-          COUNT(*) as total
-        FROM analytics_events
-        WHERE event_name = 'doc_generation'
-          AND event_data->>'doc_type' IS NOT NULL
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
-        GROUP BY event_data->>'doc_type'
-        ORDER BY total DESC
-      `;
+      conditions.push(`is_internal = FALSE`);
     }
 
-    // Get quality score distribution
-    let qualityScores;
-    if (excludeInternal) {
-      qualityScores = await sql`
-        SELECT
-          CASE
-            WHEN (event_data->>'score')::integer >= 90 THEN '90-100'
-            WHEN (event_data->>'score')::integer >= 80 THEN '80-89'
-            WHEN (event_data->>'score')::integer >= 70 THEN '70-79'
-            WHEN (event_data->>'score')::integer >= 60 THEN '60-69'
-            ELSE '0-59'
-          END as score_range,
-          COUNT(*) as count
-        FROM analytics_events
-        WHERE event_name = 'quality_score'
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
-          AND is_internal = FALSE
-        GROUP BY score_range
-        ORDER BY score_range DESC
-      `;
-    } else {
-      qualityScores = await sql`
-        SELECT
-          CASE
-            WHEN (event_data->>'score')::integer >= 90 THEN '90-100'
-            WHEN (event_data->>'score')::integer >= 80 THEN '80-89'
-            WHEN (event_data->>'score')::integer >= 70 THEN '70-79'
-            WHEN (event_data->>'score')::integer >= 60 THEN '60-69'
-            ELSE '0-59'
-          END as score_range,
-          COUNT(*) as count
-        FROM analytics_events
-        WHERE event_name = 'quality_score'
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
-        GROUP BY score_range
-        ORDER BY score_range DESC
-      `;
+    if (excludeAnonymous) {
+      conditions.push(`user_id IS NOT NULL`);
     }
+
+    queryText += ' WHERE ' + conditions.join(' AND ');
+    queryText += ` GROUP BY event_data->>'doc_type' ORDER BY total DESC`;
+
+    const docTypes = await sql.query(queryText, params);
+
+    // Get quality score distribution
+    let queryText2 = `
+      SELECT
+        CASE
+          WHEN (event_data->>'score')::integer >= 90 THEN '90-100'
+          WHEN (event_data->>'score')::integer >= 80 THEN '80-89'
+          WHEN (event_data->>'score')::integer >= 70 THEN '70-79'
+          WHEN (event_data->>'score')::integer >= 60 THEN '60-69'
+          ELSE '0-59'
+        END as score_range,
+        COUNT(*) as count
+      FROM analytics_events
+    `;
+
+    const conditions2 = [
+      `event_name = 'quality_score'`,
+      `created_at >= $1`,
+      `created_at < $2`
+    ];
+    const params2 = [startDate, endDate];
+
+    if (excludeInternal) {
+      conditions2.push(`is_internal = FALSE`);
+    }
+
+    if (excludeAnonymous) {
+      conditions2.push(`user_id IS NOT NULL`);
+    }
+
+    queryText2 += ' WHERE ' + conditions2.join(' AND ');
+    queryText2 += ' GROUP BY score_range ORDER BY score_range DESC';
+
+    const qualityScores = await sql.query(queryText2, params2);
 
     // Get quality scores by doc type (heatmap data)
     let qualityScoresByDocType;
 
-    // Need separate queries based on model filter and excludeInternal
+    // Need separate queries based on model filter
     if (model && model !== 'all') {
       // Filter by specific model
+      let queryText3 = `
+        SELECT
+          qs.doc_type,
+          qs.score_range,
+          COUNT(*) as count
+        FROM (
+          SELECT
+            event_data->>'doc_type' as doc_type,
+            CASE
+              WHEN (event_data->>'score')::integer >= 90 THEN '90-100'
+              WHEN (event_data->>'score')::integer >= 80 THEN '80-89'
+              WHEN (event_data->>'score')::integer >= 70 THEN '70-79'
+              WHEN (event_data->>'score')::integer >= 60 THEN '60-69'
+              ELSE '0-59'
+            END as score_range
+          FROM analytics_events
+      `;
+
+      const conditions3 = [
+        `event_name = 'quality_score'`,
+        `created_at >= $1`,
+        `created_at < $2`,
+        `event_data->'llm'->>'provider' = $3`
+      ];
+      const params3 = [startDate, endDate, model];
+
       if (excludeInternal) {
-        qualityScoresByDocType = await sql`
-          SELECT
-            qs.doc_type,
-            qs.score_range,
-            COUNT(*) as count
-          FROM (
-            SELECT
-              event_data->>'doc_type' as doc_type,
-              CASE
-                WHEN (event_data->>'score')::integer >= 90 THEN '90-100'
-                WHEN (event_data->>'score')::integer >= 80 THEN '80-89'
-                WHEN (event_data->>'score')::integer >= 70 THEN '70-79'
-                WHEN (event_data->>'score')::integer >= 60 THEN '60-69'
-                ELSE '0-59'
-              END as score_range
-            FROM analytics_events
-            WHERE event_name = 'quality_score'
-              AND created_at >= ${startDate}
-              AND created_at < ${endDate}
-              AND is_internal = FALSE
-              AND event_data->'llm'->>'provider' = ${model}
-          ) qs
-          GROUP BY qs.doc_type, qs.score_range
-          ORDER BY qs.doc_type, qs.score_range DESC
-        `;
-      } else {
-        qualityScoresByDocType = await sql`
-          SELECT
-            qs.doc_type,
-            qs.score_range,
-            COUNT(*) as count
-          FROM (
-            SELECT
-              event_data->>'doc_type' as doc_type,
-              CASE
-                WHEN (event_data->>'score')::integer >= 90 THEN '90-100'
-                WHEN (event_data->>'score')::integer >= 80 THEN '80-89'
-                WHEN (event_data->>'score')::integer >= 70 THEN '70-79'
-                WHEN (event_data->>'score')::integer >= 60 THEN '60-69'
-                ELSE '0-59'
-              END as score_range
-            FROM analytics_events
-            WHERE event_name = 'quality_score'
-              AND created_at >= ${startDate}
-              AND created_at < ${endDate}
-              AND event_data->'llm'->>'provider' = ${model}
-          ) qs
-          GROUP BY qs.doc_type, qs.score_range
-          ORDER BY qs.doc_type, qs.score_range DESC
-        `;
+        conditions3.push(`is_internal = FALSE`);
       }
+
+      if (excludeAnonymous) {
+        conditions3.push(`user_id IS NOT NULL`);
+      }
+
+      queryText3 += ' WHERE ' + conditions3.join(' AND ');
+      queryText3 += `) qs
+        GROUP BY qs.doc_type, qs.score_range
+        ORDER BY qs.doc_type, qs.score_range DESC
+      `;
+
+      qualityScoresByDocType = await sql.query(queryText3, params3);
     } else {
       // All models
+      let queryText3 = `
+        SELECT
+          qs.doc_type,
+          qs.score_range,
+          COUNT(*) as count
+        FROM (
+          SELECT
+            event_data->>'doc_type' as doc_type,
+            CASE
+              WHEN (event_data->>'score')::integer >= 90 THEN '90-100'
+              WHEN (event_data->>'score')::integer >= 80 THEN '80-89'
+              WHEN (event_data->>'score')::integer >= 70 THEN '70-79'
+              WHEN (event_data->>'score')::integer >= 60 THEN '60-69'
+              ELSE '0-59'
+            END as score_range
+          FROM analytics_events
+      `;
+
+      const conditions3 = [
+        `event_name = 'quality_score'`,
+        `created_at >= $1`,
+        `created_at < $2`
+      ];
+      const params3 = [startDate, endDate];
+
       if (excludeInternal) {
-        qualityScoresByDocType = await sql`
-          SELECT
-            qs.doc_type,
-            qs.score_range,
-            COUNT(*) as count
-          FROM (
-            SELECT
-              event_data->>'doc_type' as doc_type,
-              CASE
-                WHEN (event_data->>'score')::integer >= 90 THEN '90-100'
-                WHEN (event_data->>'score')::integer >= 80 THEN '80-89'
-                WHEN (event_data->>'score')::integer >= 70 THEN '70-79'
-                WHEN (event_data->>'score')::integer >= 60 THEN '60-69'
-                ELSE '0-59'
-              END as score_range
-            FROM analytics_events
-            WHERE event_name = 'quality_score'
-              AND created_at >= ${startDate}
-              AND created_at < ${endDate}
-              AND is_internal = FALSE
-          ) qs
-          GROUP BY qs.doc_type, qs.score_range
-          ORDER BY qs.doc_type, qs.score_range DESC
-        `;
-      } else {
-        qualityScoresByDocType = await sql`
-          SELECT
-            qs.doc_type,
-            qs.score_range,
-            COUNT(*) as count
-          FROM (
-            SELECT
-              event_data->>'doc_type' as doc_type,
-              CASE
-                WHEN (event_data->>'score')::integer >= 90 THEN '90-100'
-                WHEN (event_data->>'score')::integer >= 80 THEN '80-89'
-                WHEN (event_data->>'score')::integer >= 70 THEN '70-79'
-                WHEN (event_data->>'score')::integer >= 60 THEN '60-69'
-                ELSE '0-59'
-              END as score_range
-            FROM analytics_events
-            WHERE event_name = 'quality_score'
-              AND created_at >= ${startDate}
-              AND created_at < ${endDate}
-          ) qs
-          GROUP BY qs.doc_type, qs.score_range
-          ORDER BY qs.doc_type, qs.score_range DESC
-        `;
+        conditions3.push(`is_internal = FALSE`);
       }
+
+      if (excludeAnonymous) {
+        conditions3.push(`user_id IS NOT NULL`);
+      }
+
+      queryText3 += ' WHERE ' + conditions3.join(' AND ');
+      queryText3 += `) qs
+        GROUP BY qs.doc_type, qs.score_range
+        ORDER BY qs.doc_type, qs.score_range DESC
+      `;
+
+      qualityScoresByDocType = await sql.query(queryText3, params3);
     }
 
     // Get batch vs single generation (only successful generations)
-    let batchVsSingle;
+    let queryText4 = `
+      SELECT
+        CASE WHEN event_name = 'batch_generation' THEN 'batch' ELSE 'single' END as type,
+        COUNT(*) as count
+      FROM analytics_events
+    `;
+
+    const conditions4 = [
+      `event_name IN ('doc_generation', 'batch_generation')`,
+      `event_data->>'success' = 'true'`,
+      `created_at >= $1`,
+      `created_at < $2`
+    ];
+    const params4 = [startDate, endDate];
+
     if (excludeInternal) {
-      batchVsSingle = await sql`
-        SELECT
-          CASE WHEN event_name = 'batch_generation' THEN 'batch' ELSE 'single' END as type,
-          COUNT(*) as count
-        FROM analytics_events
-        WHERE event_name IN ('doc_generation', 'batch_generation')
-          AND event_data->>'success' = 'true'
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
-          AND is_internal = FALSE
-        GROUP BY type
-      `;
-    } else {
-      batchVsSingle = await sql`
-        SELECT
-          CASE WHEN event_name = 'batch_generation' THEN 'batch' ELSE 'single' END as type,
-          COUNT(*) as count
-        FROM analytics_events
-        WHERE event_name IN ('doc_generation', 'batch_generation')
-          AND event_data->>'success' = 'true'
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
-        GROUP BY type
-      `;
+      conditions4.push(`is_internal = FALSE`);
     }
+
+    if (excludeAnonymous) {
+      conditions4.push(`user_id IS NOT NULL`);
+    }
+
+    queryText4 += ' WHERE ' + conditions4.join(' AND ');
+    queryText4 += ' GROUP BY type';
+
+    const batchVsSingle = await sql.query(queryText4, params4);
 
     // Get language breakdown (successful and failed generations)
     // Language is nested under code_input for better organization
-    let languages;
+    let queryText5 = `
+      SELECT
+        event_data->'code_input'->>'language' as language,
+        COUNT(CASE WHEN event_data->>'success' = 'true' THEN 1 END) as successful,
+        COUNT(CASE WHEN event_data->>'success' = 'false' THEN 1 END) as failed,
+        COUNT(*) as total
+      FROM analytics_events
+    `;
+
+    const conditions5 = [
+      `event_name = 'doc_generation'`,
+      `event_data->'code_input'->>'language' IS NOT NULL`,
+      `created_at >= $1`,
+      `created_at < $2`
+    ];
+    const params5 = [startDate, endDate];
+
     if (excludeInternal) {
-      languages = await sql`
-        SELECT
-          event_data->'code_input'->>'language' as language,
-          COUNT(CASE WHEN event_data->>'success' = 'true' THEN 1 END) as successful,
-          COUNT(CASE WHEN event_data->>'success' = 'false' THEN 1 END) as failed,
-          COUNT(*) as total
-        FROM analytics_events
-        WHERE event_name = 'doc_generation'
-          AND event_data->'code_input'->>'language' IS NOT NULL
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
-          AND is_internal = FALSE
-        GROUP BY event_data->'code_input'->>'language'
-        ORDER BY total DESC
-        LIMIT 10
-      `;
-    } else {
-      languages = await sql`
-        SELECT
-          event_data->'code_input'->>'language' as language,
-          COUNT(CASE WHEN event_data->>'success' = 'true' THEN 1 END) as successful,
-          COUNT(CASE WHEN event_data->>'success' = 'false' THEN 1 END) as failed,
-          COUNT(*) as total
-        FROM analytics_events
-        WHERE event_name = 'doc_generation'
-          AND event_data->'code_input'->>'language' IS NOT NULL
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
-        GROUP BY event_data->'code_input'->>'language'
-        ORDER BY total DESC
-        LIMIT 10
-      `;
+      conditions5.push(`is_internal = FALSE`);
     }
+
+    if (excludeAnonymous) {
+      conditions5.push(`user_id IS NOT NULL`);
+    }
+
+    queryText5 += ' WHERE ' + conditions5.join(' AND ');
+    queryText5 += ` GROUP BY event_data->'code_input'->>'language' ORDER BY total DESC LIMIT 10`;
+
+    const languages = await sql.query(queryText5, params5);
 
     // Get code input method breakdown (ALL code_input events, not just successful generations)
     // This shows user behavior and product-market fit: where are users trying to get code from?
     // GitHub origins are split into private vs public based on repo.is_private flag
-    let codeInputMethods;
+    let queryText6 = `
+      SELECT
+        CASE
+          WHEN event_data->>'origin' = 'github'
+            AND (event_data->'repo'->>'is_private')::boolean = true
+          THEN 'github_private'
+          WHEN event_data->>'origin' = 'github'
+          THEN 'github_public'
+          ELSE event_data->>'origin'
+        END as origin,
+        COUNT(*) as count
+      FROM analytics_events
+    `;
+
+    const conditions6 = [
+      `event_name = 'code_input'`,
+      `event_data->>'origin' IS NOT NULL`,
+      `created_at >= $1`,
+      `created_at < $2`
+    ];
+    const params6 = [startDate, endDate];
+
     if (excludeInternal) {
-      codeInputMethods = await sql`
-        SELECT
-          CASE
-            WHEN event_data->>'origin' = 'github'
-              AND (event_data->'repo'->>'is_private')::boolean = true
-            THEN 'github_private'
-            WHEN event_data->>'origin' = 'github'
-            THEN 'github_public'
-            ELSE event_data->>'origin'
-          END as origin,
-          COUNT(*) as count
-        FROM analytics_events
-        WHERE event_name = 'code_input'
-          AND event_data->>'origin' IS NOT NULL
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
-          AND is_internal = FALSE
-        GROUP BY 1
-        ORDER BY count DESC
-      `;
-    } else {
-      codeInputMethods = await sql`
-        SELECT
-          CASE
-            WHEN event_data->>'origin' = 'github'
-              AND (event_data->'repo'->>'is_private')::boolean = true
-            THEN 'github_private'
-            WHEN event_data->>'origin' = 'github'
-            THEN 'github_public'
-            ELSE event_data->>'origin'
-          END as origin,
-          COUNT(*) as count
-        FROM analytics_events
-        WHERE event_name = 'code_input'
-          AND event_data->>'origin' IS NOT NULL
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
-        GROUP BY 1
-        ORDER BY count DESC
-      `;
+      conditions6.push(`is_internal = FALSE`);
     }
 
-    // Get export source breakdown (fresh vs cached)
-    let exportSources;
-    if (excludeInternal) {
-      exportSources = await sql`
-        SELECT
-          event_data->>'source' as source,
-          COUNT(*) as count
-        FROM analytics_events
-        WHERE event_name = 'doc_export'
-          AND event_data->>'source' IS NOT NULL
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
-          AND is_internal = FALSE
-        GROUP BY event_data->>'source'
-        ORDER BY count DESC
-      `;
-    } else {
-      exportSources = await sql`
-        SELECT
-          event_data->>'source' as source,
-          COUNT(*) as count
-        FROM analytics_events
-        WHERE event_name = 'doc_export'
-          AND event_data->>'source' IS NOT NULL
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
-        GROUP BY event_data->>'source'
-        ORDER BY count DESC
-      `;
+    if (excludeAnonymous) {
+      conditions6.push(`user_id IS NOT NULL`);
     }
+
+    queryText6 += ' WHERE ' + conditions6.join(' AND ');
+    queryText6 += ' GROUP BY 1 ORDER BY count DESC';
+
+    const codeInputMethods = await sql.query(queryText6, params6);
+
+    // Get export source breakdown (fresh vs cached)
+    let queryText7 = `
+      SELECT
+        event_data->>'source' as source,
+        COUNT(*) as count
+      FROM analytics_events
+    `;
+
+    const conditions7 = [
+      `event_name = 'doc_export'`,
+      `event_data->>'source' IS NOT NULL`,
+      `created_at >= $1`,
+      `created_at < $2`
+    ];
+    const params7 = [startDate, endDate];
+
+    if (excludeInternal) {
+      conditions7.push(`is_internal = FALSE`);
+    }
+
+    if (excludeAnonymous) {
+      conditions7.push(`user_id IS NOT NULL`);
+    }
+
+    queryText7 += ' WHERE ' + conditions7.join(' AND ');
+    queryText7 += ` GROUP BY event_data->>'source' ORDER BY count DESC`;
+
+    const exportSources = await sql.query(queryText7, params7);
 
     return {
       docTypes: docTypes.rows.map((r) => {
@@ -1368,7 +1305,7 @@ export const analyticsService = {
    * @param {boolean} [options.excludeInternal=true] - Exclude admin/override users
    * @returns {Promise<Array>} Time series data points
    */
-  async getTimeSeries({ metric, interval, startDate, endDate, excludeInternal = true }) {
+  async getTimeSeries({ metric, interval, startDate, endDate, excludeInternal = true, excludeAnonymous = false }) {
     // Map interval to PostgreSQL date_trunc
     const intervalMap = {
       day: 'day',
@@ -1377,128 +1314,130 @@ export const analyticsService = {
     };
     const truncInterval = intervalMap[interval] || 'day';
 
-    // Build query based on metric - use separate queries based on excludeInternal
-    // to avoid SQL fragment interpolation issues with @vercel/postgres
+    // Build query based on metric
     let result;
     switch (metric) {
-      case 'sessions':
-        if (excludeInternal) {
-          result = await sql`
-            SELECT
-              DATE_TRUNC(${truncInterval}, created_at) as date,
-              COUNT(DISTINCT session_id) as value
-            FROM analytics_events
-            WHERE event_name = 'session_start'
-              AND created_at >= ${startDate}
-              AND created_at < ${endDate}
-              AND is_internal = FALSE
-            GROUP BY 1
-            ORDER BY date
-          `;
-        } else {
-          result = await sql`
-            SELECT
-              DATE_TRUNC(${truncInterval}, created_at) as date,
-              COUNT(DISTINCT session_id) as value
-            FROM analytics_events
-            WHERE event_name = 'session_start'
-              AND created_at >= ${startDate}
-              AND created_at < ${endDate}
-            GROUP BY 1
-            ORDER BY date
-          `;
-        }
-        break;
+      case 'sessions': {
+        let queryText = `
+          SELECT
+            DATE_TRUNC('${truncInterval}', created_at) as date,
+            COUNT(DISTINCT session_id) as value
+          FROM analytics_events
+        `;
 
-      case 'generations':
+        const conditions = [
+          `event_name = 'session_start'`,
+          `created_at >= $1`,
+          `created_at < $2`
+        ];
+        const params = [startDate, endDate];
+
+        if (excludeInternal) {
+          conditions.push(`is_internal = FALSE`);
+        }
+
+        if (excludeAnonymous) {
+          conditions.push(`user_id IS NOT NULL`);
+        }
+
+        queryText += ' WHERE ' + conditions.join(' AND ');
+        queryText += ' GROUP BY 1 ORDER BY date';
+
+        result = await sql.query(queryText, params);
+        break;
+      }
+
+      case 'generations': {
         // Only count successful generations
-        if (excludeInternal) {
-          result = await sql`
-            SELECT
-              DATE_TRUNC(${truncInterval}, created_at) as date,
-              COUNT(*) as value
-            FROM analytics_events
-            WHERE event_name IN ('doc_generation', 'batch_generation')
-              AND event_data->>'success' = 'true'
-              AND created_at >= ${startDate}
-              AND created_at < ${endDate}
-              AND is_internal = FALSE
-            GROUP BY 1
-            ORDER BY date
-          `;
-        } else {
-          result = await sql`
-            SELECT
-              DATE_TRUNC(${truncInterval}, created_at) as date,
-              COUNT(*) as value
-            FROM analytics_events
-            WHERE event_name IN ('doc_generation', 'batch_generation')
-              AND event_data->>'success' = 'true'
-              AND created_at >= ${startDate}
-              AND created_at < ${endDate}
-            GROUP BY 1
-            ORDER BY date
-          `;
-        }
-        break;
+        let queryText = `
+          SELECT
+            DATE_TRUNC('${truncInterval}', created_at) as date,
+            COUNT(*) as value
+          FROM analytics_events
+        `;
 
-      case 'signups':
-        if (excludeInternal) {
-          result = await sql`
-            SELECT
-              DATE_TRUNC(${truncInterval}, created_at) as date,
-              COUNT(*) as value
-            FROM analytics_events
-            WHERE event_name = 'signup'
-              AND created_at >= ${startDate}
-              AND created_at < ${endDate}
-              AND is_internal = FALSE
-            GROUP BY 1
-            ORDER BY date
-          `;
-        } else {
-          result = await sql`
-            SELECT
-              DATE_TRUNC(${truncInterval}, created_at) as date,
-              COUNT(*) as value
-            FROM analytics_events
-            WHERE event_name = 'signup'
-              AND created_at >= ${startDate}
-              AND created_at < ${endDate}
-            GROUP BY 1
-            ORDER BY date
-          `;
-        }
-        break;
+        const conditions = [
+          `event_name IN ('doc_generation', 'batch_generation')`,
+          `event_data->>'success' = 'true'`,
+          `created_at >= $1`,
+          `created_at < $2`
+        ];
+        const params = [startDate, endDate];
 
-      case 'revenue':
         if (excludeInternal) {
-          result = await sql`
-            SELECT
-              DATE_TRUNC(${truncInterval}, created_at) as date,
-              SUM((event_data->>'amount_cents')::integer) as value
-            FROM analytics_events
-            WHERE event_name = 'checkout_completed'
-              AND created_at >= ${startDate}
-              AND created_at < ${endDate}
-              AND is_internal = FALSE
-            GROUP BY 1
-            ORDER BY date
-          `;
-        } else {
-          result = await sql`
-            SELECT
-              DATE_TRUNC(${truncInterval}, created_at) as date,
-              SUM((event_data->>'amount_cents')::integer) as value
-            FROM analytics_events
-            WHERE event_name = 'checkout_completed'
-              AND created_at >= ${startDate}
-              AND created_at < ${endDate}
-            GROUP BY 1
-            ORDER BY date
-          `;
+          conditions.push(`is_internal = FALSE`);
         }
+
+        if (excludeAnonymous) {
+          conditions.push(`user_id IS NOT NULL`);
+        }
+
+        queryText += ' WHERE ' + conditions.join(' AND ');
+        queryText += ' GROUP BY 1 ORDER BY date';
+
+        result = await sql.query(queryText, params);
         break;
+      }
+
+      case 'signups': {
+        let queryText = `
+          SELECT
+            DATE_TRUNC('${truncInterval}', created_at) as date,
+            COUNT(*) as value
+          FROM analytics_events
+        `;
+
+        const conditions = [
+          `event_name = 'signup'`,
+          `created_at >= $1`,
+          `created_at < $2`
+        ];
+        const params = [startDate, endDate];
+
+        if (excludeInternal) {
+          conditions.push(`is_internal = FALSE`);
+        }
+
+        if (excludeAnonymous) {
+          conditions.push(`user_id IS NOT NULL`);
+        }
+
+        queryText += ' WHERE ' + conditions.join(' AND ');
+        queryText += ' GROUP BY 1 ORDER BY date';
+
+        result = await sql.query(queryText, params);
+        break;
+      }
+
+      case 'revenue': {
+        let queryText = `
+          SELECT
+            DATE_TRUNC('${truncInterval}', created_at) as date,
+            SUM((event_data->>'amount_cents')::integer) as value
+          FROM analytics_events
+        `;
+
+        const conditions = [
+          `event_name = 'checkout_completed'`,
+          `created_at >= $1`,
+          `created_at < $2`
+        ];
+        const params = [startDate, endDate];
+
+        if (excludeInternal) {
+          conditions.push(`is_internal = FALSE`);
+        }
+
+        if (excludeAnonymous) {
+          conditions.push(`user_id IS NOT NULL`);
+        }
+
+        queryText += ' WHERE ' + conditions.join(' AND ');
+        queryText += ' GROUP BY 1 ORDER BY date';
+
+        result = await sql.query(queryText, params);
+        break;
+      }
 
       // ========================================================================
       // PERFORMANCE METRICS (from generated_documents table)
@@ -1622,69 +1561,69 @@ export const analyticsService = {
       // LATENCY BREAKDOWN METRICS (from analytics_events - client-side captured)
       // ========================================================================
 
-      case 'ttft':
+      case 'ttft': {
         // Time to First Token per interval from analytics_events
-        if (excludeInternal) {
-          result = await sql`
-            SELECT
-              DATE_TRUNC(${truncInterval}, created_at) as date,
-              ROUND(AVG((event_data->'latency'->>'ttft_ms')::numeric)) as value
-            FROM analytics_events
-            WHERE event_name = 'performance'
-              AND created_at >= ${startDate}
-              AND created_at < ${endDate}
-              AND is_internal = FALSE
-              AND event_data->'latency'->>'ttft_ms' IS NOT NULL
-            GROUP BY 1
-            ORDER BY date
-          `;
-        } else {
-          result = await sql`
-            SELECT
-              DATE_TRUNC(${truncInterval}, created_at) as date,
-              ROUND(AVG((event_data->'latency'->>'ttft_ms')::numeric)) as value
-            FROM analytics_events
-            WHERE event_name = 'performance'
-              AND created_at >= ${startDate}
-              AND created_at < ${endDate}
-              AND event_data->'latency'->>'ttft_ms' IS NOT NULL
-            GROUP BY 1
-            ORDER BY date
-          `;
-        }
-        break;
+        let queryText = `
+          SELECT
+            DATE_TRUNC('${truncInterval}', created_at) as date,
+            ROUND(AVG((event_data->'latency'->>'ttft_ms')::numeric)) as value
+          FROM analytics_events
+        `;
 
-      case 'streaming_time':
-        // Streaming time per interval from analytics_events
+        const conditions = [
+          `event_name = 'performance'`,
+          `created_at >= $1`,
+          `created_at < $2`,
+          `event_data->'latency'->>'ttft_ms' IS NOT NULL`
+        ];
+        const params = [startDate, endDate];
+
         if (excludeInternal) {
-          result = await sql`
-            SELECT
-              DATE_TRUNC(${truncInterval}, created_at) as date,
-              ROUND(AVG((event_data->'latency'->>'streaming_ms')::numeric)) as value
-            FROM analytics_events
-            WHERE event_name = 'performance'
-              AND created_at >= ${startDate}
-              AND created_at < ${endDate}
-              AND is_internal = FALSE
-              AND event_data->'latency'->>'streaming_ms' IS NOT NULL
-            GROUP BY 1
-            ORDER BY date
-          `;
-        } else {
-          result = await sql`
-            SELECT
-              DATE_TRUNC(${truncInterval}, created_at) as date,
-              ROUND(AVG((event_data->'latency'->>'streaming_ms')::numeric)) as value
-            FROM analytics_events
-            WHERE event_name = 'performance'
-              AND created_at >= ${startDate}
-              AND created_at < ${endDate}
-              AND event_data->'latency'->>'streaming_ms' IS NOT NULL
-            GROUP BY 1
-            ORDER BY date
-          `;
+          conditions.push(`is_internal = FALSE`);
         }
+
+        if (excludeAnonymous) {
+          conditions.push(`user_id IS NOT NULL`);
+        }
+
+        queryText += ' WHERE ' + conditions.join(' AND ');
+        queryText += ' GROUP BY 1 ORDER BY date';
+
+        result = await sql.query(queryText, params);
         break;
+      }
+
+      case 'streaming_time': {
+        // Streaming time per interval from analytics_events
+        let queryText = `
+          SELECT
+            DATE_TRUNC('${truncInterval}', created_at) as date,
+            ROUND(AVG((event_data->'latency'->>'streaming_ms')::numeric)) as value
+          FROM analytics_events
+        `;
+
+        const conditions = [
+          `event_name = 'performance'`,
+          `created_at >= $1`,
+          `created_at < $2`,
+          `event_data->'latency'->>'streaming_ms' IS NOT NULL`
+        ];
+        const params = [startDate, endDate];
+
+        if (excludeInternal) {
+          conditions.push(`is_internal = FALSE`);
+        }
+
+        if (excludeAnonymous) {
+          conditions.push(`user_id IS NOT NULL`);
+        }
+
+        queryText += ' WHERE ' + conditions.join(' AND ');
+        queryText += ' GROUP BY 1 ORDER BY date';
+
+        result = await sql.query(queryText, params);
+        break;
+      }
 
       default:
         throw new Error(`Invalid metric: ${metric}`);
@@ -1716,7 +1655,7 @@ export const analyticsService = {
    * @param {number} [options.limit=50] - Events per page
    * @returns {Promise<Object>} { events: Array, total: number, page: number, totalPages: number }
    */
-  async getEvents({ startDate, endDate, category, eventNames, eventActions, excludeInternal = false, userEmail, page = 1, limit = 50, sortBy = 'createdAt', sortOrder = 'desc' }) {
+  async getEvents({ startDate, endDate, category, eventNames, eventActions, excludeInternal = false, excludeAnonymous = false, userEmail, page = 1, limit = 50, sortBy = 'createdAt', sortOrder = 'desc' }) {
     const offset = (page - 1) * limit;
     const hasEventNames = eventNames && eventNames.length > 0;
     const hasEventActions = eventActions && Object.keys(eventActions).length > 0;
@@ -1734,345 +1673,63 @@ export const analyticsService = {
     const dbColumn = columnMap[sortBy] || 'ae.created_at';
     const order = sortOrder.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 
-    // Build email filter parameter for template literals
-    const emailFilterParam = hasUserEmail ? `%${userEmail}%` : null;
+    // Build WHERE conditions dynamically
+    const conditions = [
+      'ae.created_at >= $1',
+      'ae.created_at < $2'
+    ];
+    const params = [startDate, endDate];
+    let paramIndex = 3;
 
-    // Build WHERE conditions based on filters
-    // We need separate queries for each filter combination due to @vercel/postgres limitations
-    // Join with users table to get email for authenticated events
-    let events;
-    let countResult;
-
-    if (category && hasEventNames && excludeInternal) {
-      // Use template literal with dynamic ORDER BY
-      events = hasUserEmail
-        ? await sql`
-          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id, ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
-          FROM analytics_events ae
-          LEFT JOIN users u ON ae.user_id = u.id
-          WHERE ae.created_at >= ${startDate}
-            AND ae.created_at < ${endDate}
-            AND ae.event_category = ${category}
-            AND ae.event_name = ANY(${eventNames})
-            AND ae.is_internal = FALSE
-            AND u.email ILIKE ${emailFilterParam}
-          LIMIT ${limit} OFFSET ${offset}
-        `
-        : await sql`
-          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id, ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
-          FROM analytics_events ae
-          LEFT JOIN users u ON ae.user_id = u.id
-          WHERE ae.created_at >= ${startDate}
-            AND ae.created_at < ${endDate}
-            AND ae.event_category = ${category}
-            AND ae.event_name = ANY(${eventNames})
-            AND ae.is_internal = FALSE
-          LIMIT ${limit} OFFSET ${offset}
-        `;
-
-      countResult = hasUserEmail
-        ? await sql`
-          SELECT COUNT(*) as total
-          FROM analytics_events ae
-          LEFT JOIN users u ON ae.user_id = u.id
-          WHERE ae.created_at >= ${startDate}
-            AND ae.created_at < ${endDate}
-            AND ae.event_category = ${category}
-            AND ae.event_name = ANY(${eventNames})
-            AND ae.is_internal = FALSE
-            AND u.email ILIKE ${emailFilterParam}
-        `
-        : await sql`
-          SELECT COUNT(*) as total
-          FROM analytics_events
-          WHERE created_at >= ${startDate}
-            AND created_at < ${endDate}
-            AND event_category = ${category}
-            AND event_name = ANY(${eventNames})
-            AND is_internal = FALSE
-        `;
-    } else if (category && hasEventNames) {
-      events = hasUserEmail
-        ? await sql`
-          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id, ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
-          FROM analytics_events ae
-          LEFT JOIN users u ON ae.user_id = u.id
-          WHERE ae.created_at >= ${startDate}
-            AND ae.created_at < ${endDate}
-            AND ae.event_category = ${category}
-            AND ae.event_name = ANY(${eventNames})
-            AND u.email ILIKE ${emailFilterParam}
-          LIMIT ${limit} OFFSET ${offset}
-        `
-        : await sql`
-          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id, ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
-          FROM analytics_events ae
-          LEFT JOIN users u ON ae.user_id = u.id
-          WHERE ae.created_at >= ${startDate}
-            AND ae.created_at < ${endDate}
-            AND ae.event_category = ${category}
-            AND ae.event_name = ANY(${eventNames})
-          LIMIT ${limit} OFFSET ${offset}
-        `;
-
-      countResult = hasUserEmail
-        ? await sql`
-          SELECT COUNT(*) as total
-          FROM analytics_events ae
-          LEFT JOIN users u ON ae.user_id = u.id
-          WHERE ae.created_at >= ${startDate}
-            AND ae.created_at < ${endDate}
-            AND ae.event_category = ${category}
-            AND ae.event_name = ANY(${eventNames})
-            AND u.email ILIKE ${emailFilterParam}
-        `
-        : await sql`
-          SELECT COUNT(*) as total
-          FROM analytics_events
-          WHERE created_at >= ${startDate}
-            AND created_at < ${endDate}
-            AND event_category = ${category}
-            AND event_name = ANY(${eventNames})
-        `;
-    } else if (category && excludeInternal) {
-      events = hasUserEmail
-        ? await sql`
-          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id, ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
-          FROM analytics_events ae
-          LEFT JOIN users u ON ae.user_id = u.id
-          WHERE ae.created_at >= ${startDate}
-            AND ae.created_at < ${endDate}
-            AND ae.event_category = ${category}
-            AND ae.is_internal = FALSE
-            AND u.email ILIKE ${emailFilterParam}
-          LIMIT ${limit} OFFSET ${offset}
-        `
-        : await sql`
-          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id, ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
-          FROM analytics_events ae
-          LEFT JOIN users u ON ae.user_id = u.id
-          WHERE ae.created_at >= ${startDate}
-            AND ae.created_at < ${endDate}
-            AND ae.event_category = ${category}
-            AND ae.is_internal = FALSE
-          LIMIT ${limit} OFFSET ${offset}
-        `;
-
-      countResult = hasUserEmail
-        ? await sql`
-          SELECT COUNT(*) as total
-          FROM analytics_events ae
-          LEFT JOIN users u ON ae.user_id = u.id
-          WHERE ae.created_at >= ${startDate}
-            AND ae.created_at < ${endDate}
-            AND ae.event_category = ${category}
-            AND ae.is_internal = FALSE
-            AND u.email ILIKE ${emailFilterParam}
-        `
-        : await sql`
-          SELECT COUNT(*) as total
-          FROM analytics_events
-          WHERE created_at >= ${startDate}
-            AND created_at < ${endDate}
-            AND event_category = ${category}
-            AND is_internal = FALSE
-        `;
-    } else if (hasEventNames && excludeInternal) {
-      events = hasUserEmail
-        ? await sql`
-          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id, ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
-          FROM analytics_events ae
-          LEFT JOIN users u ON ae.user_id = u.id
-          WHERE ae.created_at >= ${startDate}
-            AND ae.created_at < ${endDate}
-            AND ae.event_name = ANY(${eventNames})
-            AND ae.is_internal = FALSE
-            AND u.email ILIKE ${emailFilterParam}
-          LIMIT ${limit} OFFSET ${offset}
-        `
-        : await sql`
-          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id, ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
-          FROM analytics_events ae
-          LEFT JOIN users u ON ae.user_id = u.id
-          WHERE ae.created_at >= ${startDate}
-            AND ae.created_at < ${endDate}
-            AND ae.event_name = ANY(${eventNames})
-            AND ae.is_internal = FALSE
-          LIMIT ${limit} OFFSET ${offset}
-        `;
-
-      countResult = hasUserEmail
-        ? await sql`
-          SELECT COUNT(*) as total
-          FROM analytics_events ae
-          LEFT JOIN users u ON ae.user_id = u.id
-          WHERE ae.created_at >= ${startDate}
-            AND ae.created_at < ${endDate}
-            AND ae.event_name = ANY(${eventNames})
-            AND ae.is_internal = FALSE
-            AND u.email ILIKE ${emailFilterParam}
-        `
-        : await sql`
-          SELECT COUNT(*) as total
-          FROM analytics_events
-          WHERE created_at >= ${startDate}
-            AND created_at < ${endDate}
-            AND event_name = ANY(${eventNames})
-            AND is_internal = FALSE
-        `;
-    } else if (category) {
-      events = hasUserEmail
-        ? await sql`
-          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id, ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
-          FROM analytics_events ae
-          LEFT JOIN users u ON ae.user_id = u.id
-          WHERE ae.created_at >= ${startDate}
-            AND ae.created_at < ${endDate}
-            AND ae.event_category = ${category}
-            AND u.email ILIKE ${emailFilterParam}
-          LIMIT ${limit} OFFSET ${offset}
-        `
-        : await sql`
-          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id, ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
-          FROM analytics_events ae
-          LEFT JOIN users u ON ae.user_id = u.id
-          WHERE ae.created_at >= ${startDate}
-            AND ae.created_at < ${endDate}
-            AND ae.event_category = ${category}
-          LIMIT ${limit} OFFSET ${offset}
-        `;
-
-      countResult = hasUserEmail
-        ? await sql`
-          SELECT COUNT(*) as total
-          FROM analytics_events ae
-          LEFT JOIN users u ON ae.user_id = u.id
-          WHERE ae.created_at >= ${startDate}
-            AND ae.created_at < ${endDate}
-            AND ae.event_category = ${category}
-            AND u.email ILIKE ${emailFilterParam}
-        `
-        : await sql`
-          SELECT COUNT(*) as total
-          FROM analytics_events
-          WHERE created_at >= ${startDate}
-            AND created_at < ${endDate}
-            AND event_category = ${category}
-        `;
-    } else if (hasEventNames) {
-      events = hasUserEmail
-        ? await sql`
-          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id, ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
-          FROM analytics_events ae
-          LEFT JOIN users u ON ae.user_id = u.id
-          WHERE ae.created_at >= ${startDate}
-            AND ae.created_at < ${endDate}
-            AND ae.event_name = ANY(${eventNames})
-            AND u.email ILIKE ${emailFilterParam}
-          LIMIT ${limit} OFFSET ${offset}
-        `
-        : await sql`
-          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id, ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
-          FROM analytics_events ae
-          LEFT JOIN users u ON ae.user_id = u.id
-          WHERE ae.created_at >= ${startDate}
-            AND ae.created_at < ${endDate}
-            AND ae.event_name = ANY(${eventNames})
-          LIMIT ${limit} OFFSET ${offset}
-        `;
-
-      countResult = hasUserEmail
-        ? await sql`
-          SELECT COUNT(*) as total
-          FROM analytics_events ae
-          LEFT JOIN users u ON ae.user_id = u.id
-          WHERE ae.created_at >= ${startDate}
-            AND ae.created_at < ${endDate}
-            AND ae.event_name = ANY(${eventNames})
-            AND u.email ILIKE ${emailFilterParam}
-        `
-        : await sql`
-          SELECT COUNT(*) as total
-          FROM analytics_events
-          WHERE created_at >= ${startDate}
-            AND created_at < ${endDate}
-            AND event_name = ANY(${eventNames})
-        `;
-    } else if (excludeInternal) {
-      events = hasUserEmail
-        ? await sql`
-          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id, ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
-          FROM analytics_events ae
-          LEFT JOIN users u ON ae.user_id = u.id
-          WHERE ae.created_at >= ${startDate}
-            AND ae.created_at < ${endDate}
-            AND ae.is_internal = FALSE
-            AND u.email ILIKE ${emailFilterParam}
-          LIMIT ${limit} OFFSET ${offset}
-        `
-        : await sql`
-          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id, ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
-          FROM analytics_events ae
-          LEFT JOIN users u ON ae.user_id = u.id
-          WHERE ae.created_at >= ${startDate}
-            AND ae.created_at < ${endDate}
-            AND ae.is_internal = FALSE
-          LIMIT ${limit} OFFSET ${offset}
-        `;
-
-      countResult = hasUserEmail
-        ? await sql`
-          SELECT COUNT(*) as total
-          FROM analytics_events ae
-          LEFT JOIN users u ON ae.user_id = u.id
-          WHERE ae.created_at >= ${startDate}
-            AND ae.created_at < ${endDate}
-            AND ae.is_internal = FALSE
-            AND u.email ILIKE ${emailFilterParam}
-        `
-        : await sql`
-          SELECT COUNT(*) as total
-          FROM analytics_events
-          WHERE created_at >= ${startDate}
-            AND created_at < ${endDate}
-            AND is_internal = FALSE
-        `;
-    } else {
-      events = hasUserEmail
-        ? await sql`
-          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id, ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
-          FROM analytics_events ae
-          LEFT JOIN users u ON ae.user_id = u.id
-          WHERE ae.created_at >= ${startDate}
-            AND ae.created_at < ${endDate}
-            AND u.email ILIKE ${emailFilterParam}
-          LIMIT ${limit} OFFSET ${offset}
-        `
-        : await sql`
-          SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id, ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
-          FROM analytics_events ae
-          LEFT JOIN users u ON ae.user_id = u.id
-          WHERE ae.created_at >= ${startDate}
-            AND ae.created_at < ${endDate}
-          LIMIT ${limit} OFFSET ${offset}
-        `;
-
-      countResult = hasUserEmail
-        ? await sql`
-          SELECT COUNT(*) as total
-          FROM analytics_events ae
-          LEFT JOIN users u ON ae.user_id = u.id
-          WHERE ae.created_at >= ${startDate}
-            AND ae.created_at < ${endDate}
-            AND u.email ILIKE ${emailFilterParam}
-        `
-        : await sql`
-          SELECT COUNT(*) as total
-          FROM analytics_events
-          WHERE created_at >= ${startDate}
-            AND created_at < ${endDate}
-        `;
+    if (excludeInternal) {
+      conditions.push('ae.is_internal = FALSE');
     }
+
+    if (excludeAnonymous) {
+      conditions.push('ae.user_id IS NOT NULL');
+    }
+
+    if (category) {
+      conditions.push(`ae.event_category = $${paramIndex}`);
+      params.push(category);
+      paramIndex++;
+    }
+
+    if (hasEventNames) {
+      conditions.push(`ae.event_name = ANY($${paramIndex})`);
+      params.push(eventNames);
+      paramIndex++;
+    }
+
+    if (hasUserEmail) {
+      conditions.push(`u.email ILIKE $${paramIndex}`);
+      params.push(`%${userEmail}%`);
+      paramIndex++;
+    }
+
+    const whereClause = conditions.join(' AND ');
+
+    // Build SELECT query with dynamic ORDER BY
+    const selectQuery = `
+      SELECT ae.id, ae.event_name, ae.event_category, ae.session_id, ae.user_id, ae.ip_address, ae.event_data, ae.is_internal, ae.created_at, u.email as user_email
+      FROM analytics_events ae
+      LEFT JOIN users u ON ae.user_id = u.id
+      WHERE ${whereClause}
+      ORDER BY ${dbColumn} ${order}
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+    `;
+
+    // Build COUNT query
+    const countQuery = `
+      SELECT COUNT(*) as total
+      FROM analytics_events ae
+      LEFT JOIN users u ON ae.user_id = u.id
+      WHERE ${whereClause}
+    `;
+
+    // Execute queries
+    const events = await sql.query(selectQuery, [...params, limit, offset]);
+    const countResult = await sql.query(countQuery, params);
 
     let total = parseInt(countResult.rows[0]?.total || 0);
 
@@ -2140,43 +1797,38 @@ export const analyticsService = {
    * @param {boolean} [options.excludeInternal=true] - Exclude internal users
    * @returns {Promise<Object>} Latency breakdown metrics
    */
-  async getLatencyBreakdown({ startDate, endDate, excludeInternal = true }) {
-    let result;
+  async getLatencyBreakdown({ startDate, endDate, excludeInternal = true, excludeAnonymous = false }) {
+    let queryText = `
+      SELECT
+        COUNT(*) as total_events,
+        ROUND(AVG((event_data->'latency'->>'total_ms')::numeric)) as avg_total_ms,
+        ROUND(AVG((event_data->'latency'->>'ttft_ms')::numeric)) as avg_ttft_ms,
+        ROUND(AVG((event_data->'latency'->>'streaming_ms')::numeric)) as avg_streaming_ms,
+        ROUND(AVG((event_data->'latency'->>'tpot_ms')::numeric)::numeric, 2) as avg_tpot_ms,
+        PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY (event_data->'latency'->>'ttft_ms')::numeric) as median_ttft_ms,
+        PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY (event_data->'latency'->>'ttft_ms')::numeric) as p95_ttft_ms
+      FROM analytics_events
+    `;
+
+    const conditions = [
+      `event_name = 'performance'`,
+      `created_at >= $1`,
+      `created_at < $2`,
+      `event_data->'latency'->>'ttft_ms' IS NOT NULL`
+    ];
+    const params = [startDate, endDate];
 
     if (excludeInternal) {
-      result = await sql`
-        SELECT
-          COUNT(*) as total_events,
-          ROUND(AVG((event_data->'latency'->>'total_ms')::numeric)) as avg_total_ms,
-          ROUND(AVG((event_data->'latency'->>'ttft_ms')::numeric)) as avg_ttft_ms,
-          ROUND(AVG((event_data->'latency'->>'streaming_ms')::numeric)) as avg_streaming_ms,
-          ROUND(AVG((event_data->'latency'->>'tpot_ms')::numeric)::numeric, 2) as avg_tpot_ms,
-          PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY (event_data->'latency'->>'ttft_ms')::numeric) as median_ttft_ms,
-          PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY (event_data->'latency'->>'ttft_ms')::numeric) as p95_ttft_ms
-        FROM analytics_events
-        WHERE event_name = 'performance'
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
-          AND is_internal = FALSE
-          AND event_data->'latency'->>'ttft_ms' IS NOT NULL
-      `;
-    } else {
-      result = await sql`
-        SELECT
-          COUNT(*) as total_events,
-          ROUND(AVG((event_data->'latency'->>'total_ms')::numeric)) as avg_total_ms,
-          ROUND(AVG((event_data->'latency'->>'ttft_ms')::numeric)) as avg_ttft_ms,
-          ROUND(AVG((event_data->'latency'->>'streaming_ms')::numeric)) as avg_streaming_ms,
-          ROUND(AVG((event_data->'latency'->>'tpot_ms')::numeric)::numeric, 2) as avg_tpot_ms,
-          PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY (event_data->'latency'->>'ttft_ms')::numeric) as median_ttft_ms,
-          PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY (event_data->'latency'->>'ttft_ms')::numeric) as p95_ttft_ms
-        FROM analytics_events
-        WHERE event_name = 'performance'
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
-          AND event_data->'latency'->>'ttft_ms' IS NOT NULL
-      `;
+      conditions.push(`is_internal = FALSE`);
     }
+
+    if (excludeAnonymous) {
+      conditions.push(`user_id IS NOT NULL`);
+    }
+
+    queryText += ' WHERE ' + conditions.join(' AND ');
+
+    const result = await sql.query(queryText, params);
 
     const data = result.rows[0] || {};
 
@@ -2368,46 +2020,42 @@ export const analyticsService = {
    * @param {boolean} params.excludeInternal - Whether to exclude internal users (default: true)
    * @returns {Promise<Object>} { totalErrors, errorRate, topErrors }
    */
-  async getErrorMetrics({ startDate, endDate, excludeInternal = true }) {
-    let errorResult;
+  async getErrorMetrics({ startDate, endDate, excludeInternal = true, excludeAnonymous = false }) {
+    let queryText1 = `
+      SELECT
+        COUNT(*) as total_errors,
+        event_data->>'errorType' as error_type,
+        event_data->>'context' as context
+      FROM analytics_events ae
+      LEFT JOIN users u ON ae.user_id = u.id
+    `;
+
+    const conditions1 = [
+      `ae.event_name = 'error'`,
+      `ae.created_at >= $1`,
+      `ae.created_at < $2`
+    ];
+    const params1 = [startDate, endDate];
 
     if (excludeInternal) {
-      errorResult = await sql`
-        SELECT
-          COUNT(*) as total_errors,
-          event_data->>'errorType' as error_type,
-          event_data->>'context' as context
-        FROM analytics_events ae
-        LEFT JOIN users u ON ae.user_id = u.id
-        WHERE ae.event_name = 'error'
-          AND ae.created_at >= ${startDate}
-          AND ae.created_at < ${endDate}
-          AND (u.id IS NULL OR (u.role NOT IN ('admin', 'support', 'super_admin') AND u.viewing_as_tier IS NULL))
-        GROUP BY error_type, context
-        ORDER BY COUNT(*) DESC
-        LIMIT 10
-      `;
-    } else {
-      errorResult = await sql`
-        SELECT
-          COUNT(*) as total_errors,
-          event_data->>'errorType' as error_type,
-          event_data->>'context' as context
-        FROM analytics_events
-        WHERE event_name = 'error'
-          AND created_at >= ${startDate}
-          AND created_at < ${endDate}
-        GROUP BY error_type, context
-        ORDER BY COUNT(*) DESC
-        LIMIT 10
-      `;
+      conditions1.push(`(u.id IS NULL OR (u.role NOT IN ('admin', 'support', 'super_admin') AND u.viewing_as_tier IS NULL))`);
     }
+
+    if (excludeAnonymous) {
+      conditions1.push(`ae.user_id IS NOT NULL`);
+    }
+
+    queryText1 += ' WHERE ' + conditions1.join(' AND ');
+    queryText1 += ' GROUP BY error_type, context ORDER BY COUNT(*) DESC LIMIT 10';
+
+    const errorResult = await sql.query(queryText1, params1);
 
     // Calculate total errors
     const totalErrors = errorResult.rows.reduce((sum, r) => sum + parseInt(r.total_errors), 0);
 
     // Calculate error rate (errors / total generations)
     // Get total generations from generated_documents table
+    // Note: generated_documents only has authenticated users, so no excludeAnonymous needed
     let generationsResult;
     if (excludeInternal) {
       generationsResult = await sql`
@@ -2456,12 +2104,14 @@ export const analyticsService = {
    * @param {boolean} params.excludeInternal - Whether to exclude internal users (default: true)
    * @returns {Promise<Object>} { newUsers, returningUsers, totalUsers, returnRate }
    */
-  async getRetentionMetrics({ startDate, endDate, excludeInternal = true }) {
+  async getRetentionMetrics({ startDate, endDate, excludeInternal = true, excludeAnonymous = false }) {
     // Query for new vs returning users
     // A user is "new" if their first authenticated session is within the date range
     // A user is "returning" if they had an authenticated session BEFORE the date range
     // Note: We look at session-level user_id (from ANY event in the session, not just session_start)
     // because users can start anonymous and then log in
+    // Note: This query inherently excludes anonymous users (WHERE user_id IS NOT NULL in period_users CTE)
+    // so excludeAnonymous parameter has no effect
     let userResult;
 
     if (excludeInternal) {
@@ -3266,7 +2916,7 @@ export const analyticsService = {
    * @param {boolean} [options.excludeInternal=true] - Exclude internal users
    * @returns {Promise<Object>} { current, previous, change }
    */
-  async getMetricComparison({ metric, startDate, endDate, excludeInternal = true }) {
+  async getMetricComparison({ metric, startDate, endDate, excludeInternal = true, excludeAnonymous = false }) {
     // Calculate previous period (same duration, immediately prior)
     const duration = endDate - startDate;
     const prevEndDate = new Date(startDate);
@@ -3280,7 +2930,7 @@ export const analyticsService = {
 
     // Fetch metric value for a period
     const getMetricValue = async (start, end) => {
-      const params = { startDate: start, endDate: end, excludeInternal };
+      const params = { startDate: start, endDate: end, excludeInternal, excludeAnonymous };
 
       switch (metric) {
         case 'sessions': {
@@ -3324,47 +2974,45 @@ export const analyticsService = {
           return data.avgThroughput;
         }
         case 'errors': {
-          let result;
+          let queryText = `SELECT COUNT(*) as count FROM analytics_events`;
+          const conditions = [
+            `event_name = 'error'`,
+            `created_at >= $1`,
+            `created_at < $2`
+          ];
+          const queryParams = [start, end];
+
           if (excludeInternal) {
-            result = await sql`
-              SELECT COUNT(*) as count
-              FROM analytics_events
-              WHERE event_name = 'error'
-                AND created_at >= ${start}
-                AND created_at < ${end}
-                AND is_internal = FALSE
-            `;
-          } else {
-            result = await sql`
-              SELECT COUNT(*) as count
-              FROM analytics_events
-              WHERE event_name = 'error'
-                AND created_at >= ${start}
-                AND created_at < ${end}
-            `;
+            conditions.push(`is_internal = FALSE`);
           }
+
+          if (excludeAnonymous) {
+            conditions.push(`user_id IS NOT NULL`);
+          }
+
+          queryText += ' WHERE ' + conditions.join(' AND ');
+          const result = await sql.query(queryText, queryParams);
           return parseInt(result.rows[0]?.count || 0);
         }
         case 'error_rate': {
-          let errors;
+          let queryText = `SELECT COUNT(*) as count FROM analytics_events`;
+          const conditions = [
+            `event_name = 'error'`,
+            `created_at >= $1`,
+            `created_at < $2`
+          ];
+          const queryParams = [start, end];
+
           if (excludeInternal) {
-            errors = await sql`
-              SELECT COUNT(*) as count
-              FROM analytics_events
-              WHERE event_name = 'error'
-                AND created_at >= ${start}
-                AND created_at < ${end}
-                AND is_internal = FALSE
-            `;
-          } else {
-            errors = await sql`
-              SELECT COUNT(*) as count
-              FROM analytics_events
-              WHERE event_name = 'error'
-                AND created_at >= ${start}
-                AND created_at < ${end}
-            `;
+            conditions.push(`is_internal = FALSE`);
           }
+
+          if (excludeAnonymous) {
+            conditions.push(`user_id IS NOT NULL`);
+          }
+
+          queryText += ' WHERE ' + conditions.join(' AND ');
+          const errors = await sql.query(queryText, queryParams);
           const funnel = await this.getConversionFunnel(params);
           const generations = funnel.stages?.generation_started?.events || 0;
           const errorCount = parseInt(errors.rows[0]?.count || 0);
@@ -3438,7 +3086,7 @@ export const analyticsService = {
    * @param {boolean} [options.excludeInternal=true] - Exclude internal users
    * @returns {Promise<Object>} Map of metric names to comparison objects
    */
-  async getBulkComparisons({ metrics, startDate, endDate, excludeInternal = true }) {
+  async getBulkComparisons({ metrics, startDate, endDate, excludeInternal = true, excludeAnonymous = false }) {
     const comparisons = {};
 
     // Fetch all comparisons in parallel
@@ -3450,6 +3098,7 @@ export const analyticsService = {
             startDate,
             endDate,
             excludeInternal,
+            excludeAnonymous,
           });
         } catch (error) {
           // If a metric fails, return null for that metric
@@ -3471,7 +3120,7 @@ export const analyticsService = {
    * @param {boolean} [params.excludeInternal=true] - Exclude internal test users
    * @returns {Promise<Object>} Summary metrics with values and comparisons
    */
-  async getSummaryMetrics({ startDate, endDate, excludeInternal = true }) {
+  async getSummaryMetrics({ startDate, endDate, excludeInternal = true, excludeAnonymous = false }) {
     try {
       // Fetch all metrics in parallel for efficiency
       const [
@@ -3479,8 +3128,8 @@ export const analyticsService = {
         funnelData,
         performanceData,
       ] = await Promise.all([
-        this.getBusinessMetrics({ startDate, endDate, excludeInternal }),
-        this.getConversionFunnel({ startDate, endDate, excludeInternal }),
+        this.getBusinessMetrics({ startDate, endDate, excludeInternal, excludeAnonymous }),
+        this.getConversionFunnel({ startDate, endDate, excludeInternal, excludeAnonymous }),
         this.getPerformanceMetrics({ startDate, endDate, excludeInternal }),
       ]);
 
@@ -3500,6 +3149,7 @@ export const analyticsService = {
         startDate,
         endDate,
         excludeInternal,
+        excludeAnonymous,
       });
 
       // Build summary response
