@@ -66,8 +66,8 @@
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
     "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.41",
-    "footer": "v3.5.4 Complete · Admin Table UX Consistency ✓ · Chart Improvements ✓ · Server-Side Pagination ✓",
-    "lastUpdated": "January 28, 2026"
+    "footer": "v3.5.5 Complete · Email Template Enterprise Polish ✓ · Purpose-First Messaging ✓ · Professional Tier Presentation ✓",
+    "lastUpdated": "January 29, 2026"
   },
   "columns": [
     {
@@ -76,6 +76,25 @@
       "title": "Completed",
       "subtitle": "Phase 1: Core Capabilities",
       "phases": [
+        {
+          "version": "v3.5.5",
+          "title": "Email Template Enterprise Polish",
+          "duration": "1 day",
+          "status": "✓ Complete",
+          "completedDate": "Jan 29, 2026",
+          "badge": "Enterprise Ready",
+          "features": [
+            "Email verification template redesigned with purpose-first messaging instead of marketing language",
+            "Header changed from celebratory 'Welcome' to actionable 'Confirm your email address'",
+            "Call-to-action button updated to 'Confirm email address' for enterprise clarity",
+            "Tier badge presentation normalized from internal format to professional 'Plan: Free (Development)' display",
+            "Environment labeling uses neutral editorial styling instead of warning colors",
+            "Fallback verification link section enhanced with technical clarity label",
+            "Security expiration notice strengthened with explicit 24-hour timeframe messaging",
+            "Footer updated with CodeScribe AI branding and professional tagline",
+            "Support, Privacy, and Terms links added to footer for enterprise trust signals"
+          ]
+        },
         {
           "version": "v3.5.4",
           "title": "Admin Table UX Consistency & Analytics Chart Improvements",
