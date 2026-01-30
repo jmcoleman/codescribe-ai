@@ -9,6 +9,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.5.5] - 2026-01-29
+
+**Summary:** Email verification template redesigned for enterprise readiness. Purpose-first messaging, professional tier presentation, neutral environment labeling, and enhanced footer branding.
+
+### Changed
+
+- **Email verification header:** Changed from "Welcome to CodeScribe AI!" to "Confirm your email address" (purpose-first, not celebratory)
+- **Call-to-action button:** Updated from "Verify Email" to "Confirm email address" for clarity
+- **Email address confirmation line:** Changed from "Verify [email] to get started" to "Confirm [email] to continue" (more deliberate)
+- **Tier badge presentation:** Normalized from "TIER: FREE DEVELOPMENT" to "Plan: Free (Development)" format
+- **Fallback link section:** Added "Direct verification link" label for technical clarity
+- **Security notice:** Added "This link expires in 24 hours for security reasons" to expiration message
+- **Environment banner:** Neutral editorial callout (dev/staging only) - matches disclaimer block styling with muted purple border, no warning colors
+- **Email footer:** Updated with CodeScribe AI branding, tagline ("Secure documentation automation for engineering teams"), and Support/Privacy/Terms links
+- **Enterprise polish:** CTA button vertical padding reduced to 10px (more restrained), footer divider top margin increased to 10px (better breathing room)
+
+### Fixed
+
+- **tierBadge function:** Now handles undefined environment parameter gracefully (no longer crashes when environment not provided)
+- **sendVerificationEmail tests:** Updated to match new function signature (now includes firstName parameter)
+- **Email template tests:** Updated assertions to match new tier badge format and footer content
+
+### Tests
+
+- Updated 5 email service tests to match new template content
+- All email verification and email service tests passing (202 passing)
+- **Test Coverage:** 4,351 passing, 144 skipped, 55 failing (4,550 total tests)
+  - Frontend: 2,154 passing, 77 skipped (2,238 total)
+  - Backend: 2,197 passing, 67 skipped (2,312 total)
+  - Note: Failing tests are pre-existing (analytics service, unrelated to email changes)
+
+---
+
 ## [3.5.4] - 2026-01-28
 
 **Summary:** Admin table UX consistency improvements and analytics chart enhancements. Standardized filter patterns, export buttons, and refresh functionality across all admin tables. Added table view toggles to all Performance tab charts and created specialized chart wrapper components to reduce code repetition.

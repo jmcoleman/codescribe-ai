@@ -1440,7 +1440,7 @@ router.get('/generations/by-user', requireAuth, requireAdmin, async (req, res) =
  */
 router.get('/analytics/funnel', requireAuth, requireAdmin, async (req, res) => {
   try {
-    const { startDate, endDate, excludeInternal = 'true' } = req.query;
+    const { startDate, endDate, excludeInternal = 'true', excludeAnonymous = 'false' } = req.query;
 
     if (!startDate || !endDate) {
       return res.status(400).json({
@@ -1453,6 +1453,7 @@ router.get('/analytics/funnel', requireAuth, requireAdmin, async (req, res) => {
       startDate: new Date(startDate),
       endDate: new Date(endDate),
       excludeInternal: excludeInternal === 'true',
+      excludeAnonymous: excludeAnonymous === 'true',
     });
 
     res.json({
@@ -1479,7 +1480,7 @@ router.get('/analytics/funnel', requireAuth, requireAdmin, async (req, res) => {
  */
 router.get('/analytics/conversion-funnel', requireAuth, requireAdmin, async (req, res) => {
   try {
-    const { startDate, endDate, excludeInternal = 'true' } = req.query;
+    const { startDate, endDate, excludeInternal = 'true', excludeAnonymous = 'false' } = req.query;
 
     if (!startDate || !endDate) {
       return res.status(400).json({
@@ -1492,6 +1493,7 @@ router.get('/analytics/conversion-funnel', requireAuth, requireAdmin, async (req
       startDate: new Date(startDate),
       endDate: new Date(endDate),
       excludeInternal: excludeInternal === 'true',
+      excludeAnonymous: excludeAnonymous === 'true',
     });
 
     res.json({
@@ -1518,7 +1520,7 @@ router.get('/analytics/conversion-funnel', requireAuth, requireAdmin, async (req
  */
 router.get('/analytics/business', requireAuth, requireAdmin, async (req, res) => {
   try {
-    const { startDate, endDate, excludeInternal = 'true' } = req.query;
+    const { startDate, endDate, excludeInternal = 'true', excludeAnonymous = 'false' } = req.query;
 
     if (!startDate || !endDate) {
       return res.status(400).json({
@@ -1531,6 +1533,7 @@ router.get('/analytics/business', requireAuth, requireAdmin, async (req, res) =>
       startDate: new Date(startDate),
       endDate: new Date(endDate),
       excludeInternal: excludeInternal === 'true',
+      excludeAnonymous: excludeAnonymous === 'true',
     });
 
     res.json({
@@ -1558,7 +1561,7 @@ router.get('/analytics/business', requireAuth, requireAdmin, async (req, res) =>
  */
 router.get('/analytics/usage', requireAuth, requireAdmin, async (req, res) => {
   try {
-    const { startDate, endDate, excludeInternal = 'true', model = 'all' } = req.query;
+    const { startDate, endDate, excludeInternal = 'true', excludeAnonymous = 'false', model = 'all' } = req.query;
 
     if (!startDate || !endDate) {
       return res.status(400).json({
@@ -1570,6 +1573,7 @@ router.get('/analytics/usage', requireAuth, requireAdmin, async (req, res) => {
     const start = new Date(startDate);
     const end = new Date(endDate);
     const excludeInternalBool = excludeInternal === 'true';
+    const excludeAnonymousBool = excludeAnonymous === 'true';
 
     // Fetch usage patterns and retention metrics in parallel
     const [patterns, retentionMetrics] = await Promise.all([
@@ -1577,12 +1581,14 @@ router.get('/analytics/usage', requireAuth, requireAdmin, async (req, res) => {
         startDate: start,
         endDate: end,
         excludeInternal: excludeInternalBool,
+        excludeAnonymous: excludeAnonymousBool,
         model,
       }),
       analyticsService.getRetentionMetrics({
         startDate: start,
         endDate: end,
         excludeInternal: excludeInternalBool,
+        excludeAnonymous: excludeAnonymousBool,
       }),
     ]);
 
@@ -1613,7 +1619,7 @@ router.get('/analytics/usage', requireAuth, requireAdmin, async (req, res) => {
  */
 router.get('/analytics/performance', requireAuth, requireAdmin, async (req, res) => {
   try {
-    const { startDate, endDate, excludeInternal = 'true' } = req.query;
+    const { startDate, endDate, excludeInternal = 'true', excludeAnonymous = 'false' } = req.query;
 
     if (!startDate || !endDate) {
       return res.status(400).json({
@@ -1625,6 +1631,7 @@ router.get('/analytics/performance', requireAuth, requireAdmin, async (req, res)
     const start = new Date(startDate);
     const end = new Date(endDate);
     const excludeInternalBool = excludeInternal === 'true';
+    const excludeAnonymousBool = excludeAnonymous === 'true';
 
     // Fetch performance metrics, latency breakdown, and error metrics in parallel
     const [metrics, latencyBreakdown, errorMetrics] = await Promise.all([
@@ -1632,16 +1639,19 @@ router.get('/analytics/performance', requireAuth, requireAdmin, async (req, res)
         startDate: start,
         endDate: end,
         excludeInternal: excludeInternalBool,
+        excludeAnonymous: excludeAnonymousBool,
       }),
       analyticsService.getLatencyBreakdown({
         startDate: start,
         endDate: end,
         excludeInternal: excludeInternalBool,
+        excludeAnonymous: excludeAnonymousBool,
       }),
       analyticsService.getErrorMetrics({
         startDate: start,
         endDate: end,
         excludeInternal: excludeInternalBool,
+        excludeAnonymous: excludeAnonymousBool,
       }),
     ]);
 
@@ -1675,7 +1685,7 @@ router.get('/analytics/performance', requireAuth, requireAdmin, async (req, res)
  */
 router.get('/analytics/timeseries', requireAuth, requireAdmin, async (req, res) => {
   try {
-    const { metric, interval, startDate, endDate, excludeInternal = 'true' } = req.query;
+    const { metric, interval, startDate, endDate, excludeInternal = 'true', excludeAnonymous = 'false' } = req.query;
 
     if (!metric || !interval || !startDate || !endDate) {
       return res.status(400).json({
@@ -1706,6 +1716,7 @@ router.get('/analytics/timeseries', requireAuth, requireAdmin, async (req, res) 
       startDate: new Date(startDate),
       endDate: new Date(endDate),
       excludeInternal: excludeInternal === 'true',
+      excludeAnonymous: excludeAnonymous === 'true',
     });
 
     res.json({
@@ -1747,6 +1758,7 @@ router.get('/analytics/events', requireAuth, requireAdmin, async (req, res) => {
       eventNames,
       eventActions,
       excludeInternal,
+      excludeAnonymous,
       userEmail,
       page = '1',
       limit = '50',
@@ -1799,6 +1811,7 @@ router.get('/analytics/events', requireAuth, requireAdmin, async (req, res) => {
       eventNames: eventNameList,
       eventActions: eventActionsParsed,
       excludeInternal: excludeInternal === 'true',
+      excludeAnonymous: excludeAnonymous === 'true',
       userEmail: userEmail || null,
       page: pageNum,
       limit: limitNum,
@@ -1875,6 +1888,7 @@ router.get('/analytics/events/export', requireAuth, requireAdmin, async (req, re
       category,
       eventNames,
       excludeInternal,
+      excludeAnonymous,
       userEmail,
     } = req.query;
 
@@ -1921,6 +1935,7 @@ router.get('/analytics/events/export', requireAuth, requireAdmin, async (req, re
       category: category || null,
       eventNames: eventNameList,
       excludeInternal: excludeInternal === 'true',
+      excludeAnonymous: excludeAnonymous === 'true',
       userEmail: userEmail || null,
       res,
     });
@@ -1957,7 +1972,7 @@ router.get('/analytics/events/export', requireAuth, requireAdmin, async (req, re
  */
 router.get('/analytics/comparisons', requireAuth, requireAdmin, async (req, res) => {
   try {
-    const { startDate, endDate, metrics, excludeInternal } = req.query;
+    const { startDate, endDate, metrics, excludeInternal, excludeAnonymous } = req.query;
 
     // Validate required params
     if (!startDate || !endDate || !metrics) {
@@ -1992,6 +2007,7 @@ router.get('/analytics/comparisons', requireAuth, requireAdmin, async (req, res)
       startDate: start,
       endDate: end,
       excludeInternal: excludeInternal !== 'false', // default true
+      excludeAnonymous: excludeAnonymous === 'true', // default false
     });
 
     res.json({
@@ -2013,7 +2029,7 @@ router.get('/analytics/comparisons', requireAuth, requireAdmin, async (req, res)
  */
 router.get('/analytics/summary', requireAuth, requireAdmin, async (req, res) => {
   try {
-    const { startDate, endDate, excludeInternal } = req.query;
+    const { startDate, endDate, excludeInternal, excludeAnonymous } = req.query;
 
     // Validate required params
     if (!startDate || !endDate) {
@@ -2038,6 +2054,7 @@ router.get('/analytics/summary', requireAuth, requireAdmin, async (req, res) => 
       startDate: start,
       endDate: end,
       excludeInternal: excludeInternal !== 'false', // default true
+      excludeAnonymous: excludeAnonymous === 'true', // default false
     });
 
     res.json({

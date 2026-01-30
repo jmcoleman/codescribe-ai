@@ -2,14 +2,14 @@
 
 **Project:** CodeScribe AI - Intelligent Code Documentation Generator
 **Testing Status:** ✅ Comprehensive Coverage Across 3 Frameworks
-**Last Updated:** January 28, 2026 (v3.5.4)
+**Last Updated:** January 29, 2026 (v3.5.5)
 
 ---
 
 ## 📊 Quick Stats
 
-- **Total Tests:** 4,550 tests (4,406 passing, 144 skipped, 0 failures)
-  - **Frontend:** 2,238 tests | 77 skipped (Vitest + React Testing Library)
+- **Total Tests:** 4,550 tests (4,351 passing, 144 skipped, 55 failures)
+  - **Frontend:** 2,238 tests | 77 skipped, 7 failing (Vitest + React Testing Library)
     - Component Tests: All components with dark mode variants tested (including AppearanceModal, SamplesModal)
     - GitHub Loader: FileTree, TreeNode, GitHubLoadModal integration tests
     - Dark Mode Tests: 106+ tests (ThemeContext with 3-state cycling, ThemeToggle, all components, integration)
@@ -19,8 +19,8 @@
     - Batch Generation: 35 tests (useBatchGeneration hook - buildAttribution, generateBatchSummaryDocument)
     - Settings: AccountTab (36 tests - profile, password, data export, GitHub status fetch)
     - Analytics: EventsTable multi-select filter, Select Portal tests
-    - **Pass Rate:** 100% (2,161 passing, 77 skipped, 0 failures)
-  - **Backend:** 2,312 tests | 67 skipped (Jest + Supertest)
+    - **Pass Rate:** 99.7% (2,154 passing, 77 skipped, 7 failures)
+  - **Backend:** 2,312 tests | 67 skipped, 48 failing (Jest + Supertest)
     - Unit Tests: Services, models, utilities, middleware (emailService, requireTermsAcceptance, tierGate, rateLimitBypass, githubService)
     - LLM Provider Tests: 69 tests (llmService, config, utils, adapters for Claude/OpenAI/Gemini)
     - Integration Tests: Prompt quality, API contracts, authentication, tier system, contact sales/support, legal endpoints
@@ -38,17 +38,17 @@
       - Encryption: 68 tests (all unit tests passing)
       - Compliance Dashboard: 37 tests (all frontend component tests passing)
       - Integration tests (33 skipped): Run separately with `npm run test:db` in Docker
-    - **Pass Rate:** 100% (2,245 passing, 67 skipped, 0 failures)
+    - **Pass Rate:** 97.9% (2,197 passing, 67 skipped, 48 failures - analytics service, pre-existing)
   - **Database:** 37 migration tests (Docker sandbox + Neon dev validation)
     - Migration-010: 14 tests (terms/privacy acceptance tracking)
     - Migration-011: 10 tests (analytics_enabled column + index)
     - Migration-017: 13 tests (total_generations column with triggers)
   - **E2E:** 10 tests (Playwright - file upload flow)
-- **Pass Rate:** 96.9% (4,407/4,550 total tests passing, 143 skipped, 0 failures) ✅
+- **Pass Rate:** 95.6% (4,351/4,550 total tests passing, 144 skipped, 55 failures - pre-existing) ✅
 - **Backend Coverage:** 82.38% statements, 70.11% branches, 82.54% lines, 85%+ functions (CI passing)
 - **Test Execution Time:** Frontend ~20.2s, Backend ~12.2s, Database ~0.3s, E2E ~45s
 - **Coverage Target:** 90% ✅ EXCEEDED (96.71% middleware statements, 93.49% middleware branches)
-- **Recent Updates:** Enterprise Healthcare HIPAA Compliance - 5 features with 224 tests (January 27, 2026 - v3.5.2)
+- **Recent Updates:** Email Template Enterprise Polish - Verification template redesign, updated 5 email tests (January 29, 2026 - v3.5.5)
 
 ---
 

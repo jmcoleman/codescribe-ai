@@ -195,6 +195,7 @@ export async function sendPasswordResetEmail({ to, resetToken }) {
  * Send email verification email
  * @param {Object} options - Email options
  * @param {string} options.to - Recipient email
+ * @param {string} [options.firstName] - User's first name (optional, for personalization)
  * @param {string} options.verificationToken - Email verification token
  * @param {string} [options.trialCode] - Optional trial invite code to embed in URL
  * @param {string} [options.subscriptionTier] - Optional subscription tier to embed in URL
@@ -202,7 +203,7 @@ export async function sendPasswordResetEmail({ to, resetToken }) {
  * @param {string} [options.subscriptionTierName] - Optional display name for the tier
  * @returns {Promise<Object>} Send result
  */
-export async function sendVerificationEmail({ to, verificationToken, trialCode, subscriptionTier, subscriptionBillingPeriod, subscriptionTierName }) {
+export async function sendVerificationEmail({ to, firstName, verificationToken, trialCode, subscriptionTier, subscriptionBillingPeriod, subscriptionTierName }) {
   let verifyUrl = `${CLIENT_URL}/verify-email?token=${verificationToken}`;
   // Append trial code to verification URL if provided
   if (trialCode) {
@@ -225,6 +226,7 @@ export async function sendVerificationEmail({ to, verificationToken, trialCode, 
     subject: 'Verify Your Email - CodeScribe AI',
     html: emailVerificationTemplate({
       userEmail: to,
+      firstName,
       verificationLink: verifyUrl,
       expirationHours: 24,
       currentTier: undefined, // No tier for transactional emails

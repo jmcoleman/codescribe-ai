@@ -5,15 +5,15 @@
  */
 
 /**
- * Email header with solid purple background (refined light theme)
+ * Email header with gradient purple background
  * @param {string} title - Main heading text
- * @param {string} subtitle - Subtitle text (optional)
+ * @param {string} subtitle - Subtitle/greeting text (optional)
  */
 export function emailHeader(title, subtitle = '') {
   return `
-    <div style="background: #9333ea; padding: 40px 20px; text-align: center; border-radius: 8px 8px 0 0;">
-      <h1 style="color: white; margin: 0 0 ${subtitle ? '8px' : '0'}; font-size: 28px; font-weight: 700;">${title}</h1>
-      ${subtitle ? `<p style="color: rgba(255, 255, 255, 0.9); margin: 0; font-size: 14px;">${subtitle}</p>` : ''}
+    <div style="background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%); padding: 40px 20px; text-align: center; border-radius: 8px 8px 0 0;">
+      ${subtitle ? `<p style="color: rgba(255, 255, 255, 0.95); margin: 0 0 12px 0; font-size: 16px; font-weight: 500; letter-spacing: 0.3px;">${subtitle}</p>` : ''}
+      <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">${title}</h1>
     </div>
   `;
 }
@@ -25,38 +25,37 @@ export function emailHeader(title, subtitle = '') {
 export function emailFooter(clientUrl) {
   return `
     <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0; text-align: center;">
-      <p style="color: #64748b; font-size: 14px; margin: 0 0 10px 0;">
-        © ${new Date().getFullYear()} CodeScribe AI. All rights reserved.
-      </p>
+      <p style="color: #1e293b; font-size: 15px; font-weight: 600; margin: 0 0 6px 0;">CodeScribe AI</p>
+      <p style="color: #64748b; font-size: 13px; margin: 0 0 12px 0;">Secure documentation automation for engineering teams</p>
       <p style="color: #64748b; font-size: 12px; margin: 0;">
-        <a href="${clientUrl}" style="color: #9333ea; text-decoration: none;">Visit CodeScribe AI</a> |
-        <a href="${clientUrl}/privacy" style="color: #9333ea; text-decoration: none;">Privacy Policy</a> |
-        <a href="${clientUrl}/terms" style="color: #9333ea; text-decoration: none;">Terms of Service</a>
+        <a href="${clientUrl}/contact" style="color: #9333ea; text-decoration: none;">Support</a> ·
+        <a href="${clientUrl}/privacy" style="color: #9333ea; text-decoration: none;">Privacy</a> ·
+        <a href="${clientUrl}/terms" style="color: #9333ea; text-decoration: none;">Terms</a>
       </p>
     </div>
   `;
 }
 
 /**
- * Tier badge component (refined light theme)
+ * Tier badge component - plain text for emails (no UI badge styling)
  * @param {string} tier - User's tier (free, starter, pro, team, enterprise)
+ * @param {string} environment - Current environment (optional, for display purposes)
  */
-export function tierBadge(tier) {
-  const badges = {
-    enterprise: '<strong>Tier:</strong> PRIORITY',
-    team: '<strong>Tier:</strong> PRIORITY',
-    pro: '<strong>Tier:</strong> PRO',
-    starter: '<strong>Tier:</strong> STARTER',
-    free: '<strong>Tier:</strong> FREE'
+export function tierBadge(tier, environment) {
+  const tierNames = {
+    enterprise: 'Priority',
+    team: 'Priority',
+    pro: 'Pro',
+    starter: 'Starter',
+    free: 'Free'
   };
 
-  const label = badges[tier?.toLowerCase()] || '<strong>Tier:</strong> FREE';
+  const tierName = tierNames[tier?.toLowerCase()] || 'Free';
+  const envSuffix = environment && environment !== 'production'
+    ? ` (${environment.charAt(0).toUpperCase() + environment.slice(1)})`
+    : '';
 
-  return `
-    <span style="display: inline-flex; align-items: center; padding: 4px 8px; background: #ecfeff; color: #155e75; font-size: 11px; font-weight: 500; text-transform: uppercase; border-radius: 6px;">
-      ${label}
-    </span>
-  `;
+  return `Plan: ${tierName}${envSuffix}`;
 }
 
 /**

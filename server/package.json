@@ -1,6 +1,6 @@
 {
   "name": "server",
-  "version": "3.5.4",
+  "version": "3.5.5",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -27,6 +27,7 @@
     "migrate:validate": "node -r dotenv/config src/db/migrate.js validate",
     "reset:user": "node -r dotenv/config scripts/reset-dev-user.js",
     "reset:data": "node -r dotenv/config scripts/reset-dev-data.js",
+    "create:admin": "node -r dotenv/config scripts/create-admin.js",
     "clear:history": "node scripts/clear-user-history.js",
     "llm:usage": "node scripts/check-llm-usage.js",
     "clear:analytics": "node -r dotenv/config src/scripts/clearAnalytics.js",

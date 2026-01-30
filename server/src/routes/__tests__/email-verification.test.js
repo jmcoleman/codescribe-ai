@@ -334,6 +334,7 @@ describeOrSkip('Email Verification Routes', () => {
       expect(User.createVerificationToken).toHaveBeenCalledWith(1);
       expect(sendVerificationEmail).toHaveBeenCalledWith({
         to: mockUser.email,
+        firstName: mockUser.first_name,
         verificationToken: mockToken
       });
     });

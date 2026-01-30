@@ -513,7 +513,7 @@ For a complete navigation guide with descriptions of all documentation, see **[D
 
 **Development & Testing:**
 - **[Dev Guide](docs/planning/mvp/05-Dev-Guide.md)** - Implementation guide with code examples
-- **[Testing Hub](docs/testing/README.md)** - 4,550 tests (4,406 passing, 144 skipped), coverage reports, test patterns
+- **[Testing Hub](docs/testing/README.md)** - 4,550 tests (4,351 passing, 144 skipped), coverage reports, test patterns
 - **[Test Fixes Guide](docs/testing/TEST-PATTERNS-GUIDE.md)** - Testing patterns & best practices
 
 **Design & UX:**
@@ -820,12 +820,12 @@ See [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) for complete
 
 ### 📊 Testing & Quality
 
-**4,550 Tests** — 4,406 passing, 144 skipped, 0 failures (96.9% pass rate)
+**4,550 Tests** — 4,351 passing, 144 skipped, 55 failures (95.6% pass rate)
 
 | Layer | Tests | Framework | Coverage |
 |-------|-------|-----------|----------|
-| Backend | 2,312 (2,245 passing, 67 skipped) | Jest + Supertest | 82.38% statements, 70.11% branches |
-| Frontend | 2,238 (2,161 passing, 77 skipped) | Vitest + React Testing Library | 100% critical paths, 18/18 components |
+| Backend | 2,312 (2,197 passing, 67 skipped, 48 failing) | Jest + Supertest | 82.38% statements, 70.11% branches |
+| Frontend | 2,238 (2,154 passing, 77 skipped, 7 failing) | Vitest + React Testing Library | 100% critical paths, 18/18 components |
 | E2E | 10 (5 browsers) | Playwright | Chromium, Firefox, WebKit, Chrome, Edge |
 
 **Running Tests:**

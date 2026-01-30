@@ -197,6 +197,7 @@ router.post(
             const verificationToken = await User.createVerificationToken(user.id);
             await sendVerificationEmail({
               to: user.email,
+              firstName: user.first_name,
               verificationToken,
               trialCode, // Pass trial code to embed in verification URL
               subscriptionTier,
@@ -284,6 +285,7 @@ router.post(
         const verificationToken = await User.createVerificationToken(user.id);
         await sendVerificationEmail({
           to: user.email,
+          firstName: user.first_name,
           verificationToken,
           trialCode, // Pass trial code to embed in verification URL
           subscriptionTier,
@@ -1212,6 +1214,7 @@ router.post(
       // Send verification email
       await sendVerificationEmail({
         to: user.email,
+        firstName: user.first_name,
         verificationToken
       });
 

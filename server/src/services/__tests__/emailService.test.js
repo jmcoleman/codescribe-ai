@@ -272,7 +272,7 @@ describe('Email Service', () => {
       );
     });
 
-    it('should include welcome message', async () => {
+    it('should include confirmation header', async () => {
       mockSendEmail.mockResolvedValue({ data: { id: 'email_456' } });
 
       await sendVerificationEmail({
@@ -281,7 +281,7 @@ describe('Email Service', () => {
       });
 
       const callArgs = mockSendEmail.mock.calls[0][0];
-      expect(callArgs.html.toLowerCase()).toContain('welcome');
+      expect(callArgs.html.toLowerCase()).toContain('confirm your email address');
     });
 
     it('should include expiration warning (24 hours)', async () => {
@@ -611,7 +611,7 @@ describe('Email Service', () => {
       await sendContactSalesEmail(validParams);
 
       const callArgs = mockSendEmail.mock.calls[0][0];
-      expect(callArgs.html).toContain('<strong>Tier:</strong> FREE'); // Tier badge format
+      expect(callArgs.html).toContain('Plan: Free'); // Tier badge format
     });
 
     it('should include interested tier in HTML', async () => {
@@ -977,7 +977,7 @@ describe('Email Service', () => {
 
       const callArgs = mockSendEmail.mock.calls[0][0];
       // Template shows tier as a badge without icon
-      expect(callArgs.html).toContain('<strong>Tier:</strong> PRO');
+      expect(callArgs.html).toContain('Plan: Pro');
     });
 
     it('should omit current tier section when not provided', async () => {
@@ -1135,9 +1135,9 @@ describe('Email Service', () => {
       expect(typeof callArgs.to).toBe('string');
       expect(callArgs.html).toContain('Jane Smith');
       expect(callArgs.html).toContain('jane@example.com');
-      // Template always shows User ID row, and shows "Tier: FREE" for unauthenticated users (no icon)
+      // Template always shows User ID row, and shows "Plan: Free" for unauthenticated users
       expect(callArgs.html).toContain('User ID:');
-      expect(callArgs.html).toContain('<strong>Tier:</strong> FREE');
+      expect(callArgs.html).toContain('Plan: Free');
     });
 
     it('should handle all subject categories', async () => {
@@ -1392,7 +1392,10 @@ describe('Email Service', () => {
 
       const callArgs = mockSendEmail.mock.calls[0][0];
       expect(callArgs.html).toContain('CodeScribe AI');
-      expect(callArgs.html).toContain('Privacy Policy');
+      expect(callArgs.html).toContain('Secure documentation automation for engineering teams');
+      expect(callArgs.html).toContain('Support');
+      expect(callArgs.html).toContain('Privacy');
+      expect(callArgs.html).toContain('Terms');
     });
   });
 

@@ -1,161 +1,44 @@
 # CodeScribe AI - Claude Context Reference
 
-**Project:** AI-Powered Code Documentation Generator
-**Status:** ✅ **PRODUCTION** - [codescribeai.com](https://codescribeai.com)
-**Tech Stack:** React 19 + Vite | Node.js + Express | Claude API | Tailwind CSS
-**Completion:** October 19, 2025 (9 days) | All times in EST/EDT
+**Status:** ✅ PRODUCTION - [codescribeai.com](https://codescribeai.com) | React 19 + Vite | Node.js + Express | Claude API
+**Metrics:** 4,550 tests (95.6% pass) | Lighthouse 75/100 perf, 100/100 a11y | 78KB bundle | 0 axe violations
+**Features:** 4 doc types | Monaco Editor | Mermaid diagrams | SSE streaming | Quality scoring (0-100)
 
 ---
 
-## 📋 Quick Overview
+## 📚 Key Documentation (⭐ = Most Referenced)
 
-AI-powered documentation generator with real-time streaming, quality scoring (0-100), and WCAG 2.1 AA compliance.
+**Architecture:** [ARCHITECTURE-OVERVIEW.md](docs/architecture/ARCHITECTURE-OVERVIEW.md) (visual) | [ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md) (technical) | [ERROR-HANDLING-PATTERNS.md](docs/architecture/ERROR-HANDLING-PATTERNS.md) ⭐ | [SUBSCRIPTION-FLOWS.md](docs/architecture/SUBSCRIPTION-FLOWS.md) ⭐ | [SUBSCRIPTION-MANAGEMENT.md](docs/architecture/SUBSCRIPTION-MANAGEMENT.md) ⭐ | [PROMPT-CACHING-GUIDE.md](docs/architecture/PROMPT-CACHING-GUIDE.md) ⭐ | [GITHUB-API-SCALING.md](docs/architecture/GITHUB-API-SCALING.md) ⭐ | [MULTI-FILE-ARCHITECTURE-ANALYSIS.md](docs/architecture/MULTI-FILE-ARCHITECTURE-ANALYSIS.md) ⭐
 
-**Key Metrics:**
-- 4,550 tests (4,406 passing, 144 skipped, 0 failing) | 96.9% pass rate | 95.45% middleware coverage
-- Lighthouse: 75/100 performance (+67%), 100/100 accessibility
-- Bundle: 78KB gzipped (-85% reduction)
-- Accessibility: 95/100 score, 0 axe violations
+**Testing:** [Testing README](docs/testing/README.md) | [TEST-PATTERNS-GUIDE.md](docs/testing/TEST-PATTERNS-GUIDE.md) ⭐ (11 patterns, ES Modules) | [COMPONENT-TEST-COVERAGE.md](docs/testing/COMPONENT-TEST-COVERAGE.md) ⭐ | [SKIPPED-TESTS.md](docs/testing/SKIPPED-TESTS.md) | [REACT-OPTIMIZATION-LESSONS.md](docs/performance/REACT-OPTIMIZATION-LESSONS.md) ⭐
 
-**Features:** 4 doc types (README, JSDoc, API, ARCHITECTURE) | Monaco Editor | Mermaid diagrams | SSE streaming | Input code health scoring
+**Design/UI:** [UI-STANDARDS.md](docs/design/UI-STANDARDS.md) ⭐ (button labels, text conventions) | [brand-palette-unified.html](docs/design/theming/brand-palette-unified.html) ⭐ | [BANNER-PATTERNS.md](docs/components/BANNER-PATTERNS.md) ⭐ | [ERROR-HANDLING-UX.md](docs/components/ERROR-HANDLING-UX.md) ⭐
 
----
+**Deployment:** [RELEASE-QUICKSTART.md](docs/deployment/RELEASE-QUICKSTART.md) ⭐ | [STRIPE-PRODUCTION-SWITCH.md](docs/deployment/STRIPE-PRODUCTION-SWITCH.md) ⭐ | [VERCEL-DEPLOYMENT-GUIDE.md](docs/deployment/VERCEL-DEPLOYMENT-GUIDE.md)
 
-## 🗺️ Documentation Quick Reference
+**Admin/Analytics:** [USER-MANAGEMENT-GUIDE.md](docs/admin/USER-MANAGEMENT-GUIDE.md) ⭐ | [CAMPAIGN-MANAGEMENT-GUIDE.md](docs/admin/CAMPAIGN-MANAGEMENT-GUIDE.md) ⭐ | [WORKFLOW-OUTCOME-METRICS-PLAN.md](docs/planning/WORKFLOW-OUTCOME-METRICS-PLAN.md) ⭐
 
-### 📐 Planning & Requirements
-| Document | Use Case | Key Contents |
-|----------|----------|--------------|
-| [01-PRD.md](docs/planning/mvp/01-PRD.md) | Product vision, requirements | Feature specs (FR-1.x to FR-5.x), NFRs, acceptance criteria, roadmap |
-| [02-Epics-Stories.md](docs/planning/mvp/02-Epics-Stories.md) | User stories, sprint planning | 5 epics, story points, DoR/DoD, day-by-day breakdown |
-| [03-Todo-List.md](docs/planning/mvp/03-Todo-List.md) | Daily task tracking | Day 1-5 tasks, setup instructions, checkpoints |
-| [MVP-DELIVERY-SUMMARY.md](docs/planning/mvp/MVP-DELIVERY-SUMMARY.md) | Interview/portfolio highlight ⭐ | 9-day delivery, 100% completion, 1,381+ tests, quality metrics, PM competencies |
-| [MVP-DEPLOY-LAUNCH.md](docs/planning/mvp/MVP-DEPLOY-LAUNCH.md) | MVP deployment guide | Vercel deployment, troubleshooting, launch checklist, post-launch monitoring |
-| [WORKFLOW-OUTCOME-METRICS-PLAN.md](docs/planning/WORKFLOW-OUTCOME-METRICS-PLAN.md) | Analytics implementation ⭐ | Session tracking, funnel events, conversion metrics, 4-6 hour implementation plan |
+**Planning:** [WORKFLOW-FIRST-PRD-TEMPLATE.md](docs/templates/WORKFLOW-FIRST-PRD-TEMPLATE.md) ⭐ | [MVP-DELIVERY-SUMMARY.md](docs/planning/mvp/MVP-DELIVERY-SUMMARY.md) ⭐ | [VISUAL-ASSET-CREATION-PLAN.md](docs/marketing/VISUAL-ASSET-CREATION-PLAN.md) ⭐
 
-### 🏗️ Architecture & Development
-| Document | Use Case | Key Contents |
-|----------|----------|--------------|
-| [ARCHITECTURE-OVERVIEW.md](docs/architecture/ARCHITECTURE-OVERVIEW.md) | Visual system architecture | Mermaid diagram, layer overview, quick reference |
-| [ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md) | Deep technical details | Design patterns, data flows, security, deployment |
-| [ERROR-HANDLING-PATTERNS.md](docs/architecture/ERROR-HANDLING-PATTERNS.md) | Error handling patterns ⭐ | App vs external API errors (429 vs 503), email/Claude patterns, HTTP status codes |
-| [SUBSCRIPTION-FLOWS.md](docs/architecture/SUBSCRIPTION-FLOWS.md) | Subscription flows ⭐ | Unauthenticated users, email/OAuth signup, billing periods, sessionStorage intent |
-| [SUBSCRIPTION-MANAGEMENT.md](docs/architecture/SUBSCRIPTION-MANAGEMENT.md) | Subscription management ⭐ | Hybrid proration (upgrade/downgrade), testing guide, webhooks |
-| [PROMPT-CACHING-GUIDE.md](docs/architecture/PROMPT-CACHING-GUIDE.md) | Cost optimization ⭐ | Caching strategy, adding examples, savings analysis ($50-300/mo) |
-| [GITHUB-API-SCALING.md](docs/architecture/GITHUB-API-SCALING.md) | GitHub API scaling ⭐ | Rate limits (60/5000/hr), server token vs per-user, caching strategy, scaling path |
-| [MULTI-FILE-ARCHITECTURE-ANALYSIS.md](docs/architecture/MULTI-FILE-ARCHITECTURE-ANALYSIS.md) | Multi-file feature ⭐ | Architecture analysis, design decisions, state management (v2.9.0) |
-| [CLAUDE-INTEGRATION-QUICK-REFERENCE.md](docs/architecture/CLAUDE-INTEGRATION-QUICK-REFERENCE.md) | Claude API | Quick reference guide, request/response patterns, best practices |
-| [TIER-ARCHITECTURE.md](docs/architecture/TIER-ARCHITECTURE.md) | Subscription tiers | Tier system architecture, feature gates, access control |
-| [WORKSPACE-FILES-REFACTOR.md](docs/architecture/WORKSPACE-FILES-REFACTOR.md) | Workspace refactor | Refactoring strategy, file management, migration path |
-| [GENERATION-HISTORY-SPEC.md](docs/architecture/GENERATION-HISTORY-SPEC.md) | History feature | Generation history specification, storage, retrieval |
-| [05-Dev-Guide.md](docs/planning/mvp/05-Dev-Guide.md) | Implementation patterns | Complete service code, best practices, deployment |
-| [API-Reference.md](docs/api/API-Reference.md) | API specs | 4 endpoints, request/response formats, error codes |
+<details>
+<summary>Full Documentation Index (by category)</summary>
 
-### 📊 Performance & Testing
-| Document | Use Case | Key Contents |
-|----------|----------|--------------|
-| [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) | Performance optimization | Lazy loading, bundle analysis, Core Web Vitals, maintenance |
-| [REACT-OPTIMIZATION-LESSONS.md](docs/performance/REACT-OPTIMIZATION-LESSONS.md) | React performance ⭐ | Memoization patterns, v2.8.0 lessons, overflow fixes, re-render prevention |
-| [Testing README](docs/testing/README.md) | Test navigation hub | 2,391 test stats, quick commands, coverage overview |
-| [COMPONENT-TEST-COVERAGE.md](docs/testing/COMPONENT-TEST-COVERAGE.md) | Coverage details ⭐ | 13/18 components tested, category breakdown, gaps |
-| [frontend-testing-guide.md](docs/testing/frontend-testing-guide.md) | React testing patterns | Vitest + RTL, mocking, a11y, interactions |
-| [TEST-PATTERNS-GUIDE.md](docs/testing/TEST-PATTERNS-GUIDE.md) | Test fix patterns ⭐⚠️ | **103 tests fixed, 11 patterns** (Pattern 11: ES Modules!), 6 insights, 97.8% pass rate |
-| [SKIPPED-TESTS.md](docs/testing/SKIPPED-TESTS.md) | Skipped tests tracking | 56 tests documented, quarterly review schedule, justifications |
+**Architecture & Dev:** [05-Dev-Guide.md](docs/planning/mvp/05-Dev-Guide.md) | [API-Reference.md](docs/api/API-Reference.md) | [CLAUDE-INTEGRATION-QUICK-REFERENCE.md](docs/architecture/CLAUDE-INTEGRATION-QUICK-REFERENCE.md) | [TIER-ARCHITECTURE.md](docs/architecture/TIER-ARCHITECTURE.md) | [WORKSPACE-FILES-REFACTOR.md](docs/architecture/WORKSPACE-FILES-REFACTOR.md) | [GENERATION-HISTORY-SPEC.md](docs/architecture/GENERATION-HISTORY-SPEC.md) | [MULTI-PROVIDER-SIMPLIFIED-ARCHITECTURE.md](docs/architecture/MULTI-PROVIDER-SIMPLIFIED-ARCHITECTURE.md)
 
-**Specialized Tests:** [ERROR-HANDLING-TESTS.md](docs/testing/ERROR-HANDLING-TESTS.md) (58 tests) | [MERMAID-DIAGRAM-TESTS.md](docs/testing/MERMAID-DIAGRAM-TESTS.md) (14 tests) | [CROSS-BROWSER-TEST-PLAN.md](docs/testing/CROSS-BROWSER-TEST-PLAN.md) | [ACCESSIBILITY-AUDIT.md](docs/testing/ACCESSIBILITY-AUDIT.md) | [SCREEN-READER-TESTING-GUIDE.md](docs/testing/SCREEN-READER-TESTING-GUIDE.md)
+**Performance:** [OPTIMIZATION-GUIDE.md](docs/performance/OPTIMIZATION-GUIDE.md) | [REACT-OPTIMIZATION-LESSONS.md](docs/performance/REACT-OPTIMIZATION-LESSONS.md)
 
-### 🎨 Design & Components
-| Document | Use Case | Key Contents |
-|----------|----------|--------------|
-| [UI-STANDARDS.md](docs/design/UI-STANDARDS.md) | UI text & button conventions ⭐ | Button labeling (New/Create/Add), filter patterns, empty states, color usage, quick reference |
-| [07-Figma-Guide.md](docs/planning/mvp/07-Figma-Guide.md) | Design system | Colors (purple/indigo/slate), typography, 8 components, UI patterns |
-| [brand-palette-unified.html](docs/design/theming/brand-palette-unified.html) | Unified color palette ⭐ | Interactive palette with light+dark themes, click-to-copy hex codes, WCAG AA |
-| [COLOR-REFERENCE.md](docs/design/theming/COLOR-REFERENCE.md) | Color quick reference | Complete color table for both themes, usage guidelines, semantic colors |
-| [TOAST-SYSTEM.md](docs/components/TOAST-SYSTEM.md) | Toast notifications | 20+ utilities, 6 custom toasts, a11y support |
-| [MERMAID-DIAGRAMS.md](docs/components/MERMAID-DIAGRAMS.md) | Diagram patterns | Brand theming, React integration, troubleshooting |
-| [BANNER-PATTERNS.md](docs/components/BANNER-PATTERNS.md) | Banner visual design ⭐ | Info/promo/error/warning banners, CTA layouts, desktop vs mobile, animations |
-| [ERROR-HANDLING-UX.md](docs/components/ERROR-HANDLING-UX.md) | Error handling decisions ⭐ | When to use banners vs inline validation vs modals, field validation timing, focus management |
-| [USAGE-PROMPTS.md](docs/components/USAGE-PROMPTS.md) | Usage warnings & limits | 80% banner, 100% modal, dynamic multipliers, simulator |
-| [COPYBUTTON.md](docs/components/COPYBUTTON.md) | Copy-to-clipboard | Variants, animation timeline, best practices |
-| [SELECT-USAGE.md](docs/components/SELECT-USAGE.md) | Dropdown component | Headless UI patterns, keyboard nav, a11y |
-| [MULTI-FILE-SIDEBAR-UX.md](docs/components/MULTI-FILE-SIDEBAR-UX.md) | Multi-file sidebar ⭐ | Sidebar UX design, file list management, selection patterns (v2.9.0) |
-| [FILE-DETAILS-PANEL.md](docs/components/FILE-DETAILS-PANEL.md) | File details panel | Panel component design, metadata display, interactions |
-| [GITHUB-LOADER.md](docs/components/GITHUB-LOADER.md) | GitHub import UI | Loading states, error handling, progress feedback |
-| [PRICING-PAGE.md](docs/components/PRICING-PAGE.md) | Pricing page | Tier comparison design, pricing table, CTAs |
-| [SETTINGS-UI-PATTERNS.md](docs/components/SETTINGS-UI-PATTERNS.md) | Settings UI | Layout patterns, form design, accessibility |
-| [FORM-VALIDATION-GUIDE.md](docs/components/FORM-VALIDATION-GUIDE.md) | Form validation | Validation patterns, error messages, real-time feedback |
-| [EMAIL-TEMPLATING-GUIDE.md](docs/components/EMAIL-TEMPLATING-GUIDE.md) | Email templates | Template system, styling constraints, testing |
-| [BUTTON-IMPLEMENTATION-SUMMARY.md](docs/components/BUTTON-IMPLEMENTATION-SUMMARY.md) | Button component | Variants (primary/secondary), states, accessibility |
-| [SKELETON-LOADER.md](docs/components/SKELETON-LOADER.md) | Loading skeletons | Loading state patterns, animation, content placeholders |
-| [DOWNLOADBUTTON.md](docs/components/DOWNLOADBUTTON.md) | Download button | Download patterns, file export, user feedback |
+**Testing:** [frontend-testing-guide.md](docs/testing/frontend-testing-guide.md) | [ERROR-HANDLING-TESTS.md](docs/testing/ERROR-HANDLING-TESTS.md) | [MERMAID-DIAGRAM-TESTS.md](docs/testing/MERMAID-DIAGRAM-TESTS.md) | [ACCESSIBILITY-AUDIT.md](docs/testing/ACCESSIBILITY-AUDIT.md) | [SCREEN-READER-TESTING-GUIDE.md](docs/testing/SCREEN-READER-TESTING-GUIDE.md)
 
-### 🛠️ Utilities
-| Document | Use Case | Key Contents |
-|----------|----------|--------------|
-| [VERSION-CHECKER.md](docs/scripts/VERSION-CHECKER.md) | Package versions | `npm run versions`, output format, update protocol |
+**Components:** [TOAST-SYSTEM.md](docs/components/TOAST-SYSTEM.md) | [MERMAID-DIAGRAMS.md](docs/components/MERMAID-DIAGRAMS.md) | [USAGE-PROMPTS.md](docs/components/USAGE-PROMPTS.md) | [COPYBUTTON.md](docs/components/COPYBUTTON.md) | [SELECT-USAGE.md](docs/components/SELECT-USAGE.md) | [MULTI-FILE-SIDEBAR-UX.md](docs/components/MULTI-FILE-SIDEBAR-UX.md) | [GITHUB-LOADER.md](docs/components/GITHUB-LOADER.md) | [FORM-VALIDATION-GUIDE.md](docs/components/FORM-VALIDATION-GUIDE.md)
 
-### 🔐 Authentication & Security
-| Document | Use Case | Key Contents |
-|----------|----------|--------------|
-| [EMAIL-VERIFICATION-SYSTEM.md](docs/authentication/EMAIL-VERIFICATION-SYSTEM.md) | Email verification | System design, user flow, 158+ tests, token lifecycle |
-| [PASSWORD-RESET-IMPLEMENTATION.md](docs/authentication/PASSWORD-RESET-IMPLEMENTATION.md) | Password reset | Flow implementation, testing, token expiration |
-| [PASSWORD-RESET-SETUP.md](docs/authentication/PASSWORD-RESET-SETUP.md) | Password reset setup | Resend configuration, template setup, testing |
-| [JWT-AUTHENTICATION-SECURITY.md](docs/security/JWT-AUTHENTICATION-SECURITY.md) | JWT security | Token handling, refresh strategy, best practices |
-| [EMAIL-RATE-LIMITING.md](docs/security/EMAIL-RATE-LIMITING.md) | Email rate limiting | Throttling strategy, abuse prevention, limits |
-| [FREEMIUM-API-PROTECTION.md](docs/security/FREEMIUM-API-PROTECTION.md) | API protection | Free tier security, rate limits, quota enforcement |
-| [EMAIL-CONFIGURATION.md](docs/security/EMAIL-CONFIGURATION.md) | Email security | Resend setup, DNS records, SPF/DKIM configuration |
+**Auth/Security:** [EMAIL-VERIFICATION-SYSTEM.md](docs/authentication/EMAIL-VERIFICATION-SYSTEM.md) | [PASSWORD-RESET-IMPLEMENTATION.md](docs/authentication/PASSWORD-RESET-IMPLEMENTATION.md) | [JWT-AUTHENTICATION-SECURITY.md](docs/security/JWT-AUTHENTICATION-SECURITY.md) | [EMAIL-RATE-LIMITING.md](docs/security/EMAIL-RATE-LIMITING.md) | [FREEMIUM-API-PROTECTION.md](docs/security/FREEMIUM-API-PROTECTION.md)
 
-### 🚀 Deployment & Configuration
-| Document | Use Case | Key Contents |
-|----------|----------|--------------|
-| [RELEASE-QUICKSTART.md](docs/deployment/RELEASE-QUICKSTART.md) | Release process ⭐ | Two-phase process (prep vs. deploy), checklist, automation |
-| [VERCEL-DEPLOYMENT-GUIDE.md](docs/deployment/VERCEL-DEPLOYMENT-GUIDE.md) | Vercel deployment | Project setup, environment variables, custom domains |
-| [STRIPE-SETUP.md](docs/deployment/STRIPE-SETUP.md) | Payment processing | Stripe configuration, webhooks, test mode vs. production |
-| [STRIPE-PRODUCTION-SWITCH.md](docs/deployment/STRIPE-PRODUCTION-SWITCH.md) | Go-live guide ⭐ | Switch from sandbox to production, complete checklist, verification steps |
-| [STRIPE-TESTING-GUIDE.md](docs/deployment/STRIPE-TESTING-GUIDE.md) | Payment testing | Test scenarios, test card numbers, webhook testing |
-| [RESEND-SETUP.md](docs/deployment/RESEND-SETUP.md) | Email service | Resend API configuration, domain verification, templates |
-| [GITHUB-OAUTH-SETUP.md](docs/deployment/GITHUB-OAUTH-SETUP.md) | OAuth provider | GitHub App setup, credentials, callback URLs |
-| [CUSTOM-DOMAIN-SETUP.md](docs/deployment/CUSTOM-DOMAIN-SETUP.md) | Domain configuration | DNS setup, SSL certificates, Vercel configuration |
-| [DEPLOYMENT-CHECKLIST.md](docs/deployment/DEPLOYMENT-CHECKLIST.md) | Pre-deployment | Complete deployment checklist, environment validation |
-| [VERCEL-ENVIRONMENT-VARIABLES.md](docs/deployment/VERCEL-ENVIRONMENT-VARIABLES.md) | Environment config | All environment variables, per-environment setup |
-| [VERCEL-POSTGRES-SETUP.md](docs/deployment/VERCEL-POSTGRES-SETUP.md) | Database setup | Neon Postgres via Vercel Marketplace, connection strings |
-| [EMAIL-FORWARDING-SETUP.md](docs/deployment/EMAIL-FORWARDING-SETUP.md) | Email forwarding | sales@, support@ configuration via Namecheap |
-| [DATABASE-ENVIRONMENT-CHECKLIST.md](docs/deployment/DATABASE-ENVIRONMENT-CHECKLIST.md) | Database env | Database environment setup, connection validation |
-| [TERMS-AND-PRIVACY-SETUP.md](docs/deployment/TERMS-AND-PRIVACY-SETUP.md) | Legal pages | Terms of Service, Privacy Policy setup |
-| [DEPLOYMENT-LEARNINGS.md](docs/deployment/DEPLOYMENT-LEARNINGS.md) | Lessons learned | Deployment gotchas, troubleshooting tips |
+**Deployment:** [STRIPE-SETUP.md](docs/deployment/STRIPE-SETUP.md) | [STRIPE-TESTING-GUIDE.md](docs/deployment/STRIPE-TESTING-GUIDE.md) | [RESEND-SETUP.md](docs/deployment/RESEND-SETUP.md) | [GITHUB-OAUTH-SETUP.md](docs/deployment/GITHUB-OAUTH-SETUP.md) | [VERCEL-POSTGRES-SETUP.md](docs/deployment/VERCEL-POSTGRES-SETUP.md) | [DEPLOYMENT-CHECKLIST.md](docs/deployment/DEPLOYMENT-CHECKLIST.md)
 
-### 🛠️ Development Practices
-| Document | Use Case | Key Contents |
-|----------|----------|--------------|
-| [FEATURE-BRANCH-WORKFLOW.md](docs/development/FEATURE-BRANCH-WORKFLOW.md) | Git workflow | Branch naming conventions, PR process, merge strategy |
-| [FEATURE-FLAGS.md](docs/development/FEATURE-FLAGS.md) | Feature flags | Feature flag system, implementation, testing patterns |
-| [SECURITY-GIT-SECRETS.md](docs/development/SECURITY-GIT-SECRETS.md) | Secret management | .env patterns, .gitignore, credential security |
-| [STORAGE-CONVENTIONS.md](docs/development/STORAGE-CONVENTIONS.md) | Browser storage | localStorage/sessionStorage naming conventions |
+**Database:** [DB-NAMING-STANDARDS.md](docs/database/DB-NAMING-STANDARDS.md) | [DB-MIGRATION-MANAGEMENT.md](docs/database/DB-MIGRATION-MANAGEMENT.md) | [SQL-BEST-PRACTICES.md](docs/database/SQL-BEST-PRACTICES.md) ⭐ | [USAGE-QUOTA-SYSTEM.md](docs/database/USAGE-QUOTA-SYSTEM.md)
 
-### 📈 Features & Extensions
-| Document | Use Case | Key Contents |
-|----------|----------|--------------|
-| [Trial Eligibility WF PRD](docs/planning/trial-eligibility-enhancement/TRIAL-ELIGIBILITY-WF-PRD.md) | Trial eligibility enhancement ⭐ | Workflow-first PRD: 4 workflows, 3-phase rollout, business outcomes, success metrics |
-| [GITHUB-MULTI-FILE-IMPORT.md](docs/features/GITHUB-MULTI-FILE-IMPORT.md) | GitHub import ⭐ | Multi-file import from GitHub repos, tree browsing, file selection |
-| [ADD-NEW-DOC-TYPE.md](docs/guides/ADD-NEW-DOC-TYPE.md) | Extension guide | Adding new documentation types, prompt templates |
-
-### 👤 Admin Tools
-| Document | Use Case | Key Contents |
-|----------|----------|--------------|
-| [USER-MANAGEMENT-GUIDE.md](docs/admin/USER-MANAGEMENT-GUIDE.md) | User management ⭐ | Role management, account suspension/deletion, trial granting, audit logging |
-| [CAMPAIGN-MANAGEMENT-GUIDE.md](docs/admin/CAMPAIGN-MANAGEMENT-GUIDE.md) | Campaign management ⭐ | Creating trials campaigns, UI-based setup, monitoring, best practices |
-| [ADMIN-USAGE-STATS.md](docs/admin/ADMIN-USAGE-STATS.md) | Usage analytics | Admin dashboard, user stats, quota monitoring |
-
-### 📋 Project Templates
-| Document | Use Case | Key Contents |
-|----------|----------|--------------|
-| [WORKFLOW-FIRST-PRD-TEMPLATE.md](docs/templates/WORKFLOW-FIRST-PRD-TEMPLATE.md) | New project PRD ⭐ | Meta prompt for workflow-first PRDs, outcome-based planning, anti-patterns to avoid |
-| [WORKFLOW-FIRST-PRD-EXAMPLE-CODESCRIBE.md](docs/templates/WORKFLOW-FIRST-PRD-EXAMPLE-CODESCRIBE.md) | PRD example ⭐ | Complete CodeScribe PRD demonstrating workflow-first approach, 5 core workflows |
-
-### 📢 Marketing & Launch
-| Document | Use Case | Key Contents |
-|----------|----------|--------------|
-| [VISUAL-ASSET-CREATION-PLAN.md](docs/marketing/VISUAL-ASSET-CREATION-PLAN.md) | Product launch assets ⭐ | Complete visual asset guide: 8 screenshots, demo video, GIFs, platform specs, timeline |
+**Development:** [FEATURE-BRANCH-WORKFLOW.md](docs/development/FEATURE-BRANCH-WORKFLOW.md) | [FEATURE-FLAGS.md](docs/development/FEATURE-FLAGS.md) | [STORAGE-CONVENTIONS.md](docs/development/STORAGE-CONVENTIONS.md) | [VERSION-CHECKER.md](docs/scripts/VERSION-CHECKER.md)
+</details>
 
 ---
 
@@ -227,157 +110,82 @@ const response = await fetch(`${API_URL}/api/protected-endpoint`, {
 
 ---
 
-## 📖 Claude Usage Guidelines
+## 📖 Usage Guidelines
 
-### 1. Question Type → Document Mapping
-| Question Type | Reference |
-|--------------|-----------|
-| Planning/Scope | PRD, Epics |
-| Implementation | Dev Guide, Master Prompt |
-| API/Endpoints | API Reference |
-| Design/UI | UI-STANDARDS.md (button labels, text conventions), Figma Guide, Unified Brand Palette, COLOR-REFERENCE.md |
-| Architecture | ARCHITECTURE-OVERVIEW.md (visual), ARCHITECTURE.md (technical) |
-| Error Handling | ERROR-HANDLING-PATTERNS.md (app vs external API errors, 429 vs 503, email/Claude patterns) |
-| Subscription Flows | SUBSCRIPTION-FLOWS.md (unauthenticated signup, email/OAuth, billing periods) |
-| Subscriptions/Payments | SUBSCRIPTION-MANAGEMENT.md (upgrade/downgrade flows, proration, webhooks) |
-| Stripe Setup | STRIPE-SETUP.md (initial setup), STRIPE-PRODUCTION-SWITCH.md (go-live), STRIPE-TESTING-GUIDE.md (testing) |
-| Authentication | EMAIL-VERIFICATION-SYSTEM.md, PASSWORD-RESET-IMPLEMENTATION.md, PASSWORD-RESET-SETUP.md |
-| Security | JWT-AUTHENTICATION-SECURITY.md, EMAIL-RATE-LIMITING.md, FREEMIUM-API-PROTECTION.md, EMAIL-CONFIGURATION.md |
-| Deployment Setup | STRIPE-SETUP.md, RESEND-SETUP.md, GITHUB-OAUTH-SETUP.md, CUSTOM-DOMAIN-SETUP.md, DEPLOYMENT-CHECKLIST.md |
-| Git Workflow | FEATURE-BRANCH-WORKFLOW.md |
-| Feature Flags | FEATURE-FLAGS.md |
-| Multi-File Feature | MULTI-FILE-ARCHITECTURE-ANALYSIS.md, GITHUB-MULTI-FILE-IMPORT.md, MULTI-FILE-SIDEBAR-UX.md |
-| Performance | OPTIMIZATION-GUIDE.md |
-| React Performance | REACT-OPTIMIZATION-LESSONS.md (memoization, re-renders, v2.8.0 lessons) |
-| Cost Optimization | PROMPT-CACHING-GUIDE.md (caching strategy, adding examples, savings) |
-| GitHub API / Scaling | GITHUB-API-SCALING.md (rate limits, server token vs per-user, caching, scaling path) |
-| Testing | Testing README, COMPONENT-TEST-COVERAGE.md, TEST-PATTERNS-GUIDE.md, SKIPPED-TESTS.md |
-| Test Fixes/Patterns | TEST-PATTERNS-GUIDE.md (11 patterns, 6 insights, frontend + backend) |
-| Skipped Tests | SKIPPED-TESTS.md (56 tests documented, quarterly review schedule) |
-| Accessibility | ACCESSIBILITY-AUDIT.md, SCREEN-READER-TESTING-GUIDE.md |
-| Banner Design | BANNER-PATTERNS.md (visual design: info/promo/error/warning, CTA layouts, animations) |
-| Error Handling UX | ERROR-HANDLING-UX.md (decision framework: banners vs inline vs modals, validation timing) |
-| Form Validation | ERROR-HANDLING-UX.md (on-submit validation, real-time exceptions, focus management) |
-| Components | TOAST-SYSTEM.md, BANNER-PATTERNS.md, ERROR-HANDLING-UX.md, USAGE-PROMPTS.md, COPYBUTTON.md, MULTI-FILE-SIDEBAR-UX.md, etc. |
-| Versions | Run `npm run versions`, VERSION-CHECKER.md |
-| Database | DB-NAMING-STANDARDS.md, DB-MIGRATION-MANAGEMENT.md, USAGE-QUOTA-SYSTEM.md, PRODUCTION-DB-SETUP.md |
-| Release/Deployment | RELEASE-QUICKSTART.md (prep for release vs. deploy), VERCEL-DEPLOYMENT-GUIDE.md |
-| New Project PRD | WORKFLOW-FIRST-PRD-TEMPLATE.md (meta prompt), WORKFLOW-FIRST-PRD-EXAMPLE-CODESCRIBE.md (example) |
-| Workflow Planning | WORKFLOW-FIRST-PRD-TEMPLATE.md (outcome-based planning, jobs-to-be-done, workflow diagrams) |
-| Analytics/Metrics | WORKFLOW-OUTCOME-METRICS-PLAN.md (session tracking, funnels, conversion metrics) |
-| Campaigns/Trials | CAMPAIGN-MANAGEMENT-GUIDE.md (UI-based setup, monitoring), TRIAL-ELIGIBILITY-WF-PRD.md (workflow PRD, eligibility rules, 3-phase plan) |
-| Admin Tools | USER-MANAGEMENT-GUIDE.md (user management, suspension/deletion), CAMPAIGN-MANAGEMENT-GUIDE.md, ADMIN-USAGE-STATS.md |
-| Marketing/Launch | VISUAL-ASSET-CREATION-PLAN.md (screenshots, demo videos, GIFs, platform requirements) |
+**Best Practices:**
+- Always cite sources (document name + file path)
+- Include code examples and file paths for implementation questions
+- Check version with `npm run versions` before citing package versions
+- Don't invent features—stay within documented scope
 
-### 2. Best Practices
-- ✅ **Always cite sources:** Mention document name + file path
-- ✅ **Be implementation-ready:** Include code examples, file paths, dependencies
-- ✅ **Cross-reference:** Multiple docs cover same topic from different angles
-- ✅ **Stay consistent:** Don't invent features; respect scope boundaries
-- ✅ **Version accuracy:** Run `npm run versions` before citing package versions
-
-### 3. Key Cross-References
-- **Architecture:** ARCHITECTURE-OVERVIEW.md (visual) → ARCHITECTURE.md (technical) → Dev Guide (implementation)
-- **Performance:** OPTIMIZATION-GUIDE.md (comprehensive) → Dev Guide (techniques) → ARCHITECTURE.md (targets)
-- **Testing:** Testing README (overview) → COMPONENT-TEST-COVERAGE.md (details) → frontend-testing-guide.md (patterns) → TEST-PATTERNS-GUIDE.md (fixes & patterns) → SKIPPED-TESTS.md (maintenance)
-- **Test Debugging:** TEST-PATTERNS-GUIDE.md (10 patterns, 6 insights) for fixing auth tests, mocking, validation
-- **Skipped Tests:** SKIPPED-TESTS.md - Update on every release, quarterly review (15 frontend tests intentionally skipped)
-- **Error Handling:** ERROR-HANDLING-PATTERNS.md (app vs API errors, HTTP status codes) → ERROR-HANDLING-UX.md (decision framework: banners vs inline vs modals) → BANNER-PATTERNS.md (visual design: all banner types, layouts, animations) → USAGE-PROMPTS.md (usage warnings/limits) → TOAST-SYSTEM.md (success toasts)
-- **Subscriptions:** SUBSCRIPTION-FLOWS.md (unauthenticated flow, sessionStorage) → SUBSCRIPTION-MANAGEMENT.md (upgrades, proration, webhooks)
-- **Stripe:** STRIPE-SETUP.md (initial integration) → STRIPE-TESTING-GUIDE.md (testing flows) → STRIPE-PRODUCTION-SWITCH.md (go-live)
-- **Campaigns:** CAMPAIGN-MANAGEMENT-GUIDE.md (UI-based setup, monitoring) → AUTO-TRIAL-CAMPAIGN.md (technical implementation)
-- **Accessibility:** ACCESSIBILITY-AUDIT.md (results) → SCREEN-READER-TESTING-GUIDE.md (procedures)
-- **Release Process:** RELEASE-QUICKSTART.md - Two-phase process (Phase 1: Prep for Release, Phase 2: Release Deployment)
+**Quick Lookups:**
+- **UI/Design:** UI-STANDARDS.md (button labels) | brand-palette-unified.html (colors) | BANNER-PATTERNS.md (banner types) | ERROR-HANDLING-UX.md (when to use banners vs inline vs modals)
+- **Testing:** TEST-PATTERNS-GUIDE.md (11 patterns, ES Modules) | SKIPPED-TESTS.md (update every release, quarterly review)
+- **Architecture:** ARCHITECTURE-OVERVIEW.md → ARCHITECTURE.md → Dev Guide
+- **Error Handling:** ERROR-HANDLING-PATTERNS.md (app vs API errors, 429 vs 503) → ERROR-HANDLING-UX.md (UI patterns) → BANNER-PATTERNS.md (visual design)
+- **Database/SQL:** SQL-BEST-PRACTICES.md (dynamic queries, security patterns) | DB-NAMING-STANDARDS.md (naming conventions) | DB-MIGRATION-MANAGEMENT.md (migration workflow)
+- **Subscriptions:** SUBSCRIPTION-FLOWS.md (signup flows) → SUBSCRIPTION-MANAGEMENT.md (upgrades/proration)
+- **Stripe:** STRIPE-SETUP.md → STRIPE-TESTING-GUIDE.md → STRIPE-PRODUCTION-SWITCH.md (go-live)
+- **Release:** RELEASE-QUICKSTART.md (two-phase: prep vs deploy)
 
 ---
 
-## ⚙️ Critical Implementation Guidelines
+## ⚙️ Critical Patterns
 
-### E2E Testing: Event-Based Waiting
-❌ **Never use `waitForTimeout()`** - causes race conditions
-✅ **Always wait for events:**
-- Network: `page.waitForResponse()`
-- DOM: `expect().toBeVisible()`
-- Components: `waitForSelector()`
+### Testing
+- **E2E:** Never use `waitForTimeout()` → Use `page.waitForResponse()`, `expect().toBeVisible()`, `waitForSelector()`
+- **Backend:** ES modules only (import from `@jest/globals`, mock BEFORE imports) - see [TEST-PATTERNS-GUIDE.md Pattern 11](docs/testing/TEST-PATTERNS-GUIDE.md)
+- **Skipped Tests:** Add `.skip()` + comment, document in SKIPPED-TESTS.md. Update counts on every release, quarterly review.
 
-### Backend Testing: ES Modules Required ⚠️
-❌ **Never use CommonJS `require()`** in tests
-✅ **Always use ES modules `import`:**
-- Import jest from `@jest/globals`
-- Mock BEFORE importing routes
-- See [Pattern 11 in TEST-PATTERNS-GUIDE.md](docs/testing/TEST-PATTERNS-GUIDE.md#pattern-11-es-modules-vs-commonjs-in-backend-tests--new-v244)
+### Database ([guides](docs/database/))
+- **Naming:** Tables `plural_snake_case`, columns singular, indexes `idx_<table>_<column>`
+- **Migration:** 1) Docker sandbox test → 2) Get approval → 3) Neon dev `npm run migrate` → 4) Auto-deploy on `main`
+- **SQL Security:** Always use parameterized queries (`$1`, `$2` placeholders) | Use `sql.query(queryText, params)` | Whitelist ORDER BY columns | Never concatenate user input into SQL strings - see [SQL-BEST-PRACTICES.md](docs/database/SQL-BEST-PRACTICES.md)
 
-### Quick References
-- **Timezone:** EST/EDT labels (Morning 6-12, Afternoon 12-5, Evening 5-9, Night 9-6)
-- **Mermaid:** Legend last in code, white bg, compact `<br/>` format ([guide](docs/components/MERMAID-DIAGRAMS.md))
-- **Versions:** Run `npm run versions` before citing ([guide](docs/scripts/VERSION-CHECKER.md))
+```javascript
+// Dynamic WHERE clauses with parameterized queries
+import { sql } from '@vercel/postgres';
 
-### Skipped Tests ([full guide](docs/testing/SKIPPED-TESTS.md))
-**When skipping:** Add `.skip()`, comment reason, document in SKIPPED-TESTS.md with category/justification
-**When unskipping:** Remove `.skip()`, verify passes, remove from SKIPPED-TESTS.md
-**On release:** Run `grep "skipped"`, update counts, review quarterly
-**Note:** Currently 54 frontend tests skipped. Database tests run separately in Docker (not counted).
+let queryText = 'SELECT * FROM users';
+const conditions = [];
+const params = [];
+let paramCounter = 1;
 
-### Database ([naming guide](docs/database/DB-NAMING-STANDARDS.md), [migration guide](docs/database/DB-MIGRATION-MANAGEMENT.md))
-**Naming:** Tables plural snake_case, columns singular, indexes `idx_<table>_<column>`, explicit `ON DELETE`
-**Migration Workflow:**
-1. Docker sandbox: `npm run test:db -- migrations-XXX` ⚠️ **Get user approval before step 2**
-2. Neon dev: `npm run migrate` + `npm run migrate:validate`
-3. Production: Auto-deploy on `main` push
+if (status) {
+  conditions.push(`status = $${paramCounter++}`);
+  params.push(status);
+}
 
-### Modal UX: No Auto-Close
-❌ **Never auto-close** confirmation modals (email/payment/account changes)
-✅ **Always require** explicit Close button click
-**Why:** Users need time to read confirmations. Industry standard (Stripe, Gmail, Slack).
+if (role) {
+  conditions.push(`role = $${paramCounter++}`);
+  params.push(role);
+}
 
-### Select/Dropdown Pattern: Always Use `<Select>` Component
-❌ **Never use native `<select>` elements** in admin dashboards or filter UIs
-✅ **Always use** the custom `<Select>` component from `src/components/Select.jsx`
+if (conditions.length > 0) {
+  queryText += ' WHERE ' + conditions.join(' AND ');
+}
+
+const result = await sql.query(queryText, params);  // ✅ Safe
+
+// ❌ NEVER: String concatenation with user input
+const where = `WHERE status = '${status}'`;  // SQL injection risk!
+```
+
+### UI Components
+- **Buttons:** "New [Noun]" (primary) | "Create [Noun]" (modal/submit) | "Add" (import only) - see [UI-STANDARDS.md](docs/design/UI-STANDARDS.md)
+- **Dropdowns:** Always use `<Select>` component (not native `<select>`) for consistent styling, a11y, portal rendering
+- **Modals:** Never auto-close confirmations—require explicit Close click (industry standard)
 
 ```jsx
+// Button labeling
+<button><Plus /> New Project</button>           // Primary ✅
+<button type="submit">Create Project</button>   // Submit ✅
+<button>Add Code</button>                       // Import ✅
+
+// Select component
 import { Select } from '../../components/Select';
-
-const OPTIONS = [
-  { value: '', label: 'All Items' },
-  { value: 'foo', label: 'Foo' },
-  { value: 'bar', label: 'Bar' },
-];
-
-<Select
-  value={currentValue}
-  onChange={(val) => setValue(val)}
-  placeholder="All Items"
-  options={OPTIONS}
-  ariaLabel="Filter by item"
-/>
+<Select value={val} onChange={setVal} options={OPTIONS} ariaLabel="Filter" />
 ```
-
-**Why:** Consistent styling (white bg, chevron, purple hover/focus), Headless UI accessibility (keyboard nav, ARIA), Portal-rendered dropdown escapes overflow containers, dark mode support built in. Native `<select>` renders with browser-default chrome that breaks visual consistency.
-
-### Button Labeling Standards
-**Follow industry standard patterns** (GitHub, Linear, Stripe, Notion) - see [UI-STANDARDS.md](docs/design/UI-STANDARDS.md)
-
-**Primary buttons:** Use "New [Noun]" (e.g., "New Project", "New Invite Code")
-**Modal titles:** Use "Create [Noun]" (e.g., "Create Project")
-**Submit buttons:** Use "Create [Noun]" (e.g., "Create Project")
-**Empty states:** Use "Create First [Noun]" (e.g., "Create First Project")
-**Exception:** Use "Add" only for imports/uploads (e.g., "Add Code" for file upload)
-
-```jsx
-✅ Correct:
-<button><Plus /> New Project</button>              // Primary button
-<h2>Create Project</h2>                            // Modal title
-<button type="submit">Create Project</button>      // Submit button
-<button>Create First Project</button>              // Empty state
-<button>Add Code</button>                          // Import/upload
-
-❌ Incorrect:
-<button>Create Project</button>                    // Primary (should be "New")
-<button>Add Project</button>                       // Creating new (should be "New")
-<button type="submit">New Project</button>         // Submit (should be "Create")
-```
-
-**Why:** Industry standard pattern. Concise "New" for buttons, formal "Create" for forms. "Add" only for bringing in existing items. Consistent across GitHub, Linear, Stripe, Notion.
 
 ---
 
@@ -415,64 +223,22 @@ cd server && npm test           # Run backend tests (get counts)
 
 ## 🔧 LLM Provider Configuration
 
-CodeScribe AI now supports multiple LLM providers with easy switching.
+**Supported:** Claude (default, Sonnet 4.5) | OpenAI (gpt-5.1)
+**Switching:** Update `server/.env` → Restart server (no code changes)
 
-### Current Implementation
-- **Architecture**: Simplified config-driven approach
-- **Supported Providers**: Claude (Anthropic), OpenAI
-- **Default Provider**: Claude Sonnet 4.5
-- **Implementation**: ~650 lines of code
-
-### Switching Providers
-
-**Environment Variables** (`server/.env`):
 ```bash
-# Use Claude (default)
+# Claude (default) - 200K context, 90% prompt caching savings
 LLM_PROVIDER=claude
 CLAUDE_API_KEY=sk-ant-...
 
-# Use OpenAI
+# OpenAI - 128K context, no prompt caching
 LLM_PROVIDER=openai
 OPENAI_API_KEY=sk-...
 LLM_MODEL=gpt-5.1
 ```
 
-**No code changes required** - just update environment variables and restart server.
-
-### Provider Capabilities
-
-| Feature | Claude | OpenAI |
-|---------|--------|--------|
-| Streaming | ✅ Yes | ✅ Yes |
-| Prompt Caching | ✅ Yes (90% savings) | ❌ No |
-| Max Context | 200K tokens | 128K tokens |
-| Default Model | claude-sonnet-4-5-20250929 | gpt-5.1 |
-
-### Documentation
-- **Architecture Guide**: [MULTI-PROVIDER-SIMPLIFIED-ARCHITECTURE.md](docs/architecture/MULTI-PROVIDER-SIMPLIFIED-ARCHITECTURE.md)
-- **Decision Guide**: [MULTI-PROVIDER-DECISION-GUIDE.md](docs/architecture/MULTI-PROVIDER-DECISION-GUIDE.md)
-- **Visual Guide**: [MULTI-PROVIDER-ARCHITECTURE-VISUAL.md](docs/architecture/MULTI-PROVIDER-ARCHITECTURE-VISUAL.md)
-
-### API Response Changes
-
-Responses now include provider metadata:
-
-```json
-{
-  "documentation": "...",
-  "qualityScore": 85,
-  "metadata": {
-    "provider": "claude",          // NEW: Provider used
-    "model": "claude-sonnet-4...", // NEW: Model used
-    "inputTokens": 500,            // NEW: Token counts
-    "outputTokens": 1000,
-    "wasCached": true,             // NEW: Cache status
-    "latencyMs": 1250,
-    "language": "javascript",
-    "docType": "README"
-  }
-}
-```
+**Response Metadata:** Includes `provider`, `model`, `inputTokens`, `outputTokens`, `wasCached`, `latencyMs`
+**Docs:** [MULTI-PROVIDER-SIMPLIFIED-ARCHITECTURE.md](docs/architecture/MULTI-PROVIDER-SIMPLIFIED-ARCHITECTURE.md) | [MULTI-PROVIDER-DECISION-GUIDE.md](docs/architecture/MULTI-PROVIDER-DECISION-GUIDE.md)
 
 ---
 
@@ -511,16 +277,10 @@ Examples:
 
 ## 🎯 Project Status
 
-**Phase 1 (Days 1-5):** ✅ Complete - Web app, API, services, UI, tests
-**Phase 1.5 (Days 6-10):** ✅ Complete - WCAG AA compliance, production deployment
-
-**Final Metrics:**
-- Accessibility: 95/100, WCAG 2.1 AA, 0 axe violations
-- Performance: 75/100 Lighthouse (+67%), 78KB bundle (-85%)
-- Testing: 3,231 tests (1,840 frontend, 1,391 backend, 90 skipped), 100% passing
-- Deployment: Vercel + GitHub Actions CI/CD, custom domain
-
-**Optional:** README screenshots, demo video, extended manual a11y testing
+✅ **Production Ready** - MVP delivered in 9 days (Oct 19, 2025)
+- Phase 1 (Days 1-5): Web app, API, services, UI, tests
+- Phase 1.5 (Days 6-10): WCAG AA compliance, production deployment
+- Current: v3.5.5 - Email template enterprise polish, analytics dashboard, admin tools
 
 ---
 
@@ -539,15 +299,9 @@ codescribe-ai/
 
 ---
 
-## 📝 Key Principles
+## 📝 Design Principles
 
-1. **Portfolio** - Full-stack skills, speed, product thinking
-2. **API-First** - Service layer supports CLI/VS Code extension
-3. **Privacy** - Code in memory only; DB for auth/usage
-4. **Real-Time** - SSE streaming for live doc generation
-5. **Educational** - Quality scoring teaches best practices
-6. **Scope** - 9-day timeline via strict discipline
-7. **Cost** - Neon free tier covers 50K users ($0/mo)
+**Portfolio** (full-stack, speed, product thinking) | **API-First** (extensible service layer) | **Privacy** (code in-memory only) | **Real-Time** (SSE streaming) | **Educational** (quality scoring) | **Cost-Efficient** (Neon free tier → 50K users)
 
 ---
 
@@ -559,31 +313,27 @@ codescribe-ai/
 
 ## 🔄 Version History
 
-**Current: v3.5.4** (January 28, 2026) - Admin Table UX Consistency & Analytics Chart Improvements
-- **Admin table standardization:** Consistent filter patterns (FilterBar component), export buttons redesigned as icon-only secondary actions, refresh buttons standardized to w-5 h-5
-- **Analytics chart enhancements:** Table view toggles added to all Performance tab charts (Latency Trend, Cache Hit Rate, Throughput Trend, Latency Breakdown)
-- **Chart wrapper components:** Created ChartSections.jsx with 7 specialized wrappers reducing code from ~20 lines to ~8 lines per chart
-- **Server-side pagination:** Implemented across all admin tables (Users, Trials, InviteCodes, TrialPrograms, EventsTable, Compliance)
-- **UX improvements:** Sticky headers, 25-row pagination default, shared Pagination component, portal-rendered Select dropdowns preventing scroll jump
-- **Chart fixes:** Business Conversion Funnel overflow (450px height), MultiLineTrendChartSection date merging, Latency Breakdown height optimization (280px)
-- Test coverage: 4,550 tests (4,406 passing, 144 skipped, 0 failing)
+**Current: v3.5.5** (January 29, 2026) - Email Template Enterprise Polish
+- Email verification template redesign: purpose-first messaging, neutral environment labeling
+- Changed header from "Welcome" to "Confirm your email address", CTA to "Confirm email address"
+- Normalized tier badge to "Plan: Free (Development)" format, added branded footer
+- Tests: 4,550 (4,351 passing, 144 skipped, 55 failing - pre-existing analytics failures)
+
+**v3.5.4** (January 28, 2026) - Admin Table UX & Analytics Charts
+- Admin table standardization: FilterBar component, icon-only exports, server-side pagination
+- Analytics chart enhancements: Table view toggles, ChartSections.jsx wrappers, overflow fixes
+- UX improvements: Sticky headers, 25-row pagination, portal-rendered Select dropdowns
+- Tests: 4,550 (4,406 passing, 144 skipped, 0 failing)
 
 <details>
 <summary>Recent Releases (v3.5.3-v2.9.0) & Milestones</summary>
 
-**v3.5.3** (January 28, 2026) - Analytics Infrastructure & Admin Dashboard Polish
-- **Pricing restructure to profitable 4-tier model:** Free/$49/$199/Custom
-  - Starter tier repurposed as programmatic-only trial/beta tier (not purchasable)
-  - Pro: $49/month (38% margin), Team: $199/month for 5 users (66% margin at $39.80/user)
-  - Enterprise: $750+/month starting with HIPAA compliance (63% margin)
-- **GitHub import background loading fix:** Background repo pagination stops when user selects a repo
-- **Server-side analytics:** `doc_generation` and `quality_score` events captured in generate routes, fire-and-forget; `performance` (TTFT) remains client-side
-- **Analytics API key auth:** `X-Analytics-Key` header secures analytics endpoint for server-to-server collection
-- **HIPAA Compliance dashboard stabilized:** Fixed 3 crashes (DateRangePicker props, undefined logs, dropdown alignment)
-- **Admin dashboard UX consistency:** Aligned headers, card styling (`rounded-xl`, no shadow), back buttons, and outer padding across Analytics, Compliance, Usage
-- **Shared `useDateRange` hook:** Consistent date range state, persistence, and API serialization across all admin pages
-- **Select dropdown scroll fix:** Portal-rendered Headless UI options no longer cause page scroll on open
-- Test coverage: 4,550 tests (4,406 passing, 144 skipped, 0 failing)
+**v3.5.3** (January 28, 2026) - Analytics Infrastructure & Pricing Polish
+- Pricing restructure: Free/$49/$199/Custom (38-66% margins), Starter = trial-only
+- Server-side analytics: `doc_generation`/`quality_score` events, API key auth (`X-Analytics-Key`)
+- Admin UX: HIPAA dashboard fixes, aligned headers/cards, shared `useDateRange` hook
+- GitHub import: Background pagination stops on repo selection
+- Tests: 4,550 (4,406 passing, 144 skipped)
 
 **v3.5.2** (Jan 27, 2026): Enterprise Healthcare HIPAA Compliance - 5 HIPAA features (224 tests), audit logging, PHI detection, encryption, compliance dashboard, BAA docs
 **v3.5.1** (Jan 26, 2026): GitHub Private Repos & Progressive Loading - Private repo access, progressive loading, pagination API, field-level errors
