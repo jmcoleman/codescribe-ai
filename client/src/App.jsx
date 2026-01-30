@@ -80,14 +80,18 @@ function App() {
   } = usePreferences();
 
   // Load persisted state from localStorage on mount, fallback to defaults
-  const [code, setCode] = useState(() => getStorageItem(STORAGE_KEYS.EDITOR_CODE, DEFAULT_CODE));
+  // Note: Code is NOT loaded here - it's loaded by useEffect below to handle user-scoped keys
+  const [code, setCode] = useState(DEFAULT_CODE);
   const [docType, setDocType] = useState(() => getStorageItem(STORAGE_KEYS.EDITOR_DOC_TYPE, 'README'));
   const [filename, setFilename] = useState(() => getStorageItem(STORAGE_KEYS.EDITOR_FILENAME, 'code.js'));
   // Track where the code came from (valid: 'upload', 'github', 'paste', 'sample', 'default')
-  const [codeOrigin, setCodeOrigin] = useState('default'); // Default pre-loaded code
+  const [codeOrigin, setCodeOrigin] = useState(() => getStorageItem(STORAGE_KEYS.EDITOR_CODE_ORIGIN, 'default'));
   // Source metadata for reloadable origins (github, gitlab, bitbucket, etc.)
   // Structure: { source: 'github'|'gitlab'|etc, repo: string, path: string, sha?: string, branch?: string }
-  const [sourceMetadata, setSourceMetadata] = useState(null);
+  const [sourceMetadata, setSourceMetadata] = useState(() => {
+    const stored = getStorageItem(STORAGE_KEYS.EDITOR_SOURCE_METADATA);
+    return stored ? JSON.parse(stored) : null;
+  });
   // Language is derived from filename, not stored separately
   const language = detectLanguageFromFilename(filename);
 
@@ -140,6 +144,7 @@ function App() {
   const [testSkeletonMode, setTestSkeletonMode] = useState(false);
   const [phiDetection, setPhiDetection] = useState(null); // PHI detection results
   const [showPhiWarning, setShowPhiWarning] = useState(false); // Show PHI warning banner
+  const [phiConfirmed, setPhiConfirmed] = useState(false); // User confirmed no actual PHI
   const phiCheckTimeoutRef = useRef(null); // Debounce PHI detection
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [isMobileView, setIsMobileView] = useState(() => window.innerWidth < 1024);
@@ -410,9 +415,10 @@ function App() {
 
   // Note: Batch data persistence is handled after useBatchGeneration hook initialization
 
-  // Load user-scoped editor content when user logs in
+  // Load user-scoped editor content when user logs in or component mounts
   // Track if we've seen a logged-in user to differentiate logout from initial load
   const hasSeenUserRef = useRef(false);
+
   useEffect(() => {
     if (user && user.id) {
       hasSeenUserRef.current = true;
@@ -420,15 +426,21 @@ function App() {
       const codeKey = getEditorKey(user.id, 'code');
       if (codeKey) {
         const savedCode = getStorageItem(codeKey);
-        if (savedCode) {
-          setCode(savedCode);
-        }
+        // Always update code state with what's in storage (or DEFAULT_CODE if nothing saved)
+        setCode(savedCode || DEFAULT_CODE);
+      }
+    } else if (!user && !hasSeenUserRef.current) {
+      // No user on initial load - check global key for anonymous user's code
+      const globalCode = getStorageItem(STORAGE_KEYS.EDITOR_CODE);
+      if (globalCode) {
+        setCode(globalCode);
       }
     } else if (hasSeenUserRef.current) {
       // User logged out (not initial page load) - clear all UI state
       // Batch state clearing is handled separately after useBatchGeneration hook
       setCode(DEFAULT_CODE);
       setCodeOrigin('default'); // Reset to default pre-loaded code
+      setSourceMetadata(null); // Clear GitHub/GitLab metadata
       setFilename('code.js');
       setDocType('README');
       // Clear documentation panel
@@ -439,6 +451,8 @@ function App() {
       removeSessionItem(STORAGE_KEYS.EDITOR_QUALITY_SCORE);
       // Clear global code key to prevent anonymous user's old code from persisting
       setStorageItem(STORAGE_KEYS.EDITOR_CODE, DEFAULT_CODE);
+      setStorageItem(STORAGE_KEYS.EDITOR_CODE_ORIGIN, 'default');
+      setStorageItem(STORAGE_KEYS.EDITOR_SOURCE_METADATA, null);
       // Reset "doc panel cleared" flag so next login will load from DB
       localStorage.removeItem(STORAGE_KEYS.DOC_PANEL_CLEARED);
       hasSeenUserRef.current = false;
@@ -466,7 +480,15 @@ function App() {
   }, [searchParams, isAuthenticated, setSearchParams]);
 
   // Persist editor code to localStorage whenever it changes (user-scoped for privacy)
+  // Skip initial render to prevent overwriting user's saved code with DEFAULT_CODE
+  const isInitialMount = useRef(true);
   useEffect(() => {
+    // Skip persistence on initial mount - let the loading effect restore first
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
     if (user && user.id) {
       // User is logged in - use user-scoped key
       const key = getEditorKey(user.id, 'code');
@@ -488,6 +510,14 @@ function App() {
   useEffect(() => {
     setStorageItem(STORAGE_KEYS.EDITOR_DOC_TYPE, docType);
   }, [docType]);
+
+  useEffect(() => {
+    setStorageItem(STORAGE_KEYS.EDITOR_CODE_ORIGIN, codeOrigin);
+  }, [codeOrigin]);
+
+  useEffect(() => {
+    setStorageItem(STORAGE_KEYS.EDITOR_SOURCE_METADATA, sourceMetadata ? JSON.stringify(sourceMetadata) : null);
+  }, [sourceMetadata]);
 
   // Keyboard shortcut: Cmd+B / Ctrl+B to toggle sidebar collapse/expand
   useEffect(() => {
@@ -695,6 +725,7 @@ function App() {
     if (batchSummary) {
       // Clear code panel state (no files to show)
       setCode('');
+      setPhiConfirmed(false); // Reset PHI confirmation when clearing
       setFilename('');
       setCodeOrigin(null);
       // Display the batch summary in the doc panel
@@ -901,6 +932,7 @@ function App() {
       // Sync code to CodePanel
       if (activeFile.content) {
         setCode(activeFile.content);
+        setPhiConfirmed(false); // Reset PHI confirmation when switching files
         setCodeOrigin(activeFile.origin || 'paste'); // Use file's origin
         // Sync source metadata for reload functionality (github, gitlab, etc.)
         if (activeFile.origin === 'github' && activeFile.github) {
@@ -1147,12 +1179,13 @@ function App() {
         return;
       }
 
-      // Check for PHI - warn user but don't block
-      // User must explicitly confirm they've verified no real PHI before proceeding
-      if (phiDetection?.containsPHI && showPhiWarning) {
-        // Scroll to top to ensure banner is visible
+      // Check for PHI - block generation until user confirms or sanitizes
+      // User must explicitly confirm they've verified no real PHI or complete sanitization
+      if (phiDetection?.containsPHI && !phiConfirmed) {
+        // Show warning banner and scroll to top to ensure it's visible
+        setShowPhiWarning(true);
         window.scrollTo({ top: 0, behavior: 'smooth' });
-        return; // Wait for user to dismiss warning or confirm
+        return; // Wait for user to sanitize or confirm no actual PHI
       }
 
       // Check line count and file size
@@ -1656,6 +1689,7 @@ function App() {
       if (data.success && data.file) {
         // Set the uploaded file content in the editor
         setCode(data.file.content);
+        setPhiConfirmed(false); // Reset PHI confirmation for new code
         setCodeOrigin('upload'); // File was uploaded
         setSourceMetadata(null); // Clear any previous source metadata (upload is not reloadable)
         setFilename(data.file.name);
@@ -1919,6 +1953,8 @@ function App() {
   // Handler for code changes in editor - tracks first meaningful code input
   const handleCodeChange = useCallback((newCode) => {
     setCode(newCode);
+    // Reset PHI confirmation when code changes
+    setPhiConfirmed(false);
 
     // Track first meaningful code input (user typing/pasting in editor)
     // Only track if code is substantial and we haven't tracked yet
@@ -1942,6 +1978,7 @@ function App() {
   const handleGithubFileLoad = ({ code: fileCode, language: fileLang, filename: fileName, metadata }) => {
     // Set the code from GitHub file
     setCode(fileCode);
+    setPhiConfirmed(false); // Reset PHI confirmation for new code
     setCodeOrigin('github'); // Code is from GitHub
 
     // Store source metadata for reload functionality (extensible for gitlab, bitbucket, etc.)
@@ -2057,20 +2094,42 @@ function App() {
    */
   const handleDismissPhiWarning = () => {
     setShowPhiWarning(false);
+    setPhiDetection(null);
+    setPhiConfirmed(false);
   };
 
   /**
    * Handler for proceeding with generation despite PHI warning
    * User confirms they've verified no real PHI exists
    */
-  const handleProceedWithPhi = async () => {
+  const handleProceedWithPhi = () => {
+    setPhiConfirmed(true);
     setShowPhiWarning(false);
-    // Proceed with generation now that user has confirmed
-    await performGeneration();
   };
+
+  /**
+   * Handler for code sanitization
+   * Updates code with sanitized version after user reviews and accepts changes
+   */
+  const handleCodeSanitized = (sanitizedCode) => {
+    setCode(sanitizedCode);
+    setPhiDetection(null);
+    setShowPhiWarning(false);
+    setPhiConfirmed(true); // Sanitized code is safe
+  };
+
+  /**
+   * Handler for PHI resolution (from Monaco editor integration)
+   * Called when all PHI has been reviewed/sanitized in the editor
+   */
+  const handlePhiResolved = useCallback(() => {
+    setPhiConfirmed(true);
+    setShowPhiWarning(false);
+  }, []);
 
   const handleLoadSample = (sample) => {
     setCode(sample.code);
+    setPhiConfirmed(false); // Reset PHI confirmation for new code
     setCodeOrigin('sample'); // Code is from a sample
     setSourceMetadata(null); // Clear any previous source metadata
     setDocType(sample.docType);
@@ -2116,6 +2175,7 @@ function App() {
     // Reset code to default placeholder
     setCode(defaultCode);
     setCodeOrigin('default'); // Cleared editor shows default placeholder
+    setSourceMetadata(null); // Clear any GitHub/GitLab metadata
     // Reset filename to default (language will be derived automatically as 'javascript')
     setFilename(defaultFilename);
 
@@ -2123,6 +2183,8 @@ function App() {
     // IMPORTANT: Clear BOTH keys because initial state loads from global key on mount
     setStorageItem(STORAGE_KEYS.EDITOR_CODE, defaultCode); // Always clear global key
     setStorageItem(STORAGE_KEYS.EDITOR_FILENAME, defaultFilename);
+    setStorageItem(STORAGE_KEYS.EDITOR_CODE_ORIGIN, 'default');
+    setStorageItem(STORAGE_KEYS.EDITOR_SOURCE_METADATA, null);
 
     if (user && user.id) {
       // User is logged in - also clear user-scoped key
@@ -2190,6 +2252,7 @@ function App() {
       setDocumentation('');
       setQualityScore(null);
       setCode(DEFAULT_CODE); // Reset to default code when workspace is fully cleared
+      setPhiConfirmed(false); // Reset PHI confirmation when resetting to default
       setFilename('code.js');
       setCodeOrigin('default');
     }
@@ -2314,6 +2377,8 @@ function App() {
       onClear={handleClear}
       onSamplesClick={() => setShowSamplesModal(true)}
       samplesButtonRef={samplesButtonRef}
+      phiDetection={phiDetection}
+      onPhiResolved={handlePhiResolved}
     />
   ), [code, filename, language, samplesButtonRef]);
 
@@ -2489,6 +2554,7 @@ function App() {
                 hasCodeInEditor={code.trim().length > 0}
                 onFilesDrop={handleMultiFilesDrop}
                 onGenerateFile={handleGenerateSingleFile}
+                hasPHI={phiDetection?.containsPHI && !phiConfirmed}
                 onGenerateSelected={() => {
                   // Check if any files are selected
                   const filesWithContent = multiFileState.files.filter(f => f.content && f.content.length > 0);
@@ -2546,6 +2612,8 @@ function App() {
           <div className="px-4 pt-4">
             <PHIWarningBanner
               phiDetection={phiDetection}
+              code={code}
+              onCodeSanitized={handleCodeSanitized}
               onDismiss={handleDismissPhiWarning}
               onProceed={handleProceedWithPhi}
             />
@@ -2671,6 +2739,8 @@ function App() {
                     <div className="px-4 pt-4">
                       <PHIWarningBanner
                         phiDetection={phiDetection}
+                        code={code}
+                        onCodeSanitized={handleCodeSanitized}
                         onDismiss={handleDismissPhiWarning}
                         onProceed={handleProceedWithPhi}
                       />
@@ -2691,6 +2761,8 @@ function App() {
                           onClear={handleClear}
                           onSamplesClick={() => setShowSamplesModal(true)}
                           samplesButtonRef={samplesButtonRef}
+                          phiDetection={phiDetection}
+                          onPhiResolved={handlePhiResolved}
                         />
                       }
                       rightPanel={
@@ -2756,6 +2828,8 @@ function App() {
               <div className="px-4 pt-4">
                 <PHIWarningBanner
                   phiDetection={phiDetection}
+                  code={code}
+                  onCodeSanitized={handleCodeSanitized}
                   onDismiss={handleDismissPhiWarning}
                   onProceed={handleProceedWithPhi}
                 />
@@ -2773,7 +2847,7 @@ function App() {
               showMenuButton={canUseBatchProcessing}
               isGenerating={isGenerating}
               isUploading={isUploading}
-              generateDisabled={!code.trim()}
+              generateDisabled={!code.trim() || (phiDetection?.containsPHI && !phiConfirmed)}
             />
 
             <MobileTabBar
@@ -2795,6 +2869,8 @@ function App() {
                     onClear={handleClear}
                     onSamplesClick={() => setShowSamplesModal(true)}
                     samplesButtonRef={samplesButtonRef}
+                    phiDetection={phiDetection}
+                    onPhiResolved={handlePhiResolved}
                   />
                 ) : (
                   <Suspense fallback={<LoadingFallback />}>
@@ -2844,6 +2920,8 @@ function App() {
                       onClear={handleClear}
                       onSamplesClick={() => setShowSamplesModal(true)}
                       samplesButtonRef={samplesButtonRef}
+                      phiDetection={phiDetection}
+                      onPhiResolved={handlePhiResolved}
                     />
                   }
                   rightPanel={

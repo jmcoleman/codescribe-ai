@@ -87,6 +87,10 @@ export function useDocumentPersistence() {
     setSaveError(null);
 
     try {
+      // Map 'default' origin to 'sample' for database constraint compliance
+      // Valid origins: 'upload', 'github', 'paste', 'sample'
+      const normalizedOrigin = docData.origin === 'default' ? 'sample' : (docData.origin || 'upload');
+
       const result = await documentsApi.saveDocument({
         filename: docData.filename,
         language: docData.language,
@@ -94,7 +98,7 @@ export function useDocumentPersistence() {
         documentation: docData.documentation,
         qualityScore: docData.qualityScore,
         docType: docData.docType,
-        origin: docData.origin || 'upload',
+        origin: normalizedOrigin,
         provider: docData.provider || 'claude',
         model: docData.model || 'claude-sonnet-4-5-20250929',
         github: docData.github || null,

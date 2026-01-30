@@ -48,6 +48,8 @@ export const STORAGE_KEYS = {
   // Note: Language is derived from filename, not stored separately
   EDITOR_FILENAME: 'cs_ed_file',
   EDITOR_DOC_TYPE: 'cs_ed_doctype',
+  EDITOR_CODE_ORIGIN: 'cs_ed_origin',       // 'upload' | 'github' | 'paste' | 'sample' | 'default'
+  EDITOR_SOURCE_METADATA: 'cs_ed_src_meta', // GitHub/GitLab metadata for reload functionality
 
   // Toast History (localStorage - persists for debugging)
   TOAST_HISTORY: 'cs_toast_hist',
