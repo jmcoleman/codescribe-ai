@@ -686,14 +686,9 @@ export function PHIEditorEnhancer({
     }
   }, [currentItemId]);
 
-  // Auto-focus table when panel opens and ensure an item is selected
+  // Select first item when panel opens if none selected
   useEffect(() => {
     if (panelExpanded && phiItems.length > 0) {
-      // Focus the table so arrow keys work immediately
-      if (tableContainerRef.current) {
-        tableContainerRef.current.focus();
-      }
-
       // If no item is selected, select the first one
       if (!currentItemId) {
         setCurrentItemId(phiItems[0].id);
@@ -763,7 +758,7 @@ export function PHIEditorEnhancer({
             <div
               ref={tableContainerRef}
               className="phi-items-table"
-              tabIndex={panelExpanded ? 0 : -1}
+              tabIndex={-1}
               role="grid"
               aria-label="PHI items list - use arrow keys to navigate, Enter to apply, Escape to close"
               aria-rowcount={phiItems.length}
