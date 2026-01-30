@@ -100,6 +100,7 @@ export function PHIEditorEnhancer({
   const hoverProviderRef = useRef(null);
   const codeActionProviderRef = useRef(null);
   const panelRef = useRef(null);
+  const panelHeaderRef = useRef(null); // For focus management when Escape closes drawer
   const resizingRef = useRef(null);
   const currentRowRef = useRef(null);
   const tableContainerRef = useRef(null);
@@ -658,8 +659,15 @@ export function PHIEditorEnhancer({
         if (!editorHasFocus) {
           // Editor doesn't have focus, so close the drawer
           setPanelExpanded(false);
+
+          // Focus the panel header toggle button so user knows where they are
+          setTimeout(() => {
+            if (panelHeaderRef.current) {
+              panelHeaderRef.current.focus();
+            }
+          }, 100);
         }
-        // If editor has focus, Monaco will handle Escape to exit the editor (via addCommand above)
+        // If editor has focus, Monaco will handle Escape to exit the editor (via onKeyDown above)
       }
     };
 
@@ -717,10 +725,11 @@ export function PHIEditorEnhancer({
       >
         {/* Panel Header - Entire header is clickable */}
         <div
+          ref={panelHeaderRef}
           className="phi-panel-header"
           onClick={() => setPanelExpanded(!panelExpanded)}
           role="button"
-          tabIndex={0}
+          tabIndex={-1}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
               e.preventDefault();
@@ -754,7 +763,7 @@ export function PHIEditorEnhancer({
             <div
               ref={tableContainerRef}
               className="phi-items-table"
-              tabIndex={0}
+              tabIndex={panelExpanded ? 0 : -1}
               role="grid"
               aria-label="PHI items list - use arrow keys to navigate, Enter to apply, Escape to close"
               aria-rowcount={phiItems.length}

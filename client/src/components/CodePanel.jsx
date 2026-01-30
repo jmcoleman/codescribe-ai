@@ -11,6 +11,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { getLanguageDisplayName } from '../constants/languages';
 import { sanitizeFilename } from '../utils/fileValidation';
 import { STORAGE_KEYS, getStorageItem, setStorageItem } from '../constants/storage';
+import './CodePanel.css';
 
 // Get scrollbar width from CSS variable
 const getScrollbarWidth = () => {
@@ -482,8 +483,8 @@ export function CodePanel({
             </div>
           </div>
         ) : (
-          /* Monaco Editor */
-          <div className="absolute inset-0">
+          /* Monaco Editor with focus wrapper */
+          <div className="absolute inset-0 monaco-editor-wrapper">
             <Suspense fallback={<EditorLoadingFallback />}>
               <LazyMonacoEditor
                 height="100%"
