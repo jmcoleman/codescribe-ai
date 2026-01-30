@@ -89,6 +89,22 @@ export function CodePanel({
   const handleEditorMount = useCallback((editor, monaco) => {
     editorRef.current = editor;
     monacoRef.current = monaco;
+
+    // Start with Tab Focus Mode enabled (Tab moves focus, not inserts tabs)
+    editor.trigger('keyboard', 'editor.action.toggleTabFocusMode', {});
+
+    // Listen for Shift+Tab to re-enable tabFocusMode before focus moves out
+    editor.onKeyDown((e) => {
+      // Shift+Tab while in editor → re-enable tabFocusMode so Tab moves focus
+      if (e.keyCode === 2 && e.shiftKey) { // KeyCode.Tab = 2
+        // Check if tabFocusMode is currently OFF (Tab inserts tabs)
+        // Toggle it ON so Shift+Tab can move focus out
+        const tabFocusMode = editor.getRawOptions().tabFocusMode;
+        if (!tabFocusMode) {
+          editor.trigger('keyboard', 'editor.action.toggleTabFocusMode', {});
+        }
+      }
+    });
   }, []);
 
   // Count lines, characters, and calculate file size
@@ -490,21 +506,41 @@ export function CodePanel({
             role="region"
             aria-label="Code editor - press Enter to edit, Escape to exit"
             onKeyDown={(e) => {
-              // Enter or any typing key activates the editor
-              if (e.key === 'Enter' || (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey)) {
+              // Enter activates the editor
+              if (e.key === 'Enter') {
+                e.preventDefault();
                 if (editorRef.current) {
-                  editorRef.current.focus();
-                  // If it was a typing key, let it through to the editor
-                  if (e.key.length === 1) {
-                    // Don't prevent default - let the key reach the editor
-                    return;
+                  // Disable tabFocusMode so Tab inserts tabs while editing
+                  const tabFocusMode = editorRef.current.getRawOptions().tabFocusMode;
+                  if (tabFocusMode) {
+                    editorRef.current.trigger('keyboard', 'editor.action.toggleTabFocusMode', {});
                   }
+                  editorRef.current.focus();
+                }
+                return;
+              }
+
+              // Any typing key (letter, number, space) activates the editor
+              if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                if (editorRef.current) {
+                  // Disable tabFocusMode so Tab inserts tabs while editing
+                  const tabFocusMode = editorRef.current.getRawOptions().tabFocusMode;
+                  if (tabFocusMode) {
+                    editorRef.current.trigger('keyboard', 'editor.action.toggleTabFocusMode', {});
+                  }
+                  editorRef.current.focus();
+                  // Monaco will receive the keypress event
                 }
               }
             }}
             onClick={() => {
               // Click also activates editor
               if (editorRef.current) {
+                // Disable tabFocusMode so Tab inserts tabs while editing
+                const tabFocusMode = editorRef.current.getRawOptions().tabFocusMode;
+                if (tabFocusMode) {
+                  editorRef.current.trigger('keyboard', 'editor.action.toggleTabFocusMode', {});
+                }
                 editorRef.current.focus();
               }
             }}

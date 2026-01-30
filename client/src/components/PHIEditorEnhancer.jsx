@@ -644,7 +644,13 @@ export function PHIEditorEnhancer({
     // Add key down listener to return focus to wrapper when Escape is pressed
     const disposable = editorInstance.onKeyDown((e) => {
       if (e.keyCode === 9) { // Monaco KeyCode.Escape = 9
-        // Find the wrapper and focus it
+        // Re-enable tabFocusMode so Tab moves focus (not inserts tabs)
+        const tabFocusMode = editorInstance.getRawOptions().tabFocusMode;
+        if (!tabFocusMode) {
+          editorInstance.trigger('keyboard', 'editor.action.toggleTabFocusMode', {});
+        }
+
+        // Find the wrapper and focus it to show purple ring
         const wrapper = editorInstance.getDomNode()?.closest('.monaco-editor-wrapper');
         if (wrapper) {
           wrapper.focus();
