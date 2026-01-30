@@ -7,7 +7,46 @@
 - After deployment, no events appear in `analytics_events` table
 - Admin analytics dashboard shows no data
 
-**Root Causes:**
+---
+
+## ⚠️ MOST COMMON ISSUE: Admin Users Are Filtered Out
+
+**Before diving into technical debugging, check this first:**
+
+If you're logged in as an **admin, support, or super_admin** user, your events are **automatically marked as `is_internal = TRUE`** and **filtered out** from the analytics dashboard.
+
+**This is by design!** Internal users are excluded from business metrics to keep them clean.
+
+**How to verify:**
+```sql
+-- Connect to production database
+psql "YOUR_PRODUCTION_POSTGRES_URL"
+
+-- Check if events exist but are marked as internal
+SELECT
+  event_name,
+  is_internal,
+  COUNT(*)
+FROM analytics_events
+WHERE created_at > NOW() - INTERVAL '1 hour'
+GROUP BY event_name, is_internal;
+```
+
+**Expected result if this is your issue:**
+```
+ event_name       | is_internal | count
+------------------+-------------+-------
+ session_start    | t           |     5
+ doc_generation   | t           |     3
+ quality_score    | t           |     3
+```
+
+**Solution:** Test analytics with a **non-admin user account** or check the database directly with the SQL query above.
+
+---
+
+## Technical Root Causes (If Not Admin User Issue)
+
 1. Missing `VITE_ANALYTICS_API_KEY` environment variable (frontend events)
 2. Server-side analytics failures (database/SQL errors)
 3. Wrong database being queried (dev vs production)

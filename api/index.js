@@ -23,7 +23,6 @@ import preferencesRoutes from '../server/src/routes/preferences.js';
 import analyticsRoutes from '../server/src/routes/analytics.js';
 import complianceRoutes from '../server/src/routes/compliance.js';
 import phiRoutes from '../server/src/routes/phi.js';
-import debugRoutes from '../server/src/routes/debug-env.js'; // TEMPORARY - Remove after debugging
 import errorHandler from '../server/src/middleware/errorHandler.js';
 import '../server/src/config/passport.js'; // Initialize passport strategies
 
@@ -107,7 +106,6 @@ if (ENABLE_AUTH) {
 }
 app.use('/api/analytics', analyticsRoutes); // Analytics event tracking (public)
 app.use('/api/phi', phiRoutes); // PHI detection (public)
-app.use('/api/debug', debugRoutes); // TEMPORARY - Debug environment variables
 app.use('/api/cron', cronRoutes);
 app.use('/api/migrate', migrateRoutes);
 

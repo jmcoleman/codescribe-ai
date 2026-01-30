@@ -83,10 +83,6 @@
 - [x] ✅ `VITE_ENABLE_AUTH=true` (enable authentication features)
 - [x] ✅ `VITE_STRIPE_ENV=sandbox` (match backend STRIPE_ENV)
 - [x] ✅ `VITE_STRIPE_PUBLISHABLE_KEY` (pk_test_xxx for sandbox)
-- [x] ✅ `VITE_ANALYTICS_API_KEY` (must match server ANALYTICS_API_KEY - for frontend event tracking)
-
-#### Analytics Configuration
-- [x] ✅ `ANALYTICS_API_KEY` (shared secret for analytics endpoint - generate with `openssl rand -base64 32`)
 
 #### CORS & URLs
 - [x] ✅ `ALLOWED_ORIGINS=https://codescribeai.com,https://www.codescribeai.com`

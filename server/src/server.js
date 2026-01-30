@@ -20,7 +20,6 @@ import preferencesRoutes from './routes/preferences.js';
 import analyticsRoutes from './routes/analytics.js';
 import complianceRoutes from './routes/compliance.js';
 import phiRoutes from './routes/phi.js';
-import debugRoutes from './routes/debug-env.js'; // TEMPORARY - Remove after debugging
 import errorHandler from './middleware/errorHandler.js';
 import securityHeaders from './middleware/securityHeaders.js';
 import { initializeDatabase, testConnection } from './db/connection.js';
@@ -138,7 +137,6 @@ if (ENABLE_AUTH) {
 }
 app.use('/api/analytics', analyticsRoutes); // Analytics event tracking (public)
 app.use('/api/phi', phiRoutes); // PHI detection (public)
-app.use('/api/debug', debugRoutes); // TEMPORARY - Debug environment variables
 app.use('/api/cron', cronRoutes);
 app.use('/api/migrate', migrateRoutes);
 app.use('/api', apiRoutes);
