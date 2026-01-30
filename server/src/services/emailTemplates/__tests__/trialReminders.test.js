@@ -83,7 +83,7 @@ describe('Trial Reminder Email Templates', () => {
 
       it('should include tier badge', () => {
         const html = trialExpiringReminderTemplate(params);
-        expect(html).toContain('PRO');
+        expect(html).toContain('Plan: Pro');
       });
 
       it('should include environment badge in non-production', () => {
@@ -223,13 +223,13 @@ describe('Trial Reminder Email Templates', () => {
 
     it('should show free tier badge', () => {
       const html = trialExpiredNoticeTemplate(params);
-      expect(html).toContain('FREE');
+      expect(html).toContain('Plan: Free');
     });
 
     it('should include footer with links', () => {
       const html = trialExpiredNoticeTemplate(params);
-      expect(html).toContain('Privacy Policy');
-      expect(html).toContain('Terms of Service');
+      expect(html).toContain('Privacy');
+      expect(html).toContain('Terms');
     });
 
     it('should return valid HTML structure', () => {
@@ -299,13 +299,13 @@ describe('Trial Reminder Email Templates', () => {
 
     it('should include tier badge', () => {
       const html = trialExtendedTemplate(params);
-      expect(html).toContain('PRO');
+      expect(html).toContain('Plan: Pro');
     });
 
     it('should include footer', () => {
       const html = trialExtendedTemplate(params);
       expect(html).toContain('CodeScribe AI');
-      expect(html).toContain('Privacy Policy');
+      expect(html).toContain('Privacy');
     });
 
     it('should return valid HTML structure', () => {

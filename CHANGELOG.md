@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **tierBadge function:** Now handles undefined environment parameter gracefully (no longer crashes when environment not provided)
 - **sendVerificationEmail tests:** Updated to match new function signature (now includes firstName parameter)
 - **Email template tests:** Updated assertions to match new tier badge format and footer content
+- **Trial reminder tests:** Updated assertions to expect "Plan: Pro/Free" instead of "PRO/FREE" and "Privacy/Terms" instead of "Privacy Policy/Terms of Service"
 
 ### Tests
 
