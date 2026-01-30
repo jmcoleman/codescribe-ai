@@ -154,6 +154,26 @@ CRON_SECRET=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 
 # ============================================================================
+# ANALYTICS SYSTEM
+# ============================================================================
+
+# Analytics API Key (shared secret for internal analytics endpoint)
+# How to generate: openssl rand -base64 32
+# Used for: Authenticating frontend analytics events to /api/analytics/track
+# ⚠️ REQUIRED: Frontend events (session_start, code_input, doc_export, etc.) won't work without this
+# Server-side events (doc_generation, quality_score) don't need this
+# See: docs/troubleshooting/ANALYTICS-PRODUCTION-DEBUGGING.md
+ANALYTICS_API_KEY=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+# Analytics API Key (Client-side copy)
+# Value: MUST MATCH the server ANALYTICS_API_KEY exactly
+# Used for: Frontend to authenticate with backend analytics endpoint
+# ⚠️ REQUIRED: Must be set for frontend analytics to work
+# Note: Prefix with VITE_ to expose to frontend build
+VITE_ANALYTICS_API_KEY=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+
+# ============================================================================
 # CORS CONFIGURATION
 # ============================================================================
 

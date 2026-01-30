@@ -35,6 +35,7 @@ import { ErrorTest } from './components/ErrorTest.jsx'
 import { Projects } from './pages/Projects.jsx'
 import { ProjectDetails } from './pages/ProjectDetails.jsx'
 import { LoggedOut } from './pages/LoggedOut.jsx'
+import DebugAnalytics from './pages/DebugAnalytics.jsx' // TEMPORARY - Remove after debugging
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -74,6 +75,8 @@ createRoot(document.getElementById('root')).render(
               <Route path="/projects/:id" element={<ProjectDetails />} />
               {/* Testing route - triggers ErrorBoundary for dark mode and UI testing */}
               <Route path="/test-error" element={<ErrorTest />} />
+              {/* TEMPORARY DEBUG - Remove after analytics debugging */}
+              <Route path="/debug-analytics" element={<DebugAnalytics />} />
             </Routes>
             <AnalyticsWrapper />
           </WorkspaceProvider>
