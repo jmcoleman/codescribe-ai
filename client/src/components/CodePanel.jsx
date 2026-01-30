@@ -483,8 +483,32 @@ export function CodePanel({
             </div>
           </div>
         ) : (
-          /* Monaco Editor with focus wrapper */
-          <div className="absolute inset-0 monaco-editor-wrapper">
+          /* Monaco Editor with focusable wrapper */
+          <div
+            className="absolute inset-0 monaco-editor-wrapper"
+            tabIndex={0}
+            role="region"
+            aria-label="Code editor - press Enter to edit, Escape to exit"
+            onKeyDown={(e) => {
+              // Enter or any typing key activates the editor
+              if (e.key === 'Enter' || (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey)) {
+                if (editorRef.current) {
+                  editorRef.current.focus();
+                  // If it was a typing key, let it through to the editor
+                  if (e.key.length === 1) {
+                    // Don't prevent default - let the key reach the editor
+                    return;
+                  }
+                }
+              }
+            }}
+            onClick={() => {
+              // Click also activates editor
+              if (editorRef.current) {
+                editorRef.current.focus();
+              }
+            }}
+          >
             <Suspense fallback={<EditorLoadingFallback />}>
               <LazyMonacoEditor
                 height="100%"

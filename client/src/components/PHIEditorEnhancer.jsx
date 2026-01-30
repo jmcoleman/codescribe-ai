@@ -88,6 +88,7 @@ export function PHIEditorEnhancer({
   const [panelExpanded, setPanelExpanded] = useState(true);
   const [showBackToFirst, setShowBackToFirst] = useState(false);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  const [isReady, setIsReady] = useState(false); // Prevent tab focus on initial load
   const [columnWidths, setColumnWidths] = useState({
     status: 120,
     type: 180,
@@ -104,6 +105,14 @@ export function PHIEditorEnhancer({
   const resizingRef = useRef(null);
   const currentRowRef = useRef(null);
   const tableContainerRef = useRef(null);
+
+  // Mark as ready after initial mount to allow tab focus
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsReady(true);
+    }, 100); // Small delay to ensure page is fully loaded
+    return () => clearTimeout(timer);
+  }, []);
 
   // Extract PHI items when detection data changes
   // Preserve review state for items that still exist after code changes
@@ -628,15 +637,18 @@ export function PHIEditorEnhancer({
   // Note: Keyboard handler is attached via onKeyDown prop on the table container
   // This ensures immediate event handling without timing issues
 
-  // Add Escape key binding to Monaco editor to blur on Escape
+  // Add Escape key binding to Monaco editor to return to wrapper
   useEffect(() => {
     if (!editorInstance) return;
 
-    // Add key down listener to blur editor when Escape is pressed
+    // Add key down listener to return focus to wrapper when Escape is pressed
     const disposable = editorInstance.onKeyDown((e) => {
       if (e.keyCode === 9) { // Monaco KeyCode.Escape = 9
-        // Blur the editor so focus returns to document
-        editorInstance.getDomNode()?.querySelector('textarea')?.blur();
+        // Find the wrapper and focus it
+        const wrapper = editorInstance.getDomNode()?.closest('.monaco-editor-wrapper');
+        if (wrapper) {
+          wrapper.focus();
+        }
       }
     });
 
@@ -717,6 +729,7 @@ export function PHIEditorEnhancer({
         className={`phi-review-panel ${panelExpanded ? 'expanded' : 'collapsed'} ${
           effectiveTheme === 'dark' ? 'dark' : 'light'
         }`}
+        inert={!isReady ? '' : undefined}
       >
         {/* Panel Header - Entire header is clickable */}
         <div

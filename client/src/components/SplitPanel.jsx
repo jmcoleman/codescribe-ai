@@ -140,7 +140,7 @@ export function SplitPanel({ leftPanel, rightPanel, layout = 'split' }) {
           className="flex"
           collapsible={layout !== 'split'}
         >
-          <div className="flex-1 min-h-0">
+          <div className="flex-1 min-h-0" inert={layout === 'doc' ? '' : undefined}>
             {leftPanel}
           </div>
         </Panel>
@@ -165,7 +165,7 @@ export function SplitPanel({ leftPanel, rightPanel, layout = 'split' }) {
           className="flex"
           collapsible={layout !== 'split'}
         >
-          <div className="flex-1 min-h-0">
+          <div className="flex-1 min-h-0" inert={layout === 'code' ? '' : undefined}>
             {rightPanel}
           </div>
         </Panel>
