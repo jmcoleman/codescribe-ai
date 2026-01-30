@@ -2475,6 +2475,7 @@ function App() {
         accept=".js,.jsx,.ts,.tsx,.py,.java,.cpp,.c,.h,.hpp,.cs,.go,.rs,.rb,.php,.txt,text/javascript,text/x-javascript,application/javascript,text/x-typescript,text/typescript,text/x-python,text/x-java-source,text/x-c,text/x-c++,text/x-csharp,text/x-go,text/x-rust,text/x-ruby,text/x-php,text/plain"
         onChange={handleFileChange}
         className="hidden"
+        tabIndex={-1}
         aria-label="Upload code file"
       />
 
@@ -2488,6 +2489,7 @@ function App() {
         multiple
         onChange={handleMultiFileChange}
         className="hidden"
+        tabIndex={-1}
         aria-label="Upload multiple code files"
       />
 

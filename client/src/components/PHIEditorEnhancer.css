@@ -381,11 +381,11 @@
 }
 
 .phi-review-panel.light .phi-items-table tbody tr.current {
-  background: #fef3c7; /* amber-100 */
+  background: #faf5ff; /* purple-50 - subtle, aligns with brand */
 }
 
 .phi-review-panel.dark .phi-items-table tbody tr.current {
-  background: rgba(245, 158, 11, 0.15);
+  background: rgba(168, 85, 247, 0.15); /* purple-500 with 15% opacity - subtle, aligns with brand */
 }
 
 .phi-items-table td {

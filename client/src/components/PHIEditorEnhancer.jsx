@@ -627,6 +627,25 @@ export function PHIEditorEnhancer({
   // Note: Keyboard handler is attached via onKeyDown prop on the table container
   // This ensures immediate event handling without timing issues
 
+  // Add Escape key binding to Monaco editor to blur on Escape
+  useEffect(() => {
+    if (!editorInstance) return;
+
+    // Add key down listener to blur editor when Escape is pressed
+    const disposable = editorInstance.onKeyDown((e) => {
+      if (e.keyCode === 9) { // Monaco KeyCode.Escape = 9
+        // Blur the editor so focus returns to document
+        editorInstance.getDomNode()?.querySelector('textarea')?.blur();
+      }
+    });
+
+    return () => {
+      if (disposable) {
+        disposable.dispose();
+      }
+    };
+  }, [editorInstance]);
+
   // Global Escape key to close drawer (VS Code pattern: first Escape exits editor, second closes drawer)
   useEffect(() => {
     if (!panelExpanded) return;
@@ -640,7 +659,7 @@ export function PHIEditorEnhancer({
           // Editor doesn't have focus, so close the drawer
           setPanelExpanded(false);
         }
-        // If editor has focus, Monaco will handle Escape to exit the editor
+        // If editor has focus, Monaco will handle Escape to exit the editor (via addCommand above)
       }
     };
 
