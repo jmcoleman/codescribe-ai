@@ -22,6 +22,12 @@ describe('DownloadButton', () => {
     global.URL.revokeObjectURL = vi.fn();
   });
 
+  afterEach(async () => {
+    // Wait for any pending tooltip timers to complete (150ms delay + buffer)
+    await new Promise(resolve => setTimeout(resolve, 200));
+    cleanup();
+  });
+
   describe('Rendering', () => {
     it('should render the download button', () => {
       render(<DownloadButton content="Test content" />);
