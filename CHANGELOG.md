@@ -31,6 +31,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **sendVerificationEmail tests:** Updated to match new function signature (now includes firstName parameter)
 - **Email template tests:** Updated assertions to match new tier badge format and footer content
 - **Trial reminder tests:** Updated assertions to expect "Plan: Pro/Free" instead of "PRO/FREE" and "Privacy/Terms" instead of "Privacy Policy/Terms of Service"
+- **Analytics tests:** Removed session_id expectations from event data (session_id is now sent separately in backend request, not in eventData)
+- **API security tests:** Updated to expect X-Session-Id header in authenticated requests
 
 ### Tests
 

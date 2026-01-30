@@ -177,8 +177,8 @@ describe('API Security', () => {
       const headers = callOptions.headers;
       const headerKeys = Object.keys(headers);
 
-      // Only expected headers should be present
-      expect(headerKeys).toEqual(['Content-Type', 'Authorization']);
+      // Only expected headers should be present (including session tracking)
+      expect(headerKeys).toEqual(['Content-Type', 'X-Session-Id', 'Authorization']);
     });
   });
 

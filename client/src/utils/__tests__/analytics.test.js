@@ -125,7 +125,7 @@ describe('Analytics Utility', () => {
       trackInteraction('test_event', { custom_field: 'value' });
 
       const loggedData = consoleSpy.mock.calls[0][1];
-      expect(loggedData.session_id).toBeDefined();
+      // session_id is sent separately in backend request, not in eventData
       expect(loggedData.session_duration_ms).toBeDefined();
       expect(loggedData.custom_field).toBe('value');
 
@@ -150,7 +150,7 @@ describe('Analytics Utility', () => {
       });
 
       const loggedData = consoleSpy.mock.calls[0][1];
-      expect(loggedData.session_id).toBeDefined();
+      // session_id is sent separately in backend request, not in eventData
       expect(loggedData.doc_type).toBe('README');
       expect(loggedData.success).toBe('true');
       // Code input attributes are grouped together
@@ -229,7 +229,7 @@ describe('Analytics Utility', () => {
       trackCodeInput('paste', 1024, 'typescript', 'test.ts');
 
       const loggedData = consoleSpy.mock.calls[0][1];
-      expect(loggedData.session_id).toBeDefined();
+      // session_id is sent separately in backend request, not in eventData
       expect(loggedData.origin).toBe('paste');
       expect(loggedData.language).toBe('typescript');
       expect(loggedData.filename).toBe('test.ts');
@@ -244,7 +244,7 @@ describe('Analytics Utility', () => {
       trackQualityScore({ score: 85, grade: 'B', docType: 'API' });
 
       const loggedData = consoleSpy.mock.calls[0][1];
-      expect(loggedData.session_id).toBeDefined();
+      // session_id is sent separately in backend request, not in eventData
       expect(loggedData.score).toBe(85);
       expect(loggedData.grade).toBe('B');
 
@@ -261,7 +261,7 @@ describe('Analytics Utility', () => {
       });
 
       const loggedData = consoleSpy.mock.calls[0][1];
-      expect(loggedData.session_id).toBeDefined();
+      // session_id is sent separately in backend request, not in eventData
       expect(loggedData.error_type).toBe('network');
 
       consoleSpy.mockRestore();
@@ -310,7 +310,7 @@ describe('Analytics Utility', () => {
       });
 
       const loggedData = consoleSpy.mock.calls[0][1];
-      expect(loggedData.session_id).toBeDefined();
+      // session_id is sent separately in backend request, not in eventData
       expect(loggedData.provider).toBe('github');
       expect(loggedData.action).toBe('initiated');
 
