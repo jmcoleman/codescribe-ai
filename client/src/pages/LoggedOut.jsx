@@ -74,11 +74,6 @@ export function LoggedOut() {
             </button>
           </div>
         </div>
-
-        {/* Footer text */}
-        <p className="text-center text-sm text-slate-600 dark:text-slate-400 mt-6">
-          Need help? <a href="mailto:support@codescribeai.com" className="text-purple-600 dark:text-purple-400 hover:underline">Contact support</a>
-        </p>
       </div>
     </div>
   );
