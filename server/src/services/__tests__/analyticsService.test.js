@@ -15,9 +15,16 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 
 // Mock @vercel/postgres BEFORE importing analyticsService
-jest.mock('@vercel/postgres', () => ({
-  sql: jest.fn(),
-}));
+// sql needs both tagged template function AND .query() method
+// Make sql.query point to the same mock so mockResolvedValueOnce works
+jest.mock('@vercel/postgres', () => {
+  const mockSql = jest.fn();
+  return {
+    sql: Object.assign(mockSql, {
+      query: mockSql, // Point to same function so tests can mock sql directly
+    }),
+  };
+});
 
 import { analyticsService } from '../analyticsService.js';
 import { sql } from '@vercel/postgres';
@@ -252,7 +259,7 @@ describe('AnalyticsService', () => {
       expect(result.conversionRates.session_start_to_code_input).toBe(80);
       expect(result.totalSessions).toBe(100);
       expect(result.completedSessions).toBe(40);
-      expect(result.overallConversion).toBe(40);
+      expect(result.overallConversionSessions).toBe(40);
     });
 
     it('should handle empty data', async () => {
@@ -268,7 +275,7 @@ describe('AnalyticsService', () => {
 
       expect(result.totalSessions).toBe(0);
       expect(result.completedSessions).toBe(0);
-      expect(result.overallConversion).toBe(0);
+      expect(result.overallConversionSessions).toBe(0);
     });
 
     it('should exclude internal users when specified', async () => {
@@ -1859,17 +1866,16 @@ describe('AnalyticsService', () => {
       expect(result).toHaveProperty('id', 'uuid-fallback');
     });
 
-    it('should update session events when internal user logs in', async () => {
+    it('should detect internal user on login without retroactive updates', async () => {
       // First call: user lookup returns admin role
       sql.mockResolvedValueOnce({
         rows: [{ role: 'admin', viewing_as_tier: null }],
       });
-      // Second call: insert login event
+      // Second call: insert login event (marked as internal based on user role)
       sql.mockResolvedValueOnce({
         rows: [{ id: 'uuid-login', created_at: new Date() }],
       });
-      // Third call: update session events to internal
-      sql.mockResolvedValueOnce({ rowCount: 5 });
+      // Note: No third call - events are immutable, no retroactive session updates
 
       const result = await analyticsService.recordEvent(
         'login',
@@ -1877,7 +1883,7 @@ describe('AnalyticsService', () => {
         { userId: 102, sessionId: 'sess-login' }
       );
 
-      expect(sql).toHaveBeenCalledTimes(3);
+      expect(sql).toHaveBeenCalledTimes(2);
       expect(result).toHaveProperty('id', 'uuid-login');
     });
 
