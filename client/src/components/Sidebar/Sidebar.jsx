@@ -3,6 +3,7 @@ import { PanelLeft, PanelLeftClose, Plus, X, AlertTriangle, Sparkles, Loader2 } 
 import { FileList } from './FileList';
 import { Tooltip } from '../Tooltip';
 import { STORAGE_KEYS, getStorageItem, setStorageItem } from '../../constants/storage';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 /**
  * Import Error Banner - Shows failed GitHub imports
@@ -75,6 +76,7 @@ function ImportErrorBanner({ errors, onDismiss }) {
  * @param {number|null} props.selectedProjectId - Currently selected project ID (Pro+ only)
  * @param {Function} props.onProjectChange - Called when project selection changes (Pro+ only)
  * @param {boolean} props.canUseProjectManagement - Whether user can use project management (Pro+ only)
+ * @param {boolean} props.hasPHI - Whether PHI has been detected and not yet confirmed/sanitized
  */
 export function Sidebar({
   files = [],
@@ -105,7 +107,8 @@ export function Sidebar({
   onProjectChange,
   canUseProjectManagement = false,
   importErrors = [],
-  onDismissImportErrors
+  onDismissImportErrors,
+  hasPHI = false
 }) {
   // Sidebar state: 'expanded', 'collapsed' (desktop only)
   // If controlled (isCollapsedProp is defined), use prop, otherwise use local state
@@ -117,6 +120,9 @@ export function Sidebar({
 
   // Track if we're on mobile
   const [isMobile, setIsMobile] = useState(false);
+
+  // Focus trap for mobile drawer (WCAG 2.1 compliance)
+  const mobileDrawerRef = useFocusTrap(isMobile && mobileOpen, onMobileClose);
 
   // Persist sidebar mode to localStorage (desktop only)
   useEffect(() => {
@@ -191,6 +197,7 @@ export function Sidebar({
 
         {/* Mobile Drawer */}
         <div
+          ref={mobileDrawerRef}
           className={`
             fixed top-0 left-0 bottom-0 z-50 lg:hidden
             w-[320px] max-w-[85vw]
@@ -246,6 +253,7 @@ export function Sidebar({
             selectedProjectId={selectedProjectId}
             onProjectChange={onProjectChange}
             canUseProjectManagement={canUseProjectManagement}
+            hasPHI={hasPHI}
           />
         </div>
       </>
@@ -280,13 +288,13 @@ export function Sidebar({
                 <PanelLeft className="w-5 h-5 text-slate-600 dark:text-slate-400" />
               </button>
             </Tooltip>
-            <Tooltip content={bulkGenerationProgress ? `Generating ${bulkGenerationProgress.completed}/${bulkGenerationProgress.total}` : "Generate docs (⌘G)"} side="right">
+            <Tooltip content={hasPHI ? "Review & sanitize PHI before generating" : bulkGenerationProgress ? `Generating ${bulkGenerationProgress.completed}/${bulkGenerationProgress.total}` : "Generate docs (⌘G)"} side="right">
               <button
                 type="button"
                 onClick={onGenerateSelected}
-                disabled={selectedCount === 0 || bulkGenerationProgress}
+                disabled={selectedCount === 0 || bulkGenerationProgress || hasPHI}
                 className="p-2 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 disabled:opacity-50 disabled:cursor-not-allowed"
-                aria-label={bulkGenerationProgress ? `Generating ${bulkGenerationProgress.completed} of ${bulkGenerationProgress.total}` : "Generate documentation"}
+                aria-label={hasPHI ? "Review and sanitize PHI before generating" : bulkGenerationProgress ? `Generating ${bulkGenerationProgress.completed} of ${bulkGenerationProgress.total}` : "Generate documentation"}
               >
                 {bulkGenerationProgress ? (
                   <Loader2 className="w-5 h-5 text-purple-600 dark:text-purple-400 animate-spin" />
@@ -331,6 +339,7 @@ export function Sidebar({
             selectedProjectId={selectedProjectId}
             onProjectChange={onProjectChange}
             canUseProjectManagement={canUseProjectManagement}
+            hasPHI={hasPHI}
           />
         )}
     </div>
