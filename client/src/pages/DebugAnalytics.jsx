@@ -7,7 +7,7 @@
  */
 
 import { useState } from 'react';
-import { trackEvent } from '../utils/analytics';
+import { STORAGE_KEYS } from '../constants/storage';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -31,12 +31,38 @@ export default function DebugAnalytics() {
   const testAnalyticsEvent = async () => {
     setLoading(true);
     try {
-      // Test tracking a simple event
-      await trackEvent('session_start', {
-        test: true,
-        timestamp: new Date().toISOString(),
+      // Test tracking a simple event directly via API
+      const headers = {
+        'Content-Type': 'application/json',
+        'X-Analytics-Key': import.meta.env.VITE_ANALYTICS_API_KEY,
+      };
+
+      // Include auth token if available
+      const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(`${API_URL}/api/analytics/track`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          eventName: 'session_start',
+          eventData: {
+            test: true,
+            timestamp: new Date().toISOString(),
+          },
+          sessionId: 'debug-session-' + Date.now(),
+        }),
       });
-      setTestResult({ success: true, message: 'Event sent successfully' });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+
+      const result = await response.json();
+      setTestResult({ success: true, message: 'Event sent successfully', response: result });
     } catch (error) {
       setTestResult({ success: false, error: error.message });
     }
