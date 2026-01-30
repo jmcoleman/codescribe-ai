@@ -83,6 +83,7 @@ function LocalSync({ className, isLoading = false }) {
  * @param {number|null} props.selectedProjectId - Currently selected project ID (Pro+ only)
  * @param {Function} props.onProjectChange - Called when project selection changes (Pro+ only)
  * @param {boolean} props.canUseProjectManagement - Whether user can use project management (Pro+ only)
+ * @param {boolean} props.hasPHI - Whether PHI has been detected and not yet confirmed/sanitized
  */
 export function FileList({
   files = [],
@@ -109,7 +110,8 @@ export function FileList({
   onViewBatchSummary,
   selectedProjectId = null,
   onProjectChange,
-  canUseProjectManagement = false
+  canUseProjectManagement = false,
+  hasPHI = false
 }) {
   const [isDragging, setIsDragging] = useState(false);
   const [detailsFileId, setDetailsFileId] = useState(null);
@@ -681,13 +683,13 @@ export function FileList({
                 </button>
               </Tooltip>
 
-              <Tooltip content={bulkGenerationProgress ? `Generating ${bulkGenerationProgress.completed}/${bulkGenerationProgress.total}` : "Generate documentation (⌘G)"}>
+              <Tooltip content={hasPHI ? "Review & sanitize PHI before generating" : bulkGenerationProgress ? `Generating ${bulkGenerationProgress.completed}/${bulkGenerationProgress.total}` : "Generate documentation (⌘G)"}>
                 <button
                   type="button"
                   onClick={onGenerateSelected}
-                  disabled={selectedCountWithContent === 0 && !hasCodeInEditor || bulkGenerationProgress}
+                  disabled={selectedCountWithContent === 0 && !hasCodeInEditor || bulkGenerationProgress || hasPHI}
                   className="inline-flex items-center gap-1 px-2 py-1.5 text-xs font-medium rounded-md transition-all duration-200 bg-purple-600 dark:bg-purple-400 text-white dark:text-slate-950 shadow-md shadow-purple-600/20 dark:shadow-purple-400/30 hover:enabled:scale-[1.02] active:enabled:scale-[0.98] disabled:cursor-not-allowed disabled:shadow-none disabled:bg-slate-300 dark:disabled:bg-slate-700 disabled:text-slate-500 dark:disabled:text-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400"
-                  aria-label={bulkGenerationProgress ? `Generating ${bulkGenerationProgress.completed} of ${bulkGenerationProgress.total}` : "Generate documentation (⌘G)"}
+                  aria-label={hasPHI ? "Review and sanitize PHI before generating" : bulkGenerationProgress ? `Generating ${bulkGenerationProgress.completed} of ${bulkGenerationProgress.total}` : "Generate documentation (⌘G)"}
                 >
                   {bulkGenerationProgress ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -897,7 +899,7 @@ export function FileList({
                     if (onToggleSidebar) onToggleSidebar();
                   }}
                   disabled={selectedCountWithContent === 0 && !hasCodeInEditor || bulkGenerationProgress}
-                  className="p-1.5 rounded bg-purple-600 dark:bg-purple-400 text-white dark:text-slate-950 shadow-sm shadow-purple-600/20 dark:shadow-purple-400/30 hover:enabled:scale-[1.02] active:enabled:scale-[0.98] disabled:cursor-not-allowed disabled:shadow-none disabled:bg-slate-300 dark:disabled:bg-slate-700 disabled:text-slate-500 dark:disabled:text-slate-400 flex items-center justify-center"
+                  className="p-1.5 rounded bg-purple-600 dark:bg-purple-400 text-white dark:text-slate-950 shadow-sm shadow-purple-600/20 dark:shadow-purple-400/30 hover:enabled:scale-[1.02] active:enabled:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center"
                   aria-label={bulkGenerationProgress ? `Generating ${bulkGenerationProgress.completed} of ${bulkGenerationProgress.total}` : "Generate for selection"}
                 >
                   {bulkGenerationProgress ? (

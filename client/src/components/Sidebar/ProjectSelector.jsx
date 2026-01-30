@@ -368,7 +368,7 @@ export function ProjectSelector({
                   type="button"
                   onClick={handleCreateProject}
                   disabled={!newProjectName.trim() || creating}
-                  className="p-1 text-white bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 disabled:cursor-not-allowed rounded transition-colors"
+                  className="p-1 text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
                   aria-label="Create project"
                 >
                   {creating ? (

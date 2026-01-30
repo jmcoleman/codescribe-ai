@@ -1,0 +1,488 @@
+/**
+ * PHI Editor Enhancer Styles
+ * Visual styling for PHI decorations, panel, and interactions
+ */
+
+/* ===========================
+   Decoration Classes
+   =========================== */
+
+.phi-high-severity {
+  background: rgba(239, 68, 68, 0.15);
+  border-bottom: 2px wavy #ef4444;
+}
+
+.phi-medium-severity {
+  background: rgba(245, 158, 11, 0.15);
+  border-bottom: 2px wavy #f59e0b;
+}
+
+.phi-low-severity {
+  background: rgba(234, 179, 8, 0.15);
+  border-bottom: 2px wavy #eab308;
+}
+
+.phi-accepted {
+  background: rgba(34, 197, 94, 0.15);
+  border-bottom: 2px solid #22c55e;
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+.phi-skipped {
+  background: rgba(148, 163, 184, 0.1);
+  border-bottom: 2px dotted #94a3b8;
+  opacity: 0.5;
+}
+
+/* Gutter Icons */
+.phi-gutter-icon {
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%23f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 16px 16px;
+  width: 16px;
+  cursor: pointer;
+}
+
+.phi-gutter-icon-current {
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="%23f59e0b" stroke="%23f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 16px 16px;
+  width: 16px;
+  cursor: pointer;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* ===========================
+   Review Panel
+   =========================== */
+
+.phi-review-panel {
+  border-top: 2px solid;
+  transition: all 0.3s ease;
+}
+
+.phi-review-panel.light {
+  background: #f8fafc; /* slate-50 */
+  border-color: #e2e8f0; /* slate-200 */
+  color: #334155; /* slate-700 */
+}
+
+.phi-review-panel.dark {
+  background: #1e293b; /* slate-800 */
+  border-color: #475569; /* slate-600 */
+  color: #e2e8f0; /* slate-200 */
+}
+
+.phi-review-panel.expanded {
+  max-height: 400px;
+}
+
+.phi-review-panel.collapsed {
+  max-height: 48px;
+}
+
+/* Panel Header */
+.phi-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.phi-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.phi-panel-title svg {
+  color: #f59e0b; /* amber-500 */
+}
+
+.phi-panel-toggle {
+  padding: 4px;
+  border-radius: 4px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.phi-review-panel.light .phi-panel-toggle:hover {
+  background: #e2e8f0; /* slate-200 */
+}
+
+.phi-review-panel.dark .phi-panel-toggle:hover {
+  background: #334155; /* slate-700 */
+}
+
+/* Progress Bar */
+.phi-progress-bar {
+  height: 4px;
+  margin: 0 16px 12px;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.phi-review-panel.light .phi-progress-bar {
+  background: #e2e8f0; /* slate-200 */
+}
+
+.phi-review-panel.dark .phi-progress-bar {
+  background: #475569; /* slate-600 */
+}
+
+.phi-progress-fill {
+  height: 100%;
+  background: linear-gradient(to right, #f59e0b, #d97706);
+  transition: width 0.3s ease;
+}
+
+/* Stats */
+.phi-stats {
+  display: flex;
+  gap: 16px;
+  padding: 0 16px 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.phi-stat-accepted {
+  color: #16a34a; /* green-600 */
+}
+
+.phi-stat-skipped {
+  color: #64748b; /* slate-500 */
+}
+
+.phi-stat-pending {
+  color: #f59e0b; /* amber-500 */
+}
+
+/* Items Table */
+.phi-items-table {
+  max-height: 200px;
+  overflow-y: auto;
+  margin: 0 16px;
+  border-radius: 8px;
+  border: 1px solid;
+}
+
+.phi-review-panel.light .phi-items-table {
+  border-color: #e2e8f0; /* slate-200 */
+}
+
+.phi-review-panel.dark .phi-items-table {
+  border-color: #475569; /* slate-600 */
+}
+
+.phi-items-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.phi-items-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.phi-review-panel.light .phi-items-table thead {
+  background: #f1f5f9; /* slate-100 */
+}
+
+.phi-review-panel.dark .phi-items-table thead {
+  background: #334155; /* slate-700 */
+}
+
+.phi-items-table th {
+  padding: 8px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.phi-review-panel.light .phi-items-table th {
+  color: #64748b; /* slate-500 */
+}
+
+.phi-review-panel.dark .phi-items-table th {
+  color: #94a3b8; /* slate-400 */
+}
+
+.phi-col-status {
+  width: 60px;
+}
+
+.phi-col-type {
+  width: 35%;
+}
+
+.phi-col-found {
+  width: 30%;
+}
+
+.phi-col-action {
+  width: 150px;
+}
+
+.phi-items-table tbody tr {
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border-bottom: 1px solid;
+}
+
+.phi-review-panel.light .phi-items-table tbody tr {
+  border-color: #e2e8f0; /* slate-200 */
+}
+
+.phi-review-panel.dark .phi-items-table tbody tr {
+  border-color: #475569; /* slate-600 */
+}
+
+.phi-review-panel.light .phi-items-table tbody tr:hover {
+  background: #f1f5f9; /* slate-100 */
+}
+
+.phi-review-panel.dark .phi-items-table tbody tr:hover {
+  background: #334155; /* slate-700 */
+}
+
+.phi-items-table tbody tr.current {
+  font-weight: 500;
+}
+
+.phi-review-panel.light .phi-items-table tbody tr.current {
+  background: #fef3c7; /* amber-100 */
+}
+
+.phi-review-panel.dark .phi-items-table tbody tr.current {
+  background: rgba(245, 158, 11, 0.15);
+}
+
+.phi-items-table td {
+  padding: 8px;
+}
+
+.phi-type-label {
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.phi-location {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.phi-col-found code {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.phi-review-panel.light .phi-col-found code {
+  background: #e2e8f0; /* slate-200 */
+  color: #334155; /* slate-700 */
+}
+
+.phi-review-panel.dark .phi-col-found code {
+  background: #334155; /* slate-700 */
+  color: #e2e8f0; /* slate-200 */
+}
+
+.phi-pending-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f59e0b; /* amber-500 */
+}
+
+/* Action Buttons */
+.phi-action-buttons {
+  display: flex;
+  gap: 4px;
+}
+
+.phi-btn-accept,
+.phi-btn-skip {
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.phi-btn-accept {
+  background: #22c55e; /* green-500 */
+  border-color: #16a34a; /* green-600 */
+  color: white;
+}
+
+.phi-btn-accept:hover {
+  background: #16a34a; /* green-600 */
+}
+
+.phi-btn-skip {
+  border-color: #94a3b8; /* slate-400 */
+}
+
+.phi-review-panel.light .phi-btn-skip {
+  background: #f1f5f9; /* slate-100 */
+  color: #475569; /* slate-600 */
+}
+
+.phi-review-panel.dark .phi-btn-skip {
+  background: #334155; /* slate-700 */
+  color: #cbd5e1; /* slate-300 */
+}
+
+.phi-review-panel.light .phi-btn-skip:hover {
+  background: #e2e8f0; /* slate-200 */
+}
+
+.phi-review-panel.dark .phi-btn-skip:hover {
+  background: #475569; /* slate-600 */
+}
+
+.phi-state-label {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+/* Panel Footer */
+.phi-panel-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-top: 1px solid;
+}
+
+.phi-review-panel.light .phi-panel-footer {
+  border-color: #e2e8f0; /* slate-200 */
+}
+
+.phi-review-panel.dark .phi-panel-footer {
+  border-color: #475569; /* slate-600 */
+}
+
+.phi-footer-left {
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+.phi-footer-right {
+  display: flex;
+  gap: 8px;
+}
+
+.phi-btn-back-to-first,
+.phi-btn-apply {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+}
+
+.phi-btn-back-to-first {
+  background: transparent;
+  border: 1px solid;
+}
+
+.phi-review-panel.light .phi-btn-back-to-first {
+  border-color: #cbd5e1; /* slate-300 */
+  color: #475569; /* slate-600 */
+}
+
+.phi-review-panel.dark .phi-btn-back-to-first {
+  border-color: #475569; /* slate-600 */
+  color: #cbd5e1; /* slate-300 */
+}
+
+.phi-review-panel.light .phi-btn-back-to-first:hover {
+  background: #f1f5f9; /* slate-100 */
+}
+
+.phi-review-panel.dark .phi-btn-back-to-first:hover {
+  background: #334155; /* slate-700 */
+}
+
+.phi-btn-apply {
+  background: linear-gradient(to right, #f59e0b, #d97706);
+  color: white;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+}
+
+.phi-btn-apply:hover {
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+  transform: translateY(-1px);
+}
+
+.phi-btn-apply:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.phi-btn-apply:disabled:hover {
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+}
+
+/* Scrollbar Styling */
+.phi-items-table::-webkit-scrollbar {
+  width: 8px;
+}
+
+.phi-items-table::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.phi-review-panel.light .phi-items-table::-webkit-scrollbar-thumb {
+  background: #cbd5e1; /* slate-300 */
+  border-radius: 4px;
+}
+
+.phi-review-panel.dark .phi-items-table::-webkit-scrollbar-thumb {
+  background: #475569; /* slate-600 */
+  border-radius: 4px;
+}
+
+.phi-review-panel.light .phi-items-table::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8; /* slate-400 */
+}
+
+.phi-review-panel.dark .phi-items-table::-webkit-scrollbar-thumb:hover {
+  background: #64748b; /* slate-500 */
+}

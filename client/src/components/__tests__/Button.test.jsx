@@ -140,11 +140,11 @@ describe('Button', () => {
       expect(screen.getByRole('button')).toBeDisabled();
     });
 
-    it('applies disabled cursor and background classes', () => {
+    it('applies disabled cursor and opacity classes', () => {
       render(<Button disabled>Disabled</Button>);
       const button = screen.getByRole('button');
       expect(button).toHaveClass('disabled:cursor-not-allowed');
-      expect(button.className).toContain('disabled:bg-slate-300');
+      expect(button.className).toContain('disabled:opacity-50');
     });
 
     it('is not clickable when disabled', async () => {

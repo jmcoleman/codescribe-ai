@@ -686,7 +686,7 @@ export default function InviteCodes() {
                   <button
                     type="submit"
                     disabled={creating}
-                    className="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-700 dark:hover:bg-purple-800 dark:active:bg-purple-900 disabled:bg-slate-400 dark:disabled:bg-slate-600 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2 shadow-lg shadow-purple-600/20 dark:shadow-purple-900/30 disabled:shadow-none"
+                    className="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-700 dark:hover:bg-purple-800 dark:active:bg-purple-900 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2 shadow-lg shadow-purple-600/20 dark:shadow-purple-900/30 disabled:shadow-none"
                   >
                     {creating ? (
                       <>

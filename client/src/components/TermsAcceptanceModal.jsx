@@ -182,7 +182,7 @@ export default function TermsAcceptanceModal({
             <button
               onClick={handleAccept}
               disabled={loading || !acceptedBoth}
-              className="btn-primary w-full px-6 py-3 font-semibold disabled:bg-slate-200 dark:disabled:bg-slate-700 disabled:text-slate-500 dark:disabled:text-slate-400 disabled:cursor-not-allowed disabled:shadow-none"
+              className="btn-primary w-full px-6 py-3 font-semibold disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
             >
               {loading ? 'Accepting...' : 'Accept and Continue'}
             </button>

@@ -95,20 +95,13 @@ function App() {
   // Language is derived from filename, not stored separately
   const language = detectLanguageFromFilename(filename);
 
-  // Layout mode state - sync with PreferencesContext
+  // Layout mode state - localStorage is source of truth
+  // We push changes to PreferencesContext but never pull from it to avoid race conditions
+  // with async API calls when navigating away/back quickly
   const [layout, setLayout] = useState(() => {
-    // Use localStorage for fast initial render, PreferencesContext will sync after load
     const stored = getStorageItem(STORAGE_KEYS.LAYOUT_MODE);
     return stored && ['split', 'code', 'doc'].includes(stored) ? stored : 'split';
   });
-
-  // Sync layout with PreferencesContext when it loads from API
-  useEffect(() => {
-    if (prefsLayoutMode && prefsLayoutMode !== layout) {
-      setLayout(prefsLayoutMode);
-      setStorageItem(STORAGE_KEYS.LAYOUT_MODE, prefsLayoutMode);
-    }
-  }, [prefsLayoutMode]);
 
   // Track session start - once per session for funnel analytics
   // Use ref to prevent React Strict Mode double-firing in dev
@@ -745,13 +738,20 @@ function App() {
     }
   }, [setDocumentation, setQualityScore, setCode, setFilename, setCodeOrigin]);
 
+  // Track previous batch processing access to detect actual downgrades
+  const prevCanUseBatchRef = useRef(canUseBatchProcessing);
+
   // Clear batch-related state when user loses batch processing access (tier downgrade/expiry)
   // Skip during initial auth loading to avoid clearing state before we know user's tier
   useEffect(() => {
     if (authLoading) return; // Don't run until auth has finished loading
 
-    if (!canUseBatchProcessing) {
-      // Clear batch generation state using hook's clearBatchState
+    // Only reset if user actually LOST access (downgrade), not just during temporary state changes
+    const hadAccess = prevCanUseBatchRef.current;
+    const hasAccess = canUseBatchProcessing;
+
+    if (hadAccess && !hasAccess) {
+      // User lost batch processing access - clear batch state and reset layout
       clearBatchState();
 
       // Reset layout to split view (default)
@@ -762,6 +762,9 @@ function App() {
       removeSessionItem('bulk_generation_summary');
       removeSessionItem('batch_summary_markdown');
     }
+
+    // Update ref for next comparison
+    prevCanUseBatchRef.current = hasAccess;
   }, [authLoading, canUseBatchProcessing, clearBatchState]);
 
   // Note: Bulk generation progress clearing is handled internally by useBatchGeneration

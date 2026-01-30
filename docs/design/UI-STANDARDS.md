@@ -1,7 +1,7 @@
 # CodeScribe UI Standards
 
-**Version:** 1.1
-**Last Updated:** January 28, 2026
+**Version:** 1.2
+**Last Updated:** January 30, 2026
 **Purpose:** Establish consistent UI text conventions, button labeling, table patterns, and interaction patterns across the application.
 
 ---
@@ -9,11 +9,12 @@
 ## 📋 Table of Contents
 
 1. [Button Labeling Conventions](#button-labeling-conventions)
-2. [Action Text Standards](#action-text-standards)
-3. [Filter & Search Patterns](#filter--search-patterns)
-4. [Table Patterns (BaseTable)](#table-patterns-basetable)
-5. [Empty State Patterns](#empty-state-patterns)
-6. [Quick Reference](#quick-reference)
+2. [Button State Patterns](#button-state-patterns)
+3. [Action Text Standards](#action-text-standards)
+4. [Filter & Search Patterns](#filter--search-patterns)
+5. [Table Patterns (BaseTable)](#table-patterns-basetable)
+6. [Empty State Patterns](#empty-state-patterns)
+7. [Quick Reference](#quick-reference)
 
 ---
 
@@ -153,6 +154,75 @@ Use **"Add"** when bringing in existing items or importing content.
 - **Distinction:** "Add" = bringing in, "New" = creating fresh
 - **User expectations:** Matches mental model
 - **Industry standard:** GitHub uses "Add" for imports, "New" for creation
+
+---
+
+## 🎨 Button State Patterns
+
+### Disabled State Standard
+
+**Use `disabled:opacity-50` for all disabled buttons** instead of changing background or text colors.
+
+```jsx
+✅ Correct:
+<button
+  disabled={!isValid}
+  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg
+             disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+>
+  Generate Docs
+</button>
+
+<button
+  disabled={isLoading}
+  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg
+             disabled:opacity-50 disabled:cursor-not-allowed"
+>
+  Save Changes
+</button>
+
+❌ Incorrect:
+<button
+  disabled={!isValid}
+  className="px-4 py-2 bg-purple-600 disabled:bg-purple-400 text-white"
+>
+  Generate Docs
+</button>
+
+<button
+  disabled={!isValid}
+  className="px-4 py-2 bg-purple-600 disabled:bg-slate-300
+             disabled:text-slate-500 text-white"
+>
+  Generate Docs
+</button>
+```
+
+**Rationale:**
+- **Consistency:** Same visual pattern across all button variants and colors
+- **Simplicity:** One pattern instead of maintaining multiple disabled colors
+- **Dark mode friendly:** Works equally well in light and dark modes without separate styles
+- **Accessibility:** 50% opacity clearly indicates disabled state while maintaining readability
+- **Maintainability:** No need to define disabled colors for each button variant
+- **Industry standard:** Used by modern design systems (Tailwind, Radix, Shadcn)
+
+**Standard disabled classes:**
+```jsx
+disabled:opacity-50          // Visual indication (semi-transparent)
+disabled:cursor-not-allowed  // Cursor feedback
+disabled:shadow-none         // Remove shadows (optional, for buttons with shadows)
+```
+
+**Why NOT to use color changes:**
+- ❌ `disabled:bg-purple-400` - Creates lighter/brighter purple (confusing)
+- ❌ `disabled:bg-slate-300` - Completely changes button identity (loses context)
+- ❌ `disabled:text-slate-500` - Extra maintenance for each variant
+
+**Benefits:**
+1. **Visual clarity:** Semi-transparent = disabled (universally understood)
+2. **Color preservation:** Still recognizable as purple/green/red button
+3. **Less code:** No need for variant-specific disabled colors
+4. **Better UX:** Users can still see what action will be available when enabled
 
 ---
 
@@ -618,6 +688,16 @@ emptyState={{
 | **Destructive actions** | Red 600 | Delete, Remove, Revoke |
 | **Success actions** | Green 600 | Approve, Activate, Confirm |
 
+### Button States
+
+| State | Pattern | Example |
+|-------|---------|---------|
+| **Disabled** | `disabled:opacity-50` | All button variants |
+| **Disabled cursor** | `disabled:cursor-not-allowed` | All buttons |
+| **Disabled shadows** | `disabled:shadow-none` | Buttons with shadows |
+| **❌ Never use** | `disabled:bg-purple-400` | Creates confusing lighter color |
+| **❌ Never use** | `disabled:bg-slate-300` | Loses button identity |
+
 ### Size Standards
 
 | Component | Size | Reasoning |
@@ -652,6 +732,13 @@ When creating new UI elements, verify:
 - [ ] Empty state buttons use "Create First [Noun]" pattern
 - [ ] "Add" only used for imports/uploads
 
+**Button States:**
+- [ ] Disabled buttons use `disabled:opacity-50` (not color changes)
+- [ ] Disabled buttons include `disabled:cursor-not-allowed`
+- [ ] Disabled buttons with shadows include `disabled:shadow-none`
+- [ ] NOT using `disabled:bg-purple-400` or `disabled:bg-slate-300`
+- [ ] NOT using `disabled:text-*` color changes
+
 **Filters & Search:**
 - [ ] "Clear filters" uses slate color
 - [ ] Filter bars use FilterBar component
@@ -681,6 +768,12 @@ When creating new UI elements, verify:
 ---
 
 ## 🔄 Version History
+
+- **v1.2** (Jan 30, 2026) - Added Button State Patterns
+  - Disabled button standard (`disabled:opacity-50`)
+  - Rationale for opacity over color changes
+  - Updated quick reference with button states
+  - Updated implementation checklist
 
 - **v1.1** (Jan 28, 2026) - Added BaseTable patterns
   - Table header structure (title/description/refresh)

@@ -293,7 +293,7 @@ export function ProjectModal({
                       type="button"
                       onClick={handleCreateProject}
                       disabled={!newProjectName.trim() || creating}
-                      className="px-4 py-2 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 disabled:cursor-not-allowed rounded-lg transition-colors flex items-center gap-2"
+                      className="px-4 py-2 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors flex items-center gap-2"
                     >
                       {creating ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
@@ -340,7 +340,7 @@ export function ProjectModal({
               type="button"
               onClick={handleConfirm}
               disabled={loading}
-              className="px-4 py-2 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 disabled:cursor-not-allowed rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-800"
+              className="px-4 py-2 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-800"
             >
               {selectedProjectId ? 'Generate with Project' : 'Generate without Project'}
             </button>

@@ -4,7 +4,7 @@ import { Editor } from '@monaco-editor/react';
  * Monaco Editor wrapper component for lazy loading
  * This component is dynamically imported to reduce initial bundle size
  */
-export function LazyMonacoEditor({ height, language, value, onChange, options, theme }) {
+export function LazyMonacoEditor({ height, language, value, onChange, options, theme, onMount }) {
   // Define custom themes before mounting
   const handleEditorWillMount = (monaco) => {
     // Light theme
@@ -132,6 +132,12 @@ export function LazyMonacoEditor({ height, language, value, onChange, options, t
     });
   };
 
+  const handleEditorDidMount = (editor, monaco) => {
+    if (onMount) {
+      onMount(editor, monaco);
+    }
+  };
+
   return (
     <Editor
       height={height}
@@ -141,6 +147,7 @@ export function LazyMonacoEditor({ height, language, value, onChange, options, t
       options={options}
       theme={theme}
       beforeMount={handleEditorWillMount}
+      onMount={handleEditorDidMount}
     />
   );
 }

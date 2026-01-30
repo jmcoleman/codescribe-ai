@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState, useRef, useEffect } from 'react';
+import { lazy, Suspense, useState, useRef, useEffect, useCallback } from 'react';
 import { Sparkles, Zap, Loader2, Upload, RefreshCw, BookOpen, MoreVertical, Copy, Download } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -23,6 +23,11 @@ const LazyMonacoEditor = lazy(() =>
   import('./LazyMonacoEditor').then(module => ({ default: module.LazyMonacoEditor }))
 );
 
+// Lazy load PHI Editor Enhancer
+const LazyPHIEditorEnhancer = lazy(() =>
+  import('./PHIEditorEnhancer').then(module => ({ default: module.PHIEditorEnhancer }))
+);
+
 // Loading fallback component with skeleton UI
 function EditorLoadingFallback() {
   return (
@@ -44,7 +49,9 @@ export function CodePanel({
   onFileDrop,
   onClear,
   onSamplesClick,
-  samplesButtonRef
+  samplesButtonRef,
+  phiDetection = null,
+  onPhiResolved = null
 }) {
   const { effectiveTheme } = useTheme();
   const [isDragging, setIsDragging] = useState(false);
@@ -55,6 +62,8 @@ export function CodePanel({
     return getStorageItem(STORAGE_KEYS.VIEW_MODE_CODE, 'raw');
   });
   const mobileMenuRef = useRef(null);
+  const editorRef = useRef(null);
+  const monacoRef = useRef(null);
 
   // Persist viewMode to localStorage
   useEffect(() => {
@@ -74,6 +83,12 @@ export function CodePanel({
       previousFilenameRef.current = filename;
     }
   }, [filename]);
+
+  // Handle editor mount - store references
+  const handleEditorMount = useCallback((editor, monaco) => {
+    editorRef.current = editor;
+    monacoRef.current = monaco;
+  }, []);
 
   // Count lines, characters, and calculate file size
   const lines = code.split('\n').length;
@@ -475,6 +490,7 @@ export function CodePanel({
                 language={language}
                 value={code}
                 onChange={onChange}
+                onMount={handleEditorMount}
                 options={{
                   minimap: { enabled: false },
                   fontSize: 13,
@@ -494,6 +510,7 @@ export function CodePanel({
                     verticalScrollbarSize: getScrollbarWidth(),
                     horizontalScrollbarSize: getScrollbarWidth(),
                   },
+                  glyphMargin: true, // Enable glyph margin for PHI icons
                 }}
                 theme={effectiveTheme === 'dark' ? 'codescribe-dark' : 'codescribe-light'}
               />
@@ -501,6 +518,21 @@ export function CodePanel({
           </div>
         )}
       </div>
+
+      {/* PHI Editor Enhancer - Bottom Panel */}
+      {phiDetection?.containsPHI && editorRef.current && monacoRef.current && !readOnly && (
+        <Suspense fallback={null}>
+          <LazyPHIEditorEnhancer
+            editorInstance={editorRef.current}
+            monacoInstance={monacoRef.current}
+            phiDetection={phiDetection}
+            code={code}
+            onCodeChange={onChange}
+            onPhiResolved={onPhiResolved}
+            effectiveTheme={effectiveTheme}
+          />
+        </Suspense>
+      )}
 
       {/* Footer */}
       <div className="flex items-center justify-between px-4 py-2 bg-slate-50 dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 transition-colors">

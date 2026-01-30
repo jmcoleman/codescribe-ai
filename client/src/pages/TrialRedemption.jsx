@@ -283,7 +283,7 @@ export function TrialRedemption() {
                 <button
                   type="submit"
                   disabled={!code || validationStatus === 'validating'}
-                  className="w-full py-3 px-4 bg-purple-600 hover:bg-purple-700 disabled:bg-slate-400 text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
+                  className="w-full py-3 px-4 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
                 >
                   {validationStatus === 'validating' ? (
                     <>
@@ -318,7 +318,7 @@ export function TrialRedemption() {
                   type="button"
                   onClick={handleRedeem}
                   disabled={isRedeeming || redemptionStatus === 'redeeming'}
-                  className="w-full py-3 px-4 bg-green-600 hover:bg-green-700 disabled:bg-slate-400 text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
+                  className="w-full py-3 px-4 bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
                 >
                   {isRedeeming || redemptionStatus === 'redeeming' ? (
                     <>
