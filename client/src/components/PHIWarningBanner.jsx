@@ -61,11 +61,11 @@ export function PHIWarningBanner({ phiDetection, code, onCodeSanitized, onDismis
     }
     return {
       bg: 'bg-white dark:bg-slate-900',
-      border: 'border-yellow-500 dark:border-yellow-400',
+      border: 'border-blue-500 dark:border-blue-400',
       text: 'text-slate-900 dark:text-white',
       textBody: 'text-slate-700 dark:text-slate-300',
-      icon: 'text-yellow-600 dark:text-yellow-400',
-      button: 'bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-700 dark:hover:bg-yellow-600',
+      icon: 'text-blue-600 dark:text-blue-400',
+      button: 'bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600',
     };
   };
 
