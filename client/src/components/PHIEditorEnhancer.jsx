@@ -32,6 +32,23 @@ function getSuggestedReplacement(type) {
 }
 
 /**
+ * Create stable ID for PHI item based on value content
+ * This ID persists across position changes when code is edited
+ */
+function createPHIItemId(value, type) {
+  // Use a simple hash of value + type for stable ID
+  // This way the same PHI keeps the same ID even if line/column changes
+  const str = `${type}:${value}`;
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  return `phi-${Math.abs(hash)}`;
+}
+
+/**
  * Extract PHI items from detection data with line/column positions
  */
 function extractPHIItems(phiDetection, code) {
@@ -48,7 +65,7 @@ function extractPHIItems(phiDetection, code) {
         let startCol = 0;
         while ((startCol = line.indexOf(example, startCol)) !== -1) {
           items.push({
-            id: `${lineIndex + 1}-${startCol}`,
+            id: createPHIItemId(example, suggestion.title), // Content-based stable ID
             lineNumber: lineIndex + 1,
             columnStart: startCol + 1, // Monaco uses 1-based columns
             columnEnd: startCol + example.length + 1,
@@ -109,17 +126,20 @@ export function PHIEditorEnhancer({
   const tableContainerRef = useRef(null);
 
   // Extract PHI items when detection data changes
-  // Preserve review state for items that still exist after code changes
+  // Preserve review state and custom replacements using stable content-based IDs
   useEffect(() => {
     if (!phiDetection?.containsPHI) {
       setPhiItems([]);
+      setReviewState({});
+      setCustomReplacements({});
+      setOriginalValues({});
       return;
     }
 
     const items = extractPHIItems(phiDetection, code);
     setPhiItems(items);
 
-    // Preserve review state for items that still exist
+    // Preserve review state for items with matching IDs (same PHI content)
     setReviewState(prev => {
       const preserved = {};
       items.forEach(item => {
@@ -130,8 +150,19 @@ export function PHIEditorEnhancer({
       return preserved;
     });
 
-    // Preserve custom replacements for items that still exist
+    // Preserve custom replacements for items with matching IDs
     setCustomReplacements(prev => {
+      const preserved = {};
+      items.forEach(item => {
+        if (prev[item.id]) {
+          preserved[item.id] = prev[item.id];
+        }
+      });
+      return preserved;
+    });
+
+    // Preserve original values for revert functionality
+    setOriginalValues(prev => {
       const preserved = {};
       items.forEach(item => {
         if (prev[item.id]) {
@@ -258,39 +289,17 @@ export function PHIEditorEnhancer({
     };
   }, [monacoInstance, phiItems]);
 
-  // Detect edits in Monaco and update replacement field
-  useEffect(() => {
-    if (!editorInstance || phiItems.length === 0) return;
-
-    const disposable = editorInstance.onDidChangeModelContent((e) => {
-      // Check if the edit affected any PHI positions
-      e.changes.forEach(change => {
-        const affectedItem = phiItems.find(item => {
-          return item.lineNumber >= change.range.startLineNumber &&
-                 item.lineNumber <= change.range.endLineNumber;
-        });
-
-        if (affectedItem && change.text) {
-          // User edited at a PHI location - update the replacement field
-          // This creates the two-way sync: Monaco edit → Table replacement
-          const newText = change.text.trim();
-          if (newText && newText !== affectedItem.value) {
-            // Update the replacement field to show what they changed it to
-            setCustomReplacements(prev => ({
-              ...prev,
-              [affectedItem.id]: newText
-            }));
-          }
-        }
-      });
-    });
-
-    return () => {
-      if (disposable) {
-        disposable.dispose();
-      }
-    };
-  }, [editorInstance, phiItems]);
+  /**
+   * Note: Monaco → Table sync is not implemented because:
+   * 1. When user edits PHI in Monaco, the value changes
+   * 2. This changes the content-based ID, breaking the link to the original item
+   * 3. PHI re-detection runs after edits (1 sec debounce), creating fresh scan
+   * 4. Best practice: Use table for systematic sanitization, Monaco for code editing
+   *
+   * Workflow:
+   * - User edits replacement in table → Applies to Monaco on Accept ✅
+   * - User edits code in Monaco → Triggers re-detection → Fresh PHI scan ✅
+   */
 
   // Register code action provider for quick fixes
   useEffect(() => {
