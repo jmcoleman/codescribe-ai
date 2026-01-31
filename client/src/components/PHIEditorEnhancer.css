@@ -384,9 +384,18 @@
   height: 12px;
 }
 
-/* Column Widths - Now controlled by inline styles */
+/* Static Column Widths (non-resizable) */
+.phi-col-number {
+  width: 40px;
+  text-align: center;
+  font-family: 'Monaco', 'Courier New', monospace;
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0.7;
+}
+
 .phi-col-status {
-  min-width: 100px;
+  width: 105px;
   white-space: nowrap;
 }
 
@@ -401,25 +410,15 @@
   font-weight: 500;
 }
 
-.phi-col-number {
-  min-width: 40px;
-  text-align: center;
-  font-family: 'Monaco', 'Courier New', monospace;
-  font-size: 12px;
-  font-weight: 500;
-  opacity: 0.7;
-}
-
 .phi-col-line {
-  min-width: 55px;
+  width: 50px;
   text-align: right;
   font-family: 'Monaco', 'Courier New', monospace;
   font-size: 12px;
 }
 
 .phi-col-id {
-  min-width: 130px;
-  max-width: 0;
+  width: 125px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -448,7 +447,7 @@
 }
 
 .phi-col-action {
-  min-width: 100px;
+  width: 110px;
 }
 
 .phi-items-table tbody tr {
