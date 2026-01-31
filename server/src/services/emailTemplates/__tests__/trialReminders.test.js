@@ -86,14 +86,16 @@ describe('Trial Reminder Email Templates', () => {
         expect(html).toContain('Plan: Pro');
       });
 
-      it('should include environment badge in non-production', () => {
+      it('should include environment label in non-production', () => {
         const html = trialExpiringReminderTemplate(params);
-        expect(html).toContain('DEVELOPMENT');
+        expect(html).toContain('Development environment');
+        expect(html).toContain('Non-production email');
       });
 
       it('should return valid HTML structure', () => {
         const html = trialExpiringReminderTemplate(params);
-        expect(html).toContain('<html>');
+        expect(html).toContain('<!doctype html>');
+        expect(html).toContain('<html lang="en"');
         expect(html).toContain('</html>');
         expect(html).toContain('<body');
         expect(html).toContain('</body>');
@@ -110,7 +112,7 @@ describe('Trial Reminder Email Templates', () => {
       it('should use red/urgent color for 1-day reminder', () => {
         const html = trialExpiringReminderTemplate(params);
         expect(html).toContain('#dc2626'); // Red urgency color
-        expect(html).toContain('#fef2f2'); // Red background
+        expect(html).toContain('#fee2e2'); // Red background
       });
 
       it('should include "Last Day!" message', () => {
@@ -154,15 +156,16 @@ describe('Trial Reminder Email Templates', () => {
     });
 
     describe('with production environment', () => {
-      it('should not include environment badge in production', () => {
+      it('should not include environment label in production', () => {
         const html = trialExpiringReminderTemplate({
           ...baseParams,
           daysRemaining: 3,
           expiresAt,
           environment: 'production'
         });
-        expect(html).not.toContain('PRODUCTION');
-        expect(html).not.toContain('DEVELOPMENT');
+        expect(html).not.toContain('Production environment');
+        expect(html).not.toContain('Development environment');
+        expect(html).not.toContain('Non-production email');
       });
     });
   });
@@ -234,7 +237,8 @@ describe('Trial Reminder Email Templates', () => {
 
     it('should return valid HTML structure', () => {
       const html = trialExpiredNoticeTemplate(params);
-      expect(html).toContain('<html>');
+      expect(html).toContain('<!doctype html>');
+      expect(html).toContain('<html lang="en"');
       expect(html).toContain('</html>');
     });
 
@@ -310,7 +314,8 @@ describe('Trial Reminder Email Templates', () => {
 
     it('should return valid HTML structure', () => {
       const html = trialExtendedTemplate(params);
-      expect(html).toContain('<html>');
+      expect(html).toContain('<!doctype html>');
+      expect(html).toContain('<html lang="en"');
       expect(html).toContain('</html>');
     });
 

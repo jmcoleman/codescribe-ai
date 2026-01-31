@@ -236,6 +236,22 @@ router.post('/generate', optionalAuth, rateLimitBypass, apiLimiter, generationLi
     });
 
     // Server-side analytics (fire-and-forget, works for all callers including API consumers)
+    const sessionId = req.headers['x-session-id'] || null;
+    const userId = req.user?.id || null;
+    const ipAddress = req.ip || req.socket?.remoteAddress || 'unknown';
+
+    // Debug log when session ID or user ID is missing
+    if (!sessionId || !userId) {
+      console.warn('[Analytics] Missing context for doc_generation:', {
+        sessionId: sessionId ? 'present' : 'MISSING',
+        userId: userId ? 'present' : 'MISSING (unauthenticated)',
+        ipAddress,
+        hasSessionHeader: !!req.headers['x-session-id'],
+        sessionHeaderValue: req.headers['x-session-id'],
+        isAuthenticated: !!req.user,
+      });
+    }
+
     analyticsService.recordEvent('doc_generation', {
       doc_type: docType || 'README',
       success: 'true',
@@ -250,14 +266,23 @@ router.post('/generate', optionalAuth, rateLimitBypass, apiLimiter, generationLi
         model: result.metadata.model || 'unknown',
       } : undefined,
     }, {
-      sessionId: req.headers['x-session-id'] || null,
-      userId: req.user?.id || null,
-      ipAddress: req.ip || req.socket?.remoteAddress || 'unknown',
+      sessionId,
+      userId,
+      ipAddress,
     }).catch((error) => {
       console.error('[DEBUG] doc_generation analytics error:', error);
     });
 
     if (result.qualityScore) {
+      // Debug log when session ID or user ID is missing
+      if (!sessionId || !userId) {
+        console.warn('[Analytics] Missing context for quality_score:', {
+          sessionId: sessionId ? 'present' : 'MISSING',
+          userId: userId ? 'present' : 'MISSING (unauthenticated)',
+          ipAddress,
+        });
+      }
+
       analyticsService.recordEvent('quality_score', {
         score: result.qualityScore.score,
         grade: result.qualityScore.grade,
@@ -267,8 +292,9 @@ router.post('/generate', optionalAuth, rateLimitBypass, apiLimiter, generationLi
           model: result.metadata.model || 'unknown',
         } : undefined,
       }, {
-        sessionId: req.headers['x-session-id'] || null,
-        userId: req.user?.id || null,
+        sessionId,
+        userId,
+        ipAddress,
       }).catch((error) => {
         console.error('[DEBUG] quality_score analytics error:', error);
       });
@@ -482,6 +508,22 @@ router.post('/generate-stream', optionalAuth, rateLimitBypass, apiLimiter, gener
     });
 
     // Server-side analytics (fire-and-forget, works for all callers including API consumers)
+    const streamSessionId = req.headers['x-session-id'] || null;
+    const streamUserId = req.user?.id || null;
+    const streamIpAddress = req.ip || req.socket?.remoteAddress || 'unknown';
+
+    // Debug log when session ID or user ID is missing
+    if (!streamSessionId || !streamUserId) {
+      console.warn('[Analytics] Missing context for streaming doc_generation:', {
+        sessionId: streamSessionId ? 'present' : 'MISSING',
+        userId: streamUserId ? 'present' : 'MISSING (unauthenticated)',
+        ipAddress: streamIpAddress,
+        hasSessionHeader: !!req.headers['x-session-id'],
+        sessionHeaderValue: req.headers['x-session-id'],
+        isAuthenticated: !!req.user,
+      });
+    }
+
     analyticsService.recordEvent('doc_generation', {
       doc_type: req.body.docType || 'README',
       success: 'true',
@@ -496,12 +538,21 @@ router.post('/generate-stream', optionalAuth, rateLimitBypass, apiLimiter, gener
         model: result.metadata.model || 'unknown',
       } : undefined,
     }, {
-      sessionId: req.headers['x-session-id'] || null,
-      userId: req.user?.id || null,
-      ipAddress: req.ip || req.socket?.remoteAddress || 'unknown',
+      sessionId: streamSessionId,
+      userId: streamUserId,
+      ipAddress: streamIpAddress,
     }).catch(() => {});
 
     if (result.qualityScore) {
+      // Debug log when session ID or user ID is missing
+      if (!streamSessionId || !streamUserId) {
+        console.warn('[Analytics] Missing context for streaming quality_score:', {
+          sessionId: streamSessionId ? 'present' : 'MISSING',
+          userId: streamUserId ? 'present' : 'MISSING (unauthenticated)',
+          ipAddress: streamIpAddress,
+        });
+      }
+
       analyticsService.recordEvent('quality_score', {
         score: result.qualityScore.score,
         grade: result.qualityScore.grade,
@@ -511,8 +562,9 @@ router.post('/generate-stream', optionalAuth, rateLimitBypass, apiLimiter, gener
           model: result.metadata.model || 'unknown',
         } : undefined,
       }, {
-        sessionId: req.headers['x-session-id'] || null,
-        userId: req.user?.id || null,
+        sessionId: streamSessionId,
+        userId: streamUserId,
+        ipAddress: streamIpAddress,
       }).catch(() => {});
     }
 

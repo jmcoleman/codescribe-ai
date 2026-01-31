@@ -263,15 +263,59 @@ export const LazyMermaidRenderer = memo(function LazyMermaidRenderer({ chart, id
         const themeBgColor = effectiveTheme === 'dark' ? '#1e293b' : '#ffffff'; // slate-800 : white
         const themeTextColor = effectiveTheme === 'dark' ? '#e2e8f0' : '#1e293b'; // slate-200 : slate-800
 
-        // Standard colors that we allow (our theme colors)
+        /**
+         * Convert light-mode colors to dark-mode equivalents
+         * Handles common diagram colors (red, blue, yellow, green, orange)
+         */
+        const convertToDarkMode = (color) => {
+          const colorLower = color.toLowerCase();
+
+          // Problematic light colors that need dark mode variants
+          // Format: [light color pattern, dark mode replacement]
+          const colorMap = [
+            // Light reds/pinks/oranges → dark slate (these create poor contrast)
+            { pattern: /^#(ff|fe|fd|fc|fb|fa|f9|f8)[a-f0-9]{4}$/i, replacement: '#334155' }, // Very light → slate-700
+            { pattern: /^#(f[0-9a-f]d|f[0-9a-f]e|f[0-9a-f]f)[a-f0-9]{3}$/i, replacement: '#334155' }, // Light salmon/peach → slate-700
+            { pattern: /^#(ff[c-f]|fe[c-f]|fd[c-f])[a-f0-9]{3}$/i, replacement: '#334155' }, // Light orange/peach → slate-700
+
+            // Light yellows/creams → slate (poor contrast in dark mode)
+            { pattern: /^#(ff|fe|fd|fc)f[c-f][a-f0-9]{2}$/i, replacement: '#475569' }, // Light yellow/cream → slate-600
+            { pattern: /^#f[a-f]f[a-f](c|d|e|f)[a-f0-9]$/i, replacement: '#475569' }, // Cream/beige → slate-600
+
+            // Light blues → darker blue
+            { pattern: /^#[c-f][0-9a-f][d-f][0-9a-f]ff$/i, replacement: '#3b82f6' }, // Light blue → blue-500
+            { pattern: /^#[d-f][0-9a-f]e[0-9a-f]ff$/i, replacement: '#3b82f6' }, // Very light blue → blue-500
+
+            // Light greens → darker green
+            { pattern: /^#[c-f][0-9a-f]f[c-f][a-f0-9]{2}$/i, replacement: '#22c55e' }, // Light green → green-500
+
+            // Pure white/very light grays → slate-800
+            { pattern: /^#f{6}$/i, replacement: '#1e293b' }, // White → slate-800
+            { pattern: /^#f[a-f]f[a-f]f[a-f]$/i, replacement: '#1e293b' }, // Very light gray → slate-800
+          ];
+
+          for (const { pattern, replacement } of colorMap) {
+            if (pattern.test(colorLower)) {
+              return replacement;
+            }
+          }
+
+          return color; // Return original if no match
+        };
+
+        // Standard colors that we allow (our theme colors + converted dark mode colors)
         const allowedBgColors = new Set([
           // Light mode standard colors
           '#ffffff', '#f8fafc', '#f1f5f9', '#e2e8f0', // white and slate variations
           '#9333ea', '#7c3aed', '#a78bfa', '#c4b5fd', // purple variations
           '#e0e7ff', '#c7d2fe', // indigo variations
           // Dark mode standard colors
-          '#0f172a', '#1e293b', '#334155', '#475569', // slate dark variations
+          '#0f172a', '#1e293b', '#334155', '#475569', '#64748b', // slate dark variations
           '#312e81', // indigo-900
+          '#3b82f6', '#2563eb', '#1d4ed8', // blue variations (dark mode safe)
+          '#22c55e', '#16a34a', '#15803d', // green variations (dark mode safe)
+          '#ef4444', '#dc2626', '#b91c1c', // red variations (darker, readable)
+          '#f59e0b', '#d97706', '#b45309', // amber variations (darker, readable)
           // Transparent/none
           'none', 'transparent',
         ]);
@@ -281,10 +325,21 @@ export const LazyMermaidRenderer = memo(function LazyMermaidRenderer({ chart, id
         allShapes.forEach(shape => {
           const fill = shape.getAttribute('fill');
           if (fill && fill !== 'none' && fill !== 'transparent' && !fill.startsWith('url(')) {
-            const fillLower = fill.toLowerCase();
+            let finalFill = fill;
+
+            // In dark mode, convert problematic light colors to dark equivalents
+            if (effectiveTheme === 'dark') {
+              finalFill = convertToDarkMode(fill);
+            }
+
+            const fillLower = finalFill.toLowerCase();
             // If it's not one of our standard colors, replace with theme background
             if (!allowedBgColors.has(fillLower)) {
-              shape.setAttribute('fill', themeBgColor);
+              finalFill = themeBgColor;
+            }
+
+            if (finalFill !== fill) {
+              shape.setAttribute('fill', finalFill);
             }
           }
         });

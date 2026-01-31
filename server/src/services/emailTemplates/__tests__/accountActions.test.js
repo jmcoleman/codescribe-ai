@@ -24,7 +24,8 @@ describe('Account Action Email Templates', () => {
         suspendedUntil: '2026-02-14T00:00:00Z'
       });
 
-      expect(html).toContain('<html>');
+      expect(html).toContain('<!doctype html>');
+      expect(html).toContain('<html lang="en"');
       expect(html).toContain('Account Suspended');
       expect(html).toContain('John Doe');
       expect(html).toContain('Reason for Suspension');
@@ -50,7 +51,8 @@ describe('Account Action Email Templates', () => {
     it('should generate valid HTML email', () => {
       const html = accountUnsuspendedTemplate(baseParams);
 
-      expect(html).toContain('<html>');
+      expect(html).toContain('<!doctype html>');
+      expect(html).toContain('<html lang="en"');
       expect(html).toContain('Account Restored');
       expect(html).toContain('John Doe');
       expect(html).toContain('suspension');
@@ -76,7 +78,8 @@ describe('Account Action Email Templates', () => {
         expiresAt: '2026-02-14T00:00:00Z'
       });
 
-      expect(html).toContain('<html>');
+      expect(html).toContain('<!doctype html>');
+      expect(html).toContain('<html lang="en"');
       expect(html).toContain('Trial');
       expect(html).toContain('John Doe');
       expect(html).toContain('Pro');
@@ -117,7 +120,8 @@ describe('Account Action Email Templates', () => {
       ];
 
       templates.forEach(html => {
-        expect(html).toContain('<html');
+        expect(html).toContain('<!doctype html>');
+        expect(html).toContain('<html lang="en"');
         expect(html).toContain('<head>');
         expect(html).toContain('<body');
         expect(html).toContain('</body>');
@@ -140,7 +144,7 @@ describe('Account Action Email Templates', () => {
   });
 
   describe('Environment handling', () => {
-    it('should include environment badge in non-production', () => {
+    it('should include environment label in non-production', () => {
       const html = accountSuspendedTemplate({
         ...baseParams,
         reason: 'Test suspension',
@@ -148,10 +152,11 @@ describe('Account Action Email Templates', () => {
         environment: 'development'
       });
 
-      expect(html).toContain('DEVELOPMENT');
+      expect(html).toContain('Development environment');
+      expect(html).toContain('Non-production email');
     });
 
-    it('should not include environment badge in production', () => {
+    it('should not include environment label in production', () => {
       const html = accountSuspendedTemplate({
         ...baseParams,
         reason: 'Test suspension',
@@ -159,8 +164,9 @@ describe('Account Action Email Templates', () => {
         environment: 'production'
       });
 
-      expect(html).not.toContain('DEVELOPMENT');
-      expect(html).not.toContain('STAGING');
+      expect(html).not.toContain('Development environment');
+      expect(html).not.toContain('Staging environment');
+      expect(html).not.toContain('Non-production email');
     });
   });
 

@@ -79,6 +79,10 @@ export function HelpModal({ isOpen, onClose }) {
       answer: 'Your documentation is scored on five criteria: Overview/Description (20 pts), Installation Instructions (15 pts), Usage Examples (20 pts), API Documentation (25 pts), and Structure/Formatting (20 pts). Click "View Breakdown" after generation to see detailed suggestions.'
     },
     {
+      question: 'What does PHI detection confidence mean?',
+      answer: 'Detection confidence indicates how likely detected patterns are actual PHI (Protected Health Information) versus example data. Each pattern type has a weight: SSNs (10 points), Medical Record Numbers (8), Phone Numbers (3), Emails (2). Your total score determines confidence: High (16+ points), Medium (6-15 points), Low (1-5 points). If your code contains keywords like "test," "example," or "mock," the score is reduced by 50%. Low confidence (like 3 email addresses) usually means the system found patterns but recognizes they\'re likely example data, not real PHI.'
+    },
+    {
       question: 'Is my code stored anywhere?',
       answer: 'No! Your code is processed in memory and never stored in a database. Once the documentation is generated, your code is immediately discarded. We prioritize your privacy.'
     },

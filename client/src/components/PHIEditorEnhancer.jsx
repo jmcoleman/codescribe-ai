@@ -78,6 +78,7 @@ export function PHIEditorEnhancer({
   code,
   onCodeChange,
   onPhiResolved,
+  onProceed,
   effectiveTheme
 }) {
   const [phiItems, setPhiItems] = useState([]);
@@ -88,6 +89,7 @@ export function PHIEditorEnhancer({
   const [panelExpanded, setPanelExpanded] = useState(true);
   const [showBackToFirst, setShowBackToFirst] = useState(false);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  const [confirmed, setConfirmed] = useState(false);
   const [columnWidths, setColumnWidths] = useState({
     status: 120,
     type: 180,
@@ -719,6 +721,14 @@ export function PHIEditorEnhancer({
           <div className="phi-panel-title">
             <AlertTriangle className="w-5 h-5" aria-hidden="true" />
             <span>Protected Health Information Detected ({phiItems.length} items)</span>
+            {phiDetection?.confidence && (
+              <span
+                className={`phi-confidence-badge phi-confidence-${phiDetection.confidence}`}
+                title={`Detection confidence: ${phiDetection.confidence}`}
+              >
+                {phiDetection.confidence.charAt(0).toUpperCase() + phiDetection.confidence.slice(1)} Confidence
+              </span>
+            )}
           </div>
           <div className="phi-panel-toggle">
             {panelExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
@@ -990,6 +1000,31 @@ export function PHIEditorEnhancer({
                   Apply All Changes ({pendingCount})
                 </button>
               </div>
+            </div>
+
+            {/* Confirmation Checkbox */}
+            <div className="phi-panel-confirmation">
+              <label className="flex items-center gap-2 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  id="phi-confirmation-drawer"
+                  checked={confirmed}
+                  onChange={(e) => {
+                    setConfirmed(e.target.checked);
+                    if (e.target.checked && onProceed) {
+                      onProceed();
+                    }
+                  }}
+                  className="h-4 w-4 rounded border-slate-300 dark:border-slate-600 text-purple-600 dark:text-purple-400 focus-visible:ring-purple-600 dark:focus-visible:ring-purple-400 focus-visible:ring-offset-0 transition-colors flex-shrink-0"
+                  aria-describedby="phi-confirmation-drawer-label"
+                />
+                <span
+                  id="phi-confirmation-drawer-label"
+                  className="text-sm leading-tight text-slate-700 dark:text-slate-300 group-hover:opacity-75 transition-opacity"
+                >
+                  I confirm this code contains no actual PHI and is safe to process
+                </span>
+              </label>
             </div>
           </div>
         )}

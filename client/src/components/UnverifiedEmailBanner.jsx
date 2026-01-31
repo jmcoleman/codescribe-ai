@@ -7,11 +7,12 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Mail, X, Loader2 } from 'lucide-react';
+import { Mail, Loader2 } from 'lucide-react';
 import { toastSuccess, toastError } from '../utils/toast';
 import { STORAGE_KEYS, getSessionItem, setSessionItem, removeSessionItem } from '../constants/storage';
 import { useAuth } from '../contexts/AuthContext';
 import { API_URL } from '../config/api';
+import { Banner } from './Banner';
 
 export default function UnverifiedEmailBanner({ user, onDismiss }) {
   const [isResending, setIsResending] = useState(false);
@@ -91,57 +92,37 @@ export default function UnverifiedEmailBanner({ user, onDismiss }) {
   };
 
   return (
-    <div
-      className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 border-b border-indigo-200 dark:border-indigo-800"
-      role="alert"
-      aria-live="polite"
+    <Banner
+      type="info"
+      icon={Mail}
+      iconColor="text-indigo-600 dark:text-indigo-400"
+      borderColor="border-indigo-500 dark:border-indigo-400"
+      onDismiss={handleDismiss}
+      ariaLive="polite"
+      actions={
+        <button
+          onClick={handleResend}
+          disabled={isResending}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 rounded-md shadow-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+        >
+          {isResending ? (
+            <>
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <span>Sending...</span>
+            </>
+          ) : (
+            'Resend Email'
+          )}
+        </button>
+      }
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5">
-        <div className="flex items-center justify-between gap-4">
-          {/* Icon + Message */}
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center ring-2 ring-indigo-200 dark:ring-indigo-700">
-              <Mail
-                className="w-4 h-4 text-indigo-600 dark:text-indigo-400"
-                aria-label="Email verification"
-              />
-            </div>
-            <p className="text-sm text-slate-700 dark:text-indigo-200 truncate">
-              <span className="font-semibold text-slate-900 dark:text-indigo-100">Verify your email</span>
-              <span className="hidden sm:inline">
-                {' — '}
-                Check your inbox and click the verification link
-              </span>
-            </p>
-          </div>
-
-          {/* Actions */}
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <button
-              onClick={handleResend}
-              disabled={isResending}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 rounded-md shadow-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
-            >
-              {isResending ? (
-                <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  <span>Sending...</span>
-                </>
-              ) : (
-                'Resend Email'
-              )}
-            </button>
-
-            <button
-              onClick={handleDismiss}
-              className="p-1.5 text-slate-400 dark:text-indigo-400 hover:text-slate-600 dark:hover:text-indigo-300 hover:bg-white/80 dark:hover:bg-slate-800/80 rounded-md transition-all duration-200 active:scale-95"
-              aria-label="Dismiss banner"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+      <p className="text-sm text-slate-700 dark:text-slate-300">
+        <span className="font-semibold text-slate-900 dark:text-white">Verify your email</span>
+        <span className="hidden sm:inline">
+          {' — '}
+          Check your inbox and click the verification link
+        </span>
+      </p>
+    </Banner>
   );
 }

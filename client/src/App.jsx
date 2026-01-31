@@ -2382,8 +2382,9 @@ function App() {
       samplesButtonRef={samplesButtonRef}
       phiDetection={phiDetection}
       onPhiResolved={handlePhiResolved}
+      onProceed={handleProceedWithPhi}
     />
-  ), [code, filename, language, samplesButtonRef]);
+  ), [code, filename, language, samplesButtonRef, phiDetection, handlePhiResolved, handleProceedWithPhi]);
 
   const docPanel = useMemo(() => (
     <Suspense fallback={<LoadingFallback />}>
@@ -2506,8 +2507,26 @@ function App() {
         onTrialCodeConsumed={() => setPendingTrialCode(null)}
       />
 
-      {/* Email Verification Banner - Shows at top for unverified users */}
-      <UnverifiedEmailBanner user={user} />
+      {/* Alert Banners Section */}
+      {(user && !user.email_verified) || (showPhiWarning && phiDetection) ? (
+        <div className="px-4 pt-4 mb-4">
+          {/* Email Verification Banner - Shows at top for unverified users */}
+          {user && !user.email_verified && (
+            <UnverifiedEmailBanner user={user} />
+          )}
+
+          {/* PHI Warning Banner - Shows when potential PHI detected */}
+          {showPhiWarning && phiDetection && (
+            <PHIWarningBanner
+              phiDetection={phiDetection}
+              code={code}
+              onCodeSanitized={handleCodeSanitized}
+              onDismiss={handleDismissPhiWarning}
+              onProceed={handleProceedWithPhi}
+            />
+          )}
+        </div>
+      ) : null}
 
       {/* Tier Override Banner - Shows for admin/support with active override */}
       {override && override.active && (
@@ -2611,19 +2630,6 @@ function App() {
           }}
           onUpgrade={handleUpgradeClick}
         />
-
-        {/* PHI Warning Banner - Shows when potential PHI detected */}
-        {showPhiWarning && phiDetection && (
-          <div className="px-4 pt-4">
-            <PHIWarningBanner
-              phiDetection={phiDetection}
-              code={code}
-              onCodeSanitized={handleCodeSanitized}
-              onDismiss={handleDismissPhiWarning}
-              onProceed={handleProceedWithPhi}
-            />
-          </div>
-        )}
 
         <MobileTabBar
           activeTab={mobileActiveTab}
@@ -2741,7 +2747,7 @@ function App() {
 
                   {/* PHI Warning Banner - Shows when potential PHI detected */}
                   {showPhiWarning && phiDetection && (
-                    <div className="px-4 pt-4">
+                    <div className="px-4 pt-4 mb-4">
                       <PHIWarningBanner
                         phiDetection={phiDetection}
                         code={code}
@@ -2768,6 +2774,7 @@ function App() {
                           samplesButtonRef={samplesButtonRef}
                           phiDetection={phiDetection}
                           onPhiResolved={handlePhiResolved}
+                          onProceed={handleProceedWithPhi}
                         />
                       }
                       rightPanel={
@@ -2828,19 +2835,6 @@ function App() {
               onUpgrade={handleUpgradeClick}
             />
 
-            {/* PHI Warning Banner - Shows when potential PHI detected */}
-            {showPhiWarning && phiDetection && (
-              <div className="px-4 pt-4">
-                <PHIWarningBanner
-                  phiDetection={phiDetection}
-                  code={code}
-                  onCodeSanitized={handleCodeSanitized}
-                  onDismiss={handleDismissPhiWarning}
-                  onProceed={handleProceedWithPhi}
-                />
-              </div>
-            )}
-
             {/* Control Bar */}
             <ControlBar
               docType={docType}
@@ -2876,6 +2870,7 @@ function App() {
                     samplesButtonRef={samplesButtonRef}
                     phiDetection={phiDetection}
                     onPhiResolved={handlePhiResolved}
+                    onProceed={handleProceedWithPhi}
                   />
                 ) : (
                   <Suspense fallback={<LoadingFallback />}>
@@ -2927,6 +2922,7 @@ function App() {
                       samplesButtonRef={samplesButtonRef}
                       phiDetection={phiDetection}
                       onPhiResolved={handlePhiResolved}
+                      onProceed={handleProceedWithPhi}
                     />
                   }
                   rightPanel={

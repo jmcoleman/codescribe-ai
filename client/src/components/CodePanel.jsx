@@ -52,7 +52,8 @@ export function CodePanel({
   onSamplesClick,
   samplesButtonRef,
   phiDetection = null,
-  onPhiResolved = null
+  onPhiResolved = null,
+  onProceed = null
 }) {
   const { effectiveTheme } = useTheme();
   const [isDragging, setIsDragging] = useState(false);
@@ -547,6 +548,7 @@ export function CodePanel({
             code={code}
             onCodeChange={onChange}
             onPhiResolved={onPhiResolved}
+            onProceed={onProceed}
             effectiveTheme={effectiveTheme}
           />
         </Suspense>
