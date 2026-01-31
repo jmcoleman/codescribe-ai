@@ -106,6 +106,7 @@ function App() {
   // Track session start - once per session for funnel analytics
   // Use ref to prevent React Strict Mode double-firing in dev
   const sessionTrackedRef = useRef(false);
+  const codeRef = useRef(''); // Always holds latest code value to avoid stale closures
   useEffect(() => {
     if (!sessionTrackedRef.current) {
       sessionTrackedRef.current = true;
@@ -420,18 +421,22 @@ function App() {
       if (codeKey) {
         const savedCode = getStorageItem(codeKey);
         // Always update code state with what's in storage (or DEFAULT_CODE if nothing saved)
-        setCode(savedCode || DEFAULT_CODE);
+        const codeToLoad = savedCode || DEFAULT_CODE;
+        setCode(codeToLoad);
+        codeRef.current = codeToLoad; // Update ref immediately
       }
     } else if (!user && !hasSeenUserRef.current) {
       // No user on initial load - check global key for anonymous user's code
       const globalCode = getStorageItem(STORAGE_KEYS.EDITOR_CODE);
       if (globalCode) {
         setCode(globalCode);
+        codeRef.current = globalCode; // Update ref immediately
       }
     } else if (hasSeenUserRef.current) {
       // User logged out (not initial page load) - clear all UI state
       // Batch state clearing is handled separately after useBatchGeneration hook
       setCode(DEFAULT_CODE);
+      codeRef.current = DEFAULT_CODE; // Update ref immediately
       setCodeOrigin('default'); // Reset to default pre-loaded code
       setSourceMetadata(null); // Clear GitHub/GitLab metadata
       setFilename('code.js');
@@ -718,6 +723,7 @@ function App() {
     if (batchSummary) {
       // Clear code panel state (no files to show)
       setCode('');
+      codeRef.current = ''; // Update ref immediately
       setPhiConfirmed(false); // Reset PHI confirmation when clearing
       setFilename('');
       setCodeOrigin(null);
@@ -935,6 +941,7 @@ function App() {
       // Sync code to CodePanel
       if (activeFile.content) {
         setCode(activeFile.content);
+        codeRef.current = activeFile.content; // Update ref immediately
         setPhiConfirmed(false); // Reset PHI confirmation when switching files
         setCodeOrigin(activeFile.origin || 'paste'); // Use file's origin
         // Sync source metadata for reload functionality (github, gitlab, etc.)
@@ -1025,6 +1032,7 @@ function App() {
           // User deleted all files (transition from files > 0 to files === 0)
           // Reset to default code
           setCode(DEFAULT_CODE);
+          codeRef.current = DEFAULT_CODE; // Update ref immediately
           setCodeOrigin('default');
           setFilename('code.js');
           setDocumentation('');
@@ -1125,6 +1133,7 @@ function App() {
       return;
     }
 
+    console.log('[App] Running PHI detection on code...', codeToScan.length, 'chars');
     try {
       const response = await fetch(`${API_URL}/api/phi/detect`, {
         method: 'POST',
@@ -1141,6 +1150,8 @@ function App() {
 
       const result = await response.json();
       if (result.success && result.data) {
+        console.log('[App] PHI detection completed:', result.data.containsPHI ? `Found ${result.data.suggestions?.length} suggestion types` : 'No PHI detected');
+        console.log('[App] API returned suggestions:', result.data.suggestions?.map(s => ({ type: s.type, examples: s.examples })));
         setPhiDetection(result.data);
         setShowPhiWarning(result.data.containsPHI);
       }
@@ -1149,6 +1160,13 @@ function App() {
       // Silently fail - don't block user workflow
     }
   }, []);
+
+  /**
+   * Keep codeRef in sync with code state to avoid stale closures in debounced callbacks
+   */
+  useEffect(() => {
+    codeRef.current = code;
+  }, [code]);
 
   /**
    * Debounced PHI detection on code change
@@ -1162,7 +1180,8 @@ function App() {
 
     // Debounce PHI check (1 second after typing stops)
     phiCheckTimeoutRef.current = setTimeout(() => {
-      detectPHI(code);
+      // Use codeRef.current to get the latest code, avoiding stale closure
+      detectPHI(codeRef.current);
     }, 1000);
 
     // Cleanup on unmount
@@ -1692,6 +1711,7 @@ function App() {
       if (data.success && data.file) {
         // Set the uploaded file content in the editor
         setCode(data.file.content);
+        codeRef.current = data.file.content; // Update ref immediately
         setPhiConfirmed(false); // Reset PHI confirmation for new code
         setCodeOrigin('upload'); // File was uploaded
         setSourceMetadata(null); // Clear any previous source metadata (upload is not reloadable)
@@ -1956,6 +1976,7 @@ function App() {
   // Handler for code changes in editor - tracks first meaningful code input
   const handleCodeChange = useCallback((newCode) => {
     setCode(newCode);
+    codeRef.current = newCode; // Update ref immediately to avoid stale closures in debounced callbacks
     // Reset PHI confirmation when code changes
     setPhiConfirmed(false);
 
@@ -1981,6 +2002,7 @@ function App() {
   const handleGithubFileLoad = ({ code: fileCode, language: fileLang, filename: fileName, metadata }) => {
     // Set the code from GitHub file
     setCode(fileCode);
+    codeRef.current = fileCode; // Update ref immediately
     setPhiConfirmed(false); // Reset PHI confirmation for new code
     setCodeOrigin('github'); // Code is from GitHub
 
@@ -2116,6 +2138,7 @@ function App() {
    */
   const handleCodeSanitized = (sanitizedCode) => {
     setCode(sanitizedCode);
+    codeRef.current = sanitizedCode; // Update ref immediately
     setPhiDetection(null);
     setShowPhiWarning(false);
     setPhiConfirmed(true); // Sanitized code is safe
@@ -2132,6 +2155,7 @@ function App() {
 
   const handleLoadSample = (sample) => {
     setCode(sample.code);
+    codeRef.current = sample.code; // Update ref immediately
     setPhiConfirmed(false); // Reset PHI confirmation for new code
     setCodeOrigin('sample'); // Code is from a sample
     setSourceMetadata(null); // Clear any previous source metadata
@@ -2177,6 +2201,7 @@ function App() {
 
     // Reset code to default placeholder
     setCode(defaultCode);
+    codeRef.current = defaultCode; // Update ref immediately
     setCodeOrigin('default'); // Cleared editor shows default placeholder
     setSourceMetadata(null); // Clear any GitHub/GitLab metadata
     // Reset filename to default (language will be derived automatically as 'javascript')
@@ -2255,6 +2280,7 @@ function App() {
       setDocumentation('');
       setQualityScore(null);
       setCode(DEFAULT_CODE); // Reset to default code when workspace is fully cleared
+      codeRef.current = DEFAULT_CODE; // Update ref immediately
       setPhiConfirmed(false); // Reset PHI confirmation when resetting to default
       setFilename('code.js');
       setCodeOrigin('default');

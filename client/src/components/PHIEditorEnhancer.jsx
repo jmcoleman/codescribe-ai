@@ -12,10 +12,57 @@
  */
 
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { AlertTriangle, Check, X, ChevronDown, ChevronUp, ArrowLeft, ArrowUpDown, GripVertical, Undo } from 'lucide-react';
+import { AlertTriangle, Check, X, ChevronDown, ChevronUp, ArrowLeft, ArrowUpDown, GripVertical, Undo, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
-import { STORAGE_KEYS } from '../constants/storage';
 import './PHIEditorEnhancer.css';
+
+/**
+ * Column importance weights for proportional width allocation
+ * Higher weight = wider column
+ */
+const COLUMN_WEIGHTS = {
+  number: 1,      // # column - minimal space
+  status: 2,      // Checkbox - minimal space
+  line: 1,        // Line number - minimal space
+  id: 3,          // Unique ID - compact
+  type: 4,        // PHI type - medium space
+  found: 8,       // Original PHI - most important for audit
+  replacement: 8, // Sanitized value - most important for review
+  action: 3       // Accept/Skip buttons - compact
+};
+
+const TOTAL_WEIGHT = Object.values(COLUMN_WEIGHTS).reduce((sum, w) => sum + w, 0); // 30
+
+/**
+ * Responsive weights for different breakpoints
+ * Hide less critical columns on smaller screens
+ */
+const RESPONSIVE_WEIGHTS = {
+  mobile: {
+    number: 0,      // Hidden
+    status: 2,
+    line: 0,        // Hidden
+    id: 0,          // Hidden
+    type: 3,
+    found: 8,
+    replacement: 8,
+    action: 3
+  },
+  tablet: {
+    number: 1,
+    status: 2,
+    line: 1,
+    id: 0,          // Hidden on tablet
+    type: 4,
+    found: 8,
+    replacement: 8,
+    action: 3
+  },
+  desktop: COLUMN_WEIGHTS // All columns visible
+};
+
+const MIN_COLUMN_WIDTH = 5; // Only hard-coded value - essentially no minimum
+const SCROLLBAR_WIDTH = 15; // Reserve space for scrollbar
 
 /**
  * Get suggested replacement text based on PHI type
@@ -48,6 +95,97 @@ function createContentId(value, type) {
 }
 
 /**
+ * Determine responsive breakpoint based on viewport width
+ */
+function getBreakpoint(viewportWidth) {
+  if (viewportWidth < 640) return 'mobile';
+  if (viewportWidth < 1024) return 'tablet';
+  return 'desktop';
+}
+
+/**
+ * Calculate column widths based on viewport width and breakpoint
+ * Uses weight-based proportional allocation
+ */
+function calculateColumnWidths(viewportWidth, breakpoint) {
+  const availableWidth = viewportWidth - SCROLLBAR_WIDTH;
+  const weights = RESPONSIVE_WEIGHTS[breakpoint];
+  const totalWeight = Object.values(weights).reduce((sum, w) => sum + w, 0);
+
+  const columnWidths = {};
+  let allocatedWidth = 0;
+
+  Object.entries(weights).forEach(([key, weight]) => {
+    if (weight === 0) {
+      columnWidths[key] = 0; // Hidden column
+    } else {
+      const proportionalWidth = (weight / totalWeight) * availableWidth;
+      const roundedWidth = Math.round(proportionalWidth);
+      const finalWidth = Math.max(MIN_COLUMN_WIDTH, roundedWidth);
+
+      columnWidths[key] = finalWidth;
+      allocatedWidth += finalWidth;
+    }
+  });
+
+  // Handle rounding error (adjust last visible column)
+  const roundingError = availableWidth - allocatedWidth;
+  if (roundingError !== 0) {
+    const lastVisibleKey = Object.keys(weights).reverse().find(key => weights[key] > 0);
+    if (lastVisibleKey) {
+      columnWidths[lastVisibleKey] += roundingError;
+    }
+  }
+
+  return columnWidths;
+}
+
+/**
+ * Handle adjacent column compensation during resize
+ * When resizing column at index i, only the adjacent column (i+1 or i-1) compensates
+ */
+function handleResizeAdjacent(columnKey, newWidth, currentWidths) {
+  const columnOrder = ['number', 'status', 'line', 'id', 'type', 'found', 'replacement', 'action'];
+  const index = columnOrder.indexOf(columnKey);
+
+  // Enforce minimum on resized column
+  const clampedWidth = Math.max(MIN_COLUMN_WIDTH, newWidth);
+
+  // Determine adjacent column (next or previous if last)
+  const adjacentIndex = index < columnOrder.length - 1 ? index + 1 : index - 1;
+  const adjacentKey = columnOrder[adjacentIndex];
+
+  // Skip if adjacent column is hidden (weight = 0)
+  if (currentWidths[adjacentKey] === 0) {
+    return currentWidths;
+  }
+
+  // Calculate delta (positive = growing, negative = shrinking)
+  const delta = clampedWidth - currentWidths[columnKey];
+
+  // Calculate new adjacent width (inverse delta)
+  const newAdjacentWidth = currentWidths[adjacentKey] - delta;
+
+  // Enforce minimum on adjacent column
+  if (newAdjacentWidth < MIN_COLUMN_WIDTH) {
+    const maxDelta = currentWidths[adjacentKey] - MIN_COLUMN_WIDTH;
+    const cappedWidth = currentWidths[columnKey] + maxDelta;
+
+    return {
+      ...currentWidths,
+      [columnKey]: cappedWidth,
+      [adjacentKey]: MIN_COLUMN_WIDTH
+    };
+  }
+
+  return {
+    ...currentWidths,
+    [columnKey]: clampedWidth,
+    [adjacentKey]: newAdjacentWidth
+  };
+}
+
+/**
  * Extract PHI items from detection data with line/column positions
  * Uses hybrid ID system:
  * - id: Unique per occurrence (for row selection/highlighting)
@@ -56,7 +194,6 @@ function createContentId(value, type) {
 function extractPHIItems(phiDetection, code) {
   const items = [];
   const lines = code.split('\n');
-  const occurrenceCounts = new Map(); // Track occurrence count per contentId
 
   if (!phiDetection?.suggestions) return items;
 
@@ -67,15 +204,14 @@ function extractPHIItems(phiDetection, code) {
       lines.forEach((line, lineIndex) => {
         let startCol = 0;
         while ((startCol = line.indexOf(example, startCol)) !== -1) {
+          // Position-based ID (line:column) for stable row identity when value changes
+          const id = `L${lineIndex + 1}:C${startCol + 1}`;
+          // Content-based ID for grouping rows with same PHI value (bulk operations)
           const contentId = createContentId(example, suggestion.title);
 
-          // Get occurrence count for this contentId
-          const occurrenceCount = occurrenceCounts.get(contentId) || 0;
-          occurrenceCounts.set(contentId, occurrenceCount + 1);
-
           items.push({
-            id: `${contentId}-${occurrenceCount}`, // Unique ID per occurrence
-            contentId: contentId, // Stable ID for same PHI value
+            id: id, // Stable ID based on position, not content
+            contentId: contentId, // Groups rows with same PHI value for bulk operations
             lineNumber: lineIndex + 1,
             columnStart: startCol + 1,
             columnEnd: startCol + example.length + 1,
@@ -114,48 +250,18 @@ export function PHIEditorEnhancer({
   const [originalValues, setOriginalValues] = useState({}); // Store original PHI values for revert (immutable "Found" column)
   const [currentItemId, setCurrentItemId] = useState(null);
   const [panelExpanded, setPanelExpanded] = useState(true);
-  const [showBackToFirst, setShowBackToFirst] = useState(false);
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  const [sortConfig, setSortConfig] = useState({ key: 'line', direction: 'asc' }); // Default sort by line number
   const [confirmed, setConfirmed] = useState(false);
   const [editingItemId, setEditingItemId] = useState(null); // Track which replacement cell is being edited
-  // Load column widths from localStorage or use defaults
-  const getInitialColumnWidths = () => {
-    const stored = localStorage.getItem(STORAGE_KEYS.PHI_TABLE_COLUMNS);
-    const defaults = {
-      number: 20,
-      status: 105,
-      line: 40,
-      id: 125,
-      type: 180,
-      found: 400,
-      replacement: 350,
-      action: 110
-    };
+  const [currentBreakpoint, setCurrentBreakpoint] = useState('desktop');
 
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        // Validate stored widths - ensure important columns aren't too small
-        const validated = { ...defaults, ...parsed };
-
-        // Ensure Found and Replacement columns have reasonable minimums
-        if (validated.found < 100) validated.found = 400;
-        if (validated.replacement < 100) validated.replacement = 350;
-
-        return validated;
-      } catch (e) {
-        return defaults;
-      }
-    }
-    return defaults;
-  };
-
-  const [columnWidths, setColumnWidths] = useState(getInitialColumnWidths());
-
-  // Save column widths to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.PHI_TABLE_COLUMNS, JSON.stringify(columnWidths));
-  }, [columnWidths]);
+  // Column widths - calculated dynamically, no localStorage persistence
+  const [columnWidths, setColumnWidths] = useState(() => {
+    // Initial calculation based on window width (will be recalculated after mount)
+    const viewportWidth = window.innerWidth;
+    const breakpoint = getBreakpoint(viewportWidth);
+    return calculateColumnWidths(viewportWidth, breakpoint);
+  });
 
   const decorationsRef = useRef([]);
   const hoverProviderRef = useRef(null);
@@ -165,6 +271,7 @@ export function PHIEditorEnhancer({
   const resizingRef = useRef(null);
   const currentRowRef = useRef(null);
   const tableContainerRef = useRef(null);
+  const containerRef = useRef(null); // For ResizeObserver
 
   // Extract PHI items when detection data changes
   // Preserve review state and custom replacements using stable content-based IDs
@@ -177,6 +284,9 @@ export function PHIEditorEnhancer({
       return;
     }
 
+    // Extract items using current code and detection results
+    // phiDetection.suggestions contains the PHI patterns to look for
+    // code is where we search for these patterns (need latest code for accurate positions)
     const items = extractPHIItems(phiDetection, code);
     setPhiItems(items);
 
@@ -217,6 +327,44 @@ export function PHIEditorEnhancer({
       setCurrentItemId(items[0].id);
     }
   }, [phiDetection, code, currentItemId]);
+
+  // Recalculate column widths when PHI items change (new code file with PHI detected)
+  useEffect(() => {
+    if (!phiItems || phiItems.length === 0) return;
+
+    // Use table container width for accurate sizing
+    const viewportWidth = tableContainerRef.current?.clientWidth || containerRef.current?.offsetWidth || window.innerWidth;
+    const breakpoint = getBreakpoint(viewportWidth);
+    const newWidths = calculateColumnWidths(viewportWidth, breakpoint);
+
+    setColumnWidths(newWidths);
+    setCurrentBreakpoint(breakpoint);
+  }, [phiItems]);
+
+  // Monitor viewport width for responsive breakpoint changes
+  useEffect(() => {
+    // Observe the table container (not the outer wrapper) for accurate width
+    const container = tableContainerRef.current || containerRef.current;
+    if (!container) return;
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const viewportWidth = entry.contentRect.width;
+        const breakpoint = getBreakpoint(viewportWidth);
+
+        // Only recalculate if breakpoint changed (mobile ↔ tablet ↔ desktop)
+        if (breakpoint !== currentBreakpoint) {
+          setCurrentBreakpoint(breakpoint);
+          const newWidths = calculateColumnWidths(viewportWidth, breakpoint);
+          setColumnWidths(newWidths);
+        }
+      }
+    });
+
+    resizeObserver.observe(container);
+
+    return () => resizeObserver.disconnect();
+  }, [currentBreakpoint]);
 
   // Apply decorations to editor
   useEffect(() => {
@@ -454,8 +602,6 @@ export function PHIEditorEnhancer({
     const currentIndex = phiItems.findIndex(i => i.id === itemId);
     if (currentIndex < phiItems.length - 1) {
       setCurrentItemId(phiItems[currentIndex + 1].id);
-    } else {
-      setShowBackToFirst(true);
     }
   }, [phiItems, customReplacements, code, onCodeChange, editorInstance]);
 
@@ -471,8 +617,6 @@ export function PHIEditorEnhancer({
     const currentIndex = phiItems.findIndex(i => i.id === itemId);
     if (currentIndex < phiItems.length - 1) {
       setCurrentItemId(phiItems[currentIndex + 1].id);
-    } else {
-      setShowBackToFirst(true);
     }
   }, [phiItems]);
 
@@ -680,33 +824,16 @@ export function PHIEditorEnhancer({
     });
   }, [phiItems, sortConfig, reviewState, customReplacements]);
 
-  // Column-specific minimum widths (all resizable columns except #)
-  // Set to 1px to allow maximum user control - essentially no minimum
-  const getMinColumnWidth = useCallback((column) => {
-    return 1; // Allow columns to shrink to essentially nothing
-  }, []);
-
-  // Handle column resize
-  const handleColumnResize = useCallback((column, deltaX) => {
-    const minWidth = getMinColumnWidth(column);
-    setColumnWidths(prev => ({
-      ...prev,
-      [column]: Math.max(minWidth, prev[column] + deltaX)
-    }));
-  }, [getMinColumnWidth]);
-
+  // Handle column resize with adjacent column compensation
   const startResize = useCallback((e, column) => {
     e.preventDefault();
     const startX = e.clientX;
     const startWidth = columnWidths[column];
-    const minWidth = getMinColumnWidth(column);
 
     const handleMouseMove = (moveEvent) => {
       const deltaX = moveEvent.clientX - startX;
-      setColumnWidths(prev => ({
-        ...prev,
-        [column]: Math.max(minWidth, startWidth + deltaX)
-      }));
+      const newWidth = startWidth + deltaX;
+      setColumnWidths(prev => handleResizeAdjacent(column, newWidth, prev));
     };
 
     const handleMouseUp = () => {
@@ -716,7 +843,16 @@ export function PHIEditorEnhancer({
 
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
-  }, [columnWidths, getMinColumnWidth]);
+  }, [columnWidths]);
+
+  // Reset column widths to calculated defaults based on current viewport
+  const handleResetColumnWidths = useCallback(() => {
+    // Use table container width (excludes scrollbars) for accurate sizing
+    const viewportWidth = tableContainerRef.current?.clientWidth || containerRef.current?.offsetWidth || window.innerWidth;
+    const breakpoint = getBreakpoint(viewportWidth);
+    const newWidths = calculateColumnWidths(viewportWidth, breakpoint);
+    setColumnWidths(newWidths);
+  }, []);
 
   // Apply all pending changes (shortcut to apply everything at once)
   const handleApplyAllChanges = useCallback(() => {
@@ -781,10 +917,9 @@ export function PHIEditorEnhancer({
 
     setReviewState(updatedReviewState);
 
-    // Move to first item if showing "Back to First"
+    // Move to first item
     if (phiItems.length > 0) {
       setCurrentItemId(phiItems[0].id);
-      setShowBackToFirst(false);
     }
   }, [phiItems, reviewState]);
 
@@ -819,13 +954,24 @@ export function PHIEditorEnhancer({
     return () => window.removeEventListener('keydown', handleEscapeKey);
   }, [panelExpanded, editorInstance]);
 
-  // Scroll current row into view when it changes
+  // Scroll current row into view when it changes (vertical only, preserve horizontal scroll)
   useEffect(() => {
-    if (currentRowRef.current) {
-      currentRowRef.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center', // Center in viewport to avoid sticky header overlap
-        inline: 'nearest'
+    if (currentRowRef.current && tableContainerRef.current) {
+      const row = currentRowRef.current;
+      const container = tableContainerRef.current;
+
+      // Calculate vertical scroll position to center the row
+      const containerRect = container.getBoundingClientRect();
+      const rowRect = row.getBoundingClientRect();
+      const scrollTop = container.scrollTop;
+      const offset = rowRect.top - containerRect.top;
+      const centerOffset = (containerRect.height - rowRect.height) / 2;
+
+      // Smooth scroll only vertically, preserve horizontal position
+      container.scrollTo({
+        top: scrollTop + offset - centerOffset,
+        left: container.scrollLeft, // Explicitly preserve horizontal scroll
+        behavior: 'smooth'
       });
     }
   }, [currentItemId]);
@@ -861,7 +1007,7 @@ export function PHIEditorEnhancer({
   }
 
   return (
-    <div className="phi-editor-enhancer">
+    <div className="phi-editor-enhancer" ref={containerRef}>
       {/* Bottom Panel */}
       <div
         ref={panelRef}
@@ -873,6 +1019,7 @@ export function PHIEditorEnhancer({
         <div
           ref={panelHeaderRef}
           className="phi-panel-header"
+          onClick={() => setPanelExpanded(!panelExpanded)}
           aria-controls="phi-panel-content"
         >
           <div className="phi-panel-title">
@@ -920,7 +1067,10 @@ export function PHIEditorEnhancer({
 
           <div
             className="phi-panel-toggle"
-            onClick={() => setPanelExpanded(!panelExpanded)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setPanelExpanded(!panelExpanded);
+            }}
             role="button"
             tabIndex={-1}
             onKeyDown={(e) => {
@@ -939,11 +1089,21 @@ export function PHIEditorEnhancer({
         {/* Panel Content */}
         {panelExpanded && (
           <div id="phi-panel-content">
-            {/* Stats */}
-            <div className="phi-stats">
-              <span className="phi-stat-accepted">✓ {acceptedCount} Accepted</span>
-              <span className="phi-stat-skipped">⊘ {skippedCount} Skipped</span>
-              <span className="phi-stat-pending">⋯ {pendingCount} Pending</span>
+            {/* Stats and Reset Columns Row */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 16px 12px' }}>
+              <div className="phi-stats">
+                <span className="phi-stat-accepted">✓ {acceptedCount} Accepted</span>
+                <span className="phi-stat-skipped">⊘ {skippedCount} Skipped</span>
+                <span className="phi-stat-pending">⋯ {pendingCount} Pending</span>
+              </div>
+              <button
+                className="phi-reset-columns-btn"
+                onClick={handleResetColumnWidths}
+                title="Reset column widths to defaults"
+                aria-label="Reset column widths"
+              >
+                Reset Columns
+              </button>
             </div>
 
             {/* PHI Items Table */}
@@ -959,174 +1119,190 @@ export function PHIEditorEnhancer({
               <table>
                 <thead>
                   <tr role="row">
-                    <th
-                      className="phi-col-number phi-col-resizable"
-                      style={{ width: `${columnWidths.number}px` }}
-                      role="columnheader"
-                      title="Entry number in table"
-                    >
-                      <div className="phi-col-header">
-                        <span>#</span>
-                        <div
-                          className="phi-col-resize-handle"
-                          onMouseDown={(e) => startResize(e, 'number')}
-                        >
-                          <GripVertical className="w-3 h-3" />
+                    {columnWidths.number > 0 && (
+                      <th
+                        className="phi-col-number phi-col-resizable"
+                        style={{ width: `${columnWidths.number}px` }}
+                        role="columnheader"
+                        title="Entry number in table"
+                      >
+                        <div className="phi-col-header">
+                          <span>#</span>
+                          <div
+                            className="phi-col-resize-handle"
+                            onMouseDown={(e) => startResize(e, 'number')}
+                          >
+                            <GripVertical className="w-3 h-3" />
+                          </div>
                         </div>
-                      </div>
-                    </th>
-                    <th
-                      className="phi-col-status phi-col-resizable"
-                      style={{ width: `${columnWidths.status}px` }}
-                      role="columnheader"
-                    >
-                      <div className="phi-col-header">
-                        <button
-                          className="phi-col-sort-btn"
-                          onClick={() => handleSort('status')}
-                          title="Sort by status"
-                        >
-                          Status
-                          {sortConfig.key === 'status' && (
-                            <ArrowUpDown className="w-3 h-3 ml-1" />
-                          )}
-                        </button>
-                        <div
-                          className="phi-col-resize-handle"
-                          onMouseDown={(e) => startResize(e, 'status')}
-                        >
-                          <GripVertical className="w-3 h-3" />
+                      </th>
+                    )}
+                    {columnWidths.status > 0 && (
+                      <th
+                        className="phi-col-status phi-col-resizable"
+                        style={{ width: `${columnWidths.status}px` }}
+                        role="columnheader"
+                      >
+                        <div className="phi-col-header">
+                          <button
+                            className="phi-col-sort-btn"
+                            onClick={() => handleSort('status')}
+                            title="Sort by status"
+                          >
+                            Status
+                            {sortConfig.key === 'status' && (
+                              <ArrowUpDown className="w-3 h-3 ml-1" />
+                            )}
+                          </button>
+                          <div
+                            className="phi-col-resize-handle"
+                            onMouseDown={(e) => startResize(e, 'status')}
+                          >
+                            <GripVertical className="w-3 h-3" />
+                          </div>
                         </div>
-                      </div>
-                    </th>
-                    <th
-                      className="phi-col-line phi-col-resizable"
-                      style={{ width: `${columnWidths.line}px` }}
-                      role="columnheader"
-                    >
-                      <div className="phi-col-header">
-                        <button
-                          className="phi-col-sort-btn"
-                          onClick={() => handleSort('line')}
-                          title="Sort by line number"
-                        >
-                          Line
-                          {sortConfig.key === 'line' && (
-                            <ArrowUpDown className="w-3 h-3 ml-1" />
-                          )}
-                        </button>
-                        <div
-                          className="phi-col-resize-handle"
-                          onMouseDown={(e) => startResize(e, 'line')}
-                        >
-                          <GripVertical className="w-3 h-3" />
+                      </th>
+                    )}
+                    {columnWidths.line > 0 && (
+                      <th
+                        className="phi-col-line phi-col-resizable"
+                        style={{ width: `${columnWidths.line}px` }}
+                        role="columnheader"
+                      >
+                        <div className="phi-col-header">
+                          <button
+                            className="phi-col-sort-btn"
+                            onClick={() => handleSort('line')}
+                            title="Sort by line number"
+                          >
+                            Line
+                            {sortConfig.key === 'line' && (
+                              <ArrowUpDown className="w-3 h-3 ml-1" />
+                            )}
+                          </button>
+                          <div
+                            className="phi-col-resize-handle"
+                            onMouseDown={(e) => startResize(e, 'line')}
+                          >
+                            <GripVertical className="w-3 h-3" />
+                          </div>
                         </div>
-                      </div>
-                    </th>
-                    <th
-                      className="phi-col-id phi-col-resizable"
-                      style={{ width: `${columnWidths.id}px` }}
-                      role="columnheader"
-                    >
-                      <div className="phi-col-header">
-                        <span className="phi-col-sort-btn" title="Unique ID for this occurrence">
-                          ID
-                        </span>
-                        <div
-                          className="phi-col-resize-handle"
-                          onMouseDown={(e) => startResize(e, 'id')}
-                        >
-                          <GripVertical className="w-3 h-3" />
+                      </th>
+                    )}
+                    {columnWidths.id > 0 && (
+                      <th
+                        className="phi-col-id phi-col-resizable"
+                        style={{ width: `${columnWidths.id}px` }}
+                        role="columnheader"
+                      >
+                        <div className="phi-col-header">
+                          <span className="phi-col-sort-btn" title="Unique ID for this occurrence">
+                            ID
+                          </span>
+                          <div
+                            className="phi-col-resize-handle"
+                            onMouseDown={(e) => startResize(e, 'id')}
+                          >
+                            <GripVertical className="w-3 h-3" />
+                          </div>
                         </div>
-                      </div>
-                    </th>
-                    <th
-                      className="phi-col-type phi-col-resizable"
-                      style={{ width: `${columnWidths.type}px` }}
-                      role="columnheader"
-                    >
-                      <div className="phi-col-header">
-                        <button
-                          className="phi-col-sort-btn"
-                          onClick={() => handleSort('type')}
-                          title="Sort by type"
-                        >
-                          Type
-                          {sortConfig.key === 'type' && (
-                            <ArrowUpDown className="w-3 h-3 ml-1" />
-                          )}
-                        </button>
-                        <div
-                          className="phi-col-resize-handle"
-                          onMouseDown={(e) => startResize(e, 'type')}
-                        >
-                          <GripVertical className="w-3 h-3" />
+                      </th>
+                    )}
+                    {columnWidths.type > 0 && (
+                      <th
+                        className="phi-col-type phi-col-resizable"
+                        style={{ width: `${columnWidths.type}px` }}
+                        role="columnheader"
+                      >
+                        <div className="phi-col-header">
+                          <button
+                            className="phi-col-sort-btn"
+                            onClick={() => handleSort('type')}
+                            title="Sort by type"
+                          >
+                            Type
+                            {sortConfig.key === 'type' && (
+                              <ArrowUpDown className="w-3 h-3 ml-1" />
+                            )}
+                          </button>
+                          <div
+                            className="phi-col-resize-handle"
+                            onMouseDown={(e) => startResize(e, 'type')}
+                          >
+                            <GripVertical className="w-3 h-3" />
+                          </div>
                         </div>
-                      </div>
-                    </th>
-                    <th
-                      className="phi-col-found phi-col-resizable"
-                      style={{ width: `${columnWidths.found}px` }}
-                      role="columnheader"
-                    >
-                      <div className="phi-col-header">
-                        <button
-                          className="phi-col-sort-btn"
-                          onClick={() => handleSort('found')}
-                          title="Sort by found value"
-                        >
-                          Found
-                          {sortConfig.key === 'found' && (
-                            <ArrowUpDown className="w-3 h-3 ml-1" />
-                          )}
-                        </button>
-                        <div
-                          className="phi-col-resize-handle"
-                          onMouseDown={(e) => startResize(e, 'found')}
-                        >
-                          <GripVertical className="w-3 h-3" />
+                      </th>
+                    )}
+                    {columnWidths.found > 0 && (
+                      <th
+                        className="phi-col-found phi-col-resizable"
+                        style={{ width: `${columnWidths.found}px` }}
+                        role="columnheader"
+                      >
+                        <div className="phi-col-header">
+                          <button
+                            className="phi-col-sort-btn"
+                            onClick={() => handleSort('found')}
+                            title="Sort by found value"
+                          >
+                            Found
+                            {sortConfig.key === 'found' && (
+                              <ArrowUpDown className="w-3 h-3 ml-1" />
+                            )}
+                          </button>
+                          <div
+                            className="phi-col-resize-handle"
+                            onMouseDown={(e) => startResize(e, 'found')}
+                          >
+                            <GripVertical className="w-3 h-3" />
+                          </div>
                         </div>
-                      </div>
-                    </th>
-                    <th
-                      className="phi-col-replacement phi-col-resizable"
-                      style={{ width: `${columnWidths.replacement}px` }}
-                      role="columnheader"
-                    >
-                      <div className="phi-col-header">
-                        <button
-                          className="phi-col-sort-btn"
-                          onClick={() => handleSort('replacement')}
-                          title="Sort by replacement value"
-                        >
-                          Replacement
-                          {sortConfig.key === 'replacement' && (
-                            <ArrowUpDown className="w-3 h-3 ml-1" />
-                          )}
-                        </button>
-                        <div
-                          className="phi-col-resize-handle"
-                          onMouseDown={(e) => startResize(e, 'replacement')}
-                        >
-                          <GripVertical className="w-3 h-3" />
+                      </th>
+                    )}
+                    {columnWidths.replacement > 0 && (
+                      <th
+                        className="phi-col-replacement phi-col-resizable"
+                        style={{ width: `${columnWidths.replacement}px` }}
+                        role="columnheader"
+                      >
+                        <div className="phi-col-header">
+                          <button
+                            className="phi-col-sort-btn"
+                            onClick={() => handleSort('replacement')}
+                            title="Sort by replacement value"
+                          >
+                            Replacement
+                            {sortConfig.key === 'replacement' && (
+                              <ArrowUpDown className="w-3 h-3 ml-1" />
+                            )}
+                          </button>
+                          <div
+                            className="phi-col-resize-handle"
+                            onMouseDown={(e) => startResize(e, 'replacement')}
+                          >
+                            <GripVertical className="w-3 h-3" />
+                          </div>
                         </div>
-                      </div>
-                    </th>
-                    <th
-                      className="phi-col-action phi-col-resizable"
-                      style={{ width: `${columnWidths.action}px` }}
-                      role="columnheader"
-                    >
-                      <div className="phi-col-header">
-                        <span>Action</span>
-                        <div
-                          className="phi-col-resize-handle"
-                          onMouseDown={(e) => startResize(e, 'action')}
-                        >
-                          <GripVertical className="w-3 h-3" />
+                      </th>
+                    )}
+                    {columnWidths.action > 0 && (
+                      <th
+                        className="phi-col-action phi-col-resizable"
+                        style={{ width: `${columnWidths.action}px` }}
+                        role="columnheader"
+                      >
+                        <div className="phi-col-header">
+                          <span>Action</span>
+                          <div
+                            className="phi-col-resize-handle"
+                            onMouseDown={(e) => startResize(e, 'action')}
+                          >
+                            <GripVertical className="w-3 h-3" />
+                          </div>
                         </div>
-                      </div>
-                    </th>
+                      </th>
+                    )}
                   </tr>
                 </thead>
                 <tbody>
@@ -1144,10 +1320,13 @@ export function PHIEditorEnhancer({
                         aria-rowindex={index + 1}
                         aria-selected={isCurrent}
                       >
-                        <td className="phi-col-number" role="gridcell">
-                          {index + 1}
-                        </td>
-                        <td className="phi-col-status" role="gridcell">
+                        {columnWidths.number > 0 && (
+                          <td className="phi-col-number" role="gridcell">
+                            {index + 1}
+                          </td>
+                        )}
+                        {columnWidths.status > 0 && (
+                          <td className="phi-col-status" role="gridcell">
                           <div className="phi-status-cell">
                             {state === 'accepted' && (
                               <>
@@ -1168,24 +1347,34 @@ export function PHIEditorEnhancer({
                               </>
                             )}
                           </div>
-                        </td>
-                        <td className="phi-col-line" role="gridcell">
-                          {item.lineNumber}
-                        </td>
-                        <td className="phi-col-id" role="gridcell">
-                          {item.id}
-                        </td>
-                        <td className="phi-col-type" role="gridcell">
-                          {item.type}
-                        </td>
-                        <td className="phi-col-found" role="gridcell" title="Original detected PHI (immutable)">
-                          <code>{item.value}</code>
-                        </td>
-                        <td
-                          className="phi-col-replacement"
-                          role="gridcell"
-                          onClick={(e) => e.stopPropagation()}
-                        >
+                          </td>
+                        )}
+                        {columnWidths.line > 0 && (
+                          <td className="phi-col-line" role="gridcell">
+                            {item.lineNumber}
+                          </td>
+                        )}
+                        {columnWidths.id > 0 && (
+                          <td className="phi-col-id" role="gridcell">
+                            {item.id}
+                          </td>
+                        )}
+                        {columnWidths.type > 0 && (
+                          <td className="phi-col-type" role="gridcell">
+                            {item.type}
+                          </td>
+                        )}
+                        {columnWidths.found > 0 && (
+                          <td className="phi-col-found" role="gridcell">
+                            <code>{item.value}</code>
+                          </td>
+                        )}
+                        {columnWidths.replacement > 0 && (
+                          <td
+                            className="phi-col-replacement"
+                            role="gridcell"
+                            onClick={(e) => e.stopPropagation()}
+                          >
                           <code
                             className="phi-replacement-preview"
                             contentEditable={true}
@@ -1229,8 +1418,10 @@ export function PHIEditorEnhancer({
                           >
                             {customReplacements[item.contentId] || item.suggestedReplacement}
                           </code>
-                        </td>
-                        <td className="phi-col-action" role="gridcell">
+                          </td>
+                        )}
+                        {columnWidths.action > 0 && (
+                          <td className="phi-col-action" role="gridcell">
                           {!state && (
                             <div className="phi-action-buttons">
                               <button
@@ -1287,7 +1478,8 @@ export function PHIEditorEnhancer({
                               </button>
                             </div>
                           )}
-                        </td>
+                          </td>
+                        )}
                       </tr>
                     );
                   })}
@@ -1301,19 +1493,35 @@ export function PHIEditorEnhancer({
                 Progress: {reviewedCount}/{totalUniquePhiCount} Unique PHI Reviewed
               </div>
               <div className="phi-footer-right">
-                {showBackToFirst && (
-                  <button
-                    onClick={() => {
-                      setCurrentItemId(phiItems[0].id);
-                      jumpToPHI(phiItems[0].id);
-                      setShowBackToFirst(false);
-                    }}
-                    className="phi-btn-back-to-first"
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                    Back to First
-                  </button>
-                )}
+                {/* Navigation buttons */}
+                <button
+                  onClick={() => {
+                    if (sortedItems.length > 0) {
+                      setCurrentItemId(sortedItems[0].id);
+                      jumpToPHI(sortedItems[0].id);
+                    }
+                  }}
+                  disabled={sortedItems.length === 0}
+                  className="phi-btn-nav"
+                  aria-label="Go to first item"
+                  title="Go to first item"
+                >
+                  <ChevronsLeft className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => {
+                    if (sortedItems.length > 0) {
+                      setCurrentItemId(sortedItems[sortedItems.length - 1].id);
+                      jumpToPHI(sortedItems[sortedItems.length - 1].id);
+                    }
+                  }}
+                  disabled={sortedItems.length === 0}
+                  className="phi-btn-nav"
+                  aria-label="Go to last item"
+                  title="Go to last item"
+                >
+                  <ChevronsRight className="w-4 h-4" />
+                </button>
                 <button
                   onClick={handleRevertAllChanges}
                   disabled={revertableCount === 0}

@@ -77,7 +77,7 @@ export function detectPHI(code) {
         count: uniqueMatches.length,
         weight: config.weight,
         description: config.description,
-        samples: uniqueMatches.slice(0, 3), // Show first 3 examples
+        samples: uniqueMatches, // Return ALL unique matches (removed slice limit)
       };
       score += uniqueMatches.length * config.weight;
     }
