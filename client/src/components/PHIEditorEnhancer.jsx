@@ -690,6 +690,27 @@ export function PHIEditorEnhancer({
     }
   }, [phiItems, reviewState, customReplacements, code, onCodeChange, onPhiResolved]);
 
+  // Skip all pending items (mark as skipped without applying replacements)
+  const handleSkipAllPending = useCallback(() => {
+    const updatedReviewState = { ...reviewState };
+
+    // Mark all pending items as skipped
+    phiItems.forEach(item => {
+      const state = reviewState[item.id];
+      if (!state || state === 'pending') {
+        updatedReviewState[item.id] = 'skipped';
+      }
+    });
+
+    setReviewState(updatedReviewState);
+
+    // Move to first item if showing "Back to First"
+    if (phiItems.length > 0) {
+      setCurrentItemId(phiItems[0].id);
+      setShowBackToFirst(false);
+    }
+  }, [phiItems, reviewState]);
+
   // Note: Keyboard handler is attached via onKeyDown prop on the table container
   // This ensures immediate event handling without timing issues
 
@@ -1134,12 +1155,22 @@ export function PHIEditorEnhancer({
                   Revert All ({acceptedCount})
                 </button>
                 <button
+                  onClick={handleSkipAllPending}
+                  disabled={pendingCount === 0}
+                  className="phi-btn-skip-all"
+                  aria-label={`Skip ${pendingCount} pending items`}
+                >
+                  <X className="w-4 h-4" />
+                  Skip All ({pendingCount})
+                </button>
+                <button
                   onClick={handleApplyAllChanges}
                   disabled={pendingCount === 0}
                   className="phi-btn-apply-all"
                   aria-label={`Apply ${pendingCount} pending items`}
                 >
-                  Apply All Changes ({pendingCount})
+                  <Check className="w-4 h-4" />
+                  Apply All ({pendingCount})
                 </button>
               </div>
             </div>

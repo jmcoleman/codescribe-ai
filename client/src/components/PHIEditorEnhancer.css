@@ -613,6 +613,7 @@
 /* Footer Buttons */
 .phi-btn-back-to-first,
 .phi-btn-revert-all,
+.phi-btn-skip-all,
 .phi-btn-apply-all {
   padding: 8px 16px;
   border-radius: 6px;
@@ -626,29 +627,33 @@
   border: 1px solid;
 }
 
-/* Back to First & Revert All - Secondary style */
+/* Back to First, Revert All & Skip All - Secondary style */
 .phi-review-panel.light .phi-btn-back-to-first,
-.phi-review-panel.light .phi-btn-revert-all {
+.phi-review-panel.light .phi-btn-revert-all,
+.phi-review-panel.light .phi-btn-skip-all {
   background: #fff;
   border-color: #cbd5e1; /* slate-300 */
   color: #475569; /* slate-600 */
 }
 
 .phi-review-panel.dark .phi-btn-back-to-first,
-.phi-review-panel.dark .phi-btn-revert-all {
+.phi-review-panel.dark .phi-btn-revert-all,
+.phi-review-panel.dark .phi-btn-skip-all {
   background: #1e293b; /* slate-800 */
   border-color: #475569; /* slate-600 */
   color: #cbd5e1; /* slate-300 */
 }
 
 .phi-review-panel.light .phi-btn-back-to-first:hover:not(:disabled),
-.phi-review-panel.light .phi-btn-revert-all:hover:not(:disabled) {
+.phi-review-panel.light .phi-btn-revert-all:hover:not(:disabled),
+.phi-review-panel.light .phi-btn-skip-all:hover:not(:disabled) {
   background: #f8fafc; /* slate-50 */
   border-color: #94a3b8; /* slate-400 */
 }
 
 .phi-review-panel.dark .phi-btn-back-to-first:hover:not(:disabled),
-.phi-review-panel.dark .phi-btn-revert-all:hover:not(:disabled) {
+.phi-review-panel.dark .phi-btn-revert-all:hover:not(:disabled),
+.phi-review-panel.dark .phi-btn-skip-all:hover:not(:disabled) {
   background: #334155; /* slate-700 */
   border-color: #64748b; /* slate-500 */
 }
@@ -677,6 +682,7 @@
 }
 
 .phi-btn-revert-all:disabled,
+.phi-btn-skip-all:disabled,
 .phi-btn-apply-all:disabled {
   opacity: 0.5;
   cursor: not-allowed;
