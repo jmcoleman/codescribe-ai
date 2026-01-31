@@ -11,9 +11,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [3.5.6] - 2026-01-31
 
-**Summary:** Comprehensive PHI detection panel UX improvements for better workflow efficiency. Redesigned footer layout for responsive sizing, shortened labels for compact display, streamlined stats presentation, and independent banner/drawer controls for better user control.
+**Summary:** Major PHI detection workflow overhaul with inline editing, resizable columns, keyboard navigation, and comprehensive UX improvements. Added direct table editing, revert functionality, and WCAG accessibility enhancements for professional PHI sanitization workflows.
+
+### Added
+
+- **Inline replacement editing** - Edit PHI replacements directly in table cells with contentEditable, syncs to Monaco editor in real-time
+- **Two-way Monaco sync** - Changes in table update editor, changes in editor update table (stable content-based IDs for persistence)
+- **Revert functionality** - Revert accepted or skipped items back to pending state, with "Revert All" bulk action
+- **Skip All button** - Bulk skip all pending items with single click
+- **Row number column** - Visual # column for easy reference and navigation
+- **Line column** - Shows source code line number for each PHI occurrence
+- **ID column** - Unique identifier for debugging and tracking (hybrid position + content-based system)
+- **Resizable table columns** - All columns resizable with 1px minimum, weight-based proportional allocation
+- **Responsive column hiding** - Columns auto-hide at mobile/tablet breakpoints (progressive disclosure)
+- **Banner component** - Shared `<Banner>` component for consistent styling across PHIWarningBanner and UnverifiedEmailBanner
+- **Monaco tab focus mode** - Automatic toggle between editor and navigation modes for seamless keyboard workflow
+- **ControlBar visual separation** - Added borders and shadow for better visual hierarchy
+- **Comprehensive inline editing guide** - User documentation for table editing workflows
 
 ### Changed
+
+- **PHI panel title:** Shortened from "Protected Health Information Detected" to "PHI Detected" with explicit counts (e.g., "3 unique, 5 total")
+- **Stats display:** Removed icons (✓, ⊘, ⋯) from Accepted/Skipped/Pending stats for cleaner presentation
+- **Stats positioning:** Moved stats above table with lighter color (opacity: 0.8) to match footer progress text styling
+- **Toggle button:** Repositioned expand/collapse toggle to top-right corner of panel header using absolute positioning
+- **Footer button labels:** Shortened to "Revert (N)", "Skip (N)", "Apply (N)" for improved responsive fit
+- **Panel height:** Increased max-height from 400px to 500px to prevent footer button overflow
+- **Collapsed panel:** Removed margin-bottom and added overflow: hidden to eliminate white space
+- **Confirmation checkbox:** Now works bidirectionally - checking enables generate button, unchecking disables it
+- **Banner/drawer independence:** Dismissing PHI warning banner no longer closes the bottom drawer panel
+- **Reset Columns button:** Updated styling to match app's secondary button pattern (border, neutral background)
+- **Responsive checkbox alignment:** Right-aligned on same line as title, left-aligned when wrapped to second line
+- **Column widths:** Reduced padding on # and Line columns for compact layout, all columns now user-resizable
+- **PHI confidence badges:** Updated to use standard pill pattern for consistency
+- **Email verification banner:** Vertically aligned icon and text for better visual balance
+- **Stacked alert banners:** Added spacing between multiple banners for clarity
 
 - **PHI panel title:** Shortened from "Protected Health Information Detected" to "PHI Detected" with explicit counts (e.g., "3 unique, 5 total")
 - **Stats display:** Removed icons (✓, ⊘, ⋯) from Accepted/Skipped/Pending stats for cleaner presentation
@@ -32,6 +64,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Footer responsiveness:** Buttons no longer overflow or overlap footer container on smaller viewports
 - **Panel state management:** handleProceedWithPhi now only sets phiConfirmed state without closing banner
 - **Banner dismiss behavior:** handleDismissPhiWarning only hides banner, preserves phiDetection state and drawer visibility
+- **PHI table column widths:** Validated stored widths to prevent Found/Replacement columns from being too small
+- **Multiple row highlighting:** Hybrid ID system (position-based + content-based) prevents incorrect row selection when values change
+- **Monaco keyboard navigation:** Simplified tab order, removed PHI table from tab sequence for better flow
+- **Tab order and focus indicators:** WCAG 2.1 AA compliance improvements for keyboard-only users
+- **PHI drawer accessibility:** Removed auto-focus, improved focus management for screen reader compatibility
+- **Mobile sidebar accessibility:** Enhanced keyboard navigation and focus indicators
+- **Monaco wrapper focus:** Added visible focus indicator for keyboard navigation
+- **CodeOrigin persistence:** Fixed bug where codeOrigin and sourceMetadata were lost across navigation
+- **Tooltip timer cleanup:** Added proper cleanup delay for Tooltip timers in DownloadButton tests to prevent memory leaks
+- **Contact Support link:** Removed from logout page (user is logged out, can't contact support)
+- **Column resize functionality:** Improved resize behavior with adjacent column compensation and minimum width enforcement
+
+### Removed
+
+- **Analytics debug endpoints:** Temporary debug routes and pages removed after analytics issue resolution
+- **Static column widths:** Removed fixed widths in favor of user-resizable columns with weight-based allocation
 
 ### Tests
 

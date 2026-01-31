@@ -66,7 +66,7 @@
       "title": "CodeScribe AI - Intelligent Code Documentation Generator"
     },
     "footerLeft": "<strong>CodeScribe AI</strong> · Strategic Roadmap v3.41",
-    "footer": "v3.5.6 Complete · PHI Detection Panel UX ✓ · Independent Controls ✓ · Responsive Footer ✓",
+    "footer": "v3.5.6 Complete · PHI Inline Editing ✓ · Resizable Columns ✓ · WCAG Accessibility ✓",
     "lastUpdated": "January 31, 2026"
   },
   "columns": [
@@ -78,22 +78,24 @@
       "phases": [
         {
           "version": "v3.5.6",
-          "title": "PHI Detection Panel UX Improvements",
-          "duration": "2 days",
+          "title": "PHI Workflow Overhaul with Inline Editing & Accessibility",
+          "duration": "5 days",
           "status": "✓ Complete",
           "completedDate": "Jan 31, 2026",
-          "badge": "UX Polish",
+          "badge": "Major Feature",
           "features": [
-            "Shortened PHI panel title displays exact counts for faster scanning (e.g., '3 unique, 5 total')",
-            "Cleaner stats presentation without decorative icons focuses attention on numbers",
-            "Repositioned toggle control to top-right corner aligns with platform conventions",
-            "Increased panel height prevents footer button crowding on smaller screens",
-            "Shortened button labels improve responsive layout without sacrificing clarity",
-            "Independent banner and drawer controls let users dismiss warnings without losing workspace",
-            "Confirmation checkbox now works bidirectionally for intuitive enable/disable workflow",
-            "Stats positioned above table with reduced opacity maintains visual hierarchy",
-            "Eliminated white space when panel collapses for cleaner interface",
-            "Reset Columns button styling now matches secondary button patterns across app"
+            "Edit PHI replacements directly in table with real-time Monaco editor synchronization",
+            "Revert accepted or skipped items back to pending state for flexible workflow control",
+            "Resizable table columns with 1px minimum allows users to customize their workspace layout",
+            "Skip all pending items with single click for faster bulk operations",
+            "Row numbers and line numbers help users track PHI locations in source code",
+            "Automatic column hiding on mobile and tablet devices improves small screen usability",
+            "Keyboard navigation enhancements with automatic tab focus mode for seamless editing",
+            "WCAG accessibility improvements ensure keyboard-only users can complete all workflows",
+            "Shared banner component provides consistent visual language across the application",
+            "Independent banner and drawer controls prevent accidental workspace loss",
+            "Shortened panel title shows exact PHI counts for faster information scanning",
+            "Repositioned toggle control to top-right corner follows platform conventions"
           ]
         },
         {

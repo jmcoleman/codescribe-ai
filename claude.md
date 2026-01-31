@@ -1,7 +1,7 @@
 # CodeScribe AI - Claude Context Reference
 
 **Status:** ✅ PRODUCTION - [codescribeai.com](https://codescribeai.com) | React 19 + Vite | Node.js + Express | Claude API
-**Metrics:** 4,550 tests (95.6% pass) | Lighthouse 75/100 perf, 100/100 a11y | 78KB bundle | 0 axe violations
+**Metrics:** 4,617 tests (96.4% pass) | Lighthouse 75/100 perf, 100/100 a11y | 78KB bundle | 0 axe violations
 **Features:** 4 doc types | Monaco Editor | Mermaid diagrams | SSE streaming | Quality scoring (0-100)
 
 ---
@@ -280,7 +280,7 @@ Examples:
 ✅ **Production Ready** - MVP delivered in 9 days (Oct 19, 2025)
 - Phase 1 (Days 1-5): Web app, API, services, UI, tests
 - Phase 1.5 (Days 6-10): WCAG AA compliance, production deployment
-- Current: v3.5.5 - Email template enterprise polish, analytics dashboard, admin tools
+- Current: v3.5.6 - PHI workflow overhaul with inline editing, resizable columns, WCAG accessibility
 
 ---
 
@@ -313,11 +313,20 @@ codescribe-ai/
 
 ## 🔄 Version History
 
-**Current: v3.5.5** (January 29, 2026) - Email Template Enterprise Polish
+**Current: v3.5.6** (January 31, 2026) - PHI Workflow Overhaul with Inline Editing & Accessibility
+- Inline replacement editing: Edit PHI directly in table with real-time Monaco sync
+- Resizable table columns with 1px minimum, weight-based allocation, responsive hiding
+- Revert functionality for accepted/skipped items, Skip All button for bulk operations
+- WCAG accessibility: Improved keyboard navigation, tab order, focus indicators
+- Banner component refactoring for consistent styling across app
+- Monaco tab focus mode for seamless editing workflow
+- Tests: 4,617 (4,446 passing, 144 skipped, 27 failing)
+
+**v3.5.5** (January 29, 2026) - Email Template Enterprise Polish
 - Email verification template redesign: purpose-first messaging, neutral environment labeling
 - Changed header from "Welcome" to "Confirm your email address", CTA to "Confirm email address"
 - Normalized tier badge to "Plan: Free (Development)" format, added branded footer
-- Tests: 4,550 (4,351 passing, 144 skipped, 55 failing - pre-existing analytics failures)
+- Tests: 4,580 (4,580 passing, 144 skipped, 0 failing)
 
 **v3.5.4** (January 28, 2026) - Admin Table UX & Analytics Charts
 - Admin table standardization: FilterBar component, icon-only exports, server-side pagination
