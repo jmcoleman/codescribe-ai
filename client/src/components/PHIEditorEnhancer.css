@@ -386,7 +386,7 @@
 
 /* Static Column Widths (non-resizable) */
 .phi-col-number {
-  width: 40px;
+  width: 20px;
   text-align: center;
   font-family: 'Monaco', 'Courier New', monospace;
   font-size: 12px;
@@ -411,7 +411,7 @@
 }
 
 .phi-col-line {
-  width: 40px;
+  width: 20px;
   text-align: right;
   font-family: 'Monaco', 'Courier New', monospace;
   font-size: 12px;
