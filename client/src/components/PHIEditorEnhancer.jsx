@@ -117,12 +117,35 @@ export function PHIEditorEnhancer({
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [confirmed, setConfirmed] = useState(false);
   const [editingItemId, setEditingItemId] = useState(null); // Track which replacement cell is being edited
-  // Only resizable columns need state
-  const [columnWidths, setColumnWidths] = useState({
-    type: 180,
-    found: 400, // Large width to minimize ellipsis - immutable audit record
-    replacement: 350 // Large width to show full replacement values - editable
-  });
+  // Load column widths from localStorage or use defaults
+  const getInitialColumnWidths = () => {
+    const stored = localStorage.getItem('phiTableColumnWidths');
+    const defaults = {
+      status: 105,
+      line: 40,
+      id: 125,
+      type: 180,
+      found: 400,
+      replacement: 350,
+      action: 110
+    };
+
+    if (stored) {
+      try {
+        return { ...defaults, ...JSON.parse(stored) };
+      } catch (e) {
+        return defaults;
+      }
+    }
+    return defaults;
+  };
+
+  const [columnWidths, setColumnWidths] = useState(getInitialColumnWidths());
+
+  // Save column widths to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('phiTableColumnWidths', JSON.stringify(columnWidths));
+  }, [columnWidths]);
 
   const decorationsRef = useRef([]);
   const hoverProviderRef = useRef(null);
@@ -647,14 +670,19 @@ export function PHIEditorEnhancer({
     });
   }, [phiItems, sortConfig, reviewState, customReplacements]);
 
-  // Column-specific minimum widths (only for resizable columns)
+  // Column-specific minimum widths (all resizable columns except #)
+  // Set very small minimums to give users maximum control
   const getMinColumnWidth = useCallback((column) => {
     const minimums = {
-      type: 60,        // Type names vary
-      found: 100,      // Need room for PHI values
-      replacement: 100 // Need room for replacement values
+      status: 30,      // Can shrink very small
+      line: 20,        // Can shrink very small
+      id: 30,          // Can shrink very small
+      type: 30,        // Can shrink very small
+      found: 30,       // Can shrink very small
+      replacement: 30, // Can shrink very small
+      action: 30       // Can shrink very small
     };
-    return minimums[column] || 60;
+    return minimums[column] || 30;
   }, []);
 
   // Handle column resize
@@ -938,42 +966,69 @@ export function PHIEditorEnhancer({
                       #
                     </th>
                     <th
-                      className="phi-col-status"
+                      className="phi-col-status phi-col-resizable"
+                      style={{ width: `${columnWidths.status}px` }}
                       role="columnheader"
                     >
-                      <button
-                        className="phi-col-sort-btn"
-                        onClick={() => handleSort('status')}
-                        title="Sort by status"
-                      >
-                        Status
-                        {sortConfig.key === 'status' && (
-                          <ArrowUpDown className="w-3 h-3 ml-1" />
-                        )}
-                      </button>
+                      <div className="phi-col-header">
+                        <button
+                          className="phi-col-sort-btn"
+                          onClick={() => handleSort('status')}
+                          title="Sort by status"
+                        >
+                          Status
+                          {sortConfig.key === 'status' && (
+                            <ArrowUpDown className="w-3 h-3 ml-1" />
+                          )}
+                        </button>
+                        <div
+                          className="phi-col-resize-handle"
+                          onMouseDown={(e) => startResize(e, 'status')}
+                        >
+                          <GripVertical className="w-3 h-3" />
+                        </div>
+                      </div>
                     </th>
                     <th
-                      className="phi-col-line"
+                      className="phi-col-line phi-col-resizable"
+                      style={{ width: `${columnWidths.line}px` }}
                       role="columnheader"
                     >
-                      <button
-                        className="phi-col-sort-btn"
-                        onClick={() => handleSort('line')}
-                        title="Sort by line number"
-                      >
-                        Line
-                        {sortConfig.key === 'line' && (
-                          <ArrowUpDown className="w-3 h-3 ml-1" />
-                        )}
-                      </button>
+                      <div className="phi-col-header">
+                        <button
+                          className="phi-col-sort-btn"
+                          onClick={() => handleSort('line')}
+                          title="Sort by line number"
+                        >
+                          Line
+                          {sortConfig.key === 'line' && (
+                            <ArrowUpDown className="w-3 h-3 ml-1" />
+                          )}
+                        </button>
+                        <div
+                          className="phi-col-resize-handle"
+                          onMouseDown={(e) => startResize(e, 'line')}
+                        >
+                          <GripVertical className="w-3 h-3" />
+                        </div>
+                      </div>
                     </th>
                     <th
-                      className="phi-col-id"
+                      className="phi-col-id phi-col-resizable"
+                      style={{ width: `${columnWidths.id}px` }}
                       role="columnheader"
                     >
-                      <span className="phi-col-sort-btn" title="Unique ID for this occurrence">
-                        ID
-                      </span>
+                      <div className="phi-col-header">
+                        <span className="phi-col-sort-btn" title="Unique ID for this occurrence">
+                          ID
+                        </span>
+                        <div
+                          className="phi-col-resize-handle"
+                          onMouseDown={(e) => startResize(e, 'id')}
+                        >
+                          <GripVertical className="w-3 h-3" />
+                        </div>
+                      </div>
                     </th>
                     <th
                       className="phi-col-type phi-col-resizable"
@@ -1048,10 +1103,19 @@ export function PHIEditorEnhancer({
                       </div>
                     </th>
                     <th
-                      className="phi-col-action"
+                      className="phi-col-action phi-col-resizable"
+                      style={{ width: `${columnWidths.action}px` }}
                       role="columnheader"
                     >
-                      Action
+                      <div className="phi-col-header">
+                        <span>Action</span>
+                        <div
+                          className="phi-col-resize-handle"
+                          onMouseDown={(e) => startResize(e, 'action')}
+                        >
+                          <GripVertical className="w-3 h-3" />
+                        </div>
+                      </div>
                     </th>
                   </tr>
                 </thead>

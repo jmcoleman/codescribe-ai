@@ -301,7 +301,7 @@
 }
 
 .phi-items-table th {
-  padding: 12px 16px;
+  padding: 8px 4px;
   text-align: left;
   font-weight: 500;
   font-size: 14px;
@@ -384,10 +384,10 @@
   height: 12px;
 }
 
-/* Static Column Widths (non-resizable) */
+/* Column Widths */
+/* # column is the only non-resizable column */
 .phi-col-number {
   width: 20px;
-  padding: 12px 4px !important; /* Reduced horizontal padding for compact column */
   text-align: center;
   font-family: 'Monaco', 'Courier New', monospace;
   font-size: 12px;
@@ -395,8 +395,8 @@
   opacity: 0.7;
 }
 
+/* All other columns are resizable - no CSS min-width, controlled by JS */
 .phi-col-status {
-  width: 105px;
   white-space: nowrap;
 }
 
@@ -412,15 +412,12 @@
 }
 
 .phi-col-line {
-  width: 20px;
-  padding: 12px 4px !important; /* Reduced horizontal padding for compact column */
   text-align: right;
   font-family: 'Monaco', 'Courier New', monospace;
   font-size: 12px;
 }
 
 .phi-col-id {
-  width: 125px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -429,11 +426,10 @@
 }
 
 .phi-col-type {
-  min-width: 120px;
+  /* No min-width - controlled by resize handle */
 }
 
 .phi-col-found {
-  min-width: 150px;
   max-width: 0; /* Required for text-overflow: ellipsis to work */
   overflow: hidden;
   text-overflow: ellipsis;
@@ -441,7 +437,6 @@
 }
 
 .phi-col-replacement {
-  min-width: 150px;
   max-width: 0; /* Required for text-overflow: ellipsis to work */
   overflow: hidden;
   text-overflow: ellipsis;
@@ -449,7 +444,7 @@
 }
 
 .phi-col-action {
-  width: 110px;
+  /* No min-width - controlled by resize handle */
 }
 
 .phi-items-table tbody tr {
@@ -487,7 +482,7 @@
 }
 
 .phi-items-table td {
-  padding: 12px 16px; /* px-4 py-3 - matches BaseTable */
+  padding: 8px 4px;
   vertical-align: middle;
 }
 
